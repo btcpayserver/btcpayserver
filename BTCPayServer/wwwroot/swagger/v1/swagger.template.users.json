@@ -18,6 +18,9 @@
                                 }
                             }
                         }
+                    },
+                    "404": {
+                        "description": "The user could not be found"
                     }
                 },
                 "security": [
@@ -39,6 +42,9 @@
                 "responses": {
                     "200": {
                         "description": "User and associated data deleted successfully"
+                    },
+                    "404": {
+                        "description": "The user could not be found"
                     }
                 },
                 "security": [
@@ -53,6 +59,7 @@
         },
         "/api/v1/users": {
             "get": {
+                "operationId": "Users_GetUsers",
                 "tags": [
                     "Users"
                 ],
@@ -80,6 +87,7 @@
                 ]
             },
             "post": {
+                "operationId": "Users_CreateUser",
                 "tags": [
                     "Users"
                 ],
@@ -158,6 +166,7 @@
         },
         "/api/v1/users/{idOrEmail}": {
             "get": {
+                "operationId": "Users_GetUser",
                 "tags": [
                     "Users"
                 ],
@@ -198,6 +207,7 @@
                 ]
             },
             "delete": {
+                "operationId": "Users_DeleteUser",
                 "tags": [
                     "Users"
                 ],
@@ -205,7 +215,7 @@
                 "description": "Delete a user.\n\nMust be an admin to perform this operation.\n\nAttempting to delete the only admin user will not succeed.\n\nAll data associated with the user will be deleted as well if the operation succeeds.",
                 "parameters": [
                     {
-                        "name": "userId",
+                        "name": "idOrEmail",
                         "in": "path",
                         "required": true,
                         "description": "The ID of the user to be deleted",
@@ -240,6 +250,7 @@
         },
         "/api/v1/users/{idOrEmail}/lock": {
             "delete": {
+                "operationId": "Users_ToggleUserLock",
                 "tags": [
                     "Users"
                 ],
@@ -247,7 +258,7 @@
                 "description": "Lock or unlock a user.\n\nMust be an admin to perform this operation.\n\nAttempting to lock the only admin user will not succeed.",
                 "parameters": [
                     {
-                        "name": "userId",
+                        "name": "idOrEmail",
                         "in": "path",
                         "required": true,
                         "description": "The ID of the user to be un/locked",

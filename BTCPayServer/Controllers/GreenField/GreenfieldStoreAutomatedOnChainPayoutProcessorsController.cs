@@ -5,6 +5,7 @@ using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data.Data;
+using BTCPayServer.Payments;
 using BTCPayServer.PayoutProcessors;
 using BTCPayServer.PayoutProcessors.OnChain;
 using BTCPayServer.PayoutProcessors.Settings;
@@ -36,6 +37,7 @@ namespace BTCPayServer.Controllers.Greenfield
         public async Task<IActionResult> GetStoreOnChainAutomatedPayoutProcessors(
             string storeId, string? paymentMethod)
         {
+            paymentMethod = !string.IsNullOrEmpty(paymentMethod) ? PaymentMethodId.Parse(paymentMethod).ToString() : null;
             var configured =
                 await _payoutProcessorService.GetProcessors(
                     new PayoutProcessorService.PayoutProcessorQuery()
@@ -50,16 +52,22 @@ namespace BTCPayServer.Controllers.Greenfield
 
         private static OnChainAutomatedPayoutSettings ToModel(PayoutProcessorData data)
         {
+            var blob = BaseAutomatedPayoutProcessor<OnChainAutomatedPayoutBlob>.GetBlob(data);
             return new OnChainAutomatedPayoutSettings()
             {
+                FeeBlockTarget = blob.FeeTargetBlock,
                 PaymentMethod = data.PaymentMethod,
-                IntervalSeconds = InvoiceRepository.FromBytes<AutomatedPayoutBlob>(data.Blob).Interval
+                IntervalSeconds = blob.Interval
             };
         }
 
-        private static AutomatedPayoutBlob FromModel(OnChainAutomatedPayoutSettings data)
+        private static OnChainAutomatedPayoutBlob FromModel(OnChainAutomatedPayoutSettings data)
         {
-            return new AutomatedPayoutBlob() {Interval = data.IntervalSeconds};
+            return new OnChainAutomatedPayoutBlob()
+            {
+                FeeTargetBlock = data.FeeBlockTarget ?? 1, 
+                Interval = data.IntervalSeconds
+            };
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -68,6 +76,7 @@ namespace BTCPayServer.Controllers.Greenfield
         public async Task<IActionResult> UpdateStoreOnchainAutomatedPayoutProcessor(
             string storeId, string paymentMethod, OnChainAutomatedPayoutSettings request)
         {
+            paymentMethod = PaymentMethodId.Parse(paymentMethod).ToString();
             var activeProcessor =
                 (await _payoutProcessorService.GetProcessors(
                     new PayoutProcessorService.PayoutProcessorQuery()

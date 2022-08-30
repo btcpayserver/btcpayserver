@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Data.Common;
@@ -71,8 +72,11 @@ public class StoreWalletBalance : ViewComponent
             using CancellationTokenSource cts = new (TimeSpan.FromSeconds(3));
             var wallet = _walletProvider.GetWallet(_networkProvider.DefaultNetwork);
             var derivation = store.GetDerivationSchemeSettings(_networkProvider, walletId.CryptoCode);
-            var balance = await wallet.GetBalance(derivation.AccountDerivation, cts.Token);
-            vm.Balance = balance.Available.GetValue();
+            if (derivation is not null)
+            {
+                var balance = await wallet.GetBalance(derivation.AccountDerivation, cts.Token);
+                vm.Balance = balance.Available.GetValue();
+            }
         }
 
         return View(vm);

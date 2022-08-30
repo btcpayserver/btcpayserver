@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Threading;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Custodians;
@@ -129,10 +130,7 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<PaymentRequestService>();
             services.TryAddSingleton<UserService>();
             services.AddSingleton<CustodianAccountRepository>();
-            
-
             services.TryAddSingleton<WalletHistogramService>();
-            services.TryAddSingleton<CustodianAccountRepository>();
             services.AddSingleton<ApplicationDbContextFactory>();
             services.AddOptions<BTCPayServerOptions>().Configure(
                 (options) =>
@@ -335,7 +333,13 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<IHostedService, WebhookSender>(o => o.GetRequiredService<WebhookSender>());
             services.AddSingleton<IHostedService, StoreEmailRuleProcessorSender>();
             services.AddHttpClient(WebhookSender.OnionNamedClient)
-                .ConfigurePrimaryHttpMessageHandler<Socks5HttpClientHandler>();
+                .ConfigurePrimaryHttpMessageHandler<Socks5HttpClientHandler>(); 
+            services.AddHttpClient(WebhookSender.LoopbackNamedClient)
+                .ConfigurePrimaryHttpMessageHandler(_ => new HttpClientHandler
+                {
+                    ServerCertificateCustomValidationCallback =
+                        HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+                });
 
 
             services.AddSingleton<BitcoinLikePayoutHandler>();
@@ -361,6 +365,7 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<IUIExtension>(new UIExtension("LNURL/LightningAddressOption",
                 "store-integrations-list"));
             services.AddSingleton<IHostedService, LightningListener>();
+            services.AddSingleton<IHostedService, LightningPendingPayoutListener>();
 
             services.AddSingleton<PaymentMethodHandlerDictionary>();
 
@@ -410,7 +415,6 @@ namespace BTCPayServer.Hosting
             services.TryAddScoped<IHttpContextAccessor, HttpContextAccessor>();
             services.AddTransient<BitpayAccessTokenController>();
             services.AddTransient<UIInvoiceController>();
-            services.AddTransient<UIAppsPublicController>();
             services.AddTransient<UIPaymentRequestController>();
             // Add application services.
             services.AddSingleton<EmailSenderFactory>();

@@ -69,7 +69,7 @@ namespace BTCPayServer.Tests
             using var tester = CreateServerTester();
             await tester.StartAsync();
             var network = tester.NetworkProvider.GetNetwork<BTCPayNetwork>("BTC");
-            var repo = tester.PayTester.GetService<PayJoinRepository>();
+            var repo = tester.PayTester.GetService<UTXOLocker>();
             var outpoint = RandomOutpoint();
 
             // Should not be locked
@@ -166,7 +166,7 @@ namespace BTCPayServer.Tests
             using var tester = CreateServerTester();
             await tester.StartAsync();
             var broadcaster = tester.PayTester.GetService<DelayedTransactionBroadcaster>();
-            var payjoinRepository = tester.PayTester.GetService<PayJoinRepository>();
+            var payjoinRepository = tester.PayTester.GetService<UTXOLocker>();
             broadcaster.Disable();
             var network = tester.NetworkProvider.GetNetwork<BTCPayNetwork>("BTC");
             var btcPayWallet = tester.PayTester.GetService<BTCPayWalletProvider>().GetWallet(network);
@@ -633,7 +633,7 @@ namespace BTCPayServer.Tests
             {
                 await tester.StartAsync();
                 var broadcaster = tester.PayTester.GetService<DelayedTransactionBroadcaster>();
-                var payjoinRepository = tester.PayTester.GetService<PayJoinRepository>();
+                var payjoinRepository = tester.PayTester.GetService<UTXOLocker>();
                 broadcaster.Disable();
                 var network = tester.NetworkProvider.GetNetwork<BTCPayNetwork>("BTC");
                 var btcPayWallet = tester.PayTester.GetService<BTCPayWalletProvider>().GetWallet(network);
@@ -1155,7 +1155,7 @@ retry:
                     Assert.True(invoiceEntity.GetPayments(false).All(p => !p.Accounted));
                     ourOutpoint = invoiceEntity.GetAllBitcoinPaymentData(false).First().PayjoinInformation.ContributedOutPoints[0];
                 });
-                var payjoinRepository = tester.PayTester.GetService<PayJoinRepository>();
+                var payjoinRepository = tester.PayTester.GetService<UTXOLocker>();
                 // The outpoint should now be available for next pj selection
                 Assert.False(await payjoinRepository.TryUnlock(ourOutpoint));
             }

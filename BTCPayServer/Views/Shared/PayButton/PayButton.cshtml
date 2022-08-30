@@ -1,7 +1,5 @@
 @inject Security.ContentSecurityPolicies csp 
 @using BTCPayServer.Views.Stores
-@using Microsoft.AspNetCore.Mvc.TagHelpers
-@using BTCPayServer.TagHelpers
 @model BTCPayServer.Plugins.PayButton.Models.PayButtonViewModel
 @{
     ViewData.SetActivePage(StoreNavPages.PayButton, "Pay Button", Context.GetStoreData().Id);
@@ -121,7 +119,7 @@
                         this.srvModel.payButtonImageUrl = this.originalButtonImageUrl;
                     } else {
                         this.srvModel.payButtonText = 'Pay with';
-                        this.srvModel.payButtonImageUrl = `${this.srvModel.urlRoot}img/logo.svg`;
+                        this.srvModel.payButtonImageUrl = `${this.srvModel.urlRoot}img/paybutton/logo.svg`;
                     }
                     this.inputChanges();
                 }

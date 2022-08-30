@@ -27,7 +27,7 @@ namespace BTCPayServer.Payments.Bitcoin
     public class NBXplorerListener : IHostedService
     {
         readonly EventAggregator _Aggregator;
-        private readonly PayJoinRepository _payJoinRepository;
+        private readonly UTXOLocker _utxoLocker;
         readonly ExplorerClientProvider _ExplorerClients;
         private readonly PaymentService _paymentService;
         readonly InvoiceRepository _InvoiceRepository;
@@ -38,7 +38,7 @@ namespace BTCPayServer.Payments.Bitcoin
                                 BTCPayWalletProvider wallets,
                                 InvoiceRepository invoiceRepository,
                                 EventAggregator aggregator,
-                                PayJoinRepository payjoinRepository,
+                                UTXOLocker payjoinRepository,
                                 PaymentService paymentService,
                                 Logs logs)
         {
@@ -48,7 +48,7 @@ namespace BTCPayServer.Payments.Bitcoin
             _InvoiceRepository = invoiceRepository;
             _ExplorerClients = explorerClients;
             _Aggregator = aggregator;
-            _payJoinRepository = payjoinRepository;
+            _utxoLocker = payjoinRepository;
             _paymentService = paymentService;
         }
 
@@ -343,7 +343,7 @@ namespace BTCPayServer.Payments.Bitcoin
                 // reuse our outpoint for another PJ
                 (originalPJBroadcastable is false && !cjPJBroadcasted))
             {
-                await _payJoinRepository.TryUnlock(payjoinInformation.ContributedOutPoints);
+                await _utxoLocker.TryUnlock(payjoinInformation.ContributedOutPoints);
             }
 
             await _paymentService.UpdatePayments(updatedPaymentEntities);

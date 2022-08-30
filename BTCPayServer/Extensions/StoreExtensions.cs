@@ -1,3 +1,4 @@
+#nullable enable
 using System.Linq;
 using BTCPayServer.Data;
 
@@ -5,7 +6,7 @@ namespace BTCPayServer
 {
     public static class StoreExtensions
     {
-        public static DerivationSchemeSettings GetDerivationSchemeSettings(this StoreData store, BTCPayNetworkProvider networkProvider, string cryptoCode)
+        public static DerivationSchemeSettings? GetDerivationSchemeSettings(this StoreData store, BTCPayNetworkProvider networkProvider, string cryptoCode)
         {
             var paymentMethod = store
                 .GetSupportedPaymentMethods(networkProvider)

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using Microsoft.EntityFrameworkCore;
@@ -6,21 +7,19 @@ using NBitcoin;
 
 namespace BTCPayServer.Payments.PayJoin
 {
-    public class PayJoinRepository
+    public class UTXOLocker : IUTXOLocker
     {
         private readonly ApplicationDbContextFactory _dbContextFactory;
 
-        public PayJoinRepository(ApplicationDbContextFactory dbContextFactory)
+        public UTXOLocker(ApplicationDbContextFactory dbContextFactory)
         {
             _dbContextFactory = dbContextFactory;
         }
+
         public async Task<bool> TryLock(OutPoint outpoint)
         {
             using var ctx = _dbContextFactory.CreateContext();
-            ctx.PayjoinLocks.Add(new PayjoinLock()
-            {
-                Id = outpoint.ToString()
-            });
+            ctx.PayjoinLocks.Add(new PayjoinLock() {Id = outpoint.ToString()});
             try
             {
                 return await ctx.SaveChangesAsync() == 1;
@@ -36,11 +35,9 @@ namespace BTCPayServer.Payments.PayJoin
             using var ctx = _dbContextFactory.CreateContext();
             foreach (OutPoint outPoint in outPoints)
             {
-                ctx.PayjoinLocks.Remove(new PayjoinLock()
-                {
-                    Id = outPoint.ToString()
-                });
+                ctx.PayjoinLocks.Remove(new PayjoinLock() {Id = outPoint.ToString()});
             }
+
             try
             {
                 return await ctx.SaveChangesAsync() == outPoints.Length;
@@ -63,6 +60,7 @@ namespace BTCPayServer.Payments.PayJoin
                     Id = "K-" + outPoint.ToString()
                 });
             }
+
             try
             {
                 return await ctx.SaveChangesAsync() == outPoints.Length;
@@ -71,6 +69,14 @@ namespace BTCPayServer.Payments.PayJoin
             {
                 return false;
             }
+        }
+
+        public async Task<HashSet<OutPoint>> FindLocks(OutPoint[] outpoints)
+        {
+            var outPointsStr = outpoints.Select(o => o.ToString());
+            await using var ctx = _dbContextFactory.CreateContext();
+            return (await ctx.PayjoinLocks.Where(l => outPointsStr.Contains(l.Id)).ToArrayAsync())
+                .Select(l => OutPoint.Parse(l.Id)).ToHashSet();
         }
     }
 }

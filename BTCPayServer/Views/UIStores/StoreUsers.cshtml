@@ -1,4 +1,5 @@
-﻿@model StoreUsersViewModel
+﻿@using BTCPayServer.Abstractions.Models
+@model StoreUsersViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
     ViewData.SetActivePage(StoreNavPages.Users, "Store Users", Context.GetStoreData().Id);

@@ -1,5 +1,4 @@
 {
-    "x_experimental": true,
     "paths": {
         "/api/v1/custodians": {
             "get": {
@@ -34,6 +33,7 @@
         },
         "/api/v1/stores/{storeId}/custodian-accounts": {
             "get": {
+                "operationId": "Custodians_GetStoreCustodianAccounts",
                 "tags": [
                     "Custodians"
                 ],
@@ -79,6 +79,7 @@
                 }
             },
             "post": {
+                "operationId": "Custodians_AddStoreCustodianAccount",
                 "tags": [
                     "Custodians"
                 ],
@@ -123,6 +124,7 @@
         },
         "/api/v1/stores/{storeId}/custodian-accounts/{accountId}": {
             "get": {
+                "operationId": "Custodians_GetStoreCustodianAccount",
                 "tags": [
                     "Custodians"
                 ],
@@ -174,6 +176,7 @@
                 }
             },
             "put": {
+                "operationId": "Custodians_UpdateStoreCustodianAccount",
                 "tags": [
                     "Custodians"
                 ],
@@ -216,6 +219,7 @@
                 ]
             },
             "delete": {
+                "operationId": "Custodians_DeleteStoreCustodianAccount",
                 "tags": [
                     "Custodians"
                 ],
@@ -233,6 +237,7 @@
         },
         "/api/v1/stores/{storeId}/custodian-accounts/{accountId}/trades/quote": {
             "get": {
+                "operationId": "Custodians_GetStoreCustodianAccountTradeQuote",
                 "tags": [
                     "Custodians"
                 ],
@@ -306,6 +311,7 @@
         },
         "/api/v1/stores/{storeId}/custodian-accounts/{accountId}/trades/market": {
             "post": {
+                "operationId": "Custodians_StoreCustodianAccountTradeMarket",
                 "tags": [
                     "Custodians"
                 ],
@@ -371,6 +377,7 @@
         },
         "/api/v1/stores/{storeId}/custodian-accounts/{accountId}/addresses/{paymentMethod}": {
             "get": {
+                "operationId": "Custodians_GetStoreCustodianAccountDepositAddress",
                 "tags": [
                     "Custodians"
                 ],
@@ -445,6 +452,7 @@
         },
         "/api/v1/stores/{storeId}/custodian-accounts/{accountId}/withdrawals": {
             "post": {
+                "operationId": "Custodians_WithdrawFromStoreCustodianAccount",
                 "tags": [
                     "Custodians"
                 ],
@@ -531,6 +539,7 @@
         },
         "/api/v1/stores/{storeId}/custodian-accounts/{accountId}/withdrawals/{withdrawalId}": {
             "post": {
+                "operationId": "Custodians_GetStoreCustodianAccountWithdrawalInfo",
                 "tags": [
                     "Custodians"
                 ],
@@ -637,19 +646,38 @@
                     },
                     "tradableAssetPairs": {
                         "type": "array",
-                        "description": "A list of tradable asset pairs, or NULL if the custodian cannot trades/convert assets.",
-                        "nullable": true
+                        "description": "A list of tradable asset pair objects, or NULL if the custodian cannot trades/convert assets.",
+                        "nullable": true,
+                        "items": {
+                            "$ref": "#/components/schemas/AssetPairData"
+                        }
                     }
                 },
                 "example": {
                     "code": "kraken",
                     "name": "Kraken",
-                    "tradableAssetPairs": [
-                        "BTC/USD",
-                        "BTC/EUR",
-                        "LTC/USD",
-                        "LTC/EUR"
-                    ],
+                    "tradableAssetPairs": {
+                        "BTC/USD": {
+                            "assetBought": "BTC",
+                            "assetSold": "USD",
+                            "minimumTradeQty": 0.001
+                        },
+                        "BTC/EUR": {
+                            "assetBought": "BTC",
+                            "assetSold": "EUR",
+                            "minimumTradeQty": 0.001
+                        },
+                        "LTC/USD": {
+                            "assetBought": "LTC",
+                            "assetSold": "USD",
+                            "minimumTradeQty": 0.05
+                        },
+                        "LTC/EUR": {
+                            "assetBought": "LTC",
+                            "assetSold": "EUR",
+                            "minimumTradeQty": 0.05
+                        }
+                    },
                     "withdrawablePaymentMethods": [
                         "BTC-OnChain",
                         "LTC-OnChain"
@@ -1023,13 +1051,26 @@
                     "qty": 1.23456
                 }
             },
-            "LedgerEntryType": {
-                "type": "string",
-                "enum": [
-                    "Trade",
-                    "Fee",
-                    "Withdrawal"
-                ]
+            "AssetPairData": {
+                "type": "object",
+                "description": "An asset pair we can trade.",
+                "properties": {
+                    "pair": {
+                        "type": "string",
+                        "description": "The name of the asset pair.",
+                        "nullable": false
+                    },
+                    "minimumTradeQty": {
+                        "type": "number",
+                        "description": "The smallest amount we can buy or sell.",
+                        "nullable": false
+                    }
+                },
+                "example": {
+                    "assetBought": "BTC",
+                    "assetSold": "USD",
+                    "minimumTradeQty": 0.0001
+                }
             }
         }
     },

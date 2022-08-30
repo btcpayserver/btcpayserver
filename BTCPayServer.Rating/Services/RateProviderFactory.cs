@@ -84,6 +84,7 @@ namespace BTCPayServer.Services.Rates
             yield return new AvailableRateProvider("coinbasepro", "Coinbase Pro", "https://api.pro.coinbase.com/products");
 
             yield return new AvailableRateProvider("argoneum", "Argoneum", "https://rates.argoneum.net/rates");
+            yield return new AvailableRateProvider("yadio", "Yadio", "https://api.yadio.io/exrates/BTC");
         }
         void InitExchanges()
         {
@@ -104,6 +105,7 @@ namespace BTCPayServer.Services.Rates
             Providers.Add("ripio", new RipioExchangeProvider(_httpClientFactory?.CreateClient("EXCHANGE_RIPIO")));
             Providers.Add("cryptomarket", new CryptoMarketExchangeRateProvider(_httpClientFactory?.CreateClient("EXCHANGE_CRYPTOMARKET")));
             Providers.Add("bitflyer", new BitflyerRateProvider(_httpClientFactory?.CreateClient("EXCHANGE_BITFLYER")));
+            Providers.Add("yadio", new YadioRateProvider(_httpClientFactory?.CreateClient("EXCHANGE_YADIO")));
             // Providers.Add("argoneum", new ArgoneumRateProvider(_httpClientFactory?.CreateClient("EXCHANGE_ARGONEUM")));
 
 

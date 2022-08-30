@@ -53,6 +53,7 @@ namespace BTCPayServer.Controllers.Greenfield
         private readonly WalletReceiveService _walletReceiveService;
         private readonly IFeeProviderFactory _feeProviderFactory;
         private readonly LabelFactory _labelFactory;
+        private readonly UTXOLocker _utxoLocker;
 
         public GreenfieldStoreOnChainWalletsController(
             IAuthorizationService authorizationService,
@@ -68,7 +69,8 @@ namespace BTCPayServer.Controllers.Greenfield
             EventAggregator eventAggregator,
             WalletReceiveService walletReceiveService,
             IFeeProviderFactory feeProviderFactory,
-            LabelFactory labelFactory
+            LabelFactory labelFactory,
+            UTXOLocker utxoLocker
         )
         {
             _authorizationService = authorizationService;
@@ -85,6 +87,7 @@ namespace BTCPayServer.Controllers.Greenfield
             _walletReceiveService = walletReceiveService;
             _feeProviderFactory = feeProviderFactory;
             _labelFactory = labelFactory;
+            _utxoLocker = utxoLocker;
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -251,7 +254,8 @@ namespace BTCPayServer.Controllers.Greenfield
             string storeId, 
             string cryptoCode,
             string transactionId,
-            [FromBody] PatchOnChainTransactionRequest request
+            [FromBody] PatchOnChainTransactionRequest request,
+            bool force = false
         )
         {
             if (IsInvalidWalletRequest(cryptoCode, out var network,
@@ -260,7 +264,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
             var wallet = _btcPayWalletProvider.GetWallet(network);
             var tx = await wallet.FetchTransaction(derivationScheme.AccountDerivation, uint256.Parse(transactionId));
-            if (tx is null)
+            if (!force && tx is null)
             {
                 return this.CreateAPIError(404, "transaction-not-found", "The transaction was not found.");
             }
@@ -317,9 +321,11 @@ namespace BTCPayServer.Controllers.Greenfield
             var walletId = new WalletId(storeId, cryptoCode);
             var walletTransactionsInfoAsync = await _walletRepository.GetWalletTransactionsInfo(walletId);
             var utxos = await wallet.GetUnspentCoins(derivationScheme.AccountDerivation);
+            
             return Ok(utxos.Select(coin =>
                 {
                     walletTransactionsInfoAsync.TryGetValue(coin.OutPoint.Hash.ToString(), out var info);
+                    var labels = info?.Labels ?? new Dictionary<string, LabelData>();
                     return new OnChainWalletUTXOData()
                     {
                         Outpoint = coin.OutPoint,

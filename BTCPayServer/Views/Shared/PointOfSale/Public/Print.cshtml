@@ -1,0 +1,114 @@
+@using BTCPayServer.Payments.Lightning
+@using BTCPayServer.Plugins.PointOfSale.Models
+@using BTCPayServer.Services.Stores
+@using LNURL
+@inject BTCPayNetworkProvider BTCPayNetworkProvider
+@inject StoreRepository StoreRepository
+@model BTCPayServer.Plugins.PointOfSale.Models.ViewPointOfSaleViewModel
+
+<style>
+    /* This hides unwanted metadata such as url, date, etc from appearing on a printed page. */
+    @@media print {
+        @@page {
+            margin-top: 0;
+            margin-bottom: 0;
+        }
+    }
+    .card { display: inline-block; width: 300px; page-break-inside: avoid; margin: 2em 1em 0 1em; }
+</style>
+
+@{
+    var store = await StoreRepository.FindStore(Model.StoreId);
+    Layout = "PointOfSale/Public/_LayoutPos";
+    Context.Request.Query.TryGetValue("cryptocode", out var cryptoCodeValues);
+    var cryptoCode = cryptoCodeValues.FirstOrDefault() ?? "BTC";
+    var supported = store.GetSupportedPaymentMethods(BTCPayNetworkProvider).OfType<LNURLPaySupportedPaymentMethod>().OrderBy(method => method.CryptoCode == cryptoCode).FirstOrDefault();
+    if (supported != null && !store.GetEnabledPaymentIds(BTCPayNetworkProvider).Contains(supported.PaymentId))
+    {
+        supported = null;
+    }
+}
+
+@if (supported is null)
+{
+    <div class="alert alert-warning text-center sticky-top mb-0 rounded-0" role="alert">
+        LNURL is not enabled on your store, which this print feature relies on.
+        <a asp-controller="UIStores" asp-action="LightningSettings" asp-route-cryptoCode="BTC"  asp-route-storeId="@store.Id" class="alert-link p-0">
+            Enable LNURL
+        </a>
+    </div>
+}
+else
+{
+    if (Model.ShowCustomAmount)
+    {
+        Model.Items = Model.Items.Concat(new[]
+        {
+            new ViewPointOfSaleViewModel.Item()
+            {
+                Description = "Create invoice to pay custom amount",
+                Title = "Custom amount",
+                BuyButtonText = Model.CustomButtonText,
+                Price = new ViewPointOfSaleViewModel.Item.ItemPrice()
+                {
+                    Type = ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Topup,
+
+                }
+            }
+        }).ToArray();
+    }
+    <div class="alert alert-info alert-dismissible d-flex align-items-center justify-content-center sticky-top mb-0 rounded-0 d-print-none fade show" role="alert">
+        <button type="button" class="btn btn-info me-4 border border-light" onclick="window.print()">
+            <i class="fa fa-print"></i>&nbsp;Print
+        </button>
+        This view is intended for printing only —
+        <a asp-route-viewType="static" class="alert-link">Regular version</a>
+    </div>
+}
+
+<div class="container text-center">
+    @for (int x = 0; x < Model.Items.Length; x++)
+    {
+        var item = Model.Items[x];
+        <div class="card" data-id="@x">
+            <div class="card-body my-auto">
+                <h4 class="card-title text-center">@item.Title</h4>
+                @if (!string.IsNullOrEmpty(item.Description))
+                {
+                    <p class="card-title text-center">@item.Description</p>
+                    
+                }
+                <div class="w-100 mb-3 fs-5 text-center">
+                    @switch (item.Price.Type)
+                    {
+                        case ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Topup:
+                            <span>Any amount</span>
+                            break;
+                        case ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Minimum:
+                            <span>@item.Price.Formatted minimum</span>
+                            break;
+                        case ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Fixed:
+                            @item.Price.Formatted
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
+                </div>
+                @if (!item.Inventory.HasValue || item.Inventory.Value > 0)
+                {
+                    if (supported != null)
+                    {
+                        var lnurlEndpoint = new Uri(Url.Action("GetLNURLForApp", "UILNURL", new
+                        {
+                            cryptoCode = supported.CryptoCode,
+                            appid = Model.AppId,
+                            ItemCode = item.Id
+                        }, Context.Request.Scheme, Context.Request.Host.ToString()));
+                        var lnUrl = LNURL.EncodeUri(lnurlEndpoint, "payRequest", supported.UseBech32Scheme);
+                        <a href="@lnUrl" rel="noreferrer noopener"><vc:qr-code data="@lnUrl.ToString().ToUpperInvariant()" /></a>
+                    }
+                }
+            </div>
+        </div>
+    }
+</div>

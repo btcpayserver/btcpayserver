@@ -184,6 +184,7 @@
                 ]
             },
             "delete": {
+                "operationId": "StoreLightningNetworkPaymentMethods_DeleteLightningNetworkPaymentMethod",
                 "tags": [
                     "Store Payment Methods (Lightning Network)"
                 ],
@@ -261,7 +262,7 @@
                     },
                     "disableBOLT11PaymentOption": {
 
-                        "type": "boolean", 
+                        "type": "boolean",
                         "description": "Whether to disable generation of bolt11 invoices. Useful when wanting to only use LNURL Pay exclusively."
                     }
                 }

@@ -83,7 +83,7 @@ namespace BTCPayServer.Payments.PayJoin
         private readonly InvoiceRepository _invoiceRepository;
         private readonly ExplorerClientProvider _explorerClientProvider;
         private readonly BTCPayWalletProvider _btcPayWalletProvider;
-        private readonly PayJoinRepository _payJoinRepository;
+        private readonly UTXOLocker _utxoLocker;
         private readonly EventAggregator _eventAggregator;
         private readonly NBXplorerDashboard _dashboard;
         private readonly DelayedTransactionBroadcaster _broadcaster;
@@ -97,7 +97,7 @@ namespace BTCPayServer.Payments.PayJoin
         public PayJoinEndpointController(BTCPayNetworkProvider btcPayNetworkProvider,
             InvoiceRepository invoiceRepository, ExplorerClientProvider explorerClientProvider,
             BTCPayWalletProvider btcPayWalletProvider,
-            PayJoinRepository payJoinRepository,
+            UTXOLocker utxoLocker,
             EventAggregator eventAggregator,
             NBXplorerDashboard dashboard,
             DelayedTransactionBroadcaster broadcaster,
@@ -111,7 +111,7 @@ namespace BTCPayServer.Payments.PayJoin
             _invoiceRepository = invoiceRepository;
             _explorerClientProvider = explorerClientProvider;
             _btcPayWalletProvider = btcPayWalletProvider;
-            _payJoinRepository = payJoinRepository;
+            _utxoLocker = utxoLocker;
             _eventAggregator = eventAggregator;
             _dashboard = dashboard;
             _broadcaster = broadcaster;
@@ -148,7 +148,7 @@ namespace BTCPayServer.Payments.PayJoin
                 });
             }
 
-            await using var ctx = new PayjoinReceiverContext(_invoiceRepository, _explorerClientProvider.GetExplorerClient(network), _payJoinRepository, Logs);
+            await using var ctx = new PayjoinReceiverContext(_invoiceRepository, _explorerClientProvider.GetExplorerClient(network), _utxoLocker, Logs);
             ObjectResult CreatePayjoinErrorAndLog(int httpCode, PayjoinReceiverWellknownErrors err, string debug)
             {
                 ctx.Logs.Write($"Payjoin error: {debug}", InvoiceEventData.EventSeverity.Error);
@@ -322,7 +322,7 @@ namespace BTCPayServer.Payments.PayJoin
                 }
 
 
-                if (!await _payJoinRepository.TryLockInputs(ctx.OriginalTransaction.Inputs.Select(i => i.PrevOut).ToArray()))
+                if (!await _utxoLocker.TryLockInputs(ctx.OriginalTransaction.Inputs.Select(i => i.PrevOut).ToArray()))
                 {
                     // We do not broadcast, since we might double spend a delayed transaction of a previous payjoin
                     ctx.DoNotBroadcast();
@@ -502,18 +502,23 @@ namespace BTCPayServer.Payments.PayJoin
                 _eventAggregator.Publish(new InvoiceEvent(invoice, InvoiceEvent.ReceivedPayment) { Payment = payment });
             }
 
-
             await _btcPayWalletProvider.GetWallet(network).SaveOffchainTransactionAsync(ctx.OriginalTransaction);
+            var labels = selectedUTXOs.GroupBy(pair => pair.Key.Hash).Select(utxo =>
+                    new KeyValuePair<uint256, List<(string color, Label label)>>(utxo.Key,
+                        new List<(string color, Label label)>()
+                        {
+                            UpdateTransactionLabel.PayjoinExposedLabelTemplate(invoice?.Id)
+                        }))
+                .ToDictionary(pair => pair.Key, pair => pair.Value);
+            
+            labels.Add(originalPaymentData.PayjoinInformation.CoinjoinTransactionHash, new List<(string color, Label label)>()
+            {
+                UpdateTransactionLabel.PayjoinLabelTemplate()
+            });
             _eventAggregator.Publish(new UpdateTransactionLabel()
             {
                 WalletId = walletId,
-                TransactionLabels = selectedUTXOs.GroupBy(pair => pair.Key.Hash).Select(utxo =>
-                       new KeyValuePair<uint256, List<(string color, Label label)>>(utxo.Key,
-                           new List<(string color, Label label)>()
-                           {
-                                UpdateTransactionLabel.PayjoinExposedLabelTemplate(invoice?.Id)
-                           }))
-                    .ToDictionary(pair => pair.Key, pair => pair.Value)
+                TransactionLabels = labels
             });
             ctx.Success();
             // BTCPay Server support PSBT set as hex
@@ -608,7 +613,7 @@ namespace BTCPayServer.Payments.PayJoin
                 {
                     continue;
                 }
-                if (await _payJoinRepository.TryLock(availableUtxo.Outpoint))
+                if (await _utxoLocker.TryLock(availableUtxo.Outpoint))
                 {
                     return (new[] { availableUtxo }, PayjoinUtxoSelectionType.HeuristicBased);
                 }
@@ -620,7 +625,7 @@ namespace BTCPayServer.Payments.PayJoin
             {
                 if (currentTry >= maxTries)
                     break;
-                if (await _payJoinRepository.TryLock(utxo.Outpoint))
+                if (await _utxoLocker.TryLock(utxo.Outpoint))
                 {
                     return (new[] { utxo }, PayjoinUtxoSelectionType.Ordered);
                 }

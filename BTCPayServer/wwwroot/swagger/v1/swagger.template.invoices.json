@@ -34,7 +34,9 @@
                         "in": "query",
                         "required": false,
                         "description": "Array of statuses of invoices to be fetched",
-                        "$ref": "#/components/schemas/InvoiceStatus"
+                        "schema": {
+                            "$ref": "#/components/schemas/InvoiceStatus"
+                        }
                     },
                     {
                         "name": "textSearch",
@@ -50,14 +52,18 @@
                         "in": "query",
                         "required": false,
                         "description": "Start date of the period to retrieve invoices",
-                        "$ref": "#/components/schemas/UnixTimestamp"
+                        "schema": {
+                            "$ref": "#/components/schemas/UnixTimestamp"
+                        }
                     },
                     {
                         "name": "endDate",
                         "in": "query",
                         "required": false,
                         "description": "End date of the period to retrieve invoices",
-                        "$ref": "#/components/schemas/UnixTimestamp"
+                        "schema": {
+                            "$ref": "#/components/schemas/UnixTimestamp"
+                        }
                     },
                     {
                         "name": "skip",
@@ -644,17 +650,6 @@
                     }
                 }
             },
-            "AddCustomerEmailRequest": {
-                "type": "object",
-                "additionalProperties": false,
-                "properties": {
-                    "email": {
-                        "type": "string",
-                        "nullable": false,
-                        "description": "Sets the customer email, if it was not set before."
-                    }
-                }
-            },
             "InvoiceStatusMark": {
                 "type": "string",
                 "description": "",
@@ -1088,22 +1083,6 @@
                         "description": "Show the payment list in the public receipt page. If null or unspecified, it will fallback to the store's settings. (The default store setting is true)"
                     }
                 }
-            },
-            "SpeedPolicy": {
-                "type": "string",
-                "description": "`\"HighSpeed\"`: 0 confirmations (1 confirmation if RBF enabled in transaction)   \n`\"MediumSpeed\"`: 1 confirmation   \n`\"LowMediumSpeed\"`: 2 confirmations   \n`\"LowSpeed\"`: 6 confirmations\n",
-                "x-enumNames": [
-                    "HighSpeed",
-                    "MediumSpeed",
-                    "LowSpeed",
-                    "LowMediumSpeed"
-                ],
-                "enum": [
-                    "HighSpeed",
-                    "MediumSpeed",
-                    "LowSpeed",
-                    "LowMediumSpeed"
-                ]
             },
             "InvoicePaymentMethodDataModel": {
                 "type": "object",

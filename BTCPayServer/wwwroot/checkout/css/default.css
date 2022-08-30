@@ -9157,14 +9157,6 @@ strong {
     padding: 1em 30px;
 }
 
-    .bp-view#paid {
-        padding-bottom: 0;
-    }
-
-        .bp-view#paid.pad {
-            padding-bottom: 30px;
-        }
-
     .bp-view.enter-contact-email {
         padding-left: 40px;
         padding-right: 40px;

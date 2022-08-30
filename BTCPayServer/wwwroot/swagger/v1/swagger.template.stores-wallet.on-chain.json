@@ -513,6 +513,15 @@
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    {
+                        "name": "force",
+                        "in": "query",
+                        "required": false,
+                        "description": "Whether to update the label/comments even if the transaction does not yet exist",
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 ],
                 "requestBody": {

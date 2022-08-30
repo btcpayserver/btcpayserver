@@ -72,10 +72,10 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
-        public void CanQueryDirectProviders()
+        public async Task CanQueryDirectProviders()
         {
             // TODO: Check once in a while whether or not they are working again
-            string[] brokenShitcoinCasinos = { "okex" };
+            string[] brokenShitcoinCasinos = { };
             var factory = FastTests.CreateBTCPayRateFactory();
             var directlySupported = factory.GetSupportedExchanges().Where(s => s.Source == RateSource.Direct)
                 .Select(s => s.Id).ToHashSet();
@@ -126,6 +126,12 @@ namespace BTCPayServer.Tests
                         e => e.CurrencyPair == new CurrencyPair("BTC", "CLP") &&
                              e.BidAsk.Bid > 1.0m); // 1 BTC will always be more than 1 CLP
                 }
+                else if (name == "yadio")
+                {
+                    Assert.Contains(exchangeRates.ByExchange[name],
+                        e => e.CurrencyPair == new CurrencyPair("BTC", "LBP") &&
+                             e.BidAsk.Bid > 1.0m); // 1 BTC will always be more than 1 LBP (I hope)
+                }
                 else
                 {
                     if (name == "kraken")
@@ -154,12 +160,11 @@ namespace BTCPayServer.Tests
             // Kraken emit one request only after first GetRates
             factory.Providers["kraken"].GetRatesAsync(default).GetAwaiter().GetResult();
 
-            using (var c = new HttpClient())
-            {
-                var p = new ExchangeSharpRateProvider<ExchangeSharp.ExchangeKrakenAPI>(c);
-                var rates = p.GetRatesAsync(default).GetAwaiter().GetResult();
-                Assert.Contains(rates, e => e.CurrencyPair == new CurrencyPair("XXMR", "XXBT") && e.BidAsk.Bid < 1.0m);
-            }
+
+            var p = new KrakenExchangeRateProvider();
+            var rates = await p.GetRatesAsync(default);
+            Assert.Contains(rates, e => e.CurrencyPair == new CurrencyPair("XMR", "BTC") && e.BidAsk.Bid < 1.0m);
+            
         }
 
         [Fact]

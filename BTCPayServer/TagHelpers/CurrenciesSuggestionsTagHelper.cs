@@ -1,7 +1,7 @@
-using BTCPayServer.Services.Rates;
-using System.Linq;
-using Microsoft.AspNetCore.Razor.TagHelpers;
 using System.Collections.Generic;
+using System.Linq;
+using BTCPayServer.Services.Rates;
+using Microsoft.AspNetCore.Razor.TagHelpers;
 
 namespace BTCPayServer.TagHelpers
 {

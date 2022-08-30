@@ -11,6 +11,8 @@ using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Models.WalletViewModels;
 using BTCPayServer.Payments;
+using BTCPayServer.Plugins.PointOfSale.Controllers;
+using BTCPayServer.Plugins.PointOfSale.Models;
 using BTCPayServer.Services.Apps;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
@@ -617,6 +619,7 @@ namespace BTCPayServer.Tests
                 user.RegisterDerivationScheme("BTC");
                 user.RegisterDerivationScheme("LTC");
                 var apps = user.GetController<UIAppsController>();
+                var pos = user.GetController<UIPointOfSaleController>();
                 var vm = Assert.IsType<CreateAppViewModel>(Assert.IsType<ViewResult>(apps.CreateApp(user.StoreId)).Model);
                 var appType = AppType.PointOfSale.ToString();
                 vm.AppName = "test";
@@ -624,8 +627,10 @@ namespace BTCPayServer.Tests
                 Assert.IsType<RedirectToActionResult>(apps.CreateApp(user.StoreId, vm).Result);
                 var appList = Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps.ListApps(user.StoreId).Result).Model);
                 var app = appList.Apps[0];
-                apps.HttpContext.SetAppData(new AppData { Id = app.Id, StoreDataId = app.StoreId, Name = app.AppName, AppType = appType });
-                var vmpos = await apps.UpdatePointOfSale(app.Id).AssertViewModelAsync<UpdatePointOfSaleViewModel>();
+                var appData = new AppData { Id = app.Id, StoreDataId = app.StoreId, Name = app.AppName, AppType = appType };
+                apps.HttpContext.SetAppData(appData);
+                pos.HttpContext.SetAppData(appData);
+                var vmpos = await pos.UpdatePointOfSale(app.Id).AssertViewModelAsync<UpdatePointOfSaleViewModel>();
                 vmpos.Title = "hello";
                 vmpos.Currency = "CAD";
                 vmpos.ButtonText = "{0} Purchase";
@@ -642,11 +647,11 @@ donation:
   price: 1.02
   custom: true
 ";
-                Assert.IsType<RedirectToActionResult>(apps.UpdatePointOfSale(app.Id, vmpos).Result);
-                vmpos = await apps.UpdatePointOfSale(app.Id).AssertViewModelAsync<UpdatePointOfSaleViewModel>();
+                Assert.IsType<RedirectToActionResult>(pos.UpdatePointOfSale(app.Id, vmpos).Result);
+                vmpos = await pos.UpdatePointOfSale(app.Id).AssertViewModelAsync<UpdatePointOfSaleViewModel>();
                 Assert.Equal("hello", vmpos.Title);
 
-                var publicApps = user.GetController<UIAppsPublicController>();
+                var publicApps = user.GetController<UIPointOfSaleController>();
                 var vmview = await publicApps.ViewPointOfSale(app.Id, PosViewType.Cart).AssertViewModelAsync<ViewPointOfSaleViewModel>();
                 Assert.Equal("hello", vmview.Title);
                 Assert.Equal(3, vmview.Items.Length);
@@ -698,7 +703,7 @@ donation:
                 })
                 {
                     TestLogs.LogInformation($"Testing for {test.Code}");
-                    vmpos = await apps.UpdatePointOfSale(app.Id).AssertViewModelAsync<UpdatePointOfSaleViewModel>();
+                    vmpos = await pos.UpdatePointOfSale(app.Id).AssertViewModelAsync<UpdatePointOfSaleViewModel>();
                     vmpos.Title = "hello";
                     vmpos.Currency = test.Item1;
                     vmpos.ButtonText = "{0} Purchase";
@@ -714,8 +719,8 @@ donation:
   price: 1.02
   custom: true
 ";
-                    Assert.IsType<RedirectToActionResult>(apps.UpdatePointOfSale(app.Id, vmpos).Result);
-                    publicApps = user.GetController<UIAppsPublicController>();
+                    Assert.IsType<RedirectToActionResult>(pos.UpdatePointOfSale(app.Id, vmpos).Result);
+                    publicApps = user.GetController<UIPointOfSaleController>();
                     vmview = await publicApps.ViewPointOfSale(app.Id, PosViewType.Cart).AssertViewModelAsync<ViewPointOfSaleViewModel>();
                     Assert.Equal(test.Code, vmview.CurrencyCode);
                     Assert.Equal(test.ExpectedSymbol,
@@ -731,7 +736,7 @@ donation:
                 }
                 
                 //test inventory related features
-                vmpos = await apps.UpdatePointOfSale(app.Id).AssertViewModelAsync<UpdatePointOfSaleViewModel>();
+                vmpos = await pos.UpdatePointOfSale(app.Id).AssertViewModelAsync<UpdatePointOfSaleViewModel>();
                 vmpos.Title = "hello";
                 vmpos.Currency = "BTC";
                 vmpos.Template = @"
@@ -741,7 +746,7 @@ inventoryitem:
   inventory: 1
 noninventoryitem:
   price: 10.0";
-                Assert.IsType<RedirectToActionResult>(apps.UpdatePointOfSale(app.Id, vmpos).Result);
+                Assert.IsType<RedirectToActionResult>(pos.UpdatePointOfSale(app.Id, vmpos).Result);
 
                 //inventoryitem has 1 item available
                 await tester.WaitForEvent<AppInventoryUpdaterHostedService.UpdateAppInventory>(() =>
@@ -777,13 +782,13 @@ noninventoryitem:
                 //check that item is back in stock
                 await TestUtils.EventuallyAsync(async () =>
                 {
-                    vmpos = await apps.UpdatePointOfSale(app.Id).AssertViewModelAsync<UpdatePointOfSaleViewModel>();
+                    vmpos = await pos.UpdatePointOfSale(app.Id).AssertViewModelAsync<UpdatePointOfSaleViewModel>();
                     Assert.Equal(1,
                         appService.Parse(vmpos.Template, "BTC").Single(item => item.Id == "inventoryitem").Inventory);
                 }, 10000);
 
                 //test payment methods option
-                vmpos = await apps.UpdatePointOfSale(app.Id).AssertViewModelAsync<UpdatePointOfSaleViewModel>();
+                vmpos = await pos.UpdatePointOfSale(app.Id).AssertViewModelAsync<UpdatePointOfSaleViewModel>();
                 vmpos.Title = "hello";
                 vmpos.Currency = "BTC";
                 vmpos.Template = @"
@@ -794,7 +799,7 @@ btconly:
     - BTC
 normal:
   price: 1.0";
-                Assert.IsType<RedirectToActionResult>(apps.UpdatePointOfSale(app.Id, vmpos).Result);
+                Assert.IsType<RedirectToActionResult>(pos.UpdatePointOfSale(app.Id, vmpos).Result);
                 Assert.IsType<RedirectToActionResult>(publicApps
                     .ViewPointOfSale(app.Id, PosViewType.Cart, 1, null, null, null, null, "btconly").Result);
                 Assert.IsType<RedirectToActionResult>(publicApps
@@ -838,8 +843,8 @@ g:
   custom: topup
 ";
                 
-                Assert.IsType<RedirectToActionResult>(apps.UpdatePointOfSale(app.Id, vmpos).Result);
-                vmpos = await apps.UpdatePointOfSale(app.Id).AssertViewModelAsync<UpdatePointOfSaleViewModel>();
+                Assert.IsType<RedirectToActionResult>(pos.UpdatePointOfSale(app.Id, vmpos).Result);
+                vmpos = await pos.UpdatePointOfSale(app.Id).AssertViewModelAsync<UpdatePointOfSaleViewModel>();
                 Assert.DoesNotContain("custom", vmpos.Template);
                 var items = appService.Parse(vmpos.Template, vmpos.Currency);
                 Assert.Contains(items, item => item.Id == "a" && item.Price.Type == ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Fixed);

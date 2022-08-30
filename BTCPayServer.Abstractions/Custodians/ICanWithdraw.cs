@@ -1,5 +1,6 @@
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Custodians.Client;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Abstractions.Custodians;

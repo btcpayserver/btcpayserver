@@ -309,6 +309,11 @@ namespace BTCPayServer.Services.Stores
                 .FirstOrDefaultAsync();
             if (hook is null)
                 return;
+            
+            if (string.IsNullOrEmpty(webhookBlob.Secret))
+            {
+                webhookBlob.Secret = hook.GetBlob().Secret;
+            }
             hook.SetBlob(webhookBlob);
             await ctx.SaveChangesAsync();
         }
@@ -382,6 +387,13 @@ namespace BTCPayServer.Services.Stores
             var data = await ctx.StoreSettings.Where(s => s.Name == name && s.StoreId == storeId).FirstOrDefaultAsync();
             return data == null ? default : this.Deserialize<T>(data.Value);
 
+        }
+
+        public async Task<Dictionary<string, T?>> GetSettingsAsync<T>(string name) where T : class
+        {
+            await using var ctx = _ContextFactory.CreateContext();
+            var data = await ctx.StoreSettings.Where(s => s.Name == name).ToDictionaryAsync(settingData => settingData.StoreId);
+            return data.ToDictionary(pair => pair.Key, pair => Deserialize<T>(pair.Value.Value));
         }
 
         public async Task UpdateSetting<T>(string storeId, string name, T obj) where T : class

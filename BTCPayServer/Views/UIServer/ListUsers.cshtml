@@ -1,4 +1,5 @@
-﻿@model UsersViewModel
+﻿@using BTCPayServer.Abstractions.Models
+@model UsersViewModel
 @{
     ViewData.SetActivePage(ServerNavPages.Users);
     var nextUserEmailSortOrder = (string)ViewData["NextUserEmailSortOrder"];

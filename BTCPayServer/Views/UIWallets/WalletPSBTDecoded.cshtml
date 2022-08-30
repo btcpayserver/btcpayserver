@@ -1,9 +1,5 @@
 @using BTCPayServer.Controllers
-@using BTCPayServer.TagHelpers
-@using Microsoft.AspNetCore.Mvc.TagHelpers
-@using BundlerMinifier.TagHelpers
 @model WalletPSBTViewModel
-@addTagHelper *, BundlerMinifier.TagHelpers
 @{
 	var walletId = Context.GetRouteValue("walletId").ToString();
     var cancelUrl = Model.ReturnUrl ?? Url.Action(nameof(UIWalletsController.WalletTransactions), new { walletId });

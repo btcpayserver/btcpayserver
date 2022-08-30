@@ -5,6 +5,7 @@ using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using BTCPayServer.Payments;
 using BTCPayServer.Client.Models;
+using BTCPayServer.Data;
 
 namespace BTCPayServer.Models.WalletViewModels
 {
@@ -69,5 +70,38 @@ namespace BTCPayServer.Models.WalletViewModels
         public long BOLT11Expiration { get; set; } = 30;
         [Display(Name = "Automatically approve claims")]
         public bool AutoApproveClaims { get; set; } = false;
+    }
+
+    public class UpdatePullPaymentModel
+    {
+
+        public string Id { get; set; }
+
+        public UpdatePullPaymentModel()
+        {
+        }
+
+        public UpdatePullPaymentModel(Data.PullPaymentData data)
+        {
+            if (data == null)
+            {
+                return;
+            }
+
+            Id = data.Id;
+            var blob = data.GetBlob();
+            Name = blob.Name;
+            Description = blob.Description;
+            CustomCSSLink = blob.View.CustomCSSLink;
+            EmbeddedCSS = blob.View.EmbeddedCSS;
+        }
+
+        [MaxLength(30)]
+        public string Name { get; set; }
+        public string Description { get; set; }
+        [Display(Name = "Custom CSS URL")]
+        public string CustomCSSLink { get; set; }
+        [Display(Name = "Custom CSS Code")]
+        public string EmbeddedCSS { get; set; }
     }
 }

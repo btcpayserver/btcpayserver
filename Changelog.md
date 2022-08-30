@@ -1,4 +1,117 @@
 # Changelog
+## 1.6.10
+
+### Bug fixes:
+
+* Fix Wallet Transactions screen not loading in case of older payout labels (#4078) @Kukks
+* Fix missing route hints for LNURL (#4077) @dennisreimann
+* Fix API Docs url (#4061) @dennisreimann
+* Fix Pay button logo and url (#4054) @dennisreimann
+
+## 1.6.9
+
+### Bug fixes:
+
+* Revert #4031 @Kukks
+
+## 1.6.8
+
+### New feature:
+
+* Edit Pull Payment UI (#4016) @daviogg
+* Custodian Account Deposit UI (#4024) @woutersamaey
+* Add Yadio rate provider (#4048) @bolatovumar
+
+### Improvement:
+
+* Add no rate found error message in Invoices (#4039) @HamroRamro
+* Greenfield API docs improvements (#4041 #4035) @dennisreimann
+* Allow binding ip and port for non ssl scenarios too (#4031) @Kukks 
+
+### Bug fixes:
+
+* Fix crash when running BTCPay without BTC (#4038) @Kukks
+* Fix edge cases around LNURL not providing invoice (#4034) @dennisreimann
+* Fix store creation button distortion  (#4025) @bolatovumar
+* Fix payout labels (#4032) @Kukks
+* Handle hold invoices in ln payouts (#4032) @Kukks
+* Save preimage of ln payouts when possible (#4032) @Kukks
+* Fix crash on stores that had configured a payment method that is no longer supported (#4042) @Kukks
+
+## 1.6.7
+
+### Improvement:
+
+* Improve LNDHub support @dennisreimann
+
+### Bug fixes:
+
+* Fix Kraken rate source (#4027) @Kukks
+
+## 1.6.6
+
+### Bug fixes:
+
+* Ensure payout processors update state @Kukks
+
+## 1.6.5
+
+### Bug fixes:
+
+* Fix crash when running BTCPay without BTC (#4017) @NicolasDorier
+
+## 1.6.4
+
+### Improvement:
+
+* If a webhook is the loopback address, skip SSL verification @Kukks
+
+### Bug fixes:
+
+* Minor checkout UI fix (#4015) @dennisreimann
+* Greenfield: Update webhook would reset the secret (#4010) @Kukks
+* Fix crash when BTC network isn't available (#4007) @Kukks
+* Make InvoicePaymentSettled return correct afterExpiration value (#3966) @Kukks
+* Greenfield: Allow tagging a transaction even if it hasn't been yet broadcasted @Kukks
+
+### Improvements:
+
+* The invoice filter dropdown list labels should be "Settled invoice" rather than "Paid invoice" (#4000 #3573) @BitcoinABee
+
+## 1.6.3
+
+### New feature:
+
+* Point of Sale: Add discount option for Keypad view (#3991) @bolatovumar
+
+### Bug fixes:
+
+* When a payjoin label was applied, coin selection filter would not work (#3986) @Kukks
+* When a payjoin happened with a receive address wallet, the payjoin label was not applied (#3986) @Kukks
+* Crowdfund: Show free when invoice is fixed and 0 amount in apps (#3994) @Kukks
+* Crowdfund: Animations on crowdfund not enabled broke JS (#3994) @Kukks
+* Crowdfund: Perk expansion in crowdfund was broken (#3994) @Kukks
+* Redirect instead of show 404 on 0 amount invoices (#3904) @Kukks
+
+### Improvements:
+
+* A few design brush up @dennisreimann @dstrukt
+* Coin Selection: Fix responsive display (#3992, #3985) @dennisreimann
+* Point of Sale: In the receipt, the Order Id is now a link pointing to the point of sale (#3995) @Kukks
+
+## 1.6.2
+
+### Bug fixes:
+
+* Fix: Cannot withdraw refund (payouts) with LNURL (#3953 #3953) @Kukks
+* Fix: Cannot withdraw refund (payouts) with LN Address (#3953 #3960) @Kukks
+* Fix: Missing pager in the wallet transaction list @NicolasDorier
+* Fix: webhook "Send specific events" display issue (#3959) @rustywave
+
+### Improvements:
+
+* Added HRF and Strike to the list of supporters #3965 @dennisreimann
+* Invoice summary: Fix indentation and heading levels (#3956) @dennisreimann
 
 ## 1.6.1
 

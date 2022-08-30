@@ -1,0 +1,92 @@
+@using BTCPayServer.Views.Stores
+@using BTCPayServer.Abstractions.Extensions
+@model BTCPayServer.Models.WalletViewModels.UpdatePullPaymentModel
+
+@{
+    ViewData.SetActivePage(StoreNavPages.Create, "Edit Pull Payment", Model.Id);
+}
+
+@section PageHeadContent {
+    <link href="~/vendor/summernote/summernote-bs5.css" rel="stylesheet" asp-append-version="true" />
+}
+
+@section PageFootContent {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/vendor/summernote/summernote-bs5.js" asp-append-version="true"></script>
+}
+
+<form method="post" asp-action="EditPullPayment" asp-route-storeId="@Context.GetRouteValue("storeId")" asp-route-pullPaymentId="@Model.Id">
+    <div class="sticky-header-setup"></div>
+    <div class="sticky-header d-sm-flex align-items-center justify-content-between">
+        <h2 class="mb-0">@ViewData["Title"]</h2>
+        <div class="d-flex gap-3 mt-3 mt-sm-0">
+            @if (string.IsNullOrEmpty(Model.Id))
+            {
+                <button type="submit" class="btn btn-primary" id="SaveButton">Create</button>
+            }
+            else
+            {
+                <button type="submit" class="btn btn-primary order-sm-1" id="SaveButton">Save</button>
+                <a class="btn btn-secondary" asp-action="ViewPullPayment" asp-route-pullPaymentId="@Model.Id" id="ViewPullPayment">View</a>
+            }
+        </div>
+    </div>
+
+    <partial name="_StatusMessage" />
+
+    <div class="row">
+        <div class="col-xl-8 col-xxl-constrain">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="Name" class="form-label" data-required></label>
+                <input asp-for="Name" class="form-control" required />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-xl-10 col-xxl-constrain">
+            <div class="form-group">
+                <label asp-for="Description" class="form-label"></label>
+                <textarea asp-for="Description" class="form-control richtext"></textarea>
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-xl-8 col-xxl-constrain">
+            <h4 class="mt-5 mb-2">Additional Options</h4>
+            <div class="form-group">
+                <div class="accordion" id="additional">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="additional-custom-css-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#additional-custom-css" aria-expanded="false" aria-controls="additional-custom-css">
+                                Custom CSS
+                                <vc:icon symbol="caret-down" />
+                            </button>
+                        </h2>
+                        <div id="additional-custom-css" class="accordion-collapse collapse" aria-labelledby="additional-custom-css-header">
+                            <div class="accordion-body">
+                                <div class="form-group">
+                                    <label asp-for="CustomCSSLink" class="form-label"></label>
+                                    <a href="https://docs.btcpayserver.org/Development/Theme/#2-bootstrap-themes" target="_blank" rel="noreferrer noopener">
+                                        <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+                                    </a>
+                                    <input asp-for="CustomCSSLink" class="form-control" />
+                                    <span asp-validation-for="CustomCSSLink" class="text-danger"></span>
+                                </div>
+                                <div class="form-group">
+                                    <label asp-for="EmbeddedCSS" class="form-label"></label>
+                                    <textarea asp-for="EmbeddedCSS" rows="10" cols="40" class="form-control"></textarea>
+                                    <span asp-validation-for="EmbeddedCSS" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>

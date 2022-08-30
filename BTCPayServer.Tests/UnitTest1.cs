@@ -35,6 +35,7 @@ using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Payments.PayJoin.Sender;
+using BTCPayServer.Plugins.PointOfSale.Controllers;
 using BTCPayServer.Security.Bitpay;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
@@ -1953,6 +1954,7 @@ namespace BTCPayServer.Tests
             var stores = user.GetController<UIStoresController>();
             var apps = user.GetController<UIAppsController>();
             var apps2 = user2.GetController<UIAppsController>();
+            var pos = user.GetController<UIPointOfSaleController>();
             var vm = Assert.IsType<CreateAppViewModel>(Assert.IsType<ViewResult>(apps.CreateApp(user.StoreId)).Model);
             var appType = AppType.PointOfSale.ToString();
             Assert.NotNull(vm.SelectedAppType);
@@ -1960,12 +1962,14 @@ namespace BTCPayServer.Tests
             vm.AppName = "test";
             vm.SelectedAppType = appType;
             var redirectToAction = Assert.IsType<RedirectToActionResult>(apps.CreateApp(user.StoreId, vm).Result);
-            Assert.Equal(nameof(apps.UpdatePointOfSale), redirectToAction.ActionName);
+            Assert.Equal(nameof(pos.UpdatePointOfSale), redirectToAction.ActionName);
             var appList = Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps.ListApps(user.StoreId).Result).Model);
             var appList2 =
                 Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps2.ListApps(user2.StoreId).Result).Model);
             var app = appList.Apps[0];
-            apps.HttpContext.SetAppData(new AppData { Id = app.Id, StoreDataId = app.StoreId, Name = app.AppName, AppType = appType });
+            var appData = new AppData { Id = app.Id, StoreDataId = app.StoreId, Name = app.AppName, AppType = appType };
+            apps.HttpContext.SetAppData(appData);
+            pos.HttpContext.SetAppData(appData);
             Assert.Single(appList.Apps);
             Assert.Empty(appList2.Apps);
             Assert.Equal("test", appList.Apps[0].AppName);

@@ -21,4 +21,9 @@ public class PayoutProcessorData
             .HasOne(o => o.Store)
             .WithMany(data => data.PayoutProcessors).OnDelete(DeleteBehavior.Cascade);
     }
+
+    public override string ToString()
+    {
+        return $"{Processor} {PaymentMethod} {StoreId}";
+    }
 }

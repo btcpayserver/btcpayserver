@@ -13,6 +13,7 @@ using BTCPayServer.PayoutProcessors.Settings;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBXplorer;
@@ -22,7 +23,7 @@ using PayoutProcessorData = BTCPayServer.Data.Data.PayoutProcessorData;
 
 namespace BTCPayServer.PayoutProcessors.OnChain
 {
-    public class OnChainAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<AutomatedPayoutBlob>
+    public class OnChainAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<OnChainAutomatedPayoutBlob>
     {
         private readonly ExplorerClientProvider _explorerClientProvider;
         private readonly BTCPayWalletProvider _btcPayWalletProvider;
@@ -40,8 +41,9 @@ namespace BTCPayServer.PayoutProcessors.OnChain
             EventAggregator eventAggregator,
             StoreRepository storeRepository,
             PayoutProcessorData payoutProcesserSettings,
+            PullPaymentHostedService pullPaymentHostedService,
             BTCPayNetworkProvider btcPayNetworkProvider) :
-            base(logger, storeRepository, payoutProcesserSettings, applicationDbContextFactory,
+            base(logger, storeRepository, payoutProcesserSettings, applicationDbContextFactory,pullPaymentHostedService,
                 btcPayNetworkProvider)
         {
             _explorerClientProvider = explorerClientProvider;
@@ -51,7 +53,7 @@ namespace BTCPayServer.PayoutProcessors.OnChain
             _eventAggregator = eventAggregator;
         }
 
-        protected override async Task Process(ISupportedPaymentMethod paymentMethod, PayoutData[] payouts)
+        protected override async Task Process(ISupportedPaymentMethod paymentMethod, List<PayoutData> payouts)
         {
             var storePaymentMethod = paymentMethod as DerivationSchemeSettings;
             if (storePaymentMethod?.IsHotWallet is not true)
@@ -87,8 +89,9 @@ namespace BTCPayServer.PayoutProcessors.OnChain
             decimal? failedAmount = null;
             var changeAddress = await explorerClient.GetUnusedAsync(
                 storePaymentMethod.AccountDerivation, DerivationFeature.Change, 0, true);
-
-            var feeRate = await explorerClient.GetFeeRateAsync(1, new FeeRate(1m));
+            
+            var processorBlob = GetBlob(_PayoutProcesserSettings);
+            var feeRate = await explorerClient.GetFeeRateAsync(processorBlob.FeeTargetBlock,new FeeRate(1m));
 
             var transfersProcessing = new List<PayoutData>();
             foreach (var transferRequest in payouts)
@@ -142,11 +145,9 @@ namespace BTCPayServer.PayoutProcessors.OnChain
             {
                 try
                 {
-                    await using var context = _applicationDbContextFactory.CreateContext();
                     var txHash = workingTx.GetHash();
                     foreach (PayoutData payoutData in transfersProcessing)
                     {
-                        context.Attach(payoutData);
                         payoutData.State = PayoutState.InProgress;
                         _bitcoinLikePayoutHandler.SetProofBlob(payoutData,
                             new PayoutTransactionOnChainBlob()
@@ -155,7 +156,6 @@ namespace BTCPayServer.PayoutProcessors.OnChain
                                 TransactionId = txHash,
                                 Candidates = new HashSet<uint256>() { txHash }
                             });
-                        await context.SaveChangesAsync();
                     }
                     TaskCompletionSource<bool> tcs = new();
                     var cts = new CancellationTokenSource();

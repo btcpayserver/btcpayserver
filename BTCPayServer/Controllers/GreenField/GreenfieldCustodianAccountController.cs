@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Custodians;
+using BTCPayServer.Abstractions.Custodians.Client;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Form;
 using BTCPayServer.Client;
@@ -231,7 +232,7 @@ namespace BTCPayServer.Controllers.Greenfield
         [HttpPost("~/api/v1/stores/{storeId}/custodian-accounts/{accountId}/trades/market")]
         [Authorize(Policy = Policies.CanTradeCustodianAccount,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        public async Task<IActionResult> TradeMarket(string storeId, string accountId,
+        public async Task<IActionResult> MarketTradeCustodianAccountAsset(string storeId, string accountId,
             TradeRequestData request, CancellationToken cancellationToken = default)
         {
             // TODO add SATS check everywhere. We cannot change to 'BTC' ourselves because the qty / price would be different too.
@@ -246,29 +247,38 @@ namespace BTCPayServer.Controllers.Greenfield
 
             if (custodian is ICanTrade tradableCustodian)
             {
-                decimal Qty;
-                if (request.Qty.EndsWith("%", StringComparison.InvariantCultureIgnoreCase))
+                bool isPercentage = request.Qty.EndsWith("%", StringComparison.InvariantCultureIgnoreCase);
+                string qtyString = isPercentage ? request.Qty.Substring(0, request.Qty.Length - 1) : request.Qty;
+                bool canParseQty = Decimal.TryParse(qtyString, out decimal qty);
+                if (!canParseQty)
                 {
-                    // Qty is a percentage of current holdings
-                    var percentage = Decimal.Parse( request.Qty.Substring(0, request.Qty.Length - 1), CultureInfo.InvariantCulture);
+                    return this.CreateAPIError(400, "bad-qty-format",
+                        $"Quantity should be a number or a number ending with '%' for percentages.");
+                }
+
+                if (isPercentage)
+                {
+                    // Percentage of current holdings => calculate the amount
                     var config = custodianAccount.GetBlob();
                     var balances = custodian.GetAssetBalancesAsync(config, cancellationToken).Result;
                     var fromAssetBalance = balances[request.FromAsset];
                     var priceQuote =
                         await tradableCustodian.GetQuoteForAssetAsync(request.FromAsset, request.ToAsset, config, cancellationToken);
-                    Qty = fromAssetBalance / priceQuote.Ask * percentage / 100;
-                }
-                else
-                {
-                    // Qty is an exact amount
-                    Qty = Decimal.Parse(request.Qty, CultureInfo.InvariantCulture);
-                    
+                    qty = fromAssetBalance / priceQuote.Ask * qty / 100;
                 }
 
-                var result = await tradableCustodian.TradeMarketAsync(request.FromAsset, request.ToAsset, Qty,
+                try
+                {
+                    var result = await tradableCustodian.TradeMarketAsync(request.FromAsset, request.ToAsset, qty,
                         custodianAccount.GetBlob(), cancellationToken);
 
-                return Ok(ToModel(result, accountId, custodianAccount.CustodianCode));
+                    return Ok(ToModel(result, accountId, custodianAccount.CustodianCode));
+                }
+                catch (CustodianApiException e)
+                {
+                    return this.CreateAPIError(e.HttpStatus,  e.Code,
+                        e.Message);
+                }
             }
 
             return this.CreateAPIError(400, "market-trade-not-supported",

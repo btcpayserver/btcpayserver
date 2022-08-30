@@ -10,4 +10,6 @@ public class OnChainAutomatedPayoutSettings
        
     [JsonConverter(typeof(TimeSpanJsonConverter.Seconds))]
     public TimeSpan IntervalSeconds { get; set; }
+
+    public int? FeeBlockTarget { get; set; } 
 }

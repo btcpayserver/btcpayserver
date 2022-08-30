@@ -1,8 +1,8 @@
 using System;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
+using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Client;
-using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
@@ -23,19 +23,22 @@ namespace BTCPayServer.Security
         private readonly AppService _appService;
         private readonly PaymentRequestRepository _paymentRequestRepository;
         private readonly InvoiceRepository _invoiceRepository;
+        private readonly IPluginHookService _pluginHookService;
 
         public CookieAuthorizationHandler(IHttpContextAccessor httpContextAccessor,
                                 UserManager<ApplicationUser> userManager,
                                 StoreRepository storeRepository,
                                 AppService appService,
                                 InvoiceRepository invoiceRepository,
-                                PaymentRequestRepository paymentRequestRepository)
+                                PaymentRequestRepository paymentRequestRepository,
+                                IPluginHookService pluginHookService)
         {
             _httpContext = httpContextAccessor.HttpContext;
             _userManager = userManager;
             _appService = appService;
             _storeRepository = storeRepository;
             _invoiceRepository = invoiceRepository;
+            _pluginHookService = pluginHookService;
             _paymentRequestRepository = paymentRequestRepository;
         }
 
@@ -144,6 +147,14 @@ namespace BTCPayServer.Security
                     if (context.User != null)
                         success = true;
                     break;
+                default:
+                    if (Policies.IsPluginPolicy(requirement.Policy))
+                    {
+                        var handle = (AuthorizationFilterHandle)await _pluginHookService.ApplyFilter("handle-authorization-requirement",
+                            new AuthorizationFilterHandle(context, requirement, _httpContext));
+                        success = handle.Success;
+                    }
+                    break;
             }
 
             if (success)
@@ -151,7 +162,6 @@ namespace BTCPayServer.Security
                 context.Succeed(requirement);
                 if (!explicitResource)
                 {
-
                     if (store != null)
                     {
                         _httpContext.SetStoreData(store);

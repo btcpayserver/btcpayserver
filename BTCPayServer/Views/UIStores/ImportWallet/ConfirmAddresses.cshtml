@@ -22,7 +22,7 @@
 
 <template id="modal-template">
     <div class="modal-dialog" role="document">
-        <form class="modal-content"  method="post" enctype="multipart/form-data">
+        <form class="modal-content" method="post" enctype="multipart/form-data">
             <div class="modal-header">
                 <h5 class="modal-title" id="addressVerification">Address verification</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
@@ -52,8 +52,8 @@
     <input asp-for="RootFingerprint" type="hidden" />
     <input asp-for="KeyPath" type="hidden" />
 
-    <div class="form-group">
-        <table class="table table-hover table-responsive-md">
+    <div class="mb-3 table-responsive-sm">
+        <table class="table table-hover w-auto mx-auto">
             <thead>
             <tr>
                 <th>Key path</th>

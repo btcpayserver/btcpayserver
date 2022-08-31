@@ -109,18 +109,17 @@
                 })();
             });
 
-            var apiKeys = @Safe.Json(Model.ApiKeyDatas.Select(data => new
+            const apiKeys = @Safe.Json(Model.ApiKeyDatas.Select(data => new
                           {
                               ApiKey = data.Id,
                               Host = Context.Request.GetAbsoluteRoot()
                           }));
-            var qrApp = initQRShow("API Key QR", "", "scan-qr-modal");
-            $("button[data-qr]").on("click", function (){
-                var data =  apiKeys[parseInt($(this).data("qr"))];
-                qrApp.data = JSON.stringify(data);
-                qrApp.currentMode = "static";
-                qrApp.allowedModes = ["static"];
-                $("#scan-qr-modal").modal("show");
+            const qrApp = initQRShow({ title: "API Key QR" });
+            delegate("click", "button[data-qr]", e => {
+                e.preventDefault();
+                const { qr } = e.target.dataset;
+                const data = apiKeys[qr];
+                qrApp.showData(JSON.stringify(data));
             });
         });
     </script>

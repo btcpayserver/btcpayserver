@@ -21,6 +21,5 @@ namespace BTCPayServer.Models.WalletViewModels
         public List<TransactionViewModel> Transactions { get; set; } = new List<TransactionViewModel>();
         public override int CurrentPageCount => Transactions.Count;
         public string CryptoCode { get; set; }
-        public int Days { get; set; }
     }
 }

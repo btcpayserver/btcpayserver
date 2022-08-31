@@ -259,20 +259,12 @@ namespace BTCPayServer.Controllers
             WalletId walletId,
             string? labelFilter = null,
             int skip = 0,
-            int count = 50,
-            int days = 30
+            int count = 50
         )
         {
             var paymentMethod = GetDerivationSchemeSettings(walletId);
             if (paymentMethod == null)
                 return NotFound();
-
-            //Set default value of interval to last 30 days            
-            var interval = TimeSpan.FromDays(days);
-
-            //Only cap out count if it is present in the query string
-            if (string.IsNullOrEmpty(Request.Query["count"]))
-                count = int.MaxValue;            
 
             var wallet = _walletProvider.GetWallet(paymentMethod.Network);
             var walletBlobAsync = WalletRepository.GetWalletInfo(walletId);
@@ -280,7 +272,7 @@ namespace BTCPayServer.Controllers
 
             // We can't filter at the database level if we need to apply label filter
             var preFiltering = string.IsNullOrEmpty(labelFilter);
-            var transactions = await wallet.FetchTransactionHistory(paymentMethod.AccountDerivation, preFiltering ? skip : null, preFiltering ? count : null, interval);
+            var transactions = await wallet.FetchTransactionHistory(paymentMethod.AccountDerivation, preFiltering ? skip : null, preFiltering ? count : null);
             var walletBlob = await walletBlobAsync;
             var walletTransactionsInfo = await walletTransactionsInfoAsync;
             var model = new ListTransactionsViewModel { Skip = skip, Count = count };
@@ -334,15 +326,11 @@ namespace BTCPayServer.Controllers
             }
 
             model.CryptoCode = walletId.CryptoCode;
-            model.Days = days;
-            
-            //If ajax call then load the partial view
-            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
-            {
-                return PartialView("_WalletTransactions", model);
-            }
 
-            return View(model);
+            //If ajax call then load the partial view
+            return Request.Headers["X-Requested-With"] == "XMLHttpRequest"
+                ? PartialView("_WalletTransactionsList", model)
+                : View(model);
         }
         
         [HttpGet("{walletId}/histogram/{type}")]

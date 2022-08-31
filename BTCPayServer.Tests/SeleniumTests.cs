@@ -447,9 +447,12 @@ namespace BTCPayServer.Tests
             s.AddDerivationScheme();
             s.GoToInvoices();
             var i = s.CreateInvoice();
-            s.GoToInvoiceCheckout(i);
-            s.PayInvoice(true);
-            TestUtils.Eventually(() => s.Driver.FindElement(By.LinkText("View receipt")).Click());
+            await s.Server.PayTester.InvoiceRepository.MarkInvoiceStatus(i, InvoiceStatus.Settled);
+            TestUtils.Eventually(() =>
+            {
+                s.Driver.Navigate().Refresh();
+                s.Driver.FindElement(By.Id($"Receipt")).Click();
+            });
             TestUtils.Eventually(() =>
             {
                 s.Driver.Navigate().Refresh();
@@ -472,7 +475,11 @@ namespace BTCPayServer.Tests
             s.GoToInvoiceCheckout(i);
             var checkouturi = s.Driver.Url;
             s.PayInvoice();
-            TestUtils.Eventually(() => s.Driver.FindElement(By.LinkText("View receipt")).Click());
+            TestUtils.Eventually(() =>
+            {
+                s.Driver.Navigate().Refresh();
+                s.Driver.FindElement(By.Id("receipt-btn")).Click();
+            });
             TestUtils.Eventually(() =>
             {
                 s.Driver.Navigate().Refresh();
@@ -480,9 +487,10 @@ namespace BTCPayServer.Tests
                 Assert.Contains("invoice-processing", s.Driver.PageSource);
             }); 
             s.GoToUrl(checkouturi);
-            s.MineBlockOnInvoiceCheckout();
+
+            await s.Server.PayTester.InvoiceRepository.MarkInvoiceStatus(i, InvoiceStatus.Settled);
             
-            TestUtils.Eventually(() => s.Driver.FindElement(By.LinkText("View receipt")).Click());
+            TestUtils.Eventually(() => s.Driver.FindElement(By.Id("receipt-btn")).Click());
             TestUtils.Eventually(() =>
             {
                 s.Driver.Navigate().Refresh();

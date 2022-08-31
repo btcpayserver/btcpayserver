@@ -68,13 +68,28 @@
 }
 
 @section PageFootContent {
-    <partial name="_ValidationScriptsPartial" />
+    <partial name="_ValidationScriptsPartial"/>
     <bundle name="wwwroot/bundles/camera-bundle.min.js"></bundle>
     <script>
         window.coinName = "@Model.Network.DisplayName.ToLowerInvariant()";
         document.addEventListener("DOMContentLoaded", function () {
             initCameraScanningApp("Scan wallet QR", data => {
-                document.getElementById("WalletFileContent").value = data;
+                let xpub = "";
+                if (typeof(data) === "object") {
+                    if (data.type === "crypto-account") {
+                        const account = window.URlib.CryptoAccount.fromCBOR(data.cbor);
+                        const [descriptor] = account.getOutputDescriptors();
+                        xpub = descriptor.getHDKey().getBip32Key();
+                    } else {
+                        console.error('Unexpected UR type', data.type)
+                    }
+                } else if (typeof(data) === 'string') {
+                    xpub = data;
+                }
+                // remove potentially leading derivation path
+                xpub = xpub.replace(/^\[.*?\]/, '');
+                // submit
+                document.getElementById("WalletFileContent").value = xpub;
                 document.getElementById("qr-import-form").submit();
             });
         });

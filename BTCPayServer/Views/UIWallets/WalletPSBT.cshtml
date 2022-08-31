@@ -28,10 +28,31 @@
     <bundle name="wwwroot/bundles/camera-bundle.min.js"></bundle>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            initQRShow("Scan PSBT", @Json.Serialize(Model.PSBTHex), "scan-qr-modal");
-            initCameraScanningApp("Scan PSBT", function (data){
-               $("textarea[name=PSBT]").val(data);
-               $("#Decode").click();
+            const psbtHex = @Json.Serialize(Model.PSBTHex);
+            if (psbtHex) {
+                const buffer = new window.URlib.Buffer.from(psbtHex, "hex");
+                const cryptoPSBT = new window.URlib.CryptoPSBT(buffer);
+                const encoder = cryptoPSBT.toUREncoder();
+                const modes = {
+                    ur: { title: "UR", fragments: encoder.encodeWhole() },
+                    static: { title: "Static", fragments: [psbtHex] }
+                };
+                initQRShow({ title: "Scan the PSBT", modes });
+            }
+            initCameraScanningApp("Scan PSBT", data => {
+                let hex = data;
+                if (typeof(data) === "object") {
+                    if (data.type === "crypto-psbt") {
+                        const psbt = window.URlib.CryptoPSBT.fromCBOR(data.cbor);
+                        hex = psbt.getPSBT().toString('hex');
+                    } else {
+                        console.error('Unexpected UR type', data.type)
+                    }
+                } else if (typeof(data) === 'string') {
+                    hex = data;
+                }
+                document.getElementById("PSBT").value = hex;
+                document.getElementById("Decode").click();
             }, "scanModal");
         });
     </script>

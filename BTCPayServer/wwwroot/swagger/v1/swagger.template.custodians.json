@@ -689,7 +689,7 @@
             }
         },
         "/api/v1/stores/{storeId}/custodian-accounts/{accountId}/withdrawals/{withdrawalId}": {
-            "post": {
+            "get": {
                 "operationId": "Custodians_GetStoreCustodianAccountWithdrawalInfo",
                 "tags": [
                     "Custodians"

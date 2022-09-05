@@ -13,9 +13,9 @@ namespace BTCPayServer
             {
                 CryptoCode = nbxplorerNetwork.CryptoCode,
                 DisplayName = "Bitcoin",
-                BlockExplorerLink = NetworkType == ChainName.Mainnet ? "https://blockstream.info/tx/{0}" :
-                                    NetworkType == Bitcoin.Instance.Signet.ChainName ? "https://explorer.bc-2.jp/tx/{0}"
-                                    : "https://blockstream.info/testnet/tx/{0}",
+                BlockExplorerLink = NetworkType == ChainName.Mainnet ? "https://mempool.space/tx/{0}" :
+                                    NetworkType == Bitcoin.Instance.Signet.ChainName ? "https://mempool.space/signet/tx/{0}"
+                                    : "https://mempool.space/testnet/tx/{0}",
                 NBXplorerNetwork = nbxplorerNetwork,
                 CryptoImagePath = "imlegacy/bitcoin.svg",
                 LightningImagePath = "imlegacy/bitcoin-lightning.svg",

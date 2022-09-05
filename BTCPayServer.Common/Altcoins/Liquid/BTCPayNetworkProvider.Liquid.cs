@@ -22,7 +22,7 @@ namespace BTCPayServer
                     "LBTC_X = LBTC_BTC * BTC_X",
                     "LBTC_BTC = 1",
                 },
-                BlockExplorerLink = NetworkType == ChainName.Mainnet ? "https://blockstream.info/liquid/tx/{0}" : "https://blockstream.info/testnet/liquid/tx/{0}",
+                BlockExplorerLink = NetworkType == ChainName.Mainnet ? "https://liquid.network/tx/{0}" : "https://liquid.network/testnet/tx/{0}",
                 NBXplorerNetwork = nbxplorerNetwork,
                 CryptoImagePath = "imlegacy/liquid.png",
                 DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(NetworkType),

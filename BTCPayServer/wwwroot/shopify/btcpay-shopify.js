@@ -133,6 +133,7 @@ window.BTCPayShopifyIntegrationModule = function () {
                 });
             });
             window.btcpay.showInvoice(currentInvoiceData.invoiceId);
+            window.btcpay.showFrame();
         }
     }
 

@@ -122,9 +122,17 @@
                     </h2>
                     <div id="CustomNodeEclairContent" class="accordion-collapse collapse" aria-labelledby="CustomNodeEclairHeader" data-bs-parent="#CustomNodeSupport">
                         <div class="accordion-body">
-                            <ul class="mb-0">
+                            <ul class="pb-3">
                                 <li>
                                     <code><b>type=</b>eclair;<b>server=</b>https://eclair:8080/;<b>password=</b>eclairpassword...</code>
+                                </li>
+                            </ul>
+                            <p class="mt-2">
+                                Note that <code>bitcoin-host</code> and <code>bitcoin-auth</code> are optional, only useful if you want to use <code>GetDepositAddress</code> on Eclair:
+                            </p>
+                            <ul class="mb-0">
+                                <li>
+                                    <code><b>type=</b>eclair;<b>server=</b>https://eclair:8080/;<b>password=</b>eclairpassword;<b>bitcoin-host=</b>bitcoin.host;<b>bitcoin-auth=</b>btcpass</code>
                                 </li>
                             </ul>
                         </div>
@@ -139,7 +147,7 @@
                     </h2>
                     <div id="CustomNodeLNDContent" class="accordion-collapse collapse" aria-labelledby="CustomNodeLNDHeader" data-bs-parent="#CustomNodeSupport">
                         <div class="accordion-body">
-                            <ul class="pb-3">
+                            <ul class="pb-2">
                                 <li>
                                     <code><b>type=</b>lnd-rest;<b>server=</b>https://mylnd:8080/;<b>macaroon=</b>abef263adfe...</code>
                                 </li>
@@ -147,7 +155,7 @@
                                     <code><b>type=</b>lnd-rest;<b>server=</b>https://mylnd:8080/;<b>macaroon=</b>abef263adfe...;<b>certthumbprint=</b>abef263adfe...</code>
                                 </li>
                             </ul>
-                            <p class="mt-2">
+                            <p>
                                 For the macaroon options you need to provide the <code>admin.macaroon</code>.<br/>
                                 The path to the LND data directory may vary, the following examples assume <code>/root/.lnd</code>.
                             </p>
@@ -159,6 +167,30 @@
                             </p>
                             <pre class="mb-4">openssl x509 -noout -fingerprint -sha256 -in /root/.lnd/tls.cert | sed -e 's/.*=//;s/://g'</pre>
                             <p class="mb-0">If your LND REST server is using HTTP or HTTPS with an untrusted certificate, you can set <code>allowinsecure=true</code> as a fallback.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="CustomNodeLNDhubHeader">
+                        <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#CustomNodeLNDhubContent" aria-controls="CustomNodeLNDhubContent" aria-expanded="false">
+                            <span><strong>LNDhub</strong> via the REST API</span>
+                            <vc:icon symbol="caret-down"/>
+                        </button>
+                    </h2>
+                    <div id="CustomNodeLNDhubContent" class="accordion-collapse collapse" aria-labelledby="CustomNodeLNDhubHeader" data-bs-parent="#CustomNodeSupport">
+                        <div class="accordion-body">
+                            <ul class="pb-2">
+                                <li>
+                                    <code><b>type=</b>lndhub;<b>server=</b>https://login:password@lndhub.io</code>
+                                </li>
+                            </ul>
+                            <p class="my-2">The credentials and server address are shown as a <code>lndhub://</code> URL on the "Export/Backup" screen in BlueWallet.</p>
+                            <p>You can also use this LNDhub-URL as the connection string and BTCPay Server converts it into the expected <code>type=lndhub</code> connection string format:</p>
+                            <ul class="mb-0">
+                                <li>
+                                    <code>lndhub://<b>login</b>:<b>password</b>@@<b>https://lndhub.io</b></code>
+                                </li>
+                            </ul>
                         </div>
                     </div>
                 </div>

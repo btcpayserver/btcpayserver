@@ -219,8 +219,7 @@ document.addEventListener("DOMContentLoaded",function (ev) {
             this.sound = this.srvModel.soundsEnabled;
             this.animation = this.srvModel.animationsEnabled;
             eventAggregator.$on("invoice-created", function (invoiceId) {
-                btcpay.showInvoice(invoiceId);
-                btcpay.showFrame();
+                btcpay.appendAndShowInvoiceFrame(invoiceId);
 
                 self.contributeModalOpen = false;
                 self.setLoading(false);

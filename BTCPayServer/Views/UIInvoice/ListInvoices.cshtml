@@ -51,7 +51,7 @@
         delegate('click', '.showInvoice', e => {
             e.preventDefault();
             const { invoiceId } = e.target.dataset;
-            btcpay.showInvoice(invoiceId);
+            btcpay.appendInvoiceFrame(invoiceId);
         })
 
         $('#btnCustomRangeDate').on('click', function (sender) {

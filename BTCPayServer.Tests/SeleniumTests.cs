@@ -808,6 +808,16 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("TargetCurrency")).Clear();
             s.Driver.FindElement(By.Id("TargetCurrency")).SendKeys("JPY");
             s.Driver.FindElement(By.Id("TargetAmount")).SendKeys("700");
+            
+            // test wrong dates
+            s.Driver.ExecuteJavaScript("const now = new Date();document.getElementById('StartDate').value = now.toISOString();" +
+                "const yst = new Date(now.setDate(now.getDate() -1));document.getElementById('EndDate').value = yst.toISOString()");
+            s.Driver.FindElement(By.Id("SaveSettings")).Click();
+            Assert.Contains("End date cannot be before start date", s.Driver.PageSource);
+            Assert.DoesNotContain("App updated", s.Driver.PageSource);
+            
+            // unset end date
+            s.Driver.ExecuteJavaScript("document.getElementById('EndDate').value = ''");
             s.Driver.FindElement(By.Id("SaveSettings")).Click();
             Assert.Contains("App updated", s.FindAlertMessage().Text);
 

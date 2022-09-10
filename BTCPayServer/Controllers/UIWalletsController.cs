@@ -320,8 +320,7 @@ namespace BTCPayServer.Controllers
                 // if we couldn't filter at the db level, we need to apply skip and count
                 if (!preFiltering)
                 {
-                    model.Transactions = model.Transactions.Skip(skip).Take(count)
-                        .ToList();
+                    model.Transactions = model.Transactions.Skip(skip).Take(count).ToList();
                 }
             }
 

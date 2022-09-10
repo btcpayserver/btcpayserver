@@ -72,6 +72,10 @@
             margin: 0;
             padding-left: var(--btcpay-space-m);
         }
+        
+        #LoadingIndicator {
+            margin-bottom: 1.5rem;
+        }
     </style>
 }
 
@@ -81,23 +85,30 @@
 
     @* Custom Range Modal *@
     <script>
+        let observer = null;
+        let $loadMore = document.getElementById('LoadMore');
+        const $actions = document.getElementById('ListActions');
+        const $list = document.getElementById('WalletTransactionsList');
+        const $indicator = document.getElementById('LoadingIndicator');
+
         delegate('click', '#switchTimeFormat', switchTimeFormat);
+        
         delegate('click', '#selectAllCheckbox', e => {
             document.querySelectorAll(".selector").forEach(checkbox => {
                 checkbox.checked = e.target.checked;
             });
         });
+        
         delegate('click', '#GoToTop', () => {
             window.scrollTo({ top: 0, behavior: 'smooth' });
         });
+        
         delegate('click', '#LoadMore', async () => {
-            document.querySelector('#LoadMore').setAttribute('disabled', 'disabled');
-            document.querySelector('#LoadMore [role="status"]').classList.remove('d-none');
-            await loadTransactions();
+            $loadMore.setAttribute('disabled', 'disabled');
+            await loadMoreTransactions();
         });
         
-        const $listActions = document.getElementById('ListActions');
-        if ($listActions && $listActions.offsetTop - window.innerHeight > 0) {
+        if ($actions && $actions.offsetTop - window.innerHeight > 0) {
             document.getElementById('GoToTop').classList.remove('d-none');
         }
         
@@ -106,9 +117,10 @@
         const loadMoreUrl = @Safe.Json(Url.Action("WalletTransactions", new { walletId, labelFilter, skip = Model.Skip, count = Model.Count }));
         let skip = @Safe.Json(Model.Skip);
         
-        async function loadTransactions() {
+        async function loadMoreTransactions() {
+            $indicator.classList.remove('d-none');
+            
             const skipNext = skip + count;
-            console.log(skipInitial, skip, skipNext)
             const url = loadMoreUrl.replace(`skip=${skipInitial}`, `skip=${skipNext}`)
             const response = await fetch(url, {
                 headers: {
@@ -116,18 +128,38 @@
                     'X-Requested-With': 'XMLHttpRequest'
                 }
             });
-            const $loadMore = document.getElementById('LoadMore');
+            
             if (response.ok) {
-                document.getElementById(`WalletTransactionsList`).innerHTML += await response.text();
+                const html = await response.text();
+                $list.innerHTML += html;
                 skip = skipNext;
                 
                 if ($loadMore) {
-                    //$loadMore.classList.add('d-none');
+                    // remove load more button
+                    $loadMore.remove();
+                    $loadMore = null;
+                    
+                    // switch to infinite scroll mode
+                    observer = new IntersectionObserver(async entries => {
+                        const { isIntersecting } = entries[0];
+                        if (isIntersecting) {
+                            await loadMoreTransactions();
+                        }
+                    }, { rootMargin: '128px' });
+                    
+                    // the actions div marks the end of the list table
+                    observer.observe($actions);
+                }
+                
+                if (html.trim() === '') {
+                    // in case the response html was empty, remove the observer and stop loading
+                    observer.unobserve($actions);
                 }
             } else if ($loadMore) {
                 $loadMore.removeAttribute('disabled');
-                $loadMore.querySelector('[role="status"]').classList.remove('d-none');
             }
+            
+            $indicator.classList.add('d-none');
         }
     </script>
 }
@@ -201,16 +233,18 @@
             </table>
         </div>
     </div>
-    <vc:pager view-model="Model"/>
     <noscript>
         <vc:pager view-model="Model"/>
     </noscript>
+    
+    <div class="text-center only-for-js d-none" id="LoadingIndicator">
+        <div class="spinner-border spinner-border-sm text-secondary ms-2" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
     <div class="d-flex flex-wrap align-items-center justify-content-center gap-3 mb-5 only-for-js" id="ListActions">
         <button type="button" class="btn btn-secondary d-flex align-items-center" id="LoadMore">
             Load more
-            <div class="spinner-border spinner-border-sm text-secondary ms-2 d-none" role="status">
-                <span class="visually-hidden">Loading...</span>
-            </div>
         </button>
         <button type="button" class="btn btn-secondary d-none" id="GoToTop">Go to top</button>
     </div>

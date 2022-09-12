@@ -248,7 +248,7 @@
                 "properties": {
                     "spread": {
                         "type": "string",
-                        "description": "A spread applies to the rate fetched. Must be 0>= or <=100"
+                        "description": "A spread applies to the rate fetched. Must be `>= 0` or `<= 100`"
                     },
                     "preferredSource": {
                         "type": "string",

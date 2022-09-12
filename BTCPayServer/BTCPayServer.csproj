@@ -94,6 +94,11 @@
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="6.0.7" />
   </ItemGroup>
 
+   <PropertyGroup>
+     <!--https://stackoverflow.com/questions/70236519/invalidoperationexception-cannot-find-compilation-library-location-for-package/70741481#70741481-->
+     <GenerateRuntimeConfigDevFile>true</GenerateRuntimeConfigDevFile>
+   </PropertyGroup>
+
 	<ItemGroup>
 	  <None Include="wwwroot\vendor\font-awesome\fonts\fontawesome-webfont.svg" />
 	  <None Include="wwwroot\vendor\font-awesome\fonts\fontawesome-webfont.woff2" />

@@ -11,7 +11,6 @@ using System.Web;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Configuration;
-using BTCPayServer.Plugins.PodServer.Extensions;
 using BTCPayServer.Services;
 using BTCPayServer.Storage.Models;
 using BTCPayServer.Storage.Services.Providers;

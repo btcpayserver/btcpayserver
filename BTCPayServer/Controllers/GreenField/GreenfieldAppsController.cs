@@ -185,10 +185,10 @@ namespace BTCPayServer.Controllers.Greenfield
                 Title = request.Title?.Trim(),
                 Enabled = request.Enabled ?? true,
                 EnforceTargetAmount = request.EnforceTargetAmount ?? false,
-                StartDate = request.StartDate?.ToUniversalTime(),
+                StartDate = request.StartDate?.UtcDateTime,
                 TargetCurrency = request.TargetCurrency?.Trim(),
                 Description = request.Description?.Trim(),
-                EndDate = request.EndDate?.ToUniversalTime(),
+                EndDate = request.EndDate?.UtcDateTime,
                 TargetAmount = request.TargetAmount,
                 CustomCSSLink = request.CustomCSSLink?.Trim(),
                 MainImageUrl = request.MainImageUrl?.Trim(),
@@ -370,7 +370,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 ModelState.AddModelError(nameof(request.AnimationColors), "Animation colors must be a non-empty comma-separated string");
             }
 
-            if (request.StartDate != null && request.EndDate != null && DateTime.Compare((DateTime)request.StartDate, (DateTime)request.EndDate) > 0)
+            if (request.StartDate != null && request.EndDate != null && DateTimeOffset.Compare((DateTimeOffset)request.StartDate, (DateTimeOffset)request.EndDate!) > 0)
             {
                 ModelState.AddModelError(nameof(request.EndDate), "End date cannot be before start date");
             }

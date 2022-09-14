@@ -57,11 +57,11 @@ namespace BTCPayServer.Client.Models
         public bool? Enabled { get; set; } = null;
         public bool? EnforceTargetAmount { get; set; } = null;
         [JsonConverter(typeof(NBitcoin.JsonConverters.DateTimeToUnixTimeConverter))]
-        public DateTime? StartDate { get; set; } = null;
+        public DateTimeOffset? StartDate { get; set; } = null;
         public string TargetCurrency { get; set; } = null;
         public string Description { get; set; } = null;
         [JsonConverter(typeof(NBitcoin.JsonConverters.DateTimeToUnixTimeConverter))]
-        public DateTime? EndDate { get; set; } = null;
+        public DateTimeOffset? EndDate { get; set; } = null;
         public decimal? TargetAmount { get; set; } = null;
         public string CustomCSSLink { get; set; } = null;
         public string MainImageUrl { get; set; } = null;

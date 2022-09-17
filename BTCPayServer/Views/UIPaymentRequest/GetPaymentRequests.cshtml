@@ -72,7 +72,7 @@
                             <td class="text-end">@item.Amount @item.Currency</td>
                             <td class="text-end">@item.Status</td>
                             <td class="text-end">
-                                <a asp-controller="UIInvoice" asp-action="ListInvoices" asp-route-searchterm="@($"orderid:{PaymentRequestRepository.GetOrderIdForPaymentRequest(item.Id)}")">Invoices</a>
+                                <a asp-controller="UIInvoice" asp-action="ListInvoices" asp-route-storeId="@item.StoreId" asp-route-searchterm="@($"orderid:{PaymentRequestRepository.GetOrderIdForPaymentRequest(item.Id)}")">Invoices</a>
                                 <span> - </span>
                                 <a asp-action="ClonePaymentRequest" asp-route-storeId="@item.StoreId" asp-route-payReqId="@item.Id" id="Clone-@item.Id">Clone</a>
                                 <span> - </span>

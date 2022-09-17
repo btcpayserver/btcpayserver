@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
+using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Configuration;
@@ -60,6 +61,7 @@ namespace BTCPayServer.Controllers
             IAuthorizationService authorizationService,
             EventAggregator eventAggregator,
             AppService appService,
+            IFileService fileService,
             WebhookSender webhookNotificationManager,
             IDataProtectionProvider dataProtector,
             IOptions<ExternalServicesOptions> externalServiceOptions)
@@ -75,6 +77,7 @@ namespace BTCPayServer.Controllers
             _policiesSettings = policiesSettings;
             _authorizationService = authorizationService;
             _appService = appService;
+            _fileService = fileService;
             DataProtector = dataProtector.CreateProtector("ConfigProtector");
             WebhookNotificationManager = webhookNotificationManager;
             _EventAggregator = eventAggregator;
@@ -102,6 +105,7 @@ namespace BTCPayServer.Controllers
         private readonly PoliciesSettings _policiesSettings;
         private readonly IAuthorizationService _authorizationService;
         private readonly AppService _appService;
+        private readonly IFileService _fileService;
         private readonly EventAggregator _EventAggregator;
         private readonly IOptions<ExternalServicesOptions> _externalServiceOptions;
 
@@ -593,6 +597,7 @@ namespace BTCPayServer.Controllers
                 Id = store.Id,
                 StoreName = store.StoreName,
                 StoreWebsite = store.StoreWebsite,
+                LogoFileId = storeBlob.LogoFileId,
                 NetworkFeeMode = storeBlob.NetworkFeeMode,
                 AnyoneCanCreateInvoice = storeBlob.AnyoneCanInvoice,
                 PaymentTolerance = storeBlob.PaymentTolerance,
@@ -628,6 +633,35 @@ namespace BTCPayServer.Controllers
             blob.DefaultCurrency = model.DefaultCurrency;
             blob.InvoiceExpiration = TimeSpan.FromMinutes(model.InvoiceExpiration);
             blob.RefundBOLT11Expiration = TimeSpan.FromDays(model.BOLT11Expiration);
+            
+            if (model.LogoFile != null)
+            {
+                if (model.LogoFile.ContentType.StartsWith("image/", StringComparison.InvariantCulture))
+                {
+                    var userId = GetUserId();
+                
+                    // delete existing image
+                    if (!string.IsNullOrEmpty(blob.LogoFileId))
+                    {
+                        await _fileService.RemoveFile(blob.LogoFileId, userId);
+                    }
+                    // add new image
+                
+                    try
+                    {
+                        var storedFile = await _fileService.AddFile(model.LogoFile, userId);
+                        blob.LogoFileId = storedFile.Id;
+                    }
+                    catch (Exception e)
+                    {
+                        TempData[WellKnownTempData.ErrorMessage] = $"Could not save logo: {e.Message}";
+                    }
+                }
+                else
+                {
+                    TempData[WellKnownTempData.ErrorMessage] = "The uploaded logo file needs to be an image";
+                }
+            }
             
             if (CurrentStore.SetStoreBlob(blob))
             {

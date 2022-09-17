@@ -1,8 +1,13 @@
 @using BTCPayServer.Abstractions.Models
+@using BTCPayServer.TagHelpers
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using BTCPayServer.Abstractions.Contracts
+@inject IFileService FileService;
 @model GeneralSettingsViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
     ViewData.SetActivePage(StoreNavPages.General, "General", Context.GetStoreData().Id);
+    var canUpload = await FileService.IsAvailable();
 }
 
 <div class="row">
@@ -11,7 +16,7 @@
         {
             <div asp-validation-summary="All" class="text-danger"></div>
         }
-        <form method="post">
+        <form method="post" enctype="multipart/form-data">
             <h3 class="mb-3">General</h3>
             <div class="form-group">
                 <label asp-for="Id" class="form-label"></label>
@@ -26,6 +31,26 @@
                 <label asp-for="StoreWebsite" class="form-label"></label>
                 <input asp-for="StoreWebsite" class="form-control" />
                 <span asp-validation-for="StoreWebsite" class="text-danger"></span>
+            </div>
+            
+            <h3 class="mb-3">Branding</h3>
+            <div class="form-group">
+                <label asp-for="LogoFile" class="form-label"></label>
+                @if (canUpload)
+                {
+                    <div class="d-flex align-items-center">
+                        <input asp-for="LogoFile" type="file" class="form-control flex-grow">
+                        @if (!string.IsNullOrEmpty(Model.LogoFileId))
+                        {
+                            <img src="@(await FileService.GetFileUrl(Context.Request.GetAbsoluteRootUri(), Model.LogoFileId))" alt="@Model.StoreName" class="rounded-circle ms-3" style="max-height:2rem;"/>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <input asp-for="LogoFile" type="file" class="form-control" disabled>
+                    <p class="form-text text-muted">In order to upload a logo, a file storage must be configured. It can be set up in Server Settings > Files.</p>
+                }
             </div>
             
             <h3 class="mt-5 mb-3">Payment</h3>

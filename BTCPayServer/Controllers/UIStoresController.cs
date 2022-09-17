@@ -598,6 +598,7 @@ namespace BTCPayServer.Controllers
                 StoreName = store.StoreName,
                 StoreWebsite = store.StoreWebsite,
                 LogoFileId = storeBlob.LogoFileId,
+                BrandColor = storeBlob.BrandColor,
                 NetworkFeeMode = storeBlob.NetworkFeeMode,
                 AnyoneCanCreateInvoice = storeBlob.AnyoneCanInvoice,
                 PaymentTolerance = storeBlob.PaymentTolerance,
@@ -631,6 +632,7 @@ namespace BTCPayServer.Controllers
             blob.NetworkFeeMode = model.NetworkFeeMode;
             blob.PaymentTolerance = model.PaymentTolerance;
             blob.DefaultCurrency = model.DefaultCurrency;
+            blob.BrandColor = model.BrandColor;
             blob.InvoiceExpiration = TimeSpan.FromMinutes(model.InvoiceExpiration);
             blob.RefundBOLT11Expiration = TimeSpan.FromDays(model.BOLT11Expiration);
             

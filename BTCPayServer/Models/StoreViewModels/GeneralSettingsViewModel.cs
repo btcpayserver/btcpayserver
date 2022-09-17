@@ -25,6 +25,9 @@ namespace BTCPayServer.Models.StoreViewModels
         [Display(Name = "Logo")]
         public IFormFile LogoFile { get; set; }
         public string LogoFileId { get; set; }
+
+        [Display(Name = "Brand Color")]
+        public string BrandColor { get; set; }
         
         public bool CanDelete { get; set; }
 

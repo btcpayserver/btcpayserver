@@ -133,6 +133,7 @@
          <a class="btn btn-secondary"
             asp-action="ListInvoices"
             asp-controller="UIInvoice"
+            asp-route-storeId="@Model.StoreId"
             asp-route-searchterm="@($"orderid:{PaymentRequestRepository.GetOrderIdForPaymentRequest(Model.Id)}")">Invoices</a>
          <a class="btn btn-secondary" asp-route-payReqId="@Model.Id" asp-action="ClonePaymentRequest" id="ClonePaymentRequest">Clone</a>
          @if (!Model.Archived)

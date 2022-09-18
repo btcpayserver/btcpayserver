@@ -32,7 +32,7 @@
         var xhttp = new XMLHttpRequest();
         xhttp.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200 && this.responseText) {
-                window.btcpay.showInvoice(JSON.parse(this.responseText).invoiceId);
+                window.btcpay.appendInvoiceFrame(JSON.parse(this.responseText).invoiceId);
             }
         };
         xhttp.open('POST', event.target.getAttribute('action'), true);

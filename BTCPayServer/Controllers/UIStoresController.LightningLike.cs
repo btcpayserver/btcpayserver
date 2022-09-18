@@ -160,7 +160,16 @@ namespace BTCPayServer.Controllers
                 {
                     CryptoCode = paymentMethodId.CryptoCode
                 };
-                paymentMethod.SetLightningUrl(connectionString);
+
+                try
+                {
+                    paymentMethod.SetLightningUrl(connectionString);
+                }
+                catch (Exception ex)
+                {
+                    ModelState.AddModelError(nameof(vm.ConnectionString), ex.Message);
+                    return View(vm);
+                }
             }
 
             switch (command)

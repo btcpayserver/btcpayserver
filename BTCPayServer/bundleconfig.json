@@ -127,7 +127,6 @@
     {
         "outputFileName": "wwwroot/bundles/wallet-send-bundle.min.js",
         "inputFiles": [
-            "wwwroot/vendor/bc-ur/web-bundle.js",
             "wwwroot/vendor/ur-registry/urlib.min.js",
             "wwwroot/vendor/vue-qrcode-reader/VueQrcodeReader.umd.min.js",
             "wwwroot/js/wallet/**/*.js"
@@ -148,7 +147,6 @@
         "inputFiles": [
             "wwwroot/vendor/vuejs/vue.min.js",
             "wwwroot/vendor/vue-qrcode/vue-qrcode.min.js",
-            "wwwroot/vendor/bc-ur/web-bundle.js",
             "wwwroot/vendor/ur-registry/urlib.min.js",
             "wwwroot/vendor/vue-qrcode-reader/VueQrcodeReader.umd.min.js"
         ],

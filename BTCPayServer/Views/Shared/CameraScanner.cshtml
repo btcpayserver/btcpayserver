@@ -10,8 +10,6 @@
 				<div class="modal-header">
                     <h5 class="modal-title">
                         {{title}}
-                        <span v-if="workload.length > 0">Animated QR detected: {{workload.length}} / {{workload[0].total}} scanned</span>
-                        <span v-if="decoder">Animated QR detected: {{decoder.processedPartsCount()}} / {{decoder.expectedPartCount()}} scanned</span>
                     </h5>
                     <button type="button" class="btn-close" aria-label="Close" v-on:click="close">
                         <vc:icon symbol="close"/>
@@ -25,34 +23,38 @@
 	</div>
 	<div v-else>
 		<slot></slot>
-		<div v-if="workload.length > 0">Animated QR detected: {{workload.length}} / {{workload[0].total}} scanned</div>
 	</div>
 </template>
 
 <div id="camera-qr-scanner-modal-app" v-cloak class="only-for-js">
     <scanner-wrap v-bind="$data" v-on:close="close">
-        <div  class="d-flex justify-content-center align-items-center" :class="{'border border-secondary': !isModal}">
+        <div class="d-flex justify-content-center align-items-center" :class="{'border border-secondary': !isModal}">
             <div class="spinner-border text-secondary position-absolute" role="status"></div>
             <qrcode-drop-zone v-on:decode="onDecode" v-on:init="logErrors">
                 <qrcode-stream v-on:decode="onDecode" v-on:init="onInit" :camera="cameraOff? 'off': cameras[camera]" :device-id="cameras[camera]" :track="paint"/>
             </qrcode-drop-zone>
             <qrcode-capture v-if="noStreamApiSupport" v-on:decode="onDecode" :camera="cameraOff? 'off': cameras[camera]" :device-id="cameras[camera]"/>
-            
         </div>
-        <div v-if="isLoaded && requestInput && cameras.length > 2" class="d-flex justify-content-center align-items-center mt-3">
-            <button class="btn btn-secondary text-center" v-on:click="nextCamera">Switch camera</button>
-        </div>
-        <div v-else-if="qrData || errorMessage">
-            <div v-if="errorMessage" class="alert alert-danger" role="alert">
+        <div v-if="isLoaded">
+            <div v-if="errorMessage" class="alert alert-danger mt-3" role="alert">
                 {{errorMessage}}
             </div>
-            <div v-if="qrData" class="font-monospace mt-3" style="overflow:hidden;text-overflow:ellipsis;">
+            <div v-if="successMessage" class="alert alert-success mt-3" role="alert">
+                {{successMessage}}
+            </div>
+            <div v-else-if="qrData" class="alert alert-info font-monospace text-truncate mt-3">
                 {{qrData}}
             </div>
-            <div class="mt-3">
+            <div v-else-if="decoder">
+                <div class="my-3">BC UR: {{decoder.expectedPartCount()}} parts, {{decoder.getProgress() * 100}}% completed</div>
+                <div class="progress">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" :style="{width: `${decoder.getProgress() * 100}%`}" id="progressbar"></div>
+                </div>
+            </div>
+            <div class="mt-3 text-center">
                 <button type="button" class="btn btn-primary me-1" v-if="qrData" v-on:click="submitData">Submit</button>
-                <button type="button" class="btn btn-secondary me-1" v-on:click="retry">Retry</button>
-                <button type="button" class="btn btn-outline-secondary" v-if="isModal" v-on:click="close">Cancel</button>
+                <button type="button" class="btn btn-secondary me-1" v-if="qrData" v-on:click="retry">Retry</button>
+                <button type="button" class="btn btn-secondary" v-if="requestInput && cameras.length > 2" v-on:click="nextCamera">Switch camera</button>
             </div>
         </div>
     </scanner-wrap>
@@ -63,7 +65,7 @@ function initCameraScanningApp(title, onDataSubmit, modalId, submitOnScan = fals
 	const isModal = !!modalId;
 
 	Vue.component('scanner-wrap', {
-		props: ["modalId", "title", "workload", "decoder"],
+		props: ["modalId", "title", "decoder"],
 		template: "#camera-qr-scanner-wrap",
 		methods: {
 			close() {
@@ -82,12 +84,12 @@ function initCameraScanningApp(title, onDataSubmit, modalId, submitOnScan = fals
 				modalId: modalId,
 				noStreamApiSupport: false,
 				qrData: null,
+				decoder: null,
 				errorMessage: null,
-				workload: [],
+				successMessage: null,
 				camera: 0,
 				cameraOff: true,
 				cameras: ["auto"],
-				decoder: null,
 				submitOnScan
 			}
 		},
@@ -103,22 +105,23 @@ function initCameraScanningApp(title, onDataSubmit, modalId, submitOnScan = fals
 		},
 		computed: {
 			requestInput() {
-				return !this.cameraOff && this.errorMessage === null;
+				return !this.cameraOff && !this.errorMessage && !this.successMessage && !this.qrData;
 			}
 		},
 		methods: {
-		    nextCamera: function (){
+		    nextCamera() {
 		        if (this.camera === 0){
 		            this.camera++;
-		        } else if (this.camera == this.cameras.length -1) {
+		        } else if (this.camera === this.cameras.length - 1) {
 		            this.camera = 0;
 		        } else {
 		            this.camera++;
 		        }
 		    },
-			setQrData (qrData) {
+			setQrData(qrData) {
 				this.qrData = qrData;
 				this.cameraOff = !!qrData;
+                
                 if (this.qrData && this.submitOnScan) {
                     this.submitData();
                 }
@@ -129,8 +132,8 @@ function initCameraScanningApp(title, onDataSubmit, modalId, submitOnScan = fals
 			},
 			reset() {
 				this.setQrData(null);
+                this.successMessage = null;
 				this.errorMessage = null;
-				this.workload = [];
                 this.decoder = null;
 			},
 			close() {
@@ -142,53 +145,37 @@ function initCameraScanningApp(title, onDataSubmit, modalId, submitOnScan = fals
 			},
 			onDecode(content) {
 				if (this.qrData) return;
-
-				if (!content.toLowerCase().startsWith("ur:")) {
-					this.setQrData(content);
-					this.workload = [];
-				} else {
-                    if (this.workload.length == 0){
-                        const d = this.decoder || new window.URlib.URRegistryDecoder();
-                        if (d.receivePart(content)){
-                            this.decoder = d;
-                            if (d.isComplete()){
-                                if (!this.decoder.isSuccess()){
-				                    this.errorMessage = this.decoder.resultError();
-                                }else{
-                                    this.setQrData(this.decoder.resultRegistryType().toString());
+                const isUR = content.toLowerCase().startsWith("ur:");
+                console.debug(1, content);
+                
+                try {
+                    if (!isUR) {
+                        this.setQrData(content);
+                    } else {
+                        this.decoder = this.decoder || new window.URlib.URRegistryDecoder();
+                        if (this.decoder.receivePart(content)) {
+                            if (this.decoder.isComplete()) {
+                                if (this.decoder.isSuccess()) {
+                                    const ur = this.decoder.resultUR();
+                                    this.setQrData(ur);
+                                    this.successMessage = `UR ${ur.type} decoded`;
+                                } else if (this.decoder.isError()) {
+                                    this.errorMessage = this.decoder.resultError();
                                 }
                             }
                         }
-                        if (this.decoder != null){
-                            return;
-                        }
-                    }
-					const [index, total] = window.bcur.extractSingleWorkload(content);
-					if (this.workload.length > 0) {
-						const currentTotal = this.workload[0].total;
-						if (total !== currentTotal) {
-							this.workload = [];
-						}
-					}
-					if (!this.workload.find(i => i.index === index)) {
-						this.workload.push({
-							index,
-							total,
-							data: content,
-						});
-						if (this.workload.length === total) {
-							const decoded = window.bcur.decodeUR(this.workload.map(i => i.data));
-							this.setQrData(decoded);
-						}
-					}
-				}
+				    }
+                } catch (error) {
+                    console.error(error);
+                    this.errorMessage = error.message;
+                }
 			},
 			submitData() {
-				if (onDataSubmit) {
-					onDataSubmit(this.qrData);
-				}
-				this.close();
-			},
+                if (onDataSubmit) {
+                    onDataSubmit(this.qrData);
+                }
+                this.close();
+            },
 			logErrors(promise) {
 				promise.catch(console.error)
 			},
@@ -208,12 +195,10 @@ function initCameraScanningApp(title, onDataSubmit, modalId, submitOnScan = fals
 			},
 			onInit(promise) {
 				promise.then(() => {
-					this.errorMessage = null;
-					if (app.cameras.length === 1)
-                    {
-                        navigator.mediaDevices.enumerateDevices().then(function (devices) {
+					if (app.cameras.length === 1) {
+                        navigator.mediaDevices.enumerateDevices().then(devices => {
                             for (const device of devices) {
-                                if (device.kind == "videoinput"){
+                                if (device.kind === "videoinput"){
                                    app.cameras.push( device.deviceId)
                                 }
                             }

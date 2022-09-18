@@ -159,7 +159,7 @@ function inputChanges(event, buttonSize) {
     }
     
     html += srvModel.payButtonText
-        ? `<button type="submit" class="submit" name="submit" style="min-width:${width};min-height:${height};border-radius:4px;border-style:none;background-color:#0f3b21;" title="Pay with BTCPay Server, a Self-Hosted Bitcoin Payment Processor"><span style="color:#fff">${esc(srvModel.payButtonText)}</span>\n` +
+        ? `<button type="submit" class="submit" name="submit" style="min-width:${width};min-height:${height};border-radius:4px;border-style:none;background-color:#0f3b21;cursor:pointer;" title="Pay with BTCPay Server, a Self-Hosted Bitcoin Payment Processor"><span style="color:#fff">${esc(srvModel.payButtonText)}</span>\n` +
             (srvModel.payButtonImageUrl? `<img src="${esc(srvModel.payButtonImageUrl)}" style="height:${parseInt(height.replace('px', ''))}px;display:inline-block;padding:5% 0 5% 5px;vertical-align:middle;">\n` : '') +
           '</button>'
         : `  <input type="image" class="submit" name="submit" src="${esc(srvModel.payButtonImageUrl)}" style="width:${width}" alt="Pay with BTCPay Server, a Self-Hosted Bitcoin Payment Processor">\n`;

@@ -128,8 +128,7 @@ document.addEventListener("DOMContentLoaded",function (ev) {
 
             eventAggregator.$on("invoice-created", function (invoiceId) {
                 self.setLoading(false);
-                btcpay.showInvoice(invoiceId);
-                btcpay.showFrame();
+                btcpay.appendAndShowInvoiceFrame(invoiceId);
             });
             eventAggregator.$on("invoice-cancelled", function (){
                 self.setLoading(false);

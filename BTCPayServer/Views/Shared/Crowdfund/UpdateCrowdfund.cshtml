@@ -108,7 +108,6 @@
                             <vc:icon symbol="close"/>
                         </button>
                     </div>
-                    <span asp-validation-for="StartDate" class="text-danger"></span>
                 </div>
                 <div class="form-group mb-0 w-250px">
                     <label asp-for="EndDate" class="form-label"></label>
@@ -121,8 +120,9 @@
                             <vc:icon symbol="close"/>
                         </button>
                     </div>
-                    <span asp-validation-for="EndDate" class="text-danger"></span>
                 </div>
+                <span asp-validation-for="StartDate" class="text-danger"></span>
+                <span asp-validation-for="EndDate" class="text-danger"></span>
             </div>
             
             <div class="form-group mt-4" id="ResetRow" hidden="@(Model.StartDate == null)">

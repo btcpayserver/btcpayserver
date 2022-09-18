@@ -647,8 +647,8 @@ namespace BTCPayServer.Controllers
                     {
                         await _fileService.RemoveFile(blob.LogoFileId, userId);
                     }
+                    
                     // add new image
-                
                     try
                     {
                         var storedFile = await _fileService.AddFile(model.LogoFile, userId);

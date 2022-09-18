@@ -42,21 +42,21 @@
                         <input asp-for="LogoFile" type="file" class="form-control flex-grow">
                         @if (!string.IsNullOrEmpty(Model.LogoFileId))
                         {
-                            <img src="@(await FileService.GetFileUrl(Context.Request.GetAbsoluteRootUri(), Model.LogoFileId))" alt="@Model.StoreName" class="rounded-circle ms-3" style="max-height:2rem;"/>
+                            <img src="@(await FileService.GetFileUrl(Context.Request.GetAbsoluteRootUri(), Model.LogoFileId))" alt="@Model.StoreName" class="rounded-circle ms-3" style="width:2.1rem;height:2.1rem;"/>
                         }
                     </div>
                 }
                 else
                 {
                     <input asp-for="LogoFile" type="file" class="form-control" disabled>
-                    <p class="form-text text-muted">In order to upload a logo, a file storage must be configured. It can be set up in Server Settings > Files.</p>
+                    <p class="form-text text-muted">In order to upload a logo, a <a asp-controller="UIServer" asp-action="Files">file storage</a> must be configured.</p>
                 }
             </div>
             <div class="form-group">
                 <label asp-for="BrandColor" class="form-label"></label>
                 <div class="input-group">
                     <input asp-for="BrandColor" class="form-control form-control-color flex-grow-0" type="color" style="width:3rem" aria-describedby="BrandColorValue" />
-                    <code class="input-group-text" id="BrandColorValue">@Model.BrandColor</code>
+                    <code class="input-group-text" id="BrandColorValue">@(Model.BrandColor ?? "None")</code>
                 </div>
                 <span asp-validation-for="BrandColor" class="text-danger"></span>
             </div>
@@ -137,7 +137,7 @@
     <partial name="_ValidationScriptsPartial"/>
     <script>
         delegate("change", "#BrandColor", e => {
-            document.getElementById("BrandColorValue").innerText = e.target.value;
+            document.getElementById("BrandColorValue").innerText = e.target.value || "None";
         })
     </script>
 }

@@ -94,8 +94,9 @@
     }
     
     <div class="mb-4">
-        <button class="btn btn-link px-0" type="button" id="AdvancedSettingsButton" data-bs-toggle="collapse" data-bs-target="#AdvancedSettings" aria-expanded="false" aria-controls="advanced-settings">
-            Advanced settings
+        <button class="d-inline-flex align-items-center btn btn-link text-primary fw-semibold p-0" type="button" id="AdvancedSettingsButton" data-bs-toggle="collapse" data-bs-target="#AdvancedSettings" aria-expanded="false" aria-controls="AdvancedSettings">
+            <vc:icon symbol="caret-down"/>
+            <span class="ms-1">Advanced settings</span>
         </button>
         <div id="AdvancedSettings" class="collapse @(string.IsNullOrEmpty(Model.Passphrase) && !Model.ImportKeysToRPC ? "" : "show")">
             <div class="pt-3">
@@ -109,12 +110,12 @@
                 }
                 <div class="form-group">
                     <label asp-for="Passphrase" class="form-label">Optional passphrase (BIP39)</label>
-                    <input type="text" asp-for="Passphrase" class="form-control" autocomplete="off" />
+                    <input type="text" asp-for="Passphrase" class="form-control" autocomplete="off"/>
                     <span asp-validation-for="Passphrase" class="text-danger"></span>
                 </div>
                 <div class="form-group">
                     <label for="passphrase_conf" class="form-label">Confirm passphrase</label>
-                    <input type="text" name="passphrase_conf" id="passphrase_conf" class="form-control" />
+                    <input type="text" name="passphrase_conf" id="passphrase_conf" class="form-control"/>
                     <span class="text-danger field-validation-valid" id="passphrase_conf_validation"></span>
                 </div>
 
@@ -122,7 +123,7 @@
                 {
                     <div class="form-group mt-4">
                         <label class="d-flex align-items-center">
-                            <input type="checkbox" asp-for="ImportKeysToRPC" class="btcpay-toggle me-3" />
+                            <input type="checkbox" asp-for="ImportKeysToRPC" class="btcpay-toggle me-3"/>
                             <div>
                                 <label asp-for="ImportKeysToRPC">Import keys to RPC</label>
                                 <span asp-validation-for="ImportKeysToRPC" class="text-danger"></span>

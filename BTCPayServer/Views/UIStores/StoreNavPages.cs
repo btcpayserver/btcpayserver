@@ -19,6 +19,7 @@ namespace BTCPayServer.Views.Stores
         Webhooks,
         PullPayments,
         Payouts,
+        PayoutProcessors,
         [Obsolete("Use StoreNavPages.Plugins instead")]
         Integrations,
         Emails

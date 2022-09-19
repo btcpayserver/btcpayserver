@@ -29,8 +29,6 @@
             });
         });
 
-        delegate('click', '#switchTimeFormat', switchTimeFormat)
-
         delegate('click', '.changeInvoiceState', e => {
             const { invoiceId, newState } = e.target.dataset;
             const pavpill = $("#pavpill_" + invoiceId);
@@ -286,9 +284,7 @@
                             <input id="selectAllCheckbox" type="checkbox" class="form-check-input" />
                         <th style="min-width:90px;" class="col-md-auto">
                             Date
-                            <a id="switchTimeFormat" href="#">
-                                <span class="fa fa-clock-o" title="Switch date format"></span>
-                            </a>
+                            <a id="switchTimeFormat" href="#" class="fa fa-clock-o" title="Switch date format"></a>
                         </th>
                         <th class="text-nowrap">Order Id</th>
                         <th class="text-nowrap">Invoice Id</th>
@@ -304,11 +300,7 @@
                             <td class="only-for-js">
                                 <input name="selectedItems" type="checkbox" class="selector form-check-input" value="@invoice.InvoiceId" />
                             </td>
-                            <td>
-                                <span class="switchTimeFormat" data-switch="@invoice.Date.ToTimeAgo()">
-                                    @invoice.Date.ToBrowserDate()
-                                </span>
-                            </td>
+                            <td>@invoice.Date.ToBrowserDate()</td>
                             <td style="max-width:120px;">
                                 @if (invoice.RedirectUrl != string.Empty)
                                 {

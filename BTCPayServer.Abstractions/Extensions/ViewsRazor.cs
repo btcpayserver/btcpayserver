@@ -88,24 +88,23 @@ namespace BTCPayServer.Abstractions.Extensions
 
         public static HtmlString ToBrowserDate(this DateTimeOffset date)
         {
-            var displayDate = date.ToString("o", CultureInfo.InvariantCulture);
-            return new HtmlString($"<span class='localizeDate'>{displayDate}</span>");
+            var displayDate = date.ToString("g", CultureInfo.InvariantCulture);
+            var dateTime = date.ToString("s", CultureInfo.InvariantCulture);
+            return new HtmlString($"<time datetime=\"{dateTime}\" data-relative=\"{date.ToTimeAgo()}\">{displayDate}</time>");
         }
 
         public static HtmlString ToBrowserDate(this DateTime date)
         {
-            var displayDate = date.ToString("o", CultureInfo.InvariantCulture);
-            return new HtmlString($"<span class='localizeDate'>{displayDate}</span>");
+            var displayDate = date.ToString("g", CultureInfo.InvariantCulture);
+            var dateTime = date.ToString("s", CultureInfo.InvariantCulture);
+            return new HtmlString($"<time datetime=\"{dateTime}\" data-relative=\"{date.ToTimeAgo()}\">{displayDate}</time>");
         }
 
-        public static string ToTimeAgo(this DateTimeOffset date)
-        {
-            var diff = DateTimeOffset.UtcNow - date;
-            var formatted = diff.TotalSeconds > 0
-                ? $"{diff.TimeString()} ago"
-                : $"in {diff.Negate().TimeString()}";
-            return formatted;
-        }
+        public static string ToTimeAgo(this DateTimeOffset date) => (DateTimeOffset.UtcNow - date).ToTimeAgo();
+
+        public static string ToTimeAgo(this DateTime date) => (DateTimeOffset.UtcNow - date).ToTimeAgo();
+
+        public static string ToTimeAgo(this TimeSpan diff) => diff.TotalSeconds > 0 ? $"{diff.TimeString()} ago" : $"in {diff.Negate().TimeString()}";
 
         public static string TimeString(this TimeSpan timeSpan)
         {
@@ -117,16 +116,14 @@ namespace BTCPayServer.Abstractions.Extensions
             {
                 return $"{(int)timeSpan.TotalMinutes} minute{Plural((int)timeSpan.TotalMinutes)}";
             }
-            if (timeSpan.Days < 1)
-            {
-                return $"{(int)timeSpan.TotalHours} hour{Plural((int)timeSpan.TotalHours)}";
-            }
-            return $"{(int)timeSpan.TotalDays} day{Plural((int)timeSpan.TotalDays)}";
+            return timeSpan.Days < 1 
+                ? $"{(int)timeSpan.TotalHours} hour{Plural((int)timeSpan.TotalHours)}"
+                : $"{(int)timeSpan.TotalDays} day{Plural((int)timeSpan.TotalDays)}";
         }
 
         private static string Plural(int value)
         {
-            return value > 1 ? "s" : string.Empty;
+            return value == 1 ? string.Empty : "s";
         }
     }
 }

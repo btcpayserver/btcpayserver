@@ -36,14 +36,6 @@
             opacity: 0.5;
         }
 
-        .switchTimeFormat {
-            display: block;
-            max-width: 125px;
-            overflow: hidden;
-            white-space: nowrap;
-            text-overflow: ellipsis;
-        }
-
         .badge-container {
             display: flex;
             flex-wrap: nowrap;
@@ -90,8 +82,6 @@
         const $actions = document.getElementById('ListActions');
         const $list = document.getElementById('WalletTransactionsList');
         const $indicator = document.getElementById('LoadingIndicator');
-
-        delegate('click', '#switchTimeFormat', switchTimeFormat);
         
         delegate('click', '#selectAllCheckbox', e => {
             document.querySelectorAll(".selector").forEach(checkbox => {
@@ -160,6 +150,7 @@
             }
             
             $indicator.classList.add('d-none');
+            formatDatetimes(document.getElementById('switchTimeFormat').dataset.mode);
         }
     </script>
 }
@@ -217,9 +208,7 @@
                     </th>
                     <th style="max-width:125px;">
                         Date
-                        <a id="switchTimeFormat" href="#">
-                            <span class="fa fa-clock-o" title="Switch date format"></span>
-                        </a>
+                        <a id="switchTimeFormat" class="fa fa-clock-o" title="Switch date format" href="#"></a>
                     </th>
                     <th class="text-start">Label</th>
                     <th>Transaction Id</th>

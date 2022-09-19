@@ -7,9 +7,7 @@
             <input name="selectedTransactions" type="checkbox" class="selector form-check-input" form="WalletActions" value="@transaction.Id" />
         </td>
         <td>
-            <span class="switchTimeFormat" data-switch="@transaction.Timestamp.ToTimeAgo()">
-                @transaction.Timestamp.ToBrowserDate()
-            </span>
+            @transaction.Timestamp.ToBrowserDate()
         </td>
         <td class="text-start">
             @if (transaction.Labels.Any())

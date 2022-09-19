@@ -57,7 +57,7 @@
         <div class="form-group mt-4">
             <label class="d-flex align-items-center">
                 <input type="checkbox" asp-for="SavePrivateKeys" class="btcpay-toggle me-3" />
-                <div class="">
+                <div>
                     <label asp-for="SavePrivateKeys">Is hot wallet</label>
                     <span asp-validation-for="SavePrivateKeys" class="text-danger"></span>
                     <p class="text-muted pt-2 mb-0">
@@ -77,7 +77,7 @@
             <div class="form-group mt-3">
                 <label class="d-flex align-items-center">
                     <input type="checkbox" asp-for="PayJoinEnabled" class="btcpay-toggle me-3" />
-                    <div class="">
+                    <div>
                         <span>Enable PayJoin</span>
                         <span asp-validation-for="PayJoinEnabled" class="text-danger"></span>
                         <p class="text-muted pt-2 mb-0">
@@ -90,59 +90,58 @@
                     </div>
                 </label>                 
             </div>
-                
-                }
-                }
-
-                <div class="mb-4">
-                    <button class="btn btn-link px-0" type="button" id="AdvancedSettingsButton" data-bs-toggle="collapse" data-bs-target="#AdvancedSettings" aria-expanded="false" aria-controls="advanced-settings">
-                        Advanced settings
-                    </button>
-                    <div id="AdvancedSettings" class="collapse @(string.IsNullOrEmpty(Model.Passphrase) && !Model.ImportKeysToRPC ? "" : "show")">
-                        <div class="pt-3">
-                            @if (isImport) // hide account option when creating a wallet
-                            {
-                                <div class="form-group">
-                                    <label asp-for="AccountNumber" class="form-label">Account</label>
-                                    <input asp-for="AccountNumber" class="form-control" style="max-width:10ch" min="0" step="1">
-                                    <span asp-validation-for="AccountNumber" class="text-danger"></span>
-                                </div>
-                            }
-                            <div class="form-group">
-                                <label asp-for="Passphrase" class="form-label">Optional passphrase (BIP39)</label>
-                                <input type="text" asp-for="Passphrase" class="form-control" autocomplete="off" />
-                                <span asp-validation-for="Passphrase" class="text-danger"></span>
-                            </div>
-                            <div class="form-group">
-                                <label for="passphrase_conf" class="form-label">Confirm passphrase</label>
-                                <input type="text" name="passphrase_conf" id="passphrase_conf" class="form-control" />
-                                <span class="text-danger field-validation-valid" id="passphrase_conf_validation"></span>
-                            </div>
-
-                            @if (canUseRpcImport)
-                            {
-                                <div class="form-group mt-4">
-                                    <label class="d-flex align-items-center">
-                                        <input type="checkbox" asp-for="ImportKeysToRPC" class="btcpay-toggle me-3" />
-                                        <div class="">
-                                            <label asp-for="ImportKeysToRPC">Import keys to RPC</label>
-                                            <span asp-validation-for="ImportKeysToRPC" class="text-danger"></span>
-                                            <p class="text-muted pt-2 mb-0">
-                                                Each address generated will be imported into the node wallet and you can view your balance through the node.
-                                                @if (isImport || isHotWallet)
-                                                {
-                                                    <span>When this is enabled for a hot wallet, you are also able to use the node wallet to spend.</span>
-                                                }
-                                            </p>
-                                        </div>
-                                    </label>
-                                </div>
-                            }
-                        </div>
+        }
+    }
+    
+    <div class="mb-4">
+        <button class="btn btn-link px-0" type="button" id="AdvancedSettingsButton" data-bs-toggle="collapse" data-bs-target="#AdvancedSettings" aria-expanded="false" aria-controls="advanced-settings">
+            Advanced settings
+        </button>
+        <div id="AdvancedSettings" class="collapse @(string.IsNullOrEmpty(Model.Passphrase) && !Model.ImportKeysToRPC ? "" : "show")">
+            <div class="pt-3">
+                @if (isImport) // hide account option when creating a wallet
+                {
+                    <div class="form-group">
+                        <label asp-for="AccountNumber" class="form-label">Account</label>
+                        <input asp-for="AccountNumber" class="form-control" style="max-width:10ch" min="0" step="1">
+                        <span asp-validation-for="AccountNumber" class="text-danger"></span>
                     </div>
+                }
+                <div class="form-group">
+                    <label asp-for="Passphrase" class="form-label">Optional passphrase (BIP39)</label>
+                    <input type="text" asp-for="Passphrase" class="form-control" autocomplete="off" />
+                    <span asp-validation-for="Passphrase" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label for="passphrase_conf" class="form-label">Confirm passphrase</label>
+                    <input type="text" name="passphrase_conf" id="passphrase_conf" class="form-control" />
+                    <span class="text-danger field-validation-valid" id="passphrase_conf_validation"></span>
                 </div>
 
-                <button type="submit" class="btn btn-primary" id="Continue">Continue</button>
+                @if (canUseRpcImport)
+                {
+                    <div class="form-group mt-4">
+                        <label class="d-flex align-items-center">
+                            <input type="checkbox" asp-for="ImportKeysToRPC" class="btcpay-toggle me-3" />
+                            <div>
+                                <label asp-for="ImportKeysToRPC">Import keys to RPC</label>
+                                <span asp-validation-for="ImportKeysToRPC" class="text-danger"></span>
+                                <p class="text-muted pt-2 mb-0">
+                                    Each address generated will be imported into the node wallet and you can view your balance through the node.
+                                    @if (isImport || isHotWallet)
+                                    {
+                                        <span>When this is enabled for a hot wallet, you are also able to use the node wallet to spend.</span>
+                                    }
+                                </p>
+                            </div>
+                        </label>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary" id="Continue">Continue</button>
 </form>
 
 <script>

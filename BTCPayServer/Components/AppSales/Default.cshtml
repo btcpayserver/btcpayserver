@@ -3,6 +3,7 @@
 @model BTCPayServer.Components.AppSales.AppSalesViewModel
 
 @{
+    var controller = $"UI{Model.App.AppType}";
     var action = $"Update{Model.App.AppType}";
     var label = Model.App.AppType == nameof(AppType.Crowdfund) ? "Contributions" : "Sales";
 }
@@ -10,7 +11,7 @@
 <div id="AppSales-@Model.App.Id" class="widget app-sales">
     <header class="mb-3">
         <h3>@Model.App.Name @label</h3>
-        <a asp-controller="UIApps" asp-action="@action" asp-route-appId="@Model.App.Id">Manage</a>
+        <a asp-controller="@controller" asp-action="@action" asp-route-appId="@Model.App.Id">Manage</a>
     </header>
     @if (Model.InitialRendering)
     {

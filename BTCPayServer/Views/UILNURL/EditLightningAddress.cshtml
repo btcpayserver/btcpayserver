@@ -60,7 +60,10 @@
             </div>
             <span asp-validation-for="Add.Username" class="text-danger"></span>
         </div>
-        <a class="d-inline-block mb-3" role="button" data-bs-toggle="collapse" data-bs-target="#AdvancedSettings">Advanced settings</a>
+        <button class="d-inline-flex align-items-center btn btn-link text-primary fw-semibold p-0 mb-3" type="button" id="AdvancedSettingsButton" data-bs-toggle="collapse" data-bs-target="#AdvancedSettings" aria-expanded="false" aria-controls="AdvancedSettings">
+            <vc:icon symbol="caret-down"/>
+            <span class="ms-1">Advanced settings</span>
+        </button>
         <div id="AdvancedSettings" class="collapse @(showAdvancedOptions ? "show" : "")">
             <div class="row">
                 <div class="col-12 col-sm-auto">

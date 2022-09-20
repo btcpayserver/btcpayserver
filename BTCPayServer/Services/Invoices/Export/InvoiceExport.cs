@@ -7,6 +7,8 @@ using BTCPayServer.Services.Rates;
 using CsvHelper.Configuration;
 using Newtonsoft.Json;
 using BTCPayServer.Data;
+using BTCPayServer.HostedServices;
+using BTCPayServer.Client.Models;
 
 namespace BTCPayServer.Services.Invoices.Export
 {
@@ -15,9 +17,16 @@ namespace BTCPayServer.Services.Invoices.Export
         public BTCPayNetworkProvider Networks { get; }
         public CurrencyNameTable Currencies { get; }
 
-        public InvoiceExport(CurrencyNameTable currencies)
+        private readonly PullPaymentHostedService _pullPaymentHostedService;
+        private readonly BTCPayNetworkJsonSerializerSettings _jsonSerializerSettings;
+
+        public InvoiceExport(CurrencyNameTable currencies, 
+            PullPaymentHostedService pullPaymentHostedService,
+            BTCPayNetworkJsonSerializerSettings jsonSerializerSettings)
         {
             Currencies = currencies;
+            _pullPaymentHostedService = pullPaymentHostedService;
+            _jsonSerializerSettings = jsonSerializerSettings;
         }
         public string Process(InvoiceEntity[] invoices, string fileFormat)
         {
@@ -57,63 +66,100 @@ namespace BTCPayServer.Services.Invoices.Export
         private IEnumerable<ExportInvoiceHolder> convertFromDb(InvoiceEntity invoice)
         {
             var exportList = new List<ExportInvoiceHolder>();
+
             var currency = Currencies.GetNumberFormatInfo(invoice.Currency, true);
             var invoiceDue = invoice.Price;
-            // in this first version we are only exporting invoices that were paid
+
+            // we are only exporting invoices that were paid
+            //  - payments
             foreach (var payment in invoice.GetPayments(true))
             {
+                var exportItem = this.GetInvoiceBase(invoice);
+
                 var cryptoCode = payment.GetPaymentMethodId().CryptoCode;
                 var pdata = payment.GetCryptoPaymentData();
-
                 var pmethod = invoice.GetPaymentMethod(payment.GetPaymentMethodId());
                 var paidAfterNetworkFees = pdata.GetValue() - payment.NetworkFee;
                 invoiceDue -= paidAfterNetworkFees * pmethod.Rate;
 
-                // Only gets first refund, if available
-                var refund = invoice.Refunds.FirstOrDefault()?.PullPaymentData?.GetBlob();
+                exportItem.ReceivedDate = payment.ReceivedTime.UtcDateTime;
+                exportItem.PaymentId = pdata.GetPaymentId();
+                exportItem.CryptoCode = cryptoCode;
+                exportItem.ConversionRate = pmethod.Rate;
+                exportItem.PaymentType = payment.GetPaymentMethodId().PaymentType.ToPrettyString();
+                exportItem.Destination = pdata.GetDestination();
+                exportItem.Paid = pdata.GetValue().ToString(CultureInfo.InvariantCulture);
+                exportItem.PaidCurrency = Math.Round(pdata.GetValue() * pmethod.Rate, currency.NumberDecimalDigits).ToString(CultureInfo.InvariantCulture);
+                // Adding NetworkFee because Paid doesn't take into account network fees
+                // so if fee is 10000 satoshis, customer can essentially send infinite number of tx
+                // and merchant effectivelly would receive 0 BTC, invoice won't be paid
+                // while looking just at export you could sum Paid and assume merchant "received payments"
+                exportItem.NetworkFee = payment.NetworkFee.ToString(CultureInfo.InvariantCulture);
 
-                var target = new ExportInvoiceHolder
+                exportList.Add(exportItem);
+            }
+
+            //  - pull payments
+            foreach (var refund in invoice.Refunds)
+            {
+                var pp = _pullPaymentHostedService.GetPullPayment(refund.PullPaymentDataId, true).Result;
+                var blob = pp.GetBlob();
+                
+                // Approved and sent only
+                foreach (var payout in pp.Payouts.Where(p => p.State == PayoutState.Completed))
                 {
-                    ReceivedDate = payment.ReceivedTime.UtcDateTime,
-                    PaymentId = pdata.GetPaymentId(),
-                    CryptoCode = cryptoCode,
-                    ConversionRate = pmethod.Rate,
-                    PaymentType = payment.GetPaymentMethodId().PaymentType.ToPrettyString(),
-                    Destination = pdata.GetDestination(),
-                    Paid = pdata.GetValue().ToString(CultureInfo.InvariantCulture),
-                    PaidCurrency = Math.Round(pdata.GetValue() * pmethod.Rate, currency.NumberDecimalDigits).ToString(CultureInfo.InvariantCulture),
-                    // Adding NetworkFee because Paid doesn't take into account network fees
-                    // so if fee is 10000 satoshis, customer can essentially send infinite number of tx
-                    // and merchant effectivelly would receive 0 BTC, invoice won't be paid
-                    // while looking just at export you could sum Paid and assume merchant "received payments"
-                    NetworkFee = payment.NetworkFee.ToString(CultureInfo.InvariantCulture),
-                    InvoiceDue = Math.Round(invoiceDue, currency.NumberDecimalDigits),
-                    OrderId = invoice.Metadata.OrderId ?? string.Empty,
-                    StoreId = invoice.StoreId,
-                    InvoiceId = invoice.Id,
-                    InvoiceCreatedDate = invoice.InvoiceTime.UtcDateTime,
-                    InvoiceExpirationDate = invoice.ExpirationTime.UtcDateTime,
-                    InvoiceMonitoringDate = invoice.MonitoringExpiration.UtcDateTime,
-#pragma warning disable CS0618 // Type or member is obsolete
-                    InvoiceFullStatus = invoice.GetInvoiceState().ToString(),
-                    InvoiceStatus = invoice.StatusString,
-                    InvoiceExceptionStatus = invoice.ExceptionStatusString,
-#pragma warning restore CS0618 // Type or member is obsolete
-                    InvoiceItemCode = invoice.Metadata.ItemCode,
-                    InvoiceItemDesc = invoice.Metadata.ItemDesc,
-                    InvoicePrice = invoice.Price,
-                    InvoiceCurrency = invoice.Currency,
-                    BuyerEmail = invoice.Metadata.BuyerEmail,
-                    RefundAmount = (refund is not null) ? refund.Limit.ToString(CultureInfo.InvariantCulture) : string.Empty,
-                    RefundCurrency = (refund is not null) ? refund.Currency : string.Empty            
-                };
+                    var exportItem = this.GetInvoiceBase(invoice);
 
-                exportList.Add(target);
+                    var payoutBlob = payout.GetBlob(_jsonSerializerSettings);
+                    var pm = invoice.GetPaymentMethod(payout.GetPaymentMethodId());
+
+                    exportItem.ReceivedDate = payout.Date.UtcDateTime;
+                    exportItem.PaymentId = payout.Id;
+                    exportItem.CryptoCode = payout.GetPaymentMethodId().CryptoCode;
+                    exportItem.ConversionRate = pm.Rate;
+                    exportItem.PaymentType = payout.GetPaymentMethodId().PaymentType.ToPrettyString();
+                    exportItem.Destination = payout.Destination;
+                    exportItem.Paid = (-1 * payoutBlob.CryptoAmount).ToString();
+                    exportItem.PaidCurrency = Math.Round(-1 * payoutBlob.CryptoAmount.GetValueOrDefault() * pm.Rate, currency.NumberDecimalDigits).ToString(CultureInfo.InvariantCulture);
+#pragma warning disable CS0618 // Type or member is obsolete
+                    exportItem.NetworkFee = pm.NextNetworkFee.ToString();
+#pragma warning restore CS0618 // Type or member is obsolete
+
+                    exportList.Add(exportItem);
+                }
             }
 
             exportList = exportList.OrderBy(a => a.ReceivedDate).ToList();
 
             return exportList;
+        }
+
+        private ExportInvoiceHolder GetInvoiceBase(InvoiceEntity invoice)
+        {
+            var currency = Currencies.GetNumberFormatInfo(invoice.Currency, true);
+            var invoiceDue = invoice.Price;
+
+            // Create base export item
+            return new ExportInvoiceHolder
+            {
+                InvoiceDue = Math.Round(invoiceDue, currency.NumberDecimalDigits),
+                OrderId = invoice.Metadata.OrderId ?? string.Empty,
+                StoreId = invoice.StoreId,
+                InvoiceId = invoice.Id,
+                InvoiceCreatedDate = invoice.InvoiceTime.UtcDateTime,
+                InvoiceExpirationDate = invoice.ExpirationTime.UtcDateTime,
+                InvoiceMonitoringDate = invoice.MonitoringExpiration.UtcDateTime,
+#pragma warning disable CS0618 // Type or member is obsolete
+                InvoiceFullStatus = invoice.GetInvoiceState().ToString(),
+                InvoiceStatus = invoice.StatusString,
+                InvoiceExceptionStatus = invoice.ExceptionStatusString,
+#pragma warning restore CS0618 // Type or member is obsolete
+                InvoiceItemCode = invoice.Metadata.ItemCode,
+                InvoiceItemDesc = invoice.Metadata.ItemDesc,
+                InvoicePrice = invoice.Price,
+                InvoiceCurrency = invoice.Currency,
+                BuyerEmail = invoice.Metadata.BuyerEmail,
+            };
         }
     }
 
@@ -144,7 +190,5 @@ namespace BTCPayServer.Services.Invoices.Export
         public string InvoiceStatus { get; set; }
         public string InvoiceExceptionStatus { get; set; }
         public string BuyerEmail { get; set; }
-        public string RefundAmount { get; set; }
-        public string RefundCurrency { get; set; }
     }
 }

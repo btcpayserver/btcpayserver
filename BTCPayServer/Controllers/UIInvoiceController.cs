@@ -46,6 +46,7 @@ namespace BTCPayServer.Controllers
         private readonly ExplorerClientProvider _ExplorerClients;
         private readonly UIWalletsController _walletsController;
         private readonly LinkGenerator _linkGenerator;
+        private readonly BTCPayNetworkJsonSerializerSettings _jsonSerializerSettings;
 
         public WebhookSender WebhookNotificationManager { get; }
 
@@ -65,7 +66,8 @@ namespace BTCPayServer.Controllers
             LanguageService languageService,
             ExplorerClientProvider explorerClients,
             UIWalletsController walletsController,
-            LinkGenerator linkGenerator)
+            LinkGenerator linkGenerator,
+            BTCPayNetworkJsonSerializerSettings jsonSerializerSettings)
         {
             _CurrencyNameTable = currencyNameTable ?? throw new ArgumentNullException(nameof(currencyNameTable));
             _StoreRepository = storeRepository ?? throw new ArgumentNullException(nameof(storeRepository));
@@ -82,6 +84,7 @@ namespace BTCPayServer.Controllers
             this._ExplorerClients = explorerClients;
             _walletsController = walletsController;
             _linkGenerator = linkGenerator;
+            _jsonSerializerSettings = jsonSerializerSettings;
         }
 
 

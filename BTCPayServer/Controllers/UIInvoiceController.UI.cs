@@ -971,7 +971,7 @@ namespace BTCPayServer.Controllers
         [BitpayAPIConstraint(false)]
         public async Task<IActionResult> Export(string format, string? searchTerm = null, int timezoneOffset = 0)
         {
-            var model = new InvoiceExport(_CurrencyNameTable);
+            var model = new InvoiceExport(_CurrencyNameTable, _paymentHostedService, _jsonSerializerSettings);
 
             InvoiceQuery invoiceQuery = GetInvoiceQuery(searchTerm, timezoneOffset);
             invoiceQuery.StoreId = new[] { GetCurrentStore().Id };

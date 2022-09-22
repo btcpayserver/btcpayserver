@@ -62,6 +62,7 @@
 * Add no rate found error message in Invoices (#4039) @HamroRamro
 * Greenfield API docs improvements (#4041 #4035) @dennisreimann
 * Allow binding ip and port for non ssl scenarios too (#4031) @Kukks
+* Fix pagination of wallet's transactions (#4150) @dennisreimann @NicolasDorier 
 
 ### Bug fixes:
 

@@ -12,6 +12,9 @@ namespace BTCPayServer.Client.Models
         [JsonProperty("text")]
         public string Text { get; set; }
 
+        [JsonProperty("color")]
+        public string Color { get; set; }
+
         [JsonExtensionData] public Dictionary<string, JToken> AdditionalData { get; set; }
     }
 }

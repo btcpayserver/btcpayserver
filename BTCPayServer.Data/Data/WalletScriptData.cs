@@ -12,6 +12,7 @@ public class WalletScriptData
     public string Data { get; set; }
     public List<WalletLabelData> WalletLabels { get; set; }
 
+    public List<WalletTransactionData> WalletTransactions { get; set; }
 
     internal static void OnModelCreating(ModelBuilder builder, DatabaseFacade databaseFacade)
     {
@@ -26,6 +27,10 @@ public class WalletScriptData
         builder.Entity<WalletScriptData>()
             .HasOne(o => o.WalletData)
             .WithMany(w => w.WalletScripts).OnDelete(DeleteBehavior.Cascade);
+        
+        builder.Entity<WalletScriptData>()
+            .HasMany<WalletTransactionData>(o => o.WalletTransactions)
+            .WithMany(w => w.WalletScripts);
             
         if (databaseFacade.IsNpgsql())
         {

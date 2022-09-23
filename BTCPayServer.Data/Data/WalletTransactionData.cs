@@ -14,6 +14,7 @@ namespace BTCPayServer.Data
         public byte[] Blob { get; set; }
 
         public List<WalletLabelData> WalletLabels { get; set; }
+        public List<WalletScriptData> WalletScripts { get; set; }
 
         internal static void OnModelCreating(ModelBuilder builder)
         {

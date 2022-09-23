@@ -14,15 +14,7 @@ namespace BTCPayServer.Services
 
     public class WalletRepository
     {
-        public static Dictionary<string, string> DefaultLabelColors = new Dictionary<string, string>()
-        {
-            {"payjoin", "#51b13e"},
-            {"invoice", "#cedc21"},
-            {"payment-request", "#489D77"},
-            {"app", "#5093B6"},
-            {"pj-exposed", "#51b13e"},
-            {"payout", "#3F88AF"}
-        };
+        
 
         private readonly ApplicationDbContextFactory _ContextFactory;
 
@@ -75,6 +67,13 @@ namespace BTCPayServer.Services
                wd.SetBlobInfo(new WalletBlobInfo());
                await context.Wallets.AddAsync(wd);
            }
+
+           var existingWalletTransactions = await context.WalletTransactions
+               .Where(data => data.WalletDataId == walletIdStr && txs.Contains(data.TransactionId))
+               .ToDictionaryAsync(data => data.TransactionId);  
+           var existingWalletScripts = await context.WalletScripts
+               .Where(data => data.WalletDataId == walletIdStr && scripts.Contains(data.Script))
+               .ToDictionaryAsync(data => data.Script);  
             
             var labelToAdd = labels.ToDictionary(label => label.Id);
             var labelIds = labelToAdd.Keys.ToArray();
@@ -94,22 +93,29 @@ namespace BTCPayServer.Services
                     await context.WalletLabels.AddAsync(labelRecord);
                 }
 
-                labelRecord.WalletScripts = new List<WalletScriptData>();
-                labelRecord.WalletTransactions = new List<WalletTransactionData>();
+                labelRecord.WalletScripts??= new List<WalletScriptData>();
+                labelRecord.WalletTransactions??= new List<WalletTransactionData>();
                 foreach (string script in scripts)
                 {
-                    if (labelRecord.WalletScripts.All(data => data.Script != script) is true)
+                    if (!existingWalletScripts.TryGetValue(script, out var scriptData))
                     {
-                        var scriptData = new WalletScriptData() {WalletDataId = walletIdStr, Script = script};
+                        scriptData = new WalletScriptData() {WalletDataId = walletIdStr, Script = script};
+                        await context.WalletScripts.AddAsync(scriptData);
+                    }
+                    if (labelRecord.WalletScripts.All(data => data.Script != script))
+                    {
                         labelRecord.WalletScripts.Add(scriptData);
                     }
                 }
-
                 foreach (string tx in txs)
                 {
-                    if (labelRecord.WalletTransactions.All(data => data.TransactionId != tx) is true)
+                    if (!existingWalletTransactions.TryGetValue(tx, out var txData))
                     {
-                        var txData = new WalletTransactionData() {WalletDataId = walletIdStr, TransactionId = tx};
+                        txData =new WalletTransactionData() {WalletDataId = walletIdStr, TransactionId = tx};
+                        await context.WalletTransactions.AddAsync(txData);
+                    }
+                    if (labelRecord.WalletTransactions.All(data => data.TransactionId != tx))
+                    {
                         labelRecord.WalletTransactions.Add(txData);
                     }
                 }
@@ -124,35 +130,57 @@ namespace BTCPayServer.Services
             public Dictionary<string, List<WalletLabelData>> TransactionLabels { get; set; }
         }
 
-        public async Task<WalletTransactionListDataResult> GetLabelsForTransactions(WalletId walletId, Dictionary<string, string[]> transactionsAndAllTheirInsAndOuts)
+        public async Task<WalletTransactionListDataResult> GetLabelsForTransactions(WalletId walletId, string[] txs)
         {
             
             var walletIdStr = walletId.ToString();
-            var txs = transactionsAndAllTheirInsAndOuts.Keys.ToArray();
-            var scripts = transactionsAndAllTheirInsAndOuts.Values.SelectMany(strings => strings).Distinct().ToArray();
             await using var context = _ContextFactory.CreateContext();
-            var data = context.WalletLabels
-                .Include(data => data.WalletTransactions)
-                .Include(data => data.WalletScripts)
-                .Where(data => data.WalletDataId == walletIdStr)
-                .Where(data =>
-                    data.WalletTransactions.Any(transactionData => txs.Contains(transactionData.TransactionId)) ||
-                    data.WalletScripts.Any(scriptData => scripts.Contains(scriptData.Script))).ToList();
 
-            var txLabels = new Dictionary<string, List<WalletLabelData>>();
-            foreach (var tx in transactionsAndAllTheirInsAndOuts)
-            {
-                txLabels.Add(tx.Key, data.Where(labelData => labelData.WalletScripts.Any(scriptData =>
-                                                                 tx.Value.Contains(scriptData.Script)) ||
-                                                         labelData.WalletTransactions.Any(transactionData =>
-                                                             tx.Key ==
-                                                             transactionData.TransactionId)).ToList());
-            }
-            
+            var query = context.WalletTransactions
+                .Where(transaction =>
+                    transaction.WalletDataId == walletIdStr && txs.Contains(transaction.TransactionId))
+                .Include(data => data.WalletLabels)
+                .Include(data => data.WalletScripts)
+                .ThenInclude(data => data.WalletLabels)
+                .Select(transaction => new
+                {
+                    tx = transaction.TransactionId,
+                    labels = transaction.WalletLabels,
+                    scriptLabels = transaction.WalletScripts.SelectMany(scriptData => scriptData.WalletLabels),
+                    blob = transaction.Blob
+                });
+               
+         
             var result = new WalletTransactionListDataResult()
             {
-                TransactionComments = data.SelectMany(data => data.WalletTransactions).DistinctBy(data => data.TransactionId).ToDictionary(data => data.TransactionId, data => data.GetBlobInfo().Comment),
-                TransactionLabels = txLabels
+                TransactionComments = query.ToDictionary(data => data.tx, data => data.blob.GetWalletTransactionInfo().Comment),
+                TransactionLabels = query.ToDictionary(data => data.tx, data => data.labels.Concat(data.scriptLabels).DistinctBy(labelData => labelData.Label).ToList()),
+            };
+            return result;
+
+        }  
+        public async Task<WalletScriptListDataResult> GetLabelsForScripts(WalletId walletId, string[] scripts)
+        {
+            
+            var walletIdStr = walletId.ToString();
+            await using var context = _ContextFactory.CreateContext();
+
+            var query = context.WalletScripts
+                .Where(scriptData =>  
+                    scriptData.WalletDataId == walletIdStr && scripts.Contains(scriptData.Script))
+                .Include(data => data.WalletLabels)
+                .Include(data => data.WalletTransactions)
+                .ThenInclude(data => data.WalletLabels)
+                .Select(scriptData => new
+                {
+                    script = scriptData.Script,
+                    labels = scriptData.WalletLabels,
+                    transactionLabels = scriptData.WalletTransactions.SelectMany(transactionData => transactionData.WalletLabels),
+                });
+            
+            var result = new WalletScriptListDataResult()
+            {
+                ScriptLabels = query.ToDictionary(data => data.script, data => data.labels.Concat(data.transactionLabels).DistinctBy(labelData => labelData.Label).ToList()),
             };
             return result;
 
@@ -169,8 +197,6 @@ namespace BTCPayServer.Services
             public Dictionary<string, string>? TransactionComments { get; set; }
             public Dictionary<ReceivedCoin, List<WalletLabelData>> UTXOLabels { get; set; }
         }
-        
-         
 
         public async Task<WalletUTXOListDataResult> GetLabelsForUTXOs(WalletId walletId, ReceivedCoin[] utxos)
         {
@@ -208,23 +234,6 @@ namespace BTCPayServer.Services
 
         }
 
-
-        public async Task<WalletScriptListDataResult> GetLabelsForScripts(WalletId walletId, string[] scripts)
-        {
-            await using var context = _ContextFactory.CreateContext();
-            var query = context.WalletScripts.Include(data => data.WalletLabels);
-          
-            var scriptsRes = await query
-                .Where(w => w.WalletDataId == walletId.ToString())
-                .Where(data => scripts == null || scripts.Contains(data.Script))
-                .AsSplitQuery()
-                .ToArrayAsync();
-            var result = new WalletScriptListDataResult()
-            {
-                ScriptLabels = scriptsRes.ToDictionary(data => data.Script, data =>  data.WalletLabels.DistinctBy(labelData => labelData.Label).ToList())
-            };
-            return result;
-        }
         
 
         public async Task<WalletBlobInfo> GetWalletInfo(WalletId walletId)
@@ -236,37 +245,8 @@ namespace BTCPayServer.Services
                  .Select(w => w)
                  .FirstOrDefaultAsync();
             var blob = data?.GetBlobInfo() ?? new WalletBlobInfo();
-            DefaultLabelColors.ToList().ForEach(x => blob.LabelColors.TryAdd(x.Key, x.Value));
             return blob;
         }
-
-        // public async Task SetWalletTransactionInfo(WalletId walletId, string transactionId, WalletTransactionInfo walletTransactionInfo)
-        // {
-        //     ArgumentNullException.ThrowIfNull(walletId);
-        //     ArgumentNullException.ThrowIfNull(transactionId);
-        //     using var ctx = _ContextFactory.CreateContext();
-        //     var walletData = new WalletTransactionData() { WalletDataId = walletId.ToString(), TransactionId = transactionId };
-        //     walletData.SetBlobInfo(walletTransactionInfo);
-        //     var entity = await ctx.WalletTransactions.AddAsync(walletData);
-        //     entity.State = EntityState.Modified;
-        //     try
-        //     {
-        //         await ctx.SaveChangesAsync();
-        //     }
-        //     catch (DbUpdateException) // Does not exists
-        //     {
-        //         entity.State = EntityState.Added;
-        //         try
-        //         {
-        //             await ctx.SaveChangesAsync();
-        //         }
-        //         catch (DbUpdateException) // the Wallet does not exists in the DB
-        //         {
-        //             await SetWalletInfo(walletId, new WalletBlobInfo());
-        //             await ctx.SaveChangesAsync();
-        //         }
-        //     }
-        // }
 
         public async Task UpdateTransactionComment(WalletId walletId, string txId, string requestComment)
         {
@@ -284,68 +264,48 @@ namespace BTCPayServer.Services
             existing.SetBlobInfo(blob);
             await ctx.SaveChangesAsync();
         }
-        
-        public async Task RemoveLabel(WalletId walletId, string[] id,string[] scripts, string[] txs )
+
+        public async Task<List<WalletLabelData>> GetWalletLabels(WalletId walletId)
+        {
+                ArgumentNullException.ThrowIfNull(walletId);
+                await using var ctx = _ContextFactory.CreateContext();
+            
+                var walletIdStr = walletId.ToString();
+                return await ctx.WalletLabels
+                    .Where(data => data.WalletDataId == walletIdStr).ToListAsync();
+        }
+
+        public async Task RemoveLabel(WalletId walletId, string[] id,  string[] scripts, string[] txs)
         {
             ArgumentNullException.ThrowIfNull(walletId);
             await using var ctx = _ContextFactory.CreateContext();
-            var existing =
-                await ctx.WalletLabels
-                    .Include(data => data.WalletTransactions)
-                    .Include(data => data.WalletScripts)
-                    .Where(data => data.WalletDataId ==  walletId.ToString() &&  id.Contains(data.Label)).ToListAsync();
-            if (existing.Any())
-            {
-                foreach (WalletLabelData data in existing)
-                {
-                    if (scripts?.Any() is true)
-                    {
-                        var removedScripts = 
-                            data.WalletScripts.Where(data => scripts.Contains(data.Script));
-                    
-                        ctx.RemoveRange(removedScripts);
-                        data.WalletScripts.RemoveAll(data => scripts.Contains(data.Script));
-                    }
-                    if (txs?.Any() is true)
-                    {
-                        var removedTxs = 
-                            data.WalletTransactions.Where(data => txs.Contains(data.TransactionId));
-                    
-                        ctx.RemoveRange(removedTxs);
-                        data.WalletTransactions.RemoveAll(data => txs.Contains(data.TransactionId));
-                    }
+            
+            var walletIdStr = walletId.ToString();
 
-                    if (!data.WalletScripts.Any() && !data.WalletTransactions.Any())
-                    {
-                    
-                        ctx.WalletLabels.Remove(data);
-                    }
-                }
+            var labels = ctx.WalletLabels
+                .Where(data => data.WalletDataId == walletIdStr && id.Contains(data.Label))
+                .Include(data => data.WalletTransactions)
+                .ThenInclude(data => data.WalletScripts)
+                .Include(data => data.WalletScripts)
+                .ThenInclude(data => data.WalletTransactions);
                 
-            }
+
+            var txsToRemove = await labels.SelectMany(data =>
+                data.WalletTransactions.Where(transactionData => txs.Contains(transactionData.TransactionId) || transactionData.WalletScripts.Any(scriptData => scripts.Contains(scriptData.Script))).ToList()).ToListAsync();
+            
+            var scriptsToRemove = await labels.SelectMany(data =>
+                data.WalletScripts.Where(scriptData => scripts.Contains(scriptData.Script) ||  scriptData.WalletTransactions.Any(transactionData => txs.Contains(transactionData.TransactionId))).ToList()).ToListAsync();
+
+
+            ctx.WalletScripts.RemoveRange(scriptsToRemove);
+            ctx.WalletTransactions.RemoveRange(txsToRemove);
+
+            ctx.WalletLabels.RemoveRange(labels.Where(data =>
+                !data.WalletScripts.Any() && !data.WalletTransactions.Any()));
+            
             await ctx.SaveChangesAsync();
-        }
-        
-        
-        
-        public static  Dictionary<string, string[]> GetLabelFilter(IEnumerable<TransactionHistoryLine> transactionHistoryLines)
-        {
-            var result = new Dictionary<string, string[]>();
-            foreach (var transactionHistoryLine in transactionHistoryLines)
-            {
-                var scripts =
-                    transactionHistoryLine.Transaction is null
-                        ? Array.Empty<string>()
-                        : transactionHistoryLine.Transaction.Inputs
-                            .Select(txIn => txIn.GetSigner().ScriptPubKey.ToString())
-                            .Concat(transactionHistoryLine.Transaction.Outputs.Select(txOut =>
-                                txOut.ScriptPubKey.ToString())).Distinct().ToArray();
-                
-                result.Add(transactionHistoryLine.TransactionId.ToString(),  scripts);
-            }
-            return result;
-        }
 
+        }
 
         public static List<TransactionHistoryLine> Filter(List<TransactionHistoryLine> txs,
             Dictionary<string, List<WalletLabelData>> labels, TransactionStatus[] statusFilter = null, string labelFilter = null)
@@ -382,5 +342,60 @@ namespace BTCPayServer.Services
 
         }
 
+        public async Task AssociateTransactionToScripts(Transaction transactionDataTransaction)
+        {
+            var txHash = transactionDataTransaction.GetHash().ToString();
+            var scripts = transactionDataTransaction.Inputs
+                .Select(txIn => txIn.GetSigner().ScriptPubKey.ToString())
+                .Concat(transactionDataTransaction.Outputs.Select(txOut =>
+                    txOut.ScriptPubKey.ToString())).Distinct().ToArray();
+            
+            await using var ctx = _ContextFactory.CreateContext();
+            var matchedWalletScripts =
+                (await ctx.WalletScripts.Where(data => scripts.Contains(data.Script)).ToListAsync()).GroupBy(data =>
+                    data.WalletDataId);
+            var walletids = matchedWalletScripts.Select(datas => datas.Key).ToList();
+            var matchedWalletTransactions = await ctx.WalletTransactions
+                .Where(data => walletids.Contains(data.WalletDataId) && data.TransactionId == txHash).Include(data => data.WalletScripts).ToDictionaryAsync(data => data.WalletDataId);
+            foreach (var walletScriptSet in matchedWalletScripts)
+            {
+                if (!matchedWalletTransactions.TryGetValue(walletScriptSet.Key, out var walletTransaction))
+                {
+                    walletTransaction = new WalletTransactionData()
+                    {
+                        WalletDataId = walletScriptSet.Key, TransactionId = txHash,
+                        WalletScripts = new ()
+                    };
+                    await ctx.WalletTransactions.AddAsync(walletTransaction);
+                }
+                foreach (var walletScript in walletScriptSet)
+                {
+                    walletTransaction.WalletScripts.Add(walletScript);
+                }
+            }
+
+            await ctx.SaveChangesAsync();
+
+
+        }
+
+        public async Task<string[]> GetTransactionsWithLabel(WalletId walletId,string label)
+        {
+            
+            ArgumentNullException.ThrowIfNull(walletId);
+            await using var ctx = _ContextFactory.CreateContext();
+            
+            var walletIdStr = walletId.ToString();
+            var baseQuery = ctx.WalletLabels
+                .Where(data => data.WalletDataId == walletIdStr && data.Label.StartsWith(label));
+
+            var txs = baseQuery.Include(data => data.WalletTransactions).SelectMany(data =>
+                data.WalletTransactions.Select(transactionData => transactionData.TransactionId)); 
+            
+            var secondLeveltxs = baseQuery.Include(data => data.WalletScripts).ThenInclude(data => data.WalletTransactions).SelectMany(data =>
+                data.WalletScripts.SelectMany(scriptData =>  scriptData.WalletTransactions.Select(transactionData => transactionData.TransactionId)));
+
+            return await txs.Concat(secondLeveltxs).Distinct().ToArrayAsync();
+        }
     }
 }

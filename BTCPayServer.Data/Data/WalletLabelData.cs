@@ -9,6 +9,7 @@ public class WalletLabelData
     public string WalletDataId { get; set; }
     public string Label { get; set; }
     public string Data { get; set; }
+    
     internal static void OnModelCreating(ModelBuilder builder, DatabaseFacade databaseFacade)
     {
         builder.Entity<WalletLabelData>()

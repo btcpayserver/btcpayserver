@@ -11,6 +11,8 @@ using Microsoft.AspNetCore.Routing;
 using BTCPayServer.Data;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Abstractions.Extensions;
+using BTCPayServer.HostedServices;
+using NBitcoin;
 
 namespace BTCPayServer.Services.Labels
 {
@@ -28,43 +30,27 @@ namespace BTCPayServer.Services.Labels
             _walletRepository = walletRepository;
         }
 
-        public IEnumerable<ColoredLabel> ColorizeTransactionLabels(WalletBlobInfo walletBlobInfo, List<WalletLabelData> labels,
+        public IEnumerable<ColoredLabel> ColorizeTransactionLabels(List<WalletLabelData> labels,
             HttpRequest request)
         {
             foreach (var label in labels)
             {
                 var parsedLabel = label.GetLabel();
-                if (!walletBlobInfo.LabelColors.TryGetValue(label.Label, out var color))
-                {
-                    if(!walletBlobInfo.LabelColors.TryGetValue(parsedLabel.Text, out color))
-                    {
-                        walletBlobInfo.LabelColors.TryGetValue(parsedLabel.Type, out color);
-                    }
-                }
-                yield return CreateLabel(parsedLabel, color, request);
-            }
-        }
-
-        public IEnumerable<ColoredLabel> GetWalletColoredLabels(WalletBlobInfo walletBlobInfo, HttpRequest request)
-        {
-            foreach (var kv in walletBlobInfo.LabelColors)
-            {
-                yield return CreateLabel(new RawLabel() { Text = kv.Key }, kv.Value, request);
+                yield return CreateLabel(parsedLabel, request);
             }
         }
 
         const string DefaultColor = "#000";
-        private ColoredLabel CreateLabel(LabelData uncoloredLabel, string? color, HttpRequest request)
+        private ColoredLabel CreateLabel(LabelData label, HttpRequest request)
         {
-            ArgumentNullException.ThrowIfNull(uncoloredLabel);
-            color ??= DefaultColor;
+            ArgumentNullException.ThrowIfNull(label);
 
             ColoredLabel coloredLabel = new ColoredLabel
             {
-                Text = uncoloredLabel.Text,
-                Color = color,
+                Text = label.Text,
+                Color = string.IsNullOrEmpty(label.Color)? DefaultColor: label.Color,
                 Tooltip = "",
-                TextColor = TextColor(color)
+                TextColor = TextColor(label.Color)
             };
 
             string PayoutLabelText(KeyValuePair<string, List<string>>? pair = null)
@@ -76,10 +62,10 @@ namespace BTCPayServer.Services.Labels
                 return pair.Value.Value.Count == 1 ? $"Paid a payout {(string.IsNullOrEmpty(pair.Value.Key)? string.Empty: $"of a pull payment ({pair.Value.Key})")}" : $"Paid {pair.Value.Value.Count} payouts {(string.IsNullOrEmpty(pair.Value.Key)? string.Empty: $"of a pull payment ({pair.Value.Key})")}";
             }
 
-            if (uncoloredLabel is ReferenceLabel refLabel)
+            if (label is Label.ReferenceLabel refLabel)
             {
                 var refInLabel = string.IsNullOrEmpty(refLabel.Reference) ? string.Empty : $"({refLabel.Reference})";
-                switch (uncoloredLabel.Type)
+                switch (label.Type)
                 {
                     case "invoice":
                         coloredLabel.Tooltip = $"Received through an invoice {refInLabel}";
@@ -107,7 +93,7 @@ namespace BTCPayServer.Services.Labels
                         break;
                 }
             }
-            else if (uncoloredLabel is PayoutLabel payoutLabel)
+            else if (label is Label.PayoutLabel payoutLabel)
             {
                 coloredLabel.Tooltip = payoutLabel.PullPaymentPayouts?.Count switch
                 {
@@ -123,7 +109,7 @@ namespace BTCPayServer.Services.Labels
                     : _linkGenerator.PayoutLink(payoutLabel.WalletId, null, PayoutState.Completed, request.Scheme, request.Host,
                         request.PathBase);
             }
-            else if (uncoloredLabel.Text == "payjoin")
+            else if (label.Text == "payjoin")
             {
                 coloredLabel.Tooltip = $"This UTXO was part of a PayJoin transaction.";
             }
@@ -144,50 +130,18 @@ namespace BTCPayServer.Services.Labels
 
         readonly int MaxLabelSize = 20;
 
-        async public Task<RawLabel> BuildLabel(
+        async public Task<Label.RawLabel> BuildLabel(
             WalletBlobInfo walletBlobInfo,
             HttpRequest request,
             WalletId walletId,
-            string label
+            string label,
+            string color
         )
         {
+
+            color ??= LabelColorScheme.ElementAt(new Random().Next(0, LabelColorScheme.Length - 1));
             label = label.Trim().TrimStart('{').ToLowerInvariant().Replace(',', ' ').Truncate(MaxLabelSize);
-            var labels = GetWalletColoredLabels(walletBlobInfo, request);
-
-            if (!labels.Any(l => l.Text.Equals(label, StringComparison.OrdinalIgnoreCase)))
-            {
-                var chosenColor = ChooseBackgroundColor(walletBlobInfo, request);
-                walletBlobInfo.LabelColors.Add(label, chosenColor);
-                await _walletRepository.SetWalletInfo(walletId, walletBlobInfo);
-            }
-
-            return new RawLabel(label);
-        }
-
-        private string ChooseBackgroundColor(
-            WalletBlobInfo walletBlobInfo,
-            HttpRequest request
-        )
-        {
-            var labels = GetWalletColoredLabels(walletBlobInfo, request);
-
-            List<string> allColors = new List<string>();
-            allColors.AddRange(LabelColorScheme);
-            allColors.AddRange(labels.Select(l => l.Color));
-            var chosenColor =
-                allColors
-                .GroupBy(k => k)
-                .OrderBy(k => k.Count())
-                .ThenBy(k =>
-                {
-                    var indexInColorScheme = Array.IndexOf(LabelColorScheme, k.Key);
-
-                    // Ensures that any label color which may not be in our label color scheme is given the least priority
-                    return indexInColorScheme == -1 ? double.PositiveInfinity : indexInColorScheme;
-                })
-                .First().Key;
-
-            return chosenColor;
+            return new Label.RawLabel(label, color);
         }
 
         private string TextColor(string bgColor)

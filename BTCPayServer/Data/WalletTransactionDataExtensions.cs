@@ -1,25 +1,22 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Services.Labels;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
+using Org.BouncyCastle.Tls;
 
 namespace BTCPayServer.Data
 {
-
     public static class WalletLabelDataExtensions
     {
         public static LabelData GetLabel(this WalletLabelData walletLabelData)
         {
-            return string.IsNullOrEmpty(walletLabelData.Data) ? new RawLabel(walletLabelData.Label) : Label.Parse(walletLabelData.Data);
+            return Label.Parse(walletLabelData.Data);
         }
-        
+
         public static string SetLabelData(this Label walletLabelData)
         {
-                return JsonConvert.SerializeObject(walletLabelData);
+            return JsonConvert.SerializeObject(walletLabelData);
         }
     }
     
@@ -36,6 +33,14 @@ namespace BTCPayServer.Data
     {
         public static int MaxCommentSize = 200;
 
+        public static WalletTransactionInfo GetWalletTransactionInfo(this byte[] blob)
+        {
+            if (blob == null || blob.Length == 0)
+                return new WalletTransactionInfo();
+            else
+                return JsonConvert.DeserializeObject<WalletTransactionInfo>(ZipUtils.Unzip(blob));
+        } 
+        
         public static WalletTransactionInfo GetBlobInfo(this WalletTransactionData walletTransactionData)
         {
             WalletTransactionInfo blobInfo;

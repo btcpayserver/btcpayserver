@@ -155,7 +155,8 @@ namespace BTCPayServer.Controllers
                     walletBlobInfo,
                     Request!,
                     walletId,
-                    addlabel
+                    addlabel,
+                    null
                 );
                 await WalletRepository.AddLabels(walletId, new Label[] {rawLabel}, Array.Empty<string>(), new[] {transactionId});
                 
@@ -238,12 +239,15 @@ namespace BTCPayServer.Controllers
                 return NotFound();
 
             var wallet = _walletProvider.GetWallet(paymentMethod.Network);
-            var walletBlobAsync = WalletRepository.GetWalletInfo(walletId);
 
+            var walletLabels = await WalletRepository.GetWalletLabels(walletId);
+            var txLabelFilterResult = string.IsNullOrEmpty(labelFilter)
+                ? null
+                : await WalletRepository.GetTransactionsWithLabel(walletId, labelFilter);
             // We can't filter at the database level if we need to apply label filter
-            var preFiltering = string.IsNullOrEmpty(labelFilter);
-            var transactions = await wallet.FetchTransactionHistory(paymentMethod.AccountDerivation, preFiltering ? skip : null, preFiltering ? count : null);
-            var walletBlob = await walletBlobAsync;
+            // var preFiltering = string.IsNullOrEmpty(labelFilter);
+            var transactions = await wallet.FetchTransactionHistory(paymentMethod.AccountDerivation,  skip, count, null , txLabelFilterResult);
+            
             // var walletTransactionsInfo = await walletTransactionsInfoAsync;
             var model = new ListTransactionsViewModel { Skip = skip, Count = count };
             if (labelFilter != null)
@@ -263,7 +267,7 @@ namespace BTCPayServer.Controllers
             else
             {
 
-                var labelResult = await WalletRepository.GetLabelsForTransactions(walletId, WalletRepository.GetLabelFilter(transactions));
+                var labelResult = await WalletRepository.GetLabelsForTransactions(walletId, transactions.Select(line => line.TransactionId.ToString()).ToArray());
                 foreach (var tx in transactions)
                 {
                     var vm = new ListTransactionsViewModel.TransactionViewModel();
@@ -277,9 +281,9 @@ namespace BTCPayServer.Controllers
 
                     if (labelResult.TransactionLabels.TryGetValue(tx.TransactionId.ToString(), out var transactionInfo))
                     {
-                        var labels = _labelFactory.ColorizeTransactionLabels(walletBlob, transactionInfo, Request);
+                        var labels = _labelFactory.ColorizeTransactionLabels(transactionInfo, Request);
                         vm.Labels.AddRange(labels);
-                        model.Labels.AddRange(labels);
+                        
                     }
 
                     if (labelResult.TransactionComments.TryGetValue(tx.TransactionId.ToString(), out var comment))
@@ -291,14 +295,11 @@ namespace BTCPayServer.Controllers
                         vm.Labels.Any(l => l.Text.Equals(labelFilter, StringComparison.OrdinalIgnoreCase)))
                         model.Transactions.Add(vm);
                 }
+                model.Labels.AddRange(_labelFactory.ColorizeTransactionLabels(walletLabels, Request));
 
-                model.Total = preFiltering ? null : model.Transactions.Count;
-                // if we couldn't filter at the db level, we need to apply skip and count
-                if (!preFiltering)
-                {
-                    model.Transactions = model.Transactions.Skip(skip).Take(count)
-                        .ToList();
-                }
+                model.Total =  model.Transactions.Count;
+                model.Transactions = model.Transactions.Skip(skip).Take(count)
+                    .ToList();
             }
 
             model.CryptoCode = walletId.CryptoCode;
@@ -603,7 +604,7 @@ namespace BTCPayServer.Controllers
                     
                     var labels = uncoloredLabels == null
                         ? new List<ColoredLabel>()
-                        : _labelFactory.ColorizeTransactionLabels(walletBlobAsync, uncoloredLabels, Request).ToList();
+                        : _labelFactory.ColorizeTransactionLabels( uncoloredLabels, Request).ToList();
                     return new WalletSendModel.InputSelectionOption()
                     {
                         Outpoint = coin.OutPoint.ToString(),
@@ -1315,7 +1316,7 @@ namespace BTCPayServer.Controllers
             var input = await wallet.FetchTransactionHistory(paymentMethod.AccountDerivation, null, null);
 
             var walletTransactionsInfo = await
-                WalletRepository.GetLabelsForTransactions(walletId, WalletRepository.GetLabelFilter(input));
+                WalletRepository.GetLabelsForTransactions(walletId, input.Select(line => line.TransactionId.ToString()).ToArray());
             input = WalletRepository.Filter(input, walletTransactionsInfo.TransactionLabels, null, labelFilter);
             var export = new TransactionsExport(wallet, walletTransactionsInfo);
             var res = export.Process(input, format);

@@ -134,9 +134,19 @@ namespace BTCPayServer.Controllers.Greenfield
             if (IsInvalidWalletRequest(cryptoCode, out var network,
                     out var derivationScheme, out var actionResult))
                 return actionResult;
-            var bitcoinAddress =  BitcoinAddress.Create(address, network.NBitcoinNetwork);
+
+            BitcoinAddress bitcoinAddress = null;
+            try
+            {
+                bitcoinAddress = BitcoinAddress.Create(address, network.NBitcoinNetwork);
+            }
+            catch (FormatException e)
+            {
+                ModelState.AddModelError(nameof(address), "The address was not in a valid format");
+                return this.CreateValidationError(ModelState);
+            }
             var explorerClient = _explorerClientProvider.GetExplorerClient(network);
-           var kpi = await explorerClient.GetKeyInformationAsync(derivationScheme.AccountDerivation, bitcoinAddress.ScriptPubKey);
+           var kpi = await explorerClient.GetKeyInformationAsync(derivationScheme.AccountDerivation, bitcoinAddress!.ScriptPubKey);
            var bip21 = network.GenerateBIP21(kpi.Address?.ToString(), null);
            var allowedPayjoin = derivationScheme.IsHotWallet && Store.GetStoreBlob().PayJoinEnabled;
            if (allowedPayjoin)
@@ -171,7 +181,22 @@ namespace BTCPayServer.Controllers.Greenfield
                     out var derivationScheme, out var actionResult))
                 return actionResult;
             var walletId = new WalletId(storeId, cryptoCode);
-            var script = BitcoinAddress.Create(address, network.NBitcoinNetwork).ScriptPubKey.ToString();
+            string script;
+            try
+            {
+                script = BitcoinAddress.Create(address, network.NBitcoinNetwork).ScriptPubKey.ToString();
+            }
+            catch (FormatException e)
+            {
+                ModelState.AddModelError(nameof(address), "The address was not in a valid format");
+                return this.CreateValidationError(ModelState);
+            }
+
+            if (request is null)
+            {
+                return this.CreateAPIError("no-request",
+                    "You did not provide any request data to patch the address with");
+            }
             if (request.Labels != null)
             {
                 await _walletRepository.AddLabels(walletId, request.Labels.Select(Label.Parse).ToArray(),
@@ -195,11 +220,8 @@ namespace BTCPayServer.Controllers.Greenfield
                 out var derivationScheme, out var actionResult))
                 return actionResult;
 
-            var kpi = await _walletReceiveService.GetOrGenerate(new WalletId(storeId, cryptoCode), forceGenerate);
-            if (kpi is null)
-            {
-                return BadRequest();
-            }
+            var kpi =(KeyPathInformation) await _walletReceiveService.GetOrGenerate(new WalletId(storeId, cryptoCode), forceGenerate);
+            
 
             var bip21 = network.GenerateBIP21(kpi.Address?.ToString(), null);
             var allowedPayjoin = derivationScheme.IsHotWallet && Store.GetStoreBlob().PayJoinEnabled;
@@ -250,14 +272,14 @@ namespace BTCPayServer.Controllers.Greenfield
             var wallet = _btcPayWalletProvider.GetWallet(network);
             var walletId = new WalletId(storeId, cryptoCode);
             
-            bool preFiltering = !(statusFilter?.Any() is true || !string.IsNullOrWhiteSpace(labelFilter));
-            var txs = await wallet.FetchTransactionHistory(derivationScheme.AccountDerivation, preFiltering ? skip : 0, preFiltering ? limit : int.MaxValue);
-
+            var txLabelFilterResult = string.IsNullOrEmpty(labelFilter)
+                ? null
+                : await _walletRepository.GetTransactionsWithLabel(walletId, labelFilter);
+            // We can't filter at the database level if we need to apply label filter
+            // var preFiltering = string.IsNullOrEmpty(labelFilter);
+            var txs = await wallet.FetchTransactionHistory(derivationScheme.AccountDerivation,  skip, limit, null , txLabelFilterResult);
             
-            var walletTransactionsInfoAsync = await _walletRepository.GetLabelsForTransactions(walletId,WalletRepository.GetLabelFilter(txs));
-if(!preFiltering)
-            txs = WalletRepository.Filter(txs, walletTransactionsInfoAsync.TransactionLabels, statusFilter, labelFilter);
-           
+            var walletTransactionsInfoAsync = await _walletRepository.GetLabelsForTransactions(walletId, txs.Select(line => line.TransactionId.ToString()).ToArray());
 
             var result = txs.Skip(skip).Take(limit).Select(information => ToModel(walletTransactionsInfoAsync, information, wallet)).ToList();
             return Ok(result);
@@ -281,7 +303,7 @@ if(!preFiltering)
             var walletId = new WalletId(storeId, cryptoCode);
 
             var walletTransactionsInfoAsync =
-                await _walletRepository.GetLabelsForTransactions(walletId, WalletRepository.GetLabelFilter(new[]{tx}));
+                await _walletRepository.GetLabelsForTransactions(walletId, new []{ transactionId});
 
             return Ok(ToModel(walletTransactionsInfoAsync, tx, wallet));
         }

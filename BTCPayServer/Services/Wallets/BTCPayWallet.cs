@@ -203,17 +203,20 @@ namespace BTCPayServer.Services.Wallets
         }
         bool? get_wallets_recentBugFixed = null;
         List<TransactionInformation> dummy = new List<TransactionInformation>();
-        public async Task<List<TransactionHistoryLine>> FetchTransactionHistory(DerivationStrategyBase derivationStrategyBase, int? skip = null, int? count = null, TimeSpan? interval = null)
+        public async Task<List<TransactionHistoryLine>> FetchTransactionHistory(
+            DerivationStrategyBase derivationStrategyBase, int? skip = null, int? count = null,
+            TimeSpan? interval = null, string[] txLabelFilterResult = null)
         {
             // This is two paths:
             // * Sometimes we can ask the DB to do the filtering of rows: If that's the case, we should try to filter at the DB level directly as it is the most efficient.
             // * Sometimes we can't query the DB or the given network need to do additional filtering. In such case, we can't really filter at the DB level, and we need to fetch all transactions in memory.
-            var needAdditionalFiltering = _Network.FilterValidTransactions(dummy) != dummy;
+            var needAdditionalFiltering = _Network.FilterValidTransactions(dummy) != dummy || txLabelFilterResult is not null;
             if (!NbxplorerConnectionFactory.Available || needAdditionalFiltering)
             {
                 var txs = await FetchTransactions(derivationStrategyBase);
                 var txinfos = txs.UnconfirmedTransactions.Transactions.Concat(txs.ConfirmedTransactions.Transactions)
                     .OrderByDescending(t => t.Timestamp)
+                    .Where(information => txLabelFilterResult is null || txLabelFilterResult.Contains(information.TransactionId.ToString()))
                     .Skip(skip is null ? 0 : skip.Value)
                     .Take(count is null ? int.MaxValue : count.Value);
                 var lines = new List<TransactionHistoryLine>(Math.Min((count is int v ? v : int.MaxValue), txs.UnconfirmedTransactions.Transactions.Count + txs.ConfirmedTransactions.Transactions.Count));
@@ -239,6 +242,7 @@ namespace BTCPayServer.Services.Wallets
                     "SELECT r.tx_id, r.seen_at, t.blk_id, t.blk_height, r.balance_change, r.asset_id, COALESCE((SELECT height FROM get_tip('BTC')) - t.blk_height + 1, 0) AS confs " +
                     "FROM get_wallets_recent(@wallet_id, @code, @interval, @count, @skip) r " +
                     "JOIN txs t USING (code, tx_id) " +
+                    
                     "ORDER BY r.seen_at DESC", new
                     {
                         wallet_id = NBXplorer.Client.DBUtils.nbxv1_get_wallet_id(Network.CryptoCode, derivationStrategyBase.ToString()),

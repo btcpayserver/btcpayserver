@@ -17,6 +17,5 @@ namespace BTCPayServer.Data
 
     public class WalletBlobInfo
     {
-        public Dictionary<string, string> LabelColors { get; set; } = new Dictionary<string, string>();
     }
 }

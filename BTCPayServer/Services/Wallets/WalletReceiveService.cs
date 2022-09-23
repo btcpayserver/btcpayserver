@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Events;
+using BTCPayServer.HostedServices;
 using BTCPayServer.Services.Labels;
 using BTCPayServer.Services.Stores;
 using Microsoft.Extensions.Hosting;
@@ -76,7 +77,7 @@ namespace BTCPayServer.Services.Wallets
             }
 
             var reserve = (await wallet.ReserveAddressAsync(derivationScheme.AccountDerivation));
-            await _walletRepository.AddLabels(walletId, new[] {new RawLabel("receive")},
+            await _walletRepository.AddLabels(walletId, new[] { UpdateTransactionLabel.ReceiveWalletLabel()},
                 new[] {reserve.ScriptPubKey.ToString()}, null);
             Set(walletId, reserve);
             return reserve;

@@ -129,6 +129,18 @@ document.addEventListener("DOMContentLoaded", function () {
         e.target.closest('.btcpay-theme-switch').blur()
     })
     
+    // Currency Selection: Remove the current input value once the element is focused, so that the user gets to
+    // see the available options. If no selection or change is made, reset it to the previous value on blur.
+    // Note: Use focusin/focusout instead of focus/blur, because the latter do not bubble up and delegate won't work.
+    delegate('focusin', 'input[list="currency-selection-suggestion"]', e => {
+        e.target.setAttribute('placeholder', e.target.value)
+        e.target.value = '';
+    })
+    delegate('focusout', 'input[list="currency-selection-suggestion"]', e => {
+        if (!e.target.value) e.target.value = e.target.getAttribute('placeholder')
+        e.target.removeAttribute('placeholder')
+    })
+    
     // Offcanvas navigation
     const mainMenuToggle = document.getElementById('mainMenuToggle')
     if (mainMenuToggle) {

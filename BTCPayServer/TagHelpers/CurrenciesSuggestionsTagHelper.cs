@@ -13,30 +13,37 @@ namespace BTCPayServer.TagHelpers
         public CurrenciesSuggestionsTagHelper(CurrencyNameTable currencies)
         {
             _currencies = currencies;
+            
         }
         public override void Process(TagHelperContext context, TagHelperOutput output)
         {
             output.Attributes.RemoveAll("currency-selection");
             output.PostElement.AppendHtml("<datalist id=\"currency-selection-suggestion\">");
-            var currencies = _currencies.Currencies.Where(c => !c.Crypto).Select(c => c.Code).OrderBy(c => c).ToList();
+            var currencies = _currencies.Currencies
+                .Where(c => !c.Crypto)
+                .OrderBy(c => c.Code).ToList();
+            // insert btc at the front
+            output.PostElement.AppendHtml("<option value=\"BTC\">BTC - Bitcoin</option>");
+            output.PostElement.AppendHtml("<option value=\"SATS\">SATS - Satoshi</option>");
+            // move most often used currencies up
             int pos = 0;
-            InsertAt(currencies, "BTC", pos++);
-            InsertAt(currencies, "SATS", pos++);
             InsertAt(currencies, "USD", pos++);
             InsertAt(currencies, "EUR", pos++);
             InsertAt(currencies, "JPY", pos++);
             InsertAt(currencies, "CNY", pos++);
-            foreach (var curr in currencies)
+            // add options
+            foreach (var c in currencies)
             {
-                output.PostElement.AppendHtml($"<option value=\"{curr}\">");
+                output.PostElement.AppendHtml($"<option value=\"{c.Code}\">{c.Code} - {c.Name}</option>");
             }
             output.PostElement.AppendHtml("</datalist>");
             output.Attributes.Add("list", "currency-selection-suggestion");
             base.Process(context, output);
         }
 
-        private void InsertAt(List<string> currencies, string curr, int idx)
+        private void InsertAt(List<CurrencyData> currencies, string code, int idx)
         {
+            var curr = currencies.FirstOrDefault(c => c.Code == code);
             currencies.Remove(curr);
             currencies.Insert(idx, curr);
         }

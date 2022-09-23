@@ -23,16 +23,14 @@ namespace BTCPayServer.Forms;
 public interface IFormComponentProvider
 {
     public string CanHandle(Field field);
-    
 }
 
 public class HtmlInputFormProvider: IFormComponentProvider
 {
     public string CanHandle(Field field)
     {
-    
-           
-        return new[] { "text",
+        return new[] {
+            "text",
             "radio",
             "checkbox",
             "password",
@@ -60,8 +58,6 @@ public class HtmlFieldsetFormProvider: IFormComponentProvider
 {
     public string CanHandle(Field field)
     {
-    
-           
         return new[] { "fieldset"}.Contains(field.Type) ? "Forms/FieldSetElement" : null;
     }
 }
@@ -74,6 +70,7 @@ public class FormComponentProvider : IFormComponentProvider
     {
         _formComponentProviders = formComponentProviders;
     }
+    
     public string CanHandle(Field field)
     {
         return _formComponentProviders.Select(formComponentProvider => formComponentProvider.CanHandle(field)).FirstOrDefault(result => !string.IsNullOrEmpty(result));
@@ -84,65 +81,119 @@ public class UIFormsController : Controller
 {
     private readonly FormDataService _formDataService;
 
-    public UIFormsController(
-        EventAggregator eventAggregator,
-        BTCPayNetworkProvider btcPayNetworkProvider,
-        FormDataService formDataService,
-        StoreRepository storeRepository,
-        BTCPayNetworkJsonSerializerSettings btcPayNetworkJsonSerializerSettings)
+    public UIFormsController(FormDataService formDataService)
     {
         _formDataService = formDataService;
     }
 
     [HttpGet("~/stores/{storeId}/forms")]
-    [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> FormsList(string storeId)
     {
-        var forms =
-            (await _formDataService.GetForms(
-                new FormDataService.FormQuery() {Stores = new[] {storeId}}));
+        var forms = await _formDataService.GetForms(new FormDataService.FormQuery {Stores = new[] {storeId}});
 
         return View(forms);
     }
 
     [HttpGet("~/stores/{storeId}/forms/new")]
-    [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-    public async Task<IActionResult> Create(string storeId)
+    public IActionResult Create(string storeId)
     {
-        return View("Modify", new ModifyForm() {FormConfig = JObject.FromObject(new Form()).ToString()});
+        var vm = new ModifyForm { FormConfig = JObject.FromObject(new Form()).ToString() };
+        return View("Modify", vm);
     }
 
     [HttpGet("~/stores/{storeId}/forms/modify/{id}")]
-    [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> Modify(string storeId, string id)
     {
-        var form =
-            (await _formDataService.GetForms(
-                new FormDataService.FormQuery() {Stores = new[] {storeId}, Ids = new[] {id}})).FirstOrDefault();
-        if (form is null)
+        var query = new FormDataService.FormQuery { Stores = new[] { storeId }, Ids = new[] { id } };
+        var form = (await _formDataService.GetForms(query)).FirstOrDefault();
+        
+        return form is null
+            ? NotFound()
+            : View(new ModifyForm { Name = form.Name, FormConfig = form.Config });
+    }
+
+    [HttpPost("~/stores/{storeId}/forms/modify/{id?}")]
+    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    public async Task<IActionResult> Modify(string storeId, string id, ModifyForm modifyForm)
+    {
+        if (id is not null)
         {
-            return NotFound();
+            var query = new FormDataService.FormQuery { Stores = new[] { storeId }, Ids = new[] { id } };
+            var form = (await _formDataService.GetForms(query)).FirstOrDefault();
+            if (form is null)
+            {
+                return NotFound();
+            }
         }
 
-        return View(new ModifyForm() {Name = form.Name, FormConfig = form.Config});
+        try
+        {
+            modifyForm.FormConfig = JObject.FromObject(JObject.Parse(modifyForm.FormConfig).ToObject<Form>()).ToString();
+        }
+        catch (Exception ex)
+        {
+            ModelState.AddModelError(nameof(modifyForm.FormConfig), $"Form config was invalid: {ex.Message}");
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return View(modifyForm);
+        }
+
+        try
+        {
+            var form = new FormData
+            {
+                Id = id,
+                StoreId = storeId,
+                Name = modifyForm.Name,
+                Config = modifyForm.FormConfig
+            };
+            var isNew = id is null;
+            await _formDataService.AddOrUpdateForm(form);
+            TempData.SetStatusMessageModel(new StatusMessageModel
+            {
+                Message = $"Form {(isNew ? "created": "updated")} successfully."
+            });
+            if (isNew)
+            {
+                return RedirectToAction("Modify", new { storeId, id = form.Id });
+            }
+        }
+        catch (Exception e)
+        {
+            ModelState.AddModelError("", $"An error occurred while saving: {e.Message}");
+        }
+
+        return View(modifyForm);
+    }
+
+    [HttpPost("~/stores/{storeId}/forms/{id}/remove")]
+    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    public async Task<IActionResult> Remove(string storeId, string id)
+    {
+        await _formDataService.RemoveForm(id, storeId);
+        TempData.SetStatusMessageModel(new StatusMessageModel
+        {
+            Severity = StatusMessageModel.StatusSeverity.Success,
+            Message = "Form removed"
+        });
+        return RedirectToAction("FormsList", new { storeId });
     }
 
     [AllowAnonymous]
     [HttpGet("~/forms/{id}")]
     public async Task<IActionResult> ViewForm(string id)
     {
-        var form =
-            (await _formDataService.GetForms(
-                new FormDataService.FormQuery() { Ids = new[] {id}})).FirstOrDefault();
-        if (form is null)
-        {
-            return NotFound();
-        }
-
-        return View("View", form);
+        var query = new FormDataService.FormQuery { Ids = new[] { id } };
+        var form = (await _formDataService.GetForms(query)).FirstOrDefault();
+        
+        return form is null
+            ? NotFound()
+            : View("View", form);
     }
 
     [AllowAnonymous]
@@ -152,9 +203,8 @@ public class UIFormsController : Controller
         [FromServices]StoreRepository storeRepository,  
         [FromServices] UIInvoiceController invoiceController)
     {
-        var orig =
-            (await _formDataService.GetForms(
-                new FormDataService.FormQuery() { Ids = new[] {id}})).FirstOrDefault();
+        var query = new FormDataService.FormQuery { Ids = new[] { id } };
+        var orig = (await _formDataService.GetForms(query)).FirstOrDefault();
         if (orig is null)
         {
             return NotFound();
@@ -167,79 +217,14 @@ public class UIFormsController : Controller
 
         var store = await storeRepository.FindStore(orig.StoreId);
         var amt = dbForm.GetFieldByName("internal_amount")?.Value;
-        
-        var inv = await invoiceController.CreateInvoiceCoreRaw(
-            new CreateInvoiceRequest()
-            {
-                Currency = dbForm.GetFieldByName("internal_currency")?.Value ??store.GetStoreBlob().DefaultCurrency, 
-                Amount = string.IsNullOrEmpty(amt)? null: int.Parse(amt, CultureInfo.InvariantCulture),
-                
-                Metadata = JObject.FromObject(data)
-            }, store, Request.GetAbsoluteRoot());
-
-        return RedirectToAction("Checkout", "UIInvoice", new {invoiceId = inv.Id});
-    }
-
-    [HttpPost("~/stores/{storeId}/forms/modify/{id?}")]
-    [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-    public async Task<IActionResult> Modify(string storeId, string? id, ModifyForm modifyForm)
-    {
-        if (id is not null)
+        var request = new CreateInvoiceRequest
         {
-            var form =
-                (await _formDataService.GetForms(
-                    new FormDataService.FormQuery() {Stores = new[] {storeId}, Ids = new[] {id}})).FirstOrDefault();
-            if (form is null)
-            {
-                return NotFound();
-            }
-        }
+            Currency = dbForm.GetFieldByName("internal_currency")?.Value ?? store.GetStoreBlob().DefaultCurrency,
+            Amount = string.IsNullOrEmpty(amt) ? null : int.Parse(amt, CultureInfo.InvariantCulture),
+            Metadata = JObject.FromObject(data)
+        };
+        var inv = await invoiceController.CreateInvoiceCoreRaw(request, store, Request.GetAbsoluteRoot());
 
-        try
-        {
-            modifyForm.FormConfig =
-                JObject.FromObject(JObject.Parse(modifyForm.FormConfig).ToObject<Form>()).ToString();
-        }
-        catch (Exception e)
-        {
-            ModelState.AddModelError(nameof(modifyForm.FormConfig), "Form config was invalid");
-        }
-
-        if (!ModelState.IsValid)
-        {
-            return View(modifyForm);
-        }
-
-        try
-        {
-            var form = new FormData() {StoreId = storeId, Name = modifyForm.Name, Config = modifyForm.FormConfig, Id = id};
-            await _formDataService.AddOrUpdateForm(form);
-            TempData.SetStatusMessageModel(new StatusMessageModel() {Message = $"Form {(id is null? "created": "updated")} successfully."});
-            if (id is null)
-            {
-                return RedirectToAction("Modify", new {storeId = storeId, id = form.Id});
-            }
-        }
-        catch (Exception e)
-        {
-            ModelState.AddModelError("", $"An error occurred while saving: {e.Message}");
-        }
-
-        return View(modifyForm);
-    }
-
-
-    [HttpPost("~/stores/{storeId}/forms/{id}/remove")]
-    [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-    public async Task<IActionResult> Remove(string storeId, string id)
-    {
-        await _formDataService.RemoveForm(id, storeId);
-        TempData.SetStatusMessageModel(new StatusMessageModel()
-        {
-            Severity = StatusMessageModel.StatusSeverity.Success, Message = "Form removed"
-        });
-        return RedirectToAction("FormsList", new {storeId});
+        return RedirectToAction("Checkout", "UIInvoice", new { invoiceId = inv.Id });
     }
 }

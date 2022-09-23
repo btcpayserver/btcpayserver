@@ -1,10 +1,8 @@
-@using BTCPayServer.Views.Stores
 @model BTCPayServer.Forms.ModifyForm
 
 @{
-    
-    var formid = this.Context.GetRouteValue("id");
-    var isNew = formid is null;
+    var formId = Context.GetRouteValue("id");
+    var isNew = formId is null;
     Layout = "../Shared/_NavLayout.cshtml";
     ViewData["NavPartialName"] = "../UIStores/_Nav";
     ViewData.SetActivePage(StoreNavPages.Forms, $"{(isNew ? "Create" : "Edit")} Form", Model.Name);
@@ -14,149 +12,145 @@
 
 @section PageFootContent {
     <partial name="_ValidationScriptsPartial"/>
-
     <script>
-    document.addEventListener("DOMContentLoaded", function () {
-                document.querySelectorAll(".template").forEach(value => value.addEventListener("click", ()=>{document.getElementById("FormConfig").value = value.dataset.template }))
-            });
+        document.addEventListener("DOMContentLoaded", () => {
+            const $config = document.getElementById("FormConfig");
+            delegate("click", "[data-form-template]", e => {
+                const { formTemplate: id } = e.target.dataset
+                const $template = document.getElementById(`form-template-${id}`)
+                $config.value = $template.innerHTML.trim()
+            })
+        })
     </script>
 }
 
-<form method="post" asp-action="Modify" asp-route-id="@formid" asp-route-storeId="@storeId" >
-    <div class="sticky-header-setup"></div>
-    <div class="sticky-header d-sm-flex align-items-center justify-content-between">
-        <h2 class="mb-0">@ViewData["Title"]</h2>
-        <div class="d-flex gap-3 mt-3 mt-sm-0">
-            <button type="submit" class="btn btn-primary order-sm-1" id="SaveButton">Save</button>
-            @if(!isNew)
-            {
-                
-                <a class="btn btn-secondary" asp-action="ViewForm" asp-route-id="@formid" id="ViewForm">View</a>
-                
-            }
-        </div>
-    </div>
+<template id="form-template-email">
+{
+  "Fields": [
+    {
+      "Name": "buyerEmail",
+      "Type": "email",
+      "Label": "Enter your email",
+      "Value": null,
+      "HelpText": null,
+      "Required": true,
+      "OriginalValue": null,
+      "ValidationErrors": []
+    }
+  ]
+}
+</template>
+<template id="form-template-address">
+{
+  "Fields": [
+    {
+      "HelpText": null,
+      "Label": "Enter your email",
+      "Name": "buyerEmail",
+      "OriginalValue": null,
+      "Required": true,
+      "Type": "email",
+      "Value": null
+    },
+    {
+      "HelpText": null,
+      "Label": "Name",
+      "Name": "buyerName",
+      "OriginalValue": null,
+      "Required": true,
+      "Type": "text",
+      "Value": null
+    },
+    {
+      "HelpText": null,
+      "Label": "Address Line 1",
+      "Name": "buyerAddress1",
+      "OriginalValue": null,
+      "Required": true,
+      "Type": "text",
+      "Value": null
+    },
+    {
+      "HelpText": null,
+      "Label": "Address Line 2",
+      "Name": "buyerAddress2",
+      "OriginalValue": null,
+      "Required": false,
+      "Type": "text",
+      "Value": null
+    },
+    {
+      "HelpText": null,
+      "Label": "City",
+      "Name": "buyerCity",
+      "OriginalValue": null,
+      "Required": true,
+      "Type": "text",
+      "Value": null
+    },
+    {
+      "HelpText": null,
+      "Label": "Postcode",
+      "Name": "buyerZip",
+      "OriginalValue": null,
+      "Required": false,
+      "Type": "text",
+      "Value": null
+    },
+    {
+      "HelpText": null,
+      "Label": "State",
+      "Name": "buyerState",
+      "OriginalValue": null,
+      "Required": false,
+      "Type": "text",
+      "Value": null
+    },
+    {
+      "HelpText": null,
+      "Label": "Country",
+      "Name": "buyerCountry",
+      "OriginalValue": null,
+      "Required": true,
+      "Type": "text",
+      "Value": null
+    }
+  ]
+}
+</template>
 
-    <partial name="_StatusMessage"/>
-
+<form method="post" asp-action="Modify" asp-route-id="@formId" asp-route-storeId="@storeId">
     <div class="row">
-        <div class="col-xl-8 col-xxl-constrain">
+        <div class="col-xl-10 col-xxl-constrain">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <h3 class="mb-0">@ViewData["Title"]</h3>
+                <div class="d-flex gap-3 mt-3 mt-sm-0">
+                    <button type="submit" class="btn btn-primary order-sm-1" id="SaveButton">Save</button>
+                    @if (!isNew)
+                    {
+                        <a class="btn btn-secondary" asp-action="ViewForm" asp-route-id="@formId" id="ViewForm">View</a>
+                    }
+                </div>
+            </div>
             <div asp-validation-summary="All" class="text-danger"></div>
             <div class="form-group">
                 <label asp-for="Name" class="form-label" data-required></label>
                 <input asp-for="Name" class="form-control" required/>
                 <span asp-validation-for="Name" class="text-danger"></span>
             </div>
-
-        </div>
-    </div>
-    
-
-
-    <div class="row">
-        <div class="col-xl-10 col-xxl-constrain">
             <div class="form-group">
-                <label asp-for="FormConfig" class="form-label" data-required></label>
-                <textarea asp-for="FormConfig" class="form-control" rows="10" cols="40" ></textarea>
+                <div class="d-flex align-items-center justify-content-between gap-3">
+                    <label asp-for="FormConfig" class="form-label" data-required></label>
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <span>Templates:</span>
+                        <button type="button" class="btn btn-link p-0" data-form-template="email">Email</button>
+                        <button type="button" class="btn btn-link p-0" data-form-template="address">Address</button>
+                    </div>
+                </div>
+                <textarea asp-for="FormConfig" class="form-control" rows="10" cols="21"></textarea>
                 <span asp-validation-for="FormConfig" class="text-danger"></span>
-                <button type="button" class="btn btn-link template" data-template="{
-                                                                                     &#x22;Fields&#x22;: [
-                                                                                           {
-                                                                                             &#x22;Name&#x22;: &#x22;buyerEmail&#x22;,
-                                                                                             &#x22;Type&#x22;: &#x22;email&#x22;,
-                                                                                             &#x22;Label&#x22;: &#x22;Enter your email&#x22;,
-                                                                                             &#x22;Value&#x22;: null,
-                                                                                             &#x22;HelpText&#x22;: null,
-                                                                                             &#x22;Required&#x22;: true,
-                                                                                             &#x22;OriginalValue&#x22;: null,
-                                                                                             &#x22;ValidationErrors&#x22;: []
-                                                                                           }
-                                                                                         ],
-                                                                                     &#x22;TopMessages&#x22;: []
-                                                                                   }" >Email template</button>
-                <button type="button" class="btn btn-link template" data-template="{
-                                                                                   	
-                                                                                   		&quot;Fields&quot;: [{
-                                                                                   				&quot;HelpText&quot;: null,
-                                                                                   				&quot;Label&quot;: &quot;Enter your email&quot;,
-                                                                                   				&quot;Name&quot;: &quot;buyerEmail&quot;,
-                                                                                   				&quot;OriginalValue&quot;: null,
-                                                                                   				&quot;Required&quot;: true,
-                                                                                   				&quot;Type&quot;: &quot;email&quot;,
-                                                                                   				&quot;Value&quot;: null
-                                                                                   			},
-                                                                                   			{
-                                                                                   				&quot;HelpText&quot;: null,
-                                                                                   				&quot;Label&quot;: &quot;Name&quot;,
-                                                                                   				&quot;Name&quot;: &quot;buyerName&quot;,
-                                                                                   				&quot;OriginalValue&quot;: null,
-                                                                                   				&quot;Required&quot;: true,
-                                                                                   				&quot;Type&quot;: &quot;text&quot;,
-                                                                                   				&quot;Value&quot;: null
-                                                                                   			},
-                                                                                   			{
-                                                                                   				&quot;HelpText&quot;: null,
-                                                                                   				&quot;Label&quot;: &quot;Address Line 1&quot;,
-                                                                                   				&quot;Name&quot;: &quot;buyerAddress1&quot;,
-                                                                                   				&quot;OriginalValue&quot;: null,
-                                                                                   				&quot;Required&quot;: true,
-                                                                                   				&quot;Type&quot;: &quot;text&quot;,
-                                                                                   				&quot;Value&quot;: null
-                                                                                   			},
-                                                                                   			{
-                                                                                   				&quot;HelpText&quot;: null,
-                                                                                   				&quot;Label&quot;: &quot;Address Line 2&quot;,
-                                                                                   				&quot;Name&quot;: &quot;buyerAddress2&quot;,
-                                                                                   				&quot;OriginalValue&quot;: null,
-                                                                                   				&quot;Required&quot;: false,
-                                                                                   				&quot;Type&quot;: &quot;text&quot;,
-                                                                                   				&quot;Value&quot;: null
-                                                                                   			},
-                                                                                   			{
-                                                                                   				&quot;HelpText&quot;: null,
-                                                                                   				&quot;Label&quot;: &quot;City&quot;,
-                                                                                   				&quot;Name&quot;: &quot;buyerCity&quot;,
-                                                                                   				&quot;OriginalValue&quot;: null,
-                                                                                   				&quot;Required&quot;: true,
-                                                                                   				&quot;Type&quot;: &quot;text&quot;,
-                                                                                   				&quot;Value&quot;: null
-                                                                                   			},
-                                                                                   			{
-                                                                                   				&quot;HelpText&quot;: null,
-                                                                                   				&quot;Label&quot;: &quot;Postcode&quot;,
-                                                                                   				&quot;Name&quot;: &quot;buyerZip&quot;,
-                                                                                   				&quot;OriginalValue&quot;: null,
-                                                                                   				&quot;Required&quot;: false,
-                                                                                   				&quot;Type&quot;: &quot;text&quot;,
-                                                                                   				&quot;Value&quot;: null
-                                                                                   			},
-                                                                                   			{
-                                                                                   				&quot;HelpText&quot;: null,
-                                                                                   				&quot;Label&quot;: &quot;State&quot;,
-                                                                                   				&quot;Name&quot;: &quot;buyerState&quot;,
-                                                                                   				&quot;OriginalValue&quot;: null,
-                                                                                   				&quot;Required&quot;: false,
-                                                                                   				&quot;Type&quot;: &quot;text&quot;,
-                                                                                   				&quot;Value&quot;: null
-                                                                                   			},
-                                                                                   			{
-                                                                                   				&quot;HelpText&quot;: null,
-                                                                                   				&quot;Label&quot;: &quot;Country&quot;,
-                                                                                   				&quot;Name&quot;: &quot;buyerCountry&quot;,
-                                                                                   				&quot;OriginalValue&quot;: null,
-                                                                                   				&quot;Required&quot;: true,
-                                                                                   				&quot;Type&quot;: &quot;text&quot;,
-                                                                                   				&quot;Value&quot;: null
-                                                                                   			}
-                                                                                   		]
-                                                                                   }" >Address template</button>
             </div>
         </div>
     </div>
-
-    
-    
-    
-    
 </form>
 

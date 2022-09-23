@@ -16,6 +16,7 @@ using BTCPayServer.Services;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Forms;
@@ -109,10 +110,11 @@ public class UIFormsController : Controller
     {
         var query = new FormDataService.FormQuery { Stores = new[] { storeId }, Ids = new[] { id } };
         var form = (await _formDataService.GetForms(query)).FirstOrDefault();
+        if (form is null) return NotFound();
         
-        return form is null
-            ? NotFound()
-            : View(new ModifyForm { Name = form.Name, FormConfig = form.Config });
+        var json = JsonConvert.DeserializeObject(form.Config);
+        var config = JsonConvert.SerializeObject(json, Formatting.Indented);
+        return View(new ModifyForm { Name = form.Name, FormConfig = config });
     }
 
     [HttpPost("~/stores/{storeId}/forms/modify/{id?}")]

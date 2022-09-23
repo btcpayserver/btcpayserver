@@ -1,35 +1,23 @@
-
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @using BTCPayServer.Abstractions.Models
 @model List<BTCPayServer.Data.Data.FormData>
 @{
     Layout = "../Shared/_NavLayout.cshtml";
     ViewData["NavPartialName"] = "../UIStores/_Nav";
-    ViewData.SetActivePage(StoreNavPages.Forms, $"Forms");
+    ViewData.SetActivePage(StoreNavPages.Forms, "Forms");
     var storeId = Context.GetCurrentStoreId();
 }
 
-<div class="sticky-header-setup"></div>
-<div class="sticky-header d-sm-flex align-items-center justify-content-between">
-    <h2 class="mb-0">
-        @ViewData["Title"]
-        <small>
-            <a href="https://docs.btcpayserver.org/Forms/" class="ms-1" target="_blank" rel="noreferrer noopener">
-                <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
-            </a>
-        </small>
-    </h2>
-    <a asp-action="Create" asp-route-storeId="@storeId" class="btn btn-primary mt-3 mt-sm-0" role="button" id="CreateForm">
-        <span class="fa fa-plus"></span>
-        Create Form
-    </a>
-</div>
-
-<partial name="_StatusMessage" />
-
 <div class="row">
-    <div class="col-lg-12">
-        @if (Model.Count > 0)
+    <div class="col-xxl-constrain col-xl-10">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <h3 class="mb-0">@ViewData["Title"]</h3>
+            <a asp-action="Create" asp-route-storeId="@storeId" class="btn btn-primary mt-3 mt-sm-0" role="button" id="CreateForm">
+                <span class="fa fa-plus"></span>
+                Create Form
+            </a>
+        </div>
+        @if (Model.Any())
         {
             <table class="table table-hover table-responsive-md">
                 <thead>
@@ -54,12 +42,11 @@
                     }
                 </tbody>
             </table>
-
         }
         else
         {
             <p class="text-secondary mt-3">
-                There are no forms matching your criteria.
+                There are no forms yet.
             </p>
         }
     </div>

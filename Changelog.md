@@ -15,7 +15,7 @@
 * Update invoice amount description in Swagger template @bolatovumar
 * Improve payout processors description (#4109) @woutersamaey
 * Set explicit cursor style property on pay button with custom text (#4107) @bolatovumar
-* Use mempool as default block explorer (#4100) @junderw
+* Use mempool space as default block explorer (#4100) @junderw
 * Improve Lightning Node setup examples (#4033) @dennisreimann
 * Refactor QR functionality and improve wallet import support (#4091) @dennisreimann
 * Sanitize filename for downloaded files (#4117) @dennisreimann

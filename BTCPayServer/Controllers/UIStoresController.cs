@@ -361,20 +361,11 @@ namespace BTCPayServer.Controllers
                                     .Where(s => s.PaymentId.PaymentType != PaymentTypes.LNURLPay)
                                     .Select(method =>
             {
-                var existing =
-                    storeBlob.PaymentMethodCriteria.SingleOrDefault(criteria =>
+                var existing = storeBlob.PaymentMethodCriteria.SingleOrDefault(criteria =>
                         criteria.PaymentMethod == method.PaymentId);
-                if (existing is null)
-                {
-                    return new PaymentMethodCriteriaViewModel()
-                    {
-                        PaymentMethod = method.PaymentId.ToString(),
-                        Value = ""
-                    };
-                }
-                else
-                {
-                    return new PaymentMethodCriteriaViewModel()
+                return existing is null
+                    ? new PaymentMethodCriteriaViewModel { PaymentMethod = method.PaymentId.ToString(), Value = "" }
+                    : new PaymentMethodCriteriaViewModel
                     {
                         PaymentMethod = existing.PaymentMethod.ToString(),
                         Type = existing.Above
@@ -382,9 +373,10 @@ namespace BTCPayServer.Controllers
                             : PaymentMethodCriteriaViewModel.CriteriaType.LessThan,
                         Value = existing.Value?.ToString() ?? ""
                     };
-                }
             }).ToList();
-
+            
+            vm.OnChainWithLnInvoiceFallback = storeBlob.OnChainWithLnInvoiceFallback;
+            vm.UseNewCheckout = storeBlob.UseNewCheckout;
             vm.RequiresRefundEmail = storeBlob.RequiresRefundEmail;
             vm.LazyPaymentMethods = storeBlob.LazyPaymentMethods;
             vm.RedirectAutomatically = storeBlob.RedirectAutomatically;
@@ -394,6 +386,7 @@ namespace BTCPayServer.Controllers
             vm.ReceiptOptions = CheckoutAppearanceViewModel.ReceiptOptionsViewModel.Create(storeBlob.ReceiptOptions);
             vm.AutoDetectLanguage = storeBlob.AutoDetectLanguage;
             vm.SetLanguages(_LangService, storeBlob.DefaultLang);
+            vm.SetCheckoutFormOptions(storeBlob.CheckoutFormId);
 
             return View(vm);
         }
@@ -451,6 +444,7 @@ namespace BTCPayServer.Controllers
             }
             SetCryptoCurrencies(model, CurrentStore);
             model.SetLanguages(_LangService, model.DefaultLang);
+            model.SetCheckoutFormOptions(model.CheckoutFormId);
             model.PaymentMethodCriteria ??= new List<PaymentMethodCriteriaViewModel>();
             for (var index = 0; index < model.PaymentMethodCriteria.Count; index++)
             {
@@ -500,6 +494,14 @@ namespace BTCPayServer.Controllers
                     PaymentMethod = paymentMethodId
                 });
             }
+
+            blob.UseNewCheckout = model.UseNewCheckout;
+            if (blob.UseNewCheckout)
+            {
+                blob.CheckoutFormId = model.CheckoutFormId;
+                blob.OnChainWithLnInvoiceFallback = model.OnChainWithLnInvoiceFallback;
+            }
+            
             blob.RequiresRefundEmail = model.RequiresRefundEmail;
             blob.LazyPaymentMethods = model.LazyPaymentMethods;
             blob.RedirectAutomatically = model.RedirectAutomatically;

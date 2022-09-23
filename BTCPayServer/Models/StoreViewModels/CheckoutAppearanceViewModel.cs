@@ -5,6 +5,7 @@ using System.Linq;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Newtonsoft.Json.Linq;
+using YamlDotNet.Core.Tokens;
 
 namespace BTCPayServer.Models.StoreViewModels
 {
@@ -20,11 +21,34 @@ namespace BTCPayServer.Models.StoreViewModels
             Languages = new SelectList(choices, nameof(chosen.Value), nameof(chosen.Name), chosen);
             DefaultLang = chosen.Value;
         }
+        
         public SelectList Languages { get; set; }
+
+        public void SetCheckoutFormOptions(string formId)
+        {
+            var choices = new List<SelectListItem>
+            {
+                new() { Text = "Do not request any information", Value = "None" },
+                new() { Text = "Request email address only", Value = "Email" },
+                new() { Text = "Request full address", Value = "FullAddress" }
+            };
+            var chosen = choices.FirstOrDefault(t => t.Value == formId);
+            CheckoutFormOptions = new SelectList(choices, nameof(SelectListItem.Value), nameof(SelectListItem.Text), chosen?.Value);
+        }
+        public SelectList CheckoutFormOptions { get; set; }
+        
+        [Display(Name = "Request customer data on checkout")]
+        public string CheckoutFormId { get; set; }
+
+        [Display(Name = "Include Lightning invoice fallback to on-chain BIP21 payment URL")]
+        public bool OnChainWithLnInvoiceFallback { get; set; }
 
         [Display(Name = "Default payment method on checkout")]
         public string DefaultPaymentMethod { get; set; }
 
+        [Display(Name = "Use the new checkout")]
+        public bool UseNewCheckout { get; set; }
+        
         [Display(Name = "Requires a refund email")]
         public bool RequiresRefundEmail { get; set; }
 

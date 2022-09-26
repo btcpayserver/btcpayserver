@@ -30,7 +30,7 @@ namespace BTCPayServer.Models.StoreViewModels
             {
                 new() { Text = "Do not request any information", Value = "None" },
                 new() { Text = "Request email address only", Value = "Email" },
-                new() { Text = "Request full address", Value = "FullAddress" }
+                new() { Text = "Request shipping address", Value = "Address" }
             };
             var chosen = choices.FirstOrDefault(t => t.Value == formId);
             CheckoutFormOptions = new SelectList(choices, nameof(SelectListItem.Value), nameof(SelectListItem.Text), chosen?.Value);

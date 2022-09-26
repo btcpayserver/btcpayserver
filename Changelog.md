@@ -23,6 +23,9 @@
 * Consistent switch UI on Create Wallet views (#4135) @dennisreimann
 * Point Of Sale: Custom amount disabled by default (#4126) @daviogg
 * Improve "Advanced Settings" button (#4140) @dennisreimann
+* Improve currency selection (#4155) @dennisreimann
+* Add official Telegram link to footer (#4160) @daviogg
+* Minor updates to security issues and bug reports doc (#4161) @Bangalisch
 
 ### Bug fixes
 
@@ -35,8 +38,10 @@
 * LNURL max value is set to min when item type is minmum (#4115) @Kukks
 * Fix Monero and Zcash nav extensions (#4124) @dennisreimann
 * Add missing store ID to invoice links (#4128) @bolatovumar
+* Fix pagination of wallet's transactions (#4150) @dennisreimann @NicolasDorier
 * Remove redundant exception status from invoice state label (#4151) @bolatovumar
 * Fix Store Settings nav highlight (#4138) @daviogg
+* Fix crash on migration from old install (#4162) @NicolasDorier
 
 ## 1.6.10
 
@@ -66,7 +71,6 @@
 * Add no rate found error message in Invoices (#4039) @HamroRamro
 * Greenfield API docs improvements (#4041 #4035) @dennisreimann
 * Allow binding ip and port for non ssl scenarios too (#4031) @Kukks
-* Fix pagination of wallet's transactions (#4150) @dennisreimann @NicolasDorier
 
 ### Bug fixes:
 

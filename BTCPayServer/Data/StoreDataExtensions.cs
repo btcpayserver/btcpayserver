@@ -52,7 +52,7 @@ namespace BTCPayServer.Data
                 result.PreferredExchange = CoinGeckoRateProvider.CoinGeckoName;
             if (result.PaymentMethodCriteria is null)
                 result.PaymentMethodCriteria = new List<PaymentMethodCriteria>();
-            result.PaymentMethodCriteria.RemoveAll(criteria => criteria.PaymentMethod is null);
+            result.PaymentMethodCriteria.RemoveAll(criteria => criteria?.PaymentMethod is null);
             return result;
         }
 

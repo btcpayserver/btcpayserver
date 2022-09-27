@@ -1653,11 +1653,11 @@ namespace BTCPayServer.Tests
             await tester.StartAsync();
             await tester.EnsureChannelsSetup();
             var user = tester.NewAccount();
-            user.GrantAccess(true);
+            await user.GrantAccessAsync(true);
             user.RegisterLightningNode("BTC", LightningConnectionType.CLightning, false);
 
             var merchant = tester.NewAccount();
-            merchant.GrantAccess(true);
+            await merchant.GrantAccessAsync(true);
             merchant.RegisterLightningNode("BTC", LightningConnectionType.LndREST);
             var merchantClient = await merchant.CreateClient($"{Policies.CanUseLightningNodeInStore}:{merchant.StoreId}");
             var merchantInvoice = await merchantClient.CreateLightningInvoice(merchant.StoreId, "BTC", new CreateLightningInvoiceRequest(LightMoney.Satoshis(1_000), "hey", TimeSpan.FromSeconds(60)));
@@ -1667,6 +1667,13 @@ namespace BTCPayServer.Tests
             var info = await client.GetLightningNodeInfo("BTC");
             Assert.Single(info.NodeURIs);
             Assert.NotEqual(0, info.BlockHeight);
+            Assert.NotNull(info.Alias);
+            Assert.NotNull(info.Color);
+            Assert.NotNull(info.Version);
+            Assert.NotNull(info.PeersCount);
+            Assert.NotNull(info.ActiveChannelsCount);
+            Assert.NotNull(info.InactiveChannelsCount);
+            Assert.NotNull(info.PendingChannelsCount);
 
             await AssertAPIError("lightning-node-unavailable", () => client.GetLightningNodeChannels("BTC"));
             // Not permission for the store!

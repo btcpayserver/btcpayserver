@@ -105,7 +105,7 @@
         onModalReceiveMessageMethod(event);
     }
 
-    function showInvoice(invoiceId, params) {
+    function appendInvoiceFrame(invoiceId, params) {
         showingInvoice = true;
         window.document.body.appendChild(iframe);
         var invoiceUrl = origin + '/invoice?id=' + invoiceId + '&view=modal';
@@ -113,6 +113,11 @@
             invoiceUrl += '&animateEntrance=false';
         }
         iframe.src = invoiceUrl;
+    }
+
+    function appendAndShowInvoiceFrame(invoiceId, params) {
+        appendInvoiceFrame(invoiceId, params);
+        showFrame();
     }
 
     function setButtonListeners() {
@@ -133,7 +138,9 @@
     window.btcpay = {
         showFrame: showFrame,
         hideFrame: hideFrame,
-        showInvoice: showInvoice,
+        showInvoice: appendInvoiceFrame,
+        appendInvoiceFrame: appendInvoiceFrame,
+        appendAndShowInvoiceFrame: appendAndShowInvoiceFrame,
         onModalWillEnter: onModalWillEnter,
         onModalWillLeave: onModalWillLeave,
         setApiUrlPrefix: setApiUrlPrefix,

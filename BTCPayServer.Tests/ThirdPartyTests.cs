@@ -75,11 +75,11 @@ namespace BTCPayServer.Tests
         public async Task CanQueryDirectProviders()
         {
             // TODO: Check once in a while whether or not they are working again
-            string[] brokenShitcoinCasinos = { };
+            string[] brokenShitcoinCasinos = {};
+            var skipped = 0;
             var factory = FastTests.CreateBTCPayRateFactory();
             var directlySupported = factory.GetSupportedExchanges().Where(s => s.Source == RateSource.Direct)
                 .Select(s => s.Id).ToHashSet();
-            var all = string.Join("\r\n", factory.GetSupportedExchanges().Select(e => e.Id).ToArray());
             foreach (var result in factory
                 .Providers
                 .Where(p => p.Value is BackgroundFetcherRateProvider bf &&
@@ -91,14 +91,26 @@ namespace BTCPayServer.Tests
                 var name = result.ExpectedName;
                 if (brokenShitcoinCasinos.Contains(name))
                 {
-                    TestLogs.LogInformation($"Skipping {name}");
+                    TestLogs.LogInformation($"Skipping {name}: Broken shitcoin casino");
+                    skipped++;
                     continue;
                 }
                 
                 TestLogs.LogInformation($"Testing {name}");
 
                 result.Fetcher.InvalidateCache();
-                var exchangeRates = new ExchangeRates(name, result.ResultAsync.Result);
+
+                ExchangeRates exchangeRates = null;
+                try
+                {
+                    exchangeRates = new ExchangeRates(name, result.ResultAsync.Result);
+                }
+                catch (Exception exception)
+                {
+                    TestLogs.LogInformation($"Skipping {name}: {exception.Message}");
+                    skipped++;
+                    continue;
+                }
                 result.Fetcher.InvalidateCache();
                 Assert.NotNull(exchangeRates);
                 Assert.NotEmpty(exchangeRates);
@@ -160,11 +172,12 @@ namespace BTCPayServer.Tests
             // Kraken emit one request only after first GetRates
             factory.Providers["kraken"].GetRatesAsync(default).GetAwaiter().GetResult();
 
-
             var p = new KrakenExchangeRateProvider();
             var rates = await p.GetRatesAsync(default);
             Assert.Contains(rates, e => e.CurrencyPair == new CurrencyPair("XMR", "BTC") && e.BidAsk.Bid < 1.0m);
             
+            // Check we didn't skip too many exchanges
+            Assert.InRange(skipped, 0, 3);
         }
 
         [Fact]

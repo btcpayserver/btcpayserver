@@ -1753,7 +1753,7 @@ namespace BTCPayServer.Tests
             await user.GrantAccessAsync();
             user.RegisterDerivationScheme("BTC");
             await user.SetNetworkFeeMode(NetworkFeeMode.Always);
-            var invoice = user.BitPay.CreateInvoice(
+            var invoice = await user.BitPay.CreateInvoiceAsync(
                 new Invoice
                 {
                     Price = 10,
@@ -1765,11 +1765,10 @@ namespace BTCPayServer.Tests
                 }, Facade.Merchant);
 
             var networkFee = new FeeRate(invoice.MinerFees["BTC"].SatoshiPerBytes).GetFee(100);
-            // ensure 0 invoices exported because there are no payments yet
             var jsonResult = user.GetController<UIInvoiceController>().Export("json").GetAwaiter().GetResult();
             var result = Assert.IsType<ContentResult>(jsonResult);
             Assert.Equal("application/json", result.ContentType);
-            Assert.Equal("[]", result.Content);
+            Assert.Single(JArray.Parse(result.Content));
 
             var cashCow = tester.ExplorerNode;
             var invoiceAddress = BitcoinAddress.Create(invoice.CryptoInfo[0].Address, cashCow.Network);

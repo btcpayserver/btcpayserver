@@ -145,24 +145,28 @@ else
                 <h5 class="mb-0 text-success">Create your store</h5>
             </div>
         </div>
-        @if (!Model.WalletEnabled)
+        @if (Model.Network is BTCPayNetwork)
         {
-            <a asp-controller="UIStores" asp-action="SetupWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" id="SetupGuide-Wallet" class="list-group-item list-group-item-action d-flex align-items-center order-1">
-                <vc:icon symbol="new-wallet"/>
-                <div class="content">
-                    <h5 class="mb-0">Set up a wallet</h5>
+
+            @if (!Model.WalletEnabled)
+            {
+                <a asp-controller="UIStores" asp-action="SetupWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" id="SetupGuide-Wallet" class="list-group-item list-group-item-action d-flex align-items-center order-1">
+                    <vc:icon symbol="new-wallet"/>
+                    <div class="content">
+                        <h5 class="mb-0">Set up a wallet</h5>
+                    </div>
+                    <vc:icon symbol="caret-right"/>
+                </a>
+            }
+            else
+            {
+                <div class="list-group-item d-flex align-items-center" id="SetupGuide-WalletDone">
+                    <vc:icon symbol="done"/>
+                    <div class="content">
+                        <h5 class="mb-0 text-success">Set up a wallet</h5>
+                    </div>
                 </div>
-                <vc:icon symbol="caret-right"/>
-            </a>
-        }
-        else
-        {
-            <div class="list-group-item d-flex align-items-center" id="SetupGuide-WalletDone">
-                <vc:icon symbol="done"/>
-                <div class="content">
-                    <h5 class="mb-0 text-success">Set up a wallet</h5>
-                </div>
-            </div>
+            }
         }
         @if (Model.LightningSupported) {
             if (!Model.LightningEnabled)

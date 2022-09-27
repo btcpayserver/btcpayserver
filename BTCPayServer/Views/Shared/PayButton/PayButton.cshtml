@@ -32,7 +32,7 @@
         var xhttp = new XMLHttpRequest();
         xhttp.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200 && this.responseText) {
-                window.btcpay.showInvoice(JSON.parse(this.responseText).invoiceId);
+                window.btcpay.appendInvoiceFrame(JSON.parse(this.responseText).invoiceId);
             }
         };
         xhttp.open('POST', event.target.getAttribute('action'), true);
@@ -161,7 +161,7 @@
             </div>
             <div class="form-group col-md-4" v-if="!srvModel.appIdEndpoint">
                 <label class="form-label" for="Currency">Currency</label>
-                <input asp-for="Currency" name="currency" currency-selection class="form-control"
+                <input asp-for="Currency" name="currency" class="form-control w-auto" currency-selection
                        v-model="srvModel.currency" v-on:change="inputChanges"
                        :class="{'is-invalid': errors.has('currency') }" />
             </div>

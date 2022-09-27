@@ -60,12 +60,13 @@ namespace BTCPayServer.Services.Labels
                 TextColor = TextColor(color)
             };
 
-            string PayoutLabelText(KeyValuePair<string, List<string>> pair)
+            string PayoutLabelText(KeyValuePair<string, List<string>>? pair = null)
             {
-                if (pair.Value.Count == 1)
-                    return $"Paid a payout {(string.IsNullOrEmpty(pair.Key)? string.Empty: $"of a pull payment ({pair.Key})")}";
-                else
-                    return $"Paid {pair.Value.Count} payouts {(string.IsNullOrEmpty(pair.Key)? string.Empty: $"of a pull payment ({pair.Key})")}";
+                if (pair is null)
+                {
+                    return "Paid a payout";
+                }
+                return pair.Value.Value.Count == 1 ? $"Paid a payout {(string.IsNullOrEmpty(pair.Value.Key)? string.Empty: $"of a pull payment ({pair.Value.Key})")}" : $"Paid {pair.Value.Value.Count} payouts {(string.IsNullOrEmpty(pair.Value.Key)? string.Empty: $"of a pull payment ({pair.Value.Key})")}";
             }
 
             if (uncoloredLabel is ReferenceLabel refLabel)
@@ -101,9 +102,14 @@ namespace BTCPayServer.Services.Labels
             }
             else if (uncoloredLabel is PayoutLabel payoutLabel)
             {
-                coloredLabel.Tooltip = payoutLabel.PullPaymentPayouts.Count > 1
-                        ? $"<ul>{string.Join(string.Empty, payoutLabel.PullPaymentPayouts.Select(pair => $"<li>{PayoutLabelText(pair)}</li>"))}</ul>"
-                        : PayoutLabelText(payoutLabel.PullPaymentPayouts.First());
+                coloredLabel.Tooltip = payoutLabel.PullPaymentPayouts?.Count switch
+                {
+                    null => PayoutLabelText(),
+                    0 => PayoutLabelText(),
+                    1 => PayoutLabelText(payoutLabel.PullPaymentPayouts.First()),
+                    _ =>
+                        $"<ul>{string.Join(string.Empty, payoutLabel.PullPaymentPayouts.Select(pair => $"<li>{PayoutLabelText(pair)}</li>"))}</ul>"
+                };
 
                 coloredLabel.Link = string.IsNullOrEmpty(payoutLabel.WalletId)
                     ? null

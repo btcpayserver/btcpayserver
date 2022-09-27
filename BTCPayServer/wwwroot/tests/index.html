@@ -8,7 +8,7 @@
         window.onload = function(){
             const urlParams = new URLSearchParams(window.location.search);
             const myParam = urlParams.get('invoice');            
-            btcpay.showInvoice(myParam);
+            btcpay.appendInvoiceFrame(myParam);
         }
     </script>
 </head>

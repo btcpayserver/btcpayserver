@@ -92,39 +92,33 @@
             <td class="font-monospace">xpub…-[taproot]</td>
         </tr>
     }
-    <tr class="additional">
+    </tbody>
+    <tbody id="MultiSigExamples" class="collapse">
+    <tr>
         <td class="text-nowrap" rowspan="2">Multi-sig P2WSH</td>
         <td class="font-monospace">2-of-xpub1…-xpub2…</td>
     </tr>
-    <tr class="additional">
+    <tr>
         <td class="font-monospace">wsh(multi(2,<br>[…/48'/0'/0'/2']xpub…/0/*,<br>[…/48'/0'/0'/2']xpub…/0/*))</td>
     </tr>
-    <tr class="additional">
+    <tr>
         <td class="text-nowrap" rowspan="2">Multi-sig P2SH-P2WSH</td>
         <td class="font-monospace">2-of-xpub1…-xpub2…-[p2sh]</td>
     </tr>
-    <tr class="additional">
+    <tr>
         <td class="font-monospace">sh(wsh(multi(2,<br>[…/48'/0'/0'/1']xpub…/0/*,<br>[…/48'/0'/0'/1']xpub…/0/*)))</td>
     </tr>
-    <tr class="additional">
+    <tr>
         <td class="text-nowrap" rowspan="2">Multi-sig P2SH</td>
         <td class="font-monospace">2-of-xpub1…-xpub2…-[legacy]</td>
     </tr>
-    <tr class="additional">
+    <tr>
         <td class="font-monospace">sh(multi(2,<br>[…/45'/0]xpub…/0/*,<br>[…/45'/0]xpub…/0/*))</td>
     </tr>
     </tbody>
 </table>
 
-<a id="ToggleAdditional" href="#additional">Show multi-sig examples</a>
-
-@section PageFootContent {
-    <partial name="_ValidationScriptsPartial" />
-
-    <script>
-        document.getElementById('ToggleAdditional').addEventListener("click", function(e) {
-          e.preventDefault();
-          document.getElementById('AddressTypes').classList.toggle('expanded');
-        });
-    </script>
-}
+<button class="d-inline-flex align-items-center btn btn-link text-primary fw-semibold p-0" type="button" id="ToggleAdditional" data-bs-toggle="collapse" data-bs-target="#MultiSigExamples" aria-expanded="false" aria-controls="MultiSigExamples">
+    <vc:icon symbol="caret-down"/>
+    <span class="ms-1">Show multi-sig examples</span>
+</button>

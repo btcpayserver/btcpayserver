@@ -33,6 +33,7 @@ namespace BTCPayServer.Controllers
                 StoreId = CurrentStore.Id,
                 StoreName = CurrentStore.StoreName,
                 CryptoCode = cryptoCode,
+                Network =  _NetworkProvider.DefaultNetwork,
                 IsSetUp = walletEnabled || lightningEnabled
             };
             

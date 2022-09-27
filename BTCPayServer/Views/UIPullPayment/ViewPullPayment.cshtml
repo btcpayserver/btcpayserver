@@ -244,21 +244,13 @@
       <script src="~/vendor/vue-qrcode/vue-qrcode.min.js" asp-append-version="true"></script>
       <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
       <partial name="ShowQR"/>
-
-    <script>
-	    
+      <script>
         document.addEventListener("DOMContentLoaded", () => {
-            const qrApp = initQRShow("LNURL Withdraw", "", "scan-qr-modal")
-            qrApp.data = null;
-            qrApp.showData = true;
-            qrApp.dataPerMode = {
-                Bech32: @Safe.Json(lnurl),
-                URI: @Safe.Json(lnurlUri)
+            const modes = {
+                uri: { title: "URI", fragments: [@Safe.Json(lnurlUri)], showData: true, href: @Safe.Json(lnurlUri) },
+                bech32: { title: "Bech32", fragments: [@Safe.Json(lnurl)], showData: true, href: @Safe.Json(lnurl) }
             };
-            qrApp.clickable = true;
-            qrApp.allowedModes = ["Bech32", "URI"];
-            qrApp.currentMode = "URI";
-            qrApp.note = @Safe.Json(note);
+            initQRShow({ title: "LNURL Withdraw", note: @Safe.Json(note), modes })
     });
     </script>
   }

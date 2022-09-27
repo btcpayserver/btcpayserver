@@ -447,9 +447,12 @@ namespace BTCPayServer.Tests
             s.AddDerivationScheme();
             s.GoToInvoices();
             var i = s.CreateInvoice();
-            s.GoToInvoiceCheckout(i);
-            s.PayInvoice(true);
-            TestUtils.Eventually(() => s.Driver.FindElement(By.LinkText("View receipt")).Click());
+            await s.Server.PayTester.InvoiceRepository.MarkInvoiceStatus(i, InvoiceStatus.Settled);
+            TestUtils.Eventually(() =>
+            {
+                s.Driver.Navigate().Refresh();
+                s.Driver.FindElement(By.Id($"Receipt")).Click();
+            });
             TestUtils.Eventually(() =>
             {
                 s.Driver.Navigate().Refresh();
@@ -472,7 +475,11 @@ namespace BTCPayServer.Tests
             s.GoToInvoiceCheckout(i);
             var checkouturi = s.Driver.Url;
             s.PayInvoice();
-            TestUtils.Eventually(() => s.Driver.FindElement(By.LinkText("View receipt")).Click());
+            TestUtils.Eventually(() =>
+            {
+                s.Driver.Navigate().Refresh();
+                s.Driver.FindElement(By.Id("receipt-btn")).Click();
+            });
             TestUtils.Eventually(() =>
             {
                 s.Driver.Navigate().Refresh();
@@ -480,9 +487,10 @@ namespace BTCPayServer.Tests
                 Assert.Contains("invoice-processing", s.Driver.PageSource);
             }); 
             s.GoToUrl(checkouturi);
-            s.MineBlockOnInvoiceCheckout();
+
+            await s.Server.PayTester.InvoiceRepository.MarkInvoiceStatus(i, InvoiceStatus.Settled);
             
-            TestUtils.Eventually(() => s.Driver.FindElement(By.LinkText("View receipt")).Click());
+            TestUtils.Eventually(() => s.Driver.FindElement(By.Id("receipt-btn")).Click());
             TestUtils.Eventually(() =>
             {
                 s.Driver.Navigate().Refresh();
@@ -800,6 +808,16 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("TargetCurrency")).Clear();
             s.Driver.FindElement(By.Id("TargetCurrency")).SendKeys("JPY");
             s.Driver.FindElement(By.Id("TargetAmount")).SendKeys("700");
+            
+            // test wrong dates
+            s.Driver.ExecuteJavaScript("const now = new Date();document.getElementById('StartDate').value = now.toISOString();" +
+                "const yst = new Date(now.setDate(now.getDate() -1));document.getElementById('EndDate').value = yst.toISOString()");
+            s.Driver.FindElement(By.Id("SaveSettings")).Click();
+            Assert.Contains("End date cannot be before start date", s.Driver.PageSource);
+            Assert.DoesNotContain("App updated", s.Driver.PageSource);
+            
+            // unset end date
+            s.Driver.ExecuteJavaScript("document.getElementById('EndDate').value = ''");
             s.Driver.FindElement(By.Id("SaveSettings")).Click();
             Assert.Contains("App updated", s.FindAlertMessage().Text);
 

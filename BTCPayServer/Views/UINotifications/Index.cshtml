@@ -33,17 +33,15 @@
                 <table class="table table-hover table-responsive-md">
                     <thead>
                         <tr>
-                            <th width="30px" class="only-for-js">
+                            <th style="width:30px" class="only-for-js">
                                 @if (Model.Items.Count > 0)
                                 {
                                     <input name="selectedItems" id="selectAllCheckbox" type="checkbox" class="form-check-input" />
                                 }
                             </th>
-                            <th width="190px">
+                            <th>
                                 Date
-                                <a href="#" id="switchTimeFormat">
-                                    <span class="fa fa-clock-o" title="Switch date format"></span>
-                                </a>
+                                <a href="#" id="switchTimeFormat" class="fa fa-clock-o" title="Switch date format"></a>
                             </th>
                             <th>Message</th>
                             <th class="text-end">Actions</th>
@@ -56,11 +54,7 @@
                                 <td class="only-for-js">
                                     <input name="selectedItems" type="checkbox" class="selector form-check-input" value="@item.Id" />
                                 </td>
-                                <td class="toggleRowCheckbox">
-                                    <span class="switchTimeFormat" data-switch="@item.Created.ToTimeAgo()">
-                                        @item.Created.ToBrowserDate()
-                                    </span>
-                                </td>
+                                <td class="toggleRowCheckbox">@item.Created.ToBrowserDate()</td>
                                 <td class="toggleRowCheckbox">
                                     @item.Body
                                 </td>
@@ -129,8 +123,6 @@ else
             input.prop('checked', !input.prop("checked"));
             updateSelectors();
         })
-
-        delegate('click', '#switchTimeFormat', switchTimeFormat)
 
         delegate('click', '.btn-toggle-seen', e => {
             const row = $(e.target).parents(".notification-row").toggleClass("loading");

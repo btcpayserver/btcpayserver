@@ -126,7 +126,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
             if (!string.IsNullOrEmpty(request.ChoiceKey))
             {
                 var choices = _appService.GetPOSItems(settings.PerksTemplate, settings.TargetCurrency);
-                choice = choices.FirstOrDefault(c => c.Id == request.ChoiceKey);
+                choice = choices?.FirstOrDefault(c => c.Id == request.ChoiceKey);
                 if (choice == null)
                     return NotFound("Incorrect option provided");
                 title = choice.Title;
@@ -287,12 +287,17 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
 
             if (Enum.Parse<CrowdfundResetEvery>(vm.ResetEvery) != CrowdfundResetEvery.Never && !vm.StartDate.HasValue)
             {
-                ModelState.AddModelError(nameof(vm.StartDate), "A start date is needed when the goal resets every X amount of time.");
+                ModelState.AddModelError(nameof(vm.StartDate), "A start date is needed when the goal resets every X amount of time");
             }
 
             if (Enum.Parse<CrowdfundResetEvery>(vm.ResetEvery) != CrowdfundResetEvery.Never && vm.ResetEveryAmount <= 0)
             {
-                ModelState.AddModelError(nameof(vm.ResetEveryAmount), "You must reset the goal at a minimum of 1 ");
+                ModelState.AddModelError(nameof(vm.ResetEveryAmount), "You must reset the goal at a minimum of 1");
+            }
+
+            if (vm.StartDate != null && vm.EndDate != null && DateTime.Compare((DateTime)vm.StartDate, (DateTime)vm.EndDate) > 0)
+            {
+                ModelState.AddModelError(nameof(vm.EndDate), "End date cannot be before start date");
             }
 
             if (vm.DisplayPerksRanking)
@@ -374,7 +379,13 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
         {
             if (string.IsNullOrWhiteSpace(currency))
             {
-                currency = (await _storeRepository.FindStore(storeId)).GetStoreBlob().DefaultCurrency;
+                var store = await _storeRepository.FindStore(storeId);
+                if (store == null)
+                {
+                    throw new Exception($"Could not find store with id {storeId}");
+                }
+
+                currency = store.GetStoreBlob().DefaultCurrency;
             }
             return currency.Trim().ToUpperInvariant();
         }

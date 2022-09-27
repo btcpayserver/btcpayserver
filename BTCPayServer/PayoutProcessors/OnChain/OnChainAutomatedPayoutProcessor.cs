@@ -23,7 +23,7 @@ using PayoutProcessorData = BTCPayServer.Data.Data.PayoutProcessorData;
 
 namespace BTCPayServer.PayoutProcessors.OnChain
 {
-    public class OnChainAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<AutomatedPayoutBlob>
+    public class OnChainAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<OnChainAutomatedPayoutBlob>
     {
         private readonly ExplorerClientProvider _explorerClientProvider;
         private readonly BTCPayWalletProvider _btcPayWalletProvider;
@@ -89,8 +89,9 @@ namespace BTCPayServer.PayoutProcessors.OnChain
             decimal? failedAmount = null;
             var changeAddress = await explorerClient.GetUnusedAsync(
                 storePaymentMethod.AccountDerivation, DerivationFeature.Change, 0, true);
-
-            var feeRate = await explorerClient.GetFeeRateAsync(1, new FeeRate(1m));
+            
+            var processorBlob = GetBlob(_PayoutProcesserSettings);
+            var feeRate = await explorerClient.GetFeeRateAsync(processorBlob.FeeTargetBlock,new FeeRate(1m));
 
             var transfersProcessing = new List<PayoutData>();
             foreach (var transferRequest in payouts)

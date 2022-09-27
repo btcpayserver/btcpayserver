@@ -36,7 +36,7 @@
             </div>
             <div class="form-group">
                 <label asp-for="Currency" class="form-label"></label>
-                <input asp-for="Currency" class="form-control" currency-selection style="max-width:10ch;" />
+                <input asp-for="Currency" class="form-control w-auto" currency-selection />
                 <small class="d-inline-block form-text text-muted">Uses the store's default currency (@Model.StoreDefaultCurrency) if empty.</small>
                 <span asp-validation-for="Currency" class="text-danger"></span>
             </div>
@@ -259,7 +259,7 @@
 
 <div class="d-flex gap-3 mt-3">
     <a class="btn btn-secondary" asp-action="ListInvoices" asp-controller="UIInvoice" asp-route-storeId="@Model.StoreId" asp-route-searchterm="@Model.SearchTerm">Invoices</a>
-    <a id="DeleteApp" class="btn btn-outline-danger" asp-action="DeleteApp" asp-route-appId="@Model.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The app <strong>@Model.AppName</strong> and its settings will be permanently deleted." data-confirm-input="DELETE">Delete this app</a>
+    <a id="DeleteApp" class="btn btn-outline-danger" asp-controller="UIApps" asp-action="DeleteApp" asp-route-appId="@Model.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The app <strong>@Model.AppName</strong> and its settings will be permanently deleted." data-confirm-input="DELETE">Delete this app</a>
 </div>
 
 <partial name="_Confirm" model="@(new ConfirmModel("Delete app", "This app will be removed from this store.", "Delete"))" />

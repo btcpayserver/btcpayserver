@@ -28,11 +28,41 @@
     <script>
         hljs.initHighlightingOnLoad();
         
-        document.addEventListener("DOMContentLoaded", function () {
-            initQRShow("Scan the PSBT with your wallet", @Json.Serialize(Model.PSBTHex), "scan-qr-modal");
-            initCameraScanningApp("Scan the PSBT from your wallet", function (data){
-               $("textarea[name=PSBT]").val(data);
-               $("#Decode").click();
+        document.addEventListener("DOMContentLoaded", () => {
+            const psbtHex = @Json.Serialize(Model.PSBTHex);
+            const buffer = new window.URlib.Buffer.from(psbtHex, "hex");
+            const cryptoPSBT = new window.URlib.CryptoPSBT(buffer);
+            const encoder = cryptoPSBT.toUREncoder();
+            const modes = {
+                ur: { title: "UR", fragments: encoder.encodeWhole() },
+                static: { title: "Static", fragments: [psbtHex] }
+            };
+            const continueCallback = () => {
+                document.querySelector("#PSBTOptionsImportHeader button").click()
+                document.getElementById("scanqrcode").click()
+            };
+            
+            initQRShow({
+                title: "Scan the PSBT with your wallet",
+                modes,
+                continueTitle: "Continue with signed PSBT",
+                continueCallback
+            });
+            
+            initCameraScanningApp("Scan the PSBT from your wallet", data => {
+                let hex = data;
+                if (typeof(data) === "object") {
+                    if (data.type === "crypto-psbt") {
+                        const psbt = window.URlib.CryptoPSBT.fromCBOR(data.cbor);
+                        hex = psbt.getPSBT().toString('hex');
+                    } else {
+                        console.error('Unexpected UR type', data.type)
+                    }
+                } else if (typeof(data) === 'string') {
+                    hex = data;
+                }
+                document.getElementById("ImportedPSBT").value = hex;
+                document.getElementById("Decode").click();
             }, "scanModal");
         });
     </script>

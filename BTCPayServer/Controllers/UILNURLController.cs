@@ -409,7 +409,7 @@ namespace BTCPayServer
             if (i.Type != InvoiceType.TopUp)
             {
                 min = i.GetPaymentMethod(pmi).Calculate().Due.ToDecimal(MoneyUnit.Satoshi);
-                max = min;
+                max = item?.Price?.Type == ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Minimum ? null :  min;
             }
 
             if (!string.IsNullOrEmpty(username))
@@ -560,9 +560,12 @@ namespace BTCPayServer
                     LightningInvoice invoice;
                     try
                     {
-                        invoice = await client.CreateInvoice(new CreateInvoiceParams(amount.Value,
-                            descriptionHash,
-                            i.ExpirationTime.ToUniversalTime() - DateTimeOffset.UtcNow));
+                        var expiry = i.ExpirationTime.ToUniversalTime() - DateTimeOffset.UtcNow;
+                        var param = new CreateInvoiceParams(amount.Value, descriptionHash, expiry)
+                        {
+                            PrivateRouteHints = blob.LightningPrivateRouteHints
+                        };
+                        invoice = await client.CreateInvoice(param);
                         if (!BOLT11PaymentRequest.Parse(invoice.BOLT11, network.NBitcoinNetwork)
                                 .VerifyDescriptionHash(metadata))
                         {

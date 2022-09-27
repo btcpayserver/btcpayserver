@@ -3,8 +3,8 @@ const flatpickrInstances = [];
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DateTimeFormat/DateTimeFormat
 const dtFormatOpts = { dateStyle: 'short', timeStyle: 'short' };
 
-const formatDatetimes = (mode = 'localized') => {
-    console.log(mode)
+const formatDateTimes = mode => {
+    if (!mode) mode = 'localized';
     // select only elements which haven't been initialized before, those without data-localized
     document.querySelectorAll("time[datetime]:not([data-localized])").forEach($el => {
         const date = new Date($el.getAttribute("datetime"));
@@ -13,7 +13,7 @@ const formatDatetimes = (mode = 'localized') => {
         // set text to chosen mode
         if ($el.dataset[mode]) $el.innerText = $el.dataset[mode];
     });
-}
+};
 
 const switchTimeFormat = event => {
     const curr = event.target.dataset.mode || 'localized';
@@ -22,7 +22,7 @@ const switchTimeFormat = event => {
         $el.innerText = $el.dataset[mode];
     });
     event.target.dataset.mode = mode;
-}
+};
 
 document.addEventListener("DOMContentLoaded", () => {
     // sticky header
@@ -36,7 +36,7 @@ document.addEventListener("DOMContentLoaded", () => {
     $("#TimezoneOffset").val(timezoneOffset);
 
     // localize all elements that have localizeDate class
-    formatDatetimes();
+    formatDateTimes();
     
     function updateTimeAgo(){
         var timeagoElements = $("[data-timeago-unixms]");

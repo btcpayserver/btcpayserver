@@ -50,7 +50,7 @@
     <PackageReference Include="BTCPayServer.Hwi" Version="2.0.2" />
     <PackageReference Include="BTCPayServer.Lightning.All" Version="1.4.5" />
     <PackageReference Include="BuildBundlerMinifier" Version="3.2.449" />
-    <PackageReference Include="BundlerMinifier.Core" Version="3.2.435" />
+    <PackageReference Include="BundlerMinifier.Core" Version="3.2.449" />
     <PackageReference Include="BundlerMinifier.TagHelpers" Version="3.2.435" />
     <PackageReference Include="CsvHelper" Version="15.0.5" />
     <PackageReference Include="Dapper" Version="2.0.123" />

@@ -8,13 +8,13 @@ namespace BTCPayServer.Abstractions.Extensions;
 
 public static class JObjectExtensions
 {
-    public static string? GetValueByPath(this JObject json, string path)
+    public static string GetValueByPath(this JObject json, string path)
     {
         string[] pathParts = path.Split('.');
 
         JObject loopedJObject = json;
         var last = pathParts.Last();
-        string? r = null;
+        string r = null;
         
         foreach (string pathPart in pathParts)
         {

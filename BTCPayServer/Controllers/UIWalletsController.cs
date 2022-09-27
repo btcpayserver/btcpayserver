@@ -320,14 +320,16 @@ namespace BTCPayServer.Controllers
                 // if we couldn't filter at the db level, we need to apply skip and count
                 if (!preFiltering)
                 {
-                    model.Transactions = model.Transactions.Skip(skip).Take(count)
-                        .ToList();
+                    model.Transactions = model.Transactions.Skip(skip).Take(count).ToList();
                 }
             }
 
             model.CryptoCode = walletId.CryptoCode;
 
-            return View(model);
+            //If ajax call then load the partial view
+            return Request.Headers["X-Requested-With"] == "XMLHttpRequest"
+                ? PartialView("_WalletTransactionsList", model)
+                : View(model);
         }
         
         [HttpGet("{walletId}/histogram/{type}")]

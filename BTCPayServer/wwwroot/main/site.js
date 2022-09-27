@@ -1,6 +1,30 @@
 const flatpickrInstances = [];
 
-document.addEventListener("DOMContentLoaded", function () {
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DateTimeFormat/DateTimeFormat
+const dtFormatOpts = { dateStyle: 'short', timeStyle: 'short' };
+
+const formatDateTimes = mode => {
+    if (!mode) mode = 'localized';
+    // select only elements which haven't been initialized before, those without data-localized
+    document.querySelectorAll("time[datetime]:not([data-localized])").forEach($el => {
+        const date = new Date($el.getAttribute("datetime"));
+        // initialize and set localized attribute
+        $el.dataset.localized = new Intl.DateTimeFormat('default', dtFormatOpts).format(date);
+        // set text to chosen mode
+        if ($el.dataset[mode]) $el.innerText = $el.dataset[mode];
+    });
+};
+
+const switchTimeFormat = event => {
+    const curr = event.target.dataset.mode || 'localized';
+    const mode = curr === 'relative' ? 'localized' : 'relative';
+    document.querySelectorAll("time[datetime]").forEach($el => {
+        $el.innerText = $el.dataset[mode];
+    });
+    event.target.dataset.mode = mode;
+};
+
+document.addEventListener("DOMContentLoaded", () => {
     // sticky header
     const stickyHeader = document.querySelector('.sticky-header-setup + .sticky-header');
     if (stickyHeader) {
@@ -12,13 +36,7 @@ document.addEventListener("DOMContentLoaded", function () {
     $("#TimezoneOffset").val(timezoneOffset);
 
     // localize all elements that have localizeDate class
-    $(".localizeDate").each(function (index) {
-        var serverDate = $(this).text();
-        var localDate = new Date(serverDate);
-
-        var dateString = localDate.toLocaleDateString() + " " + localDate.toLocaleTimeString();
-        $(this).text(dateString);
-    });
+    formatDateTimes();
     
     function updateTimeAgo(){
         var timeagoElements = $("[data-timeago-unixms]");
@@ -119,6 +137,9 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
     });
+    
+    // Time Format
+    delegate('click', '#switchTimeFormat', switchTimeFormat);
 
     // Theme Switch
     delegate('click', '.btcpay-theme-switch', e => {
@@ -171,15 +192,5 @@ document.addEventListener("DOMContentLoaded", function () {
         })
     }
 });
-
-function switchTimeFormat() {
-    $(".switchTimeFormat").each(function (index) {
-        var htmlVal = $(this).html();
-        var switchVal = $(this).attr("data-switch");
-
-        $(this).html(switchVal);
-        $(this).attr("data-switch", htmlVal);
-    });
-}
 
 

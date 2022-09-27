@@ -96,6 +96,14 @@ a.unobtrusive-link {
     transform: rotate(-180deg);
 }
 
+time[datetime] {
+    display: block;
+    max-width: 125px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
 /* Badges */
 .badge-new {
     background: #d4edda;

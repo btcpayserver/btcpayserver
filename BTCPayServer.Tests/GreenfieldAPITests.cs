@@ -2957,13 +2957,11 @@ clientBasic.PreviewUpdateStoreRateConfiguration(user.StoreId, new StoreRateConfi
             await admin.GrantAccessAsync(true);
             
             var unauthClient = new BTCPayServerClient(tester.PayTester.ServerUri);
-            var authClientNoPermissions  = await admin.CreateClient(Policies.CanViewInvoices);
             var adminClient = await admin.CreateClient(Policies.Unrestricted);
             var managerClient = await admin.CreateClient(Policies.CanManageCustodianAccounts);
             var withdrawalClient = await admin.CreateClient(Policies.CanWithdrawFromCustodianAccounts);
             var depositClient = await admin.CreateClient(Policies.CanDepositToCustodianAccounts);
             var tradeClient = await admin.CreateClient(Policies.CanTradeCustodianAccount);
-            
             
             var store = await adminClient.GetStore(admin.StoreId);
             var storeId = store.Id;
@@ -3142,9 +3140,9 @@ clientBasic.PreviewUpdateStoreRateConfiguration(user.StoreId, new StoreRateConfi
             // Test: wrong store ID
             await AssertHttpError(403, async () => await tradeClient.GetTradeInfo("WRONG-STORE-ID", accountId, MockCustodian.TradeId));
 
-            
+            var qty = MockCustodian.WithdrawalAmount.ToString(CultureInfo.InvariantCulture);
              // Test: SimulateWithdrawal, unauth
-            var simulateWithdrawalRequest = new WithdrawRequestData(MockCustodian.WithdrawalPaymentMethod, ""+MockCustodian.WithdrawalAmount );
+            var simulateWithdrawalRequest = new WithdrawRequestData(MockCustodian.WithdrawalPaymentMethod, qty);
             await AssertHttpError(401, async () => await unauthClient.SimulateWithdrawal(storeId, accountId, simulateWithdrawalRequest));
             
             // Test: SimulateWithdrawal, auth, but wrong permission
@@ -3155,7 +3153,7 @@ clientBasic.PreviewUpdateStoreRateConfiguration(user.StoreId, new StoreRateConfi
             AssertMockWithdrawal(simulateWithdrawResponse, custodianAccountData);
             
             // Test: SimulateWithdrawal, wrong payment method
-            var wrongPaymentMethodSimulateWithdrawalRequest = new WithdrawRequestData("WRONG-PAYMENT-METHOD", ""+MockCustodian.WithdrawalAmount );
+            var wrongPaymentMethodSimulateWithdrawalRequest = new WithdrawRequestData("WRONG-PAYMENT-METHOD", qty);
             await AssertApiError( 400, "unsupported-payment-method", async () => await withdrawalClient.SimulateWithdrawal(storeId, accountId, wrongPaymentMethodSimulateWithdrawalRequest));
             
             // Test: SimulateWithdrawal, wrong account ID
@@ -3169,11 +3167,9 @@ clientBasic.PreviewUpdateStoreRateConfiguration(user.StoreId, new StoreRateConfi
             var wrongAmountSimulateWithdrawalRequest = new WithdrawRequestData(MockCustodian.WithdrawalPaymentMethod, "0.666");
             await AssertHttpError(400, async () => await withdrawalClient.SimulateWithdrawal(storeId, accountId, wrongAmountSimulateWithdrawalRequest));
 
-            
-
             // Test: CreateWithdrawal, unauth
-            var createWithdrawalRequest = new WithdrawRequestData(MockCustodian.WithdrawalPaymentMethod, ""+MockCustodian.WithdrawalAmount );
-            var createWithdrawalRequestPercentage = new WithdrawRequestData(MockCustodian.WithdrawalPaymentMethod, ""+MockCustodian.WithdrawalAmount );
+            var createWithdrawalRequest = new WithdrawRequestData(MockCustodian.WithdrawalPaymentMethod, qty);
+            var createWithdrawalRequestPercentage = new WithdrawRequestData(MockCustodian.WithdrawalPaymentMethod, qty);
             await AssertHttpError(401, async () => await unauthClient.CreateWithdrawal(storeId, accountId, createWithdrawalRequest));
             
             // Test: CreateWithdrawal, auth, but wrong permission
@@ -3188,7 +3184,7 @@ clientBasic.PreviewUpdateStoreRateConfiguration(user.StoreId, new StoreRateConfi
             AssertMockWithdrawal(withdrawWithPercentageResponse, custodianAccountData);
             
             // Test: CreateWithdrawal, wrong payment method
-            var wrongPaymentMethodCreateWithdrawalRequest = new WithdrawRequestData("WRONG-PAYMENT-METHOD", ""+MockCustodian.WithdrawalAmount );
+            var wrongPaymentMethodCreateWithdrawalRequest = new WithdrawRequestData("WRONG-PAYMENT-METHOD", qty);
             await AssertApiError( 400, "unsupported-payment-method", async () => await withdrawalClient.CreateWithdrawal(storeId, accountId, wrongPaymentMethodCreateWithdrawalRequest));
             
             // Test: CreateWithdrawal, wrong account ID
@@ -3201,7 +3197,6 @@ clientBasic.PreviewUpdateStoreRateConfiguration(user.StoreId, new StoreRateConfi
             // Test: CreateWithdrawal, correct payment method, wrong amount
             var wrongAmountCreateWithdrawalRequest = new WithdrawRequestData(MockCustodian.WithdrawalPaymentMethod, "0.666");
             await AssertHttpError(400, async () => await withdrawalClient.CreateWithdrawal(storeId, accountId, wrongAmountCreateWithdrawalRequest));
-
 
             // Test: GetWithdrawalInfo, unauth
             await AssertHttpError(401, async () => await unauthClient.GetWithdrawalInfo(storeId, accountId, MockCustodian.WithdrawalPaymentMethod, MockCustodian.WithdrawalId));
@@ -3223,9 +3218,7 @@ clientBasic.PreviewUpdateStoreRateConfiguration(user.StoreId, new StoreRateConfi
             // TODO shouldn't this be 404? I cannot change this without bigger impact, as it would affect all API endpoints that are store centered
             await AssertHttpError(403, async () => await withdrawalClient.GetWithdrawalInfo("WRONG-STORE-ID", accountId, MockCustodian.WithdrawalPaymentMethod, MockCustodian.WithdrawalId));
             
-
             // TODO assert API error codes, not just status codes by using AssertCustodianApiError()
-            
             // TODO also test withdrawals for the various "Status" (Queued, Complete, Failed)
             // TODO create a mock custodian with only ICustodian
             // TODO create a mock custodian with only ICustodian + ICanWithdraw

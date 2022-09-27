@@ -501,6 +501,7 @@
         },
         "/api/v1/stores/{storeId}/custodian-accounts/{accountId}/withdrawals/simulation": {
             "post": {
+                "operationId": "Custodians_SimulateWithdrawFromStoreCustodianAccount",
                 "tags": [
                     "Custodians"
                 ],

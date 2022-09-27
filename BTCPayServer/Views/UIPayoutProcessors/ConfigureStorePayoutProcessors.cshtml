@@ -1,11 +1,13 @@
-﻿@using BTCPayServer.Abstractions.Extensions
+﻿@using BTCPayServer.Views.Stores
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using BTCPayServer.Abstractions.Extensions
 @using BTCPayServer.Abstractions.Models
 @model List<BTCPayServer.PayoutProcessors.UIPayoutProcessorsController.StorePayoutProcessorsView>
 @{
     ViewData["NavPartialName"] = "../UIStores/_Nav";
     Layout = "../Shared/_NavLayout.cshtml";
     var storeId = Context.GetStoreData().Id;
-    ViewData.SetActivePage("PayoutProcessors", "Payout Processors", storeId);
+    ViewData.SetActivePage(StoreNavPages.PayoutProcessors, "Payout Processors", storeId);
 }
 <div class="row">
     <div class="col-xl-8 col-xxl-constrain">

@@ -77,7 +77,7 @@
                         <label asp-for="CustomAmount" class="form-label"></label>
                         <div class="input-group">
                             <input asp-for="CustomAmount" type="number" step="any" asp-format="{0}" class="form-control"/>
-                            <input asp-for="CustomCurrency" type="text" class="form-control" currency-selection style="max-width:10ch;"/>
+                            <input asp-for="CustomCurrency" type="text" class="form-control w-auto" currency-selection />
                         </div>
                         <span asp-validation-for="CustomAmount" class="text-danger w-100"></span>
                         <span asp-validation-for="CustomCurrency" class="text-danger w-100"></span>

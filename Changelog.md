@@ -1,4 +1,48 @@
 # Changelog
+
+## 1.6.11
+
+### New feature
+
+* Add support for updating POS app through Greenfield API (#3458) @bolatovumar
+* Allow specifing fee block target for onchain payout processor (#4065) @Kukks
+
+### Improvement
+
+* Make POS and Crowdfund system plugins (#3987) @dennisreimann
+* Enhance export function for invoices (#4060) @HamroRamro
+* Create dynamic manifest for pos apps (#4064) @Kukks
+* Update invoice amount description in Swagger template @bolatovumar
+* Improve payout processors description (#4109) @woutersamaey
+* Set explicit cursor style property on pay button with custom text (#4107) @bolatovumar
+* Use mempool space as default block explorer (#4100) @junderw
+* Improve Lightning Node setup examples (#4033) @dennisreimann
+* Refactor QR functionality and improve wallet import support (#4091) @dennisreimann
+* Sanitize filename for downloaded files (#4117) @dennisreimann
+* Improve PayButton error page (#4129) @dennisreimann
+* Consistent switch UI on Create Wallet views (#4135) @dennisreimann
+* Point Of Sale: Custom amount disabled by default (#4126) @daviogg
+* Improve "Advanced Settings" button (#4140) @dennisreimann
+* Improve currency selection (#4155) @dennisreimann
+* Add official Telegram link to footer (#4160) @daviogg
+* Minor updates to security issues and bug reports doc (#4161) @Bangalisch
+
+### Bug fixes
+
+* Fix app-related API docs @bolatovumar
+* Fix missing route hints option for LNURL invoices (#4077) @dennisreimann
+* Scale-down PoS item image (#4076) @prusnak
+* Ensure apps can be deleted through UI (#4080) @bolatovumar
+* Make sure end date is after start date in Crowdfund app (#4084) @bolatovumar
+* Show iframe when showing invoice in Shopify plugin (#4106) @bolatovumar
+* LNURL max value is set to min when item type is minmum (#4115) @Kukks
+* Fix Monero and Zcash nav extensions (#4124) @dennisreimann
+* Add missing store ID to invoice links (#4128) @bolatovumar
+* Fix pagination of wallet's transactions (#4150) @dennisreimann @NicolasDorier
+* Remove redundant exception status from invoice state label (#4151) @bolatovumar
+* Fix Store Settings nav highlight (#4138) @daviogg
+* Fix crash on migration from old install (#4162) @NicolasDorier
+
 ## 1.6.10
 
 ### Bug fixes:
@@ -26,7 +70,7 @@
 
 * Add no rate found error message in Invoices (#4039) @HamroRamro
 * Greenfield API docs improvements (#4041 #4035) @dennisreimann
-* Allow binding ip and port for non ssl scenarios too (#4031) @Kukks 
+* Allow binding ip and port for non ssl scenarios too (#4031) @Kukks
 
 ### Bug fixes:
 
@@ -141,14 +185,14 @@ It's very likely that by updating BTCPay Server in the past six months, you've a
 * Can add sender's name to any field accepting an email destination, for example `Nicolas Dorier <blah@example.com>` rather than just `blah@example.com` (#3891) @NicolasDorier
 * Support LNURL Withdraw in payouts (#3709) @Kukks
 * Can send parametized emails based on invoice events (#3611) @Kukks
-* Dashboard: Added toggle button to switch to store default currency (#3752) @SakshamSolanki @dennisreimann 
+* Dashboard: Added toggle button to switch to store default currency (#3752) @SakshamSolanki @dennisreimann
 * Support Lightning node connection string with onion addresses (#3845) @Kukks
 * New rate provider: BUDA a chilean exchange (#3766) @Kukks
 * Add Refunds list to Invoice details page (#3815) @Kukks
 
 ### Bug fixes:
 
-* UI: Fix cancel plugin command (#3903) @dennisreimann 
+* UI: Fix cancel plugin command (#3903) @dennisreimann
 * Crowdfunding: Fix the links for the default Quake sounds (#3745) @dennisreimann
 * UI: Fix nav height issue on mobile devices (#3888) @bolatovumar
 * UI: Fix mark all notifications as seen return URL (#3848) @dennisreimann
@@ -228,7 +272,7 @@ It's very likely that by updating BTCPay Server in the past six months, you've a
 * Various UI fixes (#3702 #3721) @dennisreimann
 * Updated Payout processor Label for setting interval (#3698) @Bangalisch
 * Update validation of crowdfund app settings (#3708) @bolatovumar
-* Fix POS styling (#3713) @ishristov 
+* Fix POS styling (#3713) @ishristov
 
 ### Improvements:
 

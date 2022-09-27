@@ -202,11 +202,6 @@
                 else
                 {
                     @Model.State
-                    @if (Model.StatusException != InvoiceExceptionStatus.None)
-                    {
-                        @String.Format(" ({0})", Model.StatusException.ToString())
-                        ;
-                    }
                 }
             </td>
         </tr>

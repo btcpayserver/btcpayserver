@@ -372,7 +372,7 @@
 .btcpay-footer {
     font-size: var(--btcpay-font-size-s);
     overflow: hidden;
-    padding: .5em 0;
+    padding: 0 var(--content-padding-horizontal) 1rem;
     color: var(--btcpay-footer-text);
     background: var(--btcpay-footer-bg);
 }
@@ -613,15 +613,9 @@
         max-width: calc(100vw - var(--sidebar-width) - (2 * var(--btcpay-space-xl)) - 1rem); /* 1rem for scrollbar */
     }
 
-    #mainContent > section,
-    .btcpay-footer > .container {
+    #mainContent > section {
         margin: 0;
         max-width: none;
-    }
-    
-    .btcpay-footer {
-        padding-left: var(--btcpay-space-xl);
-        padding-right: var(--btcpay-space-xl);
     }
 
     #SectionNav .nav {

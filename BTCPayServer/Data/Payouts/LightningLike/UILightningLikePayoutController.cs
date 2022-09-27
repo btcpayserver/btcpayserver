@@ -301,8 +301,9 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                        var payment = await  lightningClient.GetPayment(bolt11PaymentRequest.PaymentHash.ToString());
                        proofBlob.Preimage = payment.Preimage;
                     }
-                    catch (Exception e)
+                    catch (Exception)
                     {
+                        // ignored
                     }
                 }
                 

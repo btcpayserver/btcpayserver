@@ -194,6 +194,41 @@
                     "blockHeight": {
                         "type": "integer",
                         "description": "The block height of the lightning node"
+                    },
+                    "alias": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "The alias of the lightning node"
+                    },
+                    "color": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "The color attribute of the lightning node"
+                    },
+                    "version": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "The version name of the lightning node"
+                    },
+                    "peersCount": {
+                        "type": "integer",
+                        "nullable": true,
+                        "description": "The number of peers"
+                    },
+                    "activeChannelsCount": {
+                        "type": "integer",
+                        "nullable": true,
+                        "description": "The number of active channels"
+                    },
+                    "inactiveChannelsCount": {
+                        "type": "integer",
+                        "nullable": true,
+                        "description": "The number of inactive channels"
+                    },
+                    "pendingChannelsCount": {
+                        "type": "integer",
+                        "nullable": true,
+                        "description": "The number of pending channels"
                     }
                 }
             },

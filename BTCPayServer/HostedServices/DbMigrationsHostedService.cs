@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
@@ -11,6 +12,8 @@ using BTCPayServer.Services.Invoices;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.HostedServices
 {
@@ -40,13 +43,109 @@ namespace BTCPayServer.HostedServices
 
         protected async Task ProcessMigration()
         {
+
             var settings = await _settingsRepository.GetSettingAsync<MigrationSettings>();
             if (settings.MigratedInvoiceTextSearchPages != int.MaxValue)
             {
                 await MigratedInvoiceTextSearchToDb(settings.MigratedInvoiceTextSearchPages ?? 0);
             }
+            if (settings.MigratedTransactionLabels != int.MaxValue)
+            {
+                await MigratedTransactionLabels(settings.MigratedTransactionLabels ?? 0);
+            }
 
             // Refresh settings since these operations may run for very long time
+        }
+
+        internal async Task MigratedTransactionLabels(int startFromOffset)
+        {
+            var serializer = new JsonSerializerSettings() { ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver() };
+            int batchCount = 2000;
+            int total = 0;
+            HashSet<(string WalletId, string LabelId)> existingLabels;
+            using (var db = _dbContextFactory.CreateContext())
+            {
+#pragma warning disable CS0612 // Type or member is obsolete
+                total = await db.WalletTransactions.CountAsync();
+#pragma warning restore CS0612 // Type or member is obsolete
+                existingLabels = (await (db.WalletLabels.AsNoTracking()
+                    .Select(wl => new { wl.WalletId, wl.LabelId })
+                    .ToListAsync()))
+                    .Select(o => (o.WalletId, o.LabelId)).ToHashSet();
+            }
+
+
+
+next:
+            using (var db = _dbContextFactory.CreateContext())
+            {
+                Logs.PayServer.LogInformation($"Wallet transaction label importing transactions {startFromOffset}/{total}");
+#pragma warning disable CS0612 // Type or member is obsolete
+                var txs = await db.WalletTransactions
+                    .OrderByDescending(wt => wt.TransactionId)
+                    .Skip(startFromOffset)
+                    .Take(batchCount)
+                    .ToArrayAsync();
+#pragma warning restore CS0612 // Type or member is obsolete
+
+                foreach (var tx in txs)
+                {
+#pragma warning disable CS0612 // Type or member is obsolete
+                    var blob = tx.GetBlobInfo();
+#pragma warning restore CS0612 // Type or member is obsolete
+                    var data = new JObject();
+                    data.Add("comment", blob.Comment ?? String.Empty);
+                    db.WalletObjects.Add(new Data.WalletObjectData()
+                    {
+                        WalletId = tx.WalletDataId,
+                        ObjectTypeId = Data.WalletObjectData.ObjectTypes.Tx,
+                        ObjectId = tx.TransactionId,
+                        Data = data.ToString()
+                    });
+                    foreach (var label in blob.Labels)
+                    {
+                        if (!existingLabels.Contains((tx.WalletDataId, label.Key)))
+                        {
+                            JObject labelData = new JObject();
+                            labelData.Add("color", "#000");
+                            db.WalletLabels.Add(new WalletLabelData()
+                            {
+                                WalletId = tx.WalletDataId,
+                                LabelId = label.Key,
+                                Data = labelData.ToString()
+                            });
+                            existingLabels.Add((tx.WalletDataId, label.Key));
+                        }
+                        db.WalletTaints.Add(new WalletTaintData()
+                        {
+                            WalletId = tx.WalletDataId,
+                            ObjectTypeId = Data.WalletObjectData.ObjectTypes.Tx,
+                            ObjectId = tx.TransactionId,
+                            TaintId = label.Value.TaintId,
+                            LabelId = label.Key,
+                            TaintTypeId = label.Value.Type,
+                            Data = JsonConvert.SerializeObject(label.Value, serializer)
+                        });
+                    }
+                }
+                await db.SaveChangesAsync();
+                if (txs.Length < batchCount)
+                {
+                    var settings = await _settingsRepository.GetSettingAsync<MigrationSettings>();
+                    settings.MigratedTransactionLabels = int.MaxValue;
+                    await _settingsRepository.UpdateSetting(settings);
+                    Logs.PayServer.LogInformation($"Wallet transaction label successfully migrated");
+                    return;
+                }
+                else
+                {
+                    startFromOffset += batchCount;
+                    var settings = await _settingsRepository.GetSettingAsync<MigrationSettings>();
+                    settings.MigratedTransactionLabels = startFromOffset;
+                    await _settingsRepository.UpdateSetting(settings);
+                    goto next;
+                }
+            }
         }
 
         private async Task MigratedInvoiceTextSearchToDb(int startFromPage)
@@ -111,11 +210,11 @@ namespace BTCPayServer.HostedServices
                     // during final pass we set int.MaxValue so migration doesn't run again
                     settings.MigratedInvoiceTextSearchPages = int.MaxValue;
                 }
-
                 // this call triggers update; we're sure that MigrationSettings is already initialized in db 
                 // because of logic executed in MigrationStartupTask.cs
                 _settingsRepository.UpdateSettingInContext(ctx, settings);
                 await ctx.SaveChangesAsync();
+                CancellationToken.ThrowIfCancellationRequested();
             }
             Logs.PayServer.LogInformation($"Full invoice search import successful");
         }

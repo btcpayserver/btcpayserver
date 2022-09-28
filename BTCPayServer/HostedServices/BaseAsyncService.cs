@@ -27,6 +27,12 @@ namespace BTCPayServer.HostedServices
         public virtual Task StartAsync(CancellationToken cancellationToken)
         {
             _Tasks = InitializeTasks();
+            foreach (var t in _Tasks)
+                t.ContinueWith(t =>
+                {
+                    if (t.IsFaulted)
+                        Logs.PayServer.LogWarning(t.Exception, $"Failure of task of {this.GetType().Name} failed");
+                }, TaskScheduler.Current);
             return Task.CompletedTask;
         }
 

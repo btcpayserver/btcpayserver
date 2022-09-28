@@ -40,6 +40,7 @@ using BTCPayServer.Security.Bitpay;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.Labels;
 using BTCPayServer.Services.Mails;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Storage.Models;
@@ -51,6 +52,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using NBitcoin.Payment;
@@ -187,7 +189,7 @@ namespace BTCPayServer.Tests
 
             Assert.Equal(description, json["components"]["securitySchemes"]["API_Key"]["description"].Value<string>());
         }
-        
+
         [Fact]
         [Trait("Integration", "Integration")]
         public async void CanStoreArbitrarySettingsWithStore()
@@ -197,11 +199,11 @@ namespace BTCPayServer.Tests
             var user = tester.NewAccount();
             await user.GrantAccessAsync();
             var settingsRepo = tester.PayTester.ServiceProvider.GetRequiredService<IStoreRepository>();
-            var arbValue = await settingsRepo.GetSettingAsync<string>(user.StoreId,"arbitrary");
+            var arbValue = await settingsRepo.GetSettingAsync<string>(user.StoreId, "arbitrary");
             Assert.Null(arbValue);
             await settingsRepo.UpdateSetting(user.StoreId, "arbitrary", "saved");
 
-            arbValue = await settingsRepo.GetSettingAsync<string>(user.StoreId,"arbitrary");
+            arbValue = await settingsRepo.GetSettingAsync<string>(user.StoreId, "arbitrary");
             Assert.Equal("saved", arbValue);
 
             await settingsRepo.UpdateSetting<TestData>(user.StoreId, "arbitrary", new TestData() { Name = "hello" });
@@ -326,6 +328,142 @@ namespace BTCPayServer.Tests
                 var localInvoice = user.BitPay.GetInvoice(invoice.Id, Facade.Merchant);
                 Assert.Equal("paid", localInvoice.Status);
             });
+        }
+
+        [Fact]
+        [Trait("Integration", "Integration")]
+        public async Task TestLabelOperations()
+        {
+            using var tester = CreateServerTester(newDb: true);
+            await tester.StartAsync();
+            var wr = tester.PayTester.GetService<WalletRepository>();
+
+            // Can have one label?
+            var wid = new WalletId("store", "BTC");
+            var expectedWalletInfo = new WalletBlobInfo()
+            {
+                LabelColors = new Dictionary<string, string>()
+                {
+                    { "labelA", "c1" }
+                }
+            };
+            await wr.SetWalletInfo(wid, expectedWalletInfo);
+            var actualWalletInfo = await wr.GetWalletInfo(wid);
+            AssertEqual(expectedWalletInfo, actualWalletInfo);
+
+            // Can add label?
+            expectedWalletInfo = new WalletBlobInfo()
+            {
+                LabelColors = new Dictionary<string, string>()
+                {
+                    { "labelA", "c1" },
+                    { "labelB", "c2" },
+                    { "labelC", "c3" },
+                }
+            };
+            await wr.SetWalletInfo(wid, expectedWalletInfo);
+            actualWalletInfo = await wr.GetWalletInfo(wid);
+            AssertEqual(expectedWalletInfo, actualWalletInfo);
+
+            // Can remove and modify label?
+            expectedWalletInfo = new WalletBlobInfo()
+            {
+                LabelColors = new Dictionary<string, string>()
+                {
+                    { "labelA", "c1" },
+                    { "labelC", "c4" },
+                }
+            };
+            await wr.SetWalletInfo(wid, expectedWalletInfo);
+            actualWalletInfo = await wr.GetWalletInfo(wid);
+            AssertEqual(expectedWalletInfo, actualWalletInfo);
+
+            // Add again?
+            expectedWalletInfo = new WalletBlobInfo()
+            {
+                LabelColors = new Dictionary<string, string>()
+                {
+                    { "labelA", "c1" },
+                    { "labelB", "c2" },
+                    { "labelC", "c4" },
+                }
+            };
+            await wr.SetWalletInfo(wid, expectedWalletInfo);
+            actualWalletInfo = await wr.GetWalletInfo(wid);
+            AssertEqual(expectedWalletInfo, actualWalletInfo);
+
+            // Can we label a transaction?
+            var txId = "txId";
+            var expectedWti = new WalletTransactionInfo()
+            {
+                Comment = "lol",
+                Labels = new Dictionary<string, LabelData>()
+                {
+                    { "oneTag", new RawLabel("rawlab") }
+                }
+            };
+            await wr.SetWalletTransactionInfo(wid, txId, expectedWti);
+            var actualWti = (await wr.GetWalletTransactionsInfo(wid, new[] { txId })).First().Value;
+            AssertEqual(expectedWti, actualWti);
+
+            // Can add label and change comment?
+            expectedWti = new WalletTransactionInfo()
+            {
+                Comment = "",
+                Labels = new Dictionary<string, LabelData>()
+                {
+                    { "oneTag", new RawLabel("rawlab") },
+                    { "twoTag", new RawLabel("rawlab2") },
+                    { "threeTag", new RawLabel("rawlab3") },
+                }
+            };
+            await wr.SetWalletTransactionInfo(wid, txId, expectedWti);
+            actualWti = (await wr.GetWalletTransactionsInfo(wid, new[] { txId })).First().Value;
+            AssertEqual(expectedWti, actualWti);
+
+            // Remove and modify label
+            expectedWti = new WalletTransactionInfo()
+            {
+                Comment = "",
+                Labels = new Dictionary<string, LabelData>()
+                {
+                    { "oneTag", new RawLabel("rawlab") },
+                    { "threeTag", new RawLabel("rawlab4") },
+                }
+            };
+            await wr.SetWalletTransactionInfo(wid, txId, expectedWti);
+            actualWti = (await wr.GetWalletTransactionsInfo(wid, new[] { txId })).First().Value;
+            AssertEqual(expectedWti, actualWti);
+
+            // Add again
+            expectedWti = new WalletTransactionInfo()
+            {
+                Comment = "",
+                Labels = new Dictionary<string, LabelData>()
+                {
+                    { "oneTag", new RawLabel("rawlab") },
+                    { "twoTag", new RawLabel("rawlab2") },
+                    { "threeTag", new RawLabel("rawlab4") },
+                }
+            };
+            await wr.SetWalletTransactionInfo(wid, txId, expectedWti);
+            actualWti = (await wr.GetWalletTransactionsInfo(wid, new[] { txId })).First().Value;
+            AssertEqual(expectedWti, actualWti);
+        }
+
+        private void AssertEqual(WalletTransactionInfo expectedWti, WalletTransactionInfo actualWti)
+        {
+            Assert.Equal(JsonConvert.SerializeObject(expectedWti, Formatting.Indented), JsonConvert.SerializeObject(actualWti, Formatting.Indented));
+        }
+
+        private void AssertEqual(WalletBlobInfo expectedWalletInfo, WalletBlobInfo actualWalletInfo)
+        {
+            Assert.Equal(expectedWalletInfo.LabelColors.Count, actualWalletInfo.LabelColors.Count);
+            foreach (var o in expectedWalletInfo.LabelColors.OrderBy(o => o.Key).Zip(actualWalletInfo.LabelColors.OrderBy(o => o.Key)))
+            {
+                Assert.Equal(o.First.Key, o.Second.Key);
+                Assert.Equal(o.First.Value, o.Second.Value);
+            }
         }
 
         [Fact]
@@ -1935,8 +2073,8 @@ namespace BTCPayServer.Tests
                 Assert.Contains($",orderId,{invoice.Id},", paidresult.Content);
                 Assert.Contains($",On-Chain,BTC,0.0991,0.0001,5000.0", paidresult.Content);
                 Assert.Contains($",USD,5.00", paidresult.Content); // Seems hacky but some plateform does not render this decimal the same
-                    Assert.Contains("0,,\"Some \"\", description\",New (paidPartial),new,paidPartial",
-                    paidresult.Content);
+                Assert.Contains("0,,\"Some \"\", description\",New (paidPartial),new,paidPartial",
+                paidresult.Content);
             });
         }
 
@@ -2158,7 +2296,7 @@ namespace BTCPayServer.Tests
                 Assert.Equal("paidPartial", localInvoice.ExceptionStatus.ToString());
                 Assert.Equal(1, localInvoice.CryptoInfo[0].TxCount);
                 Assert.NotEqual(localInvoice.BitcoinAddress, invoice.BitcoinAddress); //New address
-                    Assert.True(IsMapped(invoice, ctx));
+                Assert.True(IsMapped(invoice, ctx));
                 Assert.True(IsMapped(localInvoice, ctx));
 
                 invoiceEntity = repo.GetInvoice(invoice.Id, true).GetAwaiter().GetResult();
@@ -2176,7 +2314,7 @@ namespace BTCPayServer.Tests
                 Assert.Equal(firstPayment + secondPayment, localInvoice.BtcPaid);
                 Assert.Equal(Money.Zero, localInvoice.BtcDue);
                 Assert.Equal(localInvoice.BitcoinAddress, invoiceAddress.ToString()); //no new address generated
-                    Assert.True(IsMapped(localInvoice, ctx));
+                Assert.True(IsMapped(localInvoice, ctx));
                 Assert.False((bool)((JValue)localInvoice.ExceptionStatus).Value);
             });
 
@@ -2519,6 +2657,68 @@ namespace BTCPayServer.Tests
             store = await tester.PayTester.StoreRepository.FindStore(acc.StoreId);
             lnMethod = store.GetSupportedPaymentMethods(tester.NetworkProvider).OfType<LightningSupportedPaymentMethod>().First();
             Assert.True(lnMethod.IsInternalNode);
+        }
+
+
+        [Fact(Timeout = LongRunningTestTimeout)]
+        [Trait("Integration", "Integration")]
+        [Obsolete]
+        public async Task CanDoLabelMigrations()
+        {
+            using var tester = CreateServerTester(newDb: true);
+            await tester.StartAsync();
+            var dbf = tester.PayTester.GetService<ApplicationDbContextFactory>();
+            int walletCount = 1000;
+            using (var db = dbf.CreateContext())
+            {
+                for (int i = 0; i < walletCount; i++)
+                {
+                    var walletData = new WalletData() { Id = "S-wallet" + i + "-BTC" };
+                    walletData.SetBlobInfo(new WalletBlobInfo()
+                    {
+                        LabelColors = new Dictionary<string, string>()
+                        {
+                            { "label1", "black" }
+                        }
+                    });
+                    db.Wallets.Add(walletData);
+                }
+                await db.SaveChangesAsync();
+            }
+            using (var db = dbf.CreateContext())
+            {
+                int transactionCount = 10_000;
+                for (int i = 0; i < transactionCount; i++)
+                {
+                    var wt = new WalletTransactionData()
+                    {
+                        WalletDataId = $"S-wallet{i % walletCount}-BTC",
+                        TransactionId = RandomUtils.GetUInt256().ToString(),
+                    };
+                    var wti = new WalletTransactionInfo()
+                    {
+                        Comment = "test",
+                        Labels = new Dictionary<string, LabelData>()
+                        {
+                            { "label1", new RawLabel("label1") }
+                        }
+                    };
+                    if (i % 1240 == 0)
+                        wti.Labels.Add("labelo" + i, new RawLabel("labelo" + i));
+                    wt.SetBlobInfo(wti);
+                    db.WalletTransactions.Add(wt);
+                }
+                await db.SaveChangesAsync();
+            }
+            await RestartMigration(tester);
+            var migrator = tester.PayTester.GetService<IEnumerable<IHostedService>>().OfType<DbMigrationsHostedService>().First();
+            await migrator.MigratedTransactionLabels(0);
+
+            var walletRepo = tester.PayTester.GetService<WalletRepository>();
+            var wi1 = await walletRepo.GetWalletInfo(new WalletId("wallet0", "BTC"));
+            Assert.Equal(2, wi1.LabelColors.Count);
+            Assert.Contains(wi1.LabelColors, o => o.Key == "label1" && o.Value == "black");
+            Assert.Contains(wi1.LabelColors, o => o.Key == "labelo0" && o.Value == "#000");
         }
 
 

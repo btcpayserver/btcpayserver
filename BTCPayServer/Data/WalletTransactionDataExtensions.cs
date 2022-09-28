@@ -18,7 +18,7 @@ namespace BTCPayServer.Data
     public static class WalletTransactionDataExtensions
     {
         public static int MaxCommentSize = 200;
-
+        [Obsolete]
         public static WalletTransactionInfo GetBlobInfo(this WalletTransactionData walletTransactionData)
         {
             WalletTransactionInfo blobInfo;
@@ -55,6 +55,7 @@ namespace BTCPayServer.Data
             ContractResolver = new CamelCasePropertyNamesContractResolver(),
             Formatting = Formatting.None
         };
+        [Obsolete]
         public static void SetBlobInfo(this WalletTransactionData walletTransactionData, WalletTransactionInfo blobInfo)
         {
             if (blobInfo == null)

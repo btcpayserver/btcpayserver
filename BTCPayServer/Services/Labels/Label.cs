@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using BTCPayServer.Client.Models;
 using NBitcoin;
+using NBitcoin.DataEncoders;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -99,6 +102,7 @@ namespace BTCPayServer.Services.Labels
         {
             Text = text;
         }
+        public override string TaintId => $"raw-{Text}";
     }
     public class ReferenceLabel : Label
     {
@@ -114,6 +118,8 @@ namespace BTCPayServer.Services.Labels
         }
         [JsonProperty("ref")]
         public string Reference { get; set; }
+
+        public override string TaintId => $"ref-{Reference}";
     }
     public class PayoutLabel : Label
     {
@@ -125,6 +131,14 @@ namespace BTCPayServer.Services.Labels
 
         public Dictionary<string, List<string>> PullPaymentPayouts { get; set; } = new();
         public string WalletId { get; set; }
+
+        public override string TaintId
+        {
+            get
+            {
+                return Encoders.Hex.EncodeData(SHA256.HashData(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(this).ToString())).Take(5).ToArray());
+            }
+        }
 
         public override Label Merge(LabelData other)
         {

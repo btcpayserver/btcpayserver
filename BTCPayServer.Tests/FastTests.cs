@@ -484,6 +484,7 @@ namespace BTCPayServer.Tests
 #endif
 
         [Fact]
+        [Obsolete]
         public void CanParseLegacyLabels()
         {
             static void AssertContainsRawLabel(WalletTransactionInfo info)

@@ -29,6 +29,7 @@ using Newtonsoft.Json.Linq;
 using Xunit;
 using Xunit.Abstractions;
 using CreateApplicationUserRequest = BTCPayServer.Client.Models.CreateApplicationUserRequest;
+using BTCPayServer.Services.Labels;
 
 namespace BTCPayServer.Tests
 {
@@ -2286,7 +2287,7 @@ namespace BTCPayServer.Tests
             Assert.Equal(
                 new Dictionary<string, LabelData>()
                 {
-                    { "test label", new LabelData(){ Type = "raw", Text = "test label" } }
+                    { "test label", new RawLabel(){ Type = "raw", Text = "test label" } }
                 }.ToJson(),
                 patchedTransaction.Labels.ToJson()
             );

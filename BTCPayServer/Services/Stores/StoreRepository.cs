@@ -175,7 +175,6 @@ namespace BTCPayServer.Services.Stores
                 ApplicationUserId = ownerId,
                 Role = StoreRoles.Owner,
             };
-
             ctx.Add(storeData);
             ctx.Add(userStore);
             await ctx.SaveChangesAsync();

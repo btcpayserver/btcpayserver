@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using BTCPayServer.Services.Rates;
 
 namespace BTCPayServer.Rating
@@ -55,6 +56,13 @@ namespace BTCPayServer.Rating
                         return true;
                     }
                 }
+            }
+            else if (splitted.Length > 2)
+            {
+                // Some shitcoin have _ their own ticker name... Since we don't care about those, let's
+                // parse it anyway assuming the first part is one currency.
+                value = new CurrencyPair(splitted[0], string.Join("_", splitted.Skip(1).ToArray()));
+                return true;
             }
 
             return false;

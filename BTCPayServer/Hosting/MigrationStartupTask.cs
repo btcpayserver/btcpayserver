@@ -87,7 +87,7 @@ namespace BTCPayServer.Hosting
                 if (settings is null)
                 {
                     // If it is null, then it's the first run: let's skip all the migrations by migration flags to true
-                    settings = new MigrationSettings() { MigratedInvoiceTextSearchPages = int.MaxValue };
+                    settings = new MigrationSettings() { MigratedInvoiceTextSearchPages = int.MaxValue, MigratedTransactionLabels = int.MaxValue };
                     foreach (var prop in settings.GetType().GetProperties().Where(p => p.CanWrite && p.PropertyType == typeof(bool)))
                     {
                         prop.SetValue(settings, true);
@@ -215,6 +215,12 @@ namespace BTCPayServer.Hosting
                     settings.MigrateEmailServerDisableTLSCerts = true;
                     await _Settings.UpdateSetting(settings);
                 }
+                if (!settings.MigrateWalletColors)
+                {
+                    await MigrateMigrateLabels();
+                    settings.MigrateWalletColors = true;
+                    await _Settings.UpdateSetting(settings);
+                }
             }
             catch (Exception ex)
             {
@@ -222,6 +228,44 @@ namespace BTCPayServer.Hosting
                 throw;
             }
         }
+
+#pragma warning disable CS0612 // Type or member is obsolete
+        private async Task MigrateMigrateLabels()
+        {
+            await using var ctx = _DBContextFactory.CreateContext();
+            var wallets = await ctx.Wallets.AsNoTracking().ToArrayAsync();
+            foreach (var wallet in wallets)
+            {
+                var blob = wallet.GetBlobInfo();
+                HashSet<string> labels = new HashSet<string>(blob.LabelColors.Count);
+                foreach (var label in blob.LabelColors)
+                {
+                    var labelId = label.Key;
+                    if (labelId.StartsWith("{", StringComparison.OrdinalIgnoreCase))
+                    {
+                        try
+                        {
+                            labelId = JObject.Parse(label.Key)["value"].Value<string>();
+                        }
+                        catch
+                        {
+                        }
+                    }
+                    if (!labels.Add(labelId))
+                        continue;
+                    var obj = new JObject();
+                    obj.Add("color", label.Value);
+                    ctx.WalletLabels.Add(new Data.WalletLabelData()
+                    {
+                        WalletId =  wallet.Id,
+                        LabelId = labelId,
+                        Data = obj.ToString()
+                    });
+                }
+            }
+            await ctx.SaveChangesAsync();
+        }
+#pragma warning restore CS0612 // Type or member is obsolete
 
         // In the past, if a server was considered local network, then we would disable TLS checks.
         // Now we don't do it anymore, as we have an explicit flag (DisableCertificateCheck) to control the behavior.

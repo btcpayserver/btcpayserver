@@ -173,7 +173,7 @@ namespace BTCPayServer.PayoutProcessors.OnChain
                     {
                         _eventAggregator.Publish(new UpdateTransactionLabel(walletId,
                             txHash,
-                            UpdateTransactionLabel.PayoutTemplate(walletId.ToString(), payoutData.PullPaymentDataId, payoutData.Id)));
+                            LabelTemplate.PayoutTemplate(payoutData.PullPaymentDataId, payoutData.Id)));
                     }
                     await Task.WhenAny(tcs.Task, task);
                 }

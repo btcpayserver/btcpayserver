@@ -504,22 +504,18 @@ namespace BTCPayServer.Payments.PayJoin
 
             await _btcPayWalletProvider.GetWallet(network).SaveOffchainTransactionAsync(ctx.OriginalTransaction);
             var labels = selectedUTXOs.GroupBy(pair => pair.Key.Hash).Select(utxo =>
-                    new KeyValuePair<uint256, List<(string color, Label label)>>(utxo.Key,
-                        new List<(string color, Label label)>()
+                    new KeyValuePair<uint256, List<LabelTemplate>>(utxo.Key,
+                        new List<LabelTemplate>()
                         {
-                            UpdateTransactionLabel.PayjoinExposedLabelTemplate(invoice?.Id)
+                            LabelTemplate.PayjoinExposedLabelTemplate(invoice?.Id)
                         }))
                 .ToDictionary(pair => pair.Key, pair => pair.Value);
             
-            labels.Add(originalPaymentData.PayjoinInformation.CoinjoinTransactionHash, new List<(string color, Label label)>()
+            labels.Add(originalPaymentData.PayjoinInformation.CoinjoinTransactionHash, new List<LabelTemplate>()
             {
-                UpdateTransactionLabel.PayjoinLabelTemplate()
+                LabelTemplate.PayjoinLabelTemplate()
             });
-            _eventAggregator.Publish(new UpdateTransactionLabel()
-            {
-                WalletId = walletId,
-                TransactionLabels = labels
-            });
+            _eventAggregator.Publish(new UpdateTransactionLabel(walletId, labels));
             ctx.Success();
             // BTCPay Server support PSBT set as hex
             if (psbtFormat && HexEncoder.IsWellFormed(rawBody))

@@ -17,7 +17,7 @@ namespace BTCPayServer.Models.WalletViewModels
             public string Balance { get; set; }
             public HashSet<ColoredLabel> Labels { get; set; } = new HashSet<ColoredLabel>();
         }
-        public HashSet<ColoredLabel> Labels { get; set; } = new HashSet<ColoredLabel>();
+        public HashSet<(string Text, string Color, string TextColor)> Labels { get; set; } = new HashSet<(string Text, string Color, string TextColor)>();
         public List<TransactionViewModel> Transactions { get; set; } = new List<TransactionViewModel>();
         public override int CurrentPageCount => Transactions.Count;
         public string CryptoCode { get; set; }

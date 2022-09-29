@@ -29,9 +29,24 @@ namespace BTCPayServer.Services
             ArgumentNullException.ThrowIfNull(walletId);
             using var ctx = _ContextFactory.CreateContext();
 
-            var rows = await ctx.WalletObjectLinks
+            IQueryable<WalletObjectLinkData> wols;
+
+            // If we are using postgres, the `transactionIds.Contains(w.ChildId)` result in a long query like `ANY(@txId1, @txId2, @txId3, @txId4)`
+            // Such request isn't well optimized by postgres, and create different requests clogging up
+            // pg_stat_statements output, making it impossible to analyze the performance impact of this query.
+            if (ctx.Database.IsNpgsql() && transactionIds is not null)
+            {
+                wols = ctx.WalletObjectLinks
+                    .FromSqlInterpolated($"SELECT wol.* FROM unnest({transactionIds}) t JOIN \"WalletObjectLinks\" wol ON wol.\"WalletId\"={walletId.ToString()} AND wol.\"ChildType\"={WalletObjectData.Types.Transaction} AND wol.\"ChildId\"=t")
+                    .AsNoTracking();
+            }
+            else // Unefficient path
+            {
+                wols = ctx.WalletObjectLinks
                 .AsNoTracking()
-                .Where(w => w.WalletId == walletId.ToString() && w.ChildType == WalletObjectData.Types.Transaction && (transactionIds == null || transactionIds.Contains(w.ChildId)))
+                .Where(w => w.WalletId == walletId.ToString() && w.ChildType == WalletObjectData.Types.Transaction && (transactionIds == null || transactionIds.Contains(w.ChildId)));
+            }
+            var rows = await wols
                 .Select(tx =>
                 new
                 {
@@ -48,7 +63,7 @@ namespace BTCPayServer.Services
                 JObject data = row.AssociatedData is null ? null : JObject.Parse(row.AssociatedData);
                 if (!result.TryGetValue(row.TxId, out var info))
                 {
-                    info = new WalletTransactionInfo();
+                    info = new WalletTransactionInfo(walletId);
                     result.Add(row.TxId, info);
                 }
                 if (row.AssociatedDataType == WalletObjectData.Types.Comment)
@@ -57,29 +72,34 @@ namespace BTCPayServer.Services
                 }
                 else if (row.AssociatedDataType == WalletObjectData.Types.Label)
                 {
-                    info.Labels.Add(row.AssociatedDataId, new WalletTransactionInfo.LabelAssociatedData(row.AssociatedDataId)
-                    {
-                        Color = data["color"].Value<string>()
-                    });
+                    info.Labels.Add(row.AssociatedDataId, new WalletTransactionInfo.LabelAssociatedData(row.AssociatedDataId, data["color"]?.Value<string>() ?? "#000"));
                 }
             }
             foreach (var row in rows)
             {
                 if (!result.TryGetValue(row.TxId, out var info))
                     continue;
-                JObject data = row.AssociatedData is null ? null : JObject.Parse(row.AssociatedData);
-                var type = data["type"]?.Value<string>();
-                if (type is null || !info.Labels.TryGetValue(type, out var associatedData))
+                if (!info.Labels.TryGetValue(row.AssociatedDataType, out var associatedData))
                     continue;
-                var label = Label.TryParse(row.AssociatedData);
-                if (label is null || label.Type != type)
-                    continue;
-                associatedData.Metadata.Add(label);
+                associatedData.Metadata.Add((row.AssociatedDataId, row.AssociatedDataType, row.AssociatedData is null ? null : JObject.Parse(row.AssociatedData)));
             }
             return result;
         }
 
 #nullable enable
+
+        public async Task<(string Label, string Color)[]> GetWalletLabels(WalletId walletId)
+        {
+            using var ctx = _ContextFactory.CreateContext();
+            return (await ctx.WalletObjects
+                .AsNoTracking()
+                .Where(w => w.WalletId == walletId.ToString() && w.Type == WalletObjectData.Types.Label)
+                .Select(o => new { o.Id, o.Data })
+                .ToArrayAsync())
+                .Select(o => (o.Id, JObject.Parse(o.Data)["color"]!.Value<string>()!))
+                .ToArray();
+        }
+
         public async Task EnsureWalletObjectLink(WalletObjectId parent, WalletObjectId child)
         {
             using var ctx = _ContextFactory.CreateContext();

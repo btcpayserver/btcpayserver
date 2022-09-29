@@ -234,6 +234,11 @@ namespace BTCPayServer.Controllers
             var transactions = await wallet.FetchTransactionHistory(paymentMethod.AccountDerivation, preFiltering ? skip : null, preFiltering ? count : null);
             var walletTransactionsInfo = await WalletRepository.GetWalletTransactionsInfo(walletId, transactions.Select(t => t.TransactionId.ToString()).ToArray());
             var model = new ListTransactionsViewModel { Skip = skip, Count = count };
+            model.Labels.AddRange(
+                (await WalletRepository.GetWalletLabels(walletId))
+                .Select(c => (c.Label, c.Color, ColorPalette.Default.TextColor(c.Color)))
+                );
+
             if (labelFilter != null)
             {
                 model.PaginationQuery = new Dictionary<string, object> { { "labelFilter", labelFilter } };
@@ -265,7 +270,6 @@ namespace BTCPayServer.Controllers
                     {
                         var labels = _labelFactory.ColorizeTransactionLabels(transactionInfo, Request);
                         vm.Labels.AddRange(labels);
-                        model.Labels.AddRange(labels);
                         vm.Comment = transactionInfo.Comment;
                     }
 

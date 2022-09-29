@@ -301,9 +301,8 @@ namespace BTCPayServer.Controllers.Greenfield
             var wallet = _btcPayWalletProvider.GetWallet(network);
 
             var walletId = new WalletId(storeId, cryptoCode);
-            var walletTransactionsInfoAsync = await _walletRepository.GetWalletTransactionsInfo(walletId);
             var utxos = await wallet.GetUnspentCoins(derivationScheme.AccountDerivation);
-            
+            var walletTransactionsInfoAsync = await _walletRepository.GetWalletTransactionsInfo(walletId, utxos.Select(u => u.OutPoint.Hash.ToString()).ToHashSet().ToArray());
             return Ok(utxos.Select(coin =>
                 {
                     walletTransactionsInfoAsync.TryGetValue(coin.OutPoint.Hash.ToString(), out var info);
@@ -575,7 +574,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     var payjoinTransaction = payjoinPSBT.ExtractTransaction();
                     var hash = payjoinTransaction.GetHash();
                     _eventAggregator.Publish(new UpdateTransactionLabel(new WalletId(Store.Id, cryptoCode), hash,
-                        UpdateTransactionLabel.PayjoinLabelTemplate()));
+                        LabelTemplate.PayjoinLabelTemplate()));
                     broadcastResult = await explorerClient.BroadcastAsync(payjoinTransaction);
                     if (broadcastResult.Success)
                     {

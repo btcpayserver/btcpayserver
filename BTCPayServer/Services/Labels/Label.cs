@@ -189,6 +189,5 @@ namespace BTCPayServer.Services.Labels
         }
 
         public Dictionary<string, List<string>> PullPaymentPayouts { get; set; } = new();
-        public string WalletId { get; set; }
     }
 }

@@ -17,15 +17,12 @@ namespace BTCPayServer.Services.Labels
     public class LabelFactory
     {
         private readonly LinkGenerator _linkGenerator;
-        private readonly  WalletRepository _walletRepository;
 
         public LabelFactory(
-            LinkGenerator linkGenerator,
-            WalletRepository walletRepository
+            LinkGenerator linkGenerator
         )
         {
             _linkGenerator = linkGenerator;
-            _walletRepository = walletRepository;
         }
 
         public IEnumerable<ColoredLabel> ColorizeTransactionLabels(WalletTransactionInfo transactionInfo,
@@ -33,30 +30,19 @@ namespace BTCPayServer.Services.Labels
         {
             foreach (var label in transactionInfo.Labels)
             {
-                yield return CreateLabel(label.Value.LegacyMetadata, label.Value.Color, request);
+                yield return CreateLabel(transactionInfo, label.Value.LegacyMetadata, label.Value.Color, request);
             }
         }
-
-        public IEnumerable<ColoredLabel> GetWalletColoredLabels(WalletBlobInfo walletBlobInfo, HttpRequest request)
-        {
-            foreach (var kv in walletBlobInfo.LabelColors)
-            {
-                yield return CreateLabel(new RawLabel() { Text = kv.Key }, kv.Value, request);
-            }
-        }
-
-        const string DefaultColor = "#000";
-        private ColoredLabel CreateLabel(LabelData uncoloredLabel, string? color, HttpRequest request)
+        private ColoredLabel CreateLabel(WalletTransactionInfo transactionInfo, LabelData uncoloredLabel, string color, HttpRequest request)
         {
             ArgumentNullException.ThrowIfNull(uncoloredLabel);
-            color ??= DefaultColor;
 
             ColoredLabel coloredLabel = new ColoredLabel
             {
                 Text = uncoloredLabel.Text,
                 Color = color,
                 Tooltip = "",
-                TextColor = TextColor(color)
+                TextColor = ColorPalette.Default.TextColor(color)
             };
 
             string PayoutLabelText(KeyValuePair<string, List<string>>? pair = null)
@@ -110,9 +96,7 @@ namespace BTCPayServer.Services.Labels
                         $"<ul>{string.Join(string.Empty, payoutLabel.PullPaymentPayouts.Select(pair => $"<li>{PayoutLabelText(pair)}</li>"))}</ul>"
                 };
 
-                coloredLabel.Link = string.IsNullOrEmpty(payoutLabel.WalletId)
-                    ? null
-                    : _linkGenerator.PayoutLink(payoutLabel.WalletId, null, PayoutState.Completed, request.Scheme, request.Host,
+                coloredLabel.Link = _linkGenerator.PayoutLink(transactionInfo.WalletId.ToString(), null, PayoutState.Completed, request.Scheme, request.Host,
                         request.PathBase);
             }
             else if (uncoloredLabel.Text == "payjoin")
@@ -120,41 +104,6 @@ namespace BTCPayServer.Services.Labels
                 coloredLabel.Tooltip = $"This UTXO was part of a PayJoin transaction.";
             }
             return coloredLabel;
-        }
-
-        private string ChooseBackgroundColor(
-            WalletBlobInfo walletBlobInfo,
-            HttpRequest request
-        )
-        {
-            var labels = GetWalletColoredLabels(walletBlobInfo, request);
-
-            List<string> allColors = new List<string>();
-            allColors.AddRange(ColorPalette.Default.Labels);
-            allColors.AddRange(labels.Select(l => l.Color));
-            var chosenColor =
-                allColors
-                .GroupBy(k => k)
-                .OrderBy(k => k.Count())
-                .ThenBy(k =>
-                {
-                    var indexInColorScheme = Array.IndexOf(ColorPalette.Default.Labels, k.Key);
-
-                    // Ensures that any label color which may not be in our label color scheme is given the least priority
-                    return indexInColorScheme == -1 ? double.PositiveInfinity : indexInColorScheme;
-                })
-                .First().Key;
-
-            return chosenColor;
-        }
-
-        private string TextColor(string bgColor)
-        {
-            int nThreshold = 105;
-            var bg = ColorTranslator.FromHtml(bgColor);
-            int bgDelta = Convert.ToInt32((bg.R * 0.299) + (bg.G * 0.587) +  (bg.B * 0.114));
-            Color color = (255 - bgDelta < nThreshold) ? Color.Black : Color.White;
-            return ColorTranslator.ToHtml(color);
         }
     }
 }

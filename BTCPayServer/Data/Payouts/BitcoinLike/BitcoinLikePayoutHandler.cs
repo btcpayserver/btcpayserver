@@ -429,7 +429,7 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
                 var walletId = new WalletId(payout.StoreDataId, newTransaction.CryptoCode);
                 _eventAggregator.Publish(new UpdateTransactionLabel(walletId,
                     newTransaction.NewTransactionEvent.TransactionData.TransactionHash,
-                    UpdateTransactionLabel.PayoutTemplate(walletId.ToString(), payout.PullPaymentDataId, payout.Id)));
+                    LabelTemplate.PayoutTemplate(payout.PullPaymentDataId, payout.Id)));
             }
             else
             {

@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,44 +14,61 @@ namespace BTCPayServer.Data
     {
         public class LabelAssociatedData
         {
-            public LabelAssociatedData(string label)
+            public LabelAssociatedData(string label, string color)
             {
+                Color = color;
                 Label = label;
             }
             public string Color { get; set; }
-            public List<LabelData> Metadata { get; set; } = new List<LabelData>();
+            public List<(String Id, String Type, JObject? Value)> Metadata { get; set; } = new List<(String Id, String Type, JObject? Value)>();
             public LabelData LegacyMetadata
             {
                 get
                 {
-                    var legacy = Metadata.FirstOrDefault() ?? new RawLabel(Label);
-                    // Before, the payout label were merged into a single one. Only the LabelFactory use this
-                    // so we might want to remove it soon.
-                    if (legacy is PayoutLabel)
+                    foreach (var metadata in Metadata)
                     {
-                        var legacyPayoutLabel = new LegacyPayoutLabel();
-                        foreach (var metadata in Metadata.OfType<PayoutLabel>())
+                        switch (Label)
                         {
-                            var ppid = metadata.PullPaymentId ?? "";
-                            if (!legacyPayoutLabel.PullPaymentPayouts.TryGetValue(ppid, out var payoutIds))
-                            {
-                                payoutIds = new List<string>();
-                                legacyPayoutLabel.PullPaymentPayouts.Add(ppid, payoutIds);
-                            }
-                            payoutIds.Add(metadata.PayoutId);
+                            case "payout":
+                                var legacyPayoutLabel = new LegacyPayoutLabel();
+                                foreach (var m in Metadata.Where(m => m.Type == "payout"))
+                                {
+                                    var ppid = m.Value?["pullPaymentId"]?.Value<string>() ?? "";
+                                    if (!legacyPayoutLabel.PullPaymentPayouts.TryGetValue(ppid, out var payoutIds))
+                                    {
+                                        payoutIds = new List<string>();
+                                        legacyPayoutLabel.PullPaymentPayouts.Add(ppid, payoutIds);
+                                    }
+                                    payoutIds.Add(m.Id);
+                                }
+                                return legacyPayoutLabel;
+                            case "payjoin":
+                                return new ReferenceLabel("payjoin", "payjoin");
+                            case "payment-request":
+                            case "app":
+                            case "pj-exposed":
+                            case "invoice":
+                                return new ReferenceLabel(Label, metadata.Id);
+                            default: continue;
                         }
-                        legacy = legacyPayoutLabel;
                     }
-                    return legacy;
+                    return new RawLabel(Label);
                 }
             }
 
             public string Label { get; }
         }
+
+        public WalletTransactionInfo(WalletId walletId)
+        {
+            WalletId = walletId;
+        }
+        [JsonIgnore]
+        public WalletId WalletId { get; }
         public string Comment { get; set; } = string.Empty;
         [JsonIgnore]
         public Dictionary<string, LabelAssociatedData> Labels { get; set; } = new Dictionary<string, LabelAssociatedData>();
-        Dictionary<string, LabelData> _LegacyLabels;
+        Dictionary<string, LabelData>? _LegacyLabels;
         [JsonIgnore]
         public Dictionary<string, LabelData> LegacyLabels
         {

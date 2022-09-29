@@ -79,7 +79,7 @@
                             <div class="py-2 px-3 d-flex flex-wrap gap-2">
                                 @foreach (var label in Model.Labels)
                                 {
-                                    @if (transaction.Labels.Contains(label))
+                                    @if (transaction.Labels.Any(l => l.Text == label.Text))
                                     {
                                         <button name="removelabel" class="bg-transparent border-0 p-0" type="submit" value="@label.Text"><span class="badge" style="background-color:@label.Color;color:@label.TextColor"><span class="fa fa-check"></span> @label.Text</span></button>
                                     }

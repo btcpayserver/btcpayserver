@@ -1,3 +1,5 @@
+using System;
+using System.Drawing;
 using System.Text;
 using NBitcoin.Crypto;
 
@@ -5,6 +7,14 @@ namespace BTCPayServer
 {
     public class ColorPalette
     {
+        public string TextColor(string bgColor)
+        {
+            int nThreshold = 105;
+            var bg = ColorTranslator.FromHtml(bgColor);
+            int bgDelta = Convert.ToInt32((bg.R * 0.299) + (bg.G * 0.587) + (bg.B * 0.114));
+            Color color = (255 - bgDelta < nThreshold) ? Color.Black : Color.White;
+            return ColorTranslator.ToHtml(color);
+        }
         // Borrowed from https://github.com/ManageIQ/guides/blob/master/labels.md
         public static readonly ColorPalette Default = new ColorPalette(new string[] {
             "#fbca04",

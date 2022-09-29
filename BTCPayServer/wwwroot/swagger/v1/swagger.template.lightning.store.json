@@ -609,6 +609,83 @@
             }
         },
         "/api/v1/stores/{storeId}/lightning/{cryptoCode}/invoices": {
+            "get": {
+                "tags": [
+                    "Lightning (Store)"
+                ],
+                "summary": "Get invoices",
+                "parameters": [
+                    {
+                        "name": "cryptoCode",
+                        "in": "path",
+                        "required": true,
+                        "description": "The cryptoCode of the lightning-node to query",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "BTC"
+                    },
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store id with the lightning-node configuration to query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "pendingOnly",
+                        "in": "query",
+                        "required": false,
+                        "description": "Limit to pending invoices only",
+                        "schema": {
+                            "type": "boolean",
+                            "nullable": true,
+                            "default": false
+                        }
+                    },
+                    {
+                        "name": "offsetIndex",
+                        "in": "query",
+                        "required": false,
+                        "description": "The index of an invoice that will be used as the start of the list",
+                        "schema": {
+                            "type": "number",
+                            "nullable": true,
+                            "default": 0
+                        }
+                    }
+                ],
+                "description": "View information about the lightning invoices",
+                "operationId": "StoreLightningNodeApi_GetInvoices",
+                "responses": {
+                    "200": {
+                        "description": "Lightning invoice data",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/LightningInvoiceData"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Unable to access the lightning node"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.cancreatelightninginvoice"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
             "post": {
                 "tags": [
                     "Lightning (Store)"

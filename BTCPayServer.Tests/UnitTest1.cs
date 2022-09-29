@@ -800,9 +800,6 @@ namespace BTCPayServer.Tests
             Assert.Contains("test", tx.Labels.Select(l => l.Text));
             Assert.DoesNotContain("test2", tx.Labels.Select(l => l.Text));
             Assert.Single(tx.Labels.GroupBy(l => l.Color));
-
-            var walletInfo = await tester.PayTester.GetService<WalletRepository>().GetWalletInfo(walletId);
-            Assert.Single(walletInfo.LabelColors); // the test2 color should have been removed
         }
 
         [Fact(Timeout = LongRunningTestTimeout)]

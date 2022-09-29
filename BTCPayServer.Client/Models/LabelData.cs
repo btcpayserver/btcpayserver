@@ -9,6 +9,11 @@ namespace BTCPayServer.Client.Models
         public string Type { get; set; }
         public string Text { get; set; }
 
+        public virtual string GetWalletObjectId()
+        {
+            return string.Empty;
+        }
+
         [JsonExtensionData] public Dictionary<string, JToken> AdditionalData { get; set; }
     }
 }

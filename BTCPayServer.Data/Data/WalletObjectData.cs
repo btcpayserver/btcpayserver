@@ -10,6 +10,12 @@ namespace BTCPayServer.Data
 {
     public class WalletObjectData
     {
+        public class Types
+        {
+            public const string Label = "Label";
+            public const string Transaction = "Transaction";
+            public const string Comment = "Comment";
+        }
         public string WalletId { get; set; }
         public string Type { get; set; }
         public string Id { get; set; }

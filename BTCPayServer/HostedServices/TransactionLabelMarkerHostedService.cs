@@ -14,6 +14,8 @@ using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Labels;
 using BTCPayServer.Services.PaymentRequests;
 using NBitcoin;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.HostedServices
 {
@@ -61,51 +63,22 @@ namespace BTCPayServer.HostedServices
             }
             else if (evt is UpdateTransactionLabel updateTransactionLabel)
             {
-                var walletTransactionsInfo =
-                    await _walletRepository.GetWalletTransactionsInfo(updateTransactionLabel.WalletId);
-                var walletBlobInfo = await _walletRepository.GetWalletInfo(updateTransactionLabel.WalletId);
                 await Task.WhenAll(updateTransactionLabel.TransactionLabels.Select(async pair =>
                 {
-                    var txId = pair.Key.ToString();
-                    var coloredLabels = pair.Value;
-                    if (!walletTransactionsInfo.TryGetValue(txId, out var walletTransactionInfo))
+                    var txObjId = new WalletObjectId(updateTransactionLabel.WalletId, WalletObjectData.Types.Transaction, pair.Key.ToString());
+                    await _walletRepository.EnsureWalletObject(txObjId);
+                    foreach (var label in pair.Value)
                     {
-                        walletTransactionInfo = new WalletTransactionInfo();
-                    }
-
-                    bool walletNeedUpdate = false;
-                    foreach (var cl in coloredLabels)
-                    {
-                        if (walletBlobInfo.LabelColors.TryGetValue(cl.label.Text, out var currentColor))
+                        var labelObjId = new WalletObjectId(updateTransactionLabel.WalletId, WalletObjectData.Types.Label, label.label.Type);
+                        await _walletRepository.SetWalletObject(labelObjId, new JObject()
                         {
-                            if (currentColor != cl.color)
-                            {
-                                walletNeedUpdate = true;
-                                walletBlobInfo.LabelColors[cl.label.Text] = currentColor;
-                            }
-                        }
-                        else
-                        {
-                            walletNeedUpdate = true;
-                            walletBlobInfo.LabelColors.AddOrReplace(cl.label.Text, cl.color);
-                        }
+                            ["color"] = label.color
+                        });
+                        await _walletRepository.EnsureWalletObjectLink(labelObjId, txObjId);
+                        var data = new WalletObjectId(updateTransactionLabel.WalletId, label.label.Type, label.label.GetWalletObjectId());
+                        await _walletRepository.EnsureWalletObject(data, JObject.FromObject(label.label, Label.Serializer));
+                        await _walletRepository.EnsureWalletObjectLink(data, txObjId);
                     }
-
-                    if (walletNeedUpdate)
-                        await _walletRepository.SetWalletInfo(updateTransactionLabel.WalletId, walletBlobInfo);
-                    foreach (var cl in coloredLabels)
-                    {
-                        var label = cl.label;
-                        if (walletTransactionInfo.Labels.TryGetValue(label.Text, out var existingLabel))
-                        {
-                            label = label.Merge(existingLabel);
-                        }
-
-                        walletTransactionInfo.Labels.AddOrReplace(label.Text, label);
-                    }
-
-                    await _walletRepository.SetWalletTransactionInfo(updateTransactionLabel.WalletId,
-                        txId, walletTransactionInfo);
                 }));
             }
         }
@@ -152,11 +125,12 @@ namespace BTCPayServer.HostedServices
             return ("#51b13e", new ReferenceLabel("pj-exposed", invoice));
         }
 
-        public static (string color, Label label) PayoutTemplate(Dictionary<string, List<string>> pullPaymentToPayouts, string walletId)
+        public static (string color, Label label) PayoutTemplate(string walletId, string pullPaymentId, string payoutId)
         {
             return ("#3F88AF", new PayoutLabel()
             {
-                PullPaymentPayouts = pullPaymentToPayouts,
+                PayoutId = payoutId,
+                PullPaymentId = pullPaymentId,
                 WalletId = walletId
             });
         }

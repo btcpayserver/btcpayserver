@@ -870,28 +870,24 @@ namespace BTCPayServer.Migrations
                     b.Property<string>("WalletId")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("ParentId")
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("ParentType")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("ChildId")
+                    b.Property<string>("ParentId")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("ChildType")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("ChildId")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Data")
                         .HasColumnType("TEXT");
 
-                    b.HasKey("WalletId", "ParentId", "ParentType", "ChildId", "ChildType");
-
-                    b.HasIndex("WalletId", "ChildId", "ChildType");
+                    b.HasKey("WalletId", "ParentType", "ParentId", "ChildType", "ChildId");
 
                     b.HasIndex("WalletId", "ChildType", "ChildId");
-
-                    b.HasIndex("WalletId", "ParentType", "ParentId");
 
                     b.ToTable("WalletObjectLinks");
                 });

@@ -11,10 +11,10 @@ namespace BTCPayServer.Data
     public class WalletObjectLinkData
     {
         public string WalletId { get; set; }
-        public string ParentId { get; set; }
         public string ParentType { get; set; }
-        public string ChildId { get; set; }
+        public string ParentId { get; set; }
         public string ChildType { get; set; }
+        public string ChildId { get; set; }
         public string Data { get; set; }
 
         public WalletObjectData Parent { get; set; }
@@ -26,16 +26,16 @@ namespace BTCPayServer.Data
             new
             {
                 o.WalletId,
-                o.ParentId,
                 o.ParentType,
-                o.ChildId,
+                o.ParentId,
                 o.ChildType,
+                o.ChildId,
             });
             builder.Entity<WalletObjectLinkData>().HasIndex(o => new
             {
                 o.WalletId,
+                o.ChildType,
                 o.ChildId,
-                o.ChildType
             });
 
             builder.Entity<WalletObjectLinkData>()

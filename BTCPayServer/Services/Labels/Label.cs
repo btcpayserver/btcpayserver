@@ -11,18 +11,13 @@ namespace BTCPayServer.Services.Labels
 
     public abstract class Label : LabelData
     {
-        public virtual Label Merge(LabelData other)
-        {
-            return this;
-        }
-
         static void FixLegacy(JObject jObj, ReferenceLabel refLabel)
         {
             if (refLabel.Reference is null && jObj.ContainsKey("id"))
                 refLabel.Reference = jObj["id"].Value<string>();
             FixLegacy(jObj, (Label)refLabel);
         }
-        static void FixLegacy(JObject jObj, PayoutLabel payoutLabel)
+        static void FixLegacy(JObject jObj, LegacyPayoutLabel payoutLabel)
         {
             if (jObj.ContainsKey("id") && payoutLabel.PullPaymentPayouts.Count is 0)
             {
@@ -49,7 +44,52 @@ namespace BTCPayServer.Services.Labels
             rawLabel.Type = "raw";
             FixLegacy(jObj, (Label)rawLabel);
         }
-        public static Label Parse(string str)
+
+        public static Label TryParse(string str)
+        {
+            var jObj = JObject.Parse(str);
+            return TryParse(jObj);
+        }
+
+        public static Label TryParse(JObject jObj)
+        {
+            string type = null;
+            // Legacy label
+            if (!jObj.ContainsKey("type"))
+            {
+                type = jObj["value"].Value<string>();
+            }
+            else
+            {
+                type = jObj["type"].Value<string>();
+            }
+
+            switch (type)
+            {
+                case "invoice":
+                case "payment-request":
+                case "app":
+                case "pj-exposed":
+                    return jObj.ToObject<ReferenceLabel>(Serializer);
+                case "payout":
+                    return jObj.ToObject<PayoutLabel>(Serializer);
+                default:
+                    return null;
+            }
+        }
+
+        static Label()
+        {
+            SerializerSettings = new JsonSerializerSettings()
+            {
+                ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
+            };
+            Serializer = JsonSerializer.Create(SerializerSettings);
+        }
+
+        public static JsonSerializerSettings SerializerSettings;
+        public static JsonSerializer Serializer;
+        public static Label ParseLegacy(string str)
         {
             ArgumentNullException.ThrowIfNull(str);
             if (str.StartsWith("{", StringComparison.InvariantCultureIgnoreCase))
@@ -80,7 +120,7 @@ namespace BTCPayServer.Services.Labels
                         FixLegacy(jObj, refLabel);
                         return refLabel;
                     case "payout":
-                        var payoutLabel = JsonConvert.DeserializeObject<PayoutLabel>(str);
+                        var payoutLabel = JsonConvert.DeserializeObject<LegacyPayoutLabel>(str);
                         FixLegacy(jObj, payoutLabel);
                         return payoutLabel;
                     default:
@@ -120,6 +160,10 @@ namespace BTCPayServer.Services.Labels
         }
         [JsonProperty("ref")]
         public string Reference { get; set; }
+        public override string GetWalletObjectId()
+        {
+            return Reference;
+        }
     }
     public class PayoutLabel : Label
     {
@@ -128,23 +172,23 @@ namespace BTCPayServer.Services.Labels
             Type = "payout";
             Text = "payout";
         }
+        public string WalletId { get; set; }
+        public string PullPaymentId { get; set; }
+        public string PayoutId { get; set; }
+        public override string GetWalletObjectId()
+        {
+            return PayoutId;
+        }
+    }
+    public class LegacyPayoutLabel : Label
+    {
+        public LegacyPayoutLabel()
+        {
+            Type = "payout";
+            Text = "payout";
+        }
 
         public Dictionary<string, List<string>> PullPaymentPayouts { get; set; } = new();
         public string WalletId { get; set; }
-
-        public override Label Merge(LabelData other)
-        {
-            if (other is not PayoutLabel otherPayoutLabel) return base.Merge(other);
-            foreach (var pullPaymentPayout in otherPayoutLabel.PullPaymentPayouts)
-            {
-                if (!PullPaymentPayouts.TryGetValue(pullPaymentPayout.Key, out var pullPaymentPayouts))
-                {
-                    pullPaymentPayouts = new List<string>();
-                    PullPaymentPayouts.Add(pullPaymentPayout.Key, pullPaymentPayouts);
-                }
-                pullPaymentPayouts.AddRange(pullPaymentPayout.Value);
-            }
-            return base.Merge(other);
-        }
     }
 }

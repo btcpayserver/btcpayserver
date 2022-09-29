@@ -146,58 +146,19 @@ namespace BTCPayServer.Controllers
             if (paymentMethod == null)
                 return NotFound();
 
-            var walletBlobInfoAsync = WalletRepository.GetWalletInfo(walletId);
-            var walletTransactionsInfoAsync = WalletRepository.GetWalletTransactionsInfo(walletId);
+            var txObjId = new WalletObjectId(walletId, WalletObjectData.Types.Transaction, transactionId);
             var wallet = _walletProvider.GetWallet(paymentMethod.Network);
-            var walletBlobInfo = await walletBlobInfoAsync;
-            var walletTransactionsInfo = await walletTransactionsInfoAsync;
             if (addlabel != null)
             {
-                if (!walletTransactionsInfo.TryGetValue(transactionId, out var walletTransactionInfo))
-                {
-                    walletTransactionInfo = new WalletTransactionInfo();
-                }
-                
-                var rawLabel = await _labelFactory.BuildLabel(
-                    walletBlobInfo,
-                    Request!,
-                    walletTransactionInfo,
-                    walletId,
-                    transactionId,
-                    addlabel
-                );
-                if (walletTransactionInfo.Labels.TryAdd(rawLabel.Text, rawLabel))
-                {
-                    await WalletRepository.SetWalletTransactionInfo(walletId, transactionId, walletTransactionInfo);
-                }
+                await WalletRepository.AddWalletObjectLabels(txObjId, addlabel);
             }
             else if (removelabel != null)
             {
-                removelabel = removelabel.Trim();
-                if (walletTransactionsInfo.TryGetValue(transactionId, out var walletTransactionInfo))
-                {
-                    if (walletTransactionInfo.Labels.Remove(removelabel))
-                    {
-                        var canDeleteColor =
-                            !walletTransactionsInfo.Any(txi => txi.Value.Labels.ContainsKey(removelabel));
-                        if (canDeleteColor)
-                        {
-                            walletBlobInfo.LabelColors.Remove(removelabel);
-                            await WalletRepository.SetWalletInfo(walletId, walletBlobInfo);
-                        }
-                        await WalletRepository.SetWalletTransactionInfo(walletId, transactionId, walletTransactionInfo);
-                    }
-                }
+                await WalletRepository.RemoveWalletObjectLabels(txObjId, removelabel);
             }
             else if (addcomment != null)
             {
-                addcomment = addcomment.Trim().Truncate(WalletTransactionDataExtensions.MaxCommentSize);
-                if (!walletTransactionsInfo.TryGetValue(transactionId, out var walletTransactionInfo))
-                {
-                    walletTransactionInfo = new WalletTransactionInfo();
-                }
-                walletTransactionInfo.Comment = addcomment;
-                await WalletRepository.SetWalletTransactionInfo(walletId, transactionId, walletTransactionInfo);
+                await WalletRepository.SetWalletObjectComment(txObjId, addcomment);
             }
             return RedirectToAction(nameof(WalletTransactions), new { walletId = walletId.ToString() });
         }
@@ -267,14 +228,11 @@ namespace BTCPayServer.Controllers
                 return NotFound();
 
             var wallet = _walletProvider.GetWallet(paymentMethod.Network);
-            var walletBlobAsync = WalletRepository.GetWalletInfo(walletId);
-            var walletTransactionsInfoAsync = WalletRepository.GetWalletTransactionsInfo(walletId);
 
             // We can't filter at the database level if we need to apply label filter
             var preFiltering = string.IsNullOrEmpty(labelFilter);
             var transactions = await wallet.FetchTransactionHistory(paymentMethod.AccountDerivation, preFiltering ? skip : null, preFiltering ? count : null);
-            var walletBlob = await walletBlobAsync;
-            var walletTransactionsInfo = await walletTransactionsInfoAsync;
+            var walletTransactionsInfo = await WalletRepository.GetWalletTransactionsInfo(walletId, transactions.Select(t => t.TransactionId.ToString()).ToArray());
             var model = new ListTransactionsViewModel { Skip = skip, Count = count };
             if (labelFilter != null)
             {
@@ -305,7 +263,7 @@ namespace BTCPayServer.Controllers
 
                     if (walletTransactionsInfo.TryGetValue(tx.TransactionId.ToString(), out var transactionInfo))
                     {
-                        var labels = _labelFactory.ColorizeTransactionLabels(walletBlob, transactionInfo, Request);
+                        var labels = _labelFactory.ColorizeTransactionLabels(transactionInfo, Request);
                         vm.Labels.AddRange(labels);
                         model.Labels.AddRange(labels);
                         vm.Comment = transactionInfo.Comment;
@@ -613,17 +571,17 @@ namespace BTCPayServer.Controllers
                 var schemeSettings = GetDerivationSchemeSettings(walletId);
                 if (schemeSettings is null)
                     return NotFound();
-                var walletBlobAsync = await WalletRepository.GetWalletInfo(walletId);
-                var walletTransactionsInfoAsync = await WalletRepository.GetWalletTransactionsInfo(walletId);
 
                 var utxos = await _walletProvider.GetWallet(network)
                     .GetUnspentCoins(schemeSettings.AccountDerivation, false, cancellation);
+
+                var walletTransactionsInfoAsync = await this.WalletRepository.GetWalletTransactionsInfo(walletId, utxos.Select(u => u.OutPoint.Hash.ToString()).Distinct().ToArray());
                 vm.InputsAvailable = utxos.Select(coin =>
                 {
                     walletTransactionsInfoAsync.TryGetValue(coin.OutPoint.Hash.ToString(), out var info);
-                    var labels = info?.Labels == null
+                    var labels = info?.LegacyLabels == null
                         ? new List<ColoredLabel>()
-                        : _labelFactory.ColorizeTransactionLabels(walletBlobAsync, info, Request).ToList();
+                        : _labelFactory.ColorizeTransactionLabels(info, Request).ToList();
                     return new WalletSendModel.InputSelectionOption()
                     {
                         Outpoint = coin.OutPoint.ToString(),

@@ -60,7 +60,6 @@ namespace BTCPayServer.Controllers
         private readonly IFeeProviderFactory _feeRateProvider;
         private readonly BTCPayWalletProvider _walletProvider;
         private readonly WalletReceiveService _walletReceiveService;
-        private readonly EventAggregator _EventAggregator;
         private readonly SettingsRepository _settingsRepository;
         private readonly DelayedTransactionBroadcaster _broadcaster;
         private readonly PayjoinClient _payjoinClient;
@@ -84,7 +83,6 @@ namespace BTCPayServer.Controllers
                                  IFeeProviderFactory feeRateProvider,
                                  BTCPayWalletProvider walletProvider,
                                  WalletReceiveService walletReceiveService,
-                                 EventAggregator eventAggregator,
                                  SettingsRepository settingsRepository,
                                  DelayedTransactionBroadcaster broadcaster,
                                  PayjoinClient payjoinClient,
@@ -105,7 +103,6 @@ namespace BTCPayServer.Controllers
             _feeRateProvider = feeRateProvider;
             _walletProvider = walletProvider;
             _walletReceiveService = walletReceiveService;
-            _EventAggregator = eventAggregator;
             _settingsRepository = settingsRepository;
             _broadcaster = broadcaster;
             _payjoinClient = payjoinClient;
@@ -583,9 +580,7 @@ namespace BTCPayServer.Controllers
                 vm.InputsAvailable = utxos.Select(coin =>
                 {
                     walletTransactionsInfoAsync.TryGetValue(coin.OutPoint.Hash.ToString(), out var info);
-                    var labels = info?.LegacyLabels == null
-                        ? new List<ColoredLabel>()
-                        : _labelFactory.ColorizeTransactionLabels(info, Request).ToList();
+                    var labels = _labelFactory.ColorizeTransactionLabels(info, Request).ToList();
                     return new WalletSendModel.InputSelectionOption()
                     {
                         Outpoint = coin.OutPoint.ToString(),

@@ -5,8 +5,10 @@ using System.Text;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Data;
+using BTCPayServer.HostedServices;
 using BTCPayServer.Services.Labels;
 using Microsoft.EntityFrameworkCore;
+using NBitcoin;
 using NBitcoin.Crypto;
 using Newtonsoft.Json.Linq;
 
@@ -72,16 +74,12 @@ namespace BTCPayServer.Services
                 }
                 else if (row.AssociatedDataType == WalletObjectData.Types.Label)
                 {
-                    info.Labels.Add(row.AssociatedDataId, new WalletTransactionInfo.LabelAssociatedData(row.AssociatedDataId, data["color"]?.Value<string>() ?? "#000"));
+                    info.LabelColors.TryAdd(row.AssociatedDataId, data["color"]?.Value<string>() ?? "#000");
                 }
-            }
-            foreach (var row in rows)
-            {
-                if (!result.TryGetValue(row.TxId, out var info))
-                    continue;
-                if (!info.Labels.TryGetValue(row.AssociatedDataType, out var associatedData))
-                    continue;
-                associatedData.Metadata.Add((row.AssociatedDataId, row.AssociatedDataType, row.AssociatedData is null ? null : JObject.Parse(row.AssociatedData)));
+                else
+                {
+                    info.Tags.Add(new TransactionTag(row.AssociatedDataType, row.AssociatedDataId, row.AssociatedData is null ? null : JObject.Parse(row.AssociatedData)));
+                }
             }
             return result;
         }
@@ -147,6 +145,33 @@ namespace BTCPayServer.Services
                     ["color"] = ColorPalette.Default.DeterministicColor(l)
                 });
                 await EnsureWalletObjectLink(labelObjId, id);
+            }
+        }
+
+        public Task AddWalletTransactionTags(WalletId walletId, uint256 txId, TransactionTag tag)
+        {
+            return AddWalletTransactionTags(walletId, txId, new[] { tag });
+        }
+        public async Task AddWalletTransactionTags(WalletId walletId, uint256 txId, IEnumerable<TransactionTag> tags)
+        {
+            ArgumentNullException.ThrowIfNull(walletId);
+            ArgumentNullException.ThrowIfNull(txId);
+            var txObjId = new WalletObjectId(walletId, WalletObjectData.Types.Transaction, txId.ToString());
+            await EnsureWalletObject(txObjId);
+            foreach (var tag in tags)
+            {
+                var labelObjId = new WalletObjectId(walletId, WalletObjectData.Types.Label, tag.Label);
+                await EnsureWalletObject(labelObjId, new JObject()
+                {
+                    ["color"] = ColorPalette.Default.DeterministicColor(tag.Label)
+                });
+                await EnsureWalletObjectLink(labelObjId, txObjId);
+                if (tag.AssociatedData is not null || tag.Id.Length != 0)
+                {
+                    var data = new WalletObjectId(walletId, tag.Label, tag.Id);
+                    await EnsureWalletObject(data, tag.AssociatedData);
+                    await EnsureWalletObjectLink(data, txObjId);
+                }
             }
         }
         public async Task RemoveWalletObjectLabels(WalletObjectId id, params string[] labels)

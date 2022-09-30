@@ -29,13 +29,29 @@ namespace BTCPayServer
         {
             Labels = labels;
         }
-        
+
         public readonly string[] Labels;
 
         public string DeterministicColor(string label)
         {
-            var num = NBitcoin.Utils.ToUInt32(Hashes.SHA256(Encoding.UTF8.GetBytes(label)), 0, true);
-            return Labels[num % Labels.Length];
+            switch (label)
+            {
+                case "payjoin":
+                    return "#51b13e";
+                case "invoice":
+                    return "#cedc21";
+                case "payment-request":
+                    return "#489D77";
+                case "app":
+                    return "#5093B6";
+                case "pj-exposed":
+                    return "#51b13e";
+                case "payout":
+                    return "#3F88AF";
+                default:
+                    var num = NBitcoin.Utils.ToUInt32(Hashes.SHA256(Encoding.UTF8.GetBytes(label)), 0, true);
+                    return Labels[num % Labels.Length];
+            }
         }
     }
 }

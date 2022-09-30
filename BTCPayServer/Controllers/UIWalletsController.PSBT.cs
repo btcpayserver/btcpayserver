@@ -460,7 +460,7 @@ namespace BTCPayServer.Controllers
                             vm.SigningContext.OriginalPSBT = psbt.ToBase64();
                             proposedPayjoin.Finalize();
                             var hash = proposedPayjoin.ExtractTransaction().GetHash();
-                            _EventAggregator.Publish(new UpdateTransactionLabel(walletId, hash, LabelTemplate.PayjoinLabelTemplate()));
+                            await WalletRepository.AddWalletTransactionTags(walletId, hash, TransactionTag.PayjoinTag());
                             TempData.SetStatusMessageModel(new StatusMessageModel
                             {
                                 Severity = StatusMessageModel.StatusSeverity.Success,

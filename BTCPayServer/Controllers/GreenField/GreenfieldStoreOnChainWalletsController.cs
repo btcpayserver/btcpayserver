@@ -202,7 +202,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     if (!string.IsNullOrWhiteSpace(labelFilter))
                     {
                         walletTransactionsInfoAsync.TryGetValue(t.TransactionId.ToString(), out var transactionInfo);
-                        if (transactionInfo?.LegacyLabels.ContainsKey(labelFilter) is true)
+                        if (transactionInfo?.LabelColors.ContainsKey(labelFilter) is true)
                             filteredList.Add(t);
                     }
                     if (statusFilter?.Any() is true)
@@ -573,8 +573,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     payjoinPSBT.Finalize();
                     var payjoinTransaction = payjoinPSBT.ExtractTransaction();
                     var hash = payjoinTransaction.GetHash();
-                    _eventAggregator.Publish(new UpdateTransactionLabel(new WalletId(Store.Id, cryptoCode), hash,
-                        LabelTemplate.PayjoinLabelTemplate()));
+                    await this._walletRepository.AddWalletTransactionTags(new WalletId(Store.Id, cryptoCode), hash, TransactionTag.PayjoinTag());
                     broadcastResult = await explorerClient.BroadcastAsync(payjoinTransaction);
                     if (broadcastResult.Success)
                     {

@@ -25,12 +25,15 @@ namespace BTCPayServer.Services.Labels
             _linkGenerator = linkGenerator;
         }
 
-        public IEnumerable<ColoredLabel> ColorizeTransactionLabels(WalletTransactionInfo transactionInfo,
+        public IEnumerable<ColoredLabel> ColorizeTransactionLabels(WalletTransactionInfo? transactionInfo,
             HttpRequest request)
         {
-            foreach (var label in transactionInfo.Labels)
+            if (transactionInfo?.LegacyLabels is null)
+                yield break;
+            foreach (var label in transactionInfo.LegacyLabels)
             {
-                yield return CreateLabel(transactionInfo, label.Value.LegacyMetadata, label.Value.Color, request);
+                if (transactionInfo.LabelColors.TryGetValue(label.Key, out var color))
+                    yield return CreateLabel(transactionInfo, label.Value, color, request);
             }
         }
         private ColoredLabel CreateLabel(WalletTransactionInfo transactionInfo, LabelData uncoloredLabel, string color, HttpRequest request)

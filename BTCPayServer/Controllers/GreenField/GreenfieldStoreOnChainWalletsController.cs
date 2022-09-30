@@ -52,7 +52,6 @@ namespace BTCPayServer.Controllers.Greenfield
         private readonly EventAggregator _eventAggregator;
         private readonly WalletReceiveService _walletReceiveService;
         private readonly IFeeProviderFactory _feeProviderFactory;
-        private readonly LabelFactory _labelFactory;
         private readonly UTXOLocker _utxoLocker;
 
         public GreenfieldStoreOnChainWalletsController(
@@ -69,7 +68,6 @@ namespace BTCPayServer.Controllers.Greenfield
             EventAggregator eventAggregator,
             WalletReceiveService walletReceiveService,
             IFeeProviderFactory feeProviderFactory,
-            LabelFactory labelFactory,
             UTXOLocker utxoLocker
         )
         {
@@ -86,7 +84,6 @@ namespace BTCPayServer.Controllers.Greenfield
             _eventAggregator = eventAggregator;
             _walletReceiveService = walletReceiveService;
             _feeProviderFactory = feeProviderFactory;
-            _labelFactory = labelFactory;
             _utxoLocker = utxoLocker;
         }
 

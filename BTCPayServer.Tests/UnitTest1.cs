@@ -785,9 +785,9 @@ namespace BTCPayServer.Tests
             tx = Assert.Single(transactions.Transactions);
 
             Assert.Equal("hello", tx.Comment);
-            Assert.Contains("test", tx.Labels.Select(l => l.Text));
-            Assert.Contains("test2", tx.Labels.Select(l => l.Text));
-            Assert.Equal(2, tx.Labels.GroupBy(l => l.Color).Count());
+            Assert.Contains("test", tx.Tags.Select(l => l.Text));
+            Assert.Contains("test2", tx.Tags.Select(l => l.Text));
+            Assert.Equal(2, tx.Tags.GroupBy(l => l.Color).Count());
 
             Assert.IsType<RedirectToActionResult>(
                 await walletController.ModifyTransaction(walletId, tx.Id, removelabel: "test2"));
@@ -797,9 +797,9 @@ namespace BTCPayServer.Tests
             tx = Assert.Single(transactions.Transactions);
 
             Assert.Equal("hello", tx.Comment);
-            Assert.Contains("test", tx.Labels.Select(l => l.Text));
-            Assert.DoesNotContain("test2", tx.Labels.Select(l => l.Text));
-            Assert.Single(tx.Labels.GroupBy(l => l.Color));
+            Assert.Contains("test", tx.Tags.Select(l => l.Text));
+            Assert.DoesNotContain("test2", tx.Tags.Select(l => l.Text));
+            Assert.Single(tx.Tags.GroupBy(l => l.Color));
         }
 
         [Fact(Timeout = LongRunningTestTimeout)]

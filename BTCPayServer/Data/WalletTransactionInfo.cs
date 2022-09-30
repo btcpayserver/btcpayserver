@@ -119,6 +119,10 @@ namespace BTCPayServer.Data
                                 continue;
                         }
                     }
+                    foreach (var label in LabelColors)
+                    {
+                        legacyLabels.TryAdd(label.Key, new RawLabel(label.Key));
+                    }
                     _LegacyLabels = legacyLabels;
                 }
                 return _LegacyLabels;

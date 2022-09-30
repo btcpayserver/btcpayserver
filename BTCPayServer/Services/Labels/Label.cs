@@ -45,39 +45,6 @@ namespace BTCPayServer.Services.Labels
             FixLegacy(jObj, (Label)rawLabel);
         }
 
-        public static Label TryParse(string str)
-        {
-            var jObj = JObject.Parse(str);
-            return TryParse(jObj);
-        }
-
-        public static Label TryParse(JObject jObj)
-        {
-            string type = null;
-            // Legacy label
-            if (!jObj.ContainsKey("type"))
-            {
-                type = jObj["value"].Value<string>();
-            }
-            else
-            {
-                type = jObj["type"].Value<string>();
-            }
-
-            switch (type)
-            {
-                case "invoice":
-                case "payment-request":
-                case "app":
-                case "pj-exposed":
-                    return jObj.ToObject<ReferenceLabel>(Serializer);
-                case "payout":
-                    return jObj.ToObject<PayoutLabel>(Serializer);
-                default:
-                    return null;
-            }
-        }
-
         static Label()
         {
             SerializerSettings = new JsonSerializerSettings()
@@ -160,25 +127,6 @@ namespace BTCPayServer.Services.Labels
         }
         [JsonProperty("ref")]
         public string Reference { get; set; }
-        public override string GetWalletObjectId()
-        {
-            return Reference;
-        }
-    }
-    public class PayoutLabel : Label
-    {
-        public PayoutLabel()
-        {
-            Type = "payout";
-            Text = "payout";
-        }
-        public string WalletId { get; set; }
-        public string PullPaymentId { get; set; }
-        public string PayoutId { get; set; }
-        public override string GetWalletObjectId()
-        {
-            return PayoutId;
-        }
     }
     public class LegacyPayoutLabel : Label
     {

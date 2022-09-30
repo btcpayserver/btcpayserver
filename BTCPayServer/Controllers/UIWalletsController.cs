@@ -39,6 +39,8 @@ using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
 using Newtonsoft.Json;
 using StoreData = BTCPayServer.Data.StoreData;
+using Microsoft.AspNetCore.Routing;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Controllers
 {
@@ -63,7 +65,7 @@ namespace BTCPayServer.Controllers
         private readonly SettingsRepository _settingsRepository;
         private readonly DelayedTransactionBroadcaster _broadcaster;
         private readonly PayjoinClient _payjoinClient;
-        private readonly LabelFactory _labelFactory;
+        private readonly LinkGenerator _linkGenerator;
         private readonly PullPaymentHostedService _pullPaymentHostedService;
         private readonly UTXOLocker _utxoLocker;
         private readonly WalletHistogramService _walletHistogramService;
@@ -86,12 +88,13 @@ namespace BTCPayServer.Controllers
                                  SettingsRepository settingsRepository,
                                  DelayedTransactionBroadcaster broadcaster,
                                  PayjoinClient payjoinClient,
-                                 LabelFactory labelFactory,
                                  IServiceProvider serviceProvider,
                                  PullPaymentHostedService pullPaymentHostedService,
-                                 UTXOLocker utxoLocker)
+                                 UTXOLocker utxoLocker,
+                                 LinkGenerator linkGenerator)
         {
             _currencyTable = currencyTable;
+            _linkGenerator = linkGenerator;
             Repository = repo;
             WalletRepository = walletRepository;
             RateFetcher = rateProvider;
@@ -106,7 +109,6 @@ namespace BTCPayServer.Controllers
             _settingsRepository = settingsRepository;
             _broadcaster = broadcaster;
             _payjoinClient = payjoinClient;
-            _labelFactory = labelFactory;
             _pullPaymentHostedService = pullPaymentHostedService;
             _utxoLocker = utxoLocker;
             ServiceProvider = serviceProvider;
@@ -265,13 +267,13 @@ namespace BTCPayServer.Controllers
 
                     if (walletTransactionsInfo.TryGetValue(tx.TransactionId.ToString(), out var transactionInfo))
                     {
-                        var labels = _labelFactory.ColorizeTransactionLabels(transactionInfo, Request);
-                        vm.Labels.AddRange(labels);
+                        var labels = CreateTransactionTagModels(transactionInfo);
+                        vm.Tags.AddRange(labels);
                         vm.Comment = transactionInfo.Comment;
                     }
 
                     if (labelFilter == null ||
-                        vm.Labels.Any(l => l.Text.Equals(labelFilter, StringComparison.OrdinalIgnoreCase)))
+                        vm.Tags.Any(l => l.Text.Equals(labelFilter, StringComparison.OrdinalIgnoreCase)))
                         model.Transactions.Add(vm);
                 }
 
@@ -580,7 +582,7 @@ namespace BTCPayServer.Controllers
                 vm.InputsAvailable = utxos.Select(coin =>
                 {
                     walletTransactionsInfoAsync.TryGetValue(coin.OutPoint.Hash.ToString(), out var info);
-                    var labels = _labelFactory.ColorizeTransactionLabels(info, Request).ToList();
+                    var labels = CreateTransactionTagModels(info).ToList();
                     return new WalletSendModel.InputSelectionOption()
                     {
                         Outpoint = coin.OutPoint.ToString(),
@@ -1316,6 +1318,117 @@ namespace BTCPayServer.Controllers
         private string GetUserId() => _userManager.GetUserId(User);
 
         private StoreData GetCurrentStore() => HttpContext.GetStoreData();
+
+        public IEnumerable<TransactionTagModel> CreateTransactionTagModels(WalletTransactionInfo? transactionInfo)
+        {
+            if (transactionInfo is null)
+                return Array.Empty<TransactionTagModel>();
+
+            string PayoutTooltip(IGrouping<string, string>? payoutsByPullPaymentId = null)
+            {
+                if (payoutsByPullPaymentId is null)
+                {
+                    return "Paid a payout";
+                }
+                else if (payoutsByPullPaymentId.Count() == 1)
+                {
+                    var pp = payoutsByPullPaymentId.Key;
+                    var payout = payoutsByPullPaymentId.First();
+                    if (!string.IsNullOrEmpty(pp))
+                        return $"Paid a payout ({payout}) of a pull payment ({pp})";
+                    else
+                        return $"Paid a payout {payout}";
+                }
+                else
+                {
+                    var pp = payoutsByPullPaymentId.Key;
+                    if (!string.IsNullOrEmpty(pp))
+                        return $"Paid {payoutsByPullPaymentId.Count()} payouts of a pull payment ({pp})";
+                    else
+                        return $"Paid {payoutsByPullPaymentId.Count()} payouts";
+                }
+            }
+
+            var models = new Dictionary<string, TransactionTagModel>();
+            foreach (var tag in transactionInfo.Tags)
+            {
+                if (models.ContainsKey(tag.Label))
+                    continue;
+                if (!transactionInfo.LabelColors.TryGetValue(tag.Label, out var color))
+                    continue;
+                var model = new TransactionTagModel
+                {
+                    Text = tag.Label,
+                    Color = color,
+                    TextColor = ColorPalette.Default.TextColor(color)
+                };
+                models.Add(tag.Label, model);
+                if (tag.Label == "payout")
+                {
+                    var payoutsByPullPaymentId =
+                        transactionInfo.Tags.Where(t => t.Label == "payout")
+                        .GroupBy(t => t.AssociatedData?["pullPaymentId"]?.Value<string>() ?? "",
+                                 k => k.Id).ToList();
+
+                    model.Tooltip = payoutsByPullPaymentId.Count switch
+                    {
+                        0 => PayoutTooltip(),
+                        1 => PayoutTooltip(payoutsByPullPaymentId.First()),
+                        _ =>
+                            $"<ul>{string.Join(string.Empty, payoutsByPullPaymentId.Select(pair => $"<li>{PayoutTooltip(pair)}</li>"))}</ul>"
+                    };
+
+                    model.Link = _linkGenerator.PayoutLink(transactionInfo.WalletId.ToString(), null, PayoutState.Completed, Request.Scheme, Request.Host,
+                            Request.PathBase);
+                }
+                else if (tag.Label == "payjoin")
+                {
+                    model.Tooltip = $"This UTXO was part of a PayJoin transaction.";
+                }
+                else if (tag.Label == "invoice")
+                {
+                    model.Tooltip = $"Received through an invoice {tag.Id}";
+                    model.Link = string.IsNullOrEmpty(tag.Id)
+                            ? null
+                            : _linkGenerator.InvoiceLink(tag.Id, Request.Scheme, Request.Host, Request.PathBase);
+                }
+                else if (tag.Label == "payment-request")
+                {
+                    model.Tooltip = $"Received through a payment request {tag.Id}";
+                    model.Link = _linkGenerator.PaymentRequestLink(tag.Id, Request.Scheme, Request.Host, Request.PathBase);
+                }
+                else if (tag.Label == "app")
+                {
+                    model.Tooltip = $"Received through an app {tag.Id}";
+                    model.Link = _linkGenerator.AppLink(tag.Id, Request.Scheme, Request.Host, Request.PathBase);
+                }
+                else if (tag.Label == "pj-exposed")
+                {
+
+                    if (tag.Id.Length != 0)
+                    {
+                        model.Tooltip = $"This UTXO was exposed through a PayJoin proposal for an invoice ({tag.Id})";
+                        model.Link = _linkGenerator.InvoiceLink(tag.Id, Request.Scheme, Request.Host, Request.PathBase);
+                    }
+                    else
+                    {
+                        model.Tooltip = $"This UTXO was exposed through a PayJoin proposal";
+                    }
+                }
+                else if (tag.Label == "payjoin")
+                {
+                    model.Tooltip = $"This UTXO was part of a PayJoin transaction.";
+                }
+            }
+            foreach (var label in transactionInfo.LabelColors)
+                models.TryAdd(label.Key, new TransactionTagModel
+                {
+                    Text = label.Key,
+                    Color = label.Value,
+                    TextColor = ColorPalette.Default.TextColor(label.Value)
+                });
+            return models.Values.OrderBy(v => v.Text);
+        }
     }
 
     public class WalletReceiveViewModel

@@ -176,7 +176,7 @@ namespace BTCPayServer.Controllers
                 });
             }
             JToken? receiptData = null;
-            i.Metadata?.AdditionalData.TryGetValue("receiptData", out receiptData);
+            i.Metadata?.AdditionalData?.TryGetValue("receiptData", out receiptData);
                 
             return View(new InvoiceReceiptViewModel
             {

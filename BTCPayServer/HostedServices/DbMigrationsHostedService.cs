@@ -99,7 +99,8 @@ namespace BTCPayServer.HostedServices
 
         internal async Task MigratedTransactionLabels(int startFromOffset)
         {
-            int batchCount = 2000;
+            // Only of 1000, that's what EF does anyway under the hood by default
+            int batchCount = 1000;
             int total = 0;
             HashSet<(string WalletId, string LabelId)> existingLabels;
             using (var db = _dbContextFactory.CreateContext())
@@ -116,17 +117,23 @@ namespace BTCPayServer.HostedServices
 
 
 next:
+// var insertedObjectInDBContext
+// Need to keep track of this hack, or then EF has a bug where he crash on the .Add and get internally
+// corrupted.
+            var ifuckinghateentityframework = new HashSet<(string WalletId, string Type, string Id)>();
             using (var db = _dbContextFactory.CreateContext())
             {
                 Logs.PayServer.LogInformation($"Wallet transaction label importing transactions {startFromOffset}/{total}");
                 var txs = await db.WalletTransactions
-                    .OrderByDescending(wt => wt.TransactionId)
+                    .OrderByDescending(wt => wt.WalletDataId).ThenBy(wt => wt.TransactionId)
                     .Skip(startFromOffset)
                     .Take(batchCount)
                     .ToArrayAsync();
 
                 foreach (var tx in txs)
                 {
+                    // Same as above
+                    var ifuckinghateentityframework2 = new HashSet<(string Type, string Id)>();
                     var blob = GetBlobInfo(tx);
                     db.WalletObjects.Add(new Data.WalletObjectData()
                     {
@@ -135,9 +142,21 @@ next:
                         Id = tx.TransactionId,
                         Data = string.IsNullOrEmpty(blob.Comment) ? null : new JObject() { ["comment"] = blob.Comment }.ToString()
                     });
+
                     foreach (var label in blob.Labels)
                     {
-                        if (!existingLabels.Contains((tx.WalletDataId, label.Key)))
+                        var labelId = label.Key;
+                        if (labelId.StartsWith("{", StringComparison.OrdinalIgnoreCase))
+                        {
+                            try
+                            {
+                                labelId = JObject.Parse(label.Key)["value"].Value<string>();
+                            }
+                            catch
+                            {
+                            }
+                        }
+                        if (!existingLabels.Contains((tx.WalletDataId, labelId)))
                         {
                             JObject labelData = new JObject();
                             labelData.Add("color", "#000");
@@ -145,41 +164,42 @@ next:
                             {
                                 WalletId = tx.WalletDataId,
                                 Type = WalletObjectData.Types.Label,
-                                Id = label.Key,
+                                Id = labelId,
                                 Data = labelData.ToString()
                             });
-                            existingLabels.Add((tx.WalletDataId, label.Key));
+                            existingLabels.Add((tx.WalletDataId, labelId));
                         }
-                        db.WalletObjectLinks.Add(new WalletObjectLinkData()
-                        {
-                            WalletId = tx.WalletDataId,
-                            ChildType = Data.WalletObjectData.Types.Tx,
-                            ChildId = tx.TransactionId,
-                            ParentType = Data.WalletObjectData.Types.Label,
-                            ParentId = label.Key
-                        });
+                        if (ifuckinghateentityframework2.Add((Data.WalletObjectData.Types.Label, labelId)))
+                            db.WalletObjectLinks.Add(new WalletObjectLinkData()
+                            {
+                                WalletId = tx.WalletDataId,
+                                ChildType = Data.WalletObjectData.Types.Tx,
+                                ChildId = tx.TransactionId,
+                                ParentType = Data.WalletObjectData.Types.Label,
+                                ParentId = labelId
+                            });
 
                         if (label.Value is ReferenceLabel reflabel)
                         {
-                            if (reflabel.Type == "invoice" ||
-                                reflabel.Type == "payment-request" ||
-                                reflabel.Type == "app" ||
-                                reflabel.Type == "pj-exposed")
+                            if (IsReferenceLabel(reflabel.Type))
                             {
-                                db.WalletObjects.Add(new WalletObjectData()
-                                {
-                                    WalletId = tx.WalletDataId,
-                                    Type = reflabel.Type,
-                                    Id = reflabel.Reference ?? String.Empty
-                                });
-                                db.WalletObjectLinks.Add(new WalletObjectLinkData()
-                                {
-                                    WalletId = tx.WalletDataId,
-                                    ChildType = Data.WalletObjectData.Types.Tx,
-                                    ChildId = tx.TransactionId,
-                                    ParentType = reflabel.Type,
-                                    ParentId = reflabel.Reference ?? String.Empty
-                                });
+                                if (ifuckinghateentityframework.Add((tx.WalletDataId, reflabel.Type, reflabel.Reference ?? String.Empty)))
+                                    db.WalletObjects.Add(new WalletObjectData()
+                                    {
+                                        WalletId = tx.WalletDataId,
+                                        Type = reflabel.Type,
+                                        Id = reflabel.Reference ?? String.Empty
+                                    });
+
+                                if (ifuckinghateentityframework2.Add((reflabel.Type, reflabel.Reference ?? String.Empty)))
+                                    db.WalletObjectLinks.Add(new WalletObjectLinkData()
+                                    {
+                                        WalletId = tx.WalletDataId,
+                                        ChildType = Data.WalletObjectData.Types.Tx,
+                                        ChildId = tx.TransactionId,
+                                        ParentType = reflabel.Type,
+                                        ParentId = reflabel.Reference ?? String.Empty
+                                    });
                             }
                         }
                         else if (label.Value is PayoutLabel payoutLabel)
@@ -192,27 +212,46 @@ next:
                                     {
                                         ["pullPaymentId"] = pp.Key
                                     };
-                                    db.WalletObjects.Add(new WalletObjectData()
-                                    {
-                                        WalletId = tx.WalletDataId,
-                                        Type = "payout",
-                                        Id = payout,
-                                        Data = payoutData.ToString()
-                                    });
-                                    db.WalletObjectLinks.Add(new WalletObjectLinkData()
-                                    {
-                                        WalletId = tx.WalletDataId,
-                                        ChildType = Data.WalletObjectData.Types.Tx,
-                                        ChildId = tx.TransactionId,
-                                        ParentType = "payout",
-                                        ParentId = payout
-                                    });
+                                    if (ifuckinghateentityframework.Add((tx.WalletDataId, "payout", payout)))
+                                        db.WalletObjects.Add(new WalletObjectData()
+                                        {
+                                            WalletId = tx.WalletDataId,
+                                            Type = "payout",
+                                            Id = payout,
+                                            Data = payoutData?.ToString()
+                                        });
+                                    if (ifuckinghateentityframework2.Add(("payout", payout)))
+                                        db.WalletObjectLinks.Add(new WalletObjectLinkData()
+                                        {
+                                            WalletId = tx.WalletDataId,
+                                            ChildType = Data.WalletObjectData.Types.Tx,
+                                            ChildId = tx.TransactionId,
+                                            ParentType = "payout",
+                                            ParentId = payout
+                                        });
                                 }
                             }
                         }
                     }
                 }
-                await db.SaveChangesAsync();
+                int retry = 0;
+retrySave:
+                try
+                {
+                    await db.SaveChangesAsync();
+                }
+                catch (DbUpdateException ex) when (retry < 10)
+                {
+                    foreach (var entry in ex.Entries)
+                    {
+                        if (entry.Entity is WalletObjectData wo && (IsReferenceLabel(wo.Type) || wo.Type == "payout"))
+                        {
+                            await entry.ReloadAsync();
+                        }
+                    }
+                    retry++;
+                    goto retrySave;
+                }
                 if (txs.Length < batchCount)
                 {
                     var settings = await _settingsRepository.GetSettingAsync<MigrationSettings>();
@@ -230,6 +269,14 @@ next:
                     goto next;
                 }
             }
+        }
+
+        private static bool IsReferenceLabel(string type)
+        {
+            return type == "invoice" ||
+                    type == "payment-request" ||
+                    type == "app" ||
+                    type == "pj-exposed";
         }
 #pragma warning restore CS0612 // Type or member is obsolete
         private async Task MigratedInvoiceTextSearchToDb(int startFromPage)

@@ -269,12 +269,12 @@ namespace BTCPayServer.Hosting
                     obj.Add("color", label.Value);
                     var labelObjId = new WalletObjectId(WalletId.Parse(wallet.Id),
                         WalletObjectData.Types.Label,
-                        label.Key);
+                        labelId);
                     ctx.WalletObjects.Add(new WalletObjectData()
                     {
                         WalletId = wallet.Id,
                         Type = WalletObjectData.Types.Label,
-                        Id = label.Key,
+                        Id = labelId,
                         Data = obj.ToString()
                     });
                 }

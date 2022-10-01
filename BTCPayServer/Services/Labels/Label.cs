@@ -9,6 +9,7 @@ using Newtonsoft.Json.Linq;
 namespace BTCPayServer.Services.Labels
 {
 
+    [Obsolete]
     public abstract class Label : LabelData
     {
         static void FixLegacy(JObject jObj, ReferenceLabel refLabel)
@@ -17,7 +18,7 @@ namespace BTCPayServer.Services.Labels
                 refLabel.Reference = jObj["id"].Value<string>();
             FixLegacy(jObj, (Label)refLabel);
         }
-        static void FixLegacy(JObject jObj, LegacyPayoutLabel payoutLabel)
+        static void FixLegacy(JObject jObj, PayoutLabel payoutLabel)
         {
             if (jObj.ContainsKey("id") && payoutLabel.PullPaymentPayouts.Count is 0)
             {
@@ -56,7 +57,7 @@ namespace BTCPayServer.Services.Labels
 
         public static JsonSerializerSettings SerializerSettings;
         public static JsonSerializer Serializer;
-        public static Label ParseLegacy(string str)
+        public static Label Parse(string str)
         {
             ArgumentNullException.ThrowIfNull(str);
             if (str.StartsWith("{", StringComparison.InvariantCultureIgnoreCase))
@@ -87,7 +88,7 @@ namespace BTCPayServer.Services.Labels
                         FixLegacy(jObj, refLabel);
                         return refLabel;
                     case "payout":
-                        var payoutLabel = JsonConvert.DeserializeObject<LegacyPayoutLabel>(str);
+                        var payoutLabel = JsonConvert.DeserializeObject<PayoutLabel>(str);
                         FixLegacy(jObj, payoutLabel);
                         return payoutLabel;
                     default:
@@ -102,6 +103,7 @@ namespace BTCPayServer.Services.Labels
         }
     }
 
+    [Obsolete]
     public class RawLabel : Label
     {
         public RawLabel()
@@ -113,6 +115,7 @@ namespace BTCPayServer.Services.Labels
             Text = text;
         }
     }
+    [Obsolete]
     public class ReferenceLabel : Label
     {
         public ReferenceLabel()
@@ -128,9 +131,10 @@ namespace BTCPayServer.Services.Labels
         [JsonProperty("ref")]
         public string Reference { get; set; }
     }
-    public class LegacyPayoutLabel : Label
+    [Obsolete]
+    public class PayoutLabel : Label
     {
-        public LegacyPayoutLabel()
+        public PayoutLabel()
         {
             Type = "payout";
             Text = "payout";

@@ -708,6 +708,7 @@
             "LabelData": {
                 "type": "object",
                 "additionalProperties": true,
+                "deprecated": true,
                 "properties": {
                     "type": {
                         "type": "string",
@@ -762,6 +763,7 @@
                     },
                     "labels": {
                         "description": "Labels linked to this transaction",
+                        "deprecated": true,
                         "type": "array",
                         "items": {
                             "$ref": "#/components/schemas/LabelData"
@@ -810,6 +812,7 @@
                     },
                     "labels": {
                         "description": "Labels linked to this transaction",
+                        "deprecated": true,
                         "type": "array",
                         "items": {
                             "$ref": "#/components/schemas/LabelData"
@@ -904,6 +907,7 @@
                     },
                     "labels": {
                         "nullable": true,
+                        "deprecated": true,
                         "description": "Transaction labels",
                         "type": "array",
                         "items": {

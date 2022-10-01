@@ -2270,6 +2270,7 @@ namespace BTCPayServer.Tests
 
             Assert.Equal(transaction.TransactionHash, txdata.TransactionHash);
             Assert.Equal(String.Empty, transaction.Comment);
+#pragma warning disable CS0612 // Type or member is obsolete
             Assert.Equal(new Dictionary<string, LabelData>(), transaction.Labels);
 
             // transaction patch tests
@@ -2290,7 +2291,7 @@ namespace BTCPayServer.Tests
                 }.ToJson(),
                 patchedTransaction.Labels.ToJson()
             );
-
+#pragma warning restore CS0612 // Type or member is obsolete
             await AssertHttpError(403, async () =>
             {
                 await viewOnlyClient.ShowOnChainWalletTransactions(walletId.StoreId, walletId.CryptoCode);

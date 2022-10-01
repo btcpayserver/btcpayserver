@@ -13,54 +13,6 @@ namespace BTCPayServer.Data
 {
     public class WalletTransactionInfo
     {
-        public class LabelAssociatedData
-        {
-            public LabelAssociatedData(string label, string color)
-            {
-                Color = color;
-                Label = label;
-            }
-            public string Color { get; set; }
-            public List<TransactionTag> Tags { get; set; } = new List<TransactionTag>();
-            public LabelData LegacyLabel
-            {
-                get
-                {
-                    foreach (var tag in Tags)
-                    {
-                        switch (Label)
-                        {
-                            case "payout":
-                                var legacyPayoutLabel = new LegacyPayoutLabel();
-                                foreach (var t in Tags.Where(m => m.Label == "payout"))
-                                {
-                                    var ppid = t.AssociatedData?["pullPaymentId"]?.Value<string>() ?? "";
-                                    if (!legacyPayoutLabel.PullPaymentPayouts.TryGetValue(ppid, out var payoutIds))
-                                    {
-                                        payoutIds = new List<string>();
-                                        legacyPayoutLabel.PullPaymentPayouts.Add(ppid, payoutIds);
-                                    }
-                                    payoutIds.Add(t.Id);
-                                }
-                                return legacyPayoutLabel;
-                            case "payjoin":
-                                return new ReferenceLabel("payjoin", "payjoin");
-                            case "payment-request":
-                            case "app":
-                            case "pj-exposed":
-                            case "invoice":
-                                if (tag.Id.Length == 0)
-                                    return new RawLabel(Label);
-                                return new ReferenceLabel(Label, tag.Id);
-                            default: continue;
-                        }
-                    }
-                    return new RawLabel(Label);
-                }
-            }
-
-            public string Label { get; }
-        }
 
         public WalletTransactionInfo(WalletId walletId)
         {
@@ -75,8 +27,10 @@ namespace BTCPayServer.Data
         [JsonIgnore]
         public Dictionary<string, string> LabelColors { get; set; } = new Dictionary<string, string>();
 
+        [Obsolete]
         Dictionary<string, LabelData>? _LegacyLabels;
         [JsonIgnore]
+        [Obsolete]
         public Dictionary<string, LabelData> LegacyLabels
         {
             get
@@ -89,15 +43,15 @@ namespace BTCPayServer.Data
                         switch (tag.Label)
                         {
                             case "payout":
-                                LegacyPayoutLabel legacyPayoutLabel;
+                                PayoutLabel legacyPayoutLabel;
                                 if (legacyLabels.TryGetValue(tag.Label, out var existing) &&
-                                    existing is LegacyPayoutLabel)
+                                    existing is PayoutLabel)
                                 {
-                                    legacyPayoutLabel = (LegacyPayoutLabel)existing;
+                                    legacyPayoutLabel = (PayoutLabel)existing;
                                 }
                                 else
                                 {
-                                    legacyPayoutLabel = new LegacyPayoutLabel();
+                                    legacyPayoutLabel = new PayoutLabel();
                                     legacyLabels.Add(tag.Label, legacyPayoutLabel);
                                 }
                                 var ppid = tag.AssociatedData?["pullPaymentId"]?.Value<string>() ?? "";

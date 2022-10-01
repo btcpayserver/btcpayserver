@@ -145,7 +145,7 @@ namespace BTCPayServer.Controllers
             if (paymentMethod == null)
                 return NotFound();
 
-            var txObjId = new WalletObjectId(walletId, WalletObjectData.Types.Transaction, transactionId);
+            var txObjId = new WalletObjectId(walletId, WalletObjectData.Types.Tx, transactionId);
             var wallet = _walletProvider.GetWallet(paymentMethod.Network);
             if (addlabel != null)
             {

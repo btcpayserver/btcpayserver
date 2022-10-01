@@ -267,7 +267,7 @@ namespace BTCPayServer.Controllers.Greenfield
             }
 
             var walletId = new WalletId(storeId, cryptoCode);
-            var txObjectId = new WalletObjectId(walletId, WalletObjectData.Types.Transaction, transactionId);
+            var txObjectId = new WalletObjectId(walletId, WalletObjectData.Types.Tx, transactionId);
 
             if (request.Comment != null)
             {
@@ -303,13 +303,15 @@ namespace BTCPayServer.Controllers.Greenfield
             return Ok(utxos.Select(coin =>
                 {
                     walletTransactionsInfoAsync.TryGetValue(coin.OutPoint.Hash.ToString(), out var info);
-                    var labels = info?.LegacyLabels ?? new Dictionary<string, LabelData>();
+
                     return new OnChainWalletUTXOData()
                     {
                         Outpoint = coin.OutPoint,
                         Amount = coin.Value.GetValue(network),
                         Comment = info?.Comment,
-                        Labels = info?.LegacyLabels,
+#pragma warning disable CS0612 // Type or member is obsolete
+                        Labels = info?.LegacyLabels ?? new Dictionary<string, LabelData>(),
+#pragma warning restore CS0612 // Type or member is obsolete
                         Link = string.Format(CultureInfo.InvariantCulture, network.BlockExplorerLink,
                             coin.OutPoint.Hash.ToString()),
                         Timestamp = coin.Timestamp,
@@ -653,7 +655,9 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 TransactionHash = tx.TransactionId,
                 Comment = walletTransactionsInfoAsync?.Comment ?? string.Empty,
+#pragma warning disable CS0612 // Type or member is obsolete
                 Labels = walletTransactionsInfoAsync?.LegacyLabels ?? new Dictionary<string, LabelData>(),
+#pragma warning restore CS0612 // Type or member is obsolete
                 Amount = tx.BalanceChange.GetValue(wallet.Network),
                 BlockHash = tx.BlockHash,
                 BlockHeight = tx.Height,

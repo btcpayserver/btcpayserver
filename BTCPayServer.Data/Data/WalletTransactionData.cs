@@ -1,7 +1,9 @@
+using System;
 using Microsoft.EntityFrameworkCore;
 
 namespace BTCPayServer.Data
 {
+    [Obsolete]
     public class WalletTransactionData
     {
         public string WalletDataId { get; set; }

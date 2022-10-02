@@ -22,7 +22,7 @@ namespace BTCPayServer.Data
         public WalletId WalletId { get; }
         public string Comment { get; set; } = string.Empty;
         [JsonIgnore]
-        public List<TransactionTag> Tags { get; set; } = new List<TransactionTag>();
+        public List<Attachment> Attachments { get; set; } = new List<Attachment>();
 
         [JsonIgnore]
         public Dictionary<string, string> LabelColors { get; set; } = new Dictionary<string, string>();
@@ -38,13 +38,13 @@ namespace BTCPayServer.Data
                 if (_LegacyLabels is null)
                 {
                     var legacyLabels = new Dictionary<string, LabelData>();
-                    foreach (var tag in Tags)
+                    foreach (var tag in Attachments)
                     {
-                        switch (tag.Label)
+                        switch (tag.Type)
                         {
                             case "payout":
                                 PayoutLabel legacyPayoutLabel;
-                                if (legacyLabels.TryGetValue(tag.Label, out var existing) &&
+                                if (legacyLabels.TryGetValue(tag.Type, out var existing) &&
                                     existing is PayoutLabel)
                                 {
                                     legacyPayoutLabel = (PayoutLabel)existing;
@@ -52,9 +52,9 @@ namespace BTCPayServer.Data
                                 else
                                 {
                                     legacyPayoutLabel = new PayoutLabel();
-                                    legacyLabels.Add(tag.Label, legacyPayoutLabel);
+                                    legacyLabels.Add(tag.Type, legacyPayoutLabel);
                                 }
-                                var ppid = tag.AssociatedData?["pullPaymentId"]?.Value<string>() ?? "";
+                                var ppid = tag.Data?["pullPaymentId"]?.Value<string>() ?? "";
                                 if (!legacyPayoutLabel.PullPaymentPayouts.TryGetValue(ppid, out var payouts))
                                 {
                                     payouts = new List<string>();
@@ -67,7 +67,7 @@ namespace BTCPayServer.Data
                             case "app":
                             case "pj-exposed":
                             case "invoice":
-                                legacyLabels.TryAdd(tag.Label, new ReferenceLabel(tag.Label, tag.Id));
+                                legacyLabels.TryAdd(tag.Type, new ReferenceLabel(tag.Type, tag.Id));
                                 break;
                             default:
                                 continue;

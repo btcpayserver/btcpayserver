@@ -509,9 +509,9 @@ namespace BTCPayServer.Payments.PayJoin
 
             foreach (var utxo in selectedUTXOs)
             {
-                await _walletRepository.AddWalletTransactionTags(walletId, utxo.Key.Hash, TransactionTag.PayjoinExposedTag(invoice?.Id));
+                await _walletRepository.AddWalletTransactionAttachment(walletId, utxo.Key.Hash, Attachment.PayjoinExposed(invoice?.Id));
             }
-            await _walletRepository.AddWalletTransactionTags(walletId, originalPaymentData.PayjoinInformation.CoinjoinTransactionHash, TransactionTag.PayjoinTag());
+            await _walletRepository.AddWalletTransactionAttachment(walletId, originalPaymentData.PayjoinInformation.CoinjoinTransactionHash, Attachment.Payjoin());
             
             
             ctx.Success();

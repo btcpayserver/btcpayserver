@@ -175,9 +175,9 @@ namespace BTCPayServer.PayoutProcessors.OnChain
                     var walletId = new WalletId(_PayoutProcesserSettings.StoreId, PaymentMethodId.CryptoCode);
                     foreach (PayoutData payoutData in transfersProcessing)
                     {
-                        await WalletRepository.AddWalletTransactionTags(walletId,
+                        await WalletRepository.AddWalletTransactionAttachment(walletId,
                             txHash,
-                            TransactionTag.PayoutTag(payoutData.PullPaymentDataId, payoutData.Id));
+                            Attachment.Payout(payoutData.PullPaymentDataId, payoutData.Id));
                     }
                     await Task.WhenAny(tcs.Task, task);
                 }

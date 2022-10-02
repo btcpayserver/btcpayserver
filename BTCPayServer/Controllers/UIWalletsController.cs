@@ -1350,24 +1350,24 @@ namespace BTCPayServer.Controllers
             }
 
             var models = new Dictionary<string, TransactionTagModel>();
-            foreach (var tag in transactionInfo.Tags)
+            foreach (var tag in transactionInfo.Attachments)
             {
-                if (models.ContainsKey(tag.Label))
+                if (models.ContainsKey(tag.Type))
                     continue;
-                if (!transactionInfo.LabelColors.TryGetValue(tag.Label, out var color))
+                if (!transactionInfo.LabelColors.TryGetValue(tag.Type, out var color))
                     continue;
                 var model = new TransactionTagModel
                 {
-                    Text = tag.Label,
+                    Text = tag.Type,
                     Color = color,
                     TextColor = ColorPalette.Default.TextColor(color)
                 };
-                models.Add(tag.Label, model);
-                if (tag.Label == "payout")
+                models.Add(tag.Type, model);
+                if (tag.Type == "payout")
                 {
                     var payoutsByPullPaymentId =
-                        transactionInfo.Tags.Where(t => t.Label == "payout")
-                        .GroupBy(t => t.AssociatedData?["pullPaymentId"]?.Value<string>() ?? "",
+                        transactionInfo.Attachments.Where(t => t.Type == "payout")
+                        .GroupBy(t => t.Data?["pullPaymentId"]?.Value<string>() ?? "",
                                  k => k.Id).ToList();
 
                     model.Tooltip = payoutsByPullPaymentId.Count switch
@@ -1381,28 +1381,28 @@ namespace BTCPayServer.Controllers
                     model.Link = _linkGenerator.PayoutLink(transactionInfo.WalletId.ToString(), null, PayoutState.Completed, Request.Scheme, Request.Host,
                             Request.PathBase);
                 }
-                else if (tag.Label == "payjoin")
+                else if (tag.Type == "payjoin")
                 {
                     model.Tooltip = $"This UTXO was part of a PayJoin transaction.";
                 }
-                else if (tag.Label == "invoice")
+                else if (tag.Type == "invoice")
                 {
                     model.Tooltip = $"Received through an invoice {tag.Id}";
                     model.Link = string.IsNullOrEmpty(tag.Id)
                             ? null
                             : _linkGenerator.InvoiceLink(tag.Id, Request.Scheme, Request.Host, Request.PathBase);
                 }
-                else if (tag.Label == "payment-request")
+                else if (tag.Type == "payment-request")
                 {
                     model.Tooltip = $"Received through a payment request {tag.Id}";
                     model.Link = _linkGenerator.PaymentRequestLink(tag.Id, Request.Scheme, Request.Host, Request.PathBase);
                 }
-                else if (tag.Label == "app")
+                else if (tag.Type == "app")
                 {
                     model.Tooltip = $"Received through an app {tag.Id}";
                     model.Link = _linkGenerator.AppLink(tag.Id, Request.Scheme, Request.Host, Request.PathBase);
                 }
-                else if (tag.Label == "pj-exposed")
+                else if (tag.Type == "pj-exposed")
                 {
 
                     if (tag.Id.Length != 0)
@@ -1415,7 +1415,7 @@ namespace BTCPayServer.Controllers
                         model.Tooltip = $"This UTXO was exposed through a PayJoin proposal";
                     }
                 }
-                else if (tag.Label == "payjoin")
+                else if (tag.Type == "payjoin")
                 {
                     model.Tooltip = $"This UTXO was part of a PayJoin transaction.";
                 }

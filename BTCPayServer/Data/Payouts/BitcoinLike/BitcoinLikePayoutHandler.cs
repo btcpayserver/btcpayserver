@@ -428,10 +428,10 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
             if (isInternal)
             {
                 payout.State = PayoutState.InProgress;
-                await WalletRepository.AddWalletTransactionTags(
+                await WalletRepository.AddWalletTransactionAttachment(
                     new WalletId(payout.StoreDataId, newTransaction.CryptoCode),
                     newTransaction.NewTransactionEvent.TransactionData.TransactionHash,
-                    TransactionTag.PayoutTag(payout.PullPaymentDataId, payout.Id));
+                    Attachment.Payout(payout.PullPaymentDataId, payout.Id));
             }
             else
             {

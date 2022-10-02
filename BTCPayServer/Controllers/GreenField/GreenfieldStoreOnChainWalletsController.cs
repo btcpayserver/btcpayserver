@@ -572,7 +572,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     payjoinPSBT.Finalize();
                     var payjoinTransaction = payjoinPSBT.ExtractTransaction();
                     var hash = payjoinTransaction.GetHash();
-                    await this._walletRepository.AddWalletTransactionTags(new WalletId(Store.Id, cryptoCode), hash, TransactionTag.PayjoinTag());
+                    await this._walletRepository.AddWalletTransactionAttachment(new WalletId(Store.Id, cryptoCode), hash, Attachment.Payjoin());
                     broadcastResult = await explorerClient.BroadcastAsync(payjoinTransaction);
                     if (broadcastResult.Success)
                     {

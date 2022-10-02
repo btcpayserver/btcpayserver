@@ -97,7 +97,7 @@ namespace BTCPayServer.Services
                 }
                 else
                 {
-                    info.Tags.Add(new TransactionTag(row.AssociatedDataType, row.AssociatedDataId, row.AssociatedData is null ? null : JObject.Parse(row.AssociatedData)));
+                    info.Attachments.Add(new Attachment(row.AssociatedDataType, row.AssociatedDataId, row.AssociatedData is null ? null : JObject.Parse(row.AssociatedData)));
                 }
             }
             return result;
@@ -195,28 +195,28 @@ namespace BTCPayServer.Services
             }
         }
 
-        public Task AddWalletTransactionTags(WalletId walletId, uint256 txId, TransactionTag tag)
+        public Task AddWalletTransactionAttachment(WalletId walletId, uint256 txId, Attachment attachment)
         {
-            return AddWalletTransactionTags(walletId, txId, new[] { tag });
+            return AddWalletTransactionAttachment(walletId, txId, new[] { attachment });
         }
-        public async Task AddWalletTransactionTags(WalletId walletId, uint256 txId, IEnumerable<TransactionTag> tags)
+        public async Task AddWalletTransactionAttachment(WalletId walletId, uint256 txId, IEnumerable<Attachment> attachments)
         {
             ArgumentNullException.ThrowIfNull(walletId);
             ArgumentNullException.ThrowIfNull(txId);
             var txObjId = new WalletObjectId(walletId, WalletObjectData.Types.Tx, txId.ToString());
             await EnsureWalletObject(txObjId);
-            foreach (var tag in tags)
+            foreach (var attachment in attachments)
             {
-                var labelObjId = new WalletObjectId(walletId, WalletObjectData.Types.Label, tag.Label);
+                var labelObjId = new WalletObjectId(walletId, WalletObjectData.Types.Label, attachment.Type);
                 await EnsureWalletObject(labelObjId, new JObject()
                 {
-                    ["color"] = ColorPalette.Default.DeterministicColor(tag.Label)
+                    ["color"] = ColorPalette.Default.DeterministicColor(attachment.Type)
                 });
                 await EnsureWalletObjectLink(labelObjId, txObjId);
-                if (tag.AssociatedData is not null || tag.Id.Length != 0)
+                if (attachment.Data is not null || attachment.Id.Length != 0)
                 {
-                    var data = new WalletObjectId(walletId, tag.Label, tag.Id);
-                    await EnsureWalletObject(data, tag.AssociatedData);
+                    var data = new WalletObjectId(walletId, attachment.Type, attachment.Id);
+                    await EnsureWalletObject(data, attachment.Data);
                     await EnsureWalletObjectLink(data, txObjId);
                 }
             }

@@ -44,20 +44,20 @@ namespace BTCPayServer.HostedServices
             {
                 var walletId = new WalletId(invoiceEvent.Invoice.StoreId, invoiceEvent.Payment.GetCryptoCode());
                 var transactionId = bitcoinLikePaymentData.Outpoint.Hash;
-                var labels = new List<TransactionTag>
+                var labels = new List<Attachment>
                 {
-                    TransactionTag.InvoiceTag(invoiceEvent.Invoice.Id)
+                    Attachment.Invoice(invoiceEvent.Invoice.Id)
                 };
                 foreach (var paymentId in PaymentRequestRepository.GetPaymentIdsFromInternalTags(invoiceEvent.Invoice))
                 {
-                    labels.Add(TransactionTag.PaymentRequestTag(paymentId));
+                    labels.Add(Attachment.PaymentRequest(paymentId));
                 }
                 foreach (var appId in AppService.GetAppInternalTags(invoiceEvent.Invoice))
                 {
-                    labels.Add(TransactionTag.AppTag(appId));
+                    labels.Add(Attachment.App(appId));
                 }
 
-                await _walletRepository.AddWalletTransactionTags(walletId, transactionId, labels);
+                await _walletRepository.AddWalletTransactionAttachment(walletId, transactionId, labels);
             }
         }
     }

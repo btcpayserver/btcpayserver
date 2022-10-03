@@ -40,12 +40,20 @@ namespace BTCPayServer.Services
             return new Attachment("pj-exposed", invoice);
         }
 
-        public static Attachment Payout(string pullPaymentId, string payoutId)
+        public static IEnumerable<Attachment> Payout(string? pullPaymentId, string payoutId)
         {
-            return new Attachment("payout", payoutId, string.IsNullOrEmpty(pullPaymentId) ? null : new JObject()
+            if (string.IsNullOrEmpty(pullPaymentId))
             {
-                ["pullPaymentId"] = pullPaymentId
-            });
+                yield return new Attachment("payout", payoutId);
+            }
+            else
+            {
+                yield return new Attachment("payout", payoutId, new JObject()
+                {
+                    ["pullPaymentId"] = pullPaymentId
+                });
+                yield return new Attachment("pull-payment", pullPaymentId);
+            }
         }
     }
 }

@@ -608,18 +608,21 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> Checkout(string? invoiceId, string? id = null, string? paymentMethodId = null,
             [FromQuery] string? view = null, [FromQuery] string? lang = null)
         {
-            //Keep compatibility with Bitpay
-            invoiceId = invoiceId ?? id;
-            //
+            // Keep compatibility with Bitpay
+            invoiceId ??= id;
+            
             if (invoiceId is null)
                 return NotFound();
+            
             var model = await GetInvoiceModel(invoiceId, paymentMethodId == null ? null : PaymentMethodId.Parse(paymentMethodId), lang);
             if (model == null)
                 return NotFound();
 
             if (view == "modal")
                 model.IsModal = true;
-            return View(nameof(Checkout), model);
+
+            var viewName = model.UseNewCheckout ? "CheckoutV2" : nameof(Checkout);
+            return View(viewName, model);
         }
 
         [HttpGet("invoice-noscript")]
@@ -731,7 +734,7 @@ namespace BTCPayServer.Controllers
 
             var receiptEnabled = InvoiceDataBase.ReceiptOptions.Merge(storeBlob.ReceiptOptions, invoice.ReceiptOptions).Enabled is true;
             var receiptUrl = receiptEnabled? _linkGenerator.GetUriByAction(
-                nameof(UIInvoiceController.InvoiceReceipt),
+                nameof(InvoiceReceipt),
                 "UIInvoice",
                 new {invoiceId},
                 Request.Scheme,
@@ -748,6 +751,10 @@ namespace BTCPayServer.Controllers
                 DefaultLang = lang ?? invoice.DefaultLanguage ?? storeBlob.DefaultLang ?? "en",
                 CustomCSSLink = storeBlob.CustomCSS,
                 CustomLogoLink = storeBlob.CustomLogo,
+                LogoFileId = storeBlob.LogoFileId,
+                BrandColor = storeBlob.BrandColor,
+                UseNewCheckout = storeBlob.UseNewCheckout,
+                CheckoutFormId = storeBlob.CheckoutFormId,
                 HtmlTitle = storeBlob.HtmlTitle ?? "BTCPay Invoice",
                 CryptoImage = Request.GetRelativePathOrAbsolute(paymentMethodHandler.GetCryptoImage(paymentMethodId)),
                 BtcAddress = paymentMethodDetails.GetPaymentDestination(),

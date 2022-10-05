@@ -347,7 +347,7 @@ namespace BTCPayServer.Tests
                     new CreateCrowdfundAppRequest()
                     {
                         AppName = "good name",
-                        AnimationColors = "      "
+                        AnimationColors = new string[] {}
                     }
                 )
             );
@@ -357,7 +357,7 @@ namespace BTCPayServer.Tests
                     new CreateCrowdfundAppRequest()
                     {
                         AppName = "good name",
-                        AnimationColors = "  ,    "
+                        AnimationColors = new string[] { "  ", " " }
                     }
                 )
             );
@@ -367,7 +367,7 @@ namespace BTCPayServer.Tests
                     new CreateCrowdfundAppRequest()
                     {
                         AppName = "good name",
-                        Sounds = "      "
+                        Sounds = new string[] { "  " }
                     }
                 )
             );
@@ -377,7 +377,7 @@ namespace BTCPayServer.Tests
                     new CreateCrowdfundAppRequest()
                     {
                         AppName = "good name",
-                        Sounds = ", , , , ,"
+                        Sounds = new string[] { " ", " ", " "  }
                     }
                 )
             );

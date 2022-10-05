@@ -78,7 +78,7 @@ namespace BTCPayServer.Client.Models
         public bool? DisplayPerksValue { get; set; } = null;
         public bool? DisplayPerksRanking { get; set; } = null;
         public bool? SortPerksByPopularity { get; set; } = null;
-        public string Sounds { get; set; } = null;
-        public string AnimationColors { get; set; } = null;
+        public string[] Sounds { get; set; } = null;
+        public string[] AnimationColors { get; set; } = null;
     }
 }

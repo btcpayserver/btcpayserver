@@ -177,8 +177,8 @@ namespace BTCPayServer.Controllers.Greenfield
 
         private CrowdfundSettings ToCrowdfundSettings(CreateCrowdfundAppRequest request)
         {
-            var parsedSounds = ParseBySplitByComma(request.Sounds);
-            var parsedColors = ParseBySplitByComma(request.AnimationColors);
+            var parsedSounds = ValidateStringArray(request.Sounds);
+            var parsedColors = ValidateStringArray(request.AnimationColors);
 
             return new CrowdfundSettings
             {
@@ -302,35 +302,20 @@ namespace BTCPayServer.Controllers.Greenfield
             };
         }
 
-        private string[]? ParseBySplitByComma(string? str)
+        private string[]? ValidateStringArray(string[]? arr)
         {
-            if (str == null)
+            if (arr == null || !arr.Any()) 
             {
                 return null;
             }
 
-            var trimmedStr = str.Trim();
-            if (trimmedStr.Length == 0)
+            // Make sure it's not just an array of empty strings
+            if (arr.All(s => string.IsNullOrEmpty(s.Trim())))
             {
                 return null;
             }
 
-            var splitStr = trimmedStr.Split(
-                new[] { "," },
-                StringSplitOptions.None
-            );
-            if (!splitStr.Any()) 
-            {
-                return null;
-            }
-
-            // Make sure it's not just a comma-separated string of empty strings
-            if (splitStr.All(s => string.IsNullOrEmpty(s.Trim())))
-            {
-                return null;
-            }
-
-            return splitStr.Select(s => s.Trim()).ToArray();
+            return arr.Select(s => s.Trim()).ToArray();
         }
 
         private IActionResult? ValidateCrowdfundAppRequest(CreateCrowdfundAppRequest request)
@@ -360,14 +345,14 @@ namespace BTCPayServer.Controllers.Greenfield
                 ModelState.AddModelError(nameof(request.ResetEveryAmount), "You must reset the goal at a minimum of 1");
             }
 
-            if (request.Sounds != null && ParseBySplitByComma(request.Sounds) == null)
+            if (request.Sounds != null && ValidateStringArray(request.Sounds) == null)
             {
-                ModelState.AddModelError(nameof(request.Sounds), "Sounds must be a non-empty comma-separated string");
+                ModelState.AddModelError(nameof(request.Sounds), "Sounds must be a non-empty array of non-empty strings");
             }
 
-            if (request.AnimationColors != null && ParseBySplitByComma(request.AnimationColors) == null)
+            if (request.AnimationColors != null && ValidateStringArray(request.AnimationColors) == null)
             {
-                ModelState.AddModelError(nameof(request.AnimationColors), "Animation colors must be a non-empty comma-separated string");
+                ModelState.AddModelError(nameof(request.AnimationColors), "Animation colors must be a non-empty array of non-empty strings");
             }
 
             if (request.StartDate != null && request.EndDate != null && DateTimeOffset.Compare((DateTimeOffset)request.StartDate, (DateTimeOffset)request.EndDate!) > 0)

@@ -2,8 +2,8 @@
 
 <div id="testing">
     <hr class="my-3" />
-    <p class="alert alert-danger" style="display: none; word-break: break-all;"></p>
-    <p class="alert alert-success" style="display: none; word-break: break-all;"></p>
+    <p class="alert alert-danger text-break" hidden></p>
+    <p class="alert alert-success text-break" hidden></p>
     <form id="test-payment" action="/i/@Model.InvoiceId/test-payment" method="post" class="cheat-mode form-inline my-2">
         <input name="CryptoCode" type="hidden" value="@Model.CryptoCode">
         <div class="form-group mb-1">
@@ -39,79 +39,73 @@
 </div>
 
 <script type="text/javascript">
-    $(document).ready(function() {
-        const cheatForms = $('form.cheat-mode');
-        const expireForm = $('form#expire-invoice');
+    document.addEventListener('DOMContentLoaded', () => {
+        const expireForm = document.querySelector('form#expire-invoice');
+        const successAlert = document.querySelector('#testing p.alert-success');
+        const errorAlert = document.querySelector('#testing p.alert-danger');
         
-        const successAlert = $('#testing p.alert-success');
-        const errorAlert = $('#testing p.alert-danger');
-        
-        cheatForms.submit(e => {
+        delegate('submit', 'form.cheat-mode', async e => {
              e.preventDefault();
              
-             const form = $(e.target);
-             const url = form.attr('action');
-             const data = form.serialize();
-             const inputField = form.find('input[type=number]');
-             const submitButton = form.find('button[type=submit]');
+             const form = e.target;
+             const url = form.getAttribute('action');
+             const method = form.getAttribute('method');
+             const body = new FormData(form);
+             const headers = { 'Accept': 'application/json' }
+             const inputField = form.querySelector('input[type=number]');
+             const submitButton = form.querySelector('button[type=submit]');
              
-             successAlert.hide();
-             errorAlert.hide();
-             inputField.prop('disabled', true);
-             submitButton.prop('disabled', true);
+             successAlert.setAttribute('hidden', 'hidden');
+             errorAlert.setAttribute('hidden', 'hidden');
+             inputField.setAttribute('disabled', true);
+             submitButton.setAttribute('disabled', true);
              
-             $.post({
-                 url,
-                 data,
-                 success(data) {
-                     const { successMessage, amountRemaining } = data;
-                     successAlert.html(successMessage);
-                     successAlert.show();
-                     if (amountRemaining){
-                         if(amountRemaining > 0) {
-                             inputField.val(amountRemaining);
-                         } else {
-                             form.hide();
-                             expireForm.hide();
-                         }
+             const response = await fetch(url, { method, body, headers });
+             const data = await response.json();
+             if (response.ok) {
+                 const { successMessage, amountRemaining } =  data;
+                 
+                 successAlert.innerHTML = successMessage;
+                 successAlert.removeAttribute('hidden');
+                 if (amountRemaining) {
+                     if (amountRemaining > 0) {
+                         inputField.value = amountRemaining;
+                     } else {
+                         form.setAttribute('hidden', 'hidden');
+                         expireForm.setAttribute('hidden', 'hidden');
                      }
-                 },
-                 error(xhr) {
-                     const { errorMessage } = JSON.parse(xhr.responseText);
-                     errorAlert.html(errorMessage).show();
-                 },
-                 complete() {
-                     inputField.prop('disabled', false);
-                     submitButton.prop('disabled', false);
                  }
-             });
+             } else {
+                 errorAlert.innerHTML = data.errorMessage;
+                 errorAlert.removeAttribute('hidden');
+             }
+             inputField.removeAttribute('disabled');
+             submitButton.removeAttribute('disabled');
          });
         
         // Expire invoice form
-        expireForm.submit(e => {
+        delegate('submit', 'form#expire-invoice', async e => {
             e.preventDefault();
             
-            const form = $(e.target);
-            const submitButton = form.find('button[type=submit]');
-            const expireButton = form.find('[type=submit]');
-            successAlert.hide();
-            errorAlert.hide();
-                         
-            $.post({
-                url: expireForm.attr('action'),
-                success(data) {
-                    const { successMessage } = data;
-                    successAlert.html(successMessage).show();
-                    expireButton.hide();
-                },
-                complete() {
-                    submitButton.prop('disabled', false);
-                },
-                error(xhr) {
-                    const { errorMessage } = JSON.parse(xhr.responseText);
-                    errorAlert.html(errorMessage).show();
-                }
-            });
+            const form = e.target;
+            const url = expireForm.getAttribute('action');
+            const method = expireForm.getAttribute('method');
+            const submitButton = form.querySelector('button[type=submit]');
+            const expireButton = form.querySelector('[type=submit]');
+            successAlert.setAttribute('hidden', 'hidden');
+            errorAlert.setAttribute('hidden', 'hidden');
+            
+            const response = await fetch(url, { method });
+            const data = await response.json();
+            if (response.ok) {
+                successAlert.innerHTML = data.successMessage;
+                successAlert.removeAttribute('hidden');
+                expireButton.setAttribute('hidden', 'hidden');
+                submitButton.removeAttribute('disabled');
+            } else {
+                errorAlert.innerHTML = data.errorMessage;
+                errorAlert.removeAttribute('hidden');
+            }
         });
     });
 </script>

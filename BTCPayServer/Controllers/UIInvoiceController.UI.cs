@@ -1053,12 +1053,16 @@ namespace BTCPayServer.Controllers
                 return RedirectToAction(nameof(UIHomeController.Index), "UIHome");
             }
 
+            var storeBlob = HttpContext.GetStoreData()?.GetStoreBlob();
             var vm = new CreateInvoiceModel
             {
                 StoreId = model.StoreId,
-                Currency = HttpContext.GetStoreData()?.GetStoreBlob().DefaultCurrency,
+                Currency = storeBlob?.DefaultCurrency,
+                UseNewCheckout = storeBlob is { UseNewCheckout: true },
                 AvailablePaymentMethods = GetPaymentMethodsSelectList()
             };
+
+            vm.SetCheckoutFormOptions(null);
 
             return View(vm);
         }
@@ -1069,8 +1073,12 @@ namespace BTCPayServer.Controllers
         [BitpayAPIConstraint(false)]
         public async Task<IActionResult> CreateInvoice(CreateInvoiceModel model, CancellationToken cancellationToken)
         {
-            model.AvailablePaymentMethods = GetPaymentMethodsSelectList();
             var store = HttpContext.GetStoreData();
+            var storeBlob = store.GetStoreBlob();
+            model.UseNewCheckout = storeBlob is { UseNewCheckout: true };
+            model.AvailablePaymentMethods = GetPaymentMethodsSelectList();
+            model.SetCheckoutFormOptions(model.CheckoutFormId);
+            
             if (!ModelState.IsValid)
             {
                 return View(model);
@@ -1095,7 +1103,6 @@ namespace BTCPayServer.Controllers
                     Currency = model.Currency,
                     PosData = model.PosData,
                     OrderId = model.OrderId,
-                    //RedirectURL = redirect + "redirect",
                     NotificationURL = model.NotificationUrl,
                     ItemDesc = model.ItemDesc,
                     FullNotifications = true,
@@ -1108,7 +1115,7 @@ namespace BTCPayServer.Controllers
                     NotificationEmail = model.NotificationEmail,
                     ExtendedNotifications = model.NotificationEmail != null,
                     RequiresRefundEmail = model.RequiresRefundEmail == RequiresRefundEmail.InheritFromStore
-                        ? store.GetStoreBlob().RequiresRefundEmail
+                        ? storeBlob.RequiresRefundEmail
                         : model.RequiresRefundEmail == RequiresRefundEmail.On
                 }, store, HttpContext.Request.GetAbsoluteRoot(), cancellationToken: cancellationToken);
 

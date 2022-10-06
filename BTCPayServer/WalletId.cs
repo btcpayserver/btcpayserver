@@ -6,7 +6,7 @@ namespace BTCPayServer
 {
     public class WalletId
     {
-        static readonly Regex _WalletStoreRegex = new Regex("^S-([a-zA-Z0-9]{2,60})-([a-zA-Z]{2,5})$");
+        static readonly Regex _WalletStoreRegex = new Regex("^S-([a-zA-Z0-9]{30,60})-([a-zA-Z]{2,5})$");
         public static bool TryParse(string str, out WalletId walletId)
         {
             ArgumentNullException.ThrowIfNull(str);

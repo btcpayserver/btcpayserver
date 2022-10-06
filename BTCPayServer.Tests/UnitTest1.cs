@@ -2529,11 +2529,12 @@ namespace BTCPayServer.Tests
             await tester.StartAsync();
             var dbf = tester.PayTester.GetService<ApplicationDbContextFactory>();
             int walletCount = 1000;
+            var wallet = "walletttttttttttttttttttttttttttt";
             using (var db = dbf.CreateContext())
             {
                 for (int i = 0; i < walletCount; i++)
                 {
-                    var walletData = new WalletData() { Id = "S-wallet" + i + "-BTC" };
+                    var walletData = new WalletData() { Id = $"S-{wallet}{i}-BTC" };
                     walletData.Blob = ZipUtils.Zip("{\"LabelColors\": { \"label1\" : \"black\", \"payout\":\"green\" }}");
                     db.Wallets.Add(walletData);
                 }
@@ -2548,7 +2549,7 @@ namespace BTCPayServer.Tests
                     var txId = RandomUtils.GetUInt256();
                     var wt = new WalletTransactionData()
                     {
-                        WalletDataId = $"S-wallet{i % walletCount}-BTC",
+                        WalletDataId = $"S-{wallet}{i % walletCount}-BTC",
                         TransactionId = txId.ToString(),
                     };
                     firstTxId ??= txId;
@@ -2576,13 +2577,13 @@ namespace BTCPayServer.Tests
             await migrator.MigratedTransactionLabels(0);
 
             var walletRepo = tester.PayTester.GetService<WalletRepository>();
-            var wi1 = await walletRepo.GetWalletLabels(new WalletId("wallet0", "BTC"));
+            var wi1 = await walletRepo.GetWalletLabels(new WalletId($"{wallet}0", "BTC"));
             Assert.Equal(3, wi1.Length);
             Assert.Contains(wi1, o => o.Label == "label1" && o.Color == "black");
             Assert.Contains(wi1, o => o.Label == "labelo0" && o.Color == "#000");
             Assert.Contains(wi1, o => o.Label == "payout" && o.Color == "green");
 
-            var txInfo = await walletRepo.GetWalletTransactionsInfo(new WalletId("wallet0", "BTC"), new[] { firstTxId.ToString() });
+            var txInfo = await walletRepo.GetWalletTransactionsInfo(new WalletId($"{wallet}0", "BTC"), new[] { firstTxId.ToString() });
             Assert.Equal("test", txInfo.Values.First().Comment);
             // Should have the 2 raw labels, and one legacy label for payouts
             Assert.Equal(3, txInfo.Values.First().LegacyLabels.Count);

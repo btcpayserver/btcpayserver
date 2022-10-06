@@ -179,7 +179,7 @@ namespace BTCPayServer.Services
             await ctx.SaveChangesAsync();
         }
 
-        const int MaxLabelSize = 20;
+        const int MaxLabelSize = 50;
         public async Task AddWalletObjectLabels(WalletObjectId id, params string[] labels)
         {
             ArgumentNullException.ThrowIfNull(id);

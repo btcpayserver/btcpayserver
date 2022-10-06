@@ -72,16 +72,6 @@ namespace BTCPayServer.Migrations
 
             migrationBuilder.DropTable(
                 name: "WalletObjects");
-
-            migrationBuilder.AlterColumn<string>(
-                name: "Name",
-                table: "CustodianAccount",
-                type: "TEXT",
-                maxLength: 50,
-                nullable: true,
-                oldClrType: typeof(string),
-                oldType: "TEXT",
-                oldMaxLength: 50);
         }
     }
 }

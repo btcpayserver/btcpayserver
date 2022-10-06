@@ -129,7 +129,11 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 return NotFound();
             var settings = app.GetSettings<PointOfSaleSettings>();
             settings.DefaultView = settings.EnableShoppingCart ? PosViewType.Cart : settings.DefaultView;
-            if (string.IsNullOrEmpty(choiceKey) && !settings.ShowCustomAmount && settings.DefaultView != PosViewType.Cart)
+            var customAmountAllowed = settings.ShowCustomAmount ||
+                // Custom amount should always be allowed in the "Light" app since it's the only thing you can do there
+                settings.DefaultView == PosViewType.Light;
+            // If we have not selected an item and custom amount is not allowed then something is really wrong
+            if (string.IsNullOrEmpty(choiceKey) && !customAmountAllowed)
             {
                 return RedirectToAction(nameof(ViewPointOfSale), new { appId, viewType });
             }
@@ -171,7 +175,8 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             }
             else
             {
-                if (!settings.ShowCustomAmount && settings.DefaultView != PosViewType.Cart)
+                // If we have not selected an item and custom amount is not allowed then something is really wrong
+                if (!customAmountAllowed)
                     return NotFound();
                 price = amount;
                 title = settings.Title;

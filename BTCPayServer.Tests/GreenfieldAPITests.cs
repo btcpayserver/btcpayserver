@@ -88,7 +88,7 @@ namespace BTCPayServer.Tests
             Assert.Equal("missing-permission", e.APIError.Code);
             Assert.NotNull(e.APIError.Message);
             GreenfieldPermissionAPIError permissionError = Assert.IsType<GreenfieldPermissionAPIError>(e.APIError);
-            Assert.Equal(permissionError.MissingPermission, Policies.CanModifyStoreSettings);
+            Assert.Equal(Policies.CanModifyStoreSettings, permissionError.MissingPermission);
         }
 
         [Fact(Timeout = TestTimeout)]

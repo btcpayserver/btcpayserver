@@ -1,6 +1,15 @@
 @model (Dictionary<string, object> Items, int Level)
 
-<table class="table table-hover my-0">
+@functions{
+    public bool IsValidURL(string source)
+    {
+        Uri uriResult;
+        return Uri.TryCreate(source, UriKind.Absolute, out uriResult) && 
+            (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
+    }
+}
+
+<table class="table my-0">
     @foreach (var (key, value) in Model.Items)
     {
         <tr>
@@ -11,7 +20,7 @@
                     <th class="w-150px">@Safe.Raw(key)</th>
                 }
                 <td>
-                    @if (Uri.IsWellFormedUriString(str, UriKind.RelativeOrAbsolute))
+                    @if (IsValidURL(str))
                     {
                         <a href="@Safe.Raw(str)" target="_blank" rel="noreferrer noopener">@Safe.Raw(str)</a>
                     }
@@ -28,7 +37,7 @@
                 {
                     <th class="w-150px">@Safe.Raw(key)</th>
                     <td>
-                        @if (Uri.IsWellFormedUriString(str2, UriKind.RelativeOrAbsolute))
+                        @if (IsValidURL(str2))
                         {
                             <a href="@Safe.Raw(str2)" target="_blank" rel="noreferrer noopener">@Safe.Raw(str2)</a>
                         }

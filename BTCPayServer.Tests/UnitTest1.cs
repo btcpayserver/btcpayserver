@@ -652,7 +652,7 @@ namespace BTCPayServer.Tests
                 (string)store2.TempData[WellKnownTempData.ErrorMessage], StringComparison.CurrentCultureIgnoreCase);
         }
 
-        [Fact(Timeout = LongRunningTestTimeout)]
+        [Fact(Timeout = LongRunningTestTimeout * 2)]
         [Trait("Integration", "Integration")]
         public async Task CanUseTorClient()
         {

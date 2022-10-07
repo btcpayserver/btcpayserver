@@ -12,6 +12,7 @@ using BTCPayServer.Services.Mails;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Logging;
+using BTCPayServer.Services.Invoices;
 using InvoiceData = BTCPayServer.Client.Models.InvoiceData;
 
 namespace BTCPayServer.HostedServices;
@@ -92,6 +93,7 @@ public class StoreEmailRuleProcessorSender : EventHostedServiceBase
             .Replace("{Invoice.Price}", i.Amount.ToString(CultureInfo.InvariantCulture))
             .Replace("{Invoice.Currency}", i.Currency)
             .Replace("{Invoice.Status}", i.Status.ToString())
-            .Replace("{Invoice.AdditionalStatus}", i.AdditionalStatus.ToString());
+            .Replace("{Invoice.AdditionalStatus}", i.AdditionalStatus.ToString())
+            .Replace("{Invoice.OrderId}", i.Metadata.ToObject<InvoiceMetadata>().OrderId);
     }
 }

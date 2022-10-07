@@ -15,7 +15,7 @@ namespace BTCPayServer.Services.Labels
         {
             return this;
         }
-        
+
         static void FixLegacy(JObject jObj, ReferenceLabel refLabel)
         {
             if (refLabel.Reference is null && jObj.ContainsKey("id"))
@@ -28,6 +28,12 @@ namespace BTCPayServer.Services.Labels
             {
                 var pullPaymentId = jObj["pullPaymentId"]?.Value<string>() ?? string.Empty;
                 payoutLabel.PullPaymentPayouts.Add(pullPaymentId, new List<string>() { jObj["id"].Value<string>() });
+            }
+            else if (jObj.ContainsKey("payoutId") && jObj.ContainsKey("pullPaymentId"))
+            {
+                var pullPaymentId = jObj["pullPaymentId"]?.Value<string>() ?? string.Empty;
+                var payoutId = jObj["payoutId"]?.Value<string>() ?? string.Empty;
+                payoutLabel.PullPaymentPayouts.Add(pullPaymentId, new List<string>() { payoutId });
             }
             FixLegacy(jObj, (Label)payoutLabel);
         }

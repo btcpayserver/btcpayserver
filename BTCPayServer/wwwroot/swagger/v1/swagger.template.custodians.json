@@ -85,6 +85,15 @@
                 ],
                 "summary": "Add a custodial account to a store.",
                 "description": "Add a custodial account to a store.",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The Store ID",
+                        "schema": { "type": "string" }
+                    }
+                ],
                 "requestBody": {
                     "x-name": "request",
                     "content": {
@@ -182,6 +191,26 @@
                 ],
                 "summary": "Update custodial account",
                 "description": "Update custodial account",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The Store ID",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "accountId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The Custodian Account ID",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
                 "requestBody": {
                     "x-name": "request",
                     "content": {
@@ -225,6 +254,26 @@
                 ],
                 "summary": "Delete store custodian account",
                 "description": "Deletes a custodial account",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The Store ID",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "accountId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The Custodian Account ID",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Custodian account deleted"

@@ -14,6 +14,12 @@ namespace BTCPayServer.Abstractions.Extensions
         private const string ACTIVE_ID_KEY = "ActiveId";
         private const string ActivePageClass = "active";
 
+        public enum DateDisplayFormat
+        {
+            Localized,
+            Relative
+        }
+
         public static void SetActivePage<T>(this ViewDataDictionary viewData, T activePage, string title = null, string activeId = null)
             where T : IConvertible
         {
@@ -86,26 +92,29 @@ namespace BTCPayServer.Abstractions.Extensions
             return categoryAndPageMatch && idMatch ? ActivePageClass : null;
         }
 
-        public static HtmlString ToBrowserDate(this DateTimeOffset date)
+        public static HtmlString ToBrowserDate(this DateTimeOffset date, DateDisplayFormat format = DateDisplayFormat.Localized)
         {
-            var displayDate = date.ToString("o", CultureInfo.InvariantCulture);
-            return new HtmlString($"<span class='localizeDate'>{displayDate}</span>");
+            var relative = date.ToTimeAgo();
+            var initial = format.ToString().ToLower();
+            var dateTime = date.ToString("s", CultureInfo.InvariantCulture);
+            var displayDate = format == DateDisplayFormat.Relative ? relative : date.ToString("g", CultureInfo.InvariantCulture);
+            return new HtmlString($"<time datetime=\"{dateTime}\" data-relative=\"{relative}\" data-initial=\"{initial}\">{displayDate}</time>");
         }
 
-        public static HtmlString ToBrowserDate(this DateTime date)
+        public static HtmlString ToBrowserDate(this DateTime date, DateDisplayFormat format = DateDisplayFormat.Localized)
         {
-            var displayDate = date.ToString("o", CultureInfo.InvariantCulture);
-            return new HtmlString($"<span class='localizeDate'>{displayDate}</span>");
+            var relative = date.ToTimeAgo();
+            var initial = format.ToString().ToLower();
+            var dateTime = date.ToString("s", CultureInfo.InvariantCulture);
+            var displayDate = format == DateDisplayFormat.Relative ? relative : date.ToString("g", CultureInfo.InvariantCulture);
+            return new HtmlString($"<time datetime=\"{dateTime}\" data-relative=\"{relative}\" data-initial=\"{initial}\">{displayDate}</time>");
         }
 
-        public static string ToTimeAgo(this DateTimeOffset date)
-        {
-            var diff = DateTimeOffset.UtcNow - date;
-            var formatted = diff.TotalSeconds > 0
-                ? $"{diff.TimeString()} ago"
-                : $"in {diff.Negate().TimeString()}";
-            return formatted;
-        }
+        public static string ToTimeAgo(this DateTimeOffset date) => (DateTimeOffset.UtcNow - date).ToTimeAgo();
+
+        public static string ToTimeAgo(this DateTime date) => (DateTimeOffset.UtcNow - date).ToTimeAgo();
+
+        public static string ToTimeAgo(this TimeSpan diff) => diff.TotalSeconds > 0 ? $"{diff.TimeString()} ago" : $"in {diff.Negate().TimeString()}";
 
         public static string TimeString(this TimeSpan timeSpan)
         {
@@ -117,16 +126,14 @@ namespace BTCPayServer.Abstractions.Extensions
             {
                 return $"{(int)timeSpan.TotalMinutes} minute{Plural((int)timeSpan.TotalMinutes)}";
             }
-            if (timeSpan.Days < 1)
-            {
-                return $"{(int)timeSpan.TotalHours} hour{Plural((int)timeSpan.TotalHours)}";
-            }
-            return $"{(int)timeSpan.TotalDays} day{Plural((int)timeSpan.TotalDays)}";
+            return timeSpan.Days < 1 
+                ? $"{(int)timeSpan.TotalHours} hour{Plural((int)timeSpan.TotalHours)}"
+                : $"{(int)timeSpan.TotalDays} day{Plural((int)timeSpan.TotalDays)}";
         }
 
         private static string Plural(int value)
         {
-            return value > 1 ? "s" : string.Empty;
+            return value == 1 ? string.Empty : "s";
         }
     }
 }

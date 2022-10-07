@@ -1294,6 +1294,9 @@ namespace BTCPayServer.Tests
         [Fact]
         public void CanParseRateRules()
         {
+            var pair = CurrencyPair.Parse("USD_EMAT_IC");
+            Assert.Equal("USD", pair.Left);
+            Assert.Equal("EMAT_IC", pair.Right);
             // Check happy path
             StringBuilder builder = new StringBuilder();
             builder.AppendLine("// Some cool comments");

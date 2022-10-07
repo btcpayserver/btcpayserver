@@ -1,4 +1,3 @@
-@using BTCPayServer.Client.Models
 @model (InvoiceDetailsModel Invoice, bool ShowAddress)
 @{ var invoice = Model.Invoice; }
 
@@ -14,7 +13,7 @@
                 <th class="text-end">Rate</th>
                 <th class="text-end">Paid</th>
                 <th class="text-end">Due</th>
-                @if (invoice.StatusException == InvoiceExceptionStatus.PaidOver)
+                @if (invoice.Overpaid)
                 {
                     <th class="text-end">Overpaid</th>
                 }
@@ -34,7 +33,7 @@
                     <td class="text-end">@payment.Rate</td>
                     <td class="text-end">@payment.Paid</td>
                     <td class="text-end">@payment.Due</td>
-                    @if (invoice.StatusException == InvoiceExceptionStatus.PaidOver)
+                    @if (invoice.Overpaid)
                     {
                         <td class="text-end">@payment.Overpaid</td>
                     }

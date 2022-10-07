@@ -14,6 +14,12 @@ namespace BTCPayServer.Abstractions.Extensions
         private const string ACTIVE_ID_KEY = "ActiveId";
         private const string ActivePageClass = "active";
 
+        public enum DateDisplayFormat
+        {
+            Localized,
+            Relative
+        }
+
         public static void SetActivePage<T>(this ViewDataDictionary viewData, T activePage, string title = null, string activeId = null)
             where T : IConvertible
         {
@@ -86,18 +92,22 @@ namespace BTCPayServer.Abstractions.Extensions
             return categoryAndPageMatch && idMatch ? ActivePageClass : null;
         }
 
-        public static HtmlString ToBrowserDate(this DateTimeOffset date)
+        public static HtmlString ToBrowserDate(this DateTimeOffset date, DateDisplayFormat format = DateDisplayFormat.Localized)
         {
-            var displayDate = date.ToString("g", CultureInfo.InvariantCulture);
+            var relative = date.ToTimeAgo();
+            var initial = format.ToString().ToLower();
             var dateTime = date.ToString("s", CultureInfo.InvariantCulture);
-            return new HtmlString($"<time datetime=\"{dateTime}\" data-relative=\"{date.ToTimeAgo()}\">{displayDate}</time>");
+            var displayDate = format == DateDisplayFormat.Relative ? relative : date.ToString("g", CultureInfo.InvariantCulture);
+            return new HtmlString($"<time datetime=\"{dateTime}\" data-relative=\"{relative}\" data-initial=\"{initial}\">{displayDate}</time>");
         }
 
-        public static HtmlString ToBrowserDate(this DateTime date)
+        public static HtmlString ToBrowserDate(this DateTime date, DateDisplayFormat format = DateDisplayFormat.Localized)
         {
-            var displayDate = date.ToString("g", CultureInfo.InvariantCulture);
+            var relative = date.ToTimeAgo();
+            var initial = format.ToString().ToLower();
             var dateTime = date.ToString("s", CultureInfo.InvariantCulture);
-            return new HtmlString($"<time datetime=\"{dateTime}\" data-relative=\"{date.ToTimeAgo()}\">{displayDate}</time>");
+            var displayDate = format == DateDisplayFormat.Relative ? relative : date.ToString("g", CultureInfo.InvariantCulture);
+            return new HtmlString($"<time datetime=\"{dateTime}\" data-relative=\"{relative}\" data-initial=\"{initial}\">{displayDate}</time>");
         }
 
         public static string ToTimeAgo(this DateTimeOffset date) => (DateTimeOffset.UtcNow - date).ToTimeAgo();

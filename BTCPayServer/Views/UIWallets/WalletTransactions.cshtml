@@ -206,9 +206,11 @@
                     <th style="width:2rem;" class="only-for-js">
                         <input id="selectAllCheckbox" type="checkbox" class="form-check-input" />
                     </th>
-                    <th style="max-width:125px;">
-                        Date
-                        <a id="switchTimeFormat" class="fa fa-clock-o" title="Switch date format" href="#"></a>
+                    <th class="w-150px">
+                        <div class="d-flex align-items-center gap-1">
+                            Date
+                            <button type="button" class="btn btn-link p-0 fa fa-clock-o switch-time-format" title="Switch date format" id="switchTimeFormat"></button>
+                        </div>
                     </th>
                     <th class="text-start">Label</th>
                     <th>Transaction Id</th>

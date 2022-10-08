@@ -109,7 +109,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
         [DomainMappingConstraint(AppType.PointOfSale)]
         [RateLimitsFilter(ZoneLimits.PublicInvoices, Scope = RateLimitsScope.RemoteAddress)]
         public async Task<IActionResult> ViewPointOfSale(string appId,
-                                                        PosViewType viewType,
+                                                        PosViewType? viewType,
                                                         [ModelBinder(typeof(InvariantDecimalModelBinder))] decimal? amount,
                                                         string email,
                                                         string orderId,
@@ -129,12 +129,14 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 return NotFound();
             var settings = app.GetSettings<PointOfSaleSettings>();
             settings.DefaultView = settings.EnableShoppingCart ? PosViewType.Cart : settings.DefaultView;
-            if (string.IsNullOrEmpty(choiceKey) && !settings.ShowCustomAmount && settings.DefaultView != PosViewType.Cart)
+            var currentView = viewType ?? settings.DefaultView;
+            if (string.IsNullOrEmpty(choiceKey) && !settings.ShowCustomAmount && 
+                currentView != PosViewType.Cart && currentView != PosViewType.Light)
             {
                 return RedirectToAction(nameof(ViewPointOfSale), new { appId, viewType });
             }
-            string title = null;
-            decimal? price = null;
+            string title;
+            decimal? price;
             Dictionary<string, InvoiceSupportedTransactionCurrency> paymentMethods = null;
             ViewPointOfSaleViewModel.Item choice = null;
             if (!string.IsNullOrEmpty(choiceKey))
@@ -155,12 +157,9 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                         price = amount;
                 }
 
-                if (choice.Inventory.HasValue)
+                if (choice.Inventory is <= 0)
                 {
-                    if (choice.Inventory <= 0)
-                    {
-                        return RedirectToAction(nameof(ViewPointOfSale), new { appId = appId });
-                    }
+                    return RedirectToAction(nameof(ViewPointOfSale), new { appId });
                 }
 
                 if (choice?.PaymentMethods?.Any() is true)
@@ -171,17 +170,16 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             }
             else
             {
-                if (!settings.ShowCustomAmount && settings.DefaultView != PosViewType.Cart)
+                if (!settings.ShowCustomAmount && currentView != PosViewType.Cart && currentView != PosViewType.Light)
                     return NotFound();
+                
                 price = amount;
                 title = settings.Title;
 
                 //if cart IS enabled and we detect posdata that matches the cart system's, check inventory for the items
-                if (!string.IsNullOrEmpty(posData) &&
-                    settings.DefaultView == PosViewType.Cart &&
+                if (!string.IsNullOrEmpty(posData) && currentView == PosViewType.Cart &&
                     AppService.TryParsePosCartItems(posData, out var cartItems))
                 {
-
                     var choices = _appService.GetPOSItems(settings.Template, settings.Currency);
                     foreach (var cartItem in cartItems)
                     {
@@ -205,7 +203,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             var store = await _appService.GetStore(app);
             try
             {
-                var invoice = await _invoiceController.CreateInvoiceCore(new BitpayCreateInvoiceRequest()
+                var invoice = await _invoiceController.CreateInvoiceCore(new BitpayCreateInvoiceRequest
                 {
                     ItemCode = choice?.Id,
                     ItemDesc = title,
@@ -227,7 +225,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                         ? store.GetStoreBlob().RequiresRefundEmail
                         : requiresRefundEmail == RequiresRefundEmail.On,
                 }, store, HttpContext.Request.GetAbsoluteRoot(),
-                    new List<string>() { AppService.GetAppInternalTag(appId) },
+                    new List<string> { AppService.GetAppInternalTag(appId) },
                     cancellationToken, (entity) =>
                     {
                         entity.Metadata.OrderUrl = Request.GetDisplayUrl();

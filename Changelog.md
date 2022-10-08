@@ -17,9 +17,11 @@
 
 ### Improvement
 
-* The wallet transaction list use infinity scroll rather than pagination @HamroRamro @dennisreimann
+* The wallet transaction list use infinity scroll rather than pagination (#4074) @HamroRamro @dennisreimann
 * Remove direct and temp link functionality from the File Storage (#4177) @daviogg
 * Fix warning error when rebooting the server caused by some shitcoin currency pair format @NicolasDorier
+* Add Invoice.OrderId to list of supported email interpolation strings (#4202) @bolatovumar
+* Do not hide errors happening in tasks spawned by BaseAsyncService @NicolasDorier
 
 ## 1.6.11
 

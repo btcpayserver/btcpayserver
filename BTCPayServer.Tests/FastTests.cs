@@ -1294,6 +1294,9 @@ namespace BTCPayServer.Tests
         [Fact]
         public void CanParseRateRules()
         {
+            var pair = CurrencyPair.Parse("USD_EMAT_IC");
+            Assert.Equal("USD", pair.Left);
+            Assert.Equal("EMAT_IC", pair.Right);
             // Check happy path
             StringBuilder builder = new StringBuilder();
             builder.AppendLine("// Some cool comments");
@@ -1389,7 +1392,7 @@ namespace BTCPayServer.Tests
             rule2.Reevaluate();
             Assert.False(rule2.HasError);
             Assert.Equal("5000 * 2000.4 * 1.1", rule2.ToString(true));
-            Assert.Equal(rule2.BidAsk.Bid, 5000m * 2000.4m * 1.1m);
+            Assert.Equal(5000m * 2000.4m * 1.1m, rule2.BidAsk.Bid);
             ////////
 
             // Make sure parenthesis are correctly calculated

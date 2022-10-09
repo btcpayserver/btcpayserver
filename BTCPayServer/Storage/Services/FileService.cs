@@ -1,10 +1,13 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Web;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Configuration;
@@ -12,7 +15,6 @@ using BTCPayServer.Services;
 using BTCPayServer.Storage.Models;
 using BTCPayServer.Storage.Services.Providers;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.Options;
 
@@ -65,7 +67,7 @@ namespace BTCPayServer.Storage.Services
             if (!await IsAvailable())
                 throw new InvalidOperationException("StoreSettings not configured");
             
-            var fileName = Path.GetFileName(url.AbsolutePath);
+            var fileName = Sanitize(Path.GetFileName(url.AbsolutePath));
             if (!fileName.IsValidFileName())
                 throw new InvalidOperationException("Invalid file name");
             
@@ -140,6 +142,16 @@ namespace BTCPayServer.Storage.Services
             }
 
             return contentType;
+        }
+        
+        private static string Sanitize(string fileName)
+        {
+            var invalid = Path.GetInvalidFileNameChars().Concat(":").ToArray();
+            // replace invalid chars in url-decoded filename
+            var name = string.Join("_", HttpUtility.UrlDecode(fileName)
+                .Split(invalid, StringSplitOptions.RemoveEmptyEntries)).TrimEnd('.');
+            // replace multiple underscores with just one
+            return Regex.Replace(name, @"_+", "_");
         }
     }
 }

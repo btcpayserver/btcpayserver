@@ -169,11 +169,11 @@ On linux:
 
 ### How to debug
 
-If you want to debug, use Visual Studio Code or Visual Studio 2019.
+If you want to debug, use Jetbrain's Rider or Visual Studio 2022.
 
 You need to run the development time docker-compose as described [in the test guide](./BTCPayServer.Tests/README.md).
 
-You can then run the debugger by using the Launch Profile `Docker-Regtest` on either Visual Studio Code or Visual Studio 2017.
+You can then run the debugger by using the Launch Profile `Docker-Regtest`.
 
 If you need to debug ledger wallet interaction, install the development time certificate with:
 

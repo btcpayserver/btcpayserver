@@ -80,6 +80,22 @@ a.unobtrusive-link {
     text-decoration: inherit;
 }
 
+.btn.btn-link:focus {
+    box-shadow: none;
+}
+
+[data-bs-toggle="collapse"] svg.icon {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    margin-left: auto;
+    transition: transform 0.2s ease-in-out;
+}
+
+[data-bs-toggle="collapse"][aria-expanded="true"] svg.icon {
+    transform: rotate(-180deg);
+}
+
 /* Badges */
 .badge-new {
     background: #d4edda;

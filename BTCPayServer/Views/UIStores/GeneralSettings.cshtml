@@ -31,7 +31,7 @@
             <h3 class="mt-5 mb-3">Payment</h3>
             <div class="form-group">
                 <label asp-for="DefaultCurrency" class="form-label"></label>
-                <input asp-for="DefaultCurrency" class="form-control" currency-selection style="max-width:10ch;" />
+                <input asp-for="DefaultCurrency" class="form-control w-auto" currency-selection />
                 <span asp-validation-for="DefaultCurrency" class="text-danger"></span>
             </div>
             <div class="form-group d-flex align-items-center">

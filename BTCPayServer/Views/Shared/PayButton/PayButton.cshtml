@@ -161,7 +161,7 @@
             </div>
             <div class="form-group col-md-4" v-if="!srvModel.appIdEndpoint">
                 <label class="form-label" for="Currency">Currency</label>
-                <input asp-for="Currency" name="currency" currency-selection class="form-control"
+                <input asp-for="Currency" name="currency" class="form-control w-auto" currency-selection
                        v-model="srvModel.currency" v-on:change="inputChanges"
                        :class="{'is-invalid': errors.has('currency') }" />
             </div>

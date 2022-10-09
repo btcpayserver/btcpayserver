@@ -46,7 +46,14 @@ namespace BTCPayServer.Controllers.Greenfield
             return Ok(new LightningNodeInformationData
             {
                 BlockHeight = info.BlockHeight,
-                NodeURIs = info.NodeInfoList.Select(nodeInfo => nodeInfo).ToArray()
+                NodeURIs = info.NodeInfoList.Select(nodeInfo => nodeInfo).ToArray(),
+                Alias = info.Alias,
+                Color = info.Color,
+                Version = info.Version,
+                PeersCount = info.PeersCount,
+                ActiveChannelsCount = info.ActiveChannelsCount,
+                InactiveChannelsCount = info.InactiveChannelsCount,
+                PendingChannelsCount = info.PendingChannelsCount
             });
         }
 

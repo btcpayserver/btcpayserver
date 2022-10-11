@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
@@ -672,10 +673,10 @@ namespace BTCPayServer.Controllers
         private DerivationSchemeSettings ParseDerivationStrategy(string derivationScheme, BTCPayNetwork network)
         {
             var parser = new DerivationSchemeParser(network);
-            try
+            var isOD = Regex.Match(derivationScheme, @"\(.*?\)");
+            if (isOD.Success)
             {
-                var derivationSchemeSettings = new DerivationSchemeSettings();
-                derivationSchemeSettings.Network = network;
+                var derivationSchemeSettings = new DerivationSchemeSettings { Network = network };
                 var result = parser.ParseOutputDescriptor(derivationScheme);
                 derivationSchemeSettings.AccountOriginal = derivationScheme.Trim();
                 derivationSchemeSettings.AccountDerivation = result.Item1;
@@ -687,12 +688,9 @@ namespace BTCPayServer.Controllers
                 }).ToArray() ?? new AccountKeySettings[result.Item1.GetExtPubKeys().Count()];
                 return derivationSchemeSettings;
             }
-            catch (Exception)
-            {
-                // ignored
-            }
-
-            return new DerivationSchemeSettings(parser.Parse(derivationScheme), network);
+            
+            var strategy = parser.Parse(derivationScheme);
+            return new DerivationSchemeSettings(strategy, network);
         }
 
         [HttpGet]

@@ -1,5 +1,28 @@
 # Changelog
 
+## 1.6.12
+
+### New features
+
+* Greenfield: Extend LN GetInfo data (#4167) @dennisreimann
+
+### Bug fixes
+
+* Always show overpaid amount if invoice is overpaid (#4192) @bolatovumar
+* Fix custodian Swagger docs missing some path parameters (#4196) @AryanJ-NYC
+* Fix receipts for Lightning Address invoices (#4169) @dennisreimann
+* POS: Fix keypad view without custom amount (#4183) @dennisreimann @bolatovumar
+* Fix truncated dates in wallet transaction list (#4191) @dennisreimann
+* Update default value for "showCustomAmount" in Swagger docs (#4200) @bolatovumar
+
+### Improvement
+
+* The wallet transaction list use infinity scroll rather than pagination (#4074) @HamroRamro @dennisreimann
+* Remove direct and temp link functionality from the File Storage (#4177) @daviogg
+* Fix warning error when rebooting the server caused by some shitcoin currency pair format @NicolasDorier
+* Add Invoice.OrderId to list of supported email interpolation strings (#4202) @bolatovumar
+* Do not hide errors happening in tasks spawned by BaseAsyncService @NicolasDorier
+
 ## 1.6.11
 
 ### New feature

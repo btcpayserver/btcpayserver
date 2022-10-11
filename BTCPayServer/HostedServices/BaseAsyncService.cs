@@ -31,7 +31,7 @@ namespace BTCPayServer.HostedServices
                 t.ContinueWith(t =>
                 {
                     if (t.IsFaulted)
-                        Logs.PayServer.LogWarning(t.Exception, $"Error in task from {this.GetType().Name}");
+                        Logs.PayServer.LogWarning(t.Exception, $"Unhanded exception in {this.GetType().Name}");
                 }, TaskScheduler.Default);
             return Task.CompletedTask;
         }

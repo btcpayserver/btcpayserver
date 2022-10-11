@@ -52,7 +52,6 @@ namespace BTCPayServer.Controllers.Greenfield
         private readonly EventAggregator _eventAggregator;
         private readonly WalletReceiveService _walletReceiveService;
         private readonly IFeeProviderFactory _feeProviderFactory;
-        private readonly LabelFactory _labelFactory;
         private readonly UTXOLocker _utxoLocker;
 
         public GreenfieldStoreOnChainWalletsController(
@@ -69,7 +68,6 @@ namespace BTCPayServer.Controllers.Greenfield
             EventAggregator eventAggregator,
             WalletReceiveService walletReceiveService,
             IFeeProviderFactory feeProviderFactory,
-            LabelFactory labelFactory,
             UTXOLocker utxoLocker
         )
         {
@@ -86,7 +84,6 @@ namespace BTCPayServer.Controllers.Greenfield
             _eventAggregator = eventAggregator;
             _walletReceiveService = walletReceiveService;
             _feeProviderFactory = feeProviderFactory;
-            _labelFactory = labelFactory;
             _utxoLocker = utxoLocker;
         }
 
@@ -202,7 +199,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     if (!string.IsNullOrWhiteSpace(labelFilter))
                     {
                         walletTransactionsInfoAsync.TryGetValue(t.TransactionId.ToString(), out var transactionInfo);
-                        if (transactionInfo?.Labels.ContainsKey(labelFilter) is true)
+                        if (transactionInfo?.LabelColors.ContainsKey(labelFilter) is true)
                             filteredList.Add(t);
                     }
                     if (statusFilter?.Any() is true)
@@ -270,36 +267,18 @@ namespace BTCPayServer.Controllers.Greenfield
             }
 
             var walletId = new WalletId(storeId, cryptoCode);
-            var walletTransactionsInfoAsync = _walletRepository.GetWalletTransactionsInfo(walletId);
-            if (!(await walletTransactionsInfoAsync).TryGetValue(transactionId, out var walletTransactionInfo))
-            {
-                walletTransactionInfo = new WalletTransactionInfo();
-            }
+            var txObjectId = new WalletObjectId(walletId, WalletObjectData.Types.Tx, transactionId);
 
             if (request.Comment != null)
             {
-                walletTransactionInfo.Comment = request.Comment.Trim().Truncate(WalletTransactionDataExtensions.MaxCommentSize);
+                await _walletRepository.SetWalletObjectComment(txObjectId, request.Comment);
             }
 
             if (request.Labels != null)
             {
-                var walletBlobInfo = await _walletRepository.GetWalletInfo(walletId);
-                
-                foreach (string label in request.Labels)
-                {
-                    var rawLabel = await _labelFactory.BuildLabel(
-                        walletBlobInfo,
-                        Request,
-                        walletTransactionInfo,
-                        walletId,
-                        transactionId,
-                        label
-                    );
-                    walletTransactionInfo.Labels.TryAdd(rawLabel.Text, rawLabel);
-                }
+                await _walletRepository.AddWalletObjectLabels(txObjectId, request.Labels.ToArray());
             }
 
-            await _walletRepository.SetWalletTransactionInfo(walletId, transactionId, walletTransactionInfo);
             var walletTransactionsInfo =
                 (await _walletRepository.GetWalletTransactionsInfo(walletId, new[] { transactionId }))
                 .Values
@@ -319,19 +298,20 @@ namespace BTCPayServer.Controllers.Greenfield
             var wallet = _btcPayWalletProvider.GetWallet(network);
 
             var walletId = new WalletId(storeId, cryptoCode);
-            var walletTransactionsInfoAsync = await _walletRepository.GetWalletTransactionsInfo(walletId);
             var utxos = await wallet.GetUnspentCoins(derivationScheme.AccountDerivation);
-            
+            var walletTransactionsInfoAsync = await _walletRepository.GetWalletTransactionsInfo(walletId, utxos.Select(u => u.OutPoint.Hash.ToString()).ToHashSet().ToArray());
             return Ok(utxos.Select(coin =>
                 {
                     walletTransactionsInfoAsync.TryGetValue(coin.OutPoint.Hash.ToString(), out var info);
-                    var labels = info?.Labels ?? new Dictionary<string, LabelData>();
+
                     return new OnChainWalletUTXOData()
                     {
                         Outpoint = coin.OutPoint,
                         Amount = coin.Value.GetValue(network),
                         Comment = info?.Comment,
-                        Labels = info?.Labels,
+#pragma warning disable CS0612 // Type or member is obsolete
+                        Labels = info?.LegacyLabels ?? new Dictionary<string, LabelData>(),
+#pragma warning restore CS0612 // Type or member is obsolete
                         Link = string.Format(CultureInfo.InvariantCulture, network.BlockExplorerLink,
                             coin.OutPoint.Hash.ToString()),
                         Timestamp = coin.Timestamp,
@@ -592,8 +572,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     payjoinPSBT.Finalize();
                     var payjoinTransaction = payjoinPSBT.ExtractTransaction();
                     var hash = payjoinTransaction.GetHash();
-                    _eventAggregator.Publish(new UpdateTransactionLabel(new WalletId(Store.Id, cryptoCode), hash,
-                        UpdateTransactionLabel.PayjoinLabelTemplate()));
+                    await this._walletRepository.AddWalletTransactionAttachment(new WalletId(Store.Id, cryptoCode), hash, Attachment.Payjoin());
                     broadcastResult = await explorerClient.BroadcastAsync(payjoinTransaction);
                     if (broadcastResult.Success)
                     {
@@ -676,7 +655,9 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 TransactionHash = tx.TransactionId,
                 Comment = walletTransactionsInfoAsync?.Comment ?? string.Empty,
-                Labels = walletTransactionsInfoAsync?.Labels ?? new Dictionary<string, LabelData>(),
+#pragma warning disable CS0612 // Type or member is obsolete
+                Labels = walletTransactionsInfoAsync?.LegacyLabels ?? new Dictionary<string, LabelData>(),
+#pragma warning restore CS0612 // Type or member is obsolete
                 Amount = tx.BalanceChange.GetValue(wallet.Network),
                 BlockHash = tx.BlockHash,
                 BlockHeight = tx.Height,

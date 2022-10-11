@@ -81,6 +81,7 @@ namespace BTCPayServer.Payments.PayJoin
         }
         private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
         private readonly InvoiceRepository _invoiceRepository;
+        private readonly WalletRepository _walletRepository;
         private readonly ExplorerClientProvider _explorerClientProvider;
         private readonly BTCPayWalletProvider _btcPayWalletProvider;
         private readonly UTXOLocker _utxoLocker;
@@ -96,6 +97,7 @@ namespace BTCPayServer.Payments.PayJoin
 
         public PayJoinEndpointController(BTCPayNetworkProvider btcPayNetworkProvider,
             InvoiceRepository invoiceRepository, ExplorerClientProvider explorerClientProvider,
+            WalletRepository walletRepository,
             BTCPayWalletProvider btcPayWalletProvider,
             UTXOLocker utxoLocker,
             EventAggregator eventAggregator,
@@ -109,6 +111,7 @@ namespace BTCPayServer.Payments.PayJoin
         {
             _btcPayNetworkProvider = btcPayNetworkProvider;
             _invoiceRepository = invoiceRepository;
+            _walletRepository = walletRepository;
             _explorerClientProvider = explorerClientProvider;
             _btcPayWalletProvider = btcPayWalletProvider;
             _utxoLocker = utxoLocker;
@@ -503,23 +506,14 @@ namespace BTCPayServer.Payments.PayJoin
             }
 
             await _btcPayWalletProvider.GetWallet(network).SaveOffchainTransactionAsync(ctx.OriginalTransaction);
-            var labels = selectedUTXOs.GroupBy(pair => pair.Key.Hash).Select(utxo =>
-                    new KeyValuePair<uint256, List<(string color, Label label)>>(utxo.Key,
-                        new List<(string color, Label label)>()
-                        {
-                            UpdateTransactionLabel.PayjoinExposedLabelTemplate(invoice?.Id)
-                        }))
-                .ToDictionary(pair => pair.Key, pair => pair.Value);
+
+            foreach (var utxo in selectedUTXOs)
+            {
+                await _walletRepository.AddWalletTransactionAttachment(walletId, utxo.Key.Hash, Attachment.PayjoinExposed(invoice?.Id));
+            }
+            await _walletRepository.AddWalletTransactionAttachment(walletId, originalPaymentData.PayjoinInformation.CoinjoinTransactionHash, Attachment.Payjoin());
             
-            labels.Add(originalPaymentData.PayjoinInformation.CoinjoinTransactionHash, new List<(string color, Label label)>()
-            {
-                UpdateTransactionLabel.PayjoinLabelTemplate()
-            });
-            _eventAggregator.Publish(new UpdateTransactionLabel()
-            {
-                WalletId = walletId,
-                TransactionLabels = labels
-            });
+            
             ctx.Success();
             // BTCPay Server support PSBT set as hex
             if (psbtFormat && HexEncoder.IsWellFormed(rawBody))

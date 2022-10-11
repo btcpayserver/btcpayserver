@@ -13,7 +13,9 @@ namespace BTCPayServer.Client.Models
         public uint256 TransactionHash { get; set; }
 
         public string Comment { get; set; }
+#pragma warning disable CS0612 // Type or member is obsolete
         public Dictionary<string, LabelData> Labels { get; set; } = new Dictionary<string, LabelData>();
+#pragma warning restore CS0612 // Type or member is obsolete
 
         [JsonConverter(typeof(NumericStringJsonConverter))]
         public decimal Amount { get; set; }

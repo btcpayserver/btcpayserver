@@ -73,5 +73,6 @@ namespace BTCPayServer.Models.InvoicingModels
         public string ReceiptLink { get; set; }
         public bool UseNewCheckout { get; set; }
         public string CheckoutFormId { get; set; }
+        public bool AltcoinsBuild { get; set; }
     }
 }

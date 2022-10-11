@@ -5,9 +5,10 @@
 @inject PaymentMethodHandlerDictionary PaymentMethodHandlerDictionary
 @using BTCPayServer.Services
 @using BTCPayServer.Abstractions.Contracts
+@using BTCPayServer.Abstractions.TagHelpers
+@using BTCPayServer.Components.ThemeSwitch
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @using BundlerMinifier.TagHelpers
-@using BTCPayServer.Abstractions.TagHelpers
 @model PaymentModel
 @{
     Layout = null;
@@ -17,6 +18,14 @@
     var logoUrl = !string.IsNullOrEmpty(Model.LogoFileId)
         ? await FileService.GetFileUrl(Context.Request.GetAbsoluteRootUri(), Model.LogoFileId)
         : Model.CustomLogoLink;
+}
+@functions{
+    private string PaymentMethodName(PaymentModel.AvailableCrypto pm)
+    {
+        return Model.AltcoinsBuild
+            ? $"{pm.PaymentMethodName} {pm.CryptoCode}"
+            : pm.PaymentMethodName.Replace("Bitcoin (", "").Replace(")", "").Replace("Lightning ", "");
+    }
 }
 
 <!DOCTYPE html>
@@ -31,7 +40,7 @@
     <style>
         :root {
             --logo-size: 3rem;
-            --main-min-height: 600px;
+            --qr-size: 256px;
         }
         body {
             padding: var(--btcpay-space-l) var(--btcpay-space-m);
@@ -50,7 +59,6 @@
         }
         section {
             display: none;
-            min-height: var(--main-min-height);
             padding: var(--btcpay-space-l);
         }
         section.current {
@@ -71,6 +79,25 @@
             flex-direction: column;
             gap: var(--btcpay-space-m);
         }
+        section dl {
+            margin-bottom: 0;
+        }
+        section dl > div {
+            display: flex;
+            justify-content: space-between;
+        }
+        section dl > div dt,
+        section dl > div dd {
+            margin: 0;
+            padding: var(--btcpay-space-xs) 0;
+            font-weight: var(--btcpay-font-weight-normal);
+        }
+        section dl > div dt {
+            text-align: left;
+        }
+        section dl > div dd {
+            text-align: right;
+        }
         .logo {
             height: var(--logo-size);
         }
@@ -82,17 +109,38 @@
             max-width: 400px;
             margin: 0 auto;
         }
+        .payment-box {
+            max-width: 300px;
+            min-width: var(--qr-size);
+            margin: 0 auto;
+            text-align: center;
+        }
+        .payment-box .qr-container {
+            min-height: var(--qr-size);
+        }
+        .payment-box svg {
+            width: 100%;
+        }
+        .payment-box [data-clipboard] {
+            cursor: copy;
+        }
         #form > form,
         #result > div {
             display: flex;
             flex-direction: column;
-            min-height: var(--main-min-height);
         }
         #result .top .icon {
             display: block;
             width: 3rem;
             height: 3rem;
             margin: 1.5rem auto;
+        }
+        #PaymentDetailsButton {
+            margin: 0 auto;
+            padding: var(--btcpay-space-s);
+        }
+        #PaymentDetailsButton .icon {
+            margin-left: -1rem; /* Adjust for visual center */
         }
     </style>
     @if (Model.IsModal)
@@ -117,12 +165,6 @@
             <h1 class="h5">@Model.StoreName</h1>
         </header>
         <main>
-            <div class="timer" v-if="expiringSoon">
-                {{$t("Invoice will expire in")}} {{timerText}}
-                <div class="spinner-border-sm text-light" role="status">
-                    <span class="visually-hidden"></span>
-                </div>
-            </div>
             <section id="form" :class="{ 'current': step === 'form' }">
                 <form method="post" asp-action="UpdateForm" asp-route-invoiceId="@Model.InvoiceId" v-on:submit.prevent="onFormSubmit">
                     <div class="top">
@@ -142,121 +184,89 @@
                 </form>
             </section>
             <section id="payment" :class="{ 'current': step === 'payment' }">
-                <div>
-                    <h6>{{ srvModel.itemDesc }}</h6>
-                </div>
-                <div class="single-item-order buyerTotalLine" v-on:click="toggleLineItems" :class="{ 'expanded': lineItemsExpanded }">
-                    <div class="single-item-order__right">
-                        <div class="single-item-order__right__btc-price" v-if="srvModel.status === 'paid' && !srvModel.isUnsetTopUp">
-                            <span>{{ srvModel.btcPaid }} {{ srvModel.cryptoCode }}</span>
-                        </div>
-                        <div class="single-item-order__right__btc-price" v-if="srvModel.status !== 'paid' && !srvModel.isUnsetTopUp && parseFloat(srvModel.btcDue) > 0">
-                            <span>{{ srvModel.btcDue }} {{ srvModel.cryptoCode }}</span>
-                        </div>
-                        <div class="single-item-order__right__ex-rate" v-if="srvModel.orderAmountFiat && srvModel.cryptoCode">
-                            <span v-if="srvModel.cryptoCodeSrv === 'Sats'">1 Sat = {{ srvModel.rate }}</span>
-                            <span v-else>1 {{ srvModel.cryptoCodeSrv }} = {{ srvModel.rate }}</span>
-                        </div>
+                <h6 class="text-center mb-3 fw-semibold" v-text="srvModel.itemDesc">@Model.ItemDesc</h6>
+                @if (Model.IsUnsetTopUp)
+                {
+                    <div class="h3 text-center mb-2">{{$t("Any amount")}}</div>
+                }
+                else
+                {
+                    <div class="h3 text-center mb-2" v-text="`${srvModel.btcDue} ${srvModel.cryptoCode}`">@Model.BtcDue @Model.CryptoCode</div>
+                    <div class="h3 text-center mb-2" v-else v-text="`${srvModel.btcDue} ${srvModel.cryptoCode}`">@Model.BtcDue @Model.CryptoCode</div>
+                    <div class="text-muted text-center" v-if="srvModel.orderAmountFiat" v-text="srvModel.orderAmountFiat">@Model.OrderAmountFiat</div>
+                    <div class="d-flex align-items-center justify-content-center my-2 text-center" v-if="expiringSoon">
+                        {{$t("Invoice will expire in")}} {{timerText}}
+                        <span class="spinner-border spinner-border-sm ms-2 text-muted" role="status">
+                            <span class="visually-hidden"></span>
+                        </span>
                     </div>
-                    <span class="fa fa-angle-double-down" v-if="!srvModel.isUnsetTopUp"></span>
-                    <span class="fa fa-angle-double-up" v-if="!srvModel.isUnsetTopUp"></span>
-                </div>
-                <div class="single-item-order__left">
-                    <div style="font-weight: 600;" id="pay-with-text">
-                        {{$t("Pay with")}}
+                    <div class="my-2 text-center" v-if="srvModel.status === 'new' && srvModel.txCount > 1">
+                        <span class="text-info"><vc:icon symbol="info"/></span>
+                        <small>{{$t("NotPaid_ExtraTransaction")}}</small>
                     </div>
-                </div>
-                <div class="single-item-order__right">
+                    <button class="d-flex align-items-center btn btn-link" type="button" id="PaymentDetailsButton" :aria-expanded="displayPaymentDetails ? 'true' : 'false'" aria-controls="PaymentDetails" v-on:click="displayPaymentDetails = !displayPaymentDetails">
+                        <vc:icon symbol="caret-down"/>
+                        <span class="ms-1">{{$t("View Details")}}</span>
+                    </button>
+                    <div id="PaymentDetails" class="collapse" v-collapsible="displayPaymentDetails">
+                        <dl>
+                            <div>
+                                <dt>{{$t("Total Price")}}</dt>
+                                <dd>{{srvModel.orderAmount}} {{ srvModel.cryptoCode }}</dd>
+                            </div>
+                            <div v-if="srvModel.orderAmountFiat && srvModel.cryptoCode">
+                                <dt>{{$t("Exchange Rate")}}</dt>
+                                <dd>
+                                    <template v-if="srvModel.cryptoCodeSrv === 'Sats'">1 Sat = {{ srvModel.rate }}</template>
+                                    <template v-else>1 {{ srvModel.cryptoCodeSrv }} = {{ srvModel.rate }}</template>
+                                </dd>
+                            </div>
+                            <div v-if="srvModel.showRecommendedFee && srvModel.feeRate">
+                                <dt>{{$t("Recommended Fee")}}</dt>
+                                <dd>{{$t("Feerate", { feeRate: srvModel.feeRate })}}</dd>
+                            </div>
+                            <div v-if="srvModel.isMultiCurrency || srvModel.txCountForFee > 0">
+                                <dt>{{$t("Network Cost")}}</dt>
+                                <dd>
+                                    <template v-if="srvModel.txCountForFee > 0">{{$t("txCount", {count: srvModel.txCount})}} x</template>
+                                    {{ srvModel.networkFee }} {{ srvModel.cryptoCode }}
+                                </dd>
+                            </div>
+                            <div v-if="parseFloat(srvModel.btcPaid) > 0">
+                                <dt>{{$t("Amount Paid")}}</dt>
+                                <dd>{{srvModel.btcPaid }} {{ srvModel.cryptoCode }}</dd>
+                            </div>
+                            <div v-if="parseFloat(srvModel.btcDue) > 0">
+                                <dt>{{$t("Amount Due")}}</dt>
+                                <dd>{{srvModel.btcDue}} {{ srvModel.cryptoCode }}</dd>
+                            </div>
+                        </dl>
+                    </div>
+                }
+                <div class="my-3">
                     @if (paymentMethodCount > 1)
                     {
-                        <div class="paywithRowRight cursorPointer">
-                            <span class="payment__currencies " v-show="!changingCurrencies">
-                                <img :src="srvModel.cryptoImage"/>
-                                <span>{{srvModel.paymentMethodName}} ({{srvModel.cryptoCodeSrv}})</span>
-                                <span v-show="srvModel.isLightning">&#9889;</span>
-                                <span class="clickable_indicator fa fa-angle-right"></span>
-                            </span>
-                        </div>
-                        <div>
-                            <ul>
-                                @foreach (var crypto in Model.AvailableCryptos)
-                                {
-                                    <li>
-                                        <a href="@crypto.Link" class="payment-method" data-payment-method="@crypto.PaymentMethodId" rel="noreferrer noopener">
-                                            <img alt="@crypto.PaymentMethodName" src="@crypto.CryptoImage" asp-append-version="true"/>
-                                            @crypto.PaymentMethodName
-                                            @(crypto.IsLightning ? Html.Raw("&#9889;") : null)
-                                            <span>@crypto.CryptoCode</span>
-                                        </a>
-                                    </li>
-                                }
-                            </ul>
+                        <h6 class="text-center mb-3">{{$t("Pay with")}}</h6>
+                        <div class="btcpay-pills d-flex flex-wrap align-items-center justify-content-center gap-2 pb-2">
+                            @foreach (var crypto in Model.AvailableCryptos)
+                            {
+                                <a asp-action="Checkout" asp-route-invoiceId="@Model.InvoiceId" asp-route-paymentMethodId="@crypto.PaymentMethodId" class="btcpay-pill m-0@(crypto.PaymentMethodId == Model.PaymentMethodId ? " active" : "")">
+                                    @PaymentMethodName(crypto)
+                                </a>
+                            }
                         </div>
                     }
                     else
                     {
-                        <div class="payment__currencies_noborder">
-                            <img :src="srvModel.cryptoImage" :alt="srvModel.paymentMethodName"/>
-                            <span>{{srvModel.paymentMethodName}} ({{srvModel.cryptoCodeSrv}})</span>
-                            <span v-show="srvModel.isLightning">&#9889;</span>
-                        </div>
+                        <h6 class="text-center mb-3">
+                            {{$t("Pay with")}}
+                            @PaymentMethodName(Model.AvailableCryptos.First())
+                        </h6>
                     }
-                    <div v-show="changingCurrencies || loading">
-                        <div class="spinner-border text-light" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                    </div>
                 </div>
-                <div class="line-items" v-if="!srvModel.isUnsetTopUp">
-                    <div class="extraPayment" v-if="srvModel.status === 'new' && srvModel.txCount > 1">
-                        {{$t("NotPaid_ExtraTransaction")}}
-                    </div>
-                    <div class="line-items" :class="{ 'expanded': lineItemsExpanded}">
-                        <div class="line-items__item">
-                            <div class="line-items__item__label">{{$t("Order Amount")}}</div>
-                            <div class="line-items__item__value">{{srvModel.orderAmount}} {{ srvModel.cryptoCode }}</div>
-                        </div>
-                        <div class="line-items__item line-items_fiatvalue" v-if="srvModel.orderAmountFiat">
-                            <div class="line-items__item__label">&nbsp;</div>
-                            <div class="line-items__item__value single-item-order__right__ex-rate">
-                                {{srvModel.orderAmountFiat}}
-                            </div>
-                        </div>
-                        <div class="line-items__item" v-show="srvModel.isMultiCurrency || srvModel.txCountForFee > 0">
-                            <div class="line-items__item__label">
-                                <span>{{$t("Network Cost")}}</span>
-                            </div>
-                            <div class="line-items__item__value">
-                                <span v-if="srvModel.isMultiCurrency">
-                                    {{ srvModel.networkFee }} {{ srvModel.cryptoCode }}
-                                </span>
-                                <span v-else-if="srvModel.txCountForFee > 0">
-                                    {{$t("txCount", {count: srvModel.txCount})}} x {{ srvModel.networkFee }} {{ srvModel.cryptoCode }}
-                                </span>
-                            </div>
-                        </div>
-                        <div class="line-items__item">
-                            <div class="line-items__item__label">
-                                <span>{{$t("Already Paid")}}</span>
-                            </div>
-                            <div class="line-items__item__value">-{{srvModel.btcPaid }} {{ srvModel.cryptoCode }}</div>
-                        </div>
-                        <div class="line-items__item line-items__item--total" v-show="parseFloat(srvModel.btcDue) > 0">
-                            <div class="line-items__item__label">{{$t("Due")}}</div>
-                            <div class="line-items__item__value">{{srvModel.btcDue}} {{ srvModel.cryptoCode }}</div>
-                        </div>
-                    </div>
-                </div>
-                <component v-if="srvModel.uiSettings && srvModel.uiSettings.checkoutHeaderVueComponentName && srvModel.activated"
+                <component v-if="srvModel.uiSettings && srvModel.activated"
                            :srv-model="srvModel"
-                           :is="srvModel.uiSettings.checkoutHeaderVueComponentName">
-                </component>
-                <div class="payment-box" :class="{ 'with-recommended-fee': showRecommendedFee }">
-                    <component v-if="srvModel.uiSettings && srvModel.uiSettings.checkoutBodyVueComponentName && srvModel.activated"
-                               :srv-model="srvModel"
-                               :is="srvModel.uiSettings.checkoutBodyVueComponentName">
-                    </component>
-                </div>
+                           :is="srvModel.uiSettings.checkoutBodyVueComponentName" />
             </section>
             <section id="result" :class="{ 'current': step === 'result' }">
                 <div id="paid" v-if="invoicePaid">
@@ -265,7 +275,7 @@
                             <vc:icon symbol="payment-complete"/>
                         </span>
                         <h4>{{$t("This invoice has been paid")}}</h4>
-                        <dl>
+                        <dl class="mb-4">
                             <div>
                                 <dt>{{$t("Invoice ID")}}</dt>
                                 <dd>{{srvModel.invoiceId}}</dd>
@@ -275,7 +285,7 @@
                                 <dd>{{srvModel.orderId}}</dd>
                             </div>
                         </dl>
-                        <dl>
+                        <dl class="mb-4">
                             <div>
                                 <dt>{{$t("Order Amount")}}</dt>
                                 <dd>{{srvModel.orderAmount}} {{ srvModel.cryptoCode }}</dd>
@@ -306,7 +316,7 @@
                             <vc:icon symbol="invoice-expired" />
                         </span>
                         <h4>{{$t("Invoice expired")}}</h4>
-                        <dl>
+                        <dl class="mb-3">
                             <div>
                                 <dt>{{$t("Invoice ID")}}</dt>
                                 <dd>{{srvModel.invoiceId}}</dd>
@@ -372,6 +382,7 @@
         const STATUS_PAID = ['complete', 'confirmed', 'paid'];
         const STATUS_UNPAID = ['new', 'paidPartial'];
         const STATUS_UNPAYABLE =  ['expired', 'invalid'];
+        const qrOptions = { margin: 1, type: 'svg', color: { dark:'#000', light:'#f5f5f7'} };
         
         i18next
             .use(window.i18nextXHRBackend)
@@ -414,12 +425,17 @@
             el: '#Checkout',
             data () {
                 const srvModel = initialSrvModel;
-                const step = srvModel.requiresRefundEmail || srvModel.checkoutFormId
-                    ? 'form'
-                    : '@(paymentMethodCount > 1 ? "payment-method" : "payment")';
+                let step = 'payment';
+                if (STATUS_UNPAYABLE.concat(STATUS_PAID).includes(srvModel.status)) {
+                    step = 'result';
+                } else if (srvModel.requiresRefundEmail || (srvModel.checkoutFormId && srvModel.checkoutFormId !== 'None')) {
+                    step = 'form';
+                }
+                
                 return {
                     srvModel,
                     step,
+                    displayPaymentDetails: false,
                     end: new Date(),
                     expirationPercentage: 0,
                     timerText: "@Model.TimeLeft",
@@ -583,7 +599,10 @@
             }
         });
     </script>
-    @foreach (var paymentMethodHandler in PaymentMethodHandlerDictionary.Select(handler => handler.GetCheckoutUISettings()).Where(settings => settings != null))
+    @foreach (var paymentMethodHandler in PaymentMethodHandlerDictionary
+        .Select(handler => handler.GetCheckoutUISettings())
+        .Where(settings => settings != null)
+        .DistinctBy(pm => pm.ExtensionPartial))
     {
         <partial name="@paymentMethodHandler.ExtensionPartial-v2" model="@Model"/>
     }

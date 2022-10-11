@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
@@ -32,7 +33,7 @@ namespace BTCPayServer.Controllers
             var store = await _StoreRepository.FindStore(invoice.StoreId);
 
             // TODO support altcoins, not just bitcoin - and make it work for LN-only invoices
-            var isSats = request.CryptoCode.ToUpper() == "SATS";
+            var isSats = request.CryptoCode.ToUpper(CultureInfo.InvariantCulture) == "SATS";
             var cryptoCode = isSats ? "BTC" : request.CryptoCode;
             var network = _NetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
             var paymentMethodId = new [] {store.GetDefaultPaymentId()}.Concat(store.GetEnabledPaymentIds(_NetworkProvider))

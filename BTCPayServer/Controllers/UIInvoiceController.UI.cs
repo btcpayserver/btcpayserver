@@ -603,8 +603,8 @@ namespace BTCPayServer.Controllers
         [HttpGet("i/{invoiceId}/{paymentMethodId}")]
         [HttpGet("invoice")]
         [AcceptMediaTypeConstraint("application/bitcoin-paymentrequest", false)]
-        [XFrameOptionsAttribute(null)]
-        [ReferrerPolicyAttribute("origin")]
+        [XFrameOptions(null)]
+        [ReferrerPolicy("origin")]
         public async Task<IActionResult> Checkout(string? invoiceId, string? id = null, string? paymentMethodId = null,
             [FromQuery] string? view = null, [FromQuery] string? lang = null)
         {
@@ -743,6 +743,9 @@ namespace BTCPayServer.Controllers
             
             var model = new PaymentModel
             {
+#if ALTCOINS
+                AltcoinsBuild = true,
+#endif
                 Activated = paymentMethodDetails.Activated,
                 CryptoCode = network.CryptoCode,
                 RootPath = Request.PathBase.Value.WithTrailingSlash(),
@@ -795,7 +798,7 @@ namespace BTCPayServer.Controllers
                                           {
                                               var availableCryptoPaymentMethodId = kv.GetId();
                                               var availableCryptoHandler = _paymentMethodHandlerDictionary[availableCryptoPaymentMethodId];
-                                              return new PaymentModel.AvailableCrypto()
+                                              return new PaymentModel.AvailableCrypto
                                               {
                                                   PaymentMethodId = kv.GetId().ToString(),
                                                   CryptoCode = kv.Network?.CryptoCode ?? kv.GetId().CryptoCode,

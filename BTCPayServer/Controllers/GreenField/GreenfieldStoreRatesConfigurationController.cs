@@ -68,10 +68,9 @@ namespace BTCPayServer.Controllers.GreenField
         {
             var storeData = HttpContext.GetStoreData();
             var blob = storeData.GetStoreBlob();
-            if (!ValidateAndSanitizeConfiguration(configuration, blob))
-            {
+            ValidateAndSanitizeConfiguration(configuration, blob);
+            if (!ModelState.IsValid)
                 return this.CreateValidationError(ModelState);
-            }
 
             PopulateBlob(configuration, blob);
 
@@ -93,23 +92,20 @@ namespace BTCPayServer.Controllers.GreenField
             var parsedCurrencyPairs = new HashSet<CurrencyPair>();
 
 
-            foreach (var pair in currencyPair)
+            foreach (var pair in currencyPair ?? Array.Empty<string>())
             {
                 if (!CurrencyPair.TryParse(pair, out var currencyPairParsed))
                 {
                     ModelState.AddModelError(nameof(currencyPair),
                         $"Invalid currency pair '{pair}' (it should be formatted like BTC_USD,BTC_CAD)");
-                    continue;
+                    break;
                 }
 
                 parsedCurrencyPairs.Add(currencyPairParsed);
             }
-
-            if (!ValidateAndSanitizeConfiguration(configuration, blob))
-            {
+            ValidateAndSanitizeConfiguration(configuration, blob);
+            if (!ModelState.IsValid)
                 return this.CreateValidationError(ModelState);
-            }
-
             PopulateBlob(configuration, blob);
 
             var rules = blob.GetRateRules(_btcPayNetworkProvider);
@@ -133,8 +129,13 @@ namespace BTCPayServer.Controllers.GreenField
             return Ok(result);
         }
 
-        private bool ValidateAndSanitizeConfiguration(StoreRateConfiguration configuration, StoreBlob storeBlob)
+        private void ValidateAndSanitizeConfiguration(StoreRateConfiguration? configuration, StoreBlob storeBlob)
         {
+            if (configuration is null)
+            {
+                ModelState.AddModelError("", "Body required");
+                return;
+            }
             if (configuration.Spread < 0 || configuration.Spread > 100)
             {
                 ModelState.AddModelError(nameof(configuration.Spread),
@@ -171,21 +172,25 @@ $"You can't set the preferredSource if you are using custom scripts");
                     ModelState.AddModelError(nameof(configuration.EffectiveScript),
                     $"You can't set the effectiveScript if you aren't using custom scripts");
                 }
-            }
+                if (string.IsNullOrEmpty(configuration.PreferredSource))
+                {
+                    ModelState.AddModelError(nameof(configuration.PreferredSource),
+$"The preferredSource is required if you aren't using custom scripts");
+                }
 
-            if (!string.IsNullOrEmpty(configuration.PreferredSource) &&
-                !_rateProviderFactory
+                configuration.PreferredSource = _rateProviderFactory
                     .RateProviderFactory
                     .GetSupportedExchanges()
-                    .Any(s =>
+                    .FirstOrDefault(s =>
                         s.Id.Equals(configuration.PreferredSource,
-                            StringComparison.InvariantCultureIgnoreCase)))
-            {
-                ModelState.AddModelError(nameof(configuration.PreferredSource),
-                    $"Unsupported source, please check /misc/rate-sources to see valid values ({configuration.PreferredSource})");
-            }
+                            StringComparison.InvariantCultureIgnoreCase))?.Id;
 
-            return ModelState.ErrorCount == 0;
+                if (string.IsNullOrEmpty(configuration.PreferredSource))
+                {
+                    ModelState.AddModelError(nameof(configuration.PreferredSource),
+                    $"Unsupported source, please check /misc/rate-sources to see valid values ({configuration.PreferredSource})");
+                }
+            }
         }
 
         private static void PopulateBlob(StoreRateConfiguration configuration, StoreBlob storeBlob)

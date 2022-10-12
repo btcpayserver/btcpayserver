@@ -21,7 +21,7 @@ namespace BTCPayServer.Client
             CancellationToken token = default)
         {
             using var response = await _httpClient.SendAsync(
-                CreateHttpRequest($"api/v1/rates/sources", method: HttpMethod.Get),
+                CreateHttpRequest($"misc/rate-sources", method: HttpMethod.Get),
                 token);
             return await HandleResponse<List<RateSource>>(response);
         }

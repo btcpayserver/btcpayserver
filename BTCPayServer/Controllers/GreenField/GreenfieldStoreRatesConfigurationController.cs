@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -46,15 +46,15 @@ namespace BTCPayServer.Controllers.GreenField
 
             return Ok(new StoreRateConfiguration()
             {
-                Script = blob.RateScript,
-                Spread = blob.Spread,
-                UseScript = blob.RateScripting,
-                PreferredSource = blob.PreferredExchange
+                EffectiveScript = blob.GetRateRules(_btcPayNetworkProvider, out var preferredExchange).ToString(),
+                Spread = blob.Spread * 100.0m,
+                IsCustomScript = blob.RateScripting,
+                PreferredSource = preferredExchange ? blob.PreferredExchange : null
             });
         }
 
-        [HttpGet("~/api/v1/rates/sources")]
-        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [HttpGet("/misc/rate-sources")]
+        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie + "," + AuthenticationSchemes.Greenfield)]
         public ActionResult<List<RateSource>> GetRateSources()
         {
             return Ok(_rateProviderFactory.RateProviderFactory.GetSupportedExchanges().Select(provider =>
@@ -138,12 +138,39 @@ namespace BTCPayServer.Controllers.GreenField
             if (configuration.Spread < 0 || configuration.Spread > 100)
             {
                 ModelState.AddModelError(nameof(configuration.Spread),
-                    $"Spread value must be between 0 and 100");
+                    $"Spread value must be in %, between 0 and 100");
             }
 
-            if (configuration.UseScript && string.IsNullOrEmpty(configuration.Script))
+            if (configuration.IsCustomScript)
             {
-                configuration.Script = storeBlob.GetDefaultRateRules(_btcPayNetworkProvider).ToString();
+                if (string.IsNullOrEmpty(configuration.EffectiveScript))
+                {
+                    configuration.EffectiveScript = storeBlob.GetDefaultRateRules(_btcPayNetworkProvider).ToString();
+                }
+
+                if (!RateRules.TryParse(configuration.EffectiveScript, out var r))
+                {
+                    ModelState.AddModelError(nameof(configuration.EffectiveScript),
+                   $"Script syntax is invalid");
+                }
+                else
+                {
+                    configuration.EffectiveScript = r.ToString();
+                }
+
+                if (!string.IsNullOrEmpty(configuration.PreferredSource))
+                {
+                    ModelState.AddModelError(nameof(configuration.PreferredSource),
+$"You can't set the preferredSource if you are using custom scripts");
+                }
+            }
+            else
+            {
+                if (!string.IsNullOrEmpty(configuration.EffectiveScript))
+                {
+                    ModelState.AddModelError(nameof(configuration.EffectiveScript),
+                    $"You can't set the effectiveScript if you aren't using custom scripts");
+                }
             }
 
             if (!string.IsNullOrEmpty(configuration.PreferredSource) &&
@@ -155,18 +182,7 @@ namespace BTCPayServer.Controllers.GreenField
                             StringComparison.InvariantCultureIgnoreCase)))
             {
                 ModelState.AddModelError(nameof(configuration.PreferredSource),
-                    $"Unsupported source ({configuration.PreferredSource})");
-            }
-
-            if (!string.IsNullOrEmpty(configuration.Script) &&
-                RateRules.TryParse(configuration.Script, out var rules, out _))
-            {
-                configuration.Script = rules.ToString();
-            }
-            else if(!string.IsNullOrEmpty(configuration.Script))
-            {
-                ModelState.AddModelError(nameof(configuration.Script),
-                    $"Script syntax is invalid");
+                    $"Unsupported source, please check /misc/rate-sources to see valid values ({configuration.PreferredSource})");
             }
 
             return ModelState.ErrorCount == 0;
@@ -175,9 +191,9 @@ namespace BTCPayServer.Controllers.GreenField
         private static void PopulateBlob(StoreRateConfiguration configuration, StoreBlob storeBlob)
         {
             storeBlob.PreferredExchange = configuration.PreferredSource;
-            storeBlob.Spread = configuration.Spread;
-            storeBlob.RateScripting = configuration.UseScript;
-            storeBlob.RateScript = configuration.Script;
+            storeBlob.Spread = configuration.Spread / 100.0m;
+            storeBlob.RateScripting = configuration.IsCustomScript;
+            storeBlob.RateScript = configuration.EffectiveScript;
         }
     }
 }

@@ -2714,20 +2714,46 @@ namespace BTCPayServer.Tests
             await user.GrantAccessAsync();
             var clientBasic = await user.CreateClient();
             Assert.NotEmpty(await clientBasic.GetRateSources());
-            Assert.NotNull(await clientBasic.GetStoreRateConfiguration(user.StoreId));
+            var config = await clientBasic.GetStoreRateConfiguration(user.StoreId);
+            Assert.NotNull(config);
+            Assert.False(config.IsCustomScript);
+            Assert.Equal("X_X = coingecko(X_X);", config.EffectiveScript);
+            Assert.Equal("coingecko", config.PreferredSource);
+
             Assert.Equal(0.9m,
                 Assert.Single(await clientBasic.PreviewUpdateStoreRateConfiguration(user.StoreId,
-                    new StoreRateConfiguration() {UseScript = true, Script = "BTC_XYZ = 1;", Spread = 0.1m,},
+                    new StoreRateConfiguration() {IsCustomScript = true, EffectiveScript = "BTC_XYZ = 1;", Spread = 10m,},
                     new[] {"BTC_XYZ"})).Rate);
 
             Assert.True((await clientBasic.UpdateStoreRateConfiguration(user.StoreId,
-                    new StoreRateConfiguration() {UseScript = true, Script = "BTC_XYZ = 1", Spread = 0.1m,}))
-                .UseScript);
+                    new StoreRateConfiguration() { IsCustomScript = true, EffectiveScript = "BTC_XYZ = 1", Spread = 10m,}))
+                .IsCustomScript);
             
-            Assert.NotNull((await clientBasic.GetStoreRateConfiguration(user.StoreId)).Script);
+            config = await clientBasic.GetStoreRateConfiguration(user.StoreId);
+            Assert.NotNull(config);
+            Assert.NotNull(config.EffectiveScript);
+            Assert.Equal("BTC_XYZ = 1;", config.EffectiveScript);
+            Assert.Equal(10m, config.Spread);
+            Assert.Null(config.PreferredSource);
+
+            Assert.NotNull((await clientBasic.GetStoreRateConfiguration(user.StoreId)).EffectiveScript);
             Assert.NotNull((await clientBasic.UpdateStoreRateConfiguration(user.StoreId,
-                    new StoreRateConfiguration() {UseScript = false}))
+                    new StoreRateConfiguration() { IsCustomScript = false}))
                 .PreferredSource);
+
+            config = await clientBasic.GetStoreRateConfiguration(user.StoreId);
+            Assert.Equal("X_X = coingecko(X_X);", config.EffectiveScript);
+
+            await AssertValidationError(new[] { "EffectiveScript" }, () =>
+            clientBasic.UpdateStoreRateConfiguration(user.StoreId, new StoreRateConfiguration() { IsCustomScript = false, EffectiveScript = "BTC_XYZ = 1;" }));
+
+            await AssertValidationError(new[] { "EffectiveScript" }, () =>
+clientBasic.UpdateStoreRateConfiguration(user.StoreId, new StoreRateConfiguration() { IsCustomScript = true, EffectiveScript = "BTC_XYZ rg8w*# 1;" }));
+            await AssertValidationError(new[] { "PreferredSource" }, () =>
+clientBasic.UpdateStoreRateConfiguration(user.StoreId, new StoreRateConfiguration() { IsCustomScript = true, EffectiveScript = "", PreferredSource = "coingecko" }));
+
+            await AssertValidationError(new[] { "PreferredSource", "Spread" }, () =>
+clientBasic.UpdateStoreRateConfiguration(user.StoreId, new StoreRateConfiguration() { IsCustomScript = false, PreferredSource = "coingeckoOOO", Spread = -1m }));
         }
         
         [Fact(Timeout = TestTimeout)]

@@ -1,12 +1,10 @@
-﻿namespace BTCPayServer.Client.Models
+namespace BTCPayServer.Client.Models
 {
     public class StoreRateConfiguration
     {
         public decimal Spread { get; set; }
+        public bool IsCustomScript { get; set; }
+        public string EffectiveScript { get; set; }
         public string PreferredSource { get; set; }
-
-        public string Script { get; set; }
-
-        public bool UseScript { get; set; }
     }
 }

@@ -1121,5 +1121,31 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             HandleActionResult(await GetController<GreenfieldAppsController>().DeleteApp(appId));
         }
+
+        public override Task<List<RateSource>> GetRateSources(CancellationToken token = default)
+        {
+            return Task.FromResult(GetFromActionResult(GetController<GreenfieldStoreRateConfigurationController>().GetRateSources()));
+        }
+
+        public override Task<StoreRateConfiguration> GetStoreRateConfiguration(string storeId, CancellationToken token = default)
+        {
+            return Task.FromResult(GetFromActionResult<StoreRateConfiguration>(GetController<GreenfieldStoreRateConfigurationController>().GetStoreRateConfiguration()));
+        }
+
+        public override async Task<List<StoreRatePreviewResult>> PreviewUpdateStoreRateConfiguration(string storeId,
+            StoreRateConfiguration request,
+            string[] currencyPair,
+            CancellationToken token = default)
+        {
+            return GetFromActionResult<List<StoreRatePreviewResult>>(
+                await GetController<GreenfieldStoreRateConfigurationController>().PreviewUpdateStoreRateConfiguration(request,
+                    currencyPair));
+        }
+
+        public override async Task<StoreRateConfiguration> UpdateStoreRateConfiguration(string storeId, StoreRateConfiguration request, CancellationToken token = default)
+        {
+            return GetFromActionResult<StoreRateConfiguration>(await GetController<GreenfieldStoreRateConfigurationController>().UpdateStoreRateConfiguration(request));
+        }
+        
     }
 }

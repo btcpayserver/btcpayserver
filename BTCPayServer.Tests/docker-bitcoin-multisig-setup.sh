@@ -8,7 +8,7 @@
 # ./docker-bitcoin-multisig-setup.sh custom-name
 #
 # The custom name/prefix is optional and defaults to "multisig".
-prefix="${1:-"multisig"}"
+prefix="${1:-"multi_sig"}"
 
 declare -A xpubs
 
@@ -59,3 +59,9 @@ printf "\nTransaction ID: $txid\n"
 # Confirm everything worked
 printf "\nℹ️  Multisig wallet info\n\n"
 ./docker-bitcoin-cli.sh -rpcwallet="$multisig_name" getwalletinfo
+
+# Unload wallets to prevent having to specify which wallet to use in BTCPay, NBXplorer etc.
+for ((n=1;n<=3;n++)); do
+  ./docker-bitcoin-cli.sh unloadwallet "${prefix}_part_${n}" > /dev/null 2>&1
+done
+./docker-bitcoin-cli.sh unloadwallet "$multisig_name" > /dev/null 2>&1

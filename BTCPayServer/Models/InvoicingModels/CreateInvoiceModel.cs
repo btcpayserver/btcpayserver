@@ -88,20 +88,6 @@ namespace BTCPayServer.Models.InvoicingModels
         {
             get; set;
         }
-
-        public void SetCheckoutFormOptions(string formId)
-        {
-            var choices = new List<SelectListItem>
-            {
-                new() { Text = "Inherit from store settings", Value = "InheritFromStore" },
-                new() { Text = "Do not request any information", Value = "None" },
-                new() { Text = "Request email address only", Value = "Email" },
-                new() { Text = "Request shipping address", Value = "Address" }
-            };
-            var chosen = choices.FirstOrDefault(t => t.Value == formId);
-            CheckoutFormOptions = new SelectList(choices, nameof(SelectListItem.Value), nameof(SelectListItem.Text), chosen?.Value);
-        }
-        public SelectList CheckoutFormOptions { get; set; }
         
         [Display(Name = "Request customer data on checkout")]
         public string CheckoutFormId { get; set; }

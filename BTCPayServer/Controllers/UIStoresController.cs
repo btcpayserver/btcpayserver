@@ -386,7 +386,6 @@ namespace BTCPayServer.Controllers
             vm.ReceiptOptions = CheckoutAppearanceViewModel.ReceiptOptionsViewModel.Create(storeBlob.ReceiptOptions);
             vm.AutoDetectLanguage = storeBlob.AutoDetectLanguage;
             vm.SetLanguages(_LangService, storeBlob.DefaultLang);
-            vm.SetCheckoutFormOptions(storeBlob.CheckoutFormId);
 
             return View(vm);
         }
@@ -444,7 +443,6 @@ namespace BTCPayServer.Controllers
             }
             SetCryptoCurrencies(model, CurrentStore);
             model.SetLanguages(_LangService, model.DefaultLang);
-            model.SetCheckoutFormOptions(model.CheckoutFormId);
             model.PaymentMethodCriteria ??= new List<PaymentMethodCriteriaViewModel>();
             for (var index = 0; index < model.PaymentMethodCriteria.Count; index++)
             {

@@ -2,6 +2,16 @@
 @using BTCPayServer.Services.Apps
 @{
     ViewData.SetActivePage(InvoiceNavPages.Create, "Create Invoice");
+    
+    var choices = new List<SelectListItem>
+    {
+        new() { Text = typeof(CheckoutFormOptions).DisplayName(CheckoutFormOptions.InheritFromStore.ToString()), Value = CheckoutFormOptions.InheritFromStore.ToString() },
+        new() { Text = typeof(CheckoutFormOptions).DisplayName(CheckoutFormOptions.None.ToString()), Value = CheckoutFormOptions.None.ToString() },
+        new() { Text = typeof(CheckoutFormOptions).DisplayName(CheckoutFormOptions.Email.ToString()), Value = CheckoutFormOptions.Email.ToString() },
+        new() { Text = typeof(CheckoutFormOptions).DisplayName(CheckoutFormOptions.Address.ToString()), Value = CheckoutFormOptions.Address.ToString() }
+    };
+    var chosen = choices.FirstOrDefault(t => t.Value == Model.CheckoutFormId);
+    var checkoutFormOptions = new SelectList(choices, nameof(SelectListItem.Value), nameof(SelectListItem.Text), chosen?.Value);
 }
 
 @section PageFootContent {
@@ -93,7 +103,7 @@
                 @if (Model.UseNewCheckout)
                 {
                     <label asp-for="CheckoutFormId" class="form-label"></label>
-                    <select asp-for="CheckoutFormId" class="form-select w-auto" asp-items="Model.CheckoutFormOptions"></select>
+                    <select asp-for="CheckoutFormId" class="form-select w-auto" asp-items="@checkoutFormOptions"></select>
                     <span asp-validation-for="CheckoutFormId" class="text-danger"></span>
                 }
                 else

@@ -11,7 +11,7 @@ const urlParams = {};
     }
 })();
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener('DOMContentLoaded', () => {
     // Theme Switch
     delegate('click', '.btcpay-theme-switch', e => {
         e.preventDefault()
@@ -23,20 +23,20 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 Vue.directive('collapsible', {
-    bind (el) {
+    bind: function (el) {
         el.transitionDuration = 350;
     },
-    update (el, binding) {
+    update: function (el, binding) {
         if (binding.oldValue !== binding.value){
             if (binding.value) {
                 setTimeout(function () {
-                    el.classList.remove("collapse");
-                    var height = window.getComputedStyle(el).height;
+                    el.classList.remove('collapse');
+                    const height = window.getComputedStyle(el).height;
                     el.classList.add('collapsing');
                     el.offsetHeight;
                     el.style.height = height;
-                    setTimeout(function() {
-                        el.classList.remove("collapsing");
+                    setTimeout(() => {
+                        el.classList.remove('collapsing');
                         el.classList.add('collapse');
                         el.style.height = null;
                         el.classList.add('show');
@@ -45,12 +45,12 @@ Vue.directive('collapsible', {
             }
             else {
                 el.style.height = window.getComputedStyle(el).height;
-                el.classList.remove("collapse");
+                el.classList.remove('collapse');
                 el.classList.remove('show');
                 el.offsetHeight;
                 el.style.height = null;
                 el.classList.add('collapsing');
-                setTimeout(function() {
+                setTimeout(() => {
                     el.classList.add('collapse');
                     el.classList.remove("collapsing");
                 }, el.transitionDuration)

@@ -40,6 +40,7 @@
     <style>
         :root {
             --logo-size: 3rem;
+            --navbutton-size: .8rem;
             --qr-size: 256px;
         }
         body {
@@ -54,8 +55,35 @@
             gap: var(--btcpay-space-m);
         }
         main {
+            position: relative;
             border-radius: var(--btcpay-border-radius-l);
             background-color: var(--btcpay-bg-tile);
+        }
+        nav {
+            position: absolute;
+            top: var(--btcpay-space-m);
+            left: var(--btcpay-space-m);
+            right: var(--btcpay-space-m);
+        }
+        nav button {
+            position: absolute;
+            top: 0;
+            border: none;
+            background: none;
+            color: var(--btcpay-body-text-muted);
+        }
+        nav button:hover {
+            color: var(--btcpay-body-text-hover);
+        }
+        nav button#back {
+            left: 0;
+        }
+        nav button#close {
+            right: 0;
+        }
+        nav button .icon {
+            width: var(--navbutton-size);
+            height: var(--navbutton-size);
         }
         section {
             display: none;
@@ -147,10 +175,7 @@
     {
         <style>
             body {
-                background: rgba(25, 25, 25, 0.9);
-            }
-            .close-icon {
-                display: flex;
+                background: rgba(var(--btcpay-black-rgb), 0.85);
             }
         </style>
     }
@@ -165,13 +190,19 @@
             <h1 class="h5">@Model.StoreName</h1>
         </header>
         <main>
+            <nav v-if="hasNav">
+                <button type="button" v-if="showBackButton" id="back" v-on:click="back">
+                    <vc:icon symbol="back"/>
+                </button>
+                <button type="button" v-if="isModal" id="close" v-on:click="close">
+                    <vc:icon symbol="close"/>
+                </button>
+            </nav>
             <section id="form" :class="{ 'current': step === 'form' }">
                 <form method="post" asp-action="UpdateForm" asp-route-invoiceId="@Model.InvoiceId" v-on:submit.prevent="onFormSubmit">
                     <div class="top">
                         <h6>{{$t("Please fill out the following")}}</h6>
-                        <div>
-                            TODO: Forms integration
-                        </div>
+                        <p>TODO: Forms integration -> {{srvModel.checkoutFormId}}</p>
                     </div>
                     <div class="buttons">
                         <button type="submit" class="btn btn-primary" :disabled="formSubmitPending" :class="{ 'loading': formSubmitPending }">
@@ -184,7 +215,7 @@
                 </form>
             </section>
             <section id="payment" :class="{ 'current': step === 'payment' }">
-                <h6 class="text-center mb-3 fw-semibold" v-text="srvModel.itemDesc">@Model.ItemDesc</h6>
+                <h6 class="text-center mb-3 fw-semibold" v-if="srvModel.itemDesc" v-text="srvModel.itemDesc">@Model.ItemDesc</h6>
                 @if (Model.IsUnsetTopUp)
                 {
                     <div class="h3 text-center mb-2">{{$t("Any amount")}}</div>
@@ -266,10 +297,10 @@
                 </div>
                 <component v-if="srvModel.uiSettings && srvModel.activated"
                            :srv-model="srvModel"
-                           :is="srvModel.uiSettings.checkoutBodyVueComponentName" />
+                           :is="srvModel.uiSettings.checkoutBodyVueComponentName"/>
             </section>
             <section id="result" :class="{ 'current': step === 'result' }">
-                <div id="paid" v-if="invoicePaid">
+                <div id="paid" v-if="isPaid">
                     <div class="top">
                         <span class="text-success">
                             <vc:icon symbol="payment-complete"/>
@@ -310,10 +341,10 @@
                         <a class="btn btn-secondary" :href="srvModel.merchantRefLink" v-if="srvModel.merchantRefLink">{{$t('Return to StoreName', srvModel)}}</a>
                     </div>
                 </div>
-                <div id="expired" v-if="invoiceUnpayable">
+                <div id="expired" v-if="isUnpayable">
                     <div class="top">
                         <span class="text-muted">
-                            <vc:icon symbol="invoice-expired" />
+                            <vc:icon symbol="invoice-expired"/>
                         </span>
                         <h4>{{$t("Invoice expired")}}</h4>
                         <dl class="mb-3">
@@ -343,7 +374,8 @@
             </template>
         }
         <footer>
-            <select asp-for="DefaultLang" asp-items="@LangService.GetLanguageSelectListItems()"></select>
+            <select asp-for="DefaultLang" asp-items="@LangService.GetLanguageSelectListItems()" v-on:change="changeLanguage"></select>
+            
             <div class="text-muted my-2">
                 Powered by <a href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">BTCPay Server</a>
             </div>
@@ -393,7 +425,8 @@
                 lng: startingLanguage,
                 fallbackLng: fallbackLanguage,
                 nsSeparator: false,
-                keySeparator: false
+                keySeparator: false,
+                load: 'currentOnly'
             });
 
         function computeStartingLanguage() {
@@ -404,12 +437,6 @@
                 return defaultLang;
             } else {
                 return fallbackLanguage;
-            }
-        }
-
-        function changeLanguage(lang) {
-            if (isLanguageAvailable(lang)) {
-                i18next.changeLanguage(lang);
             }
         }
 
@@ -438,7 +465,7 @@
                     displayPaymentDetails: false,
                     end: new Date(),
                     expirationPercentage: 0,
-                    timerText: "@Model.TimeLeft",
+                    timerText: @Safe.Json(Model.TimeLeft),
                     emailAddressInput: "",
                     emailAddressInputDirty: false,
                     emailAddressInputInvalid: false,
@@ -451,29 +478,51 @@
             },
             computed: {
                 expiringSoon () {
-                    return this.expirationPercentage >= 75 && !this.invoiceUnpayable && !this.invoicePaid;
+                    return this.isActive && this.expirationPercentage >= 75;
                 },
                 showRecommendedFee () {
                     return  this.srvModel.showRecommendedFee && this.srvModel.feeRate !== 0;
                 },
-                invoiceUnpayable () {
+                isUnpayable () {
                     return STATUS_UNPAYABLE.includes(this.srvModel.status);
                 },
-                invoicePaid () {
+                isPaid () {
                     return STATUS_PAID.includes(this.srvModel.status);
+                },
+                isActive () {
+                    return !this.isUnpayable && !this.isPaid;
+                },
+                hasNav () {
+                    return this.isModal || this.showBackButton;
+                },
+                hasForm () {
+                    console.log(this.srvModel.checkoutFormId)
+                    return this.srvModel.requiresRefundEmail || (
+                        this.srvModel.checkoutFormId && this.srvModel.checkoutFormId !== 'None');
+                },
+                showBackButton () {
+                    return this.hasForm && this.step === 'payment';
                 }
             },
             mounted () {
-                this.startProgressTimer();
-                this.listenIn();
                 this.onDataCallback(this.srvModel);
                 if (this.srvModel.status === 'new' && this.srvModel.txCount > 1) {
                     this.onlyExpandLineItems();
+                }
+                if (this.isActive) {
+                    this.startProgressTimer();
+                    this.listenIn();
                 }
                 window.parent.postMessage('loaded', '*');
                 this.loading = false;
             },
             methods: {
+                changeLanguage(e) {
+                    const lang = e.target.value;
+                    if (isLanguageAvailable(lang)) {
+                        i18next.changeLanguage(lang);
+                    }
+                },
                 onlyExpandLineItems () {
                     if (!this.lineItemsExpanded) {
                         this.toggleLineItems();
@@ -487,6 +536,9 @@
                         this.srvModel.paymentMethodId = currency;
                         this.fetchData();
                     }
+                },
+                back () {
+                    this.step = 'form';
                 },
                 close () {
                     window.parent.postMessage('close', '*');
@@ -585,7 +637,7 @@
                     this.srvModel = jsonData;
 
                     eventBus.$emit("data-fetched", this.srvModel);
-                    if (this.invoicePaid && jsonData.redirectAutomatically && jsonData.merchantRefLink) {
+                    if (this.isPaid && jsonData.redirectAutomatically && jsonData.merchantRefLink) {
                         this.loading = true;
                         setTimeout(function () {
                             if (this.isModal && window.top.location == jsonData.merchantRefLink){

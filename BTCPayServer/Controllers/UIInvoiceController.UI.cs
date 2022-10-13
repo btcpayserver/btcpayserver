@@ -757,7 +757,7 @@ namespace BTCPayServer.Controllers
                 LogoFileId = storeBlob.LogoFileId,
                 BrandColor = storeBlob.BrandColor,
                 UseNewCheckout = storeBlob.UseNewCheckout,
-                CheckoutFormId = storeBlob.CheckoutFormId,
+                CheckoutFormId = invoice.CheckoutFormId ?? storeBlob.CheckoutFormId,
                 HtmlTitle = storeBlob.HtmlTitle ?? "BTCPay Invoice",
                 CryptoImage = Request.GetRelativePathOrAbsolute(paymentMethodHandler.GetCryptoImage(paymentMethodId)),
                 BtcAddress = paymentMethodDetails.GetPaymentDestination(),
@@ -1080,8 +1080,6 @@ namespace BTCPayServer.Controllers
                 AvailablePaymentMethods = GetPaymentMethodsSelectList()
             };
 
-            vm.SetCheckoutFormOptions(null);
-
             return View(vm);
         }
 
@@ -1095,7 +1093,6 @@ namespace BTCPayServer.Controllers
             var storeBlob = store.GetStoreBlob();
             model.UseNewCheckout = storeBlob is { UseNewCheckout: true };
             model.AvailablePaymentMethods = GetPaymentMethodsSelectList();
-            model.SetCheckoutFormOptions(model.CheckoutFormId);
             
             if (!ModelState.IsValid)
             {
@@ -1115,7 +1112,7 @@ namespace BTCPayServer.Controllers
 
             try
             {
-                var result = await CreateInvoiceCore(new BitpayCreateInvoiceRequest()
+                var result = await CreateInvoiceCore(new BitpayCreateInvoiceRequest
                 {
                     Price = model.Amount,
                     Currency = model.Currency,
@@ -1125,7 +1122,7 @@ namespace BTCPayServer.Controllers
                     ItemDesc = model.ItemDesc,
                     FullNotifications = true,
                     BuyerEmail = model.BuyerEmail,
-                    SupportedTransactionCurrencies = model.SupportedTransactionCurrencies?.ToDictionary(s => s, s => new InvoiceSupportedTransactionCurrency()
+                    SupportedTransactionCurrencies = model.SupportedTransactionCurrencies?.ToDictionary(s => s, s => new InvoiceSupportedTransactionCurrency
                     {
                         Enabled = true
                     }),
@@ -1134,7 +1131,10 @@ namespace BTCPayServer.Controllers
                     ExtendedNotifications = model.NotificationEmail != null,
                     RequiresRefundEmail = model.RequiresRefundEmail == RequiresRefundEmail.InheritFromStore
                         ? storeBlob.RequiresRefundEmail
-                        : model.RequiresRefundEmail == RequiresRefundEmail.On
+                        : model.RequiresRefundEmail == RequiresRefundEmail.On,
+                    CheckoutFormId = model.CheckoutFormId == CheckoutFormOptions.InheritFromStore.ToString()
+                        ? storeBlob.CheckoutFormId
+                        : model.CheckoutFormId
                 }, store, HttpContext.Request.GetAbsoluteRoot(), cancellationToken: cancellationToken);
 
                 TempData[WellKnownTempData.SuccessMessage] = $"Invoice {result.Data.Id} just created!";

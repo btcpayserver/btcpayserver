@@ -96,7 +96,7 @@ namespace BTCPayServer.Abstractions.Extensions
         {
             var relative = date.ToTimeAgo();
             var initial = format.ToString().ToLower();
-            var dateTime = date.ToString("s", CultureInfo.InvariantCulture);
+            var dateTime = date.ToString("o", CultureInfo.InvariantCulture);
             var displayDate = format == DateDisplayFormat.Relative ? relative : date.ToString("g", CultureInfo.InvariantCulture);
             return new HtmlString($"<time datetime=\"{dateTime}\" data-relative=\"{relative}\" data-initial=\"{initial}\">{displayDate}</time>");
         }
@@ -105,7 +105,7 @@ namespace BTCPayServer.Abstractions.Extensions
         {
             var relative = date.ToTimeAgo();
             var initial = format.ToString().ToLower();
-            var dateTime = date.ToString("s", CultureInfo.InvariantCulture);
+            var dateTime = date.ToString("o", CultureInfo.InvariantCulture);
             var displayDate = format == DateDisplayFormat.Relative ? relative : date.ToString("g", CultureInfo.InvariantCulture);
             return new HtmlString($"<time datetime=\"{dateTime}\" data-relative=\"{relative}\" data-initial=\"{initial}\">{displayDate}</time>");
         }

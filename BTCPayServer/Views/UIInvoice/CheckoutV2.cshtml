@@ -42,6 +42,7 @@
             --logo-size: 3rem;
             --navbutton-size: .8rem;
             --qr-size: 256px;
+            --section-padding: var(--btcpay-space-l);
         }
         body {
             padding: var(--btcpay-space-l) var(--btcpay-space-m);
@@ -87,7 +88,7 @@
         }
         section {
             display: none;
-            padding: var(--btcpay-space-l);
+            padding: var(--section-padding);
         }
         section.current {
             display: block;
@@ -137,6 +138,15 @@
             max-width: 400px;
             margin: 0 auto;
         }
+        .timer {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: var(--btcpay-space-m) calc(var(--section-padding) * -1) var(--btcpay-space-s);
+            padding: var(--btcpay-space-s) var(--section-padding);
+            background-color: var(--btcpay-body-bg-medium);
+            text-align: center;
+        }
         .payment-box {
             max-width: 300px;
             min-width: var(--qr-size);
@@ -151,6 +161,9 @@
         }
         .payment-box [data-clipboard] {
             cursor: copy;
+        }
+        #payment .btcpay-pills .btcpay-pill {
+            padding: var(--btcpay-space-xs) var(--btcpay-space-m);
         }
         #form > form,
         #result > div {
@@ -174,8 +187,18 @@
     @if (Model.IsModal)
     {
         <style>
-            body {
-                background: rgba(var(--btcpay-black-rgb), 0.85);
+            body { background: rgba(var(--btcpay-black-rgb), 0.85); }
+        </style>
+    }
+    @if (!string.IsNullOrEmpty(Model.BrandColor))
+    {
+        <style>
+            :root {
+                --btcpay-primary: @Model.BrandColor;
+                --btcpay-primary-bg-hover: @Model.BrandColor;
+                --btcpay-primary-bg-active: @Model.BrandColor;
+                --btcpay-primary-shadow: @Model.BrandColor;
+                --btcpay-body-link-accent: @Model.BrandColor;
             }
         </style>
     }
@@ -202,7 +225,13 @@
                 <form method="post" asp-action="UpdateForm" asp-route-invoiceId="@Model.InvoiceId" v-on:submit.prevent="onFormSubmit">
                     <div class="top">
                         <h6>{{$t("Please fill out the following")}}</h6>
-                        <p>TODO: Forms integration -> {{srvModel.checkoutFormId}}</p>
+                        <div class="timer" v-if="expiringSoon">
+                            {{$t("Invoice will expire in")}} {{timerText}}
+                            <span class="spinner-border spinner-border-sm ms-2" role="status">
+                                <span class="visually-hidden"></span>
+                            </span>
+                        </div>
+                        <p class="my-5 text-center">TODO: Forms integration -> {{srvModel.checkoutFormId}}</p>
                     </div>
                     <div class="buttons">
                         <button type="submit" class="btn btn-primary" :disabled="formSubmitPending" :class="{ 'loading': formSubmitPending }">
@@ -222,16 +251,16 @@
                 }
                 else
                 {
-                    <div class="h3 text-center mb-2" v-text="`${srvModel.btcDue} ${srvModel.cryptoCode}`">@Model.BtcDue @Model.CryptoCode</div>
-                    <div class="h3 text-center mb-2" v-else v-text="`${srvModel.btcDue} ${srvModel.cryptoCode}`">@Model.BtcDue @Model.CryptoCode</div>
+                    <div class="h3 text-center mb-2" v-text="`${srvModel.btcDue} ${srvModel.cryptoCode}`" :data-clipboard="srvModel.btcDue">@Model.BtcDue @Model.CryptoCode</div>
+                    <div class="h3 text-center mb-2" v-else v-text="`${srvModel.btcDue} ${srvModel.cryptoCode}`" :data-clipboard="srvModel.btcDue">@Model.BtcDue @Model.CryptoCode</div>
                     <div class="text-muted text-center" v-if="srvModel.orderAmountFiat" v-text="srvModel.orderAmountFiat">@Model.OrderAmountFiat</div>
-                    <div class="d-flex align-items-center justify-content-center my-2 text-center" v-if="expiringSoon">
+                    <div class="timer" v-if="expiringSoon">
                         {{$t("Invoice will expire in")}} {{timerText}}
                         <span class="spinner-border spinner-border-sm ms-2 text-muted" role="status">
                             <span class="visually-hidden"></span>
                         </span>
                     </div>
-                    <div class="my-2 text-center" v-if="srvModel.status === 'new' && srvModel.txCount > 1">
+                    <div class="mt-3 mb-1 text-center" v-if="showPaymentDueInfo">
                         <span class="text-info"><vc:icon symbol="info"/></span>
                         <small>{{$t("NotPaid_ExtraTransaction")}}</small>
                     </div>
@@ -243,33 +272,33 @@
                         <dl>
                             <div>
                                 <dt>{{$t("Total Price")}}</dt>
-                                <dd>{{srvModel.orderAmount}} {{ srvModel.cryptoCode }}</dd>
+                                <dd :data-clipboard="srvModel.orderAmount">{{srvModel.orderAmount}} {{ srvModel.cryptoCode }}</dd>
                             </div>
                             <div v-if="srvModel.orderAmountFiat && srvModel.cryptoCode">
                                 <dt>{{$t("Exchange Rate")}}</dt>
-                                <dd>
+                                <dd :data-clipboard="srvModel.rate">
                                     <template v-if="srvModel.cryptoCodeSrv === 'Sats'">1 Sat = {{ srvModel.rate }}</template>
                                     <template v-else>1 {{ srvModel.cryptoCodeSrv }} = {{ srvModel.rate }}</template>
                                 </dd>
                             </div>
                             <div v-if="srvModel.showRecommendedFee && srvModel.feeRate">
                                 <dt>{{$t("Recommended Fee")}}</dt>
-                                <dd>{{$t("Feerate", { feeRate: srvModel.feeRate })}}</dd>
+                                <dd :data-clipboard="srvModel.feeRate">{{$t("Feerate", { feeRate: srvModel.feeRate })}}</dd>
                             </div>
                             <div v-if="srvModel.isMultiCurrency || srvModel.txCountForFee > 0">
                                 <dt>{{$t("Network Cost")}}</dt>
-                                <dd>
+                                <dd :data-clipboard="srvModel.networkFee">
                                     <template v-if="srvModel.txCountForFee > 0">{{$t("txCount", {count: srvModel.txCount})}} x</template>
                                     {{ srvModel.networkFee }} {{ srvModel.cryptoCode }}
                                 </dd>
                             </div>
-                            <div v-if="parseFloat(srvModel.btcPaid) > 0">
+                            <div v-if="btcPaid > 0">
                                 <dt>{{$t("Amount Paid")}}</dt>
-                                <dd>{{srvModel.btcPaid }} {{ srvModel.cryptoCode }}</dd>
+                                <dd :data-clipboard="srvModel.btcPaid">{{srvModel.btcPaid }} {{ srvModel.cryptoCode }}</dd>
                             </div>
-                            <div v-if="parseFloat(srvModel.btcDue) > 0">
+                            <div v-if="btcDue > 0">
                                 <dt>{{$t("Amount Due")}}</dt>
-                                <dd>{{srvModel.btcDue}} {{ srvModel.cryptoCode }}</dd>
+                                <dd :data-clipboard="srvModel.btcDue">{{srvModel.btcDue}} {{ srvModel.cryptoCode }}</dd>
                             </div>
                         </dl>
                     </div>
@@ -470,8 +499,6 @@
                     emailAddressInputDirty: false,
                     emailAddressInputInvalid: false,
                     formSubmitPending: false,
-                    lineItemsExpanded: false,
-                    changingCurrencies: false,
                     loading: true,
                     isModal: srvModel.isModal
                 }
@@ -496,21 +523,26 @@
                     return this.isModal || this.showBackButton;
                 },
                 hasForm () {
-                    console.log(this.srvModel.checkoutFormId)
                     return this.srvModel.requiresRefundEmail || (
                         this.srvModel.checkoutFormId && this.srvModel.checkoutFormId !== 'None');
                 },
                 showBackButton () {
                     return this.hasForm && this.step === 'payment';
+                },
+                showPaymentDueInfo () {
+                    return this.srvModel.status === 'new' && this.btcPaid > 0 && this.btcDue < this.btcPaid;
+                },
+                btcDue () {
+                    return parseFloat(this.srvModel.btcDue);
+                },
+                btcPaid () {
+                    return parseFloat(this.srvModel.btcPaid);
                 }
             },
             mounted () {
                 this.onDataCallback(this.srvModel);
-                if (this.srvModel.status === 'new' && this.srvModel.txCount > 1) {
-                    this.onlyExpandLineItems();
-                }
                 if (this.isActive) {
-                    this.startProgressTimer();
+                    this.updateProgressTimer();
                     this.listenIn();
                 }
                 window.parent.postMessage('loaded', '*');
@@ -523,44 +555,34 @@
                         i18next.changeLanguage(lang);
                     }
                 },
-                onlyExpandLineItems () {
-                    if (!this.lineItemsExpanded) {
-                        this.toggleLineItems();
-                    }},
-                toggleLineItems () {
-                    this.lineItemsExpanded = !this.lineItemsExpanded;
-                },
-                changeCurrency (currency) {
-                    if (currency !== null && this.srvModel.paymentMethodId !== currency) {
-                        this.changingCurrencies = true;
-                        this.srvModel.paymentMethodId = currency;
-                        this.fetchData();
-                    }
-                },
                 back () {
                     this.step = 'form';
                 },
                 close () {
                     window.parent.postMessage('close', '*');
                 },
-                startProgressTimer () {
-                    const timeLeftS = this.endDate? (this.endDate.getTime() - new Date().getTime())/1000 : this.srvModel.expirationSeconds;
+                updateProgressTimer () {
+                    const timeLeftS = this.endDate
+                        ? Math.floor((this.endDate.getTime() - new Date().getTime())/1000)
+                        : this.srvModel.expirationSeconds;
                     this.expirationPercentage = 100 - ((timeLeftS / this.srvModel.maxTimeSeconds) * 100);
                     this.timerText = this.updateTimerText(timeLeftS);
                     if (this.expirationPercentage < 100 && STATUS_UNPAID.includes(this.srvModel.status)){
-                        setTimeout(this.startProgressTimer, 500);
+                        setTimeout(this.updateProgressTimer, 500);
                     }
                 },
+                minutesLeft (timer) {
+                    const val = Math.floor(timer / 60);
+                    return val < 10 ? `0${val}` : val;
+                },
+                secondsLeft (timer) {
+                    const val = Math.floor(timer % 60);
+                    return val < 10 ? `0${val}` : val;
+                },
                 updateTimerText (timer) {
-                    if (timer >= 0) {
-                        let minutes = parseInt(timer / 60, 10);
-                        minutes = minutes < 10 ? "0" + minutes : minutes;
-                        let seconds = parseInt(timer % 60, 10);
-                        seconds = seconds < 10 ? "0" + seconds : seconds;
-                        return `${minutes}:${seconds}`;
-                    } else {
-                        return '00:00';
-                    }
+                    return timer >= 0 
+                        ? `${this.minutesLeft(timer)}:${this.secondsLeft(timer)}`
+                        : '00:00';
                 },
                 listenIn () {
                     let socket;
@@ -619,24 +641,18 @@
                     if (this.srvModel.status !== jsonData.status) {
                         const { invoiceId } = this.srvModel;
                         const { status } = jsonData;
-                        window.parent.postMessage({ invoiceId, status }, "*");
-                    }
-                    if (jsonData.paymentMethodId === this.srvModel.paymentMethodId) {
-                        this.changingCurrencies = false;
+                        window.parent.postMessage({ invoiceId, status }, '*');
                     }
                     // displaying satoshis for lightning payments
                     jsonData.cryptoCodeSrv = jsonData.cryptoCode;
-                    // expand line items to show details on amount due for multi-transaction payment
-                    if (this.srvModel.txCount === 1 && jsonData.txCount > 1) {
-                        this.onlyExpandLineItems();
-                    }
+                    
                     const newEnd = new Date();
-                    newEnd.setSeconds(newEnd.getSeconds()+ jsonData.expirationSeconds);
+                    newEnd.setSeconds(newEnd.getSeconds() + jsonData.expirationSeconds);
                     this.endDate = newEnd;
                     // updating ui
                     this.srvModel = jsonData;
 
-                    eventBus.$emit("data-fetched", this.srvModel);
+                    eventBus.$emit('data-fetched', this.srvModel);
                     if (this.isPaid && jsonData.redirectAutomatically && jsonData.merchantRefLink) {
                         this.loading = true;
                         setTimeout(function () {

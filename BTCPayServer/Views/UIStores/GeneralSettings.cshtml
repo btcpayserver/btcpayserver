@@ -57,6 +57,7 @@
                 <div class="input-group">
                     <input asp-for="BrandColor" class="form-control form-control-color flex-grow-0" type="color" style="width:3rem" aria-describedby="BrandColorValue" />
                     <code class="input-group-text" id="BrandColorValue">@(Model.BrandColor ?? "None")</code>
+                    <button class="btn btn-outline-secondary" type="button" id="BrandColorUnset" @(string.IsNullOrEmpty(Model.BrandColor) ? "hidden" : "")>Unset</button>
                 </div>
                 <span asp-validation-for="BrandColor" class="text-danger"></span>
             </div>
@@ -136,8 +137,26 @@
 @section PageFootContent {
     <partial name="_ValidationScriptsPartial"/>
     <script>
-        delegate("change", "#BrandColor", e => {
-            document.getElementById("BrandColorValue").innerText = e.target.value || "None";
+    (() => {
+        const $colorInput = document.getElementById('BrandColor');
+        const $colorValue = document.getElementById('BrandColorValue');
+        const $colorUnset = document.getElementById('BrandColorUnset');
+        const setBrandColor = value => {
+            const color = value && value.match('#(?!0{6})[0-9a-fA-F]{6}') ? value : null;
+            $colorInput.value = color;
+            $colorValue.innerText = color || 'None';
+            if (color) {
+                $colorUnset.removeAttribute('hidden');
+            } else {
+                $colorUnset.setAttribute('hidden', 'hidden');
+            }
+        };
+        delegate('change', '#BrandColor', e => {
+            setBrandColor(e.target.value);
         })
+        delegate('click', '#BrandColorUnset', () => {
+            setBrandColor(null);
+        })
+    })();
     </script>
 }

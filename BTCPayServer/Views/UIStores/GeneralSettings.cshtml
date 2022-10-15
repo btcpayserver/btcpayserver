@@ -8,6 +8,7 @@
     Layout = "../Shared/_NavLayout.cshtml";
     ViewData.SetActivePage(StoreNavPages.General, "General", Context.GetStoreData().Id);
     var canUpload = await FileService.IsAvailable();
+    var colorPattern = "#[0-9a-fA-F]{6}";
 }
 
 <div class="row">
@@ -55,9 +56,8 @@
             <div class="form-group">
                 <label asp-for="BrandColor" class="form-label"></label>
                 <div class="input-group">
-                    <input asp-for="BrandColor" class="form-control form-control-color flex-grow-0" type="color" style="width:3rem" aria-describedby="BrandColorValue" />
-                    <code class="input-group-text" id="BrandColorValue">@(Model.BrandColor ?? "None")</code>
-                    <button class="btn btn-outline-secondary" type="button" id="BrandColorUnset" @(string.IsNullOrEmpty(Model.BrandColor) ? "hidden" : "")>Unset</button>
+                    <input id="BrandColorInput" class="form-control form-control-color flex-grow-0" type="color" style="width:3rem" aria-describedby="BrandColorValue" value="@Model.BrandColor" />
+                    <input asp-for="BrandColor" class="form-control form-control-color flex-grow-0 font-monospace" pattern="@colorPattern"  style="width:5.5rem" />
                 </div>
                 <span asp-validation-for="BrandColor" class="text-danger"></span>
             </div>
@@ -138,25 +138,15 @@
     <partial name="_ValidationScriptsPartial"/>
     <script>
     (() => {
-        const $colorInput = document.getElementById('BrandColor');
-        const $colorValue = document.getElementById('BrandColorValue');
-        const $colorUnset = document.getElementById('BrandColorUnset');
-        const setBrandColor = value => {
-            const color = value && value.match('#(?!0{6})[0-9a-fA-F]{6}') ? value : null;
-            $colorInput.value = color;
-            $colorValue.innerText = color || 'None';
-            if (color) {
-                $colorUnset.removeAttribute('hidden');
-            } else {
-                $colorUnset.setAttribute('hidden', 'hidden');
-            }
-        };
+        const $colorValue = document.getElementById('BrandColor');
+        const $colorInput = document.getElementById('BrandColorInput');
         delegate('change', '#BrandColor', e => {
-            setBrandColor(e.target.value);
-        })
-        delegate('click', '#BrandColorUnset', () => {
-            setBrandColor(null);
-        })
+            const value = e.target.value;
+            $colorInput.value = value && value.match(@Safe.Json(colorPattern)) ? value : null;
+        });
+        delegate('change', '#BrandColorInput', e => {
+            $colorValue.value = e.target.value;
+        });
     })();
     </script>
 }

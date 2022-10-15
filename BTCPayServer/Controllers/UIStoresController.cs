@@ -634,10 +634,7 @@ namespace BTCPayServer.Controllers
             blob.DefaultCurrency = model.DefaultCurrency;
             blob.InvoiceExpiration = TimeSpan.FromMinutes(model.InvoiceExpiration);
             blob.RefundBOLT11Expiration = TimeSpan.FromDays(model.BOLT11Expiration);
-            
-            // Match valid colors, but exclude #000000 (black), which is the default and cannot be unset
-            blob.BrandColor = Regex.Match(model.BrandColor, "#(?!0{6})[0-9a-fA-F]{6}").Success 
-                ? model.BrandColor : null;
+            blob.BrandColor = Regex.Match(model.BrandColor, "#[0-9a-fA-F]{6}").Success ? model.BrandColor : null;
             
             if (model.LogoFile != null)
             {

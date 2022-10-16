@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Custodians;
@@ -152,7 +153,7 @@ public class MockCustodian : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
     {
         if (paymentMethod == WithdrawalPaymentMethod)
         {
-            if ((""+amount).Equals(""+WithdrawalAmount, StringComparison.InvariantCulture) || WithdrawalAmountPercentage.Equals(amount))
+            if (amount.ToString(CultureInfo.InvariantCulture).Equals(""+WithdrawalAmount, StringComparison.InvariantCulture) || WithdrawalAmountPercentage.Equals(amount))
             {
                 return Task.FromResult(CreateWithdrawResult());
             }

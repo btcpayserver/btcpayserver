@@ -634,8 +634,12 @@ namespace BTCPayServer.Controllers
             blob.DefaultCurrency = model.DefaultCurrency;
             blob.InvoiceExpiration = TimeSpan.FromMinutes(model.InvoiceExpiration);
             blob.RefundBOLT11Expiration = TimeSpan.FromDays(model.BOLT11Expiration);
-            blob.BrandColor = !string.IsNullOrEmpty(model.BrandColor) && 
-                Regex.Match(model.BrandColor, "#[0-9a-fA-F]{6}").Success ? model.BrandColor : null;
+            if (model.BrandColor != null || ColorPalette.IsValid(model.BrandColor))
+            {
+                ModelState.AddModelError(nameof(model.BrandColor), "Invalid color");
+                return View(model);
+            }
+            blob.BrandColor = model.BrandColor;
             
             if (model.LogoFile != null)
             {

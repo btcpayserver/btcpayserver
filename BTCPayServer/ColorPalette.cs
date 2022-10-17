@@ -1,12 +1,18 @@
 using System;
 using System.Drawing;
 using System.Text;
+using System.Text.RegularExpressions;
 using NBitcoin.Crypto;
 
 namespace BTCPayServer
 {
     public class ColorPalette
     {
+        public const string Pattern = "^#[0-9a-fA-F]{6}$";
+        public static bool IsValid(string color)
+        {
+            return Regex.Match(color, Pattern).Success;
+        }
         public string TextColor(string bgColor)
         {
             int nThreshold = 105;

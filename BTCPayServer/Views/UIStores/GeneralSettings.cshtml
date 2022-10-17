@@ -5,10 +5,9 @@
 @inject IFileService FileService;
 @model GeneralSettingsViewModel
 @{
-    Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePage(StoreNavPages.General, "General", Context.GetStoreData().Id);
-    var canUpload = await FileService.IsAvailable();
-    var colorPattern = "#[0-9a-fA-F]{6}";
+	Layout = "../Shared/_NavLayout.cshtml";
+	ViewData.SetActivePage(StoreNavPages.General, "General", Context.GetStoreData().Id);
+	var canUpload = await FileService.IsAvailable();
 }
 
 <div class="row">
@@ -58,7 +57,7 @@
                 <label asp-for="BrandColor" class="form-label"></label>
                 <div class="input-group">
                     <input id="BrandColorInput" class="form-control form-control-color flex-grow-0" type="color" style="width:3rem" aria-describedby="BrandColorValue" value="@Model.BrandColor" />
-                    <input asp-for="BrandColor" class="form-control form-control-color flex-grow-0 font-monospace" pattern="@colorPattern" style="width:5.5rem" />
+                    <input asp-for="BrandColor" class="form-control form-control-color flex-grow-0 font-monospace" pattern="@ColorPalette.Pattern" style="width:5.5rem" />
                 </div>
                 <span asp-validation-for="BrandColor" class="text-danger"></span>
             </div>
@@ -143,7 +142,8 @@
         const $colorInput = document.getElementById('BrandColorInput');
         delegate('change', '#BrandColor', e => {
             const value = e.target.value;
-            $colorInput.value = value && value.match(@Safe.Json(colorPattern)) ? value : null;
+			if (value.match(@Safe.Json(@ColorPalette.Pattern)))
+				$colorInput.value = value;
         });
         delegate('change', '#BrandColorInput', e => {
             $colorValue.value = e.target.value;

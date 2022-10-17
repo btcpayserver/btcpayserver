@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -23,10 +24,10 @@ namespace BTCPayServer.Payments.PayJoin
             _explorerClient = explorerClient;
             _utxoLocker = utxoLocker;
         }
-        public Invoice Invoice { get; set; }
-        public NBitcoin.Transaction OriginalTransaction { get; set; }
+        public InvoiceEntity? Invoice { get; set; }
+        public NBitcoin.Transaction? OriginalTransaction { get; set; }
         public InvoiceLogs Logs { get; } = new InvoiceLogs();
-        public OutPoint[] LockedUTXOs { get; set; }
+        public OutPoint[]? LockedUTXOs { get; set; }
         public async Task DisposeAsync()
         {
             List<Task> disposing = new List<Task>();

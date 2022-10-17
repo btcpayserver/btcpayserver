@@ -73,7 +73,7 @@ namespace BTCPayServer.Models.WalletViewModels
 
         public class InputSelectionOption
         {
-            public IEnumerable<ColoredLabel> Labels { get; set; }
+            public IEnumerable<TransactionTagModel> Labels { get; set; }
             public string Comment { get; set; }
             public decimal Amount { get; set; }
             public string Outpoint { get; set; }

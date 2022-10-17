@@ -389,7 +389,6 @@
             }
         },
 
-
         "/api/v1/server/lightning/{cryptoCode}/invoices/{id}": {
             "get": {
                 "tags": [
@@ -406,7 +405,8 @@
                             "type": "string"
                         },
                         "example": "BTC"
-                    }   ,                 {
+                    },
+                    {
                         "name": "id",
                         "in": "path",
                         "required": true,
@@ -446,6 +446,7 @@
                 ]
             }
         },
+        
         "/api/v1/server/lightning/{cryptoCode}/invoices/pay": {
             "post": {
                 "tags": [
@@ -524,7 +525,76 @@
                 ]
             }
         },
+        
         "/api/v1/server/lightning/{cryptoCode}/invoices": {
+            "get": {
+                "tags": [
+                    "Lightning (Internal Node)"
+                ],
+                "summary": "Get invoices",
+                "parameters": [
+                    {
+                        "name": "cryptoCode",
+                        "in": "path",
+                        "required": true,
+                        "description": "The cryptoCode of the lightning-node to query",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "BTC"
+                    },
+                    {
+                        "name": "pendingOnly",
+                        "in": "query",
+                        "required": false,
+                        "description": "Limit to pending invoices only",
+                        "schema": {
+                            "type": "boolean",
+                            "nullable": true,
+                            "default": false
+                        }
+                    },
+                    {
+                        "name": "offsetIndex",
+                        "in": "query",
+                        "required": false,
+                        "description": "The index of an invoice that will be used as the start of the list",
+                        "schema": {
+                            "type": "number",
+                            "nullable": true,
+                            "default": 0
+                        }
+                    }
+                ],
+                "description": "View information about the lightning invoices",
+                "operationId": "InternalLightningNodeApi_GetInvoices",
+                "responses": {
+                    "200": {
+                        "description": "Lightning invoice data",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/LightningInvoiceData"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Unable to access the lightning node"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.server.canuseinternallightningnode"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
             "post": {
                 "tags": [
                     "Lightning (Internal Node)"

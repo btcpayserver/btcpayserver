@@ -112,9 +112,9 @@ namespace BTCPayServer.Configuration
                 {
                     Logs.Configuration.LogWarning($"The SSH key is not supported ({ex.Message}), try to generate the key with ssh-keygen using \"-m PEM\". Skipping SSH configuration...");
                 }
-                catch
+                catch (Exception ex)
                 {
-                    throw new ConfigException($"sshkeyfilepassword is invalid");
+                    Logs.Configuration.LogWarning(ex, "Error while loading SSH settings");
                 }
             }
 

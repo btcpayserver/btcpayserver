@@ -148,6 +148,11 @@
                     "amountReceived": {
                         "type": "string",
                         "description": "The amount received in millisatoshi"
+                    },
+                    "customRecords": {
+                        "type": "object",
+                        "nullable": true,
+                        "description": "The custom TLV records attached to a keysend payment"
                     }
                 }
             },

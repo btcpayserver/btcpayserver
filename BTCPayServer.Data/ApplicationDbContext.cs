@@ -59,7 +59,11 @@ namespace BTCPayServer.Data
         public DbSet<U2FDevice> U2FDevices { get; set; }
         public DbSet<Fido2Credential> Fido2Credentials { get; set; }
         public DbSet<UserStore> UserStore { get; set; }
+        [Obsolete]
         public DbSet<WalletData> Wallets { get; set; }
+        public DbSet<WalletObjectData> WalletObjects { get; set; }
+        public DbSet<WalletObjectLinkData> WalletObjectLinks { get; set; }
+        [Obsolete]
         public DbSet<WalletTransactionData> WalletTransactions { get; set; }
         public DbSet<WebhookDeliveryData> WebhookDeliveries { get; set; }
         public DbSet<WebhookData> Webhooks { get; set; }
@@ -109,7 +113,11 @@ namespace BTCPayServer.Data
             Fido2Credential.OnModelCreating(builder);
             BTCPayServer.Data.UserStore.OnModelCreating(builder);
             //WalletData.OnModelCreating(builder);
+            WalletObjectData.OnModelCreating(builder, Database);
+            WalletObjectLinkData.OnModelCreating(builder, Database);
+#pragma warning disable CS0612 // Type or member is obsolete
             WalletTransactionData.OnModelCreating(builder);
+#pragma warning restore CS0612 // Type or member is obsolete
             WebhookDeliveryData.OnModelCreating(builder);
             LightningAddressData.OnModelCreating(builder);
             PayoutProcessorData.OnModelCreating(builder);

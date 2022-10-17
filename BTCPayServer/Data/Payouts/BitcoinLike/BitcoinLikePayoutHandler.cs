@@ -34,22 +34,24 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
     private readonly ExplorerClientProvider _explorerClientProvider;
     private readonly BTCPayNetworkJsonSerializerSettings _jsonSerializerSettings;
     private readonly ApplicationDbContextFactory _dbContextFactory;
-    private readonly EventAggregator _eventAggregator;
     private readonly NotificationSender _notificationSender;
     private readonly Logs Logs;
+
+    public WalletRepository WalletRepository { get; }
+
     public BitcoinLikePayoutHandler(BTCPayNetworkProvider btcPayNetworkProvider,
+        WalletRepository walletRepository,
         ExplorerClientProvider explorerClientProvider,
         BTCPayNetworkJsonSerializerSettings jsonSerializerSettings,
         ApplicationDbContextFactory dbContextFactory,
-        EventAggregator eventAggregator,
         NotificationSender notificationSender,
         Logs logs)
     {
         _btcPayNetworkProvider = btcPayNetworkProvider;
+        WalletRepository = walletRepository;
         _explorerClientProvider = explorerClientProvider;
         _jsonSerializerSettings = jsonSerializerSettings;
         _dbContextFactory = dbContextFactory;
-        _eventAggregator = eventAggregator;
         _notificationSender = notificationSender;
         this.Logs = logs;
     }
@@ -426,13 +428,10 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
             if (isInternal)
             {
                 payout.State = PayoutState.InProgress;
-                var walletId = new WalletId(payout.StoreDataId, newTransaction.CryptoCode);
-                _eventAggregator.Publish(new UpdateTransactionLabel(walletId,
+                await WalletRepository.AddWalletTransactionAttachment(
+                    new WalletId(payout.StoreDataId, newTransaction.CryptoCode),
                     newTransaction.NewTransactionEvent.TransactionData.TransactionHash,
-                    UpdateTransactionLabel.PayoutTemplate(new ()
-                    {
-                        {payout.PullPaymentDataId?? "", new List<string>{payout.Id}}
-                    }, walletId.ToString())));
+                    Attachment.Payout(payout.PullPaymentDataId, payout.Id));
             }
             else
             {

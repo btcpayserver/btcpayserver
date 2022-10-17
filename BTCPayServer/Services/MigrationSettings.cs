@@ -25,6 +25,7 @@ namespace BTCPayServer.Services
 
         // Done in DbMigrationsHostedService
         public int? MigratedInvoiceTextSearchPages { get; set; }
+        public int? MigratedTransactionLabels { get; set; }
         public bool MigrateAppCustomOption { get; set; }
         public bool MigratePayoutDestinationId { get; set; }
         public bool AddInitialUserBlob { get; set; }
@@ -32,5 +33,6 @@ namespace BTCPayServer.Services
         public bool LighingAddressDatabaseMigration { get; set; }
         public bool AddStoreToPayout { get; set; }
         public bool MigrateEmailServerDisableTLSCerts { get; set; }
+        public bool MigrateWalletColors { get; set; }
     }
 }

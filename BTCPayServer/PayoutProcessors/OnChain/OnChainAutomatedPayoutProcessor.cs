@@ -39,6 +39,7 @@ namespace BTCPayServer.PayoutProcessors.OnChain
             ILoggerFactory logger,
             BitcoinLikePayoutHandler bitcoinLikePayoutHandler,
             EventAggregator eventAggregator,
+            WalletRepository walletRepository,
             StoreRepository storeRepository,
             PayoutProcessorData payoutProcesserSettings,
             PullPaymentHostedService pullPaymentHostedService,
@@ -51,7 +52,10 @@ namespace BTCPayServer.PayoutProcessors.OnChain
             _btcPayNetworkJsonSerializerSettings = btcPayNetworkJsonSerializerSettings;
             _bitcoinLikePayoutHandler = bitcoinLikePayoutHandler;
             _eventAggregator = eventAggregator;
+            WalletRepository = walletRepository;
         }
+
+        public WalletRepository WalletRepository { get; }
 
         protected override async Task Process(ISupportedPaymentMethod paymentMethod, List<PayoutData> payouts)
         {
@@ -171,12 +175,9 @@ namespace BTCPayServer.PayoutProcessors.OnChain
                     var walletId = new WalletId(_PayoutProcesserSettings.StoreId, PaymentMethodId.CryptoCode);
                     foreach (PayoutData payoutData in transfersProcessing)
                     {
-                        _eventAggregator.Publish(new UpdateTransactionLabel(walletId,
+                        await WalletRepository.AddWalletTransactionAttachment(walletId,
                             txHash,
-                            UpdateTransactionLabel.PayoutTemplate(new ()
-                            {
-                                {payoutData.PullPaymentDataId?? "", new List<string>{payoutData.Id}}
-                            }, walletId.ToString())));
+                            Attachment.Payout(payoutData.PullPaymentDataId, payoutData.Id));
                     }
                     await Task.WhenAny(tcs.Task, task);
                 }

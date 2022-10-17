@@ -132,14 +132,20 @@ namespace BTCPayServer.Data
 
         public BTCPayServer.Rating.RateRules GetRateRules(BTCPayNetworkProvider networkProvider)
         {
+            return GetRateRules(networkProvider, out _);
+        }
+        public BTCPayServer.Rating.RateRules GetRateRules(BTCPayNetworkProvider networkProvider, out bool preferredSource)
+        {
             if (!RateScripting ||
                 string.IsNullOrEmpty(RateScript) ||
                 !BTCPayServer.Rating.RateRules.TryParse(RateScript, out var rules))
             {
+                preferredSource = true;
                 return GetDefaultRateRules(networkProvider);
             }
             else
             {
+                preferredSource = false;
                 rules.Spread = Spread;
                 return rules;
             }
@@ -185,6 +191,8 @@ namespace BTCPayServer.Data
         public TimeSpan RefundBOLT11Expiration { get; set; }
 
         public List<UIStoresController.StoreEmailRule> EmailRules { get; set; }
+        public string LogoFileId { get; set; }
+        public string BrandColor { get; set; }
 
         public IPaymentFilter GetExcludedPaymentMethods()
         {

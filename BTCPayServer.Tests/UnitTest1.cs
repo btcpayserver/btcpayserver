@@ -40,6 +40,7 @@ using BTCPayServer.Security.Bitpay;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.Labels;
 using BTCPayServer.Services.Mails;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Storage.Models;
@@ -51,6 +52,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using NBitcoin.Payment;
@@ -785,9 +787,9 @@ namespace BTCPayServer.Tests
             tx = Assert.Single(transactions.Transactions);
 
             Assert.Equal("hello", tx.Comment);
-            Assert.Contains("test", tx.Labels.Select(l => l.Text));
-            Assert.Contains("test2", tx.Labels.Select(l => l.Text));
-            Assert.Equal(2, tx.Labels.GroupBy(l => l.Color).Count());
+            Assert.Contains("test", tx.Tags.Select(l => l.Text));
+            Assert.Contains("test2", tx.Tags.Select(l => l.Text));
+            Assert.Equal(2, tx.Tags.GroupBy(l => l.Color).Count());
 
             Assert.IsType<RedirectToActionResult>(
                 await walletController.ModifyTransaction(walletId, tx.Id, removelabel: "test2"));
@@ -797,12 +799,9 @@ namespace BTCPayServer.Tests
             tx = Assert.Single(transactions.Transactions);
 
             Assert.Equal("hello", tx.Comment);
-            Assert.Contains("test", tx.Labels.Select(l => l.Text));
-            Assert.DoesNotContain("test2", tx.Labels.Select(l => l.Text));
-            Assert.Single(tx.Labels.GroupBy(l => l.Color));
-
-            var walletInfo = await tester.PayTester.GetService<WalletRepository>().GetWalletInfo(walletId);
-            Assert.Single(walletInfo.LabelColors); // the test2 color should have been removed
+            Assert.Contains("test", tx.Tags.Select(l => l.Text));
+            Assert.DoesNotContain("test2", tx.Tags.Select(l => l.Text));
+            Assert.Single(tx.Tags.GroupBy(l => l.Color));
         }
 
         [Fact(Timeout = LongRunningTestTimeout)]
@@ -2519,6 +2518,79 @@ namespace BTCPayServer.Tests
             store = await tester.PayTester.StoreRepository.FindStore(acc.StoreId);
             lnMethod = store.GetSupportedPaymentMethods(tester.NetworkProvider).OfType<LightningSupportedPaymentMethod>().First();
             Assert.True(lnMethod.IsInternalNode);
+        }
+
+        [Fact(Timeout = LongRunningTestTimeout)]
+        [Trait("Integration", "Integration")]
+        [Obsolete]
+        public async Task CanDoLabelMigrations()
+        {
+            using var tester = CreateServerTester(newDb: true);
+            await tester.StartAsync();
+            var dbf = tester.PayTester.GetService<ApplicationDbContextFactory>();
+            int walletCount = 1000;
+            var wallet = "walletttttttttttttttttttttttttttt";
+            using (var db = dbf.CreateContext())
+            {
+                for (int i = 0; i < walletCount; i++)
+                {
+                    var walletData = new WalletData() { Id = $"S-{wallet}{i}-BTC" };
+                    walletData.Blob = ZipUtils.Zip("{\"LabelColors\": { \"label1\" : \"black\", \"payout\":\"green\" }}");
+                    db.Wallets.Add(walletData);
+                }
+                await db.SaveChangesAsync();
+            }
+            uint256 firstTxId = null;
+            using (var db = dbf.CreateContext())
+            {
+                int transactionCount = 10_000;
+                for (int i = 0; i < transactionCount; i++)
+                {
+                    var txId = RandomUtils.GetUInt256();
+                    var wt = new WalletTransactionData()
+                    {
+                        WalletDataId = $"S-{wallet}{i % walletCount}-BTC",
+                        TransactionId = txId.ToString(),
+                    };
+                    firstTxId ??= txId;
+                    if (i != 10)
+                        wt.Blob = ZipUtils.Zip("{\"Comment\":\"test\"}");
+                    if (i % 1240 != 0)
+                    {
+                        wt.Labels = "[{\"type\":\"raw\", \"text\":\"label1\"}]";
+                    }
+                    else if (i == 0)
+                    {
+                        wt.Labels = "[{\"type\":\"raw\", \"text\":\"label1\"},{\"type\":\"raw\", \"text\":\"labelo" + i + "\"}, " +
+                            "{\"type\":\"payout\", \"text\":\"payout\", \"pullPaymentPayouts\":{\"pp1\":[\"p1\",\"p2\"],\"pp2\":[\"p3\"]}}]";
+                    }
+                    else
+                    {
+                        wt.Labels = "[{\"type\":\"raw\", \"text\":\"label1\"},{\"type\":\"raw\", \"text\":\"labelo" + i + "\"}]";
+                    }
+                    db.WalletTransactions.Add(wt);
+                }
+                await db.SaveChangesAsync();
+            }
+            await RestartMigration(tester);
+            var migrator = tester.PayTester.GetService<IEnumerable<IHostedService>>().OfType<DbMigrationsHostedService>().First();
+            await migrator.MigratedTransactionLabels(0);
+
+            var walletRepo = tester.PayTester.GetService<WalletRepository>();
+            var wi1 = await walletRepo.GetWalletLabels(new WalletId($"{wallet}0", "BTC"));
+            Assert.Equal(3, wi1.Length);
+            Assert.Contains(wi1, o => o.Label == "label1" && o.Color == "black");
+            Assert.Contains(wi1, o => o.Label == "labelo0" && o.Color == "#000");
+            Assert.Contains(wi1, o => o.Label == "payout" && o.Color == "green");
+
+            var txInfo = await walletRepo.GetWalletTransactionsInfo(new WalletId($"{wallet}0", "BTC"), new[] { firstTxId.ToString() });
+            Assert.Equal("test", txInfo.Values.First().Comment);
+            // Should have the 2 raw labels, and one legacy label for payouts
+            Assert.Equal(3, txInfo.Values.First().LegacyLabels.Count);
+            var payoutLabel = txInfo.Values.First().LegacyLabels.Select(l => l.Value).OfType<PayoutLabel>().First();
+            Assert.Equal(2, payoutLabel.PullPaymentPayouts.Count);
+            Assert.Equal(2, payoutLabel.PullPaymentPayouts["pp1"].Count);
+            Assert.Single(payoutLabel.PullPaymentPayouts["pp2"]);
         }
 
 

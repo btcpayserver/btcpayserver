@@ -1662,9 +1662,9 @@ namespace BTCPayServer.Tests
             var merchantClient = await merchant.CreateClient($"{Policies.CanUseLightningNodeInStore}:{merchant.StoreId}");
             var merchantInvoice = await merchantClient.CreateLightningInvoice(merchant.StoreId, "BTC", new CreateLightningInvoiceRequest(LightMoney.Satoshis(1_000), "hey", TimeSpan.FromSeconds(60)));
             // The default client is using charge, so we should not be able to query channels
-            var client = await user.CreateClient(Policies.CanUseInternalLightningNode);
+            var chargeClient = await user.CreateClient(Policies.CanUseInternalLightningNode);
 
-            var info = await client.GetLightningNodeInfo("BTC");
+            var info = await chargeClient.GetLightningNodeInfo("BTC");
             Assert.Single(info.NodeURIs);
             Assert.NotEqual(0, info.BlockHeight);
             Assert.NotNull(info.Alias);
@@ -1675,10 +1675,10 @@ namespace BTCPayServer.Tests
             Assert.NotNull(info.InactiveChannelsCount);
             Assert.NotNull(info.PendingChannelsCount);
 
-            await AssertAPIError("lightning-node-unavailable", () => client.GetLightningNodeChannels("BTC"));
+            await AssertAPIError("lightning-node-unavailable", () => chargeClient.GetLightningNodeChannels("BTC"));
             // Not permission for the store!
-            await AssertAPIError("missing-permission", () => client.GetLightningNodeChannels(user.StoreId, "BTC"));
-            var invoiceData = await client.CreateLightningInvoice("BTC", new CreateLightningInvoiceRequest()
+            await AssertAPIError("missing-permission", () => chargeClient.GetLightningNodeChannels(user.StoreId, "BTC"));
+            var invoiceData = await chargeClient.CreateLightningInvoice("BTC", new CreateLightningInvoiceRequest()
             {
                 Amount = LightMoney.Satoshis(1000),
                 Description = "lol",
@@ -1686,9 +1686,17 @@ namespace BTCPayServer.Tests
                 PrivateRouteHints = false
             });
             var chargeInvoice = invoiceData;
-            Assert.NotNull(await client.GetLightningInvoice("BTC", invoiceData.Id));
+            Assert.NotNull(await chargeClient.GetLightningInvoice("BTC", invoiceData.Id));
 
-            client = await user.CreateClient($"{Policies.CanUseLightningNodeInStore}:{user.StoreId}");
+            // check list for internal node
+            var invoices = await chargeClient.GetLightningInvoices("BTC");
+            var pendingInvoices = await chargeClient.GetLightningInvoices("BTC", true);
+            Assert.NotEmpty(invoices);
+            Assert.Contains(invoices, i => i.Id == invoiceData.Id);
+            Assert.NotEmpty(pendingInvoices);
+            Assert.Contains(pendingInvoices, i => i.Id == invoiceData.Id);
+
+            var client = await user.CreateClient($"{Policies.CanUseLightningNodeInStore}:{user.StoreId}");
             // Not permission for the server
             await AssertAPIError("missing-permission", () => client.GetLightningNodeChannels("BTC"));
 
@@ -1706,6 +1714,11 @@ namespace BTCPayServer.Tests
 
             Assert.NotNull(await client.GetLightningInvoice(user.StoreId, "BTC", invoiceData.Id));
 
+            // check pending list
+            var merchantPendingInvoices = await merchantClient.GetLightningInvoices(merchant.StoreId, "BTC", true);
+            Assert.NotEmpty(merchantPendingInvoices);
+            Assert.Contains(merchantPendingInvoices, i => i.Id == merchantInvoice.Id);
+            
             await client.PayLightningInvoice(user.StoreId, "BTC", new PayLightningInvoiceRequest()
             {
                 BOLT11 = merchantInvoice.BOLT11
@@ -1726,13 +1739,21 @@ namespace BTCPayServer.Tests
             var invoice = await merchantClient.GetLightningInvoice(merchant.StoreId, "BTC", merchantInvoice.Id);
             Assert.NotNull(invoice.PaidAt);
             Assert.Equal(LightMoney.Satoshis(1000), invoice.Amount);
+            
+            // check list for store with paid invoice
+            var merchantInvoices = await merchantClient.GetLightningInvoices(merchant.StoreId, "BTC");
+            merchantPendingInvoices = await merchantClient.GetLightningInvoices(merchant.StoreId, "BTC", true);
+            Assert.NotEmpty(merchantInvoices);
+            Assert.Empty(merchantPendingInvoices);
+            // if the test ran too many times the invoice might be on a later page
+            if (merchantInvoices.Length < 100) Assert.Contains(merchantInvoices, i => i.Id == merchantInvoice.Id);
+            
             // Amount received might be bigger because of internal implementation shit from lightning
             Assert.True(LightMoney.Satoshis(1000) <= invoice.AmountReceived);
 
             info = await client.GetLightningNodeInfo(user.StoreId, "BTC");
             Assert.Single(info.NodeURIs);
             Assert.NotEqual(0, info.BlockHeight);
-
 
             // As admin, can use the internal node through our store.
             await user.MakeAdmin(true);
@@ -1743,7 +1764,7 @@ namespace BTCPayServer.Tests
             await AssertPermissionError("btcpay.server.canuseinternallightningnode", () => client.GetLightningNodeInfo(user.StoreId, "BTC"));
             // However, even as a guest, you should be able to create an invoice
             var guest = tester.NewAccount();
-            guest.GrantAccess(false);
+            await guest.GrantAccessAsync();
             await user.AddGuest(guest.UserId);
             client = await guest.CreateClient(Policies.CanCreateLightningInvoiceInStore);
             await client.CreateLightningInvoice(user.StoreId, "BTC", new CreateLightningInvoiceRequest()
@@ -2270,6 +2291,7 @@ namespace BTCPayServer.Tests
 
             Assert.Equal(transaction.TransactionHash, txdata.TransactionHash);
             Assert.Equal(String.Empty, transaction.Comment);
+#pragma warning disable CS0612 // Type or member is obsolete
             Assert.Equal(new Dictionary<string, LabelData>(), transaction.Labels);
 
             // transaction patch tests
@@ -2290,7 +2312,7 @@ namespace BTCPayServer.Tests
                 }.ToJson(),
                 patchedTransaction.Labels.ToJson()
             );
-
+#pragma warning restore CS0612 // Type or member is obsolete
             await AssertHttpError(403, async () =>
             {
                 await viewOnlyClient.ShowOnChainWalletTransactions(walletId.StoreId, walletId.CryptoCode);
@@ -2700,8 +2722,67 @@ namespace BTCPayServer.Tests
             Assert.NotNull(custodians);
             Assert.NotEmpty(custodians);
         }
+        
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task StoreRateConfigTests()
+        {
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+            var unauthClient = new BTCPayServerClient(tester.PayTester.ServerUri);
+            await AssertHttpError(401, async () => await unauthClient.GetRateSources());
 
+            var user = tester.NewAccount();
+            await user.GrantAccessAsync();
+            var clientBasic = await user.CreateClient();
+            Assert.NotEmpty(await clientBasic.GetRateSources());
+            var config = await clientBasic.GetStoreRateConfiguration(user.StoreId);
+            Assert.NotNull(config);
+            Assert.False(config.IsCustomScript);
+            Assert.Equal("X_X = coingecko(X_X);", config.EffectiveScript);
+            Assert.Equal("coingecko", config.PreferredSource);
 
+            Assert.Equal(0.9m,
+                Assert.Single(await clientBasic.PreviewUpdateStoreRateConfiguration(user.StoreId,
+                    new StoreRateConfiguration() {IsCustomScript = true, EffectiveScript = "BTC_XYZ = 1;", Spread = 10m,},
+                    new[] {"BTC_XYZ"})).Rate);
+
+            Assert.True((await clientBasic.UpdateStoreRateConfiguration(user.StoreId,
+                    new StoreRateConfiguration() { IsCustomScript = true, EffectiveScript = "BTC_XYZ = 1", Spread = 10m,}))
+                .IsCustomScript);
+            
+            config = await clientBasic.GetStoreRateConfiguration(user.StoreId);
+            Assert.NotNull(config);
+            Assert.NotNull(config.EffectiveScript);
+            Assert.Equal("BTC_XYZ = 1;", config.EffectiveScript);
+            Assert.Equal(10m, config.Spread);
+            Assert.Null(config.PreferredSource);
+
+            Assert.NotNull((await clientBasic.GetStoreRateConfiguration(user.StoreId)).EffectiveScript);
+            Assert.NotNull((await clientBasic.UpdateStoreRateConfiguration(user.StoreId,
+                    new StoreRateConfiguration() { IsCustomScript = false, PreferredSource = "coingecko"}))
+                .PreferredSource);
+
+            config = await clientBasic.GetStoreRateConfiguration(user.StoreId);
+            Assert.Equal("X_X = coingecko(X_X);", config.EffectiveScript);
+
+            await AssertValidationError(new[] { "EffectiveScript", "PreferredSource" }, () =>
+            clientBasic.UpdateStoreRateConfiguration(user.StoreId, new StoreRateConfiguration() { IsCustomScript = false, EffectiveScript = "BTC_XYZ = 1;" }));
+
+            await AssertValidationError(new[] { "EffectiveScript" }, () =>
+clientBasic.UpdateStoreRateConfiguration(user.StoreId, new StoreRateConfiguration() { IsCustomScript = true, EffectiveScript = "BTC_XYZ rg8w*# 1;" }));
+            await AssertValidationError(new[] { "PreferredSource" }, () =>
+clientBasic.UpdateStoreRateConfiguration(user.StoreId, new StoreRateConfiguration() { IsCustomScript = true, EffectiveScript = "", PreferredSource = "coingecko" }));
+
+            await AssertValidationError(new[] { "PreferredSource", "Spread" }, () =>
+clientBasic.UpdateStoreRateConfiguration(user.StoreId, new StoreRateConfiguration() { IsCustomScript = false, PreferredSource = "coingeckoOOO", Spread = -1m }));
+
+            await AssertValidationError(new[] { "currencyPair" }, () =>
+clientBasic.PreviewUpdateStoreRateConfiguration(user.StoreId, new StoreRateConfiguration() { IsCustomScript = false, PreferredSource = "coingecko" }, new[] { "BTC_USD_USD_BTC" }));
+            await AssertValidationError(new[] { "PreferredSource", "currencyPair" }, () =>
+clientBasic.PreviewUpdateStoreRateConfiguration(user.StoreId, new StoreRateConfiguration() { IsCustomScript = false, PreferredSource = "coingeckoOOO" }, new[] { "BTC_USD_USD_BTC" }));
+        }
+        
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task CustodianAccountControllerTests()

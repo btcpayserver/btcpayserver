@@ -1,28 +1,24 @@
 using System;
 
-namespace BTCPayServer.Services.Labels
+namespace BTCPayServer.Models.WalletViewModels
 {
-    public class ColoredLabel
+    public class TransactionTagModel
     {
-        internal ColoredLabel()
-        {
-        }
-
         public string Text { get; internal set; }
         public string Color { get; internal set; }
         public string TextColor { get; internal set; }
         public string Link { get; internal set; }
-        public string Tooltip { get; internal set; }
+        public string Tooltip { get; internal set; } = String.Empty;
 
         public override bool Equals(object obj)
         {
-            ColoredLabel item = obj as ColoredLabel;
+            TransactionTagModel item = obj as TransactionTagModel;
             if (item == null)
                 return false;
             return Text.Equals(item.Text, StringComparison.OrdinalIgnoreCase);
         }
 
-        public static bool operator ==(ColoredLabel a, ColoredLabel b)
+        public static bool operator ==(TransactionTagModel a, TransactionTagModel b)
         {
             if (System.Object.ReferenceEquals(a, b))
                 return true;
@@ -31,7 +27,7 @@ namespace BTCPayServer.Services.Labels
             return a.Text == b.Text;
         }
 
-        public static bool operator !=(ColoredLabel a, ColoredLabel b)
+        public static bool operator !=(TransactionTagModel a, TransactionTagModel b)
         {
             return !(a == b);
         }

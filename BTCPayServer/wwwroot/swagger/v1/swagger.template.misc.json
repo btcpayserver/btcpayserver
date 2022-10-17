@@ -1,5 +1,42 @@
 {
     "paths": {
+        "/misc/rate-sources": {
+            "get": {
+                "tags": [
+                    "Miscelleneous"
+                ],
+                "summary": "Get available rate sources",
+                "description": "View available rate providers that you can use in stores",
+                "operationId": "GetRateSources",
+                "responses": {
+                    "200": {
+                        "description": "rate providers array",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "additionalProperties": false,
+                                        "properties": {
+                                            "id": {
+                                                "type": "string",
+                                                "description": "The id of the rate provider"
+                                            },
+                                            "name": {
+                                                "type": "string",
+                                                "description": "The name of the rate provider"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": []
+            }
+        },
         "/misc/permissions": {
             "get": {
                 "tags": [

@@ -93,7 +93,11 @@
         section.current {
             display: block;
         }
-        section h4,
+        section h4 {
+            margin-bottom: var(--btcpay-space-l);
+            font-weight: var(--btcpay-font-weight-semibold);
+            text-align: center;
+        }
         section h5,
         section h6 {
             margin-bottom: 1.5rem;
@@ -109,7 +113,7 @@
             gap: var(--btcpay-space-m);
         }
         section dl {
-            margin-bottom: 0;
+            margin-bottom: 1.5rem;
         }
         section dl > div {
             display: flex;
@@ -178,7 +182,10 @@
             display: block;
             width: 3rem;
             height: 3rem;
-            margin: 1.5rem auto;
+            margin: .5rem auto 1.5rem;
+        }
+        #PaymentDetails dl {
+            margin: 0;
         }
         #PaymentDetailsButton {
             margin: 0 auto;
@@ -339,17 +346,17 @@
                             <vc:icon symbol="payment-complete"/>
                         </span>
                         <h4>{{$t("Invoice paid")}}</h4>
-                        <dl class="mb-4">
+                        <dl>
                             <div>
                                 <dt>{{$t("Invoice ID")}}</dt>
                                 <dd>{{srvModel.invoiceId}}</dd>
                             </div>
-                            <div>
+                            <div v-if="srvModel.orderId">
                                 <dt>{{$t("Order ID")}}</dt>
                                 <dd>{{srvModel.orderId}}</dd>
                             </div>
                         </dl>
-                        <dl class="mb-4">
+                        <dl>
                             <div>
                                 <dt>{{$t("Order Amount")}}</dt>
                                 <dd>{{srvModel.orderAmount}} {{ srvModel.cryptoCode }}</dd>
@@ -358,7 +365,7 @@
                                 <dt>{{$t("Order Amount")}}</dt>
                                 <dd>{{srvModel.orderAmountFiat}}</dd>
                             </div>
-                            <div v-if="srvModel.isMultiCurrency || srvModel.txCountForFee > 0">
+                            <div v-if="srvModel.networkFee">
                                 <dt>{{$t("Network Cost")}}</dt>
                                 <dd v-if="srvModel.isMultiCurrency">{{ srvModel.networkFee }} {{ srvModel.cryptoCode }}</dd>
                                 <dd v-else-if="srvModel.txCountForFee > 0">{{$t("txCount", {count: srvModel.txCount})}} x {{ srvModel.networkFee }} {{ srvModel.cryptoCode }}</dd>
@@ -380,12 +387,12 @@
                             <vc:icon symbol="invoice-expired"/>
                         </span>
                         <h4>{{$t("Invoice expired")}}</h4>
-                        <dl class="mb-3">
+                        <dl>
                             <div>
                                 <dt>{{$t("Invoice ID")}}</dt>
                                 <dd>{{srvModel.invoiceId}}</dd>
                             </div>
-                            <div>
+                            <div v-if="srvModel.orderId">
                                 <dt>{{$t("Order ID")}}</dt>
                                 <dd>{{srvModel.orderId}}</dd>
                             </div>
@@ -447,7 +454,7 @@
         const STATUS_PAID = ['complete', 'confirmed', 'paid'];
         const STATUS_UNPAID = ['new', 'paidPartial'];
         const STATUS_UNPAYABLE =  ['expired', 'invalid'];
-        const qrOptions = { margin: 1, type: 'svg', color: { dark:'#000', light:'#f5f5f7'} };
+        const qrOptions = { margin: 1, type: 'svg', color: { dark: '#000', light: '#fff' } };
         
         i18next
             .use(window.i18nextXHRBackend)

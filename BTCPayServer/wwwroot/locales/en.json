@@ -58,5 +58,6 @@
   "Feerate": "{{feeRate}} sat/byte",
   "Amount Paid": "Amount Paid",
   "Amount Due": "Amount Due",
-  "Pay in wallet": "Pay in wallet"
+  "Pay in wallet": "Pay in wallet",
+  "Invoice paid": "Invoice paid"
 }

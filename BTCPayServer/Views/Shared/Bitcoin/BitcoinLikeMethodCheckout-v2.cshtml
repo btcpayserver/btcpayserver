@@ -3,7 +3,7 @@
 
 <template id="bitcoin-method-checkout-template">
     <div class="payment-box">
-        <small class="d-block" id="QR_Text_@Model.PaymentMethodId">{{$t("QR_Text")}}</small>
+        <small class="qr-text" id="QR_Text_@Model.PaymentMethodId">{{$t("QR_Text")}}</small>
         <div class="qr-container my-3" data-clipboard-confirm-element="QR_Text_@Model.PaymentMethodId" :data-clipboard="srvModel.btcAddress">
             <qrcode v-if="srvModel.invoiceBitcoinUrlQR" :value="srvModel.invoiceBitcoinUrlQR" tag="div" :options="qrOptions" />
         </div>

@@ -45,7 +45,7 @@
             --section-padding: var(--btcpay-space-l);
         }
         body {
-            padding: var(--btcpay-space-l) var(--btcpay-space-m);
+            padding: var(--btcpay-space-m);
         }
         header,
         footer {
@@ -153,6 +153,10 @@
             margin: 0 auto;
             text-align: center;
         }
+        .payment-box .qr-text {
+            display:  block;
+            color: var(--btcpay-light-text);
+        }
         .payment-box .qr-container {
             min-height: var(--qr-size);
         }
@@ -203,14 +207,14 @@
         </style>
     }
 </head>
-<body class="min-vh-100">
+<body>
     <div id="Checkout" class="wrap" v-cloak>
         <header>
             @if (!string.IsNullOrEmpty(logoUrl))
             {
                 <img src="@logoUrl" alt="@Model.StoreName" class="logo @(!string.IsNullOrEmpty(Model.LogoFileId) ? "logo--square" : "")"/>
             }
-            <h1 class="h5">@Model.StoreName</h1>
+            <h1 class="h5 mb-0">@Model.StoreName</h1>
         </header>
         <main>
             <nav v-if="hasNav">
@@ -247,13 +251,13 @@
                 <h6 class="text-center mb-3 fw-semibold" v-if="srvModel.itemDesc" v-text="srvModel.itemDesc">@Model.ItemDesc</h6>
                 @if (Model.IsUnsetTopUp)
                 {
-                    <div class="h3 text-center mb-2">{{$t("Any amount")}}</div>
+                    <h2 class="text-center mb-3">{{$t("Any amount")}}</h2>
                 }
                 else
                 {
-                    <div class="h3 text-center mb-2" v-text="`${srvModel.btcDue} ${srvModel.cryptoCode}`" :data-clipboard="srvModel.btcDue">@Model.BtcDue @Model.CryptoCode</div>
-                    <div class="h3 text-center mb-2" v-else v-text="`${srvModel.btcDue} ${srvModel.cryptoCode}`" :data-clipboard="srvModel.btcDue">@Model.BtcDue @Model.CryptoCode</div>
-                    <div class="text-muted text-center" v-if="srvModel.orderAmountFiat" v-text="srvModel.orderAmountFiat">@Model.OrderAmountFiat</div>
+                    <h2 class="text-center" v-text="`${srvModel.btcDue} ${srvModel.cryptoCode}`" :data-clipboard="srvModel.btcDue">@Model.BtcDue @Model.CryptoCode</h2>
+                    <h2 class="text-center" v-else v-text="`${srvModel.btcDue} ${srvModel.cryptoCode}`" :data-clipboard="srvModel.btcDue">@Model.BtcDue @Model.CryptoCode</h2>
+                    <div class="text-muted text-center fw-semibold" v-if="srvModel.orderAmountFiat" v-text="srvModel.orderAmountFiat">@Model.OrderAmountFiat</div>
                     <div class="timer" v-if="expiringSoon">
                         {{$t("Invoice will expire in")}} {{timerText}}
                         <span class="spinner-border spinner-border-sm ms-2 text-muted" role="status">
@@ -266,7 +270,7 @@
                     </div>
                     <button class="d-flex align-items-center btn btn-link" type="button" id="PaymentDetailsButton" :aria-expanded="displayPaymentDetails ? 'true' : 'false'" aria-controls="PaymentDetails" v-on:click="displayPaymentDetails = !displayPaymentDetails">
                         <vc:icon symbol="caret-down"/>
-                        <span class="ms-1">{{$t("View Details")}}</span>
+                        <span class="ms-1 fw-semibold">{{$t("View Details")}}</span>
                     </button>
                     <div id="PaymentDetails" class="collapse" v-collapsible="displayPaymentDetails">
                         <dl>
@@ -334,7 +338,7 @@
                         <span class="text-success">
                             <vc:icon symbol="payment-complete"/>
                         </span>
-                        <h4>{{$t("This invoice has been paid")}}</h4>
+                        <h4>{{$t("Invoice paid")}}</h4>
                         <dl class="mb-4">
                             <div>
                                 <dt>{{$t("Invoice ID")}}</dt>

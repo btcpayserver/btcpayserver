@@ -151,7 +151,7 @@ namespace BTCPayServer.Payments.Bitcoin
         public override PaymentType PaymentType => PaymentTypes.BTCLike;
 
         public override async Task<IPaymentMethodDetails> CreatePaymentMethodDetails(
-            InvoiceLogs logs,
+            InvoiceContext ctx,
             DerivationSchemeSettings supportedPaymentMethod, PaymentMethod paymentMethod, StoreData store,
             BTCPayNetwork network, object preparePaymentObject, IEnumerable<PaymentMethodId> invoicePaymentMethods)
         {
@@ -212,11 +212,11 @@ namespace BTCPayServer.Payments.Bitcoin
                     ?.CanSupportTransactionCheck is true;
                 onchainMethod.PayjoinEnabled &= supportedPaymentMethod.IsHotWallet && nodeSupport;
                 if (!supportedPaymentMethod.IsHotWallet)
-                    logs.Write($"{prefix} Payjoin should have been enabled, but your store is not a hotwallet", InvoiceEventData.EventSeverity.Warning);
+                    ctx.Logs.Write($"{prefix} Payjoin should have been enabled, but your store is not a hotwallet", InvoiceEventData.EventSeverity.Warning);
                 if (!nodeSupport)
-                    logs.Write($"{prefix} Payjoin should have been enabled, but your version of NBXplorer or full node does not support it.", InvoiceEventData.EventSeverity.Warning);
+                    ctx.Logs.Write($"{prefix} Payjoin should have been enabled, but your version of NBXplorer or full node does not support it.", InvoiceEventData.EventSeverity.Warning);
                 if (onchainMethod.PayjoinEnabled)
-                    logs.Write($"{prefix} Payjoin is enabled for this invoice.", InvoiceEventData.EventSeverity.Info);
+                    ctx.Logs.Write($"{prefix} Payjoin is enabled for this invoice.", InvoiceEventData.EventSeverity.Info);
             }
 
             return onchainMethod;

@@ -228,14 +228,14 @@ namespace BTCPayServer.Payments.Lightning
 
         private async Task CreateNewLNInvoiceForBTCPayInvoice(InvoiceEntity invoice)
         {
+            var ctx = new InvoiceContext(invoice);
             var paymentMethods = invoice.GetPaymentMethods()
                 .Where(method => new[] { PaymentTypes.LightningLike, LNURLPayPaymentType.Instance }.Contains(method.GetId().PaymentType))
                 .ToArray();
             var store = await _storeRepository.FindStore(invoice.StoreId);
             if (paymentMethods.Any())
             {
-                var logs = new InvoiceLogs();
-                logs.Write(
+                ctx.Logs.Write(
                     "Partial payment detected, attempting to update all lightning payment methods with new bolt11 with correct due amount.",
                     InvoiceEventData.EventSeverity.Info);
                 foreach (var paymentMethod in paymentMethods)
@@ -302,7 +302,7 @@ namespace BTCPayServer.Payments.Lightning
                         var pmis = invoice.GetPaymentMethods().Select(method => method.GetId()).ToHashSet();
                         var newPaymentMethodDetails =
                             (LightningLikePaymentMethodDetails)(await _lightningLikePaymentHandler
-                                .CreatePaymentMethodDetails(logs, supportedMethod, paymentMethod, store,
+                                .CreatePaymentMethodDetails(ctx, supportedMethod, paymentMethod, store,
                                     paymentMethod.Network, prepObj, pmis));
 
                         var instanceListenerKey = (paymentMethod.Network.CryptoCode,
@@ -329,12 +329,12 @@ namespace BTCPayServer.Payments.Lightning
                     }
                     catch (Exception e)
                     {
-                        logs.Write($"Could not update {paymentMethod.GetId().ToPrettyString()}: {e.Message}",
+                        ctx.Logs.Write($"Could not update {paymentMethod.GetId().ToPrettyString()}: {e.Message}",
                             InvoiceEventData.EventSeverity.Error);
                     }
                 }
 
-                await _InvoiceRepository.AddInvoiceLogs(invoice.Id, logs);
+                await _InvoiceRepository.AddInvoiceLogs(invoice.Id, ctx.Logs);
                 _CheckInvoices.Writer.TryWrite(invoice.Id);
             }
 

@@ -44,7 +44,7 @@ namespace BTCPayServer.Payments.Lightning
         public IOptions<LightningNetworkOptions> Options { get; }
 
         public override async Task<IPaymentMethodDetails> CreatePaymentMethodDetails(
-            InvoiceLogs logs,
+            InvoiceContext ctx,
             LNURLPaySupportedPaymentMethod supportedPaymentMethod, PaymentMethod paymentMethod, Data.StoreData store,
             BTCPayNetwork network, object preparePaymentObject, IEnumerable<PaymentMethodId> invoicePaymentMethods)
         {
@@ -81,7 +81,7 @@ namespace BTCPayServer.Payments.Lightning
             NodeInfo? nodeInfo = null;
             if (lnLightningSupportedPaymentMethod != null)
             {
-                nodeInfo = (await _lightningLikePaymentHandler.GetNodeInfo(lnLightningSupportedPaymentMethod, _networkProvider.GetNetwork<BTCPayNetwork>(supportedPaymentMethod.CryptoCode), logs, paymentMethod.PreferOnion)).FirstOrDefault();
+                nodeInfo = (await _lightningLikePaymentHandler.GetNodeInfo(lnLightningSupportedPaymentMethod, _networkProvider.GetNetwork<BTCPayNetwork>(supportedPaymentMethod.CryptoCode), ctx.Logs, paymentMethod.PreferOnion)).FirstOrDefault();
             }
 
             return new LNURLPayPaymentMethodDetails

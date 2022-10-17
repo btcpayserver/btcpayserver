@@ -20,7 +20,7 @@ namespace BTCPayServer.Payments
         /// <summary>
         /// Create needed to track payments of this invoice
         /// </summary>
-        /// <param name="logs"></param>
+        /// <param name="invoiceContext"></param>
         /// <param name="supportedPaymentMethod"></param>
         /// <param name="paymentMethod"></param>
         /// <param name="store"></param>
@@ -28,7 +28,7 @@ namespace BTCPayServer.Payments
         /// <param name="preparePaymentObject"></param>
         /// <param name="invoicePaymentMethods"></param>
         /// <returns></returns>
-        Task<IPaymentMethodDetails> CreatePaymentMethodDetails(InvoiceLogs logs,
+        Task<IPaymentMethodDetails> CreatePaymentMethodDetails(InvoiceContext invoiceContext,
             ISupportedPaymentMethod supportedPaymentMethod,
             PaymentMethod paymentMethod, StoreData store, BTCPayNetworkBase network, object preparePaymentObject,
             IEnumerable<PaymentMethodId> invoicePaymentMethods);
@@ -55,19 +55,19 @@ namespace BTCPayServer.Payments
         where TSupportedPaymentMethod : ISupportedPaymentMethod
         where TBTCPayNetwork : BTCPayNetworkBase
     {
-        Task<IPaymentMethodDetails> CreatePaymentMethodDetails(InvoiceLogs logs, TSupportedPaymentMethod supportedPaymentMethod,
+        Task<IPaymentMethodDetails> CreatePaymentMethodDetails(InvoiceContext ctx, TSupportedPaymentMethod supportedPaymentMethod,
             PaymentMethod paymentMethod, StoreData store, TBTCPayNetwork network, object preparePaymentObject, IEnumerable<PaymentMethodId> invoicePaymentMethods);
     }
 
-    public abstract class PaymentMethodHandlerBase<TSupportedPaymentMethod, TBTCPayNetwork> : IPaymentMethodHandler<
-            TSupportedPaymentMethod, TBTCPayNetwork>
+    public abstract class PaymentMethodHandlerBase<TSupportedPaymentMethod, TBTCPayNetwork>: 
+        IPaymentMethodHandler<TSupportedPaymentMethod, TBTCPayNetwork>
         where TSupportedPaymentMethod : ISupportedPaymentMethod
         where TBTCPayNetwork : BTCPayNetworkBase
     {
         public abstract PaymentType PaymentType { get; }
 
         public abstract Task<IPaymentMethodDetails> CreatePaymentMethodDetails(
-            InvoiceLogs logs,
+            InvoiceContext ctx,
             TSupportedPaymentMethod supportedPaymentMethod,
             PaymentMethod paymentMethod, StoreData store, TBTCPayNetwork network, object preparePaymentObject, IEnumerable<PaymentMethodId> invoicePaymentMethods);
 
@@ -99,14 +99,14 @@ namespace BTCPayServer.Payments
             return null;
         }
 
-        public Task<IPaymentMethodDetails> CreatePaymentMethodDetails(InvoiceLogs logs,
+        public Task<IPaymentMethodDetails> CreatePaymentMethodDetails(InvoiceContext ctx,
             ISupportedPaymentMethod supportedPaymentMethod, PaymentMethod paymentMethod,
             StoreData store, BTCPayNetworkBase network, object preparePaymentObject,
             IEnumerable<PaymentMethodId> invoicePaymentMethods)
         {
             if (supportedPaymentMethod is TSupportedPaymentMethod method && network is TBTCPayNetwork correctNetwork)
             {
-                return CreatePaymentMethodDetails(logs, method, paymentMethod, store, correctNetwork, preparePaymentObject, invoicePaymentMethods);
+                return CreatePaymentMethodDetails(ctx, method, paymentMethod, store, correctNetwork, preparePaymentObject, invoicePaymentMethods);
             }
 
             throw new NotSupportedException("Invalid supportedPaymentMethod");

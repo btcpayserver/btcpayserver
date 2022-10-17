@@ -212,8 +212,8 @@ namespace BTCPayServer.Controllers
 
         internal async Task<InvoiceEntity> CreateInvoiceCoreRaw(InvoiceEntity entity, StoreData store, IPaymentFilter? invoicePaymentMethodFilter, string[]? additionalSearchTerms = null, CancellationToken cancellationToken = default,  Action<InvoiceEntity>? entityManipulator = null)
         {
-            InvoiceLogs logs = new InvoiceLogs();
-            logs.Write("Creation of invoice starting", InvoiceEventData.EventSeverity.Info);
+            InvoiceContext ctx = new InvoiceContext(entity);
+            ctx.Logs.Write("Creation of invoice starting", InvoiceEventData.EventSeverity.Info);
             var storeBlob = store.GetStoreBlob();
             if (string.IsNullOrEmpty(entity.Currency))
                 entity.Currency = storeBlob.DefaultCurrency;
@@ -269,7 +269,7 @@ namespace BTCPayServer.Controllers
 
             var rateRules = storeBlob.GetRateRules(_NetworkProvider);
             var fetchingByCurrencyPair = _RateProvider.FetchRates(currencyPairsToFetch, rateRules, cancellationToken);
-            var fetchingAll = WhenAllFetched(logs, fetchingByCurrencyPair);
+            var fetchingAll = WhenAllFetched(ctx.Logs, fetchingByCurrencyPair);
 
             List<ISupportedPaymentMethod> supported = new List<ISupportedPaymentMethod>();
             var paymentMethods = new PaymentMethodDictionary();
@@ -294,7 +294,7 @@ namespace BTCPayServer.Controllers
                     .Select(o =>
                         (SupportedPaymentMethod: o.SupportedPaymentMethod,
                             PaymentMethod: CreatePaymentMethodAsync(fetchingByCurrencyPair, o.Handler,
-                                o.SupportedPaymentMethod, o.Network, entity, store, logs, pmis)))
+                                o.SupportedPaymentMethod, o.Network, ctx, store, pmis)))
                     .ToList())
                 {
                     var paymentMethod = await o.PaymentMethod;
@@ -312,7 +312,7 @@ namespace BTCPayServer.Controllers
                             "Warning: No wallet has been linked to your BTCPay Store. See the following link for more information on how to connect your store and wallet. (https://docs.btcpayserver.org/WalletSetup/)");
                     else
                         errors.AppendLine("Warning: You have payment methods configured but none of them match any of the requested payment methods or the rate is not available. See logs below:");
-                    foreach (var error in logs.ToList())
+                    foreach (var error in ctx.Logs.ToList())
                     {
                         errors.AppendLine(error.ToString());
                     }
@@ -331,7 +331,7 @@ namespace BTCPayServer.Controllers
             {
                 entityManipulator.Invoke(entity);
             }
-            using (logs.Measure("Saving invoice"))
+            using (ctx.Logs.Measure("Saving invoice"))
             {
                 entity = await _InvoiceRepository.CreateInvoiceAsync(store.Id, entity, additionalSearchTerms);
             }
@@ -343,9 +343,9 @@ namespace BTCPayServer.Controllers
                 }
                 catch (AggregateException ex)
                 {
-                    ex.Handle(e => { logs.Write($"Error while fetching rates {ex}", InvoiceEventData.EventSeverity.Error); return true; });
+                    ex.Handle(e => { ctx.Logs.Write($"Error while fetching rates {ex}", InvoiceEventData.EventSeverity.Error); return true; });
                 }
-                await _InvoiceRepository.AddInvoiceLogs(entity.Id, logs);
+                await _InvoiceRepository.AddInvoiceLogs(entity.Id, ctx.Logs);
             });
             _EventAggregator.Publish(new Events.InvoiceEvent(entity, InvoiceEvent.Created));
             return entity;
@@ -373,8 +373,8 @@ namespace BTCPayServer.Controllers
         private async Task<PaymentMethod?> CreatePaymentMethodAsync(
             Dictionary<CurrencyPair, Task<RateResult>> fetchingByCurrencyPair,
             IPaymentMethodHandler handler, ISupportedPaymentMethod supportedPaymentMethod, BTCPayNetworkBase network,
-            InvoiceEntity entity,
-            StoreData store, InvoiceLogs logs,
+            InvoiceContext ctx,
+            StoreData store,
             HashSet<PaymentMethodId> invoicePaymentMethods)
         {
             try
@@ -391,28 +391,28 @@ namespace BTCPayServer.Controllers
                 {
                     preparePayment = handler.PreparePayment(supportedPaymentMethod, store, network);
                 }
-                var rate = await fetchingByCurrencyPair[new CurrencyPair(network.CryptoCode, entity.Currency)];
+                var rate = await fetchingByCurrencyPair[new CurrencyPair(network.CryptoCode, ctx.Invoice.Currency)];
                 if (rate.BidAsk == null)
                 {
                     return null;
                 }
                 var paymentMethod = new PaymentMethod
                 {
-                    ParentEntity = entity,
+                    ParentEntity = ctx.Invoice,
                     Network = network,
                     Rate = rate.BidAsk.Bid,
-                    PreferOnion = Uri.TryCreate(entity.ServerUrl, UriKind.Absolute, out var u) && u.DnsSafeHost.EndsWith(".onion", StringComparison.OrdinalIgnoreCase)
+                    PreferOnion = Uri.TryCreate(ctx.Invoice.ServerUrl, UriKind.Absolute, out var u) && u.DnsSafeHost.EndsWith(".onion", StringComparison.OrdinalIgnoreCase)
                 };
                 paymentMethod.SetId(supportedPaymentMethod.PaymentId);
 
-                using (logs.Measure($"{logPrefix} Payment method details creation"))
+                using (ctx.Logs.Measure($"{logPrefix} Payment method details creation"))
                 {
-                    var paymentDetails = await handler.CreatePaymentMethodDetails(logs, supportedPaymentMethod, paymentMethod, store, network, preparePayment, invoicePaymentMethods);
+                    var paymentDetails = await handler.CreatePaymentMethodDetails(ctx, supportedPaymentMethod, paymentMethod, store, network, preparePayment, invoicePaymentMethods);
                     paymentMethod.SetPaymentMethodDetails(paymentDetails);
                 }
 
                 var criteria = storeBlob.PaymentMethodCriteria?.Find(methodCriteria => methodCriteria.PaymentMethod == supportedPaymentMethod.PaymentId);
-                if (criteria?.Value != null && entity.Type != InvoiceType.TopUp)
+                if (criteria?.Value != null && ctx.Invoice.Type != InvoiceType.TopUp)
                 {
                     var currentRateToCrypto =
                         await fetchingByCurrencyPair[new CurrencyPair(supportedPaymentMethod.PaymentId.CryptoCode, criteria.Value.Currency)];
@@ -423,39 +423,39 @@ namespace BTCPayServer.Controllers
 
                         if (amount < limitValueCrypto && criteria.Above)
                         {
-                            logs.Write($"{logPrefix} invoice amount below accepted value for payment method", InvoiceEventData.EventSeverity.Error);
+                            ctx.Logs.Write($"{logPrefix} invoice amount below accepted value for payment method", InvoiceEventData.EventSeverity.Error);
                             return null;
                         }
                         if (amount > limitValueCrypto && !criteria.Above)
                         {
-                            logs.Write($"{logPrefix} invoice amount above accepted value for payment method", InvoiceEventData.EventSeverity.Error);
+                            ctx.Logs.Write($"{logPrefix} invoice amount above accepted value for payment method", InvoiceEventData.EventSeverity.Error);
                             return null;
                         }
                     }
                     else
                     {
                         var suffix = currentRateToCrypto?.EvaluatedRule is string s ? $" ({s})" : string.Empty;
-                        logs.Write($"{logPrefix} This payment method should be created only if the amount of this invoice is in proper range. However, we are unable to fetch the rate of those limits. {suffix}", InvoiceEventData.EventSeverity.Warning);
+                        ctx.Logs.Write($"{logPrefix} This payment method should be created only if the amount of this invoice is in proper range. However, we are unable to fetch the rate of those limits. {suffix}", InvoiceEventData.EventSeverity.Warning);
                     }
                 }
 
 #pragma warning disable CS0618
                 if (paymentMethod.GetId().IsBTCOnChain)
                 {
-                    entity.TxFee = paymentMethod.NextNetworkFee;
-                    entity.Rate = paymentMethod.Rate;
-                    entity.DepositAddress = paymentMethod.DepositAddress;
+                    ctx.Invoice.TxFee = paymentMethod.NextNetworkFee;
+                    ctx.Invoice.Rate = paymentMethod.Rate;
+                    ctx.Invoice.DepositAddress = paymentMethod.DepositAddress;
                 }
 #pragma warning restore CS0618
                 return paymentMethod;
             }
             catch (PaymentMethodUnavailableException ex)
             {
-                logs.Write($"{supportedPaymentMethod.PaymentId.CryptoCode}: Payment method unavailable ({ex.Message})", InvoiceEventData.EventSeverity.Error);
+                ctx.Logs.Write($"{supportedPaymentMethod.PaymentId.CryptoCode}: Payment method unavailable ({ex.Message})", InvoiceEventData.EventSeverity.Error);
             }
             catch (Exception ex)
             {
-                logs.Write($"{supportedPaymentMethod.PaymentId.CryptoCode}: Unexpected exception ({ex})", InvoiceEventData.EventSeverity.Error);
+                ctx.Logs.Write($"{supportedPaymentMethod.PaymentId.CryptoCode}: Unexpected exception ({ex})", InvoiceEventData.EventSeverity.Error);
             }
             return null;
         }

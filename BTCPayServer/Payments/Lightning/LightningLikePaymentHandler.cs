@@ -51,7 +51,7 @@ namespace BTCPayServer.Payments.Lightning
         public IOptions<LightningNetworkOptions> Options { get; }
 
         public override async Task<IPaymentMethodDetails> CreatePaymentMethodDetails(
-            InvoiceLogs logs,
+            InvoiceContext ctx,
             LightningSupportedPaymentMethod supportedPaymentMethod, PaymentMethod paymentMethod, Data.StoreData store,
             BTCPayNetwork network, object preparePaymentObject, IEnumerable<PaymentMethodId> invoicePaymentMethods)
         {
@@ -72,7 +72,7 @@ namespace BTCPayServer.Payments.Lightning
                 };
             }
             var storeBlob = store.GetStoreBlob();
-            var nodeInfo = GetNodeInfo(supportedPaymentMethod, network, logs, paymentMethod.PreferOnion);
+            var nodeInfo = GetNodeInfo(supportedPaymentMethod, network, ctx.Logs, paymentMethod.PreferOnion);
 
             var invoice = paymentMethod.ParentEntity;
             decimal due = Extensions.RoundUp(invoice.Price / paymentMethod.Rate, network.Divisibility);

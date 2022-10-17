@@ -27,13 +27,13 @@ namespace BTCPayServer.Services.Invoices
                 var paymentMethod = invoice.GetPaymentMethod(paymentMethodId);
                 var network = btcPayNetworkProvider.GetNetwork(paymentMethodId.CryptoCode);
                 var prepare = payHandler.PreparePayment(supportPayMethod, store, network);
-                InvoiceLogs logs = new InvoiceLogs();
+                var ctx = new InvoiceContext(invoice);
                 try
                 {
                     var pmis = invoice.GetPaymentMethods().Select(method => method.GetId()).ToHashSet();
-                    logs.Write($"{paymentMethodId}: Activating", InvoiceEventData.EventSeverity.Info);
+                    ctx.Logs.Write($"{paymentMethodId}: Activating", InvoiceEventData.EventSeverity.Info);
                     var newDetails = await
-                        payHandler.CreatePaymentMethodDetails(logs, supportPayMethod, paymentMethod, store, network,
+                        payHandler.CreatePaymentMethodDetails(ctx, supportPayMethod, paymentMethod, store, network,
                             prepare, pmis);
                     eligibleMethodToActivate.SetPaymentMethodDetails(newDetails);
                     await invoiceRepository.UpdateInvoicePaymentMethod(invoice.Id, eligibleMethodToActivate);
@@ -43,14 +43,14 @@ namespace BTCPayServer.Services.Invoices
                 }
                 catch (PaymentMethodUnavailableException ex)
                 {
-                    logs.Write($"{paymentMethodId}: Payment method unavailable ({ex.Message})", InvoiceEventData.EventSeverity.Error);
+                    ctx.Logs.Write($"{paymentMethodId}: Payment method unavailable ({ex.Message})", InvoiceEventData.EventSeverity.Error);
                 }
                 catch (Exception ex)
                 {
-                    logs.Write($"{paymentMethodId}: Unexpected exception ({ex})", InvoiceEventData.EventSeverity.Error);
+                    ctx.Logs.Write($"{paymentMethodId}: Unexpected exception ({ex})", InvoiceEventData.EventSeverity.Error);
                 }
 
-                await invoiceRepository.AddInvoiceLogs(invoice.Id, logs);
+                await invoiceRepository.AddInvoiceLogs(invoice.Id, ctx.Logs);
             }
             return success;
         }

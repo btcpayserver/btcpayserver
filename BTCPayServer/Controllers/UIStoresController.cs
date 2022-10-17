@@ -634,7 +634,7 @@ namespace BTCPayServer.Controllers
             blob.DefaultCurrency = model.DefaultCurrency;
             blob.InvoiceExpiration = TimeSpan.FromMinutes(model.InvoiceExpiration);
             blob.RefundBOLT11Expiration = TimeSpan.FromDays(model.BOLT11Expiration);
-            if (model.BrandColor != null || ColorPalette.IsValid(model.BrandColor))
+            if (!string.IsNullOrEmpty(model.BrandColor) && !ColorPalette.IsValid(model.BrandColor))
             {
                 ModelState.AddModelError(nameof(model.BrandColor), "Invalid color");
                 return View(model);

@@ -644,15 +644,26 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("enable-pay-button")).Click();
             s.Driver.FindElement(By.Id("disable-pay-button")).Click();
             s.FindAlertMessage();
-            s.GoToStore(StoreNavPages.General);
+            s.GoToStore();
             Assert.False(s.Driver.FindElement(By.Id("AnyoneCanCreateInvoice")).Selected);
             s.Driver.SetCheckbox(By.Id("AnyoneCanCreateInvoice"), true);
             s.Driver.FindElement(By.Id("Save")).Click();
             s.FindAlertMessage();
             Assert.True(s.Driver.FindElement(By.Id("AnyoneCanCreateInvoice")).Selected);
 
+            // Store settings: Set and unset brand color
+            s.GoToStore();
+            s.Driver.FindElement(By.Id("BrandColor")).SendKeys("#f7931a");
+            s.Driver.FindElement(By.Id("Save")).Click();
+            Assert.Contains("Store successfully updated", s.FindAlertMessage().Text);
+            Assert.Equal("#f7931a", s.Driver.FindElement(By.Id("BrandColor")).GetAttribute("value"));
+            s.Driver.FindElement(By.Id("BrandColor")).Clear();
+            s.Driver.FindElement(By.Id("Save")).Click();
+            Assert.Contains("Store successfully updated", s.FindAlertMessage().Text);
+            Assert.Equal(string.Empty, s.Driver.FindElement(By.Id("BrandColor")).GetAttribute("value"));
+
             // Alice should be able to delete the store
-            s.GoToStore(StoreNavPages.General);
+            s.GoToStore();
             s.Driver.FindElement(By.Id("DeleteStore")).Click();
             s.Driver.WaitForElement(By.Id("ConfirmInput")).SendKeys("DELETE");
             s.Driver.FindElement(By.Id("ConfirmContinue")).Click();

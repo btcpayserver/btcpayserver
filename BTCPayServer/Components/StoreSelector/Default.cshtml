@@ -1,5 +1,10 @@
-@inject BTCPayServer.Services.BTCPayServerEnvironment _env
-@inject SignInManager<ApplicationUser> _signInManager
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using BTCPayServer.Abstractions.Extensions
+@using BTCPayServer.Abstractions.TagHelpers
+@using BTCPayServer.Abstractions.Contracts
+@inject BTCPayServer.Services.BTCPayServerEnvironment Env
+@inject SignInManager<ApplicationUser> SignInManager
+@inject IFileService FileService
 @model BTCPayServer.Components.StoreSelector.StoreSelectorViewModel
 @functions {
     @* ReSharper disable once CSharpWarnings::CS1998 *@
@@ -8,9 +13,9 @@
     {
         var logoSrc = $"{ViewContext.HttpContext.Request.PathBase}/img/logo.svg";
         <svg xmlns="http://www.w3.org/2000/svg" role="img" alt="BTCPay Server" class="logo"><use href="@logoSrc#small" class="logo-small" /><use href="@logoSrc#large" class="logo-large" /></svg>
-        @if (_env.NetworkType != NBitcoin.ChainName.Mainnet)
+        @if (Env.NetworkType != NBitcoin.ChainName.Mainnet)
         {
-            <span class="badge bg-warning ms-1 ms-sm-0" style="font-size:10px;">@_env.NetworkType.ToString()</span>
+            <span class="badge bg-warning ms-1 ms-sm-0" style="font-size:10px;">@Env.NetworkType.ToString()</span>
         }
     }
     private string StoreName(string title)
@@ -37,7 +42,14 @@ else
     {
         <div id="StoreSelectorDropdown" class="dropdown only-for-js">
             <button id="StoreSelectorToggle" class="btn btn-secondary dropdown-toggle rounded-pill px-3 @(Model.CurrentStoreId == null ? "text-secondary" : "")" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                <vc:icon symbol="store"/>
+                @if (!string.IsNullOrEmpty(Model.CurrentStoreLogoFileId))
+                {
+                    <img class="logo" src="@(await FileService.GetFileUrl(Context.Request.GetAbsoluteRootUri(), Model.CurrentStoreLogoFileId))" alt="@Model.CurrentDisplayName" />
+                }
+                else
+                {
+                    <vc:icon symbol="store"/>
+                }
                 <span>@(Model.CurrentStoreId == null ? "Select Store" : Model.CurrentDisplayName)</span>
                 <vc:icon symbol="caret-down"/>
             </button>
@@ -60,7 +72,7 @@ else
             </ul>
         </div>
     }
-    else if (_signInManager.IsSignedIn(User))
+    else if (SignInManager.IsSignedIn(User))
     {
         <a asp-controller="UIUserStores" asp-action="CreateStore" class="btn btn-primary w-100 rounded-pill" id="StoreSelectorCreate">Create Store</a>
     }

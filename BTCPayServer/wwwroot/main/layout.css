@@ -150,14 +150,20 @@
     content: none;
 }
 
+#StoreSelectorToggle .logo,
 #StoreSelectorToggle .icon {
     width: 1.5rem;
     height: 1.5rem;
     transition: color 0.15s ease-in-out;
 }
 
+#StoreSelectorToggle .logo,
 #StoreSelectorToggle .icon.icon-store {
     margin-right: var(--btcpay-space-s);
+}
+
+#StoreSelectorToggle .logo {
+    border-radius: 50%;
 }
 
 #StoreSelectorToggle .icon.icon-caret-down {

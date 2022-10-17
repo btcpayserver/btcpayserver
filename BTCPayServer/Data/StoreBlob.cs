@@ -191,6 +191,8 @@ namespace BTCPayServer.Data
         public TimeSpan RefundBOLT11Expiration { get; set; }
 
         public List<UIStoresController.StoreEmailRule> EmailRules { get; set; }
+        public string LogoFileId { get; set; }
+        public string BrandColor { get; set; }
 
         public IPaymentFilter GetExcludedPaymentMethods()
         {

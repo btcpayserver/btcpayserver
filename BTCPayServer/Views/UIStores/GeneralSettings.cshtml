@@ -1,8 +1,13 @@
 @using BTCPayServer.Abstractions.Models
+@using BTCPayServer.TagHelpers
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using BTCPayServer.Abstractions.Contracts
+@inject IFileService FileService;
 @model GeneralSettingsViewModel
 @{
-    Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePage(StoreNavPages.General, "General", Context.GetStoreData().Id);
+	Layout = "../Shared/_NavLayout.cshtml";
+	ViewData.SetActivePage(StoreNavPages.General, "General", Context.GetStoreData().Id);
+	var canUpload = await FileService.IsAvailable();
 }
 
 <div class="row">
@@ -11,7 +16,7 @@
         {
             <div asp-validation-summary="All" class="text-danger"></div>
         }
-        <form method="post">
+        <form method="post" enctype="multipart/form-data">
             <h3 class="mb-3">General</h3>
             <div class="form-group">
                 <label asp-for="Id" class="form-label"></label>
@@ -26,6 +31,35 @@
                 <label asp-for="StoreWebsite" class="form-label"></label>
                 <input asp-for="StoreWebsite" class="form-control" />
                 <span asp-validation-for="StoreWebsite" class="text-danger"></span>
+            </div>
+            
+            <h3 class="mb-3">Branding</h3>
+            <div class="form-group">
+                <label asp-for="LogoFile" class="form-label"></label>
+                @if (canUpload)
+                {
+                    <div class="d-flex align-items-center">
+                        <input asp-for="LogoFile" type="file" class="form-control flex-grow">
+                        @if (!string.IsNullOrEmpty(Model.LogoFileId))
+                        {
+                            <img src="@(await FileService.GetFileUrl(Context.Request.GetAbsoluteRootUri(), Model.LogoFileId))" alt="@Model.StoreName" class="rounded-circle ms-3" style="width:2.1rem;height:2.1rem;"/>
+                        }
+                    </div>
+                    <p class="form-text text-muted">Please upload an image with square dimension, as it will be displayed in 1:1 format and circular.</p>
+                }
+                else
+                {
+                    <input asp-for="LogoFile" type="file" class="form-control" disabled>
+                    <p class="form-text text-muted">In order to upload a logo, a <a asp-controller="UIServer" asp-action="Files">file storage</a> must be configured.</p>
+                }
+            </div>
+            <div class="form-group">
+                <label asp-for="BrandColor" class="form-label"></label>
+                <div class="input-group">
+                    <input id="BrandColorInput" class="form-control form-control-color flex-grow-0" type="color" style="width:3rem" aria-describedby="BrandColorValue" value="@Model.BrandColor" />
+                    <input asp-for="BrandColor" class="form-control form-control-color flex-grow-0 font-monospace" pattern="@ColorPalette.Pattern" style="width:5.5rem" />
+                </div>
+                <span asp-validation-for="BrandColor" class="text-danger"></span>
             </div>
             
             <h3 class="mt-5 mb-3">Payment</h3>
@@ -101,5 +135,19 @@
 <partial name="_Confirm" model="@(new ConfirmModel("Delete store", "The store will be permanently deleted. This action will also delete all invoices, apps and data associated with the store.", "Delete"))" />
 
 @section PageFootContent {
-    <partial name="_ValidationScriptsPartial" />
+    <partial name="_ValidationScriptsPartial"/>
+    <script>
+    (() => {
+        const $colorValue = document.getElementById('BrandColor');
+        const $colorInput = document.getElementById('BrandColorInput');
+        delegate('change', '#BrandColor', e => {
+            const value = e.target.value;
+			if (value.match(@Safe.Json(@ColorPalette.Pattern)))
+				$colorInput.value = value;
+        });
+        delegate('change', '#BrandColorInput', e => {
+            $colorValue.value = e.target.value;
+        });
+    })();
+    </script>
 }

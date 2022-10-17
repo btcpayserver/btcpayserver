@@ -351,7 +351,7 @@ namespace BTCPayServer.Controllers.Greenfield
             CancellationToken token = default)
         {
             return GetFromActionResult<LightningNodeBalanceData>(
-                await GetController<GreenfieldStoreLightningNodeApiController>().GetBalance(cryptoCode));
+                await GetController<GreenfieldStoreLightningNodeApiController>().GetBalance(cryptoCode, token));
         }
 
         public override async Task ConnectToLightningNode(string storeId, string cryptoCode,
@@ -392,6 +392,13 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             return GetFromActionResult<LightningInvoiceData>(
                 await GetController<GreenfieldStoreLightningNodeApiController>().GetInvoice(cryptoCode, invoiceId, token));
+        }
+
+        public override async Task<LightningInvoiceData[]> GetLightningInvoices(string storeId, string cryptoCode,
+            bool? pendingOnly = null, long? offsetIndex = null, CancellationToken token = default)
+        {
+            return GetFromActionResult<LightningInvoiceData[]>(
+                await GetController<GreenfieldStoreLightningNodeApiController>().GetInvoices(cryptoCode, pendingOnly, offsetIndex, token));
         }
 
         public override async Task<LightningInvoiceData> CreateLightningInvoice(string storeId, string cryptoCode,
@@ -453,6 +460,13 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             return GetFromActionResult<LightningInvoiceData>(
                 await GetController<GreenfieldInternalLightningNodeApiController>().GetInvoice(cryptoCode, invoiceId, token));
+        }
+
+        public override async Task<LightningInvoiceData[]> GetLightningInvoices(string cryptoCode,
+            bool? pendingOnly = null, long? offsetIndex = null, CancellationToken token = default)
+        {
+            return GetFromActionResult<LightningInvoiceData[]>(
+                await GetController<GreenfieldInternalLightningNodeApiController>().GetInvoices(cryptoCode, pendingOnly, offsetIndex, token));
         }
 
         public override async Task<LightningInvoiceData> CreateLightningInvoice(string cryptoCode,

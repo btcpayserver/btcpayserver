@@ -246,6 +246,14 @@ namespace BTCPayServer.Controllers.Greenfield
             return inv == null ? this.CreateAPIError(404, "invoice-not-found", "Impossible to find a lightning invoice with this id") : Ok(ToModel(inv));
         }
 
+        public virtual async Task<IActionResult> GetInvoices(string cryptoCode, [FromQuery] bool? pendingOnly, [FromQuery] long? offsetIndex, CancellationToken cancellationToken = default)
+        {
+            var lightningClient = await GetLightningClient(cryptoCode, false);
+            var param = new ListInvoicesParams { PendingOnly = pendingOnly, OffsetIndex = offsetIndex };
+            var invoices = await lightningClient.ListInvoices(param, cancellationToken);
+            return Ok(invoices.Select(ToModel));
+        }
+
         public virtual async Task<IActionResult> CreateInvoice(string cryptoCode, CreateLightningInvoiceRequest request, CancellationToken cancellationToken = default)
         {
             var lightningClient = await GetLightningClient(cryptoCode, false);
@@ -303,7 +311,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
         private LightningInvoiceData ToModel(LightningInvoice invoice)
         {
-            return new LightningInvoiceData
+            var data = new LightningInvoiceData
             {
                 Amount = invoice.Amount,
                 Id = invoice.Id,
@@ -313,6 +321,12 @@ namespace BTCPayServer.Controllers.Greenfield
                 BOLT11 = invoice.BOLT11,
                 ExpiresAt = invoice.ExpiresAt
             };
+
+            if (invoice.CustomRecords != null)
+            {
+                data.CustomRecords = invoice.CustomRecords;
+            }
+            return data;
         }
 
         private LightningPaymentData ToModel(LightningPayment payment)

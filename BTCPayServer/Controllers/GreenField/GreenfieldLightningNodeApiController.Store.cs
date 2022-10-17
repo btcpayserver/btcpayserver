@@ -111,6 +111,14 @@ namespace BTCPayServer.Controllers.Greenfield
             return base.GetInvoice(cryptoCode, id, cancellationToken);
         }
 
+        [Authorize(Policy = Policies.CanUseLightningNodeInStore,
+            AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [HttpGet("~/api/v1/stores/{storeId}/lightning/{cryptoCode}/invoices")]
+        public override Task<IActionResult> GetInvoices(string cryptoCode, [FromQuery] bool? pendingOnly, [FromQuery] long? offsetIndex, CancellationToken cancellationToken = default)
+        {
+            return base.GetInvoices(cryptoCode, pendingOnly, offsetIndex, cancellationToken);
+        }
+
         [Authorize(Policy = Policies.CanCreateLightningInvoiceInStore,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpPost("~/api/v1/stores/{storeId}/lightning/{cryptoCode}/invoices")]

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using BTCPayServer.Client.JsonConverters;
 using BTCPayServer.Lightning;
 using Newtonsoft.Json;
@@ -26,5 +27,8 @@ namespace BTCPayServer.Client.Models
 
         [JsonConverter(typeof(LightMoneyJsonConverter))]
         public LightMoney AmountReceived { get; set; }
+
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public Dictionary<ulong, string> CustomRecords { get; set; }
     }
 }

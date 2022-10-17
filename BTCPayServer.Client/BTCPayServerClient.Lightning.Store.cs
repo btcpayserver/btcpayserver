@@ -97,6 +97,24 @@ namespace BTCPayServer.Client
                     method: HttpMethod.Get), token);
             return await HandleResponse<LightningInvoiceData>(response);
         }
+        
+        public virtual async Task<LightningInvoiceData[]> GetLightningInvoices(string storeId, string cryptoCode,
+            bool? pendingOnly = null, long? offsetIndex = null, CancellationToken token = default)
+        {
+            var queryPayload = new Dictionary<string, object>();
+            if (pendingOnly is bool v)
+            {
+                queryPayload.Add("pendingOnly", v.ToString());
+            }
+            if (offsetIndex is > 0)
+            {
+                queryPayload.Add("offsetIndex", offsetIndex);
+            }
+
+            var response = await _httpClient.SendAsync(
+                CreateHttpRequest($"api/v1/stores/{storeId}/lightning/{cryptoCode}/invoices", queryPayload), token);
+            return await HandleResponse<LightningInvoiceData[]>(response);
+        }
 
         public virtual async Task<LightningInvoiceData> CreateLightningInvoice(string storeId, string cryptoCode,
             CreateLightningInvoiceRequest request, CancellationToken token = default)

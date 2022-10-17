@@ -100,9 +100,9 @@ namespace BTCPayServer.Client
             bool? pendingOnly = null, long? offsetIndex = null, CancellationToken token = default)
         {
             var queryPayload = new Dictionary<string, object>();
-            if (pendingOnly is true)
+            if (pendingOnly is bool v)
             {
-                queryPayload.Add("pendingOnly", "true");
+                queryPayload.Add("pendingOnly", v.ToString());
             }
             if (offsetIndex is > 0)
             {

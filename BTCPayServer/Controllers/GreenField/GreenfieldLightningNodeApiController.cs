@@ -322,11 +322,10 @@ namespace BTCPayServer.Controllers.Greenfield
                 ExpiresAt = invoice.ExpiresAt
             };
 
-            if (invoice.CustomRecords != null && invoice.CustomRecords.Any())
+            if (invoice.CustomRecords != null)
             {
                 data.CustomRecords = invoice.CustomRecords;
             }
-
             return data;
         }
 

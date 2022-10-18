@@ -646,6 +646,8 @@ namespace BTCPayServer.Controllers
                 if (model.LogoFile.ContentType.StartsWith("image/", StringComparison.InvariantCulture))
                 {
                     var userId = GetUserId();
+                    if (userId is null)
+                        return NotFound();
                 
                     // delete existing image
                     if (!string.IsNullOrEmpty(blob.LogoFileId))

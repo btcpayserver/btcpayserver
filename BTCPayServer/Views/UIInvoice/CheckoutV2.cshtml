@@ -1,6 +1,6 @@
 @inject LanguageService LangService
 @inject BTCPayServerEnvironment Env
-@inject IFileService FileService;
+@inject IFileService FileService
 @inject ThemeSettings Theme
 @inject PaymentMethodHandlerDictionary PaymentMethodHandlerDictionary
 @using BTCPayServer.Services
@@ -19,7 +19,7 @@
         ? await FileService.GetFileUrl(Context.Request.GetAbsoluteRootUri(), Model.LogoFileId)
         : Model.CustomLogoLink;
 }
-@functions{
+@functions {
     private string PaymentMethodName(PaymentModel.AvailableCrypto pm)
     {
         return Model.AltcoinsBuild
@@ -29,7 +29,7 @@
 }
 
 <!DOCTYPE html>
-<html lang="@Safe.Json(Model.DefaultLang)">
+<html lang="@Model.DefaultLang">
 <head>
     <partial name="LayoutHead"/>
     <meta name="robots" content="noindex,nofollow">
@@ -409,13 +409,11 @@
         </main>
         @if (Env.CheatMode)
         {
-            <template v-if="step === 'payment'">
-                <partial name="Checkout-Testing"/>
-            </template>
+            <checkout-cheating v-if="step === 'payment'" invoice-id="@Model.InvoiceId" :btc-due="btcDue" :is-paid="isPaid" />
         }
         <footer>
             <select asp-for="DefaultLang" asp-items="@LangService.GetLanguageSelectListItems()" v-on:change="changeLanguage"></select>
-            
+
             <div class="text-muted my-2">
                 Powered by <a href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">BTCPay Server</a>
             </div>
@@ -443,6 +441,10 @@
     <script src="~/js/copy-to-clipboard.js" asp-append-version="true"></script>
     <script src="~/main/utils.js" asp-append-version="true"></script>
     <script src="~/checkout-v2/querystring.js" asp-append-version="true"></script>
+    @if (Env.CheatMode)
+    {
+        <partial name="Checkout-Cheating" model="@Model" />
+    }
     <script>
         const statusUrl = @Safe.Json(Url.Action("GetStatus", new { invoiceId = Model.InvoiceId }));
         const statusWsUrl = @Safe.Json(Url.Action("GetStatusWebSocket", new { invoiceId = Model.InvoiceId }));
@@ -455,7 +457,7 @@
         const STATUS_UNPAID = ['new', 'paidPartial'];
         const STATUS_UNPAYABLE =  ['expired', 'invalid'];
         const qrOptions = { margin: 1, type: 'svg', color: { dark: '#000', light: '#fff' } };
-        
+
         i18next
             .use(window.i18nextXHRBackend)
             .init({
@@ -486,7 +488,7 @@
 
         const i18n = new VueI18next(i18next);
         const eventBus = new Vue();
-        
+
         new Vue({
             i18n,
             el: '#Checkout',
@@ -498,7 +500,7 @@
                 } else if (srvModel.requiresRefundEmail || (srvModel.checkoutFormId && srvModel.checkoutFormId !== 'None')) {
                     step = 'form';
                 }
-                
+
                 return {
                     srvModel,
                     step,
@@ -510,7 +512,6 @@
                     emailAddressInputDirty: false,
                     emailAddressInputInvalid: false,
                     formSubmitPending: false,
-                    loading: true,
                     isModal: srvModel.isModal
                 }
             },
@@ -557,7 +558,6 @@
                     this.listenIn();
                 }
                 window.parent.postMessage('loaded', '*');
-                this.loading = false;
             },
             methods: {
                 changeLanguage(e) {
@@ -591,7 +591,7 @@
                     return val < 10 ? `0${val}` : val;
                 },
                 updateTimerText (timer) {
-                    return timer >= 0 
+                    return timer >= 0
                         ? `${this.minutesLeft(timer)}:${this.secondsLeft(timer)}`
                         : '00:00';
                 },
@@ -600,7 +600,7 @@
                     const updateFn = this.fetchData;
                     const supportsWebSockets = 'WebSocket' in window && window.WebSocket.CLOSING === 2;
                     if (supportsWebSockets) {
-                        const protocol = window.location.protocol.replace('http', 'ws'); 
+                        const protocol = window.location.protocol.replace('http', 'ws');
                         const wsUri = `${protocol}//${window.location.host}${statusWsUrl}`;
                         try {
                             socket = new WebSocket(wsUri);
@@ -631,7 +631,7 @@
                     const method = form.getAttribute('method');
                     const body = new FormData(form);
                     const headers = { 'Content-Type': 'application/json' };
-                    
+
                     this.formSubmitPending = true;
                     const response = await fetch(url, { method, body, headers });
                     this.formSubmitPending = false;
@@ -643,29 +643,31 @@
                 async fetchData () {
                     const url = `${statusUrl}&paymentMethodId=${this.srvModel.paymentMethodId}`;
                     const response = await fetch(url);
-                    const data = await response.json();
                     if (response.ok) {
+                        const data = await response.json();
                         this.onDataCallback(data);
                     }
                 },
                 onDataCallback (jsonData) {
+                    console.log(jsonData)
                     if (this.srvModel.status !== jsonData.status) {
                         const { invoiceId } = this.srvModel;
                         const { status } = jsonData;
                         window.parent.postMessage({ invoiceId, status }, '*');
                     }
+
                     // displaying satoshis for lightning payments
                     jsonData.cryptoCodeSrv = jsonData.cryptoCode;
-                    
+
                     const newEnd = new Date();
                     newEnd.setSeconds(newEnd.getSeconds() + jsonData.expirationSeconds);
                     this.endDate = newEnd;
+
                     // updating ui
                     this.srvModel = jsonData;
-
                     eventBus.$emit('data-fetched', this.srvModel);
+
                     if (this.isPaid && jsonData.redirectAutomatically && jsonData.merchantRefLink) {
-                        this.loading = true;
                         setTimeout(function () {
                             if (this.isModal && window.top.location == jsonData.merchantRefLink){
                                 this.close();
@@ -673,6 +675,8 @@
                                 window.top.location = jsonData.merchantRefLink;
                             }
                         }.bind(this), 2000);
+                    } else if (!this.isActive) {
+                        this.step = 'result';
                     }
                 }
             }

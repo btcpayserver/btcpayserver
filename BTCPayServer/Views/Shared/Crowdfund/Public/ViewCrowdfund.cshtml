@@ -10,7 +10,10 @@
 <html class="h-100">
 <head>
     <partial name="LayoutHead"/>
-    <bundle name="wwwroot/bundles/crowdfund-bundle.min.css" asp-append-version="true"></bundle>
+    <link href="~/vendor/font-awesome/css/font-awesome.min.css" asp-append-version="true"  rel="stylesheet" />
+    <link href="~/vendor/bootstrap-vue/bootstrap-vue.css" asp-append-version="true"  rel="stylesheet" />
+    <link href="~/crowdfund/styles/main.css" asp-append-version="true"  rel="stylesheet" />
+
     @if (!string.IsNullOrEmpty(Model.CustomCSSLink))
     {
         <link href="@Model.CustomCSSLink" rel="stylesheet"/>
@@ -403,7 +406,18 @@
     <script>var srvModel = @Safe.Json(Model);</script>
     <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
     <script src="~/vendor/moment/moment.min.js" asp-append-version="true"></script>
-    <bundle name="wwwroot/bundles/crowdfund-bundle.min.js" asp-append-version="true"></bundle>
+    <script src="~/vendor/vue-qrcode/vue-qrcode.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/babel-polyfill/polyfill.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/vue-toasted/vue-toasted.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/bootstrap-vue/bootstrap-vue.js" asp-append-version="true"></script>
+    <script src="~/vendor/signalr/signalr.js" asp-append-version="true"></script>
+    <script src="~/vendor/animejs/anime.min.js" asp-append-version="true"></script>
+    <script src="~/crowdfund/app.js" asp-append-version="true"></script>
+    <script src="~/crowdfund/helpers/math.js" asp-append-version="true"></script>
+    <script src="~/crowdfund/services/audioplayer.js" asp-append-version="true"></script>
+    <script src="~/crowdfund/services/fireworks.js" asp-append-version="true"></script>
+    <script src="~/crowdfund/services/listener.js" asp-append-version="true"></script>
+
     @*We need to make sure btcpay.js is not bundled, else it will not work if there is a RootPath*@
     <script src="~/modal/btcpay.js" asp-append-version="true"></script>
 }

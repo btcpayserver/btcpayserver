@@ -38,7 +38,11 @@
 @section PageFootContent
 {
     <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
-    <bundle name="wwwroot/bundles/wallet-send-bundle.min.js"></bundle>
+    <script src="~/vendor/ur-registry/urlib.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/vue-qrcode-reader/VueQrcodeReader.umd.min.js" asp-append-version="true"></script>
+    <script src="~/js/wallet/wallet-camera-scanner.js" asp-append-version="true"></script>
+    <script src="~/js/wallet/WalletSend.js" asp-append-version="true"></script>
+
 }
 
 <partial name="CameraScanner"/>

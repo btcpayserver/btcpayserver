@@ -15,15 +15,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <META NAME="robots" CONTENT="noindex,nofollow">
     <title>@Model.HtmlTitle</title>
+    <link href="~/vendor/font-awesome/css/font-awesome.css" asp-append-version="true"  rel="stylesheet" />
+    <link href="~/vendor/vex/css/vex.css" asp-append-version="true"  rel="stylesheet" />
+    <link href="~/main/fonts/Roboto.css" asp-append-version="true"  rel="stylesheet" />
+    <link href="~/main/fonts/RobotoMono.css" asp-append-version="true"  rel="stylesheet" />
+    <link href="~/checkout/css/default.css" asp-append-version="true"  rel="stylesheet" />
+    <link href="~/checkout/css/vex-extrastyles.css" asp-append-version="true"  rel="stylesheet" />
+    <link href="~/checkout/css/vex-theme-btcpay.css" asp-append-version="true"  rel="stylesheet" />
+    <link href="~/vendor/jquery-prettydropdowns/prettydropdowns.css" asp-append-version="true"  rel="stylesheet" />
 
-    <bundle name="wwwroot/bundles/checkout-bundle.min.css" asp-append-version="true" />
 
     <script>
         var initialSrvModel = @Safe.Json(Model);
     </script>
+    <script src="~/vendor/jquery/jquery.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/bootstrap/bootstrap.bundle.min.js" asp-append-version="true"></script>
 
-    <bundle name="wwwroot/bundles/bootstrap-bundle.min.js" asp-append-version="true" />
-    <bundle name="wwwroot/bundles/checkout-bundle.min.js" asp-append-version="true" />
+    <script src="~/vendor/clipboard.js/clipboard.js" asp-append-version="true"></script>
+    <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/vue-qrcode/vue-qrcode.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/i18next/i18next.js" asp-append-version="true"></script>
+    <script src="~/vendor/i18next/i18nextXHRBackend.js" asp-append-version="true"></script>
+    <script src="~/vendor/i18next/vue-i18next.js" asp-append-version="true"></script>
+    <script src="~/vendor/jquery-prettydropdowns/jquery.prettydropdowns.js" asp-append-version="true"></script>
+    <script src="~/vendor/vex/js/vex.combined.min.js" asp-append-version="true"></script>
+    <script src="~/main/utils.js" asp-append-version="true"></script>
+    <script src="~/checkout/js/checkout.js" asp-append-version="true"></script>
+    <script src="~/checkout/js/querystring.js" asp-append-version="true"></script>
+
     <script>vex.defaultOptions.className = 'vex-theme-btcpay'</script>
 
     @if (!string.IsNullOrEmpty(Model.CustomCSSLink))

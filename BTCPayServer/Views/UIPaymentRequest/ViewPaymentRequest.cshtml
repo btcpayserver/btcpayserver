@@ -37,7 +37,10 @@
 <html lang="en" @(env.IsDeveloping ? " data-devenv" : "")>
 <head>
     <partial name="LayoutHead" />
-    <bundle name="wwwroot/bundles/payment-request-bundle.min.css" asp-append-version="true"></bundle>
+    <link href="~/vendor/font-awesome/css/font-awesome.min.css" asp-append-version="true"  rel="stylesheet" />
+    <link href="~/vendor/bootstrap-vue/bootstrap-vue.css" asp-append-version="true"  rel="stylesheet" />
+    <link href="~/main/site.css" asp-append-version="true"  rel="stylesheet" />
+
     @if (Model.CustomCSSLink != null)
     {
         <link href="@Model.CustomCSSLink" rel="stylesheet" />
@@ -46,7 +49,15 @@
         var srvModel = @Safe.Json(Model);
     </script>
     <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
-    <bundle name="wwwroot/bundles/payment-request-bundle.min.js" asp-append-version="true"></bundle>
+    <script src="~/vendor/babel-polyfill/polyfill.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/vue-toasted/vue-toasted.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/bootstrap-vue/bootstrap-vue.js" asp-append-version="true"></script>
+    <script src="~/vendor/signalr/signalr.js" asp-append-version="true"></script>
+    <script src="~/vendor/animejs/anime.min.js" asp-append-version="true"></script>
+    <script src="~/payment-request/app.js" asp-append-version="true"></script>
+    <script src="~/payment-request/helpers/math.js" asp-append-version="true"></script>
+    <script src="~/payment-request/services/listener.js" asp-append-version="true"></script>
+
     @*We need to make sure btcpay.js is not bundled, else it will not work if there is a RootPath*@
     <script src="~/modal/btcpay.js" asp-append-version="true"></script>
     @Safe.Raw(Model.EmbeddedCSS)

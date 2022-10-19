@@ -1,4 +1,4 @@
- <Project Sdk="Microsoft.NET.Sdk.Web">
+﻿ <Project Sdk="Microsoft.NET.Sdk.Web">
   <Import Project="../Build/Version.csproj" Condition="Exists('../Build/Version.csproj')" />
   <Import Project="../Build/Common.csproj" />
 
@@ -9,16 +9,12 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="Build\**" />
-    <Compile Remove="wwwroot\bundles\jqueryvalidate\**" />
     <Compile Remove="wwwroot\vendor\jquery-nice-select\**" />
     <Content Remove="Build\**" />
-    <Content Remove="wwwroot\bundles\jqueryvalidate\**" />
     <Content Remove="wwwroot\vendor\jquery-nice-select\**" />
     <EmbeddedResource Remove="Build\**" />
-    <EmbeddedResource Remove="wwwroot\bundles\jqueryvalidate\**" />
     <EmbeddedResource Remove="wwwroot\vendor\jquery-nice-select\**" />
     <None Remove="Build\**" />
-    <None Remove="wwwroot\bundles\jqueryvalidate\**" />
     <None Remove="wwwroot\vendor\jquery-nice-select\**" />
     <Content Update="Views\UIStorePullPayments\NewPullPayment.cshtml">
       <Pack>false</Pack>
@@ -33,9 +29,6 @@
   <ItemGroup>
     <None Remove="Currencies.txt" />
   </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="bundleconfig.json" />
-  </ItemGroup>
 
   <ItemGroup Condition="'$(Altcoins)' != 'true'">
     <Content Remove="Services\Altcoins\**\*" />
@@ -49,9 +42,6 @@
     <PackageReference Include="BIP78.Sender" Version="0.2.2" />
     <PackageReference Include="BTCPayServer.Hwi" Version="2.0.2" />
     <PackageReference Include="BTCPayServer.Lightning.All" Version="1.4.6" />
-    <PackageReference Include="BuildBundlerMinifier" Version="3.2.449" />
-    <PackageReference Include="BundlerMinifier.Core" Version="3.2.449" />
-    <PackageReference Include="BundlerMinifier.TagHelpers" Version="3.2.435" />
     <PackageReference Include="CsvHelper" Version="15.0.5" />
     <PackageReference Include="Dapper" Version="2.0.123" />
     <PackageReference Include="Fido2" Version="2.0.2" />

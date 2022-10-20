@@ -127,6 +127,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 //we do not include PaymentMethodCriteria because moving the CurrencyValueJsonConverter to the Client csproj is hard and requires a refactor (#1571 & #1572)
                 NetworkFeeMode = storeBlob.NetworkFeeMode,
                 RequiresRefundEmail = storeBlob.RequiresRefundEmail,
+                CheckoutFormId = storeBlob.CheckoutFormId,
                 Receipt = InvoiceDataBase.ReceiptOptions.Merge(storeBlob.ReceiptOptions, null),
                 LightningAmountInSatoshi = storeBlob.LightningAmountInSatoshi,
                 LightningPrivateRouteHints = storeBlob.LightningPrivateRouteHints,
@@ -165,6 +166,7 @@ namespace BTCPayServer.Controllers.Greenfield
             blob.NetworkFeeMode = restModel.NetworkFeeMode;
             blob.DefaultCurrency = restModel.DefaultCurrency;
             blob.RequiresRefundEmail = restModel.RequiresRefundEmail;
+            blob.CheckoutFormId = restModel.CheckoutFormId;
             blob.ReceiptOptions = InvoiceDataBase.ReceiptOptions.Merge(restModel.Receipt, null);
             blob.LightningAmountInSatoshi = restModel.LightningAmountInSatoshi;
             blob.LightningPrivateRouteHints = restModel.LightningPrivateRouteHints;

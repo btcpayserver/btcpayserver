@@ -437,6 +437,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     DefaultLanguage = entity.DefaultLanguage,
                     RedirectAutomatically = entity.RedirectAutomatically,
                     RequiresRefundEmail = entity.RequiresRefundEmail,
+                    CheckoutFormId = entity.CheckoutFormId,
                     RedirectURL = entity.RedirectURLTemplate
                 },
                 Receipt = entity.ReceiptOptions

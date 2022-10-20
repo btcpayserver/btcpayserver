@@ -374,9 +374,10 @@ namespace BTCPayServer.Controllers
                         Value = existing.Value?.ToString() ?? ""
                     };
             }).ToList();
-            
-            vm.OnChainWithLnInvoiceFallback = storeBlob.OnChainWithLnInvoiceFallback;
+
             vm.UseNewCheckout = storeBlob.UseNewCheckout;
+            vm.CheckoutFormId = storeBlob.CheckoutFormId;
+            vm.OnChainWithLnInvoiceFallback = storeBlob.OnChainWithLnInvoiceFallback;
             vm.RequiresRefundEmail = storeBlob.RequiresRefundEmail;
             vm.LazyPaymentMethods = storeBlob.LazyPaymentMethods;
             vm.RedirectAutomatically = storeBlob.RedirectAutomatically;

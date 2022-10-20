@@ -24,6 +24,7 @@ using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Invoices.Export;
 using BTCPayServer.Services.Rates;
+using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -1132,7 +1133,7 @@ namespace BTCPayServer.Controllers
                     RequiresRefundEmail = model.RequiresRefundEmail == RequiresRefundEmail.InheritFromStore
                         ? storeBlob.RequiresRefundEmail
                         : model.RequiresRefundEmail == RequiresRefundEmail.On,
-                    CheckoutFormId = model.CheckoutFormId == CheckoutFormOptions.InheritFromStore.ToString()
+                    CheckoutFormId = model.CheckoutFormId == GenericFormOption.InheritFromStore.ToString()
                         ? storeBlob.CheckoutFormId
                         : model.CheckoutFormId
                 }, store, HttpContext.Request.GetAbsoluteRoot(), cancellationToken: cancellationToken);

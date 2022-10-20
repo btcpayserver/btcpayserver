@@ -1,17 +1,11 @@
 @model BTCPayServer.Models.InvoicingModels.CreateInvoiceModel
 @using BTCPayServer.Services.Apps
+@using BTCPayServer.Services.Stores
 @{
     ViewData.SetActivePage(InvoiceNavPages.Create, "Create Invoice");
     
-    var choices = new List<SelectListItem>
-    {
-        new() { Text = typeof(CheckoutFormOptions).DisplayName(CheckoutFormOptions.InheritFromStore.ToString()), Value = CheckoutFormOptions.InheritFromStore.ToString() },
-        new() { Text = typeof(CheckoutFormOptions).DisplayName(CheckoutFormOptions.None.ToString()), Value = CheckoutFormOptions.None.ToString() },
-        new() { Text = typeof(CheckoutFormOptions).DisplayName(CheckoutFormOptions.Email.ToString()), Value = CheckoutFormOptions.Email.ToString() },
-        new() { Text = typeof(CheckoutFormOptions).DisplayName(CheckoutFormOptions.Address.ToString()), Value = CheckoutFormOptions.Address.ToString() }
-    };
-    var chosen = choices.FirstOrDefault(t => t.Value == Model.CheckoutFormId);
-    var checkoutFormOptions = new SelectList(choices, nameof(SelectListItem.Value), nameof(SelectListItem.Text), chosen?.Value);
+    var store = ViewContext.HttpContext.GetStoreData();
+    var checkoutFormOptions = CheckoutFormSelectList.ForStore(store, Model.CheckoutFormId, true);
 }
 
 @section PageFootContent {

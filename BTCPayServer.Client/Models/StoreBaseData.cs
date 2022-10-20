@@ -31,6 +31,8 @@ namespace BTCPayServer.Client.Models
         public bool AnyoneCanCreateInvoice { get; set; }
         public string DefaultCurrency { get; set; }
         public bool RequiresRefundEmail { get; set; }
+
+        public string CheckoutFormId { get; set; }
         public bool LightningAmountInSatoshi { get; set; }
         public bool LightningPrivateRouteHints { get; set; }
         public bool OnChainWithLnInvoiceFallback { get; set; }

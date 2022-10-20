@@ -19,6 +19,7 @@ using BTCPayServer.Services.Custodian.Client.MockCustodian;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Notifications;
 using BTCPayServer.Services.Notifications.Blobs;
+using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -1324,12 +1325,14 @@ namespace BTCPayServer.Tests
                     Checkout = new CreateInvoiceRequest.CheckoutOptions()
                     {
                         RedirectAutomatically = true,
-                        RequiresRefundEmail = true
+                        RequiresRefundEmail = true,
+                        CheckoutFormId = GenericFormOption.Email.ToString()
                     },
                     AdditionalSearchTerms = new string[] { "Banana" }
                 });
             Assert.True(newInvoice.Checkout.RedirectAutomatically);
             Assert.True(newInvoice.Checkout.RequiresRefundEmail);
+            Assert.Equal(GenericFormOption.Email.ToString(), newInvoice.Checkout.CheckoutFormId);
             Assert.Equal(user.StoreId, newInvoice.StoreId);
             //list 
             var invoices = await viewOnly.GetInvoices(user.StoreId);

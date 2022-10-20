@@ -794,7 +794,14 @@ namespace BTCPayServer.Controllers
                 IsMultiCurrency = invoice.GetPayments(false).Select(p => p.GetPaymentMethodId()).Concat(new[] { paymentMethod.GetId() }).Distinct().Count() > 1,
                 StoreId = store.Id,
                 AvailableCryptos = invoice.GetPaymentMethods()
-                                          .Where(i => i.Network != null)
+                                          .Where(i => i.Network != null &&
+                                              // TODO: These cases and implementation need to be discussed
+                                              (!storeBlob.UseNewCheckout ||
+                                                // Exclude LNURL for non-topup invoices
+                                                (invoice.IsUnsetTopUp() || i.GetId().PaymentType is not LNURLPayPaymentType)) &&
+                                                // Exclude Lightning if OnChainWithLnInvoiceFallback is active
+                                                (!storeBlob.OnChainWithLnInvoiceFallback || i.GetId().PaymentType is not LightningPaymentType)
+                                              )
                                           .Select(kv =>
                                           {
                                               var availableCryptoPaymentMethodId = kv.GetId();

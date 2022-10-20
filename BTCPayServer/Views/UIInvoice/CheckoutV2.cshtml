@@ -242,7 +242,17 @@
                                 <span class="visually-hidden"></span>
                             </span>
                         </div>
-                        <p class="my-5 text-center">TODO: Forms integration -> {{srvModel.checkoutFormId}}</p>
+                        <template v-if="srvModel.checkoutFormId && srvModel.checkoutFormId !== 'None'">
+                            <p class="my-5 text-center">TODO: Forms integration -> {{srvModel.checkoutFormId}}</p>
+                        </template>
+                        <template v-else-if="srvModel.requiresRefundEmail">
+                            <p>{{$t("Contact_Body")}}</p>
+                            <div class="form-group">
+                                <label class="form-label" for="Email">{{$t("Contact and Refund Email")}}</label>
+                                <input class="form-control" id="Email" name="Email">
+                                <span class="text-danger" hidden>{{$t("Please enter a valid email address")}}</span>
+                            </div>
+                        </template>
                     </div>
                     <div class="buttons">
                         <button type="submit" class="btn btn-primary" :disabled="formSubmitPending" :class="{ 'loading': formSubmitPending }">

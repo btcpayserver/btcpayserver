@@ -158,6 +158,7 @@ public class UIFormsController : Controller
             await _formDataService.AddOrUpdateForm(form);
             TempData.SetStatusMessageModel(new StatusMessageModel
             {
+                Severity = StatusMessageModel.StatusSeverity.Success,
                 Message = $"Form {(isNew ? "created": "updated")} successfully."
             });
             if (isNew)

@@ -1,4 +1,4 @@
-﻿@using BTCPayServer.Abstractions.Contracts
+@using BTCPayServer.Abstractions.Contracts
 @model LoginViewModel
 @inject BTCPayServer.Services.PoliciesSettings PoliciesSettings
 @{
@@ -44,8 +44,11 @@
 
 @section PageFootContent {
     <partial name="CameraScanner"/>
+    <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/vue-qrcode/vue-qrcode.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/ur-registry/urlib.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/vue-qrcode-reader/VueQrcodeReader.umd.min.js" asp-append-version="true"></script>
 
-    <bundle name="wwwroot/bundles/camera-bundle.min.js"></bundle>
     <link href="~/vendor/vue-qrcode-reader/vue-qrcode-reader.css" rel="stylesheet" asp-append-version="true"/>
 
     <script type="text/javascript">

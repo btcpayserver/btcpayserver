@@ -1,7 +1,6 @@
 @inject BTCPayServer.Services.BTCPayServerEnvironment Env
 @inject BTCPayServer.Services.ThemeSettings Theme
 @inject BTCPayNetworkProvider BtcPayNetworkProvider
-@using NUglify.Helpers
 @using BTCPayServer.Client
 @using BTCPayServer.Components.ThemeSwitch
 @using BTCPayServer.Payments
@@ -44,7 +43,10 @@
 <html lang="en" @(Env.IsDeveloping ? " data-devenv" : "")>
 <head>
     <partial name="LayoutHead" />
-    <bundle name="wwwroot/bundles/payment-request-bundle.min.css" asp-append-version="true"></bundle>
+    <link href="~/vendor/font-awesome/css/font-awesome.min.css" asp-append-version="true"  rel="stylesheet" />
+    <link href="~/vendor/bootstrap-vue/bootstrap-vue.css" asp-append-version="true"  rel="stylesheet" />
+    <link href="~/main/site.css" asp-append-version="true"  rel="stylesheet" />
+
     @if (Model.CustomCSSLink != null)
     {
         <link href="@Model.CustomCSSLink" rel="stylesheet" />
@@ -109,7 +111,7 @@
                 <div class="row">
                     <div class="col col-12 col-lg-6 mb-4">
                         <div class="bg-tile h-100 m-0 p-3 p-sm-5 rounded">
-                            @if (!Model.Title.IsNullOrWhiteSpace())
+                            @if (!string.IsNullOrWhiteSpace(Model.Title))
                             {
                                 <h2 class="h4 mb-3">@Model.Title</h2>
                             }

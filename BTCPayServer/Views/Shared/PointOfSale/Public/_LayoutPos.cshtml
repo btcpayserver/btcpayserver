@@ -3,7 +3,6 @@
 @using BTCPayServer.Services.Apps
 @using BTCPayServer.Abstractions.Extensions
 @using BTCPayServer.Abstractions.TagHelpers
-@using BundlerMinifier.TagHelpers
 @using Microsoft.AspNetCore.Hosting
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @using Newtonsoft.Json
@@ -40,7 +39,13 @@
     <link rel="apple-touch-icon" href="~/img/icons/icon-512x512.png">
     <link rel="apple-touch-startup-image" href="~/img/splash.png">
     <link rel="manifest" href="@(await GetDynamicManifest(Model.Title))">
-    <bundle name="wwwroot/bundles/main-bundle.min.css" asp-append-version="true" />
+    <link href="~/main/bootstrap/bootstrap.css" asp-append-version="true"  rel="stylesheet" />
+    <link href="~/vendor/font-awesome/css/font-awesome.css" asp-append-version="true"  rel="stylesheet" />
+    <link href="~/vendor/flatpickr/flatpickr.css" asp-append-version="true"  rel="stylesheet" />
+    <link href="~/main/fonts/OpenSans.css" asp-append-version="true"  rel="stylesheet" />
+    <link href="~/main/layout.css" asp-append-version="true"  rel="stylesheet" />
+    <link href="~/main/site.css" asp-append-version="true"  rel="stylesheet" />
+
     <link href="@Context.Request.GetRelativePathOrAbsolute(Theme.CssUri)" rel="stylesheet" asp-append-version="true"/>
     @if (Model.CustomCSSLink != null)
     {
@@ -54,18 +59,26 @@
         <script type="text/javascript">
             var srvModel = @Safe.Json(Model);
         </script>
-        <bundle name="wwwroot/bundles/bootstrap-bundle.min.js" asp-append-version="true" />
-        <bundle name="wwwroot/bundles/cart-bundle.min.js" asp-append-version="true" />
+        <script src="~/vendor/jquery/jquery.min.js" asp-append-version="true"></script>
+        <script src="~/vendor/bootstrap/bootstrap.bundle.min.js" asp-append-version="true"></script>
+
+        <script src="~/cart/js/cart.js" asp-append-version="true"></script>
+        <script src="~/cart/js/cart.jquery.js" asp-append-version="true"></script>
+
     }
     @if (Model.ViewType == PosViewType.Light)
     {
-        <bundle name="wwwroot/bundles/light-pos-bundle.min.css" asp-append-version="true" />
+        <link href="~/light-pos/styles/main.css" asp-append-version="true"  rel="stylesheet" />
+
         <script type="text/javascript">
             var srvModel = @Safe.Json(Model);
         </script>
-        <bundle name="wwwroot/bundles/bootstrap-bundle.min.js" asp-append-version="true" />
+        <script src="~/vendor/jquery/jquery.min.js" asp-append-version="true"></script>
+        <script src="~/vendor/bootstrap/bootstrap.bundle.min.js" asp-append-version="true"></script>
+
         <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
-        <bundle name="wwwroot/bundles/light-pos-bundle.min.js" asp-append-version="true" />
+        <script src="~/light-pos/app.js" asp-append-version="true"></script>
+
     }
     <style>
         .card-deck {

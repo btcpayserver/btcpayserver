@@ -77,10 +77,7 @@ namespace BTCPayServer.Plugins.Shopify
                 return _cachedShopifyJavascript;
             }
 
-            string[] fileList = _btcPayServerOptions.Value.BundleJsCss
-                ? new[] { "bundles/shopify-bundle.min.js" }
-                : new[] { "modal/btcpay.js", "shopify/btcpay-shopify.js" };
-
+            string[] fileList = new[] { "modal/btcpay.js", "shopify/btcpay-shopify.js" };
 
             foreach (var file in fileList)
             {
@@ -287,4 +284,3 @@ namespace BTCPayServer.Plugins.Shopify
     }
 
 }
-

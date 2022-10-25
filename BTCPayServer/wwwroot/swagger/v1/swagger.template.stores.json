@@ -18,6 +18,16 @@
                                 }
                             }
                         }
+                    },
+                    "401": {
+                        "description": "Missing authorization",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -424,7 +434,8 @@
     },
     "tags": [
         {
-            "name": "Stores"
+            "name": "Stores",
+            "description": "Store operations"
         }
     ]
 }

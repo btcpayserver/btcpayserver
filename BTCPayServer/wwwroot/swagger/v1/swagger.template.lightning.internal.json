@@ -446,7 +446,7 @@
                 ]
             }
         },
-        
+
         "/api/v1/server/lightning/{cryptoCode}/invoices/pay": {
             "post": {
                 "tags": [
@@ -525,7 +525,7 @@
                 ]
             }
         },
-        
+
         "/api/v1/server/lightning/{cryptoCode}/invoices": {
             "get": {
                 "tags": [
@@ -582,8 +582,28 @@
                             }
                         }
                     },
+                    "401": {
+                        "description": "Missing authorization",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    },
                     "503": {
                         "description": "Unable to access the lightning node"
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -665,7 +685,8 @@
     },
     "tags": [
         {
-            "name": "Lightning (Internal Node)"
+            "name": "Lightning (Internal Node)",
+            "description": "Lightning (Internal Node) operations"
         }
     ]
 }

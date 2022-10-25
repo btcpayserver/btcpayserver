@@ -648,10 +648,12 @@
     },
     "tags": [
         {
-            "name": "Stores (Payout Processors)"
+            "name": "Stores (Payout Processors)",
+            "description": "Stores (Payout Processors) operations"
         },
         {
-            "name": "Payout Processors"
+            "name": "Payout Processors",
+            "description": "Payout Processors operations"
         }
     ]
 }

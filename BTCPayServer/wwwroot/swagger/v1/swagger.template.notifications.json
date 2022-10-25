@@ -251,7 +251,8 @@
     },
     "tags": [
         {
-            "name": "Notifications (Current User)"
+            "name": "Notifications (Current User)",
+            "description": "Notifications operations"
         }
     ]
 }

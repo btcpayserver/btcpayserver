@@ -827,7 +827,18 @@
                         }
                     }
                 },
-                "responses": {}
+                "responses": {
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    }
+                }
             }
         },
         "InvoiceExpired": {
@@ -859,7 +870,18 @@
                         }
                     }
                 },
-                "responses": {}
+                "responses": {
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    }
+                }
             }
         },
         "InvoiceReceivedPayment": {
@@ -891,7 +913,18 @@
                         }
                     }
                 },
-                "responses": {}
+                "responses": {
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    }
+                }
             }
         },
         "InvoicePaymentSettled": {
@@ -923,7 +956,18 @@
                         }
                     }
                 },
-                "responses": {}
+                "responses": {
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    }
+                }
             }
         },
         "InvoiceProcessing": {
@@ -955,7 +999,18 @@
                         }
                     }
                 },
-                "responses": {}
+                "responses": {
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    }
+                }
             }
         },
         "InvoiceInvalid": {
@@ -987,7 +1042,18 @@
                         }
                     }
                 },
-                "responses": {}
+                "responses": {
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    }
+                }
             }
         },
         "InvoiceSettled": {
@@ -1019,13 +1085,25 @@
                         }
                     }
                 },
-                "responses": {}
+                "responses": {
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     },
     "tags": [
         {
-            "name": "Webhooks"
+            "name": "Webhooks",
+            "description": "Webhook operations"
         }
     ]
 }

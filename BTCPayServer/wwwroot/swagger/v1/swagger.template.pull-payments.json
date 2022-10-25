@@ -879,13 +879,16 @@
     },
     "tags": [
         {
-            "name": "Pull payments (Management)"
+            "name": "Pull payments (Management)",
+            "description": "Pull payments (Management) operations"
         },
         {
-            "name": "Pull payments (Public)"
+            "name": "Pull payments (Public)",
+            "description": "Pull payments (Public) operations"
         },
         {
-            "name": "Pull payments payout (Public)"
+            "name": "Pull payments payout (Public)",
+            "description": "Pull payments payout (Public) operations"
         }
     ]
 }

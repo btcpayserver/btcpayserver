@@ -477,12 +477,14 @@
                     "startDate": {
                         "type": "number",
                         "description": "UNIX timestamp for crowdfund start time (https://www.unixtimestamp.com/)",
+                        "allOf": [ {"$ref": "#/components/schemas/UnixTimestamp"}],
                         "example": 768658369,
                         "nullable": true
                     },
                     "endDate": {
                         "type": "number",
                         "description": "UNIX timestamp for crowdfund end time (https://www.unixtimestamp.com/)",
+                        "allOf": [ {"$ref": "#/components/schemas/UnixTimestamp"}],
                         "example": 771336769,
                         "nullable": true
                     },

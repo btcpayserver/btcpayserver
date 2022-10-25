@@ -534,6 +534,37 @@
                     }
                 }
             ],
+            "get": {
+                "summary": "Get Payout",
+                "operationId": "GetStorePayout",
+                "description": "Get payout",
+                "responses": {
+                    "200": {
+                        "description": "A specific payout of a store",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PayoutData"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Payout not found"
+                    }
+                },
+                "tags": [
+                    "Stores (Payouts)"
+                ],
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmanagepullpayments"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
             "post": {
                 "summary": "Approve Payout",
                 "operationId": "PullPayments_ApprovePayout",
@@ -696,6 +727,89 @@
                     }
                 ]
             }
+        },
+        "/api/v1/stores/{storeId}/payouts/{payoutId}/mark": {
+            "parameters": [
+                {
+                    "name": "storeId",
+                    "in": "path",
+                    "required": true,
+                    "description": "The ID of the store",
+                    "schema": {
+                        "type": "string"
+                    }
+                },
+                {
+                    "name": "payoutId",
+                    "in": "path",
+                    "required": true,
+                    "description": "The ID of the payout",
+                    "schema": {
+                        "type": "string"
+                    }
+                }
+            ],
+            "post": {
+                "summary": "Mark Payout",
+                "operationId": "PullPayments_MarkPayout",
+                "description": "Mark a payout with a state",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "state": {
+                                        "$ref": "#/components/schemas/PayoutState"
+                                    },
+                                    "paymentProof": {
+                                        "$ref": "#/components/schemas/PayoutPaymentProof"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The payout has been set to the specified state"
+                    },
+                    "422": {
+                        "description": "Unable to validate the request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Wellknown error codes are: `invalid-state`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "The payout is not found"
+                    }
+                },
+                "tags": [
+                    "Stores (Payouts)"
+                ],
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmanagepullpayments"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
         }
     },
     "components": {
@@ -753,6 +867,57 @@
                     }
                 ]
             },
+            "PayoutPaymentProof": {
+                "type": "object",
+                "additionalProperties": true,
+                "description": "Additional information around how the payout is being or has been paid out. The mentioned properties are all optional (except `proofType`) and you can introduce any json format you wish.",
+                "properties": {
+                    "proofType": {
+                        "type": "string",
+                        "description": "The type of payment proof it is."
+                    }
+                },
+                "anyOf": [
+                    {
+                        "properties": {
+                            "link": {
+                                "type": "string",
+                                "format": "url",
+                                "nullable": true,
+                                "description": "A link to the proof of payout payment."
+                            }
+                        }
+                    },
+                    {
+                        "properties": {
+                            "id": {
+                                "type": "string",
+                                "nullable": true,
+                                "description": "A unique identifier to the proof of payout payment."
+                            }
+                        }
+                    }
+                ]
+            },
+            "PayoutState": {
+                "type": "string",
+                "example": "AwaitingPayment",
+                "description": "The state of the payout (`AwaitingApproval`, `AwaitingPayment`, `InProgress`, `Completed`, `Cancelled`)",
+                "x-enumNames": [
+                    "AwaitingApproval",
+                    "AwaitingPayment",
+                    "InProgress",
+                    "Completed",
+                    "Cancelled"
+                ],
+                "enum": [
+                    "AwaitingApproval",
+                    "AwaitingPayment",
+                    "InProgress",
+                    "Completed",
+                    "Cancelled"
+                ]
+            },
             "PayoutData": {
                 "type": "object",
                 "properties": {
@@ -801,23 +966,10 @@
                         "description": "The amount of the payout in the currency of the payment method (eg. BTC). This is only available from the `AwaitingPayment` state."
                     },
                     "state": {
-                        "type": "string",
-                        "example": "AwaitingPayment",
-                        "description": "The state of the payout (`AwaitingApproval`, `AwaitingPayment`, `InProgress`, `Completed`, `Cancelled`)",
-                        "x-enumNames": [
-                            "AwaitingApproval",
-                            "AwaitingPayment",
-                            "InProgress",
-                            "Completed",
-                            "Cancelled"
-                        ],
-                        "enum": [
-                            "AwaitingApproval",
-                            "AwaitingPayment",
-                            "InProgress",
-                            "Completed",
-                            "Cancelled"
-                        ]
+                        "$ref": "#/components/schemas/PayoutState"
+                    },
+                    "paymentProof": {
+                        "$ref": "#/components/schemas/PayoutPaymentProof"
                     }
                 }
             },

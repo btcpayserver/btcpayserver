@@ -2,6 +2,7 @@ using System;
 using BTCPayServer.JsonConverters;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Client.Models
 {
@@ -29,5 +30,6 @@ namespace BTCPayServer.Client.Models
         [JsonConverter(typeof(StringEnumConverter))]
         public PayoutState State { get; set; }
         public int Revision { get; set; }
+        public JObject PaymentProof { get; set; }
     }
 }

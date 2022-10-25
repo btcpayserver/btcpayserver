@@ -20,6 +20,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using MarkPayoutRequest = BTCPayServer.HostedServices.MarkPayoutRequest;
 using PayoutData = BTCPayServer.Data.PayoutData;
 using PullPaymentData = BTCPayServer.Data.PullPaymentData;
 using StoreData = BTCPayServer.Data.StoreData;
@@ -391,12 +392,12 @@ namespace BTCPayServer.Controllers
                             continue;
 
                         var result =
-                            await _pullPaymentService.MarkPaid(new PayoutPaidRequest() { PayoutId = payout.Id });
-                        if (result != PayoutPaidRequest.PayoutPaidResult.Ok)
+                            await _pullPaymentService.MarkPaid(new MarkPayoutRequest() { PayoutId = payout.Id });
+                        if (result != MarkPayoutRequest.PayoutPaidResult.Ok)
                         {
                             TempData.SetStatusMessageModel(new StatusMessageModel()
                             {
-                                Message = PayoutPaidRequest.GetErrorMessage(result),
+                                Message = MarkPayoutRequest.GetErrorMessage(result),
                                 Severity = StatusMessageModel.StatusSeverity.Error
                             });
                             return RedirectToAction(nameof(Payouts),
@@ -418,7 +419,7 @@ namespace BTCPayServer.Controllers
 
                 case "cancel":
                     await _pullPaymentService.Cancel(
-                        new PullPaymentHostedService.CancelRequest(payoutIds));
+                        new PullPaymentHostedService.CancelRequest(payoutIds, new[] {storeId}));
                     TempData.SetStatusMessageModel(new StatusMessageModel()
                     {
                         Message = "Payouts archived", Severity = StatusMessageModel.StatusSeverity.Success

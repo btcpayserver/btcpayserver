@@ -454,7 +454,7 @@
                 ]
             }
         },
-        
+
         "/api/v1/stores/{storeId}/lightning/{cryptoCode}/invoices/{id}": {
             "get": {
                 "tags": [
@@ -673,8 +673,28 @@
                             }
                         }
                     },
+                    "401": {
+                        "description": "Missing authorization",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    },
                     "503": {
                         "description": "Unable to access the lightning node"
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -765,7 +785,8 @@
     },
     "tags": [
         {
-            "name": "Lightning (Store)"
+            "name": "Lightning (Store)",
+            "description": "Lightning (Store) operations"
         }
     ]
 }

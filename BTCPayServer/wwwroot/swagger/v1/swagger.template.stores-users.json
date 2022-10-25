@@ -215,7 +215,8 @@
     },
     "tags": [
         {
-            "name": "Stores (Users)"
+            "name": "Stores (Users)",
+            "description": "Store Users operations"
         }
     ]
 }

@@ -144,6 +144,7 @@
                 ],
                 "summary": "Preview rate configuration results",
                 "description": "Preview rate configuration results before you set it on the store",
+                "operationId": "Stores_PreviewStoreRateConfiguration",
                 "requestBody": {
                     "x-name": "request",
                     "content": {
@@ -186,7 +187,7 @@
                 },
                 "security": [
                     {
-                        "API Key": [
+                        "API_Key": [
                             "btcpay.store.canmodifystoresettings"
                         ],
                         "Basic": []
@@ -245,8 +246,8 @@
     },
     "tags": [
         {
-            "name": "Stores (Rates Config)"
+            "name": "Stores (Rates Config)",
+            "description": "Store Rates Config operations"
         }
     ]
 }
-

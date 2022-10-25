@@ -27,7 +27,7 @@
                 },
                 "security": [
                     {
-                        "API_Key": [ "unrestricted" ],
+                        "API_Key": ["unrestricted"],
                         "Basic": []
                     }
                 ]
@@ -48,6 +48,16 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ApiKeyData"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing authorization",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
                                 }
                             }
                         }
@@ -76,6 +86,16 @@
                                 }
                             }
                         }
+                    },
+                    "401": {
+                        "description": "Missing authorization",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -100,6 +120,26 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ApiKeyData"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing authorization",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
                                 }
                             }
                         }
@@ -170,7 +210,8 @@
     },
     "tags": [
         {
-            "name": "API Keys"
+            "name": "API Keys",
+            "description": "API Key operations"
         }
     ]
 }

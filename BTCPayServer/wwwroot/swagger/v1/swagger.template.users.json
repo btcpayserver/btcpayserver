@@ -359,7 +359,8 @@
     },
     "tags": [
         {
-            "name": "Users"
+            "name": "Users",
+            "description": "User operations"
         }
     ]
 }

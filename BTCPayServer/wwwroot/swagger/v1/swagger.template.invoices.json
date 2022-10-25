@@ -90,11 +90,31 @@
                 "operationId": "Invoices_GetInvoices",
                 "responses": {
                     "200": {
-                        "description": "list of invoices",
+                        "description": "List of invoices",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/InvoiceDataList"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing authorization",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
                                 }
                             }
                         }
@@ -1243,7 +1263,8 @@
     },
     "tags": [
         {
-            "name": "Invoices"
+            "name": "Invoices",
+            "description": "Invoice operations"
         }
     ]
 }

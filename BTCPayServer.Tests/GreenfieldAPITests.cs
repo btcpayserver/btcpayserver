@@ -1675,6 +1675,9 @@ namespace BTCPayServer.Tests
             Assert.NotNull(info.InactiveChannelsCount);
             Assert.NotNull(info.PendingChannelsCount);
 
+            var gex = await AssertAPIError("lightning-node-unavailable", () => chargeClient.ConnectToLightningNode("BTC", new ConnectToNodeRequest(NodeInfo.Parse($"{new Key().PubKey.ToHex()}@localhost:3827"))));
+            Assert.Contains("NotSupported", gex.Message);
+
             await AssertAPIError("lightning-node-unavailable", () => chargeClient.GetLightningNodeChannels("BTC"));
             // Not permission for the store!
             await AssertAPIError("missing-permission", () => chargeClient.GetLightningNodeChannels(user.StoreId, "BTC"));

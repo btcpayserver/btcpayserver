@@ -20,6 +20,10 @@
                 <vc:icon symbol="telegram"/>
                 <span style="margin-left:.4rem">Telegram</span>
             </a>
+            <a href="https://btcpayserver.org/donate/" class="d-flex align-items-center" target="_blank" rel="noreferrer noopener">
+                <vc:icon symbol="donate"/>
+                <span style="margin-left:.4rem">Donate</span>
+            </a>
             @if (!string.IsNullOrEmpty(_env.OnionUrl) && !Context.Request.IsOnion())
             {
                 <a href="@_env.OnionUrl" class="d-flex align-items-center" target="_onion" rel="noreferrer noopener" role="button" data-clipboard="@_env.OnionUrl" style="min-width:9em;">

@@ -209,9 +209,10 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             var lightningClient = await GetLightningClient(cryptoCode, true);
             var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
-
-            if (lightningInvoice?.BOLT11 is null ||
-                !BOLT11PaymentRequest.TryParse(lightningInvoice.BOLT11, out _, network.NBitcoinNetwork))
+            BOLT11PaymentRequest bolt11 = null;
+            
+            if (string.IsNullOrEmpty(lightningInvoice.BOLT11) ||
+                !BOLT11PaymentRequest.TryParse(lightningInvoice.BOLT11, out bolt11, network.NBitcoinNetwork))
             {
                 ModelState.AddModelError(nameof(lightningInvoice.BOLT11), "The BOLT11 invoice was invalid.");
             }
@@ -221,10 +222,27 @@ namespace BTCPayServer.Controllers.Greenfield
                 return this.CreateValidationError(ModelState);
             }
             
-            var param = lightningInvoice?.MaxFeeFlat != null || lightningInvoice?.MaxFeePercent != null || lightningInvoice?.Amount != null
+            var param = lightningInvoice.MaxFeeFlat != null || lightningInvoice.MaxFeePercent != null || lightningInvoice.Amount != null
                 ? new PayInvoiceParams { MaxFeePercent = lightningInvoice.MaxFeePercent, MaxFeeFlat = lightningInvoice.MaxFeeFlat, Amount = lightningInvoice.Amount }
                 : null;
             var result = await lightningClient.Pay(lightningInvoice.BOLT11, param, cancellationToken);
+            
+            if (result.Result == PayResult.Ok && bolt11?.PaymentHash is not null)
+            {
+                var paymentHash = bolt11.PaymentHash.ToString();
+                var payment = await lightningClient.GetPayment(paymentHash, cancellationToken);
+                return Ok(new LightningPaymentData
+                {
+                    Id = payment.Id,
+                    PaymentHash = paymentHash,
+                    Status = payment.Status,
+                    BOLT11 = payment.BOLT11,
+                    Preimage = payment.Preimage,
+                    CreatedAt = payment.CreatedAt,
+                    TotalAmount = payment.AmountSent,
+                    FeeAmount = payment.Fee,
+                });
+            }
             
             return result.Result switch
             {

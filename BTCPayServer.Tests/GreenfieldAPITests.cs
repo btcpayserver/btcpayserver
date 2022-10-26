@@ -1722,10 +1722,17 @@ namespace BTCPayServer.Tests
             Assert.NotEmpty(merchantPendingInvoices);
             Assert.Contains(merchantPendingInvoices, i => i.Id == merchantInvoice.Id);
             
-            await client.PayLightningInvoice(user.StoreId, "BTC", new PayLightningInvoiceRequest()
+            var payResponse = await client.PayLightningInvoice(user.StoreId, "BTC", new PayLightningInvoiceRequest
             {
                 BOLT11 = merchantInvoice.BOLT11
             });
+            Assert.Equal(merchantInvoice.BOLT11, payResponse.BOLT11);
+            Assert.Equal(LightningPaymentStatus.Complete, payResponse.Status);
+            Assert.NotNull(payResponse.Preimage);
+            Assert.NotNull(payResponse.FeeAmount);
+            Assert.NotNull(payResponse.TotalAmount);
+            Assert.NotNull(payResponse.PaymentHash);
+            
             await Assert.ThrowsAsync<GreenfieldValidationException>(async () => await client.PayLightningInvoice(user.StoreId, "BTC", new PayLightningInvoiceRequest()
             {
                 BOLT11 = "lol"

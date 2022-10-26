@@ -835,6 +835,17 @@ namespace BTCPayServer.Services.Invoices
                    (Status != InvoiceStatusLegacy.Invalid && ExceptionStatus == InvoiceExceptionStatus.Marked);
         }
 
+        public bool CanRefund()
+        {
+            return Status == InvoiceStatusLegacy.Confirmed ||
+                Status == InvoiceStatusLegacy.Complete ||
+                (Status == InvoiceStatusLegacy.Expired &&
+                (ExceptionStatus == InvoiceExceptionStatus.PaidLate ||
+                ExceptionStatus == InvoiceExceptionStatus.PaidOver ||
+                ExceptionStatus == InvoiceExceptionStatus.PaidPartial)) ||
+                Status == InvoiceStatusLegacy.Invalid;
+        }
+
         public override int GetHashCode()
         {
             return HashCode.Combine(Status, ExceptionStatus);

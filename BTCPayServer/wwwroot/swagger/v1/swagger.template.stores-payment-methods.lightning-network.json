@@ -30,11 +30,31 @@
                 "operationId": "StoreLightningNetworkPaymentMethods_GetLightningNetworkPaymentMethods",
                 "responses": {
                     "200": {
-                        "description": "list of payment methods",
+                        "description": "List of payment methods",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/LightningNetworkPaymentMethodDataList"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing authorization",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
                                 }
                             }
                         }
@@ -311,7 +331,8 @@
     },
     "tags": [
         {
-            "name": "Store Payment Methods (Lightning Network)"
+            "name": "Store Payment Methods (Lightning Network)",
+            "description": "Store Payment Methods (Lightning Network) operations"
         }
     ]
 }

@@ -448,6 +448,7 @@ namespace BTCPayServer.Hosting
 
             services.AddSingleton<IObjectModelValidator, SkippableObjectValidatorProvider>();
             services.SkipModelValidation<RootedKeyPath>();
+            services.SkipModelValidation<NodeInfo>();
 
             if (configuration.GetOrDefault<bool>("cheatmode", false))
             {

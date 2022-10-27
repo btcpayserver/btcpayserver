@@ -38,6 +38,26 @@
                                 }
                             }
                         }
+                    },
+                    "401": {
+                        "description": "Missing authorization",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -90,11 +110,35 @@
                             }
                         }
                     },
+                    "401": {
+                        "description": "Missing authorization",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    },
                     "403": {
-                        "description": "If you are authenticated but forbidden to view the specified store"
+                        "description": "If you are authenticated but forbidden to view the specified store",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
                     },
                     "404": {
-                        "description": "The key is not found for this store/payment method"
+                        "description": "The key is not found for this store/payment method",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -293,7 +337,8 @@
     },
     "tags": [
         {
-            "name": "Store Payment Methods (LNURL Pay)"
+            "name": "Store Payment Methods (LNURL Pay)",
+            "description": "Store Payment Methods (LNURL Pay) operations"
         }
     ]
 }

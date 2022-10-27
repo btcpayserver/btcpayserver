@@ -373,7 +373,8 @@
     },
     "tags": [
         {
-            "name": "Apps"
+            "name": "Apps",
+            "description": "App operations"
         }
     ]
 }

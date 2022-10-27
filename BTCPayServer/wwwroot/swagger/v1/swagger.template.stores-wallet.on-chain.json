@@ -920,7 +920,8 @@
     },
     "tags": [
         {
-            "name": "Store Wallet (On Chain)"
+            "name": "Store Wallet (On Chain)",
+            "description": "Store Wallet (On Chain) operations"
         }
     ]
 }

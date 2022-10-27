@@ -18,6 +18,26 @@
                                 }
                             }
                         }
+                    },
+                    "401": {
+                        "description": "Missing authorization",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -116,7 +136,8 @@
     },
     "tags": [
         {
-            "name": "ServerInfo"
+            "name": "ServerInfo",
+            "description": "Server Info operations"
         }
     ]
 }

@@ -1678,6 +1678,9 @@ namespace BTCPayServer.Tests
             Assert.NotNull(info.InactiveChannelsCount);
             Assert.NotNull(info.PendingChannelsCount);
 
+            var gex = await AssertAPIError("lightning-node-unavailable", () => chargeClient.ConnectToLightningNode("BTC", new ConnectToNodeRequest(NodeInfo.Parse($"{new Key().PubKey.ToHex()}@localhost:3827"))));
+            Assert.Contains("NotSupported", gex.Message);
+
             await AssertAPIError("lightning-node-unavailable", () => chargeClient.GetLightningNodeChannels("BTC"));
             // Not permission for the store!
             await AssertAPIError("missing-permission", () => chargeClient.GetLightningNodeChannels(user.StoreId, "BTC"));
@@ -1722,10 +1725,17 @@ namespace BTCPayServer.Tests
             Assert.NotEmpty(merchantPendingInvoices);
             Assert.Contains(merchantPendingInvoices, i => i.Id == merchantInvoice.Id);
             
-            await client.PayLightningInvoice(user.StoreId, "BTC", new PayLightningInvoiceRequest()
+            var payResponse = await client.PayLightningInvoice(user.StoreId, "BTC", new PayLightningInvoiceRequest
             {
                 BOLT11 = merchantInvoice.BOLT11
             });
+            Assert.Equal(merchantInvoice.BOLT11, payResponse.BOLT11);
+            Assert.Equal(LightningPaymentStatus.Complete, payResponse.Status);
+            Assert.NotNull(payResponse.Preimage);
+            Assert.NotNull(payResponse.FeeAmount);
+            Assert.NotNull(payResponse.TotalAmount);
+            Assert.NotNull(payResponse.PaymentHash);
+            
             await Assert.ThrowsAsync<GreenfieldValidationException>(async () => await client.PayLightningInvoice(user.StoreId, "BTC", new PayLightningInvoiceRequest()
             {
                 BOLT11 = "lol"

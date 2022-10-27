@@ -30,11 +30,31 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "list of payment methods",
+                        "description": "List of payment methods",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/OnChainPaymentMethodDataList"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing authorization",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
                                 }
                             }
                         }
@@ -697,7 +717,8 @@
     },
     "tags": [
         {
-            "name": "Store Payment Methods (On Chain)"
+            "name": "Store Payment Methods (On Chain)",
+            "description": "Store Payment Methods (On Chain) operations"
         }
     ]
 }

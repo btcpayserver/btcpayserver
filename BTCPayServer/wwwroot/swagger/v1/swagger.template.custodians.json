@@ -10,7 +10,7 @@
                 "operationId": "Custodians_GetSupportedCustodians",
                 "responses": {
                     "200": {
-                        "description": "list of supported custodians",
+                        "description": "List of supported custodians",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1125,7 +1125,8 @@
     },
     "tags": [
         {
-            "name": "Custodians"
+            "name": "Custodians",
+            "description": "Custodian operations"
         }
     ]
 }

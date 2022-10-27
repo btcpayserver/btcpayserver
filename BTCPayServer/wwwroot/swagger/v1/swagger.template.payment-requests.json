@@ -19,11 +19,21 @@
                 "operationId": "PaymentRequests_GetPaymentRequests",
                 "responses": {
                     "200": {
-                        "description": "list of payment requests",
+                        "description": "List of payment requests",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/PaymentRequestDataList"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing authorization",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
                                 }
                             }
                         }
@@ -374,7 +384,8 @@
     },
     "tags": [
         {
-            "name": "Payment Requests"
+            "name": "Payment Requests",
+            "description": "Payment Requests operations"
         }
     ]
 }

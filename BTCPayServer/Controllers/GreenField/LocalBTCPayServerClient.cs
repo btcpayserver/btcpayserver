@@ -381,10 +381,11 @@ namespace BTCPayServer.Controllers.Greenfield
                 await GetController<GreenfieldStoreLightningNodeApiController>().GetDepositAddress(cryptoCode, token));
         }
 
-        public override async Task PayLightningInvoice(string storeId, string cryptoCode,
+        public override async Task<LightningPaymentData> PayLightningInvoice(string storeId, string cryptoCode,
             PayLightningInvoiceRequest request, CancellationToken token = default)
         {
-            HandleActionResult(await GetController<GreenfieldStoreLightningNodeApiController>().PayInvoice(cryptoCode, request, token));
+            return GetFromActionResult<LightningPaymentData>(
+                await GetController<GreenfieldStoreLightningNodeApiController>().PayInvoice(cryptoCode, request, token));
         }
 
         public override async Task<LightningInvoiceData> GetLightningInvoice(string storeId, string cryptoCode,

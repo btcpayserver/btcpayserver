@@ -1,18 +1,21 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
+using BTCPayServer.PaymentRequest;
 using BTCPayServer.Security;
 using BTCPayServer.Services.PaymentRequests;
 using BTCPayServer.Services.Rates;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Routing;
 using PaymentRequestData = BTCPayServer.Data.PaymentRequestData;
 
 namespace BTCPayServer.Controllers.Greenfield
@@ -22,14 +25,23 @@ namespace BTCPayServer.Controllers.Greenfield
     [EnableCors(CorsPolicies.All)]
     public class GreenfieldPaymentRequestsController : ControllerBase
     {
+        private readonly UIInvoiceController _invoiceController;
         private readonly PaymentRequestRepository _paymentRequestRepository;
         private readonly CurrencyNameTable _currencyNameTable;
+        private readonly LinkGenerator _linkGenerator;
 
-        public GreenfieldPaymentRequestsController(PaymentRequestRepository paymentRequestRepository,
-            CurrencyNameTable currencyNameTable)
+        public GreenfieldPaymentRequestsController(
+            UIInvoiceController invoiceController,
+            PaymentRequestRepository paymentRequestRepository,
+            PaymentRequestService paymentRequestService,
+            CurrencyNameTable currencyNameTable,
+            LinkGenerator linkGenerator)
         {
+            _invoiceController = invoiceController;
             _paymentRequestRepository = paymentRequestRepository;
+            PaymentRequestService = paymentRequestService;
             _currencyNameTable = currencyNameTable;
+            _linkGenerator = linkGenerator;
         }
 
         [Authorize(Policy = Policies.CanViewPaymentRequests, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -54,6 +66,53 @@ namespace BTCPayServer.Controllers.Greenfield
             }
 
             return Ok(FromModel(pr.First()));
+        }
+
+        [Authorize(Policy = Policies.CanViewPaymentRequests, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [HttpPost("~/api/v1/stores/{storeId}/payment-requests/{paymentRequestId}/pay")]
+        public async Task<IActionResult> PayPaymentRequest(string storeId, string paymentRequestId, [FromBody] PayPaymentRequestRequest pay, CancellationToken cancellationToken)
+        {
+            var pr = await this.PaymentRequestService.GetPaymentRequest(paymentRequestId);
+            if (pr is null || pr.StoreId != storeId)
+                return PaymentRequestNotFound();
+
+            var amount = pay?.Amount;
+            if (amount.HasValue && amount.Value <= 0)
+            {
+                ModelState.AddModelError(nameof(pay.Amount), "The amount should be more than 0");
+            }
+            if (amount.HasValue && !pr.AllowCustomPaymentAmounts)
+            {
+                ModelState.AddModelError(nameof(pay.Amount), "This payment request doesn't allow custom payment amount");
+            }
+
+            if (!ModelState.IsValid)
+                return this.CreateValidationError(ModelState);
+
+            if (pr.Archived)
+            {
+                return this.CreateAPIError("archived", "You cannot pay an archived payment request");
+            }
+
+            if (pr.AmountDue <= 0)
+            {
+                return this.CreateAPIError("already-paid", "This payment request is already paid");
+            }
+
+            if (pr.ExpiryDate.HasValue && DateTime.UtcNow >= pr.ExpiryDate)
+            {
+                return this.CreateAPIError("expired", "This payment request is expired");
+            }
+
+            try
+            {
+                var invoice = await _invoiceController.CreatePaymentRequestInvoice(pr, amount, this.StoreData, Request, cancellationToken);
+                return Ok(GreenfieldInvoiceController.ToModel(invoice, _linkGenerator, Request));
+            }
+            catch (BitpayHttpException e)
+            {
+                return this.CreateAPIError(null, e.Message);
+            }
         }
 
         [Authorize(Policy = Policies.CanModifyPaymentRequests,
@@ -97,6 +156,9 @@ namespace BTCPayServer.Controllers.Greenfield
             return Ok(FromModel(pr));
         }
         public Data.StoreData StoreData => HttpContext.GetStoreData();
+
+        public PaymentRequestService PaymentRequestService { get; }
+
         [HttpPut("~/api/v1/stores/{storeId}/payment-requests/{paymentRequestId}")]
         [Authorize(Policy = Policies.CanModifyPaymentRequests,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]

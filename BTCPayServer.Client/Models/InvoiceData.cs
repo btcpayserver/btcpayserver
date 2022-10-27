@@ -87,6 +87,7 @@ namespace BTCPayServer.Client.Models
             public string DefaultLanguage { get; set; }
             [JsonProperty("checkoutFormId")]
             public string CheckoutFormId { get; set; }
+            public CheckoutType? CheckoutType { get; set; }
         }
     }
     public class InvoiceData : InvoiceDataBase

@@ -38,5 +38,6 @@ namespace BTCPayServer.Client.Models
         public bool? RequiresRefundEmail { get; set; } = null;
         public string CheckoutFormId { get; set; } = null;
         public string EmbeddedCSS { get; set; } = null;
+        public CheckoutType? CheckoutType { get; set; } = null;
     }
 }

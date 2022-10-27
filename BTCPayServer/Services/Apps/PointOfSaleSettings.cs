@@ -1,3 +1,4 @@
+using BTCPayServer.Client.Models;
 using BTCPayServer.Services.Stores;
 
 namespace BTCPayServer.Services.Apps
@@ -76,5 +77,6 @@ namespace BTCPayServer.Services.Apps
             public string NotificationUrl { get; set; }
             public string RedirectUrl { get; set; }
             public bool? RedirectAutomatically { get; set; }
-        }
+            public CheckoutType CheckoutType { get; internal set; }
+    }
 }

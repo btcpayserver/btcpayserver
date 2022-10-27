@@ -448,6 +448,8 @@ namespace BTCPayServer.Services.Invoices
 
         [JsonProperty("checkoutFormId")]
         public string CheckoutFormId { get; set; }
+        [JsonConverter(typeof(StringEnumConverter))]
+        public CheckoutType? CheckoutType { get; set; }
 
         public bool IsExpired()
         {
@@ -577,6 +579,7 @@ namespace BTCPayServer.Services.Invoices
             dto.Price = Price;
             dto.Currency = Currency;
             dto.CheckoutFormId = CheckoutFormId;
+            dto.CheckoutType = CheckoutType;
             dto.Buyer = new JObject();
             dto.Buyer.Add(new JProperty("name", Metadata.BuyerName));
             dto.Buyer.Add(new JProperty("address1", Metadata.BuyerAddress1));

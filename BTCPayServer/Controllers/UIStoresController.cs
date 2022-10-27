@@ -375,7 +375,7 @@ namespace BTCPayServer.Controllers
                     };
             }).ToList();
 
-            vm.UseNewCheckout = storeBlob.UseNewCheckout;
+            vm.UseNewCheckout = storeBlob.CheckoutType == Client.Models.CheckoutType.V2;
             vm.CheckoutFormId = storeBlob.CheckoutFormId;
             vm.OnChainWithLnInvoiceFallback = storeBlob.OnChainWithLnInvoiceFallback;
             vm.RequiresRefundEmail = storeBlob.RequiresRefundEmail;
@@ -494,8 +494,8 @@ namespace BTCPayServer.Controllers
                 });
             }
 
-            blob.UseNewCheckout = model.UseNewCheckout;
-            if (blob.UseNewCheckout)
+            blob.CheckoutType = model.UseNewCheckout ? Client.Models.CheckoutType.V2 : Client.Models.CheckoutType.V1;
+            if (blob.CheckoutType == Client.Models.CheckoutType.V2)
             {
                 blob.CheckoutFormId = model.CheckoutFormId;
                 blob.OnChainWithLnInvoiceFallback = model.OnChainWithLnInvoiceFallback;

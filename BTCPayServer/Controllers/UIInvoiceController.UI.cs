@@ -622,7 +622,7 @@ namespace BTCPayServer.Controllers
             if (view == "modal")
                 model.IsModal = true;
 
-            var viewName = model.UseNewCheckout ? "CheckoutV2" : nameof(Checkout);
+            var viewName = model.CheckoutType == CheckoutType.V2 ? "CheckoutV2" : nameof(Checkout);
             return View(viewName, model);
         }
 
@@ -741,7 +741,7 @@ namespace BTCPayServer.Controllers
                 Request.Scheme,
                 Request.Host,
                 Request.PathBase) : null;
-            
+
             var model = new PaymentModel
             {
 #if ALTCOINS
@@ -757,8 +757,8 @@ namespace BTCPayServer.Controllers
                 CustomLogoLink = storeBlob.CustomLogo,
                 LogoFileId = storeBlob.LogoFileId,
                 BrandColor = storeBlob.BrandColor,
-                UseNewCheckout = storeBlob.UseNewCheckout,
                 CheckoutFormId = invoice.CheckoutFormId ?? storeBlob.CheckoutFormId,
+                CheckoutType = invoice.CheckoutType ?? storeBlob.CheckoutType,
                 HtmlTitle = storeBlob.HtmlTitle ?? "BTCPay Invoice",
                 CryptoImage = Request.GetRelativePathOrAbsolute(paymentMethodHandler.GetCryptoImage(paymentMethodId)),
                 BtcAddress = paymentMethodDetails.GetPaymentDestination(),
@@ -796,7 +796,7 @@ namespace BTCPayServer.Controllers
                 AvailableCryptos = invoice.GetPaymentMethods()
                                           .Where(i => i.Network != null &&
                                               // TODO: These cases and implementation need to be discussed
-                                              (!storeBlob.UseNewCheckout ||
+                                              (storeBlob.CheckoutType == CheckoutType.V1 ||
                                                 // Exclude LNURL for non-topup invoices
                                                 (invoice.IsUnsetTopUp() || i.GetId().PaymentType is not LNURLPayPaymentType)) &&
                                                 // Exclude Lightning if OnChainWithLnInvoiceFallback is active
@@ -1084,7 +1084,7 @@ namespace BTCPayServer.Controllers
             {
                 StoreId = model.StoreId,
                 Currency = storeBlob?.DefaultCurrency,
-                UseNewCheckout = storeBlob is { UseNewCheckout: true },
+                UseNewCheckout = storeBlob?.CheckoutType is CheckoutType.V2,
                 AvailablePaymentMethods = GetPaymentMethodsSelectList()
             };
 
@@ -1099,7 +1099,7 @@ namespace BTCPayServer.Controllers
         {
             var store = HttpContext.GetStoreData();
             var storeBlob = store.GetStoreBlob();
-            model.UseNewCheckout = storeBlob is { UseNewCheckout: true };
+            model.UseNewCheckout = storeBlob.CheckoutType == CheckoutType.V2;
             model.AvailablePaymentMethods = GetPaymentMethodsSelectList();
             
             if (!ModelState.IsValid)

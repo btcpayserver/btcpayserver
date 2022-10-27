@@ -331,6 +331,9 @@
                         "default": false,
                         "description": "If true, the checkout page will ask to enter an email address before accessing payment information."
                     },
+                    "checkoutType": {
+                        "$ref": "#/components/schemas/CheckoutType"
+                    },
                     "checkoutFormId": {
                         "type": "string",
                         "description": "Form ID to request customer data, in case the new checkout is used",

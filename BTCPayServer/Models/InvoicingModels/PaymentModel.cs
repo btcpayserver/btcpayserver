@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using BTCPayServer.Client.Models;
 
 namespace BTCPayServer.Models.InvoicingModels
 {
@@ -71,8 +72,8 @@ namespace BTCPayServer.Models.InvoicingModels
         public bool Activated { get; set; }
         public string InvoiceCurrency { get; set; }
         public string ReceiptLink { get; set; }
-        public bool UseNewCheckout { get; set; }
         public string CheckoutFormId { get; set; }
         public bool AltcoinsBuild { get; set; }
+        public CheckoutType CheckoutType { get; set; }
     }
 }

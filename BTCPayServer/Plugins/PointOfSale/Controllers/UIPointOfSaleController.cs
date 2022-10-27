@@ -285,7 +285,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 RedirectAutomatically = settings.RedirectAutomatically.HasValue ? settings.RedirectAutomatically.Value ? "true" : "false" : "",
                 RequiresRefundEmail = settings.RequiresRefundEmail,
                 CheckoutFormId = settings.CheckoutFormId,
-                UseNewCheckout = storeBlob.UseNewCheckout
+                UseNewCheckout = storeBlob.CheckoutType == Client.Models.CheckoutType.V2
             };
             if (HttpContext?.Request != null)
             {
@@ -376,7 +376,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 RequiresRefundEmail = vm.RequiresRefundEmail
             };
             
-            if (storeBlob.UseNewCheckout)
+            if (storeBlob.CheckoutType == Client.Models.CheckoutType.V2)
             {
                 settings.CheckoutFormId = vm.CheckoutFormId == GenericFormOption.InheritFromStore.ToString()
                     ? storeBlob.CheckoutFormId

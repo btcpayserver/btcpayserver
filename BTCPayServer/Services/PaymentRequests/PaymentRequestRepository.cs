@@ -133,7 +133,9 @@ namespace BTCPayServer.Services.PaymentRequests
             }
 
             invoiceQuery.OrderId = new[] { GetOrderIdForPaymentRequest(paymentRequestId) };
-            return await _InvoiceRepository.GetInvoices(invoiceQuery);
+            return (await _InvoiceRepository.GetInvoices(invoiceQuery))
+                .Where(i => i.InternalTags.Contains(GetInternalTag(paymentRequestId)))
+                .ToArray();
         }
 
         public static string GetOrderIdForPaymentRequest(string paymentRequestId)

@@ -132,7 +132,7 @@ window.BTCPayShopifyIntegrationModule = function () {
                     handleInvoiceData(d, {backgroundCheck: true})
                 });
             });
-            window.btcpay.showInvoice(currentInvoiceData.invoiceId);
+            btcpay.appendAndShowInvoiceFrame(currentInvoiceData.invoiceId);
         }
     }
 

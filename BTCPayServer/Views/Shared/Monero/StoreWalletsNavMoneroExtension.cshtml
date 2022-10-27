@@ -1,0 +1,22 @@
+@using BTCPayServer.Services.Altcoins.Monero.Configuration
+@using BTCPayServer.Services.Altcoins.Monero.UI
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using BTCPayServer.Client
+@using BTCPayServer.Abstractions.TagHelpers
+@using BTCPayServer.Abstractions.Contracts
+@inject MoneroLikeConfiguration MoneroLikeConfiguration;
+@inject IScopeProvider ScopeProvider
+@{
+    var storeId = ScopeProvider.GetCurrentStoreId();
+    var isActive = !string.IsNullOrEmpty(storeId) && ViewContext.RouteData.Values.TryGetValue("Controller", out var controller) && controller is not null && 
+                   nameof(UIMoneroLikeStoreController).StartsWith(controller.ToString() ?? string.Empty, StringComparison.InvariantCultureIgnoreCase);
+}
+@if (MoneroLikeConfiguration.MoneroLikeConfigurationItems.Any())
+{
+    <li class="nav-item" permission="@Policies.CanModifyStoreSettings">
+        <a asp-action="GetStoreMoneroLikePaymentMethods" asp-controller="UIMoneroLikeStore" asp-route-storeId="@storeId" class="nav-link @(isActive ? "active" : string.Empty)" id="StoreNav-Monero">
+            <span class="me-2 btcpay-status"></span>
+            <span>Monero</span>
+        </a>
+    </li>
+}

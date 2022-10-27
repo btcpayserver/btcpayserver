@@ -1,16 +1,11 @@
 @inject BTCPayServer.Services.BTCPayServerEnvironment Env
 @inject BTCPayServer.Services.ThemeSettings Theme
 @inject BTCPayNetworkProvider BtcPayNetworkProvider
-@using NUglify.Helpers
 @using BTCPayServer.Client
 @using BTCPayServer.Components.ThemeSwitch
 @using BTCPayServer.Payments
-@using Microsoft.AspNetCore.Mvc.TagHelpers
-@using BundlerMinifier.TagHelpers
-@using BTCPayServer.TagHelpers
 @model BTCPayServer.Models.ViewPullPaymentModel
 
-@addTagHelper *, BundlerMinifier.TagHelpers
 @{
     ViewData["Title"] = Model.Title;
     Layout = null;
@@ -48,7 +43,10 @@
 <html lang="en" @(Env.IsDeveloping ? " data-devenv" : "")>
 <head>
     <partial name="LayoutHead" />
-    <bundle name="wwwroot/bundles/payment-request-bundle.min.css" asp-append-version="true"></bundle>
+    <link href="~/vendor/font-awesome/css/font-awesome.min.css" asp-append-version="true"  rel="stylesheet" />
+    <link href="~/vendor/bootstrap-vue/bootstrap-vue.css" asp-append-version="true"  rel="stylesheet" />
+    <link href="~/main/site.css" asp-append-version="true"  rel="stylesheet" />
+
     @if (Model.CustomCSSLink != null)
     {
         <link href="@Model.CustomCSSLink" rel="stylesheet" />
@@ -113,7 +111,7 @@
                 <div class="row">
                     <div class="col col-12 col-lg-6 mb-4">
                         <div class="bg-tile h-100 m-0 p-3 p-sm-5 rounded">
-                            @if (!Model.Title.IsNullOrWhiteSpace())
+                            @if (!string.IsNullOrWhiteSpace(Model.Title))
                             {
                                 <h2 class="h4 mb-3">@Model.Title</h2>
                             }
@@ -219,8 +217,11 @@
         </main>
         <footer class="pt-2 pb-4 d-print-none">
             <p class="container text-center" permission="@Policies.CanViewStoreSettings">
-                <a asp-controller="UIStorePullPayments" asp-action="Payouts" asp-route-storeId="@Model.StoreId">
-                    Back to payouts
+                <a asp-action="EditPullPayment"
+                   asp-controller="UIPullPayment"
+                   asp-route-storeId="@Model.StoreId"
+                   asp-route-pullPaymentId="@Model.Id">
+                    Edit pull payment
                 </a>
             </p>
             <div class="container d-flex flex-wrap align-items-center justify-content-center">
@@ -245,21 +246,13 @@
       <script src="~/vendor/vue-qrcode/vue-qrcode.min.js" asp-append-version="true"></script>
       <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
       <partial name="ShowQR"/>
-
-    <script>
-	    
+      <script>
         document.addEventListener("DOMContentLoaded", () => {
-            const qrApp = initQRShow("LNURL Withdraw", "", "scan-qr-modal")
-            qrApp.data = null;
-            qrApp.showData = true;
-            qrApp.dataPerMode = {
-                Bech32: @Safe.Json(lnurl),
-                URI: @Safe.Json(lnurlUri)
+            const modes = {
+                uri: { title: "URI", fragments: [@Safe.Json(lnurlUri)], showData: true, href: @Safe.Json(lnurlUri) },
+                bech32: { title: "Bech32", fragments: [@Safe.Json(lnurl)], showData: true, href: @Safe.Json(lnurl) }
             };
-            qrApp.clickable = true;
-            qrApp.allowedModes = ["Bech32", "URI"];
-            qrApp.currentMode = "URI";
-            qrApp.note = @Safe.Json(note);
+            initQRShow({ title: "LNURL Withdraw", note: @Safe.Json(note), modes })
     });
     </script>
   }

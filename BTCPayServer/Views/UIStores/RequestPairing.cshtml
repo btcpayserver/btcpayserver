@@ -1,12 +1,22 @@
 ﻿@model PairingModel
 @{
-    Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePage(StoreNavPages.Tokens, "Pairing Permission", Context.GetStoreData()?.Id);
+    var store = Context.GetStoreData();
+    Layout = store is null ? "_LayoutWizard" : "_NavLayout";
+    ViewData.SetActivePage(StoreNavPages.Tokens, "Pairing Permission", store?.Id);
 }
 
-<h3 class="mb-0">@ViewData["Title"]</h3>
+@if (store is null)
+{
+    @section Navbar {
+        <button type="button" class="cancel" onclick="history.back()">
+            <vc:icon symbol="close" />
+        </button>
+    }
+}
+
 <div class="row">
-    <div class="col-md-4">
+    <div class="col-sm-8 col-md-6 @(store is null ? "mx-auto" : "")">
+        <h3 class="mb-0">@ViewData["Title"]</h3>
         <table class="table table-hover">
             <tr>
                 <th>Label</th>
@@ -17,17 +27,21 @@
                 <td class="text-end">@Model.SIN</td>
             </tr>
         </table>
-    </div>
-</div>
-<div class="row">
-    <div class="col-md-4">
+        
         <form asp-action="Pair" method="post">
-            <div class="form-group">
-                <label asp-for="StoreId" class="form-label">Pair To Store</label>
-                <select asp-for="StoreId" asp-items="@(new SelectList(Model.Stores,"Id","Name"))" class="form-select"></select>
-                <span asp-validation-for="StoreId" class="text-danger"></span>
-            </div>
-            <input type="hidden" name="pairingCode" value="@Model.Id" />
+            @if (store is null)
+            {
+                <div class="form-group">
+                    <label asp-for="StoreId" class="form-label">Pair To Store</label>
+                    <select asp-for="StoreId" asp-items="@(new SelectList(Model.Stores, "Id", "Name"))" class="form-select"></select>
+                    <span asp-validation-for="StoreId" class="text-danger"></span>
+                </div>
+            }
+            else
+            {
+                <input asp-for="StoreId" type="hidden" />
+            }
+            <input type="hidden" name="pairingCode" value="@Model.Id"/>
             <button id="ApprovePairing" type="submit" class="btn btn-primary mt-3" title="Approve this pairing demand">Approve</button>
         </form>
     </div>

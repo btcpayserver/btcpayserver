@@ -62,7 +62,6 @@
                             <td>@file.ApplicationUser.UserName</td>
                             <td class="text-end">
                                 <a href="@Url.Action("Files", "UIServer", new { fileIds = new string[] { file.Id } })">Get Link</a>
-                                - <a asp-action="CreateTemporaryFileUrl" asp-route-fileId="@file.Id">Get Temp Link</a>
                                 - <a asp-action="DeleteFile" asp-route-fileId="@file.Id">Remove</a>
                             </td>
                         </tr>
@@ -83,7 +82,6 @@
             foreach (KeyValuePair<string, string> fileUrlPair in Model.DirectUrlByFiles)
             {
                 var fileId = fileUrlPair.Key;
-                var fileUrl = fileUrlPair.Value;
                 var file = Model.Files.Single(storedFile => storedFile.Id.Equals(fileId, StringComparison.InvariantCultureIgnoreCase));
 
                 <div class="card mb-2">
@@ -100,10 +98,6 @@
                                         fileId = fileId
                                     }, Context.Request.Scheme, Context.Request.Host.ToString())
                                 </a>
-                            </li>
-                            <li class="list-group-item">
-                                <strong>Direct URL:</strong>
-                                <a href="@fileUrl" target="_blank" rel="noreferrer noopener">@fileUrl</a>
                             </li>
                         </ul>
                     </div>

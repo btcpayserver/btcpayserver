@@ -6,10 +6,8 @@
       "environmentVariables": {
         "BTCPAY_NETWORK": "regtest",
         "BTCPAY_LAUNCHSETTINGS": "true",
-        "BTCPAY_BUNDLEJSCSS": "false",
         "BTCPAY_BTCLIGHTNING": "type=clightning;server=tcp://127.0.0.1:30993",
-        "BTCPAY_BTCEXTERNALLNDGRPC": "type=lnd-grpc;server=https://lnd:lnd@127.0.0.1:53280/;allowinsecure=true",
-        "BTCPAY_BTCEXTERNALLNDREST": "type=lnd-rest;server=https://lnd:lnd@127.0.0.1:35531/;allowinsecure=true",
+        "BTCPAY_BTCEXTERNALLNDREST": "type=lnd-rest;server=http://lnd:lnd@127.0.0.1:35531/;allowinsecure=true",
         "BTCPAY_BTCEXTERNALLNDSEEDBACKUP": "../BTCPayServer.Tests/TestData/LndSeedBackup/walletunlock.json",
         "BTCPAY_BTCEXTERNALSPARK": "server=/spark/btc/;cookiefile=fake",
         "BTCPAY_BTCEXTERNALCHARGE": "server=https://127.0.0.1:53280/mycharge/btc/;cookiefilepath=fake",
@@ -32,7 +30,7 @@
         "BTCPAY_CHEATMODE": "true",
         "BTCPAY_EXPLORERPOSTGRES": "User ID=postgres;Include Error Detail=true;Host=127.0.0.1;Port=39372;Database=nbxplorer"
       },
-      "applicationUrl": "http://127.0.0.1:14142/"
+      "applicationUrl": "http://localhost:14142/"
     },
     "Bitcoin-HTTPS": {
       "commandName": "Project",
@@ -42,11 +40,9 @@
         "BTCPAY_LAUNCHSETTINGS": "true",
         "BTCPAY_PORT": "14142",
         "BTCPAY_HttpsUseDefaultCertificate": "true",
-        "BTCPAY_BUNDLEJSCSS": "false",
         "BTCPAY_VERBOSE": "true",
         "BTCPAY_BTCLIGHTNING": "type=clightning;server=tcp://127.0.0.1:30993",
-        "BTCPAY_BTCEXTERNALLNDGRPC": "type=lnd-grpc;server=https://lnd:lnd@127.0.0.1:53280/;allowinsecure=true",
-        "BTCPAY_BTCEXTERNALLNDREST": "type=lnd-rest;server=https://lnd:lnd@127.0.0.1:35531/;allowinsecure=true",
+        "BTCPAY_BTCEXTERNALLNDREST": "type=lnd-rest;server=http://lnd:lnd@127.0.0.1:35531/;allowinsecure=true",
         "BTCPAY_BTCEXTERNALLNDSEEDBACKUP": "../BTCPayServer.Tests/TestData/LndSeedBackup/walletunlock.json",
         "BTCPAY_BTCEXTERNALSPARK": "server=/spark/btc/;cookiefile=fake",
         "BTCPAY_BTCEXTERNALCHARGE": "server=https://127.0.0.1:53280/mycharge/btc/;cookiefilepath=fake",
@@ -81,12 +77,10 @@
         "BTCPAY_PORT": "14142",
         "BTCPAY_HttpsUseDefaultCertificate": "true",
         "BTCPAY_VERBOSE": "true",
-        "BTCPAY_BUNDLEJSCSS": "false",
         "BTCPAY_LTCEXPLORERURL": "http://127.0.0.1:32838/",
         "BTCPAY_LBTCEXPLORERURL": "http://127.0.0.1:32838/",
         "BTCPAY_BTCLIGHTNING": "type=clightning;server=tcp://127.0.0.1:30993",
-        "BTCPAY_BTCEXTERNALLNDGRPC": "type=lnd-grpc;server=https://lnd:lnd@127.0.0.1:53280/;allowinsecure=true",
-        "BTCPAY_BTCEXTERNALLNDREST": "type=lnd-rest;server=https://lnd:lnd@127.0.0.1:35531/;allowinsecure=true",
+        "BTCPAY_BTCEXTERNALLNDREST": "type=lnd-rest;server=http://lnd:lnd@127.0.0.1:35531/;allowinsecure=true",
         "BTCPAY_BTCEXTERNALLNDSEEDBACKUP": "../BTCPayServer.Tests/TestData/LndSeedBackup/walletunlock.json",
         "BTCPAY_BTCEXTERNALSPARK": "server=/spark/btc/;cookiefile=fake",
         "BTCPAY_BTCEXTERNALCHARGE": "server=https://127.0.0.1:53280/mycharge/btc/;cookiefilepath=fake",

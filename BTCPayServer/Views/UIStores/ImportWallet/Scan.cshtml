@@ -1,5 +1,4 @@
 @model WalletSetupViewModel
-@addTagHelper *, BundlerMinifier.TagHelpers
 @{
     Layout = "_LayoutWalletSetup";
     ViewData.SetActivePage(StoreNavPages.OnchainSettings, "Scan QR code", Context.GetStoreData().Id);
@@ -59,7 +58,11 @@
     </tr>
     <tr>
         <td>Specter DIY</td>
-        <td>Master public keys ❯ Select key ❯ Disable "Show derivation path"</td>
+        <td>Master public keys ❯ Select key</td>
+    </tr>
+    <tr>
+        <td>SeedSigner</td>
+        <td>Seeds ❯ Select seed ❯ Export XPUB ❯ BlueWallet</td>
     </tr>
     </tbody>
 </table>
@@ -69,13 +72,32 @@
 }
 
 @section PageFootContent {
-    <partial name="_ValidationScriptsPartial" />
-    <bundle name="wwwroot/bundles/camera-bundle.min.js"></bundle>
+    <partial name="_ValidationScriptsPartial"/>
+    <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/vue-qrcode/vue-qrcode.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/ur-registry/urlib.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/vue-qrcode-reader/VueQrcodeReader.umd.min.js" asp-append-version="true"></script>
+
     <script>
         window.coinName = "@Model.Network.DisplayName.ToLowerInvariant()";
         document.addEventListener("DOMContentLoaded", function () {
             initCameraScanningApp("Scan wallet QR", data => {
-                document.getElementById("WalletFileContent").value = data;
+                let xpub = "";
+                if (typeof(data) === "object") {
+                    if (data.type === "crypto-account") {
+                        const account = window.URlib.CryptoAccount.fromCBOR(data.cbor);
+                        const [descriptor] = account.getOutputDescriptors();
+                        xpub = descriptor.getHDKey().getBip32Key();
+                    } else {
+                        console.error('Unexpected UR type', data.type)
+                    }
+                } else if (typeof(data) === 'string') {
+                    xpub = data;
+                }
+                // remove potentially leading derivation path
+                xpub = xpub.replace(/^\[.*?\]/, '');
+                // submit
+                document.getElementById("WalletFileContent").value = xpub;
                 document.getElementById("qr-import-form").submit();
             });
         });

@@ -65,11 +65,7 @@ namespace BTCPayServer.Configuration
             if (conf.GetOrDefault<bool>("launchsettings", false) && NetworkType != ChainName.Regtest)
                 throw new ConfigException($"You need to run BTCPayServer with the run.sh or run.ps1 script");
 
-
-
-            BundleJsCss = conf.GetOrDefault<bool>("bundlejscss", true);
             DockerDeployment = conf.GetOrDefault<bool>("dockerdeployment", true);
-
             TorrcFile = conf.GetOrDefault<string>("torrcfile", null);
             TorServices = conf.GetOrDefault<string>("torservices", null)
                 ?.Split(new[] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries);
@@ -112,9 +108,9 @@ namespace BTCPayServer.Configuration
                 {
                     Logs.Configuration.LogWarning($"The SSH key is not supported ({ex.Message}), try to generate the key with ssh-keygen using \"-m PEM\". Skipping SSH configuration...");
                 }
-                catch
+                catch (Exception ex)
                 {
-                    throw new ConfigException($"sshkeyfilepassword is invalid");
+                    Logs.Configuration.LogWarning(ex, "Error while loading SSH settings");
                 }
             }
 
@@ -192,16 +188,7 @@ namespace BTCPayServer.Configuration
 
         public string RootPath { get; set; }
         public bool DockerDeployment { get; set; }
-        public bool BundleJsCss
-        {
-            get;
-            set;
-        }
-        public SSHSettings SSHSettings
-        {
-            get;
-            set;
-        }
+        public SSHSettings SSHSettings { get; set; }
         public string TorrcFile { get; set; }
         public string[] TorServices { get; set; }
         public Uri UpdateUrl { get; set; }

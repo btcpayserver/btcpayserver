@@ -83,6 +83,7 @@ namespace BTCPayServer
             }
             catch (Exception e) when (PluginManager.IsExceptionByPlugin(e))
             {
+                logs.Configuration.LogError(e, $"Disabling plugin {e.Source} as it crashed on startup");
                 var pluginDir = new DataDirectories().Configure(conf).PluginDir;
                 PluginManager.DisablePlugin(pluginDir, e.Source);
             }

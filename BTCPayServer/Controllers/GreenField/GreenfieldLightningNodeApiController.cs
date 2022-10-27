@@ -46,7 +46,14 @@ namespace BTCPayServer.Controllers.Greenfield
             return Ok(new LightningNodeInformationData
             {
                 BlockHeight = info.BlockHeight,
-                NodeURIs = info.NodeInfoList.Select(nodeInfo => nodeInfo).ToArray()
+                NodeURIs = info.NodeInfoList.Select(nodeInfo => nodeInfo).ToArray(),
+                Alias = info.Alias,
+                Color = info.Color,
+                Version = info.Version,
+                PeersCount = info.PeersCount,
+                ActiveChannelsCount = info.ActiveChannelsCount,
+                InactiveChannelsCount = info.InactiveChannelsCount,
+                PendingChannelsCount = info.PendingChannelsCount
             });
         }
 
@@ -202,9 +209,10 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             var lightningClient = await GetLightningClient(cryptoCode, true);
             var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
-
-            if (lightningInvoice?.BOLT11 is null ||
-                !BOLT11PaymentRequest.TryParse(lightningInvoice.BOLT11, out _, network.NBitcoinNetwork))
+            BOLT11PaymentRequest bolt11 = null;
+            
+            if (string.IsNullOrEmpty(lightningInvoice.BOLT11) ||
+                !BOLT11PaymentRequest.TryParse(lightningInvoice.BOLT11, out bolt11, network.NBitcoinNetwork))
             {
                 ModelState.AddModelError(nameof(lightningInvoice.BOLT11), "The BOLT11 invoice was invalid.");
             }
@@ -214,10 +222,27 @@ namespace BTCPayServer.Controllers.Greenfield
                 return this.CreateValidationError(ModelState);
             }
             
-            var param = lightningInvoice?.MaxFeeFlat != null || lightningInvoice?.MaxFeePercent != null || lightningInvoice?.Amount != null
+            var param = lightningInvoice.MaxFeeFlat != null || lightningInvoice.MaxFeePercent != null || lightningInvoice.Amount != null
                 ? new PayInvoiceParams { MaxFeePercent = lightningInvoice.MaxFeePercent, MaxFeeFlat = lightningInvoice.MaxFeeFlat, Amount = lightningInvoice.Amount }
                 : null;
             var result = await lightningClient.Pay(lightningInvoice.BOLT11, param, cancellationToken);
+            
+            if (result.Result == PayResult.Ok && bolt11?.PaymentHash is not null)
+            {
+                var paymentHash = bolt11.PaymentHash.ToString();
+                var payment = await lightningClient.GetPayment(paymentHash, cancellationToken);
+                return Ok(new LightningPaymentData
+                {
+                    Id = payment.Id,
+                    PaymentHash = paymentHash,
+                    Status = payment.Status,
+                    BOLT11 = payment.BOLT11,
+                    Preimage = payment.Preimage,
+                    CreatedAt = payment.CreatedAt,
+                    TotalAmount = payment.AmountSent,
+                    FeeAmount = payment.Fee,
+                });
+            }
             
             return result.Result switch
             {
@@ -237,6 +262,14 @@ namespace BTCPayServer.Controllers.Greenfield
             var lightningClient = await GetLightningClient(cryptoCode, false);
             var inv = await lightningClient.GetInvoice(id, cancellationToken);
             return inv == null ? this.CreateAPIError(404, "invoice-not-found", "Impossible to find a lightning invoice with this id") : Ok(ToModel(inv));
+        }
+
+        public virtual async Task<IActionResult> GetInvoices(string cryptoCode, [FromQuery] bool? pendingOnly, [FromQuery] long? offsetIndex, CancellationToken cancellationToken = default)
+        {
+            var lightningClient = await GetLightningClient(cryptoCode, false);
+            var param = new ListInvoicesParams { PendingOnly = pendingOnly, OffsetIndex = offsetIndex };
+            var invoices = await lightningClient.ListInvoices(param, cancellationToken);
+            return Ok(invoices.Select(ToModel));
         }
 
         public virtual async Task<IActionResult> CreateInvoice(string cryptoCode, CreateLightningInvoiceRequest request, CancellationToken cancellationToken = default)
@@ -296,7 +329,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
         private LightningInvoiceData ToModel(LightningInvoice invoice)
         {
-            return new LightningInvoiceData
+            var data = new LightningInvoiceData
             {
                 Amount = invoice.Amount,
                 Id = invoice.Id,
@@ -306,6 +339,12 @@ namespace BTCPayServer.Controllers.Greenfield
                 BOLT11 = invoice.BOLT11,
                 ExpiresAt = invoice.ExpiresAt
             };
+
+            if (invoice.CustomRecords != null)
+            {
+                data.CustomRecords = invoice.CustomRecords;
+            }
+            return data;
         }
 
         private LightningPaymentData ToModel(LightningPayment payment)

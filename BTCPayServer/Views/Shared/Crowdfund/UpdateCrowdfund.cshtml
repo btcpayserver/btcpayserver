@@ -1,0 +1,369 @@
+@using System.Globalization
+@using BTCPayServer.Abstractions.Extensions
+@using BTCPayServer.Abstractions.Models
+@using BTCPayServer.TagHelpers
+@using BTCPayServer.Views.Apps
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@model BTCPayServer.Plugins.Crowdfund.Models.UpdateCrowdfundViewModel
+@{
+    ViewData.SetActivePage(AppsNavPages.Update, "Update Crowdfund", Model.AppId);
+}
+
+@section PageHeadContent {
+    <link href="~/vendor/summernote/summernote-bs5.css" rel="stylesheet" asp-append-version="true" />
+    <link href="~/main/template-editor.css" rel="stylesheet" asp-append-version="true" />
+    <style>
+        .flatpickr-wrapper { flex-grow: 1; }
+    </style>
+}
+
+@section PageFootContent {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/summernote/summernote-bs5.js" asp-append-version="true"></script>
+}
+
+<form method="post">
+    <div class="sticky-header-setup"></div>
+    <div class="sticky-header d-sm-flex align-items-center justify-content-between">
+        <h2 class="mb-0">@ViewData["Title"]</h2>
+        <div class="d-flex gap-3 mt-3 mt-sm-0">
+            <button type="submit" class="btn btn-primary order-sm-1" id="SaveSettings">Save</button>   
+            @if (Model.ModelWithMinimumData)
+            {
+                <a class="btn btn-secondary" asp-action="ViewCrowdfund" asp-route-appId="@Model.AppId" id="ViewApp" target="_blank">View</a>
+            }
+        </div>
+    </div>
+
+    <partial name="_StatusMessage" />
+
+    <input type="hidden" asp-for="StoreId" />
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="row">
+        <div class="col-xl-8 col-xxl-constrain">
+            <div class="form-group">
+                <label asp-for="AppName" class="form-label" data-required></label>
+                <input asp-for="AppName" class="form-control" required />
+                <span asp-validation-for="AppName" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Title" class="form-label" data-required></label>
+                <input asp-for="Title" class="form-control" required />
+                <span asp-validation-for="Title" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Tagline" class="form-label"></label>
+                <input asp-for="Tagline" class="form-control" />
+                <span asp-validation-for="Tagline" class="text-danger"></span>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-xl-10 col-xxl-constrain">
+            <div class="form-group">
+                <label asp-for="Description" class="form-label" data-required></label>
+                <textarea asp-for="Description" rows="20" cols="40" class="form-control richtext"></textarea>
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <div class="d-flex align-items-center">
+                    <input asp-for="Enabled" type="checkbox" class="btcpay-toggle me-3"/>
+                    <div>
+                        <label asp-for="Enabled" class="form-label mb-0"></label>
+                        <span asp-validation-for="Enabled" class="text-danger"></span>
+                        <div class="text-muted" hidden="@Model.Enabled">The crowdfund is only visible to you. To make it visible to anyone else, enable this.</div>
+                        <div class="text-muted" hidden="@(!Model.Enabled)">The crowdfund is visible to anyone. To make it only visible to you, disable this.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-xl-10 col-xxl-constrain">
+            <h3 class="mt-5 mb-4">Goal</h3>
+            <div class="d-flex flex-wrap gap-3 mb-3">
+                <div class="form-group w-250px mb-0">
+                    <label asp-for="TargetAmount" class="form-label"></label>
+                    <input inputmode="decimal" asp-for="TargetAmount" class="form-control" />
+                    <span asp-validation-for="TargetAmount" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="TargetCurrency" class="form-label"></label>
+                    <input asp-for="TargetCurrency" class="form-control w-auto" currency-selection />
+                    <small class="d-inline-block form-text text-muted">Uses the store's default currency (@Model.StoreDefaultCurrency) if empty.</small>
+                    <span asp-validation-for="TargetCurrency" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="d-flex flex-wrap gap-3 align-items-center mb-4">
+                <div class="form-group mb-0 w-250px">
+                    <label asp-for="StartDate" class="form-label"></label>
+                    <div class="input-group flex-nowrap">
+                        <input type="datetime-local" asp-for="StartDate"
+                               value="@(Model.StartDate?.ToString("u", CultureInfo.InvariantCulture))"
+                               class="form-control flatdtpicker"
+                               placeholder="No start date has been set" />
+                        <button class="btn btn-secondary input-group-clear px-3" type="button" title="Clear">
+                            <vc:icon symbol="close"/>
+                        </button>
+                    </div>
+                </div>
+                <div class="form-group mb-0 w-250px">
+                    <label asp-for="EndDate" class="form-label"></label>
+                    <div class="input-group flex-nowrap">
+                        <input type="datetime-local" asp-for="EndDate"
+                               value="@(Model.EndDate?.ToString("u", CultureInfo.InvariantCulture))"
+                               class="form-control flatdtpicker"
+                               placeholder="No end date has been set" />
+                        <button class="btn btn-secondary input-group-clear px-3" type="button" title="Clear">
+                            <vc:icon symbol="close"/>
+                        </button>
+                    </div>
+                </div>
+                <span asp-validation-for="StartDate" class="text-danger"></span>
+                <span asp-validation-for="EndDate" class="text-danger"></span>
+            </div>
+            
+            <div class="form-group mt-4" id="ResetRow" hidden="@(Model.StartDate == null)">
+                <div class="d-flex align-items-center mb-3">
+                    <input asp-for="IsRecurring" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#ResetEverySettings" aria-expanded="@(Model.IsRecurring)" aria-controls="ResetEverySettings" />
+                    <div>
+                        <label asp-for="IsRecurring" class="form-label mb-0">Recurring Goal</label>
+                        <span asp-validation-for="IsRecurring" class="text-danger"></span>
+                        <div class="text-muted">Reset goal after a specific period of time, based on your crowdfund's start date.</div>
+                    </div>
+                </div>
+                
+                <div class="collapse @(Model.IsRecurring ? "show" : "")" id="ResetEverySettings">
+                    <div class="form-group mb-0 pt-2 w-250px">
+                        <label asp-for="ResetEveryAmount" class="form-label"></label>
+                        <div class="d-flex align-items-center">
+                            <input type="number" inputmode="numeric" asp-for="ResetEveryAmount" placeholder="Amount" class="form-control me-3" min="0">
+                            <select class="form-select w-auto" asp-for="ResetEvery">
+                                @foreach (var opt in Model.ResetEveryValues)
+                                {
+                                    <option value="@opt">@opt</option>
+                                }
+                            </select>
+                        </div>
+                        <span asp-validation-for="ResetEveryAmount" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-xl-10 col-xxl-constrain">
+            <partial name="TemplateEditor" model="@(nameof(Model.PerksTemplate), "Perks", Model.TargetCurrency ?? Model.StoreDefaultCurrency)" />
+        </div>
+    </div>
+    <div class="row collapse" id="RawEditor">
+        <div class="col-xl-10 col-xxl-constrain">
+            <div class="form-group pt-3">
+                <label asp-for="PerksTemplate" class="form-label"></label>
+                <textarea asp-for="PerksTemplate" rows="10" cols="40" class="form-control"></textarea>
+                <span asp-validation-for="PerksTemplate" class="text-danger"></span>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-xl-8 col-xxl-constrain">
+            <h3 class="mt-5 mb-4">Contributions</h3>
+            <div class="form-check mb-3">
+                <input asp-for="SortPerksByPopularity" type="checkbox" class="form-check-input" />
+                <label asp-for="SortPerksByPopularity" class="form-check-label"></label>
+                <span asp-validation-for="SortPerksByPopularity" class="text-danger"></span>
+            </div>
+            <div class="form-check mb-3">
+                <input asp-for="DisplayPerksRanking" type="checkbox" class="form-check-input" />
+                <label asp-for="DisplayPerksRanking" class="form-check-label"></label>
+                <span asp-validation-for="DisplayPerksRanking" class="text-danger"></span>
+            </div>
+            <div class="form-check mb-3">
+                <input asp-for="DisplayPerksValue" type="checkbox" class="form-check-input" />
+                <label asp-for="DisplayPerksValue" class="form-check-label"></label>
+                <span asp-validation-for="DisplayPerksValue" class="text-danger"></span>
+            </div>
+            <div class="form-check mb-3">
+                <input asp-for="EnforceTargetAmount" type="checkbox" class="form-check-input" />
+                <label asp-for="EnforceTargetAmount" class="form-check-label"></label>
+                <span asp-validation-for="EnforceTargetAmount" class="text-danger"></span>
+            </div>
+            
+            <h3 class="mt-5 mb-4">Crowdfund Behavior</h3>
+            <div class="form-check">
+                <input asp-for="UseAllStoreInvoices" type="checkbox" class="form-check-input" />
+                <label asp-for="UseAllStoreInvoices" class="form-check-label"></label>
+                <span asp-validation-for="UseAllStoreInvoices" class="text-danger"></span>
+            </div>
+
+            <h3 class="mt-5 mb-2">Additional Options</h3>
+            <div class="form-group">
+                <div class="accordion" id="additional">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="additional-sound-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#additional-sound" aria-expanded="false" aria-controls="additional-sound">
+                                Sound
+                                <vc:icon symbol="caret-down" />
+                            </button>
+                        </h2>
+                        <div id="additional-sound" class="accordion-collapse collapse" aria-labelledby="additional-sound-header">
+                            <div class="accordion-body">
+                                <div class="form-group mb-0">
+                                    <div class="d-flex align-items-center">
+                                        <input asp-for="SoundsEnabled" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#SoundsEnabledSettings" aria-expanded="@Model.SoundsEnabled" aria-controls="SoundsEnabledSettings"/>
+                                        <label asp-for="SoundsEnabled" class="form-label mb-0"></label>
+                                        <span asp-validation-for="SoundsEnabled" class="text-danger"></span>
+                                    </div>
+                                </div>
+                                <div class="collapse @(Model.SoundsEnabled ? "show" : "")" id="SoundsEnabledSettings">
+                                    <div class="form-group mb-0 pt-3">
+                                        <label asp-for="Sounds" class="form-label"></label>
+                                        <textarea asp-for="Sounds" class="form-control" rows="5"></textarea>
+                                        <span asp-validation-for="Sounds" class="text-danger"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="additional-animation-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#additional-animation" aria-expanded="false" aria-controls="additional-animation">
+                                Animation
+                                <vc:icon symbol="caret-down" />
+                            </button>
+                        </h2>
+                        <div id="additional-animation" class="accordion-collapse collapse" aria-labelledby="additional-animation-header">
+                            <div class="accordion-body">
+                                <div class="form-group mb-0">
+                                    <div class="d-flex align-items-center">
+                                        <input asp-for="AnimationsEnabled" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#AnimationsEnabledSettings" aria-expanded="@Model.AnimationsEnabled" aria-controls="AnimationsEnabledSettings"/>
+                                        <label asp-for="AnimationsEnabled" class="form-label mb-0"></label>
+                                        <span asp-validation-for="AnimationsEnabled" class="text-danger"></span>
+                                    </div>
+                                </div>
+                                <div class="collapse @(Model.AnimationsEnabled ? "show" : "")" id="AnimationsEnabledSettings">
+                                    <div class="form-group mb-0 pt-3">
+                                        <label asp-for="AnimationColors" class="form-label"></label>
+                                        <textarea asp-for="AnimationColors" class="form-control" rows="5"></textarea>
+                                        <span asp-validation-for="AnimationColors" class="text-danger"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="additional-discussion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#additional-discussion" aria-expanded="false" aria-controls="additional-discussion">
+                                Discussion
+                                <vc:icon symbol="caret-down" />
+                            </button>
+                        </h2>
+                        <div id="additional-discussion" class="accordion-collapse collapse" aria-labelledby="additional-discussion-header">
+                            <div class="accordion-body">
+                                <div class="form-group mb-0">
+                                    <div class="d-flex align-items-center">
+                                        <input asp-for="DisqusEnabled" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#DisqusEnabledSettings" aria-expanded="@Model.DisqusEnabled" aria-controls="DisqusEnabledSettings"/>
+                                        <label asp-for="DisqusEnabled" class="form-label mb-0"></label>
+                                        <span asp-validation-for="DisqusEnabled" class="text-danger"></span>
+                                    </div>
+                                </div>
+                                <div class="collapse @(Model.DisqusEnabled ? "show" : "")" id="DisqusEnabledSettings">
+                                    <div class="form-group mb-0 pt-3">
+                                        <label asp-for="DisqusShortname" class="form-label"></label>
+                                        <input asp-for="DisqusShortname" class="form-control" />
+                                        <span asp-validation-for="DisqusShortname" class="text-danger"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="additional-custom-css-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#additional-custom-css" aria-expanded="false" aria-controls="additional-custom-css">
+                                Custom CSS
+                                <vc:icon symbol="caret-down" />
+                            </button>
+                        </h2>
+                        <div id="additional-custom-css" class="accordion-collapse collapse" aria-labelledby="additional-custom-css-header">
+                            <div class="accordion-body">
+                                <div class="form-group">
+                                    <label asp-for="MainImageUrl" class="form-label"></label>
+                                    <input asp-for="MainImageUrl" class="form-control" />
+                                    <span asp-validation-for="MainImageUrl" class="text-danger"></span>
+                                </div>
+                                <div class="form-group">
+                                    <label asp-for="CustomCSSLink" class="form-label"></label>
+                                    <a href="https://docs.btcpayserver.org/Development/Theme/#2-bootstrap-themes" target="_blank" rel="noreferrer noopener">
+                                        <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+                                    </a>
+                                    <input asp-for="CustomCSSLink" class="form-control" />
+                                    <span asp-validation-for="CustomCSSLink" class="text-danger"></span>
+                                </div>
+                                <div class="form-group mb-4">
+                                    <label asp-for="EmbeddedCSS" class="form-label"></label>
+                                    <textarea asp-for="EmbeddedCSS" rows="10" cols="40" class="form-control"></textarea>
+                                    <span asp-validation-for="EmbeddedCSS" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="additional-notification-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#additional-notification" aria-expanded="false" aria-controls="additional-notification">
+                                Notification URL Callbacks
+                                <vc:icon symbol="caret-down" />
+                            </button>
+                        </h2>
+                        <div id="additional-notification" class="accordion-collapse collapse" aria-labelledby="additional-notification-header">
+                            <div class="accordion-body">
+                                <div class="form-group">
+                                    <label asp-for="NotificationUrl" class="form-label"></label>
+                                    <input asp-for="NotificationUrl" class="form-control" />
+                                    <span asp-validation-for="NotificationUrl" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<div class="d-flex gap-3 mt-3">
+    <a class="btn btn-secondary" asp-action="ListInvoices" asp-controller="UIInvoice" asp-route-storeId="@Model.StoreId" asp-route-searchterm="@Model.SearchTerm">Invoices</a>
+    <a id="DeleteApp" class="btn btn-outline-danger" asp-controller="UIApps" asp-action="DeleteApp" asp-route-appId="@Model.AppId" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The app <strong>@Model.AppName</strong> and its settings will be permanently deleted." data-confirm-input="DELETE">Delete this app</a>
+</div>
+
+<partial name="_Confirm" model="@(new ConfirmModel("Delete app", "This app will be removed from this store.", "Delete"))" />
+
+<script>
+    const resetRow = document.getElementById('ResetRow');
+    const startDateInputId = "StartDate";
+
+    document.addEventListener("DOMContentLoaded", () => {
+        setTimeout(() => {
+            flatpickrInstances.forEach((instance) => {
+                if (instance.element.id === startDateInputId) {
+                    instance.config.onChange.push((selectedDates) => {
+                        if (selectedDates.length) {
+                            // Show the reset row if start date is selected.
+                            // Since start date must be selected in order for the reset options to be set
+                            // we don't need to show it by default and can show it only when start date is selected
+                                resetRow.removeAttribute('hidden');
+                        }
+                    });
+                }
+            });
+        }, 0);
+
+        document.addEventListener('input-group-clear-input-value-cleared', ({ detail }) => {
+            const input = detail[0];
+            if (input.id === startDateInputId) {
+                resetRow.setAttribute('hidden', 'hidden');
+            }
+        });
+    });
+</script>

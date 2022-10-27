@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Custodians;
+using BTCPayServer.Abstractions.Custodians.Client;
 using BTCPayServer.Abstractions.Form;
 using BTCPayServer.Client.Models;
 using Newtonsoft.Json.Linq;
@@ -76,7 +77,7 @@ public class MockCustodian : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
     public List<AssetPairData> GetTradableAssetPairs()
     {
         var r = new List<AssetPairData>();
-        r.Add(new AssetPairData("BTC", "EUR"));
+        r.Add(new AssetPairData("BTC", "EUR", (decimal) 0.0001));
         return r;
     }
 

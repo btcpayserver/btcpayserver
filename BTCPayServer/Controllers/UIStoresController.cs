@@ -3,9 +3,11 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
+using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Configuration;
@@ -59,6 +61,7 @@ namespace BTCPayServer.Controllers
             IAuthorizationService authorizationService,
             EventAggregator eventAggregator,
             AppService appService,
+            IFileService fileService,
             WebhookSender webhookNotificationManager,
             IDataProtectionProvider dataProtector,
             IOptions<ExternalServicesOptions> externalServiceOptions)
@@ -74,6 +77,7 @@ namespace BTCPayServer.Controllers
             _policiesSettings = policiesSettings;
             _authorizationService = authorizationService;
             _appService = appService;
+            _fileService = fileService;
             DataProtector = dataProtector.CreateProtector("ConfigProtector");
             WebhookNotificationManager = webhookNotificationManager;
             _EventAggregator = eventAggregator;
@@ -101,8 +105,13 @@ namespace BTCPayServer.Controllers
         private readonly PoliciesSettings _policiesSettings;
         private readonly IAuthorizationService _authorizationService;
         private readonly AppService _appService;
+        private readonly IFileService _fileService;
         private readonly EventAggregator _EventAggregator;
         private readonly IOptions<ExternalServicesOptions> _externalServiceOptions;
+
+        public string? GeneratedPairingCode { get; set; }
+        public WebhookSender WebhookNotificationManager { get; }
+        public IDataProtector DataProtector { get; }
 
         [TempData]
         public bool StoreNotConfigured
@@ -592,6 +601,8 @@ namespace BTCPayServer.Controllers
                 Id = store.Id,
                 StoreName = store.StoreName,
                 StoreWebsite = store.StoreWebsite,
+                LogoFileId = storeBlob.LogoFileId,
+                BrandColor = storeBlob.BrandColor,
                 NetworkFeeMode = storeBlob.NetworkFeeMode,
                 AnyoneCanCreateInvoice = storeBlob.AnyoneCanInvoice,
                 PaymentTolerance = storeBlob.PaymentTolerance,
@@ -619,7 +630,7 @@ namespace BTCPayServer.Controllers
                 needUpdate = true;
                 CurrentStore.StoreWebsite = model.StoreWebsite;
             }
-            
+
             var blob = CurrentStore.GetStoreBlob();
             blob.AnyoneCanInvoice = model.AnyoneCanCreateInvoice;
             blob.NetworkFeeMode = model.NetworkFeeMode;
@@ -627,6 +638,43 @@ namespace BTCPayServer.Controllers
             blob.DefaultCurrency = model.DefaultCurrency;
             blob.InvoiceExpiration = TimeSpan.FromMinutes(model.InvoiceExpiration);
             blob.RefundBOLT11Expiration = TimeSpan.FromDays(model.BOLT11Expiration);
+            if (!string.IsNullOrEmpty(model.BrandColor) && !ColorPalette.IsValid(model.BrandColor))
+            {
+                ModelState.AddModelError(nameof(model.BrandColor), "Invalid color");
+                return View(model);
+            }
+            blob.BrandColor = model.BrandColor;
+            
+            if (model.LogoFile != null)
+            {
+                if (model.LogoFile.ContentType.StartsWith("image/", StringComparison.InvariantCulture))
+                {
+                    var userId = GetUserId();
+                    if (userId is null)
+                        return NotFound();
+                
+                    // delete existing image
+                    if (!string.IsNullOrEmpty(blob.LogoFileId))
+                    {
+                        await _fileService.RemoveFile(blob.LogoFileId, userId);
+                    }
+                    
+                    // add new image
+                    try
+                    {
+                        var storedFile = await _fileService.AddFile(model.LogoFile, userId);
+                        blob.LogoFileId = storedFile.Id;
+                    }
+                    catch (Exception e)
+                    {
+                        TempData[WellKnownTempData.ErrorMessage] = $"Could not save logo: {e.Message}";
+                    }
+                }
+                else
+                {
+                    TempData[WellKnownTempData.ErrorMessage] = "The uploaded logo file needs to be an image";
+                }
+            }
             
             if (CurrentStore.SetStoreBlob(blob))
             {
@@ -672,10 +720,10 @@ namespace BTCPayServer.Controllers
         private DerivationSchemeSettings ParseDerivationStrategy(string derivationScheme, BTCPayNetwork network)
         {
             var parser = new DerivationSchemeParser(network);
-            try
+            var isOD = Regex.Match(derivationScheme, @"\(.*?\)");
+            if (isOD.Success)
             {
-                var derivationSchemeSettings = new DerivationSchemeSettings();
-                derivationSchemeSettings.Network = network;
+                var derivationSchemeSettings = new DerivationSchemeSettings { Network = network };
                 var result = parser.ParseOutputDescriptor(derivationScheme);
                 derivationSchemeSettings.AccountOriginal = derivationScheme.Trim();
                 derivationSchemeSettings.AccountDerivation = result.Item1;
@@ -687,16 +735,12 @@ namespace BTCPayServer.Controllers
                 }).ToArray() ?? new AccountKeySettings[result.Item1.GetExtPubKeys().Count()];
                 return derivationSchemeSettings;
             }
-            catch (Exception)
-            {
-                // ignored
-            }
-
-            return new DerivationSchemeSettings(parser.Parse(derivationScheme), network);
+            
+            var strategy = parser.Parse(derivationScheme);
+            return new DerivationSchemeSettings(strategy, network);
         }
 
-        [HttpGet]
-        [Route("{storeId}/Tokens")]
+        [HttpGet("{storeId}/tokens")]
         public async Task<IActionResult> ListTokens()
         {
             var model = new TokensViewModel();
@@ -739,8 +783,7 @@ namespace BTCPayServer.Controllers
             return RedirectToAction(nameof(ListTokens), new { storeId = token?.StoreId });
         }
 
-        [HttpGet]
-        [Route("{storeId}/tokens/{tokenId}")]
+        [HttpGet("{storeId}/tokens/{tokenId}")]
         public async Task<IActionResult> ShowToken(string tokenId)
         {
             var token = await _TokenRepository.GetToken(tokenId);
@@ -749,8 +792,18 @@ namespace BTCPayServer.Controllers
             return View(token);
         }
 
-        [HttpPost]
-        [Route("{storeId}/Tokens/Create")]
+        [HttpGet("{storeId}/tokens/create")]
+        public IActionResult CreateToken(string storeId)
+        {
+            var model = new CreateTokenViewModel();
+            ViewBag.HidePublicKey = storeId == null;
+            ViewBag.ShowStores = storeId == null;
+            ViewBag.ShowMenu = storeId != null;
+            model.StoreId = storeId;
+            return View(model);
+        }
+
+        [HttpPost("{storeId}/tokens/create")]
         public async Task<IActionResult> CreateToken(string storeId, CreateTokenViewModel model)
         {
             if (!ModelState.IsValid)
@@ -791,29 +844,12 @@ namespace BTCPayServer.Controllers
             GeneratedPairingCode = pairingCode;
             return RedirectToAction(nameof(RequestPairing), new
             {
-                pairingCode = pairingCode,
+                pairingCode,
                 selectedStore = storeId
             });
         }
 
-        public string? GeneratedPairingCode { get; set; }
-        public WebhookSender WebhookNotificationManager { get; }
-        public IDataProtector DataProtector { get; }
-
-        [HttpGet]
-        [Route("{storeId}/Tokens/Create")]
-        public IActionResult CreateToken(string storeId)
-        {
-            var model = new CreateTokenViewModel();
-            ViewBag.HidePublicKey = storeId == null;
-            ViewBag.ShowStores = storeId == null;
-            ViewBag.ShowMenu = storeId != null;
-            model.StoreId = storeId;
-            return View(model);
-        }
-
-        [HttpGet]
-        [Route("/api-tokens")]
+        [HttpGet("/api-tokens")]
         [AllowAnonymous]
         public async Task<IActionResult> CreateToken()
         {
@@ -834,16 +870,14 @@ namespace BTCPayServer.Controllers
             return View(model);
         }
 
-        [HttpPost]
-        [Route("/api-tokens")]
+        [HttpPost("/api-tokens")]
         [AllowAnonymous]
         public Task<IActionResult> CreateToken2(CreateTokenViewModel model)
         {
             return CreateToken(model.StoreId, model);
         }
 
-        [HttpPost]
-        [Route("{storeId}/tokens/apikey")]
+        [HttpPost("{storeId}/tokens/apikey")]
         public async Task<IActionResult> GenerateAPIKey(string storeId, string command = "")
         {
             var store = HttpContext.GetStoreData();
@@ -866,50 +900,48 @@ namespace BTCPayServer.Controllers
             });
         }
 
-        [HttpGet]
-        [Route("/api-access-request")]
+        [HttpGet("/api-access-request")]
         [AllowAnonymous]
         public async Task<IActionResult> RequestPairing(string pairingCode, string? selectedStore = null)
         {
             var userId = GetUserId();
             if (userId == null)
                 return Challenge(AuthenticationSchemes.Cookie);
+            
             if (pairingCode == null)
                 return NotFound();
+            
             if (selectedStore != null)
             {
                 var store = await _Repo.FindStore(selectedStore, userId);
                 if (store == null)
                     return NotFound();
                 HttpContext.SetStoreData(store);
-                ViewBag.ShowStores = false;
             }
+            
             var pairing = await _TokenRepository.GetPairingAsync(pairingCode);
             if (pairing == null)
             {
                 TempData[WellKnownTempData.ErrorMessage] = "Unknown pairing code";
                 return RedirectToAction(nameof(UIHomeController.Index), "UIHome");
             }
-            else
+            
+            var stores = await _Repo.GetStoresByUserId(userId);
+            return View(new PairingModel
             {
-                var stores = await _Repo.GetStoresByUserId(userId);
-                return View(new PairingModel
+                Id = pairing.Id,
+                Label = pairing.Label,
+                SIN = pairing.SIN ?? "Server-Initiated Pairing",
+                StoreId = selectedStore ?? stores.FirstOrDefault()?.Id,
+                Stores = stores.Where(u => u.Role == StoreRoles.Owner).Select(s => new PairingModel.StoreViewModel
                 {
-                    Id = pairing.Id,
-                    Label = pairing.Label,
-                    SIN = pairing.SIN ?? "Server-Initiated Pairing",
-                    StoreId = selectedStore ?? stores.FirstOrDefault()?.Id,
-                    Stores = stores.Where(u => u.Role == StoreRoles.Owner).Select(s => new PairingModel.StoreViewModel()
-                    {
-                        Id = s.Id,
-                        Name = string.IsNullOrEmpty(s.StoreName) ? s.Id : s.StoreName
-                    }).ToArray()
-                });
-            }
+                    Id = s.Id,
+                    Name = string.IsNullOrEmpty(s.StoreName) ? s.Id : s.StoreName
+                }).ToArray()
+            });
         }
 
-        [HttpPost]
-        [Route("/api-access-request")]
+        [HttpPost("/api-access-request")]
         public async Task<IActionResult> Pair(string pairingCode, string storeId)
         {
             if (pairingCode == null)

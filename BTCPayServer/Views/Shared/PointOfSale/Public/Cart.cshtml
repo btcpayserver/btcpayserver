@@ -1,0 +1,305 @@
+@using BTCPayServer.Plugins.PointOfSale.Models
+@model BTCPayServer.Plugins.PointOfSale.Models.ViewPointOfSaleViewModel
+@{
+    Layout = "PointOfSale/Public/_LayoutPos";
+    var customTipPercentages = Model.CustomTipPercentages;
+    var anyInventoryItems = Model.Items.Any(item => item.Inventory.HasValue);
+}
+
+<script id="template-cart-item" type="text/template">
+    <tr data-id="{id}">
+        <td class="align-middle pe-0" width="1%">{image}</td>
+        <td class="align-middle pe-0 ps-2"><b>{title}</b></td>
+        <td class="align-middle px-0">
+            <a class="js-cart-item-remove btn btn-link" href="#"><i class="fa fa-trash text-muted"></i></a>
+        </td>
+        <td class="align-middle px-0">
+            <div class="input-group align-items-center">
+                <a class="js-cart-item-minus btn btn-link px-2" href="#"><i class="fa fa-minus-circle fa-fw text-danger"></i></a>
+                <input class="js-cart-item-count form-control form-control-sm pull-left hide-number-spin text-end" type="number" step="1" name="count" placeholder="Qty" max="{inventory}"  value="{count}" data-prev="{count}">
+                <a class="input-group-text js-cart-item-plus btn btn-link px-2" href="#">
+                    <i class="fa fa-plus-circle fa-fw text-success"></i>
+                </a>
+            </div>
+        </td>
+        <td class="align-middle text-end">{price}</td>
+    </tr>
+</script>
+
+<script id="template-cart-item-image" type="text/template">
+    <img class="cart-item-image" src="{image}" alt="">
+</script>
+
+<script id="template-cart-custom-amount" type="text/template">
+    <tr>
+        <td colspan="5">
+            <div class="input-group">
+                <span class="input-group-text"><i class="fa fa-shopping-cart fa-fw"></i></span>
+                <input class="js-cart-custom-amount form-control" type="number" min="0" step="@Model.Step" name="amount" placeholder="Pay what you want">
+                <div class="input-group-text">
+                    <a class="js-cart-custom-amount-remove btn btn-danger" href="#"><i class="fa fa-times"></i></a>
+                </div>
+            </div>
+        </td>
+    </tr>
+</script>
+
+<script id="template-cart-extra" type="text/template">
+   @if(Model.ShowCustomAmount){
+        <tr>
+            <th colspan="5" class="border-0 pb-0">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fa fa-shopping-cart fa-fw"></i></span>
+                    <input class="js-cart-custom-amount form-control" type="number" min="0" step="@Model.Step" name="amount" value="{customAmount}" placeholder="Pay what you want">
+                    <a class="js-cart-custom-amount-remove btn btn-danger" href="#"><i class="fa fa-times"></i></a>
+                </div>
+            </th>
+        </tr>
+    }
+    @if (Model.ShowDiscount)
+    {
+        <tr>
+            <th colspan="5" class="border-top-0">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fa fa-percent fa-fw"></i></span>
+                    <input class="js-cart-discount form-control" type="number" min="0" step="@Model.Step" value="{discount}" name="discount" placeholder="Discount in %">
+                    <a class="js-cart-discount-remove btn btn-danger" href="#"><i class="fa fa-times"></i></a>
+                </div>
+            </th>
+        </tr>
+    }
+</script>
+
+<script id="template-cart-tip" type="text/template">
+    @if (Model.EnableTips)
+    {
+        <tr>
+            <th colspan="5" class="border-top-0 pt-4 h5">@Model.CustomTipText</th>
+        </tr>
+        <tr>
+            <th colspan="5" class="border-0">
+                <div class="input-group mb-2">
+                    <span class="input-group-text"><i class="fa fa-money fa-fw"></i></span>
+                    <input class="js-cart-tip form-control form-control-lg" type="number" min="0" step="@Model.Step" value="{tip}" name="tip" placeholder="Tip in @(Model.CurrencyInfo.CurrencySymbol != null ? Model.CurrencyInfo.CurrencySymbol : Model.CurrencyCode)">
+                    <a class="js-cart-tip-remove btn btn-lg btn-danger" href="#"><i class="fa fa-times"></i></a>
+                </div>
+                <div class="row mb-1">
+                    @if (customTipPercentages != null && customTipPercentages.Length > 0)
+                    {
+                        @for (int i = 0; i < customTipPercentages.Length; i++)
+                        {
+                            var percentage = customTipPercentages[i];
+                            <div class="col">
+                                <a class="js-cart-tip-btn btn btn-lg btn-light w-100 border mb-2" href="#" data-tip="@percentage">@percentage%</a>
+                            </div>
+                        }
+                    }
+
+                </div>
+            </th>
+        </tr>}
+</script>
+
+<script id="template-cart-total" type="text/template">
+    <tr>
+        <th colspan="1" class="pb-4 h4">Total</th>
+        <th colspan="4" class="pb-4 h4 text-end">
+            <span class="js-cart-total">{total}</span>
+        </th>
+    </tr>
+</script>
+
+<div id="cartModal" class="modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white border-0">
+                <h5 class="modal-title">Confirmation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" ref="close">
+                    <vc:icon symbol="close" />
+                </button>
+            </div>
+            <div class="modal-body p-0">
+                <table id="js-cart-summary" class="table m-0">
+                    <tbody class="my-3">
+                        <tr>
+                            <td colspan="2" class="border-top-0 h5">Summary</td>
+                        </tr>
+                        <tr>
+                            <td class="border-0 pb-0 h6">Total products</td>
+                            <td align="right" class="border-0 pb-0 h6">
+                                <span class="js-cart-summary-products text-nowrap"></span>
+                            </td>
+                        </tr>
+                        @if (Model.ShowDiscount)
+                        {
+                            <tr>
+                                <td class="border-0 pb-y h6">Discount</td>
+                                <td align="right" class="border-0 pb-y h6">
+                                    <span class="js-cart-summary-discount text-nowrap"></span>
+                                </td>
+                            </tr>
+                        }
+                        @if (Model.EnableTips)
+                        {
+                            <tr>
+                                <td class="border-top-0 pt-0 h6">Tip</td>
+                                <td align="right" class="border-top-0 pt-0 h6">
+                                    <span class="js-cart-summary-tip text-nowrap"></span>
+                                </td>
+                            </tr>
+                        }
+                        <tr>
+                            <td class="h3 table-light">Total</td>
+                            <td class="h3 table-light text-end">
+                                <span class="js-cart-summary-total text-nowrap"></span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer bg-light">
+                <form
+                    id="js-cart-pay-form"
+                    method="post"
+                    asp-action="ViewPointOfSale"
+                    asp-route-appId="@Model.AppId"
+                    asp-antiforgery="false"
+                    data-buy
+                >
+                    <input id="js-cart-amount" class="form-control" type="hidden" name="amount">
+                    <input id="js-cart-posdata" class="form-control" type="hidden" name="posdata">
+                    <button id="js-cart-pay" class="btn btn-primary btn-lg" type="submit">
+                        <b>@Model.CustomButtonText</b>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="wrapper">
+    <!-- Page Content  -->
+    <div id="content">
+        <div class="p-2 p-sm-4">
+            <div class="row">
+                <partial name="_StatusMessage" />
+
+                <div class="col-sm-4 col-lg-2 order-sm-last text-end mb-2">
+                    <a class="js-cart btn btn-lg btn-outline-primary" href="#">
+                        <i class="fa fa-shopping-basket"></i>&nbsp;
+                        <span class="badge bg-light rounded-pill">
+                            <span id="js-cart-items">0</span>
+                        </span>
+                    </a>
+                </div>
+                <div class="col-sm-8 col-lg-10 mb-2">
+                    <div class="mb-2 position-relative">
+                        <input type="text" class="js-search form-control form-control-lg" placeholder="Find product">
+                        <a class="js-search-reset btn btn-lg btn-link text-black" href="#">
+                            <i class="fa fa-times-circle fa-lg"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            @if (!string.IsNullOrEmpty(Model.Description))
+            {
+                <div class="row">
+                    <div class="overflow-hidden col-12">@Safe.Raw(Model.Description)</div>
+                </div>
+            }
+        </div>
+        <div id="js-pos-list" class="text-center mx-auto px-4">
+            <div class="card-deck my-3">
+                @for (var index = 0; index < Model.Items.Length; index++)
+                {
+                    var item = Model.Items[index];
+                    var image = item.Image;
+                    var description = item.Description;
+
+                    <div class="js-add-cart card px-0 card-wrapper" data-index="@index">
+                        @if (!string.IsNullOrWhiteSpace(image))
+                        {
+                            <img class="card-img-top" src="@image" alt="@item.Title" asp-append-version="true">
+                        }
+                        <div class="card-body p-3">
+                            <h6 class="card-title mb-0">@item.Title</h6>
+                            @if (!String.IsNullOrWhiteSpace(description))
+                            {
+                                <p class="card-text">@Safe.Raw(description)</p>
+                            }
+                        </div>
+                        <div class="card-footer bg-transparent border-0 pt-0 pb-3">
+
+                            <span class="text-muted small">
+                                @{
+                                    var buttonText = string.IsNullOrEmpty(item.BuyButtonText) ? item.Price.Type != ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Fixed ? Model.CustomButtonText : Model.ButtonText : item.BuyButtonText;
+                                    if (item.Price.Type != ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Topup)
+                                    {
+                                        buttonText = buttonText.Replace("{0}",item.Price.Formatted)
+                                            ?.Replace("{Price}",item.Price.Formatted);
+                                    }
+                                }
+                                @Safe.Raw(buttonText)
+                            </span>
+                             @if (item.Inventory.HasValue)
+                             {
+
+                                 <div class="w-100 pt-2 text-center text-muted">
+                                     @if (item.Inventory > 0)
+                                     {
+                                         <span>@item.Inventory left</span>
+                                     }
+                                     else
+                                     {
+                                         <span>Sold out</span>
+                                     }
+                                 </div>
+                             } else if (anyInventoryItems)
+                             {
+                                 <div class="w-100 pt-2">&nbsp;</div>
+                             }
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar  -->
+    <nav id="sidebar">
+        <div class="bg-primary p-3 clearfix">
+            <h3 class="text-white m-0 pull-left">Cart</h3>
+            <a class="js-cart btn btn-sm bg-white text-black pull-right ms-5" href="#">
+                <i class="fa fa-times fa-lg"></i>
+            </a>
+            <a class="js-cart-destroy btn btn-danger pull-right" href="#" style="display: none;">Empty cart <i class="fa fa-trash fa-fw fa-lg"></i></a>
+        </div>
+
+        <table id="js-cart-list" class="table table-responsive table-light mt-0 mb-0">
+            <thead>
+                <tr>
+                    <th colspan="3" width="55%">Product</th>
+                    <th class="text-center" width="20%">
+                        <div style="width: 84px">Quantity</div>
+                    </th>
+                    <th class="text-end" width="25%">
+                        <div style="min-width: 50px">Price</div>
+                    </th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+
+        <table id="js-cart-extra" class="table table-light mt-0 mb-0">
+            <thead></thead>
+        </table>
+
+        <button id="js-cart-confirm" data-bs-toggle="modal" data-bs-target="#cartModal" class="btn btn-primary btn-lg w-100 mb-3 p-3" disabled="disabled" type="submit">
+            <b>Confirm</b>
+        </button>
+
+        <div class="text-center mb-5 pb-5">
+            <svg class="logo" viewBox="0 0 192 84" xmlns="http://www.w3.org/2000/svg"><g><path d="M5.206 83.433a4.86 4.86 0 01-4.859-4.861V5.431a4.86 4.86 0 119.719 0v73.141a4.861 4.861 0 01-4.86 4.861" fill="#CEDC21" class="logo-brand-light"/><path d="M5.209 83.433a4.862 4.862 0 01-2.086-9.253L32.43 60.274 2.323 38.093a4.861 4.861 0 015.766-7.826l36.647 26.999a4.864 4.864 0 01-.799 8.306L7.289 82.964a4.866 4.866 0 01-2.08.469" fill="#51B13E" class="logo-brand-medium"/><path d="M5.211 54.684a4.86 4.86 0 01-2.887-8.774L32.43 23.73 3.123 9.821a4.861 4.861 0 014.166-8.784l36.648 17.394a4.86 4.86 0 01.799 8.305l-36.647 27a4.844 4.844 0 01-2.878.948" fill="#CEDC21" class="logo-brand-light"/><path d="M10.066 31.725v20.553L24.01 42.006z" fill="#1E7A44" class="logo-brand-dark"/><path d="M10.066 5.431A4.861 4.861 0 005.206.57 4.86 4.86 0 00.347 5.431v61.165h9.72V5.431h-.001z" fill="#CEDC21" class="logo-brand-light"/><path d="M74.355 41.412c3.114.884 4.84 3.704 4.84 7.238 0 5.513-3.368 8.082-7.955 8.082H60.761V27.271h9.259c4.504 0 7.997 2.146 7.997 7.743 0 2.821-1.179 5.43-3.662 6.398m-4.293-.716c3.324 0 6.018-1.179 6.018-5.724 0-4.586-2.776-5.808-6.145-5.808h-7.197v11.531h7.324v.001zm1.052 14.099c3.366 0 6.06-1.768 6.06-6.145 0-4.713-3.072-6.144-6.901-6.144h-7.534v12.288h8.375v.001zM98.893 27.271v1.81h-8.122v27.651h-1.979V29.081h-8.123v-1.81zM112.738 26.85c5.01 0 9.554 2.524 10.987 8.543h-1.895c-1.348-4.923-5.303-6.732-9.134-6.732-6.944 0-10.605 5.681-10.605 13.341 0 8.08 3.661 13.256 10.646 13.256 4.125 0 7.828-1.85 9.26-7.279h1.895c-1.264 6.271-6.229 9.174-11.154 9.174-7.87 0-12.583-5.808-12.583-15.15 0-8.966 4.969-15.153 12.583-15.153M138.709 27.271c5.091 0 8.795 3.326 8.795 9.764 0 6.06-3.704 9.722-8.795 9.722h-7.746v9.976h-1.935V27.271h9.681zm0 17.549c3.745 0 6.816-2.397 6.816-7.827 0-5.429-2.947-7.869-6.816-7.869h-7.746V44.82h7.746zM147.841 56.732v-.255l11.741-29.29h.885l11.615 29.29v.255h-2.062l-3.322-8.501H153.27l-3.324 8.501h-2.105zm12.164-26.052l-6.059 15.697h12.078l-6.019-15.697zM189.551 27.271h2.104v.293l-9.176 16.92v12.248h-2.02V44.484l-9.216-16.961v-.252h2.147l3.997 7.492 4.043 7.786h.04l4.081-7.786z" class="logo-brand-text"/></g></svg>
+        </div>
+    </nav>
+</div>

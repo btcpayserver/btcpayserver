@@ -25,7 +25,7 @@ namespace BTCPayServer.Abstractions.Contracts
         class CustomNpgsqlMigrationsSqlGenerator : NpgsqlMigrationsSqlGenerator
         {
 #pragma warning disable EF1001 // Internal EF Core API usage.
-            public CustomNpgsqlMigrationsSqlGenerator(MigrationsSqlGeneratorDependencies dependencies, Npgsql.EntityFrameworkCore.PostgreSQL.Infrastructure.Internal.INpgsqlOptions opts) : base(dependencies, opts)
+            public CustomNpgsqlMigrationsSqlGenerator(MigrationsSqlGeneratorDependencies dependencies, Npgsql.EntityFrameworkCore.PostgreSQL.Infrastructure.Internal.INpgsqlSingletonOptions opts) : base(dependencies, opts)
 #pragma warning restore EF1001 // Internal EF Core API usage.
             {
             }

@@ -34,24 +34,28 @@ namespace BTCPayServer.PaymentRequest
             _PaymentRequestController = paymentRequestController;
         }
 
-        public async Task ListenToPaymentRequest(string paymentRequestId)
+        public async Task ListenToPaymentRequest(string prId)
         {
             if (Context.Items.ContainsKey("pr-id"))
             {
                 await Groups.RemoveFromGroupAsync(Context.ConnectionId, Context.Items["pr-id"].ToString());
                 Context.Items.Remove("pr-id");
             }
-
-            Context.Items.Add("pr-id", paymentRequestId);
-            await Groups.AddToGroupAsync(Context.ConnectionId, paymentRequestId);
+            if (prId != null)
+            {
+                Context.Items.Add("pr-id", prId);
+                await Groups.AddToGroupAsync(Context.ConnectionId, prId);
+            }
         }
 
 
-        public async Task Pay(decimal? amount = null)
+        public async Task Pay(string prId, decimal? amount = null)
         {
+            if (prId is null)
+                return;
             _PaymentRequestController.ControllerContext.HttpContext = Context.GetHttpContext();
             var result =
-                await _PaymentRequestController.PayPaymentRequest(Context.Items["pr-id"].ToString(), false, amount);
+                await _PaymentRequestController.PayPaymentRequest(prId, false, amount);
             switch (result)
             {
                 case OkObjectResult okObjectResult:
@@ -66,15 +70,17 @@ namespace BTCPayServer.PaymentRequest
             }
         }
 
-        public async Task CancelUnpaidPendingInvoice()
+        public async Task CancelUnpaidPendingInvoice(string prId)
         {
+            if (prId is null)
+                return;
             _PaymentRequestController.ControllerContext.HttpContext = Context.GetHttpContext();
             var result =
-                await _PaymentRequestController.CancelUnpaidPendingInvoice(Context.Items["pr-id"].ToString(), false);
+                await _PaymentRequestController.CancelUnpaidPendingInvoice(prId, false);
             switch (result)
             {
                 case OkObjectResult okObjectResult:
-                    await Clients.Group(Context.Items["pr-id"].ToString()).SendCoreAsync(InvoiceCancelled, System.Array.Empty<object>());
+                    await Clients.Group(prId).SendCoreAsync(InvoiceCancelled, System.Array.Empty<object>());
                     break;
 
                 default:

@@ -10,7 +10,11 @@
 }
 
 @section PageHeadContent {
-    <bundle name="wwwroot/bundles/camera-bundle.min.js"></bundle>
+    <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/vue-qrcode/vue-qrcode.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/ur-registry/urlib.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/vue-qrcode-reader/VueQrcodeReader.umd.min.js" asp-append-version="true"></script>
+
     <link href="~/vendor/vue-qrcode-reader/vue-qrcode-reader.css" rel="stylesheet" asp-append-version="true"/>
 }
 
@@ -198,14 +202,13 @@
 @section PageFootContent {
     <script>
         const wallets = @Safe.Json(Model.AccountKeys.Select(model => Encoders.Hex.EncodeData(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(model, Formatting.None)))))
-        const qrApp = initQRShow("Wallet QR", "", "scan-qr-modal")
+        const qrApp = initQRShow({ title: "Wallet QR" })
         
         delegate('click', '#Delete', event => { event.preventDefault() })
         
         delegate('click', 'button[data-account-key]', event => {
-            const { accountKey } = event.target.dataset
-            qrApp.data = wallets[parseInt(accountKey)]
-            $("#scan-qr-modal").modal("show")
+            const { accountKey } = event.target.dataset;
+            qrApp.showData(wallets[parseInt(accountKey)]);
         })
         
         if (navigator.registerProtocolHandler) {

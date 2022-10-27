@@ -34,22 +34,24 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
     private readonly ExplorerClientProvider _explorerClientProvider;
     private readonly BTCPayNetworkJsonSerializerSettings _jsonSerializerSettings;
     private readonly ApplicationDbContextFactory _dbContextFactory;
-    private readonly EventAggregator _eventAggregator;
     private readonly NotificationSender _notificationSender;
     private readonly Logs Logs;
+
+    public WalletRepository WalletRepository { get; }
+
     public BitcoinLikePayoutHandler(BTCPayNetworkProvider btcPayNetworkProvider,
+        WalletRepository walletRepository,
         ExplorerClientProvider explorerClientProvider,
         BTCPayNetworkJsonSerializerSettings jsonSerializerSettings,
         ApplicationDbContextFactory dbContextFactory,
-        EventAggregator eventAggregator,
         NotificationSender notificationSender,
         Logs logs)
     {
         _btcPayNetworkProvider = btcPayNetworkProvider;
+        WalletRepository = walletRepository;
         _explorerClientProvider = explorerClientProvider;
         _jsonSerializerSettings = jsonSerializerSettings;
         _dbContextFactory = dbContextFactory;
-        _eventAggregator = eventAggregator;
         _notificationSender = notificationSender;
         this.Logs = logs;
     }
@@ -103,9 +105,9 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
         {
             return null;
         }
-        var raw = JObject.Parse(Encoding.UTF8.GetString(payout.Proof));
-        if (raw.TryGetValue("proofType", StringComparison.InvariantCultureIgnoreCase, out var proofType) &&
-            proofType.Value<string>() == ManualPayoutProof.Type)
+
+        ParseProofType(payout.Proof, out var raw, out var proofType);
+        if (proofType == ManualPayoutProof.Type)
         {
             return raw.ToObject<ManualPayoutProof>();
         }
@@ -116,6 +118,22 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
             return null;
         res.LinkTemplate = network.BlockExplorerLink;
         return res;
+    }
+
+    public static void ParseProofType(byte[] proof, out JObject obj, out string type)
+    {
+        type = null;
+        if (proof is null)
+        {
+            obj = null;
+            return;
+        }
+
+        obj = JObject.Parse(Encoding.UTF8.GetString(proof));
+        if (obj.TryGetValue("proofType", StringComparison.InvariantCultureIgnoreCase, out var proofType))
+        {
+            type = proofType.Value<string>();
+        }
     }
 
     public void StartBackgroundCheck(Action<Type[]> subscribe)
@@ -392,7 +410,9 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
                 return;
 
             var derivationSchemeSettings = payout.StoreData
-                .GetDerivationSchemeSettings(_btcPayNetworkProvider, newTransaction.CryptoCode).AccountDerivation;
+                .GetDerivationSchemeSettings(_btcPayNetworkProvider, newTransaction.CryptoCode)?.AccountDerivation;
+            if (derivationSchemeSettings is null)
+                return;
 
             var storeWalletMatched = (await _explorerClientProvider.GetExplorerClient(newTransaction.CryptoCode)
                 .GetTransactionAsync(derivationSchemeSettings,
@@ -408,13 +428,10 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
             if (isInternal)
             {
                 payout.State = PayoutState.InProgress;
-                var walletId = new WalletId(payout.StoreDataId, newTransaction.CryptoCode);
-                _eventAggregator.Publish(new UpdateTransactionLabel(walletId,
+                await WalletRepository.AddWalletTransactionAttachment(
+                    new WalletId(payout.StoreDataId, newTransaction.CryptoCode),
                     newTransaction.NewTransactionEvent.TransactionData.TransactionHash,
-                    UpdateTransactionLabel.PayoutTemplate(new ()
-                    {
-                        {payout.PullPaymentDataId?? "", new List<string>{payout.Id}}
-                    }, walletId.ToString())));
+                    Attachment.Payout(payout.PullPaymentDataId, payout.Id));
             }
             else
             {
@@ -441,11 +458,7 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
 
     public void SetProofBlob(PayoutData data, PayoutTransactionOnChainBlob blob)
     {
-        var bytes = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(blob, _jsonSerializerSettings.GetSerializer(data.GetPaymentMethodId().CryptoCode)));
-        // We only update the property if the bytes actually changed, this prevent from hammering the DB too much
-        if (data.Proof is null || bytes.Length != data.Proof.Length || !bytes.SequenceEqual(data.Proof))
-        {
-            data.Proof = bytes;
-        }
+        data.SetProofBlob(blob, _jsonSerializerSettings.GetSerializer(data.GetPaymentMethodId().CryptoCode));
+
     }
 }

@@ -5,10 +5,10 @@ using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
-using BTCPayServer.Models;
 using BTCPayServer.Models.AppViewModels;
+using BTCPayServer.Plugins.Crowdfund.Controllers;
+using BTCPayServer.Plugins.PointOfSale.Controllers;
 using BTCPayServer.Services.Apps;
-using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -16,33 +16,53 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BTCPayServer.Controllers
 {
-    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     [AutoValidateAntiforgeryToken]
     [Route("apps")]
     public partial class UIAppsController : Controller
     {
         public UIAppsController(
             UserManager<ApplicationUser> userManager,
-            EventAggregator eventAggregator,
-            CurrencyNameTable currencies,
             StoreRepository storeRepository,
             AppService appService)
         {
             _userManager = userManager;
-            _eventAggregator = eventAggregator;
-            _currencies = currencies;
             _storeRepository = storeRepository;
             _appService = appService;
         }
 
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly EventAggregator _eventAggregator;
-        private readonly CurrencyNameTable _currencies;
         private readonly StoreRepository _storeRepository;
         private readonly AppService _appService;
 
         public string CreatedAppId { get; set; }
+        
+        public class AppUpdated
+        {
+            public string AppId { get; set; }
+            public object Settings { get; set; }
+            public string StoreId { get; set; }
+            public override string ToString()
+            {
+                return string.Empty;
+            }
+        }
+        
+        [HttpGet("/apps/{appId}")]
+        public async Task<IActionResult> RedirectToApp(string appId)
+        {
+            var app = await _appService.GetApp(appId, null);
+            if (app is null)
+                return NotFound();
+            
+            return app.AppType switch
+            {
+                nameof(AppType.Crowdfund) => RedirectToAction(nameof(UICrowdfundController.ViewCrowdfund), "UICrowdfund", new { appId }),
+                nameof(AppType.PointOfSale) => RedirectToAction(nameof(UIPointOfSaleController.ViewPointOfSale), "UIPointOfSale", new { appId }),
+                _ => NotFound()
+            };
+        }
 
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [HttpGet("/stores/{storeId}/apps")]
         public async Task<IActionResult> ListApps(
             string storeId,
@@ -88,6 +108,7 @@ namespace BTCPayServer.Controllers
             });
         }
 
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [HttpGet("/stores/{storeId}/apps/create")]
         public IActionResult CreateApp(string storeId)
         {
@@ -97,6 +118,7 @@ namespace BTCPayServer.Controllers
             });
         }
 
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [HttpPost("/stores/{storeId}/apps/create")]
         public async Task<IActionResult> CreateApp(string storeId, CreateAppViewModel vm)
         {
@@ -139,12 +161,13 @@ namespace BTCPayServer.Controllers
 
             return appType switch
             {
-                AppType.PointOfSale => RedirectToAction(nameof(UpdatePointOfSale), new { appId = appData.Id }),
-                AppType.Crowdfund => RedirectToAction(nameof(UpdateCrowdfund), new { appId = appData.Id }),
+                AppType.PointOfSale => RedirectToAction(nameof(UIPointOfSaleController.UpdatePointOfSale), "UIPointOfSale", new { appId = appData.Id }),
+                AppType.Crowdfund => RedirectToAction(nameof(UICrowdfundController.UpdateCrowdfund), "UICrowdfund", new { appId = appData.Id }),
                 _ => throw new ArgumentOutOfRangeException()
             };
         }
 
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [HttpGet("{appId}/delete")]
         public IActionResult DeleteApp(string appId)
         {
@@ -155,6 +178,7 @@ namespace BTCPayServer.Controllers
             return View("Confirm", new ConfirmModel("Delete app", $"The app <strong>{app.Name}</strong> and its settings will be permanently deleted. Are you sure?", "Delete"));
         }
 
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [HttpPost("{appId}/delete")]
         public async Task<IActionResult> DeleteAppPost(string appId)
         {

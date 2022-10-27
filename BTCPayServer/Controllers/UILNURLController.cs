@@ -19,6 +19,7 @@ using BTCPayServer.Lightning;
 using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
+using BTCPayServer.Plugins.PointOfSale.Models;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
@@ -408,7 +409,7 @@ namespace BTCPayServer
             if (i.Type != InvoiceType.TopUp)
             {
                 min = i.GetPaymentMethod(pmi).Calculate().Due.ToDecimal(MoneyUnit.Satoshi);
-                max = min;
+                max = item?.Price?.Type == ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Minimum ? null :  min;
             }
 
             if (!string.IsNullOrEmpty(username))
@@ -524,8 +525,21 @@ namespace BTCPayServer
                             Url = _linkGenerator.GetUriByAction(HttpContext, "InvoiceReceipt", "UIInvoice", new { invoiceId})
                         };
                 }
-                if (amount.HasValue && string.IsNullOrEmpty(paymentMethodDetails.BOLT11) ||
-                    paymentMethodDetails.GeneratedBoltAmount != amount)
+
+                if (amount is null)
+                {
+                    return Ok(new LNURLPayRequest
+                    {
+                        Tag = "payRequest",
+                        MinSendable = min,
+                        MaxSendable = max,
+                        CommentAllowed = lnurlSupportedPaymentMethod.LUD12Enabled ? 2000 : 0,
+                        Metadata = metadata,
+                        Callback = new Uri(Request.GetCurrentUrl())
+                    });
+                }
+                
+                if (string.IsNullOrEmpty(paymentMethodDetails.BOLT11) || paymentMethodDetails.GeneratedBoltAmount != amount)
                 {
                     var client =
                         _lightningLikePaymentHandler.CreateLightningClient(
@@ -546,9 +560,12 @@ namespace BTCPayServer
                     LightningInvoice invoice;
                     try
                     {
-                        invoice = await client.CreateInvoice(new CreateInvoiceParams(amount.Value,
-                            descriptionHash,
-                            i.ExpirationTime.ToUniversalTime() - DateTimeOffset.UtcNow));
+                        var expiry = i.ExpirationTime.ToUniversalTime() - DateTimeOffset.UtcNow;
+                        var param = new CreateInvoiceParams(amount.Value, descriptionHash, expiry)
+                        {
+                            PrivateRouteHints = blob.LightningPrivateRouteHints
+                        };
+                        invoice = await client.CreateInvoice(param);
                         if (!BOLT11PaymentRequest.Parse(invoice.BOLT11, network.NBitcoinNetwork)
                                 .VerifyDescriptionHash(metadata))
                         {
@@ -589,7 +606,7 @@ namespace BTCPayServer
                     });
                 }
 
-                if (amount.HasValue && paymentMethodDetails.GeneratedBoltAmount == amount)
+                if (paymentMethodDetails.GeneratedBoltAmount == amount)
                 {
                     if (lnurlSupportedPaymentMethod.LUD12Enabled && paymentMethodDetails.ProvidedComment != comment)
                     {
@@ -602,19 +619,6 @@ namespace BTCPayServer
                     {
                         Disposable = true, Routes = Array.Empty<string>(), Pr = paymentMethodDetails.BOLT11,
                         SuccessAction = successAction
-                    });
-                }
-
-                if (amount is null)
-                {
-                    return Ok(new LNURLPayRequest
-                    {
-                        Tag = "payRequest",
-                        MinSendable = min,
-                        MaxSendable = max,
-                        CommentAllowed = lnurlSupportedPaymentMethod.LUD12Enabled ? 2000 : 0,
-                        Metadata = metadata,
-                        Callback = new Uri(Request.GetCurrentUrl())
                     });
                 }
             }

@@ -24,48 +24,39 @@
             <span class="fa fa-times"></span>
         </button>
     </div>
-    <ul class="list-group mb-3" v-show="filteredItems.length">
-        <li class="list-group-item cursor-pointer"
+    <ul class="list-group list-group-flush mb-3" v-show="filteredItems.length">
+        <li class="list-group-item py-2 cursor-pointer gap-2 align-items-center justify-content-between"
             v-for="item of filteredItems"
             :key="item.outpoint"
-            v-bind:class="{ 'active': item.selected }"
+            :class="{ 'active': item.selected }"
             v-on:click="toggleItem($event, item, !item.selected)">
-            <div class="d-flex justify-content-between align-items-center">
-                <input class="mt-0 me-2 form-check-input flex-shrink-0"
+            <div class="d-flex align-items-center flex-grow-1 gap-2" style="min-width:0">
+                <input class="form-check-input mt-0 flex-shrink-0"
                        type="checkbox"
-                       v-bind:id="item.outpoint"
-                       v-bind:value="item.outpoint"
-                       v-bind:checked="item.selected">
-                <label
-                    class="flex-1 d-inline-block text-truncate mb-0"
-                    v-bind:for="item.outpoint">
-                    <a
-                        v-tooltip="item.outpoint"
-                        v-bind:href="item.link"
-                        target="_blank">
-                        {{item.outpoint}}
+                       :id="item.outpoint"
+                       :value="item.outpoint"
+                       :checked="item.selected">
+                <a :href="item.link" target="_blank" class="text-truncate flex-grow-1" v-tooltip="item.outpoint">{{item.outpoint}}</a>
+                <template v-if="item.labels">
+                    <a v-for="label of item.labels"
+                       key="label.text"
+                       :href="label.link || '#'"
+                       target="_blank"
+                       class="badge rounded-pill px-2"
+                       data-bs-toggle="tooltip"
+                       v-tooltip="label.tooltip"
+                       :style="styles(label.color)">
+                        {{label.text}}
                     </a>
-                </label>
-                <span class="text-muted text-nowrap ms-3">{{item.amount}} @Model.CryptoCode</span>
-            </div>
-            <div class="d-flex justify-content-between align-items-center" style="padding-left:1.35rem;">
-                <div>
-                    <template v-if="item.labels">
-                        <a v-for="label of item.labels"
-                           key="label.text"
-                           :href="label.link || '#'"
-                           target="_blank"
-                           class="badge rounded-pill px-2 mt-2 me-2"
-                           data-bs-toggle="tooltip"
-                           v-tooltip="label.tooltip"
-                           v-bind:style="styles(label.color)">
-                            {{label.text}}
-                        </a>
-                    </template><span v-if="item.comment" data-bs-toggle="tooltip" v-tooltip="item.comment" class="badge bg-info rounded-pill mt-2" style="min-width:2em">
-                        <span class="fa fa-info"></span>
-                    </span>
-                </div>
-                <span v-bind:class="{'bg-success' : item.confirmations > 0, 'bg-warning' : item.confirmations <= 0}" data-bs-toggle="tooltip" v-tooltip="item.confirmations +' confirmations'" class="badge mt-2">
+                </template>
+                <span v-if="item.comment" data-bs-toggle="tooltip" v-tooltip="item.comment" class="badge bg-info rounded-pill" style="min-width:2em">
+                    <span class="fa fa-info"></span>
+                </span>
+                <span class="text-muted text-nowrap flex-shrink-0 ms-2">{{item.amount}} @Model.CryptoCode</span>
+                <span :class="{'bg-success' : item.confirmations > 0, 'bg-warning' : item.confirmations <= 0}"
+                      class="badge"
+                      data-bs-toggle="tooltip"
+                      v-tooltip="`${item.confirmations} confirmation${item.confirmations === 1 ? '' : 's'}`">
                     {{item.confirmations}} <span class="fa fa-cube"></span>
                 </span>
             </div>
@@ -73,7 +64,7 @@
     </ul>
     
     <ul class="pagination" v-show="currentItems.length > pageSize">
-        <li class="page-item" v-bind:class="{'disabled' : pageStart == 0}">
+        <li class="page-item" :class="{'disabled' : pageStart == 0}">
             <a class="page-link" tabindex="-1" href="#" v-on:click="page = page -1">«</a>
         </li>
         <li class="page-item disabled">
@@ -81,7 +72,7 @@
                 Showing {{pageStart+1}}-{{pageEnd}} of {{currentItems.length}}
             </span>
         </li>
-        <li class="page-item" v-bind:class="{'disabled' : pageEnd>= currentItems.length}">
+        <li class="page-item" :class="{'disabled' : pageEnd>= currentItems.length}">
             <a class="page-link" href="#" v-on:click="page = page +1">»</a>
         </li>
     </ul>

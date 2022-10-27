@@ -1,14 +1,16 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
+using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Models;
+using BTCPayServer.Models.WalletViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Rates;
@@ -19,7 +21,6 @@ using NBitcoin;
 
 namespace BTCPayServer.Controllers
 {
-    [AllowAnonymous]
     public class UIPullPaymentController : Controller
     {
         private readonly ApplicationDbContextFactory _dbContextFactory;
@@ -41,7 +42,8 @@ namespace BTCPayServer.Controllers
             _payoutHandlers = payoutHandlers;
         }
 
-        [Route("pull-payments/{pullPaymentId}")]
+        [AllowAnonymous]
+        [HttpGet("pull-payments/{pullPaymentId}")]
         public async Task<IActionResult> ViewPullPayment(string pullPaymentId)
         {
             using var ctx = _dbContextFactory.CreateContext();
@@ -92,6 +94,64 @@ namespace BTCPayServer.Controllers
             return View(nameof(ViewPullPayment), vm);
         }
 
+        [HttpGet("stores/{storeId}/pull-payments/edit/{pullPaymentId}")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+        public async Task<IActionResult> EditPullPayment(string storeId, string pullPaymentId)
+        {
+            using var ctx = _dbContextFactory.CreateContext();
+            Data.PullPaymentData pp = await ctx.PullPayments.FindAsync(pullPaymentId);
+            if (pp == null && !string.IsNullOrEmpty(pullPaymentId))
+            {
+                return NotFound();
+            }
+
+            var vm = new UpdatePullPaymentModel(pp);
+            return View(vm);
+        }
+
+        [HttpPost("stores/{storeId}/pull-payments/edit/{pullPaymentId}")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+        public async Task<IActionResult> EditPullPayment(string storeId, string pullPaymentId, UpdatePullPaymentModel viewModel)
+        {
+            using var ctx = _dbContextFactory.CreateContext();
+
+            var pp = await ctx.PullPayments.FindAsync(pullPaymentId);
+            if (pp == null && !string.IsNullOrEmpty(pullPaymentId))
+            {
+                return NotFound();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return View(viewModel);
+            }
+
+            var blob = pp.GetBlob();
+            blob.Description = viewModel.Description ?? string.Empty;
+            blob.Name = viewModel.Name ?? string.Empty;
+            blob.View = new PullPaymentBlob.PullPaymentView()
+            {
+                Title = viewModel.Name ?? string.Empty,
+                Description = viewModel.Description ?? string.Empty,
+                CustomCSSLink = viewModel.CustomCSSLink,
+                Email = null,
+                EmbeddedCSS = viewModel.EmbeddedCSS,
+            };
+            
+            pp.SetBlob(blob);
+            ctx.PullPayments.Update(pp);
+            await ctx.SaveChangesAsync();
+          
+            TempData.SetStatusMessageModel(new StatusMessageModel
+            {
+                Message = "Pull payment updated successfully",
+                Severity = StatusMessageModel.StatusSeverity.Success
+            });
+
+            return RedirectToAction(nameof(UIStorePullPaymentsController.PullPayments), "UIStorePullPayments", new { storeId, pullPaymentId });
+        }
+
+        [AllowAnonymous]
         [HttpPost("pull-payments/{pullPaymentId}/claim")]
         public async Task<IActionResult> ClaimPullPayment(string pullPaymentId, ViewPullPaymentModel vm)
         {

@@ -29,10 +29,11 @@ namespace BTCPayServer.Controllers
             {
                 WalletEnabled = walletEnabled,
                 LightningEnabled = lightningEnabled,
-                LightningSupported = _NetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode).SupportLightning,
+                LightningSupported = _NetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode)?.SupportLightning is true,
                 StoreId = CurrentStore.Id,
                 StoreName = CurrentStore.StoreName,
                 CryptoCode = cryptoCode,
+                Network =  _NetworkProvider.DefaultNetwork,
                 IsSetUp = walletEnabled || lightningEnabled
             };
             

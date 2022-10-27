@@ -1,6 +1,5 @@
 @model WalletSetupViewModel
 @inject BTCPayNetworkProvider BTCPayNetworkProvider
-@addTagHelper *, BundlerMinifier.TagHelpers
 @{
     Layout = "_LayoutWalletSetup";
     ViewData.SetActivePage(StoreNavPages.OnchainSettings, $"Import {Model.CryptoCode} Wallet", Context.GetStoreData().Id);

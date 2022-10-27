@@ -41,6 +41,26 @@
                                 }
                             }
                         }
+                    },
+                    "401": {
+                        "description": "Missing authorization",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -92,7 +112,8 @@
     },
     "tags": [
         {
-            "name": "Store Payment Methods"
+            "name": "Store Payment Methods",
+            "description": "Store Payment Methods operations"
         }
     ]
 }

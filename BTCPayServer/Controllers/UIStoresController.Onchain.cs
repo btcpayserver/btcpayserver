@@ -119,17 +119,16 @@ namespace BTCPayServer.Controllers
                             accountSettings.AccountKeyPath =
                                 vm.KeyPath == null ? null : KeyPath.Parse(vm.KeyPath);
                             accountSettings.RootFingerprint = string.IsNullOrEmpty(vm.RootFingerprint)
-                                ? (HDFingerprint?)null
-                                : new HDFingerprint(
-                                    NBitcoin.DataEncoders.Encoders.Hex.DecodeData(vm.RootFingerprint));
+                                ? null
+                                : new HDFingerprint(Encoders.Hex.DecodeData(vm.RootFingerprint));
                         }
                     }
                     vm.DerivationScheme = strategy.AccountDerivation.ToString();
                     ModelState.Remove(nameof(vm.DerivationScheme));
                 }
-                catch
+                catch (Exception ex)
                 {
-                    ModelState.AddModelError(nameof(vm.DerivationScheme), "Invalid wallet format");
+                    ModelState.AddModelError(nameof(vm.DerivationScheme), $"Invalid wallet format: {ex.Message}");
                     return View(vm.ViewName, vm);
                 }
             }

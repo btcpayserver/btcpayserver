@@ -33,12 +33,14 @@ using Microsoft.Extensions.Options;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using NBitcoin.Scripting.Parser;
+using NBXplorer;
 using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Xunit;
 using Xunit.Abstractions;
+using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Tests
 {
@@ -480,93 +482,6 @@ namespace BTCPayServer.Tests
 #pragma warning restore CS0618
         }
 #endif
-
-        [Fact]
-        public void CanParseLegacyLabels()
-        {
-            static void AssertContainsRawLabel(WalletTransactionInfo info)
-            {
-                foreach (var item in new[] { "blah", "lol", "hello" })
-                {
-                    Assert.True(info.Labels.ContainsKey(item));
-                    var rawLabel = Assert.IsType<RawLabel>(info.Labels[item]);
-                    Assert.Equal("raw", rawLabel.Type);
-                    Assert.Equal(item, rawLabel.Text);
-                }
-            }
-            var data = new WalletTransactionData();
-            data.Labels = "blah,lol,hello,lol";
-            var info = data.GetBlobInfo();
-            Assert.Equal(3, info.Labels.Count);
-            AssertContainsRawLabel(info);
-            data.SetBlobInfo(info);
-            Assert.Contains("raw", data.Labels);
-            Assert.Contains("{", data.Labels);
-            Assert.Contains("[", data.Labels);
-            info = data.GetBlobInfo();
-            AssertContainsRawLabel(info);
-
-
-            data = new WalletTransactionData()
-            {
-                Labels = "pos",
-                Blob = Encoders.Hex.DecodeData("1f8b08000000000000037abf7b7fb592737e6e6e6a5e89929592522d000000ffff030036bc6ad911000000")
-            };
-            info = data.GetBlobInfo();
-            var label = Assert.Single(info.Labels);
-            Assert.Equal("raw", label.Value.Type);
-            Assert.Equal("pos", label.Value.Text);
-            Assert.Equal("pos", label.Key);
-
-
-            static void AssertContainsLabel(WalletTransactionInfo info)
-            {
-                Assert.Equal(2, info.Labels.Count);
-                var invoiceLabel = Assert.IsType<ReferenceLabel>(info.Labels["invoice"]);
-                Assert.Equal("BFm1MCJPBCDeRoWXvPcwnM", invoiceLabel.Reference);
-                Assert.Equal("invoice", invoiceLabel.Text);
-                Assert.Equal("invoice", invoiceLabel.Type);
-
-                var appLabel = Assert.IsType<ReferenceLabel>(info.Labels["app"]);
-                Assert.Equal("87kj5yKay8mB4UUZcJhZH5TqDKMD3CznjwLjiu1oYZXe", appLabel.Reference);
-                Assert.Equal("app", appLabel.Text);
-                Assert.Equal("app", appLabel.Type);
-            }
-            data = new WalletTransactionData()
-            {
-                Labels = "[\"{\\n  \\\"value\\\": \\\"invoice\\\",\\n  \\\"id\\\": \\\"BFm1MCJPBCDeRoWXvPcwnM\\\"\\n}\",\"{\\n  \\\"value\\\": \\\"app\\\",\\n  \\\"id\\\": \\\"87kj5yKay8mB4UUZcJhZH5TqDKMD3CznjwLjiu1oYZXe\\\"\\n}\"]",
-            };
-            info = data.GetBlobInfo();
-            AssertContainsLabel(info);
-            data.SetBlobInfo(info);
-            info = data.GetBlobInfo();
-            AssertContainsLabel(info);
-
-            static void AssertPayoutLabel(WalletTransactionInfo info)
-            {
-                Assert.Single(info.Labels);
-                var l = Assert.IsType<PayoutLabel>(info.Labels["payout"]);
-                Assert.Single(Assert.Single(l.PullPaymentPayouts, k => k.Key == "pullPaymentId").Value, "payoutId");
-                Assert.Equal("walletId", l.WalletId);
-            }
-
-            var payoutId = "payoutId";
-            var pullPaymentId = "pullPaymentId";
-            var walletId = "walletId";
-            // How it was serialized before
-
-            data = new WalletTransactionData()
-            {
-                Labels = new JArray(JObject.FromObject(new { value = "payout", id = payoutId, pullPaymentId, walletId })).ToString()
-            };
-            info = data.GetBlobInfo();
-            AssertPayoutLabel(info);
-            data.SetBlobInfo(info);
-            info = data.GetBlobInfo();
-            AssertPayoutLabel(info);
-        }
-
-
 
         [Fact]
         public void DeterministicUTXOSorter()
@@ -1292,6 +1207,9 @@ namespace BTCPayServer.Tests
         [Fact]
         public void CanParseRateRules()
         {
+            var pair = CurrencyPair.Parse("USD_EMAT_IC");
+            Assert.Equal("USD", pair.Left);
+            Assert.Equal("EMAT_IC", pair.Right);
             // Check happy path
             StringBuilder builder = new StringBuilder();
             builder.AppendLine("// Some cool comments");
@@ -1387,7 +1305,7 @@ namespace BTCPayServer.Tests
             rule2.Reevaluate();
             Assert.False(rule2.HasError);
             Assert.Equal("5000 * 2000.4 * 1.1", rule2.ToString(true));
-            Assert.Equal(rule2.BidAsk.Bid, 5000m * 2000.4m * 1.1m);
+            Assert.Equal(5000m * 2000.4m * 1.1m, rule2.BidAsk.Bid);
             ////////
 
             // Make sure parenthesis are correctly calculated
@@ -1807,6 +1725,33 @@ namespace BTCPayServer.Tests
                    Assert.True( UIManageController.AddApiKeyViewModel.PermissionValueItem.PermissionDescriptions.ContainsKey($"{policy}:"));
                }
             }
+        }
+        [Fact]
+        public void PaymentMethodIdConverterIsGraceful()
+        {
+            var pmi = "\"BTC_hasjdfhasjkfjlajn\"";
+            JsonTextReader reader = new(new StringReader(pmi));
+            reader.Read();
+            Assert.Null(new PaymentMethodIdJsonConverter().ReadJson(reader, typeof(PaymentMethodId), null,
+                JsonSerializer.CreateDefault()));
+        }
+
+        [Fact]
+        public void CanBeBracefulAfterObsoleteShitcoin()
+        {
+            var blob = new StoreBlob();
+            blob.PaymentMethodCriteria = new List<PaymentMethodCriteria>()
+            {
+                new()
+                {
+                    Above = true,
+                    Value = new CurrencyValue() {Currency = "BTC", Value = 0.1m},
+                    PaymentMethod = new PaymentMethodId("BTC", PaymentTypes.BTCLike)
+                }
+            };
+            var newBlob = Encoding.UTF8.GetBytes(
+                new Serializer(null).ToString(blob).Replace( "paymentMethod\":\"BTC\"","paymentMethod\":\"ETH_ZYC\""));
+            Assert.Empty(StoreDataExtensions.GetStoreBlob(new StoreData() {StoreBlob = newBlob}).PaymentMethodCriteria);
         }
     }
 }

@@ -1,5 +1,4 @@
 @model WalletSetupViewModel
-@addTagHelper *, BundlerMinifier.TagHelpers
 @{
     var isHotWallet = Model.Method == WalletSetupMethod.HotWallet;
     var type = isHotWallet ? "Hot" : "Watch-Only";

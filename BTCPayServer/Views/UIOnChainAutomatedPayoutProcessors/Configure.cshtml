@@ -1,9 +1,10 @@
 ﻿@using BTCPayServer.Abstractions.Extensions
+@using BTCPayServer.Views.Stores
 @model BTCPayServer.PayoutProcessors.OnChain.UIOnChainAutomatedPayoutProcessorsController.OnChainTransferViewModel
 @{
     ViewData["NavPartialName"] = "../UIStores/_Nav";
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePage("PayoutProcessors", "On-Chain Payout Processor", Context.GetStoreData().Id);
+    ViewData.SetActivePage(StoreNavPages.PayoutProcessors, "On-Chain Payout Processor", Context.GetStoreData().Id);
 }
 <div class="row">
     <div class="col-xl-8 col-xxl-constrain">
@@ -21,6 +22,13 @@
                 <div class="input-group">
                     <input asp-for="IntervalMinutes" class="form-control" inputmode="numeric" style="max-width:10ch;">
                     <span class="input-group-text">minutes</span>
+                </div>
+            </div> 
+            <div class="form-group">
+                <label asp-for="FeeTargetBlock" class="form-label" data-required>Fee block target</label>
+                <div class="input-group">
+                    <input asp-for="FeeTargetBlock" class="form-control" min="1" inputmode="numeric" style="max-width:10ch;">
+                    <span class="input-group-text">blocks</span>
                 </div>
             </div>
             <button name="command" type="submit" class="btn btn-primary mt-2" value="Save" id="Save">Save</button>

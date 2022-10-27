@@ -1,7 +1,9 @@
+using System;
 using System.Collections.Generic;
 
 namespace BTCPayServer.Data
 {
+    [Obsolete]
     public class WalletData
     {
         [System.ComponentModel.DataAnnotations.Key]

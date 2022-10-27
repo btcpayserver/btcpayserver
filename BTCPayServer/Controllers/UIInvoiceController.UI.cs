@@ -149,6 +149,7 @@ namespace BTCPayServer.Controllers
             var details = InvoicePopulatePayments(invoice);
             model.CryptoPayments = details.CryptoPayments;
             model.Payments = details.Payments;
+            model.Overpaid = details.Overpaid;
 
             return View(model);
         }
@@ -178,7 +179,7 @@ namespace BTCPayServer.Controllers
                 });
             }
             JToken? receiptData = null;
-            i.Metadata?.AdditionalData.TryGetValue("receiptData", out receiptData);
+            i.Metadata?.AdditionalData?.TryGetValue("receiptData", out receiptData);
                 
             return View(new InvoiceReceiptViewModel
             {
@@ -469,15 +470,25 @@ namespace BTCPayServer.Controllers
 
         private InvoiceDetailsModel InvoicePopulatePayments(InvoiceEntity invoice)
         {
-            return new InvoiceDetailsModel
+
+            var overpaid = false;
+            var model = new InvoiceDetailsModel
             {
                 Archived = invoice.Archived,
                 Payments = invoice.GetPayments(false),
+                Overpaid = true,
                 CryptoPayments = invoice.GetPaymentMethods().Select(
                     data =>
                     {
                         var accounting = data.Calculate();
                         var paymentMethodId = data.GetId();
+                        var overpaidAmount = accounting.OverpaidHelper.ToDecimal(MoneyUnit.BTC);
+
+                        if (overpaidAmount > 0)
+                        {
+                            overpaid = true;
+                        }
+
                         return new InvoiceDetailsModel.CryptoPayment
                         {
                             PaymentMethodId = paymentMethodId,
@@ -488,13 +499,16 @@ namespace BTCPayServer.Controllers
                                 accounting.CryptoPaid.ToDecimal(MoneyUnit.BTC),
                                 paymentMethodId.CryptoCode),
                             Overpaid = _CurrencyNameTable.DisplayFormatCurrency(
-                                accounting.OverpaidHelper.ToDecimal(MoneyUnit.BTC), paymentMethodId.CryptoCode),
+                                overpaidAmount, paymentMethodId.CryptoCode),
                             Address = data.GetPaymentMethodDetails().GetPaymentDestination(),
                             Rate = ExchangeRate(data),
                             PaymentMethodRaw = data
                         };
                     }).ToList()
             };
+            model.Overpaid = overpaid;
+
+            return model;
         }
 
         [HttpPost("invoices/{invoiceId}/archive")]
@@ -553,8 +567,7 @@ namespace BTCPayServer.Controllers
                         if (this.GetCurrentStore().Role != StoreRoles.Owner)
                             return Forbid();
                         
-                        var settings = (this.GetCurrentStore().GetDerivationSchemeSettings(_NetworkProvider, network.CryptoCode));
-                        var derivationScheme = settings.AccountDerivation;
+                        var derivationScheme = (this.GetCurrentStore().GetDerivationSchemeSettings(_NetworkProvider, network.CryptoCode))?.AccountDerivation;
                         if (derivationScheme is null)
                             return NotSupported("This feature is only available to BTC wallets");
                         var bumpableAddresses = (await GetAddresses(selectedItems))

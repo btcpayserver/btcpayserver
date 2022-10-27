@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:6.0.101-bullseye-slim AS builder
+FROM mcr.microsoft.com/dotnet/sdk:6.0.401-bullseye-slim AS builder
 
 RUN apt-get update && apt-get install -y --no-install-recommends chromium-driver \
     && rm -rf /var/lib/apt/lists/*

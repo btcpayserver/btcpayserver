@@ -40,7 +40,7 @@ namespace BTCPayServer.Services.Apps
                     "  inventory: 5\n" +
                     "  custom: true";
                 DefaultView = PosViewType.Static;
-                ShowCustomAmount = true;
+                ShowCustomAmount = false;
                 ShowDiscount = true;
                 EnableTips = true;
                 RequiresRefundEmail = RequiresRefundEmail.InheritFromStore;

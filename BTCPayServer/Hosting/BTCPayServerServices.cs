@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Threading;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Custodians;
@@ -40,7 +41,6 @@ using BTCPayServer.Services.PaymentRequests;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
-using BundlerMinifier.TagHelpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -102,7 +102,6 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<SettingsRepository>();
             services.TryAddSingleton<ISettingsRepository>(provider => provider.GetService<SettingsRepository>());
             services.TryAddSingleton<IStoreRepository>(provider => provider.GetService<StoreRepository>());
-            services.TryAddSingleton<LabelFactory>();
             services.TryAddSingleton<TorServices>();
             services.AddSingleton<IHostedService>(provider => provider.GetRequiredService<TorServices>());
             services.AddSingleton<ISwaggerProvider, DefaultSwaggerProvider>();
@@ -129,10 +128,7 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<PaymentRequestService>();
             services.TryAddSingleton<UserService>();
             services.AddSingleton<CustodianAccountRepository>();
-            
-
             services.TryAddSingleton<WalletHistogramService>();
-            services.TryAddSingleton<CustodianAccountRepository>();
             services.AddSingleton<ApplicationDbContextFactory>();
             services.AddOptions<BTCPayServerOptions>().Configure(
                 (options) =>
@@ -335,7 +331,13 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<IHostedService, WebhookSender>(o => o.GetRequiredService<WebhookSender>());
             services.AddSingleton<IHostedService, StoreEmailRuleProcessorSender>();
             services.AddHttpClient(WebhookSender.OnionNamedClient)
-                .ConfigurePrimaryHttpMessageHandler<Socks5HttpClientHandler>();
+                .ConfigurePrimaryHttpMessageHandler<Socks5HttpClientHandler>(); 
+            services.AddHttpClient(WebhookSender.LoopbackNamedClient)
+                .ConfigurePrimaryHttpMessageHandler(_ => new HttpClientHandler
+                {
+                    ServerCertificateCustomValidationCallback =
+                        HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+                });
 
 
             services.AddSingleton<BitcoinLikePayoutHandler>();
@@ -361,6 +363,7 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<IUIExtension>(new UIExtension("LNURL/LightningAddressOption",
                 "store-integrations-list"));
             services.AddSingleton<IHostedService, LightningListener>();
+            services.AddSingleton<IHostedService, LightningPendingPayoutListener>();
 
             services.AddSingleton<PaymentMethodHandlerDictionary>();
 
@@ -410,7 +413,6 @@ namespace BTCPayServer.Hosting
             services.TryAddScoped<IHttpContextAccessor, HttpContextAccessor>();
             services.AddTransient<BitpayAccessTokenController>();
             services.AddTransient<UIInvoiceController>();
-            services.AddTransient<UIAppsPublicController>();
             services.AddTransient<UIPaymentRequestController>();
             // Add application services.
             services.AddSingleton<EmailSenderFactory>();
@@ -424,16 +426,6 @@ namespace BTCPayServer.Hosting
             services.AddAPIKeyAuthentication();
             services.AddBtcPayServerAuthenticationSchemes();
             services.AddAuthorization(o => o.AddBTCPayPolicies());
-            // bundling
-            services.AddSingleton<IBundleProvider, ResourceBundleProvider>();
-            services.AddTransient<BundleOptions>(provider =>
-            {
-                var opts = provider.GetRequiredService<BTCPayServerOptions>();
-                var bundle = new BundleOptions();
-                bundle.UseBundles = opts.BundleJsCss;
-                bundle.AppendVersion = true;
-                return bundle;
-            });
 
             services.AddCors(options =>
             {
@@ -456,6 +448,7 @@ namespace BTCPayServer.Hosting
 
             services.AddSingleton<IObjectModelValidator, SkippableObjectValidatorProvider>();
             services.SkipModelValidation<RootedKeyPath>();
+            services.SkipModelValidation<NodeInfo>();
 
             if (configuration.GetOrDefault<bool>("cheatmode", false))
             {

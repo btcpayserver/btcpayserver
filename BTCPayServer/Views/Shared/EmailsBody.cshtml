@@ -71,8 +71,9 @@
             </div>
             <input asp-for="PasswordSet" type="hidden"/>
 			<div class="my-4">
-                <button class="btn btn-link text-primary p-0" type="button" id="AdvancedSettingsButton" data-bs-toggle="collapse" data-bs-target="#AdvancedSettings" aria-expanded="false" aria-controls="AdvancedSettings">
-                    Advanced settings
+                <button class="d-inline-flex align-items-center btn btn-link text-primary fw-semibold p-0" type="button" id="AdvancedSettingsButton" data-bs-toggle="collapse" data-bs-target="#AdvancedSettings" aria-expanded="false" aria-controls="AdvancedSettings">
+                    <vc:icon symbol="caret-down"/>
+                    <span class="ms-1">Advanced settings</span>
                 </button>
                 <div id="AdvancedSettings" class="collapse">
                     <div class="pt-3 pb-1">

@@ -86,8 +86,7 @@ namespace BTCPayServer.Controllers
             // we just assume that it is 20 blocks
             var assumedFeeRate = await fr.GetFeeRateAsync(20);
 
-            var settings = (this.GetCurrentStore().GetDerivationSchemeSettings(NetworkProvider, network.CryptoCode));
-            var derivationScheme = settings.AccountDerivation;
+            var derivationScheme = (this.GetCurrentStore().GetDerivationSchemeSettings(NetworkProvider, network.CryptoCode))?.AccountDerivation;
             if (derivationScheme is null)
                 return NotFound();
 
@@ -461,7 +460,7 @@ namespace BTCPayServer.Controllers
                             vm.SigningContext.OriginalPSBT = psbt.ToBase64();
                             proposedPayjoin.Finalize();
                             var hash = proposedPayjoin.ExtractTransaction().GetHash();
-                            _EventAggregator.Publish(new UpdateTransactionLabel(walletId, hash, UpdateTransactionLabel.PayjoinLabelTemplate()));
+                            await WalletRepository.AddWalletTransactionAttachment(walletId, hash, Attachment.Payjoin());
                             TempData.SetStatusMessageModel(new StatusMessageModel
                             {
                                 Severity = StatusMessageModel.StatusSeverity.Success,

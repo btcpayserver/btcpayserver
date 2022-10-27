@@ -150,14 +150,20 @@
     content: none;
 }
 
+#StoreSelectorToggle .logo,
 #StoreSelectorToggle .icon {
     width: 1.5rem;
     height: 1.5rem;
     transition: color 0.15s ease-in-out;
 }
 
+#StoreSelectorToggle .logo,
 #StoreSelectorToggle .icon.icon-store {
     margin-right: var(--btcpay-space-s);
+}
+
+#StoreSelectorToggle .logo {
+    border-radius: 50%;
 }
 
 #StoreSelectorToggle .icon.icon-caret-down {
@@ -372,7 +378,7 @@
 .btcpay-footer {
     font-size: var(--btcpay-font-size-s);
     overflow: hidden;
-    padding: .5em 0;
+    padding: 0 var(--content-padding-horizontal) 1rem;
     color: var(--btcpay-footer-text);
     background: var(--btcpay-footer-bg);
 }
@@ -591,7 +597,8 @@
     #StoreSelector {
         order: 2;
         margin-top: var(--btcpay-space-m);
-        width: 100%;
+        /* Make sure we are actually taking up all of the space or else you end up with this: https://github.com/btcpayserver/btcpayserver/issues/3972 */
+        min-width: 100%;
     }
     
     #mainMenuToggle,
@@ -612,15 +619,9 @@
         max-width: calc(100vw - var(--sidebar-width) - (2 * var(--btcpay-space-xl)) - 1rem); /* 1rem for scrollbar */
     }
 
-    #mainContent > section,
-    .btcpay-footer > .container {
+    #mainContent > section {
         margin: 0;
         max-width: none;
-    }
-    
-    .btcpay-footer {
-        padding-left: var(--btcpay-space-xl);
-        padding-right: var(--btcpay-space-xl);
     }
 
     #SectionNav .nav {

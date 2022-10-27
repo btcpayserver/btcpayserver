@@ -201,7 +201,7 @@ namespace BTCPayServer.Services.Wallets
             }
             return await completionSource.Task;
         }
-
+        bool? get_wallets_recentBugFixed = null;
         List<TransactionInformation> dummy = new List<TransactionInformation>();
         public async Task<IList<TransactionHistoryLine>> FetchTransactionHistory(DerivationStrategyBase derivationStrategyBase, int? skip = null, int? count = null, TimeSpan? interval = null)
         {
@@ -231,6 +231,10 @@ namespace BTCPayServer.Services.Wallets
             else
             {
                 await using var ctx = await NbxplorerConnectionFactory.OpenConnection();
+                if (get_wallets_recentBugFixed is null)
+                {
+                    get_wallets_recentBugFixed = await ctx.QuerySingleAsync<bool>("SELECT COUNT(*) = 1 FROM nbxv1_migrations WHERE script_name='011.FixGetWalletsRecent';");
+                }
                 var rows = await ctx.QueryAsync<(string tx_id, DateTimeOffset seen_at, string blk_id, long? blk_height, long balance_change, string asset_id, long confs)>(
                     "SELECT r.tx_id, r.seen_at, t.blk_id, t.blk_height, r.balance_change, r.asset_id, COALESCE((SELECT height FROM get_tip('BTC')) - t.blk_height + 1, 0) AS confs " +
                     "FROM get_wallets_recent(@wallet_id, @code, @interval, @count, @skip) r " +
@@ -239,14 +243,23 @@ namespace BTCPayServer.Services.Wallets
                     {
                         wallet_id = NBXplorer.Client.DBUtils.nbxv1_get_wallet_id(Network.CryptoCode, derivationStrategyBase.ToString()),
                         code = Network.CryptoCode,
-                        count,
-                        skip,
+                        count = get_wallets_recentBugFixed is true ? count : skip + count,
+                        skip = get_wallets_recentBugFixed is true ? skip : 0,
                         interval = interval is TimeSpan t ? t : TimeSpan.FromDays(365 * 1000)
                     });
                 rows.TryGetNonEnumeratedCount(out int c);
                 var lines = new List<TransactionHistoryLine>(c);
                 foreach (var row in rows)
                 {
+                    if (get_wallets_recentBugFixed is false)
+                    {
+                        if (skip > 0)
+                        {
+                            // We skip row manually so version of nbx before 2.3.34, return the expected... Remove in a year.
+                            skip--;
+                            continue;
+                        }
+                    }
                     lines.Add(new TransactionHistoryLine()
                     {
                         BalanceChange = string.IsNullOrEmpty(row.asset_id) ? Money.Satoshis(row.balance_change) : new AssetMoney(uint256.Parse(row.asset_id), row.balance_change),

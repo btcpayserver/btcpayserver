@@ -1,8 +1,6 @@
 @model BTCPayServer.Components.Notifications.NotificationsViewModel
-@addTagHelper *, BundlerMinifier.TagHelpers
 
 <div id="NotificationsRecent">
-    
     @if (Model.Last5.Any())
     {
         <div class="d-flex align-items-center justify-content-between mb-3">

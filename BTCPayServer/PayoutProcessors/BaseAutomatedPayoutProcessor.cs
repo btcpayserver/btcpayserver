@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
@@ -20,6 +22,7 @@ public abstract class BaseAutomatedPayoutProcessor<T> : BaseAsyncService where T
     protected readonly StoreRepository _storeRepository;
     protected readonly PayoutProcessorData _PayoutProcesserSettings;
     protected readonly ApplicationDbContextFactory _applicationDbContextFactory;
+    private readonly PullPaymentHostedService _pullPaymentHostedService;
     protected readonly BTCPayNetworkProvider _btcPayNetworkProvider;
     protected readonly PaymentMethodId PaymentMethodId;
 
@@ -28,12 +31,14 @@ public abstract class BaseAutomatedPayoutProcessor<T> : BaseAsyncService where T
         StoreRepository storeRepository,
         PayoutProcessorData payoutProcesserSettings,
         ApplicationDbContextFactory applicationDbContextFactory,
+        PullPaymentHostedService pullPaymentHostedService,
         BTCPayNetworkProvider btcPayNetworkProvider) : base(logger.CreateLogger($"{payoutProcesserSettings.Processor}:{payoutProcesserSettings.StoreId}:{payoutProcesserSettings.PaymentMethod}"))
     {
         _storeRepository = storeRepository;
         _PayoutProcesserSettings = payoutProcesserSettings;
         PaymentMethodId = _PayoutProcesserSettings.GetPaymentMethodId();
         _applicationDbContextFactory = applicationDbContextFactory;
+        _pullPaymentHostedService = pullPaymentHostedService;
         _btcPayNetworkProvider = btcPayNetworkProvider;
     }
 
@@ -42,7 +47,7 @@ public abstract class BaseAutomatedPayoutProcessor<T> : BaseAsyncService where T
         return new[] { CreateLoopTask(Act) };
     }
 
-    protected abstract Task Process(ISupportedPaymentMethod paymentMethod, PayoutData[] payouts);
+    protected abstract Task Process(ISupportedPaymentMethod paymentMethod, List<PayoutData> payouts);
 
     private async Task Act()
     {
@@ -54,11 +59,20 @@ public abstract class BaseAutomatedPayoutProcessor<T> : BaseAsyncService where T
         var blob = GetBlob(_PayoutProcesserSettings);
         if (paymentMethod is not null)
         {
-            var payouts = await GetRelevantPayouts();
-            if (payouts.Length > 0)
+            
+            await using var context = _applicationDbContextFactory.CreateContext();
+            var payouts = await _pullPaymentHostedService.GetPayouts(
+                new PullPaymentHostedService.PayoutQuery()
+                {
+                    States = new[] {PayoutState.AwaitingPayment},
+                    PaymentMethods = new[] {_PayoutProcesserSettings.PaymentMethod},
+                    Stores = new[] {_PayoutProcesserSettings.StoreId}
+                }, context);
+            if (payouts.Any())
             {
-                Logs.PayServer.LogInformation($"{payouts.Length} found to process. Starting (and after will sleep for {blob.Interval})");
+                Logs.PayServer.LogInformation($"{payouts.Count} found to process. Starting (and after will sleep for {blob.Interval})");
                 await Process(paymentMethod, payouts);
+                await context.SaveChangesAsync();
             }
         }
         await Task.Delay(blob.Interval, CancellationToken);
@@ -68,17 +82,5 @@ public abstract class BaseAutomatedPayoutProcessor<T> : BaseAsyncService where T
     public static T GetBlob(PayoutProcessorData data)
     {
         return InvoiceRepository.FromBytes<T>(data.Blob);
-    }
-
-    private async Task<PayoutData[]> GetRelevantPayouts()
-    {
-        await using var context = _applicationDbContextFactory.CreateContext();
-        var pmi = _PayoutProcesserSettings.PaymentMethod;
-        return await context.Payouts
-            .Where(data => data.State == PayoutState.AwaitingPayment)
-            .Where(data => data.PaymentMethodId == pmi)
-            .Where(data => data.StoreDataId == _PayoutProcesserSettings.StoreId)
-            .OrderBy(data => data.Date)
-            .ToArrayAsync();
     }
 }

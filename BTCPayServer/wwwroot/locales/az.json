@@ -49,5 +49,5 @@
   "Close": "Qapat",
   "NotPaid_ExtraTransaction": "Faktura tam ödənilməyib. Lütfən məbləği tam ödəmək üçün daha bir tranzaksiya həyata keçirin.",
   "Recommended_Fee": "Tövsiyə edilən komissiya: {{feeRate}} sat/byte",
-  "View receipt": "View receipt"
+  "View receipt": "Qəbzə bax"
 }

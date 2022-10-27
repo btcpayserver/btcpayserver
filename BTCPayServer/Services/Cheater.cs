@@ -17,7 +17,7 @@ namespace BTCPayServer.Services
 
         public Cheater(BTCPayServerOptions opts, ExplorerClientProvider prov, ApplicationDbContextFactory applicationDbContextFactory)
         {
-            CashCow = prov.GetExplorerClient("BTC").RPCClient;
+            CashCow = prov.GetExplorerClient("BTC")?.RPCClient;
             _applicationDbContextFactory = applicationDbContextFactory;
         }
         public RPCClient CashCow
@@ -38,7 +38,7 @@ namespace BTCPayServer.Services
 
         Task IHostedService.StartAsync(CancellationToken cancellationToken)
         {
-            _ = CashCow.ScanRPCCapabilitiesAsync();
+            _ = CashCow?.ScanRPCCapabilitiesAsync();
             return Task.CompletedTask;
         }
 

@@ -91,7 +91,11 @@
     <link href="~/vendor/vue-qrcode-reader/vue-qrcode-reader.css" rel="stylesheet" asp-append-version="true" />
 }
 @section PageFootContent {
-    <bundle name="wwwroot/bundles/camera-bundle.min.js"></bundle>
+    <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/vue-qrcode/vue-qrcode.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/ur-registry/urlib.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/vue-qrcode-reader/VueQrcodeReader.umd.min.js" asp-append-version="true"></script>
+
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             $("[data-reveal-btn]").on("click", function (){
@@ -109,18 +113,17 @@
                 })();
             });
 
-            var apiKeys = @Safe.Json(Model.ApiKeyDatas.Select(data => new
+            const apiKeys = @Safe.Json(Model.ApiKeyDatas.Select(data => new
                           {
                               ApiKey = data.Id,
                               Host = Context.Request.GetAbsoluteRoot()
                           }));
-            var qrApp = initQRShow("API Key QR", "", "scan-qr-modal");
-            $("button[data-qr]").on("click", function (){
-                var data =  apiKeys[parseInt($(this).data("qr"))];
-                qrApp.data = JSON.stringify(data);
-                qrApp.currentMode = "static";
-                qrApp.allowedModes = ["static"];
-                $("#scan-qr-modal").modal("show");
+            const qrApp = initQRShow({ title: "API Key QR" });
+            delegate("click", "button[data-qr]", e => {
+                e.preventDefault();
+                const { qr } = e.target.dataset;
+                const data = apiKeys[qr];
+                qrApp.showData(JSON.stringify(data));
             });
         });
     </script>

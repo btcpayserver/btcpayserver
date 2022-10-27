@@ -180,6 +180,15 @@ namespace BTCPayServer.Controllers.Greenfield
             return Ok(CreatePullPaymentData(pp));
         }
 
+        private PayoutState[]? GetStateFilter(bool includeCancelled) =>
+            includeCancelled
+                ? null
+                : new[]
+                {
+                    PayoutState.Completed, PayoutState.AwaitingApproval, PayoutState.AwaitingPayment,
+                    PayoutState.InProgress
+                };
+
         [HttpGet("~/api/v1/pull-payments/{pullPaymentId}/payouts")]
         [AllowAnonymous]
         public async Task<IActionResult> GetPayouts(string pullPaymentId, bool includeCancelled = false)
@@ -189,7 +198,12 @@ namespace BTCPayServer.Controllers.Greenfield
             var pp = await _pullPaymentService.GetPullPayment(pullPaymentId, true);
             if (pp is null)
                 return PullPaymentNotFound();
-            var payouts = pp.Payouts.Where(p => p.State != PayoutState.Cancelled || includeCancelled).ToList();
+            
+            var payouts =await _pullPaymentService.GetPayouts(new PullPaymentHostedService.PayoutQuery()
+            {
+                PullPayments = new[] {pullPaymentId},
+                States = GetStateFilter(includeCancelled)
+            });
             return base.Ok(payouts
                     .Select(ToModel).ToList());
         }
@@ -201,10 +215,13 @@ namespace BTCPayServer.Controllers.Greenfield
             if (payoutId is null)
                 return PayoutNotFound();
             await using var ctx = _dbContextFactory.CreateContext();
-            var pp = await _pullPaymentService.GetPullPayment(pullPaymentId, true);
-            if (pp is null)
-                return PullPaymentNotFound();
-            var payout = pp.Payouts.FirstOrDefault(p => p.Id == payoutId);
+
+            var payout = (await _pullPaymentService.GetPayouts(new PullPaymentHostedService.PayoutQuery()
+            {
+                PullPayments = new[] {pullPaymentId}, PayoutIds = new[] {payoutId}
+            })).FirstOrDefault();
+            
+            
             if (payout is null)
                 return PayoutNotFound();
             return base.Ok(ToModel(payout));
@@ -392,10 +409,13 @@ namespace BTCPayServer.Controllers.Greenfield
         [Authorize(Policy = Policies.CanManagePullPayments, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> GetStorePayouts(string storeId, bool includeCancelled = false)
         {
-            await using var ctx = _dbContextFactory.CreateContext();
-            var payouts = await ctx.Payouts
-                .Where(p => p.StoreDataId == storeId && (p.State != PayoutState.Cancelled || includeCancelled))
-                .ToListAsync();
+            var payouts = await _pullPaymentService.GetPayouts(new PullPaymentHostedService.PayoutQuery()
+            {
+                Stores = new[] {storeId},
+                States = GetStateFilter(includeCancelled)
+            });
+            
+            
             return base.Ok(payouts
                 .Select(ToModel).ToList());
         }

@@ -3,6 +3,8 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Controllers;
 using BTCPayServer.Models.AppViewModels;
+using BTCPayServer.Plugins.Crowdfund.Controllers;
+using BTCPayServer.Plugins.Crowdfund.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -17,12 +19,14 @@ namespace BTCPayServer.Services.Apps
         public const string PaymentReceived = "PaymentReceived";
         public const string InfoUpdated = "InfoUpdated";
         public const string InvoiceError = "InvoiceError";
-        private readonly UIAppsPublicController _AppsPublicController;
+        
+        private readonly UICrowdfundController _crowdfundController;
 
-        public AppHub(UIAppsPublicController appsPublicController)
+        public AppHub(UICrowdfundController crowdfundController)
         {
-            _AppsPublicController = appsPublicController;
+            _crowdfundController = crowdfundController;
         }
+        
         public async Task ListenToCrowdfundApp(string appId)
         {
             if (Context.Items.ContainsKey("app"))
@@ -34,16 +38,15 @@ namespace BTCPayServer.Services.Apps
             await Groups.AddToGroupAsync(Context.ConnectionId, appId);
         }
 
-
         public async Task CreateInvoice(ContributeToCrowdfund model)
         {
             model.RedirectToCheckout = false;
-            _AppsPublicController.ControllerContext.HttpContext = Context.GetHttpContext();
+            _crowdfundController.ControllerContext.HttpContext = Context.GetHttpContext();
             try
             {
 
                 var result =
-                    await _AppsPublicController.ContributeToCrowdfund(Context.Items["app"].ToString(), model, Context.ConnectionAborted);
+                    await _crowdfundController.ContributeToCrowdfund(Context.Items["app"].ToString(), model, Context.ConnectionAborted);
                 switch (result)
                 {
                     case OkObjectResult okObjectResult:
@@ -53,16 +56,14 @@ namespace BTCPayServer.Services.Apps
                         await Clients.Caller.SendCoreAsync(InvoiceError, new[] { objectResult.Value });
                         break;
                     default:
-                        await Clients.Caller.SendCoreAsync(InvoiceError, System.Array.Empty<object>());
+                        await Clients.Caller.SendCoreAsync(InvoiceError, Array.Empty<object>());
                         break;
                 }
             }
             catch (Exception)
             {
-                await Clients.Caller.SendCoreAsync(InvoiceError, System.Array.Empty<object>());
-
+                await Clients.Caller.SendCoreAsync(InvoiceError, Array.Empty<object>());
             }
-
         }
 
         public static string GetHubPath(HttpRequest request)
@@ -74,6 +75,5 @@ namespace BTCPayServer.Services.Apps
         {
             route.MapHub<AppHub>("/apps/hub");
         }
-
     }
 }

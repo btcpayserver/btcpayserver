@@ -540,7 +540,7 @@ namespace BTCPayServer.Services.Invoices
             return invoice;
         }
 
-        private InvoiceEntity ToEntity(Data.InvoiceData invoice)
+        public InvoiceEntity ToEntity(Data.InvoiceData invoice)
         {
             var entity = invoice.GetBlob(_btcPayNetworkProvider);
             PaymentMethodDictionary paymentMethods = null;

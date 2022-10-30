@@ -189,6 +189,11 @@ namespace BTCPayServer.Hosting
                             };
                         options.NBXplorerConnectionSettings.Add(setting);
                         options.ConnectionString = configuration.GetOrDefault<string>("explorer.postgres", null);
+                        var blockExplorerLink = configuration.GetOrDefault<string>("blockexplorerlink", null);
+                        if (!string.IsNullOrEmpty(blockExplorerLink))
+                        {
+                            btcPayNetwork.BlockExplorerLink = blockExplorerLink;
+                        }
                     }
                 });
             services.AddOptions<LightningNetworkOptions>().Configure<BTCPayNetworkProvider>(

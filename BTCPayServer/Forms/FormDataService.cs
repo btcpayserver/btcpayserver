@@ -29,7 +29,7 @@ public class FormDataService
         await using var context = _applicationDbContextFactory.CreateContext();
         return await GetForms(query, context);
     }
-    
+
     private async Task<List<FormData>> GetForms(FormQuery query, ApplicationDbContext context)
     {
         var queryable = context.Forms.AsQueryable();
@@ -58,8 +58,28 @@ public class FormDataService
     public async Task AddOrUpdateForm(FormData data)
     {
         await using var context = _applicationDbContextFactory.CreateContext();
-       
+
         context.Update(data);
         await context.SaveChangesAsync();
     }
+
+    public static readonly Form StaticFormEmail = new()
+    {
+        Fields = new List<Field>() {new HtmlInputField("Enter your email", "buyerEmail", null, true, null)}
+    };
+
+    public static readonly Form StaticFormAddress = new()
+    {
+        Fields = new List<Field>()
+        {
+            new HtmlInputField("Enter your email", "buyerEmail", null, true, null, "email"),
+            new HtmlInputField("Name", "buyerName", null, true, null),
+            new HtmlInputField("Address Line 1", "buyerAddress1", null, true, null),
+            new HtmlInputField("Address Line 2", "buyerAddress2", null, false, null),
+            new HtmlInputField("City", "buyerCity", null, true, null),
+            new HtmlInputField("Postcode", "buyerZip", null, false, null),
+            new HtmlInputField("State", "buyerState", null, false, null),
+            new HtmlInputField("Country", "buyerCountry", null, true, null)
+        }
+    };
 }

@@ -1,6 +1,6 @@
 namespace BTCPayServer.Abstractions.Form;
 
-public class TextField : Field
+public class HtmlInputField : Field
 {
         
 
@@ -15,7 +15,7 @@ public class TextField : Field
     public string HelpText;
 
     public bool Required = false;
-    public TextField(string label, string name, string value, bool required, string helpText)
+    public HtmlInputField(string label, string name, string value, bool required, string helpText, string type = "text")
     {
         this.Label = label;
         this.Name = name;
@@ -23,7 +23,7 @@ public class TextField : Field
         this.OriginalValue = value;
         this.Required = required;
         this.HelpText = helpText;
-        this.Type = "text";
+        this.Type = type;
     }
 
     // TODO JSON parsing from string to objects again probably won't work out of the box because of the different field types. 

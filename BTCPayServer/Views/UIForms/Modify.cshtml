@@ -1,3 +1,7 @@
+@using BTCPayServer.Forms
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using BTCPayServer.Abstractions.TagHelpers
+@using Newtonsoft.Json
 @model BTCPayServer.Forms.ModifyForm
 
 @{
@@ -6,7 +10,7 @@
     Layout = "../Shared/_NavLayout.cshtml";
     ViewData["NavPartialName"] = "../UIStores/_Nav";
     ViewData.SetActivePage(StoreNavPages.Forms, $"{(isNew ? "Create" : "Edit")} Form", Model.Name);
-    
+
     var storeId = Context.GetCurrentStoreId();
 }
 
@@ -25,98 +29,16 @@
 }
 
 <template id="form-template-email">
-{
-  "Fields": [
+    @Json.Serialize(FormDataService.StaticFormEmail, new JsonSerializerSettings()
     {
-      "Name": "buyerEmail",
-      "Type": "email",
-      "Label": "Enter your email",
-      "Value": null,
-      "HelpText": null,
-      "Required": true,
-      "OriginalValue": null,
-      "ValidationErrors": []
-    }
-  ]
-}
+        Formatting = Formatting.Indented
+    })
 </template>
 <template id="form-template-address">
-{
-  "Fields": [
+    @Json.Serialize(FormDataService.StaticFormAddress, new JsonSerializerSettings()
     {
-      "HelpText": null,
-      "Label": "Enter your email",
-      "Name": "buyerEmail",
-      "OriginalValue": null,
-      "Required": true,
-      "Type": "email",
-      "Value": null
-    },
-    {
-      "HelpText": null,
-      "Label": "Name",
-      "Name": "buyerName",
-      "OriginalValue": null,
-      "Required": true,
-      "Type": "text",
-      "Value": null
-    },
-    {
-      "HelpText": null,
-      "Label": "Address Line 1",
-      "Name": "buyerAddress1",
-      "OriginalValue": null,
-      "Required": true,
-      "Type": "text",
-      "Value": null
-    },
-    {
-      "HelpText": null,
-      "Label": "Address Line 2",
-      "Name": "buyerAddress2",
-      "OriginalValue": null,
-      "Required": false,
-      "Type": "text",
-      "Value": null
-    },
-    {
-      "HelpText": null,
-      "Label": "City",
-      "Name": "buyerCity",
-      "OriginalValue": null,
-      "Required": true,
-      "Type": "text",
-      "Value": null
-    },
-    {
-      "HelpText": null,
-      "Label": "Postcode",
-      "Name": "buyerZip",
-      "OriginalValue": null,
-      "Required": false,
-      "Type": "text",
-      "Value": null
-    },
-    {
-      "HelpText": null,
-      "Label": "State",
-      "Name": "buyerState",
-      "OriginalValue": null,
-      "Required": false,
-      "Type": "text",
-      "Value": null
-    },
-    {
-      "HelpText": null,
-      "Label": "Country",
-      "Name": "buyerCountry",
-      "OriginalValue": null,
-      "Required": true,
-      "Type": "text",
-      "Value": null
-    }
-  ]
-}
+        Formatting = Formatting.Indented
+    })
 </template>
 
 <form method="post" asp-action="Modify" asp-route-id="@formId" asp-route-storeId="@storeId">
@@ -153,4 +75,3 @@
         </div>
     </div>
 </form>
-

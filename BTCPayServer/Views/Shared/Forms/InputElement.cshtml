@@ -2,9 +2,9 @@
 @using Newtonsoft.Json.Linq
 @model BTCPayServer.Abstractions.Form.Field
 @{
-    if (Model is not TextField field)
+    if (Model is not HtmlInputField field)
     {
-        field = JObject.FromObject(Model).ToObject<TextField>();
+        field = JObject.FromObject(Model).ToObject<HtmlInputField>();
     }
 }
 <div class="form-group">

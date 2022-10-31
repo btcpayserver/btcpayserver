@@ -138,6 +138,7 @@ namespace BTCPayServer.Configuration
             {
                 builder.AppendLine(CultureInfo.InvariantCulture, $"#{n.CryptoCode}.explorer.url={n.NBXplorerNetwork.DefaultSettings.DefaultUrl}");
                 builder.AppendLine(CultureInfo.InvariantCulture, $"#{n.CryptoCode}.explorer.cookiefile={ n.NBXplorerNetwork.DefaultSettings.DefaultCookieFile}");
+                builder.AppendLine(CultureInfo.InvariantCulture, $"#{n.CryptoCode}.blockexplorerlink=https://mempool.space/tx/{{0}}");
                 if (n.SupportLightning)
                 {
                     builder.AppendLine(CultureInfo.InvariantCulture, $"#{n.CryptoCode}.lightning=/root/.lightning/lightning-rpc");

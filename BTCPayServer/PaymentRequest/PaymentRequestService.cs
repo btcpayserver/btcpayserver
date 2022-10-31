@@ -100,7 +100,7 @@ namespace BTCPayServer.PaymentRequest
                 AnyPendingInvoice = pendingInvoice != null,
                 PendingInvoiceHasPayments = pendingInvoice != null &&
                                             pendingInvoice.ExceptionStatus != InvoiceExceptionStatus.None,
-                Invoices = invoices.Select(entity =>
+                Invoices = new ViewPaymentRequestViewModel.InvoiceList(invoices.Select(entity =>
                 {
                     var state = entity.GetInvoiceState();
                     var payments = entity
@@ -153,8 +153,7 @@ namespace BTCPayServer.PaymentRequest
                         Payments = payments
                     };
                 })
-                .Where(invoice => invoice != null)
-                .ToList()
+                .Where(invoice => invoice != null))
             };
         }
 

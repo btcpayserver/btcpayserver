@@ -301,7 +301,7 @@
                         "schema": { "type": "string" }
                     }
                 ],
-                "description": "Create a new invoice for the payment request",
+                "description": "Create a new invoice for the payment request, or reuse an existing one",
                 "requestBody": {
                     "description": "Invoice creation request",
                     "content": {
@@ -318,6 +318,12 @@
                                         "description": "The amount of the invoice. If `null` or `unspecified`, it will be set to the payment request's due amount. Note that the payment's request `allowCustomPaymentAmounts` must be `true`, or a 422 error will be sent back.'",
                                         "nullable": true,
                                         "example": "0.1"
+                                    },
+                                    "allowPendingInvoiceReuse": {
+                                        "type": "boolean",
+                                        "nullable": true,
+                                        "default": false,
+                                        "description":  "If `true`, this endpoint will not necessarily create a new invoice, and instead attempt to give back a pending one for this payment request."
                                     }
                                 }
                             }

@@ -210,14 +210,7 @@ namespace BTCPayServer.Controllers
                 return BadRequest("Payment Request has expired");
             }
 
-            var stateAllowedToDisplay = new HashSet<InvoiceState>
-            {
-                new InvoiceState(InvoiceStatusLegacy.New, InvoiceExceptionStatus.None),
-                new InvoiceState(InvoiceStatusLegacy.New, InvoiceExceptionStatus.PaidPartial),
-            };
-            var currentInvoice = result
-                .Invoices
-                .FirstOrDefault(invoice => stateAllowedToDisplay.Contains(invoice.State));
+            var currentInvoice = result.Invoices.GetReusableInvoice(amount);
             if (currentInvoice != null)
             {
                 if (redirectToInvoice)

@@ -10,6 +10,7 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.PaymentRequest;
 using BTCPayServer.Security;
+using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.PaymentRequests;
 using BTCPayServer.Services.Rates;
 using Microsoft.AspNetCore.Authorization;
@@ -25,18 +26,21 @@ namespace BTCPayServer.Controllers.Greenfield
     [EnableCors(CorsPolicies.All)]
     public class GreenfieldPaymentRequestsController : ControllerBase
     {
+        private readonly InvoiceRepository _InvoiceRepository;
         private readonly UIInvoiceController _invoiceController;
         private readonly PaymentRequestRepository _paymentRequestRepository;
         private readonly CurrencyNameTable _currencyNameTable;
         private readonly LinkGenerator _linkGenerator;
 
         public GreenfieldPaymentRequestsController(
+            InvoiceRepository invoiceRepository,
             UIInvoiceController invoiceController,
             PaymentRequestRepository paymentRequestRepository,
             PaymentRequestService paymentRequestService,
             CurrencyNameTable currencyNameTable,
             LinkGenerator linkGenerator)
         {
+            _InvoiceRepository = invoiceRepository;
             _invoiceController = invoiceController;
             _paymentRequestRepository = paymentRequestRepository;
             PaymentRequestService = paymentRequestService;
@@ -102,6 +106,15 @@ namespace BTCPayServer.Controllers.Greenfield
             if (pr.ExpiryDate.HasValue && DateTime.UtcNow >= pr.ExpiryDate)
             {
                 return this.CreateAPIError("expired", "This payment request is expired");
+            }
+
+            if (pay?.AllowPendingInvoiceReuse is true)
+            {
+                if (pr.Invoices.GetReusableInvoice(amount)?.Id is string invoiceId)
+                {
+                    var inv = await _InvoiceRepository.GetInvoice(invoiceId);
+                    return Ok(GreenfieldInvoiceController.ToModel(inv, _linkGenerator, Request));
+                }
             }
 
             try

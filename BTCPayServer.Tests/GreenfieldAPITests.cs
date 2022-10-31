@@ -1247,6 +1247,14 @@ namespace BTCPayServer.Tests
 
             Assert.Equal(0.06m, invoiceData.Amount);
             Assert.Equal("BTC", invoiceData.Currency);
+
+            var expectedInvoiceId = invoiceData.Id;
+            invoiceData = await client.PayPaymentRequest(user.StoreId, paymentTestPaymentRequest.Id, new PayPaymentRequestRequest() { AllowPendingInvoiceReuse = true });
+            Assert.Equal(expectedInvoiceId, invoiceData.Id);
+
+            var notExpectedInvoiceId = invoiceData.Id;
+            invoiceData = await client.PayPaymentRequest(user.StoreId, paymentTestPaymentRequest.Id, new PayPaymentRequestRequest() { AllowPendingInvoiceReuse = false });
+            Assert.NotEqual(notExpectedInvoiceId, invoiceData.Id);
         }
 
         [Fact(Timeout = TestTimeout)]

@@ -10,5 +10,6 @@ namespace BTCPayServer.Client.Models
     {
         [JsonConverter(typeof(NumericStringJsonConverter))]
         public decimal? Amount { get; set; }
+        public bool? AllowPendingInvoiceReuse { get; set; }
     }
 }

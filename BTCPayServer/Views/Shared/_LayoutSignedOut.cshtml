@@ -13,10 +13,12 @@
             background: var(--btcpay-bg-tile);
             border-radius: var(--btcpay-border-radius);
         }
-        
         .account-form h4 {
             margin-bottom: 1.5rem;
         }
+        .main-logo { height: 4rem; width: 18rem; }
+        .main-logo.main-logo-btcpay { height: 4.5rem; width: 2.5rem; }
+        .main-logo-btcpay .main-logo-btcpay--large { display: none; }
     </style>
     @await RenderSectionAsync("PageHeadContent", false)
 }
@@ -28,8 +30,8 @@
 
 <div class="row justify-content-center mb-2">
     <div class="col text-center">
-        <a asp-controller="UIHome" asp-action="Index" tabindex="-1">
-            <img src="~/img/btcpay-logo.svg" alt="BTCPay Server" class="mb-4" height="70" asp-append-version="true"/>
+        <a asp-controller="UIHome" asp-action="Index" tabindex="-1" class="d-inline-block navbar-brand mx-0 mb-4">
+            <vc:main-logo />
         </a>
 
         <h1 class="h2 mb-3">Welcome to your BTCPay&nbsp;Server</h1>

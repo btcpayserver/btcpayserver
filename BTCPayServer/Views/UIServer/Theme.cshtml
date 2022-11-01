@@ -1,6 +1,9 @@
-﻿@model BTCPayServer.Services.ThemeSettings
+﻿@using BTCPayServer.Abstractions.Contracts
+@model BTCPayServer.Services.ThemeSettings
+@inject IFileService FileService
 @{
     ViewData.SetActivePage(ServerNavPages.Theme, "Theme");
+    var canUpload = await FileService.IsAvailable();
 }
 
 @section PageFootContent {
@@ -11,16 +14,12 @@
 
 <div class="row">
     <div class="col-xl-8 col-xxl-constrain">
-        <form method="post">
+        <form method="post" enctype="multipart/form-data">
             <p>Use the default Light or Dark Themes, or provide a CSS theme file below.</p>
-            @if (!ViewContext.ModelState.IsValid)
-            {
-                <div asp-validation-summary="All" class="text-danger"></div>
-            }
+            
             <div class="form-group d-flex align-items-center">
                 <input asp-for="CustomTheme" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#CustomThemeSettings" aria-expanded="@Model.CustomTheme" aria-controls="CustomThemeSettings" />
                 <label asp-for="CustomTheme" class="form-label mb-0"></label>
-                <span asp-validation-for="CustomTheme" class="text-danger"></span>
             </div>
             <div class="collapse @(Model.CustomTheme ? "show" : "")" id="CustomThemeSettings">
                 <div class="form-group">
@@ -30,7 +29,30 @@
                     </a>
                     <input asp-for="CustomThemeCssUri" class="form-control" />
                     <span asp-validation-for="CustomThemeCssUri" class="text-danger"></span>
+                    <span asp-validation-for="CustomTheme" class="text-danger"></span>
                 </div>
+            </div>
+            
+            <h3 class="mt-5 mb-3">Branding</h3>
+            <div class="form-group">
+                <label asp-for="LogoFile" class="form-label"></label>
+                @if (canUpload)
+                {
+                    <div class="d-flex flex-wrap gap-3 align-items-center">
+                        <input asp-for="LogoFile" type="file" class="form-control flex-grow">
+                        @if (!string.IsNullOrEmpty(Model.LogoFileId))
+                        {
+                            <img src="@(await FileService.GetFileUrl(Context.Request.GetAbsoluteRootUri(), Model.LogoFileId))" alt="Logo" style="height:2.1rem;max-width:10.5rem;"/>
+                            <button type="submit" class="btn btn-sm btn-outline-danger" name="RemoveLogoFile" value="true">Remove</button>
+                        }
+                    </div>
+                    <span asp-validation-for="LogoFile" class="text-danger"></span>
+                }
+                else
+                {
+                    <input asp-for="LogoFile" type="file" class="form-control" disabled>
+                    <p class="form-text text-muted">In order to upload a logo, a <a asp-controller="UIServer" asp-action="Files">file storage</a> must be configured.</p>
+                }
             </div>
             
             <button type="submit" class="btn btn-primary mt-2" name="command" value="Save">Save</button>

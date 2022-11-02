@@ -5,21 +5,25 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Logging;
 using BTCPayServer.Models;
+using BTCPayServer.Models.PaymentRequestViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Rating;
 using BTCPayServer.Security;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.PaymentRequests;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Validation;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
@@ -166,6 +170,35 @@ namespace BTCPayServer.Controllers
             entity.RequiresRefundEmail = invoice.RequiresRefundEmail;
 
             return await CreateInvoiceCoreRaw(entity, store, excludeFilter, null, cancellationToken, entityManipulator);
+        }
+
+        internal async Task<InvoiceEntity> CreatePaymentRequestInvoice(ViewPaymentRequestViewModel pr, decimal? amount, StoreData storeData, HttpRequest request, CancellationToken cancellationToken)
+        {
+            if (pr.AllowCustomPaymentAmounts && amount != null)
+                amount = Math.Min(pr.AmountDue, amount.Value);
+            else
+                amount = pr.AmountDue;
+            var redirectUrl = _linkGenerator.PaymentRequestLink(pr.Id, request.Scheme, request.Host, request.PathBase);
+
+            var invoiceMetadata =
+                new InvoiceMetadata
+                {
+                    OrderId = PaymentRequestRepository.GetOrderIdForPaymentRequest(pr.Id),
+                    PaymentRequestId = pr.Id,
+                    BuyerEmail = pr.Email
+                };
+
+            var invoiceRequest =
+                new CreateInvoiceRequest
+                {
+                    Metadata = invoiceMetadata.ToJObject(),
+                    Currency = pr.Currency,
+                    Amount = amount,
+                    Checkout = { RedirectURL = redirectUrl }
+                };
+
+            var additionalTags = new List<string> { PaymentRequestRepository.GetInternalTag(pr.Id) };
+            return await CreateInvoiceCoreRaw(invoiceRequest, storeData, request.GetAbsoluteRoot(), additionalTags, cancellationToken);
         }
 
         internal async Task<InvoiceEntity> CreateInvoiceCoreRaw(CreateInvoiceRequest invoice, StoreData store, string serverUrl, List<string>? additionalTags = null, CancellationToken cancellationToken = default,  Action<InvoiceEntity>? entityManipulator = null)

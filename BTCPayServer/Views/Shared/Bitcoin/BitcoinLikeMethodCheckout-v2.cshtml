@@ -1,0 +1,29 @@
+@using BTCPayServer.BIP78.Sender
+@model BTCPayServer.Models.InvoicingModels.PaymentModel
+
+<template id="bitcoin-method-checkout-template">
+    <div class="payment-box">
+        <small class="qr-text" id="QR_Text_@Model.PaymentMethodId">{{$t("QR_Text")}}</small>
+        <div class="qr-container my-3" data-clipboard-confirm-element="QR_Text_@Model.PaymentMethodId" :data-clipboard="srvModel.btcAddress">
+            <qrcode v-if="srvModel.invoiceBitcoinUrlQR" :value="srvModel.invoiceBitcoinUrlQR" tag="div" :options="qrOptions" />
+        </div>
+        <a v-if="srvModel.invoiceBitcoinUrl" class="btn btn-primary rounded-pill w-100" target="_top"
+           :href="srvModel.invoiceBitcoinUrl" :title="$t(hasPayjoin ? 'BIP21 payment link with PayJoin support' : 'BIP21 payment link')">{{$t("Pay in wallet")}}</a>
+        @await Component.InvokeAsync("UiExtensionPoint", new { location = "checkout-bitcoin-post-content", model = Model })
+    </div>
+</template>
+
+<script>
+    Vue.component('BitcoinLikeMethodCheckout', {
+        props: ["srvModel"],
+        template: "#bitcoin-method-checkout-template",
+        components: {
+            qrcode: VueQrcode
+        },
+        computed: {
+            hasPayjoin () {
+                return this.srvModel.invoiceBitcoinUrl.indexOf('@PayjoinClient.BIP21EndpointKey=') !== -1;
+            }
+        }
+    });
+</script>

@@ -1,0 +1,83 @@
+@model PaymentModel
+
+<div id="Checkout-Cheating" class="mt-5" v-cloak>
+    <p class="alert alert-success text-break" v-if="successMessage">{{ successMessage }}</p>
+    <p class="alert alert-danger text-break" v-if="errorMessage">{{ errorMessage }}</p>
+    <form id="test-payment" :action="`/i/${invoiceId}/test-payment`" method="post" class="my-5" v-on:submit.prevent="pay" v-if="!isPaid">
+        <input name="CryptoCode" type="hidden" value="@Model.CryptoCode">
+        <label for="test-payment-amount" class="control-label form-label">{{$t("Fake a @Model.CryptoCode payment for testing")}}</label>
+        <div class="d-flex gap-3 mb-2">
+            <div class="input-group">
+                <input id="test-payment-amount" name="Amount" type="number" step="0.00000001" min="0" class="form-control" placeholder="Amount" v-model="amountRemaining" :disabled="paying" />
+                <div id="test-payment-crypto-code" class="input-group-addon input-group-text">@Model.CryptoCode</div>
+            </div>
+            <button id="FakePayment" class="btn btn-primary flex-shrink-0" type="submit" :disabled="paying">{{$t("Fake Payment")}}</button>
+        </div>
+        <small class="text-muted">{{$t("This is the same as running bitcoin-cli.sh sendtoaddress xxx")}}</small>
+    </form>
+    <form id="mine-block" :action="`/i/${invoiceId}/mine-blocks`" method="post" class="my-5" v-on:submit.prevent="mine">
+         <!-- TODO only show when BTC On-chain -->
+         <label for="block-count" class="control-label form-label">{{$t("Mine a few blocks to test processing and settlement.")}}</label>
+         <div class="d-flex gap-3">
+              <div class="input-group">
+                  <input id="block-count" name="BlockCount" type="number" step="1" min="1" class="form-control" value="1" />
+                  <div class="input-group-addon input-group-text">{{$t("Blocks")}}</div>
+              </div>
+              <button class="btn btn-secondary" type="submit">{{$t("Mine")}}</button>
+         </div>
+     </form>
+    <form id="expire-invoice" :action="`/i/${invoiceId}/expire`" method="post" class="my-5" v-on:submit.prevent="expire" v-if="!isPaid">
+        <button class="btn btn-secondary" type="submit" :disabled="expiring">{{$t("Expire Invoice Now")}}</button>
+    </form>
+</div>
+
+<script>
+    Vue.component('checkout-cheating', {
+        el: '#Checkout-Cheating',
+        data () {
+            return {
+                successMessage: null,
+                errorMessage: null,
+                paying: false,
+                expiring: false,
+                amountRemaining: parseFloat(this.btcDue)
+            }
+        },
+        props: {
+            invoiceId: String,
+            btcDue: Number,
+            isPaid: Boolean
+        },
+        methods: {
+            async pay (e) {
+                const form = e.target;
+                const url = form.getAttribute('action');
+                const method = form.getAttribute('method');
+                const body = new FormData(form);
+                const headers = { 'Accept': 'application/json' }
+                
+                this.paying = true;
+                const response = await fetch(url, { method, body, headers });
+                const data = await response.json();
+                this.successMessage = data.successMessage;
+                this.errorMessage = data.errorMessage;
+                this.paying = false;
+            },
+            mine () {
+                console.log("TODO")
+            },
+            async expire (e) {
+                const form = e.target;
+                const url = form.getAttribute('action');
+                const method = form.getAttribute('method');
+                
+                this.expiring = true;
+                const response = await fetch(url, { method });
+                const data = await response.json();
+                this.successMessage = data.successMessage;
+                this.errorMessage = data.errorMessage;
+                this.expiring = false;
+            }
+        }
+    })
+</script>

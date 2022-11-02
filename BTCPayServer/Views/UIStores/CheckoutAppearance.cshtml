@@ -1,8 +1,28 @@
 @using BTCPayServer.Payments
+@using BTCPayServer.Services.Invoices
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using BTCPayServer.Abstractions.TagHelpers
+@using BTCPayServer.Services.Stores
 @model CheckoutAppearanceViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
     ViewData.SetActivePage(StoreNavPages.CheckoutAppearance, "Checkout experience", Context.GetStoreData().Id);
+
+    var store = ViewContext.HttpContext.GetStoreData();
+    var checkoutFormOptions = CheckoutFormSelectList.ForStore(store, Model.CheckoutFormId, false);
+}
+
+@section PageFootContent {
+    <partial name="_ValidationScriptsPartial"/>
+    <script>
+        delegate('click', '.setTheme', e => {
+            e.preventDefault();
+            const { theme } = e.target.dataset;
+            document.getElementById('CustomCSS').value = ['dark', 'legacy'].includes(theme)
+                ? `/checkout/css/themes/${theme}.css`
+                : ''
+        });
+    </script>
 }
 
 <div class="row">
@@ -43,6 +63,7 @@
                     </table>
                 </div>
             }
+            
             <div class="form-check my-3">
                 <input asp-for="RequiresRefundEmail" type="checkbox" class="form-check-input" />
                 <label asp-for="RequiresRefundEmail" class="form-check-label"></label>
@@ -56,7 +77,35 @@
                 <label asp-for="RedirectAutomatically" class="form-check-label"></label>
             </div>
             
-			<h3 class="mt-5 mb-3">Public receipt</h3>
+            <h3 class="mt-5 mb-3 d-flex align-items-center">
+                New checkout
+                <span class="badge bg-warning ms-3" style="font-size:10px;">Experimental</span>
+            </h3>
+            <div class="d-flex align-items-center mb-3">
+                <input asp-for="UseNewCheckout" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#NewCheckoutSettings" aria-expanded="@(Model.UseNewCheckout)" aria-controls="NewCheckoutSettings" />
+                <div>
+                    <label asp-for="UseNewCheckout" class="form-label mb-0"></label>
+                    <span asp-validation-for="UseNewCheckout" class="text-danger"></span>
+                    <div class="text-muted">
+                        Since v1.7.0 a new version of the checkout is available.<br/>
+                        We are still collecting feedback and offer this as an opt-in feature.
+                    </div>
+                </div>
+            </div>
+                            
+            <div class="collapse @(Model.UseNewCheckout ? "show" : "")" id="NewCheckoutSettings">
+                <div class="form-group pt-2">
+                    <label asp-for="CheckoutFormId" class="form-label"></label>
+                    <select asp-for="CheckoutFormId" class="form-select w-auto" asp-items="@checkoutFormOptions"></select>
+                    <span asp-validation-for="CheckoutFormId" class="text-danger"></span>
+                </div>
+                <div class="form-check mb-0">
+                    <input asp-for="OnChainWithLnInvoiceFallback" type="checkbox" class="form-check-input"/>
+                    <label asp-for="OnChainWithLnInvoiceFallback" class="form-check-label"></label>
+                </div>
+            </div>
+            
+            <h3 class="mt-5 mb-3">Public receipt</h3>
             <div class="form-check my-3">
                 <input asp-for="ReceiptOptions.Enabled" type="checkbox" class="form-check-input" />
                 <label asp-for="ReceiptOptions.Enabled" class="form-check-label"></label>
@@ -75,7 +124,7 @@
                 <div class="form-check">
                     <input asp-for="AutoDetectLanguage" type="checkbox" class="form-check-input" />
                     <label asp-for="AutoDetectLanguage" class="form-check-label"></label>
-                    <p class="form-text text-muted">Detects the language of the customer's browser with 99.9% accuracy.</p>
+                    <p class="text-muted">Detects the language of the customer's browser with 99.9% accuracy.</p>
                 </div>
             </div>
             <div class="form-group">
@@ -116,16 +165,3 @@
         </form>
     </div>
 </div>
-
-@section PageFootContent {
-    <partial name="_ValidationScriptsPartial"/>
-    <script>
-        delegate('click', '.setTheme', e => {
-            e.preventDefault();
-            const { theme } = e.target.dataset;
-            document.getElementById('CustomCSS').value = ['dark', 'legacy'].includes(theme)
-                ? `/checkout/css/themes/${theme}.css`
-                : ''
-        });
-    </script>
-}

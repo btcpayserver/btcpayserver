@@ -1,3 +1,6 @@
+using BTCPayServer.Client.Models;
+using BTCPayServer.Services.Stores;
+
 namespace BTCPayServer.Services.Apps
 {
     public class PointOfSaleSettings
@@ -55,6 +58,8 @@ namespace BTCPayServer.Services.Apps
             public bool EnableTips { get; set; }
             public RequiresRefundEmail RequiresRefundEmail { get; set; }
 
+            public string CheckoutFormId { get; set; } = GenericFormOption.InheritFromStore.ToString();
+
             public const string BUTTON_TEXT_DEF = "Buy for {0}";
             public string ButtonText { get; set; } = BUTTON_TEXT_DEF;
             public const string CUSTOM_BUTTON_TEXT_DEF = "Pay";
@@ -72,5 +77,6 @@ namespace BTCPayServer.Services.Apps
             public string NotificationUrl { get; set; }
             public string RedirectUrl { get; set; }
             public bool? RedirectAutomatically { get; set; }
-        }
+            public CheckoutType CheckoutType { get; internal set; }
+    }
 }

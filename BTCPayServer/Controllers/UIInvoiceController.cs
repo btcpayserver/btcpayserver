@@ -138,6 +138,7 @@ namespace BTCPayServer.Controllers
             entity.RedirectAutomatically =
                 invoice.RedirectAutomatically.GetValueOrDefault(storeBlob.RedirectAutomatically);
             entity.RequiresRefundEmail = invoice.RequiresRefundEmail;
+            entity.CheckoutFormId = invoice.CheckoutFormId;
             entity.SpeedPolicy = ParseSpeedPolicy(invoice.TransactionSpeed, store.SpeedPolicy);
 
             IPaymentFilter? excludeFilter = null;
@@ -193,6 +194,8 @@ namespace BTCPayServer.Controllers
             entity.DefaultLanguage = invoice.Checkout.DefaultLanguage;
             entity.DefaultPaymentMethod = invoice.Checkout.DefaultPaymentMethod;
             entity.RedirectAutomatically = invoice.Checkout.RedirectAutomatically ?? storeBlob.RedirectAutomatically;
+            entity.CheckoutFormId = invoice.Checkout.CheckoutFormId;
+            entity.CheckoutType = invoice.Checkout.CheckoutType;
             entity.RequiresRefundEmail = invoice.Checkout.RequiresRefundEmail;
             IPaymentFilter? excludeFilter = null;
             if (invoice.Checkout.PaymentMethods != null)
@@ -278,7 +281,6 @@ namespace BTCPayServer.Controllers
 
             if (!noNeedForMethods)
             {
-
                 // This loop ends with .ToList so we are querying all payment methods at once
                 // instead of sequentially to improve response time
                 var x1 = store.GetSupportedPaymentMethods(_NetworkProvider)

@@ -123,7 +123,10 @@
         </div>
         @if (Model.Balance.OffchainBalance != null && Model.Balance.OnchainBalance != null)
         {
-            <a class="d-inline-block mt-3" role="button" data-bs-toggle="collapse" data-bs-target=".balance-details" aria-expanded="false" aria-controls="balanceDetailsOffchain balanceDetailsOnchain">Show details</a>
+            <button class="d-inline-flex align-items-center btn btn-link text-primary fw-semibold p-0 mt-3 ms-n1" type="button" data-bs-toggle="collapse" data-bs-target=".balance-details" aria-expanded="false" aria-controls="balanceDetailsOffchain balanceDetailsOnchain">
+                <vc:icon symbol="caret-down"/>
+                <span class="ms-1">Details</span>
+            </button>
         }
     }
     else

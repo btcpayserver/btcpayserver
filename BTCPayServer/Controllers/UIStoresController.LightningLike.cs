@@ -194,12 +194,15 @@ namespace BTCPayServer.Controllers
                     try
                     {
                         var info = await handler.GetNodeInfo(paymentMethod, network, new InvoiceLogs(), Request.IsOnion(), true);
-                        if (!vm.SkipPortTest)
+                        var hasPublicAddress = info.Any();
+                        if (!vm.SkipPortTest && hasPublicAddress)
                         {
                             using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(20));
                             await handler.TestConnection(info.First(), cts.Token);
                         }
-                        TempData[WellKnownTempData.SuccessMessage] = $"Connection to the Lightning node successful. Your node address: {info.First()}";
+                        TempData[WellKnownTempData.SuccessMessage] = "Connection to the Lightning node successful" + (hasPublicAddress
+                            ? $". Your node address: {info.First()}"
+                            : ", but no public address has been configured");
                     }
                     catch (Exception ex)
                     {
@@ -225,7 +228,7 @@ namespace BTCPayServer.Controllers
             var lightning = GetExistingLightningSupportedPaymentMethod(cryptoCode, store);
             if (lightning == null) 
             {
-                TempData[WellKnownTempData.ErrorMessage] = $"You need to connect to a Lightning node before adjusting its settings.";
+                TempData[WellKnownTempData.ErrorMessage] = "You need to connect to a Lightning node before adjusting its settings.";
 
                 return RedirectToAction(nameof(SetupLightningNode), new { storeId, cryptoCode });
             }

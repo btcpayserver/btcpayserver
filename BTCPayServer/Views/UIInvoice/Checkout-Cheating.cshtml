@@ -1,6 +1,6 @@
 @model PaymentModel
 
-<div id="Checkout-Cheating" class="mt-5" v-cloak>
+<div id="checkout-cheating" class="mt-5" v-cloak>
     <p class="alert alert-success text-break" v-if="successMessage">{{ successMessage }}</p>
     <p class="alert alert-danger text-break" v-if="errorMessage">{{ errorMessage }}</p>
     <form id="test-payment" :action="`/i/${invoiceId}/test-payment`" method="post" class="my-5" v-on:submit.prevent="pay" v-if="!isPaid">
@@ -33,7 +33,7 @@
 
 <script>
     Vue.component('checkout-cheating', {
-        el: '#Checkout-Cheating',
+        el: '#checkout-cheating',
         data () {
             return {
                 successMessage: null,

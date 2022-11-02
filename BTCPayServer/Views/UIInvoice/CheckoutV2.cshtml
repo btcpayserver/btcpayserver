@@ -261,7 +261,7 @@
         </main>
         @if (Env.CheatMode)
         {
-            <checkout-cheating v-if="step === 'payment'" invoice-id="@Model.InvoiceId" :btc-due="btcDue" :is-paid="isPaid" />
+            <checkout-cheating v-if="step === 'payment'" invoice-id="@Model.InvoiceId" :btc-due="btcDue" :is-paid="isPaid"></checkout-cheating>
         }
         <footer>
             <select asp-for="DefaultLang" asp-items="@LangService.GetLanguageSelectListItems()" v-on:change="changeLanguage"></select>

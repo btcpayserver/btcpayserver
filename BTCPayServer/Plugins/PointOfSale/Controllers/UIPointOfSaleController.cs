@@ -221,6 +221,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                     PosData = string.IsNullOrEmpty(posData) ? null : posData,
                     RedirectAutomatically = settings.RedirectAutomatically,
                     SupportedTransactionCurrencies = paymentMethods,
+                    CheckoutFormId = store.GetStoreBlob().CheckoutFormId,
                     RequiresRefundEmail = requiresRefundEmail == RequiresRefundEmail.InheritFromStore
                         ? store.GetStoreBlob().RequiresRefundEmail
                         : requiresRefundEmail == RequiresRefundEmail.On,
@@ -252,10 +253,11 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             if (app == null)
                 return NotFound();
 
+            var storeBlob = GetCurrentStore().GetStoreBlob();
             var settings = app.GetSettings<PointOfSaleSettings>();
             settings.DefaultView = settings.EnableShoppingCart ? PosViewType.Cart : settings.DefaultView;
             settings.EnableShoppingCart = false;
-            
+
             var vm = new UpdatePointOfSaleViewModel
             {
                 Id = appId,
@@ -281,7 +283,9 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 RedirectUrl = settings.RedirectUrl,
                 SearchTerm = app.TagAllInvoices ? $"storeid:{app.StoreDataId}" : $"orderid:{AppService.GetAppOrderId(app)}",
                 RedirectAutomatically = settings.RedirectAutomatically.HasValue ? settings.RedirectAutomatically.Value ? "true" : "false" : "",
-                RequiresRefundEmail = settings.RequiresRefundEmail
+                RequiresRefundEmail = settings.RequiresRefundEmail,
+                CheckoutFormId = settings.CheckoutFormId,
+                UseNewCheckout = storeBlob.CheckoutType == Client.Models.CheckoutType.V2
             };
             if (HttpContext?.Request != null)
             {
@@ -348,8 +352,8 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 return View("PointOfSale/UpdatePointOfSale", vm);
             }
 
-            app.Name = vm.AppName;
-            app.SetSettings(new PointOfSaleSettings
+            var storeBlob = GetCurrentStore().GetStoreBlob();
+            var settings = new PointOfSaleSettings
             {
                 Title = vm.Title,
                 DefaultView = vm.DefaultView,
@@ -367,9 +371,20 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 RedirectUrl = vm.RedirectUrl,
                 Description = vm.Description,
                 EmbeddedCSS = vm.EmbeddedCSS,
-                RedirectAutomatically = string.IsNullOrEmpty(vm.RedirectAutomatically) ? (bool?)null : bool.Parse(vm.RedirectAutomatically),
-                RequiresRefundEmail = vm.RequiresRefundEmail,
-            });
+                RedirectAutomatically =
+                    string.IsNullOrEmpty(vm.RedirectAutomatically) ? (bool?)null : bool.Parse(vm.RedirectAutomatically),
+                RequiresRefundEmail = vm.RequiresRefundEmail
+            };
+            
+            if (storeBlob.CheckoutType == Client.Models.CheckoutType.V2)
+            {
+                settings.CheckoutFormId = vm.CheckoutFormId == GenericFormOption.InheritFromStore.ToString()
+                    ? storeBlob.CheckoutFormId
+                    : vm.CheckoutFormId;
+            }
+
+            app.Name = vm.AppName;
+            app.SetSettings(settings);
             await _appService.UpdateOrCreateApp(app);
             TempData[WellKnownTempData.SuccessMessage] = "App updated";
             return RedirectToAction(nameof(UpdatePointOfSale), new { appId });
@@ -397,6 +412,8 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             }
             return currency.Trim().ToUpperInvariant();
         }
+
+        private StoreData GetCurrentStore() => HttpContext.GetStoreData();
         
         private AppData GetCurrentApp() => HttpContext.GetAppData();
     }

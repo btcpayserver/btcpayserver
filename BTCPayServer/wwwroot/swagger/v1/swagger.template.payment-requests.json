@@ -206,7 +206,7 @@
                 },
                 "security": [
                     {
-                        "API_Key": [ "btcpay.store.canmodifypaymentrequests"],
+                        "API_Key": [ "btcpay.store.canmodifypaymentrequests" ],
                         "Basic": []
                     }
                 ]
@@ -278,6 +278,99 @@
                     }
                 ]
             }
+        },
+        "/api/v1/stores/{storeId}/payment-requests/{paymentRequestId}/pay": {
+            "post": {
+                "tags": [
+                    "Payment Requests"
+                ],
+                "summary": "Create a new invoice for the payment request",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store to fetch",
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "paymentRequestId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The payment request to create",
+                        "schema": { "type": "string" }
+                    }
+                ],
+                "description": "Create a new invoice for the payment request, or reuse an existing one",
+                "requestBody": {
+                    "description": "Invoice creation request",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "properties": {
+                                    "amount": {
+                                        "type": "string",
+                                        "format": "decimal",
+                                        "minimum": 0,
+                                        "exclusiveMinimum": true,
+                                        "description": "The amount of the invoice. If `null` or `unspecified`, it will be set to the payment request's due amount. Note that the payment's request `allowCustomPaymentAmounts` must be `true`, or a 422 error will be sent back.'",
+                                        "nullable": true,
+                                        "example": "0.1"
+                                    },
+                                    "allowPendingInvoiceReuse": {
+                                        "type": "boolean",
+                                        "nullable": true,
+                                        "default": false,
+                                        "description":  "If `true`, this endpoint will not necessarily create a new invoice, and instead attempt to give back a pending one for this payment request."
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "A new invoice",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/InvoiceData"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unable to validate the request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Wellknown error codes are: `archived`, `already-paid`, `expired`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canviewpaymentrequests"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
         }
     },
     "components": {
@@ -320,7 +413,7 @@
                     }
                 ]
             },
-            "PaymentRequestBaseData":{
+            "PaymentRequestBaseData": {
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
@@ -329,12 +422,12 @@
                         "format": "decimal",
                         "minimum": 0,
                         "exclusiveMinimum": true,
-                        "description":  "The amount of the payment request",
+                        "description": "The amount of the payment request",
                         "nullable": false
                     },
                     "title": {
                         "type": "string",
-                        "description":  "The title of the payment request",
+                        "description": "The title of the payment request",
                         "nullable": false
                     },
                     "currency": {
@@ -358,7 +451,7 @@
                     "expiryDate": {
                         "description": "The expiry date of the payment request",
                         "nullable": true,
-                        "allOf": [ {"$ref": "#/components/schemas/UnixTimestamp"}]
+                        "allOf": [ { "$ref": "#/components/schemas/UnixTimestamp" } ]
                     },
                     "embeddedCSS": {
                         "type": "string",

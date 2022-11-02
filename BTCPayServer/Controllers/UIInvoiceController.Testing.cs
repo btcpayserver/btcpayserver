@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
@@ -24,34 +25,35 @@ namespace BTCPayServer.Controllers
             public string CryptoCode { get; set; } = "BTC";
         }
 
-        [HttpPost]
-        [Route("i/{invoiceId}/test-payment")]
+        [HttpPost("i/{invoiceId}/test-payment")]
         [CheatModeRoute]
         public async Task<IActionResult> TestPayment(string invoiceId, FakePaymentRequest request, [FromServices] Cheater cheater)
         {
             var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
             var store = await _StoreRepository.FindStore(invoice.StoreId);
 
-            // TODO support altcoins, not just bitcoin
-            var network = _NetworkProvider.GetNetwork<BTCPayNetwork>(request.CryptoCode);
+            // TODO support altcoins, not just bitcoin - and make it work for LN-only invoices
+            var isSats = request.CryptoCode.ToUpper(CultureInfo.InvariantCulture) == "SATS";
+            var cryptoCode = isSats ? "BTC" : request.CryptoCode;
+            var network = _NetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
             var paymentMethodId = new [] {store.GetDefaultPaymentId()}.Concat(store.GetEnabledPaymentIds(_NetworkProvider))
-                .FirstOrDefault(p => p!= null && p.CryptoCode == request.CryptoCode && p.PaymentType == PaymentTypes.BTCLike);
+                .FirstOrDefault(p => p != null && p.CryptoCode == cryptoCode && p.PaymentType == PaymentTypes.BTCLike);
             var bitcoinAddressString = invoice.GetPaymentMethod(paymentMethodId).GetPaymentMethodDetails().GetPaymentDestination();
             var bitcoinAddressObj = BitcoinAddress.Create(bitcoinAddressString, network.NBitcoinNetwork);
-            var BtcAmount = request.Amount;
+            var amount = new Money(request.Amount, isSats ? MoneyUnit.Satoshi : MoneyUnit.BTC);
 
             try
             {
                 var paymentMethod = invoice.GetPaymentMethod(paymentMethodId);
                 var rate = paymentMethod.Rate;
-                var txid = cheater.CashCow.SendToAddress(bitcoinAddressObj, new Money(BtcAmount, MoneyUnit.BTC)).ToString();
+                var txid = (await cheater.CashCow.SendToAddressAsync(bitcoinAddressObj, amount)).ToString();
 
                 // TODO The value of totalDue is wrong. How can we get the real total due? invoice.Price is only correct if this is the 2nd payment, not for a 3rd or 4th payment. 
                 var totalDue = invoice.Price;
                 return Ok(new
                 {
                     Txid = txid,
-                    AmountRemaining = (totalDue - (BtcAmount * rate)) / rate,
+                    AmountRemaining = (totalDue - (amount.ToUnit(MoneyUnit.BTC) * rate)) / rate,
                     SuccessMessage = "Created transaction " + txid
                 });
             }
@@ -65,8 +67,7 @@ namespace BTCPayServer.Controllers
             }
         }
 
-        [HttpPost]
-        [Route("i/{invoiceId}/mine-blocks")]
+        [HttpPost("i/{invoiceId}/mine-blocks")]
         [CheatModeRoute]
         public IActionResult MineBlock(string invoiceId, MineBlocksRequest request, [FromServices] Cheater cheater)
         {
@@ -96,8 +97,7 @@ namespace BTCPayServer.Controllers
             }
         }
 
-        [HttpPost]
-        [Route("i/{invoiceId}/expire")]
+        [HttpPost("i/{invoiceId}/expire")]
         [CheatModeRoute]
         public async Task<IActionResult> TestExpireNow(string invoiceId, [FromServices] Cheater cheater)
         {

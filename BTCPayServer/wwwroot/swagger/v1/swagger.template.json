@@ -79,19 +79,32 @@
                     "LowMediumSpeed"
                 ]
             },
+            "CheckoutType": {
+                "type": "string",
+                "description": "`\"V1\"`: The original checkout form   \n`\"V2\"`: The new experimental checkout form",
+                "nullable": true,
+                "default": "V1",
+                "x-enumNames": [
+                    "V1",
+                    "V2"
+                ],
+                "enum": [
+                    "V1",
+                    "V2"
+                ]
+            },
             "TimeSpan": {
                 "type": "number",
                 "format": "int32",
                 "example": 90
             },
             "TimeSpanSeconds": {
-                "allOf": [ {"$ref": "#/components/schemas/TimeSpan"}],
-
+                "allOf": [ { "$ref": "#/components/schemas/TimeSpan" } ],
                 "format": "seconds",
                 "description": "A span of times in seconds"
             },
             "TimeSpanMinutes": {
-                "allOf": [ {"$ref": "#/components/schemas/TimeSpan"}],
+                "allOf": [ { "$ref": "#/components/schemas/TimeSpan" } ],
                 "format": "minutes",
                 "description": "A span of times in minutes"
             }

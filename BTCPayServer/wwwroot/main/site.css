@@ -84,7 +84,7 @@ a.unobtrusive-link {
     box-shadow: none;
 }
 
-[data-bs-toggle="collapse"] svg.icon {
+[aria-expanded] > svg.icon-caret-down {
     flex-shrink: 0;
     width: 24px;
     height: 24px;
@@ -92,7 +92,7 @@ a.unobtrusive-link {
     transition: transform 0.2s ease-in-out;
 }
 
-[data-bs-toggle="collapse"][aria-expanded="true"] svg.icon {
+[aria-expanded="true"] > svg.icon-caret-down {
     transform: rotate(-180deg);
 }
 

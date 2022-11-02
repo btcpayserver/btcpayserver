@@ -1,0 +1,23 @@
+@model BTCPayServer.Models.InvoicingModels.PaymentModel
+
+<template id="lightning-method-checkout-template">
+    <div class="payment-box">
+        <small class="qr-text" id="QR_Text_@Model.PaymentMethodId">{{$t("QR_Text")}}</small>
+        <div class="qr-container my-3" data-clipboard-confirm-element="QR_Text_@Model.PaymentMethodId" :data-clipboard="srvModel.btcAddress">
+            <qrcode v-if="srvModel.invoiceBitcoinUrlQR" :value="srvModel.invoiceBitcoinUrlQR" tag="div" :options="qrOptions" />
+        </div>
+        <a v-if="srvModel.invoiceBitcoinUrl" class="btn btn-primary rounded-pill w-100" target="_top"
+           :href="srvModel.invoiceBitcoinUrl">{{$t("Pay in wallet")}}</a>
+        @await Component.InvokeAsync("UiExtensionPoint", new { location = "checkout-lightning-post-content", model = Model })
+    </div>          
+</template>
+
+<script>
+    Vue.component('LightningLikeMethodCheckout', {
+        props: ["srvModel"],
+        template: "#lightning-method-checkout-template",
+        components: {
+            qrcode: VueQrcode
+        }
+    });
+</script>

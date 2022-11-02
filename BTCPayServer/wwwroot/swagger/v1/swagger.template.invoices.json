@@ -1074,6 +1074,25 @@
                         "nullable": true,
                         "description": "Invoice will require user to provide a refund email if this option is set to `true`. Has no effect if `buyerEmail` metadata is set as there is no email to collect in this case."
                     },
+                    "checkoutType": {
+                        "type": "string",
+                        "description": "`\"V1\"`: The original checkout form   \n`\"V2\"`: The new experimental checkout form.   \nIf `null` or unspecified, the store's settings will be used.",
+                        "nullable": true,
+                        "default": null,
+                        "x-enumNames": [
+                            "V1",
+                            "V2"
+                        ],
+                        "enum": [
+                            "V1",
+                            "V2"
+                        ]
+                    },
+                    "checkoutFormId": {
+                        "type": "string",
+                        "description": "Form ID to request customer data, in case the new checkout is used",
+                        "nullable": true
+                    },
                     "defaultLanguage": {
                         "type": "string",
                         "nullable": true,

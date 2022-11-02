@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using BTCPayServer.Services.Apps;
+using BTCPayServer.Services.Stores;
 using BTCPayServer.Validation;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
@@ -97,7 +98,13 @@ namespace BTCPayServer.Plugins.PointOfSale.Models
         [Display(Name = "Custom CSS Code")]
         public string EmbeddedCSS { get; set; }
         public string Description { get; set; }
+        
         [Display(Name = "Require refund email on checkout")]
         public RequiresRefundEmail RequiresRefundEmail { get; set; } = RequiresRefundEmail.InheritFromStore;
+        
+        [Display(Name = "Request customer data on checkout")]
+        public string CheckoutFormId { get; set; } = GenericFormOption.InheritFromStore.ToString();
+
+        public bool UseNewCheckout { get; set; }
     }
 }

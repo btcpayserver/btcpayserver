@@ -548,11 +548,21 @@
                         }
                     }
                 ],
-                "description": "Pay a lightning invoice.",
+                "description": "Pay a lightning invoice. In case the payment response times out, the status will be reported as pending and the final status can be resolved using the [Get payment](#operation/StoreLightningNodeApi_GetPayment) endpoint. The default wait time for payment responses is 30 seconds — it might take longer if multiple routes are tried or a hold invoice is getting paid.",
                 "operationId": "StoreLightningNodeApi_PayInvoice",
                 "responses": {
                     "200": {
                         "description": "Successfully paid",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LightningPaymentData"
+                                }
+                            }
+                        }
+                    },
+                    "202": {
+                        "description": "Payment initiated",
                         "content": {
                             "application/json": {
                                 "schema": {

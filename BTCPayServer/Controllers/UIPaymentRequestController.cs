@@ -35,7 +35,6 @@ namespace BTCPayServer.Controllers
         private readonly EventAggregator _EventAggregator;
         private readonly CurrencyNameTable _Currencies;
         private readonly InvoiceRepository _InvoiceRepository;
-        private readonly LinkGenerator _linkGenerator;
 
         public UIPaymentRequestController(
             UIInvoiceController invoiceController,
@@ -44,8 +43,7 @@ namespace BTCPayServer.Controllers
             PaymentRequestService paymentRequestService,
             EventAggregator eventAggregator,
             CurrencyNameTable currencies,
-            InvoiceRepository invoiceRepository,
-            LinkGenerator linkGenerator)
+            InvoiceRepository invoiceRepository)
         {
             _InvoiceController = invoiceController;
             _UserManager = userManager;
@@ -54,7 +52,6 @@ namespace BTCPayServer.Controllers
             _EventAggregator = eventAggregator;
             _Currencies = currencies;
             _InvoiceRepository = invoiceRepository;
-            _linkGenerator = linkGenerator;
         }
 
         [BitpayAPIConstraint(false)]
@@ -213,14 +210,7 @@ namespace BTCPayServer.Controllers
                 return BadRequest("Payment Request has expired");
             }
 
-            var stateAllowedToDisplay = new HashSet<InvoiceState>
-            {
-                new InvoiceState(InvoiceStatusLegacy.New, InvoiceExceptionStatus.None),
-                new InvoiceState(InvoiceStatusLegacy.New, InvoiceExceptionStatus.PaidPartial),
-            };
-            var currentInvoice = result
-                .Invoices
-                .FirstOrDefault(invoice => stateAllowedToDisplay.Contains(invoice.State));
+            var currentInvoice = result.Invoices.GetReusableInvoice(amount);
             if (currentInvoice != null)
             {
                 if (redirectToInvoice)
@@ -231,38 +221,9 @@ namespace BTCPayServer.Controllers
                 return Ok(currentInvoice.Id);
             }
 
-            if (result.AllowCustomPaymentAmounts && amount != null)
-                amount = Math.Min(result.AmountDue, amount.Value);
-            else
-                amount = result.AmountDue;
-
-            var pr = await _PaymentRequestRepository.FindPaymentRequest(payReqId, null, cancellationToken);
-            var blob = pr.GetBlob();
-            var store = pr.StoreData;
             try
             {
-                var redirectUrl = _linkGenerator.PaymentRequestLink(payReqId, Request.Scheme, Request.Host, Request.PathBase);
-
-                var invoiceMetadata =
-                    new InvoiceMetadata
-                    {
-                        OrderId = PaymentRequestRepository.GetOrderIdForPaymentRequest(payReqId),
-                        PaymentRequestId = payReqId,
-                        BuyerEmail = result.Email
-                    };
-
-                var invoiceRequest =
-                    new CreateInvoiceRequest
-                    {
-                        Metadata = invoiceMetadata.ToJObject(),
-                        Currency = blob.Currency,
-                        Amount = amount.Value,
-                        Checkout = { RedirectURL = redirectUrl }
-                    };
-
-                var additionalTags = new List<string> { PaymentRequestRepository.GetInternalTag(payReqId) };
-                var newInvoice = await _InvoiceController.CreateInvoiceCoreRaw(invoiceRequest, store, Request.GetAbsoluteRoot(), additionalTags, cancellationToken);
-
+                var newInvoice = await _InvoiceController.CreatePaymentRequestInvoice(result, amount, this.GetCurrentStore(), Request, cancellationToken);
                 if (redirectToInvoice)
                 {
                     return RedirectToAction("Checkout", "UIInvoice", new { invoiceId = newInvoice.Id });

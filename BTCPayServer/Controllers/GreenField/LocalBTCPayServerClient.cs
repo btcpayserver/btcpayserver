@@ -592,6 +592,12 @@ namespace BTCPayServer.Controllers.Greenfield
             HandleActionResult(await GetController<GreenfieldPaymentRequestsController>().ArchivePaymentRequest(storeId, paymentRequestId));
         }
 
+        public override async Task<InvoiceData> PayPaymentRequest(string storeId, string paymentRequestId, PayPaymentRequestRequest request, CancellationToken token = default)
+        {
+            return GetFromActionResult<InvoiceData>(
+                await GetController<GreenfieldPaymentRequestsController>().PayPaymentRequest(storeId, paymentRequestId, request, token));
+        }
+
         public override async Task<PaymentRequestData> CreatePaymentRequest(string storeId,
             CreatePaymentRequestRequest request, CancellationToken token = default)
         {

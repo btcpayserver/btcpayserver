@@ -2,9 +2,13 @@
 @using BTCPayServer.Abstractions.Models
 @using BTCPayServer.Views.Apps
 @using BTCPayServer.Abstractions.Extensions
+@using BTCPayServer.Services.Stores
 @model BTCPayServer.Plugins.PointOfSale.Models.UpdatePointOfSaleViewModel
 @{
     ViewData.SetActivePage(AppsNavPages.Update, "Update Point of Sale", Model.Id);
+    
+    var store = ViewContext.HttpContext.GetStoreData();
+    var checkoutFormOptions = CheckoutFormSelectList.ForStore(store, Model.CheckoutFormId, true);
 }
 
 <form method="post">
@@ -72,9 +76,7 @@
                 <label asp-for="DefaultView" class="form-label" data-required></label>
                 <select asp-for="DefaultView" asp-items="@Html.GetEnumSelectList<PosViewType>()" class="form-select" required></select>
                 <span asp-validation-for="DefaultView" class="text-danger"></span>
-                <div class="mt-2">
-                    <span class="text-secondary">Choose the point of sale style for your customers.</span>
-                </div>
+                <p class="form-text text-muted">Choose the point of sale style for your customers.</p>
             </div>
             <div class="form-group" id="button-price-text">
                 <label asp-for="ButtonText" class="form-label" data-required></label>
@@ -82,9 +84,18 @@
                 <span asp-validation-for="ButtonText" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="RequiresRefundEmail" class="form-label"></label>
-                <select asp-for="RequiresRefundEmail" asp-items="@Html.GetEnumSelectList<RequiresRefundEmail>()" class="form-select" required></select>
-                <span asp-validation-for="RequiresRefundEmail" class="text-danger"></span>
+                @if (Model.UseNewCheckout)
+                {
+                    <label asp-for="CheckoutFormId" class="form-label"></label>
+                    <select asp-for="CheckoutFormId" class="form-select w-auto" asp-items="@checkoutFormOptions"></select>
+                    <span asp-validation-for="CheckoutFormId" class="text-danger"></span>
+                }
+                else
+                {
+                    <label asp-for="RequiresRefundEmail" class="form-label"></label>
+                    <select asp-for="RequiresRefundEmail" asp-items="@Html.GetEnumSelectList<RequiresRefundEmail>()" class="form-select w-auto"></select>
+                    <span asp-validation-for="RequiresRefundEmail" class="text-danger"></span>
+                }
             </div>
             <section id="discounts" class="p-0">
                 <h3 class="mt-5 mb-4">Discounts</h3>

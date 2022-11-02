@@ -85,6 +85,9 @@ namespace BTCPayServer.Client.Models
             public bool? RedirectAutomatically { get; set; }
             public bool? RequiresRefundEmail { get; set; } = null;
             public string DefaultLanguage { get; set; }
+            [JsonProperty("checkoutFormId")]
+            public string CheckoutFormId { get; set; }
+            public CheckoutType? CheckoutType { get; set; }
         }
     }
     public class InvoiceData : InvoiceDataBase

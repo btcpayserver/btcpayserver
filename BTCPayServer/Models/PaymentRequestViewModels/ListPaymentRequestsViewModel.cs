@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Services.Invoices;
@@ -130,7 +131,32 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
         public string Description { get; set; }
         public string EmbeddedCSS { get; set; }
         public string CustomCSSLink { get; set; }
-        public List<PaymentRequestInvoice> Invoices { get; set; } = new List<PaymentRequestInvoice>();
+
+#nullable enable
+        public class InvoiceList : List<PaymentRequestInvoice>
+        {
+            static HashSet<InvoiceState> stateAllowedToDisplay = new HashSet<InvoiceState>
+                {
+                    new InvoiceState(InvoiceStatusLegacy.New, InvoiceExceptionStatus.None),
+                    new InvoiceState(InvoiceStatusLegacy.New, InvoiceExceptionStatus.PaidPartial),
+                };
+            public InvoiceList()
+            {
+
+            }
+            public InvoiceList(IEnumerable<PaymentRequestInvoice> collection) : base(collection)
+            {
+
+            }
+            public PaymentRequestInvoice? GetReusableInvoice(decimal? amount)
+            {
+                return this
+                    .Where(i => amount is null || amount.Value == i.Amount)
+                    .FirstOrDefault(invoice => stateAllowedToDisplay.Contains(invoice.State));
+            }
+        }
+#nullable restore
+        public InvoiceList Invoices { get; set; } = new InvoiceList();
         public DateTime LastUpdated { get; set; }
         public CurrencyData CurrencyData { get; set; }
         public string AmountCollectedFormatted { get; set; }

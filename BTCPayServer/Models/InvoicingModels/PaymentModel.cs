@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using BTCPayServer.Client.Models;
 
 namespace BTCPayServer.Models.InvoicingModels
 {
@@ -23,9 +24,11 @@ namespace BTCPayServer.Models.InvoicingModels
         }
         public string CustomCSSLink { get; set; }
         public string CustomLogoLink { get; set; }
+        public string LogoFileId { get; set; }
+        public string BrandColor { get; set; }
         public string HtmlTitle { get; set; }
         public string DefaultLang { get; set; }
-        public List<AvailableCrypto> AvailableCryptos { get; set; } = new List<AvailableCrypto>();
+        public List<AvailableCrypto> AvailableCryptos { get; set; } = new ();
         public bool IsModal { get; set; }
         public bool IsUnsetTopUp { get; set; }
         public string CryptoCode { get; set; }
@@ -69,5 +72,8 @@ namespace BTCPayServer.Models.InvoicingModels
         public bool Activated { get; set; }
         public string InvoiceCurrency { get; set; }
         public string ReceiptLink { get; set; }
+        public string CheckoutFormId { get; set; }
+        public bool AltcoinsBuild { get; set; }
+        public CheckoutType CheckoutType { get; set; }
     }
 }

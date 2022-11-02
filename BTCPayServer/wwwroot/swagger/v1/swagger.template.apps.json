@@ -358,6 +358,14 @@
                         "type": "boolean",
                         "description": "Whether to redirect user to redirect URL automatically once invoice is paid. Defaults to what is set in the store settings",
                         "nullable": true
+                    },
+                    "checkoutType": {
+                        "$ref": "#/components/schemas/CheckoutType"
+                    },
+                    "checkoutFormId": {
+                        "type": "string",
+                        "description": "Form ID to request customer data, in case the new checkout is used",
+                        "nullable": true
                     }
                 }
             }

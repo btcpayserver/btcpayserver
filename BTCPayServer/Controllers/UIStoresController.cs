@@ -365,20 +365,11 @@ namespace BTCPayServer.Controllers
                                     .Where(s => s.PaymentId.PaymentType != PaymentTypes.LNURLPay)
                                     .Select(method =>
             {
-                var existing =
-                    storeBlob.PaymentMethodCriteria.SingleOrDefault(criteria =>
+                var existing = storeBlob.PaymentMethodCriteria.SingleOrDefault(criteria =>
                         criteria.PaymentMethod == method.PaymentId);
-                if (existing is null)
-                {
-                    return new PaymentMethodCriteriaViewModel()
-                    {
-                        PaymentMethod = method.PaymentId.ToString(),
-                        Value = ""
-                    };
-                }
-                else
-                {
-                    return new PaymentMethodCriteriaViewModel()
+                return existing is null
+                    ? new PaymentMethodCriteriaViewModel { PaymentMethod = method.PaymentId.ToString(), Value = "" }
+                    : new PaymentMethodCriteriaViewModel
                     {
                         PaymentMethod = existing.PaymentMethod.ToString(),
                         Type = existing.Above
@@ -386,9 +377,11 @@ namespace BTCPayServer.Controllers
                             : PaymentMethodCriteriaViewModel.CriteriaType.LessThan,
                         Value = existing.Value?.ToString() ?? ""
                     };
-                }
             }).ToList();
 
+            vm.UseNewCheckout = storeBlob.CheckoutType == Client.Models.CheckoutType.V2;
+            vm.CheckoutFormId = storeBlob.CheckoutFormId;
+            vm.OnChainWithLnInvoiceFallback = storeBlob.OnChainWithLnInvoiceFallback;
             vm.RequiresRefundEmail = storeBlob.RequiresRefundEmail;
             vm.LazyPaymentMethods = storeBlob.LazyPaymentMethods;
             vm.RedirectAutomatically = storeBlob.RedirectAutomatically;
@@ -504,6 +497,14 @@ namespace BTCPayServer.Controllers
                     PaymentMethod = paymentMethodId
                 });
             }
+
+            blob.CheckoutType = model.UseNewCheckout ? Client.Models.CheckoutType.V2 : Client.Models.CheckoutType.V1;
+            if (blob.CheckoutType == Client.Models.CheckoutType.V2)
+            {
+                blob.CheckoutFormId = model.CheckoutFormId;
+                blob.OnChainWithLnInvoiceFallback = model.OnChainWithLnInvoiceFallback;
+            }
+            
             blob.RequiresRefundEmail = model.RequiresRefundEmail;
             blob.LazyPaymentMethods = model.LazyPaymentMethods;
             blob.RedirectAutomatically = model.RedirectAutomatically;

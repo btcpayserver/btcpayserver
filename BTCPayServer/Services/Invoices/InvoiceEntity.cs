@@ -446,6 +446,11 @@ namespace BTCPayServer.Services.Invoices
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public InvoiceDataBase.ReceiptOptions ReceiptOptions { get; set; }
 
+        [JsonProperty("checkoutFormId")]
+        public string CheckoutFormId { get; set; }
+        [JsonConverter(typeof(StringEnumConverter))]
+        public CheckoutType? CheckoutType { get; set; }
+
         public bool IsExpired()
         {
             return DateTimeOffset.UtcNow > ExpirationTime;
@@ -573,6 +578,8 @@ namespace BTCPayServer.Services.Invoices
             dto.TaxIncluded = Metadata.TaxIncluded ?? 0m;
             dto.Price = Price;
             dto.Currency = Currency;
+            dto.CheckoutFormId = CheckoutFormId;
+            dto.CheckoutType = CheckoutType;
             dto.Buyer = new JObject();
             dto.Buyer.Add(new JProperty("name", Metadata.BuyerName));
             dto.Buyer.Add(new JProperty("address1", Metadata.BuyerAddress1));

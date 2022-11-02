@@ -1,7 +1,11 @@
 @model BTCPayServer.Models.InvoicingModels.CreateInvoiceModel
 @using BTCPayServer.Services.Apps
+@using BTCPayServer.Services.Stores
 @{
     ViewData.SetActivePage(InvoiceNavPages.Create, "Create Invoice");
+    
+    var store = ViewContext.HttpContext.GetStoreData();
+    var checkoutFormOptions = CheckoutFormSelectList.ForStore(store, Model.CheckoutFormId, true);
 }
 
 @section PageFootContent {
@@ -90,9 +94,18 @@
                 <span asp-validation-for="BuyerEmail" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="RequiresRefundEmail" class="form-label"></label>
-                <select asp-for="RequiresRefundEmail" asp-items="@Html.GetEnumSelectList<RequiresRefundEmail>()" class="form-select"></select>
-                <span asp-validation-for="RequiresRefundEmail" class="text-danger"></span>
+                @if (Model.UseNewCheckout)
+                {
+                    <label asp-for="CheckoutFormId" class="form-label"></label>
+                    <select asp-for="CheckoutFormId" class="form-select w-auto" asp-items="@checkoutFormOptions"></select>
+                    <span asp-validation-for="CheckoutFormId" class="text-danger"></span>
+                }
+                else
+                {
+                    <label asp-for="RequiresRefundEmail" class="form-label"></label>
+                    <select asp-for="RequiresRefundEmail" asp-items="@Html.GetEnumSelectList<RequiresRefundEmail>()" class="form-select w-auto"></select>
+                    <span asp-validation-for="RequiresRefundEmail" class="text-danger"></span>
+                }
             </div>
 
             <h4 class="mt-5 mb-2">Additional Options</h4>

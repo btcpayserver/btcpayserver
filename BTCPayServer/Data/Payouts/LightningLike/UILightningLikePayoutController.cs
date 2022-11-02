@@ -281,6 +281,8 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             var proofBlob = new PayoutLightningBlob() {PaymentHash = bolt11PaymentRequest.PaymentHash.ToString()};
             try
             {
+                // TODO: Incorporate the changes from this PR here:
+                // https://github.com/btcpayserver/BTCPayServer.Lightning/pull/106
                 using var cts = new CancellationTokenSource(SendTimeout);
                 var result = await lightningClient.Pay(bolt11PaymentRequest.ToString(),
                     new PayInvoiceParams()

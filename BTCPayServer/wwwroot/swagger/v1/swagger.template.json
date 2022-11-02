@@ -100,7 +100,6 @@
             },
             "TimeSpanSeconds": {
                 "allOf": [ { "$ref": "#/components/schemas/TimeSpan" } ],
-
                 "format": "seconds",
                 "description": "A span of times in seconds"
             },

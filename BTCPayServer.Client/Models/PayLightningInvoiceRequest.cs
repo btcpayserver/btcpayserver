@@ -1,3 +1,4 @@
+using System;
 using BTCPayServer.Client.JsonConverters;
 using BTCPayServer.JsonConverters;
 using BTCPayServer.Lightning;
@@ -19,5 +20,8 @@ namespace BTCPayServer.Client.Models
     
         [JsonConverter(typeof(LightMoneyJsonConverter))]
         public LightMoney Amount { get; set; }
+
+        [JsonConverter(typeof(TimeSpanJsonConverter.Seconds))]
+        public TimeSpan? SendTimeout { get; set; }
     }
 }

@@ -41,7 +41,7 @@
   <ItemGroup>
     <PackageReference Include="BIP78.Sender" Version="0.2.2" />
     <PackageReference Include="BTCPayServer.Hwi" Version="2.0.2" />
-    <PackageReference Include="BTCPayServer.Lightning.All" Version="1.4.7" />
+    <PackageReference Include="BTCPayServer.Lightning.All" Version="1.4.8" />
     <PackageReference Include="CsvHelper" Version="15.0.5" />
     <PackageReference Include="Dapper" Version="2.0.123" />
     <PackageReference Include="Fido2" Version="2.0.2" />

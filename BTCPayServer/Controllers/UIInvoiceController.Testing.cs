@@ -38,23 +38,24 @@ namespace BTCPayServer.Controllers
             var network = _NetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
             var paymentMethodId = new [] {store.GetDefaultPaymentId()}.Concat(store.GetEnabledPaymentIds(_NetworkProvider))
                 .FirstOrDefault(p => p != null && p.CryptoCode == cryptoCode && p.PaymentType == PaymentTypes.BTCLike);
-            var bitcoinAddressString = invoice.GetPaymentMethod(paymentMethodId).GetPaymentMethodDetails().GetPaymentDestination();
+            var paymentMethod = invoice.GetPaymentMethod(paymentMethodId);
+            var bitcoinAddressString = paymentMethod.GetPaymentMethodDetails().GetPaymentDestination();
             var bitcoinAddressObj = BitcoinAddress.Create(bitcoinAddressString, network.NBitcoinNetwork);
             var amount = new Money(request.Amount, isSats ? MoneyUnit.Satoshi : MoneyUnit.BTC);
 
             try
             {
-                var paymentMethod = invoice.GetPaymentMethod(paymentMethodId);
                 var rate = paymentMethod.Rate;
                 var txid = (await cheater.CashCow.SendToAddressAsync(bitcoinAddressObj, amount)).ToString();
 
                 // TODO The value of totalDue is wrong. How can we get the real total due? invoice.Price is only correct if this is the 2nd payment, not for a 3rd or 4th payment. 
                 var totalDue = invoice.Price;
+                var paid = amount.ToUnit(MoneyUnit.BTC) * rate;
                 return Ok(new
                 {
                     Txid = txid,
-                    AmountRemaining = (totalDue - (amount.ToUnit(MoneyUnit.BTC) * rate)) / rate,
-                    SuccessMessage = "Created transaction " + txid
+                    AmountRemaining = (totalDue - paid) / rate,
+                    SuccessMessage = $"Created transaction {txid}" 
                 });
             }
             catch (Exception e)
@@ -99,12 +100,12 @@ namespace BTCPayServer.Controllers
 
         [HttpPost("i/{invoiceId}/expire")]
         [CheatModeRoute]
-        public async Task<IActionResult> TestExpireNow(string invoiceId, [FromServices] Cheater cheater)
+        public async Task<IActionResult> ExpireNow(string invoiceId, [FromServices] Cheater cheater)
         {
             try
             {
-                await cheater.UpdateInvoiceExpiry(invoiceId, DateTimeOffset.Now);
-                return Ok(new { SuccessMessage = "Invoice is now expired." });
+                await cheater.UpdateInvoiceExpiry(invoiceId, DateTimeOffset.Now.AddSeconds(5));
+                return Ok(new { SuccessMessage = "Invoice is now expiring." });
             }
             catch (Exception e)
             {

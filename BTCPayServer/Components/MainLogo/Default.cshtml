@@ -13,9 +13,8 @@
 }
 else
 {
-    var logoSrc = $"{ViewContext.HttpContext.Request.PathBase}/img/logo.svg";
     <svg xmlns="http://www.w3.org/2000/svg" role="img" alt="BTCPay Server" class="main-logo main-logo-btcpay @Model.CssClass">
-        <use href="@logoSrc#small" class="main-logo-btcpay--small"/>
-        <use href="@logoSrc#large" class="main-logo-btcpay--large"/>
+        <use href="/img/logo.svg#small" class="main-logo-btcpay--small"/>
+        <use href="/img/logo.svg#large" class="main-logo-btcpay--large"/>
     </svg>
 }

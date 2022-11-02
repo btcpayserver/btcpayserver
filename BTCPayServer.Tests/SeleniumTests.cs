@@ -1021,10 +1021,10 @@ namespace BTCPayServer.Tests
             }
 
             // This one should be checked
-            Assert.Contains($"value=\"InvoiceProcessing\" checked", s.Driver.PageSource);
-            Assert.Contains($"value=\"InvoiceCreated\" checked", s.Driver.PageSource);
+            Assert.Contains("value=\"InvoiceProcessing\" checked", s.Driver.PageSource);
+            Assert.Contains("value=\"InvoiceCreated\" checked", s.Driver.PageSource);
             // This one never been checked
-            Assert.DoesNotContain($"value=\"InvoiceReceivedPayment\" checked", s.Driver.PageSource);
+            Assert.DoesNotContain("value=\"InvoiceReceivedPayment\" checked", s.Driver.PageSource);
 
             s.Driver.FindElement(By.Name("update")).Click();
             s.FindAlertMessage();
@@ -1055,6 +1055,7 @@ namespace BTCPayServer.Tests
             s.GoToStore(StoreNavPages.Webhooks);
             s.Driver.FindElement(By.LinkText("Modify")).Click();
             var elements = s.Driver.FindElements(By.ClassName("redeliver"));
+            
             // One worked, one failed
             s.Driver.FindElement(By.ClassName("fa-times"));
             s.Driver.FindElement(By.ClassName("fa-check"));

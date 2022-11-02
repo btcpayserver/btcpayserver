@@ -6,76 +6,56 @@
     <div id="syncModal" class="modal-dialog">
         <div class="modal-content">
             <a class="modal-header btn-link border-0 text-decoration-none cursor-pointer align-items-center" data-bs-toggle="collapse" data-bs-target="#syncModalContent">
-                <h4 class="modal-title">Your nodes are synching...</h4>
-                <span class="fa fa-chevron-down"></span>
+                <h4 class="modal-title h5 fw-semibold">Your nodes are synching …</h4>
+                <vc:icon symbol="caret-down"/>
             </a>
             <div id="syncModalContent" class="collapse show">
                 <div class="modal-body pt-0">
-                    <p>
-                        Your node is synching the entire blockchain and validating the consensus rules...
-                    </p>
+                    <p>Your node is synching the entire blockchain and validating the consensus rules.</p>
                     @foreach (var provider in SyncSummaryProviders)
                     {
                         <partial name="@provider.Partial"/>
                     }
-                    <p>
-                        <a href="https://www.youtube.com/watch?v=OrYDehC-8TU" target="_blank" rel="noreferrer noopener">Watch this video</a> to understand the importance of blockchain synchronization.
+                    <p class="mb-0">
+                        <a href="https://www.youtube.com/watch?v=OrYDehC-8TU" target="_blank" rel="noreferrer noopener">Watch this video</a>
+                        to understand the importance of blockchain synchronization.
+                        If you really don't want to sync and you are familiar with the command line, check
+                        <a href="https://docs.btcpayserver.org/Docker/fastsync/" target="_blank" rel="noreferrer noopener">FastSync</a>.
                     </p>
-                    <p class="mb-0">If you really don't want to sync and you are familiar with the command line, check <a href="https://github.com/btcpayserver/btcpayserver-docker/blob/master/contrib/FastSync/README.md" target="_blank" rel="noreferrer noopener">FastSync</a>.</p>
                 </div>
             </div>
         </div>
     </div>
 
     <style>
-            #syncModal {
-                position: fixed;
-                bottom: 40px;
-                right: 10px;
-                margin: 0;
-                z-index: 1040;
-                width: 500px;
-                max-width: 100%;
-            }
-            #syncModal .modal-body {
-                max-height: 400px; 
-                overflow-y: scroll;
-            }
-            #syncModal .fa-chevron-down {
-                font-size: 1em;
-                text-decoration: none;
-                transition: transform .35s;
-            }
-            #syncModal .collapsed .fa-chevron-down {
-                transform: rotate(-90deg);
-            }
-        </style>
+        #syncModal {
+            --outer-margin-horizontal: var(--content-padding-horizontal);
+            --outer-margin-vertical: 50px;
+            position: fixed;
+            z-index: 1040;
+            bottom: 0;
+            right: 0;
+            margin: var(--outer-margin-vertical) var(--outer-margin-horizontal);
+            width: 500px;
+            max-width: calc(100% - var(--outer-margin-horizontal) * 2);
+        }
+        #syncModal .modal-body {
+            /* 92px is so that the header is still displayed */
+            max-height: min(360px, calc(100vh - 92px - var(--outer-margin-vertical) * 2));
+            overflow-y: scroll;
+        }
+        #syncModal .modal-body ul {
+            padding-left: 2em;
+        }
+    </style>
 
     <script>
-            var syncModalContent = $('#syncModalContent');
-            var syncModal = $('#syncModal');
-            if (localStorage.getItem("sync-collapsed")){
-                syncModalContent.removeClass("show");
-            }
-            syncModalContent.on('hidden.bs.collapse', function () {
-                localStorage.setItem("sync-collapsed", "true");
-            }).on('shown.bs.collapse', function () {
-                localStorage.removeItem("sync-collapsed");
-            });
-            function handleFooterBottom() {
-                var footer = document.getElementsByTagName("footer")[0];
-                // Not all pages have a footer
-                if (!footer) {
-                    return;
-                }
-
-                if (footer.getBoundingClientRect().top < window.innerHeight){
-                    syncModal.stop().animate({"bottom":"40px"}, 200);
-                } else {      
-                    syncModal.stop().animate({"bottom":"10px"}, 200);
-                }
-            }
-            $(document).on("scroll", handleFooterBottom);
-            handleFooterBottom();
-        </script>
+        const $syncModalContent = document.getElementById('syncModalContent');
+        const $syncModal = document.getElementById('syncModal');
+        if (localStorage.getItem('sync-collapsed')) {
+            $syncModalContent.classList.remove('show');
+        }
+        delegate('hidden.bs.collapse', '#syncModalContent', () => { localStorage.setItem('sync-collapsed', 'true'); });
+        delegate('shown.bs.collapse', '#syncModalContent', () => { localStorage.removeItem('sync-collapsed') });
+    </script>
 }

@@ -1,6 +1,7 @@
 @using BTCPayServer.Abstractions.Contracts
 @inject IEnumerable<ISyncSummaryProvider> SyncSummaryProviders;
-
+@if (SyncSummaryProviders.Any(provider => !provider.AllAvailable()))
+{
     <!-- Modal -->
     <div id="syncModal" class="modal-dialog">
         <div class="modal-content">
@@ -57,3 +58,4 @@
         delegate('hidden.bs.collapse', '#syncModalContent', () => { localStorage.setItem('sync-collapsed', 'true'); });
         delegate('shown.bs.collapse', '#syncModalContent', () => { localStorage.removeItem('sync-collapsed') });
     </script>
+}

@@ -85,7 +85,7 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 ModelState.AddModelError(nameof(pay.Amount), "The amount should be more than 0");
             }
-            if (amount.HasValue && !pr.AllowCustomPaymentAmounts)
+            if (amount.HasValue && !pr.AllowCustomPaymentAmounts && amount.Value != pr.AmountDue)
             {
                 ModelState.AddModelError(nameof(pay.Amount), "This payment request doesn't allow custom payment amount");
             }

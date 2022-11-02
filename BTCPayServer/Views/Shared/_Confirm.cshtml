@@ -33,6 +33,11 @@
                     ? $continue.removeAttribute('disabled')
                     : $continue.setAttribute('disabled', 'disabled')
             })
+            $form.addEventListener('submit', event => {
+                if ($input.value.trim() !== confirmInput) {
+                    event.preventDefault()
+                }
+            })
         } else {
             $text.setAttribute('hidden', 'hidden')
             $continue.removeAttribute('disabled')

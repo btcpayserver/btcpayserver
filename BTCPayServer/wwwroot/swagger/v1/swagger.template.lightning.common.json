@@ -323,6 +323,17 @@
                         "nullable": true,
                         "description": "The fee limit expressed as a fixed amount in satoshi",
                         "example": "21"
+                    },
+                    "sendTimeout": {
+                        "nullable": true,
+                        "example": 30,
+                        "default": 30,
+                        "description": "The number of seconds after which the payment times out",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/TimeSpanSeconds"
+                            }
+                        ]
                     }
                 }
             },

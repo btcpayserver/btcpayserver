@@ -2,7 +2,6 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
@@ -222,16 +221,26 @@ namespace BTCPayServer.Controllers.Greenfield
                 return this.CreateValidationError(ModelState);
             }
             
-            var param = lightningInvoice.MaxFeeFlat != null || lightningInvoice.MaxFeePercent != null || lightningInvoice.Amount != null
-                ? new PayInvoiceParams { MaxFeePercent = lightningInvoice.MaxFeePercent, MaxFeeFlat = lightningInvoice.MaxFeeFlat, Amount = lightningInvoice.Amount }
+            var param = lightningInvoice.MaxFeeFlat != null || lightningInvoice.MaxFeePercent != null
+                    || lightningInvoice.Amount != null || lightningInvoice.SendTimeout != null
+                ? new PayInvoiceParams
+                {
+                    MaxFeePercent = lightningInvoice.MaxFeePercent,
+                    MaxFeeFlat = lightningInvoice.MaxFeeFlat,
+                    Amount = lightningInvoice.Amount,
+                    SendTimeout = lightningInvoice.SendTimeout
+                }
                 : null;
             var result = await lightningClient.Pay(lightningInvoice.BOLT11, param, cancellationToken);
             
-            if (result.Result == PayResult.Ok && bolt11?.PaymentHash is not null)
+            if (result.Result is PayResult.Ok or PayResult.Unknown && bolt11?.PaymentHash is not null)
             {
+                // get a new instance of the LN client, because the old one might have disposed its HTTPClient
+                lightningClient = await GetLightningClient(cryptoCode, true);
+                
                 var paymentHash = bolt11.PaymentHash.ToString();
                 var payment = await lightningClient.GetPayment(paymentHash, cancellationToken);
-                return Ok(new LightningPaymentData
+                var data = new LightningPaymentData
                 {
                     Id = payment.Id,
                     PaymentHash = paymentHash,
@@ -241,19 +250,25 @@ namespace BTCPayServer.Controllers.Greenfield
                     CreatedAt = payment.CreatedAt,
                     TotalAmount = payment.AmountSent,
                     FeeAmount = payment.Fee,
-                });
+                };
+                return result.Result is PayResult.Ok ? Ok(data) : Accepted(data);
             }
             
             return result.Result switch
             {
                 PayResult.CouldNotFindRoute => this.CreateAPIError("could-not-find-route", "Impossible to find a route to the peer"),
                 PayResult.Error => this.CreateAPIError("generic-error", result.ErrorDetail),
+                PayResult.Unknown => Accepted(new LightningPaymentData
+                {
+                    Status = LightningPaymentStatus.Unknown
+                }),
                 PayResult.Ok => Ok(new LightningPaymentData
                 {
+                    Status = LightningPaymentStatus.Complete,
                     TotalAmount = result.Details?.TotalAmount, 
                     FeeAmount = result.Details?.FeeAmount
                 }),
-                _ => throw new NotSupportedException("Unsupported Payresult")
+                _ => throw new NotSupportedException("Unsupported PayResult")
             };
         }
 

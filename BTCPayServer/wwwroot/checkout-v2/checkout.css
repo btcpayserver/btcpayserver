@@ -68,9 +68,6 @@ section .buttons {
     flex-direction: column;
     gap: var(--btcpay-space-m);
 }
-section dl {
-    margin-bottom: 1.5rem;
-}
 section dl > div {
     display: flex;
     justify-content: space-between;
@@ -126,6 +123,16 @@ section dl > div dd {
 .payment-box [data-clipboard] {
     cursor: copy;
 }
+.payment-details dl {
+    margin: 0;
+}
+.payment-details-button {
+    margin: 0 auto;
+    padding: var(--btcpay-space-s);
+}
+.payment-details-button .icon {
+    margin-left: -1rem; /* Adjust for visual center */
+}
 #payment .btcpay-pills .btcpay-pill {
     padding: var(--btcpay-space-xs) var(--btcpay-space-m);
 }
@@ -134,19 +141,9 @@ section dl > div dd {
     display: flex;
     flex-direction: column;
 }
-#result .top .icon {
+#result .top .icn .icon {
     display: block;
     width: 3rem;
     height: 3rem;
     margin: .5rem auto 1.5rem;
-}
-#PaymentDetails dl {
-    margin: 0;
-}
-#PaymentDetailsButton {
-    margin: 0 auto;
-    padding: var(--btcpay-space-s);
-}
-#PaymentDetailsButton .icon {
-    margin-left: -1rem; /* Adjust for visual center */
 }

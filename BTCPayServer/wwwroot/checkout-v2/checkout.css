@@ -3,6 +3,7 @@
     --navbutton-size: .8rem;
     --qr-size: 256px;
     --section-padding: var(--btcpay-space-l);
+    --border-radius: var(--btcpay-border-radius-l);
 }
 body {
     padding: var(--btcpay-space-m);
@@ -17,7 +18,7 @@ footer {
 }
 main {
     position: relative;
-    border-radius: var(--btcpay-border-radius-l);
+    border-radius: var(--border-radius);
     background-color: var(--btcpay-bg-tile);
 }
 nav {
@@ -95,14 +96,32 @@ section dl > div dd {
     max-width: 400px;
     margin: 0 auto;
 }
-.timer {
+.info {
+    padding: var(--btcpay-space-s) var(--btcpay-space-m);
+    background-color: var(--btcpay-body-bg);
+    border-radius: var(--border-radius);
+}
+.info > div {
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: var(--btcpay-space-m) calc(var(--section-padding) * -1) var(--btcpay-space-s);
-    padding: var(--btcpay-space-s) var(--section-padding);
-    background-color: var(--btcpay-body-bg-medium);
     text-align: center;
+}
+.info > div + div {
+    margin-top: var(--btcpay-space-s);
+}
+.info .spinner-border {
+    width: var(--btcpay-font-size-s);
+    height: var(--btcpay-font-size-s);
+    margin-right: var(--btcpay-space-s);
+    color: var(--btcpay-body-text-muted);
+    animation-duration: 1s;
+}
+.info .icon {
+    width: 1.25rem;
+    height: 1.25rem;
+    margin-right: var(--btcpay-space-s);
+    color: var(--btcpay-info);
 }
 .payment-box {
     max-width: 300px;

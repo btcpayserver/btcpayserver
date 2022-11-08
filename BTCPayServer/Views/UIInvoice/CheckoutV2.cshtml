@@ -152,12 +152,6 @@
                 <form method="post" asp-action="UpdateForm" asp-route-invoiceId="@Model.InvoiceId" v-on:submit.prevent="onFormSubmit">
                     <div class="top">
                         <h6>{{$t("Please fill out the following")}}</h6>
-                        <div class="timer" v-if="expiringSoon">
-                            {{$t("Invoice will expire in")}} {{timerText}}
-                            <span class="spinner-border spinner-border-sm ms-2" role="status">
-                                <span class="visually-hidden"></span>
-                            </span>
-                        </div>
                         <template v-if="srvModel.checkoutFormId && srvModel.checkoutFormId !== 'None'">
                             <p class="my-5 text-center">TODO: Forms integration -> {{srvModel.checkoutFormId}}</p>
                         </template>
@@ -191,15 +185,16 @@
                     <h2 class="text-center" v-text="`${srvModel.btcDue} ${srvModel.cryptoCode}`" :data-clipboard="srvModel.btcDue">@Model.BtcDue @Model.CryptoCode</h2>
                     <h2 class="text-center" v-else v-text="`${srvModel.btcDue} ${srvModel.cryptoCode}`" :data-clipboard="srvModel.btcDue">@Model.BtcDue @Model.CryptoCode</h2>
                     <div class="text-muted text-center fw-semibold" v-if="srvModel.orderAmountFiat" v-text="srvModel.orderAmountFiat">@Model.OrderAmountFiat</div>
-                    <div class="timer" v-if="expiringSoon">
-                        {{$t("Invoice will expire in")}} {{timerText}}
-                        <span class="spinner-border spinner-border-sm ms-2 text-muted" role="status">
-                            <span class="visually-hidden"></span>
-                        </span>
-                    </div>
-                    <div class="mt-3 mb-1 text-center" v-if="showPaymentDueInfo">
-                        <span class="text-info"><vc:icon symbol="info"/></span>
-                        <small>{{$t("NotPaid_ExtraTransaction")}}</small>
+                    <div class="info mt-3 mb-1" v-if="expiringSoon || showPaymentDueInfo">
+                        <div class="timer" v-if="expiringSoon">
+                            <span class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden"></span></span>
+                            <span>{{$t("The invoice will expire in", { timeLeft: timerText })}}</span>
+                        </div>
+                        <div class="payment-due" v-if="showPaymentDueInfo">
+                            <vc:icon symbol="info"/>
+                            <span>{{$t("The invoice hasn't been paid in full")}}</span>
+                        </div>
+                        <div>{{$t("Please send a transaction to cover the exact amount due", { cryptoCode: srvModel.cryptoCode })}}</div>
                     </div>
                     <button class="d-flex align-items-center btn btn-link payment-details-button" type="button" :aria-expanded="displayPaymentDetails ? 'true' : 'false'" v-on:click="displayPaymentDetails = !displayPaymentDetails">
                         <vc:icon symbol="caret-down"/>

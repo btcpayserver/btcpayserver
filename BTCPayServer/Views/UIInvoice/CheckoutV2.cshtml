@@ -77,11 +77,11 @@
             <section id="result" v-if="isPaid || isUnpayable">
                 <div id="paid" v-if="isPaid">
                     <div class="top">
-                        <span class="text-success">
+                        <span class="text-success icn">
                             <vc:icon symbol="payment-complete"/>
                         </span>
                         <h4>{{$t("Invoice paid")}}</h4>
-                        <dl>
+                        <dl class="mb-3">
                             <div>
                                 <dt>{{$t("Invoice ID")}}</dt>
                                 <dd>{{srvModel.invoiceId}}</dd>
@@ -91,7 +91,7 @@
                                 <dd>{{srvModel.orderId}}</dd>
                             </div>
                         </dl>
-                        <dl>
+                        <dl class="mb-3">
                             <div>
                                 <dt>{{$t("Order Amount")}}</dt>
                                 <dd>{{srvModel.orderAmount}} {{ srvModel.cryptoCode }}</dd>
@@ -118,11 +118,11 @@
                 </div>
                 <div id="expired" v-if="isUnpayable">
                     <div class="top">
-                        <span class="text-muted">
+                        <span class="text-muted icn">
                             <vc:icon symbol="invoice-expired"/>
                         </span>
                         <h4>{{$t("Invoice expired")}}</h4>
-                        <dl>
+                        <dl class="mb-0">
                             <div>
                                 <dt>{{$t("Invoice ID")}}</dt>
                                 <dd>{{srvModel.invoiceId}}</dd>
@@ -132,7 +132,14 @@
                                 <dd>{{srvModel.orderId}}</dd>
                             </div>
                         </dl>
-                        <p v-html="$t('InvoiceExpired_Body_1', {storeName: srvModel.storeName, maxTimeMinutes: @Model.MaxTimeMinutes})"></p>
+                        <div class="collapse payment-details" v-collapsible="displayPaymentDetails">
+                            <payment-details :srv-model="srvModel"></payment-details>
+                        </div>
+                        <button class="d-flex align-items-center btn btn-link payment-details-button" type="button" :aria-expanded="displayPaymentDetails ? 'true' : 'false'" v-on:click="displayPaymentDetails = !displayPaymentDetails">
+                            <vc:icon symbol="caret-down"/>
+                            <span class="ms-1 fw-semibold">{{$t("View Details")}}</span>
+                        </button>
+                        <p class="mt-4" v-html="$t('InvoiceExpired_Body_1', {storeName: srvModel.storeName, maxTimeMinutes: @Model.MaxTimeMinutes})"></p>
                         <p>{{$t("InvoiceExpired_Body_2")}}</p>
                         <p>{{$t("InvoiceExpired_Body_3")}}</p>
                     </div>
@@ -194,43 +201,12 @@
                         <span class="text-info"><vc:icon symbol="info"/></span>
                         <small>{{$t("NotPaid_ExtraTransaction")}}</small>
                     </div>
-                    <button class="d-flex align-items-center btn btn-link" type="button" id="PaymentDetailsButton" :aria-expanded="displayPaymentDetails ? 'true' : 'false'" aria-controls="PaymentDetails" v-on:click="displayPaymentDetails = !displayPaymentDetails">
+                    <button class="d-flex align-items-center btn btn-link payment-details-button" type="button" :aria-expanded="displayPaymentDetails ? 'true' : 'false'" v-on:click="displayPaymentDetails = !displayPaymentDetails">
                         <vc:icon symbol="caret-down"/>
                         <span class="ms-1 fw-semibold">{{$t("View Details")}}</span>
                     </button>
-                    <div id="PaymentDetails" class="collapse" v-collapsible="displayPaymentDetails">
-                        <dl>
-                            <div>
-                                <dt>{{$t("Total Price")}}</dt>
-                                <dd :data-clipboard="srvModel.orderAmount">{{srvModel.orderAmount}} {{ srvModel.cryptoCode }}</dd>
-                            </div>
-                            <div v-if="srvModel.orderAmountFiat && srvModel.cryptoCode">
-                                <dt>{{$t("Exchange Rate")}}</dt>
-                                <dd :data-clipboard="srvModel.rate">
-                                    <template v-if="srvModel.cryptoCodeSrv === 'Sats'">1 Sat = {{ srvModel.rate }}</template>
-                                    <template v-else>1 {{ srvModel.cryptoCodeSrv }} = {{ srvModel.rate }}</template>
-                                </dd>
-                            </div>
-                            <div v-if="srvModel.showRecommendedFee && srvModel.feeRate">
-                                <dt>{{$t("Recommended Fee")}}</dt>
-                                <dd :data-clipboard="srvModel.feeRate">{{$t("Feerate", { feeRate: srvModel.feeRate })}}</dd>
-                            </div>
-                            <div v-if="srvModel.networkFee">
-                                <dt>{{$t("Network Cost")}}</dt>
-                                <dd :data-clipboard="srvModel.networkFee">
-                                    <template v-if="srvModel.txCountForFee > 0">{{$t("txCount", {count: srvModel.txCount})}} x</template>
-                                    {{ srvModel.networkFee }} {{ srvModel.cryptoCode }}
-                                </dd>
-                            </div>
-                            <div v-if="btcPaid > 0">
-                                <dt>{{$t("Amount Paid")}}</dt>
-                                <dd :data-clipboard="srvModel.btcPaid">{{srvModel.btcPaid }} {{ srvModel.cryptoCode }}</dd>
-                            </div>
-                            <div v-if="btcDue > 0">
-                                <dt>{{$t("Amount Due")}}</dt>
-                                <dd :data-clipboard="srvModel.btcDue">{{srvModel.btcDue}} {{ srvModel.cryptoCode }}</dd>
-                            </div>
-                        </dl>
+                    <div class="collapse payment-details" v-collapsible="displayPaymentDetails">
+                        <payment-details :srv-model="srvModel"></payment-details>
                     </div>
                 }
                 <div class="my-3">
@@ -264,8 +240,7 @@
             <checkout-cheating v-if="step === 'payment'" invoice-id="@Model.InvoiceId" :btc-due="btcDue" :is-paid="isPaid"></checkout-cheating>
         }
         <footer>
-            <select asp-for="DefaultLang" asp-items="@LangService.GetLanguageSelectListItems()" v-on:change="changeLanguage"></select>
-
+            <select asp-for="DefaultLang" asp-items="@LangService.GetLanguageSelectListItems()" class="form-select w-auto" v-on:change="changeLanguage"></select>
             <div class="text-muted my-2">
                 Powered by <a href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">BTCPay Server</a>
             </div>
@@ -285,6 +260,40 @@
             </p>
         </div>
     </noscript>
+    <template id="payment-details">
+        <dl>
+            <div>
+                <dt>{{$t("Total Price")}}</dt>
+                <dd :data-clipboard="srvModel.orderAmount">{{srvModel.orderAmount}} {{ srvModel.cryptoCode }}</dd>
+            </div>
+            <div v-if="srvModel.orderAmountFiat && srvModel.cryptoCode">
+                <dt>{{$t("Exchange Rate")}}</dt>
+                <dd :data-clipboard="srvModel.rate">
+                    <template v-if="srvModel.cryptoCodeSrv === 'Sats'">1 Sat = {{ srvModel.rate }}</template>
+                    <template v-else>1 {{ srvModel.cryptoCodeSrv }} = {{ srvModel.rate }}</template>
+                </dd>
+            </div>
+            <div v-if="srvModel.showRecommendedFee && srvModel.feeRate">
+                <dt>{{$t("Recommended Fee")}}</dt>
+                <dd :data-clipboard="srvModel.feeRate">{{$t("Feerate", { feeRate: srvModel.feeRate })}}</dd>
+            </div>
+            <div v-if="srvModel.networkFee">
+                <dt>{{$t("Network Cost")}}</dt>
+                <dd :data-clipboard="srvModel.networkFee">
+                    <template v-if="srvModel.txCountForFee > 0">{{$t("txCount", {count: srvModel.txCount})}} x</template>
+                    {{ srvModel.networkFee }} {{ srvModel.cryptoCode }}
+                </dd>
+            </div>
+            <div v-if="btcPaid > 0">
+                <dt>{{$t("Amount Paid")}}</dt>
+                <dd :data-clipboard="srvModel.btcPaid">{{srvModel.btcPaid }} {{ srvModel.cryptoCode }}</dd>
+            </div>
+            <div v-if="btcDue > 0">
+                <dt>{{$t("Amount Due")}}</dt>
+                <dd :data-clipboard="srvModel.btcDue">{{srvModel.btcDue}} {{ srvModel.cryptoCode }}</dd>
+            </div>
+        </dl>
+    </template>
     <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
     <script src="~/vendor/vue-qrcode/vue-qrcode.min.js" asp-append-version="true"></script>
     <script src="~/vendor/i18next/i18next.js" asp-append-version="true"></script>
@@ -340,10 +349,31 @@
 
         const i18n = new VueI18next(i18next);
         const eventBus = new Vue();
+        
+        const PaymentDetails = Vue.component('payment-details', {
+            el: '#payment-details',
+            props: {
+                srvModel: Object
+            },
+            data () {
+                return {};
+            },
+            computed: {
+               btcDue () {
+                   return parseFloat(this.srvModel.btcDue);
+               },
+               btcPaid () {
+                   return parseFloat(this.srvModel.btcPaid);
+               }
+            }
+        });
 
         new Vue({
             i18n,
             el: '#Checkout',
+            components: {
+                PaymentDetails
+            },
             data () {
                 const srvModel = initialSrvModel;
                 let step = 'payment';

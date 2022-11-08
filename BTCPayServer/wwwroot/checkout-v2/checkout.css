@@ -120,9 +120,6 @@ section dl > div dd {
 .payment-box svg {
     width: 100%;
 }
-.payment-box [data-clipboard] {
-    cursor: copy;
-}
 .payment-details dl {
     margin: 0;
 }
@@ -132,6 +129,9 @@ section dl > div dd {
 }
 .payment-details-button .icon {
     margin-left: -1rem; /* Adjust for visual center */
+}
+[data-clipboard] {
+    cursor: copy;
 }
 #payment .btcpay-pills .btcpay-pill {
     padding: var(--btcpay-space-xs) var(--btcpay-space-m);

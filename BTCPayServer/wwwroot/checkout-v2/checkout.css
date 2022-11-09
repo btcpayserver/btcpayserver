@@ -37,9 +37,6 @@ nav button {
 nav button:hover {
     color: var(--btcpay-body-text-hover);
 }
-nav button#back {
-    left: 0;
-}
 nav button#close {
     right: 0;
 }

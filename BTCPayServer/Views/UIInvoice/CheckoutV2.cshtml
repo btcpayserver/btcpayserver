@@ -25,6 +25,11 @@
             ? $"{pm.PaymentMethodName} {pm.CryptoCode}"
             : pm.PaymentMethodName.Replace("Bitcoin (", "").Replace(")", "").Replace("Lightning ", "");
     }
+
+    private string ToJsValue(object value)
+    {
+        return Safe.Json(value).ToString()?.Replace("\"", "'");
+    }
 }
 
 <!DOCTYPE html>
@@ -66,15 +71,70 @@
             <h1 class="h5 mb-0">@Model.StoreName</h1>
         </header>
         <main>
-            <nav v-if="hasNav">
-                <button type="button" v-if="showBackButton" id="back" v-on:click="back">
-                    <vc:icon symbol="back"/>
-                </button>
+            <nav v-if="isModal">
                 <button type="button" v-if="isModal" id="close" v-on:click="close">
                     <vc:icon symbol="close"/>
                 </button>
             </nav>
-            <section id="result" v-if="isPaid || isUnpayable">
+            <section id="payment" v-if="isActive">
+                <h6 class="text-center mb-3 fw-semibold" v-if="srvModel.itemDesc" v-text="srvModel.itemDesc">@Model.ItemDesc</h6>
+                @if (Model.IsUnsetTopUp)
+                {
+                    <h2 class="text-center mb-3">{{$t("Any amount")}}</h2>
+                }
+                else
+                {
+                    <h2 class="text-center" v-text="`${srvModel.btcDue} ${srvModel.cryptoCode}`" :data-clipboard="srvModel.btcDue">@Model.BtcDue @Model.CryptoCode</h2>
+                    <h2 class="text-center" v-else v-text="`${srvModel.btcDue} ${srvModel.cryptoCode}`" :data-clipboard="srvModel.btcDue">@Model.BtcDue @Model.CryptoCode</h2>
+                    <div class="text-muted text-center fw-semibold" v-if="srvModel.orderAmountFiat" v-text="srvModel.orderAmountFiat">@Model.OrderAmountFiat</div>
+                    <div class="info mt-3 mb-1" v-if="expiringSoon || showPaymentDueInfo">
+                        <div class="timer" v-if="expiringSoon">
+                            <span class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden"></span></span>
+                            <span>{{$t("The invoice will expire in", { timeLeft: timerText })}}</span>
+                        </div>
+                        <div class="payment-due" v-if="showPaymentDueInfo">
+                            <vc:icon symbol="info"/>
+                            <span>{{$t("The invoice hasn't been paid in full")}}</span>
+                        </div>
+                        <div>{{$t("Please send a transaction to cover the exact amount due", { cryptoCode: srvModel.cryptoCode })}}</div>
+                    </div>
+                    <button class="d-flex align-items-center btn btn-link payment-details-button" type="button" :aria-expanded="displayPaymentDetails ? 'true' : 'false'" v-on:click="displayPaymentDetails = !displayPaymentDetails">
+                        <vc:icon symbol="caret-down"/>
+                        <span class="ms-1 fw-semibold">{{$t("View Details")}}</span>
+                    </button>
+                    <div class="collapse payment-details" v-collapsible="displayPaymentDetails">
+                        <payment-details :srv-model="srvModel"></payment-details>
+                    </div>
+                }
+                <div class="my-3">
+                    @if (paymentMethodCount > 1)
+                    {
+                        <h6 class="text-center mb-3">{{$t("Pay with")}}</h6>
+                        <div class="btcpay-pills d-flex flex-wrap align-items-center justify-content-center gap-2 pb-2">
+                            @foreach (var crypto in Model.AvailableCryptos)
+                            {
+                                <a asp-action="Checkout" asp-route-invoiceId="@Model.InvoiceId" asp-route-paymentMethodId="@crypto.PaymentMethodId"
+                                   class="btcpay-pill m-0"
+                                   :class="{ active: pmId === @ToJsValue(crypto.PaymentMethodId) }"
+                                   v-on:click.prevent="changePaymentMethod(@ToJsValue(crypto.PaymentMethodId))">
+                                    @PaymentMethodName(crypto)
+                                </a>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <h6 class="text-center mb-3">
+                            {{$t("Pay with")}}
+                            @PaymentMethodName(Model.AvailableCryptos.First())
+                        </h6>
+                    }
+                </div>
+                <component v-if="srvModel.uiSettings && srvModel.activated"
+                           :srv-model="srvModel"
+                           :is="srvModel.uiSettings.checkoutBodyVueComponentName"/>
+            </section>
+            <section id="result" v-else>
                 <div id="paid" v-if="isPaid">
                     <div class="top">
                         <span class="text-success icn">
@@ -147,87 +207,6 @@
                         <a class="btn btn-primary" :href="srvModel.merchantRefLink" v-if="srvModel.merchantRefLink">{{$t('Return to StoreName', srvModel)}}</a>
                     </div>
                 </div>
-            </section>
-            <section id="form" v-else-if="step === 'form'">
-                <form method="post" asp-action="UpdateForm" asp-route-invoiceId="@Model.InvoiceId" v-on:submit.prevent="onFormSubmit">
-                    <div class="top">
-                        <h6>{{$t("Please fill out the following")}}</h6>
-                        <template v-if="srvModel.checkoutFormId && srvModel.checkoutFormId !== 'None'">
-                            <p class="my-5 text-center">TODO: Forms integration -> {{srvModel.checkoutFormId}}</p>
-                        </template>
-                        <template v-else-if="srvModel.requiresRefundEmail">
-                            <p>{{$t("Contact_Body")}}</p>
-                            <div class="form-group">
-                                <label class="form-label" for="Email">{{$t("Contact and Refund Email")}}</label>
-                                <input class="form-control" id="Email" name="Email">
-                                <span class="text-danger" hidden>{{$t("Please enter a valid email address")}}</span>
-                            </div>
-                        </template>
-                    </div>
-                    <div class="buttons">
-                        <button type="submit" class="btn btn-primary" :disabled="formSubmitPending" :class="{ 'loading': formSubmitPending }">
-                            {{$t("Continue")}}
-                            <span class="spinner-border spinner-border-sm ms-1" role="status" v-if="formSubmitPending">
-                                <span class="visually-hidden"></span>
-                            </span>
-                        </button>
-                    </div>
-                </form>
-            </section>
-            <section id="payment" v-else>
-                <h6 class="text-center mb-3 fw-semibold" v-if="srvModel.itemDesc" v-text="srvModel.itemDesc">@Model.ItemDesc</h6>
-                @if (Model.IsUnsetTopUp)
-                {
-                    <h2 class="text-center mb-3">{{$t("Any amount")}}</h2>
-                }
-                else
-                {
-                    <h2 class="text-center" v-text="`${srvModel.btcDue} ${srvModel.cryptoCode}`" :data-clipboard="srvModel.btcDue">@Model.BtcDue @Model.CryptoCode</h2>
-                    <h2 class="text-center" v-else v-text="`${srvModel.btcDue} ${srvModel.cryptoCode}`" :data-clipboard="srvModel.btcDue">@Model.BtcDue @Model.CryptoCode</h2>
-                    <div class="text-muted text-center fw-semibold" v-if="srvModel.orderAmountFiat" v-text="srvModel.orderAmountFiat">@Model.OrderAmountFiat</div>
-                    <div class="info mt-3 mb-1" v-if="expiringSoon || showPaymentDueInfo">
-                        <div class="timer" v-if="expiringSoon">
-                            <span class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden"></span></span>
-                            <span>{{$t("The invoice will expire in", { timeLeft: timerText })}}</span>
-                        </div>
-                        <div class="payment-due" v-if="showPaymentDueInfo">
-                            <vc:icon symbol="info"/>
-                            <span>{{$t("The invoice hasn't been paid in full")}}</span>
-                        </div>
-                        <div>{{$t("Please send a transaction to cover the exact amount due", { cryptoCode: srvModel.cryptoCode })}}</div>
-                    </div>
-                    <button class="d-flex align-items-center btn btn-link payment-details-button" type="button" :aria-expanded="displayPaymentDetails ? 'true' : 'false'" v-on:click="displayPaymentDetails = !displayPaymentDetails">
-                        <vc:icon symbol="caret-down"/>
-                        <span class="ms-1 fw-semibold">{{$t("View Details")}}</span>
-                    </button>
-                    <div class="collapse payment-details" v-collapsible="displayPaymentDetails">
-                        <payment-details :srv-model="srvModel"></payment-details>
-                    </div>
-                }
-                <div class="my-3">
-                    @if (paymentMethodCount > 1)
-                    {
-                        <h6 class="text-center mb-3">{{$t("Pay with")}}</h6>
-                        <div class="btcpay-pills d-flex flex-wrap align-items-center justify-content-center gap-2 pb-2">
-                            @foreach (var crypto in Model.AvailableCryptos)
-                            {
-                                <a asp-action="Checkout" asp-route-invoiceId="@Model.InvoiceId" asp-route-paymentMethodId="@crypto.PaymentMethodId" class="btcpay-pill m-0@(crypto.PaymentMethodId == Model.PaymentMethodId ? " active" : "")">
-                                    @PaymentMethodName(crypto)
-                                </a>
-                            }
-                        </div>
-                    }
-                    else
-                    {
-                        <h6 class="text-center mb-3">
-                            {{$t("Pay with")}}
-                            @PaymentMethodName(Model.AvailableCryptos.First())
-                        </h6>
-                    }
-                </div>
-                <component v-if="srvModel.uiSettings && srvModel.activated"
-                           :srv-model="srvModel"
-                           :is="srvModel.uiSettings.checkoutBodyVueComponentName"/>
             </section>
         </main>
         @if (Env.CheatMode)
@@ -350,9 +329,6 @@
             props: {
                 srvModel: Object
             },
-            data () {
-                return {};
-            },
             computed: {
                btcDue () {
                    return parseFloat(this.srvModel.btcDue);
@@ -371,12 +347,7 @@
             },
             data () {
                 const srvModel = initialSrvModel;
-                let step = 'payment';
-                if (STATUS_UNPAYABLE.concat(STATUS_PAID).includes(srvModel.status)) {
-                    step = 'result';
-                } else if (srvModel.requiresRefundEmail || (srvModel.checkoutFormId && srvModel.checkoutFormId !== 'None')) {
-                    step = 'form';
-                }
+                const step = STATUS_UNPAYABLE.concat(STATUS_PAID).includes(srvModel.status) ? 'result' : 'payment';
 
                 return {
                     srvModel,
@@ -388,7 +359,7 @@
                     emailAddressInput: "",
                     emailAddressInputDirty: false,
                     emailAddressInputInvalid: false,
-                    formSubmitPending: false,
+                    paymentMethodId: null,
                     isModal: srvModel.isModal
                 }
             },
@@ -408,16 +379,6 @@
                 isActive () {
                     return !this.isUnpayable && !this.isPaid;
                 },
-                hasNav () {
-                    return this.isModal || this.showBackButton;
-                },
-                hasForm () {
-                    return this.srvModel.requiresRefundEmail || (
-                        this.srvModel.checkoutFormId && this.srvModel.checkoutFormId !== 'None');
-                },
-                showBackButton () {
-                    return this.hasForm && this.step === 'payment';
-                },
                 showPaymentDueInfo () {
                     return this.btcPaid > 0 && this.btcDue > 0;
                 },
@@ -426,6 +387,9 @@
                 },
                 btcPaid () {
                     return parseFloat(this.srvModel.btcPaid);
+                },
+                pmId () {
+                    return this.paymentMethodId || this.srvModel.paymentMethodId;
                 }
             },
             mounted () {
@@ -437,14 +401,17 @@
                 window.parent.postMessage('loaded', '*');
             },
             methods: {
-                changeLanguage(e) {
+                changePaymentMethod (paymentMethodId) {
+                    if (this.pmId !== paymentMethodId) {
+                        this.paymentMethodId = paymentMethodId;
+                        this.fetchData();
+                    }
+                },
+                changeLanguage (e) {
                     const lang = e.target.value;
                     if (isLanguageAvailable(lang)) {
                         i18next.changeLanguage(lang);
                     }
-                },
-                back () {
-                    this.step = 'form';
                 },
                 close () {
                     window.parent.postMessage('close', '*');
@@ -502,23 +469,8 @@
                         }, 2000);
                     })();
                 },
-                async onFormSubmit (e) {
-                    const form = e.target;
-                    const url = form.getAttribute('action');
-                    const method = form.getAttribute('method');
-                    const body = new FormData(form);
-                    const headers = { 'Content-Type': 'application/json' };
-
-                    this.formSubmitPending = true;
-                    const response = await fetch(url, { method, body, headers });
-                    this.formSubmitPending = false;
-                    if (response.ok) {
-                        // TODO
-                        this.step = 'payment';
-                    }
-                },
                 async fetchData () {
-                    const url = `${statusUrl}&paymentMethodId=${this.srvModel.paymentMethodId}`;
+                    const url = `${statusUrl}&paymentMethodId=${this.paymentMethodId}`;
                     const response = await fetch(url);
                     if (response.ok) {
                         const data = await response.json();

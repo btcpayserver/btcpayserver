@@ -5,7 +5,12 @@
     --section-padding: var(--btcpay-space-l);
     --border-radius: var(--btcpay-border-radius-l);
 }
-body {
+.wrap {
+    display: flex;
+    flex-direction: column;
+    max-width: 400px;
+    min-height: 100vh;
+    margin: 0 auto;
     padding: var(--btcpay-space-m);
 }
 header,
@@ -93,10 +98,6 @@ section dl > div dd {
     width: var(--logo-size);
     border-radius: 50%;
 }
-.wrap {
-    max-width: 400px;
-    margin: 0 auto;
-}
 .info {
     padding: var(--btcpay-space-s) var(--btcpay-space-m);
     background-color: var(--btcpay-body-bg);
@@ -161,9 +162,29 @@ section dl > div dd {
     display: flex;
     flex-direction: column;
 }
+
 #result .top .icn .icon {
     display: block;
     width: 3rem;
     height: 3rem;
     margin: .5rem auto 1.5rem;
+}
+
+#result #paid .top .icn .icon {
+    color: var(--btcpay-primary);
+}
+#result #expired .top .icn .icon {
+    color: var(--btcpay-body-text-muted);
+}
+footer {
+    margin-top: auto;
+    color: var(--btcpay-body-text-muted);
+}
+footer a {
+    color: var(--btcpay-body-text-muted);
+}
+#DefaultLang {
+    background-color: transparent;
+    color: var(--btcpay-body-text-muted);
+    text-align: center;
 }

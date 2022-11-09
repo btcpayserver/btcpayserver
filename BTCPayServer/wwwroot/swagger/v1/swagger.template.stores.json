@@ -367,7 +367,7 @@
                     "onChainWithLnInvoiceFallback": {
                         "type": "boolean",
                         "default": false,
-                        "description": "Include lightning invoice fallback to on-chain BIP21 payment url."
+                        "description": "Unify on-chain and lightning payment URL."
                     },
                     "redirectAutomatically": {
                         "type": "boolean",

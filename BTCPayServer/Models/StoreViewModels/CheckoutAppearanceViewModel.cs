@@ -27,7 +27,7 @@ namespace BTCPayServer.Models.StoreViewModels
         [Display(Name = "Request customer data on checkout")]
         public string CheckoutFormId { get; set; }
 
-        [Display(Name = "Include Lightning invoice fallback to on-chain BIP21 payment URL")]
+        [Display(Name = "Unify on-chain and lightning payment URL/QR code")]
         public bool OnChainWithLnInvoiceFallback { get; set; }
 
         [Display(Name = "Default payment method on checkout")]

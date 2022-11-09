@@ -46,6 +46,7 @@
     {
         <style>
             body { background: rgba(var(--btcpay-black-rgb), 0.85); }
+            h1 { color: var(--btcpay-white); }
         </style>
     }
     @if (!string.IsNullOrEmpty(Model.BrandColor))
@@ -61,7 +62,7 @@
         </style>
     }
 </head>
-<body>
+<body class="min-vh-100">
     <div id="Checkout" class="wrap" v-cloak>
         <header>
             @if (!string.IsNullOrEmpty(logoUrl))
@@ -86,7 +87,6 @@
                 {
                     <h2 class="text-center" v-text="`${srvModel.btcDue} ${srvModel.cryptoCode}`" :data-clipboard="srvModel.btcDue">@Model.BtcDue @Model.CryptoCode</h2>
                     <h2 class="text-center" v-else v-text="`${srvModel.btcDue} ${srvModel.cryptoCode}`" :data-clipboard="srvModel.btcDue">@Model.BtcDue @Model.CryptoCode</h2>
-                    <div class="text-muted text-center fw-semibold" v-if="srvModel.orderAmountFiat" v-text="srvModel.orderAmountFiat">@Model.OrderAmountFiat</div>
                     <div class="info mt-3 mb-1" v-if="expiringSoon || showPaymentDueInfo">
                         <div class="timer" v-if="expiringSoon">
                             <span class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden"></span></span>
@@ -103,7 +103,7 @@
                         <span class="ms-1 fw-semibold">{{$t("View Details")}}</span>
                     </button>
                     <div class="collapse payment-details" v-collapsible="displayPaymentDetails">
-                        <payment-details :srv-model="srvModel"></payment-details>
+                        <payment-details :srv-model="srvModel" :is-active="isActive"></payment-details>
                     </div>
                 }
                 <div class="my-3">
@@ -137,7 +137,7 @@
             <section id="result" v-else>
                 <div id="paid" v-if="isPaid">
                     <div class="top">
-                        <span class="text-success icn">
+                        <span class="icn">
                             <vc:icon symbol="payment-complete"/>
                         </span>
                         <h4>{{$t("Invoice paid")}}</h4>
@@ -151,25 +151,7 @@
                                 <dd>{{srvModel.orderId}}</dd>
                             </div>
                         </dl>
-                        <dl class="mb-3">
-                            <div>
-                                <dt>{{$t("Order Amount")}}</dt>
-                                <dd>{{srvModel.orderAmount}} {{ srvModel.cryptoCode }}</dd>
-                            </div>
-                            <div v-if="srvModel.orderAmountFiat">
-                                <dt>{{$t("Order Amount")}}</dt>
-                                <dd>{{srvModel.orderAmountFiat}}</dd>
-                            </div>
-                            <div v-if="srvModel.networkFee">
-                                <dt>{{$t("Network Cost")}}</dt>
-                                <dd v-if="srvModel.isMultiCurrency">{{ srvModel.networkFee }} {{ srvModel.cryptoCode }}</dd>
-                                <dd v-else-if="srvModel.txCountForFee > 0">{{$t("txCount", {count: srvModel.txCount})}} x {{ srvModel.networkFee }} {{ srvModel.cryptoCode }}</dd>
-                            </div>
-                            <div>
-                                <dt>{{$t("Amount Paid")}}</dt>
-                                <dd>{{srvModel.btcPaid }} {{ srvModel.cryptoCode }}</dd>
-                            </div>
-                        </dl>
+                        <payment-details :srv-model="srvModel" :is-active="isActive" class="mb-5"></payment-details>
                     </div>
                     <div class="buttons">
                         <a class="btn btn-primary" :href="srvModel.receiptLink" v-if="srvModel.receiptLink" :target="isModal ? '_blank' : '_top'">{{$t('View receipt')}}</a>
@@ -178,7 +160,7 @@
                 </div>
                 <div id="expired" v-if="isUnpayable">
                     <div class="top">
-                        <span class="text-muted icn">
+                        <span class="icn">
                             <vc:icon symbol="invoice-expired"/>
                         </span>
                         <h4>{{$t("Invoice expired")}}</h4>
@@ -193,7 +175,7 @@
                             </div>
                         </dl>
                         <div class="collapse payment-details" v-collapsible="displayPaymentDetails">
-                            <payment-details :srv-model="srvModel"></payment-details>
+                            <payment-details :srv-model="srvModel" :is-active="isActive"></payment-details>
                         </div>
                         <button class="d-flex align-items-center btn btn-link payment-details-button" type="button" :aria-expanded="displayPaymentDetails ? 'true' : 'false'" v-on:click="displayPaymentDetails = !displayPaymentDetails">
                             <vc:icon symbol="caret-down"/>
@@ -211,13 +193,14 @@
         </main>
         @if (Env.CheatMode)
         {
-            <checkout-cheating v-if="step === 'payment'" invoice-id="@Model.InvoiceId" :btc-due="btcDue" :is-paid="isPaid"></checkout-cheating>
+            <checkout-cheating v-if="isActive" invoice-id="@Model.InvoiceId" :btc-due="btcDue" :is-paid="isPaid"></checkout-cheating>
         }
         <footer>
-            <select asp-for="DefaultLang" asp-items="@LangService.GetLanguageSelectListItems()" class="form-select w-auto" v-on:change="changeLanguage"></select>
-            <div class="text-muted my-2">
+            <div>
                 Powered by <a href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">BTCPay Server</a>
             </div>
+            <select asp-for="DefaultLang" asp-items="@LangService.GetLanguageSelectListItems()" class="form-select w-auto" v-on:change="changeLanguage"></select>
+
             @if (!Theme.CustomTheme)
             {
                 <vc:theme-switch css-class="text-muted ms-n3" responsive="none"/>
@@ -235,10 +218,14 @@
         </div>
     </noscript>
     <template id="payment-details">
-        <dl>
+        <dl v-cloak>
             <div>
                 <dt>{{$t("Total Price")}}</dt>
                 <dd :data-clipboard="srvModel.orderAmount">{{srvModel.orderAmount}} {{ srvModel.cryptoCode }}</dd>
+            </div>
+            <div v-if="srvModel.orderAmountFiat">
+                <dt>{{$t("Total Fiat")}}</dt>
+                <dd :data-clipboard="srvModel.orderAmountFiat">{{srvModel.orderAmountFiat}}</dd>
             </div>
             <div v-if="srvModel.orderAmountFiat && srvModel.cryptoCode">
                 <dt>{{$t("Exchange Rate")}}</dt>
@@ -246,10 +233,6 @@
                     <template v-if="srvModel.cryptoCodeSrv === 'Sats'">1 Sat = {{ srvModel.rate }}</template>
                     <template v-else>1 {{ srvModel.cryptoCodeSrv }} = {{ srvModel.rate }}</template>
                 </dd>
-            </div>
-            <div v-if="srvModel.showRecommendedFee && srvModel.feeRate">
-                <dt>{{$t("Recommended Fee")}}</dt>
-                <dd :data-clipboard="srvModel.feeRate">{{$t("Feerate", { feeRate: srvModel.feeRate })}}</dd>
             </div>
             <div v-if="srvModel.networkFee">
                 <dt>{{$t("Network Cost")}}</dt>
@@ -265,6 +248,10 @@
             <div v-if="btcDue > 0">
                 <dt>{{$t("Amount Due")}}</dt>
                 <dd :data-clipboard="srvModel.btcDue">{{srvModel.btcDue}} {{ srvModel.cryptoCode }}</dd>
+            </div>
+            <div v-if="showRecommendedFee">
+                <dt>{{$t("Recommended Fee")}}</dt>
+                <dd :data-clipboard="srvModel.feeRate">{{$t("Feerate", { feeRate: srvModel.feeRate })}}</dd>
             </div>
         </dl>
     </template>
@@ -327,7 +314,8 @@
         const PaymentDetails = Vue.component('payment-details', {
             el: '#payment-details',
             props: {
-                srvModel: Object
+                srvModel: Object,
+                isActive: Boolean
             },
             computed: {
                btcDue () {
@@ -335,7 +323,10 @@
                },
                btcPaid () {
                    return parseFloat(this.srvModel.btcPaid);
-               }
+               },
+               showRecommendedFee () {
+                   return this.isActive && this.srvModel.showRecommendedFee && this.srvModel.feeRate;
+               },
             }
         });
 
@@ -347,11 +338,8 @@
             },
             data () {
                 const srvModel = initialSrvModel;
-                const step = STATUS_UNPAYABLE.concat(STATUS_PAID).includes(srvModel.status) ? 'result' : 'payment';
-
                 return {
                     srvModel,
-                    step,
                     displayPaymentDetails: false,
                     end: new Date(),
                     expirationPercentage: 0,
@@ -367,9 +355,6 @@
                 expiringSoon () {
                     return this.isActive && this.expirationPercentage >= 75;
                 },
-                showRecommendedFee () {
-                    return  this.srvModel.showRecommendedFee && this.srvModel.feeRate !== 0;
-                },
                 isUnpayable () {
                     return STATUS_UNPAYABLE.includes(this.srvModel.status);
                 },
@@ -381,6 +366,9 @@
                 },
                 showPaymentDueInfo () {
                     return this.btcPaid > 0 && this.btcDue > 0;
+                },
+                showRecommendedFee () {
+                    return this.isActive() && this.srvModel.showRecommendedFee && this.srvModel.feeRate;
                 },
                 btcDue () {
                     return parseFloat(this.srvModel.btcDue);
@@ -503,8 +491,6 @@
                                 window.top.location = jsonData.merchantRefLink;
                             }
                         }.bind(this), 2000);
-                    } else if (!this.isActive) {
-                        this.step = 'result';
                     }
                 }
             }

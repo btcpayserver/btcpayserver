@@ -8,6 +8,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
+using McMaster.NETCore.Plugins;
 using NBitcoin.Crypto;
 using NBitcoin.DataEncoders;
 using NBitcoin.Secp256k1;
@@ -33,7 +34,8 @@ namespace BTCPayServer.PluginPacker
                 throw new Exception($"{rootDLLPath} could not be found");
             }
 
-            var assembly = Assembly.LoadFrom(rootDLLPath);
+            var plugin = PluginLoader.CreateFromAssemblyFile(rootDLLPath, false, new[] { typeof(IBTCPayServerPlugin) });
+            var assembly = plugin.LoadAssembly(name);
             var extension = GetAllExtensionTypesFromAssembly(assembly).FirstOrDefault();
             if (extension is null)
             {

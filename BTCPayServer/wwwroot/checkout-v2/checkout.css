@@ -72,6 +72,7 @@ section .buttons {
 section dl > div {
     display: flex;
     justify-content: space-between;
+    gap: var(--btcpay-space-m);
 }
 section dl > div dt,
 section dl > div dd {
@@ -81,9 +82,12 @@ section dl > div dd {
 }
 section dl > div dt {
     text-align: left;
+    white-space: nowrap;
 }
 section dl > div dd {
     text-align: right;
+    word-wrap: break-word;
+    word-break: break-word;
 }
 .logo {
     height: var(--logo-size);

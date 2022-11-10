@@ -62,7 +62,7 @@
   "Amount Due": "Amount Due",
   "Pay in wallet": "Pay in wallet",
   "Invoice paid": "Invoice paid",
-  "The invoice will expire in": "The invoice will expire in {{timeLeft}}",
+  "This invoice will expire in": "This invoice will expire in {{timeLeft}}",
   "The invoice hasn't been paid in full": "The invoice hasn't been paid in full.",
   "Please send a transaction to cover the exact amount due": "Please send a transaction to cover the exact {{cryptoCode}} amount due."
 }

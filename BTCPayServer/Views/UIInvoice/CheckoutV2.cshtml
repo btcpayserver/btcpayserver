@@ -90,7 +90,7 @@
                     <div class="info mt-3 mb-1" v-if="expiringSoon || showPaymentDueInfo">
                         <div class="timer" v-if="expiringSoon">
                             <span class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden"></span></span>
-                            <span>{{$t("The invoice will expire in", { timeLeft: timerText })}}</span>
+                            <span>{{$t("This invoice will expire in", { timeLeft: timerText })}}</span>
                         </div>
                         <div class="payment-due" v-if="showPaymentDueInfo">
                             <vc:icon symbol="info"/>

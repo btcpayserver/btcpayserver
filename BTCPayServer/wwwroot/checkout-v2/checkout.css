@@ -20,6 +20,8 @@ footer {
     flex-direction: column;
     align-items: center;
     padding: var(--section-padding);
+}
+header {
     gap: var(--btcpay-space-s);
 }
 main {
@@ -179,7 +181,9 @@ section dl > div dd {
 }
 footer {
     margin-top: auto;
+    padding-top: 2.5rem;
     color: var(--btcpay-body-text-muted);
+    gap: var(--btcpay-space-m);
 }
 footer a {
     color: var(--btcpay-body-text-muted);

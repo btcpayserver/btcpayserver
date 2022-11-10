@@ -32,7 +32,7 @@ namespace BTCPayServer.Controllers
             var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
             var store = await _StoreRepository.FindStore(invoice.StoreId);
 
-            // TODO support altcoins, not just bitcoin - and make it work for LN-only invoices
+            // TODO make it work for LN-only invoices
             var isSats = request.CryptoCode.ToUpper(CultureInfo.InvariantCulture) == "SATS";
             var cryptoCode = isSats ? "BTC" : request.CryptoCode;
             var network = _NetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
@@ -72,29 +72,19 @@ namespace BTCPayServer.Controllers
         [CheatModeRoute]
         public IActionResult MineBlock(string invoiceId, MineBlocksRequest request, [FromServices] Cheater cheater)
         {
-            // TODO support altcoins, not just bitcoin
             var blockRewardBitcoinAddress = cheater.CashCow.GetNewAddress();
             try
             {
                 if (request.BlockCount > 0)
                 {
                     cheater.CashCow.GenerateToAddress(request.BlockCount, blockRewardBitcoinAddress);
-                    return Ok(new
-                    {
-                        SuccessMessage = "Mined " + request.BlockCount + " blocks"
-                    });
+                    return Ok(new { SuccessMessage = $"Mined {request.BlockCount} block{(request.BlockCount == 1 ? "" : "s")} " });
                 }
-                return BadRequest(new
-                {
-                    ErrorMessage = "Number of blocks should be > 0"
-                });
+                return BadRequest(new { ErrorMessage = "Number of blocks should be at least 1" });
             }
             catch (Exception e)
             {
-                return BadRequest(new
-                {
-                    ErrorMessage = e.Message
-                });
+                return BadRequest(new { ErrorMessage = e.Message });
             }
         }
 

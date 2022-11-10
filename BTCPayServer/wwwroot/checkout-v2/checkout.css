@@ -2,23 +2,24 @@
     --logo-size: 3rem;
     --navbutton-size: .8rem;
     --qr-size: 256px;
-    --section-padding: var(--btcpay-space-l);
+    --section-padding: 1.5rem;
     --border-radius: var(--btcpay-border-radius-l);
+    --wrap-max-width: 400px;
 }
 .wrap {
     display: flex;
     flex-direction: column;
-    max-width: 400px;
     min-height: 100vh;
     margin: 0 auto;
     padding: var(--btcpay-space-m);
+    max-width: var(--wrap-max-width);
 }
 header,
 footer {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: var(--btcpay-space-l) var(--btcpay-space-s);
+    padding: var(--section-padding);
     gap: var(--btcpay-space-m);
 }
 main {
@@ -187,4 +188,13 @@ footer a {
     background-color: transparent;
     color: var(--btcpay-body-text-muted);
     text-align: center;
+}
+
+@media (max-width: 400px) {
+    .wrap {
+        padding: 0;
+    }
+    main {
+        border-radius: 0;
+    }
 }

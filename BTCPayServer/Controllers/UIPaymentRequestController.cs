@@ -35,6 +35,7 @@ namespace BTCPayServer.Controllers
         private readonly EventAggregator _EventAggregator;
         private readonly CurrencyNameTable _Currencies;
         private readonly InvoiceRepository _InvoiceRepository;
+        private readonly StoreRepository _storeRepository;
 
         public UIPaymentRequestController(
             UIInvoiceController invoiceController,
@@ -43,6 +44,7 @@ namespace BTCPayServer.Controllers
             PaymentRequestService paymentRequestService,
             EventAggregator eventAggregator,
             CurrencyNameTable currencies,
+            StoreRepository storeRepository,
             InvoiceRepository invoiceRepository)
         {
             _InvoiceController = invoiceController;
@@ -51,6 +53,7 @@ namespace BTCPayServer.Controllers
             _PaymentRequestService = paymentRequestService;
             _EventAggregator = eventAggregator;
             _Currencies = currencies;
+            _storeRepository = storeRepository;
             _InvoiceRepository = invoiceRepository;
         }
 
@@ -223,7 +226,8 @@ namespace BTCPayServer.Controllers
 
             try
             {
-                var newInvoice = await _InvoiceController.CreatePaymentRequestInvoice(result, amount, this.GetCurrentStore(), Request, cancellationToken);
+                var store = await _storeRepository.FindStore(result.StoreId);
+                var newInvoice = await _InvoiceController.CreatePaymentRequestInvoice(result, amount, store, Request, cancellationToken);
                 if (redirectToInvoice)
                 {
                     return RedirectToAction("Checkout", "UIInvoice", new { invoiceId = newInvoice.Id });

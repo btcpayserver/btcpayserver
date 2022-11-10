@@ -871,9 +871,8 @@ namespace BTCPayServer.Tests
             var viewUrl = s.Driver.Url;
             
             Assert.Equal("Amount due", s.Driver.FindElement(By.CssSelector("[data-test='amount-due-title']")).Text);
-            Assert.Equal("Pay Invoice",
-                s.Driver.FindElement(By.CssSelector("[data-test='pay-button']")).Text.Trim());
-
+            Assert.Equal("Pay Invoice", s.Driver.FindElement(By.CssSelector("[data-test='pay-button']")).Text.Trim());
+            
             // expire
             s.GoToUrl(editUrl);
             s.Driver.ExecuteJavaScript("document.getElementById('ExpiryDate').value = '2021-01-21T21:00:00.000Z'");
@@ -891,8 +890,13 @@ namespace BTCPayServer.Tests
             
             s.GoToUrl(viewUrl);
             s.Driver.AssertElementNotFound(By.CssSelector("[data-test='status']"));
-            Assert.Equal("Pay Invoice",
-                s.Driver.FindElement(By.CssSelector("[data-test='pay-button']")).Text.Trim());
+            Assert.Equal("Pay Invoice", s.Driver.FindElement(By.CssSelector("[data-test='pay-button']")).Text.Trim());
+            
+            // test invoice creation, click with JS, because the button is inside a sticky header
+            s.Driver.ExecuteJavaScript("document.querySelector('[data-test=\"pay-button\"]').click()");
+            // checkout v1
+            s.Driver.WaitForElement(By.CssSelector("invoice"));
+            Assert.Contains("Awaiting Payment", s.Driver.PageSource);
             
             // archive (from details page)
             s.GoToUrl(editUrl);

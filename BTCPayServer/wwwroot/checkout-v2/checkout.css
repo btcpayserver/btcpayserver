@@ -20,7 +20,7 @@ footer {
     flex-direction: column;
     align-items: center;
     padding: var(--section-padding);
-    gap: var(--btcpay-space-m);
+    gap: var(--btcpay-space-s);
 }
 main {
     position: relative;

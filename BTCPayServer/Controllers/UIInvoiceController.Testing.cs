@@ -55,7 +55,7 @@ namespace BTCPayServer.Controllers
                         return Ok(new
                         {
                             Txid = txid,
-                            AmountRemaining = (paymentMethod.Calculate().TotalDue - amount).ToUnit(MoneyUnit.BTC),
+                            AmountRemaining = (paymentMethod.Calculate().Due - amount).ToUnit(MoneyUnit.BTC),
                             SuccessMessage = $"Created transaction {txid}" 
                         });
 

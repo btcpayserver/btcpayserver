@@ -65,6 +65,7 @@
                 const data = await response.json();
                 this.successMessage = data.successMessage;
                 this.errorMessage = data.errorMessage;
+                if (data.amountRemaining) this.amountRemaining = data.amountRemaining;
                 this[processing] = false;
             }
         }

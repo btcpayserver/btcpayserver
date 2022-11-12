@@ -96,7 +96,7 @@
                             <vc:icon symbol="info"/>
                             <span>{{$t("The invoice hasn't been paid in full")}}</span>
                         </div>
-                        <div>{{$t("Please send a transaction to cover the exact amount due", { cryptoCode: srvModel.cryptoCode })}}</div>
+                        <div>{{$t("still_due", { amountDue: srvModel.btcDue, cryptoCode: srvModel.cryptoCode })}}</div>
                     </div>
                     <button class="d-flex align-items-center btn btn-link payment-details-button" type="button" :aria-expanded="displayPaymentDetails ? 'true' : 'false'" v-on:click="displayPaymentDetails = !displayPaymentDetails">
                         <vc:icon symbol="caret-down"/>
@@ -458,7 +458,7 @@
                     })();
                 },
                 async fetchData () {
-                    const url = `${statusUrl}&paymentMethodId=${this.paymentMethodId}`;
+                    const url = `${statusUrl}&paymentMethodId=${this.pmId}`;
                     const response = await fetch(url);
                     if (response.ok) {
                         const data = await response.json();

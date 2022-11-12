@@ -2,9 +2,13 @@
 
 <template id="lightning-method-checkout-template">
     <div class="payment-box">
-        <small class="qr-text" id="QR_Text_@Model.PaymentMethodId">{{$t("QR_Text")}}</small>
         <div class="qr-container my-3" data-clipboard-confirm-element="QR_Text_@Model.PaymentMethodId" :data-clipboard="srvModel.btcAddress">
             <qrcode v-if="srvModel.invoiceBitcoinUrlQR" :value="srvModel.invoiceBitcoinUrlQR" tag="div" :options="qrOptions" />
+        </div>
+        <small class="qr-text" id="QR_Text_@Model.PaymentMethodId">{{$t("QR_Text")}}</small>
+        <div class="mt-2 mb-4">
+            <input type="text" class="form-control form-control-sm" :value="srvModel.invoiceBitcoinUrl"
+                    data-clipboard-confirm-element="QR_Text_@Model.PaymentMethodId" :data-clipboard="srvModel.invoiceBitcoinUrl">
         </div>
         <a v-if="srvModel.invoiceBitcoinUrl" class="btn btn-primary rounded-pill w-100" target="_top"
            :href="srvModel.invoiceBitcoinUrl">{{$t("Pay in wallet")}}</a>

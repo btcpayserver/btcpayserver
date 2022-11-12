@@ -129,8 +129,8 @@ namespace BTCPayServer.Controllers
         {
             try
             {
-                await cheater.UpdateInvoiceExpiry(invoiceId, DateTimeOffset.Now.AddSeconds(5));
-                return Ok(new { SuccessMessage = "Invoice is now expiring." });
+                await cheater.UpdateInvoiceExpiry(invoiceId, DateTimeOffset.Now.AddSeconds(-1));
+                return Ok(new { SuccessMessage = "Invoice set to expired." });
             }
             catch (Exception e)
             {

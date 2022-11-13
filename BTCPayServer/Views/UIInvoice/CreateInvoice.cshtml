@@ -1,11 +1,12 @@
 @model BTCPayServer.Models.InvoicingModels.CreateInvoiceModel
+@inject FormDataService FormDataService
 @using BTCPayServer.Services.Apps
-@using BTCPayServer.Services.Stores
+@using BTCPayServer.Forms
 @{
     ViewData.SetActivePage(InvoiceNavPages.Create, "Create Invoice");
     
     var store = ViewContext.HttpContext.GetStoreData();
-    var checkoutFormOptions = CheckoutFormSelectList.ForStore(store, Model.CheckoutFormId, true);
+    var checkoutFormOptions = await CheckoutFormSelectLsist.ForStore(store, Model.CheckoutFormId, true, FormDataService);
 }
 
 @section PageFootContent {

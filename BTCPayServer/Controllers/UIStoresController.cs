@@ -502,9 +502,10 @@ namespace BTCPayServer.Controllers
             }
 
             blob.CheckoutType = model.UseNewCheckout ? Client.Models.CheckoutType.V2 : Client.Models.CheckoutType.V1;
+            
+            blob.CheckoutFormId = model.CheckoutFormId;
             if (blob.CheckoutType == Client.Models.CheckoutType.V2)
             {
-                blob.CheckoutFormId = model.CheckoutFormId;
                 blob.OnChainWithLnInvoiceFallback = model.OnChainWithLnInvoiceFallback;
             }
             

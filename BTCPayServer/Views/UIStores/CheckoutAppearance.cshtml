@@ -2,14 +2,16 @@
 @using BTCPayServer.Services.Invoices
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @using BTCPayServer.Abstractions.TagHelpers
+@using BTCPayServer.Forms
 @using BTCPayServer.Services.Stores
+@inject FormDataService FormDataService
 @model CheckoutAppearanceViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
     ViewData.SetActivePage(StoreNavPages.CheckoutAppearance, "Checkout experience", Context.GetStoreData().Id);
 
     var store = ViewContext.HttpContext.GetStoreData();
-    var checkoutFormOptions = CheckoutFormSelectList.ForStore(store, Model.CheckoutFormId, false);
+    var checkoutFormOptions = await CheckoutFormSelectList.ForStore(store, Model.CheckoutFormId, false, FormDataService);
 }
 
 @section PageFootContent {

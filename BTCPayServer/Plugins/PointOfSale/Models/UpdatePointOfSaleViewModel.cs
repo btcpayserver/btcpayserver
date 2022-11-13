@@ -104,7 +104,5 @@ namespace BTCPayServer.Plugins.PointOfSale.Models
         
         [Display(Name = "Request customer data on checkout")]
         public string CheckoutFormId { get; set; } = GenericFormOption.InheritFromStore.ToString();
-
-        public bool UseNewCheckout { get; set; }
     }
 }

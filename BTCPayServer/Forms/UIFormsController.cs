@@ -12,10 +12,12 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.Data.Data;
+using BTCPayServer.Models;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -81,10 +83,12 @@ public class FormComponentProvider : IFormComponentProvider
 public class UIFormsController : Controller
 {
     private readonly FormDataService _formDataService;
+    private readonly IMemoryCache _memoryCache;
 
-    public UIFormsController(FormDataService formDataService)
+    public UIFormsController(FormDataService formDataService, IMemoryCache memoryCache)
     {
         _formDataService = formDataService;
+        _memoryCache = memoryCache;
     }
 
     [HttpGet("~/stores/{storeId}/forms")]
@@ -186,17 +190,56 @@ public class UIFormsController : Controller
         });
         return RedirectToAction("FormsList", new { storeId });
     }
-
+    
     [AllowAnonymous]
     [HttpGet("~/forms/{id}")]
-    public async Task<IActionResult> ViewForm(string id)
+    public async Task<IActionResult> ViewForm(string id, string redirectUrl)
     {
-        var query = new FormDataService.FormQuery { Ids = new[] { id } };
-        var form = (await _formDataService.GetForms(query)).FirstOrDefault();
-        
+        TempData["redirectUrl"] = redirectUrl;
+        FormData form = await GetFormData(id);
+
         return form is null
             ? NotFound()
             : View("View", form);
+    }
+
+    private async Task<FormData> GetFormData(string id)
+    {
+        FormData form;
+        switch (id)
+        {
+            case { } formid when formid == GenericFormOption.Address.ToString():
+                form = new FormData()
+                {
+                    Config = JObject.FromObject(FormDataService.StaticFormAddress).ToString(),
+                    Id = GenericFormOption.Address.ToString(),
+                    Name = "Address Form",
+                };
+                break;
+
+            case { } formid when formid == GenericFormOption.Email.ToString():
+                form = new FormData()
+                {
+                    Config = JObject.FromObject(FormDataService.StaticFormAddress).ToString(),
+                    Id = GenericFormOption.Address.ToString(),
+                    Name = "Address Form",
+                };
+
+                break;
+            default:
+                var query = new FormDataService.FormQuery {Ids = new[] {id}};
+                form = (await _formDataService.GetForms(query)).FirstOrDefault();
+
+                break;
+        }
+
+        // if (form is not null && redirectUrl is not null)
+        // {
+        //     var f = form.Deserialize().ToObject<Form>();
+        //     f.Fields.Add(new HtmlInputField(null, "integration_redirectUrl", redirectUrl, true, null, "hidden"));
+        //     form.Config = JObject.FromObject(f).Serialize();
+        // }
+        return form;
     }
 
     [AllowAnonymous]
@@ -206,18 +249,30 @@ public class UIFormsController : Controller
         [FromServices]StoreRepository storeRepository,  
         [FromServices] UIInvoiceController invoiceController)
     {
-        var query = new FormDataService.FormQuery { Ids = new[] { id } };
-        var orig = (await _formDataService.GetForms(query)).FirstOrDefault();
+        var orig = await GetFormData(id);
         if (orig is null)
         {
             return NotFound();
         }
 
         var dbForm = JObject.Parse(orig.Config).ToObject<Form>();
-        dbForm.ApplyValuesFromForm(Request.Form);
+        dbForm.ApplyValuesFromForm(Request.Form, "internal");
 
         Dictionary<string, object> data = dbForm.GetValues();
 
+        
+        // var redirect = dbForm.GetFieldByName("integration_redirectUrl")?.Value;
+        if (TempData.TryGetValue("redirectUrl", out var r) && r is string redirect)
+        {
+            TempData["formResponse"] = JsonConvert.SerializeObject(data);
+            
+            return View("PostRedirect", new PostRedirectViewModel
+            {
+                FormUrl = redirect
+            });
+
+        }
+        
         var store = await storeRepository.FindStore(orig.StoreId);
         var amt = dbForm.GetFieldByName("internal_amount")?.Value;
         var request = new CreateInvoiceRequest

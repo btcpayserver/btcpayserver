@@ -151,10 +151,7 @@
                                 <span class="visually-hidden"></span>
                             </span>
                         </div>
-                        <template v-if="srvModel.checkoutFormId && srvModel.checkoutFormId !== 'None'">
-                            <p class="my-5 text-center">TODO: Forms integration -> {{srvModel.checkoutFormId}}</p>
-                        </template>
-                        <template v-else-if="srvModel.requiresRefundEmail">
+                        <template v-if="srvModel.requiresRefundEmail">
                             <p>{{$t("Contact_Body")}}</p>
                             <div class="form-group">
                                 <label class="form-label" for="Email">{{$t("Contact and Refund Email")}}</label>
@@ -349,7 +346,7 @@
                 let step = 'payment';
                 if (STATUS_UNPAYABLE.concat(STATUS_PAID).includes(srvModel.status)) {
                     step = 'result';
-                } else if (srvModel.requiresRefundEmail || (srvModel.checkoutFormId && srvModel.checkoutFormId !== 'None')) {
+                } else if (srvModel.requiresRefundEmail) {
                     step = 'form';
                 }
 

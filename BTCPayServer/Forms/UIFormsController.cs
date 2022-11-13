@@ -220,9 +220,9 @@ public class UIFormsController : Controller
             case { } formid when formid == GenericFormOption.Email.ToString():
                 form = new FormData()
                 {
-                    Config = JObject.FromObject(FormDataService.StaticFormAddress).ToString(),
-                    Id = GenericFormOption.Address.ToString(),
-                    Name = "Address Form",
+                    Config = JObject.FromObject(FormDataService.StaticFormEmail).ToString(),
+                    Id = GenericFormOption.Email.ToString(),
+                    Name = "Email Form",
                 };
 
                 break;

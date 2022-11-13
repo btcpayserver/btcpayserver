@@ -24,5 +24,8 @@ namespace BTCPayServer.Client.Models
 
         [JsonExtensionData]
         public IDictionary<string, JToken> AdditionalData { get; set; }
+
+        public string FormId { get; set; }
+        public string FormResponse { get; set; }
     }
 }

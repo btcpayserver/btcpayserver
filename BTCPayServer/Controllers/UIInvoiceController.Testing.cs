@@ -18,7 +18,7 @@ namespace BTCPayServer.Controllers
         {
             public Decimal Amount { get; set; }
             public string CryptoCode { get; set; } = "BTC";
-            public string PaymentMethodId { get; set; }
+            public string PaymentMethodId { get; set; } = "BTC";
         }
 
         public class MineBlocksRequest
@@ -125,12 +125,12 @@ namespace BTCPayServer.Controllers
 
         [HttpPost("i/{invoiceId}/expire")]
         [CheatModeRoute]
-        public async Task<IActionResult> ExpireNow(string invoiceId, [FromServices] Cheater cheater)
+        public async Task<IActionResult> Expire(string invoiceId, int seconds, [FromServices] Cheater cheater)
         {
             try
             {
-                await cheater.UpdateInvoiceExpiry(invoiceId, DateTimeOffset.Now.AddSeconds(-1));
-                return Ok(new { SuccessMessage = "Invoice set to expired." });
+                await cheater.UpdateInvoiceExpiry(invoiceId, TimeSpan.FromSeconds(seconds));
+                return Ok(new { SuccessMessage = $"Invoice set to expire in {seconds} seconds." });
             }
             catch (Exception e)
             {

@@ -182,16 +182,42 @@ section dl > div dd {
 footer {
     margin-top: auto;
     padding-top: 2.5rem;
-    color: var(--btcpay-body-text-muted);
     gap: var(--btcpay-space-m);
 }
-footer a {
+footer,
+footer a,
+#DefaultLang,
+.btcpay-theme-switch {
     color: var(--btcpay-body-text-muted);
+}
+footer a {
+    transition-duration: unset;
+}
+footer a svg {
+    height: 2rem;
+    width: 4rem;
 }
 #DefaultLang {
     background-color: transparent;
-    color: var(--btcpay-body-text-muted);
-    text-align: center;
+    box-shadow: none;
+    border: none;
+    text-align: right;
+    cursor: pointer;
+    margin-left: -4.5rem; /* Adjust for visual center */
+}
+footer a:hover,
+#DefaultLang:hover,
+.btcpay-theme-switch:hover {
+    color: var(--btcpay-body-text-hover);
+}
+footer a:hover .logo-brand-light {
+    color: var(--btcpay-brand-secondary);
+}
+footer a:hover .logo-brand-medium {
+    color: var(--btcpay-brand-primary);
+}
+footer a:hover .logo-brand-dark {
+    color: var(--btcpay-brand-tertiary);
 }
 
 @media (max-width: 400px) {
@@ -201,4 +227,15 @@ footer a {
     main {
         border-radius: 0;
     }
+}
+
+/* Modal adjustments */
+.checkout-modal body {
+    background: rgba(var(--btcpay-black-rgb), 0.85);
+}
+.checkout-modal h1,
+.checkout-modal footer a:hover,
+.checkout-modal #DefaultLang:hover,
+.checkout-modal .btcpay-theme-switch:hover{
+    color: var(--btcpay-white);
 }

@@ -186,8 +186,7 @@ footer {
 }
 footer,
 footer a,
-#DefaultLang,
-.btcpay-theme-switch {
+#DefaultLang {
     color: var(--btcpay-body-text-muted);
 }
 footer a {
@@ -206,8 +205,7 @@ footer a svg {
     margin-left: -4.5rem; /* Adjust for visual center */
 }
 footer a:hover,
-#DefaultLang:hover,
-.btcpay-theme-switch:hover {
+#DefaultLang:hover {
     color: var(--btcpay-body-text-hover);
 }
 footer a:hover .logo-brand-light {
@@ -235,7 +233,6 @@ footer a:hover .logo-brand-dark {
 }
 .checkout-modal h1,
 .checkout-modal footer a:hover,
-.checkout-modal #DefaultLang:hover,
-.checkout-modal .btcpay-theme-switch:hover{
+.checkout-modal #DefaultLang:hover {
     color: var(--btcpay-white);
 }

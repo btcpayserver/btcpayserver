@@ -6,7 +6,6 @@
 @using BTCPayServer.Services
 @using BTCPayServer.Abstractions.Contracts
 @using BTCPayServer.Abstractions.TagHelpers
-@using BTCPayServer.Components.ThemeSwitch
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @model PaymentModel
 @{
@@ -203,10 +202,6 @@
                 </a>
             </div>
             <select asp-for="DefaultLang" asp-items="@LangService.GetLanguageSelectListItems()" class="form-select w-auto" v-on:change="changeLanguage"></select>
-            @if (!Theme.CustomTheme)
-            {
-                <vc:theme-switch css-class="ms-n3" responsive="none"/>
-            }
         </footer>
     </div>
     <noscript>

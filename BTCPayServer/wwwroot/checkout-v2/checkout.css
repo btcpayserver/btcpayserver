@@ -236,3 +236,8 @@ footer a:hover .logo-brand-dark {
 .checkout-modal #DefaultLang:hover {
     color: var(--btcpay-white);
 }
+
+/* Plugins */
+.payment-box .plugins > .payment {
+    margin-top: var(--btcpay-space-l);
+}

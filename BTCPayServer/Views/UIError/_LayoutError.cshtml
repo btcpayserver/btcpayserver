@@ -2,30 +2,24 @@
     Layout = "_LayoutSimple";
 }
 
-<div class="row">
-    <div class="col-12 col-head" style="justify-content:center; flex-direction: row; display:flex; flex-direction:row; text-align:center;">
-        <a asp-controller="UIHome" asp-action="Index">
-            <img src="~/img/btcpay-logo.svg" alt="BTCPay Server" class="head-logo" height="70" asp-append-version="true" />
-        </a>
+<style>
+    .main-logo { height: 4rem; width: 18rem; }
+    .main-logo-btcpay .main-logo-btcpay--small { display: none; }
+    .lead img { max-width: 100%; }
+</style>
 
-        <h1 class="text-uppercase mt-3 ms-4">@ViewData["Title"]</h1>
+<div class="text-center">
+    <a asp-controller="UIHome" asp-action="Index" class="d-inline-block navbar-brand mx-0 mb-5">
+        <vc:main-logo />
+    </a>
+
+    <h1 class="text-uppercase my-3">@ViewData["Title"]</h1>
+
+    <div class="lead text-center">
+        @RenderBody()
     </div>
-</div>
 
-<center>
-    <hr class="primary" />
-</center>
+    <hr class="primary my-5" />
 
-<p class="lead text-center">
-    @RenderBody()
-</p>
-
-<center>
-    <hr class="primary" />
-</center>
-
-<div class="row justify-content-center mt-5">
-    <div class="col">
-        <partial name="_BTCPaySupporters" />
-    </div>
+    <partial name="_BTCPaySupporters" />    
 </div>

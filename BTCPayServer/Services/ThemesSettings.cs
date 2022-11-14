@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 
 namespace BTCPayServer.Services
@@ -19,6 +20,13 @@ namespace BTCPayServer.Services
         }
 
         public bool FirstRun { get; set; }
+
+        [Display(Name = "Logo")]
+        [JsonIgnore]
+        public IFormFile LogoFile { get; set; }
+        
+        public string LogoFileId { get; set; }
+
         public override string ToString()
         {
             // no logs

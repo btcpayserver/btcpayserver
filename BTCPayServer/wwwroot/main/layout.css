@@ -135,6 +135,17 @@
     height: 1px;
 }
 
+#StoreSelectorHome {
+    position: relative;
+}
+
+#StoreSelectorHome .badge {
+    position: absolute;
+    top: .25rem;
+    left: 100%;
+    font-size: 9px;
+}
+
 #StoreSelectorDropdown,
 #StoreSelectorToggle {
     width: 100%;
@@ -144,6 +155,7 @@
     display: flex;
     align-items: center;
     color: var(--btcpay-header-link);
+    background-color: var(--btcpay-header-bg);
 }
 
 #StoreSelectorToggle::after {
@@ -191,24 +203,35 @@
 }
 
 /* Logo */
+#mainMenuHead .main-logo {
+    display: inline-block;
+    height: 2rem;
+}
+
 @media (max-width: 575px) {
-    .logo {
-        width: 1.125rem;
-        height: 2rem;
+    #mainMenuHead .main-logo-custom {
+        max-width: 25vw;
     }
 
-    .logo-large {
+    #mainMenuHead .main-logo-btcpay {
+        width: 1.125rem;
+    }
+
+    #mainMenuHead .main-logo-btcpay .main-logo-btcpay--large {
         display: none;
     }
 }
 
 @media (min-width: 576px) {
-    .logo {
-        width: 4.6rem;
-        height: 2rem;
+    #mainMenuHead .main-logo-custom {
+        max-width: 10.5rem;
     }
 
-    .logo-small {
+    #mainMenuHead .main-logo-btcpay {
+        width: 4.625rem;
+    }
+
+    #mainMenuHead .main-logo-btcpay .main-logo-btcpay--small {
         display: none;
     }
 }

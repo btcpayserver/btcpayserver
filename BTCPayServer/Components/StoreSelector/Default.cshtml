@@ -1,9 +1,9 @@
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @using BTCPayServer.Abstractions.Extensions
-@using BTCPayServer.Abstractions.TagHelpers
 @using BTCPayServer.Abstractions.Contracts
-@inject BTCPayServer.Services.BTCPayServerEnvironment Env
+@using BTCPayServer.Services
 @inject SignInManager<ApplicationUser> SignInManager
+@inject BTCPayServerEnvironment Env
 @inject IFileService FileService
 @model BTCPayServer.Components.StoreSelector.StoreSelectorViewModel
 @functions {
@@ -11,14 +11,14 @@
 	#pragma warning disable 1998
     private async Task LogoContent()
     {
-        var logoSrc = $"{ViewContext.HttpContext.Request.PathBase}/img/logo.svg";
-        <svg xmlns="http://www.w3.org/2000/svg" role="img" alt="BTCPay Server" class="logo"><use href="@logoSrc#small" class="logo-small" /><use href="@logoSrc#large" class="logo-large" /></svg>
+        <vc:main-logo />
         @if (Env.NetworkType != NBitcoin.ChainName.Mainnet)
         {
-            <span class="badge bg-warning ms-1 ms-sm-0" style="font-size:10px;">@Env.NetworkType.ToString()</span>
+            var type = Env.NetworkType.ToString();
+            <small class="badge bg-warning rounded-pill ms-1 ms-sm-0" title="@type">@type.Replace("Testnet", "TN").Replace("Regtest", "RT")</small>
         }
     }
-    private string StoreName(string title)
+    private static string StoreName(string title)
     {
         return string.IsNullOrEmpty(title) ? "Unnamed Store" : title;
     }
@@ -26,15 +26,15 @@
 }
 @if (Model.CurrentStoreId == null)
 {
-    <a href="~/" class="navbar-brand py-2 js-scroll-trigger">@{await LogoContent();}</a>
+    <a asp-controller="UIHome" asp-action="Index" id="StoreSelectorHome" class="navbar-brand py-2">@{await LogoContent();}</a>
 }
 else if (Model.CurrentStoreIsOwner)
 {
-    <a asp-controller="UIStores" asp-action="Dashboard" asp-route-storeId="@Model.CurrentStoreId" class="navbar-brand py-2 js-scroll-trigger">@{await LogoContent();}</a>
+    <a asp-controller="UIStores" asp-action="Dashboard" asp-route-storeId="@Model.CurrentStoreId" id="StoreSelectorHome" class="navbar-brand py-2">@{await LogoContent();}</a>
 }
 else
 {
-    <a asp-controller="UIInvoice" asp-action="ListInvoices" asp-route-storeId="@Model.CurrentStoreId" class="navbar-brand py-2 js-scroll-trigger">@{await LogoContent();}</a>
+    <a asp-controller="UIInvoice" asp-action="ListInvoices" asp-route-storeId="@Model.CurrentStoreId" id="StoreSelectorHome" class="navbar-brand py-2">@{await LogoContent();}</a>
 }
 
 <div id="StoreSelector">

@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Configuration;
+using BTCPayServer.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Caching.Memory;
@@ -22,79 +23,40 @@ namespace BTCPayServer.Plugins
     public class PluginService
     {
         private readonly IOptions<DataDirectories> _dataDirectories;
-        private readonly IMemoryCache _memoryCache;
+        private readonly PoliciesSettings _policiesSettings;
         private readonly ISettingsRepository _settingsRepository;
-        private readonly BTCPayServerOptions _btcPayServerOptions;
-        private readonly HttpClient _githubClient;
+        private readonly PluginBuilderClient _pluginBuilderClient;
         public PluginService(
             ISettingsRepository settingsRepository,
             IEnumerable<IBTCPayServerPlugin> btcPayServerPlugins,
-            IHttpClientFactory httpClientFactory, BTCPayServerOptions btcPayServerOptions, 
-            IOptions<DataDirectories> dataDirectories, IMemoryCache memoryCache)
+            PluginBuilderClient pluginBuilderClient, 
+            IOptions<DataDirectories> dataDirectories,
+            PoliciesSettings policiesSettings,
+            BTCPayServerEnvironment env)
         {
             LoadedPlugins = btcPayServerPlugins;
-            _githubClient = httpClientFactory.CreateClient();
-            _githubClient.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("btcpayserver", "1"));
+            _pluginBuilderClient = pluginBuilderClient;
             _settingsRepository = settingsRepository;
-            _btcPayServerOptions = btcPayServerOptions;
             _dataDirectories = dataDirectories;
-            _memoryCache = memoryCache;
-        }
-
-        private async Task<string> CallHttpAndCache(string uri)
-        {
-            var cacheTime = TimeSpan.FromMinutes(30);
-            return await _memoryCache.GetOrCreateAsync(nameof(PluginService) + uri, async entry =>
-            {
-                entry.AbsoluteExpiration = DateTimeOffset.UtcNow + cacheTime;
-                return await  _githubClient.GetStringAsync(uri);
-            });
+            _policiesSettings = policiesSettings;
+            Env = env;
         }
 
         public IEnumerable<IBTCPayServerPlugin> LoadedPlugins { get; }
+        public BTCPayServerEnvironment Env { get; }
 
         public async Task<AvailablePlugin[]> GetRemotePlugins()
         {
-            var resp = await CallHttpAndCache($"https://api.github.com/repos/{_btcPayServerOptions.PluginRemote}/git/trees/master?recursive=1");
-
-            var respObj = JObject.Parse(resp)["tree"] as JArray;
-
-            var detectedPlugins = respObj.Where(token => token["path"].ToString().EndsWith(".btcpay", StringComparison.OrdinalIgnoreCase));
-
-            List<Task<AvailablePlugin>> result = new List<Task<AvailablePlugin>>();
-            foreach (JToken detectedPlugin in detectedPlugins)
-            {
-                var pluginName = detectedPlugin["path"].ToString();
-                
-                var metadata =  respObj.SingleOrDefault(token => (pluginName + ".json")== token["path"].ToString());
-                if (metadata is null)
-                {
-                    continue;
-                }
-                result.Add( CallHttpAndCache(metadata["url"].ToString())
-                    .ContinueWith(
-                    task =>
-                    {
-                        var d = JObject.Parse(task.Result);
-
-                        var content = Encoders.Base64.DecodeData(d["content"].Value<string>());
-
-                        var r = JsonConvert.DeserializeObject<AvailablePlugin>(Encoding.UTF8.GetString(content));
-                        r.Path = $"https://raw.githubusercontent.com/{_btcPayServerOptions.PluginRemote}/master/{pluginName}";
-                        return r;
-                    }, TaskScheduler.Current));
-                
-            }
-
-            return await Task.WhenAll(result);
+            var versions = await _pluginBuilderClient.GetPublishedVersions(Env.Version, _policiesSettings.PluginPreReleases);
+            return versions.Select(v => v.ManifestInfo.ToObject<AvailablePlugin>()).ToArray();
         }
-        public async Task DownloadRemotePlugin(string plugin, string path)
+        public async Task DownloadRemotePlugin(string pluginIdentifier, string version)
         {
             var dest = _dataDirectories.Value.PluginDir;
-            
-            var filedest = Path.Join(dest, plugin+".btcpay");
+            var filedest = Path.Join(dest, pluginIdentifier + ".btcpay");
             Directory.CreateDirectory(Path.GetDirectoryName(filedest));
-            using var resp2 = await _githubClient.GetAsync(path); 
+            var url = $"api/v1/plugins/[{Uri.EscapeDataString(pluginIdentifier)}]/versions/{Uri.EscapeDataString(version)}/download";
+            using var resp2 = await _pluginBuilderClient.HttpClient.GetAsync(url);
             using var fs = new FileStream(filedest, FileMode.Create, FileAccess.ReadWrite);
             await resp2.Content.CopyToAsync(fs);
             await fs.FlushAsync();
@@ -130,7 +92,7 @@ namespace BTCPayServer.Plugins
             PluginManager.QueueCommands(dest, ("delete", plugin));
         }
 
-        public class AvailablePlugin : IBTCPayServerPlugin
+        public class AvailablePlugin
         {
             public string Identifier { get; set; }
             public string Name { get; set; }
@@ -139,7 +101,6 @@ namespace BTCPayServer.Plugins
             public bool SystemPlugin { get; set; } = false;
 
             public IBTCPayServerPlugin.PluginDependency[] Dependencies { get; set; } = Array.Empty<IBTCPayServerPlugin.PluginDependency>();
-            public string Path { get; set; }
 
             public void Execute(IApplicationBuilder applicationBuilder,
                 IServiceProvider applicationBuilderApplicationServices)

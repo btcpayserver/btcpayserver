@@ -35,7 +35,6 @@ namespace BTCPayServer.Controllers.Greenfield
         private readonly StoreRepository _storeRepository;
         private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
         private readonly IAuthorizationService _authorizationService;
-        private readonly ISettingsRepository _settingsRepository;
 
         public GreenfieldStoreLightningNetworkPaymentMethodsController(
             StoreRepository storeRepository,
@@ -47,7 +46,6 @@ namespace BTCPayServer.Controllers.Greenfield
             _storeRepository = storeRepository;
             _btcPayNetworkProvider = btcPayNetworkProvider;
             _authorizationService = authorizationService;
-            _settingsRepository = settingsRepository;
             PoliciesSettings = policiesSettings;
         }
 

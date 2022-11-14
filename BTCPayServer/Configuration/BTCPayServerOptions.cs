@@ -140,14 +140,15 @@ namespace BTCPayServer.Configuration
             }
 
             DisableRegistration = conf.GetOrDefault<bool>("disable-registration", true);
-            PluginRemote = conf.GetOrDefault("plugin-remote", "btcpayserver/btcpayserver-plugins");
+            var pluginRemote = conf.GetOrDefault<string>("plugin-remote", null);
+            if (pluginRemote != null)
+                Logs.Configuration.LogWarning("plugin-remote is an obsolete configuration setting, please remove it from configuration");
             RecommendedPlugins = conf.GetOrDefault("recommended-plugins", "").ToLowerInvariant().Split('\r', '\n', '\t', ' ').Where(s => !string.IsNullOrEmpty(s)).Distinct().ToArray();
             CheatMode = conf.GetOrDefault("cheatmode", false);
             if (CheatMode && this.NetworkType == ChainName.Mainnet)
                 throw new ConfigException($"cheatmode can't be used on mainnet");
         }
 
-        public string PluginRemote { get; set; }
         public string[] RecommendedPlugins { get; set; }
         public bool CheatMode { get; set; }
 

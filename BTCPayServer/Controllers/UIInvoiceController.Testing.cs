@@ -39,7 +39,7 @@ namespace BTCPayServer.Controllers
             var network = _NetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode).NBitcoinNetwork;
             var paymentMethodId = new [] {store.GetDefaultPaymentId()}
                 .Concat(store.GetEnabledPaymentIds(_NetworkProvider))
-                .FirstOrDefault(p => p.ToString() == request.PaymentMethodId);
+                .FirstOrDefault(p => p?.ToString() == request.PaymentMethodId);
             
             try
             {

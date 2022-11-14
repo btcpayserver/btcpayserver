@@ -16699,4 +16699,3 @@
   return VuePlugin$F;
 
 })));
-//# sourceMappingURL=bootstrap-vue.js.map

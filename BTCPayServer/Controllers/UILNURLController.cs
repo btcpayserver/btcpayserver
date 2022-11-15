@@ -31,6 +31,7 @@ using Microsoft.AspNetCore.Routing;
 using NBitcoin;
 using NBitcoin.Crypto;
 using Newtonsoft.Json;
+using MarkPayoutRequest = BTCPayServer.HostedServices.MarkPayoutRequest;
 
 namespace BTCPayServer
 {
@@ -167,9 +168,9 @@ namespace BTCPayServer
                     switch (payResult.Result)
                     {
                         case PayResult.Ok:
-                            await _pullPaymentHostedService.MarkPaid(new PayoutPaidRequest()
+                            await _pullPaymentHostedService.MarkPaid(new MarkPayoutRequest()
                             {
-                                PayoutId = claimResponse.PayoutData.Id, Proof = new ManualPayoutProof { }
+                                PayoutId = claimResponse.PayoutData.Id, State = PayoutState.Completed
                             });
 
                             return Ok(new LNUrlStatusResponse {Status = "OK"});
@@ -178,7 +179,7 @@ namespace BTCPayServer
                                 new PullPaymentHostedService.CancelRequest(new string[]
                                 {
                                     claimResponse.PayoutData.Id
-                                }));
+                                }, null));
 
                             return Ok(new LNUrlStatusResponse
                             {

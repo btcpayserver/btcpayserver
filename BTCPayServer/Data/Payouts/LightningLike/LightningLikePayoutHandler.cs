@@ -125,12 +125,12 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             {
                 return null;
             }
-            if (proofType == ManualPayoutProof.Type)
+            if (proofType == PayoutLightningBlob.PayoutLightningBlobProofType)
             {
-                return raw.ToObject<ManualPayoutProof>();
+                return raw.ToObject<PayoutLightningBlob>();
             }
 
-            return raw.ToObject<PayoutLightningBlob>();
+            return raw.ToObject<ManualPayoutProof>();
         }
 
         public void StartBackgroundCheck(Action<Type[]> subscribe)

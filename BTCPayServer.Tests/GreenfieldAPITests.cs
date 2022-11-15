@@ -797,6 +797,100 @@ namespace BTCPayServer.Tests
             await AssertAPIError("invalid-state", async () => await client.MarkPayoutPaid(storeId, payout.Id));
         }
 
+        [Fact]
+        [Trait("Integration", "Integration")]
+        public async Task CanProcessPayoutsExternally()
+        {
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+            var acc = tester.NewAccount();
+            acc.Register();
+            await acc.CreateStoreAsync();
+            var storeId = (await acc.RegisterDerivationSchemeAsync("BTC", importKeysToNBX: true)).StoreId;
+            var client = await acc.CreateClient();
+            var address = await tester.ExplorerNode.GetNewAddressAsync();
+            var payout = await client.CreatePayout(storeId, new CreatePayoutThroughStoreRequest()
+            {
+                 Approved = false,
+                 PaymentMethod = "BTC",
+                 Amount = 0.0001m,
+                 Destination = address.ToString()
+            });
+            await AssertAPIError("invalid-state", async () =>
+            {
+                await client.MarkPayout(storeId, payout.Id, new MarkPayoutRequest() {State = PayoutState.Completed});
+
+            });
+
+            await client.ApprovePayout(storeId, payout.Id, new ApprovePayoutRequest());
+            
+            await client.MarkPayout(storeId, payout.Id, new MarkPayoutRequest() {State = PayoutState.Completed});
+            Assert.Equal(PayoutState.Completed,(await client.GetStorePayouts(storeId,false)).Single(data => data.Id == payout.Id ).State );
+            Assert.Null((await client.GetStorePayouts(storeId,false)).Single(data => data.Id == payout.Id ).PaymentProof );
+
+            foreach (var state in new []{ PayoutState.AwaitingApproval, PayoutState.Cancelled, PayoutState.Completed, PayoutState.AwaitingApproval, PayoutState.InProgress})
+            {
+                await AssertAPIError("invalid-state", async () =>
+                {
+                    await client.MarkPayout(storeId, payout.Id, new MarkPayoutRequest() {State = state});
+                });
+            }
+            payout = await client.CreatePayout(storeId, new CreatePayoutThroughStoreRequest()
+            {
+                Approved = true,
+                PaymentMethod = "BTC",
+                Amount = 0.0001m,
+                Destination = address.ToString()
+            });
+
+            payout = await client.GetStorePayout(storeId, payout.Id);
+            Assert.NotNull(payout);
+            Assert.Equal(PayoutState.AwaitingPayment, payout.State);
+            await AssertValidationError(new []{"PaymentProof"}, async () =>
+            {
+                await client.MarkPayout(storeId, payout.Id, new MarkPayoutRequest() {State = PayoutState.Completed, PaymentProof = JObject.FromObject(new
+                {
+                    test = "zyx"
+                })});
+            });
+            await client.MarkPayout(storeId, payout.Id, new MarkPayoutRequest() {State = PayoutState.InProgress, PaymentProof = JObject.FromObject(new
+            {
+                proofType = "external-proof"
+            })});
+            payout = await client.GetStorePayout(storeId, payout.Id);
+            Assert.NotNull(payout);
+            Assert.Equal(PayoutState.InProgress, payout.State);
+            Assert.True(payout.PaymentProof.TryGetValue("proofType", out var savedType));
+            Assert.Equal("external-proof",savedType);
+            
+            await client.MarkPayout(storeId, payout.Id, new MarkPayoutRequest() {State = PayoutState.AwaitingPayment, PaymentProof = JObject.FromObject(new
+            {
+                proofType = "external-proof",
+                id="finality proof",
+                link="proof.com"
+            })});
+            payout = await client.GetStorePayout(storeId, payout.Id);
+            Assert.NotNull(payout);
+            Assert.Null(payout.PaymentProof);
+            Assert.Equal(PayoutState.AwaitingPayment, payout.State);
+            
+            await client.MarkPayout(storeId, payout.Id, new MarkPayoutRequest() {State = PayoutState.Completed, PaymentProof = JObject.FromObject(new
+            {
+                proofType = "external-proof",
+                id="finality proof",
+                link="proof.com"
+            })});
+            payout = await client.GetStorePayout(storeId, payout.Id);
+            Assert.NotNull(payout);
+            Assert.Equal(PayoutState.Completed, payout.State);
+            Assert.True(payout.PaymentProof.TryGetValue("proofType", out savedType));
+            Assert.True(payout.PaymentProof.TryGetValue("link", out var savedLink));
+            Assert.True(payout.PaymentProof.TryGetValue("id", out var savedId));
+            Assert.Equal("external-proof",savedType);
+            Assert.Equal("finality proof",savedId);
+            Assert.Equal("proof.com",savedLink);
+        }
+
         private DateTimeOffset RoundSeconds(DateTimeOffset dateTimeOffset)
         {
             return new DateTimeOffset(dateTimeOffset.Year, dateTimeOffset.Month, dateTimeOffset.Day, dateTimeOffset.Hour, dateTimeOffset.Minute, dateTimeOffset.Second, dateTimeOffset.Offset);

@@ -1168,5 +1168,26 @@ namespace BTCPayServer.Controllers.Greenfield
             return GetFromActionResult<StoreRateConfiguration>(await GetController<GreenfieldStoreRateConfigurationController>().UpdateStoreRateConfiguration(request));
         }
         
+        public override async Task MarkPayoutPaid(string storeId, string payoutId, CancellationToken cancellationToken = default)
+        {
+            HandleActionResult(await GetController<GreenfieldPullPaymentController>().MarkPayoutPaid(storeId, payoutId, cancellationToken));
+        }
+
+        public override async Task MarkPayout(string storeId, string payoutId, MarkPayoutRequest request,
+            CancellationToken cancellationToken = default)
+        {
+            HandleActionResult(await GetController<GreenfieldPullPaymentController>().MarkPayout(storeId, payoutId, request));
+        }
+
+        public override async Task<PayoutData> GetPullPaymentPayout(string pullPaymentId, string payoutId, CancellationToken cancellationToken = default)
+        {
+            return GetFromActionResult<PayoutData>(await GetController<GreenfieldPullPaymentController>().GetPayout(pullPaymentId, payoutId));
+        }
+
+        public override async Task<PayoutData> GetStorePayout(string storeId, string payoutId,
+            CancellationToken cancellationToken = default)
+        {
+            return GetFromActionResult<PayoutData>(await GetController<GreenfieldPullPaymentController>().GetStorePayout(storeId, payoutId));
+        }
     }
 }

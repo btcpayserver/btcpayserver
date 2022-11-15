@@ -1,6 +1,6 @@
 @model PaymentModel
 
-<main id="checkout-cheating" class="shadow-lg mt-5" v-cloak>
+<main id="checkout-cheating" class="shadow-lg mt-4" v-cloak>
     <section>
         <p class="alert alert-success text-break" v-if="successMessage" v-text="successMessage"></p>
         <p class="alert alert-danger text-break" v-if="errorMessage" v-text="errorMessage"></p>
@@ -17,7 +17,7 @@
             </div>
             <small class="text-muted">Equals running bitcoin-cli.sh sendtoaddress</small>
         </form>
-        <form id="mine-block" :action="`/i/${invoiceId}/mine-blocks`" method="post" class="mt-5" v-on:submit.prevent="handleFormSubmit($event, 'mining')" v-if="paymentMethodId === 'BTC'">
+        <form id="mine-block" :action="`/i/${invoiceId}/mine-blocks`" method="post" class="mt-4" v-on:submit.prevent="handleFormSubmit($event, 'mining')" v-if="paymentMethodId === 'BTC'">
             <label for="block-count" class="control-label form-label">Mine to test processing and settlement</label>
             <div class="d-flex gap-2">
                 <div class="input-group">
@@ -27,7 +27,7 @@
                 <button class="btn btn-secondary flex-shrink-0 px-3 w-100px" type="submit" :disabled="mining">Mine</button>
             </div>
         </form>
-        <form id="expire-invoice" :action="`/i/${invoiceId}/expire`" method="post" class="mt-5" v-on:submit.prevent="handleFormSubmit($event, 'expiring')" v-if="!isPaid">
+        <form id="expire-invoice" :action="`/i/${invoiceId}/expire`" method="post" class="mt-4" v-on:submit.prevent="handleFormSubmit($event, 'expiring')" v-if="!isPaid">
             <label for="expiry-seconds" class="control-label form-label">Expire invoice in …</label>
             <div class="d-flex gap-2">
                 <div class="input-group">

@@ -107,17 +107,18 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
         }
 
         ParseProofType(payout.Proof, out var raw, out var proofType);
-        if (proofType == ManualPayoutProof.Type)
+        if (proofType == PayoutTransactionOnChainBlob.Type)
         {
-            return raw.ToObject<ManualPayoutProof>();
+            
+            var res = raw.ToObject<PayoutTransactionOnChainBlob>(
+                JsonSerializer.Create(_jsonSerializerSettings.GetSerializer(paymentMethodId.CryptoCode)));
+            var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(paymentMethodId.CryptoCode);
+            if (res == null)
+                return null;
+            res.LinkTemplate = network.BlockExplorerLink;
+            return res;
         }
-        var res = raw.ToObject<PayoutTransactionOnChainBlob>(
-            JsonSerializer.Create(_jsonSerializerSettings.GetSerializer(paymentMethodId.CryptoCode)));
-        var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(paymentMethodId.CryptoCode);
-        if (res == null)
-            return null;
-        res.LinkTemplate = network.BlockExplorerLink;
-        return res;
+        return raw.ToObject<ManualPayoutProof>();
     }
 
     public static void ParseProofType(byte[] proof, out JObject obj, out string type)
@@ -130,10 +131,21 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
         }
 
         obj = JObject.Parse(Encoding.UTF8.GetString(proof));
-        if (obj.TryGetValue("proofType", StringComparison.InvariantCultureIgnoreCase, out var proofType))
+        TryParseProofType(obj, out type);
+    }
+    
+    public static bool TryParseProofType(JObject proof, out string type)
+    {
+        type = null;
+        if (proof is null)
         {
-            type = proofType.Value<string>();
+            return false;
         }
+
+        if (!proof.TryGetValue("proofType", StringComparison.InvariantCultureIgnoreCase, out var proofType))
+            return false;
+        type = proofType.Value<string>();
+        return true;
     }
 
     public void StartBackgroundCheck(Action<Type[]> subscribe)

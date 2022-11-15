@@ -10,6 +10,7 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
+using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Configuration;
@@ -61,7 +62,7 @@ namespace BTCPayServer.Controllers
         private readonly IOptions<ExternalServicesOptions> _externalServiceOptions;
         private readonly Logs Logs;
         private readonly StoredFileRepository _StoredFileRepository;
-        private readonly FileService _FileService;
+        private readonly IFileService _fileService;
         private readonly IEnumerable<IStorageProviderService> _StorageProviderServices;
         private readonly LinkGenerator _linkGenerator;
         private readonly EmailSenderFactory _emailSenderFactory;
@@ -70,7 +71,7 @@ namespace BTCPayServer.Controllers
             UserManager<ApplicationUser> userManager,
             UserService userService,
             StoredFileRepository storedFileRepository,
-            FileService fileService,
+            IFileService fileService,
             IEnumerable<IStorageProviderService> storageProviderServices,
             BTCPayServerOptions options,
             SettingsRepository settingsRepository,
@@ -92,7 +93,7 @@ namespace BTCPayServer.Controllers
             _policiesSettings = policiesSettings;
             _Options = options;
             _StoredFileRepository = storedFileRepository;
-            _FileService = fileService;
+            _fileService = fileService;
             _StorageProviderServices = storageProviderServices;
             _UserManager = userManager;
             _userService = userService;
@@ -972,22 +973,69 @@ namespace BTCPayServer.Controllers
             return RedirectToAction(nameof(Services));
         }
 
-        [Route("server/theme")]
+        [HttpGet("server/theme")]
         public async Task<IActionResult> Theme()
         {
             var data = await _SettingsRepository.GetSettingAsync<ThemeSettings>() ?? new ThemeSettings();
             return View(data);
         }
 
-        [Route("server/theme")]
-        [HttpPost]
-        public async Task<IActionResult> Theme(ThemeSettings settings)
+        [HttpPost("server/theme")]
+        public async Task<IActionResult> Theme(ThemeSettings model, [FromForm] bool RemoveLogoFile)
         {
-            if (settings.CustomTheme && !Uri.IsWellFormedUriString(settings.CssUri, UriKind.RelativeOrAbsolute))
+            var settingsChanged = false;
+            var settings = await _SettingsRepository.GetSettingAsync<ThemeSettings>() ?? new ThemeSettings();
+            
+            var userId = GetUserId();
+            if (userId is null)
+                return NotFound();
+            
+            if (model.LogoFile != null)
             {
-                TempData[WellKnownTempData.ErrorMessage] = "Please provide a non-empty theme URI";
+                if (model.LogoFile.ContentType.StartsWith("image/", StringComparison.InvariantCulture))
+                {
+                    // delete existing image
+                    if (!string.IsNullOrEmpty(settings.LogoFileId))
+                    {
+                        await _fileService.RemoveFile(settings.LogoFileId, userId);
+                    }
+                    
+                    // add new image
+                    try
+                    {
+                        var storedFile = await _fileService.AddFile(model.LogoFile, userId);
+                        settings.LogoFileId = storedFile.Id;
+                        settingsChanged = true;
+                    }
+                    catch (Exception e)
+                    {
+                        ModelState.AddModelError(nameof(model.LogoFile), $"Could not save logo: {e.Message}");
+                    }
+                }
+                else
+                {
+                    ModelState.AddModelError(nameof(model.LogoFile), "The uploaded logo file needs to be an image");
+                }
             }
-            else
+            else if (RemoveLogoFile && !string.IsNullOrEmpty(settings.LogoFileId))
+            {
+                await _fileService.RemoveFile(settings.LogoFileId, userId);
+                settings.LogoFileId = null;
+                settingsChanged = true;
+            }
+            
+            if (model.CustomTheme && !Uri.IsWellFormedUriString(model.CssUri, UriKind.RelativeOrAbsolute))
+            {
+                ModelState.AddModelError(nameof(model.CustomTheme), "Please provide a non-empty theme URI");
+            }
+            else if (settings.CustomTheme != model.CustomTheme)
+            {
+                settings.CustomTheme = model.CustomTheme;
+                settings.CustomThemeCssUri = model.CustomThemeCssUri;
+                settingsChanged = true;
+            }
+
+            if (settingsChanged)
             {
                 await _SettingsRepository.UpdateSetting(settings);
                 TempData[WellKnownTempData.SuccessMessage] = "Theme settings updated successfully";
@@ -995,7 +1043,6 @@ namespace BTCPayServer.Controllers
 
             return View(settings);
         }
-
 
         [Route("server/emails")]
         public async Task<IActionResult> Emails()

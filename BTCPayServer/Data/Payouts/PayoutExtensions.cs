@@ -8,6 +8,7 @@ using BTCPayServer.Payments;
 using BTCPayServer.Services;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Data
 {
@@ -31,6 +32,7 @@ namespace BTCPayServer.Data
         {
             return PaymentMethodId.TryParse(data.PaymentMethodId, out var paymentMethodId) ? paymentMethodId : null;
         }
+        
         public static PayoutBlob GetBlob(this PayoutData data, BTCPayNetworkJsonSerializerSettings serializers)
         {
             return JsonConvert.DeserializeObject<PayoutBlob>(Encoding.UTF8.GetString(data.Blob), serializers.GetSerializer(data.GetPaymentMethodId().CryptoCode));
@@ -39,13 +41,31 @@ namespace BTCPayServer.Data
         {
             data.Blob = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(blob, serializers.GetSerializer(data.GetPaymentMethodId().CryptoCode)));
         }
-        
 
+        public static JObject? GetProofBlobJson(this PayoutData data)
+        {
+            return data?.Proof is null ? null : JObject.Parse(Encoding.UTF8.GetString(data.Proof));
+        }
         public static void SetProofBlob(this PayoutData data, IPayoutProof blob, JsonSerializerSettings settings)
         {
             if (blob is null)
+            {
+                data.Proof = null;
                 return;
-            var bytes = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(blob, settings));
+            }
+
+            data.SetProofBlob(settings is null
+                ? JObject.FromObject(blob)
+                : JObject.FromObject(blob, JsonSerializer.Create(settings)));
+        }
+        public static void SetProofBlob(this PayoutData data, JObject blob)
+        {
+            if (blob is null)
+            {
+                data.Proof = null;
+                return;
+            }
+            var bytes = Encoding.UTF8.GetBytes(blob.ToString(Formatting.None));
             // We only update the property if the bytes actually changed, this prevent from hammering the DB too much
             if (data.Proof is null || bytes.Length != data.Proof.Length || !bytes.SequenceEqual(data.Proof))
             {

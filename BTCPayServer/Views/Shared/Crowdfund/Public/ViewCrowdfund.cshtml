@@ -266,7 +266,7 @@
     <div class="me-3" v-text="`Updated ${lastUpdated}`">Updated @Model.Info.LastUpdated</div>
     @if (!Theme.CustomTheme)
     {
-        <vc:theme-switch css-class="text-muted me-3" responsive="none"/>
+        <vc:theme-switch css-class="text-muted me-3" />
     }
     <div class="form-check me-3 my-0 only-for-js" v-if="srvModel.animationsEnabled || animation">
         <input class="form-check-input" type="checkbox" id="cbAnime" v-model="animation">

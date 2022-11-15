@@ -56,13 +56,8 @@
   "Exchange Rate": "Exchange Rate",
   "Recommended Fee": "Recommended Fee",
   "Feerate": "{{feeRate}} sat/byte",
-  "Fiat Amount": "Fiat Amount",
-  "Total Fiat": "Total Fiat",
   "Amount Paid": "Amount Paid",
   "Amount Due": "Amount Due",
   "Pay in wallet": "Pay in wallet",
-  "Invoice paid": "Invoice paid",
-  "This invoice will expire in": "This invoice will expire in {{timeLeft}}",
-  "The invoice hasn't been paid in full": "The invoice hasn't been paid in full.",
-  "still_due": "Please send {{amountDue}} {{cryptoCode}}."
+  "Invoice paid": "Invoice paid"
 }

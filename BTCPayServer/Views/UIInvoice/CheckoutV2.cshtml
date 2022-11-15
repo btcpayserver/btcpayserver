@@ -88,9 +88,9 @@
                         </div>
                         <div v-html="replaceNewlines($t('still_due', { amount: `${srvModel.btcDue} ${srvModel.cryptoCode}` }))"></div>
                     </div>
-                    <button class="d-flex align-items-center btn btn-link payment-details-button" type="button" :aria-expanded="displayPaymentDetails ? 'true' : 'false'" v-on:click="displayPaymentDetails = !displayPaymentDetails">
+                    <button class="d-flex align-items-center gap-1 btn btn-link payment-details-button" type="button" :aria-expanded="displayPaymentDetails ? 'true' : 'false'" v-on:click="displayPaymentDetails = !displayPaymentDetails">
+                        <span class="fw-semibold" v-t="'view_details'"></span>
                         <vc:icon symbol="caret-down"/>
-                        <span class="ms-1 fw-semibold" v-t="'view_details'"></span>
                     </button>
                     <div class="collapse payment-details" v-collapsible="displayPaymentDetails">
                         <payment-details :srv-model="srvModel" :is-active="isActive" class="pb-3"></payment-details>
@@ -158,9 +158,9 @@
                         <div class="collapse payment-details" v-collapsible="displayPaymentDetails">
                             <payment-details :srv-model="srvModel" :is-active="isActive"></payment-details>
                         </div>
-                        <button class="d-flex align-items-center btn btn-link payment-details-button" type="button" :aria-expanded="displayPaymentDetails ? 'true' : 'false'" v-on:click="displayPaymentDetails = !displayPaymentDetails">
+                        <button class="d-flex align-items-center gap-1 btn btn-link payment-details-button" type="button" :aria-expanded="displayPaymentDetails ? 'true' : 'false'" v-on:click="displayPaymentDetails = !displayPaymentDetails">
+                            <span class="fw-semibold" v-t="'view_details'"></span>
                             <vc:icon symbol="caret-down"/>
-                            <span class="ms-1 fw-semibold" v-t="'view_details'"></span>
                         </button>
                         <p class="text-center mt-3" v-html="replaceNewlines($t('invoice_expired_body', { storeName: srvModel.storeName, minutes: @Model.MaxTimeMinutes }))"></p>
                     </div>

@@ -93,12 +93,12 @@
                         <span class="ms-1 fw-semibold" v-t="'view_details'"></span>
                     </button>
                     <div class="collapse payment-details" v-collapsible="displayPaymentDetails">
-                        <payment-details :srv-model="srvModel" :is-active="isActive"></payment-details>
+                        <payment-details :srv-model="srvModel" :is-active="isActive" class="pb-3"></payment-details>
                     </div>
                 }
-                <div class="my-3">
-                    @if (paymentMethodCount > 1)
-                    {
+                @if (paymentMethodCount > 1)
+                {
+                    <div class="my-3">
                         <h6 class="text-center mb-3" v-t="'pay_with'"></h6>
                         <div class="btcpay-pills d-flex flex-wrap align-items-center justify-content-center gap-2 pb-2">
                             @foreach (var crypto in Model.AvailableCryptos)
@@ -111,15 +111,8 @@
                                 </a>
                             }
                         </div>
-                    }
-                    else
-                    {
-                        <h6 class="text-center mb-3">
-                            {{$t("pay_with")}}
-                            @PaymentMethodName(Model.AvailableCryptos.First())
-                        </h6>
-                    }
-                </div>
+                    </div>
+                }
                 <component v-if="srvModel.uiSettings && srvModel.activated" :srv-model="srvModel" :is="srvModel.uiSettings.checkoutBodyVueComponentName"/>
             </section>
             <section id="result" v-else>
@@ -203,8 +196,8 @@
             </p>
         </div>
     </noscript>
-    <template id="payment-details">
-        <dl v-cloak>
+    <template id="payment-details" v-cloak>
+        <dl>
             <div>
                 <dt v-t="'total_price'"></dt>
                 <dd :data-clipboard="srvModel.orderAmount" :data-clipboard-confirm="`${$t('copy_confirm')} ✔`">{{srvModel.orderAmount}} {{ srvModel.cryptoCode }}</dd>

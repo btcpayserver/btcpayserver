@@ -52,19 +52,6 @@ const startingLanguage = computeStartingLanguage();
 const STATUS_PAID = ['complete', 'confirmed', 'paid'];
 const STATUS_UNPAYABLE =  ['expired', 'invalid'];
 
-i18next
-    .use(window.i18nextXHRBackend)
-    .init({
-        backend: {
-            loadPath: i18nUrl
-        },
-        lng: startingLanguage,
-            fallbackLng: fallbackLanguage,
-            nsSeparator: false,
-            keySeparator: false,
-            load: 'currentOnly'
-        });
-
 function computeStartingLanguage() {
     if (urlParams.lang && isLanguageAvailable(urlParams.lang)) {
         return urlParams.lang;
@@ -76,6 +63,19 @@ function computeStartingLanguage() {
 function isLanguageAvailable(languageCode) {
     return availableLanguages.indexOf(languageCode) >= 0;
 }
+
+i18next
+    .use(window.i18nextXHRBackend)
+    .init({
+        backend: {
+            loadPath: i18nUrl
+        },
+        lng: startingLanguage,
+        fallbackLng: fallbackLanguage,
+        nsSeparator: false,
+        keySeparator: false,
+        load: 'currentOnly'
+    });
 
 const i18n = new VueI18next(i18next);
 const eventBus = new Vue();
@@ -260,6 +260,9 @@ new Vue({
                     }
                 }, 2000);
             }
+        },
+        replaceNewlines (value) {
+            return value ? value.replace(/\n/ig, '<br>') : '';
         }
     }
 });

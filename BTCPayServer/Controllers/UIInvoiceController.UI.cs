@@ -179,6 +179,12 @@ namespace BTCPayServer.Controllers
             }
             JToken? receiptData = null;
             i.Metadata?.AdditionalData?.TryGetValue("receiptData", out receiptData);
+            string? formResponse = null;
+            if (i.Metadata?.AdditionalData?.TryGetValue("formResponse", out var formResponseRaw)is true)
+            {
+                formResponse = formResponseRaw.Value<string>();
+            }
+                
 
             var payments = i.GetPayments(true)
                 .Select(paymentEntity =>
@@ -223,6 +229,8 @@ namespace BTCPayServer.Controllers
                 InvoiceId = i.Id,
                 OrderId = i.Metadata?.OrderId,
                 OrderUrl = i.Metadata?.OrderUrl,
+                FormId = i.CheckoutFormId,
+                FormSubmitted  = formResponse == i.CheckoutFormId,
                 Payments = receipt.ShowPayments is false ? null : payments,
                 ReceiptOptions = receipt,
                 AdditionalData = receiptData is null
@@ -230,6 +238,48 @@ namespace BTCPayServer.Controllers
                     : PosDataParser.ParsePosData(receiptData.ToString())
             });
 
+        }
+        
+        
+        [HttpGet("i/{invoiceId}/form")]
+        [HttpPost("i/{invoiceId}/form")]
+        [AllowAnonymous]
+        public async Task<IActionResult> ViewInvoiceForm(string invoiceId)
+        {
+            TempData.TryGetValue("formResponse", out var formResponseRaw);
+            TempData.Remove("formResponse");
+            
+            var i = await _InvoiceRepository.GetInvoice(invoiceId);
+            if (i is null)
+                return NotFound();
+            var store = await _StoreRepository.GetStoreByInvoiceId(i.Id);
+            if (store is null)
+                return NotFound();
+
+            var formId = i.CheckoutFormId;
+
+            JObject formResponse = null;
+            switch (formId)
+            {
+                case { } frid when string.IsNullOrEmpty(frid) || frid == GenericFormOption.None.ToString():
+                    break;
+                default:
+                    if (formResponseRaw is string raw && !string.IsNullOrEmpty(raw) )
+                    {
+
+                        var newMeta = i.Metadata.ToJObject();
+                        newMeta.Merge(JObject.Parse(raw));
+                        await _InvoiceRepository.UpdateInvoiceMetadata(invoiceId, store.Id, newMeta);
+                        return RedirectToAction("InvoiceReceipt", new {invoiceId});
+                    }
+                    else
+                    {
+                        var redirect = Request.GetCurrentUrl();
+                        return RedirectToAction("ViewForm", "UIForms", new {id = formId, redirectUrl = redirect});
+                    }
+            }
+            
+            return RedirectToAction("InvoiceReceipt", new {invoiceId});
         }
         private string? GetTransactionLink(PaymentMethodId paymentMethodId, string txId)
         {
@@ -927,14 +977,7 @@ namespace BTCPayServer.Controllers
             await _InvoiceRepository.UpdateInvoice(invoiceId, data).ConfigureAwait(false);
             return Ok("{}");
         }
-
-        [HttpPost("i/{invoiceId}/Form")]
-        [HttpPost("invoice/Form")]
-        public IActionResult UpdateForm(string invoiceId)
-        {
-            // TODO: Forms integration 
-            return Ok();
-        }
+        
 
         [HttpGet("/stores/{storeId}/invoices")]
         [HttpGet("invoices")]

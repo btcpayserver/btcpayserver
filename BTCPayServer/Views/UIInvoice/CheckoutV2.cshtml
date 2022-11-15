@@ -142,33 +142,33 @@
                 </div>
             </section>
             <section id="form" v-else-if="step === 'form'">
-                <form method="post" asp-action="UpdateForm" asp-route-invoiceId="@Model.InvoiceId" v-on:submit.prevent="onFormSubmit">
-                    <div class="top">
-                        <h6>{{$t("Please fill out the following")}}</h6>
-                        <div class="timer" v-if="expiringSoon">
-                            {{$t("Invoice will expire in")}} {{timerText}}
-                            <span class="spinner-border spinner-border-sm ms-2" role="status">
-                                <span class="visually-hidden"></span>
-                            </span>
-                        </div>
-                        <template v-if="srvModel.requiresRefundEmail">
-                            <p>{{$t("Contact_Body")}}</p>
-                            <div class="form-group">
-                                <label class="form-label" for="Email">{{$t("Contact and Refund Email")}}</label>
-                                <input class="form-control" id="Email" name="Email">
-                                <span class="text-danger" hidden>{{$t("Please enter a valid email address")}}</span>
-                            </div>
-                        </template>
-                    </div>
-                    <div class="buttons">
-                        <button type="submit" class="btn btn-primary" :disabled="formSubmitPending" :class="{ 'loading': formSubmitPending }">
-                            {{$t("Continue")}}
-                            <span class="spinner-border spinner-border-sm ms-1" role="status" v-if="formSubmitPending">
-                                <span class="visually-hidden"></span>
-                            </span>
-                        </button>
-                    </div>
-                </form>
+                @* <form method="post" asp-action="UpdateForm" asp-route-invoiceId="@Model.InvoiceId" v-on:submit.prevent="onFormSubmit"> *@
+                @*     <div class="top"> *@
+                @*         <h6>{{$t("Please fill out the following")}}</h6> *@
+                @*         <div class="timer" v-if="expiringSoon"> *@
+                @*             {{$t("Invoice will expire in")}} {{timerText}} *@
+                @*             <span class="spinner-border spinner-border-sm ms-2" role="status"> *@
+                @*                 <span class="visually-hidden"></span> *@
+                @*             </span> *@
+                @*         </div> *@
+                @*         <template v-if="srvModel.requiresRefundEmail"> *@
+                @*             <p>{{$t("Contact_Body")}}</p> *@
+                @*             <div class="form-group"> *@
+                @*                 <label class="form-label" for="Email">{{$t("Contact and Refund Email")}}</label> *@
+                @*                 <input class="form-control" id="Email" name="Email"> *@
+                @*                 <span class="text-danger" hidden>{{$t("Please enter a valid email address")}}</span> *@
+                @*             </div> *@
+                @*         </template> *@
+                @*     </div> *@
+                @*     <div class="buttons"> *@
+                @*         <button type="submit" class="btn btn-primary" :disabled="formSubmitPending" :class="{ 'loading': formSubmitPending }"> *@
+                @*             {{$t("Continue")}} *@
+                @*             <span class="spinner-border spinner-border-sm ms-1" role="status" v-if="formSubmitPending"> *@
+                @*                 <span class="visually-hidden"></span> *@
+                @*             </span> *@
+                @*         </button> *@
+                @*     </div> *@
+                @* </form> *@
             </section>
             <section id="payment" v-else>
                 <h6 class="text-center mb-3 fw-semibold" v-if="srvModel.itemDesc" v-text="srvModel.itemDesc">@Model.ItemDesc</h6>

@@ -271,7 +271,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                     PosData = string.IsNullOrEmpty(posData) ? null : posData,
                     RedirectAutomatically = settings.RedirectAutomatically,
                     SupportedTransactionCurrencies = paymentMethods,
-                    CheckoutFormId = blob.CheckoutFormId,
+                    CheckoutFormId = null,
                     RequiresRefundEmail = requiresRefundEmail == RequiresRefundEmail.InheritFromStore
                         ? blob.RequiresRefundEmail
                         : requiresRefundEmail == RequiresRefundEmail.On,

@@ -259,7 +259,7 @@ public class UIFormsController : Controller
         dbForm.ApplyValuesFromForm(Request.Form, "internal");
 
         Dictionary<string, object> data = dbForm.GetValues();
-
+        data.TryAdd("formResponse", orig.Id);
         
         // var redirect = dbForm.GetFieldByName("integration_redirectUrl")?.Value;
         if (TempData.TryGetValue("redirectUrl", out var r) && r is string redirect)

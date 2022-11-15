@@ -19,5 +19,7 @@ namespace BTCPayServer.Models.InvoicingModels
         public ReceiptOptions ReceiptOptions { get; set; }
         public List<ViewPaymentRequestViewModel.PaymentRequestInvoicePayment> Payments { get; set; }
         public string OrderUrl { get; set; }
+        public bool FormSubmitted { get; set; }
+        public string FormId { get; set; }
     }
 }

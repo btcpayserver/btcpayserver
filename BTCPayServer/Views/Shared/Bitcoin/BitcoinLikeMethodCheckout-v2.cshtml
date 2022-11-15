@@ -3,14 +3,16 @@
 
 <template id="bitcoin-method-checkout-template">
     <div class="payment-box">
-        <div class="qr-container my-3" data-clipboard-confirm-element="QR_Text_@Model.PaymentMethodId" :data-clipboard="srvModel.btcAddress" :data-clipboard-confirm="`${$t('copy_confirm')} ✔`">
+        <div class="qr-container" data-clipboard-confirm-element="QR_Text_@Model.PaymentMethodId" :data-clipboard="srvModel.btcAddress" :data-clipboard-confirm="`${$t('copy_confirm')} ✔`">
             <qrcode v-if="srvModel.invoiceBitcoinUrlQR" :value="srvModel.invoiceBitcoinUrlQR" tag="div" :options="qrOptions" />
         </div>
-        <small class="qr-text" id="QR_Text_@Model.PaymentMethodId" v-t="'qr_text'"></small>
-        <div class="mt-2 mb-4">
-            <input type="text" class="form-control form-control-sm" :value="srvModel.invoiceBitcoinUrl"
-                   :data-clipboard="srvModel.invoiceBitcoinUrl" :data-clipboard-confirm="`${$t('copy_confirm')} ✔`"
-                   data-clipboard-confirm-element="QR_Text_@Model.PaymentMethodId">
+        <div class="mt-1 mb-3">
+            <small class="qr-text" id="QR_Text_@Model.PaymentMethodId" v-t="'qr_text'"></small>
+            @*
+            <input type="text" class="form-control form-control-sm" :value="srvModel.btcAddress"
+                   :data-clipboard="srvModel.btcAddress" :data-clipboard-confirm="`${$t('copy_confirm')} ✔`"
+                   data-clipboard-confirm-element="QR_Text_@Model.PaymentMethodId" readonly>
+            *@
         </div>
         <a v-if="srvModel.invoiceBitcoinUrl" class="btn btn-primary rounded-pill w-100" target="_top"
            :href="srvModel.invoiceBitcoinUrl" :title="$t(hasPayjoin ? 'BIP21 payment link with PayJoin support' : 'BIP21 payment link')" v-t="'pay_in_wallet'"></a>

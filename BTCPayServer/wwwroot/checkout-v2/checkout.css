@@ -88,6 +88,7 @@ section dl > div dd {
 section dl > div dt {
     text-align: left;
     white-space: nowrap;
+    color: var(--btcpay-body-text-muted);
 }
 section dl > div dd {
     text-align: right;

@@ -141,6 +141,9 @@ section dl > div dd {
 .payment-box .qr-container {
     min-height: var(--qr-size);
 }
+.payment-box .qr-container svg {
+    border-radius: var(--border-radius);
+}
 .payment-box svg {
     width: 100%;
 }

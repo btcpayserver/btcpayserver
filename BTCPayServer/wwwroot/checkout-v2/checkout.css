@@ -103,17 +103,19 @@ section dl > div dd {
     border-radius: 50%;
 }
 .info {
-    padding: var(--btcpay-space-s) var(--btcpay-space-m);
     background-color: var(--btcpay-body-bg);
     border-radius: var(--border-radius);
 }
 .info > div {
+    padding: var(--btcpay-space-s) var(--btcpay-space-m);
+}
+.info > div > div {
     display: flex;
     align-items: center;
     justify-content: center;
     text-align: center;
 }
-.info > div + div {
+.info > div > div + div {
     margin-top: var(--btcpay-space-s);
 }
 .info .spinner-border {

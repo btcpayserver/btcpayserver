@@ -78,6 +78,8 @@ i18next
     });
 
 const i18n = new VueI18next(i18next);
+Vue.use(VueI18next, { i18n });
+
 const eventBus = new Vue();
 
 const PaymentDetails = Vue.component('payment-details', {

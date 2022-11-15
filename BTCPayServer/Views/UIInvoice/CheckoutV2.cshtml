@@ -77,16 +77,18 @@
                 {
                     <h2 class="text-center" v-text="`${srvModel.btcDue} ${srvModel.cryptoCode}`" :data-clipboard="srvModel.btcDue" :data-clipboard-confirm="`${$t('copy_confirm')} ✔`">@Model.BtcDue @Model.CryptoCode</h2>
                     <h2 class="text-center" v-else v-text="`${srvModel.btcDue} ${srvModel.cryptoCode}`" :data-clipboard="srvModel.btcDue" :data-clipboard-confirm="`${$t('copy_confirm')} ✔`">@Model.BtcDue @Model.CryptoCode</h2>
-                    <div class="info mt-3 mb-1" v-if="showTimer || showPaymentDueInfo">
-                        <div class="timer" v-if="showTimer">
-                            <span class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden"></span></span>
-                            <template>{{$t('expiry_info', { timeLeft: timeText })}}"></template>
+                    <div class="collapse info mt-3 mb-1" v-collapsible="showTimer || showPaymentDueInfo">
+                        <div>
+                            <div class="timer" v-if="showTimer">
+                                <span class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden"></span></span>
+                                <template>{{$t('expiry_info', { timeLeft: timeText })}}</template>
+                            </div>
+                            <div class="payment-due" v-if="showPaymentDueInfo">
+                                <vc:icon symbol="info"/>
+                                <span v-t="'partial_payment_info'"></span>
+                            </div>
+                            <div v-html="replaceNewlines($t('still_due', { amount: `${srvModel.btcDue} ${srvModel.cryptoCode}` }))"></div>
                         </div>
-                        <div class="payment-due" v-if="showPaymentDueInfo">
-                            <vc:icon symbol="info"/>
-                            <span v-t="'partial_payment_info'"></span>
-                        </div>
-                        <div v-html="replaceNewlines($t('still_due', { amount: `${srvModel.btcDue} ${srvModel.cryptoCode}` }))"></div>
                     </div>
                     <button class="d-flex align-items-center gap-1 btn btn-link payment-details-button" type="button" :aria-expanded="displayPaymentDetails ? 'true' : 'false'" v-on:click="displayPaymentDetails = !displayPaymentDetails">
                         <span class="fw-semibold" v-t="'view_details'"></span>
@@ -98,7 +100,7 @@
                 }
                 @if (paymentMethodCount > 1)
                 {
-                    <div class="my-3">
+                    <div class="mt-3 mb-2">
                         <h6 class="text-center mb-3" v-t="'pay_with'"></h6>
                         <div class="btcpay-pills d-flex flex-wrap align-items-center justify-content-center gap-2 pb-2">
                             @foreach (var crypto in Model.AvailableCryptos)

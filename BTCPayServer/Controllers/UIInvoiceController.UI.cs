@@ -179,48 +179,51 @@ namespace BTCPayServer.Controllers
             }
             JToken? receiptData = null;
             i.Metadata?.AdditionalData?.TryGetValue("receiptData", out receiptData);
-                
+
+            var payments = i.GetPayments(true)
+                .Select(paymentEntity =>
+                {
+                    var paymentData = paymentEntity.GetCryptoPaymentData();
+                    var paymentMethodId = paymentEntity.GetPaymentMethodId();
+                    if (paymentData is null || paymentMethodId is null)
+                    {
+                        return null;
+                    }
+
+                    string txId = paymentData.GetPaymentId();
+                    string? link = GetTransactionLink(paymentMethodId, txId);
+                    var paymentMethod = i.GetPaymentMethod(paymentMethodId);
+                    var amount = paymentData.GetValue();
+                    var rate = paymentMethod.Rate;
+                    var paid = (amount - paymentEntity.NetworkFee) * rate;
+
+                    return new ViewPaymentRequestViewModel.PaymentRequestInvoicePayment
+                    {
+                        Amount = amount,
+                        Paid = paid,
+                        ReceivedDate = paymentEntity.ReceivedTime.DateTime,
+                        PaidFormatted = _CurrencyNameTable.FormatCurrency(paid, i.Currency),
+                        RateFormatted = _CurrencyNameTable.FormatCurrency(rate, i.Currency),
+                        PaymentMethod = paymentMethodId.ToPrettyString(),
+                        Link = link,
+                        Id = txId,
+                        Destination = paymentData.GetDestination()
+                    };
+                })
+                .Where(payment => payment != null)
+                .ToList();
+            
             return View(new InvoiceReceiptViewModel
             {
                 StoreName = store.StoreName,
                 Status = i.Status.ToModernStatus(),
-                Amount = i.Price,
+                Amount = payments.Sum(p => p!.Paid),
                 Currency = i.Currency,
                 Timestamp = i.InvoiceTime,
                 InvoiceId = i.Id,
                 OrderId = i.Metadata?.OrderId,
                 OrderUrl = i.Metadata?.OrderUrl,
-                Payments = receipt.ShowPayments is false ? null : i.GetPayments(true).Select(paymentEntity =>
-                    {
-                        var paymentData = paymentEntity.GetCryptoPaymentData();
-                        var paymentMethodId = paymentEntity.GetPaymentMethodId();
-                        if (paymentData is null || paymentMethodId is null)
-                        {
-                            return null;
-                        }
-
-                        string txId = paymentData.GetPaymentId();
-                        string? link = GetTransactionLink(paymentMethodId, txId);
-                        var paymentMethod = i.GetPaymentMethod(paymentMethodId);
-                        var amount = paymentData.GetValue();
-                        var rate = paymentMethod.Rate;
-                        var paid = (amount - paymentEntity.NetworkFee) * rate;
-
-                        return new ViewPaymentRequestViewModel.PaymentRequestInvoicePayment
-                        {
-                            Amount = amount,
-                            Paid = paid,
-                            ReceivedDate = paymentEntity.ReceivedTime.DateTime,
-                            PaidFormatted = _CurrencyNameTable.FormatCurrency(paid, i.Currency),
-                            RateFormatted = _CurrencyNameTable.FormatCurrency(rate, i.Currency),
-                            PaymentMethod = paymentMethodId.ToPrettyString(),
-                            Link = link,
-                            Id = txId,
-                            Destination = paymentData.GetDestination()
-                        };
-                    })
-                    .Where(payment => payment != null)
-                    .ToList(),
+                Payments = receipt.ShowPayments is false ? null : payments,
                 ReceiptOptions = receipt,
                 AdditionalData = receiptData is null
                     ? new Dictionary<string, object>()

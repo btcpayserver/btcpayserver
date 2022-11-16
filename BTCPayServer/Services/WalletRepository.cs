@@ -1,15 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Extensions;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
-using BTCPayServer.HostedServices;
-using BTCPayServer.Services.Labels;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin;
-using NBitcoin.Crypto;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Services
@@ -107,26 +105,76 @@ namespace BTCPayServer.Services
 
         public async Task<(string Label, string Color)[]> GetWalletLabels(WalletId walletId)
         {
-            using var ctx = _ContextFactory.CreateContext();
-            return (await ctx.WalletObjects
-                .AsNoTracking()
-                .Where(w => w.WalletId == walletId.ToString() && w.Type == WalletObjectData.Types.Label)
-                .Select(o => new { o.Id, o.Data })
-                .ToArrayAsync())
+            await using var ctx = _ContextFactory.CreateContext();
+            return (await (await GetWalletObjects(ctx, ctx.WalletObjects
+                    .AsNoTracking(), walletId, new OnChainWalletObjectQuery() {Types = new[] {WalletObjectData.Types.Label}})).ToArrayAsync())
                 .Select(o => (o.Id, JObject.Parse(o.Data)["color"]!.Value<string>()!))
                 .ToArray();
         }
 
-        public async Task EnsureWalletObjectLink(WalletObjectId parent, WalletObjectId child)
+        public async Task<WalletObjectData[]> GetWalletObjects(WalletId walletId, OnChainWalletObjectQuery query)
         {
-            using var ctx = _ContextFactory.CreateContext();
+            await using var ctx = _ContextFactory.CreateContext();
+            return await (await GetWalletObjects(ctx,ctx.WalletObjects.AsNoTracking(), walletId, query)).ToArrayAsync();
+        }
+        
+        public async Task RemoveWalletObjects( WalletId walletId, OnChainWalletObjectQuery query)
+        {
+            query.IncludeLinks = false;
+            await using var ctx = _ContextFactory.CreateContext();
+            ctx.WalletObjects.RemoveRange(await GetWalletObjects(ctx,ctx.WalletObjects, walletId, query));
+            await ctx.SaveChangesAsync();
+        }
+
+        private async Task<IQueryable<WalletObjectData>> GetWalletObjects(ApplicationDbContext applicationDbContext,
+            IQueryable<WalletObjectData> queryable, WalletId walletId, OnChainWalletObjectQuery query)
+        {
+            var result = queryable.AsQueryable();
+            result = result.Where(w => w.WalletId == walletId.ToString());
+            if (query.IncludeLinks)
+            {
+                result = result
+                    .Include(data => data.ChildLinks)
+                    .Include(data => data.ParentLinks);
+            }
+            if (query.Types is not null)
+            {
+                result = result.Where(w => query.Types.Contains(w.Type));
+            }
+
+            if (query.Parents is not null)
+            {
+                var allowedChildren =  await applicationDbContext.WalletObjectLinks
+                    .Where(data => data.WalletId == walletId.ToString())
+                    .FilterByItems(query.Parents, (data, id) => data.ParentId == id.Id && data.ParentType == id.Type,
+                        true).Select(data => new WalletObjectId(walletId, data.ChildType, data.ChildId)).ToArrayAsync();
+
+                result = result.FilterByItems(allowedChildren,(data, id) => data.Id == id.Id && data.Type == id.Type, true);
+            }
+            if (query.Children is not null)
+            {
+                var allowedParents =  await applicationDbContext.WalletObjectLinks
+                    .Where(data => data.WalletId == walletId.ToString())
+                    .FilterByItems(query.Children, (data, id) => data.ChildId == id.Id && data.ChildType == id.Type,
+                        true).Select(data => new WalletObjectId(walletId, data.ParentType, data.ParentId)).ToArrayAsync();
+
+                result = result.FilterByItems(allowedParents,(data, id) => data.Id == id.Id && data.Type == id.Type, true);
+            }
+
+            return result;
+        }
+
+        public async Task EnsureWalletObjectLink(WalletObjectId parent, WalletObjectId child, JObject? data = null)
+        {
+            await using var ctx = _ContextFactory.CreateContext();
             var l = new WalletObjectLinkData()
             {
                 WalletId = parent.WalletId.ToString(),
                 ChildType = child.Type,
                 ChildId = child.Id,
                 ParentType = parent.Type,
-                ParentId = parent.Id
+                ParentId = parent.Id,
+                Data = data?.ToString(Formatting.None)
             };
             ctx.WalletObjectLinks.Add(l);
             try
@@ -135,6 +183,30 @@ namespace BTCPayServer.Services
             }
             catch (DbUpdateException) // already exists
             {
+            }
+        }
+
+        public async Task SetWalletObjectLink(WalletObjectId parent, WalletObjectId child, JObject? data = null)
+        {
+            await using var ctx = _ContextFactory.CreateContext();
+            var l = new WalletObjectLinkData()
+            {
+                WalletId = parent.WalletId.ToString(),
+                ChildType = child.Type,
+                ChildId = child.Id,
+                ParentType = parent.Type,
+                ParentId = parent.Id,
+                Data = data?.ToString(Formatting.None)
+            };
+            var e = ctx.WalletObjectLinks.Add(l);
+            try
+            {
+                await ctx.SaveChangesAsync();
+            }
+            catch (DbUpdateException) // already exists
+            {
+                e.State = EntityState.Modified;
+                await ctx.SaveChangesAsync();
             }
         }
 
@@ -194,6 +266,21 @@ namespace BTCPayServer.Services
                 await EnsureWalletObjectLink(labelObjId, id);
             }
         }
+        
+        public async Task AddWalletObjects(WalletObjectId id, params string[] labels)
+        {
+            ArgumentNullException.ThrowIfNull(id);
+            await EnsureWalletObject(id);
+            foreach (var l in labels.Select(l => l.Trim().Truncate(MaxLabelSize)))
+            {
+                var labelObjId = new WalletObjectId(id.WalletId, WalletObjectData.Types.Label, l);
+                await EnsureWalletObject(labelObjId, new JObject()
+                {
+                    ["color"] = ColorPalette.Default.DeterministicColor(l)
+                });
+                await EnsureWalletObjectLink(labelObjId, id);
+            }
+        }
 
         public Task AddWalletTransactionAttachment(WalletId walletId, uint256 txId, Attachment attachment)
         {
@@ -221,35 +308,40 @@ namespace BTCPayServer.Services
                 }
             }
         }
+
+        public async Task RemoveWalletObjectLink(WalletObjectId parent, WalletObjectId child)
+        {
+            await using var ctx = _ContextFactory.CreateContext();
+            ctx.WalletObjectLinks.Remove(new WalletObjectLinkData()
+            {
+                WalletId = parent.WalletId.ToString(),
+                ChildId = child.Id,
+                ChildType = child.Type,
+                ParentId = parent.Id,
+                ParentType = parent.Type
+            });
+            try
+            {
+                await ctx.SaveChangesAsync();
+            }
+            catch (DbUpdateException) // Already deleted, do nothing
+            {
+            }
+        }
         public async Task RemoveWalletObjectLabels(WalletObjectId id, params string[] labels)
         {
             ArgumentNullException.ThrowIfNull(id);
             foreach (var l in labels.Select(l => l.Trim()))
             {
                 var labelObjId = new WalletObjectId(id.WalletId, WalletObjectData.Types.Label, l);
-                using var ctx = _ContextFactory.CreateContext();
-                ctx.WalletObjectLinks.Remove(new WalletObjectLinkData()
-                {
-                    WalletId = id.WalletId.ToString(),
-                    ChildId = id.Id,
-                    ChildType = id.Type,
-                    ParentId = labelObjId.Id,
-                    ParentType = labelObjId.Type
-                });
-                try
-                {
-                    await ctx.SaveChangesAsync();
-                }
-                catch (DbUpdateException) // Already deleted, do nothing
-                {
-                }
+                await RemoveWalletObjectLink(labelObjId, id);
             }
         }
 
         public async Task SetWalletObject(WalletObjectId id, JObject? data)
         {
             ArgumentNullException.ThrowIfNull(id);
-            using var ctx = _ContextFactory.CreateContext();
+            await using var ctx = _ContextFactory.CreateContext();
             var o = NewWalletObjectData(id, data);
             ctx.WalletObjects.Add(o);
             try
@@ -266,7 +358,7 @@ namespace BTCPayServer.Services
         public async Task EnsureWalletObject(WalletObjectId id, JObject? data = null)
         {
             ArgumentNullException.ThrowIfNull(id);
-            using var ctx = _ContextFactory.CreateContext();
+            await using var ctx = _ContextFactory.CreateContext();
             ctx.WalletObjects.Add(NewWalletObjectData(id, data));
             try
             {

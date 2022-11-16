@@ -92,7 +92,7 @@ namespace BTCPayServer.Controllers.Greenfield
         public async Task<IActionResult> ShowOnChainWalletOverview(string storeId, string cryptoCode)
         {
             if (IsInvalidWalletRequest(cryptoCode, out var network,
-                out var derivationScheme, out var actionResult))
+                    out var derivationScheme, out var actionResult))
                 return actionResult;
 
             var wallet = _btcPayWalletProvider.GetWallet(network);
@@ -112,7 +112,7 @@ namespace BTCPayServer.Controllers.Greenfield
         public async Task<IActionResult> GetOnChainFeeRate(string storeId, string cryptoCode, int? blockTarget = null)
         {
             if (IsInvalidWalletRequest(cryptoCode, out var network,
-                out var derivationScheme, out var actionResult))
+                    out var derivationScheme, out var actionResult))
                 return actionResult;
 
             var feeRateTarget = blockTarget ?? Store.GetStoreBlob().RecommendedFeeBlockTarget;
@@ -125,10 +125,11 @@ namespace BTCPayServer.Controllers.Greenfield
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/address")]
-        public async Task<IActionResult> GetOnChainWalletReceiveAddress(string storeId, string cryptoCode, bool forceGenerate = false)
+        public async Task<IActionResult> GetOnChainWalletReceiveAddress(string storeId, string cryptoCode,
+            bool forceGenerate = false)
         {
             if (IsInvalidWalletRequest(cryptoCode, out var network,
-                out var derivationScheme, out var actionResult))
+                    out var derivationScheme, out var actionResult))
                 return actionResult;
 
             var kpi = await _walletReceiveService.GetOrGenerate(new WalletId(storeId, cryptoCode), forceGenerate);
@@ -141,13 +142,14 @@ namespace BTCPayServer.Controllers.Greenfield
             var allowedPayjoin = derivationScheme.IsHotWallet && Store.GetStoreBlob().PayJoinEnabled;
             if (allowedPayjoin)
             {
-                bip21.QueryParams.Add(PayjoinClient.BIP21EndpointKey, Request.GetAbsoluteUri(Url.Action(nameof(PayJoinEndpointController.Submit), "PayJoinEndpoint", new { cryptoCode })));
+                bip21.QueryParams.Add(PayjoinClient.BIP21EndpointKey,
+                    Request.GetAbsoluteUri(Url.Action(nameof(PayJoinEndpointController.Submit), "PayJoinEndpoint",
+                        new {cryptoCode})));
             }
+
             return Ok(new OnChainWalletAddressData()
             {
-                Address = kpi.Address?.ToString(),
-                PaymentLink = bip21.ToString(),
-                KeyPath = kpi.KeyPath
+                Address = kpi.Address?.ToString(), PaymentLink = bip21.ToString(), KeyPath = kpi.KeyPath
             });
         }
 
@@ -156,7 +158,7 @@ namespace BTCPayServer.Controllers.Greenfield
         public async Task<IActionResult> UnReserveOnChainWalletReceiveAddress(string storeId, string cryptoCode)
         {
             if (IsInvalidWalletRequest(cryptoCode, out var network,
-                out var derivationScheme, out var actionResult))
+                    out var derivationScheme, out var actionResult))
                 return actionResult;
 
             var addr = await _walletReceiveService.UnReserveAddress(new WalletId(storeId, cryptoCode));
@@ -165,6 +167,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 return this.CreateAPIError("no-reserved-address",
                     $"There was no reserved address for {cryptoCode} on this store.");
             }
+
             return Ok();
         }
 
@@ -180,7 +183,7 @@ namespace BTCPayServer.Controllers.Greenfield
         )
         {
             if (IsInvalidWalletRequest(cryptoCode, out var network,
-                out var derivationScheme, out var actionResult))
+                    out var derivationScheme, out var actionResult))
                 return actionResult;
 
             var wallet = _btcPayWalletProvider.GetWallet(network);
@@ -190,7 +193,8 @@ namespace BTCPayServer.Controllers.Greenfield
             var preFiltering = true;
             if (statusFilter?.Any() is true || !string.IsNullOrWhiteSpace(labelFilter))
                 preFiltering = false;
-            var txs = await wallet.FetchTransactionHistory(derivationScheme.AccountDerivation, preFiltering ? skip : 0, preFiltering ? limit : int.MaxValue);
+            var txs = await wallet.FetchTransactionHistory(derivationScheme.AccountDerivation, preFiltering ? skip : 0,
+                preFiltering ? limit : int.MaxValue);
             if (!preFiltering)
             {
                 var filteredList = new List<TransactionHistoryLine>(txs.Count);
@@ -202,6 +206,7 @@ namespace BTCPayServer.Controllers.Greenfield
                         if (transactionInfo?.LabelColors.ContainsKey(labelFilter) is true)
                             filteredList.Add(t);
                     }
+
                     if (statusFilter?.Any() is true)
                     {
                         if (statusFilter.Contains(TransactionStatus.Confirmed) && t.Confirmations != 0)
@@ -210,6 +215,7 @@ namespace BTCPayServer.Controllers.Greenfield
                             filteredList.Add(t);
                     }
                 }
+
                 txs = filteredList;
             }
 
@@ -227,7 +233,7 @@ namespace BTCPayServer.Controllers.Greenfield
             string transactionId)
         {
             if (IsInvalidWalletRequest(cryptoCode, out var network,
-                out var derivationScheme, out var actionResult))
+                    out var derivationScheme, out var actionResult))
                 return actionResult;
 
             var wallet = _btcPayWalletProvider.GetWallet(network);
@@ -239,16 +245,17 @@ namespace BTCPayServer.Controllers.Greenfield
 
             var walletId = new WalletId(storeId, cryptoCode);
             var walletTransactionsInfoAsync =
-                (await _walletRepository.GetWalletTransactionsInfo(walletId, new[] { transactionId })).Values
+                (await _walletRepository.GetWalletTransactionsInfo(walletId, new[] {transactionId})).Values
                 .FirstOrDefault();
 
             return Ok(ToModel(walletTransactionsInfoAsync, tx, wallet));
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        [HttpPatch("~/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/transactions/{transactionId}")]
+        [HttpPatch(
+            "~/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/transactions/{transactionId}")]
         public async Task<IActionResult> PatchOnChainWalletTransaction(
-            string storeId, 
+            string storeId,
             string cryptoCode,
             string transactionId,
             [FromBody] PatchOnChainTransactionRequest request,
@@ -256,7 +263,7 @@ namespace BTCPayServer.Controllers.Greenfield
         )
         {
             if (IsInvalidWalletRequest(cryptoCode, out var network,
-                out var derivationScheme, out var actionResult))
+                    out var derivationScheme, out var actionResult))
                 return actionResult;
 
             var wallet = _btcPayWalletProvider.GetWallet(network);
@@ -280,7 +287,7 @@ namespace BTCPayServer.Controllers.Greenfield
             }
 
             var walletTransactionsInfo =
-                (await _walletRepository.GetWalletTransactionsInfo(walletId, new[] { transactionId }))
+                (await _walletRepository.GetWalletTransactionsInfo(walletId, new[] {transactionId}))
                 .Values
                 .FirstOrDefault();
 
@@ -292,14 +299,15 @@ namespace BTCPayServer.Controllers.Greenfield
         public async Task<IActionResult> GetOnChainWalletUTXOs(string storeId, string cryptoCode)
         {
             if (IsInvalidWalletRequest(cryptoCode, out var network,
-                out var derivationScheme, out var actionResult))
+                    out var derivationScheme, out var actionResult))
                 return actionResult;
 
             var wallet = _btcPayWalletProvider.GetWallet(network);
 
             var walletId = new WalletId(storeId, cryptoCode);
             var utxos = await wallet.GetUnspentCoins(derivationScheme.AccountDerivation);
-            var walletTransactionsInfoAsync = await _walletRepository.GetWalletTransactionsInfo(walletId, utxos.Select(u => u.OutPoint.Hash.ToString()).ToHashSet().ToArray());
+            var walletTransactionsInfoAsync = await _walletRepository.GetWalletTransactionsInfo(walletId,
+                utxos.Select(u => u.OutPoint.Hash.ToString()).ToHashSet().ToArray());
             return Ok(utxos.Select(coin =>
                 {
                     walletTransactionsInfoAsync.TryGetValue(coin.OutPoint.Hash.ToString(), out var info);
@@ -317,7 +325,9 @@ namespace BTCPayServer.Controllers.Greenfield
                         Timestamp = coin.Timestamp,
                         KeyPath = coin.KeyPath,
                         Confirmations = coin.Confirmations,
-                        Address = network.NBXplorerNetwork.CreateAddress(derivationScheme.AccountDerivation, coin.KeyPath, coin.ScriptPubKey).ToString()
+                        Address = network.NBXplorerNetwork
+                            .CreateAddress(derivationScheme.AccountDerivation, coin.KeyPath, coin.ScriptPubKey)
+                            .ToString()
                     };
                 }).ToList()
             );
@@ -329,7 +339,7 @@ namespace BTCPayServer.Controllers.Greenfield
             [FromBody] CreateOnChainTransactionRequest request)
         {
             if (IsInvalidWalletRequest(cryptoCode, out var network,
-                out var derivationScheme, out var actionResult))
+                    out var derivationScheme, out var actionResult))
                 return actionResult;
             if (network.ReadonlyWallet)
             {
@@ -340,7 +350,8 @@ namespace BTCPayServer.Controllers.Greenfield
             //This API is only meant for hot wallet usage for now. We can expand later when we allow PSBT manipulation.
             if (!(await CanUseHotWallet()).HotWallet)
             {
-                return this.CreateAPIError(503, "not-available", $"You need to allow non-admins to use hotwallets for their stores (in /server/policies)");
+                return this.CreateAPIError(503, "not-available",
+                    $"You need to allow non-admins to use hotwallets for their stores (in /server/policies)");
             }
 
             if (request.Destinations == null || !request.Destinations.Any())
@@ -401,6 +412,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 {
                     amount = null;
                 }
+
                 var address = string.Empty;
                 try
                 {
@@ -433,9 +445,12 @@ namespace BTCPayServer.Controllers.Greenfield
                 if (amount is null || amount <= 0)
                 {
                     request.AddModelError(transactionRequest => transactionRequest.Destinations[index],
-                        "Amount must be specified or destination must be a BIP21 payment link, and greater than 0", this);
+                        "Amount must be specified or destination must be a BIP21 payment link, and greater than 0",
+                        this);
                 }
-                if (request.ProceedWithPayjoin && bip21?.UnknownParameters?.ContainsKey(PayjoinClient.BIP21EndpointKey) is true)
+
+                if (request.ProceedWithPayjoin &&
+                    bip21?.UnknownParameters?.ContainsKey(PayjoinClient.BIP21EndpointKey) is true)
                 {
                     payjoinOutputIndex = index;
                 }
@@ -565,14 +580,17 @@ namespace BTCPayServer.Controllers.Greenfield
                     await _delayedTransactionBroadcaster.Schedule(DateTimeOffset.UtcNow + TimeSpan.FromMinutes(2.0),
                         transaction, network);
                     var payjoinPSBT = await _payjoinClient.RequestPayjoin(
-                        new BitcoinUrlBuilder(signingContext.PayJoinBIP21, network.NBitcoinNetwork), new PayjoinWallet(derivationScheme),
+                        new BitcoinUrlBuilder(signingContext.PayJoinBIP21, network.NBitcoinNetwork),
+                        new PayjoinWallet(derivationScheme),
                         psbt.PSBT, CancellationToken.None);
-                    psbt.PSBT.Settings.SigningOptions = new SigningOptions() { EnforceLowR = !(signingContext?.EnforceLowR is false) };
+                    psbt.PSBT.Settings.SigningOptions =
+                        new SigningOptions() {EnforceLowR = !(signingContext?.EnforceLowR is false)};
                     payjoinPSBT = psbt.PSBT.SignAll(derivationScheme.AccountDerivation, accountKey, rootedKeyPath);
                     payjoinPSBT.Finalize();
                     var payjoinTransaction = payjoinPSBT.ExtractTransaction();
                     var hash = payjoinTransaction.GetHash();
-                    await this._walletRepository.AddWalletTransactionAttachment(new WalletId(Store.Id, cryptoCode), hash, Attachment.Payjoin());
+                    await this._walletRepository.AddWalletTransactionAttachment(new WalletId(Store.Id, cryptoCode),
+                        hash, Attachment.Payjoin());
                     broadcastResult = await explorerClient.BroadcastAsync(payjoinTransaction);
                     if (broadcastResult.Success)
                     {
@@ -601,19 +619,157 @@ namespace BTCPayServer.Controllers.Greenfield
             }
         }
 
+        [HttpGet("~/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/objects")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        public async Task<IActionResult> GetOnChainWalletObjects(string storeId, string cryptoCode,
+            [FromBody] OnChainWalletObjectQuery query)
+        {
+            var walletId = new WalletId(storeId, cryptoCode);
+            return Ok((await _walletRepository.GetWalletObjects(walletId, query)).Select(ToModel).ToArray());
+        }
+
+        [HttpDelete("~/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/objects")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        public async Task<IActionResult> RemoveOnChainWalletObjects(string storeId, string cryptoCode,
+            [FromBody] OnChainWalletObjectQuery query)
+        {
+            var walletId = new WalletId(storeId, cryptoCode);
+            await _walletRepository.RemoveWalletObjects(walletId, query);
+            return Ok();
+        }
+
+        [HttpPost("~/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/objects")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        public async Task<IActionResult> AddOrUpdateOnChainWalletObjects(string storeId, string cryptoCode,
+            [FromBody] OnChainWalletObjectData[] request)
+        {
+            var walletId = new WalletId(storeId, cryptoCode);
+            foreach (OnChainWalletObjectData onChainWalletObjectData in request)
+            {
+                await _walletRepository.SetWalletObject(
+                    new WalletObjectId(walletId, onChainWalletObjectData.Type, onChainWalletObjectData.Id),
+                    onChainWalletObjectData.Data);
+            }
+
+            foreach (OnChainWalletObjectData onChainWalletObjectData in request)
+            {
+                if (onChainWalletObjectData.Children?.Any() is true)
+                {
+                    var parent = new WalletObjectId(walletId, onChainWalletObjectData.Type,
+                        onChainWalletObjectData.Id);
+
+                    foreach (var onChainWalletObjectLink in onChainWalletObjectData.Children)
+                    {
+                        try
+                        {
+                            await _walletRepository.SetWalletObjectLink(parent,
+                                new WalletObjectId(walletId, onChainWalletObjectLink.Type, onChainWalletObjectLink.Id),
+                                onChainWalletObjectData.Data);
+                        }
+                        catch (Exception e)
+                        {
+                            // ignored
+                        }
+                    }
+                }
+
+                if (onChainWalletObjectData.Parents?.Any() is true)
+                {
+                    var child = new WalletObjectId(walletId, onChainWalletObjectData.Type,
+                        onChainWalletObjectData.Id);
+
+                    foreach (var onChainWalletObjectLink in onChainWalletObjectData.Parents)
+                    {
+                        try
+                        {
+                            await _walletRepository.SetWalletObjectLink(
+                                new WalletObjectId(walletId, onChainWalletObjectLink.Type, onChainWalletObjectLink.Id),
+                                child, onChainWalletObjectData.Data);
+                        }
+                        catch (Exception e)
+                        {
+                        }
+                    }
+                }
+            }
+
+            return Ok();
+        }
+
+        [HttpPost("~/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/object-links")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        public async Task<IActionResult> AddOrUpdateOnChainWalletLinks(string storeId, string cryptoCode,
+            [FromBody] AddOnChainWalletObjectLinkRequest[] request)
+        {
+            var walletId = new WalletId(storeId, cryptoCode);
+            foreach (AddOnChainWalletObjectLinkRequest addOnChainWalletObjectLinkRequest in request)
+            {
+                await _walletRepository.SetWalletObjectLink(
+                    new WalletObjectId(walletId, addOnChainWalletObjectLinkRequest.Parent.Type,
+                        addOnChainWalletObjectLinkRequest.Parent.Id),
+                    new WalletObjectId(walletId, addOnChainWalletObjectLinkRequest.Child.Type,
+                        addOnChainWalletObjectLinkRequest.Child.Id), addOnChainWalletObjectLinkRequest.Data);
+            }
+
+            return Ok();
+        }
+
+        [HttpDelete("~/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/object-links")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        public async Task<IActionResult> RemoveOnChainWalletLinks(string storeId, string cryptoCode,
+            [FromBody] RemoveOnChainWalletObjectLinkRequest[] request)
+        {
+            var walletId = new WalletId(storeId, cryptoCode);
+            foreach (RemoveOnChainWalletObjectLinkRequest removeOnChainWalletObjectLinkRequest in request)
+            {
+                await _walletRepository.RemoveWalletObjectLink(
+                    new WalletObjectId(walletId, removeOnChainWalletObjectLinkRequest.Parent.Type,
+                        removeOnChainWalletObjectLinkRequest.Parent.Id),
+                    new WalletObjectId(walletId, removeOnChainWalletObjectLinkRequest.Child.Type,
+                        removeOnChainWalletObjectLinkRequest.Child.Id));
+            }
+
+            return Ok();
+        }
+
+        private OnChainWalletObjectData ToModel(WalletObjectData data)
+        {
+            return new OnChainWalletObjectData()
+            {
+                Data = string.IsNullOrEmpty(data.Data) ? null : JObject.Parse(data.Data),
+                Type = data.Type,
+                Id = data.Id,
+                Children = data.ChildLinks?.Select(linkData => ToModel(linkData, false)).ToArray(),
+                Parents = data.ParentLinks?.Select(linkData => ToModel(linkData, true)).ToArray()
+            };
+        }
+
+        private OnChainWalletObjectData.OnChainWalletObjectLink ToModel(WalletObjectLinkData data, bool isParent)
+        {
+            return new OnChainWalletObjectData.OnChainWalletObjectLink()
+            {
+                LinkData = string.IsNullOrEmpty(data.Data) ? null : JObject.Parse(data.Data),
+                Type = isParent ? data.ParentType : data.ChildType,
+                Id = isParent ? data.ParentId : data.ChildId,
+            };
+        }
+
+
         private async Task<(bool HotWallet, bool RPCImport)> CanUseHotWallet()
         {
             return await _authorizationService.CanUseHotWallet(PoliciesSettings, User);
         }
 
         private bool IsInvalidWalletRequest(string cryptoCode, [MaybeNullWhen(true)] out BTCPayNetwork network,
-            [MaybeNullWhen(true)] out DerivationSchemeSettings derivationScheme, [MaybeNullWhen(false)] out IActionResult actionResult)
+            [MaybeNullWhen(true)] out DerivationSchemeSettings derivationScheme,
+            [MaybeNullWhen(false)] out IActionResult actionResult)
         {
             derivationScheme = null;
             network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
             if (network is null)
             {
-                throw new JsonHttpException(this.CreateAPIError(404, "unknown-cryptocode", "This crypto code isn't set up in this BTCPay Server instance"));
+                throw new JsonHttpException(this.CreateAPIError(404, "unknown-cryptocode",
+                    "This crypto code isn't set up in this BTCPay Server instance"));
             }
 
 

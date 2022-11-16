@@ -215,12 +215,43 @@ namespace BTCPayServer.Controllers.Greenfield
             throw new NotSupportedException("This method is not supported by the LocalBTCPayServerClient.");
         }
 
-
         public override async Task<MarketTradeResponseData> MarketTradeCustodianAccountAsset(string storeId, string accountId,
             TradeRequestData request, CancellationToken cancellationToken = default)
         {
             return GetFromActionResult<MarketTradeResponseData>(
                 await GetController<GreenfieldCustodianAccountController>().MarketTradeCustodianAccountAsset(storeId, accountId, request, cancellationToken));
+        }
+
+        public override async Task<OnChainWalletObjectData[]> GetOnChainWalletObjects(string storeId, string cryptoCode, OnChainWalletObjectQuery query,
+            CancellationToken token = default)
+        {
+            return GetFromActionResult<OnChainWalletObjectData[]>(
+                await GetController<GreenfieldStoreOnChainWalletsController>().GetOnChainWalletObjects(storeId, cryptoCode, query));
+
+        }
+
+        public override async Task RemoveOnChainWalletObjects(string storeId, string cryptoCode, OnChainWalletObjectQuery query,
+            CancellationToken token = default)
+        {
+            HandleActionResult(await GetController<GreenfieldStoreOnChainWalletsController>().RemoveOnChainWalletObjects(storeId, cryptoCode, query));
+        }
+
+        public override async Task AddOrUpdateOnChainWalletObjects(string storeId, string cryptoCode, OnChainWalletObjectData[] request,
+            CancellationToken token = default)
+        {
+            HandleActionResult(await GetController<GreenfieldStoreOnChainWalletsController>().AddOrUpdateOnChainWalletObjects(storeId, cryptoCode, request));
+        }
+
+        public override async Task AddOrUpdateOnChainWalletLinks(string storeId, string cryptoCode, AddOnChainWalletObjectLinkRequest[] request,
+            CancellationToken token = default)
+        {
+            HandleActionResult(await GetController<GreenfieldStoreOnChainWalletsController>().AddOrUpdateOnChainWalletLinks(storeId, cryptoCode, request));
+        }
+
+        public override async Task RemoveOnChainWalletLinks(string storeId, string cryptoCode, RemoveOnChainWalletObjectLinkRequest[] request,
+            CancellationToken token = default)
+        {
+            HandleActionResult(await GetController<GreenfieldStoreOnChainWalletsController>().RemoveOnChainWalletLinks(storeId, cryptoCode, request));
         }
 
         public override async Task<StoreWebhookData> CreateWebhook(string storeId, CreateStoreWebhookRequest create,
@@ -1167,7 +1198,7 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             return GetFromActionResult<StoreRateConfiguration>(await GetController<GreenfieldStoreRateConfigurationController>().UpdateStoreRateConfiguration(request));
         }
-        
+
         public override async Task MarkPayoutPaid(string storeId, string payoutId, CancellationToken cancellationToken = default)
         {
             HandleActionResult(await GetController<GreenfieldPullPaymentController>().MarkPayoutPaid(storeId, payoutId, cancellationToken));

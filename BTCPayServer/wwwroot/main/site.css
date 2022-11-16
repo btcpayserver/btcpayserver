@@ -97,6 +97,7 @@ a.unobtrusive-link {
 }
 
 /* Badges */
+.badge-pending,
 .badge-new {
     background: #d4edda;
     color: #000;

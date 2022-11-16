@@ -101,7 +101,7 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
             switch (data.Status)
             {
                 case Client.Models.PaymentRequestData.PaymentRequestStatus.Pending:
-                    Status = ExpiryDate.HasValue ? $"Expires on {ExpiryDate.Value:g}" : "Pending";
+                    Status = "Pending";
                     IsPending = true;
                     break;
                 case Client.Models.PaymentRequestData.PaymentRequestStatus.Completed:

@@ -136,8 +136,8 @@
                         <payment-details :srv-model="srvModel" :is-active="isActive" class="mb-5"></payment-details>
                     </div>
                     <div class="buttons">
-                        <a class="btn btn-primary" :href="srvModel.receiptLink" v-if="srvModel.receiptLink" :target="isModal ? '_blank' : '_top'" v-t="'view_receipt'"></a>
-                        <a class="btn btn-secondary" :href="srvModel.merchantRefLink" v-if="srvModel.merchantRefLink" v-t="{ path: 'return_to_store', args: { storeName: srvModel.storeName }}"></a>
+                        <a v-if="srvModel.receiptLink" class="btn btn-primary" :href="srvModel.receiptLink" :target="isModal ? '_top' : null" v-t="'view_receipt'"></a>
+                        <a v-if="srvModel.merchantRefLink" class="btn btn-secondary" :href="srvModel.merchantRefLink" :target="isModal ? '_top' : null" v-t="{ path: 'return_to_store', args: { storeName: srvModel.storeName }}"></a>
                     </div>
                 </div>
                 <div id="expired" v-if="isUnpayable">
@@ -166,7 +166,8 @@
                         <p class="text-center mt-3" v-html="replaceNewlines($t('invoice_expired_body', { storeName: srvModel.storeName, minutes: @Model.MaxTimeMinutes }))"></p>
                     </div>
                     <div class="buttons">
-                        <a class="btn btn-primary" :href="srvModel.merchantRefLink" v-if="srvModel.merchantRefLink" v-t="{ path: 'return_to_store', args: { storeName: srvModel.storeName }}"></a>
+                        <a v-if="!isModal && srvModel.merchantRefLink" class="btn btn-primary" :href="srvModel.merchantRefLink" v-t="{ path: 'return_to_store', args: { storeName: srvModel.storeName }}"></a>
+                        <button v-else-if="isModal" class="btn btn-primary" v-on:click="close" v-t="'Close'"></button>
                     </div>
                 </div>
             </section>

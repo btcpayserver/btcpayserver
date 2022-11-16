@@ -5,7 +5,6 @@ using System.Linq;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Newtonsoft.Json.Linq;
-using YamlDotNet.Core.Tokens;
 
 namespace BTCPayServer.Models.StoreViewModels
 {

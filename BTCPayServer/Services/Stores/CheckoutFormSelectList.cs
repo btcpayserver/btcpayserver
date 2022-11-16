@@ -28,7 +28,7 @@ public static class CheckoutFormSelectList
 {
     public static async Task<SelectList> ForStore(StoreData store, string selectedFormId, bool isStoreEntity, FormDataService formDataService)
     {
-        var forms = await formDataService.GetForms(new FormDataService.FormQuery() {Stores = new string[] {store.Id}});
+        var forms = await formDataService.GetForms(new FormDataService.FormQuery { Stores = new [] { store.Id }});
         var choices = new List<SelectListItem>();
 
         if (isStoreEntity)
@@ -37,7 +37,7 @@ public static class CheckoutFormSelectList
             var inherit = GenericOptionItem(GenericFormOption.InheritFromStore);
             inherit.Text += Enum.TryParse<GenericFormOption>(blob.CheckoutFormId, out var item)
                 ? $" ({DisplayName(item)})"
-                : $" ({blob.CheckoutFormId})";
+                : $" ({forms.Find(f => f.Id == blob.CheckoutFormId)?.Name ?? blob.CheckoutFormId })";
             
             choices.Add(inherit);
         }

@@ -417,15 +417,10 @@ namespace BTCPayServer.Controllers
                 var logPrefix = $"{supportedPaymentMethod.PaymentId.ToPrettyString()}:";
                 var storeBlob = store.GetStoreBlob();
 
-                object? preparePayment;
-                if (storeBlob.LazyPaymentMethods)
-                {
-                    preparePayment = null;
-                }
-                else
-                {
-                    preparePayment = handler.PreparePayment(supportedPaymentMethod, store, network);
-                }
+                // Checkout v2 does not show a payment method switch for Bitcoin-only + BIP21, so exclude that case
+                var preparePayment = storeBlob.LazyPaymentMethods && !storeBlob.OnChainWithLnInvoiceFallback
+                    ? null
+                    : handler.PreparePayment(supportedPaymentMethod, store, network);
                 var rate = await fetchingByCurrencyPair[new CurrencyPair(network.CryptoCode, entity.Currency)];
                 if (rate.BidAsk == null)
                 {

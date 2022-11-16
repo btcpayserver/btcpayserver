@@ -512,6 +512,7 @@ namespace BTCPayServer.Controllers
                     case ExternalServiceTypes.RTL:
                     case ExternalServiceTypes.ThunderHub:
                     case ExternalServiceTypes.Spark:
+                    case ExternalServiceTypes.Torq:
                         if (connectionString.AccessKey == null)
                         {
                             TempData[WellKnownTempData.ErrorMessage] = $"The access key of the service is not set";

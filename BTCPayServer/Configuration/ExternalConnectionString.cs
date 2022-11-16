@@ -77,7 +77,8 @@ namespace BTCPayServer.Configuration
                 }
             }
 
-            if (new[] { ExternalServiceTypes.Charge, ExternalServiceTypes.RTL, ExternalServiceTypes.ThunderHub, ExternalServiceTypes.Spark, ExternalServiceTypes.Configurator }.Contains(serviceType))
+            if (new[] { ExternalServiceTypes.Charge, ExternalServiceTypes.RTL, ExternalServiceTypes.ThunderHub,
+                ExternalServiceTypes.Spark, ExternalServiceTypes.Configurator, ExternalServiceTypes.Torq }.Contains(serviceType))
             {
                 // Read access key from cookie file
                 if (connectionString.CookieFilePath != null)
@@ -97,7 +98,8 @@ namespace BTCPayServer.Configuration
                     }
                     connectionString.CookieFilePath = null;
                     
-                    if (serviceType == ExternalServiceTypes.RTL || serviceType == ExternalServiceTypes.Configurator || serviceType == ExternalServiceTypes.ThunderHub)
+                    if (serviceType == ExternalServiceTypes.RTL || serviceType == ExternalServiceTypes.Configurator ||
+                        serviceType == ExternalServiceTypes.ThunderHub || serviceType == ExternalServiceTypes.Torq)
                     {
                         connectionString.AccessKey = cookieFileContent;
                     }

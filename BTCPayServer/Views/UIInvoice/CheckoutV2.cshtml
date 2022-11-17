@@ -76,11 +76,11 @@
                 else
                 {
                     <h2 id="AmountDue" class="text-center" v-text="`${srvModel.btcDue} ${srvModel.cryptoCode}`" :data-clipboard="srvModel.btcDue" :data-clipboard-confirm="$t('copy_confirm')">@Model.BtcDue @Model.CryptoCode</h2>
-                    <div class="collapse info mt-3 mb-2" v-collapsible="showTimer || showPaymentDueInfo">
+                    <div class="collapse info mt-3 mb-2" :class="{ show: showInfo }" v-collapsible="showInfo">
                         <div>
                             <div class="timer" v-if="showTimer">
                                 <span class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden"></span></span>
-                                <template>{{$t('expiry_info', { timeLeft: timeText })}}</template>
+                                <span v-t="'expiry_info'"></span> <span class="expiryTime">{{timeText}}</span>
                             </div>
                             <div class="payment-due" v-if="showPaymentDueInfo">
                                 <vc:icon symbol="info"/>

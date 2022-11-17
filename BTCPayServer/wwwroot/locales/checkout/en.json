@@ -1,6 +1,6 @@
 {
   "any_amount": "Any amount",
-  "expiry_info": "This invoice will expire in {{timeLeft}}",
+  "expiry_info": "This invoice will expire in",
   "partial_payment_info": "The invoice hasn't been paid in full.",
   "still_due": "Please send {{amount}}\nto the address below.",
   "view_details": "View Details",

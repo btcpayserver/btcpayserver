@@ -103,8 +103,12 @@ section dl > div dd {
     border-radius: 50%;
 }
 .info {
+    color: var(--btcpay-form-text-addon);
     background-color: var(--btcpay-body-bg);
     border-radius: var(--border-radius);
+}
+.info .expiryTime {
+    color: var(--btcpay-body-text);
 }
 .info > div {
     padding: var(--btcpay-space-m) var(--btcpay-space-m);
@@ -114,6 +118,7 @@ section dl > div dd {
     align-items: center;
     justify-content: center;
     text-align: center;
+    gap: var(--btcpay-space-xs);
 }
 .info > div > div + div {
     margin-top: var(--btcpay-space-s);
@@ -121,14 +126,13 @@ section dl > div dd {
 .info .spinner-border {
     width: var(--btcpay-font-size-s);
     height: var(--btcpay-font-size-s);
-    margin-right: var(--btcpay-space-s);
     color: var(--btcpay-body-text-muted);
+    margin-right: var(--btcpay-space-xs);
     animation-duration: 1s;
 }
 .info .icon {
     width: 1.25rem;
     height: 1.25rem;
-    margin-right: var(--btcpay-space-s);
     color: var(--btcpay-info);
 }
 .payment-box {

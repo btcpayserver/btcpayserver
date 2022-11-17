@@ -9,7 +9,7 @@
             <small class="qr-text" id="QR_Text_@Model.PaymentMethodId" v-t="'qr_text'"></small>
             @*
             <input type="text" class="form-control form-control-sm" :value="srvModel.btcAddress"
-                   :data-clipboard="srvModel.invoiceBitcoinUrl" :data-clipboard-confirm="`${$t('copy_confirm')} ✔`"
+                   :data-clipboard="srvModel.invoiceBitcoinUrl" :data-clipboard-confirm="$t('copy_confirm')"
                     data-clipboard-confirm-element="QR_Text_@Model.PaymentMethodId" readonly>
             *@
         </div>

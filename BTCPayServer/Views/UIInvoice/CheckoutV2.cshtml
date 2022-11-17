@@ -75,7 +75,7 @@
                 }
                 else
                 {
-                    <h2 id="AmountDue" class="text-center" v-text="`${srvModel.btcDue} ${srvModel.cryptoCode}`" :data-clipboard="srvModel.btcDue" :data-clipboard-confirm="`${$t('copy_confirm')} ✔`">@Model.BtcDue @Model.CryptoCode</h2>
+                    <h2 id="AmountDue" class="text-center" v-text="`${srvModel.btcDue} ${srvModel.cryptoCode}`" :data-clipboard="srvModel.btcDue" :data-clipboard-confirm="$t('copy_confirm')">@Model.BtcDue @Model.CryptoCode</h2>
                     <div class="collapse info mt-3 mb-2" v-collapsible="showTimer || showPaymentDueInfo">
                         <div>
                             <div class="timer" v-if="showTimer">
@@ -203,22 +203,22 @@
         <dl>
             <div>
                 <dt v-t="'total_price'"></dt>
-                <dd :data-clipboard="srvModel.orderAmount" :data-clipboard-confirm="`${$t('copy_confirm')} ✔`">{{srvModel.orderAmount}} {{ srvModel.cryptoCode }}</dd>
+                <dd :data-clipboard="srvModel.orderAmount" :data-clipboard-confirm="$t('copy_confirm')">{{srvModel.orderAmount}} {{ srvModel.cryptoCode }}</dd>
             </div>
             <div v-if="srvModel.orderAmountFiat">
                 <dt v-t="'total_fiat'"></dt>
-                <dd :data-clipboard="srvModel.orderAmountFiat" :data-clipboard-confirm="`${$t('copy_confirm')} ✔`">{{srvModel.orderAmountFiat}}</dd>
+                <dd :data-clipboard="srvModel.orderAmountFiat" :data-clipboard-confirm="$t('copy_confirm')">{{srvModel.orderAmountFiat}}</dd>
             </div>
             <div v-if="srvModel.orderAmountFiat && srvModel.cryptoCode">
                 <dt v-t="'exchange_rate'"></dt>
-                <dd :data-clipboard="srvModel.rate" :data-clipboard-confirm="`${$t('copy_confirm')} ✔`">
+                <dd :data-clipboard="srvModel.rate" :data-clipboard-confirm="$t('copy_confirm')">
                     <template v-if="srvModel.cryptoCodeSrv === 'Sats'">1 Sat = {{ srvModel.rate }}</template>
                     <template v-else>1 {{ srvModel.cryptoCodeSrv }} = {{ srvModel.rate }}</template>
                 </dd>
             </div>
             <div v-if="srvModel.networkFee">
                 <dt v-t="'network_cost'"></dt>
-                <dd :data-clipboard="srvModel.networkFee" :data-clipboard-confirm="`${$t('copy_confirm')} ✔`">
+                <dd :data-clipboard="srvModel.networkFee" :data-clipboard-confirm="$t('copy_confirm')">
                     <template v-if="srvModel.txCountForFee > 0">
                         {{$t('tx_count', { count: srvModel.txCount })}} x
                     </template>
@@ -227,15 +227,15 @@
             </div>
             <div v-if="btcPaid > 0">
                 <dt v-t="'amount_paid'"></dt>
-                <dd :data-clipboard="srvModel.btcPaid" :data-clipboard-confirm="`${$t('copy_confirm')} ✔`">{{srvModel.btcPaid }} {{ srvModel.cryptoCode }}</dd>
+                <dd :data-clipboard="srvModel.btcPaid" :data-clipboard-confirm="$t('copy_confirm')">{{srvModel.btcPaid }} {{ srvModel.cryptoCode }}</dd>
             </div>
             <div v-if="btcDue > 0">
                 <dt v-t="'amount_due'"></dt>
-                <dd :data-clipboard="srvModel.btcDue" :data-clipboard-confirm="`${$t('copy_confirm')} ✔`">{{srvModel.btcDue}} {{ srvModel.cryptoCode }}</dd>
+                <dd :data-clipboard="srvModel.btcDue" :data-clipboard-confirm="$t('copy_confirm')">{{srvModel.btcDue}} {{ srvModel.cryptoCode }}</dd>
             </div>
             <div v-if="showRecommendedFee">
                 <dt v-t="'recommended_fee'"></dt>
-                <dd :data-clipboard="srvModel.feeRate" :data-clipboard-confirm="`${$t('copy_confirm')} ✔`" v-t="{ path: 'fee_rate', args: { feeRate: srvModel.feeRate } }"></dd>
+                <dd :data-clipboard="srvModel.feeRate" :data-clipboard-confirm="$t('copy_confirm')" v-t="{ path: 'fee_rate', args: { feeRate: srvModel.feeRate } }"></dd>
             </div>
         </dl>
     </template>

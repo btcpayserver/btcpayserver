@@ -28,6 +28,7 @@ using NBXplorer;
 using NBXplorer.Models;
 using Newtonsoft.Json.Linq;
 using StoreData = BTCPayServer.Data.StoreData;
+using Microsoft.EntityFrameworkCore;
 
 namespace BTCPayServer.Controllers.Greenfield
 {
@@ -621,115 +622,114 @@ namespace BTCPayServer.Controllers.Greenfield
 
         [HttpGet("~/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/objects")]
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        public async Task<IActionResult> GetOnChainWalletObjects(string storeId, string cryptoCode,
-            [FromBody] OnChainWalletObjectQuery query)
+        public async Task<IActionResult> GetOnChainWalletObjects(string storeId, string cryptoCode, string? type = null, [FromQuery(Name = "ids")] string[]? ids = null, bool? includeNeighbourData = null)
+        {
+            if (ids?.Length is 0 && !Request.Query.ContainsKey("ids"))
+                ids = null;
+            if (type is null && ids is not null)
+                ModelState.AddModelError(nameof(ids), "If ids is specified, type should be specified");
+            if (!ModelState.IsValid)
+                return this.CreateValidationError(ModelState);
+            var walletId = new WalletId(storeId, cryptoCode);
+            return Ok((await _walletRepository.GetWalletObjects(new(walletId, type, ids) { IncludeNeighbours = includeNeighbourData ?? true })).Select(kv => kv.Value).Select(ToModel).ToArray());
+        }
+        [HttpGet("~/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/objects/{objectType}/{objectId}")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        public async Task<IActionResult> GetOnChainWalletObject(string storeId, string cryptoCode,
+            string objectType, string objectId,
+            bool? includeNeighbourData = null)
         {
             var walletId = new WalletId(storeId, cryptoCode);
-            return Ok((await _walletRepository.GetWalletObjects(walletId, query)).Select(ToModel).ToArray());
+            var wo = await _walletRepository.GetWalletObject(new(walletId, objectType, objectId), includeNeighbourData ?? true);
+            if (wo is null)
+                return WalletObjectNotFound();
+            return Ok(ToModel(wo));
         }
 
-        [HttpDelete("~/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/objects")]
+        [HttpDelete("~/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/objects/{objectType}/{objectId}")]
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        public async Task<IActionResult> RemoveOnChainWalletObjects(string storeId, string cryptoCode,
-            [FromBody] OnChainWalletObjectQuery query)
+        public async Task<IActionResult> RemoveOnChainWalletObject(string storeId, string cryptoCode,
+            string objectType, string objectId)
         {
             var walletId = new WalletId(storeId, cryptoCode);
-            await _walletRepository.RemoveWalletObjects(walletId, query);
-            return Ok();
+            if (await _walletRepository.RemoveWalletObjects(new WalletObjectId(walletId, objectType, objectId)))
+                return Ok();
+            else
+                return WalletObjectNotFound();
+        }
+
+        private IActionResult WalletObjectNotFound()
+        {
+            return this.CreateAPIError(404, "wallet-object-not-found", "This wallet object's can't be found");
         }
 
         [HttpPost("~/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/objects")]
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        public async Task<IActionResult> AddOrUpdateOnChainWalletObjects(string storeId, string cryptoCode,
-            [FromBody] OnChainWalletObjectData[] request)
+        public async Task<IActionResult> AddOrUpdateOnChainWalletObject(string storeId, string cryptoCode,
+            [FromBody] AddOnChainWalletObjectRequest request)
         {
+            if (request?.Type is null)
+                ModelState.AddModelError(nameof(request.Type), "Type is required");
+            if (request?.Id is null)
+                ModelState.AddModelError(nameof(request.Id), "Id is required");
+            if (!ModelState.IsValid)
+                return this.CreateValidationError(ModelState);
+
             var walletId = new WalletId(storeId, cryptoCode);
-            foreach (OnChainWalletObjectData onChainWalletObjectData in request)
+
+            try
             {
                 await _walletRepository.SetWalletObject(
-                    new WalletObjectId(walletId, onChainWalletObjectData.Type, onChainWalletObjectData.Id),
-                    onChainWalletObjectData.Data);
+                        new WalletObjectId(walletId, request!.Type, request.Id), request.Data);
+                return await GetOnChainWalletObject(storeId, cryptoCode, request!.Type, request.Id);
             }
-
-            foreach (OnChainWalletObjectData onChainWalletObjectData in request)
+            catch (DbUpdateException)
             {
-                if (onChainWalletObjectData.Children?.Any() is true)
-                {
-                    var parent = new WalletObjectId(walletId, onChainWalletObjectData.Type,
-                        onChainWalletObjectData.Id);
-
-                    foreach (var onChainWalletObjectLink in onChainWalletObjectData.Children)
-                    {
-                        try
-                        {
-                            await _walletRepository.SetWalletObjectLink(parent,
-                                new WalletObjectId(walletId, onChainWalletObjectLink.Type, onChainWalletObjectLink.Id),
-                                onChainWalletObjectData.Data);
-                        }
-                        catch (Exception e)
-                        {
-                            // ignored
-                        }
-                    }
-                }
-
-                if (onChainWalletObjectData.Parents?.Any() is true)
-                {
-                    var child = new WalletObjectId(walletId, onChainWalletObjectData.Type,
-                        onChainWalletObjectData.Id);
-
-                    foreach (var onChainWalletObjectLink in onChainWalletObjectData.Parents)
-                    {
-                        try
-                        {
-                            await _walletRepository.SetWalletObjectLink(
-                                new WalletObjectId(walletId, onChainWalletObjectLink.Type, onChainWalletObjectLink.Id),
-                                child, onChainWalletObjectData.Data);
-                        }
-                        catch (Exception e)
-                        {
-                        }
-                    }
-                }
+                return WalletObjectNotFound();
             }
-
-            return Ok();
         }
 
-        [HttpPost("~/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/object-links")]
+        [HttpPost("~/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/objects/{objectType}/{objectId}/links")]
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> AddOrUpdateOnChainWalletLinks(string storeId, string cryptoCode,
-            [FromBody] AddOnChainWalletObjectLinkRequest[] request)
+            string objectType, string objectId,
+            [FromBody] AddOnChainWalletObjectLinkRequest request)
         {
+            if (request?.Type is null)
+                ModelState.AddModelError(nameof(request.Type), "Type is required");
+            if (request?.Id is null)
+                ModelState.AddModelError(nameof(request.Id), "Id is required");
+            if (!ModelState.IsValid)
+                return this.CreateValidationError(ModelState);
+
             var walletId = new WalletId(storeId, cryptoCode);
-            foreach (AddOnChainWalletObjectLinkRequest addOnChainWalletObjectLinkRequest in request)
+            try
             {
                 await _walletRepository.SetWalletObjectLink(
-                    new WalletObjectId(walletId, addOnChainWalletObjectLinkRequest.Parent.Type,
-                        addOnChainWalletObjectLinkRequest.Parent.Id),
-                    new WalletObjectId(walletId, addOnChainWalletObjectLinkRequest.Child.Type,
-                        addOnChainWalletObjectLinkRequest.Child.Id), addOnChainWalletObjectLinkRequest.Data);
+                        new WalletObjectId(walletId, objectType, objectId),
+                        new WalletObjectId(walletId, request!.Type, request.Id),
+                        request?.Data);
+                return Ok();
             }
-
-            return Ok();
+            catch (DbUpdateException)
+            {
+                return WalletObjectNotFound();
+            }
         }
 
-        [HttpDelete("~/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/object-links")]
+        [HttpDelete("~/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/objects/{objectType}/{objectId}/links/{linkType}/{linkId}")]
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        public async Task<IActionResult> RemoveOnChainWalletLinks(string storeId, string cryptoCode,
-            [FromBody] RemoveOnChainWalletObjectLinkRequest[] request)
+        public async Task<IActionResult> RemoveOnChainWalletLink(string storeId, string cryptoCode,
+            string objectType, string objectId,
+            string linkType, string linkId)
         {
             var walletId = new WalletId(storeId, cryptoCode);
-            foreach (RemoveOnChainWalletObjectLinkRequest removeOnChainWalletObjectLinkRequest in request)
-            {
-                await _walletRepository.RemoveWalletObjectLink(
-                    new WalletObjectId(walletId, removeOnChainWalletObjectLinkRequest.Parent.Type,
-                        removeOnChainWalletObjectLinkRequest.Parent.Id),
-                    new WalletObjectId(walletId, removeOnChainWalletObjectLinkRequest.Child.Type,
-                        removeOnChainWalletObjectLinkRequest.Child.Id));
-            }
-
-            return Ok();
+            if (await _walletRepository.RemoveWalletObjectLink(
+                    new WalletObjectId(walletId, objectType, objectId),
+                    new WalletObjectId(walletId, linkType, linkId)))
+                return Ok();
+            else
+                return WalletObjectNotFound();
         }
 
         private OnChainWalletObjectData ToModel(WalletObjectData data)
@@ -739,18 +739,18 @@ namespace BTCPayServer.Controllers.Greenfield
                 Data = string.IsNullOrEmpty(data.Data) ? null : JObject.Parse(data.Data),
                 Type = data.Type,
                 Id = data.Id,
-                Children = data.ChildLinks?.Select(linkData => ToModel(linkData, false)).ToArray(),
-                Parents = data.ParentLinks?.Select(linkData => ToModel(linkData, true)).ToArray()
+                Links = data.GetLinks().Select(linkData => ToModel(linkData)).ToArray()
             };
         }
 
-        private OnChainWalletObjectData.OnChainWalletObjectLink ToModel(WalletObjectLinkData data, bool isParent)
+        private OnChainWalletObjectData.OnChainWalletObjectLink ToModel((string type, string id, string linkdata, string objectdata) data)
         {
             return new OnChainWalletObjectData.OnChainWalletObjectLink()
             {
-                LinkData = string.IsNullOrEmpty(data.Data) ? null : JObject.Parse(data.Data),
-                Type = isParent ? data.ParentType : data.ChildType,
-                Id = isParent ? data.ParentId : data.ChildId,
+                LinkData = string.IsNullOrEmpty(data.linkdata) ? null : JObject.Parse(data.linkdata),
+                ObjectData = string.IsNullOrEmpty(data.objectdata) ? null : JObject.Parse(data.objectdata),
+                Type = data.type,
+                Id = data.id,
             };
         }
 

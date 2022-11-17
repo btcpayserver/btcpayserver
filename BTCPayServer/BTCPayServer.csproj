@@ -6,6 +6,10 @@
     <OutputType>Exe</OutputType>
 
     <PreserveCompilationContext>true</PreserveCompilationContext>
+
+    <RunAnalyzersDuringLiveAnalysis>False</RunAnalyzersDuringLiveAnalysis>
+
+    <RunAnalyzersDuringBuild>False</RunAnalyzersDuringBuild>
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="Build\**" />

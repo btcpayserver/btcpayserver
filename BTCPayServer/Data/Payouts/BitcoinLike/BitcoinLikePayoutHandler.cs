@@ -429,8 +429,8 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
             var storeWalletMatched = (await _explorerClientProvider.GetExplorerClient(newTransaction.CryptoCode)
                 .GetTransactionAsync(derivationSchemeSettings,
                     newTransaction.NewTransactionEvent.TransactionData.TransactionHash));
-            //if the wallet related to the store related to the payout does not have the tx: it is external
-            var isInternal = storeWalletMatched is { };
+            //if the wallet related to the store of the payout does not have the tx: it has been paid externally
+            var isInternal = storeWalletMatched is not null;
 
             var proof = ParseProof(payout) as PayoutTransactionOnChainBlob ??
                         new PayoutTransactionOnChainBlob() { Accounted = isInternal };

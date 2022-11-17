@@ -41,6 +41,8 @@ namespace BTCPayServer.Tests
             
             Assert.Equal(2, s.Driver.FindElements(By.CssSelector(".payment-method")).Count);
             Assert.Contains("Lightning", s.Driver.FindElement(By.CssSelector(".payment-method.active")).Text);
+            var payUrl = s.Driver.FindElement(By.CssSelector(".btn-primary")).GetAttribute("href");
+            Assert.StartsWith("lightning:", payUrl);
             
             // Lightning amount in Sats
             Assert.Contains("BTC", s.Driver.FindElement(By.Id("AmountDue")).Text);
@@ -51,6 +53,69 @@ namespace BTCPayServer.Tests
             Assert.Contains("BTC Lightning settings successfully updated", s.FindAlertMessage().Text);
             s.GoToInvoiceCheckout(invoiceId);
             Assert.Contains("Sats", s.Driver.FindElement(By.Id("AmountDue")).Text);
+            
+            // Expire
+            var expirySeconds = s.Driver.FindElement(By.Id("ExpirySeconds"));
+            expirySeconds.Clear();
+            expirySeconds.SendKeys("3");
+            s.Driver.FindElement(By.Id("Expire")).Click();
+
+            var paymentInfo = s.Driver.WaitForElement(By.Id("PaymentInfo"));
+            Assert.Contains("This invoice will expire in", paymentInfo.Text);
+            TestUtils.Eventually(() =>
+            {
+                var expiredSection = s.Driver.FindElement(By.Id("expired"));
+                Assert.True(expiredSection.Displayed);
+                Assert.Contains("Invoice Expired", expiredSection.Text);
+            });
+            
+            // BIP21
+            s.GoToHome();
+            s.GoToStore(StoreNavPages.CheckoutAppearance);
+            s.Driver.SetCheckbox(By.Id("OnChainWithLnInvoiceFallback"), true);
+            s.Driver.FindElement(By.Id("Save")).Click();
+            Assert.Contains("Store successfully updated", s.FindAlertMessage().Text);
+            
+            invoiceId = s.CreateInvoice();
+            s.GoToInvoiceCheckout(invoiceId);
+            Assert.Empty(s.Driver.FindElements(By.CssSelector(".payment-method")));
+            payUrl = s.Driver.FindElement(By.CssSelector(".btn-primary")).GetAttribute("href");
+            Assert.StartsWith("bitcoin:", payUrl);
+            Assert.Contains("&LIGHTNING=", payUrl);
+            
+            // Details
+            s.Driver.ToggleCollapse("PaymentDetails");
+            var details = s.Driver.FindElement(By.CssSelector(".payment-details"));
+            Assert.Contains("Total Price", details.Text);
+            Assert.Contains("Total Fiat", details.Text);
+            Assert.Contains("Exchange Rate", details.Text);
+            Assert.Contains("Amount Due", details.Text);
+            Assert.Contains("Recommended Fee", details.Text);
+            
+            // Pay partial amount
+            var fakePayAmount = s.Driver.FindElement(By.Id("FakePayAmount"));
+            fakePayAmount.Clear();
+            fakePayAmount.SendKeys("0.00001");
+            s.Driver.FindElement(By.Id("FakePay")).Click();
+            TestUtils.Eventually(() =>
+            {
+                s.Driver.FindElement(By.Id("CheatSuccessMessage"));
+                paymentInfo = s.Driver.WaitForElement(By.Id("PaymentInfo"));
+                Assert.Contains("The invoice hasn't been paid in full", paymentInfo.Text);
+            });
+            
+            // Pay full amount
+            s.Driver.FindElement(By.Id("FakePay")).Click();
+            s.Driver.WaitForElement(By.Id("CheatSuccessMessage"));
+            s.Driver.ScrollTo(By.Id("Mine"));
+            s.Driver.FindElement(By.Id("Mine")).Click();
+            s.Driver.FindElement(By.Id("Mine")).Click();
+            TestUtils.Eventually(() =>
+            {
+                var paidSection = s.Driver.FindElement(By.Id("paid"));
+                Assert.True(paidSection.Displayed);
+                Assert.Contains("Invoice Paid", paidSection.Text);
+            });
         }
 
         [Fact(Timeout = TestTimeout)]

@@ -76,7 +76,7 @@
                 else
                 {
                     <h2 id="AmountDue" class="text-center" v-text="`${srvModel.btcDue} ${srvModel.cryptoCode}`" :data-clipboard="srvModel.btcDue" :data-clipboard-confirm="$t('copy_confirm')">@Model.BtcDue @Model.CryptoCode</h2>
-                    <div class="collapse info mt-3 mb-2" :class="{ show: showInfo }" v-collapsible="showInfo">
+                    <div id="PaymentInfo" class="collapse info mt-3 mb-2" :class="{ show: showInfo }" v-collapsible="showInfo">
                         <div>
                             <div class="timer" v-if="showTimer">
                                 <span class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden"></span></span>
@@ -89,11 +89,11 @@
                             <div v-html="replaceNewlines($t('still_due', { amount: `${srvModel.btcDue} ${srvModel.cryptoCode}` }))"></div>
                         </div>
                     </div>
-                    <button class="d-flex align-items-center gap-1 btn btn-link payment-details-button mb-2" type="button" :aria-expanded="displayPaymentDetails ? 'true' : 'false'" v-on:click="displayPaymentDetails = !displayPaymentDetails">
+                    <button id="DetailsToggle" class="d-flex align-items-center gap-1 btn btn-link payment-details-button mb-2" type="button" :aria-expanded="displayPaymentDetails ? 'true' : 'false'" v-on:click="displayPaymentDetails = !displayPaymentDetails">
                         <span class="fw-semibold" v-t="'view_details'"></span>
                         <vc:icon symbol="caret-down"/>
                     </button>
-                    <div class="collapse payment-details" v-collapsible="displayPaymentDetails">
+                    <div id="PaymentDetails" class="collapse payment-details" v-collapsible="displayPaymentDetails">
                         <payment-details :srv-model="srvModel" :is-active="isActive" class="pb-4"></payment-details>
                     </div>
                 }
@@ -157,7 +157,7 @@
                                 <dd v-text="srvModel.orderId"></dd>
                             </div>
                         </dl>
-                        <div class="collapse payment-details" v-collapsible="displayPaymentDetails">
+                        <div id="PaymentDetails" class="collapse payment-details" v-collapsible="displayPaymentDetails">
                             <payment-details :srv-model="srvModel" :is-active="isActive"></payment-details>
                         </div>
                         <button class="d-flex align-items-center gap-1 btn btn-link payment-details-button" type="button" :aria-expanded="displayPaymentDetails ? 'true' : 'false'" v-on:click="displayPaymentDetails = !displayPaymentDetails">

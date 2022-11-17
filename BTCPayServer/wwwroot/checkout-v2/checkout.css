@@ -103,7 +103,7 @@ section dl > div dd {
     border-radius: 50%;
 }
 .info {
-    color: var(--btcpay-form-text-addon);
+    color: var(--btcpay-neutral-700);
     background-color: var(--btcpay-body-bg);
     border-radius: var(--border-radius);
 }

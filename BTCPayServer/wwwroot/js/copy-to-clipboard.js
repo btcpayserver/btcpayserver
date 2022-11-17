@@ -1,5 +1,9 @@
 const confirmCopy = (el, message) => {
-    el.innerText = message;
+    if (!el.dataset.clipboardInitial) {
+        el.dataset.clipboardInitial = el.innerHTML;
+        el.style.minWidth = el.getBoundingClientRect().width + 'px';
+    }
+    el.innerHTML = `<span class="text-success">${message}</span>`;
     setTimeout(function () {
         el.innerHTML = el.dataset.clipboardInitial;
     }, 2500);
@@ -11,25 +15,11 @@ window.copyToClipboard = function (e, data) {
     const confirm = item.dataset.clipboardConfirmElement
         ? document.getElementById(item.dataset.clipboardConfirmElement) || item
         : item.querySelector('[data-clipboard-confirm]') || item;
-    const message = confirm.getAttribute('data-clipboard-confirm') || 'Copied ✔';
-    if (!confirm.dataset.clipboardInitial) {
-        confirm.dataset.clipboardInitial = confirm.innerHTML;
-        confirm.style.minWidth = confirm.getBoundingClientRect().width + 'px';
-    }
+    const message = confirm.getAttribute('data-clipboard-confirm') || 'Copied';
     if (navigator.clipboard) {
-        navigator.clipboard.writeText(data).then(function () {
+        navigator.clipboard.writeText(data).then(() => {
             confirmCopy(confirm, message);
         });
-    } else {
-        const copyEl = document.createElement('textarea');
-        copyEl.style.position = 'absolute';
-        copyEl.style.opacity = '0';
-        copyEl.value = data;
-        document.body.appendChild(copyEl);
-        copyEl.select();
-        document.execCommand('copy');
-        copyEl.remove();
-        confirmCopy(confirm, message);
     }
     item.blur();
 }

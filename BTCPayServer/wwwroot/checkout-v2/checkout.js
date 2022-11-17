@@ -132,6 +132,9 @@ new Vue({
         isActive () {
             return !this.isUnpayable && !this.isPaid;
         },
+        showInfo () {
+            return this.showTimer || this.showPaymentDueInfo;
+        },
         showTimer () {
             return this.isActive && (this.expirationPercentage >= 75 || this.minutesLeft < 5);
         },

@@ -1,6 +1,7 @@
 #nullable enable
 using System.Collections.Generic;
 using BTCPayServer.Client.Models;
+using BTCPayServer.Data;
 using BTCPayServer.Services.Labels;
 using Newtonsoft.Json.Linq;
 
@@ -20,39 +21,39 @@ namespace BTCPayServer.Services
         }
         public static Attachment Payjoin()
         {
-            return new Attachment("payjoin");
+            return new Attachment(WalletObjectData.Types.Payjoin);
         }
         public static Attachment Invoice(string invoice)
         {
-            return new Attachment("invoice", invoice);
+            return new Attachment(WalletObjectData.Types.Invoice, invoice);
         }
         public static Attachment PaymentRequest(string paymentRequestId)
         {
-            return new Attachment("payment-request", paymentRequestId);
+            return new Attachment(WalletObjectData.Types.PaymentRequest, paymentRequestId);
         }
         public static Attachment App(string appId)
         {
-            return new Attachment("app", appId);
+            return new Attachment(WalletObjectData.Types.App, appId);
         }
 
         public static Attachment PayjoinExposed(string? invoice)
         {
-            return new Attachment("pj-exposed", invoice);
+            return new Attachment(WalletObjectData.Types.PayjoinExposed, invoice);
         }
 
         public static IEnumerable<Attachment> Payout(string? pullPaymentId, string payoutId)
         {
             if (string.IsNullOrEmpty(pullPaymentId))
             {
-                yield return new Attachment("payout", payoutId);
+                yield return new Attachment(WalletObjectData.Types.Payout, payoutId);
             }
             else
             {
-                yield return new Attachment("payout", payoutId, new JObject()
+                yield return new Attachment(WalletObjectData.Types.Payout, payoutId, new JObject()
                 {
                     ["pullPaymentId"] = pullPaymentId
                 });
-                yield return new Attachment("pull-payment", pullPaymentId);
+                yield return new Attachment(WalletObjectData.Types.PullPayment, pullPaymentId);
             }
         }
     }

@@ -14,6 +14,13 @@ namespace BTCPayServer.Data
         {
             public const string Label = "label";
             public const string Tx = "tx";
+            public const string Payjoin = "payjoin";
+            public const string Invoice = "invoice";
+            public const string PaymentRequest = "payment-request";
+            public const string App = "app";
+            public const string PayjoinExposed = "pj-exposed";
+            public const string Payout = "payout";
+            public const string PullPayment = "pull-payment";
         }
         public string WalletId { get; set; }
         public string Type { get; set; }

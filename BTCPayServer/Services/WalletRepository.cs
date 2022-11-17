@@ -266,22 +266,6 @@ namespace BTCPayServer.Services
                 await EnsureWalletObjectLink(labelObjId, id);
             }
         }
-        
-        public async Task AddWalletObjects(WalletObjectId id, params string[] labels)
-        {
-            ArgumentNullException.ThrowIfNull(id);
-            await EnsureWalletObject(id);
-            foreach (var l in labels.Select(l => l.Trim().Truncate(MaxLabelSize)))
-            {
-                var labelObjId = new WalletObjectId(id.WalletId, WalletObjectData.Types.Label, l);
-                await EnsureWalletObject(labelObjId, new JObject()
-                {
-                    ["color"] = ColorPalette.Default.DeterministicColor(l)
-                });
-                await EnsureWalletObjectLink(labelObjId, id);
-            }
-        }
-
         public Task AddWalletTransactionAttachment(WalletId walletId, uint256 txId, Attachment attachment)
         {
             return AddWalletTransactionAttachment(walletId, txId, new[] { attachment });

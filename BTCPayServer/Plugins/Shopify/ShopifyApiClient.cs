@@ -38,7 +38,7 @@ namespace BTCPayServer.Plugins.Shopify
             string relativeUrl = null)
         {
             var url =
-                $"https://{(shopName.Contains(".", StringComparison.InvariantCulture) ? shopName : $"{shopName}.myshopify.com")}/{relativeUrl ?? ("admin/api/2020-07/" + action)}";
+                $"https://{(shopName.Contains('.', StringComparison.InvariantCulture) ? shopName : $"{shopName}.myshopify.com")}/{relativeUrl ?? ("admin/api/2020-07/" + action)}";
             var req = new HttpRequestMessage(method, url);
             return req;
         }

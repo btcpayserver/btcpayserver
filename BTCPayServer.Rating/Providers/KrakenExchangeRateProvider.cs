@@ -168,7 +168,7 @@ namespace BTCPayServer.Services.Rates
             sb.Append(url);
             if (payload != null)
             {
-                sb.Append("?");
+                sb.Append('?');
                 sb.Append(String.Join('&', payload.Select(kv => $"{kv.Key}={kv.Value}").OfType<object>().ToArray()));
             }
             var request = new HttpRequestMessage(HttpMethod.Get, sb.ToString());

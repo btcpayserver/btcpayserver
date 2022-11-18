@@ -99,17 +99,17 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("FakePay")).Click();
             TestUtils.Eventually(() =>
             {
-                s.Driver.FindElement(By.Id("CheatSuccessMessage"));
+                var successMessage = s.Driver.WaitForElement(By.Id("CheatSuccessMessage"));
+                Assert.Contains("Created transaction", successMessage.Text);
                 paymentInfo = s.Driver.WaitForElement(By.Id("PaymentInfo"));
                 Assert.Contains("The invoice hasn't been paid in full", paymentInfo.Text);
             });
             
             // Pay full amount
+            var amountDue = s.Driver.FindElement(By.Id("AmountDue")).GetAttribute("data-amount-due");
+            fakePayAmount.Clear();
+            fakePayAmount.SendKeys(amountDue);
             s.Driver.FindElement(By.Id("FakePay")).Click();
-            s.Driver.WaitForElement(By.Id("CheatSuccessMessage"));
-            s.Driver.ScrollTo(By.Id("Mine"));
-            s.Driver.FindElement(By.Id("Mine")).Click();
-            s.Driver.FindElement(By.Id("Mine")).Click();
             TestUtils.Eventually(() =>
             {
                 var paidSection = s.Driver.FindElement(By.Id("paid"));

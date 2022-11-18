@@ -78,6 +78,63 @@ namespace BTCPayServer.Tests
             Assert.True(s.Driver.ElementDoesNotExist(By.Id("ReceiptLink")));
             Assert.Equal(storeUrl, s.Driver.FindElement(By.Id("StoreLink")).GetAttribute("href"));
             
+            // Test payment
+            s.GoToHome();
+            invoiceId = s.CreateInvoice();
+            s.GoToInvoiceCheckout(invoiceId);
+            
+            // Details
+            s.Driver.ToggleCollapse("PaymentDetails");
+            var details = s.Driver.FindElement(By.CssSelector(".payment-details"));
+            Assert.Contains("Total Price", details.Text);
+            Assert.Contains("Total Fiat", details.Text);
+            Assert.Contains("Exchange Rate", details.Text);
+            Assert.Contains("Amount Due", details.Text);
+            Assert.Contains("Recommended Fee", details.Text);
+            
+            // Pay partial amount
+            await Task.Delay(200);
+            var address = s.Driver.FindElement(By.CssSelector(".qr-container")).GetAttribute("data-clipboard");
+            var amountFraction = "0.00001";
+            var invoice = await s.Server.PayTester.InvoiceRepository.GetInvoice(invoiceId);
+            await s.Server.ExplorerNode.SendToAddressAsync(BitcoinAddress.Create(address, Network.RegTest),
+                Money.Parse(amountFraction));
+            await s.Server.ExplorerNode.GenerateAsync(1);
+            
+            // Fake Pay
+            s.Driver.FindElement(By.Id("FakePayAmount")).FillIn(amountFraction);
+            s.Driver.FindElement(By.Id("FakePay")).Click();
+            TestUtils.Eventually(() =>
+            {
+                Assert.Contains("Created transaction",
+                    s.Driver.WaitForElement(By.Id("CheatSuccessMessage")).Text);
+                Assert.Contains("The invoice hasn't been paid in full",
+                    s.Driver.WaitForElement(By.Id("PaymentInfo")).Text);
+                s.Server.ExplorerNode.Generate(1);
+            });
+
+            // Mine
+            s.Driver.FindElement(By.Id("Mine")).Click();
+            TestUtils.Eventually(() =>
+            {
+                Assert.Contains("Mined 1 block",
+                    s.Driver.WaitForElement(By.Id("CheatSuccessMessage")).Text);
+            });
+            
+            // Pay full amount
+            var amountDue = s.Driver.FindElement(By.Id("AmountDue")).GetAttribute("data-amount-due");
+            s.Driver.FindElement(By.Id("FakePayAmount")).FillIn(amountDue);
+            s.Driver.FindElement(By.Id("FakePay")).Click();
+            TestUtils.Eventually(() =>
+            {
+                s.Server.ExplorerNode.Generate(1);
+                var paidSection = s.Driver.WaitForElement(By.Id("paid"));
+                Assert.True(paidSection.Displayed);
+                Assert.Contains("Invoice Paid", paidSection.Text);
+            });
+            s.Driver.FindElement(By.Id("ReceiptLink"));
+            Assert.Equal(storeUrl, s.Driver.FindElement(By.Id("StoreLink")).GetAttribute("href"));
+            
             // BIP21
             s.GoToHome();
             s.GoToStore(StoreNavPages.CheckoutAppearance);
@@ -91,45 +148,6 @@ namespace BTCPayServer.Tests
             payUrl = s.Driver.FindElement(By.CssSelector(".btn-primary")).GetAttribute("href");
             Assert.StartsWith("bitcoin:", payUrl);
             Assert.Contains("&LIGHTNING=", payUrl);
-            
-            // Details
-            s.Driver.ToggleCollapse("PaymentDetails");
-            var details = s.Driver.FindElement(By.CssSelector(".payment-details"));
-            Assert.Contains("Total Price", details.Text);
-            Assert.Contains("Total Fiat", details.Text);
-            Assert.Contains("Exchange Rate", details.Text);
-            Assert.Contains("Amount Due", details.Text);
-            Assert.Contains("Recommended Fee", details.Text);
-            
-            // Pay partial amount
-            var fakePayAmount = s.Driver.FindElement(By.Id("FakePayAmount"));
-            fakePayAmount.Clear();
-            fakePayAmount.SendKeys("0.00001");
-            s.Driver.FindElement(By.Id("FakePay")).Click();
-            TestUtils.Eventually(() =>
-            {
-                var successMessage = s.Driver.WaitForElement(By.Id("CheatSuccessMessage"));
-                Assert.Contains("Created transaction", successMessage.Text);
-                fakePayAmount.Clear();
-                fakePayAmount.SendKeys("0.00001");
-                s.Driver.FindElement(By.Id("FakePay")).Click();
-                paymentInfo = s.Driver.WaitForElement(By.Id("PaymentInfo"));
-                Assert.Contains("The invoice hasn't been paid in full", paymentInfo.Text);
-            });
-            
-            // Pay full amount
-            var amountDue = s.Driver.FindElement(By.Id("AmountDue")).GetAttribute("data-amount-due");
-            fakePayAmount.Clear();
-            fakePayAmount.SendKeys(amountDue);
-            s.Driver.FindElement(By.Id("FakePay")).Click();
-            TestUtils.Eventually(() =>
-            {
-                var paidSection = s.Driver.FindElement(By.Id("paid"));
-                Assert.True(paidSection.Displayed);
-                Assert.Contains("Invoice Paid", paidSection.Text);
-            });
-            s.Driver.FindElement(By.Id("ReceiptLink"));
-            Assert.Equal(storeUrl, s.Driver.FindElement(By.Id("StoreLink")).GetAttribute("href"));
         }
 
         [Fact(Timeout = TestTimeout)]

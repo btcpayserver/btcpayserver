@@ -620,7 +620,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost("{storeId}/settings")]
-        public async Task<IActionResult> GeneralSettings(GeneralSettingsViewModel model, string? command = null)
+        public async Task<IActionResult> GeneralSettings(GeneralSettingsViewModel model, [FromForm] bool RemoveLogoFile = false)
         {
             bool needUpdate = false;
             if (CurrentStore.StoreName != model.StoreName)
@@ -649,14 +649,14 @@ namespace BTCPayServer.Controllers
             }
             blob.BrandColor = model.BrandColor;
             
+            var userId = GetUserId();
+            if (userId is null)
+                return NotFound();
+            
             if (model.LogoFile != null)
             {
                 if (model.LogoFile.ContentType.StartsWith("image/", StringComparison.InvariantCulture))
                 {
-                    var userId = GetUserId();
-                    if (userId is null)
-                        return NotFound();
-                
                     // delete existing image
                     if (!string.IsNullOrEmpty(blob.LogoFileId))
                     {
@@ -678,6 +678,12 @@ namespace BTCPayServer.Controllers
                 {
                     TempData[WellKnownTempData.ErrorMessage] = "The uploaded logo file needs to be an image";
                 }
+            }
+            else if (RemoveLogoFile && !string.IsNullOrEmpty(blob.LogoFileId))
+            {
+                await _fileService.RemoveFile(blob.LogoFileId, userId);
+                blob.LogoFileId = null;
+                needUpdate = true;
             }
             
             if (CurrentStore.SetStoreBlob(blob))

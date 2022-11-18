@@ -35,6 +35,13 @@ namespace BTCPayServer.Tests
             s.AddLightningNode();
             s.AddDerivationScheme();
 
+            // Configure store url
+            var storeUrl = "https://satoshisteaks.com/";
+            s.GoToStore();
+            s.Driver.FindElement(By.Id("StoreWebsite")).SendKeys(storeUrl);
+            s.Driver.FindElement(By.Id("Save")).Click();
+            Assert.Contains("Store successfully updated", s.FindAlertMessage().Text);
+            
             // Default payment method
             var invoiceId = s.CreateInvoice(defaultPaymentMethod: "BTC_LightningLike");
             s.GoToInvoiceCheckout(invoiceId);
@@ -68,6 +75,8 @@ namespace BTCPayServer.Tests
                 Assert.True(expiredSection.Displayed);
                 Assert.Contains("Invoice Expired", expiredSection.Text);
             });
+            Assert.True(s.Driver.ElementDoesNotExist(By.Id("ReceiptLink")));
+            Assert.Equal(storeUrl, s.Driver.FindElement(By.Id("StoreLink")).GetAttribute("href"));
             
             // BIP21
             s.GoToHome();
@@ -101,6 +110,9 @@ namespace BTCPayServer.Tests
             {
                 var successMessage = s.Driver.WaitForElement(By.Id("CheatSuccessMessage"));
                 Assert.Contains("Created transaction", successMessage.Text);
+                fakePayAmount.Clear();
+                fakePayAmount.SendKeys("0.00001");
+                s.Driver.FindElement(By.Id("FakePay")).Click();
                 paymentInfo = s.Driver.WaitForElement(By.Id("PaymentInfo"));
                 Assert.Contains("The invoice hasn't been paid in full", paymentInfo.Text);
             });
@@ -116,6 +128,8 @@ namespace BTCPayServer.Tests
                 Assert.True(paidSection.Displayed);
                 Assert.Contains("Invoice Paid", paidSection.Text);
             });
+            s.Driver.FindElement(By.Id("ReceiptLink"));
+            Assert.Equal(storeUrl, s.Driver.FindElement(By.Id("StoreLink")).GetAttribute("href"));
         }
 
         [Fact(Timeout = TestTimeout)]

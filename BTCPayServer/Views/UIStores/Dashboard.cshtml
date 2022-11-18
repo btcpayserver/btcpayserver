@@ -17,7 +17,10 @@
 
 <div class="d-flex align-items-center justify-content-between">
     <h2 class="mb-0">@ViewData["Title"]</h2>
-    <button type="button" class="btn btn-secondary only-for-js" data-bs-toggle="modal" data-bs-target="#WhatsNew">What's New</button>
+    @if (Model.IsSetUp)
+    {
+        <button type="button" class="btn btn-secondary only-for-js" data-bs-toggle="modal" data-bs-target="#WhatsNew">What's New</button>
+    }
 </div>
 
 <div class="modal fade" id="WhatsNew" tabindex="-1" aria-labelledby="WhatsNewTitle" aria-hidden="true">
@@ -30,32 +33,16 @@
                 </button>
             </div>
             <div class="modal-body">
+                <h5 class="alert-heading">Updated in <a href="https://blog.btcpayserver.org/btcpay-server-1-7-0/" target="_blank" rel="noreferrer noopener">v1.7.0</a></h5>
+                <p class="mb-2">We've redesigned the checkout and the new version is available as an opt-in feature. We're looking forward to your <a href="https://github.com/btcpayserver/btcpayserver/discussions/4308" target="_blank" rel="noreferrer noopener">feedback</a>!</p>
+                <p class="mb-0">You can now also request customer data (e.g. their shipping address) when they pay an invoice.</p>
+                <hr style="height:1px;background-color:var(--btcpay-body-text-muted);margin:var(--btcpay-space-m) 0;" />
                 <h5 class="alert-heading">Updated in <a href="https://blog.btcpayserver.org/btcpay-server-1-6-0/" target="_blank" rel="noreferrer noopener">v1.6.0</a></h5>
                 <p class="mb-2">The dashboard now contains your Lightning balances and services, as well as Point of Sale statistics.</p>
                 <p class="mb-0">We've also added invoice receipts and LNURL withdraw for payouts.</p>
                 <hr style="height:1px;background-color:var(--btcpay-body-text-muted);margin:var(--btcpay-space-m) 0;" />
                 <h5 class="alert-heading">Updated in <a href="https://blog.btcpayserver.org/btcpay-server-1-5-0/" target="_blank" rel="noreferrer noopener">v1.5.0</a></h5>
                 <p class="mb-0">Stores now have a neat dashboard like the one you see here! 🗠🎉</p>
-                <hr style="height:1px;background-color:var(--btcpay-body-text-muted);margin:var(--btcpay-space-m) 0;" />
-                <h5 class="alert-heading">Updated in <a href="https://blog.btcpayserver.org/btcpay-server-1-4-0/" target="_blank" rel="noreferrer noopener">v1.4.0</a></h5>
-                <p class="mb-2">Invoice states have been updated to match the Greenfield API:</p>
-                <ul class="list-unstyled mb-md-0">
-                    <li>
-                        <span class="badge badge-processing">Paid</span>
-                        <span class="mx-1">is now shown as</span>
-                        <span class="badge badge-processing">Processing</span>
-                    </li>
-                    <li class="mt-2">
-                        <span class="badge badge-settled">Completed</span>
-                        <span class="mx-1">is now shown as</span>
-                        <span class="badge badge-settled">Settled</span>
-                    </li>
-                    <li class="mt-2">
-                        <span class="badge badge-settled">Confirmed</span>
-                        <span class="mx-1">is now shown as</span>
-                        <span class="badge badge-settled">Settled</span>
-                    </li>
-                </ul>
             </div>
         </div>
     </div>

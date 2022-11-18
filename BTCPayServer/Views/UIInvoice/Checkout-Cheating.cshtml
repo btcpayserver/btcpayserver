@@ -15,7 +15,6 @@
                 </div>
                 <button class="btn btn-secondary flex-shrink-0 px-3 w-100px" type="submit" :disabled="paying" id="FakePay">Pay</button>
             </div>
-            <small class="text-muted">Equals running bitcoin-cli.sh sendtoaddress</small>
         </form>
         <form id="mine-block" :action="`/i/${invoiceId}/mine-blocks`" method="post" class="mt-4" v-on:submit.prevent="handleFormSubmit($event, 'mining')" v-if="paymentMethodId === 'BTC'">
             <label for="BlockCount" class="control-label form-label">Mine to test processing and settlement</label>
@@ -68,6 +67,9 @@
                 const headers = { 'Accept': 'application/json' }
                 
                 this[processing] = true;
+                this.successMessage = null;
+                this.errorMessage = null;
+                
                 const response = await fetch(url, { method, body, headers });
                 const data = await response.json();
                 this.successMessage = data.successMessage;

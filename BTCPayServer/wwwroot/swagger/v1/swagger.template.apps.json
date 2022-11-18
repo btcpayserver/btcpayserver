@@ -588,15 +588,21 @@
                         "nullable": true
                     },
                     "sounds": {
-                        "type": "string",
-                        "description": "Comma-separated list of custom sounds to use on new contributions",
+                        "type": "array",
+                        "description": "Array of custom sounds to use on new contributions",
+                        "items": {
+                            "type": "string"
+                        },
                         "nullable": true
                     },
                     "animationColors": {
-                        "type": "string",
-                        "description": "Comma-separated list of custom HEX colors to use for background animations on new contributions",
+                        "type": "array",
+                        "description": "Array of custom HEX colors to use for background animations on new contributions",
+                        "items": {
+                            "type": "string"
+                        },
                         "nullable": true,
-                        "example": "#FF0000,#00FF00,#0000FF"
+                        "example": ["#FF0000", "#00FF00", "#0000FF"]
                     }
                 }
             }

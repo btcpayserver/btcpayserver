@@ -1,3 +1,4 @@
+using System;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
@@ -39,5 +40,45 @@ namespace BTCPayServer.Client.Models
         public string CheckoutFormId { get; set; } = null;
         public string EmbeddedCSS { get; set; } = null;
         public CheckoutType? CheckoutType { get; set; } = null;
+    }
+
+    public enum CrowdfundResetEvery
+    {
+        Never,
+        Hour,
+        Day,
+        Month,
+        Year
+    }
+
+    public class CreateCrowdfundAppRequest : CreateAppRequest
+    {
+        public string Title { get; set; } = null;
+        public bool? Enabled { get; set; } = null;
+        public bool? EnforceTargetAmount { get; set; } = null;
+        [JsonConverter(typeof(NBitcoin.JsonConverters.DateTimeToUnixTimeConverter))]
+        public DateTimeOffset? StartDate { get; set; } = null;
+        public string TargetCurrency { get; set; } = null;
+        public string Description { get; set; } = null;
+        [JsonConverter(typeof(NBitcoin.JsonConverters.DateTimeToUnixTimeConverter))]
+        public DateTimeOffset? EndDate { get; set; } = null;
+        public decimal? TargetAmount { get; set; } = null;
+        public string CustomCSSLink { get; set; } = null;
+        public string MainImageUrl { get; set; } = null;
+        public string EmbeddedCSS { get; set; } = null;
+        public string NotificationUrl { get; set; } = null;
+        public string Tagline { get; set; } = null;
+        public string PerksTemplate { get; set; } = null;
+        public bool? SoundsEnabled { get; set; } = null;
+        public string DisqusShortname { get; set; } = null;
+        public bool? AnimationsEnabled { get; set; } = null;
+        public int? ResetEveryAmount { get; set; } = null;
+        [JsonConverter(typeof(StringEnumConverter))]
+        public CrowdfundResetEvery ResetEvery { get; set; } = CrowdfundResetEvery.Never;
+        public bool? DisplayPerksValue { get; set; } = null;
+        public bool? DisplayPerksRanking { get; set; } = null;
+        public bool? SortPerksByPopularity { get; set; } = null;
+        public string[] Sounds { get; set; } = null;
+        public string[] AnimationColors { get; set; } = null;
     }
 }

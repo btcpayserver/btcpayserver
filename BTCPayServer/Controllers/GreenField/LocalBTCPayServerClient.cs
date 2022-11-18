@@ -1163,6 +1163,14 @@ namespace BTCPayServer.Controllers.Greenfield
                await GetController<GreenfieldAppsController>().UpdatePointOfSaleApp(appId, request));
         }
 
+        public override async Task<CrowdfundAppData> CreateCrowdfundApp(
+            string storeId,
+            CreateCrowdfundAppRequest request, CancellationToken token = default)
+        {
+            return GetFromActionResult<CrowdfundAppData>(
+                await GetController<GreenfieldAppsController>().CreateCrowdfundApp(storeId, request));
+        }
+
         public override async Task<AppDataBase> GetApp(string appId, CancellationToken token = default)
         {
             return GetFromActionResult<AppDataBase>(

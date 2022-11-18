@@ -288,6 +288,117 @@ namespace BTCPayServer.Tests
                 await client.GetApp(retrievedApp.Id);
             });
         }
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task CanCreateCrowdfundApp()
+        {
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+            var user = tester.NewAccount();
+            await user.RegisterDerivationSchemeAsync("BTC");
+            var client = await user.CreateClient();
+
+            // Test validation for creating the app
+            await AssertValidationError(new[] { "AppName" },
+                async () => await client.CreateCrowdfundApp(user.StoreId, new CreateCrowdfundAppRequest() {}));
+            await AssertValidationError(new[] { "AppName" },
+                async () => await client.CreateCrowdfundApp(
+                    user.StoreId,
+                    new CreateCrowdfundAppRequest()
+                    {
+                        AppName = "this is a really long app name this is a really long app name this is a really long app name",
+                    }
+                )
+            );
+            await AssertValidationError(new[] { "TargetCurrency" },
+                async () => await client.CreateCrowdfundApp(
+                    user.StoreId,
+                    new CreateCrowdfundAppRequest()
+                    {
+                        AppName = "good name",
+                        TargetCurrency = "fake currency"
+                    }
+                )
+            );
+            await AssertValidationError(new[] { "PerksTemplate" },
+                async () => await client.CreateCrowdfundApp(
+                    user.StoreId,
+                    new CreateCrowdfundAppRequest()
+                    {
+                        AppName = "good name",
+                        PerksTemplate = "lol invalid template"
+                    }
+                )
+            );
+            await AssertValidationError(new[] { "AppName", "TargetCurrency", "PerksTemplate" },
+                async () => await client.CreateCrowdfundApp(
+                    user.StoreId,
+                    new CreateCrowdfundAppRequest()
+                    {
+                        TargetCurrency = "fake currency",
+                        PerksTemplate = "lol invalid template"
+                    }
+                )
+            );
+            await AssertValidationError(new[] { "AnimationColors" },
+                async () => await client.CreateCrowdfundApp(
+                    user.StoreId,
+                    new CreateCrowdfundAppRequest()
+                    {
+                        AppName = "good name",
+                        AnimationColors = new string[] {}
+                    }
+                )
+            );
+            await AssertValidationError(new[] { "AnimationColors" },
+                async () => await client.CreateCrowdfundApp(
+                    user.StoreId,
+                    new CreateCrowdfundAppRequest()
+                    {
+                        AppName = "good name",
+                        AnimationColors = new string[] { "  ", " " }
+                    }
+                )
+            );
+            await AssertValidationError(new[] { "Sounds" },
+                async () => await client.CreateCrowdfundApp(
+                    user.StoreId,
+                    new CreateCrowdfundAppRequest()
+                    {
+                        AppName = "good name",
+                        Sounds = new string[] { "  " }
+                    }
+                )
+            );
+            await AssertValidationError(new[] { "Sounds" },
+                async () => await client.CreateCrowdfundApp(
+                    user.StoreId,
+                    new CreateCrowdfundAppRequest()
+                    {
+                        AppName = "good name",
+                        Sounds = new string[] { " ", " ", " "  }
+                    }
+                )
+            );
+            await AssertValidationError(new[] { "EndDate" },
+                async () => await client.CreateCrowdfundApp(
+                    user.StoreId,
+                    new CreateCrowdfundAppRequest()
+                    {
+                        AppName = "good name",
+                        StartDate = DateTime.Parse("1998-01-01"),
+                        EndDate = DateTime.Parse("1997-12-31")
+                    }
+                )
+            );
+
+            // Test creating a crowdfund app
+            var app = await client.CreateCrowdfundApp(user.StoreId, new CreateCrowdfundAppRequest() { AppName = "test app from API" });
+            Assert.Equal("test app from API", app.Name);
+            Assert.Equal(user.StoreId, app.StoreId);
+            Assert.Equal("Crowdfund", app.AppType);
+        }
         
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]

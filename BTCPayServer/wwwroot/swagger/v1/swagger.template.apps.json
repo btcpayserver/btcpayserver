@@ -15,7 +15,7 @@
             "post": {
                 "operationId": "Apps_CreatePointOfSaleApp",
                 "summary": "Create a new Point of Sale app",
-                "description": "Point of Sale apps allows accepting payments for items in a virtual store",
+                "description": "Point of Sale app allows accepting payments for items in a virtual store",
                 "requestBody": {
                     "x-name": "request",
                     "content": {
@@ -126,6 +126,69 @@
                 ]
             }
         },
+        "/api/v1/stores/{storeId}/apps/crowdfund": {
+            "parameters": [
+                {
+                    "name": "storeId",
+                    "in": "path",
+                    "required": true,
+                    "description": "The store ID",
+                    "schema": {
+                        "type": "string"
+                    }
+                }
+            ],
+            "post": {
+                "operationId": "Apps_CreateCrowdfundApp",
+                "summary": "Create a new Crowdfund app",
+                "requestBody": {
+                    "x-name": "request",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreateCrowdfundAppRequest"
+                            }
+                        }
+                    },
+                    "required": true,
+                    "x-position": 1
+                },
+                "responses": {
+                    "200": {
+                        "description": "Created app details",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CrowdfundAppData"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unable to validate the request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    }
+                },
+                "tags": [
+                    "Apps",
+                    "Crowdfund"
+                ],
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
         "/api/v1/apps/{appId}": {
             "get": {
                 "tags": [
@@ -209,6 +272,15 @@
     "components": {
         "schemas": {
             "PointOfSaleAppData": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/BasicAppData"
+                    },
+                    {
+                    }
+                ]
+            },
+            "CrowdfundAppData": {
                 "allOf": [
                     {
                         "$ref": "#/components/schemas/BasicAppData"
@@ -366,6 +438,171 @@
                         "type": "string",
                         "description": "Form ID to request customer data, in case the new checkout is used",
                         "nullable": true
+                    }
+                }
+            },
+            "CreateCrowdfundAppRequest": {
+                "type": "object",
+                "properties": {
+                    "appName": {
+                        "type": "string",
+                        "description": "The name of the app (shown in admin UI)",
+                        "example": "Kukkstarter",
+                        "nullable": false
+                    },
+                    "title": {
+                        "type": "string",
+                        "description": "The title of the app (shown to the user)",
+                        "example": "My crowdfund app",
+                        "nullable": true
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "The description of the app (shown to the user)",
+                        "example": "My app description",
+                        "nullable": true
+                    },
+                    "enabled": {
+                        "type": "boolean",
+                        "description": "Determines if the app is enabled to be viewed by everyone",
+                        "default": true,
+                        "nullable": true
+                    },
+                    "enforceTargetAmount": {
+                        "type": "boolean",
+                        "description": "Will not allow contributions over the set target amount",
+                        "default": false,
+                        "nullable": true
+                    },
+                    "startDate": {
+                        "type": "number",
+                        "description": "UNIX timestamp for crowdfund start time (https://www.unixtimestamp.com/)",
+                        "allOf": [ {"$ref": "#/components/schemas/UnixTimestamp"}],
+                        "example": 768658369,
+                        "nullable": true
+                    },
+                    "endDate": {
+                        "type": "number",
+                        "description": "UNIX timestamp for crowdfund end time (https://www.unixtimestamp.com/)",
+                        "allOf": [ {"$ref": "#/components/schemas/UnixTimestamp"}],
+                        "example": 771336769,
+                        "nullable": true
+                    },
+                    "targetCurrency": {
+                        "type": "string",
+                        "description": "Target currency for the crowdfund. Defaults to the currency used by the store if not specified",
+                        "example": "BTC",
+                        "nullable": true
+                    },
+                    "targetAmount": {
+                        "type": "number",
+                        "description": "Target amount for the crowdfund",
+                        "example": 420,
+                        "nullable": true
+                    },
+                    "customCSSLink": {
+                        "type": "string",
+                        "description": "Link to a custom CSS stylesheet to be used in the app",
+                        "nullable": true
+                    },
+                    "mainImageUrl": {
+                        "type": "string",
+                        "description": "URL for image to be used as a cover image for the app",
+                        "nullable": true
+                    },
+                    "embeddedCSS": {
+                        "type": "string",
+                        "description": "Custom CSS to embed into the app",
+                        "nullable": true
+                    },
+                    "perksTemplate": {
+                        "type": "string",
+                        "description": "YAML template of perks available in the app",
+                        "example": "test_perk:\r\n  price: 100\r\n  title: test perk\r\n  price_type: \"fixed\" \r\n  disabled: false",
+                        "nullable": true
+                    },
+                    "notificationUrl": {
+                        "type": "string",
+                        "description": "Callback notification url to POST to once when invoice is paid for and once when there are enough blockchain confirmations",
+                        "nullable": true
+                    },
+                    "tagline": {
+                        "type": "string",
+                        "description": "Tagline for the app (shown to the user)",
+                        "example": "I can't believe it's not butter",
+                        "nullable": true
+                    },
+                    "disqusShortname": {
+                        "type": "string",
+                        "description": "Disqus shortname to used for the app. Enables Disqus functionality if set.",
+                        "nullable": true
+                    },
+                    "soundsEnabled": {
+                        "type": "boolean",
+                        "description": "Enables sounds on new contributions if set to true",
+                        "default": false,
+                        "nullable": true
+                    },
+                    "animationsEnabled": {
+                        "type": "boolean",
+                        "description": "Enables background animations on new contributions if set to true",
+                        "default": false,
+                        "nullable": true
+                    },
+                    "resetEveryAmount": {
+                        "type": "number",
+                        "description": "Contribution goal reset frequency amount. Must be used in conjunction with resetEvery and startDate.",
+                        "default": 1,
+                        "nullable": true
+                    },
+                    "resetEvery": {
+                        "type": "string",
+                        "description": "Contribution goal reset frequency. Must be used in conjunction with resetEveryAmount and startDate.",
+                        "nullable": true,
+                        "default": "Never",
+                        "x-enumNames": [
+                            "Never",
+                            "Hour",
+                            "Day",
+                            "Month",
+                            "Year"
+                        ],
+                        "enum": [
+                            "Never",
+                            "Hour",
+                            "Day",
+                            "Month",
+                            "Year"
+                        ]
+                    },
+                    "displayPerksValue": {
+                        "type": "boolean",
+                        "description": "Enables background animations on new contributions if set to true",
+                        "default": false,
+                        "nullable": true
+                    },
+                    "sortPerksByPopularity": {
+                        "type": "boolean",
+                        "description": "Sorts perks by popularity if set to true",
+                        "default": false,
+                        "nullable": true
+                    },
+                    "sounds": {
+                        "type": "array",
+                        "description": "Array of custom sounds to use on new contributions",
+                        "items": {
+                            "type": "string"
+                        },
+                        "nullable": true
+                    },
+                    "animationColors": {
+                        "type": "array",
+                        "description": "Array of custom HEX colors to use for background animations on new contributions",
+                        "items": {
+                            "type": "string"
+                        },
+                        "nullable": true,
+                        "example": ["#FF0000", "#00FF00", "#0000FF"]
                     }
                 }
             }

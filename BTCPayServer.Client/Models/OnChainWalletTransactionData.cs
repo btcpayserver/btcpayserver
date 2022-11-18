@@ -8,48 +8,81 @@ using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Client.Models
 {
-    
-    public class OnChainWalletObjectQuery
-    {
-        public string[]? Types { get; set; }
-        public OnChainWalletObjectId[]? Parents { get; set; }
-        public OnChainWalletObjectId[]? Children { get; set; }
-            
-        public bool IncludeLinks { get; set; }
-    }
-
-
-    
     public class OnChainWalletObjectId
     {
+        public OnChainWalletObjectId()
+        {
+
+        }
+        public OnChainWalletObjectId(string type, string id)
+        {
+            Type = type;
+            Id = id;
+        }
         public string Type { get; set; }
         public string Id { get; set; }
     }
-
-    public class RemoveOnChainWalletObjectLinkRequest
+    public class AddOnChainWalletObjectLinkRequest : OnChainWalletObjectId
     {
-        public OnChainWalletObjectId Parent { get; set; }
-        public OnChainWalletObjectId Child { get; set; }
-    }
-    public class AddOnChainWalletObjectLinkRequest
-    {
-        public OnChainWalletObjectId Parent { get; set; }
-        public OnChainWalletObjectId Child { get; set; }
-        public JObject? Data { get; set; }
-    }
-    
-
-    public class OnChainWalletObjectData:OnChainWalletObjectId
-    {
-        public class OnChainWalletObjectLink:OnChainWalletObjectId
+        public AddOnChainWalletObjectLinkRequest()
         {
-            public JObject? LinkData { get; set; }
+
         }
-        public JObject? Data { get; set; }
-        public OnChainWalletObjectLink[]? Parents { get; set; }
-        public OnChainWalletObjectLink[]? Children { get; set; }
+        public AddOnChainWalletObjectLinkRequest(string objectType, string objectId) : base(objectType, objectId)
+        {
+
+        }
+        public JObject Data { get; set; }
     }
-    
+
+    public class GetWalletObjectsRequest
+    {
+        public string Type { get; set; }
+        public string[] Ids { get; set; }
+        public bool? IncludeNeighbourData { get; set; }
+    }
+
+    public class AddOnChainWalletObjectRequest : OnChainWalletObjectId
+    {
+        public AddOnChainWalletObjectRequest()
+        {
+
+        }
+        public AddOnChainWalletObjectRequest(string objectType, string objectId) : base(objectType, objectId)
+        {
+
+        }
+        public JObject Data { get; set; }
+    }
+
+    public class OnChainWalletObjectData : OnChainWalletObjectId
+    {
+        public OnChainWalletObjectData()
+        {
+
+        }
+        public OnChainWalletObjectData(string type, string id) : base(type, id)
+        {
+
+        }
+
+        public class OnChainWalletObjectLink : OnChainWalletObjectId
+        {
+            public OnChainWalletObjectLink()
+            {
+
+            }
+            public OnChainWalletObjectLink(string type, string id) : base(type, id)
+            {
+
+            }
+            public JObject LinkData { get; set; }
+            public JObject ObjectData { get; set; }
+        }
+        public JObject Data { get; set; }
+        public OnChainWalletObjectLink[] Links { get; set; }
+    }
+
     public class OnChainWalletTransactionData
     {
         [JsonConverter(typeof(UInt256JsonConverter))]

@@ -42,7 +42,7 @@ namespace BTCPayServer.Data
             data.Blob = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(blob, serializers.GetSerializer(data.GetPaymentMethodId().CryptoCode)));
         }
 
-        public static JObject? GetProofBlobJson(this PayoutData data)
+        public static JObject GetProofBlobJson(this PayoutData data)
         {
             return data?.Proof is null ? null : JObject.Parse(Encoding.UTF8.GetString(data.Proof));
         }

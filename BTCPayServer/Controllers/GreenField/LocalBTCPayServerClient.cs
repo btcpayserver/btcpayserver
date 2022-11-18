@@ -222,36 +222,38 @@ namespace BTCPayServer.Controllers.Greenfield
                 await GetController<GreenfieldCustodianAccountController>().MarketTradeCustodianAccountAsset(storeId, accountId, request, cancellationToken));
         }
 
-        public override async Task<OnChainWalletObjectData[]> GetOnChainWalletObjects(string storeId, string cryptoCode, OnChainWalletObjectQuery query,
+        public override async Task<OnChainWalletObjectData[]> GetOnChainWalletObjects(string storeId, string cryptoCode,
+            GetWalletObjectsRequest query = null,
             CancellationToken token = default)
         {
             return GetFromActionResult<OnChainWalletObjectData[]>(
-                await GetController<GreenfieldStoreOnChainWalletsController>().GetOnChainWalletObjects(storeId, cryptoCode, query));
-
+                await GetController<GreenfieldStoreOnChainWalletsController>().GetOnChainWalletObjects(storeId, cryptoCode, query?.Type, query?.Ids, query?.IncludeNeighbourData));
         }
 
-        public override async Task RemoveOnChainWalletObjects(string storeId, string cryptoCode, OnChainWalletObjectQuery query,
-            CancellationToken token = default)
+        public override async Task<OnChainWalletObjectData> GetOnChainWalletObject(string storeId, string cryptoCode, OnChainWalletObjectId objectId, bool? includeNeighbourData = null, CancellationToken token = default)
         {
-            HandleActionResult(await GetController<GreenfieldStoreOnChainWalletsController>().RemoveOnChainWalletObjects(storeId, cryptoCode, query));
+            return GetFromActionResult<OnChainWalletObjectData>(
+                await GetController<GreenfieldStoreOnChainWalletsController>().GetOnChainWalletObject(storeId, cryptoCode, objectId.Type, objectId.Id, includeNeighbourData));
+        }
+        public override async Task<OnChainWalletObjectData> AddOrUpdateOnChainWalletObject(string storeId, string cryptoCode, AddOnChainWalletObjectRequest request, CancellationToken token = default)
+        {
+            return GetFromActionResult<OnChainWalletObjectData>(
+                await GetController<GreenfieldStoreOnChainWalletsController>().AddOrUpdateOnChainWalletObject(storeId, cryptoCode, request));
         }
 
-        public override async Task AddOrUpdateOnChainWalletObjects(string storeId, string cryptoCode, OnChainWalletObjectData[] request,
-            CancellationToken token = default)
+        public override async Task RemoveOnChainWalletLinks(string storeId, string cryptoCode, OnChainWalletObjectId objectId, OnChainWalletObjectId link, CancellationToken token = default)
         {
-            HandleActionResult(await GetController<GreenfieldStoreOnChainWalletsController>().AddOrUpdateOnChainWalletObjects(storeId, cryptoCode, request));
+            HandleActionResult(await GetController<GreenfieldStoreOnChainWalletsController>().RemoveOnChainWalletLink(storeId, cryptoCode, objectId.Type, objectId.Id, link.Type, link.Id));
         }
 
-        public override async Task AddOrUpdateOnChainWalletLinks(string storeId, string cryptoCode, AddOnChainWalletObjectLinkRequest[] request,
-            CancellationToken token = default)
+        public override async Task RemoveOnChainWalletObject(string storeId, string cryptoCode, OnChainWalletObjectId objectId, CancellationToken token = default)
         {
-            HandleActionResult(await GetController<GreenfieldStoreOnChainWalletsController>().AddOrUpdateOnChainWalletLinks(storeId, cryptoCode, request));
+            HandleActionResult(await GetController<GreenfieldStoreOnChainWalletsController>().RemoveOnChainWalletObject(storeId, cryptoCode, objectId.Type, objectId.Id));
         }
 
-        public override async Task RemoveOnChainWalletLinks(string storeId, string cryptoCode, RemoveOnChainWalletObjectLinkRequest[] request,
-            CancellationToken token = default)
+        public override async Task AddOrUpdateOnChainWalletLink(string storeId, string cryptoCode, OnChainWalletObjectId objectId, AddOnChainWalletObjectLinkRequest request = null, CancellationToken token = default)
         {
-            HandleActionResult(await GetController<GreenfieldStoreOnChainWalletsController>().RemoveOnChainWalletLinks(storeId, cryptoCode, request));
+            HandleActionResult(await GetController<GreenfieldStoreOnChainWalletsController>().AddOrUpdateOnChainWalletLinks(storeId, cryptoCode, objectId.Type, objectId.Id, request));
         }
 
         public override async Task<StoreWebhookData> CreateWebhook(string storeId, CreateStoreWebhookRequest create,

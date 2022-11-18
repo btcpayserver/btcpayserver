@@ -763,7 +763,7 @@ namespace BTCPayServer.HostedServices
         }
 
         public string PayoutId { get; set; }
-        public JObject? Proof { get; set; }
+        public JObject Proof { get; set; }
         public PayoutState State { get; set; }
 
         public static string GetErrorMessage(PayoutPaidResult result)

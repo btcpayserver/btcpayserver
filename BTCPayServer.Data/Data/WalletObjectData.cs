@@ -30,6 +30,36 @@ namespace BTCPayServer.Data
         public List<WalletObjectLinkData> ChildLinks { get; set; }
         public List<WalletObjectLinkData> ParentLinks { get; set; }
 
+        public IEnumerable<(string type, string id, string linkdata, string objectdata)> GetLinks()
+        {
+            if (ChildLinks is not null)
+                foreach (var c in ChildLinks)
+                {
+                    yield return (c.ChildType, c.ChildId, c.Data, c.Child?.Data);
+                }
+            if (ParentLinks is not null)
+                foreach (var c in ParentLinks)
+                {
+                    yield return (c.ParentType, c.ParentId, c.Data, c.Parent?.Data);
+                }
+        }
+
+        public IEnumerable<WalletObjectData> GetNeighbours()
+        {
+            if (ChildLinks != null)
+                foreach (var c in ChildLinks)
+                {
+                    if (c.Child != null)
+                        yield return c.Child;
+                }
+            if (ParentLinks != null)
+                foreach (var c in ParentLinks)
+                {
+                    if (c.Parent != null)
+                        yield return c.Parent;
+                }
+        }
+
         internal static void OnModelCreating(ModelBuilder builder, DatabaseFacade databaseFacade)
         {
             builder.Entity<WalletObjectData>().HasKey(o =>

@@ -2996,113 +2996,119 @@ namespace BTCPayServer.Tests
         {
             using var tester = CreateServerTester();
             await tester.StartAsync();
-            
+
             var admin = tester.NewAccount();
             await admin.GrantAccessAsync(true);
-            
+
             var client = await admin.CreateClient(Policies.Unrestricted);
 
-            Assert.Empty(await client.GetOnChainWalletObjects(admin.StoreId, "BTC", new()));
-            await client.AddOrUpdateOnChainWalletObjects(admin.StoreId, "BTC",
-                new OnChainWalletObjectData[] {new OnChainWalletObjectData() {Id = "test", Type = "test"}});
-            Assert.Single(await client.GetOnChainWalletObjects(admin.StoreId, "BTC", new()));
-            Assert.Single(await client.GetOnChainWalletObjects(admin.StoreId, "BTC", new()
-            {
-                Types = new []{ "test"},
-            }));
-            Assert.Empty(await client.GetOnChainWalletObjects(admin.StoreId, "BTC", new()
-            {
-                Types = new []{ "test-wrong"},
-            }));
-            await client.RemoveOnChainWalletObjects(admin.StoreId, "BTC", new()
-            {
-                Types = new []{ "test"},
-            });
-            
-            Assert.Empty(await client.GetOnChainWalletObjects(admin.StoreId, "BTC", new()));
-            
-            await client.AddOrUpdateOnChainWalletObjects(admin.StoreId, "BTC",
-                new OnChainWalletObjectData[] {new OnChainWalletObjectData() {Id = "test", Type = "test", Children = new []
-                {
-                    new OnChainWalletObjectData.OnChainWalletObjectLink()
-                    {
-                        Id = "test-child",
-                        Type = "test",
-                        
-                    },
-                },
-                    Parents = new []{ new OnChainWalletObjectData.OnChainWalletObjectLink()
-                    {
-                        Id = "test-parent",
-                        Type = "test",
-                        
-                    },}
-                }});
-            Assert.Single(await client.GetOnChainWalletObjects(admin.StoreId, "BTC", new()
-            {
-                Types = new []{ "test"},
-            }));
-            
-             
-            await client.AddOrUpdateOnChainWalletObjects(admin.StoreId, "BTC",
-                new OnChainWalletObjectData[] {
-                    new OnChainWalletObjectData() {Id = "test-child", Type = "test",},
-                    new OnChainWalletObjectData() {Id = "test-parent", Type = "test",},
-                    
-                    
-                    new OnChainWalletObjectData() {Id = "test", Type = "test", Children = new []
-                    {
-                        new OnChainWalletObjectData.OnChainWalletObjectLink()
-                        {
-                            Id = "test-child",
-                            Type = "test",
-                        
-                        },
-                    },
-                    Parents = new []{ new OnChainWalletObjectData.OnChainWalletObjectLink()
-                    {
-                        Id = "test-parent",
-                        Type = "test",
-                        
-                    },}
-                }});
+            Assert.Empty(await client.GetOnChainWalletObjects(admin.StoreId, "BTC"));
+            var test = new OnChainWalletObjectId("test", "test");
+            Assert.NotNull(await client.AddOrUpdateOnChainWalletObject(admin.StoreId, "BTC", new AddOnChainWalletObjectRequest(test.Type, test.Id)));
 
-            var objs = await client.GetOnChainWalletObjects(admin.StoreId, "BTC", new() {Types = new[] {"test"}, IncludeLinks = true});
+            Assert.Single(await client.GetOnChainWalletObjects(admin.StoreId, "BTC"));
+            Assert.NotNull(await client.GetOnChainWalletObject(admin.StoreId, "BTC", test));
+            Assert.Null(await client.GetOnChainWalletObject(admin.StoreId, "BTC", new OnChainWalletObjectId("test-wrong", "test")));
+            Assert.Null(await client.GetOnChainWalletObject(admin.StoreId, "BTC", new OnChainWalletObjectId("test", "test-wrong")));
+
+            await client.RemoveOnChainWalletObject(admin.StoreId, "BTC", new OnChainWalletObjectId("test", "test"));
+
+            Assert.Empty(await client.GetOnChainWalletObjects(admin.StoreId, "BTC"));
+
+            var test1 = new OnChainWalletObjectId("test", "test1");
+            var test2 = new OnChainWalletObjectId("test", "test2");
+            await client.AddOrUpdateOnChainWalletObject(admin.StoreId, "BTC", new AddOnChainWalletObjectRequest(test.Type, test.Id));
+            // Those links don't exists
+            await AssertAPIError("wallet-object-not-found", () => client.AddOrUpdateOnChainWalletLink(admin.StoreId, "BTC", test, new AddOnChainWalletObjectLinkRequest(test1.Type, test1.Id)));
+            await AssertAPIError("wallet-object-not-found", () => client.AddOrUpdateOnChainWalletLink(admin.StoreId, "BTC", test, new AddOnChainWalletObjectLinkRequest(test2.Type, test2.Id)));
+
+            Assert.Single(await client.GetOnChainWalletObjects(admin.StoreId, "BTC"));
+
+            await client.AddOrUpdateOnChainWalletObject(admin.StoreId, "BTC", new AddOnChainWalletObjectRequest(test1.Type, test1.Id));
+            await client.AddOrUpdateOnChainWalletObject(admin.StoreId, "BTC", new AddOnChainWalletObjectRequest(test2.Type, test2.Id));
+
+            await client.AddOrUpdateOnChainWalletLink(admin.StoreId, "BTC", test, new AddOnChainWalletObjectLinkRequest(test1.Type, test1.Id));
+            await client.AddOrUpdateOnChainWalletLink(admin.StoreId, "BTC", test, new AddOnChainWalletObjectLinkRequest(test2.Type, test2.Id));
+
+            var objs = await client.GetOnChainWalletObjects(admin.StoreId, "BTC");
             Assert.Equal(3, objs.Length);
             var middleObj = objs.Single(data => data.Id == "test" && data.Type == "test");
-            Assert.Equal("test-child", Assert.Single(middleObj.Children).Id);
-            Assert.Equal("test-parent", Assert.Single(middleObj.Parents).Id);
-            
-            Assert.Equal("test", Assert.Single(objs.Single(data => data.Id == "test-parent" && data.Type == "test").Children).Id);
-            Assert.Equal("test", Assert.Single(objs.Single(data => data.Id == "test-child" && data.Type == "test").Parents).Id);
+            Assert.Equal(2, middleObj.Links.Length);
+            Assert.Contains("test1", middleObj.Links.Select(l => l.Id));
+            Assert.Contains("test2", middleObj.Links.Select(l => l.Id));
+
+            var test1Obj = objs.Single(data => data.Id == "test1" && data.Type == "test");
+            var test2Obj = objs.Single(data => data.Id == "test2" && data.Type == "test");
+            Assert.Single(test1Obj.Links.Select(l => l.Id), l => l == "test");
+            Assert.Single(test2Obj.Links.Select(l => l.Id), l => l == "test");
 
             await client.RemoveOnChainWalletLinks(admin.StoreId, "BTC",
-                new[]
-                {
-                    new RemoveOnChainWalletObjectLinkRequest()
-                    {
-                        Parent = new OnChainWalletObjectId() {Id = "test-parent", Type = "test"},
-                        Child = new OnChainWalletObjectId() {Id = "test", Type = "test"}
-                    }
-                });
+                test1,
+                test);
 
-            Assert.Empty(await client.GetOnChainWalletObjects(admin.StoreId, "BTC",
-                new() {Parents = new OnChainWalletObjectId[] {new() {Id = "test-parent", Type = "test"}}})
-            );
+            var testObj = await client.GetOnChainWalletObject(admin.StoreId, "BTC", test);
+            Assert.Single(testObj.Links.Select(l => l.Id), l => l == "test2");
+            Assert.Single(testObj.Links);
+            test1Obj = await client.GetOnChainWalletObject(admin.StoreId, "BTC", test1);
+            Assert.Empty(test1Obj.Links);
 
-           await client.AddOrUpdateOnChainWalletLinks(admin.StoreId, "BTC",
-                new AddOnChainWalletObjectLinkRequest[]
-                {
-                    new()
-                    {
-                        Parent = new OnChainWalletObjectId() {Id = "test-parent", Type = "test"},
-                        Child = new OnChainWalletObjectId() {Id = "test", Type = "test"}
-                    }
-                });
-            
-            Assert.Single(await client.GetOnChainWalletObjects(admin.StoreId, "BTC",
-                new() {Parents = new OnChainWalletObjectId[] {new() {Id = "test-parent", Type = "test"}}})
-            );
+            await client.AddOrUpdateOnChainWalletLink(admin.StoreId, "BTC",
+                test1,
+                new AddOnChainWalletObjectLinkRequest(test.Type, test.Id) { Data = new JObject() { ["testData"] = "lol" } });
+
+            // Add some data to test1
+            await client.AddOrUpdateOnChainWalletObject(admin.StoreId, "BTC", new AddOnChainWalletObjectRequest() { Type = test1.Type, Id = test1.Id, Data = new JObject() { ["testData"] = "test1" } });
+
+            // Create a new type
+            await client.AddOrUpdateOnChainWalletObject(admin.StoreId, "BTC", new AddOnChainWalletObjectRequest() { Type = "newtype", Id = test1.Id });
+
+            testObj = await client.GetOnChainWalletObject(admin.StoreId, "BTC", test);
+            Assert.Single(testObj.Links.Where(l => l.Id == "test1" && l.LinkData["testData"]?.Value<string>() == "lol"));
+            Assert.Single(testObj.Links.Where(l => l.Id == "test1" && l.ObjectData["testData"]?.Value<string>() == "test1"));
+            testObj = await client.GetOnChainWalletObject(admin.StoreId, "BTC", test, false);
+            Assert.Single(testObj.Links.Where(l => l.Id == "test1" && l.LinkData["testData"]?.Value<string>() == "lol"));
+            Assert.Single(testObj.Links.Where(l => l.Id == "test1" && l.ObjectData is null));
+
+            async Task TestWalletRepository(bool useInefficient)
+            {
+                // We should have 4 nodes, two `test` type and one `newtype`
+                // Only the node `test` `test` is connected to `test1`
+                var wid = new WalletId(admin.StoreId, "BTC");
+                var repo = tester.PayTester.GetService<WalletRepository>();
+                var allObjects = await repo.GetWalletObjects((GetWalletObjectsQuery)(new(wid, null) { UseInefficientPath = useInefficient }));
+                var allTests = await repo.GetWalletObjects((GetWalletObjectsQuery)(new(wid, "test") { UseInefficientPath = useInefficient }));
+                var twoTests2 = await repo.GetWalletObjects((GetWalletObjectsQuery)(new(wid, "test", new[] { "test1", "test2", "test-unk" }) { UseInefficientPath = useInefficient }));
+                var oneTest = await repo.GetWalletObjects((GetWalletObjectsQuery)(new(wid, "test", new[] { "test" }) { UseInefficientPath = useInefficient }));
+                var oneTestWithoutData = await repo.GetWalletObjects((GetWalletObjectsQuery)(new(wid, "test", new[] { "test" }) { UseInefficientPath = useInefficient, IncludeNeighbours = false }));
+
+                Assert.Equal(4, allObjects.Count);
+                Assert.Equal(3, allTests.Count);
+                Assert.Equal(2, twoTests2.Count);
+                Assert.Single(oneTest);
+                Assert.NotNull(oneTest.First().Value.GetNeighbours().Select(n => n.Data).FirstOrDefault());
+                Assert.Single(oneTestWithoutData);
+                Assert.Null(oneTestWithoutData.First().Value.GetNeighbours().Select(n => n.Data).FirstOrDefault());
+            }
+            await TestWalletRepository(false);
+            await TestWalletRepository(true);
+
+            {
+                var allObjects = await client.GetOnChainWalletObjects(admin.StoreId, "BTC");
+                var allTests = await client.GetOnChainWalletObjects(admin.StoreId, "BTC", new GetWalletObjectsRequest() { Type = "test" });
+                var twoTests2 = await client.GetOnChainWalletObjects(admin.StoreId, "BTC", new GetWalletObjectsRequest() { Type = "test", Ids = new[] { "test1", "test2", "test-unk" } });
+                var oneTest = await client.GetOnChainWalletObjects(admin.StoreId, "BTC", new GetWalletObjectsRequest() { Type = "test", Ids=new[] { "test" } });
+                var oneTestWithoutData = await client.GetOnChainWalletObjects(admin.StoreId, "BTC", new GetWalletObjectsRequest() { Type = "test", Ids = new[] { "test" }, IncludeNeighbourData = false });
+
+                Assert.Equal(4, allObjects.Length);
+                Assert.Equal(3, allTests.Length);
+                Assert.Equal(2, twoTests2.Length);
+                Assert.Single(oneTest);
+                Assert.NotNull(oneTest.First().Links.Select(n => n.ObjectData).FirstOrDefault());
+                Assert.Single(oneTestWithoutData);
+                Assert.Null(oneTestWithoutData.First().Links.Select(n => n.ObjectData).FirstOrDefault());
+            }
+
+
         }
         
         [Fact(Timeout = TestTimeout)]

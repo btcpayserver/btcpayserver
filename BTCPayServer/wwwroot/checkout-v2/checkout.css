@@ -149,7 +149,7 @@ section dl > div dd {
     min-height: var(--qr-size);
 }
 .payment-box .qr-container svg {
-    border-radius: var(--border-radius);
+    border-radius: var(--btcpay-border-radius);
 }
 .payment-box svg {
     width: 100%;

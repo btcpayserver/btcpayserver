@@ -1,4 +1,7 @@
 @using BTCPayServer.Services.PaymentRequests
+@using Microsoft.AspNetCore.Html
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using BTCPayServer.Components
 @model BTCPayServer.Models.PaymentRequestViewModels.ListPaymentRequestsViewModel
 @{
     Layout = "_Layout";
@@ -55,9 +58,14 @@
                 <thead>
                     <tr>
                         <th>Title</th>
-                        <th>Expiry</th>
-                        <th class="text-end">Price</th>
-                        <th class="text-end">Status</th>
+                        <th class="w-150px">
+                            <div class="d-flex align-items-center gap-1">
+                                Expiry
+                                <button type="button" class="btn btn-link p-0 fa fa-clock-o switch-time-format only-for-js" title="Switch date format"></button>
+                            </div>
+                        </th>
+                        <th>Status</th>
+                        <th class="text-end">Amount</th>
                         <th class="text-end">Actions</th>
                     </tr>
                 </thead>
@@ -68,9 +76,13 @@
                             <td>
                                 <a asp-action="EditPaymentRequest" asp-route-storeId="@item.StoreId" asp-route-payReqId="@item.Id" id="Edit-@item.Id">@item.Title</a>
                             </td>
-                            <td>@(item.ExpiryDate?.ToString("g") ?? "No Expiry")</td>
-                            <td class="text-end">@item.Amount @item.Currency</td>
-                            <td class="text-end">@item.Status</td>
+                            <td>
+                                @(item.ExpiryDate?.ToBrowserDate() ?? new HtmlString($"<span class=\"text-muted\">No Expiry</span>"))
+                            </td>
+                            <td>
+                                <span class="badge badge-@item.Status.ToLower()">@item.Status</span>
+                            </td>
+                            <td class="text-end">@item.AmountFormatted</td>
                             <td class="text-end">
                                 <a asp-controller="UIInvoice" asp-action="ListInvoices" asp-route-storeId="@item.StoreId" asp-route-searchterm="@($"orderid:{PaymentRequestRepository.GetOrderIdForPaymentRequest(item.Id)}")">Invoices</a>
                                 <span> - </span>

@@ -74,7 +74,15 @@ namespace BTCPayServer.Controllers
                 IncludeArchived = includeArchived
             });
 
-            model.Items = result.Select(data => new ViewPaymentRequestViewModel(data)).ToList();
+            model.Items = result.Select(data =>
+            {
+                var blob = data.GetBlob();
+                return new ViewPaymentRequestViewModel(data)
+                {
+                    AmountFormatted = _Currencies.FormatCurrency(blob.Amount, blob.Currency)
+                };
+            }).ToList();
+            
             return View(model);
         }
 

@@ -12,13 +12,15 @@ const urlParams = {};
 })();
 
 Vue.directive('collapsible', {
-    bind: function (el) {
+    bind: function (el, binding) {
+        el.classList.add('collapse');
+        el.classList[binding.value ? 'add' : 'remove']('show');
         el.transitionDuration = 350;
     },
     update: function (el, binding) {
         if (binding.oldValue !== binding.value){
             if (binding.value) {
-                setTimeout(function () {
+                setTimeout(() => {
                     el.classList.remove('collapse');
                     const height = window.getComputedStyle(el).height;
                     el.classList.add('collapsing');
@@ -64,22 +66,9 @@ function isLanguageAvailable(languageCode) {
     return availableLanguages.indexOf(languageCode) >= 0;
 }
 
-i18next
-    .use(window.i18nextXHRBackend)
-    .init({
-        backend: {
-            loadPath: i18nUrl
-        },
-        lng: startingLanguage,
-        fallbackLng: fallbackLanguage,
-        nsSeparator: false,
-        keySeparator: false,
-        load: 'currentOnly'
-    });
+Vue.use(VueI18next);
 
 const i18n = new VueI18next(i18next);
-Vue.use(VueI18next, { i18n });
-
 const eventBus = new Vue();
 
 const PaymentDetails = Vue.component('payment-details', {
@@ -89,6 +78,9 @@ const PaymentDetails = Vue.component('payment-details', {
         isActive: Boolean
     },
     computed: {
+        orderAmount () {
+            return parseFloat(this.srvModel.orderAmount);
+        },
         btcDue () {
             return parseFloat(this.srvModel.btcDue);
         },
@@ -101,7 +93,7 @@ const PaymentDetails = Vue.component('payment-details', {
     }
 });
 
-new Vue({
+const initApp = () => new Vue({
     i18n,
     el: '#Checkout',
     components: {
@@ -143,6 +135,9 @@ new Vue({
         },
         showRecommendedFee () {
             return this.isActive() && this.srvModel.showRecommendedFee && this.srvModel.feeRate;
+        },
+        orderAmount () {
+            return parseFloat(this.srvModel.orderAmount);
         },
         btcDue () {
             return parseFloat(this.srvModel.btcDue);
@@ -200,7 +195,7 @@ new Vue({
             }
         },
         listenIn () {
-            let socket;
+            let socket = null;
             const updateFn = this.fetchData;
             const supportsWebSockets = 'WebSocket' in window && window.WebSocket.CLOSING === 2;
             if (supportsWebSockets) {
@@ -208,9 +203,8 @@ new Vue({
                 const wsUri = `${protocol}//${window.location.host}${statusWsUrl}`;
                 try {
                     socket = new WebSocket(wsUri);
-                    socket.onmessage = e => {
-                        if (e.data === 'ping') return;
-                        updateFn();
+                    socket.onmessage = async e => {
+                        if (e.data !== 'ping') await updateFn();
                     };
                     socket.onerror = e => {
                         console.error('Error while connecting to websocket for invoice notifications (callback):', e);
@@ -222,9 +216,9 @@ new Vue({
             }
             // fallback in case there is no websocket support
             (function watcher() {
-                setTimeout(() => {
+                setTimeout(async () => {
                     if (socket === null || socket.readyState !== 1) {
-                        updateFn();
+                        await updateFn();
                     }
                     watcher();
                 }, 2000);
@@ -271,3 +265,16 @@ new Vue({
         }
     }
 });
+
+i18next
+    .use(window.i18nextXHRBackend)
+    .init({
+        backend: {
+            loadPath: i18nUrl
+        },
+        lng: startingLanguage,
+        fallbackLng: fallbackLanguage,
+        nsSeparator: false,
+        keySeparator: false,
+        load: 'currentOnly'
+    }, initApp);

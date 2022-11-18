@@ -181,6 +181,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                     AppService.TryParsePosCartItems(posData, out var cartItems))
                 {
                     var choices = _appService.GetPOSItems(settings.Template, settings.Currency);
+                    var expectedMinimumAmount = 0m;
                     foreach (var cartItem in cartItems)
                     {
                         var itemChoice = choices.FirstOrDefault(c => c.Id == cartItem.Key);
@@ -197,6 +198,19 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                                     return RedirectToAction(nameof(ViewPointOfSale), new { appId });
                             }
                         }
+
+                        decimal expectedCartItemPrice = 0;
+                        if (choice.Price.Type != ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Topup)
+                        {
+                            expectedCartItemPrice = choice.Price.Value ?? 0;
+                        }
+
+                        expectedMinimumAmount += expectedCartItemPrice * cartItem.Value;
+                    }
+
+                    if (expectedMinimumAmount > amount)
+                    {
+                        return RedirectToAction(nameof(ViewPointOfSale), new { appId });
                     }
                 }
             }

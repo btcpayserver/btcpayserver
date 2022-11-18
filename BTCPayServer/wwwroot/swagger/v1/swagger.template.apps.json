@@ -593,7 +593,8 @@
                         "items": {
                             "type": "string"
                         },
-                        "nullable": true
+                        "nullable": true,
+                        "example": [ "https://github.com/ClaudiuHKS/AdvancedQuakeSounds/raw/master/sound/AQS/doublekill.wav" ]
                     },
                     "animationColors": {
                         "type": "array",

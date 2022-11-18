@@ -158,6 +158,11 @@ const initApp = () => new Vue({
             return this.remainingSeconds > 0
                 ? `${this.padTime(this.minutesLeft)}:${this.padTime(this.secondsLeft)}`
                 : '00:00';
+        },
+        storeLink () {
+            return this.srvModel.merchantRefLink && this.srvModel.merchantRefLink !== this.srvModel.receiptLink
+                ? this.srvModel.merchantRefLink
+                : null;
         }
     },
     mounted () {

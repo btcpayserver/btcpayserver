@@ -75,7 +75,7 @@
                 }
                 else
                 {
-                    <h2 id="AmountDue" class="text-center" v-text="`${srvModel.btcDue} ${srvModel.cryptoCode}`" :data-clipboard="srvModel.btcDue" :data-clipboard-confirm="$t('copy_confirm')">@Model.BtcDue @Model.CryptoCode</h2>
+                    <h2 id="AmountDue" class="text-center" v-text="`${srvModel.btcDue} ${srvModel.cryptoCode}`" :data-clipboard="srvModel.btcDue" :data-clipboard-confirm="$t('copy_confirm')" :data-amount-due="btcDue">@Model.BtcDue @Model.CryptoCode</h2>
                 }
                 <div id="PaymentInfo" class="info mt-3 mb-2" v-collapsible="showInfo">
                     <div>

@@ -35,15 +35,22 @@
             
             <h3 class="mt-5 mb-3">Branding</h3>
             <div class="form-group">
-                <label asp-for="LogoFile" class="form-label"></label>
+                <div class="d-flex align-items-center justify-content-between gap-2">
+                    <label asp-for="LogoFile" class="form-label"></label>
+                    @if (!string.IsNullOrEmpty(Model.LogoFileId))
+                    {
+                        <button type="submit" class="btn btn-link p-0 text-danger" name="RemoveLogoFile" value="true">
+                            <span class="fa fa-times"></span> Remove
+                        </button>
+                    }
+                </div>
                 @if (canUpload)
                 {
-                    <div class="d-flex flex-wrap gap-3 align-items-center">
+                    <div class="d-flex align-items-center gap-3">
                         <input asp-for="LogoFile" type="file" class="form-control flex-grow">
                         @if (!string.IsNullOrEmpty(Model.LogoFileId))
                         {
                             <img src="@(await FileService.GetFileUrl(Context.Request.GetAbsoluteRootUri(), Model.LogoFileId))" alt="Logo" style="height:2.1rem;max-width:10.5rem;"/>
-                            <button type="submit" class="btn btn-sm btn-outline-danger" name="RemoveLogoFile" value="true">Remove</button>
                         }
                     </div>
                     <span asp-validation-for="LogoFile" class="text-danger"></span>

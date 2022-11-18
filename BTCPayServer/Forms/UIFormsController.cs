@@ -13,82 +13,21 @@ using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.Data.Data;
 using BTCPayServer.Models;
-using BTCPayServer.Services;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Forms;
 
-public interface IFormComponentProvider
-{
-    public string CanHandle(Field field);
-}
-
-public class HtmlInputFormProvider: IFormComponentProvider
-{
-    public string CanHandle(Field field)
-    {
-        return new[] {
-            "text",
-            "radio",
-            "checkbox",
-            "password",
-            "file",
-            "hidden",
-            "button",
-            "submit",
-            "color",
-            "date",
-            "datetime-local",
-            "month",
-            "week",
-            "time",
-            "email",
-            "image",
-            "number",
-            "range",
-            "search",
-            "url",
-            "tel",
-            "reset"}.Contains(field.Type) ? "Forms/InputElement" : null;
-    }
-}
-public class HtmlFieldsetFormProvider: IFormComponentProvider
-{
-    public string CanHandle(Field field)
-    {
-        return new[] { "fieldset"}.Contains(field.Type) ? "Forms/FieldSetElement" : null;
-    }
-}
-
-public class FormComponentProvider : IFormComponentProvider
-{
-    private readonly IEnumerable<IFormComponentProvider> _formComponentProviders;
-
-    public FormComponentProvider(IEnumerable<IFormComponentProvider> formComponentProviders)
-    {
-        _formComponentProviders = formComponentProviders;
-    }
-    
-    public string CanHandle(Field field)
-    {
-        return _formComponentProviders.Select(formComponentProvider => formComponentProvider.CanHandle(field)).FirstOrDefault(result => !string.IsNullOrEmpty(result));
-    }
-}
-
 public class UIFormsController : Controller
 {
     private readonly FormDataService _formDataService;
-    private readonly IMemoryCache _memoryCache;
 
-    public UIFormsController(FormDataService formDataService, IMemoryCache memoryCache)
+    public UIFormsController(FormDataService formDataService)
     {
         _formDataService = formDataService;
-        _memoryCache = memoryCache;
     }
 
     [HttpGet("~/stores/{storeId}/forms")]
@@ -213,7 +152,7 @@ public class UIFormsController : Controller
                 {
                     Config = JObject.FromObject(FormDataService.StaticFormAddress).ToString(),
                     Id = GenericFormOption.Address.ToString(),
-                    Name = "Address Form",
+                    Name = "Provide your address",
                 };
                 break;
 
@@ -222,7 +161,7 @@ public class UIFormsController : Controller
                 {
                     Config = JObject.FromObject(FormDataService.StaticFormEmail).ToString(),
                     Id = GenericFormOption.Email.ToString(),
-                    Name = "Email Form",
+                    Name = "Provide your email address",
                 };
 
                 break;

@@ -30,6 +30,10 @@ namespace BTCPayServer.Migrations
                 {
                     table.PrimaryKey("PK_WalletObjects", x => new { x.WalletId, x.Type, x.Id });
                 });
+            migrationBuilder.CreateIndex(
+                name: "IX_WalletObjects_Type_Id",
+                table: "WalletObjects",
+                columns: new[] { "Type", "Id" });
 
             migrationBuilder.CreateTable(
                 name: "WalletObjectLinks",

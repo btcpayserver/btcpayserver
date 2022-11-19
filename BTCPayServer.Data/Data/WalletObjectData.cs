@@ -69,6 +69,12 @@ namespace BTCPayServer.Data
                 o.Type,
                 o.Id,
             });
+            builder.Entity<WalletObjectData>().HasIndex(o =>
+            new
+            {
+                o.Type,
+                o.Id
+            });
 
             if (databaseFacade.IsNpgsql())
             {

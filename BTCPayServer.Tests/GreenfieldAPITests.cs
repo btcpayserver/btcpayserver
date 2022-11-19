@@ -3075,19 +3075,26 @@ namespace BTCPayServer.Tests
                 // Only the node `test` `test` is connected to `test1`
                 var wid = new WalletId(admin.StoreId, "BTC");
                 var repo = tester.PayTester.GetService<WalletRepository>();
-                var allObjects = await repo.GetWalletObjects((GetWalletObjectsQuery)(new(wid, null) { UseInefficientPath = useInefficient }));
-                var allTests = await repo.GetWalletObjects((GetWalletObjectsQuery)(new(wid, "test") { UseInefficientPath = useInefficient }));
-                var twoTests2 = await repo.GetWalletObjects((GetWalletObjectsQuery)(new(wid, "test", new[] { "test1", "test2", "test-unk" }) { UseInefficientPath = useInefficient }));
-                var oneTest = await repo.GetWalletObjects((GetWalletObjectsQuery)(new(wid, "test", new[] { "test" }) { UseInefficientPath = useInefficient }));
-                var oneTestWithoutData = await repo.GetWalletObjects((GetWalletObjectsQuery)(new(wid, "test", new[] { "test" }) { UseInefficientPath = useInefficient, IncludeNeighbours = false }));
+                var allObjects = await repo.GetWalletObjects((new(wid, null) { UseInefficientPath = useInefficient }));
+                var allObjectsNoWallet = await repo.GetWalletObjects((new() { UseInefficientPath = useInefficient }));
+                var allObjectsNoWalletAndType = await repo.GetWalletObjects((new() { Type = "test", UseInefficientPath = useInefficient }));
+                var allTests = await repo.GetWalletObjects((new(wid, "test") { UseInefficientPath = useInefficient }));
+                var twoTests2 = await repo.GetWalletObjects((new(wid, "test", new[] { "test1", "test2", "test-unk" }) { UseInefficientPath = useInefficient }));
+                var oneTest = await repo.GetWalletObjects((new(wid, "test", new[] { "test" }) { UseInefficientPath = useInefficient }));
+                var oneTestWithoutData = await repo.GetWalletObjects((new(wid, "test", new[] { "test" }) { UseInefficientPath = useInefficient, IncludeNeighbours = false }));
+                var idsTypes = await repo.GetWalletObjects((new(wid) { TypesIds = new[] { new ObjectTypeId("test", "test1"), new ObjectTypeId("test", "test2") }, UseInefficientPath = useInefficient }));
 
                 Assert.Equal(4, allObjects.Count);
+                // We are reusing a db in this test, as such we may have other wallets here.
+                Assert.True(allObjectsNoWallet.Count >= 4);
+                Assert.True(allObjectsNoWalletAndType.Count >= 4);
                 Assert.Equal(3, allTests.Count);
                 Assert.Equal(2, twoTests2.Count);
                 Assert.Single(oneTest);
                 Assert.NotNull(oneTest.First().Value.GetNeighbours().Select(n => n.Data).FirstOrDefault());
                 Assert.Single(oneTestWithoutData);
                 Assert.Null(oneTestWithoutData.First().Value.GetNeighbours().Select(n => n.Data).FirstOrDefault());
+                Assert.Equal(2, idsTypes.Count);
             }
             await TestWalletRepository(false);
             await TestWalletRepository(true);

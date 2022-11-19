@@ -16,17 +16,17 @@
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div class="form-group">
                 <label asp-for="Name" class="form-label" data-required></label>
-                <input asp-for="Name" class="form-control" required />
+                <input asp-for="Name" class="form-control w-300px" required />
                 <span asp-validation-for="Name" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="DefaultCurrency" class="form-label" data-required></label>
-                <input asp-for="DefaultCurrency" class="form-control w-auto" currency-selection />
+                <input asp-for="DefaultCurrency" class="form-control w-300px" currency-selection />
                 <span asp-validation-for="DefaultCurrency" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="PreferredExchange" class="form-label" data-required></label>
-                <select asp-for="PreferredExchange" asp-items="Model.Exchanges" class="form-select w-auto"></select>
+                <select asp-for="PreferredExchange" asp-items="Model.Exchanges" class="form-select w-300px"></select>
                 <span asp-validation-for="PreferredExchange" class="text-danger"></span>
             </div>
             <div class="form-group mt-4">

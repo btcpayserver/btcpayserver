@@ -131,15 +131,43 @@ public class UIFormsController : Controller
     }
     
     [AllowAnonymous]
-    [HttpGet("~/forms/{id}")]
-    public async Task<IActionResult> ViewForm(string id, string redirectUrl)
+    [HttpGet("~/forms/internal")]
+    public async Task<IActionResult> ViewStepForm()
     {
-        TempData["redirectUrl"] = redirectUrl;
+        TempData.Remove("formResponse");
+        var formId = TempData.Peek("formId");
+        var redirectUrl = TempData.Peek("redirectUrl");
+
+        if (formId is null || redirectUrl is null)
+        {
+            return NotFound();
+        }
+        FormData form = await GetFormData(formId.ToString());
+
+        switch( form)
+        {
+            case null:
+                TempData.TryAdd("formResponse", "{}");
+                return Redirect(redirectUrl.ToString()!);
+            default: return View("View", form);
+        };
+    }
+    
+    [AllowAnonymous]
+    [HttpGet("~/forms/{id}")]
+    public async Task<IActionResult> ViewPublicForm(string id)
+    {
+        TempData.Remove("formResponse");
+        TempData.Remove("redirectUrl");
+        TempData.Remove("formId");
         FormData form = await GetFormData(id);
 
-        return form is null
-            ? NotFound()
-            : View("View", form);
+        switch( form)
+        {
+            case null:
+                return NotFound();
+            default: return View("View", form);
+        };
     }
 
     private async Task<FormData> GetFormData(string id)
@@ -182,12 +210,16 @@ public class UIFormsController : Controller
     }
 
     [AllowAnonymous]
-    [HttpPost("~/forms/{id}")]
+    [HttpPost("~/forms/{id?}")]
     public async Task<IActionResult> SubmitForm(
-        string id,
+        string? id,
         [FromServices]StoreRepository storeRepository,  
         [FromServices] UIInvoiceController invoiceController)
     {
+        if (TempData.TryGetValue("formId", out var formId) )
+        {
+            id = formId.ToString();
+        }
         var orig = await GetFormData(id);
         if (orig is null)
         {
@@ -200,7 +232,6 @@ public class UIFormsController : Controller
         Dictionary<string, object> data = dbForm.GetValues();
         data.TryAdd("formResponse", orig.Id);
         
-        // var redirect = dbForm.GetFieldByName("integration_redirectUrl")?.Value;
         if (TempData.TryGetValue("redirectUrl", out var r) && r is string redirect)
         {
             TempData["formResponse"] = JsonConvert.SerializeObject(data);

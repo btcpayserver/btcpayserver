@@ -274,8 +274,10 @@ namespace BTCPayServer.Controllers
                     }
                     else
                     {
-                        var redirect = Request.GetCurrentUrl();
-                        return RedirectToAction("ViewForm", "UIForms", new {id = formId, redirectUrl = redirect});
+                        TempData["formId"] = formId;
+                        TempData["redirectUrl"] = Request.GetCurrentUrl();;
+                        
+                        return RedirectToAction("ViewStepForm", "UIForms");
                     }
             }
             

@@ -147,6 +147,11 @@ namespace BTCPayServer.Controllers
             blob.EmbeddedCSS = viewModel.EmbeddedCSS;
             blob.CustomCSSLink = viewModel.CustomCSSLink;
             blob.AllowCustomPaymentAmounts = viewModel.AllowCustomPaymentAmounts;
+            
+            if (!string.IsNullOrEmpty(viewModel.FormId) && viewModel.FormId == GenericFormOption.InheritFromStore.ToString())
+            {
+                viewModel.FormId = store.GetStoreBlob().CheckoutFormId;
+            }
             blob.FormId = viewModel.FormId;
 
             data.SetBlob(blob);
@@ -216,7 +221,10 @@ namespace BTCPayServer.Controllers
                     else
                     {
                         var redirect = Request.GetCurrentUrl();
-                        return RedirectToAction("ViewForm", "UIForms", new {id = formId, redirectUrl = redirect});
+                        TempData["formId"] = formId;
+                        TempData["redirectUrl"] = redirect;
+                        
+                        return RedirectToAction("ViewStepForm", "UIForms");
                     }
             }
             

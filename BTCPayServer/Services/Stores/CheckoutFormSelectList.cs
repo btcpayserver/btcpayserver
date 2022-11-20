@@ -37,12 +37,12 @@ public static class CheckoutFormSelectList
             var inherit = GenericOptionItem(GenericFormOption.InheritFromStore);
             inherit.Text += Enum.TryParse<GenericFormOption>(blob.CheckoutFormId, out var item)
                 ? $" ({DisplayName(item)})"
-                : $" ({forms.Find(f => f.Id == blob.CheckoutFormId)?.Name ?? blob.CheckoutFormId })";
+                : $" ({forms.Find(f => f.Id == blob.CheckoutFormId)?.Name ?? DisplayName(GenericFormOption.None) })";
             
             choices.Add(inherit);
         }
         
-        choices.Add(GenericOptionItem(GenericFormOption.None));
+        choices.Add(new SelectListItem { Text = DisplayName(GenericFormOption.None), Value = null });
         choices.Add(GenericOptionItem(GenericFormOption.Email));
         choices.Add(GenericOptionItem(GenericFormOption.Address));
         forms.ForEach(data => choices.Add(new SelectListItem(data.Name, data.Id)));

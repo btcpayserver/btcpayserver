@@ -22,7 +22,7 @@ namespace BTCPayServer.Services.PaymentRequests
 
         public async Task<PaymentRequestData> CreateOrUpdatePaymentRequest(PaymentRequestData entity)
         {
-            using var context = _ContextFactory.CreateContext();
+            await using var context = _ContextFactory.CreateContext();
             if (string.IsNullOrEmpty(entity.Id))
             {
                 entity.Id = Guid.NewGuid().ToString();

@@ -227,7 +227,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             JObject formResponse = null;
             switch (settings.CheckoutFormId)
             {
-                case { } formId when string.IsNullOrEmpty(formId) || formId == GenericFormOption.None.ToString():
+                case { } formId when string.IsNullOrEmpty(formId):
                     break;
                 default:
                     if (formResponseRaw is string raw && !string.IsNullOrEmpty(raw) )
@@ -237,19 +237,16 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                     }
                     else
                     {
-                        
                         var query = new QueryBuilder(Request.Query);
                         foreach (var keyValuePair in Request.Form)
                         {
                             query.Add(keyValuePair.Key, keyValuePair.Value.ToArray());
                         }
-
                         var redirect = Request.GetCurrentUrl() + query;
-                        return RedirectToAction("ViewForm", "UIForms", new {id = settings.CheckoutFormId, redirectUrl = redirect});
-
+                        TempData["formId"] = settings.CheckoutFormId;
+                        TempData["redirectUrl"] = redirect;
+                        return RedirectToAction("ViewStepForm", "UIForms");
                     }
-                    
-                    
             }
             try
             {

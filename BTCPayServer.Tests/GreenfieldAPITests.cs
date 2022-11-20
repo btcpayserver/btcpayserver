@@ -3087,7 +3087,7 @@ namespace BTCPayServer.Tests
                 Assert.Equal(4, allObjects.Count);
                 // We are reusing a db in this test, as such we may have other wallets here.
                 Assert.True(allObjectsNoWallet.Count >= 4);
-                Assert.True(allObjectsNoWalletAndType.Count >= 4);
+                Assert.True(allObjectsNoWalletAndType.Count >= 3);
                 Assert.Equal(3, allTests.Count);
                 Assert.Equal(2, twoTests2.Count);
                 Assert.Single(oneTest);

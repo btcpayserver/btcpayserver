@@ -64,6 +64,7 @@ namespace BTCPayServer.Controllers
             IFileService fileService,
             WebhookSender webhookNotificationManager,
             IDataProtectionProvider dataProtector,
+            IOptions<LightningNetworkOptions> lightningNetworkOptions,
             IOptions<ExternalServicesOptions> externalServiceOptions)
         {
             _RateFactory = rateFactory;
@@ -80,6 +81,7 @@ namespace BTCPayServer.Controllers
             _fileService = fileService;
             DataProtector = dataProtector.CreateProtector("ConfigProtector");
             WebhookNotificationManager = webhookNotificationManager;
+            LightningNetworkOptions = lightningNetworkOptions.Value;
             _EventAggregator = eventAggregator;
             _NetworkProvider = networkProvider;
             _ExplorerProvider = explorerProvider;
@@ -111,6 +113,7 @@ namespace BTCPayServer.Controllers
 
         public string? GeneratedPairingCode { get; set; }
         public WebhookSender WebhookNotificationManager { get; }
+        public LightningNetworkOptions LightningNetworkOptions { get; }
         public IDataProtector DataProtector { get; }
 
         [TempData]

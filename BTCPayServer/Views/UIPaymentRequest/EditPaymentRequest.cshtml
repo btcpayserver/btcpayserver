@@ -91,15 +91,13 @@
                 <label asp-for="FormId" class="form-label"></label>
                 <select asp-for="FormId" class="form-select w-auto" asp-items="@checkoutFormOptions"></select>
                 <span asp-validation-for="FormId" class="text-danger"></span>
-                @if (Model.FormResponse is not null)
-                {
-                    <div class="bg-light rounded p-4">
-                        <partial name="PosData" model="(Model.FormResponse, 1)"/>
-                    </div>
-                }
             </div>
-
-
+            @if (Model.FormResponse is not null)
+            {
+                <div class="bg-tile rounded py-2 px-3 mb-5">
+                    <partial name="PosData" model="(Model.FormResponse, 1)"/>
+                </div>
+            }
         </div>
     </div>
 

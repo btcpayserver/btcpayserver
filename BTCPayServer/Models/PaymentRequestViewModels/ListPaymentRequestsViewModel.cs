@@ -51,6 +51,7 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
                 : JObject.Parse(blob.FormResponse).ToObject<Dictionary<string, object>>();
         }
 
+        [Display(Name = "Request customer data on checkout")]
         public string FormId { get; set; }
 
         public bool Archived { get; set; }

@@ -24,5 +24,7 @@
   "view_receipt": "View Receipt",
   "return_to_store": "Return to {{storeName}}",
   "copy_confirm": "Copied",
-  "powered_by": "Powered by"
+  "powered_by": "Powered by",
+  "conversion_body": "You can pay {{btcDue}} {{cryptoCode}} using altcoins other than the ones merchant directly supports.\n\nThis service is provided by 3rd party. Please keep in mind that we have no control over how providers will forward your funds. Invoice will only be marked paid once funds are received on {{cryptoCode}} Blockchain."
+
 }

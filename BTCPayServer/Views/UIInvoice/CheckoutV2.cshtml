@@ -1,16 +1,17 @@
 @inject LanguageService LangService
 @inject BTCPayServerEnvironment Env
 @inject IFileService FileService
+@inject IEnumerable<IUIExtension> UiExtensions 
 @inject PaymentMethodHandlerDictionary PaymentMethodHandlerDictionary
 @using BTCPayServer.Services
 @using BTCPayServer.Abstractions.Contracts
-@using BTCPayServer.Abstractions.TagHelpers
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @model PaymentModel
 @{
     Layout = null;
     ViewData["Title"] = Model.HtmlTitle;
 
+    var hasPaymentPlugins = UiExtensions.Any(extension => extension.Location == "checkout-payment-method");
     var paymentMethodCount = Model.AvailableCryptos.Count;
     var logoUrl = !string.IsNullOrEmpty(Model.LogoFileId)
         ? await FileService.GetFileUrl(Context.Request.GetAbsoluteRootUri(), Model.LogoFileId)
@@ -97,7 +98,7 @@
                 <div id="PaymentDetails" class="payment-details" v-collapsible="displayPaymentDetails">
                     <payment-details :srv-model="srvModel" :is-active="isActive" class="pb-4"></payment-details>
                 </div>
-                @if (paymentMethodCount > 1)
+                @if (paymentMethodCount > 1 || hasPaymentPlugins)
                 {
                     <div class="mt-3 mb-2">
                         <h6 class="text-center mb-3" v-t="'pay_with'"></h6>
@@ -111,10 +112,11 @@
                                     @PaymentMethodName(crypto)
                                 </a>
                             }
+                            @await Component.InvokeAsync("UiExtensionPoint", new { location = "checkout-payment-method", model = Model })
                         </div>
                     </div>
                 }
-                <component v-if="srvModel.uiSettings && srvModel.activated" :srv-model="srvModel" :is="srvModel.uiSettings.checkoutBodyVueComponentName"/>
+                <component v-if="paymentMethodComponent" :is="paymentMethodComponent" :model="srvModel" />
             </section>
             <section id="result" v-else>
                 <div id="paid" v-if="isPaid">
@@ -264,6 +266,6 @@
     {
         <partial name="@paymentMethodHandler.ExtensionPartial-v2" model="@Model"/>
     }
-    @await Component.InvokeAsync("UiExtensionPoint", new { location = "checkout-end", model = Model })
+    @await Component.InvokeAsync("UiExtensionPoint", new { location = "checkout-payment", model = Model })
 </body>
 </html>

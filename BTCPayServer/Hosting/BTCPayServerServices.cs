@@ -87,6 +87,16 @@ namespace BTCPayServer.Hosting
             {
                 httpClient.Timeout = Timeout.InfiniteTimeSpan;
             });
+            services.AddHttpClient<PluginBuilderClient>((prov, httpClient) =>
+            {
+                var p = prov.GetRequiredService<PoliciesSettings>();
+                var pluginSource = p.PluginSource ?? PoliciesSettings.DefaultPluginSource;
+                if (pluginSource.EndsWith('/'))
+                    pluginSource = pluginSource.Substring(0, pluginSource.Length - 1);
+                if (!Uri.TryCreate(pluginSource, UriKind.Absolute, out var r) || (r.Scheme != "https" && r.Scheme != "http"))
+                    r = new Uri(PoliciesSettings.DefaultPluginSource, UriKind.Absolute);
+                httpClient.BaseAddress = r;
+            });
 
             services.AddSingleton<Logs>(logs);
             services.AddSingleton<BTCPayNetworkJsonSerializerSettings>();
@@ -263,7 +273,7 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton(o => configuration.ConfigureNetworkProvider(logs));
 
             services.TryAddSingleton<AppService>();
-            services.AddSingleton<PluginService>();
+            services.AddTransient<PluginService>();
             services.AddSingleton<IPluginHookService, PluginHookService>();
             services.TryAddTransient<Safe>();
             services.TryAddSingleton<Ganss.XSS.HtmlSanitizer>(o =>

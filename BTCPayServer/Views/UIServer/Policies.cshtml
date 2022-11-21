@@ -118,6 +118,21 @@
         </div>
     </div>
 
+	<h4 class="mb-3">Plugins</h4>
+	<div class="row">
+		<div class="col-12 col-lg-8">
+			<div class="form-group">
+				<label asp-for="PluginSource" class="form-label"></label>
+				<input asp-for="PluginSource" placeholder="@PoliciesSettings.DefaultPluginSource" class="form-control"/>
+				<span asp-validation-for="PluginSource" class="text-danger"></span>
+			</div>
+			<div class="form-check my-3">
+				<input asp-for="PluginPreReleases" type="checkbox" class="form-check-input"/>
+				<label asp-for="PluginPreReleases" class="form-check-label"></label>
+			</div>
+		</div>
+	</div>
+
     <h4 class="mb-3">Customization Settings</h4>
 
     <div class="form-group">

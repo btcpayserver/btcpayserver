@@ -83,11 +83,11 @@ namespace BTCPayServer.Controllers
 
         [HttpPost("server/plugins/install")]
         public async Task<IActionResult> InstallPlugin(
-            [FromServices] PluginService pluginService, string plugin, bool update = false, string path ="")
+            [FromServices] PluginService pluginService, string plugin, bool update = false, string version = null)
         {
             try
             {
-                await pluginService.DownloadRemotePlugin(plugin, path);
+                await pluginService.DownloadRemotePlugin(plugin, version);
                 if (update)
                 {
                     pluginService.UpdatePlugin(plugin);

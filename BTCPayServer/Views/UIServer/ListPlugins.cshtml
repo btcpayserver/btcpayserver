@@ -226,7 +226,7 @@
                             {
                                 @if (updateAvailable && DependenciesMet(x.Dependencies))
                                 {
-                                    <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" asp-route-path="@x.Path" asp-route-update="true" class="me-3">
+                                    <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" asp-route-version="@x.Version" asp-route-update="true" class="me-3">
                                         <button type="submit" class="btn btn-secondary">Update</button>
                                     </form>
                                 }
@@ -304,7 +304,7 @@
                             @* Don't show the "Install" button if plugin has been disabled *@
                             @if (!disabled)
                             {
-                                <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" asp-route-path="@plugin.Path">
+                                <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" asp-route-version="@plugin.Version">
                                     <button type="submit" class="btn btn-primary">Install</button>
                                 </form>
                             }

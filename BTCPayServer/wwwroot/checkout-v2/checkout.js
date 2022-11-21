@@ -163,6 +163,17 @@ const initApp = () => new Vue({
             return this.srvModel.merchantRefLink && this.srvModel.merchantRefLink !== this.srvModel.receiptLink
                 ? this.srvModel.merchantRefLink
                 : null;
+        },
+        paymentMethodIds () {
+            return this.srvModel.availableCryptos.map(c => c.paymentMethodId);
+        },
+        paymentMethodComponent () {
+            return this.isPluginPaymentMethod
+                ? `${this.pmId}Checkout`
+                : this.srvModel.activated && this.srvModel.uiSettings.checkoutBodyVueComponentName;
+        },
+        isPluginPaymentMethod () {
+            return !this.paymentMethodIds.includes(this.pmId);
         }
     },
     mounted () {
@@ -174,9 +185,9 @@ const initApp = () => new Vue({
         window.parent.postMessage('loaded', '*');
     },
     methods: {
-        changePaymentMethod (paymentMethodId) {
-            if (this.pmId !== paymentMethodId) {
-                this.paymentMethodId = paymentMethodId;
+        changePaymentMethod (id) { // payment method or plugin id
+            if (this.pmId !== id) {
+                this.paymentMethodId = id;
                 this.fetchData();
             }
         },
@@ -230,6 +241,8 @@ const initApp = () => new Vue({
             })();
         },
         async fetchData () {
+            if (this.isPluginPaymentMethod) return;
+            
             const url = `${statusUrl}&paymentMethodId=${this.pmId}`;
             const response = await fetch(url);
             if (response.ok) {

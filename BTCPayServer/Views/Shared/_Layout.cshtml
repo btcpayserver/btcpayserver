@@ -1,6 +1,7 @@
 @using BTCPayServer.Abstractions.Extensions
 @using BTCPayServer.Components.StoreSelector
 @using BTCPayServer.Components.MainNav
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor _context;
 @inject BTCPayServer.Services.BTCPayServerEnvironment _env
 @inject SignInManager<ApplicationUser> _signInManager
 @inject UserManager<ApplicationUser> _userManager
@@ -15,6 +16,8 @@
         var user = await _userManager.GetUserAsync(User);
         notificationDisabled = user?.DisabledNotifications == "all";
     }
+	var expectedScheme = _context.HttpContext.Request.Scheme;
+	var expectedHost = _context.HttpContext.Request.Host.ToString();
 }
 
 <!DOCTYPE html>
@@ -37,21 +40,20 @@
     </div>
     <vc:main-nav />
 </header>
+<template id="badUrl">
+	<div class="alert alert-danger alert-dismissible m-3" role="alert">
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+            <vc:icon symbol="close"/>
+        </button>
+        <span>
+            BTCPay is expecting you to access this website from <strong>@(expectedScheme)://@(expectedHost)/</strong>.
+            If you use a reverse proxy, please set the <strong>X-Forwarded-Proto</strong> header to <strong id="browserScheme">@(expectedScheme)</strong>
+            (<a href="https://docs.btcpayserver.org/FAQ/Deployment/#cause-3-btcpay-is-expecting-you-to-access-this-website-from" target="_blank" class="alert-link" rel="noreferrer noopener">More information</a>)
+        </span>
+    </div>
+</template>
 <main id="mainContent">
-    @if (_env.Context.Request.Host.ToString() != _env.ExpectedHost || _env.Context.Request.Scheme != _env.ExpectedProtocol)
-    {
-        <div id="badUrl" class="alert alert-danger alert-dismissible m-3" role="alert">
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
-                <vc:icon symbol="close"/>
-            </button>
-            <span>
-                BTCPay is expecting you to access this website from <strong>@(_env.ExpectedProtocol)://@(_env.ExpectedHost)/</strong>.
-                If you use a reverse proxy, please set the <strong>X-Forwarded-Proto</strong> header to <strong id="browserScheme">@(_env.ExpectedProtocol)</strong>
-                (<a href="https://docs.btcpayserver.org/FAQ/Deployment/#cause-3-btcpay-is-expecting-you-to-access-this-website-from" target="_blank" class="alert-link" rel="noreferrer noopener">More information</a>)
-            </span>
-        </div>
-    }
-    @if (!_env.IsSecure)
+    @if (!_env.IsSecure(_context.HttpContext))
     {
         <div id="insecureEnv" class="alert alert-danger alert-dismissible" style="position:absolute; top:75px;" role="alert">
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
@@ -76,6 +78,12 @@
     @if (!notificationDisabled)
     {
         <script>
+			var mainContent = document.getElementById("mainContent");
+			if (window.location.protocol != "@(expectedScheme):" || window.location.host != "@expectedHost")
+			{
+				var tmpl = document.getElementById("badUrl");
+				mainContent.prepend(tmpl.content.cloneNode(true));
+			}
             if ('WebSocket' in window && window.WebSocket.CLOSING === 2) {
                 const { host, protocol } = window.location;
                 var wsUri = "@_linkGenerator.GetPathByAction("SubscribeUpdates", "UINotifications", pathBase: Context.Request.PathBase)";

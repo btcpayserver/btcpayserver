@@ -9,6 +9,7 @@
 @using BTCPayServer.Client
 @using BTCPayServer.Services
 @using BTCPayServer.Views.CustodianAccounts
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContext;
 @inject BTCPayServerEnvironment Env
 @inject SignInManager<ApplicationUser> SignInManager
 @inject PoliciesSettings PoliciesSettings
@@ -227,7 +228,7 @@
                 })()
             </script>
         }
-        else if (Env.IsSecure)
+        else if (Env.IsSecure(HttpContext.HttpContext))
         {
             <ul class="navbar-nav">
                 @if (!PoliciesSettings.LockSubscription)

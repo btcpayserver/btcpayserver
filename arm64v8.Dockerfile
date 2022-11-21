@@ -23,7 +23,8 @@ COPY BTCPayServer.Abstractions/. BTCPayServer.Abstractions/.
 COPY BTCPayServer/. BTCPayServer/.
 COPY Build/Version.csproj Build/Version.csproj
 ARG CONFIGURATION_NAME=Release
-RUN cd BTCPayServer && dotnet publish --output /app/ --configuration ${CONFIGURATION_NAME}
+ARG GIT_COMMIT
+RUN cd BTCPayServer && dotnet publish -p:GitCommit=${GIT_COMMIT} --output /app/ --configuration ${CONFIGURATION_NAME}
 
 # Force the builder machine to take make an arm runtime image. This is fine as long as the builder does not run any program
 FROM mcr.microsoft.com/dotnet/aspnet:6.0.9-bullseye-slim-arm64v8

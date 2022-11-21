@@ -20,6 +20,7 @@ namespace BTCPayServer.Services
         {
             this.httpContext = httpContext;
             Version = typeof(BTCPayServerEnvironment).GetTypeInfo().Assembly.GetCustomAttribute<AssemblyFileVersionAttribute>().Version;
+            Commit = typeof(BTCPayServerEnvironment).GetTypeInfo().Assembly.GetCustomAttribute<GitCommitAttribute>()?.ShortSHA;
 #if DEBUG
             Build = "Debug";
 #else
@@ -78,12 +79,15 @@ namespace BTCPayServer.Services
             }
         }
 
+        public string Commit { get; set; }
         public HttpContext Context => httpContext.HttpContext;
 
         public override string ToString()
         {
             StringBuilder txt = new StringBuilder();
             txt.Append(CultureInfo.InvariantCulture, $"© BTCPay Server v{Version}");
+            if (Commit != null)
+                txt.Append($"+{Commit}");
             if (AltcoinsVersion)
                 txt.Append(" (Altcoins)");
             if (!Environment.IsProduction() || !Build.Equals("Release", StringComparison.OrdinalIgnoreCase))

@@ -200,9 +200,9 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                         }
 
                         decimal expectedCartItemPrice = 0;
-                        if (choice.Price.Type != ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Topup)
+                        if (itemChoice.Price.Type != ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Topup)
                         {
-                            expectedCartItemPrice = choice.Price.Value ?? 0;
+                            expectedCartItemPrice = itemChoice.Price.Value ?? 0;
                         }
 
                         expectedMinimumAmount += expectedCartItemPrice * cartItem.Value;

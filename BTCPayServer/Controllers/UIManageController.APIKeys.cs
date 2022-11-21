@@ -67,7 +67,7 @@ namespace BTCPayServer.Controllers
         [HttpGet]
         public async Task<IActionResult> AddApiKey()
         {
-            if (!_btcPayServerEnvironment.IsSecure)
+            if (!_btcPayServerEnvironment.IsSecure(HttpContext))
             {
                 TempData.SetStatusMessageModel(new StatusMessageModel()
                 {
@@ -84,7 +84,7 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> AuthorizeAPIKey(string[] permissions, string applicationName = null, Uri redirect = null,
             bool strict = true, bool selectiveStores = false, string applicationIdentifier = null)
         {
-            if (!_btcPayServerEnvironment.IsSecure)
+            if (!_btcPayServerEnvironment.IsSecure(HttpContext))
             {
                 TempData.SetStatusMessageModel(new StatusMessageModel
                 {

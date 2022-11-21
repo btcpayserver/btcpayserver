@@ -227,7 +227,7 @@ namespace BTCPayServer.Controllers
 
         private async Task<LoginWithFido2ViewModel> BuildFido2ViewModel(bool rememberMe, ApplicationUser user)
         {
-            if (_btcPayServerEnvironment.IsSecure)
+            if (_btcPayServerEnvironment.IsSecure(HttpContext))
             {
                 var r = await _fido2Service.RequestLogin(user.Id);
                 if (r is null)
@@ -247,7 +247,7 @@ namespace BTCPayServer.Controllers
 
         private async Task<LoginWithLNURLAuthViewModel> BuildLNURLAuthViewModel(bool rememberMe, ApplicationUser user)
         {
-            if (_btcPayServerEnvironment.IsSecure)
+            if (_btcPayServerEnvironment.IsSecure(HttpContext))
             {
                 var r = await _lnurlAuthService.RequestLogin(user.Id);
                 if (r is null)
@@ -777,7 +777,7 @@ namespace BTCPayServer.Controllers
 
         private bool CanLoginOrRegister()
         {
-            return _btcPayServerEnvironment.IsDeveloping || _btcPayServerEnvironment.IsSecure;
+            return _btcPayServerEnvironment.IsDeveloping || _btcPayServerEnvironment.IsSecure(HttpContext);
         }
 
         private void SetInsecureFlags()

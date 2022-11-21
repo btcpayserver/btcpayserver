@@ -14,11 +14,9 @@ namespace BTCPayServer.Services
 {
     public class BTCPayServerEnvironment
     {
-        readonly IHttpContextAccessor httpContext;
         readonly TorServices torServices;
-        public BTCPayServerEnvironment(IWebHostEnvironment env, BTCPayNetworkProvider provider, IHttpContextAccessor httpContext, TorServices torServices, BTCPayServerOptions opts)
+        public BTCPayServerEnvironment(IWebHostEnvironment env, BTCPayNetworkProvider provider, TorServices torServices, BTCPayServerOptions opts)
         {
-            this.httpContext = httpContext;
             Version = typeof(BTCPayServerEnvironment).GetTypeInfo().Assembly.GetCustomAttribute<AssemblyFileVersionAttribute>().Version;
 #if DEBUG
             Build = "Debug";
@@ -41,9 +39,6 @@ namespace BTCPayServer.Services
             get; set;
         }
 
-        public string ExpectedDomain => httpContext.HttpContext.Request.Host.Host;
-        public string ExpectedHost => httpContext.HttpContext.Request.Host.Value;
-        public string ExpectedProtocol => httpContext.HttpContext.Request.Scheme;
         public string OnionUrl => this.torServices.Services.Where(s => s.ServiceType == TorServiceType.BTCPayServer)
                                                            .Select(s => $"http://{s.OnionHost}").FirstOrDefault();
 
@@ -67,18 +62,13 @@ namespace BTCPayServer.Services
             }
         }
 
-        public bool IsSecure
+        public bool IsSecure(HttpContext httpContext)
         {
-            get
-            {
-                return NetworkType != ChainName.Mainnet ||
-                       httpContext.HttpContext.Request.Scheme == "https" ||
-                       httpContext.HttpContext.Request.Host.Host.EndsWith(".onion", StringComparison.OrdinalIgnoreCase) ||
-                       Extensions.IsLocalNetwork(httpContext.HttpContext.Request.Host.Host);
-            }
+            return NetworkType != ChainName.Mainnet ||
+                       httpContext.Request.Scheme == "https" ||
+                       httpContext.Request.Host.Host.EndsWith(".onion", StringComparison.OrdinalIgnoreCase) ||
+                       Extensions.IsLocalNetwork(httpContext.Request.Host.Host);
         }
-
-        public HttpContext Context => httpContext.HttpContext;
 
         public override string ToString()
         {

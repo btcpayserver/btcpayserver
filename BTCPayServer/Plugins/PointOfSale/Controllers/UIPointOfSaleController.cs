@@ -227,6 +227,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             JObject formResponse = null;
             switch (settings.CheckoutFormId)
             {
+                case null:
                 case { } formId when string.IsNullOrEmpty(formId):
                     break;
                 default:

@@ -1,16 +1,3 @@
-const urlParams = {};
-(window.onpopstate = function () {
-    let match,
-        pl = /\+/g,  // Regex for replacing addition symbol with a space
-        search = /([^&=]+)=?([^&]*)/g,
-        decode = function (s) { return decodeURIComponent(s.replace(pl, " ")); },
-        query = window.location.search.substring(1);
-
-    while (match = search.exec(query)) {
-        urlParams[decode(match[1])] = decode(match[2]);
-    }
-})();
-
 Vue.directive('collapsible', {
     bind: function (el, binding) {
         el.classList.add('collapse');
@@ -55,9 +42,6 @@ const STATUS_PAID = ['complete', 'confirmed', 'paid'];
 const STATUS_UNPAYABLE =  ['expired', 'invalid'];
 
 function computeStartingLanguage() {
-    if (urlParams.lang && isLanguageAvailable(urlParams.lang)) {
-        return urlParams.lang;
-    }
     const { defaultLang } = initialSrvModel;
     return isLanguageAvailable(defaultLang) ? defaultLang : fallbackLanguage;
 }

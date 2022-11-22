@@ -141,7 +141,13 @@
             <div class="col col-12 col-md-6 col-lg-12 col-xl-6 col-xxl-4 mb-4">
                 <div class="card h-100" id="@plugin.Identifier">
                     <div class="card-body">
-                        <h4 class="card-title d-inline-block" title="@plugin.Identifier" data-bs-toggle="tooltip">@plugin.Name</h4>
+						<div class="d-flex">
+							<h4 class="card-title" title="@plugin.Identifier" data-bs-toggle="tooltip">@plugin.Name</h4>
+							@if (@Model.DocsByIdentifier.ContainsKey(@plugin.Identifier))
+							{
+								<div style="margin-left:auto;" class="align-self-baseline"><a href="@Model.DocsByIdentifier[plugin.Identifier]" rel="noreferrer noopener" target="_blank">See documentation</a></div>
+							}
+						</div>
                         <div class="d-flex flex-wrap align-items-center mb-2">
                             <h5 class="text-muted d-flex align-items-center mt-1">
                                 @plugin.Version
@@ -261,7 +267,13 @@
             <div class="col col-12 col-md-6 col-lg-12 col-xl-6 col-xxl-4 mb-4">
                 <div class="card h-100" id="@plugin.Identifier">
                     <div class="card-body">
-                        <h4 class="card-title d-inline-block" data-bs-toggle="tooltip" title="@plugin.Identifier">@plugin.Name</h4>
+						<div class="d-flex">
+							<h4 class="card-title" data-bs-toggle="tooltip" title="@plugin.Identifier">@plugin.Name</h4>
+							@if (!string.IsNullOrEmpty(plugin.Documentation))
+							{
+								<div style="margin-left:auto;" class="align-self-baseline"><a href="@plugin.Documentation" rel="noreferrer noopener" target="_blank">See documentation</a></div>
+							}
+						</div>
                         <h5 class="text-muted d-flex align-items-center mt-1">
                             @plugin.Version
                             @if (disabled) 
@@ -315,7 +327,7 @@
                                 Cannot install until dependencies are met.
                             </div>
                         }
-                    </div>
+					</div>
                 </div>
             </div>
         }

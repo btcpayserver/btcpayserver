@@ -55,7 +55,6 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Au
     protected override async Task Process(ISupportedPaymentMethod paymentMethod, List<PayoutData> payouts)
     {
         var lightningSupportedPaymentMethod = (LightningSupportedPaymentMethod)paymentMethod;
-
         if (lightningSupportedPaymentMethod.IsInternalNode &&
             !(await Task.WhenAll((await _storeRepository.GetStoreUsers(_PayoutProcesserSettings.StoreId))
                 .Where(user => user.Role == StoreRoles.Owner).Select(user => user.Id)
@@ -63,7 +62,6 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Au
         {
             return;
         }
-
         var client =
             lightningSupportedPaymentMethod.CreateLightningClient(_network, _options.Value,
                 _lightningClientFactoryService);
@@ -71,7 +69,7 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Au
         foreach (var payoutData in payouts)
         {
             var blob = payoutData.GetBlob(_btcPayNetworkJsonSerializerSettings);
-            var claim = await _payoutHandler.ParseClaimDestination(PaymentMethodId, blob.Destination);
+            var claim = await _payoutHandler.ParseClaimDestination(PaymentMethodId, blob.Destination, CancellationToken);
             try
             {
                 switch (claim.destination)
@@ -79,7 +77,7 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Au
                     case LNURLPayClaimDestinaton lnurlPayClaimDestinaton:
                         var lnurlResult = await UILightningLikePayoutController.GetInvoiceFromLNURL(payoutData,
                             _payoutHandler, blob,
-                            lnurlPayClaimDestinaton, _network.NBitcoinNetwork);
+                            lnurlPayClaimDestinaton, _network.NBitcoinNetwork, CancellationToken);
                         if (lnurlResult.Item2 is not null)
                         {
                             continue;
@@ -104,6 +102,6 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Au
         BOLT11PaymentRequest bolt11PaymentRequest)
     {
         return (await UILightningLikePayoutController.TrypayBolt(lightningClient, payoutBlob, payoutData, bolt11PaymentRequest,
-            payoutData.GetPaymentMethodId())).Result == PayResult.Ok;
+            payoutData.GetPaymentMethodId(), CancellationToken)).Result == PayResult.Ok;
     }
 }

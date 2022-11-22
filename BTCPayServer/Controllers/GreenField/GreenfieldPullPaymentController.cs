@@ -250,7 +250,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
         [HttpPost("~/api/v1/pull-payments/{pullPaymentId}/payouts")]
         [AllowAnonymous]
-        public async Task<IActionResult> CreatePayout(string pullPaymentId, CreatePayoutRequest request)
+        public async Task<IActionResult> CreatePayout(string pullPaymentId, CreatePayoutRequest request, CancellationToken cancellationToken)
         {
             if (!PaymentMethodId.TryParse(request?.PaymentMethod, out var paymentMethodId))
             {
@@ -270,7 +270,7 @@ namespace BTCPayServer.Controllers.Greenfield
             if (pp is null)
                 return PullPaymentNotFound();
             var ppBlob = pp.GetBlob();
-            var destination = await payoutHandler.ParseAndValidateClaimDestination(paymentMethodId, request!.Destination, ppBlob);
+            var destination = await payoutHandler.ParseAndValidateClaimDestination(paymentMethodId, request!.Destination, ppBlob, cancellationToken);
             if (destination.destination is null)
             {
                 ModelState.AddModelError(nameof(request.Destination), destination.error ?? "The destination is invalid for the payment specified");
@@ -332,7 +332,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     return PullPaymentNotFound();
                 ppBlob = pp.GetBlob();
             }
-            var destination = await payoutHandler.ParseAndValidateClaimDestination(paymentMethodId, request!.Destination, ppBlob);
+            var destination = await payoutHandler.ParseAndValidateClaimDestination(paymentMethodId, request!.Destination, ppBlob, default);
             if (destination.destination is null)
             {
                 ModelState.AddModelError(nameof(request.Destination), destination.error ?? "The destination is invalid for the payment specified");

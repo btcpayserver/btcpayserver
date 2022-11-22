@@ -357,7 +357,7 @@ namespace BTCPayServer.Controllers.Greenfield
             CancellationToken cancellationToken = default)
         {
             return GetFromActionResult<PayoutData>(
-                await GetController<GreenfieldPullPaymentController>().CreatePayout(pullPaymentId, payoutRequest));
+                await GetController<GreenfieldPullPaymentController>().CreatePayout(pullPaymentId, payoutRequest, cancellationToken));
         }
 
         public override async Task CancelPayout(string storeId, string payoutId,

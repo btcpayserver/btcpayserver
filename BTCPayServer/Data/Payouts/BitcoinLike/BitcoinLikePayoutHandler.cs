@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer;
 using BTCPayServer.Abstractions.Models;
@@ -71,7 +72,7 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
             await explorerClient.TrackAsync(TrackedSource.Create(bitcoinLikeClaimDestination.Address));
     }
 
-    public Task<(IClaimDestination destination, string error)> ParseClaimDestination(PaymentMethodId paymentMethodId, string destination)
+    public Task<(IClaimDestination destination, string error)> ParseClaimDestination(PaymentMethodId paymentMethodId, string destination, CancellationToken cancellationToken)
     {
         var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(paymentMethodId.CryptoCode);
         destination = destination.Trim();
@@ -287,7 +288,7 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
             var blob = payout.GetBlob(_jsonSerializerSettings);
             if (payout.GetPaymentMethodId() != paymentMethodId)
                 continue;
-            var claim = await ParseClaimDestination(paymentMethodId, blob.Destination);
+            var claim = await ParseClaimDestination(paymentMethodId, blob.Destination, default);
             switch (claim.destination)
             {
                 case UriClaimDestination uriClaimDestination:

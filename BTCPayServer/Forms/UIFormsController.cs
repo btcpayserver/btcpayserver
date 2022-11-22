@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable enable
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -213,7 +214,7 @@ public class UIFormsController : Controller
     [HttpPost("~/forms/{id?}")]
     public async Task<IActionResult> SubmitForm(
         string? id,
-        [FromServices]StoreRepository storeRepository,  
+        [FromServices] StoreRepository storeRepository,  
         [FromServices] UIInvoiceController invoiceController)
     {
         if (TempData.TryGetValue("formId", out var formId) )

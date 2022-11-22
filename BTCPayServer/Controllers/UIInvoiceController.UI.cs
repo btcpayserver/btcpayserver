@@ -258,7 +258,6 @@ namespace BTCPayServer.Controllers
 
             var formId = i.CheckoutFormId;
 
-            JObject formResponse = null;
             switch (formId)
             {
                 case { } frid when string.IsNullOrEmpty(frid) || frid == GenericFormOption.None.ToString():
@@ -275,7 +274,7 @@ namespace BTCPayServer.Controllers
                     else
                     {
                         TempData["formId"] = formId;
-                        TempData["redirectUrl"] = Request.GetCurrentUrl();;
+                        TempData["redirectUrl"] = Request.GetCurrentUrl();
                         
                         return RedirectToAction("ViewStepForm", "UIForms");
                     }

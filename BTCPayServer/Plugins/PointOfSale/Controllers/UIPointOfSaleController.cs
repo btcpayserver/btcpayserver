@@ -221,11 +221,8 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
 
             var store = await _appService.GetStore(app);
             var blob = store.GetStoreBlob();
-            settings.CheckoutFormId = settings.CheckoutFormId == GenericFormOption.InheritFromStore.ToString()
-                ? blob.CheckoutFormId
-                : settings.CheckoutFormId;
             JObject formResponse = null;
-            switch (settings.CheckoutFormId)
+            switch (settings.FormId)
             {
                 case null:
                 case { } formId when string.IsNullOrEmpty(formId):
@@ -244,7 +241,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                             query.Add(keyValuePair.Key, keyValuePair.Value.ToArray());
                         }
                         var redirect = Request.GetCurrentUrl() + query;
-                        TempData["formId"] = settings.CheckoutFormId;
+                        TempData["formId"] = settings.FormId;
                         TempData["redirectUrl"] = redirect;
                         return RedirectToAction("ViewStepForm", "UIForms");
                     }
@@ -269,7 +266,6 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                     PosData = string.IsNullOrEmpty(posData) ? null : posData,
                     RedirectAutomatically = settings.RedirectAutomatically,
                     SupportedTransactionCurrencies = paymentMethods,
-                    CheckoutFormId = null,
                     RequiresRefundEmail = requiresRefundEmail == RequiresRefundEmail.InheritFromStore
                         ? blob.RequiresRefundEmail
                         : requiresRefundEmail == RequiresRefundEmail.On,
@@ -339,7 +335,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 SearchTerm = app.TagAllInvoices ? $"storeid:{app.StoreDataId}" : $"orderid:{AppService.GetAppOrderId(app)}",
                 RedirectAutomatically = settings.RedirectAutomatically.HasValue ? settings.RedirectAutomatically.Value ? "true" : "false" : "",
                 RequiresRefundEmail = settings.RequiresRefundEmail,
-                CheckoutFormId = settings.CheckoutFormId
+                FormId = settings.FormId
             };
             if (HttpContext?.Request != null)
             {
@@ -430,7 +426,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 RequiresRefundEmail = vm.RequiresRefundEmail
             };
 
-            settings.CheckoutFormId = vm.CheckoutFormId;
+            settings.FormId = vm.FormId;
 
             app.Name = vm.AppName;
             app.SetSettings(settings);

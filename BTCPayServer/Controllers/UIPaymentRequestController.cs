@@ -147,11 +147,6 @@ namespace BTCPayServer.Controllers
             blob.EmbeddedCSS = viewModel.EmbeddedCSS;
             blob.CustomCSSLink = viewModel.CustomCSSLink;
             blob.AllowCustomPaymentAmounts = viewModel.AllowCustomPaymentAmounts;
-            
-            if (!string.IsNullOrEmpty(viewModel.FormId) && viewModel.FormId == GenericFormOption.InheritFromStore.ToString())
-            {
-                viewModel.FormId = store.GetStoreBlob().CheckoutFormId;
-            }
             blob.FormId = viewModel.FormId;
 
             data.SetBlob(blob);
@@ -198,12 +193,6 @@ namespace BTCPayServer.Controllers
 
             var prBlob = result.GetBlob();
             var formId = prBlob.FormId;
-            if (prBlob.FormId == GenericFormOption.InheritFromStore.ToString())
-            {
-                var store = await _storeRepository.FindStore(result.StoreDataId);
-                var storeBlob = store.GetStoreBlob();
-                formId = storeBlob.CheckoutFormId;
-            }
 
             switch (formId)
             {

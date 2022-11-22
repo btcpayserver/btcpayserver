@@ -384,8 +384,7 @@
                     return this.isModal || this.showBackButton;
                 },
                 hasForm () {
-                    return this.srvModel.requiresRefundEmail || (
-                        this.srvModel.checkoutFormId && this.srvModel.checkoutFormId !== 'None');
+                    return this.srvModel.requiresRefundEmail;
                 },
                 showBackButton () {
                     return this.hasForm && this.step === 'payment';

@@ -11,7 +11,6 @@
     ViewData["Title"] = $"Receipt from {Model.StoreName}";
     var isProcessing = Model.Status == InvoiceStatus.Processing;
     var isSettled = Model.Status == InvoiceStatus.Settled;
-    var requiresForm = !string.IsNullOrEmpty(Model.FormId) && !Model.FormSubmitted;
 }
 
 <!DOCTYPE html>
@@ -40,12 +39,6 @@
                 <div class="d-flex flex-column justify-content-center gap-4">
                     <h1 class="h3 text-center">@ViewData["Title"]</h1>
                     <div id="InvoiceSummary" class="bg-tile p-3 p-sm-4 rounded d-flex flex-wrap align-items-center">
-                        @if (requiresForm)
-                        {
-                            <div class="w-100 align-content-center">
-                                <a asp-action="ViewInvoiceForm" asp-route-invoiceId="@Model.InvoiceId" class="btn btn-lg btn-primary ">Fill out form</a>
-                                </div>
-                        }
                         @if (isProcessing)
                         {
                             <div class="lead text-center text-muted py-5 px-4 fw-semibold" id="invoice-processing">

@@ -8,7 +8,7 @@
 @model BTCPayServer.Models.PaymentRequestViewModels.UpdatePaymentRequestViewModel
 @{
     var store = ViewContext.HttpContext.GetStoreData();
-    var checkoutFormOptions = await CheckoutFormSelectList.ForStore(store, Model.FormId, true, FormDataService);
+    var checkoutFormOptions = await CheckoutFormSelectList.ForStore(store, Model.FormId, FormDataService);
 
     ViewData.SetActivePage(PaymentRequestsNavPages.Create, $"{(string.IsNullOrEmpty(Model.Id) ? "Create" : "Edit")} Payment Request", Model.Id);
 }

@@ -142,7 +142,6 @@ namespace BTCPayServer.Controllers
             entity.RedirectAutomatically =
                 invoice.RedirectAutomatically.GetValueOrDefault(storeBlob.RedirectAutomatically);
             entity.RequiresRefundEmail = invoice.RequiresRefundEmail;
-            entity.CheckoutFormId = invoice.CheckoutFormId;
             entity.SpeedPolicy = ParseSpeedPolicy(invoice.TransactionSpeed, store.SpeedPolicy);
 
             IPaymentFilter? excludeFilter = null;
@@ -195,8 +194,7 @@ namespace BTCPayServer.Controllers
                     Currency = pr.Currency,
                     Amount = amount,
                     Checkout = { 
-                        RedirectURL = redirectUrl, 
-                        CheckoutFormId = null
+                        RedirectURL = redirectUrl
                     }
                 };
 
@@ -230,7 +228,6 @@ namespace BTCPayServer.Controllers
             entity.DefaultLanguage = invoice.Checkout.DefaultLanguage;
             entity.DefaultPaymentMethod = invoice.Checkout.DefaultPaymentMethod;
             entity.RedirectAutomatically = invoice.Checkout.RedirectAutomatically ?? storeBlob.RedirectAutomatically;
-            entity.CheckoutFormId = invoice.Checkout.CheckoutFormId;
             entity.CheckoutType = invoice.Checkout.CheckoutType;
             entity.RequiresRefundEmail = invoice.Checkout.RequiresRefundEmail;
             IPaymentFilter? excludeFilter = null;

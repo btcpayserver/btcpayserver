@@ -229,58 +229,12 @@ namespace BTCPayServer.Controllers
                 InvoiceId = i.Id,
                 OrderId = i.Metadata?.OrderId,
                 OrderUrl = i.Metadata?.OrderUrl,
-                FormId = i.CheckoutFormId,
-                FormSubmitted  = formResponse == i.CheckoutFormId,
                 Payments = receipt.ShowPayments is false ? null : payments,
                 ReceiptOptions = receipt,
                 AdditionalData = receiptData is null
                     ? new Dictionary<string, object>()
                     : PosDataParser.ParsePosData(receiptData.ToString())
             });
-
-        }
-        
-        
-        [HttpGet("i/{invoiceId}/form")]
-        [HttpPost("i/{invoiceId}/form")]
-        [AllowAnonymous]
-        public async Task<IActionResult> ViewInvoiceForm(string invoiceId)
-        {
-            TempData.TryGetValue("formResponse", out var formResponseRaw);
-            TempData.Remove("formResponse");
-            
-            var i = await _InvoiceRepository.GetInvoice(invoiceId);
-            if (i is null)
-                return NotFound();
-            var store = await _StoreRepository.GetStoreByInvoiceId(i.Id);
-            if (store is null)
-                return NotFound();
-
-            var formId = i.CheckoutFormId;
-
-            switch (formId)
-            {
-                case { } frid when string.IsNullOrEmpty(frid) || frid == GenericFormOption.None.ToString():
-                    break;
-                default:
-                    if (formResponseRaw is string raw && !string.IsNullOrEmpty(raw) )
-                    {
-
-                        var newMeta = i.Metadata.ToJObject();
-                        newMeta.Merge(JObject.Parse(raw));
-                        await _InvoiceRepository.UpdateInvoiceMetadata(invoiceId, store.Id, newMeta);
-                        return RedirectToAction("InvoiceReceipt", new {invoiceId});
-                    }
-                    else
-                    {
-                        TempData["formId"] = formId;
-                        TempData["redirectUrl"] = Request.GetCurrentUrl();
-                        
-                        return RedirectToAction("ViewStepForm", "UIForms");
-                    }
-            }
-            
-            return RedirectToAction("InvoiceReceipt", new {invoiceId});
         }
         private string? GetTransactionLink(PaymentMethodId paymentMethodId, string txId)
         {
@@ -811,7 +765,6 @@ namespace BTCPayServer.Controllers
                 CustomLogoLink = storeBlob.CustomLogo,
                 LogoFileId = storeBlob.LogoFileId,
                 BrandColor = storeBlob.BrandColor,
-                CheckoutFormId = invoice.CheckoutFormId ?? storeBlob.CheckoutFormId,
                 CheckoutType = invoice.CheckoutType ?? storeBlob.CheckoutType,
                 HtmlTitle = storeBlob.HtmlTitle ?? "BTCPay Invoice",
                 CryptoImage = Request.GetRelativePathOrAbsolute(paymentMethodHandler.GetCryptoImage(paymentMethodId)),
@@ -1187,9 +1140,6 @@ namespace BTCPayServer.Controllers
                     RequiresRefundEmail = model.RequiresRefundEmail == RequiresRefundEmail.InheritFromStore
                         ? storeBlob.RequiresRefundEmail
                         : model.RequiresRefundEmail == RequiresRefundEmail.On,
-                    CheckoutFormId = model.CheckoutFormId == GenericFormOption.InheritFromStore.ToString()
-                        ? storeBlob.CheckoutFormId
-                        : model.CheckoutFormId
                 }, store, HttpContext.Request.GetAbsoluteRoot(), cancellationToken: cancellationToken);
 
                 TempData[WellKnownTempData.SuccessMessage] = $"Invoice {result.Data.Id} just created!";

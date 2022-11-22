@@ -103,6 +103,6 @@ namespace BTCPayServer.Plugins.PointOfSale.Models
         public RequiresRefundEmail RequiresRefundEmail { get; set; } = RequiresRefundEmail.InheritFromStore;
         
         [Display(Name = "Request customer data on checkout")]
-        public string CheckoutFormId { get; set; } = GenericFormOption.InheritFromStore.ToString();
+        public string FormId { get; set; } = GenericFormOption.None.ToString();
     }
 }

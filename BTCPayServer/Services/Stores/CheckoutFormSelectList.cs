@@ -11,8 +11,6 @@ namespace BTCPayServer.Services.Stores;
 
 public enum GenericFormOption
 {
-   [Display(Name = "Inherit from store settings")]
-   InheritFromStore,
 
    [Display(Name = "Do not request any information")]
    None,
@@ -26,22 +24,11 @@ public enum GenericFormOption
 
 public static class CheckoutFormSelectList
 {
-    public static async Task<SelectList> ForStore(StoreData store, string selectedFormId, bool isStoreEntity, FormDataService formDataService)
+    public static async Task<SelectList> ForStore(StoreData store, string selectedFormId, FormDataService formDataService)
     {
         var forms = await formDataService.GetForms(new FormDataService.FormQuery { Stores = new [] { store.Id }});
         var choices = new List<SelectListItem>();
 
-        if (isStoreEntity)
-        {
-            var blob = store.GetStoreBlob();
-            var inherit = GenericOptionItem(GenericFormOption.InheritFromStore);
-            inherit.Text += Enum.TryParse<GenericFormOption>(blob.CheckoutFormId, out var item)
-                ? $" ({DisplayName(item)})"
-                : $" ({forms.Find(f => f.Id == blob.CheckoutFormId)?.Name ?? DisplayName(GenericFormOption.None) })";
-            
-            choices.Add(inherit);
-        }
-        
         choices.Add(new SelectListItem { Text = DisplayName(GenericFormOption.None), Value = null });
         choices.Add(GenericOptionItem(GenericFormOption.Email));
         choices.Add(GenericOptionItem(GenericFormOption.Address));

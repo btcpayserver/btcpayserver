@@ -48,7 +48,12 @@ namespace BTCPayServer.Plugins
         public async Task<AvailablePlugin[]> GetRemotePlugins()
         {
             var versions = await _pluginBuilderClient.GetPublishedVersions(Env.Version, _policiesSettings.PluginPreReleases);
-            return versions.Select(v => v.ManifestInfo.ToObject<AvailablePlugin>()).ToArray();
+            return versions.Select(v =>
+            {
+                var p = v.ManifestInfo.ToObject<AvailablePlugin>();
+                p.Documentation = v.Documentation;
+                return p;
+            }).ToArray();
         }
         public async Task DownloadRemotePlugin(string pluginIdentifier, string version)
         {
@@ -101,6 +106,7 @@ namespace BTCPayServer.Plugins
             public bool SystemPlugin { get; set; } = false;
 
             public IBTCPayServerPlugin.PluginDependency[] Dependencies { get; set; } = Array.Empty<IBTCPayServerPlugin.PluginDependency>();
+            public string Documentation { get; set; }
 
             public void Execute(IApplicationBuilder applicationBuilder,
                 IServiceProvider applicationBuilderApplicationServices)

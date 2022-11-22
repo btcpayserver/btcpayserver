@@ -258,7 +258,6 @@ namespace BTCPayServer.Controllers
 
             var formId = i.CheckoutFormId;
 
-            JObject formResponse = null;
             switch (formId)
             {
                 case { } frid when string.IsNullOrEmpty(frid) || frid == GenericFormOption.None.ToString():

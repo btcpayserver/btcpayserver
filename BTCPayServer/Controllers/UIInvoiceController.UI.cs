@@ -274,7 +274,7 @@ namespace BTCPayServer.Controllers
                     else
                     {
                         TempData["formId"] = formId;
-                        TempData["redirectUrl"] = Request.GetCurrentUrl();;
+                        TempData["redirectUrl"] = Request.GetCurrentUrl();
                         
                         return RedirectToAction("ViewStepForm", "UIForms");
                     }

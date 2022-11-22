@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -75,6 +75,7 @@ public abstract class BaseAutomatedPayoutProcessor<T> : BaseAsyncService where T
                 await context.SaveChangesAsync();
             }
         }
+        Logs.PayServer.LogInformation($"WAITING {CancellationToken.IsCancellationRequested}");
         await Task.Delay(blob.Interval, CancellationToken);
     }
 

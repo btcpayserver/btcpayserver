@@ -423,7 +423,7 @@ WHERE cte.""Id""=p.""Id""
                 {
                     continue;
                 }
-                var claim = await handler?.ParseClaimDestination(pmi, payoutData.GetBlob(_btcPayNetworkJsonSerializerSettings).Destination);
+                var claim = await handler?.ParseClaimDestination(pmi, payoutData.GetBlob(_btcPayNetworkJsonSerializerSettings).Destination, default);
                 payoutData.Destination = claim.destination?.Id;
             }
             await ctx.SaveChangesAsync();

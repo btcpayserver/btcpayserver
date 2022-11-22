@@ -65,6 +65,64 @@ namespace BTCPayServer.Tests
         }
         
         [Fact(Timeout = TestTimeout)]
+        public async Task CanUseForms()
+        {
+            using var s = CreateSeleniumTester();
+            await s.StartAsync();
+            s.RegisterNewUser(true);
+            s.CreateNewStore();
+            s.GenerateWallet(isHotWallet: true);
+            
+            //pos form test
+            
+            s.Driver.FindElement(By.Id("StoreNav-CreateApp")).Click();
+            s.Driver.FindElement(By.Id("SelectedAppType")).Click();
+            s.Driver.FindElement(By.CssSelector("option[value='PointOfSale']")).Click();
+            s.Driver.FindElement(By.Id("AppName")).SendKeys(Guid.NewGuid().ToString());
+            s.Driver.FindElement(By.Id("Create")).Click();
+            TestUtils.Eventually(() => Assert.Contains("App successfully created", s.FindAlertMessage().Text));
+            s.Driver.FindElement(By.Id("FormId")).Click();
+            s.Driver.FindElement(By.CssSelector("option[value='Email']")).Click();
+            s.Driver.FindElement(By.Id("SaveSettings")).Click();
+            Assert.Contains("App updated", s.FindAlertMessage().Text);
+
+            s.Driver.FindElement(By.Id("ViewApp")).Click();
+            var windows = s.Driver.WindowHandles;
+            Assert.Equal(2, windows.Count);
+            s.Driver.SwitchTo().Window(windows[1]);
+            s.Driver.FindElement(By.CssSelector("button[type='submit']")).Click();
+            Assert.Contains("Enter your email", s.Driver.PageSource);
+            s.Driver.FindElement(By.Name("buyerEmail")).SendKeys("aa@aa.com");
+            s.Driver.FindElement(By.CssSelector("input[type='submit']")).Click();
+            s.PayInvoice(true);
+            var invoiceId = s.Driver.Url.Substring(s.Driver.Url.LastIndexOf("/") + 1);
+            s.GoToInvoice(invoiceId);
+            
+            Assert.Contains("aa@aa.com", s.Driver.PageSource);
+           
+            
+            //pay request test
+            s.Driver.FindElement(By.Id("StoreNav-PaymentRequests")).Click();
+            s.Driver.FindElement(By.Id("CreatePaymentRequest")).Click();
+            s.Driver.FindElement(By.Id("Title")).SendKeys("Pay123");
+            s.Driver.FindElement(By.Id("Amount")).SendKeys("700");
+            s.Driver.FindElement(By.Id("FormId")).Click();
+            s.Driver.FindElement(By.CssSelector("option[value='Email']")).Click();
+            
+            s.Driver.FindElement(By.Id("SaveButton")).Click();
+            s.Driver.FindElement(By.XPath("//a[starts-with(@id, 'Edit-')]")).Click();
+            var editUrl = s.Driver.Url;
+            
+            s.Driver.FindElement(By.Id("ViewPaymentRequest")).Click();
+            s.Driver.FindElement(By.CssSelector("[data-test='form-button']")).Click();
+            Assert.Contains("Enter your email", s.Driver.PageSource);
+            s.Driver.FindElement(By.Name("buyerEmail")).SendKeys("aa@aa.com");
+            s.Driver.FindElement(By.CssSelector("input[type='submit']")).Click();
+            s.Driver.Navigate().GoToUrl(editUrl);
+            Assert.Contains("aa@aa.com", s.Driver.PageSource);
+        }
+        
+        [Fact(Timeout = TestTimeout)]
         public async Task CanUseCPFP()
         {
             using var s = CreateSeleniumTester();

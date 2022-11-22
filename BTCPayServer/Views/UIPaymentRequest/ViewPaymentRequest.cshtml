@@ -145,7 +145,7 @@
                             }
                         </noscript>
                         <template v-if="srvModel.formId && srvModel.formId != 'None' && !srvModel.formSubmitted">
-                            <a asp-action="ViewPaymentRequestForm" asp-route-payReqId="@Model.Id" class="btn btn-primary w-100 d-flex d-print-none align-items-center justify-content-center text-nowrap btn-lg" data-test="pay-button">
+                            <a asp-action="ViewPaymentRequestForm" asp-route-payReqId="@Model.Id" class="btn btn-primary w-100 d-flex d-print-none align-items-center justify-content-center text-nowrap btn-lg" data-test="form-button">
                                 Pay Invoice
                             </a>
                         </template>

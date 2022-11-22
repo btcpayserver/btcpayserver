@@ -17,6 +17,7 @@ namespace BTCPayServer.Services.Altcoins.Monero.Payments
         public string TransactionId { get; set; }
 
         public BTCPayNetworkBase Network { get; set; }
+        public long LockTime { get; set; } = 0;
 
         public string GetPaymentId()
         {
@@ -35,11 +36,17 @@ namespace BTCPayServer.Services.Altcoins.Monero.Payments
 
         public bool PaymentCompleted(PaymentEntity entity)
         {
-            return ConfirmationCount >= (Network as MoneroLikeSpecificBtcPayNetwork).MaxTrackedConfirmation;
+            return 
+                ConfirmationCount >= LockTime && 
+                ConfirmationCount >= (Network as MoneroLikeSpecificBtcPayNetwork).MaxTrackedConfirmation;
         }
 
         public bool PaymentConfirmed(PaymentEntity entity, SpeedPolicy speedPolicy)
         {
+            if (ConfirmationCount < LockTime)
+            {
+                return false;
+            }
             switch (speedPolicy)
             {
                 case SpeedPolicy.HighSpeed:

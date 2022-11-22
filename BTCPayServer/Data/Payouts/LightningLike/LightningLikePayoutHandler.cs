@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client.Models;
@@ -59,7 +60,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                 : LightningLikePayoutHandlerClearnetNamedClient);
         }
 
-        public async Task<(IClaimDestination destination, string error)> ParseClaimDestination(PaymentMethodId paymentMethodId, string destination)
+        public async Task<(IClaimDestination destination, string error)> ParseClaimDestination(PaymentMethodId paymentMethodId, string destination, CancellationToken cancellationToken)
         {
             destination = destination.Trim();
             var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(paymentMethodId.CryptoCode);
@@ -72,7 +73,9 @@ namespace BTCPayServer.Data.Payouts.LightningLike
 
                 if (lnurlTag is null)
                 {
-                    var info = (LNURLPayRequest)(await LNURL.LNURL.FetchInformation(lnurl, CreateClient(lnurl)));
+                    using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+                    using var t = CancellationTokenSource.CreateLinkedTokenSource(timeout.Token, cancellationToken);
+                    var info = (LNURLPayRequest)(await LNURL.LNURL.FetchInformation(lnurl, CreateClient(lnurl), t.Token));
                     lnurlTag = info.Tag;
                 }
 

@@ -298,9 +298,9 @@ namespace BTCPayServer.Controllers
         [HttpPost("server/policies")]
         public async Task<IActionResult> Policies([FromServices] BTCPayNetworkProvider btcPayNetworkProvider, PoliciesSettings settings, string command = "")
         {
-
             ViewBag.UpdateUrlPresent = _Options.UpdateUrl != null;
             ViewBag.AppsList = await GetAppSelectList();
+            
             if (command == "add-domain")
             {
                 ModelState.Clear();

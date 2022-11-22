@@ -27,7 +27,7 @@ namespace BTCPayServer.Models.StoreViewModels
         [Range(10, 60 * 24 * 24)]
         public int MonitoringExpiration { get; set; }
 
-        [Display(Name = "Consider the invoice confirmed when the payment transaction …")]
+        [Display(Name = "Consider the invoice settled when the payment transaction …")]
         public SpeedPolicy SpeedPolicy { get; set; }
 
         public string Label { get; set; }

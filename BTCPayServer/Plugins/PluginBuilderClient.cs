@@ -12,6 +12,7 @@ namespace BTCPayServer.Plugins
         public long BuildId { get; set; }
         public JObject BuildInfo { get; set; }
         public JObject ManifestInfo { get; set; }
+        public string Documentation { get; set; }
     }
     public class PluginBuilderClient
     {

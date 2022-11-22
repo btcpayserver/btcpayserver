@@ -141,17 +141,23 @@
             <div class="col col-12 col-md-6 col-lg-12 col-xl-6 col-xxl-4 mb-4">
                 <div class="card h-100" id="@plugin.Identifier">
                     <div class="card-body">
-                        <h4 class="card-title d-inline-block" title="@plugin.Identifier" data-bs-toggle="tooltip">@plugin.Name</h4>
+						<div class="d-flex align-items-baseline justify-content-between gap-2">
+							<h4 class="card-title" title="@plugin.Identifier" data-bs-toggle="tooltip">@plugin.Name</h4>
+							@if (Model.DocsByIdentifier.ContainsKey(plugin.Identifier))
+							{
+								<a href="@Model.DocsByIdentifier[plugin.Identifier]" rel="noreferrer noopener" target="_blank">Documentation</a>
+							}
+						</div>
                         <div class="d-flex flex-wrap align-items-center mb-2">
-                            <h5 class="text-muted d-flex align-items-center mt-1">
+                            <h5 class="text-muted d-flex align-items-center mt-1 gap-3">
                                 @plugin.Version
                                 @if (plugin.SystemPlugin)
                                 {
-                                    <div class="badge bg-secondary ms-3">System plugin</div>
+                                    <div class="badge bg-light">System plugin</div>
                                 }
-                                else if (updateAvailable)
+                                else if (updateAvailable && x != null)
                                 {
-                                    <div class="badge bg-info ms-3">
+                                    <div class="badge bg-info">
                                         @x.Version available
                                     </div>
                                 }
@@ -186,7 +192,7 @@
                                 }
                             </div>
 
-                            @if (updateAvailable)
+                            @if (updateAvailable && x != null)
                             {
                                 <div class="tab-pane" id="@tabId-update">
                                     <p class="card-text">@x.Description</p>
@@ -213,7 +219,7 @@
                     @{
                         var pendingAction = Model.Commands.Any(tuple => tuple.plugin.Equals(plugin.Identifier, StringComparison.InvariantCultureIgnoreCase));
                     }
-                    @if (!plugin.SystemPlugin && (pendingAction || (updateAvailable && DependenciesMet(x.Dependencies)) || !DependentOn(plugin.Identifier)))
+                    @if (!plugin.SystemPlugin && (pendingAction || (updateAvailable && x != null && DependenciesMet(x.Dependencies)) || !DependentOn(plugin.Identifier)))
                     {
                         <div class="card-footer border-0 pb-3 d-flex">
                             @if (pendingAction)
@@ -224,7 +230,7 @@
                             }
                             else
                             {
-                                @if (updateAvailable && DependenciesMet(x.Dependencies))
+                                @if (updateAvailable && x != null && DependenciesMet(x.Dependencies))
                                 {
                                     <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" asp-route-version="@x.Version" asp-route-update="true" class="me-3">
                                         <button type="submit" class="btn btn-secondary">Update</button>
@@ -261,16 +267,22 @@
             <div class="col col-12 col-md-6 col-lg-12 col-xl-6 col-xxl-4 mb-4">
                 <div class="card h-100" id="@plugin.Identifier">
                     <div class="card-body">
-                        <h4 class="card-title d-inline-block" data-bs-toggle="tooltip" title="@plugin.Identifier">@plugin.Name</h4>
-                        <h5 class="text-muted d-flex align-items-center mt-1">
+						<div class="d-flex align-items-baseline justify-content-between gap-2">
+							<h4 class="card-title" data-bs-toggle="tooltip" title="@plugin.Identifier">@plugin.Name</h4>
+							@if (!string.IsNullOrEmpty(plugin.Documentation))
+							{
+								<a href="@plugin.Documentation" rel="noreferrer noopener" target="_blank">Documentation</a>
+							}
+						</div>
+                        <h5 class="text-muted d-flex align-items-center mt-1 gap-2">
                             @plugin.Version
                             @if (disabled) 
                             {
-                                <div class="badge bg-light ms-2">Disabled</div>
+                                <div class="badge bg-light">Disabled</div>
                             }
                             else if (recommended)
                             {
-                                <div class="badge bg-light ms-2 text-nowrap" data-bs-toggle="tooltip" title="This plugin has been recommended to be installed by your deployment method.">Recommended <span class="fa fa-question-circle-o text-secondary"></span></div>
+                                <div class="badge bg-light text-nowrap" data-bs-toggle="tooltip" title="This plugin has been recommended to be installed by your deployment method.">Recommended <span class="fa fa-question-circle-o text-secondary"></span></div>
                             }
                         </h5>
                         <p class="card-text">@plugin.Description</p>
@@ -315,7 +327,7 @@
                                 Cannot install until dependencies are met.
                             </div>
                         }
-                    </div>
+					</div>
                 </div>
             </div>
         }

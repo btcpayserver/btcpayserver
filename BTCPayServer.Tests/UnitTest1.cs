@@ -655,7 +655,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact(Timeout = LongRunningTestTimeout * 2)]
-        [Trait("Integration", "Integration")]
+        [Trait("Flaky", "Flaky")]
         public async Task CanUseTorClient()
         {
             using var tester = CreateServerTester();

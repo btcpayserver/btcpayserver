@@ -72,7 +72,6 @@ namespace BTCPayServer.Services
         }
 
         public string Commit { get; set; }
-        public HttpContext Context => httpContext.HttpContext;
 
         public override string ToString()
         {

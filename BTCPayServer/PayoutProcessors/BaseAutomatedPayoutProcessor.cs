@@ -75,7 +75,6 @@ public abstract class BaseAutomatedPayoutProcessor<T> : BaseAsyncService where T
                 await context.SaveChangesAsync();
             }
         }
-        Logs.PayServer.LogInformation($"WAITING {CancellationToken.IsCancellationRequested}");
         await Task.Delay(blob.Interval, CancellationToken);
     }
 

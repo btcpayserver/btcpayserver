@@ -383,7 +383,7 @@ namespace BTCPayServer.HostedServices
                 var payoutHandler = _payoutHandlers.FindPayoutHandler(paymentMethod);
                 if (payoutHandler is null)
                     throw new InvalidOperationException($"No payout handler for {paymentMethod}");
-                var dest = await payoutHandler.ParseClaimDestination(paymentMethod, payoutBlob.Destination);
+                var dest = await payoutHandler.ParseClaimDestination(paymentMethod, payoutBlob.Destination, default);
                 decimal minimumCryptoAmount =
                     await payoutHandler.GetMinimumPayoutAmount(paymentMethod, dest.destination);
                 if (cryptoAmount < minimumCryptoAmount)

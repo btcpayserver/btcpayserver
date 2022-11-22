@@ -107,7 +107,7 @@ namespace BTCPayServer.PayoutProcessors.OnChain
                 }
 
                 var claimDestination =
-                    await _bitcoinLikePayoutHandler.ParseClaimDestination(paymentMethodId, blob.Destination);
+                    await _bitcoinLikePayoutHandler.ParseClaimDestination(paymentMethodId, blob.Destination, CancellationToken);
                 if (!string.IsNullOrEmpty(claimDestination.error))
                 {
                     continue;

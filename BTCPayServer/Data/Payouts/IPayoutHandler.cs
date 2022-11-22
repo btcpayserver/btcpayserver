@@ -1,6 +1,7 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client.Models;
@@ -15,11 +16,11 @@ public interface IPayoutHandler
     public bool CanHandle(PaymentMethodId paymentMethod);
     public Task TrackClaim(PaymentMethodId paymentMethodId, IClaimDestination claimDestination);
     //Allows payout handler to parse payout destinations on its own
-    public Task<(IClaimDestination destination, string error)> ParseClaimDestination(PaymentMethodId paymentMethodId, string destination);
+    public Task<(IClaimDestination destination, string error)> ParseClaimDestination(PaymentMethodId paymentMethodId, string destination, CancellationToken cancellationToken);
     public (bool valid, string? error) ValidateClaimDestination(IClaimDestination claimDestination, PullPaymentBlob? pullPaymentBlob);
-    public async Task<(IClaimDestination? destination, string? error)> ParseAndValidateClaimDestination(PaymentMethodId paymentMethodId, string destination, PullPaymentBlob? pullPaymentBlob)
+    public async Task<(IClaimDestination? destination, string? error)> ParseAndValidateClaimDestination(PaymentMethodId paymentMethodId, string destination, PullPaymentBlob? pullPaymentBlob, CancellationToken cancellationToken)
     {
-        var res = await ParseClaimDestination(paymentMethodId, destination);
+        var res = await ParseClaimDestination(paymentMethodId, destination, cancellationToken);
         if (res.destination is null)
             return res;
         var res2 = ValidateClaimDestination(res.destination, pullPaymentBlob);

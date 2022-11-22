@@ -1,24 +1,22 @@
 ﻿using Microsoft.EntityFrameworkCore.Migrations;
-
+using System;
+using BTCPayServer.Data;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 #nullable disable
 
 namespace BTCPayServer.Migrations
 {
+    
+    [DbContext(typeof(ApplicationDbContext))]
+    [Migration("20220919105333_FormBuilder")]
     public partial class FormBuilder : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AlterColumn<string>(
-                name: "Name",
-                table: "CustodianAccount",
-                type: "TEXT",
-                maxLength: 50,
-                nullable: false,
-                defaultValue: "",
-                oldClrType: typeof(string),
-                oldType: "TEXT",
-                oldMaxLength: 50,
-                oldNullable: true);
 
             migrationBuilder.CreateTable(
                 name: "Forms",
@@ -27,7 +25,7 @@ namespace BTCPayServer.Migrations
                     Id = table.Column<string>(type: "TEXT", nullable: false),
                     Name = table.Column<string>(type: "TEXT", nullable: true),
                     StoreId = table.Column<string>(type: "TEXT", nullable: true),
-                    Config = table.Column<string>(type: "TEXT", nullable: true)
+                    Config = table.Column<string>(type: migrationBuilder.IsNpgsql() ? "JSONB" : "TEXT", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -50,16 +48,6 @@ namespace BTCPayServer.Migrations
         {
             migrationBuilder.DropTable(
                 name: "Forms");
-
-            migrationBuilder.AlterColumn<string>(
-                name: "Name",
-                table: "CustodianAccount",
-                type: "TEXT",
-                maxLength: 50,
-                nullable: true,
-                oldClrType: typeof(string),
-                oldType: "TEXT",
-                oldMaxLength: 50);
         }
     }
 }

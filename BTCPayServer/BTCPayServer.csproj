@@ -4,13 +4,15 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-
     <PreserveCompilationContext>true</PreserveCompilationContext>
-
     <RunAnalyzersDuringLiveAnalysis>False</RunAnalyzersDuringLiveAnalysis>
-
     <RunAnalyzersDuringBuild>False</RunAnalyzersDuringBuild>
   </PropertyGroup>
+   <ItemGroup>
+     <AssemblyAttribute  Condition="'$(GitCommit)' != ''" Include="BTCPayServer.GitCommitAttribute">
+       <_Parameter1>$(GitCommit)</_Parameter1>
+     </AssemblyAttribute>
+   </ItemGroup>
   <ItemGroup>
     <Compile Remove="Build\**" />
     <Compile Remove="wwwroot\vendor\jquery-nice-select\**" />

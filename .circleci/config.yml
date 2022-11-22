@@ -41,9 +41,10 @@ jobs:
       - run:
           command: |
             LATEST_TAG=${CIRCLE_TAG:1} #trim v from tag
+            GIT_COMMIT=$(git rev-parse HEAD)
             #
-            sudo docker build --pull -t $DOCKERHUB_REPO:$LATEST_TAG-amd64 -f amd64.Dockerfile .
-            sudo docker build --pull --build-arg CONFIGURATION_NAME=Altcoins-Release -t $DOCKERHUB_REPO:$LATEST_TAG-altcoins-amd64 -f amd64.Dockerfile .
+            sudo docker build --build-arg GIT_COMMIT=${GIT_COMMIT} --pull -t $DOCKERHUB_REPO:$LATEST_TAG-amd64 -f amd64.Dockerfile .
+            sudo docker build --build-arg GIT_COMMIT=${GIT_COMMIT} --pull --build-arg CONFIGURATION_NAME=Altcoins-Release -t $DOCKERHUB_REPO:$LATEST_TAG-altcoins-amd64 -f amd64.Dockerfile .
             sudo docker login --username=$DOCKERHUB_USER --password=$DOCKERHUB_PASS
             sudo docker push $DOCKERHUB_REPO:$LATEST_TAG-amd64
             sudo docker push $DOCKERHUB_REPO:$LATEST_TAG-altcoins-amd64
@@ -57,9 +58,10 @@ jobs:
           command: |
             sudo docker run --rm --privileged multiarch/qemu-user-static:register --reset
             LATEST_TAG=${CIRCLE_TAG:1} #trim v from tag
+            GIT_COMMIT=$(git rev-parse HEAD)
             #
-            sudo docker build --pull -t $DOCKERHUB_REPO:$LATEST_TAG-arm32v7 -f arm32v7.Dockerfile .
-            sudo docker build --pull --build-arg CONFIGURATION_NAME=Altcoins-Release -t $DOCKERHUB_REPO:$LATEST_TAG-altcoins-arm32v7 -f arm32v7.Dockerfile .
+            sudo docker build --build-arg GIT_COMMIT=${GIT_COMMIT} --pull -t $DOCKERHUB_REPO:$LATEST_TAG-arm32v7 -f arm32v7.Dockerfile .
+            sudo docker build --build-arg GIT_COMMIT=${GIT_COMMIT} --pull --build-arg CONFIGURATION_NAME=Altcoins-Release -t $DOCKERHUB_REPO:$LATEST_TAG-altcoins-arm32v7 -f arm32v7.Dockerfile .
             sudo docker login --username=$DOCKERHUB_USER --password=$DOCKERHUB_PASS
             sudo docker push $DOCKERHUB_REPO:$LATEST_TAG-arm32v7
             sudo docker push $DOCKERHUB_REPO:$LATEST_TAG-altcoins-arm32v7
@@ -73,9 +75,10 @@ jobs:
           command: |
             sudo docker run --rm --privileged multiarch/qemu-user-static:register --reset
             LATEST_TAG=${CIRCLE_TAG:1} #trim v from tag
+            GIT_COMMIT=$(git rev-parse HEAD)
             #
-            sudo docker build --pull -t $DOCKERHUB_REPO:$LATEST_TAG-arm64v8 -f arm64v8.Dockerfile .
-            sudo docker build --build-arg CONFIGURATION_NAME=Altcoins-Release --pull -t $DOCKERHUB_REPO:$LATEST_TAG-altcoins-arm64v8 -f arm64v8.Dockerfile .
+            sudo docker build --build-arg GIT_COMMIT=${GIT_COMMIT} --pull -t $DOCKERHUB_REPO:$LATEST_TAG-arm64v8 -f arm64v8.Dockerfile .
+            sudo docker build --build-arg GIT_COMMIT=${GIT_COMMIT} --build-arg CONFIGURATION_NAME=Altcoins-Release --pull -t $DOCKERHUB_REPO:$LATEST_TAG-altcoins-arm64v8 -f arm64v8.Dockerfile .
             sudo docker login --username=$DOCKERHUB_USER --password=$DOCKERHUB_PASS
             sudo docker push $DOCKERHUB_REPO:$LATEST_TAG-arm64v8
             sudo docker push $DOCKERHUB_REPO:$LATEST_TAG-altcoins-arm64v8

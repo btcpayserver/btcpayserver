@@ -36,10 +36,6 @@
     <partial name="LayoutHead"/>
     <meta name="robots" content="noindex,nofollow">
     <link href="~/checkout-v2/checkout.css" asp-append-version="true" rel="stylesheet" />
-    @if (!string.IsNullOrEmpty(Model.CustomCSSLink))
-    {
-        <link href="@Model.CustomCSSLink" rel="stylesheet"/>
-    }
     @if (!string.IsNullOrEmpty(Model.BrandColor))
     {
         <style>

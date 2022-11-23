@@ -196,7 +196,8 @@ namespace BTCPayServer.Controllers
 
             switch (formId)
             {
-                case { } frid when string.IsNullOrEmpty(frid) || frid == GenericFormOption.None.ToString():
+                case null:
+                case { } frid when string.IsNullOrEmpty(frid):
                     break;
                 default:
                     if (formResponseRaw is string raw && !string.IsNullOrEmpty(raw) )

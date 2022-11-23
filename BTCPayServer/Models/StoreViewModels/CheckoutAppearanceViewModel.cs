@@ -23,9 +23,6 @@ namespace BTCPayServer.Models.StoreViewModels
         
         public SelectList Languages { get; set; }
 
-        [Display(Name = "Request customer data on checkout")]
-        public string CheckoutFormId { get; set; }
-
         [Display(Name = "Unify on-chain and lightning payment URL/QR code")]
         public bool OnChainWithLnInvoiceFallback { get; set; }
 

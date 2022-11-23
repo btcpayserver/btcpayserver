@@ -205,7 +205,7 @@ namespace BTCPayServer.Controllers
                         prBlob.FormResponse = raw;
                         result.SetBlob(prBlob);
                         await _PaymentRequestRepository.CreateOrUpdatePaymentRequest(result);
-                        return RedirectToAction("ViewPaymentRequest", new {payReqId});
+                        return RedirectToAction("PayPaymentRequest", new {payReqId});
                     }
                     else
                     {

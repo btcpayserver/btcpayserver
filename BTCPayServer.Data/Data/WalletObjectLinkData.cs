@@ -19,6 +19,7 @@ namespace BTCPayServer.Data
 
         public WalletObjectData A { get; set; }
         public WalletObjectData B { get; set; }
+        public int InfectionRate { get; set; } = 0;
 
         internal static void OnModelCreating(ModelBuilder builder, DatabaseFacade databaseFacade)
         {

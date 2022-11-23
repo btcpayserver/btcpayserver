@@ -325,7 +325,7 @@ namespace BTCPayServer.Services
             }
         }
 
-        public async Task EnsureWalletObjectLink(WalletObjectId a, WalletObjectId b, JObject? data = null)
+        public async Task EnsureWalletObjectLink(WalletObjectId a, WalletObjectId b, JObject? data = null, int infection = 0)
         {
             SortWalletObjectLinks(ref a, ref b);
             await using var ctx = _ContextFactory.CreateContext();
@@ -336,15 +336,56 @@ namespace BTCPayServer.Services
                 AId = a.Id,
                 BType = b.Type,
                 BId = b.Id,
-                Data = data?.ToString(Formatting.None)
+                Data = data?.ToString(Formatting.None),
+                InfectionRate = infection
             };
             ctx.WalletObjectLinks.Add(l);
             try
             {
                 await ctx.SaveChangesAsync();
+                await SpreadInfection(a, b, data, infection);
             }
             catch (DbUpdateException) // already exists
             {
+            }
+        }
+
+        private async Task SpreadInfection(WalletObjectId a, WalletObjectId b, JObject? data = null, int infectionRate = 0 )
+        {
+            SortWalletObjectLinks(ref a, ref b);
+            await using var ctx = _ContextFactory.CreateContext();
+            var contagion = await ctx.WalletObjectLinks
+                .Include(data => data.Parent)
+                .ThenInclude(data => data.ChildLinks)
+                .Include(data => data.Parent)
+                .ThenInclude(data => data.ParentLinks)
+                .Include(data => data.Child)
+                .ThenInclude(data => data.ChildLinks)
+                .Include(data => data.Child)
+                .ThenInclude(data => data.ParentLinks)
+                .SingleOrDefaultAsync(data =>
+                data.WalletId == a.WalletId.ToString() &&
+                data.ParentType == a.Type &&
+                data.ParentId == a.Id &&
+                data.ChildType == b.Type &&
+                data.ChildId == b.Id
+            );
+            if (contagion is null)
+            {
+                await EnsureWalletObjectLink(a, b, data, infectionRate);
+            }
+            if ( contagion.InfectionRate == 0)
+            {
+                return;
+            }
+
+            foreach (WalletObjectData parentNeighbour in contagion.Parent.GetNeighbours())
+            {
+                await EnsureWalletObjectLink(b, new WalletObjectId(b.WalletId, parentNeighbour.Type, parentNeighbour.Id), data, infectionRate-1);
+            }
+            foreach (WalletObjectData childNeighbour in contagion.Child.GetNeighbours())
+            {
+                await EnsureWalletObjectLink(a, new WalletObjectId(a.WalletId, childNeighbour.Type, childNeighbour.Id), data, infectionRate-1);
             }
         }
 

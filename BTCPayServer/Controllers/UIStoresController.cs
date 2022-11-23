@@ -383,7 +383,6 @@ namespace BTCPayServer.Controllers
             }).ToList();
 
             vm.UseNewCheckout = storeBlob.CheckoutType == Client.Models.CheckoutType.V2;
-            vm.CheckoutFormId = storeBlob.CheckoutFormId;
             vm.OnChainWithLnInvoiceFallback = storeBlob.OnChainWithLnInvoiceFallback;
             vm.RequiresRefundEmail = storeBlob.RequiresRefundEmail;
             vm.LazyPaymentMethods = storeBlob.LazyPaymentMethods;
@@ -504,7 +503,6 @@ namespace BTCPayServer.Controllers
             blob.CheckoutType = model.UseNewCheckout ? Client.Models.CheckoutType.V2 : Client.Models.CheckoutType.V1;
             if (blob.CheckoutType == Client.Models.CheckoutType.V2)
             {
-                blob.CheckoutFormId = model.CheckoutFormId;
                 blob.OnChainWithLnInvoiceFallback = model.OnChainWithLnInvoiceFallback;
             }
             

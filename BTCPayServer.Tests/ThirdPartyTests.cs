@@ -311,17 +311,39 @@ namespace BTCPayServer.Tests
         {
             // This test verify that no malicious js is added in the minified files.
             // We should extend the tests to other js files, but we can do as we go...
-
-            using HttpClient client = new HttpClient();
-            var actual = GetFileContent("BTCPayServer", "wwwroot", "vendor", "bootstrap", "bootstrap.bundle.min.js");
+            using var client = new HttpClient();
+            var actual = GetFileContent("BTCPayServer", "wwwroot", "vendor", "bootstrap", "bootstrap.bundle.min.js").Trim();
             var version = Regex.Match(actual, "Bootstrap v([0-9]+.[0-9]+.[0-9]+)").Groups[1].Value;
-            var expected = await (await client.GetAsync($"https://cdn.jsdelivr.net/npm/bootstrap@{version}/dist/js/bootstrap.bundle.min.js")).Content.ReadAsStringAsync();
-            Assert.Equal(expected, actual.Replace("\r\n", "\n", StringComparison.OrdinalIgnoreCase));
+            var expected = (await (await client.GetAsync($"https://cdn.jsdelivr.net/npm/bootstrap@{version}/dist/js/bootstrap.bundle.min.js")).Content.ReadAsStringAsync()).Trim();
+            Assert.Equal(expected, actual);
 
             actual = GetFileContent("BTCPayServer", "wwwroot", "vendor", "clipboard.js", "clipboard.js");
-            expected = await (await client.GetAsync($"https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.8/clipboard.js")).Content.ReadAsStringAsync();
-            Assert.Equal(expected, actual.Replace("\r\n", "\n", StringComparison.OrdinalIgnoreCase));
+            expected = (await (await client.GetAsync("https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.8/clipboard.js")).Content.ReadAsStringAsync()).Trim();
+            Assert.Equal(expected, actual);
+
+            actual = GetFileContent("BTCPayServer", "wwwroot", "vendor", "vuejs", "vue.min.js").Trim();
+            version = Regex.Match(actual, "Vue\\.js v([0-9]+.[0-9]+.[0-9]+)").Groups[1].Value;
+            expected = (await (await client.GetAsync($"https://cdnjs.cloudflare.com/ajax/libs/vue/{version}/vue.min.js")).Content.ReadAsStringAsync()).Trim();
+            Assert.Equal(expected, actual);
+
+            actual = GetFileContent("BTCPayServer", "wwwroot", "vendor", "i18next", "i18next.min.js").Trim();
+            expected = (await (await client.GetAsync("https://cdnjs.cloudflare.com/ajax/libs/i18next/22.0.6/i18next.min.js")).Content.ReadAsStringAsync()).Trim();
+            Assert.Equal(expected, actual);
+
+            actual = GetFileContent("BTCPayServer", "wwwroot", "vendor", "i18next", "i18nextHttpBackend.min.js").Trim();
+            expected = (await (await client.GetAsync("https://cdnjs.cloudflare.com/ajax/libs/i18next-http-backend/2.0.1/i18nextHttpBackend.min.js")).Content.ReadAsStringAsync()).Trim();
+            Assert.Equal(expected, actual);
+
+            actual = GetFileContent("BTCPayServer", "wwwroot", "vendor", "i18next", "vue-i18next.js").Trim();
+            expected = (await (await client.GetAsync("https://unpkg.com/@panter/vue-i18next@0.15.2/dist/vue-i18next.js")).Content.ReadAsStringAsync()).Trim();
+            Assert.Equal(expected, actual);
+
+            actual = GetFileContent("BTCPayServer", "wwwroot", "vendor", "vue-qrcode", "vue-qrcode.min.js").Trim();
+            version = Regex.Match(actual, "vue-qrcode v([0-9]+.[0-9]+.[0-9]+)").Groups[1].Value;
+            expected = (await (await client.GetAsync($"https://unpkg.com/@chenfengyuan/vue-qrcode@{version}/dist/vue-qrcode.min.js")).Content.ReadAsStringAsync()).Trim();
+            Assert.Equal(expected, actual);
         }
+        
         string GetFileContent(params string[] path)
         {
             var l = path.ToList();

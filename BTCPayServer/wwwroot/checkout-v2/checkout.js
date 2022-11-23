@@ -272,7 +272,7 @@ function initApp() {
 }
 
 i18next
-    .use(window.i18nextXHRBackend)
+    .use(window.i18nextHttpBackend)
     .init({
         backend: {
             loadPath: i18nUrl

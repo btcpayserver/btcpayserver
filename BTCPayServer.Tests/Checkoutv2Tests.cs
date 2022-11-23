@@ -94,9 +94,8 @@ namespace BTCPayServer.Tests
             
             // Pay partial amount
             await Task.Delay(200);
-            var address = s.Driver.FindElement(By.CssSelector(".qr-container")).GetAttribute("data-clipboard");
+            var address = s.Driver.FindElement(By.CssSelector(".qr-container")).GetAttribute("data-destination");
             var amountFraction = "0.00001";
-            var invoice = await s.Server.PayTester.InvoiceRepository.GetInvoice(invoiceId);
             await s.Server.ExplorerNode.SendToAddressAsync(BitcoinAddress.Create(address, Network.RegTest),
                 Money.Parse(amountFraction));
             await s.Server.ExplorerNode.GenerateAsync(1);

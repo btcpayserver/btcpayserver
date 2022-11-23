@@ -48,6 +48,7 @@ namespace BTCPayServer.Tests
             
             Assert.Equal(2, s.Driver.FindElements(By.CssSelector(".payment-method")).Count);
             Assert.Contains("Lightning", s.Driver.FindElement(By.CssSelector(".payment-method.active")).Text);
+            Assert.DoesNotContain("LNURL", s.Driver.PageSource);
             var payUrl = s.Driver.FindElement(By.CssSelector(".btn-primary")).GetAttribute("href");
             Assert.StartsWith("lightning:", payUrl);
             
@@ -107,9 +108,9 @@ namespace BTCPayServer.Tests
             {
                 Assert.Contains("Created transaction",
                     s.Driver.WaitForElement(By.Id("CheatSuccessMessage")).Text);
+                s.Server.ExplorerNode.Generate(1);
                 Assert.Contains("The invoice hasn't been paid in full",
                     s.Driver.WaitForElement(By.Id("PaymentInfo")).Text);
-                s.Server.ExplorerNode.Generate(1);
             });
 
             // Mine
@@ -147,6 +148,15 @@ namespace BTCPayServer.Tests
             payUrl = s.Driver.FindElement(By.CssSelector(".btn-primary")).GetAttribute("href");
             Assert.StartsWith("bitcoin:", payUrl);
             Assert.Contains("&LIGHTNING=", payUrl);
+            
+            // BIP21 with topup invoice (which is only available with Bitcoin onchain)
+            s.GoToHome();
+            invoiceId = s.CreateInvoice(amount: null);
+            s.GoToInvoiceCheckout(invoiceId);
+            Assert.Empty(s.Driver.FindElements(By.CssSelector(".payment-method")));
+            payUrl = s.Driver.FindElement(By.CssSelector(".btn-primary")).GetAttribute("href");
+            Assert.StartsWith("bitcoin:", payUrl);
+            Assert.DoesNotContain("&LIGHTNING=", payUrl);
         }
 
         [Fact(Timeout = TestTimeout)]

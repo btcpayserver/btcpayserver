@@ -81,9 +81,6 @@ namespace BTCPayServer.Models
         public bool? RedirectAutomatically { get; set; }
         [JsonProperty(PropertyName = "requiresRefundEmail", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public bool? RequiresRefundEmail { get; set; }
-        
-        [JsonProperty(PropertyName = "checkoutFormId", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public string CheckoutFormId { get; set; }
 
         //Bitpay compatibility: create invoice in btcpay uses this instead of supportedTransactionCurrencies
         [JsonProperty(PropertyName = "paymentCurrencies", DefaultValueHandling = DefaultValueHandling.Ignore)]

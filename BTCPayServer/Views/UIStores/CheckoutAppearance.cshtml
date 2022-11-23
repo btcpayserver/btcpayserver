@@ -1,6 +1,6 @@
 @using BTCPayServer.Payments
 @using Microsoft.AspNetCore.Mvc.TagHelpers
-@using BTCPayServer.Services.Stores
+@using BTCPayServer.Abstractions.TagHelpers
 @model CheckoutAppearanceViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
@@ -44,7 +44,7 @@
                             var criteria = Model.PaymentMethodCriteria[index];
                             <tr>
                                 <td class="border-0 ps-0 align-middle">
-                                    <input type="hidden" asp-for="PaymentMethodCriteria[index].PaymentMethod" />
+                                    <input type="hidden" asp-for="PaymentMethodCriteria[index].PaymentMethod"/>
                                     @PaymentMethodId.Parse(criteria.PaymentMethod).ToPrettyString()
                                 </td>
                                 <td class="border-0">
@@ -53,7 +53,7 @@
                                     </select>
                                 </td>
                                 <td class="border-0">
-                                    <input placeholder="6.15 USD" asp-for="PaymentMethodCriteria[index].Value" class="form-control my-0" style="max-width: 20ch;" />
+                                    <input placeholder="6.15 USD" asp-for="PaymentMethodCriteria[index].Value" class="form-control my-0" style="max-width: 20ch;"/>
                                 </td>
                             </tr>
                         }
@@ -142,14 +142,14 @@
                 <input asp-for="RedirectAutomatically" type="checkbox" class="form-check-input" />
                 <label asp-for="RedirectAutomatically" class="form-check-label"></label>
             </div>
-            
+
             <h3 class="mt-5 mb-3">Public receipt</h3>
             <div class="form-check my-3">
-                <input asp-for="ReceiptOptions.Enabled" type="checkbox" class="form-check-input" />
+                <input asp-for="ReceiptOptions.Enabled" type="checkbox" class="form-check-input"/>
                 <label asp-for="ReceiptOptions.Enabled" class="form-check-label"></label>
             </div>
-			<div class="form-check my-3">
-                <input asp-for="ReceiptOptions.ShowPayments" type="checkbox" class="form-check-input" />
+            <div class="form-check my-3">
+                <input asp-for="ReceiptOptions.ShowPayments" type="checkbox" class="form-check-input"/>
                 <label asp-for="ReceiptOptions.ShowPayments" class="form-check-label"></label>
             </div>
             <div class="form-check my-3">

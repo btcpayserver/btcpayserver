@@ -47,7 +47,7 @@
                         }
                         else if (!isSettled)
                         {
-                            <div class="lead text-center text-muted py-5 px-4 fw-semibold"  id="invoice-unsettled">
+                            <div class="lead text-center text-muted py-5 px-4 fw-semibold" id="invoice-unsettled">
                                 The invoice is not settled.
                             </div>
                         }
@@ -78,24 +78,24 @@
                                     <div class="d-flex flex-column">
                                         <dd class="text-muted mb-0 fw-semibold">Order ID</dd>
                                         <dt class="fs-5 mb-0 text-break fw-semibold">
-										@if (!string.IsNullOrEmpty(Model.OrderUrl))
-										{
-											<a href="@Model.OrderUrl" rel="noreferrer noopener" target="_blank">
-												@if (string.IsNullOrEmpty(Model.OrderId))
-												{
-													<span>View Order</span>
-												}
-												else
-												{
-													@Model.OrderId
-												}
-											</a>
-										}
-										else
-										{
-											<span>@Model.OrderId</span>
-										}
-										</dt>
+                                            @if (!string.IsNullOrEmpty(Model.OrderUrl))
+                                            {
+                                                <a href="@Model.OrderUrl" rel="noreferrer noopener" target="_blank">
+                                                    @if (string.IsNullOrEmpty(Model.OrderId))
+                                                    {
+                                                        <span>View Order</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        @Model.OrderId
+                                                    }
+                                                </a>
+                                            }
+                                            else
+                                            {
+                                                <span>@Model.OrderId</span>
+                                            }
+                                        </dt>
                                     </div>
                                 }
                             </dl>

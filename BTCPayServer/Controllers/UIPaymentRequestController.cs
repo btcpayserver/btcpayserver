@@ -16,9 +16,11 @@ using BTCPayServer.Services.PaymentRequests;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
+using Newtonsoft.Json.Linq;
 using PaymentRequestData = BTCPayServer.Data.PaymentRequestData;
 using StoreData = BTCPayServer.Data.StoreData;
 
@@ -145,6 +147,7 @@ namespace BTCPayServer.Controllers
             blob.EmbeddedCSS = viewModel.EmbeddedCSS;
             blob.CustomCSSLink = viewModel.CustomCSSLink;
             blob.AllowCustomPaymentAmounts = viewModel.AllowCustomPaymentAmounts;
+            blob.FormId = viewModel.FormId;
 
             data.SetBlob(blob);
             var isNewPaymentRequest = string.IsNullOrEmpty(payReqId);
@@ -174,6 +177,49 @@ namespace BTCPayServer.Controllers
             return View(result);
         }
 
+        [HttpGet("{payReqId}/form")]
+        [HttpPost("{payReqId}/form")]
+        [AllowAnonymous]
+        public async Task<IActionResult> ViewPaymentRequestForm(string payReqId)
+        {
+            TempData.TryGetValue("formResponse", out var formResponseRaw);
+            TempData.Remove("formResponse");
+            
+            var result = await _PaymentRequestRepository.FindPaymentRequest(payReqId, GetUserId());
+            if (result == null)
+            {
+                return NotFound();
+            }
+
+            var prBlob = result.GetBlob();
+            var formId = prBlob.FormId;
+
+            switch (formId)
+            {
+                case null:
+                case { } frid when string.IsNullOrEmpty(frid):
+                    break;
+                default:
+                    if (formResponseRaw is string raw && !string.IsNullOrEmpty(raw) )
+                    {
+                        prBlob.FormResponse = raw;
+                        result.SetBlob(prBlob);
+                        await _PaymentRequestRepository.CreateOrUpdatePaymentRequest(result);
+                        return RedirectToAction("ViewPaymentRequest", new {payReqId});
+                    }
+                    else
+                    {
+                        var redirect = Request.GetCurrentUrl();
+                        TempData["formId"] = formId;
+                        TempData["redirectUrl"] = redirect;
+                        
+                        return RedirectToAction("ViewStepForm", "UIForms");
+                    }
+            }
+            
+            return RedirectToAction("ViewPaymentRequest", new {payReqId});
+        }
+        
         [HttpGet("{payReqId}/pay")]
         [AllowAnonymous]
         public async Task<IActionResult> PayPaymentRequest(string payReqId, bool redirectToInvoice = true,

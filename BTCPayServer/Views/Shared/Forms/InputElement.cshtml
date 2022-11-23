@@ -1,0 +1,33 @@
+﻿@using BTCPayServer.Abstractions.Form
+@using Newtonsoft.Json.Linq
+@model BTCPayServer.Abstractions.Form.Field
+@{
+    if (Model is not HtmlInputField field)
+    {
+        field = JObject.FromObject(Model).ToObject<HtmlInputField>();
+    }
+}
+<div class="form-group">
+    @if (field.Required)
+    {
+        <label class="form-label" for="@field.Name" data-required>
+            @field.Label
+        </label>
+    }
+    else
+    {
+        <label class="form-label" for="@field.Name">
+            @field.Label
+        </label>
+    }
+
+    <input class="form-control @(field.IsValid() ? "" : "is-invalid")" id="@field.Name" type="@field.Type" required="@field.Required" name="@field.Name" value="@field.Value" aria-describedby="@("HelpText" + field.Name)"/>
+    @if (!string.IsNullOrEmpty(field.HelpText))
+    {
+        <small id="@("HelpText" + field.Name)" class="form-text text-muted">
+            @field.HelpText
+        </small>
+    }
+
+
+</div>

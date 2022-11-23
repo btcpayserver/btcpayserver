@@ -470,6 +470,17 @@
                         "type": "boolean",
                         "description": "Whether to allow users to create invoices that partially pay the payment request ",
                         "nullable": true
+                    },
+
+                    "formId": {
+                        "type": "string",
+                        "description": "Form ID to request customer data",
+                        "nullable": true
+                    },
+                    "formResponse": {
+                        "type": "string",
+                        "description": "Form data response",
+                        "nullable": true
                     }
                 }
             }

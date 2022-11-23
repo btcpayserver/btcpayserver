@@ -434,9 +434,9 @@
                     "checkoutType": {
                         "$ref": "#/components/schemas/CheckoutType"
                     },
-                    "checkoutFormId": {
+                    "formId": {
                         "type": "string",
-                        "description": "Form ID to request customer data, in case the new checkout is used",
+                        "description": "Form ID to request customer data",
                         "nullable": true
                     }
                 }

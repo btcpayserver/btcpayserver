@@ -144,7 +144,12 @@
                                 </div>
                             }
                         </noscript>
-                        <template v-if="srvModel.isPending && !srvModel.archived" class="d-print-none">
+                        <template v-if="srvModel.formId && srvModel.formId != 'None' && !srvModel.formSubmitted">
+                            <a asp-action="ViewPaymentRequestForm" asp-route-payReqId="@Model.Id" class="btn btn-primary w-100 d-flex d-print-none align-items-center justify-content-center text-nowrap btn-lg" data-test="form-button">
+                                Pay Invoice
+                            </a>
+                        </template>
+                        <template v-else-if="srvModel.isPending && !srvModel.archived">
                             <template v-if="srvModel.allowCustomPaymentAmounts && !srvModel.anyPendingInvoice">
                                 <form v-on:submit="submitCustomAmountForm" class="d-print-none">
                                     <div class="row">

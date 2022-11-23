@@ -38,7 +38,6 @@ namespace BTCPayServer.Data
 
         [JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
         public CheckoutType CheckoutType { get; set; }
-        public string CheckoutFormId { get; set; }
         public bool RequiresRefundEmail { get; set; }
         public bool LightningAmountInSatoshi { get; set; }
         public bool LightningPrivateRouteHints { get; set; }

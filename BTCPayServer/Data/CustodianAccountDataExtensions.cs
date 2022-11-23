@@ -1,3 +1,4 @@
+using BTCPayServer.Services.Invoices;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Data;
@@ -8,7 +9,7 @@ public static class CustodianAccountDataExtensions
     {
         var result = custodianAccountData.Blob == null
             ? new JObject()
-            : JObject.Parse(ZipUtils.Unzip(custodianAccountData.Blob));
+            : InvoiceRepository.FromBytes<JObject>(custodianAccountData.Blob);
         return result;
     }
 
@@ -17,7 +18,8 @@ public static class CustodianAccountDataExtensions
         var original = custodianAccountData.GetBlob();
         if (JToken.DeepEquals(original, blob))
             return false;
-        custodianAccountData.Blob = blob is null ? null : ZipUtils.Zip(blob.ToString(Newtonsoft.Json.Formatting.None));
+        
+        custodianAccountData.Blob = blob is null ? null : InvoiceRepository.ToBytes(blob);
         return true;
     }
 }

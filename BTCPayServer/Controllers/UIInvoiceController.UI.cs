@@ -928,14 +928,6 @@ namespace BTCPayServer.Controllers
             return Ok("{}");
         }
 
-        [HttpPost("i/{invoiceId}/Form")]
-        [HttpPost("invoice/Form")]
-        public IActionResult UpdateForm(string invoiceId)
-        {
-            // TODO: Forms integration 
-            return Ok();
-        }
-
         [HttpGet("/stores/{storeId}/invoices")]
         [HttpGet("invoices")]
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanViewInvoices)]

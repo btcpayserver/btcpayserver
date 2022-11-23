@@ -139,6 +139,28 @@ namespace BTCPayServer.Services.Invoices
             await ctx.SaveChangesAsync().ConfigureAwait(false);
         }
 
+        public async Task UpdateInvoiceExpiry(string invoiceId, TimeSpan seconds)
+        {
+            await using var ctx = _applicationDbContextFactory.CreateContext();
+            var invoiceData = await ctx.Invoices.FindAsync(invoiceId);
+            var invoice = invoiceData.GetBlob(_btcPayNetworkProvider);
+            var expiry = DateTimeOffset.Now + seconds;
+            invoice.ExpirationTime = expiry;
+            invoice.MonitoringExpiration = expiry.AddHours(1);
+            invoiceData.Blob = ToBytes(invoice, _btcPayNetworkProvider.DefaultNetwork);
+            
+            await ctx.SaveChangesAsync();
+            
+            _eventAggregator.Publish(new InvoiceDataChangedEvent(invoice));
+            _ = InvoiceNeedUpdateEventLater(invoiceId, seconds);
+        }
+        
+        async Task InvoiceNeedUpdateEventLater(string invoiceId, TimeSpan expirationIn)
+        {
+            await Task.Delay(expirationIn);
+            _eventAggregator.Publish(new InvoiceNeedUpdateEvent(invoiceId));
+        }
+
         public async Task ExtendInvoiceMonitor(string invoiceId)
         {
             using var ctx = _applicationDbContextFactory.CreateContext();

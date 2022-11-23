@@ -5,7 +5,6 @@ using System.Linq;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Newtonsoft.Json.Linq;
-using YamlDotNet.Core.Tokens;
 
 namespace BTCPayServer.Models.StoreViewModels
 {
@@ -24,10 +23,7 @@ namespace BTCPayServer.Models.StoreViewModels
         
         public SelectList Languages { get; set; }
 
-        [Display(Name = "Request customer data on checkout")]
-        public string CheckoutFormId { get; set; }
-
-        [Display(Name = "Include Lightning invoice fallback to on-chain BIP21 payment URL")]
+        [Display(Name = "Unify on-chain and lightning payment URL/QR code")]
         public bool OnChainWithLnInvoiceFallback { get; set; }
 
         [Display(Name = "Default payment method on checkout")]

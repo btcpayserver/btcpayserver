@@ -3,7 +3,7 @@
 
 <template id="bitcoin-method-checkout-template">
     <div class="payment-box">
-        <div class="qr-container" data-clipboard-confirm-element="QR_Text_@Model.PaymentMethodId" :data-clipboard="model.btcAddress" :data-clipboard-confirm="$t('copy_confirm')">
+        <div class="qr-container" data-clipboard-confirm-element="QR_Text_@Model.PaymentMethodId" :data-clipboard="model.invoiceBitcoinUrl" :data-clipboard-confirm="$t('copy_confirm')" :data-destination="model.btcAddress">
             <qrcode v-if="model.invoiceBitcoinUrlQR" :value="model.invoiceBitcoinUrlQR" tag="div" :options="qrOptions" />
         </div>
         <div class="mt-2 mb-4">

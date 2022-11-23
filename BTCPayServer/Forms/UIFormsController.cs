@@ -143,7 +143,7 @@ public class UIFormsController : Controller
         {
             return NotFound();
         }
-        FormData form = await GetFormData(formId.ToString());
+        FormData? form = await GetFormData(formId.ToString());
 
         switch( form)
         {
@@ -161,7 +161,7 @@ public class UIFormsController : Controller
         TempData.Remove("formResponse");
         TempData.Remove("redirectUrl");
         TempData.Remove("formId");
-        FormData form = await GetFormData(id);
+        FormData? form = await GetFormData(id);
 
         switch( form)
         {
@@ -171,9 +171,9 @@ public class UIFormsController : Controller
         };
     }
 
-    private async Task<FormData> GetFormData(string id)
+    private async Task<FormData?> GetFormData(string id)
     {
-        FormData form;
+        FormData? form;
         switch (id)
         {
             case { } formid when formid == GenericFormOption.Address.ToString():
@@ -200,13 +200,6 @@ public class UIFormsController : Controller
 
                 break;
         }
-
-        // if (form is not null && redirectUrl is not null)
-        // {
-        //     var f = form.Deserialize().ToObject<Form>();
-        //     f.Fields.Add(new HtmlInputField(null, "integration_redirectUrl", redirectUrl, true, null, "hidden"));
-        //     form.Config = JObject.FromObject(f).Serialize();
-        // }
         return form;
     }
 

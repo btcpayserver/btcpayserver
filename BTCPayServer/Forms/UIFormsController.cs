@@ -127,7 +127,7 @@ public class UIFormsController : Controller
     
     [AllowAnonymous]
     [HttpGet("~/forms/internal")]
-    public async Task<IActionResult> ViewStepForm(string storeId)
+    public async Task<IActionResult> ViewStepForm()
     {
         TempData.Remove("formResponse");
         var formId = TempData.Peek("formId")?.ToString();

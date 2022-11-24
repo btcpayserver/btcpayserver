@@ -1,10 +1,9 @@
 @model (Dictionary<string, object> Items, int Level)
 
-@functions{
-    public bool IsValidURL(string source)
+@functions {
+    private bool IsValidURL(string source)
     {
-        Uri uriResult;
-        return Uri.TryCreate(source, UriKind.Absolute, out uriResult) && 
+        return Uri.TryCreate(source, UriKind.Absolute, out var uriResult) && 
             (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
     }
 }

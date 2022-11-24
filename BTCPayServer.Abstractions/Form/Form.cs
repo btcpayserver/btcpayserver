@@ -27,7 +27,6 @@ public class Form
         return GetFieldByName(name, Fields, null);
     }
     
-    
     private static Field GetFieldByName(string name, List<Field> fields, string prefix)
     {
         prefix ??= string.Empty;

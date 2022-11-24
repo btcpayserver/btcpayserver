@@ -471,7 +471,6 @@
                         "description": "Whether to allow users to create invoices that partially pay the payment request ",
                         "nullable": true
                     },
-
                     "formId": {
                         "type": "string",
                         "description": "Form ID to request customer data",

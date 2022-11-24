@@ -2,9 +2,6 @@ namespace BTCPayServer.Abstractions.Form;
 
 public class HtmlInputField : Field
 {
-        
-
-    
     // The translated label of the field.
     public string Label;
     
@@ -14,19 +11,17 @@ public class HtmlInputField : Field
     // A useful note shown below the field or via a tooltip / info icon. Should be translated for the user.
     public string HelpText;
 
-    public bool Required = false;
+    public bool Required;
     public HtmlInputField(string label, string name, string value, bool required, string helpText, string type = "text")
     {
-        this.Label = label;
-        this.Name = name;
-        this.Value = value;
-        this.OriginalValue = value;
-        this.Required = required;
-        this.HelpText = helpText;
-        this.Type = type;
+        Label = label;
+        Name = name;
+        Value = value;
+        OriginalValue = value;
+        Required = required;
+        HelpText = helpText;
+        Type = type;
     }
 
-    // TODO JSON parsing from string to objects again probably won't work out of the box because of the different field types. 
-    
-
+    // TODO JSON parsing from string to objects again probably won't work out of the box because of the different field types.
 }

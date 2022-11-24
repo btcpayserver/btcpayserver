@@ -42,7 +42,7 @@ public class FormDataService
     private Task<List<FormData>> GetForms(FormQuery query, ApplicationDbContext context)
     {
         return context.Forms
-                    .Where(data => query.StoreId == data.StoreId && query.Id == data.Id)
+                    .Where(data => query.StoreId == data.StoreId && query.Id == null || query.Id == data.Id)
                     .ToListAsync();
     }
 

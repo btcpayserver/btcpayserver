@@ -185,6 +185,15 @@ namespace BTCPayServer.Tests
             return (name, storeId);
         }
 
+        public void EnableCheckoutV2(bool bip21 = false)
+        {
+            GoToStore(StoreNavPages.CheckoutAppearance);
+            Driver.SetCheckbox(By.Id("UseNewCheckout"), true);
+            Driver.WaitForElement(By.Id("OnChainWithLnInvoiceFallback"));
+            Driver.SetCheckbox(By.Id("OnChainWithLnInvoiceFallback"), bip21);
+            Driver.FindElement(By.Id("Save")).Click();
+        }
+
         public Mnemonic GenerateWallet(string cryptoCode = "BTC", string seed = "", bool? importkeys = null, bool isHotWallet = false, ScriptPubKeyType format = ScriptPubKeyType.Segwit)
         {
             var isImport = !string.IsNullOrEmpty(seed);

@@ -931,7 +931,6 @@ namespace BTCPayServer.Controllers
             await _InvoiceRepository.UpdateInvoice(invoiceId, data).ConfigureAwait(false);
             return Ok("{}");
         }
-        
 
         [HttpGet("/stores/{storeId}/invoices")]
         [HttpGet("invoices")]

@@ -798,13 +798,8 @@ namespace BTCPayServer.Controllers
                 StoreId = store.Id,
                 AvailableCryptos = invoice.GetPaymentMethods()
                                           .Where(i => i.Network != null &&
-                                              // TODO: These cases and implementation need to be discussed
-                                              (storeBlob.CheckoutType == CheckoutType.V1 ||
-                                                // Exclude LNURL for non-topup invoices
-                                                (invoice.IsUnsetTopUp() || i.GetId().PaymentType is not LNURLPayPaymentType)) &&
-                                                // Exclude Lightning if OnChainWithLnInvoiceFallback is active
-                                                (!storeBlob.OnChainWithLnInvoiceFallback || i.GetId().PaymentType is not LightningPaymentType)
-                                              )
+                                              // Exclude LNURL for Checkout v2
+                                              (storeBlob.CheckoutType == CheckoutType.V1 || i.GetId().PaymentType is not LNURLPayPaymentType))
                                           .Select(kv =>
                                           {
                                               var availableCryptoPaymentMethodId = kv.GetId();
@@ -828,6 +823,16 @@ namespace BTCPayServer.Controllers
                                           .OrderByDescending(a => a.CryptoCode == _NetworkProvider.DefaultNetwork.CryptoCode).ThenBy(a => a.PaymentMethodName).ThenBy(a => a.IsLightning ? 1 : 0)
                                           .ToList()
             };
+            // Exclude Lightning if OnChainWithLnInvoiceFallback is active and we have both payment methods
+            if (storeBlob.CheckoutType == CheckoutType.V2 && storeBlob.OnChainWithLnInvoiceFallback)
+            {
+                var onchainPM = model.AvailableCryptos.Find(c => c.PaymentMethodId == "BTC");
+                var lightningPM = model.AvailableCryptos.Find(c => c.PaymentMethodId == "BTC_LightningLike");
+                if (onchainPM != null && lightningPM != null)
+                {
+                    model.AvailableCryptos.Remove(lightningPM);
+                }
+            }
             paymentMethodHandler.PreparePaymentModel(model, dto, storeBlob, paymentMethod);
             model.UISettings = paymentMethodHandler.GetCheckoutUISettings();
             model.PaymentMethodId = paymentMethodId.ToString();

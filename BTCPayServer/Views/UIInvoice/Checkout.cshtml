@@ -224,6 +224,11 @@
             },
             invoicePaid: function(){
                 return  ["complete", "confirmed", "paid"].indexOf(this.srvModel.status) >= 0;
+            },
+            storeLink () {
+                return this.srvModel.merchantRefLink && this.srvModel.merchantRefLink !== this.srvModel.receiptLink
+                    ? this.srvModel.merchantRefLink
+                    : null;
             }
         },
         mounted: function(){

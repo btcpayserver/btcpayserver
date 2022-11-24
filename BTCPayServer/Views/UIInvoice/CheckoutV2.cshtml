@@ -84,7 +84,7 @@
                             <vc:icon symbol="info"/>
                             <span v-t="'partial_payment_info'"></span>
                         </div>
-                        <div v-html="replaceNewlines($t('still_due', { amount: `${srvModel.btcDue} ${srvModel.cryptoCode}` }))"></div>
+                        <div v-if="showPaymentDueInfo" v-html="replaceNewlines($t('still_due', { amount: `${srvModel.btcDue} ${srvModel.cryptoCode}` }))"></div>
                     </div>
                 </div>
                 <button id="DetailsToggle" class="d-flex align-items-center gap-1 btn btn-link payment-details-button mb-2" type="button" :aria-expanded="displayPaymentDetails ? 'true' : 'false'" v-on:click="displayPaymentDetails = !displayPaymentDetails">
@@ -165,7 +165,7 @@
                         <p class="text-center mt-3" v-html="replaceNewlines($t('invoice_expired_body', { storeName: srvModel.storeName, minutes: @Model.MaxTimeMinutes }))"></p>
                     </div>
                     <div class="buttons">
-                        <a v-if="!isModal && storeLink" class="btn btn-primary" :href="storeLink" :target="isModal ? '_top' : null" v-t="{ path: 'return_to_store', args: { storeName: srvModel.storeName }}" id="StoreLink"></a>
+                        <a v-if="storeLink" class="btn btn-primary" :href="storeLink" :target="isModal ? '_top' : null" v-t="{ path: 'return_to_store', args: { storeName: srvModel.storeName }}" id="StoreLink"></a>
                         <button v-else-if="isModal" class="btn btn-primary" v-on:click="close" v-t="'Close'"></button>
                     </div>
                 </div>

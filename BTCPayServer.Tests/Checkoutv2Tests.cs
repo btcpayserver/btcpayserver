@@ -47,7 +47,7 @@ namespace BTCPayServer.Tests
             s.GoToInvoiceCheckout(invoiceId);
             
             Assert.Equal(2, s.Driver.FindElements(By.CssSelector(".payment-method")).Count);
-            Assert.Contains("Lightning", s.Driver.FindElement(By.CssSelector(".payment-method.active")).Text);
+            Assert.Contains("Lightning", s.Driver.WaitForElement(By.CssSelector(".payment-method.active")).Text);
             Assert.DoesNotContain("LNURL", s.Driver.PageSource);
             var payUrl = s.Driver.FindElement(By.CssSelector(".btn-primary")).GetAttribute("href");
             Assert.StartsWith("lightning:", payUrl);
@@ -70,6 +70,7 @@ namespace BTCPayServer.Tests
 
             var paymentInfo = s.Driver.WaitForElement(By.Id("PaymentInfo"));
             Assert.Contains("This invoice will expire in", paymentInfo.Text);
+            Assert.DoesNotContain("Please send", paymentInfo.Text);
             TestUtils.Eventually(() =>
             {
                 var expiredSection = s.Driver.FindElement(By.Id("expired"));
@@ -109,8 +110,9 @@ namespace BTCPayServer.Tests
                 Assert.Contains("Created transaction",
                     s.Driver.WaitForElement(By.Id("CheatSuccessMessage")).Text);
                 s.Server.ExplorerNode.Generate(1);
-                Assert.Contains("The invoice hasn't been paid in full",
-                    s.Driver.WaitForElement(By.Id("PaymentInfo")).Text);
+                paymentInfo = s.Driver.WaitForElement(By.Id("PaymentInfo"));
+                Assert.Contains("The invoice hasn't been paid in full", paymentInfo.Text);
+                Assert.Contains("Please send", paymentInfo.Text);
             });
 
             // Mine
@@ -157,6 +159,16 @@ namespace BTCPayServer.Tests
             payUrl = s.Driver.FindElement(By.CssSelector(".btn-primary")).GetAttribute("href");
             Assert.StartsWith("bitcoin:", payUrl);
             Assert.DoesNotContain("&LIGHTNING=", payUrl);
+            
+            // Expiry message should not show amount for topup invoice
+            expirySeconds = s.Driver.FindElement(By.Id("ExpirySeconds"));
+            expirySeconds.Clear();
+            expirySeconds.SendKeys("5");
+            s.Driver.FindElement(By.Id("Expire")).Click();
+
+            paymentInfo = s.Driver.WaitForElement(By.Id("PaymentInfo"));
+            Assert.Contains("This invoice will expire in", paymentInfo.Text);
+            Assert.DoesNotContain("Please send", paymentInfo.Text);
         }
 
         [Fact(Timeout = TestTimeout)]

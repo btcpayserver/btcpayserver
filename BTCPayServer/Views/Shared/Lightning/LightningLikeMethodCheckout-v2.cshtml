@@ -5,7 +5,7 @@
         <div class="qr-container" data-clipboard-confirm-element="QR_Text_@Model.PaymentMethodId" :data-clipboard="model.invoiceBitcoinUrl" :data-destination="model.btcAddress">
             <qrcode v-if="model.invoiceBitcoinUrlQR" :value="model.invoiceBitcoinUrlQR" tag="div" :options="qrOptions" />
         </div>
-        <div class="mt-1 mb-3">
+        <div class="mt-2 mb-4">
             <small class="qr-text" id="QR_Text_@Model.PaymentMethodId" v-t="'qr_text'"></small>
             @*
             <input type="text" class="form-control form-control-sm" :value="model.btcAddress"

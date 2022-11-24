@@ -445,7 +445,7 @@ namespace BTCPayServer.Services.Invoices
         
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public InvoiceDataBase.ReceiptOptions ReceiptOptions { get; set; }
-        
+
         [JsonConverter(typeof(StringEnumConverter))]
         public CheckoutType? CheckoutType { get; set; }
 

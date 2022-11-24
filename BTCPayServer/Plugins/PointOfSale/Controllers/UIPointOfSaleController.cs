@@ -220,7 +220,6 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             }
 
             var store = await _appService.GetStore(app);
-            var blob = store.GetStoreBlob();
             JObject formResponse = null;
             switch (settings.FormId)
             {
@@ -233,18 +232,15 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                         formResponse = JObject.Parse(raw);
                         break;
                     }
-                    else
+                    var query = new QueryBuilder(Request.Query);
+                    foreach (var keyValuePair in Request.Form)
                     {
-                        var query = new QueryBuilder(Request.Query);
-                        foreach (var keyValuePair in Request.Form)
-                        {
-                            query.Add(keyValuePair.Key, keyValuePair.Value.ToArray());
-                        }
-                        var redirect = Request.GetCurrentUrl() + query;
-                        TempData["formId"] = settings.FormId;
-                        TempData["redirectUrl"] = redirect;
-                        return RedirectToAction("ViewStepForm", "UIForms");
+                        query.Add(keyValuePair.Key, keyValuePair.Value.ToArray());
                     }
+                    var redirect = Request.GetCurrentUrl() + query;
+                    TempData["formId"] = settings.FormId;
+                    TempData["redirectUrl"] = redirect;
+                    return RedirectToAction("ViewStepForm", "UIForms");
             }
             try
             {
@@ -267,7 +263,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                     RedirectAutomatically = settings.RedirectAutomatically,
                     SupportedTransactionCurrencies = paymentMethods,
                     RequiresRefundEmail = requiresRefundEmail == RequiresRefundEmail.InheritFromStore
-                        ? blob.RequiresRefundEmail
+                        ? store.GetStoreBlob().RequiresRefundEmail
                         : requiresRefundEmail == RequiresRefundEmail.On,
                 }, store, HttpContext.Request.GetAbsoluteRoot(),
                     new List<string> { AppService.GetAppInternalTag(appId) },
@@ -427,7 +423,6 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             };
 
             settings.FormId = vm.FormId;
-
             app.Name = vm.AppName;
             app.SetSettings(settings);
             await _appService.UpdateOrCreateApp(app);

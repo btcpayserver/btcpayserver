@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -11,7 +10,6 @@ namespace BTCPayServer.Services.Stores;
 
 public enum GenericFormOption
 {
-
    [Display(Name = "Do not request any information")]
    None,
 

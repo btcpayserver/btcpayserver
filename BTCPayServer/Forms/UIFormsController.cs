@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -35,7 +35,7 @@ public class UIFormsController : Controller
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> FormsList(string storeId)
     {
-        var forms = await _formDataService.GetForms(new FormDataService.FormQuery {Stores = new[] {storeId}});
+        var forms = await _formDataService.GetForms(new FormDataService.FormQuery(storeId));
 
         return View(forms);
     }
@@ -52,7 +52,7 @@ public class UIFormsController : Controller
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> Modify(string storeId, string id)
     {
-        var query = new FormDataService.FormQuery { Stores = new[] { storeId }, Ids = new[] { id } };
+        var query = new FormDataService.FormQuery(storeId, id);
         var form = (await _formDataService.GetForms(query)).FirstOrDefault();
         if (form is null) return NotFound();
         
@@ -67,7 +67,7 @@ public class UIFormsController : Controller
     {
         if (id is not null)
         {
-            var query = new FormDataService.FormQuery { Stores = new[] { storeId }, Ids = new[] { id } };
+            var query = new FormDataService.FormQuery(storeId, id);
             var form = (await _formDataService.GetForms(query)).FirstOrDefault();
             if (form is null)
             {
@@ -195,7 +195,7 @@ public class UIFormsController : Controller
 
                 break;
             default:
-                var query = new FormDataService.FormQuery {Ids = new[] {id}};
+                var query = new FormDataService.FormQuery(id);
                 form = (await _formDataService.GetForms(query)).FirstOrDefault();
 
                 break;

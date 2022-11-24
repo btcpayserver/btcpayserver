@@ -20,8 +20,17 @@ public class FormDataService
 
     public class FormQuery
     {
-        public string[] Stores { get; set; }
-        public string[] Ids { get; set; }
+        public FormQuery(string storeId)
+        {
+            StoreId = storeId;
+        }
+        public FormQuery(string storeId, string id)
+        {
+            StoreId = storeId;
+            Id = id;
+        }
+        public string StoreId { get; }
+        public string Id { get; }
     }
 
     public async Task<List<FormData>> GetForms(FormQuery query)
@@ -30,20 +39,11 @@ public class FormDataService
         return await GetForms(query, context);
     }
 
-    private async Task<List<FormData>> GetForms(FormQuery query, ApplicationDbContext context)
+    private Task<List<FormData>> GetForms(FormQuery query, ApplicationDbContext context)
     {
-        var queryable = context.Forms.AsQueryable();
-
-        if (query.Stores is not null)
-        {
-            queryable = queryable.Where(data => query.Stores.Contains(data.StoreId));
-        }
-        if (query.Ids is not null)
-        {
-            queryable = queryable.Where(data => query.Ids.Contains(data.Id));
-        }
-
-        return await queryable.ToListAsync();
+        return context.Forms
+                    .Where(data => query.StoreId == data.StoreId && query.Id == data.Id)
+                    .ToListAsync();
     }
 
     public async Task RemoveForm(string id, string storeId)

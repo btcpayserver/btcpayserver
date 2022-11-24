@@ -70,6 +70,7 @@ namespace BTCPayServer.Tests
 
             var paymentInfo = s.Driver.WaitForElement(By.Id("PaymentInfo"));
             Assert.Contains("This invoice will expire in", paymentInfo.Text);
+            Assert.DoesNotContain("Please send", paymentInfo.Text);
             TestUtils.Eventually(() =>
             {
                 var expiredSection = s.Driver.FindElement(By.Id("expired"));
@@ -109,8 +110,9 @@ namespace BTCPayServer.Tests
                 Assert.Contains("Created transaction",
                     s.Driver.WaitForElement(By.Id("CheatSuccessMessage")).Text);
                 s.Server.ExplorerNode.Generate(1);
-                Assert.Contains("The invoice hasn't been paid in full",
-                    s.Driver.WaitForElement(By.Id("PaymentInfo")).Text);
+                paymentInfo = s.Driver.WaitForElement(By.Id("PaymentInfo"));
+                Assert.Contains("The invoice hasn't been paid in full", paymentInfo.Text);
+                Assert.Contains("Please send", paymentInfo.Text);
             });
 
             // Mine
@@ -157,6 +159,16 @@ namespace BTCPayServer.Tests
             payUrl = s.Driver.FindElement(By.CssSelector(".btn-primary")).GetAttribute("href");
             Assert.StartsWith("bitcoin:", payUrl);
             Assert.DoesNotContain("&LIGHTNING=", payUrl);
+            
+            // Expire should not show amount
+            expirySeconds = s.Driver.FindElement(By.Id("ExpirySeconds"));
+            expirySeconds.Clear();
+            expirySeconds.SendKeys("5");
+            s.Driver.FindElement(By.Id("Expire")).Click();
+
+            paymentInfo = s.Driver.WaitForElement(By.Id("PaymentInfo"));
+            Assert.Contains("This invoice will expire in", paymentInfo.Text);
+            Assert.DoesNotContain("Please send", paymentInfo.Text);
         }
 
         [Fact(Timeout = TestTimeout)]

@@ -1,9 +1,6 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
-using System.Threading.Tasks;
-using BTCPayServer.Data;
-using BTCPayServer.Forms;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace BTCPayServer.Services.Stores;
@@ -22,15 +19,14 @@ public enum GenericFormOption
 
 public static class CheckoutFormSelectList
 {
-    public static async Task<SelectList> ForStore(StoreData store, string selectedFormId, FormDataService formDataService)
+    public static SelectList WithSelected(string selectedFormId)
     {
-        var forms = await formDataService.GetForms(store.Id);
-        var choices = new List<SelectListItem>();
-
-        choices.Add(new SelectListItem { Text = DisplayName(GenericFormOption.None), Value = null });
-        choices.Add(GenericOptionItem(GenericFormOption.Email));
-        choices.Add(GenericOptionItem(GenericFormOption.Address));
-        forms.ForEach(data => choices.Add(new SelectListItem(data.Name, data.Id)));
+        var choices = new List<SelectListItem>
+        {
+            GenericOptionItem(GenericFormOption.None),
+            GenericOptionItem(GenericFormOption.Email),
+            GenericOptionItem(GenericFormOption.Address)
+        };
         
         var chosen = choices.FirstOrDefault(t => t.Value == selectedFormId);
         return new SelectList(choices, nameof(SelectListItem.Value), nameof(SelectListItem.Text), chosen?.Value);

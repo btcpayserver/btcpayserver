@@ -1,28 +1,25 @@
 @using BTCPayServer.Services.PaymentRequests
 @using System.Globalization
-@using BTCPayServer.Forms
 @using BTCPayServer.Services.Stores
 @using BTCPayServer.TagHelpers
 @using Microsoft.AspNetCore.Mvc.TagHelpers
-@inject FormDataService FormDataService
 @model BTCPayServer.Models.PaymentRequestViewModels.UpdatePaymentRequestViewModel
 @{
-    var store = ViewContext.HttpContext.GetStoreData();
-    var checkoutFormOptions = await CheckoutFormSelectList.ForStore(store, Model.FormId, FormDataService);
+    var checkoutFormOptions = CheckoutFormSelectList.WithSelected(Model.FormId);
 
     ViewData.SetActivePage(PaymentRequestsNavPages.Create, $"{(string.IsNullOrEmpty(Model.Id) ? "Create" : "Edit")} Payment Request", Model.Id);
 }
 
 @section PageHeadContent {
-    <link href="~/vendor/summernote/summernote-bs5.css" rel="stylesheet" asp-append-version="true"/>
+    <link href="~/vendor/summernote/summernote-bs5.css" rel="stylesheet" asp-append-version="true" />
 }
 
 @section PageFootContent {
-    <partial name="_ValidationScriptsPartial"/>
+    <partial name="_ValidationScriptsPartial" />
     <script src="~/vendor/summernote/summernote-bs5.js" asp-append-version="true"></script>
 }
 
-<form method="post" action="@Url.Action("EditPaymentRequest", "UIPaymentRequest", new {storeId = Model.StoreId, payReqId = Model.Id}, Context.Request.Scheme)">
+<form method="post" action="@Url.Action("EditPaymentRequest", "UIPaymentRequest", new { storeId = Model.StoreId, payReqId = Model.Id }, Context.Request.Scheme)">
     <div class="sticky-header-setup"></div>
     <div class="sticky-header d-sm-flex align-items-center justify-content-between">
         <h2 class="mb-0">@ViewData["Title"]</h2>
@@ -39,30 +36,30 @@
         </div>
     </div>
 
-    <partial name="_StatusMessage"/>
+    <partial name="_StatusMessage" />
 
     <div class="row">
         <div class="col-xl-8 col-xxl-constrain">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div class="form-group">
                 <label asp-for="Title" class="form-label" data-required></label>
-                <input asp-for="Title" class="form-control" required/>
+                <input asp-for="Title" class="form-control" required />
                 <span asp-validation-for="Title" class="text-danger"></span>
             </div>
             <div class="d-flex justify-content-between">
                 <div class="form-group flex-fill me-4">
                     <label asp-for="Amount" class="form-label" data-required></label>
-                    <input type="number" inputmode="decimal" step="any" asp-for="Amount" class="form-control" required/>
+                    <input type="number" inputmode="decimal" step="any" asp-for="Amount" class="form-control" required />
                     <span asp-validation-for="Amount" class="text-danger"></span>
                 </div>
                 <div class="form-group">
                     <label asp-for="Currency" class="form-label"></label>
-                    <input asp-for="Currency" class="form-control w-auto" currency-selection/>
+                    <input asp-for="Currency" class="form-control w-auto" currency-selection />
                     <span asp-validation-for="Currency" class="text-danger"></span>
                 </div>
             </div>
             <div class="form-group form-check">
-                <input asp-for="AllowCustomPaymentAmounts" type="checkbox" class="form-check-input"/>
+                <input asp-for="AllowCustomPaymentAmounts" type="checkbox" class="form-check-input" />
                 <label asp-for="AllowCustomPaymentAmounts" class="form-check-label"></label>
                 <span asp-validation-for="AllowCustomPaymentAmounts" class="text-danger"></span>
             </div>
@@ -71,7 +68,7 @@
                 <div class="input-group ">
                     <input asp-for="ExpiryDate"
                            value="@(Model.ExpiryDate?.ToString("u", CultureInfo.InvariantCulture))"
-                           class="form-control flatdtpicker" min="today" placeholder="No expiry date has been set for this payment request"/>
+                           class="form-control flatdtpicker" min="today" placeholder="No expiry date has been set for this payment request" />
                     <button id="ClearExpiryDate" class="btn btn-secondary input-group-clear" type="button" title="Clear">
                         <span class="fa fa-times"></span>
                     </button>
@@ -80,18 +77,18 @@
             </div>
             <div class="form-group">
                 <label asp-for="Email" class="form-label"></label>
-                <input type="email" asp-for="Email" placeholder="Firstname Lastname <email@example.com>" class="form-control"/>
+                <input type="email" asp-for="Email" placeholder="Firstname Lastname <email@example.com>" class="form-control" />
                 <span asp-validation-for="Email" class="text-danger"></span>
                 <p id="PaymentRequestEmailHelpBlock" class="form-text text-muted">
                     Receive updates for this payment request.
                 </p>
             </div>
-
             <div class="form-group">
                 <label asp-for="FormId" class="form-label"></label>
                 <select asp-for="FormId" class="form-select w-auto" asp-items="@checkoutFormOptions"></select>
                 <span asp-validation-for="FormId" class="text-danger"></span>
             </div>
+            
             @if (Model.FormResponse is not null)
             {
                 <div class="bg-tile rounded py-2 px-3 mb-5">
@@ -120,7 +117,7 @@
                         <h2 class="accordion-header" id="additional-custom-css-header">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#additional-custom-css" aria-expanded="false" aria-controls="additional-custom-css">
                                 Custom CSS
-                                <vc:icon symbol="caret-down"/>
+                                <vc:icon symbol="caret-down" />
                             </button>
                         </h2>
                         <div id="additional-custom-css" class="accordion-collapse collapse" aria-labelledby="additional-custom-css-header">
@@ -130,7 +127,7 @@
                                     <a href="https://docs.btcpayserver.org/Development/Theme/#2-bootstrap-themes" target="_blank" rel="noreferrer noopener">
                                         <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
                                     </a>
-                                    <input asp-for="CustomCSSLink" class="form-control"/>
+                                    <input asp-for="CustomCSSLink" class="form-control" />
                                     <span asp-validation-for="CustomCSSLink" class="text-danger"></span>
                                 </div>
                                 <div class="form-group">

@@ -74,7 +74,7 @@ public class UIFormsController : Controller
 
         try
         {
-            modifyForm.FormConfig = JObject.FromObject(JObject.Parse(modifyForm.FormConfig).ToObject<Form>()).ToString();
+            modifyForm.FormConfig = JObject.FromObject(JObject.Parse(modifyForm.FormConfig).ToObject<Form>()!).ToString();
         }
         catch (Exception ex)
         {
@@ -132,14 +132,14 @@ public class UIFormsController : Controller
     public async Task<IActionResult> ViewStepForm()
     {
         TempData.Remove("formResponse");
-        var formId = TempData.Peek("formId");
+        var formId = TempData.Peek("formId")?.ToString();
         var redirectUrl = TempData.Peek("redirectUrl");
 
         if (formId is null || redirectUrl is null)
         {
             return NotFound();
         }
-        FormData? form = await GetFormData(formId.ToString());
+        FormData? form = await GetFormData(formId);
 
         switch( form)
         {
@@ -206,17 +206,19 @@ public class UIFormsController : Controller
         [FromServices] StoreRepository storeRepository,  
         [FromServices] UIInvoiceController invoiceController)
     {
-        if (TempData.TryGetValue("formId", out var formId) )
+        if (TempData.TryGetValue("formId", out var formId))
         {
-            id = formId.ToString();
+            id = formId?.ToString();
         }
+        if (id is null)
+            return NotFound();
         var orig = await GetFormData(id);
         if (orig is null)
         {
             return NotFound();
         }
 
-        var dbForm = JObject.Parse(orig.Config).ToObject<Form>();
+        var dbForm = JObject.Parse(orig.Config).ToObject<Form>()!;
         dbForm.ApplyValuesFromForm(Request.Form, "internal");
 
         Dictionary<string, object> data = dbForm.GetValues();
@@ -234,6 +236,8 @@ public class UIFormsController : Controller
         }
         
         var store = await storeRepository.FindStore(orig.StoreId);
+        if (store is null)
+            return NotFound();
         var amt = dbForm.GetFieldByName("internal_amount")?.Value;
         var request = new CreateInvoiceRequest
         {

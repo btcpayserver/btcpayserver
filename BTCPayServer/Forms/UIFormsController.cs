@@ -59,7 +59,7 @@ public class UIFormsController : Controller
     }
 
     [HttpPost("~/stores/{storeId}/forms/modify/{id?}")]
-    public async Task<IActionResult> Modify(string storeId, string id, ModifyForm modifyForm)
+    public async Task<IActionResult> Modify(string storeId, string? id, ModifyForm modifyForm)
     {
         if (id is not null)
         {

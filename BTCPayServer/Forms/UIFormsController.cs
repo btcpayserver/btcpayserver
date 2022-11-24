@@ -35,7 +35,7 @@ public class UIFormsController : Controller
     [HttpGet("~/stores/{storeId}/forms")]
     public async Task<IActionResult> FormsList(string storeId)
     {
-        var forms = await _formDataService.GetForms(new FormDataService.FormQuery(storeId));
+        var forms = await _formDataService.GetForms(storeId);
 
         return View(forms);
     }
@@ -50,8 +50,7 @@ public class UIFormsController : Controller
     [HttpGet("~/stores/{storeId}/forms/modify/{id}")]
     public async Task<IActionResult> Modify(string storeId, string id)
     {
-        var query = new FormDataService.FormQuery(storeId, id);
-        var form = (await _formDataService.GetForms(query)).FirstOrDefault();
+        var form = await _formDataService.GetForm(storeId, id);
         if (form is null) return NotFound();
         
         var json = JsonConvert.DeserializeObject(form.Config);
@@ -64,8 +63,7 @@ public class UIFormsController : Controller
     {
         if (id is not null)
         {
-            var query = new FormDataService.FormQuery(storeId, id);
-            var form = (await _formDataService.GetForms(query)).FirstOrDefault();
+            var form = await _formDataService.GetForm(storeId, id);
             if (form is null)
             {
                 return NotFound();
@@ -129,7 +127,7 @@ public class UIFormsController : Controller
     
     [AllowAnonymous]
     [HttpGet("~/forms/internal")]
-    public async Task<IActionResult> ViewStepForm()
+    public async Task<IActionResult> ViewStepForm(string storeId)
     {
         TempData.Remove("formResponse");
         var formId = TempData.Peek("formId")?.ToString();
@@ -152,7 +150,7 @@ public class UIFormsController : Controller
     
     [AllowAnonymous]
     [HttpGet("~/forms/{id}")]
-    public async Task<IActionResult> ViewPublicForm(string id)
+    public async Task<IActionResult> ViewPublicForm(string storeId, string id)
     {
         TempData.Remove("formResponse");
         TempData.Remove("redirectUrl");
@@ -191,9 +189,7 @@ public class UIFormsController : Controller
 
                 break;
             default:
-                var query = new FormDataService.FormQuery(id);
-                form = (await _formDataService.GetForms(query)).FirstOrDefault();
-
+                form = await _formDataService.GetForm(id);
                 break;
         }
         return form;
@@ -202,6 +198,7 @@ public class UIFormsController : Controller
     [AllowAnonymous]
     [HttpPost("~/forms/{id?}")]
     public async Task<IActionResult> SubmitForm(
+        string storeId,
         string? id,
         [FromServices] StoreRepository storeRepository,  
         [FromServices] UIInvoiceController invoiceController)

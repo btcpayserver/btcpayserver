@@ -26,7 +26,7 @@ public static class CheckoutFormSelectList
 {
     public static async Task<SelectList> ForStore(StoreData store, string selectedFormId, FormDataService formDataService)
     {
-        var forms = await formDataService.GetForms(new FormDataService.FormQuery(store.Id));
+        var forms = await formDataService.GetForms(store.Id);
         var choices = new List<SelectListItem>();
 
         choices.Add(new SelectListItem { Text = DisplayName(GenericFormOption.None), Value = null });

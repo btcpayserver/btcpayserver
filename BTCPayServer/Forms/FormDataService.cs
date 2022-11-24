@@ -1,3 +1,5 @@
+#nullable enable
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -18,32 +20,22 @@ public class FormDataService
         _applicationDbContextFactory = applicationDbContextFactory;
     }
 
-    public class FormQuery
+    public async Task<List<FormData>> GetForms(string storeId)
     {
-        public FormQuery(string storeId)
-        {
-            StoreId = storeId;
-        }
-        public FormQuery(string storeId, string id)
-        {
-            StoreId = storeId;
-            Id = id;
-        }
-        public string StoreId { get; }
-        public string Id { get; }
+        ArgumentNullException.ThrowIfNull(storeId);
+        await using var context = _applicationDbContextFactory.CreateContext();
+        return await context.Forms.Where(data => data.StoreId == storeId).ToListAsync();
     }
 
-    public async Task<List<FormData>> GetForms(FormQuery query)
+    public async Task<FormData?> GetForm(string storeId, string id)
     {
         await using var context = _applicationDbContextFactory.CreateContext();
-        return await GetForms(query, context);
+        return await context.Forms.Where(data => data.Id == id && data.StoreId == storeId).FirstOrDefaultAsync();
     }
-
-    private Task<List<FormData>> GetForms(FormQuery query, ApplicationDbContext context)
+    public async Task<FormData?> GetForm(string id)
     {
-        return context.Forms
-                    .Where(data => query.StoreId == data.StoreId && query.Id == null || query.Id == data.Id)
-                    .ToListAsync();
+        await using var context = _applicationDbContextFactory.CreateContext();
+        return await context.Forms.Where(data => data.Id == id).FirstOrDefaultAsync();
     }
 
     public async Task RemoveForm(string id, string storeId)

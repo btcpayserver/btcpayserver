@@ -182,10 +182,9 @@ namespace BTCPayServer.Controllers
             string? formResponse = null;
             if (i.Metadata?.AdditionalData?.TryGetValue("formResponse", out var formResponseRaw)is true)
             {
-                formResponse = formResponseRaw.Value<string>();
+                formResponseRaw.Value<string>();
             }
                 
-
             var payments = i.GetPayments(true)
                 .Select(paymentEntity =>
                 {

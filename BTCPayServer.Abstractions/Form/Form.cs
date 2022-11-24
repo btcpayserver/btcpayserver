@@ -8,14 +8,12 @@ namespace BTCPayServer.Abstractions.Form;
 
 public class Form
 {
-
     // Messages to be shown at the top of the form indicating user feedback like "Saved successfully" or "Please change X because of Y." or a warning, etc...
     public List<AlertMessage> TopMessages { get; set; } = new();
     
     // Groups of fields in the form
     public List<Field> Fields { get; set; } = new();
     
-
     // Are all the fields valid in the form?
     public bool IsValid()
     {
@@ -119,7 +117,8 @@ public class Form
     {
         return GetValues(Fields);
     }
-    private static  Dictionary<string, object> GetValues(List<Field> fields)
+    
+    private static Dictionary<string, object> GetValues(List<Field> fields)
     {
         var result = new Dictionary<string, object>();
         foreach (Field field in fields)
@@ -146,5 +145,4 @@ public class Form
 
         return result;
     }
-    
 }

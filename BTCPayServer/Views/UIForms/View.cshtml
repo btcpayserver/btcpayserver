@@ -1,12 +1,11 @@
-@using Newtonsoft.Json.Linq
-@using BTCPayServer.Abstractions.Form
+@using BTCPayServer.Components.ThemeSwitch
+@using Microsoft.AspNetCore.Mvc.TagHelpers
 @inject BTCPayServer.Services.BTCPayServerEnvironment env
 @inject BTCPayServer.Services.ThemeSettings Theme
-@model BTCPayServer.Data.Data.FormData
+@model BTCPayServer.Forms.Models.FormViewModel
 @{
-    var form = JObject.Parse(Model.Config).ToObject<Form>();
     Layout = null;
-    ViewData["Title"] = Model.Name;
+    ViewData["Title"] = Model.FormData.Name;
 }
 
 <!DOCTYPE html>
@@ -14,7 +13,6 @@
 <head>
     <partial name="LayoutHead"/>
     <meta name="robots" content="noindex,nofollow">
-
 </head>
 <body>
 <div class="min-vh-100 d-flex flex-column">
@@ -25,12 +23,16 @@
             {
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             }
-            <partial name="_FormTopMessages" model="form"/>
+            <partial name="_FormTopMessages" model="@Model.Form"/>
             <div class="d-flex flex-column justify-content-center gap-4">
                 <h1 class="h3 text-center">@ViewData["Title"]</h1>
                 <div  class="bg-tile p-3 p-sm-4 rounded">
-                    <form asp-action="SubmitForm" asp-route-id="@Model.Id">
-                        <partial name="_Form" model="@form"/>
+                    <form asp-action="SubmitForm" asp-route-formId="@Model.FormData.Id">
+                        @if (!string.IsNullOrEmpty(Model.RedirectUrl))
+                        {
+                            <input type="hidden" asp-for="RedirectUrl" value="@Model.RedirectUrl"/>
+                        }
+                        <partial name="_Form" model="@Model.Form"/>
                         <input type="submit" class="btn btn-primary" value="Submit"/>
                     </form>
                 </div>

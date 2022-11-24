@@ -97,7 +97,6 @@ namespace BTCPayServer.Tests
             s.PayInvoice(true);
             var invoiceId = s.Driver.Url[(s.Driver.Url.LastIndexOf("/", StringComparison.Ordinal) + 1)..];
             s.GoToInvoice(invoiceId);
-            
             Assert.Contains("aa@aa.com", s.Driver.PageSource);
             
             // Payment Request

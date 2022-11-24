@@ -13,6 +13,7 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.Data.Data;
+using BTCPayServer.Forms.Models;
 using BTCPayServer.Models;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
@@ -126,114 +127,57 @@ public class UIFormsController : Controller
     }
     
     [AllowAnonymous]
-    [HttpGet("~/forms/internal")]
-    public async Task<IActionResult> ViewStepForm()
+    [HttpGet("~/forms/{formId}")]
+    [HttpPost("~/forms")]
+    public async Task<IActionResult> ViewPublicForm(string? formId, string? redirectUrl)
     {
-        TempData.Remove("formResponse");
-        var formId = TempData.Peek("formId")?.ToString();
-        var redirectUrl = TempData.Peek("redirectUrl");
-
-        if (formId is null || redirectUrl is null)
+        FormData? formData = string.IsNullOrEmpty(formId) ? null : await GetFormData(formId);
+        if (formData == null)
         {
-            return NotFound();
+            return string.IsNullOrEmpty(redirectUrl)
+                ? NotFound()
+                : Redirect(redirectUrl);
         }
-        FormData? form = await GetFormData(formId);
-
-        switch( form)
-        {
-            case null:
-                TempData.TryAdd("formResponse", "{}");
-                return Redirect(redirectUrl.ToString()!);
-            default: return View("View", form);
-        };
-    }
-    
-    [AllowAnonymous]
-    [HttpGet("~/forms/{id}")]
-    public async Task<IActionResult> ViewPublicForm(string storeId, string id)
-    {
-        TempData.Remove("formResponse");
-        TempData.Remove("redirectUrl");
-        TempData.Remove("formId");
-        FormData? form = await GetFormData(id);
-
-        switch( form)
-        {
-            case null:
-                return NotFound();
-            default: return View("View", form);
-        };
-    }
-
-    private async Task<FormData?> GetFormData(string id)
-    {
-        FormData? form;
-        switch (id)
-        {
-            case { } formid when formid == GenericFormOption.Address.ToString():
-                form = new FormData()
-                {
-                    Config = JObject.FromObject(FormDataService.StaticFormAddress).ToString(),
-                    Id = GenericFormOption.Address.ToString(),
-                    Name = "Provide your address",
-                };
-                break;
-
-            case { } formid when formid == GenericFormOption.Email.ToString():
-                form = new FormData()
-                {
-                    Config = JObject.FromObject(FormDataService.StaticFormEmail).ToString(),
-                    Id = GenericFormOption.Email.ToString(),
-                    Name = "Provide your email address",
-                };
-
-                break;
-            default:
-                form = await _formDataService.GetForm(id);
-                break;
-        }
-        return form;
+        
+        return View("View", new FormViewModel { FormData = formData, RedirectUrl = redirectUrl });
     }
 
     [AllowAnonymous]
-    [HttpPost("~/forms/{id?}")]
+    [HttpPost("~/forms/{formId}")]
     public async Task<IActionResult> SubmitForm(
-        string? id,
+        string formId, string? redirectUrl,
         [FromServices] StoreRepository storeRepository,  
         [FromServices] UIInvoiceController invoiceController)
     {
-        if (TempData.TryGetValue("formId", out var formId))
-        {
-            id = formId?.ToString();
-        }
-        if (id is null)
-            return NotFound();
-        var orig = await GetFormData(id);
-        if (orig is null)
+        var formData = await GetFormData(formId);
+        if (formData is null)
         {
             return NotFound();
         }
 
-        var dbForm = JObject.Parse(orig.Config).ToObject<Form>()!;
+        var dbForm = JObject.Parse(formData.Config).ToObject<Form>()!;
         dbForm.ApplyValuesFromForm(Request.Form, "internal");
-
         Dictionary<string, object> data = dbForm.GetValues();
-        data.TryAdd("formResponse", orig.Id);
         
-        if (TempData.TryGetValue("redirectUrl", out var r) && r is string redirect)
+        // With redirect, the form comes from another entity that we need to send the data back to
+        if (!string.IsNullOrEmpty(redirectUrl))
         {
-            TempData["formResponse"] = JsonConvert.SerializeObject(data);
-            
             return View("PostRedirect", new PostRedirectViewModel
             {
-                FormUrl = redirect
+                FormUrl = redirectUrl,
+                FormParameters =
+                {
+                    { "formId", formData.Id },
+                    { "formData", JsonConvert.SerializeObject(data) }
+                }
             });
-
         }
         
-        var store = await storeRepository.FindStore(orig.StoreId);
+        // Create invoice after public form has been filled
+        var store = await storeRepository.FindStore(formData.StoreId);
         if (store is null)
             return NotFound();
+        
         var amt = dbForm.GetFieldByName("internal_amount")?.Value;
         var request = new CreateInvoiceRequest
         {
@@ -244,5 +188,26 @@ public class UIFormsController : Controller
         var inv = await invoiceController.CreateInvoiceCoreRaw(request, store, Request.GetAbsoluteRoot());
 
         return RedirectToAction("Checkout", "UIInvoice", new { invoiceId = inv.Id });
+    }
+
+    private async Task<FormData?> GetFormData(string id)
+    {
+        FormData? form = id switch
+        {
+            { } formId when formId == GenericFormOption.Address.ToString() => new FormData
+            {
+                Config = JObject.FromObject(FormDataService.StaticFormAddress).ToString(),
+                Id = GenericFormOption.Address.ToString(),
+                Name = "Provide your address",
+            },
+            { } formId when formId == GenericFormOption.Email.ToString() => new FormData
+            {
+                Config = JObject.FromObject(FormDataService.StaticFormEmail).ToString(),
+                Id = GenericFormOption.Email.ToString(),
+                Name = "Provide your email address",
+            },
+            _ => await _formDataService.GetForm(id)
+        };
+        return form;
     }
 }

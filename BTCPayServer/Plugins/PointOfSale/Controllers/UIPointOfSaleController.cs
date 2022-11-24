@@ -118,12 +118,12 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                                                         string notificationUrl,
                                                         string redirectUrl,
                                                         string choiceKey,
+                                                        string formId = null,
+                                                        string formData = null,
                                                         string posData = null,
                                                         RequiresRefundEmail requiresRefundEmail = RequiresRefundEmail.InheritFromStore,
                                                         CancellationToken cancellationToken = default)
         {
-            TempData.TryGetValue("formResponse", out var formResponseRaw);
-            TempData.Remove("formResponse");
             var app = await _appService.GetApp(appId, AppType.PointOfSale);
             if (string.IsNullOrEmpty(choiceKey) && amount <= 0)
             {
@@ -220,27 +220,39 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             }
 
             var store = await _appService.GetStore(app);
+            var posFormId = settings.FormId;
             JObject formResponse = null;
-            switch (settings.FormId)
+            switch (posFormId)
             {
                 case null:
-                case { } formId when string.IsNullOrEmpty(formId):
+                case { } when string.IsNullOrEmpty(posFormId):
                     break;
+                
                 default:
-                    if (formResponseRaw is string raw && !string.IsNullOrEmpty(raw) )
+                    // POST case: Handle form submit
+                    if (!string.IsNullOrEmpty(formData) && formId == posFormId)
                     {
-                        formResponse = JObject.Parse(raw);
+                        formResponse = JObject.Parse(formData);
                         break;
                     }
+                    
                     var query = new QueryBuilder(Request.Query);
                     foreach (var keyValuePair in Request.Form)
                     {
                         query.Add(keyValuePair.Key, keyValuePair.Value.ToArray());
                     }
-                    var redirect = Request.GetCurrentUrl() + query;
-                    TempData["formId"] = settings.FormId;
-                    TempData["redirectUrl"] = redirect;
-                    return RedirectToAction("ViewStepForm", "UIForms");
+                    
+                    // GET or empty form data case: Redirect to form
+                    return View("PostRedirect", new PostRedirectViewModel
+                    {
+                        AspController = "UIForms",
+                        AspAction = "ViewPublicForm",
+                        FormParameters =
+                        {
+                            { "formId", posFormId },
+                            { "redirectUrl", Request.GetCurrentUrl() + query }
+                        }
+                    });
             }
             try
             {

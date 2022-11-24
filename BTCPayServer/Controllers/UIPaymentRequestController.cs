@@ -9,6 +9,7 @@ using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
+using BTCPayServer.Models;
 using BTCPayServer.Models.PaymentRequestViewModels;
 using BTCPayServer.PaymentRequest;
 using BTCPayServer.Services.Invoices;
@@ -180,11 +181,8 @@ namespace BTCPayServer.Controllers
         [HttpGet("{payReqId}/form")]
         [HttpPost("{payReqId}/form")]
         [AllowAnonymous]
-        public async Task<IActionResult> ViewPaymentRequestForm(string payReqId)
+        public async Task<IActionResult> ViewPaymentRequestForm(string payReqId, [FromForm] string formId, [FromForm] string formData)
         {
-            TempData.TryGetValue("formResponse", out var formResponseRaw);
-            TempData.Remove("formResponse");
-            
             var result = await _PaymentRequestRepository.FindPaymentRequest(payReqId, GetUserId());
             if (result == null)
             {
@@ -192,32 +190,37 @@ namespace BTCPayServer.Controllers
             }
 
             var prBlob = result.GetBlob();
-            var formId = prBlob.FormId;
-
-            switch (formId)
+            var prFormId = prBlob.FormId;
+            switch (prFormId)
             {
                 case null:
-                case { } frid when string.IsNullOrEmpty(frid):
+                case { } when string.IsNullOrEmpty(prFormId):
                     break;
+                
                 default:
-                    if (formResponseRaw is string raw && !string.IsNullOrEmpty(raw) )
+                    // POST case: Handle form submit
+                    if (!string.IsNullOrEmpty(formData) && formId == prFormId)
                     {
-                        prBlob.FormResponse = raw;
+                        prBlob.FormResponse = formData;
                         result.SetBlob(prBlob);
                         await _PaymentRequestRepository.CreateOrUpdatePaymentRequest(result);
-                        return RedirectToAction("PayPaymentRequest", new {payReqId});
+                        return RedirectToAction("PayPaymentRequest", new { payReqId });
                     }
-                    else
+                    
+                    // GET or empty form data case: Redirect to form
+                    return View("PostRedirect", new PostRedirectViewModel
                     {
-                        var redirect = Request.GetCurrentUrl();
-                        TempData["formId"] = formId;
-                        TempData["redirectUrl"] = redirect;
-                        
-                        return RedirectToAction("ViewStepForm", "UIForms");
-                    }
+                        AspController = "UIForms",
+                        AspAction = "ViewPublicForm",
+                        FormParameters =
+                        {
+                            { "formId", prFormId },
+                            { "redirectUrl", Request.GetCurrentUrl() }
+                        }
+                    });
             }
             
-            return RedirectToAction("ViewPaymentRequest", new {payReqId});
+            return RedirectToAction("ViewPaymentRequest", new { payReqId });
         }
         
         [HttpGet("{payReqId}/pay")]

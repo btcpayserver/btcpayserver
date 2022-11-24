@@ -22,6 +22,7 @@ using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Forms;
 
+[Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
 public class UIFormsController : Controller
 {
     private readonly FormDataService _formDataService;
@@ -32,7 +33,6 @@ public class UIFormsController : Controller
     }
 
     [HttpGet("~/stores/{storeId}/forms")]
-    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> FormsList(string storeId)
     {
         var forms = await _formDataService.GetForms(new FormDataService.FormQuery(storeId));
@@ -41,7 +41,6 @@ public class UIFormsController : Controller
     }
 
     [HttpGet("~/stores/{storeId}/forms/new")]
-    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public IActionResult Create(string storeId)
     {
         var vm = new ModifyForm { FormConfig = JObject.FromObject(new Form()).ToString() };
@@ -49,7 +48,6 @@ public class UIFormsController : Controller
     }
 
     [HttpGet("~/stores/{storeId}/forms/modify/{id}")]
-    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> Modify(string storeId, string id)
     {
         var query = new FormDataService.FormQuery(storeId, id);
@@ -62,7 +60,6 @@ public class UIFormsController : Controller
     }
 
     [HttpPost("~/stores/{storeId}/forms/modify/{id?}")]
-    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> Modify(string storeId, string id, ModifyForm modifyForm)
     {
         if (id is not null)
@@ -119,7 +116,6 @@ public class UIFormsController : Controller
     }
 
     [HttpPost("~/stores/{storeId}/forms/{id}/remove")]
-    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> Remove(string storeId, string id)
     {
         await _formDataService.RemoveForm(id, storeId);

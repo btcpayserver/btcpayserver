@@ -198,7 +198,6 @@ public class UIFormsController : Controller
     [AllowAnonymous]
     [HttpPost("~/forms/{id?}")]
     public async Task<IActionResult> SubmitForm(
-        string storeId,
         string? id,
         [FromServices] StoreRepository storeRepository,  
         [FromServices] UIInvoiceController invoiceController)

@@ -32,11 +32,17 @@ public class UIFormsController : Controller
     {
         FormProviders = formProviders;
     }
+    private bool IsValidRedirectUri(string? redirectUrl) =>
+    !string.IsNullOrEmpty(redirectUrl) && Uri.TryCreate(redirectUrl, UriKind.RelativeOrAbsolute, out var uri) &&
+    (Url.IsLocalUrl(redirectUrl) || uri.Host.Equals(Request.Host.Host.ToString()));
+
     [AllowAnonymous]
     [HttpGet("~/forms/{formId}")]
     [HttpPost("~/forms")]
     public IActionResult ViewPublicForm(string? formId, string? redirectUrl)
     {
+        if (!IsValidRedirectUri(redirectUrl))
+            return BadRequest();
         FormData? formData = string.IsNullOrEmpty(formId) ? null : GetFormData(formId);
         if (formData == null)
         {
@@ -61,6 +67,8 @@ public class UIFormsController : Controller
         [FromServices] StoreRepository storeRepository,  
         [FromServices] UIInvoiceController invoiceController)
     {
+        if (!IsValidRedirectUri(redirectUrl))
+            return BadRequest();
         var formData = GetFormData(formId);
         if (formData?.Config is null)
             return NotFound();

@@ -10,6 +10,7 @@ using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
+using BTCPayServer.Forms;
 using BTCPayServer.Models;
 using BTCPayServer.Models.PaymentRequestViewModels;
 using BTCPayServer.PaymentRequest;
@@ -41,6 +42,8 @@ namespace BTCPayServer.Controllers
         private readonly InvoiceRepository _InvoiceRepository;
         private readonly StoreRepository _storeRepository;
 
+        public FormComponentProviders FormProviders { get; }
+
         public UIPaymentRequestController(
             UIInvoiceController invoiceController,
             UserManager<ApplicationUser> userManager,
@@ -49,7 +52,8 @@ namespace BTCPayServer.Controllers
             EventAggregator eventAggregator,
             CurrencyNameTable currencies,
             StoreRepository storeRepository,
-            InvoiceRepository invoiceRepository)
+            InvoiceRepository invoiceRepository,
+            FormComponentProviders formProviders)
         {
             _InvoiceController = invoiceController;
             _UserManager = userManager;
@@ -59,6 +63,7 @@ namespace BTCPayServer.Controllers
             _Currencies = currencies;
             _storeRepository = storeRepository;
             _InvoiceRepository = invoiceRepository;
+            FormProviders = formProviders;
         }
 
         [BitpayAPIConstraint(false)]
@@ -204,7 +209,7 @@ namespace BTCPayServer.Controllers
                     // POST case: Handle form submit
                     var formData = Form.Parse(Forms.UIFormsController.GetFormData(prFormId).Config);
                     formData.ApplyValuesFromForm(this.Request.Form);
-                    if (formData.IsValid())
+                    if (FormProviders.Validate(formData, ModelState))
                     {
                         prBlob.FormResponse = JObject.FromObject(formData.GetValues());
                         result.SetBlob(prBlob);

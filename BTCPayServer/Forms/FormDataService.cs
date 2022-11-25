@@ -15,21 +15,21 @@ public class FormDataService
 
     public static readonly Form StaticFormEmail = new()
     {
-        Fields = new List<Field>() {new HtmlInputField("Enter your email", "buyerEmail", null, true, null)}
+        Fields = new List<Field>() {Field.Create("Enter your email", "buyerEmail", null, true, null, "email")}
     };
 
     public static readonly Form StaticFormAddress = new()
     {
         Fields = new List<Field>()
         {
-            new HtmlInputField("Enter your email", "buyerEmail", null, true, null, "email"),
-            new HtmlInputField("Name", "buyerName", null, true, null),
-            new HtmlInputField("Address Line 1", "buyerAddress1", null, true, null),
-            new HtmlInputField("Address Line 2", "buyerAddress2", null, false, null),
-            new HtmlInputField("City", "buyerCity", null, true, null),
-            new HtmlInputField("Postcode", "buyerZip", null, false, null),
-            new HtmlInputField("State", "buyerState", null, false, null),
-            new HtmlInputField("Country", "buyerCountry", null, true, null)
+            Field.Create("Enter your email", "buyerEmail", null, true, null, "email"),
+            Field.Create("Name", "buyerName", null, true, null),
+            Field.Create("Address Line 1", "buyerAddress1", null, true, null),
+            Field.Create("Address Line 2", "buyerAddress2", null, false, null),
+            Field.Create("City", "buyerCity", null, true, null),
+            Field.Create("Postcode", "buyerZip", null, false, null),
+            Field.Create("State", "buyerState", null, false, null),
+            Field.Create("Country", "buyerCountry", null, true, null)
         }
     };
 }

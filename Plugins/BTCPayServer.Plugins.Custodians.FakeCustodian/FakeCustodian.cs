@@ -34,16 +34,16 @@ public class FakeCustodian : ICustodian
         var fakeConfig = ParseConfig(config);
 
         var form = new Form();
-        var fieldset = new Fieldset();
+        var fieldset = Field.CreateFieldset();
 
         // Maybe a decimal type field would be better?
-        var fakeBTCBalance = new HtmlInputField("BTC Balance", "BTCBalance", fakeConfig?.BTCBalance.ToString(), true,
+        var fakeBTCBalance = Field.Create("BTC Balance", "BTCBalance", fakeConfig?.BTCBalance.ToString(), true,
             "Enter the amount of BTC you want to have.");
-        var fakeLTCBalance = new HtmlInputField("LTC Balance", "LTCBalance", fakeConfig?.LTCBalance.ToString(), true,
+        var fakeLTCBalance = Field.Create("LTC Balance", "LTCBalance", fakeConfig?.LTCBalance.ToString(), true,
             "Enter the amount of LTC you want to have.");
-        var fakeEURBalance = new HtmlInputField("EUR Balance", "EURBalance", fakeConfig?.EURBalance.ToString(), true,
+        var fakeEURBalance = Field.Create("EUR Balance", "EURBalance", fakeConfig?.EURBalance.ToString(), true,
             "Enter the amount of EUR you want to have.");
-        var fakeUSDBalance = new HtmlInputField("USD Balance", "USDBalance", fakeConfig?.USDBalance.ToString(), true,
+        var fakeUSDBalance = Field.Create("USD Balance", "USDBalance", fakeConfig?.USDBalance.ToString(), true,
             "Enter the amount of USD you want to have.");
 
         fieldset.Label = "Your fake balances";

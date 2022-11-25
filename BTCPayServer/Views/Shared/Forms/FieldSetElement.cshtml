@@ -1,27 +1,19 @@
-﻿@using BTCPayServer.Abstractions.Form
+@using BTCPayServer.Abstractions.Form
 @using BTCPayServer.Forms
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @using Newtonsoft.Json.Linq
-@inject FormComponentProvider FormComponentProvider
+@inject FormComponentProviders FormComponentProviders
 @model BTCPayServer.Abstractions.Form.Field
-@{
-    if (Model is not Fieldset fieldset)
-    {
-        fieldset = JObject.FromObject(Model).ToObject<Fieldset>();
-    }
-}
-@if (!fieldset.Hidden)
+@if (!Model.Hidden)
 {
     <fieldset>
-        <legend class="h3 mt-4 mb-3">@fieldset.Label</legend>
-        @foreach (var field in fieldset.Fields)
+        <legend class="h3 mt-4 mb-3">@Model.Label</legend>
+        @foreach (var field in Model.Fields)
         {
-            var partial = FormComponentProvider.CanHandle(field);
-            if (string.IsNullOrEmpty(partial))
-            {
-                continue;
-            }
-            <partial name="@partial" for="@field"></partial>
+			if (FormComponentProviders.TypeToComponentProvider.TryGetValue(field.Type, out var partial))
+			{
+					<partial name="@partial.View" for="@field"></partial>
+			}
         }
     </fieldset>
 }

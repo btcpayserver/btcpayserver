@@ -29,7 +29,7 @@ public class Form
     // Are all the fields valid in the form?
     public bool IsValid()
     {
-        return Validate(null);
+        return Fields.Select(f => f.IsValid()).All(o => o);
     }
 
     public Field GetFieldByName(string name)
@@ -64,16 +64,6 @@ public class Form
         }
         return null;
     }
-
-#nullable enable
-    public bool Validate(ModelStateDictionary? modelState)
-    {
-        modelState ??= new ModelStateDictionary();
-        foreach (var field in Fields)
-            field.Validate(modelState);
-        return modelState.IsValid;
-    }
-#nullable restore
 
     public List<string> GetAllNames()
     {

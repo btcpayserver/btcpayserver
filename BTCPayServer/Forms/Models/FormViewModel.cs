@@ -8,5 +8,6 @@ public class FormViewModel
 {
     public string RedirectUrl { get; set; }
     public FormData FormData { get; set; }
-    public Form Form { get => JObject.Parse(FormData.Config).ToObject<Form>(); }
+    Form _Form;
+    public Form Form { get => _Form ??= Form.Parse(FormData.Config); }
 }

@@ -39,7 +39,7 @@ public class UIFormsController : Controller
                 : Redirect(redirectUrl);
         }
         
-        return View("View", new FormViewModel { FormData = formData, RedirectUrl = redirectUrl });
+        return View("View", new FormViewModel() { FormData = formData, RedirectUrl = redirectUrl });
     }
 
     [AllowAnonymous]
@@ -50,12 +50,12 @@ public class UIFormsController : Controller
         [FromServices] UIInvoiceController invoiceController)
     {
         var formData = GetFormData(formId);
-        if (formData is null)
+        if (formData?.Config is null)
         {
             return NotFound();
         }
 
-        var dbForm = JObject.Parse(formData.Config!).ToObject<Form>()!;
+        var dbForm = Form.Parse(formData.Config);
         dbForm.ApplyValuesFromForm(Request.Form);
         Dictionary<string, object> data = dbForm.GetValues();
         
@@ -82,13 +82,13 @@ public class UIFormsController : Controller
         {
             { } formId when formId == GenericFormOption.Address.ToString() => new FormData
             {
-                Config = JObject.FromObject(FormDataService.StaticFormAddress).ToString(),
+                Config = FormDataService.StaticFormAddress.ToString(),
                 Id = GenericFormOption.Address.ToString(),
                 Name = "Provide your address",
             },
             { } formId when formId == GenericFormOption.Email.ToString() => new FormData
             {
-                Config = JObject.FromObject(FormDataService.StaticFormEmail).ToString(),
+                Config = FormDataService.StaticFormEmail.ToString(),
                 Id = GenericFormOption.Email.ToString(),
                 Name = "Provide your email address",
             },

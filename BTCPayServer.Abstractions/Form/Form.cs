@@ -8,6 +8,17 @@ namespace BTCPayServer.Abstractions.Form;
 
 public class Form
 {
+#nullable enable
+    public static Form Parse(string str)
+    {
+        ArgumentNullException.ThrowIfNull(str);
+        return JObject.Parse(str).ToObject<Form>(CamelCaseSerializerSettings.Serializer) ?? throw new InvalidOperationException("Impossible to deserialize Form");
+    }
+    public override string ToString()
+    {
+        return JObject.FromObject(this, CamelCaseSerializerSettings.Serializer).ToString(Newtonsoft.Json.Formatting.Indented);
+    }
+#nullable restore
     // Messages to be shown at the top of the form indicating user feedback like "Saved successfully" or "Please change X because of Y." or a warning, etc...
     public List<AlertMessage> TopMessages { get; set; } = new();
     

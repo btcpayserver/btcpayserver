@@ -27,36 +27,36 @@ namespace BTCPayServer.Data
         public string Id { get; set; }
         public string Data { get; set; }
 
-        public List<WalletObjectLinkData> ChildLinks { get; set; }
-        public List<WalletObjectLinkData> ParentLinks { get; set; }
+        public List<WalletObjectLinkData> Bs { get; set; }
+        public List<WalletObjectLinkData> As { get; set; }
 
         public IEnumerable<(string type, string id, string linkdata, string objectdata)> GetLinks()
         {
-            if (ChildLinks is not null)
-                foreach (var c in ChildLinks)
+            if (Bs is not null)
+                foreach (var c in Bs)
                 {
-                    yield return (c.ChildType, c.ChildId, c.Data, c.Child?.Data);
+                    yield return (c.BType, c.BId, c.Data, c.B?.Data);
                 }
-            if (ParentLinks is not null)
-                foreach (var c in ParentLinks)
+            if (As is not null)
+                foreach (var c in As)
                 {
-                    yield return (c.ParentType, c.ParentId, c.Data, c.Parent?.Data);
+                    yield return (c.AType, c.AId, c.Data, c.A?.Data);
                 }
         }
 
         public IEnumerable<WalletObjectData> GetNeighbours()
         {
-            if (ChildLinks != null)
-                foreach (var c in ChildLinks)
+            if (Bs != null)
+                foreach (var c in Bs)
                 {
-                    if (c.Child != null)
-                        yield return c.Child;
+                    if (c.B != null)
+                        yield return c.B;
                 }
-            if (ParentLinks != null)
-                foreach (var c in ParentLinks)
+            if (As != null)
+                foreach (var c in As)
                 {
-                    if (c.Parent != null)
-                        yield return c.Parent;
+                    if (c.A != null)
+                        yield return c.A;
                 }
         }
 

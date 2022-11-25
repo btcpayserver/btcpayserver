@@ -193,7 +193,8 @@ namespace BTCPayServer.Controllers
                     Metadata = invoiceMetadata.ToJObject(),
                     Currency = pr.Currency,
                     Amount = amount,
-                    Checkout = { RedirectURL = redirectUrl }
+                    Checkout = { RedirectURL = redirectUrl },
+                    Receipt = new InvoiceDataBase.ReceiptOptions { Enabled = false }
                 };
 
             var additionalTags = new List<string> { PaymentRequestRepository.GetInternalTag(pr.Id) };

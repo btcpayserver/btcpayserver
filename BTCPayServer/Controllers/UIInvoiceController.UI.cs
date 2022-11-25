@@ -179,11 +179,6 @@ namespace BTCPayServer.Controllers
             }
             JToken? receiptData = null;
             i.Metadata?.AdditionalData?.TryGetValue("receiptData", out receiptData);
-            string? formResponse = null;
-            if (i.Metadata?.AdditionalData?.TryGetValue("formResponse", out var formResponseRaw)is true)
-            {
-                formResponseRaw.Value<string>();
-            }
                 
             var payments = i.GetPayments(true)
                 .Select(paymentEntity =>

@@ -9,11 +9,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
+using BTCPayServer.Abstractions.Form;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
+using BTCPayServer.Forms;
 using BTCPayServer.ModelBinders;
 using BTCPayServer.Models;
 using BTCPayServer.Plugins.PointOfSale.Models;
@@ -39,19 +41,23 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             AppService appService,
             CurrencyNameTable currencies,
             StoreRepository storeRepository,
-            UIInvoiceController invoiceController)
+            UIInvoiceController invoiceController,
+            FormComponentProviders formProviders)
         {
             _currencies = currencies;
             _appService = appService;
             _storeRepository = storeRepository;
             _invoiceController = invoiceController;
+            FormProviders = formProviders;
         }
 
         private readonly CurrencyNameTable _currencies;
         private readonly StoreRepository _storeRepository;
         private readonly AppService _appService;
         private readonly UIInvoiceController _invoiceController;
-        
+
+        public FormComponentProviders FormProviders { get; }
+
         [HttpGet("/")]
         [HttpGet("/apps/{appId}/pos/{viewType?}")]
         [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.AllowAll)]
@@ -118,8 +124,6 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                                                         string notificationUrl,
                                                         string redirectUrl,
                                                         string choiceKey,
-                                                        string formId = null,
-                                                        string formData = null,
                                                         string posData = null,
                                                         RequiresRefundEmail requiresRefundEmail = RequiresRefundEmail.InheritFromStore,
                                                         CancellationToken cancellationToken = default)
@@ -230,9 +234,12 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 
                 default:
                     // POST case: Handle form submit
-                    if (!string.IsNullOrEmpty(formData) && formId == posFormId)
+                    var formData = Form.Parse(Forms.UIFormsController.GetFormData(posFormId).Config);
+                    formData.ApplyValuesFromForm(this.Request.Form);
+
+                    if (FormProviders.Validate(formData, ModelState))
                     {
-                        formResponse = JObject.Parse(formData);
+                        formResponse = JObject.FromObject(formData.GetValues());
                         break;
                     }
                     
@@ -247,9 +254,12 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                     {
                         AspController = "UIForms",
                         AspAction = "ViewPublicForm",
+                        RouteParameters =
+                        {
+                            { "formId", posFormId }
+                        },
                         FormParameters =
                         {
-                            { "formId", posFormId },
                             { "redirectUrl", Request.GetCurrentUrl() + query }
                         }
                     });

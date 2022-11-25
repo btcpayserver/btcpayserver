@@ -10,7 +10,7 @@ public static class FormDataExtensions
     public static void AddForms(this IServiceCollection serviceCollection)
     {
         serviceCollection.AddSingleton<FormDataService>();
-        serviceCollection.AddSingleton<FormComponentProvider>();
+        serviceCollection.AddSingleton<FormComponentProviders>();
         serviceCollection.AddSingleton<IFormComponentProvider, HtmlInputFormProvider>();
         serviceCollection.AddSingleton<IFormComponentProvider, HtmlFieldsetFormProvider>();
     }

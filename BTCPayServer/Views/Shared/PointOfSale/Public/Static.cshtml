@@ -36,7 +36,6 @@
                                 {
                                     <form method="post" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" data-buy>
                                         <input type="hidden" name="choicekey" value="@item.Id"/>
-                                        <input type="hidden" name="requiresRefundEmail" value="@Model.RequiresRefundEmail.ToString()" />
                                         @{PayFormInputContent(item.BuyButtonText ?? Model.CustomButtonText, item.Price.Type, item.Price.Value, item.Price.Value);}
                                     </form>
                                 }

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Abstractions.Form;
@@ -28,7 +29,7 @@ public class Form
     // Are all the fields valid in the form?
     public bool IsValid()
     {
-        return Fields.All(field => field.IsValid());
+        return Fields.Select(f => f.IsValid()).All(o => o);
     }
 
     public Field GetFieldByName(string name)
@@ -63,6 +64,7 @@ public class Form
         }
         return null;
     }
+
     public List<string> GetAllNames()
     {
         return GetAllNames(Fields);

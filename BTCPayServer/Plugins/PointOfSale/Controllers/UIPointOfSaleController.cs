@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
+using BTCPayServer.Abstractions.Form;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Controllers;
@@ -118,8 +119,6 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                                                         string notificationUrl,
                                                         string redirectUrl,
                                                         string choiceKey,
-                                                        string formId = null,
-                                                        string formData = null,
                                                         string posData = null,
                                                         RequiresRefundEmail requiresRefundEmail = RequiresRefundEmail.InheritFromStore,
                                                         CancellationToken cancellationToken = default)
@@ -230,9 +229,12 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 
                 default:
                     // POST case: Handle form submit
-                    if (!string.IsNullOrEmpty(formData) && formId == posFormId)
+                    var formData = Form.Parse(Forms.UIFormsController.GetFormData(posFormId).Config);
+                    formData.ApplyValuesFromForm(this.Request.Form);
+
+                    if (formData.IsValid())
                     {
-                        formResponse = JObject.Parse(formData);
+                        formResponse = JObject.FromObject(formData.GetValues());
                         break;
                     }
                     
@@ -247,9 +249,12 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                     {
                         AspController = "UIForms",
                         AspAction = "ViewPublicForm",
+                        RouteParameters =
+                        {
+                            { "formId", posFormId }
+                        },
                         FormParameters =
                         {
-                            { "formId", posFormId },
                             { "redirectUrl", Request.GetCurrentUrl() + query }
                         }
                     });

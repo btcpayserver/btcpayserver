@@ -45,38 +45,36 @@ public class UIFormsController : Controller
     [AllowAnonymous]
     [HttpPost("~/forms/{formId}")]
     public IActionResult SubmitForm(
-        string formId, string? redirectUrl,
+        string formId,
+        string? redirectUrl,
         [FromServices] StoreRepository storeRepository,  
         [FromServices] UIInvoiceController invoiceController)
     {
         var formData = GetFormData(formId);
         if (formData?.Config is null)
-        {
             return NotFound();
-        }
+        var conf = Form.Parse(formData.Config);
+        conf.ApplyValuesFromForm(Request.Form);
+        if (!conf.Validate(ModelState))
+            return View("View", new FormViewModel() { FormData = formData, RedirectUrl = redirectUrl });
 
-        var dbForm = Form.Parse(formData.Config);
-        dbForm.ApplyValuesFromForm(Request.Form);
-        Dictionary<string, object> data = dbForm.GetValues();
-        
+        var form = new MultiValueDictionary<string, string>();
+        foreach (var kv in Request.Form)
+            form.Add(kv.Key, kv.Value);
         // With redirect, the form comes from another entity that we need to send the data back to
         if (!string.IsNullOrEmpty(redirectUrl))
         {
             return View("PostRedirect", new PostRedirectViewModel
             {
                 FormUrl = redirectUrl,
-                FormParameters =
-                {
-                    { "formId", formId },
-                    { "formData", JsonConvert.SerializeObject(data) }
-                }
+                FormParameters = form
             });
         }
 
         return NotFound();
     }
 
-    private FormData? GetFormData(string id)
+    internal static FormData? GetFormData(string id)
     {
         FormData? form = id switch
         {

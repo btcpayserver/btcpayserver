@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -19,16 +20,22 @@ public class Field
     // If this is the first the user sees the form, then value and original value are the same. Value changes as the user starts interacting with the form.
     public string Value;
 
-    // The field is considered "valid" if there are no validation errors
-    public List<string> ValidationErrors = new List<string>();
-
-    public virtual bool IsValid()
-    {
-        return ValidationErrors.Count == 0 && Fields.All(field => field.IsValid());
-    }
-
+    public bool Required;
     [JsonExtensionData] public IDictionary<string, JToken> AdditionalData { get; set; }
     public List<Field> Fields { get; set; } = new();
-    
-   
+
+    public virtual void Validate(ModelStateDictionary modelState)
+    {
+        if (Required && string.IsNullOrEmpty(Value))
+        {
+            modelState.AddModelError(Name, "This field is required");
+        }
+    }
+
+    public bool IsValid()
+    {
+        ModelStateDictionary modelState = new ModelStateDictionary();
+        Validate(modelState);
+        return modelState.IsValid;
+    }
 }

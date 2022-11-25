@@ -1,5 +1,63 @@
 # Changelog
 
+## 1.7.0
+
+### New features
+
+* New version of the checkout as opt-in feature (#4157 #4276 #4345) @dennisreimann @dstrukt
+* Request customer data with forms for email and shipping address (#4137) @Kukks
+* Server settings: Add option to customize the instance logo (#4258) @dennisreimann
+* Store settings: Add branding options (#4131) @dennisreimann
+* Greenfield: Store Rates Config (#3931) @Kukks
+* Greenfield: Get Lightning invoices (#4180) @dennisreimann
+* Greenfield: Create payment request invoices (#4243) @NicolasDorier
+* Greenfield: Allow marking payout status and payment proofs (#4244) @Kukks
+* Greenfield: Wallet Objects (#4274 #4297) @Kukks @NicolasDorier
+* Greenfield: Add crowdfund app create endpoint (#4068) @bolatovumar
+* Add Lightning Service Torq (#4296) @maxwedwards
+
+### Bug fixes
+
+* Do not crash startup if ssh settings aren't correct (0286c7) @NicolasDorier
+* UI: Fix missing timezone in browser dates (#4210) @dennisreimann
+* PayjoinController could throw HTTP 500 in corner cases (#4215) @NicolasDorier
+* Greenfield: The route to connect to a peer lightning node was always crashing (8b7921) @NicolasDorier
+* Greenfield: Fix missing payment data (#4233) @dennisreimann
+* Invoice's orderId equals to payreq id shouldn't appear part of the pay request (9e7326) @NicolasDorier
+* Fix Public Node Info View for IPv6 addresses (#4247) @dennisreimann
+* Confirm modal: Prevent form submit without confirmation (#4262) @dennisreimann
+* Do not activate onchain payment method if node is unavailable (#4291) @Kukks
+* Receipts: Fix amount paid discrepancy (#4287) @dennisreimann
+* Minor UI fixes (#4209 #4221 #4232 #4253 #4311) @dennisreimann
+* Show error message if reverse proxy domain isn't well configured (#4322) @NicolasDorier
+* Update incorrect `monitoringExpiration` field for invoice API docs (#4348) @bolatovumar
+
+### Improvement
+
+* Refactor labels (#4179 #4297 #4347) @NicolasDorier
+* Allow config to set default block explorer link (#4249) @Kukks
+* Import xpub: Surface error details (#4205) @dennisreimann
+* Sync modal improvements (#4260) @dennisreimann
+* Remove asset bundle minifier (#4222 #4225) @NicolasDorier @dennisreimann
+* Vault: Add warnings for Safari and Brave (#4226) @NicolasDorier
+* Greenfield: Graceful return for in-flight HTLCs (#4252) @dennisreimann
+* Greenfield: Docs improvements (#4231 #4235) @NicolasDorier @dennisreimann
+* Add donate link to footer(#4239) @dennisreimann
+* Improve access token pairing (#4237) @dennisreimann
+* Lightning: Better handling for non-public nodes (#4263) @dennisreimann
+* Use PluginLoader in the PluginPacker to prevent conflicts (#4277) @NicolasDorier
+* Remove dead shitcoin MUE (c8a102) @NicolasDorier
+* Unify payment request list with invoices (#4294) @dennisreimann
+* POS: Validate cart cost with explicit amount (#4307) @Kukks
+* Disable internal node options if no internal node configured (#4315) @NicolasDorier
+* Use the plugin builder website instead of docker to fetch plugins (#4285) @NicolasDorier
+* Update Code analysis (#4293) @JesterHodl
+* Server Settings: Update Policies page (#4326) @dennisreimann
+* Wallet Settings: Update speed policy wording (#4328) @ndeet
+* Plugins: Add documentation link (#4329) @NicolasDorier
+* Show the git commit of the current build of BTCPay (#4320) @NicolasDorier
+* Disable receipts for payment request invoices (#4342) @Kukks
+
 ## 1.6.12
 
 ### New features

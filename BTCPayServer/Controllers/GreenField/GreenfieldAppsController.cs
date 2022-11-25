@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 
 namespace BTCPayServer.Controllers.Greenfield
 {
@@ -327,6 +328,15 @@ namespace BTCPayServer.Controllers.Greenfield
                 EnableTips = settings.EnableTips,
                 Currency = settings.Currency,
                 Template = settings.Template,
+                Items = JsonConvert.DeserializeObject(
+                    JsonConvert.SerializeObject(
+                        _appService.Parse(settings.Template, settings.Currency), 
+                        new JsonSerializerSettings
+                        { 
+                            ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver() 
+                        }
+                    )
+                ),
                 FixedAmountPayButtonText = settings.ButtonText,
                 CustomAmountPayButtonText = settings.CustomButtonText,
                 TipText = settings.CustomTipText,
@@ -393,6 +403,15 @@ namespace BTCPayServer.Controllers.Greenfield
                 NotificationUrl = settings.NotificationUrl,
                 Tagline = settings.Tagline,
                 PerksTemplate = settings.PerksTemplate,
+                Perks = JsonConvert.DeserializeObject(
+                    JsonConvert.SerializeObject(
+                        _appService.Parse(settings.PerksTemplate, settings.TargetCurrency), 
+                        new JsonSerializerSettings
+                        { 
+                            ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver() 
+                        }
+                    )
+                ),
                 DisqusEnabled = settings.DisqusEnabled,
                 DisqusShortname = settings.DisqusShortname,
                 SoundsEnabled = settings.SoundsEnabled,

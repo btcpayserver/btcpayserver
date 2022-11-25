@@ -12,48 +12,6 @@ namespace BTCPayServer.Forms;
 
 public class FormDataService
 {
-    private readonly ApplicationDbContextFactory _applicationDbContextFactory;
-
-    public FormDataService(
-        ApplicationDbContextFactory applicationDbContextFactory)
-    {
-        _applicationDbContextFactory = applicationDbContextFactory;
-    }
-
-    public async Task<List<FormData>> GetForms(string storeId)
-    {
-        ArgumentNullException.ThrowIfNull(storeId);
-        await using var context = _applicationDbContextFactory.CreateContext();
-        return await context.Forms.Where(data => data.StoreId == storeId).ToListAsync();
-    }
-
-    public async Task<FormData?> GetForm(string storeId, string id)
-    {
-        await using var context = _applicationDbContextFactory.CreateContext();
-        return await context.Forms.Where(data => data.Id == id && data.StoreId == storeId).FirstOrDefaultAsync();
-    }
-    public async Task<FormData?> GetForm(string id)
-    {
-        await using var context = _applicationDbContextFactory.CreateContext();
-        return await context.Forms.Where(data => data.Id == id).FirstOrDefaultAsync();
-    }
-
-    public async Task RemoveForm(string id, string storeId)
-    {
-        await using var context = _applicationDbContextFactory.CreateContext();
-        var item = await context.Forms.SingleOrDefaultAsync(data => data.StoreId == storeId && id == data.Id);
-        if (item is not null)
-            context.Remove(item);
-        await context.SaveChangesAsync();
-    }
-
-    public async Task AddOrUpdateForm(FormData data)
-    {
-        await using var context = _applicationDbContextFactory.CreateContext();
-
-        context.Update(data);
-        await context.SaveChangesAsync();
-    }
 
     public static readonly Form StaticFormEmail = new()
     {

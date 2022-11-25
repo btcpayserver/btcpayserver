@@ -1,4 +1,4 @@
-﻿using BTCPayServer.Data.Data;
+using BTCPayServer.Data.Data;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -13,11 +13,6 @@ public static class FormDataExtensions
         serviceCollection.AddSingleton<FormComponentProvider>();
         serviceCollection.AddSingleton<IFormComponentProvider, HtmlInputFormProvider>();
         serviceCollection.AddSingleton<IFormComponentProvider, HtmlFieldsetFormProvider>();
-    }
-    
-    public static JObject Deserialize(this FormData form) 
-    {
-        return JsonConvert.DeserializeObject<JObject>(form.Config);
     }
 
     public static string Serialize(this JObject form)

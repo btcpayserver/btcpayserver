@@ -93,16 +93,11 @@ public class Form
         }
     }
     
-    public void ApplyValuesFromForm(IFormCollection form, string ignorePrefix = null)
+    public void ApplyValuesFromForm(IFormCollection form)
     {
         var names = GetAllNames();
         foreach (var name in names)
         {
-            if (ignorePrefix is not null && name.StartsWith(ignorePrefix))
-            {
-                continue;
-            }
-
             var field = GetFieldByName(name);
             if (field is null || !form.TryGetValue(name, out var val))
             {

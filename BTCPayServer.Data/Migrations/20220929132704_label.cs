@@ -40,33 +40,33 @@ namespace BTCPayServer.Migrations
                 columns: table => new
                 {
                     WalletId = table.Column<string>(type: "TEXT", nullable: false),
-                    ParentType = table.Column<string>(type: "TEXT", nullable: false),
-                    ParentId = table.Column<string>(type: "TEXT", nullable: false),
-                    ChildType = table.Column<string>(type: "TEXT", nullable: false),
-                    ChildId = table.Column<string>(type: "TEXT", nullable: false),
+                    AType = table.Column<string>(type: "TEXT", nullable: false),
+                    AId = table.Column<string>(type: "TEXT", nullable: false),
+                    BType = table.Column<string>(type: "TEXT", nullable: false),
+                    BId = table.Column<string>(type: "TEXT", nullable: false),
                     Data = table.Column<string>(type: migrationBuilder.IsNpgsql() ? "JSONB" : "TEXT", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_WalletObjectLinks", x => new { x.WalletId, x.ParentType, x.ParentId, x.ChildType, x.ChildId });
+                    table.PrimaryKey("PK_WalletObjectLinks", x => new { x.WalletId, x.AType, x.AId, x.BType, x.BId });
                     table.ForeignKey(
-                        name: "FK_WalletObjectLinks_WalletObjects_WalletId_ChildType_ChildId",
-                        columns: x => new { x.WalletId, x.ChildType, x.ChildId },
+                        name: "FK_WalletObjectLinks_WalletObjects_WalletId_BType_BId",
+                        columns: x => new { x.WalletId, x.BType, x.BId },
                         principalTable: "WalletObjects",
                         principalColumns: new[] { "WalletId", "Type", "Id" },
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_WalletObjectLinks_WalletObjects_WalletId_ParentType_ParentId",
-                        columns: x => new { x.WalletId, x.ParentType, x.ParentId },
+                        name: "FK_WalletObjectLinks_WalletObjects_WalletId_AType_AId",
+                        columns: x => new { x.WalletId, x.AType, x.AId },
                         principalTable: "WalletObjects",
                         principalColumns: new[] { "WalletId", "Type", "Id" },
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_WalletObjectLinks_WalletId_ChildType_ChildId",
+                name: "IX_WalletObjectLinks_WalletId_BType_BId",
                 table: "WalletObjectLinks",
-                columns: new[] { "WalletId", "ChildType", "ChildId" });
+                columns: new[] { "WalletId", "BType", "BId" });
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)

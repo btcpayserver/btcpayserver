@@ -872,24 +872,24 @@ namespace BTCPayServer.Migrations
                     b.Property<string>("WalletId")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("ParentType")
+                    b.Property<string>("AType")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("ParentId")
+                    b.Property<string>("AId")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("ChildType")
+                    b.Property<string>("BType")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("ChildId")
+                    b.Property<string>("BId")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Data")
                         .HasColumnType("TEXT");
 
-                    b.HasKey("WalletId", "ParentType", "ParentId", "ChildType", "ChildId");
+                    b.HasKey("WalletId", "AType", "AId", "BType", "BId");
 
-                    b.HasIndex("WalletId", "ChildType", "ChildId");
+                    b.HasIndex("WalletId", "BType", "BId");
 
                     b.ToTable("WalletObjectLinks");
                 });
@@ -1384,21 +1384,21 @@ namespace BTCPayServer.Migrations
 
             modelBuilder.Entity("BTCPayServer.Data.WalletObjectLinkData", b =>
                 {
-                    b.HasOne("BTCPayServer.Data.WalletObjectData", "Child")
-                        .WithMany("ParentLinks")
-                        .HasForeignKey("WalletId", "ChildType", "ChildId")
+                    b.HasOne("BTCPayServer.Data.WalletObjectData", "A")
+                        .WithMany("Bs")
+                        .HasForeignKey("WalletId", "AType", "AId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("BTCPayServer.Data.WalletObjectData", "Parent")
-                        .WithMany("ChildLinks")
-                        .HasForeignKey("WalletId", "ParentType", "ParentId")
+                    b.HasOne("BTCPayServer.Data.WalletObjectData", "B")
+                        .WithMany("As")
+                        .HasForeignKey("WalletId", "BType", "BId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Child");
+                    b.Navigation("A");
 
-                    b.Navigation("Parent");
+                    b.Navigation("B");
                 });
 
             modelBuilder.Entity("BTCPayServer.Data.WalletTransactionData", b =>
@@ -1545,9 +1545,9 @@ namespace BTCPayServer.Migrations
 
             modelBuilder.Entity("BTCPayServer.Data.WalletObjectData", b =>
                 {
-                    b.Navigation("ChildLinks");
+                    b.Navigation("As");
 
-                    b.Navigation("ParentLinks");
+                    b.Navigation("Bs");
                 });
 
             modelBuilder.Entity("BTCPayServer.Data.WebhookData", b =>

@@ -11,14 +11,14 @@ namespace BTCPayServer.Data
     public class WalletObjectLinkData
     {
         public string WalletId { get; set; }
-        public string ParentType { get; set; }
-        public string ParentId { get; set; }
-        public string ChildType { get; set; }
-        public string ChildId { get; set; }
+        public string AType { get; set; }
+        public string AId { get; set; }
+        public string BType { get; set; }
+        public string BId { get; set; }
         public string Data { get; set; }
 
-        public WalletObjectData Parent { get; set; }
-        public WalletObjectData Child { get; set; }
+        public WalletObjectData A { get; set; }
+        public WalletObjectData B { get; set; }
 
         internal static void OnModelCreating(ModelBuilder builder, DatabaseFacade databaseFacade)
         {
@@ -26,28 +26,28 @@ namespace BTCPayServer.Data
             new
             {
                 o.WalletId,
-                o.ParentType,
-                o.ParentId,
-                o.ChildType,
-                o.ChildId,
+                o.AType,
+                o.AId,
+                o.BType,
+                o.BId,
             });
             builder.Entity<WalletObjectLinkData>().HasIndex(o => new
             {
                 o.WalletId,
-                o.ChildType,
-                o.ChildId,
+                o.BType,
+                o.BId,
             });
 
             builder.Entity<WalletObjectLinkData>()
-                .HasOne(o => o.Parent)
-                .WithMany(o => o.ChildLinks)
-                .HasForeignKey(o => new { o.WalletId, o.ParentType, o.ParentId })
+                .HasOne(o => o.A)
+                .WithMany(o => o.Bs)
+                .HasForeignKey(o => new { o.WalletId, o.AType, o.AId })
                 .OnDelete(DeleteBehavior.Cascade);
 
             builder.Entity<WalletObjectLinkData>()
-                .HasOne(o => o.Child)
-                .WithMany(o => o.ParentLinks)
-                .HasForeignKey(o => new { o.WalletId, o.ChildType, o.ChildId })
+                .HasOne(o => o.B)
+                .WithMany(o => o.As)
+                .HasForeignKey(o => new { o.WalletId, o.BType, o.BId })
                 .OnDelete(DeleteBehavior.Cascade);
 
             if (databaseFacade.IsNpgsql())

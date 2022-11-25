@@ -98,7 +98,7 @@ namespace BTCPayServer.PaymentRequest
                 CurrencyData = _currencies.GetCurrencyData(blob.Currency, true),
                 LastUpdated = DateTime.UtcNow,
                 FormId = blob.FormId,
-                FormSubmitted = !string.IsNullOrEmpty(blob.FormResponse),
+                FormSubmitted = blob.FormResponse is not null,
                 AnyPendingInvoice = pendingInvoice != null,
                 PendingInvoiceHasPayments = pendingInvoice != null &&
                                             pendingInvoice.ExceptionStatus != InvoiceExceptionStatus.None,

@@ -46,9 +46,9 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
             CustomCSSLink = blob.CustomCSSLink;
             EmbeddedCSS = blob.EmbeddedCSS;
             AllowCustomPaymentAmounts = blob.AllowCustomPaymentAmounts;
-            FormResponse = string.IsNullOrEmpty(blob.FormResponse)
+            FormResponse = blob.FormResponse is null
                 ? null
-                : JObject.Parse(blob.FormResponse).ToObject<Dictionary<string, object>>();
+                : blob.FormResponse.ToObject<Dictionary<string, object>>();
         }
 
         [Display(Name = "Request customer data on checkout")]

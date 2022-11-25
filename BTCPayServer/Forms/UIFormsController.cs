@@ -67,7 +67,7 @@ public class UIFormsController : Controller
                 FormUrl = redirectUrl,
                 FormParameters =
                 {
-                    { "formId", formData.Id },
+                    { "formId", formId },
                     { "formData", JsonConvert.SerializeObject(data) }
                 }
             });

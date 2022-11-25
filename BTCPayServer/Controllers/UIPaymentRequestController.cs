@@ -201,7 +201,7 @@ namespace BTCPayServer.Controllers
                     // POST case: Handle form submit
                     if (!string.IsNullOrEmpty(formData) && formId == prFormId)
                     {
-                        prBlob.FormResponse = formData;
+                        prBlob.FormResponse = JObject.Parse(formData);
                         result.SetBlob(prBlob);
                         await _PaymentRequestRepository.CreateOrUpdatePaymentRequest(result);
                         return RedirectToAction("PayPaymentRequest", new { payReqId });

@@ -477,7 +477,7 @@
                         "nullable": true
                     },
                     "formResponse": {
-                        "type": "string",
+                        "type": "object",
                         "description": "Form data response",
                         "nullable": true
                     }

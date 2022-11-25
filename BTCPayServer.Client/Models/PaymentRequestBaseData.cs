@@ -27,6 +27,6 @@ namespace BTCPayServer.Client.Models
 
         public string FormId { get; set; }
 
-        public string FormResponse { get; set; }
+        public JObject FormResponse { get; set; }
     }
 }

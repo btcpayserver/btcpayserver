@@ -649,6 +649,79 @@
                     }
                 ]
             }
+        },
+        "/api/v1/stores/{storeId}/invoices/{invoiceId}/payment-methods/{paymentMethod}/refund": {
+            "post": {
+                "tags": [
+                    "Invoices",
+                    "Refund"
+                ],
+                "summary": "Refund invoice",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store to query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "invoiceId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The invoice to refund",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "paymentMethod",
+                        "in": "path",
+                        "required": true,
+                        "description": "The payment method to refund with",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "description": "Refund invoice",
+                "operationId": "Invoices_Refund",
+                "responses": {
+                    "200": {
+                        "description": "Pull payment for refunding the invoice",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PullPaymentData"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "A list of errors that occurred when refunding the invoice",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to refund the invoice"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
         }
     },
     "components": {

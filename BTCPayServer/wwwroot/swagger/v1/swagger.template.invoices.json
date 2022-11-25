@@ -789,8 +789,8 @@
                                     }
                                 ]
                             },
-                            "monitoringTime": {
-                                "description": "The monitoring time of the invoice",
+                            "monitoringExpiration": {
+                                "description": "Expiration time for monitoring of the invoice for any changes",
                                 "allOf": [
                                     {
                                         "$ref": "#/components/schemas/UnixTimestamp"

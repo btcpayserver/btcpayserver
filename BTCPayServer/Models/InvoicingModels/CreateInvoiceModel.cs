@@ -88,9 +88,6 @@ namespace BTCPayServer.Models.InvoicingModels
         {
             get; set;
         }
-        
-        [Display(Name = "Request customer data on checkout")]
-        public string CheckoutFormId { get; set; }
 
         public bool UseNewCheckout { get; set; }
     }

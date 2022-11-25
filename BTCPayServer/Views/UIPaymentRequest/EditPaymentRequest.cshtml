@@ -1,7 +1,12 @@
 @using BTCPayServer.Services.PaymentRequests
 @using System.Globalization
+@using BTCPayServer.Services.Stores
+@using BTCPayServer.TagHelpers
+@using Microsoft.AspNetCore.Mvc.TagHelpers
 @model BTCPayServer.Models.PaymentRequestViewModels.UpdatePaymentRequestViewModel
 @{
+    var checkoutFormOptions = CheckoutFormSelectList.WithSelected(Model.FormId);
+
     ViewData.SetActivePage(PaymentRequestsNavPages.Create, $"{(string.IsNullOrEmpty(Model.Id) ? "Create" : "Edit")} Payment Request", Model.Id);
 }
 
@@ -32,7 +37,7 @@
     </div>
 
     <partial name="_StatusMessage" />
-    
+
     <div class="row">
         <div class="col-xl-8 col-xxl-constrain">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
@@ -78,6 +83,18 @@
                     Receive updates for this payment request.
                 </p>
             </div>
+            <div class="form-group">
+                <label asp-for="FormId" class="form-label"></label>
+                <select asp-for="FormId" class="form-select w-auto" asp-items="@checkoutFormOptions"></select>
+                <span asp-validation-for="FormId" class="text-danger"></span>
+            </div>
+            
+            @if (Model.FormResponse is not null)
+            {
+                <div class="bg-tile rounded py-2 px-3 mb-5">
+                    <partial name="PosData" model="(Model.FormResponse, 1)"/>
+                </div>
+            }
         </div>
     </div>
 
@@ -130,20 +147,19 @@
 @if (!string.IsNullOrEmpty(Model.Id))
 {
     <div class="d-flex gap-3 mt-3">
-         <a class="btn btn-secondary"
-            asp-action="ListInvoices"
-            asp-controller="UIInvoice"
-            asp-route-storeId="@Model.StoreId"
-            asp-route-searchterm="@($"orderid:{PaymentRequestRepository.GetOrderIdForPaymentRequest(Model.Id)}")">Invoices</a>
-         <a class="btn btn-secondary" asp-route-payReqId="@Model.Id" asp-action="ClonePaymentRequest" id="ClonePaymentRequest">Clone</a>
-         @if (!Model.Archived)
-         {
-             <a class="btn btn-secondary" data-bs-toggle="tooltip" title="Archive this payment request so that it does not appear in the payment request list by default" asp-controller="UIPaymentRequest" asp-action="TogglePaymentRequestArchival" asp-route-payReqId="@Model.Id" id="ArchivePaymentRequest">Archive</a>
-         }
-         else
-         {
-             <a class="btn btn-secondary" data-bs-toggle="tooltip" title="Unarchive this payment request" asp-controller="UIPaymentRequest" asp-action="TogglePaymentRequestArchival" asp-route-payReqId="@Model.Id" id="UnarchivePaymentRequest">Unarchive</a>
-         }
-     </div>
+        <a class="btn btn-secondary"
+           asp-action="ListInvoices"
+           asp-controller="UIInvoice"
+           asp-route-storeId="@Model.StoreId"
+           asp-route-searchterm="@($"orderid:{PaymentRequestRepository.GetOrderIdForPaymentRequest(Model.Id)}")">Invoices</a>
+        <a class="btn btn-secondary" asp-route-payReqId="@Model.Id" asp-action="ClonePaymentRequest" id="ClonePaymentRequest">Clone</a>
+        @if (!Model.Archived)
+        {
+            <a class="btn btn-secondary" data-bs-toggle="tooltip" title="Archive this payment request so that it does not appear in the payment request list by default" asp-controller="UIPaymentRequest" asp-action="TogglePaymentRequestArchival" asp-route-payReqId="@Model.Id" id="ArchivePaymentRequest">Archive</a>
+        }
+        else
+        {
+            <a class="btn btn-secondary" data-bs-toggle="tooltip" title="Unarchive this payment request" asp-controller="UIPaymentRequest" asp-action="TogglePaymentRequestArchival" asp-route-payReqId="@Model.Id" id="UnarchivePaymentRequest">Unarchive</a>
+        }
+    </div>
 }
-

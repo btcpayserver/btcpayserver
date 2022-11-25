@@ -179,7 +179,12 @@ namespace BTCPayServer.Controllers
             }
             JToken? receiptData = null;
             i.Metadata?.AdditionalData?.TryGetValue("receiptData", out receiptData);
-
+            string? formResponse = null;
+            if (i.Metadata?.AdditionalData?.TryGetValue("formResponse", out var formResponseRaw)is true)
+            {
+                formResponseRaw.Value<string>();
+            }
+                
             var payments = i.GetPayments(true)
                 .Select(paymentEntity =>
                 {
@@ -229,7 +234,6 @@ namespace BTCPayServer.Controllers
                     ? new Dictionary<string, object>()
                     : PosDataParser.ParsePosData(receiptData.ToString())
             });
-
         }
         private string? GetTransactionLink(PaymentMethodId paymentMethodId, string txId)
         {
@@ -760,7 +764,6 @@ namespace BTCPayServer.Controllers
                 CustomLogoLink = storeBlob.CustomLogo,
                 LogoFileId = storeBlob.LogoFileId,
                 BrandColor = storeBlob.BrandColor,
-                CheckoutFormId = invoice.CheckoutFormId ?? storeBlob.CheckoutFormId,
                 CheckoutType = invoice.CheckoutType ?? storeBlob.CheckoutType,
                 HtmlTitle = storeBlob.HtmlTitle ?? "BTCPay Invoice",
                 CryptoImage = Request.GetRelativePathOrAbsolute(paymentMethodHandler.GetCryptoImage(paymentMethodId)),
@@ -1140,9 +1143,6 @@ namespace BTCPayServer.Controllers
                     RequiresRefundEmail = model.RequiresRefundEmail == RequiresRefundEmail.InheritFromStore
                         ? storeBlob.RequiresRefundEmail
                         : model.RequiresRefundEmail == RequiresRefundEmail.On,
-                    CheckoutFormId = model.CheckoutFormId == GenericFormOption.InheritFromStore.ToString()
-                        ? storeBlob.CheckoutFormId
-                        : model.CheckoutFormId
                 }, store, HttpContext.Request.GetAbsoluteRoot(), cancellationToken: cancellationToken);
 
                 TempData[WellKnownTempData.SuccessMessage] = $"Invoice {result.Data.Id} just created!";

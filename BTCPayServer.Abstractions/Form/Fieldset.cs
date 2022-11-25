@@ -1,14 +1,12 @@
-using System.Collections.Generic;
-
 namespace BTCPayServer.Abstractions.Form;
 
-public class Fieldset
+public class Fieldset : Field
 {
+    public bool Hidden { get; set; }
+    public string Label { get; set; }
+
     public Fieldset()
     {
-        this.Fields = new List<Field>();
+        Type = "fieldset";
     }
-
-    public string Label { get; set; }
-    public List<Field> Fields { get; set; }
 }

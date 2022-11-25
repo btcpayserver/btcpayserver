@@ -8,6 +8,7 @@ using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Validation;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Newtonsoft.Json.Linq;
 using PaymentRequestData = BTCPayServer.Data.PaymentRequestData;
 
 namespace BTCPayServer.Models.PaymentRequestViewModels
@@ -35,6 +36,7 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
             StoreId = data.StoreDataId;
             Archived = data.Archived;
             var blob = data.GetBlob();
+            FormId = blob.FormId;
             Title = blob.Title;
             Amount = blob.Amount;
             Currency = blob.Currency;
@@ -44,7 +46,13 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
             CustomCSSLink = blob.CustomCSSLink;
             EmbeddedCSS = blob.EmbeddedCSS;
             AllowCustomPaymentAmounts = blob.AllowCustomPaymentAmounts;
+            FormResponse = blob.FormResponse is null
+                ? null
+                : blob.FormResponse.ToObject<Dictionary<string, object>>();
         }
+
+        [Display(Name = "Request customer data on checkout")]
+        public string FormId { get; set; }
 
         public bool Archived { get; set; }
 
@@ -77,6 +85,8 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
         public string EmbeddedCSS { get; set; }
         [Display(Name = "Allow payee to create invoices in their own denomination")]
         public bool AllowCustomPaymentAmounts { get; set; }
+
+        public Dictionary<string, object> FormResponse { get; set; }
     }
 
     public class ViewPaymentRequestViewModel
@@ -165,6 +175,8 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
         public bool PendingInvoiceHasPayments { get; set; }
         public string HubPath { get; set; }
         public bool Archived { get; set; }
+        public string FormId { get; set; }
+        public bool FormSubmitted { get; set; }
 
         public class PaymentRequestInvoice
         {

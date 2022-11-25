@@ -9,7 +9,7 @@
     <RunAnalyzersDuringBuild>False</RunAnalyzersDuringBuild>
   </PropertyGroup>
    <ItemGroup>
-     <AssemblyAttribute  Condition="'$(GitCommit)' != ''" Include="BTCPayServer.GitCommitAttribute">
+     <AssemblyAttribute Condition="'$(GitCommit)' != ''" Include="BTCPayServer.GitCommitAttribute">
        <_Parameter1>$(GitCommit)</_Parameter1>
      </AssemblyAttribute>
    </ItemGroup>

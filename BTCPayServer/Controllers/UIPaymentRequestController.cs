@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -19,10 +18,8 @@ using BTCPayServer.Services.PaymentRequests;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Routing;
 using Newtonsoft.Json.Linq;
 using PaymentRequestData = BTCPayServer.Data.PaymentRequestData;
 using StoreData = BTCPayServer.Data.StoreData;
@@ -42,7 +39,7 @@ namespace BTCPayServer.Controllers
         private readonly InvoiceRepository _InvoiceRepository;
         private readonly StoreRepository _storeRepository;
 
-        public FormComponentProviders FormProviders { get; }
+        private FormComponentProviders FormProviders { get; }
 
         public UIPaymentRequestController(
             UIInvoiceController invoiceController,
@@ -207,8 +204,8 @@ namespace BTCPayServer.Controllers
                         break;
                 default:
                     // POST case: Handle form submit
-                    var formData = Form.Parse(Forms.UIFormsController.GetFormData(prFormId).Config);
-                    formData.ApplyValuesFromForm(this.Request.Form);
+                    var formData = Form.Parse(UIFormsController.GetFormData(prFormId).Config);
+                    formData.ApplyValuesFromForm(Request.Form);
                     if (FormProviders.Validate(formData, ModelState))
                     {
                         prBlob.FormResponse = JObject.FromObject(formData.GetValues());
@@ -224,13 +221,13 @@ namespace BTCPayServer.Controllers
                 AspController = "UIForms",
                 AspAction = "ViewPublicForm",
                 RouteParameters =
-                        {
-                            { "formId", prFormId }
-                        },
+                {
+                    { "formId", prFormId }
+                },
                 FormParameters =
-                        {
-                            { "redirectUrl", Request.GetCurrentUrl() }
-                        }
+                {
+                    { "redirectUrl", Request.GetCurrentUrl() }
+                }
             });
         }
         

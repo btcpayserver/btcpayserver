@@ -5,8 +5,8 @@
 
 @foreach (var field in Model.Fields)
 {
-	if (FormComponentProviders.TypeToComponentProvider.TryGetValue(field.Type, out var partial))
-	{
-			<partial name="@partial.View" for="@field"></partial>
-	}
+    if (FormComponentProviders.TypeToComponentProvider.TryGetValue(field.Type, out var partial))
+    {
+        <partial name="@partial.View" for="@field"></partial>
+    }
 }

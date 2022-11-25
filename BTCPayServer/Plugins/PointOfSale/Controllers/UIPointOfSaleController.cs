@@ -42,13 +42,15 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             CurrencyNameTable currencies,
             StoreRepository storeRepository,
             UIInvoiceController invoiceController,
-            FormComponentProviders formProviders)
+            FormComponentProviders formProviders,
+            FormDataService formDataService)
         {
             _currencies = currencies;
             _appService = appService;
             _storeRepository = storeRepository;
             _invoiceController = invoiceController;
             FormProviders = formProviders;
+            FormDataService = formDataService;
         }
 
         private readonly CurrencyNameTable _currencies;
@@ -57,6 +59,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
         private readonly UIInvoiceController _invoiceController;
 
         public FormComponentProviders FormProviders { get; }
+        public FormDataService FormDataService { get; }
 
         [HttpGet("/")]
         [HttpGet("/apps/{appId}/pos/{viewType?}")]
@@ -234,7 +237,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 
                 default:
                     // POST case: Handle form submit
-                    var formData = Form.Parse(Forms.UIFormsController.GetFormData(posFormId).Config);
+                    var formData = Form.Parse((await FormDataService.GetForm(posFormId)).Config);
                     formData.ApplyValuesFromForm(this.Request.Form);
 
                     if (FormProviders.Validate(formData, ModelState))

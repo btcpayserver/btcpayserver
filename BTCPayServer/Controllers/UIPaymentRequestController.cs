@@ -40,6 +40,7 @@ namespace BTCPayServer.Controllers
         private readonly StoreRepository _storeRepository;
 
         private FormComponentProviders FormProviders { get; }
+        public FormDataService FormDataService { get; }
 
         public UIPaymentRequestController(
             UIInvoiceController invoiceController,
@@ -50,7 +51,8 @@ namespace BTCPayServer.Controllers
             CurrencyNameTable currencies,
             StoreRepository storeRepository,
             InvoiceRepository invoiceRepository,
-            FormComponentProviders formProviders)
+            FormComponentProviders formProviders,
+            FormDataService formDataService)
         {
             _InvoiceController = invoiceController;
             _UserManager = userManager;
@@ -61,6 +63,7 @@ namespace BTCPayServer.Controllers
             _storeRepository = storeRepository;
             _InvoiceRepository = invoiceRepository;
             FormProviders = formProviders;
+            FormDataService = formDataService;
         }
 
         [BitpayAPIConstraint(false)]
@@ -204,7 +207,7 @@ namespace BTCPayServer.Controllers
                         break;
                 default:
                     // POST case: Handle form submit
-                    var formData = Form.Parse(UIFormsController.GetFormData(prFormId).Config);
+                    var formData = Form.Parse((await FormDataService.GetForm(prFormId)).Config);
                     formData.ApplyValuesFromForm(Request.Form);
                     if (FormProviders.Validate(formData, ModelState))
                     {

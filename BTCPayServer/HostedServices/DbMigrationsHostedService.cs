@@ -173,10 +173,10 @@ next:
                             db.WalletObjectLinks.Add(new WalletObjectLinkData()
                             {
                                 WalletId = tx.WalletDataId,
-                                ChildType = Data.WalletObjectData.Types.Tx,
-                                ChildId = tx.TransactionId,
-                                ParentType = Data.WalletObjectData.Types.Label,
-                                ParentId = labelId
+                                BType = Data.WalletObjectData.Types.Tx,
+                                BId = tx.TransactionId,
+                                AType = Data.WalletObjectData.Types.Label,
+                                AId = labelId
                             });
 
                         if (label.Value is ReferenceLabel reflabel)
@@ -195,10 +195,10 @@ next:
                                     db.WalletObjectLinks.Add(new WalletObjectLinkData()
                                     {
                                         WalletId = tx.WalletDataId,
-                                        ChildType = Data.WalletObjectData.Types.Tx,
-                                        ChildId = tx.TransactionId,
-                                        ParentType = reflabel.Type,
-                                        ParentId = reflabel.Reference ?? String.Empty
+                                        BType = Data.WalletObjectData.Types.Tx,
+                                        BId = tx.TransactionId,
+                                        AType = reflabel.Type,
+                                        AId = reflabel.Reference ?? String.Empty
                                     });
                             }
                         }
@@ -224,10 +224,10 @@ next:
                                         db.WalletObjectLinks.Add(new WalletObjectLinkData()
                                         {
                                             WalletId = tx.WalletDataId,
-                                            ChildType = Data.WalletObjectData.Types.Tx,
-                                            ChildId = tx.TransactionId,
-                                            ParentType = "payout",
-                                            ParentId = payout
+                                            BType = Data.WalletObjectData.Types.Tx,
+                                            BId = tx.TransactionId,
+                                            AType = "payout",
+                                            AId = payout
                                         });
                                 }
                             }

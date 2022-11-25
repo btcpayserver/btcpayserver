@@ -2,22 +2,31 @@
     --logo-size: 3rem;
     --navbutton-size: .8rem;
     --qr-size: 256px;
-    --section-padding: var(--btcpay-space-l);
+    --section-padding: 1.5rem;
+    --border-radius: var(--btcpay-border-radius-l);
+    --wrap-max-width: 400px;
 }
-body {
+.wrap {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    margin: 0 auto;
     padding: var(--btcpay-space-m);
+    max-width: var(--wrap-max-width);
 }
 header,
 footer {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: var(--btcpay-space-l) var(--btcpay-space-s);
-    gap: var(--btcpay-space-m);
+    padding: var(--section-padding);
+}
+header {
+    gap: var(--btcpay-space-s);
 }
 main {
     position: relative;
-    border-radius: var(--btcpay-border-radius-l);
+    border-radius: var(--border-radius);
     background-color: var(--btcpay-bg-tile);
 }
 nav {
@@ -35,9 +44,6 @@ nav button {
 }
 nav button:hover {
     color: var(--btcpay-body-text-hover);
-}
-nav button#back {
-    left: 0;
 }
 nav button#close {
     right: 0;
@@ -68,12 +74,10 @@ section .buttons {
     flex-direction: column;
     gap: var(--btcpay-space-m);
 }
-section dl {
-    margin-bottom: 1.5rem;
-}
 section dl > div {
     display: flex;
     justify-content: space-between;
+    gap: var(--btcpay-space-m);
 }
 section dl > div dt,
 section dl > div dd {
@@ -83,9 +87,13 @@ section dl > div dd {
 }
 section dl > div dt {
     text-align: left;
+    white-space: nowrap;
+    color: var(--btcpay-body-text-muted);
 }
 section dl > div dd {
     text-align: right;
+    word-wrap: break-word;
+    word-break: break-word;
 }
 .logo {
     height: var(--logo-size);
@@ -94,18 +102,38 @@ section dl > div dd {
     width: var(--logo-size);
     border-radius: 50%;
 }
-.wrap {
-    max-width: 400px;
-    margin: 0 auto;
+.info {
+    color: var(--btcpay-neutral-700);
+    background-color: var(--btcpay-body-bg);
+    border-radius: var(--border-radius);
 }
-.timer {
+.info .expiryTime {
+    color: var(--btcpay-body-text);
+}
+.info > div {
+    padding: var(--btcpay-space-m) var(--btcpay-space-m);
+}
+.info > div > div {
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: var(--btcpay-space-m) calc(var(--section-padding) * -1) var(--btcpay-space-s);
-    padding: var(--btcpay-space-s) var(--section-padding);
-    background-color: var(--btcpay-body-bg-medium);
     text-align: center;
+    gap: var(--btcpay-space-xs);
+}
+.info > div > div + div {
+    margin-top: var(--btcpay-space-s);
+}
+.info .spinner-border {
+    width: var(--btcpay-font-size-s);
+    height: var(--btcpay-font-size-s);
+    color: var(--btcpay-body-text-muted);
+    margin-right: var(--btcpay-space-xs);
+    animation-duration: 1s;
+}
+.info .icon {
+    width: 1.25rem;
+    height: 1.25rem;
+    color: var(--btcpay-info);
 }
 .payment-box {
     max-width: 300px;
@@ -120,11 +148,43 @@ section dl > div dd {
 .payment-box .qr-container {
     min-height: var(--qr-size);
 }
+.payment-box .qr-container svg {
+    border-radius: var(--btcpay-border-radius);
+}
 .payment-box svg {
     width: 100%;
 }
-.payment-box [data-clipboard] {
+.payment-details dl {
+    margin: 0;
+}
+.payment-details-button {
+    margin: 0 auto;
+    padding: var(--btcpay-space-s);
+}
+.payment-details-button .icon {
+    margin-left: -1rem; /* Adjust for visual center */
+}
+[data-clipboard] {
     cursor: copy;
+}
+.payment-details [data-clipboard] {
+    position: relative;
+}
+
+.payment-details [data-clipboard]::before {
+    content: '';
+    position: absolute;
+    top: .5rem;
+    left: -1.5rem;
+    width: 1rem;
+    height: 1rem;
+    background-image: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPGcgY2xpcC1wYXRoPSJ1cmwoI2EpIiBzdHJva2U9IiM4Rjk3OUUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+CiAgICA8cGF0aCBkPSJNMTMuMzMgNmgtNkM2LjYgNiA2IDYuNiA2IDcuMzN2NmMwIC43NC42IDEuMzQgMS4zMyAxLjM0aDZjLjc0IDAgMS4zNC0uNiAxLjM0LTEuMzR2LTZjMC0uNzMtLjYtMS4zMy0xLjM0LTEuMzNaIi8+CiAgICA8cGF0aCBkPSJNMy4zMyAxMGgtLjY2YTEuMzMgMS4zMyAwIDAgMS0xLjM0LTEuMzN2LTZhMS4zMyAxLjMzIDAgMCAxIDEuMzQtMS4zNGg2QTEuMzMgMS4zMyAwIDAgMSAxMCAyLjY3di42NiIvPgogIDwvZz4KICA8ZGVmcz4KICAgIDxjbGlwUGF0aCBpZD0iYSI+CiAgICAgIDxwYXRoIGZpbGw9IiNmZmYiIGQ9Ik0wIDBoMTZ2MTZIMHoiLz4KICAgIDwvY2xpcFBhdGg+CiAgPC9kZWZzPgo8L3N2Zz4K");
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity var(--btcpay-transition-duration-fast);
+}
+.payment-details [data-clipboard]:hover::before {
+    opacity: 1;
 }
 #payment .btcpay-pills .btcpay-pill {
     padding: var(--btcpay-space-xs) var(--btcpay-space-m);
@@ -134,19 +194,79 @@ section dl > div dd {
     display: flex;
     flex-direction: column;
 }
-#result .top .icon {
+
+#result .top .icn .icon {
     display: block;
     width: 3rem;
     height: 3rem;
     margin: .5rem auto 1.5rem;
 }
-#PaymentDetails dl {
-    margin: 0;
+
+#result #paid .top .icn .icon {
+    color: var(--btcpay-primary);
 }
-#PaymentDetailsButton {
-    margin: 0 auto;
-    padding: var(--btcpay-space-s);
+#result #expired .top .icn .icon {
+    color: var(--btcpay-body-text-muted);
 }
-#PaymentDetailsButton .icon {
-    margin-left: -1rem; /* Adjust for visual center */
+footer {
+    margin-top: auto;
+    padding-top: 2.5rem;
+    gap: var(--btcpay-space-m);
+}
+footer,
+footer a,
+#DefaultLang {
+    color: var(--btcpay-body-text-muted);
+}
+footer a {
+    transition-duration: unset;
+}
+footer a svg {
+    height: 2rem;
+    width: 4rem;
+}
+#DefaultLang {
+    background-color: transparent;
+    box-shadow: none;
+    border: none;
+    text-align: right;
+    cursor: pointer;
+    margin-left: -4.5rem; /* Adjust for visual center */
+}
+footer a:hover,
+#DefaultLang:hover {
+    color: var(--btcpay-body-text-hover);
+}
+footer a:hover .logo-brand-light {
+    color: var(--btcpay-brand-secondary);
+}
+footer a:hover .logo-brand-medium {
+    color: var(--btcpay-brand-primary);
+}
+footer a:hover .logo-brand-dark {
+    color: var(--btcpay-brand-tertiary);
+}
+
+@media (max-width: 400px) {
+    .wrap {
+        padding: 0;
+    }
+    main {
+        border-radius: 0;
+    }
+}
+
+/* Modal adjustments */
+.checkout-modal body {
+    background: rgba(var(--btcpay-black-rgb), 0.85);
+}
+.checkout-modal h1,
+.checkout-modal footer a:hover,
+.checkout-modal #DefaultLang:hover {
+    color: var(--btcpay-white);
+}
+
+/* Plugins */
+.payment-box .plugins > .payment {
+    margin-top: var(--btcpay-space-l);
 }

@@ -344,11 +344,6 @@
                     "checkoutType": {
                         "$ref": "#/components/schemas/CheckoutType"
                     },
-                    "checkoutFormId": {
-                        "type": "string",
-                        "description": "Form ID to request customer data, in case the new checkout is used",
-                        "nullable": true
-                    },
                     "receipt": {
                         "nullable": true,
                         "$ref": "#/components/schemas/ReceiptOptions",
@@ -367,7 +362,7 @@
                     "onChainWithLnInvoiceFallback": {
                         "type": "boolean",
                         "default": false,
-                        "description": "Include lightning invoice fallback to on-chain BIP21 payment url."
+                        "description": "Unify on-chain and lightning payment URL."
                     },
                     "redirectAutomatically": {
                         "type": "boolean",

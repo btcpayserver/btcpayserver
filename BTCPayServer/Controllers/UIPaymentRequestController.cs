@@ -9,6 +9,7 @@ using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
+using BTCPayServer.Models;
 using BTCPayServer.Models.PaymentRequestViewModels;
 using BTCPayServer.PaymentRequest;
 using BTCPayServer.Services.Invoices;
@@ -16,9 +17,11 @@ using BTCPayServer.Services.PaymentRequests;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
+using Newtonsoft.Json.Linq;
 using PaymentRequestData = BTCPayServer.Data.PaymentRequestData;
 using StoreData = BTCPayServer.Data.StoreData;
 
@@ -145,6 +148,7 @@ namespace BTCPayServer.Controllers
             blob.EmbeddedCSS = viewModel.EmbeddedCSS;
             blob.CustomCSSLink = viewModel.CustomCSSLink;
             blob.AllowCustomPaymentAmounts = viewModel.AllowCustomPaymentAmounts;
+            blob.FormId = viewModel.FormId;
 
             data.SetBlob(blob);
             var isNewPaymentRequest = string.IsNullOrEmpty(payReqId);
@@ -174,6 +178,51 @@ namespace BTCPayServer.Controllers
             return View(result);
         }
 
+        [HttpGet("{payReqId}/form")]
+        [HttpPost("{payReqId}/form")]
+        [AllowAnonymous]
+        public async Task<IActionResult> ViewPaymentRequestForm(string payReqId, [FromForm] string formId, [FromForm] string formData)
+        {
+            var result = await _PaymentRequestRepository.FindPaymentRequest(payReqId, GetUserId());
+            if (result == null)
+            {
+                return NotFound();
+            }
+
+            var prBlob = result.GetBlob();
+            var prFormId = prBlob.FormId;
+            switch (prFormId)
+            {
+                case null:
+                case { } when string.IsNullOrEmpty(prFormId):
+                    break;
+                
+                default:
+                    // POST case: Handle form submit
+                    if (!string.IsNullOrEmpty(formData) && formId == prFormId)
+                    {
+                        prBlob.FormResponse = JObject.Parse(formData);
+                        result.SetBlob(prBlob);
+                        await _PaymentRequestRepository.CreateOrUpdatePaymentRequest(result);
+                        return RedirectToAction("PayPaymentRequest", new { payReqId });
+                    }
+                    
+                    // GET or empty form data case: Redirect to form
+                    return View("PostRedirect", new PostRedirectViewModel
+                    {
+                        AspController = "UIForms",
+                        AspAction = "ViewPublicForm",
+                        FormParameters =
+                        {
+                            { "formId", prFormId },
+                            { "redirectUrl", Request.GetCurrentUrl() }
+                        }
+                    });
+            }
+            
+            return RedirectToAction("ViewPaymentRequest", new { payReqId });
+        }
+        
         [HttpGet("{payReqId}/pay")]
         [AllowAnonymous]
         public async Task<IActionResult> PayPaymentRequest(string payReqId, bool redirectToInvoice = true,

@@ -176,8 +176,8 @@ h2 small .fa-question-circle-o {
     background-color: lightgray;
 }
 
-[v-cloak] { display:none }
-[v-cloak-loading] > * { display:none }
+[v-cloak] { display: none !important; }
+[v-cloak-loading] > * { display: none !important; }
 [v-cloak-loading]::before { content: "loading…" }
 
 .list-group-item a:not(.btn) {

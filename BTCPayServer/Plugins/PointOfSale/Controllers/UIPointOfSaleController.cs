@@ -18,6 +18,7 @@ using BTCPayServer.ModelBinders;
 using BTCPayServer.Models;
 using BTCPayServer.Plugins.PointOfSale.Models;
 using BTCPayServer.Services.Apps;
+using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
@@ -25,6 +26,7 @@ using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using NBitpayClient;
+using Newtonsoft.Json.Linq;
 using NicolasDorier.RateLimits;
 
 namespace BTCPayServer.Plugins.PointOfSale.Controllers
@@ -116,6 +118,8 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                                                         string notificationUrl,
                                                         string redirectUrl,
                                                         string choiceKey,
+                                                        string formId = null,
+                                                        string formData = null,
                                                         string posData = null,
                                                         RequiresRefundEmail requiresRefundEmail = RequiresRefundEmail.InheritFromStore,
                                                         CancellationToken cancellationToken = default)
@@ -214,7 +218,42 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                     }
                 }
             }
+
             var store = await _appService.GetStore(app);
+            var posFormId = settings.FormId;
+            JObject formResponse = null;
+            switch (posFormId)
+            {
+                case null:
+                case { } when string.IsNullOrEmpty(posFormId):
+                    break;
+                
+                default:
+                    // POST case: Handle form submit
+                    if (!string.IsNullOrEmpty(formData) && formId == posFormId)
+                    {
+                        formResponse = JObject.Parse(formData);
+                        break;
+                    }
+                    
+                    var query = new QueryBuilder(Request.Query);
+                    foreach (var keyValuePair in Request.Form)
+                    {
+                        query.Add(keyValuePair.Key, keyValuePair.Value.ToArray());
+                    }
+                    
+                    // GET or empty form data case: Redirect to form
+                    return View("PostRedirect", new PostRedirectViewModel
+                    {
+                        AspController = "UIForms",
+                        AspAction = "ViewPublicForm",
+                        FormParameters =
+                        {
+                            { "formId", posFormId },
+                            { "redirectUrl", Request.GetCurrentUrl() + query }
+                        }
+                    });
+            }
             try
             {
                 var invoice = await _invoiceController.CreateInvoiceCore(new BitpayCreateInvoiceRequest
@@ -235,7 +274,6 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                     PosData = string.IsNullOrEmpty(posData) ? null : posData,
                     RedirectAutomatically = settings.RedirectAutomatically,
                     SupportedTransactionCurrencies = paymentMethods,
-                    CheckoutFormId = store.GetStoreBlob().CheckoutFormId,
                     RequiresRefundEmail = requiresRefundEmail == RequiresRefundEmail.InheritFromStore
                         ? store.GetStoreBlob().RequiresRefundEmail
                         : requiresRefundEmail == RequiresRefundEmail.On,
@@ -244,6 +282,13 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                     cancellationToken, (entity) =>
                     {
                         entity.Metadata.OrderUrl = Request.GetDisplayUrl();
+                        
+                        if (formResponse is not null)
+                        {
+                            var meta = entity.Metadata.ToJObject();
+                            meta.Merge(formResponse);
+                            entity.Metadata = InvoiceMetadata.FromJObject(meta);
+                        }
                     } );
                 return RedirectToAction(nameof(UIInvoiceController.Checkout), "UIInvoice", new { invoiceId = invoice.Data.Id });
             }
@@ -298,8 +343,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 SearchTerm = app.TagAllInvoices ? $"storeid:{app.StoreDataId}" : $"orderid:{AppService.GetAppOrderId(app)}",
                 RedirectAutomatically = settings.RedirectAutomatically.HasValue ? settings.RedirectAutomatically.Value ? "true" : "false" : "",
                 RequiresRefundEmail = settings.RequiresRefundEmail,
-                CheckoutFormId = settings.CheckoutFormId,
-                UseNewCheckout = storeBlob.CheckoutType == Client.Models.CheckoutType.V2
+                FormId = settings.FormId
             };
             if (HttpContext?.Request != null)
             {
@@ -389,14 +433,8 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                     string.IsNullOrEmpty(vm.RedirectAutomatically) ? (bool?)null : bool.Parse(vm.RedirectAutomatically),
                 RequiresRefundEmail = vm.RequiresRefundEmail
             };
-            
-            if (storeBlob.CheckoutType == Client.Models.CheckoutType.V2)
-            {
-                settings.CheckoutFormId = vm.CheckoutFormId == GenericFormOption.InheritFromStore.ToString()
-                    ? storeBlob.CheckoutFormId
-                    : vm.CheckoutFormId;
-            }
 
+            settings.FormId = vm.FormId;
             app.Name = vm.AppName;
             app.SetSettings(settings);
             await _appService.UpdateOrCreateApp(app);

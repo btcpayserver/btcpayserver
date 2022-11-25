@@ -1,7 +1,5 @@
 @using BTCPayServer.Payments
-@using BTCPayServer.Services.Invoices
 @using Microsoft.AspNetCore.Mvc.TagHelpers
-@using BTCPayServer.Abstractions.TagHelpers
 @using BTCPayServer.Services.Stores
 @model CheckoutAppearanceViewModel
 @{
@@ -9,7 +7,6 @@
     ViewData.SetActivePage(StoreNavPages.CheckoutAppearance, "Checkout experience", Context.GetStoreData().Id);
 
     var store = ViewContext.HttpContext.GetStoreData();
-    var checkoutFormOptions = CheckoutFormSelectList.ForStore(store, Model.CheckoutFormId, false);
 }
 
 @section PageFootContent {
@@ -64,10 +61,79 @@
                 </div>
             }
             
-            <div class="form-check my-3">
-                <input asp-for="RequiresRefundEmail" type="checkbox" class="form-check-input" />
-                <label asp-for="RequiresRefundEmail" class="form-check-label"></label>
+            <h3 class="mt-5 mb-3">Checkout</h3>
+            <div class="d-flex align-items-center mb-3">
+                <input asp-for="UseNewCheckout" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target=".checkout-settings" aria-expanded="@(Model.UseNewCheckout)" aria-controls="NewCheckoutSettings" />
+                <div>
+                    <label asp-for="UseNewCheckout" class="d-flex align-items-center form-label">
+                        Use the new checkout
+                        <span class="badge bg-warning ms-2">Experimental</span>
+                    </label>
+                    <span asp-validation-for="UseNewCheckout" class="text-danger"></span>
+                    <div class="text-muted">
+                        Since v1.7.0 a new version of the checkout is available. Note: For now, the new version is English-only.<br/>
+                        We are still collecting <a href="https://github.com/btcpayserver/btcpayserver/discussions/4308" target="_blank" rel="noreferrer noopener">feedback</a> and offer this as an opt-in feature.
+                    </div>
+                </div>
             </div>
+                            
+            <div class="checkout-settings collapse @(Model.UseNewCheckout ? "show" : "")" id="NewCheckoutSettings">
+                <div class="form-check">
+                    <input asp-for="OnChainWithLnInvoiceFallback" type="checkbox" class="form-check-input"/>
+                    <label asp-for="OnChainWithLnInvoiceFallback" class="form-check-label"></label>
+                    <a href="https://bitcoinqr.dev/" target="_blank" rel="noreferrer noopener">
+                        <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+                    </a>
+                </div>
+            </div>
+                            
+            <div class="checkout-settings collapse @(Model.UseNewCheckout ? "" : "show")" id="OldCheckoutSettings">
+                <div class="form-check">
+                    <input asp-for="RequiresRefundEmail" type="checkbox" class="form-check-input" />
+                    <label asp-for="RequiresRefundEmail" class="form-check-label"></label>
+                </div>
+                <div class="form-group">
+                    <div class="form-check">
+                        <input asp-for="AutoDetectLanguage" type="checkbox" class="form-check-input"/>
+                        <label asp-for="AutoDetectLanguage" class="form-check-label"></label>
+                        <p class="text-muted">Detects the language of the customer's browser with 99.9% accuracy.</p>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label asp-for="DefaultLang" class="form-label"></label>
+                    <select asp-for="DefaultLang" asp-items="Model.Languages" class="form-select w-auto"></select>
+                </div>
+                <div class="form-group">
+                    <label asp-for="CustomLogo" class="form-label"></label>
+                    <a href="https://docs.btcpayserver.org/Development/Theme/#checkout-page-themes" target="_blank" rel="noreferrer noopener">
+                        <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+                    </a>
+                    <input asp-for="CustomLogo" class="form-control" />
+                    <span asp-validation-for="CustomLogo" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="CustomCSS" class="form-label"></label>
+                    <a href="https://docs.btcpayserver.org/Development/Theme/#checkout-page-themes" target="_blank" rel="noreferrer noopener">
+                        <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+                    </a>
+                    <input asp-for="CustomCSS" class="form-control" />
+                    <span asp-validation-for="CustomCSS" class="text-danger"></span>
+                    <p class="form-text text-muted">
+                        Bundled Themes:
+                        <a href="#" class="setTheme" data-theme="default">Default</a> |
+                        <a href="#" class="setTheme" data-theme="dark">Dark</a> |
+                        <a href="#" class="setTheme" data-theme="legacy">Legacy</a>
+                    </p>
+                    @await Component.InvokeAsync("UiExtensionPoint", new { location = "invoice-checkout-theme-options", model = Model })
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="HtmlTitle" class="form-label"></label>
+                <input asp-for="HtmlTitle" class="form-control" />
+                <span asp-validation-for="HtmlTitle" class="text-danger"></span>
+            </div>
+            
             <div class="form-check my-3">
                 <input asp-for="LazyPaymentMethods" type="checkbox" class="form-check-input" />
                 <label asp-for="LazyPaymentMethods" class="form-check-label"></label>
@@ -77,91 +143,21 @@
                 <label asp-for="RedirectAutomatically" class="form-check-label"></label>
             </div>
             
-            <h3 class="mt-5 mb-3 d-flex align-items-center">
-                New checkout
-                <span class="badge bg-warning ms-3" style="font-size:10px;">Experimental</span>
-            </h3>
-            <div class="d-flex align-items-center mb-3">
-                <input asp-for="UseNewCheckout" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#NewCheckoutSettings" aria-expanded="@(Model.UseNewCheckout)" aria-controls="NewCheckoutSettings" />
-                <div>
-                    <label asp-for="UseNewCheckout" class="form-label mb-0"></label>
-                    <span asp-validation-for="UseNewCheckout" class="text-danger"></span>
-                    <div class="text-muted">
-                        Since v1.7.0 a new version of the checkout is available.<br/>
-                        We are still collecting feedback and offer this as an opt-in feature.
-                    </div>
-                </div>
-            </div>
-                            
-            <div class="collapse @(Model.UseNewCheckout ? "show" : "")" id="NewCheckoutSettings">
-                <div class="form-group pt-2">
-                    <label asp-for="CheckoutFormId" class="form-label"></label>
-                    <select asp-for="CheckoutFormId" class="form-select w-auto" asp-items="@checkoutFormOptions"></select>
-                    <span asp-validation-for="CheckoutFormId" class="text-danger"></span>
-                </div>
-                <div class="form-check mb-0">
-                    <input asp-for="OnChainWithLnInvoiceFallback" type="checkbox" class="form-check-input"/>
-                    <label asp-for="OnChainWithLnInvoiceFallback" class="form-check-label"></label>
-                </div>
-            </div>
-            
             <h3 class="mt-5 mb-3">Public receipt</h3>
             <div class="form-check my-3">
                 <input asp-for="ReceiptOptions.Enabled" type="checkbox" class="form-check-input" />
                 <label asp-for="ReceiptOptions.Enabled" class="form-check-label"></label>
             </div>
-			<div class="form-check my-3">
+            <div class="form-check my-3">
                 <input asp-for="ReceiptOptions.ShowPayments" type="checkbox" class="form-check-input" />
                 <label asp-for="ReceiptOptions.ShowPayments" class="form-check-label"></label>
             </div>
-			<div class="form-check my-3">
+            <div class="form-check my-3">
                 <input asp-for="ReceiptOptions.ShowQR" type="checkbox" class="form-check-input" />
                 <label asp-for="ReceiptOptions.ShowQR" class="form-check-label"></label>
             </div>
-
-            <h3 class="mt-5 mb-3">Language</h3>
-            <div class="form-group">
-                <div class="form-check">
-                    <input asp-for="AutoDetectLanguage" type="checkbox" class="form-check-input" />
-                    <label asp-for="AutoDetectLanguage" class="form-check-label"></label>
-                    <p class="text-muted">Detects the language of the customer's browser with 99.9% accuracy.</p>
-                </div>
-            </div>
-            <div class="form-group">
-                <label asp-for="DefaultLang" class="form-label"></label>
-                <select asp-for="DefaultLang" asp-items="Model.Languages" class="form-select w-auto"></select>
-            </div>
-
-            <h3 class="mt-5 mb-3">Appearance</h3>
-            <div class="form-group">
-                <label asp-for="HtmlTitle" class="form-label"></label>
-                <input asp-for="HtmlTitle" class="form-control" />
-                <span asp-validation-for="HtmlTitle" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="CustomLogo" class="form-label"></label>
-                <a href="https://docs.btcpayserver.org/Development/Theme/#checkout-page-themes" target="_blank" rel="noreferrer noopener">
-                    <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
-                </a>
-                <input asp-for="CustomLogo" class="form-control" />
-                <span asp-validation-for="CustomLogo" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="CustomCSS" class="form-label"></label>
-                <a href="https://docs.btcpayserver.org/Development/Theme/#checkout-page-themes" target="_blank" rel="noreferrer noopener">
-                    <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
-                </a>
-                <input asp-for="CustomCSS" class="form-control" />
-                <span asp-validation-for="CustomCSS" class="text-danger"></span>
-                <p class="form-text text-muted">
-                    Bundled Themes:
-                    <a href="#" class="setTheme" data-theme="default">Default</a> |
-                    <a href="#" class="setTheme" data-theme="dark">Dark</a> |
-                    <a href="#" class="setTheme" data-theme="legacy">Legacy</a>
-                </p>
-                @await Component.InvokeAsync("UiExtensionPoint", new { location = "invoice-checkout-theme-options", model = Model })
-            </div>
-            <button name="command" type="submit" class="btn btn-primary" value="Save">Save</button>
+            
+            <button type="submit" class="btn btn-primary mt-4" id="Save">Save</button>
         </form>
     </div>
 </div>

@@ -35,17 +35,29 @@
             
             <h3 class="mt-5 mb-3">Branding</h3>
             <div class="form-group">
-                <label asp-for="LogoFile" class="form-label"></label>
+                <div class="d-flex align-items-center justify-content-between gap-2">
+                    <label asp-for="LogoFile" class="form-label"></label>
+                    @if (!string.IsNullOrEmpty(Model.LogoFileId))
+                    {
+                        <button type="submit" class="btn btn-link p-0 text-danger" name="RemoveLogoFile" value="true">
+                            <span class="fa fa-times"></span> Remove
+                        </button>
+                    }
+                </div>
                 @if (canUpload)
                 {
-                    <div class="d-flex align-items-center">
+                    <div class="d-flex align-items-center gap-3">
                         <input asp-for="LogoFile" type="file" class="form-control flex-grow">
                         @if (!string.IsNullOrEmpty(Model.LogoFileId))
                         {
-                            <img src="@(await FileService.GetFileUrl(Context.Request.GetAbsoluteRootUri(), Model.LogoFileId))" alt="@Model.StoreName" class="rounded-circle ms-3" style="width:2.1rem;height:2.1rem;"/>
+                            <img src="@(await FileService.GetFileUrl(Context.Request.GetAbsoluteRootUri(), Model.LogoFileId))" alt="@Model.StoreName" class="rounded-circle" style="width:2.1rem;height:2.1rem;"/>
                         }
                     </div>
-                    <p class="form-text text-muted">Please upload an image with square dimension, as it will be displayed in 1:1 format and circular.</p>
+                    <span asp-validation-for="LogoFile" class="text-danger"></span>
+                    <p class="form-text text-muted">
+                        Please upload an image with square dimension, as it will be displayed in 1:1 format and circular.
+                        Size should be around 100✕100px.
+                    </p>
                 }
                 else
                 {
@@ -120,7 +132,7 @@
                 <span asp-validation-for="BOLT11Expiration" class="text-danger"></span>
             </div>
             
-            <button name="command" type="submit" class="btn btn-primary mt-2" value="Save" id="Save">Save</button>
+            <button type="submit" class="btn btn-primary mt-2" id="Save">Save</button>
         </form>
         @if (Model.CanDelete)
         {

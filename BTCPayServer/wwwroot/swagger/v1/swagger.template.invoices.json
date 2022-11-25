@@ -789,8 +789,8 @@
                                     }
                                 ]
                             },
-                            "monitoringTime": {
-                                "description": "The monitoring time of the invoice",
+                            "monitoringExpiration": {
+                                "description": "Expiration time for monitoring of the invoice for any changes",
                                 "allOf": [
                                     {
                                         "$ref": "#/components/schemas/UnixTimestamp"
@@ -1087,11 +1087,6 @@
                             "V1",
                             "V2"
                         ]
-                    },
-                    "checkoutFormId": {
-                        "type": "string",
-                        "description": "Form ID to request customer data, in case the new checkout is used",
-                        "nullable": true
                     },
                     "defaultLanguage": {
                         "type": "string",

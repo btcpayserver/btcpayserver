@@ -1357,7 +1357,6 @@ return Promise$2;
 
 
 
-//# sourceMappingURL=es6-promise.auto.map
 
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(2)))
 
@@ -4085,4 +4084,3 @@ var JsonHubProtocol = /** @class */ (function () {
 /***/ })
 /******/ ]);
 });
-//# sourceMappingURL=signalr.js.map

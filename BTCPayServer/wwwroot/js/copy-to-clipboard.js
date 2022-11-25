@@ -1,5 +1,9 @@
-const confirmCopy = (el, message) => {
-    el.innerText = message;
+function confirmCopy(el, message) {
+    if (!el.dataset.clipboardInitial) {
+        el.dataset.clipboardInitial = el.innerHTML;
+        el.style.minWidth = el.getBoundingClientRect().width + 'px';
+    }
+    el.innerHTML = `<span class="text-success">${message}</span>`;
     setTimeout(function () {
         el.innerHTML = el.dataset.clipboardInitial;
     }, 2500);
@@ -11,11 +15,7 @@ window.copyToClipboard = function (e, data) {
     const confirm = item.dataset.clipboardConfirmElement
         ? document.getElementById(item.dataset.clipboardConfirmElement) || item
         : item.querySelector('[data-clipboard-confirm]') || item;
-    const message = confirm.getAttribute('data-clipboard-confirm') || 'Copied ✔';
-    if (!confirm.dataset.clipboardInitial) {
-        confirm.dataset.clipboardInitial = confirm.innerHTML;
-        confirm.style.minWidth = confirm.getBoundingClientRect().width + 'px';
-    }
+    const message = confirm.getAttribute('data-clipboard-confirm') || 'Copied';
     if (navigator.clipboard) {
         navigator.clipboard.writeText(data).then(function () {
             confirmCopy(confirm, message);
@@ -38,12 +38,12 @@ window.copyUrlToClipboard = function (e) {
     window.copyToClipboard(e, window.location)
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-    delegate('click', '[data-clipboard]', e => {
+document.addEventListener("DOMContentLoaded", function () {
+    delegate('click', '[data-clipboard]', function (e) {
         const data = e.target.closest('[data-clipboard]').getAttribute('data-clipboard')
         window.copyToClipboard(e, data)
     })
-    delegate('click', '[data-clipboard-target]', e => {
+    delegate('click', '[data-clipboard-target]', function (e) {
         const selector = e.target.closest('[data-clipboard-target]').getAttribute('data-clipboard-target')
         const target = document.querySelector(selector)
         const data = target.innerText

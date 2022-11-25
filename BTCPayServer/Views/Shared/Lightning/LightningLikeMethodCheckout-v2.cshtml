@@ -2,22 +2,32 @@
 
 <template id="lightning-method-checkout-template">
     <div class="payment-box">
-        <small class="qr-text" id="QR_Text_@Model.PaymentMethodId">{{$t("QR_Text")}}</small>
-        <div class="qr-container my-3" data-clipboard-confirm-element="QR_Text_@Model.PaymentMethodId" :data-clipboard="srvModel.btcAddress">
-            <qrcode v-if="srvModel.invoiceBitcoinUrlQR" :value="srvModel.invoiceBitcoinUrlQR" tag="div" :options="qrOptions" />
+        <div class="qr-container" data-clipboard-confirm-element="QR_Text_@Model.PaymentMethodId" :data-clipboard="model.invoiceBitcoinUrl" :data-destination="model.btcAddress">
+            <qrcode v-if="model.invoiceBitcoinUrlQR" :value="model.invoiceBitcoinUrlQR" tag="div" :options="qrOptions" />
         </div>
-        <a v-if="srvModel.invoiceBitcoinUrl" class="btn btn-primary rounded-pill w-100" target="_top"
-           :href="srvModel.invoiceBitcoinUrl">{{$t("Pay in wallet")}}</a>
-        @await Component.InvokeAsync("UiExtensionPoint", new { location = "checkout-lightning-post-content", model = Model })
+        <div class="mt-2 mb-4">
+            <small class="qr-text" id="QR_Text_@Model.PaymentMethodId" v-t="'qr_text'"></small>
+            @*
+            <input type="text" class="form-control form-control-sm" :value="model.btcAddress"
+                   :data-clipboard="model.invoiceBitcoinUrl" :data-clipboard-confirm="$t('copy_confirm')"
+                    data-clipboard-confirm-element="QR_Text_@Model.PaymentMethodId" readonly>
+            *@
+        </div>
+        <a v-if="model.invoiceBitcoinUrl" class="btn btn-primary rounded-pill w-100" target="_top"
+           :href="model.invoiceBitcoinUrl" v-t="'pay_in_wallet'"></a>
     </div>          
 </template>
 
 <script>
     Vue.component('LightningLikeMethodCheckout', {
-        props: ["srvModel"],
+        props: ["model"],
         template: "#lightning-method-checkout-template",
         components: {
             qrcode: VueQrcode
+        },
+        data () {
+            // currentTab is needed for backwards-compatibility with old plugin versions
+            return { currentTab: undefined };
         }
     });
 </script>

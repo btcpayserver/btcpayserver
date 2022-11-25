@@ -1,18 +1,17 @@
 @inject LanguageService LangService
 @inject BTCPayServerEnvironment Env
 @inject IFileService FileService
-@inject ThemeSettings Theme
+@inject IEnumerable<IUIExtension> UiExtensions 
 @inject PaymentMethodHandlerDictionary PaymentMethodHandlerDictionary
 @using BTCPayServer.Services
 @using BTCPayServer.Abstractions.Contracts
-@using BTCPayServer.Abstractions.TagHelpers
-@using BTCPayServer.Components.ThemeSwitch
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @model PaymentModel
 @{
     Layout = null;
     ViewData["Title"] = Model.HtmlTitle;
 
+    var hasPaymentPlugins = UiExtensions.Any(extension => extension.Location == "checkout-payment-method");
     var paymentMethodCount = Model.AvailableCryptos.Count;
     var logoUrl = !string.IsNullOrEmpty(Model.LogoFileId)
         ? await FileService.GetFileUrl(Context.Request.GetAbsoluteRootUri(), Model.LogoFileId)
@@ -25,24 +24,18 @@
             ? $"{pm.PaymentMethodName} {pm.CryptoCode}"
             : pm.PaymentMethodName.Replace("Bitcoin (", "").Replace(")", "").Replace("Lightning ", "");
     }
-}
 
+    private string ToJsValue(object value)
+    {
+        return Safe.Json(value).ToString()?.Replace("\"", "'");
+    }
+}
 <!DOCTYPE html>
-<html lang="@Model.DefaultLang">
+<html lang="@Model.DefaultLang" class="@(Model.IsModal ? "checkout-modal" : "")"@(Env.IsDeveloping ? " data-devenv" : "")>
 <head>
     <partial name="LayoutHead"/>
     <meta name="robots" content="noindex,nofollow">
     <link href="~/checkout-v2/checkout.css" asp-append-version="true" rel="stylesheet" />
-    @if (!string.IsNullOrEmpty(Model.CustomCSSLink))
-    {
-        <link href="@Model.CustomCSSLink" rel="stylesheet"/>
-    }
-    @if (Model.IsModal)
-    {
-        <style>
-            body { background: rgba(var(--btcpay-black-rgb), 0.85); }
-        </style>
-    }
     @if (!string.IsNullOrEmpty(Model.BrandColor))
     {
         <style>
@@ -56,223 +49,142 @@
         </style>
     }
 </head>
-<body>
-    <div id="Checkout" class="wrap" v-cloak>
+<body class="min-vh-100">
+    <div id="Checkout" class="wrap" v-cloak v-waitForT>
         <header>
             @if (!string.IsNullOrEmpty(logoUrl))
             {
                 <img src="@logoUrl" alt="@Model.StoreName" class="logo @(!string.IsNullOrEmpty(Model.LogoFileId) ? "logo--square" : "")"/>
             }
-            <h1 class="h5 mb-0">@Model.StoreName</h1>
+            <h1 class="h4 mb-0">@Model.StoreName</h1>
         </header>
-        <main>
-            <nav v-if="hasNav">
-                <button type="button" v-if="showBackButton" id="back" v-on:click="back">
-                    <vc:icon symbol="back"/>
-                </button>
+        <main class="shadow-lg">
+            <nav v-if="isModal">
                 <button type="button" v-if="isModal" id="close" v-on:click="close">
                     <vc:icon symbol="close"/>
                 </button>
             </nav>
-            <section id="result" v-if="isPaid || isUnpayable">
+            <section id="payment" v-if="isActive">
+                <h5 class="text-center mt-1 mb-3 fw-semibold" v-if="srvModel.itemDesc" v-text="srvModel.itemDesc">@Model.ItemDesc</h5>
+                @if (Model.IsUnsetTopUp)
+                {
+                    <h2 id="AmountDue" class="text-center mb-3" v-t="'any_amount'"></h2>
+                }
+                else
+                {
+                    <h2 id="AmountDue" class="text-center" v-text="`${srvModel.btcDue} ${srvModel.cryptoCode}`" :data-clipboard="srvModel.btcDue" :data-clipboard-confirm="$t('copy_confirm')" :data-amount-due="btcDue">@Model.BtcDue @Model.CryptoCode</h2>
+                }
+                <div id="PaymentInfo" class="info mt-3 mb-2" v-collapsible="showInfo">
+                    <div>
+                        <div class="timer" v-if="showTimer">
+                            <span class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden"></span></span>
+                            <span v-t="'expiry_info'"></span> <span class="expiryTime">{{timeText}}</span>
+                        </div>
+                        <div class="payment-due" v-if="showPaymentDueInfo">
+                            <vc:icon symbol="info"/>
+                            <span v-t="'partial_payment_info'"></span>
+                        </div>
+                        <div v-if="showPaymentDueInfo" v-html="replaceNewlines($t('still_due', { amount: `${srvModel.btcDue} ${srvModel.cryptoCode}` }))"></div>
+                    </div>
+                </div>
+                <button id="DetailsToggle" class="d-flex align-items-center gap-1 btn btn-link payment-details-button mb-2" type="button" :aria-expanded="displayPaymentDetails ? 'true' : 'false'" v-on:click="displayPaymentDetails = !displayPaymentDetails">
+                    <span class="fw-semibold" v-t="'view_details'"></span>
+                    <vc:icon symbol="caret-down"/>
+                </button>
+                <div id="PaymentDetails" class="payment-details" v-collapsible="displayPaymentDetails">
+                    <payment-details :srv-model="srvModel" :is-active="isActive" class="pb-4"></payment-details>
+                </div>
+                @if (paymentMethodCount > 1 || hasPaymentPlugins)
+                {
+                    <div class="mt-3 mb-2">
+                        <h6 class="text-center mb-3" v-t="'pay_with'"></h6>
+                        <div class="btcpay-pills d-flex flex-wrap align-items-center justify-content-center gap-2 pb-2">
+                            @foreach (var crypto in Model.AvailableCryptos)
+                            {
+                                <a asp-action="Checkout" asp-route-invoiceId="@Model.InvoiceId" asp-route-paymentMethodId="@crypto.PaymentMethodId"
+                                   class="btcpay-pill m-0 payment-method"
+                                   :class="{ active: pmId === @ToJsValue(crypto.PaymentMethodId) }"
+                                   v-on:click.prevent="changePaymentMethod(@ToJsValue(crypto.PaymentMethodId))">
+                                    @PaymentMethodName(crypto)
+                                </a>
+                            }
+                            @await Component.InvokeAsync("UiExtensionPoint", new { location = "checkout-payment-method", model = Model })
+                        </div>
+                    </div>
+                }
+                <component v-if="paymentMethodComponent" :is="paymentMethodComponent" :model="srvModel" />
+            </section>
+            <section id="result" v-else>
                 <div id="paid" v-if="isPaid">
                     <div class="top">
-                        <span class="text-success">
+                        <span class="icn">
                             <vc:icon symbol="payment-complete"/>
                         </span>
-                        <h4>{{$t("Invoice paid")}}</h4>
-                        <dl>
+                        <h4 v-t="'invoice_paid'"></h4>
+                        <dl class="mb-3">
                             <div>
-                                <dt>{{$t("Invoice ID")}}</dt>
-                                <dd>{{srvModel.invoiceId}}</dd>
+                                <dt v-t="'invoice_id'"></dt>
+                                <dd v-text="srvModel.invoiceId"></dd>
                             </div>
                             <div v-if="srvModel.orderId">
-                                <dt>{{$t("Order ID")}}</dt>
-                                <dd>{{srvModel.orderId}}</dd>
+                                <dt v-t="'order_id'"></dt>
+                                <dd v-text="srvModel.orderId"></dd>
                             </div>
                         </dl>
-                        <dl>
-                            <div>
-                                <dt>{{$t("Order Amount")}}</dt>
-                                <dd>{{srvModel.orderAmount}} {{ srvModel.cryptoCode }}</dd>
-                            </div>
-                            <div v-if="srvModel.orderAmountFiat">
-                                <dt>{{$t("Order Amount")}}</dt>
-                                <dd>{{srvModel.orderAmountFiat}}</dd>
-                            </div>
-                            <div v-if="srvModel.networkFee">
-                                <dt>{{$t("Network Cost")}}</dt>
-                                <dd v-if="srvModel.isMultiCurrency">{{ srvModel.networkFee }} {{ srvModel.cryptoCode }}</dd>
-                                <dd v-else-if="srvModel.txCountForFee > 0">{{$t("txCount", {count: srvModel.txCount})}} x {{ srvModel.networkFee }} {{ srvModel.cryptoCode }}</dd>
-                            </div>
-                            <div>
-                                <dt>{{$t("Amount Paid")}}</dt>
-                                <dd>{{srvModel.btcPaid }} {{ srvModel.cryptoCode }}</dd>
-                            </div>
-                        </dl>
+                        <payment-details :srv-model="srvModel" :is-active="isActive" class="mb-5"></payment-details>
                     </div>
                     <div class="buttons">
-                        <a class="btn btn-primary" :href="srvModel.receiptLink" v-if="srvModel.receiptLink" :target="isModal ? '_blank' : '_top'">{{$t('View receipt')}}</a>
-                        <a class="btn btn-secondary" :href="srvModel.merchantRefLink" v-if="srvModel.merchantRefLink">{{$t('Return to StoreName', srvModel)}}</a>
+                        <a v-if="srvModel.receiptLink" class="btn btn-primary" :href="srvModel.receiptLink" :target="isModal ? '_top' : null" v-t="'view_receipt'" id="ReceiptLink"></a>
+                        <a v-if="storeLink" class="btn btn-secondary" :href="storeLink" :target="isModal ? '_top' : null" v-t="{ path: 'return_to_store', args: { storeName: srvModel.storeName }}" id="StoreLink"></a>
+                        <button v-else-if="isModal" class="btn btn-secondary" v-on:click="close" v-t="'Close'"></button>
                     </div>
                 </div>
                 <div id="expired" v-if="isUnpayable">
                     <div class="top">
-                        <span class="text-muted">
+                        <span class="icn">
                             <vc:icon symbol="invoice-expired"/>
                         </span>
-                        <h4>{{$t("Invoice expired")}}</h4>
-                        <dl>
+                        <h4 v-t="'invoice_expired'"></h4>
+                        <dl class="mb-0">
                             <div>
-                                <dt>{{$t("Invoice ID")}}</dt>
-                                <dd>{{srvModel.invoiceId}}</dd>
+                                <dt v-t="'invoice_id'"></dt>
+                                <dd v-text="srvModel.invoiceId"></dd>
                             </div>
                             <div v-if="srvModel.orderId">
-                                <dt>{{$t("Order ID")}}</dt>
-                                <dd>{{srvModel.orderId}}</dd>
+                                <dt v-t="'order_id'"></dt>
+                                <dd v-text="srvModel.orderId"></dd>
                             </div>
                         </dl>
-                        <p v-html="$t('InvoiceExpired_Body_1', {storeName: srvModel.storeName, maxTimeMinutes: @Model.MaxTimeMinutes})"></p>
-                        <p>{{$t("InvoiceExpired_Body_2")}}</p>
-                        <p>{{$t("InvoiceExpired_Body_3")}}</p>
-                    </div>
-                    <div class="buttons">
-                        <a class="btn btn-primary" :href="srvModel.merchantRefLink" v-if="srvModel.merchantRefLink">{{$t('Return to StoreName', srvModel)}}</a>
-                    </div>
-                </div>
-            </section>
-            <section id="form" v-else-if="step === 'form'">
-                <form method="post" asp-action="UpdateForm" asp-route-invoiceId="@Model.InvoiceId" v-on:submit.prevent="onFormSubmit">
-                    <div class="top">
-                        <h6>{{$t("Please fill out the following")}}</h6>
-                        <div class="timer" v-if="expiringSoon">
-                            {{$t("Invoice will expire in")}} {{timerText}}
-                            <span class="spinner-border spinner-border-sm ms-2" role="status">
-                                <span class="visually-hidden"></span>
-                            </span>
+                        <div id="PaymentDetails" class="payment-details" v-collapsible="displayPaymentDetails">
+                            <payment-details :srv-model="srvModel" :is-active="isActive"></payment-details>
                         </div>
-                        <template v-if="srvModel.checkoutFormId && srvModel.checkoutFormId !== 'None'">
-                            <p class="my-5 text-center">TODO: Forms integration -> {{srvModel.checkoutFormId}}</p>
-                        </template>
-                        <template v-else-if="srvModel.requiresRefundEmail">
-                            <p>{{$t("Contact_Body")}}</p>
-                            <div class="form-group">
-                                <label class="form-label" for="Email">{{$t("Contact and Refund Email")}}</label>
-                                <input class="form-control" id="Email" name="Email">
-                                <span class="text-danger" hidden>{{$t("Please enter a valid email address")}}</span>
-                            </div>
-                        </template>
-                    </div>
-                    <div class="buttons">
-                        <button type="submit" class="btn btn-primary" :disabled="formSubmitPending" :class="{ 'loading': formSubmitPending }">
-                            {{$t("Continue")}}
-                            <span class="spinner-border spinner-border-sm ms-1" role="status" v-if="formSubmitPending">
-                                <span class="visually-hidden"></span>
-                            </span>
+                        <button class="d-flex align-items-center gap-1 btn btn-link payment-details-button" type="button" :aria-expanded="displayPaymentDetails ? 'true' : 'false'" v-on:click="displayPaymentDetails = !displayPaymentDetails">
+                            <span class="fw-semibold" v-t="'view_details'"></span>
+                            <vc:icon symbol="caret-down"/>
                         </button>
+                        <p class="text-center mt-3" v-html="replaceNewlines($t('invoice_expired_body', { storeName: srvModel.storeName, minutes: @Model.MaxTimeMinutes }))"></p>
                     </div>
-                </form>
-            </section>
-            <section id="payment" v-else>
-                <h6 class="text-center mb-3 fw-semibold" v-if="srvModel.itemDesc" v-text="srvModel.itemDesc">@Model.ItemDesc</h6>
-                @if (Model.IsUnsetTopUp)
-                {
-                    <h2 class="text-center mb-3">{{$t("Any amount")}}</h2>
-                }
-                else
-                {
-                    <h2 class="text-center" v-text="`${srvModel.btcDue} ${srvModel.cryptoCode}`" :data-clipboard="srvModel.btcDue">@Model.BtcDue @Model.CryptoCode</h2>
-                    <h2 class="text-center" v-else v-text="`${srvModel.btcDue} ${srvModel.cryptoCode}`" :data-clipboard="srvModel.btcDue">@Model.BtcDue @Model.CryptoCode</h2>
-                    <div class="text-muted text-center fw-semibold" v-if="srvModel.orderAmountFiat" v-text="srvModel.orderAmountFiat">@Model.OrderAmountFiat</div>
-                    <div class="timer" v-if="expiringSoon">
-                        {{$t("Invoice will expire in")}} {{timerText}}
-                        <span class="spinner-border spinner-border-sm ms-2 text-muted" role="status">
-                            <span class="visually-hidden"></span>
-                        </span>
+                    <div class="buttons">
+                        <a v-if="storeLink" class="btn btn-primary" :href="storeLink" :target="isModal ? '_top' : null" v-t="{ path: 'return_to_store', args: { storeName: srvModel.storeName }}" id="StoreLink"></a>
+                        <button v-else-if="isModal" class="btn btn-primary" v-on:click="close" v-t="'Close'"></button>
                     </div>
-                    <div class="mt-3 mb-1 text-center" v-if="showPaymentDueInfo">
-                        <span class="text-info"><vc:icon symbol="info"/></span>
-                        <small>{{$t("NotPaid_ExtraTransaction")}}</small>
-                    </div>
-                    <button class="d-flex align-items-center btn btn-link" type="button" id="PaymentDetailsButton" :aria-expanded="displayPaymentDetails ? 'true' : 'false'" aria-controls="PaymentDetails" v-on:click="displayPaymentDetails = !displayPaymentDetails">
-                        <vc:icon symbol="caret-down"/>
-                        <span class="ms-1 fw-semibold">{{$t("View Details")}}</span>
-                    </button>
-                    <div id="PaymentDetails" class="collapse" v-collapsible="displayPaymentDetails">
-                        <dl>
-                            <div>
-                                <dt>{{$t("Total Price")}}</dt>
-                                <dd :data-clipboard="srvModel.orderAmount">{{srvModel.orderAmount}} {{ srvModel.cryptoCode }}</dd>
-                            </div>
-                            <div v-if="srvModel.orderAmountFiat && srvModel.cryptoCode">
-                                <dt>{{$t("Exchange Rate")}}</dt>
-                                <dd :data-clipboard="srvModel.rate">
-                                    <template v-if="srvModel.cryptoCodeSrv === 'Sats'">1 Sat = {{ srvModel.rate }}</template>
-                                    <template v-else>1 {{ srvModel.cryptoCodeSrv }} = {{ srvModel.rate }}</template>
-                                </dd>
-                            </div>
-                            <div v-if="srvModel.showRecommendedFee && srvModel.feeRate">
-                                <dt>{{$t("Recommended Fee")}}</dt>
-                                <dd :data-clipboard="srvModel.feeRate">{{$t("Feerate", { feeRate: srvModel.feeRate })}}</dd>
-                            </div>
-                            <div v-if="srvModel.networkFee">
-                                <dt>{{$t("Network Cost")}}</dt>
-                                <dd :data-clipboard="srvModel.networkFee">
-                                    <template v-if="srvModel.txCountForFee > 0">{{$t("txCount", {count: srvModel.txCount})}} x</template>
-                                    {{ srvModel.networkFee }} {{ srvModel.cryptoCode }}
-                                </dd>
-                            </div>
-                            <div v-if="btcPaid > 0">
-                                <dt>{{$t("Amount Paid")}}</dt>
-                                <dd :data-clipboard="srvModel.btcPaid">{{srvModel.btcPaid }} {{ srvModel.cryptoCode }}</dd>
-                            </div>
-                            <div v-if="btcDue > 0">
-                                <dt>{{$t("Amount Due")}}</dt>
-                                <dd :data-clipboard="srvModel.btcDue">{{srvModel.btcDue}} {{ srvModel.cryptoCode }}</dd>
-                            </div>
-                        </dl>
-                    </div>
-                }
-                <div class="my-3">
-                    @if (paymentMethodCount > 1)
-                    {
-                        <h6 class="text-center mb-3">{{$t("Pay with")}}</h6>
-                        <div class="btcpay-pills d-flex flex-wrap align-items-center justify-content-center gap-2 pb-2">
-                            @foreach (var crypto in Model.AvailableCryptos)
-                            {
-                                <a asp-action="Checkout" asp-route-invoiceId="@Model.InvoiceId" asp-route-paymentMethodId="@crypto.PaymentMethodId" class="btcpay-pill m-0@(crypto.PaymentMethodId == Model.PaymentMethodId ? " active" : "")">
-                                    @PaymentMethodName(crypto)
-                                </a>
-                            }
-                        </div>
-                    }
-                    else
-                    {
-                        <h6 class="text-center mb-3">
-                            {{$t("Pay with")}}
-                            @PaymentMethodName(Model.AvailableCryptos.First())
-                        </h6>
-                    }
                 </div>
-                <component v-if="srvModel.uiSettings && srvModel.activated"
-                           :srv-model="srvModel"
-                           :is="srvModel.uiSettings.checkoutBodyVueComponentName"/>
             </section>
         </main>
         @if (Env.CheatMode)
         {
-            <checkout-cheating v-if="step === 'payment'" invoice-id="@Model.InvoiceId" :btc-due="btcDue" :is-paid="isPaid" />
+            <checkout-cheating v-if="isActive" invoice-id="@Model.InvoiceId" :btc-due="btcDue" :is-paid="isPaid" :payment-method-id="pmId"></checkout-cheating>
         }
         <footer>
-            <select asp-for="DefaultLang" asp-items="@LangService.GetLanguageSelectListItems()" v-on:change="changeLanguage"></select>
-
-            <div class="text-muted my-2">
-                Powered by <a href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">BTCPay Server</a>
+            <div>
+                <a href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">
+                    {{$t("powered_by")}}
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 84" role="img" alt="BTCPay Server" class="ms-1"><path d="M5.206 83.433a4.86 4.86 0 01-4.859-4.861V5.431a4.86 4.86 0 119.719 0v73.141a4.861 4.861 0 01-4.86 4.861" fill="currentColor" class="logo-brand-light"/><path d="M5.209 83.433a4.862 4.862 0 01-2.086-9.253L32.43 60.274 2.323 38.093a4.861 4.861 0 015.766-7.826l36.647 26.999a4.864 4.864 0 01-.799 8.306L7.289 82.964a4.866 4.866 0 01-2.08.469" fill="currentColor" class="logo-brand-medium"/><path d="M5.211 54.684a4.86 4.86 0 01-2.887-8.774L32.43 23.73 3.123 9.821a4.861 4.861 0 014.166-8.784l36.648 17.394a4.86 4.86 0 01.799 8.305l-36.647 27a4.844 4.844 0 01-2.878.948" fill="currentColor" class="logo-brand-light"/><path d="M10.066 31.725v20.553L24.01 42.006z" fill="currentColor" class="logo-brand-dark"/><path d="M10.066 5.431A4.861 4.861 0 005.206.57 4.86 4.86 0 00.347 5.431v61.165h9.72V5.431h-.001z" fill="currentColor" class="logo-brand-light"/><path d="M74.355 41.412c3.114.884 4.84 3.704 4.84 7.238 0 5.513-3.368 8.082-7.955 8.082H60.761V27.271h9.259c4.504 0 7.997 2.146 7.997 7.743 0 2.821-1.179 5.43-3.662 6.398m-4.293-.716c3.324 0 6.018-1.179 6.018-5.724 0-4.586-2.776-5.808-6.145-5.808h-7.197v11.531h7.324v.001zm1.052 14.099c3.366 0 6.06-1.768 6.06-6.145 0-4.713-3.072-6.144-6.901-6.144h-7.534v12.288h8.375v.001zM98.893 27.271v1.81h-8.122v27.651h-1.979V29.081h-8.123v-1.81zM112.738 26.85c5.01 0 9.554 2.524 10.987 8.543h-1.895c-1.348-4.923-5.303-6.732-9.134-6.732-6.944 0-10.605 5.681-10.605 13.341 0 8.08 3.661 13.256 10.646 13.256 4.125 0 7.828-1.85 9.26-7.279h1.895c-1.264 6.271-6.229 9.174-11.154 9.174-7.87 0-12.583-5.808-12.583-15.15 0-8.966 4.969-15.153 12.583-15.153M138.709 27.271c5.091 0 8.795 3.326 8.795 9.764 0 6.06-3.704 9.722-8.795 9.722h-7.746v9.976h-1.935V27.271h9.681zm0 17.549c3.745 0 6.816-2.397 6.816-7.827 0-5.429-2.947-7.869-6.816-7.869h-7.746V44.82h7.746zM147.841 56.732v-.255l11.741-29.29h.885l11.615 29.29v.255h-2.062l-3.322-8.501H153.27l-3.324 8.501h-2.105zm12.164-26.052l-6.059 15.697h12.078l-6.019-15.697zM189.551 27.271h2.104v.293l-9.176 16.92v12.248h-2.02V44.484l-9.216-16.961v-.252h2.147l3.997 7.492 4.043 7.786h.04l4.081-7.786z" fill="currentColor" class="logo-brand-text"/></svg>
+                </a>
             </div>
-            @if (!Theme.CustomTheme)
-            {
-                <vc:theme-switch css-class="text-muted ms-n3" responsive="none"/>
-            }
+            @* TODO: Re-add this once checkout v2 has been translated
+            <select asp-for="DefaultLang" asp-items="@LangService.GetLanguageSelectListItems()" class="form-select w-auto" v-on:change="changeLanguage"></select>
+            *@
         </footer>
     </div>
     <noscript>
@@ -285,10 +197,56 @@
             </p>
         </div>
     </noscript>
+    <dl id="payment-details" v-cloak>
+        <div v-if="orderAmount > 0">
+            <dt v-t="'total_price'"></dt>
+            <dd :data-clipboard="srvModel.orderAmount" :data-clipboard-confirm="$t('copy_confirm')">{{srvModel.orderAmount}} {{ srvModel.cryptoCode }}</dd>
+        </div>
+        <div v-if="orderAmount > 0 && srvModel.orderAmountFiat">
+            <dt v-t="'total_fiat'"></dt>
+            <dd :data-clipboard="srvModel.orderAmountFiat" :data-clipboard-confirm="$t('copy_confirm')">{{srvModel.orderAmountFiat}}</dd>
+        </div>
+        <div v-if="srvModel.rate && srvModel.cryptoCode">
+            <dt v-t="'exchange_rate'"></dt>
+            <dd :data-clipboard="srvModel.rate" :data-clipboard-confirm="$t('copy_confirm')">
+                <template v-if="srvModel.cryptoCodeSrv === 'Sats'">1 Sat = {{ srvModel.rate }}</template>
+                <template v-else>1 {{ srvModel.cryptoCodeSrv }} = {{ srvModel.rate }}</template>
+            </dd>
+        </div>
+        <div v-if="srvModel.networkFee">
+            <dt v-t="'network_cost'"></dt>
+            <dd :data-clipboard="srvModel.networkFee" :data-clipboard-confirm="$t('copy_confirm')">
+                <template v-if="srvModel.txCountForFee > 0">
+                    {{$t('tx_count', { count: srvModel.txCount })}} x
+                </template>
+                {{ srvModel.networkFee }} {{ srvModel.cryptoCode }}
+            </dd>
+        </div>
+        <div v-if="btcPaid > 0">
+            <dt v-t="'amount_paid'"></dt>
+            <dd :data-clipboard="srvModel.btcPaid" :data-clipboard-confirm="$t('copy_confirm')">{{srvModel.btcPaid }} {{ srvModel.cryptoCode }}</dd>
+        </div>
+        <div v-if="btcDue > 0">
+            <dt v-t="'amount_due'"></dt>
+            <dd :data-clipboard="srvModel.btcDue" :data-clipboard-confirm="$t('copy_confirm')">{{srvModel.btcDue}} {{ srvModel.cryptoCode }}</dd>
+        </div>
+        <div v-if="showRecommendedFee">
+            <dt v-t="'recommended_fee'"></dt>
+            <dd :data-clipboard="srvModel.feeRate" :data-clipboard-confirm="$t('copy_confirm')" v-t="{ path: 'fee_rate', args: { feeRate: srvModel.feeRate } }"></dd>
+        </div>
+    </dl>
+    <script>
+        const i18nUrl = @Safe.Json($"{Model.RootPath}locales/checkout/{{{{lng}}}}.json");
+        const statusUrl = @Safe.Json(Url.Action("GetStatus", new { invoiceId = Model.InvoiceId }));
+        const statusWsUrl = @Safe.Json(Url.Action("GetStatusWebSocket", new { invoiceId = Model.InvoiceId }));
+        const availableLanguages = ['en']; // @Safe.Json(LangService.GetLanguages().Select(language => language.Code));
+        const initialSrvModel = @Safe.Json(Model);
+        const qrOptions = { margin: 1, type: 'svg', color: { dark: '#000', light: '#fff' } };
+    </script>
     <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
     <script src="~/vendor/vue-qrcode/vue-qrcode.min.js" asp-append-version="true"></script>
-    <script src="~/vendor/i18next/i18next.js" asp-append-version="true"></script>
-    <script src="~/vendor/i18next/i18nextXHRBackend.js" asp-append-version="true"></script>
+    <script src="~/vendor/i18next/i18next.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/i18next/i18nextHttpBackend.min.js" asp-append-version="true"></script>
     <script src="~/vendor/i18next/vue-i18next.js" asp-append-version="true"></script>
     <script src="~/js/copy-to-clipboard.js" asp-append-version="true"></script>
     <script src="~/main/utils.js" asp-append-version="true"></script>
@@ -297,242 +255,6 @@
     {
         <partial name="Checkout-Cheating" model="@Model" />
     }
-    <script>
-        const statusUrl = @Safe.Json(Url.Action("GetStatus", new { invoiceId = Model.InvoiceId }));
-        const statusWsUrl = @Safe.Json(Url.Action("GetStatusWebSocket", new { invoiceId = Model.InvoiceId }));
-        const initialSrvModel = @Safe.Json(Model);
-        const availableLanguages = @Safe.Json(LangService.GetLanguages().Select(language => language.Code));
-        const defaultLang = @Safe.Json(Model.DefaultLang);
-        const fallbackLanguage = "en";
-        const startingLanguage = computeStartingLanguage();
-        const STATUS_PAID = ['complete', 'confirmed', 'paid'];
-        const STATUS_UNPAID = ['new', 'paidPartial'];
-        const STATUS_UNPAYABLE =  ['expired', 'invalid'];
-        const qrOptions = { margin: 1, type: 'svg', color: { dark: '#000', light: '#fff' } };
-
-        i18next
-            .use(window.i18nextXHRBackend)
-            .init({
-                backend: {
-                    loadPath: @Safe.Json($"{Model.RootPath}locales/{{{{lng}}}}.json")
-                },
-                lng: startingLanguage,
-                fallbackLng: fallbackLanguage,
-                nsSeparator: false,
-                keySeparator: false,
-                load: 'currentOnly'
-            });
-
-        function computeStartingLanguage() {
-            if (urlParams.lang && isLanguageAvailable(urlParams.lang)) {
-                return urlParams.lang;
-            }
-            else if (isLanguageAvailable(defaultLang)) {
-                return defaultLang;
-            } else {
-                return fallbackLanguage;
-            }
-        }
-
-        function isLanguageAvailable(languageCode) {
-            return availableLanguages.indexOf(languageCode) >= 0;
-        }
-
-        const i18n = new VueI18next(i18next);
-        const eventBus = new Vue();
-
-        new Vue({
-            i18n,
-            el: '#Checkout',
-            data () {
-                const srvModel = initialSrvModel;
-                let step = 'payment';
-                if (STATUS_UNPAYABLE.concat(STATUS_PAID).includes(srvModel.status)) {
-                    step = 'result';
-                } else if (srvModel.requiresRefundEmail || (srvModel.checkoutFormId && srvModel.checkoutFormId !== 'None')) {
-                    step = 'form';
-                }
-
-                return {
-                    srvModel,
-                    step,
-                    displayPaymentDetails: false,
-                    end: new Date(),
-                    expirationPercentage: 0,
-                    timerText: @Safe.Json(Model.TimeLeft),
-                    emailAddressInput: "",
-                    emailAddressInputDirty: false,
-                    emailAddressInputInvalid: false,
-                    formSubmitPending: false,
-                    isModal: srvModel.isModal
-                }
-            },
-            computed: {
-                expiringSoon () {
-                    return this.isActive && this.expirationPercentage >= 75;
-                },
-                showRecommendedFee () {
-                    return  this.srvModel.showRecommendedFee && this.srvModel.feeRate !== 0;
-                },
-                isUnpayable () {
-                    return STATUS_UNPAYABLE.includes(this.srvModel.status);
-                },
-                isPaid () {
-                    return STATUS_PAID.includes(this.srvModel.status);
-                },
-                isActive () {
-                    return !this.isUnpayable && !this.isPaid;
-                },
-                hasNav () {
-                    return this.isModal || this.showBackButton;
-                },
-                hasForm () {
-                    return this.srvModel.requiresRefundEmail || (
-                        this.srvModel.checkoutFormId && this.srvModel.checkoutFormId !== 'None');
-                },
-                showBackButton () {
-                    return this.hasForm && this.step === 'payment';
-                },
-                showPaymentDueInfo () {
-                    return this.btcPaid > 0 && this.btcDue > 0;
-                },
-                btcDue () {
-                    return parseFloat(this.srvModel.btcDue);
-                },
-                btcPaid () {
-                    return parseFloat(this.srvModel.btcPaid);
-                }
-            },
-            mounted () {
-                this.onDataCallback(this.srvModel);
-                if (this.isActive) {
-                    this.updateProgressTimer();
-                    this.listenIn();
-                }
-                window.parent.postMessage('loaded', '*');
-            },
-            methods: {
-                changeLanguage(e) {
-                    const lang = e.target.value;
-                    if (isLanguageAvailable(lang)) {
-                        i18next.changeLanguage(lang);
-                    }
-                },
-                back () {
-                    this.step = 'form';
-                },
-                close () {
-                    window.parent.postMessage('close', '*');
-                },
-                updateProgressTimer () {
-                    const timeLeftS = this.endDate
-                        ? Math.floor((this.endDate.getTime() - new Date().getTime())/1000)
-                        : this.srvModel.expirationSeconds;
-                    this.expirationPercentage = 100 - ((timeLeftS / this.srvModel.maxTimeSeconds) * 100);
-                    this.timerText = this.updateTimerText(timeLeftS);
-                    if (this.expirationPercentage < 100 && STATUS_UNPAID.includes(this.srvModel.status)){
-                        setTimeout(this.updateProgressTimer, 500);
-                    }
-                },
-                minutesLeft (timer) {
-                    const val = Math.floor(timer / 60);
-                    return val < 10 ? `0${val}` : val;
-                },
-                secondsLeft (timer) {
-                    const val = Math.floor(timer % 60);
-                    return val < 10 ? `0${val}` : val;
-                },
-                updateTimerText (timer) {
-                    return timer >= 0
-                        ? `${this.minutesLeft(timer)}:${this.secondsLeft(timer)}`
-                        : '00:00';
-                },
-                listenIn () {
-                    let socket;
-                    const updateFn = this.fetchData;
-                    const supportsWebSockets = 'WebSocket' in window && window.WebSocket.CLOSING === 2;
-                    if (supportsWebSockets) {
-                        const protocol = window.location.protocol.replace('http', 'ws');
-                        const wsUri = `${protocol}//${window.location.host}${statusWsUrl}`;
-                        try {
-                            socket = new WebSocket(wsUri);
-                            socket.onmessage = e => {
-                                if (e.data === 'ping') return;
-                                updateFn();
-                            };
-                            socket.onerror = e => {
-                                console.error('Error while connecting to websocket for invoice notifications (callback):', e);
-                            };
-                        }
-                        catch (e) {
-                            console.error('Error while connecting to websocket for invoice notifications', e);
-                        }
-                    }
-                    (function watcher() {
-                        setTimeout(() => {
-                            if (socket === null || socket.readyState !== 1) {
-                                updateFn();
-                            }
-                            watcher();
-                        }, 2000);
-                    })();
-                },
-                async onFormSubmit (e) {
-                    const form = e.target;
-                    const url = form.getAttribute('action');
-                    const method = form.getAttribute('method');
-                    const body = new FormData(form);
-                    const headers = { 'Content-Type': 'application/json' };
-
-                    this.formSubmitPending = true;
-                    const response = await fetch(url, { method, body, headers });
-                    this.formSubmitPending = false;
-                    if (response.ok) {
-                        // TODO
-                        this.step = 'payment';
-                    }
-                },
-                async fetchData () {
-                    const url = `${statusUrl}&paymentMethodId=${this.srvModel.paymentMethodId}`;
-                    const response = await fetch(url);
-                    if (response.ok) {
-                        const data = await response.json();
-                        this.onDataCallback(data);
-                    }
-                },
-                onDataCallback (jsonData) {
-                    if (this.srvModel.status !== jsonData.status) {
-                        const { invoiceId } = this.srvModel;
-                        const { status } = jsonData;
-                        window.parent.postMessage({ invoiceId, status }, '*');
-                    }
-
-                    // displaying satoshis for lightning payments
-                    jsonData.cryptoCodeSrv = jsonData.cryptoCode;
-
-                    const newEnd = new Date();
-                    newEnd.setSeconds(newEnd.getSeconds() + jsonData.expirationSeconds);
-                    this.endDate = newEnd;
-
-                    // updating ui
-                    this.srvModel = jsonData;
-                    eventBus.$emit('data-fetched', this.srvModel);
-
-                    if (this.isPaid && jsonData.redirectAutomatically && jsonData.merchantRefLink) {
-                        setTimeout(function () {
-                            if (this.isModal && window.top.location == jsonData.merchantRefLink){
-                                this.close();
-                            } else {
-                                window.top.location = jsonData.merchantRefLink;
-                            }
-                        }.bind(this), 2000);
-                    } else if (!this.isActive) {
-                        this.step = 'result';
-                    }
-                }
-            }
-        });
-    </script>
     @foreach (var paymentMethodHandler in PaymentMethodHandlerDictionary
         .Select(handler => handler.GetCheckoutUISettings())
         .Where(settings => settings != null)
@@ -540,6 +262,6 @@
     {
         <partial name="@paymentMethodHandler.ExtensionPartial-v2" model="@Model"/>
     }
-    @await Component.InvokeAsync("UiExtensionPoint", new { location = "checkout-end", model = Model })
+    @await Component.InvokeAsync("UiExtensionPoint", new { location = "checkout-payment", model = Model })
 </body>
 </html>

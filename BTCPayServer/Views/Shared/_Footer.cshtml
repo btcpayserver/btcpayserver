@@ -26,9 +26,9 @@
             </a>
             @if (!string.IsNullOrEmpty(_env.OnionUrl) && !Context.Request.IsOnion())
             {
-                <a href="@_env.OnionUrl" class="d-flex align-items-center" target="_onion" rel="noreferrer noopener" role="button" data-clipboard="@_env.OnionUrl" style="min-width:9em;">
+                <a href="@_env.OnionUrl" class="d-flex align-items-center" target="_onion" rel="noreferrer noopener" role="button" data-clipboard="@_env.OnionUrl" data-clipboard-confirm-element="CopyTorUrlText" style="min-width:9em;">
                     <vc:icon symbol="onion"/>
-                    <span style="margin-left:.4rem" data-clipboard-confirm="Copied URL ✔">Copy Tor URL</span>
+                    <span style="margin-left:.4rem" id="CopyTorUrlText">Copy Tor URL</span>
                 </a>
             }
         </div>

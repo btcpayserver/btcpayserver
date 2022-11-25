@@ -125,6 +125,12 @@ retry:
 
             return el;
         }
+
+        public static void FillIn(this IWebElement el, string text)
+        {
+            el.Clear();
+            el.SendKeys(text);
+        }
         
         public static void ScrollTo(this IWebDriver driver, IWebElement element)
         {

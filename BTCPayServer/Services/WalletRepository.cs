@@ -78,7 +78,7 @@ namespace BTCPayServer.Services
 
             using var ctx = _ContextFactory.CreateContext();
 
-            // If we are using postgres, the `transactionIds.Contains(w.ChildId)` result in a long query like `ANY(@txId1, @txId2, @txId3, @txId4)`
+            // If we are using postgres, the `transactionIds.Contains(w.BId)` result in a long query like `ANY(@txId1, @txId2, @txId3, @txId4)`
             // Such request isn't well optimized by postgres, and create different requests clogging up
             // pg_stat_statements output, making it impossible to analyze the performance impact of this query.
             // On top of this, the entity version is doing 2 left join to satisfy the Include queries, resulting in n*m row returned for each transaction.
@@ -106,9 +106,9 @@ namespace BTCPayServer.Services
                 var query =
                     $"SELECT wos.\"WalletId\", wos.\"Id\", wos.\"Type\", wos.\"Data\", wol.\"LinkData\", wol.\"Type2\", wol.\"Id2\"{includeNeighbourSelect} FROM ({selectWalletObjects}) wos " +
                     $"LEFT JOIN LATERAL ( " +
-                    "SELECT \"ParentType\" AS \"Type2\", \"ParentId\" AS \"Id2\", \"Data\" AS \"LinkData\" FROM \"WalletObjectLinks\" WHERE \"WalletId\"=wos.\"WalletId\" AND \"ChildType\"=wos.\"Type\" AND \"ChildId\"=wos.\"Id\" " +
+                    "SELECT \"AType\" AS \"Type2\", \"AId\" AS \"Id2\", \"Data\" AS \"LinkData\" FROM \"WalletObjectLinks\" WHERE \"WalletId\"=wos.\"WalletId\" AND \"BType\"=wos.\"Type\" AND \"BId\"=wos.\"Id\" " +
                     "UNION " +
-                    "SELECT \"ChildType\" AS \"Type2\", \"ChildId\" AS \"Id2\", \"Data\" AS \"LinkData\" FROM \"WalletObjectLinks\" WHERE \"WalletId\"=wos.\"WalletId\" AND \"ParentType\"=wos.\"Type\" AND \"ParentId\"=wos.\"Id\"" +
+                    "SELECT \"BType\" AS \"Type2\", \"BId\" AS \"Id2\", \"Data\" AS \"LinkData\" FROM \"WalletObjectLinks\" WHERE \"WalletId\"=wos.\"WalletId\" AND \"AType\"=wos.\"Type\" AND \"AId\"=wos.\"Id\"" +
                     $" ) wol ON true " + includeNeighbourJoin;
                 cmd.CommandText = query;
                 if (queryObject.WalletId is not null)
@@ -177,21 +177,21 @@ namespace BTCPayServer.Services
                     else
                     {
                         wosById.Add(id, wo);
-                        wo.ChildLinks = new List<WalletObjectLinkData>();
+                        wo.Bs = new List<WalletObjectLinkData>();
                     }
                     if (reader["Type2"] is not DBNull)
                     {
                         var l = new WalletObjectLinkData()
                         {
-                            ChildType = (string)reader["Type2"],
-                            ChildId = (string)reader["Id2"],
+                            BType = (string)reader["Type2"],
+                            BId = (string)reader["Id2"],
                             Data = reader["LinkData"] is DBNull ? null : (string)reader["LinkData"]
                         };
-                        wo.ChildLinks.Add(l);
-                        l.Child = new WalletObjectData()
+                        wo.Bs.Add(l);
+                        l.B = new WalletObjectData()
                         {
-                            Type = l.ChildType,
-                            Id = l.ChildId,
+                            Type = l.BType,
+                            Id = l.BId,
                             Data = (!queryObject.IncludeNeighbours || reader["Data2"] is DBNull) ? null : (string)reader["Data2"]
                         };
                     }
@@ -215,8 +215,8 @@ namespace BTCPayServer.Services
                 }
                 if (queryObject.IncludeNeighbours)
                 {
-                    q = q.Include(o => o.ChildLinks).ThenInclude(o => o.Child)
-                        .Include(o => o.ParentLinks).ThenInclude(o => o.Parent);
+                    q = q.Include(o => o.Bs).ThenInclude(o => o.B)
+                        .Include(o => o.As).ThenInclude(o => o.A);
                 }
                 q = q.AsNoTracking();
 
@@ -299,10 +299,10 @@ namespace BTCPayServer.Services
             var l = new WalletObjectLinkData()
             {
                 WalletId = a.WalletId.ToString(),
-                ParentType = a.Type,
-                ParentId = a.Id,
-                ChildType = b.Type,
-                ChildId = b.Id,
+                AType = a.Type,
+                AId = a.Id,
+                BType = b.Type,
+                BId = b.Id,
                 Data = data?.ToString(Formatting.None)
             };
             ctx.WalletObjectLinks.Add(l);
@@ -345,10 +345,10 @@ namespace BTCPayServer.Services
             var l = new WalletObjectLinkData()
             {
                 WalletId = a.WalletId.ToString(),
-                ParentType = a.Type,
-                ParentId = a.Id,
-                ChildType = b.Type,
-                ChildId = b.Id,
+                AType = a.Type,
+                AId = a.Id,
+                BType = b.Type,
+                BId = b.Id,
                 Data = data?.ToString(Formatting.None)
             };
             var e = ctx.WalletObjectLinks.Add(l);
@@ -453,10 +453,10 @@ namespace BTCPayServer.Services
             ctx.WalletObjectLinks.Remove(new WalletObjectLinkData()
             {
                 WalletId = a.WalletId.ToString(),
-                ParentId = a.Id,
-                ParentType = a.Type,
-                ChildId = b.Id,
-                ChildType = b.Type
+                AId = a.Id,
+                AType = a.Type,
+                BId = b.Id,
+                BType = b.Type
             });
             try
             {

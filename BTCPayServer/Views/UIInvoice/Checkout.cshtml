@@ -32,8 +32,8 @@
     <script src="~/vendor/clipboard.js/clipboard.js" asp-append-version="true"></script>
     <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
     <script src="~/vendor/vue-qrcode/vue-qrcode.min.js" asp-append-version="true"></script>
-    <script src="~/vendor/i18next/i18next.js" asp-append-version="true"></script>
-    <script src="~/vendor/i18next/i18nextXHRBackend.js" asp-append-version="true"></script>
+    <script src="~/vendor/i18next/i18next.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/i18next/i18nextHttpBackend.min.js" asp-append-version="true"></script>
     <script src="~/vendor/i18next/vue-i18next.js" asp-append-version="true"></script>
     <script src="~/vendor/jquery-prettydropdowns/jquery.prettydropdowns.js" asp-append-version="true"></script>
     <script src="~/vendor/vex/js/vex.combined.min.js" asp-append-version="true"></script>
@@ -149,7 +149,7 @@
     var fallbackLanguage = "en";
     startingLanguage = computeStartingLanguage();
     i18next
-        .use(window.i18nextXHRBackend)
+        .use(window.i18nextHttpBackend)
         .init({
             backend: {
                 loadPath: @Safe.Json($"{Model.RootPath}locales/{{{{lng}}}}.json")
@@ -224,6 +224,11 @@
             },
             invoicePaid: function(){
                 return  ["complete", "confirmed", "paid"].indexOf(this.srvModel.status) >= 0;
+            },
+            storeLink () {
+                return this.srvModel.merchantRefLink && this.srvModel.merchantRefLink !== this.srvModel.receiptLink
+                    ? this.srvModel.merchantRefLink
+                    : null;
             }
         },
         mounted: function(){

@@ -1599,13 +1599,11 @@ namespace BTCPayServer.Tests
                     {
                         RedirectAutomatically = true,
                         RequiresRefundEmail = true,
-                        CheckoutFormId = GenericFormOption.Email.ToString()
                     },
                     AdditionalSearchTerms = new string[] { "Banana" }
                 });
             Assert.True(newInvoice.Checkout.RedirectAutomatically);
             Assert.True(newInvoice.Checkout.RequiresRefundEmail);
-            Assert.Equal(GenericFormOption.Email.ToString(), newInvoice.Checkout.CheckoutFormId);
             Assert.Equal(user.StoreId, newInvoice.StoreId);
             //list 
             var invoices = await viewOnly.GetInvoices(user.StoreId);

@@ -58,7 +58,7 @@ namespace BTCPayServer.Services.Apps
             public bool EnableTips { get; set; }
             public RequiresRefundEmail RequiresRefundEmail { get; set; }
 
-            public string CheckoutFormId { get; set; } = GenericFormOption.InheritFromStore.ToString();
+            public string FormId { get; set; } = null;
 
             public const string BUTTON_TEXT_DEF = "Buy for {0}";
             public string ButtonText { get; set; } = BUTTON_TEXT_DEF;

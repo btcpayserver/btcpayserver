@@ -8,6 +8,7 @@ using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
 using BTCPayServer.Lightning;
+using BTCPayServer.Logging;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Security;
@@ -18,6 +19,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NBitcoin;
 
@@ -44,7 +46,8 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             BTCPayNetworkProvider btcPayNetworkProvider,
             StoreRepository storeRepository,
             LightningClientFactoryService lightningClientFactoryService,
-            IOptions<LightningNetworkOptions> options, IAuthorizationService authorizationService)
+            IOptions<LightningNetworkOptions> options, IAuthorizationService authorizationService,
+            Logs logs)
         {
             _applicationDbContextFactory = applicationDbContextFactory;
             _userManager = userManager;
@@ -55,6 +58,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             _options = options;
             _storeRepository = storeRepository;
             _authorizationService = authorizationService;
+            Logs = logs;
         }
 
         private async Task<List<PayoutData>> GetPayouts(ApplicationDbContext dbContext, PaymentMethodId pmi,
@@ -178,13 +182,13 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                                 }
                                 else
                                 {
-                                    result = await TrypayBolt(client, blob, payoutData, lnurlResult.Item1, pmi, cancellationToken);
+                                    result = await TrypayBolt(client, blob, payoutData, lnurlResult.Item1, pmi, cancellationToken, Logs);
                                 }
 
                                 break;
 
                             case BoltInvoiceClaimDestination item1:
-                                result = await TrypayBolt(client, blob, payoutData, item1.PaymentRequest, pmi, cancellationToken);
+                                result = await TrypayBolt(client, blob, payoutData, item1.PaymentRequest, pmi, cancellationToken, Logs);
 
                                 break;
                             default:
@@ -260,9 +264,12 @@ namespace BTCPayServer.Data.Payouts.LightningLike
 
 
         public static readonly TimeSpan SendTimeout = TimeSpan.FromSeconds(20);
+
+        public Logs Logs { get; }
+
         public static async Task<ResultVM> TrypayBolt(
             ILightningClient lightningClient, PayoutBlob payoutBlob, PayoutData payoutData, BOLT11PaymentRequest bolt11PaymentRequest,
-            PaymentMethodId pmi, CancellationToken cancellationToken)
+            PaymentMethodId pmi, CancellationToken cancellationToken, Logs logs)
         {
             var boltAmount = bolt11PaymentRequest.MinimumAmount.ToDecimal(LightMoneyUnit.BTC);
             if (boltAmount != payoutBlob.CryptoAmount)
@@ -281,6 +288,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             var proofBlob = new PayoutLightningBlob() { PaymentHash = bolt11PaymentRequest.PaymentHash.ToString() };
             try
             {
+                logs.PayServer.LogInformation("AAA");
                 // TODO: Incorporate the changes from this PR here:
                 // https://github.com/btcpayserver/BTCPayServer.Lightning/pull/106
                 using var timeout = new CancellationTokenSource(SendTimeout);
@@ -292,6 +300,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                             ? new LightMoney((decimal)payoutBlob.CryptoAmount, LightMoneyUnit.BTC)
                             : null
                     }, c.Token);
+                logs.PayServer.LogInformation("BBB");
                 string message = null;
                 if (result.Result == PayResult.Ok)
                 {
@@ -301,12 +310,13 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                     payoutData.State = PayoutState.Completed;
                     try
                     {
-                        var payment = await lightningClient.GetPayment(bolt11PaymentRequest.PaymentHash.ToString(), cancellationToken);
+                        var payment = await lightningClient.GetPayment("2648c492e5b9de1d69fa2d5639fb09639c6f700fe14f07bcb364d3500603cb2b", cancellationToken);
                         proofBlob.Preimage = payment.Preimage;
+                        logs.PayServer.LogInformation("CCC");
                     }
                     catch (Exception)
                     {
-                        // ignored
+                        logs.PayServer.LogInformation("DDD");
                     }
                 }
 

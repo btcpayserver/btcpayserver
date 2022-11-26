@@ -54,6 +54,7 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Au
 
     protected override async Task Process(ISupportedPaymentMethod paymentMethod, List<PayoutData> payouts)
     {
+        Logs.PayServer.LogInformation("A");
         var lightningSupportedPaymentMethod = (LightningSupportedPaymentMethod)paymentMethod;
         if (lightningSupportedPaymentMethod.IsInternalNode &&
             !(await Task.WhenAll((await _storeRepository.GetStoreUsers(_PayoutProcesserSettings.StoreId))
@@ -62,6 +63,7 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Au
         {
             return;
         }
+        Logs.PayServer.LogInformation("B");
         var client =
             lightningSupportedPaymentMethod.CreateLightningClient(_network, _options.Value,
                 _lightningClientFactoryService);
@@ -69,15 +71,19 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Au
         foreach (var payoutData in payouts)
         {
             var blob = payoutData.GetBlob(_btcPayNetworkJsonSerializerSettings);
+            Logs.PayServer.LogInformation("C");
             var claim = await _payoutHandler.ParseClaimDestination(PaymentMethodId, blob.Destination, CancellationToken);
+            Logs.PayServer.LogInformation("D");
             try
             {
                 switch (claim.destination)
                 {
                     case LNURLPayClaimDestinaton lnurlPayClaimDestinaton:
+                        Logs.PayServer.LogInformation("E");
                         var lnurlResult = await UILightningLikePayoutController.GetInvoiceFromLNURL(payoutData,
                             _payoutHandler, blob,
                             lnurlPayClaimDestinaton, _network.NBitcoinNetwork, CancellationToken);
+                        Logs.PayServer.LogInformation("F");
                         if (lnurlResult.Item2 is not null)
                         {
                             continue;
@@ -86,6 +92,7 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Au
                             lnurlResult.Item1);
                         break;
                     case BoltInvoiceClaimDestination item1:
+                        Logs.PayServer.LogInformation("G");
                         await TrypayBolt(client, blob, payoutData, item1.PaymentRequest);
                         break;
                 }
@@ -101,7 +108,10 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Au
     async Task<bool> TrypayBolt(ILightningClient lightningClient, PayoutBlob payoutBlob, PayoutData payoutData,
         BOLT11PaymentRequest bolt11PaymentRequest)
     {
-        return (await UILightningLikePayoutController.TrypayBolt(lightningClient, payoutBlob, payoutData, bolt11PaymentRequest,
-            payoutData.GetPaymentMethodId(), CancellationToken)).Result == PayResult.Ok;
+        Logs.PayServer.LogInformation("AB");
+        var a = (await UILightningLikePayoutController.TrypayBolt(lightningClient, payoutBlob, payoutData, bolt11PaymentRequest,
+            payoutData.GetPaymentMethodId(), CancellationToken, Logs)).Result == PayResult.Ok;
+        Logs.PayServer.LogInformation("AC");
+        return a;
     }
 }

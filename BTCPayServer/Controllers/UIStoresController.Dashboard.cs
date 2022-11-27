@@ -8,6 +8,7 @@ using BTCPayServer.Components.StoreRecentTransactions;
 using BTCPayServer.Data;
 using BTCPayServer.Models.StoreViewModels;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace BTCPayServer.Controllers
 {
@@ -52,47 +53,28 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("{storeId}/dashboard/{cryptoCode}/lightning/balance")]
-        public IActionResult LightningBalance(string storeId, string cryptoCode)
-        {
-            var store = HttpContext.GetStoreData();
-            if (store == null)
-                return NotFound();
-
-            var vm = new StoreLightningBalanceViewModel { Store = store, CryptoCode = cryptoCode };
-            return ViewComponent("StoreLightningBalance", new { vm });
-        }
+        public IActionResult LightningBalance(string storeId, string cryptoCode) =>
+            ViewComponent("StoreLightningBalance", new { vm = CreateViewModel<StoreLightningBalanceViewModel>(storeId, cryptoCode) });
         
         [HttpGet("{storeId}/dashboard/{cryptoCode}/numbers")]
-        public IActionResult StoreNumbers(string storeId, string cryptoCode)
-        {
-            var store = HttpContext.GetStoreData();
-            if (store == null)
-                return NotFound();
-
-            var vm = new StoreNumbersViewModel { Store = store, CryptoCode = cryptoCode  };
-            return ViewComponent("StoreNumbers", new { vm });
-        }
+        public IActionResult StoreNumbers(string storeId, string cryptoCode) =>
+            ViewComponent("StoreNumbers", new { vm = CreateViewModel<StoreNumbersViewModel>(storeId, cryptoCode) });
         
         [HttpGet("{storeId}/dashboard/{cryptoCode}/recent-transactions")]
-        public IActionResult RecentTransactions(string storeId, string cryptoCode)
-        {
-            var store = HttpContext.GetStoreData();
-            if (store == null)
-                return NotFound();
-
-            var vm = new StoreRecentTransactionsViewModel { Store = store, CryptoCode = cryptoCode  };
-            return ViewComponent("StoreRecentTransactions", new { vm });
-        }
+        public IActionResult RecentTransactions(string storeId, string cryptoCode) =>
+            ViewComponent("StoreRecentTransactions", new { vm = CreateViewModel<StoreRecentTransactionsViewModel>(storeId, cryptoCode) });
         
         [HttpGet("{storeId}/dashboard/{cryptoCode}/recent-invoices")]
-        public IActionResult RecentInvoices(string storeId, string cryptoCode)
+        public IActionResult RecentInvoices(string storeId, string cryptoCode) =>
+            ViewComponent("StoreRecentInvoices", new { vm = CreateViewModel<StoreRecentInvoicesViewModel>(storeId, cryptoCode) });
+
+        private T CreateViewModel<T>(string storeId, string cryptoCode) where T : class, IStoreViewModel
         {
             var store = HttpContext.GetStoreData();
             if (store == null)
                 return NotFound();
 
-            var vm = new StoreRecentInvoicesViewModel { Store = store, CryptoCode = cryptoCode  };
-            return ViewComponent("StoreRecentInvoices", new { vm });
+            return (T)ActivatorUtilities.CreateInstance(_Services, typeof(T), new[] { store, cryptoCode });
         }
     }
 }

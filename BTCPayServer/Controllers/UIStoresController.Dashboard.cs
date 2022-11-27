@@ -1,4 +1,5 @@
 #nullable enable
+using Microsoft.AspNetCore.Mvc.ViewComponents;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Components.StoreLightningBalance;
@@ -69,7 +70,7 @@ namespace BTCPayServer.Controllers
         public IActionResult RecentInvoices(string storeId, string cryptoCode) =>
             ViewComponent("StoreRecentInvoices", new { vm = CreateViewModel<StoreRecentInvoicesViewModel>(storeId, cryptoCode) });
 
-        private T CreateViewModel<T>(string storeId, string cryptoCode) where T : class, IStoreViewModel
+        private T CreateViewModel<T>(string storeId, string cryptoCode) where T : class, IViewComponentModel
         {
             var store = HttpContext.GetStoreData();
             if (store == null)

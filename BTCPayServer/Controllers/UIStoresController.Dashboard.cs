@@ -6,6 +6,7 @@ using BTCPayServer.Components.StoreNumbers;
 using BTCPayServer.Components.StoreRecentInvoices;
 using BTCPayServer.Components.StoreRecentTransactions;
 using BTCPayServer.Data;
+using BTCPayServer.Models;
 using BTCPayServer.Models.StoreViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;

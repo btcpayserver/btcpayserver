@@ -57,7 +57,7 @@ public class UIFormsController : Controller
         if (formData?.Config is null)
             return NotFound();
         
-        if (command is not "Submit")
+        if (!Request.HasFormContentType)
             return GetFormView(formData, redirectUrl);
 
         var conf = Form.Parse(formData.Config);

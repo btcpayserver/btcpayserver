@@ -1,6 +1,6 @@
 ﻿[
    {
-      "name":"Afghani",
+      "name":"Afghan Afghani",
       "code":"AFN",
       "divisibility":2,
       "symbol":null,
@@ -21,7 +21,7 @@
       "crypto":false
    },
    {
-      "name":"Lek",
+      "name":"Albanian Lek",
       "code":"ALL",
       "divisibility":2,
       "symbol":null,
@@ -42,7 +42,7 @@
       "crypto":false
    },
    {
-      "name":"Kwanza",
+      "name":"Angolan Kwanza",
       "code":"AOA",
       "divisibility":2,
       "symbol":null,
@@ -84,7 +84,7 @@
       "crypto":false
    },
    {
-      "name":"Azerbaijanian Manat",
+      "name":"Azerbaijani Manat",
       "code":"AZN",
       "divisibility":2,
       "symbol":null,
@@ -105,14 +105,14 @@
       "crypto":false
    },
    {
-      "name":"Taka",
+      "name":"Bangladeshi Taka",
       "code":"BDT",
       "divisibility":2,
       "symbol":null,
       "crypto":false
    },
    {
-      "name":"Barbados Dollar",
+      "name":"Barbadian Dollar",
       "code":"BBD",
       "divisibility":2,
       "symbol":null,
@@ -161,21 +161,21 @@
       "crypto":false
    },
    {
-      "name":"Ngultrum",
+      "name":"Bhutanese Ngultrum",
       "code":"BTN",
       "divisibility":2,
       "symbol":null,
       "crypto":false
    },
    {
-      "name":"Boliviano",
+      "name":"Bolivian Boliviano",
       "code":"BOB",
       "divisibility":2,
       "symbol":null,
       "crypto":false
    },
    {
-      "name":"Mvdol",
+      "name":"Bolivian Mvdol",
       "code":"BOV",
       "divisibility":2,
       "symbol":null,
@@ -189,7 +189,7 @@
       "crypto":false
    },
    {
-      "name":"Pula",
+      "name":"Botswana Pula",
       "code":"BWP",
       "divisibility":2,
       "symbol":null,
@@ -224,21 +224,21 @@
       "crypto":false
    },
    {
-      "name":"Burundi Franc",
+      "name":"Burundian Franc",
       "code":"BIF",
       "divisibility":0,
       "symbol":null,
       "crypto":false
    },
    {
-      "name":"Cabo Verde Escudo",
+      "name":"Cape Verdean Escudo",
       "code":"CVE",
       "divisibility":2,
       "symbol":null,
       "crypto":false
    },
    {
-      "name":"Riel",
+      "name":"Cambodian Riel",
       "code":"KHR",
       "divisibility":2,
       "symbol":null,
@@ -301,7 +301,7 @@
       "crypto":false
    },
    {
-      "name":"Comoro Franc",
+      "name":"Comorian Franc",
       "code":"KMF",
       "divisibility":0,
       "symbol":null,
@@ -329,7 +329,7 @@
       "crypto":false
    },
    {
-      "name":"Kuna",
+      "name":"Croatian Kuna",
       "code":"HRK",
       "divisibility":2,
       "symbol":null,
@@ -371,7 +371,7 @@
       "crypto":false
    },
    {
-      "name":"Djibouti Franc",
+      "name":"Djiboutian Franc",
       "code":"DJF",
       "divisibility":0,
       "symbol":null,
@@ -392,14 +392,14 @@
       "crypto":false
    },
    {
-      "name":"El Salvador Colon",
+      "name":"Salvadoran Colon",
       "code":"SVC",
       "divisibility":2,
       "symbol":null,
       "crypto":false
    },
    {
-      "name":"Nakfa",
+      "name":"Eritrean Nakfa",
       "code":"ERN",
       "divisibility":2,
       "symbol":null,
@@ -420,7 +420,7 @@
       "crypto":false
    },
    {
-      "name":"Fiji Dollar",
+      "name":"Fijian Dollar",
       "code":"FJD",
       "divisibility":2,
       "symbol":null,
@@ -434,21 +434,21 @@
       "crypto":false
    },
    {
-      "name":"Dalasi",
+      "name":"Gambian Dalasi",
       "code":"GMD",
       "divisibility":2,
       "symbol":null,
       "crypto":false
    },
    {
-      "name":"Lari",
+      "name":"Georgian Lari",
       "code":"GEL",
       "divisibility":2,
       "symbol":null,
       "crypto":false
    },
    {
-      "name":"Ghana Cedi",
+      "name":"Ghanaian Cedi",
       "code":"GHS",
       "divisibility":2,
       "symbol":null,
@@ -462,7 +462,7 @@
       "crypto":false
    },
    {
-      "name":"Quetzal",
+      "name":"Guatemalan Quetzal",
       "code":"GTQ",
       "divisibility":2,
       "symbol":null,
@@ -476,28 +476,28 @@
       "crypto":false
    },
    {
-      "name":"Guinea Franc",
+      "name":"Guinean Franc",
       "code":"GNF",
       "divisibility":0,
       "symbol":null,
       "crypto":false
    },
    {
-      "name":"Guyana Dollar",
+      "name":"Guyanese Dollar",
       "code":"GYD",
       "divisibility":2,
       "symbol":null,
       "crypto":false
    },
    {
-      "name":"Gourde",
+      "name":"Haitian Gourde",
       "code":"HTG",
       "divisibility":2,
       "symbol":null,
       "crypto":false
    },
    {
-      "name":"Lempira",
+      "name":"Honduran Lempira",
       "code":"HNL",
       "divisibility":2,
       "symbol":null,
@@ -511,21 +511,21 @@
       "crypto":false
    },
    {
-      "name":"Forint",
+      "name":"Hungarian Forint",
       "code":"HUF",
       "divisibility":2,
       "symbol":null,
       "crypto":false
    },
    {
-      "name":"Iceland Krona",
+      "name":"Icelandic Krona",
       "code":"ISK",
       "divisibility":0,
       "symbol":null,
       "crypto":false
    },
    {
-      "name":"Rupiah",
+      "name":"Indonesian Rupiah",
       "code":"IDR",
       "divisibility":2,
       "symbol":null,
@@ -546,7 +546,7 @@
       "crypto":false
    },
    {
-      "name":"New Israeli Sheqel",
+      "name":"New Israeli Shekel",
       "code":"ILS",
       "divisibility":2,
       "symbol":null,
@@ -560,7 +560,7 @@
       "crypto":false
    },
    {
-      "name":"Yen",
+      "name":"Japanese Yen",
       "code":"JPY",
       "divisibility":0,
       "symbol":"¥",
@@ -574,7 +574,7 @@
       "crypto":false
    },
    {
-      "name":"Tenge",
+      "name":"Kazakhstani Tenge",
       "code":"KZT",
       "divisibility":2,
       "symbol":null,
@@ -595,7 +595,7 @@
       "crypto":false
    },
    {
-      "name":"Won",
+      "name":"South Korean Won",
       "code":"KRW",
       "divisibility":0,
       "symbol":"₩",
@@ -609,14 +609,14 @@
       "crypto":false
    },
    {
-      "name":"Som",
+      "name":"Kyrgyzstani Som",
       "code":"KGS",
       "divisibility":2,
       "symbol":null,
       "crypto":false
    },
    {
-      "name":"Kip",
+      "name":"Lao Kip",
       "code":"LAK",
       "divisibility":2,
       "symbol":null,
@@ -630,14 +630,14 @@
       "crypto":false
    },
    {
-      "name":"Loti",
+      "name":"Lesotho Loti",
       "code":"LSL",
       "divisibility":2,
       "symbol":null,
       "crypto":false
    },
    {
-      "name":"Rand",
+      "name":"South African Rand",
       "code":"ZAR",
       "divisibility":2,
       "symbol":null,
@@ -665,14 +665,14 @@
       "crypto":false
    },
    {
-      "name":"Pataca",
+      "name":"Macanese Pataca",
       "code":"MOP",
       "divisibility":2,
       "symbol":null,
       "crypto":false
    },
    {
-      "name":"Denar",
+      "name":"Macedonian Denar",
       "code":"MKD",
       "divisibility":2,
       "symbol":null,
@@ -686,7 +686,7 @@
       "crypto":false
    },
    {
-      "name":"Malawi Kwacha",
+      "name":"Malawian Kwacha",
       "code":"MWK",
       "divisibility":2,
       "symbol":null,
@@ -700,21 +700,21 @@
       "crypto":false
    },
    {
-      "name":"Rufiyaa",
+      "name":"Maldivian Rufiyaa",
       "code":"MVR",
       "divisibility":2,
       "symbol":null,
       "crypto":false
    },
    {
-      "name":"Ouguiya",
+      "name":"Mauritanian Ouguiya",
       "code":"MRO",
       "divisibility":2,
       "symbol":null,
       "crypto":false
    },
    {
-      "name":"Mauritius Rupee",
+      "name":"Mauritian Rupee",
       "code":"MUR",
       "divisibility":2,
       "symbol":null,
@@ -742,7 +742,7 @@
       "crypto":false
    },
    {
-      "name":"Tugrik",
+      "name":"Mongolian Tugrik",
       "code":"MNT",
       "divisibility":2,
       "symbol":null,
@@ -756,21 +756,21 @@
       "crypto":false
    },
    {
-      "name":"Mozambique Metical",
+      "name":"Mozambican Metical",
       "code":"MZN",
       "divisibility":2,
       "symbol":null,
       "crypto":false
    },
    {
-      "name":"Kyat",
+      "name":"Myanmar Kyat",
       "code":"MMK",
       "divisibility":2,
       "symbol":null,
       "crypto":false
    },
    {
-      "name":"Namibia Dollar",
+      "name":"Namibian dollar",
       "code":"NAD",
       "divisibility":2,
       "symbol":null,
@@ -784,56 +784,56 @@
       "crypto":false
    },
    {
-      "name":"Cordoba Oro",
+      "name":"Nicaraguan Cordoba",
       "code":"NIO",
       "divisibility":2,
       "symbol":null,
       "crypto":false
    },
    {
-      "name":"Naira",
+      "name":"Nigerian Naira",
       "code":"NGN",
       "divisibility":2,
       "symbol":null,
       "crypto":false
    },
    {
-      "name":"Rial Omani",
+      "name":"Omani Rial",
       "code":"OMR",
       "divisibility":3,
       "symbol":null,
       "crypto":false
    },
    {
-      "name":"Pakistan Rupee",
+      "name":"Pakistani Rupee",
       "code":"PKR",
       "divisibility":2,
       "symbol":null,
       "crypto":false
    },
    {
-      "name":"Balboa",
+      "name":"Panamanian Balboa",
       "code":"PAB",
       "divisibility":2,
       "symbol":null,
       "crypto":false
    },
    {
-      "name":"Kina",
+      "name":"Papua New Guinean Kina",
       "code":"PGK",
       "divisibility":2,
       "symbol":null,
       "crypto":false
    },
    {
-      "name":"Guarani",
+      "name":"Paraguayan Guarani",
       "code":"PYG",
       "divisibility":0,
       "symbol":null,
       "crypto":false
    },
    {
-      "name":"Sol",
+      "name":"Peruvian Sol",
       "code":"PEN",
       "divisibility":2,
       "symbol":null,
@@ -847,7 +847,7 @@
       "crypto":false
    },
    {
-      "name":"Zloty",
+      "name":"Polish Zloty",
       "code":"PLN",
       "divisibility":2,
       "symbol":null,
@@ -875,7 +875,7 @@
       "crypto":false
    },
    {
-      "name":"Rwanda Franc",
+      "name":"Rwandan Franc",
       "code":"RWF",
       "divisibility":0,
       "symbol":null,
@@ -889,14 +889,14 @@
       "crypto":false
    },
    {
-      "name":"Tala",
+      "name":"Samoan Tala",
       "code":"WST",
       "divisibility":2,
       "symbol":null,
       "crypto":false
    },
    {
-      "name":"Dobra",
+      "name":"São Tomé and Príncipe sDobra",
       "code":"STD",
       "divisibility":2,
       "symbol":null,
@@ -917,14 +917,14 @@
       "crypto":false
    },
    {
-      "name":"Seychelles Rupee",
+      "name":"Seychellois Rupee",
       "code":"SCR",
       "divisibility":2,
       "symbol":null,
       "crypto":false
    },
    {
-      "name":"Leone",
+      "name":"Sierra Leonean Leone",
       "code":"SLL",
       "divisibility":2,
       "symbol":null,
@@ -959,7 +959,7 @@
       "crypto":false
    },
    {
-      "name":"Sri Lanka Rupee",
+      "name":"Sri Lankan Rupee",
       "code":"LKR",
       "divisibility":2,
       "symbol":null,
@@ -973,14 +973,14 @@
       "crypto":false
    },
    {
-      "name":"Surinam Dollar",
+      "name":"Surinamese Dollar",
       "code":"SRD",
       "divisibility":2,
       "symbol":null,
       "crypto":false
    },
    {
-      "name":"Lilangeni",
+      "name":"Swazi Lilangeni",
       "code":"SZL",
       "divisibility":2,
       "symbol":null,
@@ -1022,7 +1022,7 @@
       "crypto":false
    },
    {
-      "name":"Somoni",
+      "name":"Tajikistani Somoni",
       "code":"TJS",
       "divisibility":2,
       "symbol":null,
@@ -1036,14 +1036,14 @@
       "crypto":false
    },
    {
-      "name":"Baht",
+      "name":"Thai Baht",
       "code":"THB",
       "divisibility":2,
       "symbol":null,
       "crypto":false
    },
    {
-      "name":"Pa’anga",
+      "name":"Tongan paʻanga",
       "code":"TOP",
       "divisibility":2,
       "symbol":null,
@@ -1071,21 +1071,21 @@
       "crypto":false
    },
    {
-      "name":"Turkmenistan New Manat",
+      "name":"Turkmenistani Manat",
       "code":"TMT",
       "divisibility":2,
       "symbol":null,
       "crypto":false
    },
    {
-      "name":"Uganda Shilling",
+      "name":"Ugandan Shilling",
       "code":"UGX",
       "divisibility":0,
       "symbol":null,
       "crypto":false
    },
    {
-      "name":"Hryvnia",
+      "name":"Ukrainian Hryvnia",
       "code":"UAH",
       "divisibility":2,
       "symbol":null,
@@ -1106,7 +1106,7 @@
       "crypto":false
    },
    {
-      "name":"Peso Uruguayo",
+      "name":"Uruguayan Peso",
       "code":"UYU",
       "divisibility":2,
       "symbol":null,
@@ -1120,28 +1120,28 @@
       "crypto":false
    },
    {
-      "name":"Uzbekistan Sum",
+      "name":"Uzbekistani Sum",
       "code":"UZS",
       "divisibility":2,
       "symbol":null,
       "crypto":false
    },
    {
-      "name":"Vatu",
+      "name":"Vanuatu Vatu",
       "code":"VUV",
       "divisibility":0,
       "symbol":null,
       "crypto":false
    },
    {
-      "name":"Bolívar",
+      "name":"Venezuelan Bolívar",
       "code":"VEF",
       "divisibility":2,
       "symbol":null,
       "crypto":false
    },
    {
-      "name":"Dong",
+      "name":"Vietnamese Dong",
       "code":"VND",
       "divisibility":0,
       "symbol":null,
@@ -1162,7 +1162,7 @@
       "crypto":false
    },
    {
-      "name":"Zimbabwe Dollar",
+      "name":"Zimbabwean Dollar",
       "code":"ZWL",
       "divisibility":2,
       "symbol":null,

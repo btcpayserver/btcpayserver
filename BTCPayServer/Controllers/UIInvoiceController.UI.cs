@@ -643,9 +643,23 @@ namespace BTCPayServer.Controllers
                 return null;
             
             bool isDefaultPaymentId = false;
+            var storeBlob = store.GetStoreBlob();
+            var btcId = PaymentMethodId.Parse("BTC");
+            var lnId = PaymentMethodId.Parse("BTC_LightningLike");
             if (paymentMethodId is null)
             {
-                var enabledPaymentIds = store.GetEnabledPaymentIds(_NetworkProvider);
+                var enabledPaymentIds = store.GetEnabledPaymentIds(_NetworkProvider)
+                    // Exclude LNURL for Checkout v2
+                    .Where(pmId => storeBlob.CheckoutType == CheckoutType.V1 || pmId.PaymentType is not LNURLPayPaymentType)
+                    .ToArray();
+                
+                // Exclude Lightning if OnChainWithLnInvoiceFallback is active and we have both payment methods
+                if (storeBlob.CheckoutType == CheckoutType.V2 && storeBlob.OnChainWithLnInvoiceFallback &&
+                    enabledPaymentIds.Contains(btcId) && enabledPaymentIds.Contains(lnId))
+                {
+                    enabledPaymentIds = enabledPaymentIds.Where(pmId => pmId != lnId).ToArray();
+                }
+                
                 PaymentMethodId? invoicePaymentId = invoice.GetDefaultPaymentMethod();
                 PaymentMethodId? storePaymentId = store.GetDefaultPaymentId();
                 if (invoicePaymentId is not null)
@@ -676,6 +690,7 @@ namespace BTCPayServer.Controllers
             }
             if (paymentMethodId is null)
                 return null;
+            
             BTCPayNetworkBase network = _NetworkProvider.GetNetwork<BTCPayNetworkBase>(paymentMethodId.CryptoCode);
             if (network is null || !invoice.Support(paymentMethodId))
             {
@@ -702,12 +717,10 @@ namespace BTCPayServer.Controllers
                     return await GetInvoiceModel(invoiceId, paymentMethodId, lang);
                 }
             }
+            
             var dto = invoice.EntityToDTO();
-            var storeBlob = store.GetStoreBlob();
             var accounting = paymentMethod.Calculate();
-
             var paymentMethodHandler = _paymentMethodHandlerDictionary[paymentMethodId];
-
             var divisibility = _CurrencyNameTable.GetNumberFormatInfo(paymentMethod.GetId().CryptoCode, false)?.CurrencyDecimalDigits;
 
             switch (lang?.ToLowerInvariant())
@@ -810,16 +823,18 @@ namespace BTCPayServer.Controllers
                                           .OrderByDescending(a => a.CryptoCode == _NetworkProvider.DefaultNetwork.CryptoCode).ThenBy(a => a.PaymentMethodName).ThenBy(a => a.IsLightning ? 1 : 0)
                                           .ToList()
             };
+            
             // Exclude Lightning if OnChainWithLnInvoiceFallback is active and we have both payment methods
             if (storeBlob.CheckoutType == CheckoutType.V2 && storeBlob.OnChainWithLnInvoiceFallback)
             {
-                var onchainPM = model.AvailableCryptos.Find(c => c.PaymentMethodId == "BTC");
-                var lightningPM = model.AvailableCryptos.Find(c => c.PaymentMethodId == "BTC_LightningLike");
+                var onchainPM = model.AvailableCryptos.Find(c => c.PaymentMethodId == btcId.ToString());
+                var lightningPM = model.AvailableCryptos.Find(c => c.PaymentMethodId == lnId.ToString()); 
                 if (onchainPM != null && lightningPM != null)
                 {
                     model.AvailableCryptos.Remove(lightningPM);
                 }
             }
+            
             paymentMethodHandler.PreparePaymentModel(model, dto, storeBlob, paymentMethod);
             model.UISettings = paymentMethodHandler.GetCheckoutUISettings();
             model.PaymentMethodId = paymentMethodId.ToString();

@@ -1,8 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Client.Models
 {
@@ -19,6 +16,7 @@ namespace BTCPayServer.Client.Models
 
         [JsonProperty(Order = 1)] public string StoreId { get; set; }
         [JsonProperty(Order = 2)] public string InvoiceId { get; set; }
+        [JsonProperty(Order = 3)] public JObject Metadata { get; set; }
     }
 
     public class WebhookInvoiceSettledEvent : WebhookInvoiceEvent

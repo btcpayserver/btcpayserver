@@ -49,7 +49,7 @@
     <link href="@Context.Request.GetRelativePathOrAbsolute(Theme.CssUri)" rel="stylesheet" asp-append-version="true"/>
     @if (Model.CustomCSSLink != null)
     {
-        <link href="@Model.CustomCSSLink" rel="stylesheet" />
+        <link href="@Model.CustomCSSLink" rel="stylesheet" asp-append-version="true" />
     }
     <link href="~/vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" asp-append-version="true" />
 

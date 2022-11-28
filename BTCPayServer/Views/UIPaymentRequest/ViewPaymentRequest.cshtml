@@ -43,7 +43,7 @@
 
     @if (Model.CustomCSSLink != null)
     {
-        <link href="@Model.CustomCSSLink" rel="stylesheet" />
+        <link href="@Model.CustomCSSLink" rel="stylesheet" asp-append-version="true" />
     }
     <script type="text/javascript">
         var srvModel = @Safe.Json(Model);

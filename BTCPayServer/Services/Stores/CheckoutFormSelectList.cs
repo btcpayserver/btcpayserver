@@ -36,5 +36,5 @@ public static class CheckoutFormSelectList
         typeof(GenericFormOption).DisplayName(opt.ToString());
 
     private static SelectListItem GenericOptionItem(GenericFormOption opt) =>
-        new() { Text = DisplayName(opt), Value = opt.ToString() };
+        new() { Text = DisplayName(opt), Value = opt == GenericFormOption.None ? null : opt.ToString() };
 }

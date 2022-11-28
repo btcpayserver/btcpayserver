@@ -194,17 +194,17 @@ namespace BTCPayServer.Controllers
 
             var prBlob = result.GetBlob();
             var prFormId = prBlob.FormId;
-            switch (prFormId)
+            var formConfig = prFormId is null ? null : Forms.UIFormsController.GetFormData(prFormId)?.Config;
+            switch (formConfig)
             {
                 case null:
-                case { } when string.IsNullOrEmpty(prFormId):
-                case { } when Request.Method == "GET" && prBlob.FormResponse is not null:
+                case { } when !this.Request.HasFormContentType && prBlob.FormResponse is not null:
                     return RedirectToAction("ViewPaymentRequest", new { payReqId });
-                case { } when Request.Method == "GET" && prBlob.FormResponse is null:
-                        break;
+                case { } when !this.Request.HasFormContentType && prBlob.FormResponse is null:
+                    break;
                 default:
                     // POST case: Handle form submit
-                    var formData = Form.Parse(UIFormsController.GetFormData(prFormId).Config);
+                    var formData = Form.Parse(formConfig);
                     formData.ApplyValuesFromForm(Request.Form);
                     if (FormProviders.Validate(formData, ModelState))
                     {

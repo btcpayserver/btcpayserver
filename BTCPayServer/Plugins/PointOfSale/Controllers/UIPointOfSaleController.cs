@@ -225,16 +225,16 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
 
             var store = await _appService.GetStore(app);
             var posFormId = settings.FormId;
+
+            var formConfig = posFormId is null ? null : Forms.UIFormsController.GetFormData(posFormId)?.Config;
             JObject formResponse = null;
-            switch (posFormId)
+            switch (formConfig)
             {
                 case null:
-                case { } when string.IsNullOrEmpty(posFormId):
+                case { } when !this.Request.HasFormContentType:
                     break;
-                
                 default:
-                    // POST case: Handle form submit
-                    var formData = Form.Parse(Forms.UIFormsController.GetFormData(posFormId).Config);
+                    var formData = Form.Parse(formConfig);
                     formData.ApplyValuesFromForm(this.Request.Form);
 
                     if (FormProviders.Validate(formData, ModelState))

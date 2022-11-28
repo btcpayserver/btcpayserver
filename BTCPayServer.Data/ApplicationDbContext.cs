@@ -105,10 +105,10 @@ namespace BTCPayServer.Data
             //PlannedTransaction.OnModelCreating(builder);
             PullPaymentData.OnModelCreating(builder);
             RefundData.OnModelCreating(builder);
-            //SettingData.OnModelCreating(builder);
+            SettingData.OnModelCreating(builder, Database);
             StoreSettingData.OnModelCreating(builder, Database);
             StoreWebhookData.OnModelCreating(builder);
-            //StoreData.OnModelCreating(builder);
+            StoreData.OnModelCreating(builder, Database);
             U2FDevice.OnModelCreating(builder);
             Fido2Credential.OnModelCreating(builder);
             BTCPayServer.Data.UserStore.OnModelCreating(builder);

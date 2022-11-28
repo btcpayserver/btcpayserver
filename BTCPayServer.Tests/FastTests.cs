@@ -1749,8 +1749,7 @@ namespace BTCPayServer.Tests
                     PaymentMethod = new PaymentMethodId("BTC", PaymentTypes.BTCLike)
                 }
             };
-            var newBlob = Encoding.UTF8.GetBytes(
-                new Serializer(null).ToString(blob).Replace( "paymentMethod\":\"BTC\"","paymentMethod\":\"ETH_ZYC\""));
+            var newBlob = new Serializer(null).ToString(blob).Replace( "paymentMethod\":\"BTC\"","paymentMethod\":\"ETH_ZYC\"");
             Assert.Empty(StoreDataExtensions.GetStoreBlob(new StoreData() {StoreBlob = newBlob}).PaymentMethodCriteria);
         }
     }

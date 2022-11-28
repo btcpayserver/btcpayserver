@@ -133,7 +133,7 @@ namespace BTCPayServer.Controllers
                 Events = invoice.Events,
                 PosData = PosDataParser.ParsePosData(invoice.Metadata.PosData),
                 Archived = invoice.Archived,
-                CanRefund = CanRefund(invoiceState),
+                CanRefund = invoiceState.CanRefund(),
                 Refunds = invoice.Refunds,
                 ShowCheckout = invoice.Status == InvoiceStatusLegacy.New,
                 ShowReceipt = invoice.Status.ToModernStatus() == InvoiceStatus.Settled && (invoice.ReceiptOptions?.Enabled ?? receipt.Enabled is true),
@@ -234,16 +234,6 @@ namespace BTCPayServer.Controllers
             var network = _NetworkProvider.GetNetwork(paymentMethodId.CryptoCode);
             return network == null ? null : paymentMethodId.PaymentType.GetTransactionLink(network, txId);
         }
-        bool CanRefund(InvoiceState invoiceState)
-        {
-            return invoiceState.Status == InvoiceStatusLegacy.Confirmed ||
-                invoiceState.Status == InvoiceStatusLegacy.Complete ||
-                (invoiceState.Status == InvoiceStatusLegacy.Expired &&
-                (invoiceState.ExceptionStatus == InvoiceExceptionStatus.PaidLate ||
-                invoiceState.ExceptionStatus == InvoiceExceptionStatus.PaidOver ||
-                invoiceState.ExceptionStatus == InvoiceExceptionStatus.PaidPartial)) ||
-                invoiceState.Status == InvoiceStatusLegacy.Invalid;
-        }
 
         [HttpGet("invoices/{invoiceId}/refund")]
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
@@ -262,7 +252,7 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             if (invoice.CurrentRefund?.PullPaymentDataId is null && GetUserId() is null)
                 return NotFound();
-            if (!CanRefund(invoice.GetInvoiceState()))
+            if (!invoice.GetInvoiceState().CanRefund())
                 return NotFound();
             if (invoice.CurrentRefund?.PullPaymentDataId is string ppId && !invoice.CurrentRefund.PullPaymentData.Archived)
             {
@@ -318,7 +308,7 @@ namespace BTCPayServer.Controllers
             if (invoice == null)
                 return NotFound();
 
-            if (!CanRefund(invoice.GetInvoiceState()))
+            if (!invoice.GetInvoiceState().CanRefund())
                 return NotFound();
 
             var store = GetCurrentStore();

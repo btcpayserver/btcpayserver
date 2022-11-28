@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.7.1
+
+### New features
+
+* Greenfield: API for create an invoice refund (#4238, #4181) @bolatovumar
+* Greenfield: Add metadata to invoice webhook event (#4370, #4223) @bolatovumar
+
+### Bug fixes
+
+* Fix error HTTP 500 happening on Point of Sale (#4355, #4368) @NicolasDorier
+* Some logos or images wouldn't show up properly if rootPath is used (#4367) @NicolasDorier
+* Fix malformed manifest on PoS app (#4373, #4363) @dennisreimann
+* Call to LND would start failing on some conditions @NicolasDorier
+
+### Improvement
+
+* Adjust currency name to be standard (#4369) @bolatovumar
+* Language update in checkout v1 for pt-BR and sv cultures
+
 ## 1.7.0
 
 ### New features

@@ -673,7 +673,12 @@
                                 "type": "string",
                                 "description": "The invoice id of the invoice's event",
                                 "nullable": false
-                            }
+                            },
+                            "metadata": {
+                              "type": "object",
+                              "description": "User-supplied metadata added to the invoice at the time of its creation",
+                              "nullable": false
+                          }
                         }
                     }
                 ]

@@ -47,7 +47,7 @@ namespace BTCPayServer.Data
 
         public static StoreBlob GetStoreBlob(this StoreData storeData)
         {
-            var result = storeData.StoreBlob == null ? new StoreBlob() : new Serializer(null).ToObject<StoreBlob>(Encoding.UTF8.GetString(storeData.StoreBlob));
+            var result = storeData.StoreBlob == null ? new StoreBlob() : new Serializer(null).ToObject<StoreBlob>(storeData.StoreBlob);
             if (result.PreferredExchange == null)
                 result.PreferredExchange = CoinGeckoRateProvider.CoinGeckoName;
             if (result.PaymentMethodCriteria is null)
@@ -62,7 +62,7 @@ namespace BTCPayServer.Data
             var newBlob = new Serializer(null).ToString(storeBlob);
             if (original == newBlob)
                 return false;
-            storeData.StoreBlob = Encoding.UTF8.GetBytes(newBlob);
+            storeData.StoreBlob = newBlob;
             return true;
         }
 

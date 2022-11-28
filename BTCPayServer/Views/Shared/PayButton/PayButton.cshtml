@@ -1,14 +1,7 @@
-@inject Security.ContentSecurityPolicies csp 
 @using BTCPayServer.Views.Stores
 @model BTCPayServer.Plugins.PayButton.Models.PayButtonViewModel
 @{
     ViewData.SetActivePage(StoreNavPages.PayButton, "Pay Button", Context.GetStoreData().Id);
-    csp.AllowUnsafeHashes("onBTCPayFormSubmit(event);return false");
-    csp.AllowUnsafeHashes("handleSliderChange(event);return false");
-    csp.AllowUnsafeHashes("handleSliderInput(event);return false");
-    csp.AllowUnsafeHashes("handlePriceSlider(event);return false");
-    csp.AllowUnsafeHashes("handlePriceInput(event);return false");
-    csp.AllowUnsafeHashes("handlePlusMinus(event);return false");
 }
 
 @section PageHeadContent {
@@ -27,7 +20,7 @@
         script.src = @(Safe.Json(Model.UrlRoot + "modal/btcpay.js"));
         document.getElementsByTagName('head')[0].append(script);
     }
-    function onBTCPayFormSubmit(event) {
+    function handleFormSubmit(event) {
         event.preventDefault();
         var xhttp = new XMLHttpRequest();
         xhttp.onreadystatechange = function() {
@@ -38,6 +31,9 @@
         xhttp.open('POST', event.target.getAttribute('action'), true);
         xhttp.send(new FormData(event.target));
     }
+    document.querySelectorAll(".btcpay-form").forEach(function(el) {
+        el.addEventListener('submit', handleFormSubmit);
+    });
     </template>
     <template id="template-price-buttons" csp-allow>
     function handlePlusMinus(event) {
@@ -55,6 +51,9 @@
             el.value = price + step > max ? max : price + step;
         }
     }
+    document.querySelectorAll(".btcpay-form .plus-minus").forEach(function(el) {
+        el.addEventListener('click', handlePlusMinus);
+    });
     </template>
     <template id="template-price-input" csp-allow>
     function handlePriceInput(event) {
@@ -70,6 +69,9 @@
             event.target.value = max;
         }
     }
+    document.querySelectorAll(".btcpay-form .btcpay-input-price").forEach(function(el) {
+        el.addEventListener('input', handlePriceInput);
+    });
     </template>
     <template id="template-price-slider" csp-allow>
     function handleSliderChange(event) {
@@ -86,10 +88,15 @@
         } 
         root.querySelector('.btcpay-input-range').value = el.value;
     }
-    
     function handleSliderInput(event) {
         event.target.closest('.btcpay-form').querySelector('.btcpay-input-price').value = event.target.value;
     }
+    document.querySelectorAll(".btcpay-form .btcpay-input-range").forEach(function(el) {
+        el.addEventListener('input', handleSliderInput);
+    });
+    document.querySelectorAll(".btcpay-form .btcpay-input-price").forEach(function(el) {
+        el.addEventListener('change', handleSliderChange);
+    });
     </template>
     
     

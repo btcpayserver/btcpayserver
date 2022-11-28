@@ -13,6 +13,7 @@
 * Some logos or images wouldn't show up properly if rootPath is used (#4367) @NicolasDorier
 * Fix malformed manifest on PoS app (#4373, #4363) @dennisreimann
 * Call to LND would start failing on some conditions @NicolasDorier
+* Checkout v2: Fix for BIP21 case with default payment method other than onchain BTC (#4375) @dennisreimann
 
 ### Improvement
 

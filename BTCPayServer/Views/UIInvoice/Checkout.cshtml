@@ -45,7 +45,7 @@
 
     @if (!string.IsNullOrEmpty(Model.CustomCSSLink))
     {
-        <link href="@Model.CustomCSSLink" rel="stylesheet" />
+        <link href="@Model.CustomCSSLink" rel="stylesheet" asp-append-version="true"/>
     }
 
     @if (Model.IsModal)

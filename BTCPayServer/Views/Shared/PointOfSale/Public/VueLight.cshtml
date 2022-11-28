@@ -4,7 +4,7 @@
         <div class="l-pos-header bg-primary py-3 px-3">
             @if (!string.IsNullOrEmpty(Model.CustomLogoLink))
             {
-                <img src="@Model.CustomLogoLink" height="40"/>
+                <img src="@Model.CustomLogoLink" height="40" asp-append-version="true" />
             }
             else
             {

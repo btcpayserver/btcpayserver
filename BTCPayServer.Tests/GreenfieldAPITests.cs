@@ -1587,13 +1587,15 @@ namespace BTCPayServer.Tests
             // test validation that the invoice exists
             await AssertHttpError(404, async () =>
             {
-                 await client.RefundInvoice(user.StoreId, "lol fake invoice id", method.PaymentMethod, new RefundInvoiceRequest() {
+                 await client.RefundInvoice(user.StoreId, "lol fake invoice id", new RefundInvoiceRequest() {
+                    PaymentMethod = method.PaymentMethod,
                     RefundVariant = RefundVariant.RateThen
                 });
             });
 
             // test validation error for when invoice is not yet in the state in which it can be refunded
-            var apiError = await AssertAPIError("non-refundable", () => client.RefundInvoice(user.StoreId, invoice.Id, method.PaymentMethod, new RefundInvoiceRequest() {
+            var apiError = await AssertAPIError("non-refundable", () => client.RefundInvoice(user.StoreId, invoice.Id, new RefundInvoiceRequest() {
+                PaymentMethod = method.PaymentMethod,
                 RefundVariant = RefundVariant.RateThen
             }));
             Assert.Equal("Cannot refund this invoice", apiError.Message);
@@ -1610,67 +1612,74 @@ namespace BTCPayServer.Tests
             });
 
             // test validation for the payment method
-            var validationError = await AssertValidationError(new[] { "paymentMethod" }, async () =>
+            var validationError = await AssertValidationError(new[] { "PaymentMethod" }, async () =>
             {
-                 await client.RefundInvoice(user.StoreId, invoice.Id, "fake payment method", new RefundInvoiceRequest() {
+                 await client.RefundInvoice(user.StoreId, invoice.Id, new RefundInvoiceRequest() {
+                    PaymentMethod = "fake payment method",
                     RefundVariant = RefundVariant.RateThen
                 });
             });
-            Assert.Contains("paymentMethod: Please select one of the payment methods which were available for the original invoice", validationError.Message);
+            Assert.Contains("PaymentMethod: Please select one of the payment methods which were available for the original invoice", validationError.Message);
 
             // test RefundVariant.RateThen
-            var pp = await client.RefundInvoice(user.StoreId, invoice.Id, method.PaymentMethod, new RefundInvoiceRequest() {
+            var pp = await client.RefundInvoice(user.StoreId, invoice.Id, new RefundInvoiceRequest() {
+                PaymentMethod = method.PaymentMethod,
                 RefundVariant = RefundVariant.RateThen
             });
             Assert.Equal("BTC", pp.Currency);
-            Assert.Equal(true, pp.AutoApproveClaims);
+            Assert.True(pp.AutoApproveClaims);
             Assert.Equal(1, pp.Amount);
             Assert.Equal(pp.Name, $"Refund {invoice.Id}");
 
             // test RefundVariant.CurrentRate
-            pp = await client.RefundInvoice(user.StoreId, invoice.Id, method.PaymentMethod, new RefundInvoiceRequest() {
+            pp = await client.RefundInvoice(user.StoreId, invoice.Id, new RefundInvoiceRequest() {
+                PaymentMethod = method.PaymentMethod,
                 RefundVariant = RefundVariant.CurrentRate
             });
             Assert.Equal("BTC", pp.Currency);
-            Assert.Equal(true, pp.AutoApproveClaims);
+            Assert.True(pp.AutoApproveClaims);
             Assert.Equal(1, pp.Amount);
 
             // test RefundVariant.Fiat
-            pp = await client.RefundInvoice(user.StoreId, invoice.Id, method.PaymentMethod, new RefundInvoiceRequest() {
+            pp = await client.RefundInvoice(user.StoreId, invoice.Id, new RefundInvoiceRequest() {
+                PaymentMethod = method.PaymentMethod,
                 RefundVariant = RefundVariant.Fiat,
                 Name = "my test name"
             });
             Assert.Equal("USD", pp.Currency);
-            Assert.Equal(false, pp.AutoApproveClaims);
+            Assert.False(pp.AutoApproveClaims);
             Assert.Equal(5000, pp.Amount);
             Assert.Equal("my test name", pp.Name);
 
             // test RefundVariant.Custom
             validationError = await AssertValidationError(new[] { "CustomAmount", "CustomCurrency" }, async () =>
             {
-                await client.RefundInvoice(user.StoreId, invoice.Id, method.PaymentMethod, new RefundInvoiceRequest() {
+                await client.RefundInvoice(user.StoreId, invoice.Id, new RefundInvoiceRequest() {
+                    PaymentMethod = method.PaymentMethod,
                     RefundVariant = RefundVariant.Custom,
                 });
             });
             Assert.Contains("CustomAmount: Amount must be greater than 0", validationError.Message);
             Assert.Contains("CustomCurrency: Invalid currency", validationError.Message);
 
-            pp = await client.RefundInvoice(user.StoreId, invoice.Id, method.PaymentMethod, new RefundInvoiceRequest() {
+            pp = await client.RefundInvoice(user.StoreId, invoice.Id, new RefundInvoiceRequest() {
+                PaymentMethod = method.PaymentMethod,
                 RefundVariant = RefundVariant.Custom,
                 CustomAmount = 69420,
                 CustomCurrency = "JPY"
             });
             Assert.Equal("JPY", pp.Currency);
-            Assert.Equal(false, pp.AutoApproveClaims);
+            Assert.False(pp.AutoApproveClaims);
             Assert.Equal(69420, pp.Amount);
 
             // should auto-approve if currencies match
-            pp = await client.RefundInvoice(user.StoreId, invoice.Id, method.PaymentMethod, new RefundInvoiceRequest() {
+            pp = await client.RefundInvoice(user.StoreId, invoice.Id, new RefundInvoiceRequest() {
+                PaymentMethod = method.PaymentMethod,
                 RefundVariant = RefundVariant.Custom,
                 CustomAmount = 0.00069420m,
                 CustomCurrency = "BTC"
             });
-            Assert.Equal(true, pp.AutoApproveClaims);
+            Assert.True(pp.AutoApproveClaims);
         }
 
         [Fact(Timeout = TestTimeout)]

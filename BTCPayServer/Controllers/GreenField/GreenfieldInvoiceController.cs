@@ -352,11 +352,10 @@ namespace BTCPayServer.Controllers.Greenfield
 
         [Authorize(Policy = Policies.CanModifyStoreSettings,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        [HttpPost("~/api/v1/stores/{storeId}/invoices/{invoiceId}/payment-methods/{paymentMethod}/refund")]
+        [HttpPost("~/api/v1/stores/{storeId}/invoices/{invoiceId}/refund")]
         public async Task<IActionResult> RefundInvoice(
             string storeId,
             string invoiceId,
-            string paymentMethod,
             RefundInvoiceRequest request,
             CancellationToken cancellationToken = default
         )
@@ -377,20 +376,24 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 return InvoiceNotFound();
             }
-
             if (!invoice.GetInvoiceState().CanRefund())
             {
                 return this.CreateAPIError("non-refundable", "Cannot refund this invoice");
             }
-
-            var paymentMethodId = PaymentMethodId.Parse(paymentMethod);
-            var invoicePaymentMethod = invoice.GetPaymentMethods().SingleOrDefault(method => method.GetId() == paymentMethodId);
-            if (invoicePaymentMethod == null)
+            PaymentMethod? invoicePaymentMethod = null;
+            PaymentMethodId? paymentMethodId = null;
+            if (request.PaymentMethod is not null && PaymentMethodId.TryParse(request.PaymentMethod, out paymentMethodId))
             {
-                this.ModelState.AddModelError(nameof(paymentMethod), "Please select one of the payment methods which were available for the original invoice");
-
-                return this.CreateValidationError(ModelState);
+                invoicePaymentMethod = invoice.GetPaymentMethods().SingleOrDefault(method => method.GetId() == paymentMethodId);
             }
+            if (invoicePaymentMethod is null)
+            {
+                this.ModelState.AddModelError(nameof(request.PaymentMethod), "Please select one of the payment methods which were available for the original invoice");
+            }
+            if (request.RefundVariant is null)
+                this.ModelState.AddModelError(nameof(request.RefundVariant), "`refundVariant` is mandatory");
+            if (!ModelState.IsValid || invoicePaymentMethod is null || paymentMethodId is null)
+                return this.CreateValidationError(ModelState);
 
             var cryptoPaid = invoicePaymentMethod.Calculate().Paid.ToDecimal(MoneyUnit.BTC);
             var cdCurrency = _currencyNameTable.GetCurrencyData(invoice.Currency, true);
@@ -409,6 +412,16 @@ namespace BTCPayServer.Controllers.Greenfield
                 StoreId = storeId,
                 PaymentMethodIds = new[] { paymentMethodId },
             };
+
+            if (request.RefundVariant != RefundVariant.Custom)
+            {
+                if (request.CustomAmount is not null)
+                    this.ModelState.AddModelError(nameof(request.CustomAmount), "CustomAmount should only be set if the refundVariant is Custom");
+                if (request.CustomCurrency is not null)
+                    this.ModelState.AddModelError(nameof(request.CustomCurrency), "CustomCurrency should only be set if the refundVariant is Custom");
+                if (!ModelState.IsValid)
+                    return this.CreateValidationError(ModelState);
+            }
 
             switch (request.RefundVariant)
             {
@@ -431,7 +444,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     break;
                 
                 case RefundVariant.Custom:
-                    if (request.CustomAmount <= 0) {
+                    if (request.CustomAmount is null || (request.CustomAmount is decimal v && v <= 0)) {
                         this.ModelState.AddModelError(nameof(request.CustomAmount), "Amount must be greater than 0");
                     }
 
@@ -449,13 +462,13 @@ namespace BTCPayServer.Controllers.Greenfield
                             $"Impossible to fetch rate: {rateResult.EvaluatedRule}");
                     }
 
-                    if (!ModelState.IsValid)
+                    if (!ModelState.IsValid || request.CustomAmount is null)
                     {
                         return this.CreateValidationError(ModelState);
                     }
 
                     createPullPayment.Currency = request.CustomCurrency;
-                    createPullPayment.Amount = request.CustomAmount;
+                    createPullPayment.Amount = request.CustomAmount.Value;
                     createPullPayment.AutoApproveClaims = paymentMethodId.CryptoCode == request.CustomCurrency;
                     break;
                 

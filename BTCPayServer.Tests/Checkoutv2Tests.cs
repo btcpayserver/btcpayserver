@@ -151,6 +151,15 @@ namespace BTCPayServer.Tests
             Assert.StartsWith("bitcoin:", payUrl);
             Assert.Contains("&LIGHTNING=", payUrl);
             
+            // BIP21 with LN as default payment method
+            s.GoToHome();
+            invoiceId = s.CreateInvoice(defaultPaymentMethod: "BTC_LightningLike");
+            s.GoToInvoiceCheckout(invoiceId);
+            Assert.Empty(s.Driver.FindElements(By.CssSelector(".payment-method")));
+            payUrl = s.Driver.FindElement(By.CssSelector(".btn-primary")).GetAttribute("href");
+            Assert.StartsWith("bitcoin:", payUrl);
+            Assert.Contains("&LIGHTNING=", payUrl);
+            
             // BIP21 with topup invoice (which is only available with Bitcoin onchain)
             s.GoToHome();
             invoiceId = s.CreateInvoice(amount: null);

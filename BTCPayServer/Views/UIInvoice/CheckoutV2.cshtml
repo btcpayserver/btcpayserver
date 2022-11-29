@@ -134,9 +134,9 @@
                         <payment-details :srv-model="srvModel" :is-active="isActive" class="mb-5"></payment-details>
                     </div>
                     <div class="buttons">
-                        <a v-if="srvModel.receiptLink" class="btn btn-primary" :href="srvModel.receiptLink" :target="isModal ? '_top' : null" v-t="'view_receipt'" id="ReceiptLink"></a>
-                        <a v-if="storeLink" class="btn btn-secondary" :href="storeLink" :target="isModal ? '_top' : null" v-t="{ path: 'return_to_store', args: { storeName: srvModel.storeName }}" id="StoreLink"></a>
-                        <button v-else-if="isModal" class="btn btn-secondary" v-on:click="close" v-t="'Close'"></button>
+                        <a v-if="srvModel.receiptLink" class="btn btn-primary rounded-pill w-100" :href="srvModel.receiptLink" :target="isModal ? '_top' : null" v-t="'view_receipt'" id="ReceiptLink"></a>
+                        <a v-if="storeLink" class="btn btn-secondary rounded-pill w-100" :href="storeLink" :target="isModal ? '_top' : null" v-t="{ path: 'return_to_store', args: { storeName: srvModel.storeName }}" id="StoreLink"></a>
+                        <button v-else-if="isModal" class="btn btn-secondary rounded-pill w-100" v-on:click="close" v-t="'Close'"></button>
                     </div>
                 </div>
                 <div id="expired" v-if="isUnpayable">
@@ -165,8 +165,8 @@
                         <p class="text-center mt-3" v-html="replaceNewlines($t('invoice_expired_body', { storeName: srvModel.storeName, minutes: @Model.MaxTimeMinutes }))"></p>
                     </div>
                     <div class="buttons">
-                        <a v-if="storeLink" class="btn btn-primary" :href="storeLink" :target="isModal ? '_top' : null" v-t="{ path: 'return_to_store', args: { storeName: srvModel.storeName }}" id="StoreLink"></a>
-                        <button v-else-if="isModal" class="btn btn-primary" v-on:click="close" v-t="'Close'"></button>
+                        <a v-if="storeLink" class="btn btn-primary rounded-pill w-100" :href="storeLink" :target="isModal ? '_top' : null" v-t="{ path: 'return_to_store', args: { storeName: srvModel.storeName }}" id="StoreLink"></a>
+                        <button v-else-if="isModal" class="btn btn-primary rounded-pill w-100" v-on:click="close" v-t="'Close'"></button>
                     </div>
                 </div>
             </section>

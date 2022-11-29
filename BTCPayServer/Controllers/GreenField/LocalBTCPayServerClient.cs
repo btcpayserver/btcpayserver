@@ -1047,9 +1047,11 @@ namespace BTCPayServer.Controllers.Greenfield
             return GetFromActionResult<ApplicationUserData>(await GetController<GreenfieldUsersController>().GetUser(idOrEmail));
         }
 
-        public override async Task LockUser(string idOrEmail, bool disabled, CancellationToken token = default)
+        public override async Task<bool> LockUser(string idOrEmail, bool disabled, CancellationToken token = default)
         {
-            HandleActionResult(await GetController<GreenfieldUsersController>().LockUser(idOrEmail, new LockUserRequest() {Locked = disabled}));
+            return GetFromActionResult<bool>(
+                await GetController<GreenfieldUsersController>().LockUser(idOrEmail,
+                    new LockUserRequest { Locked = disabled }));
         }
 
         public override async Task<OnChainWalletTransactionData> PatchOnChainWalletTransaction(string storeId,

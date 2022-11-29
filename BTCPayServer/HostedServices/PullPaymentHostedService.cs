@@ -79,10 +79,12 @@ namespace BTCPayServer.HostedServices
                 OldRevision
             }
 
+            public record ApprovalResult(Result Result, decimal? CryptoAmount);
+            
             public string PayoutId { get; set; }
             public int Revision { get; set; }
             public decimal Rate { get; set; }
-            internal TaskCompletionSource<Result> Completion { get; set; }
+            internal TaskCompletionSource<ApprovalResult> Completion { get; set; }
 
             public static string GetErrorMessage(Result result)
             {
@@ -333,10 +335,10 @@ namespace BTCPayServer.HostedServices
             return _rateFetcher.FetchRate(rule, cancellationToken);
         }
 
-        public Task<PayoutApproval.Result> Approve(PayoutApproval approval)
+        public Task<PayoutApproval.ApprovalResult> Approve(PayoutApproval approval)
         {
             approval.Completion =
-                new TaskCompletionSource<PayoutApproval.Result>(TaskCreationOptions.RunContinuationsAsynchronously);
+                new TaskCompletionSource<PayoutApproval.ApprovalResult>(TaskCreationOptions.RunContinuationsAsynchronously);
             if (!_Channel.Writer.TryWrite(approval))
                 throw new ObjectDisposedException(nameof(PullPaymentHostedService));
             return approval.Completion.Task;
@@ -351,26 +353,26 @@ namespace BTCPayServer.HostedServices
                     .FirstOrDefaultAsync();
                 if (payout is null)
                 {
-                    req.Completion.SetResult(PayoutApproval.Result.NotFound);
+                    req.Completion.SetResult(new PayoutApproval.ApprovalResult(PayoutApproval.Result.NotFound, null));
                     return;
                 }
 
                 if (payout.State != PayoutState.AwaitingApproval)
                 {
-                    req.Completion.SetResult(PayoutApproval.Result.InvalidState);
+                    req.Completion.SetResult(new PayoutApproval.ApprovalResult(PayoutApproval.Result.InvalidState, null));
                     return;
                 }
 
                 var payoutBlob = payout.GetBlob(this._jsonSerializerSettings);
                 if (payoutBlob.Revision != req.Revision)
                 {
-                    req.Completion.SetResult(PayoutApproval.Result.OldRevision);
+                    req.Completion.SetResult(new PayoutApproval.ApprovalResult(PayoutApproval.Result.OldRevision, null));
                     return;
                 }
 
                 if (!PaymentMethodId.TryParse(payout.PaymentMethodId, out var paymentMethod))
                 {
-                    req.Completion.SetResult(PayoutApproval.Result.NotFound);
+                    req.Completion.SetResult(new PayoutApproval.ApprovalResult(PayoutApproval.Result.NotFound, null));
                     return;
                 }
 
@@ -388,7 +390,7 @@ namespace BTCPayServer.HostedServices
                     await payoutHandler.GetMinimumPayoutAmount(paymentMethod, dest.destination);
                 if (cryptoAmount < minimumCryptoAmount)
                 {
-                    req.Completion.TrySetResult(PayoutApproval.Result.TooLowAmount);
+                    req.Completion.TrySetResult(new PayoutApproval.ApprovalResult(PayoutApproval.Result.TooLowAmount, null));
                     return;
                 }
 
@@ -397,7 +399,7 @@ namespace BTCPayServer.HostedServices
                 payout.SetBlob(payoutBlob, _jsonSerializerSettings);
                 await ctx.SaveChangesAsync();
 
-                req.Completion.SetResult(PayoutApproval.Result.Ok);
+                req.Completion.SetResult(new PayoutApproval.ApprovalResult(PayoutApproval.Result.Ok, payoutBlob.CryptoAmount));
             }
             catch (Exception ex)
             {
@@ -566,18 +568,20 @@ namespace BTCPayServer.HostedServices
                         var rateResult = await GetRate(payout, null, CancellationToken.None);
                         if (rateResult.BidAsk != null)
                         {
-                            var approveResult = new TaskCompletionSource<PayoutApproval.Result>();
+                            var approveResultTask = new TaskCompletionSource<PayoutApproval.ApprovalResult>();
                             await HandleApproval(new PayoutApproval()
                             {
                                 PayoutId = payout.Id,
                                 Revision = payoutBlob.Revision,
                                 Rate = rateResult.BidAsk.Ask,
-                                Completion = approveResult
+                                Completion = approveResultTask
                             });
-
-                            if ((await approveResult.Task) == PayoutApproval.Result.Ok)
+                            var approveResult = await approveResultTask.Task;
+                            if (approveResult.Result == PayoutApproval.Result.Ok)
                             {
                                 payout.State = PayoutState.AwaitingPayment;
+                                payoutBlob.CryptoAmount = approveResult.CryptoAmount;
+                                payout.SetBlob(payoutBlob, _jsonSerializerSettings);
                             }
                         }
                     }

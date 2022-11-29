@@ -14,7 +14,6 @@ public static class PayoutProcessorsExtensions
         serviceCollection.AddSingleton<IPayoutProcessorFactory>(provider => provider.GetRequiredService<OnChainAutomatedPayoutSenderFactory>());
         serviceCollection.AddSingleton<LightningAutomatedPayoutSenderFactory>();
         serviceCollection.AddSingleton<IPayoutProcessorFactory>(provider => provider.GetRequiredService<LightningAutomatedPayoutSenderFactory>());
-        serviceCollection.AddHostedService<PayoutProcessorService>();
         serviceCollection.AddSingleton<PayoutProcessorService>();
         serviceCollection.AddHostedService(s=> s.GetRequiredService<PayoutProcessorService>());
     }

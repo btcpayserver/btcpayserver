@@ -460,12 +460,12 @@ namespace BTCPayServer.Controllers.Greenfield
                 ModelState.AddModelError(nameof(approvePayoutRequest.RateRule), "Invalid RateRule");
                 return this.CreateValidationError(ModelState);
             }
-            var result = await _pullPaymentService.Approve(new PullPaymentHostedService.PayoutApproval()
+            var result = (await _pullPaymentService.Approve(new PullPaymentHostedService.PayoutApproval()
             {
                 PayoutId = payoutId,
                 Revision = revision!.Value,
                 Rate = rateResult.BidAsk.Ask
-            });
+            })).Result;
             var errorMessage = PullPaymentHostedService.PayoutApproval.GetErrorMessage(result);
             switch (result)
             {

@@ -257,9 +257,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                     });
             }
         }
-
-
-        public static readonly TimeSpan SendTimeout = TimeSpan.FromSeconds(20);
+        
         public static async Task<ResultVM> TrypayBolt(
             ILightningClient lightningClient, PayoutBlob payoutBlob, PayoutData payoutData, BOLT11PaymentRequest bolt11PaymentRequest,
             PaymentMethodId pmi, CancellationToken cancellationToken)
@@ -281,17 +279,13 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             var proofBlob = new PayoutLightningBlob() { PaymentHash = bolt11PaymentRequest.PaymentHash.ToString() };
             try
             {
-                // TODO: Incorporate the changes from this PR here:
-                // https://github.com/btcpayserver/BTCPayServer.Lightning/pull/106
-                using var timeout = new CancellationTokenSource(SendTimeout);
-                using var c = CancellationTokenSource.CreateLinkedTokenSource(timeout.Token, cancellationToken);
                 var result = await lightningClient.Pay(bolt11PaymentRequest.ToString(),
                     new PayInvoiceParams()
                     {
                         Amount = bolt11PaymentRequest.MinimumAmount == LightMoney.Zero
                             ? new LightMoney((decimal)payoutBlob.CryptoAmount, LightMoneyUnit.BTC)
                             : null
-                    }, c.Token);
+                    }, cancellationToken);
                 string message = null;
                 if (result.Result == PayResult.Ok)
                 {
@@ -308,6 +302,11 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                     {
                         // ignored
                     }
+                }
+                else if(result.Result == PayResult.Unknown)
+                {
+                    payoutData.State = PayoutState.InProgress;
+                    message = "The payment has been initiated but is still in-flight.";
                 }
 
                 payoutData.SetProofBlob(proofBlob, null);

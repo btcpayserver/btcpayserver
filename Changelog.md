@@ -20,6 +20,10 @@
 * Adjust currency name to be standard (#4369) @bolatovumar
 * Language update in checkout v1 for pt-BR and sv cultures
 
+### Miscalleneous
+
+* Mark MySql and SQLite backend deprecated
+
 ## 1.7.0
 
 ### New features

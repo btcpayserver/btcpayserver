@@ -510,8 +510,8 @@ namespace BTCPayServer.Controllers
             blob.LazyPaymentMethods = model.LazyPaymentMethods;
             blob.RedirectAutomatically = model.RedirectAutomatically;
             blob.ReceiptOptions = model.ReceiptOptions.ToDTO();
-            blob.CustomLogo = model.CustomLogo;
-            blob.CustomCSS = model.CustomCSS;
+            blob.CustomLogo = model.CustomLogo?.Replace($"{Request.Scheme}://{Request.Host.ToString()}", String.Empty);
+            blob.CustomCSS = model.CustomCSS?.Replace($"{Request.Scheme}://{Request.Host.ToString()}", String.Empty);
             blob.HtmlTitle = string.IsNullOrWhiteSpace(model.HtmlTitle) ? null : model.HtmlTitle;
             blob.AutoDetectLanguage = model.AutoDetectLanguage;
             blob.DefaultLang = model.DefaultLang;

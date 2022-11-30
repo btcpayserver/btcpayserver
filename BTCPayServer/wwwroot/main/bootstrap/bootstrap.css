@@ -1984,8 +1984,8 @@ progress {
 
 .form-text {
   margin-top: 0.25rem;
-  font-size: 0.875em;
-  color: var(--btcpay-form-text);
+  font-size: var(--btcpay-font-size-base);
+  color: var(--btcpay-body-text-muted);
 }
 
 .form-control {
@@ -2663,7 +2663,7 @@ textarea.form-control-lg {
   display: none;
   width: 100%;
   margin-top: 0.25rem;
-  font-size: 0.875em;
+  font-size: var(--btcpay-font-size-base);
   color: var(--btcpay-success);
 }
 
@@ -2759,7 +2759,7 @@ textarea.form-control-lg {
   display: none;
   width: 100%;
   margin-top: 0.25rem;
-  font-size: 0.875em;
+  font-size: var(--btcpay-font-size-base);
   color: var(--btcpay-danger);
 }
 

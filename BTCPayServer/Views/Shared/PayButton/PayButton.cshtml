@@ -305,9 +305,7 @@
                        v-model="srvModel.serverIpn" v-on:change="inputChanges"
                        v-validate="'url'" :class="{'is-invalid': errors.has('serverIpn') }">
                 <small class="text-danger">{{ errors.first('serverIpn') }}</small>
-                <p class="form-text text-muted">
-                    The URL to post purchase data.
-                </p>
+                <div class="form-text">The URL to post purchase data.</div>
             </div>
             <div class="form-group" v-if="!srvModel.appIdEndpoint">
                 <label class="form-label" for="email-notifications">Email Notifications</label>
@@ -316,9 +314,7 @@
                        v-model="srvModel.notifyEmail" v-on:change="inputChanges"
                        v-validate="'email'" :class="{'is-invalid': errors.has('notifyEmail') }">
                 <small class="text-danger">{{ errors.first('notifyEmail') }}</small>
-                <p class="form-text text-muted">
-                    Receive email notification updates.
-                </p>
+                <div class="form-text">Receive email notification updates.</div>
             </div>
             <div class="form-group">
                 <label class="form-label" for="browser-redirect">Browser Redirect</label>
@@ -326,9 +322,7 @@
                        v-model="srvModel.browserRedirect" v-on:change="inputChanges"
                        v-validate="'url'" :class="{'is-invalid': errors.has('browserRedirect') }">
                 <small class="text-danger">{{ errors.first('browserRedirect') }}</small>
-                <p class="form-text text-muted">
-                    Where to redirect the customer after payment is complete.
-                </p>
+                <div class="form-text">Where to redirect the customer after payment is complete</div>
             </div>
         </div>
     </div>

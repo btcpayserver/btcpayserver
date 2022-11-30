@@ -454,7 +454,7 @@ progress {
 
 .lead {
   font-size: 1.09375rem;
-  font-weight: 300;
+  font-weight: var(--btcpay-font-weight-normal);
 }
 
 .display-1 {
@@ -4775,7 +4775,7 @@ fieldset:disabled .btn {
 .alert {
   --btcpay-alert-bg: transparent;
   --btcpay-alert-padding-x: 1rem;
-  --btcpay-alert-padding-y: 1rem;
+  --btcpay-alert-padding-y: 0.75rem;
   --btcpay-alert-margin-bottom: 1rem;
   --btcpay-alert-color: inherit;
   --btcpay-alert-border-color: transparent;
@@ -4807,7 +4807,7 @@ fieldset:disabled .btn {
   top: 0;
   right: 0;
   z-index: 2;
-  padding: 1.25rem 1rem;
+  padding: 0.9375rem 1rem;
 }
 
 .alert-primary {
@@ -11163,7 +11163,7 @@ ul:not([class]) li {
 
 .alert-dismissible .btn-close {
   color: inherit;
-  padding: 1.25rem;
+  padding: 1rem;
 }
 
 /* Button */

@@ -19,6 +19,8 @@ using BTCPayServer.Plugins.PointOfSale.Models;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Stores;
+using BTCPayServer.Storage.Models;
+using BTCPayServer.Storage.Services.Providers.FileSystemStorage.Configuration;
 using ExchangeSharp;
 using Fido2NetLib.Objects;
 using Microsoft.AspNetCore.Identity;
@@ -220,6 +222,21 @@ namespace BTCPayServer.Hosting
                 {
                     await MigrateMigrateLabels();
                     settings.MigrateWalletColors = true;
+                    await _Settings.UpdateSetting(settings);
+                }
+                if (!settings.FileSystemStorageAsDefault)
+                {
+                    var storageSettings = await _Settings.GetSettingAsync<StorageSettings>();
+                    if (storageSettings is null)
+                    {
+                        storageSettings = new StorageSettings
+                        {
+                            Provider = StorageProvider.FileSystem,
+                            Configuration = JObject.FromObject(new FileSystemStorageConfiguration())
+                        };
+                        await _Settings.UpdateSetting(storageSettings);
+                    }
+                    settings.FileSystemStorageAsDefault = true;
                     await _Settings.UpdateSetting(settings);
                 }
             }

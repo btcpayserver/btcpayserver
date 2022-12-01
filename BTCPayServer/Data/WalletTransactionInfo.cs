@@ -7,7 +7,6 @@ using BTCPayServer.Services;
 using BTCPayServer.Services.Labels;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Newtonsoft.Json.Serialization;
 
 namespace BTCPayServer.Data
 {
@@ -83,5 +82,23 @@ namespace BTCPayServer.Data
             }
         }
 
+        public string Type { get; set; }
+
+        public void Merge(WalletTransactionInfo? value)
+        {
+            if (value is null)
+                return;
+
+            foreach (var valueLabelColor in value.LabelColors)
+            {
+                LabelColors.TryAdd(valueLabelColor.Key, valueLabelColor.Value);
+            }
+            
+            foreach (var valueAttachment in value.Attachments.Where(valueAttachment => !Attachments.Any(attachment =>
+                         attachment.Id == valueAttachment.Id && attachment.Type == valueAttachment.Type)))
+            {
+                Attachments.Add(valueAttachment);
+            }
+        }
     }
 }

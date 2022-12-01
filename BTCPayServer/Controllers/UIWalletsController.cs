@@ -578,17 +578,24 @@ namespace BTCPayServer.Controllers
                 var utxos = await _walletProvider.GetWallet(network)
                     .GetUnspentCoins(schemeSettings.AccountDerivation, false, cancellation);
 
-                var walletTransactionsInfoAsync = await this.WalletRepository.GetWalletTransactionsInfo(walletId, utxos.Select(u => u.OutPoint.Hash.ToString()).Distinct().ToArray());
+                var walletTransactionsInfoAsync = await this.WalletRepository.GetWalletTransactionsInfo(walletId, 
+                    utxos.SelectMany(u => GetWalletObjectsQuery.Get(u)).Distinct().ToArray());
                 vm.InputsAvailable = utxos.Select(coin =>
                 {
                     walletTransactionsInfoAsync.TryGetValue(coin.OutPoint.Hash.ToString(), out var info);
-                    var labels = CreateTransactionTagModels(info).ToList();
+                    walletTransactionsInfoAsync.TryGetValue(coin.ScriptPubKey.ToHex(), out var info2);
+                    
+                    if (info is not null && info2 is not null)
+                    {
+                        info.Merge(info2);
+                    }
+                    info ??= info2;
                     return new WalletSendModel.InputSelectionOption()
                     {
                         Outpoint = coin.OutPoint.ToString(),
                         Amount = coin.Value.GetValue(network),
                         Comment = info?.Comment,
-                        Labels = labels,
+                        Labels = CreateTransactionTagModels(info),
                         Link = string.Format(CultureInfo.InvariantCulture, network.BlockExplorerLink,
                             coin.OutPoint.Hash.ToString()),
                         Confirmations = coin.Confirmations
@@ -1291,7 +1298,7 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             
             var wallet = _walletProvider.GetWallet(paymentMethod.Network);
-            var walletTransactionsInfoAsync = WalletRepository.GetWalletTransactionsInfo(walletId);
+            var walletTransactionsInfoAsync = WalletRepository.GetWalletTransactionsInfo(walletId, (string[] ) null);
             var input = await wallet.FetchTransactionHistory(paymentMethod.AccountDerivation, null, null);
             var walletTransactionsInfo = await walletTransactionsInfoAsync;
             var export = new TransactionsExport(wallet, walletTransactionsInfo);

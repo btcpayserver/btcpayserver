@@ -89,13 +89,15 @@ namespace BTCPayServer.Hosting
                 var settings = (await _Settings.GetSettingAsync<MigrationSettings>());
                 if (settings is null)
                 {
-                    // If it is null, then it's the first run: let's skip all the migrations by migration flags to true
+                    // If it is null, then it's the first run: let's skip all the migrations by setting flags to true
                     settings = new MigrationSettings() { MigratedInvoiceTextSearchPages = int.MaxValue };
                     foreach (var prop in settings.GetType().GetProperties().Where(p => p.CanWrite && p.PropertyType == typeof(bool)))
                     {
                         prop.SetValue(settings, true);
                     }
+                    // Ensure these checks still get run
                     settings.CheckedFirstRun = false;
+                    settings.FileSystemStorageAsDefault = false;
                     await _Settings.UpdateSetting(settings);
                 }
 

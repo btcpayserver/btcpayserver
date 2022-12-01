@@ -40,6 +40,9 @@ namespace BTCPayServer.HostedServices
         {
             switch (evt)
             {
+                // For each new transaction that we detect, we check if we can find
+                // any utxo or script object matching it.
+                // If we find, then we create a link between them and the tx object.
                 case NewOnChainTransactionEvent transactionEvent:
                 {
                     var txHash = transactionEvent.NewTransactionEvent.TransactionData.TransactionHash.ToString();
@@ -55,8 +58,7 @@ namespace BTCPayServer.HostedServices
                             new ObjectTypeId(WalletObjectData.Types.Utxo,txOut.ToCoin().Outpoint.ToString())
                             
                             } )).Distinct().ToArray();
-                    
-                    // we are intentionally excluding wallet id filter so that we reduce db trips
+
                     var objs = await _walletRepository.GetWalletObjects(new GetWalletObjectsQuery(){TypesIds = matchedObjects});
 
                     foreach (var walletObjectDatas in objs.GroupBy(data => data.Key.WalletId))

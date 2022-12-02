@@ -93,7 +93,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("/stores/{storeId}/payment-requests/edit/{payReqId?}")]
-        public IActionResult EditPaymentRequest(string storeId, string payReqId)
+        public async Task<IActionResult> EditPaymentRequest(string storeId, string payReqId)
         {
             var store = GetCurrentStore();
             var paymentRequest = GetCurrentPaymentRequest();
@@ -102,9 +102,11 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             }
 
+            var prInvoices = (await _PaymentRequestService.GetPaymentRequest(payReqId, GetUserId())).Invoices;
             var vm = new UpdatePaymentRequestViewModel(paymentRequest)
             {
-                StoreId = store.Id
+                StoreId = store.Id,
+                AmountAndCurrencyEditable = !prInvoices.Any()
             };
 
             vm.Currency ??= store.GetStoreBlob().DefaultCurrency;
@@ -343,10 +345,10 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("{payReqId}/clone")]
-        public IActionResult ClonePaymentRequest(string payReqId)
+        public async Task<IActionResult> ClonePaymentRequest(string payReqId)
         {
             var store = GetCurrentStore();
-            var result = EditPaymentRequest(store.Id, payReqId);
+            var result = await EditPaymentRequest(store.Id, payReqId);
             if (result is ViewResult viewResult)
             {
                 var model = (UpdatePaymentRequestViewModel)viewResult.Model;
@@ -364,7 +366,7 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> TogglePaymentRequestArchival(string payReqId)
         {
             var store = GetCurrentStore();
-            var result = EditPaymentRequest(store.Id, payReqId);
+            var result = await EditPaymentRequest(store.Id, payReqId);
             if (result is ViewResult viewResult)
             {
                 var model = (UpdatePaymentRequestViewModel)viewResult.Model;

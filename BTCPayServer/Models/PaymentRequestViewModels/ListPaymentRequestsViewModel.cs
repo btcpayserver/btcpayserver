@@ -87,6 +87,7 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
         public bool AllowCustomPaymentAmounts { get; set; }
 
         public Dictionary<string, object> FormResponse { get; set; }
+        public bool AmountAndCurrencyEditable { get; set; } = true;
     }
 
     public class ViewPaymentRequestViewModel

@@ -839,10 +839,14 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("SaveButton")).Click();
             s.Driver.ScrollTo(By.Id("RootAppId"));
             s.Driver.FindElement(By.Id("AddDomainButton")).Click();
-            s.Driver.FindElement(By.Id("DomainToAppMapping_0__Domain")).SendKeys(new Uri(s.Driver.Url, UriKind.Absolute).DnsSafeHost);
+
+            var uri = new Uri(s.Driver.Url, UriKind.Absolute);
+            var domain = uri.AbsoluteUri.Replace(uri.AbsolutePath, "");
+            s.Driver.FindElement(By.Id("DomainToAppMapping_0__Domain")).SendKeys(domain);
             select = new SelectElement(s.Driver.FindElement(By.Id("DomainToAppMapping_0__AppId")));
             select.SelectByText("Point of", true);
             s.Driver.FindElement(By.Id("SaveButton")).Click();
+            Assert.Contains("Policies updated successfully", s.FindAlertMessage().Text);
 
             s.Logout();
             s.LogIn(userId);

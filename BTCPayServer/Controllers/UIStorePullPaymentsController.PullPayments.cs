@@ -338,11 +338,11 @@ namespace BTCPayServer.Controllers
                                 Revision = payout.GetBlob(_jsonSerializerSettings).Revision,
                                 Rate = rateResult.BidAsk.Ask
                             });
-                        if (approveResult != PullPaymentHostedService.PayoutApproval.Result.Ok)
+                        if (approveResult.Result != PullPaymentHostedService.PayoutApproval.Result.Ok)
                         {
                             TempData.SetStatusMessageModel(new StatusMessageModel()
                             {
-                                Message = PullPaymentHostedService.PayoutApproval.GetErrorMessage(approveResult),
+                                Message = PullPaymentHostedService.PayoutApproval.GetErrorMessage(approveResult.Result),
                                 Severity = StatusMessageModel.StatusSeverity.Error
                             });
                             failed = true;

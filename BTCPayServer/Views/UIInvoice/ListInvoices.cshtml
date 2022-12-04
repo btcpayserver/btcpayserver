@@ -41,7 +41,7 @@
                     pavpill.replaceWith(statusHtml);
                 })
                 .fail(function (data) {
-                    pavpill.html(originalHtml.replace("dropdown-menu pull-right show", "dropdown-menu pull-right"));
+                    pavpill.html(originalHtml.replace("dropdown-menu show", "dropdown-menu"));
                     alert("Invoice state update failed");
                 });
         })
@@ -325,16 +325,16 @@
                                         <span class="dropdown-toggle changeInvoiceStateToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                             @invoice.Status.ToString()
                                         </span>
-                                        <div class="dropdown-menu pull-right">
+                                        <div class="dropdown-menu">
                                             @if (invoice.CanMarkInvalid)
                                             {
-                                                <button class="dropdown-item cursorPointer changeInvoiceState" data-invoice-id="@invoice.InvoiceId" data-new-state="invalid">
+                                                <button type="button" class="dropdown-item lh-base changeInvoiceState" data-invoice-id="@invoice.InvoiceId" data-new-state="invalid">
                                                     Mark as invalid
                                                 </button>
                                             }
                                             @if (invoice.CanMarkSettled)
                                             {
-                                                <button class="dropdown-item cursorPointer changeInvoiceState" data-invoice-id="@invoice.InvoiceId" data-new-state="settled">
+                                                <button type="button" class="dropdown-item lh-base changeInvoiceState" data-invoice-id="@invoice.InvoiceId" data-new-state="settled">
                                                     Mark as settled
                                                 </button>
                                             }

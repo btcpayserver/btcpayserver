@@ -29,15 +29,15 @@
                         <i class="fa fa-eye"></i>
                     </span>
                 </div>
-                <p class="text-muted small form-text">The endpoint receiving the payload must validate the payload by checking that the HTTP header <code>BTCPAY-SIG</code> of the callback matches the HMAC256 of the secret on the payload's body bytes.</p>
+                <div class="form-text">The endpoint receiving the payload must validate the payload by checking that the HTTP header <code>BTCPAY-SIG</code> of the callback matches the HMAC256 of the secret on the payload's body bytes.</div>
             </div>
             <div class="form-group">
                 <label class="form-group d-flex align-items-center">
                     <input asp-for="AutomaticRedelivery" type="checkbox" class="btcpay-toggle me-3" />
-                    <div class="">
+                    <div>
                         <span>Automatic redelivery</span>
-                        <p class="text-muted small form-text mb-0">We will try to redeliver any failed delivery after 10 seconds, 1 minute and up to 6 times after 10 minutes</p>
-                        </div>
+                        <div class="form-text">We will try to redeliver any failed delivery after 10 seconds, 1 minute and up to 6 times after 10 minutes</div>
+                    </div>
                 </label>
             </div>
             <div class="form-group">

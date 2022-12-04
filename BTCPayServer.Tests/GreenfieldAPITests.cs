@@ -3194,7 +3194,7 @@ namespace BTCPayServer.Tests
                 // Only the node `test` `test` is connected to `test1`
                 var wid = new WalletId(admin.StoreId, "BTC");
                 var repo = tester.PayTester.GetService<WalletRepository>();
-                var allObjects = await repo.GetWalletObjects((new(wid, null) { UseInefficientPath = useInefficient }));
+                var allObjects = await repo.GetWalletObjects(new(wid) { UseInefficientPath = useInefficient });
                 var allObjectsNoWallet = await repo.GetWalletObjects((new() { UseInefficientPath = useInefficient }));
                 var allObjectsNoWalletAndType = await repo.GetWalletObjects((new() { Type = "test", UseInefficientPath = useInefficient }));
                 var allTests = await repo.GetWalletObjects((new(wid, "test") { UseInefficientPath = useInefficient }));

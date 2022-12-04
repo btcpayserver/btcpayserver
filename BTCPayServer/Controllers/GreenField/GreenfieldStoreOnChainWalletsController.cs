@@ -189,7 +189,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
             var wallet = _btcPayWalletProvider.GetWallet(network);
             var walletId = new WalletId(storeId, cryptoCode);
-            var walletTransactionsInfoAsync = await _walletRepository.GetWalletTransactionsInfo(walletId);
+            var walletTransactionsInfoAsync = await _walletRepository.GetWalletTransactionsInfo(walletId, (string[] ) null);
 
             var preFiltering = true;
             if (statusFilter?.Any() is true || !string.IsNullOrWhiteSpace(labelFilter))

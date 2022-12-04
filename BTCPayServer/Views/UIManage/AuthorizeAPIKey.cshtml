@@ -128,7 +128,7 @@
                             <div>
                                 <label for="@Model.PermissionValues[i].Permission" class="form-check-label">@Model.PermissionValues[i].Title</label>
                             </div>
-                            <div class="form-text text-muted">@Model.PermissionValues[i].Description</div>
+                            <div class="form-text">@Model.PermissionValues[i].Description</div>
                             <span asp-validation-for="PermissionValues[i].Value" class="text-danger"></span>
                             @if (Model.PermissionValues[i].Forbidden)
                             {

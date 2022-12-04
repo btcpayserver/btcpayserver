@@ -88,7 +88,7 @@ namespace BTCPayServer.Hosting
                 if (settings is null)
                 {
                     // If it is null, then it's the first run: let's skip all the migrations by migration flags to true
-                    settings = new MigrationSettings() { MigratedInvoiceTextSearchPages = int.MaxValue };
+                    settings = new MigrationSettings() { MigratedInvoiceTextSearchPages = int.MaxValue, MigratedTransactionLabels = int.MaxValue };
                     foreach (var prop in settings.GetType().GetProperties().Where(p => p.CanWrite && p.PropertyType == typeof(bool)))
                     {
                         prop.SetValue(settings, true);

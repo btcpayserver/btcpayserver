@@ -9,7 +9,7 @@
 {   // legacy customization with CSS URI - keep it for backwards-compatibility
     <link href="@Context.Request.GetRelativePathOrAbsolute(Theme.CssUri)" rel="stylesheet" asp-append-version="true" />
 }
-else if (Theme.CustomTheme)
+else if (Theme.CustomTheme && !string.IsNullOrEmpty(Theme.CustomThemeFileId))
 {   // new customization uses theme file id provided by upload
     @if (Theme.CustomThemeExtension != ThemeExtension.Custom)
     {   // needs to be added for light and dark, because dark extends light

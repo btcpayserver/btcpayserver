@@ -1013,12 +1013,12 @@ namespace BTCPayServer.Controllers
                     }
                     catch (Exception e)
                     {
-                        ModelState.AddModelError(nameof(model.CustomThemeFile), $"Could not save theme file: {e.Message}");
+                        ModelState.AddModelError(nameof(settings.CustomThemeFile), $"Could not save theme file: {e.Message}");
                     }
                 }
                 else
                 {
-                    ModelState.AddModelError(nameof(model.CustomThemeFile), "The uploaded theme file needs to be a CSS file");
+                    ModelState.AddModelError(nameof(settings.CustomThemeFile), "The uploaded theme file needs to be a CSS file");
                 }
             }
             else if (RemoveCustomThemeFile && !string.IsNullOrEmpty(settings.CustomThemeFileId))
@@ -1047,12 +1047,12 @@ namespace BTCPayServer.Controllers
                     }
                     catch (Exception e)
                     {
-                        ModelState.AddModelError(nameof(model.LogoFile), $"Could not save logo: {e.Message}");
+                        ModelState.AddModelError(nameof(settings.LogoFile), $"Could not save logo: {e.Message}");
                     }
                 }
                 else
                 {
-                    ModelState.AddModelError(nameof(model.LogoFile), "The uploaded logo file needs to be an image");
+                    ModelState.AddModelError(nameof(settings.LogoFile), "The uploaded logo file needs to be an image");
                 }
             }
             else if (RemoveLogoFile && !string.IsNullOrEmpty(settings.LogoFileId))
@@ -1062,15 +1062,23 @@ namespace BTCPayServer.Controllers
                 settingsChanged = true;
             }
             
-            if (model.CustomTheme && !string.IsNullOrEmpty(model.CssUri) && !Uri.IsWellFormedUriString(model.CssUri, UriKind.RelativeOrAbsolute))
+            if (model.CustomTheme && !string.IsNullOrEmpty(model.CustomThemeCssUri) && !Uri.IsWellFormedUriString(model.CustomThemeCssUri, UriKind.RelativeOrAbsolute))
             {
-                ModelState.AddModelError(nameof(model.CssUri), "Please provide a non-empty theme URI");
+                ModelState.AddModelError(nameof(settings.CustomThemeCssUri), "Please provide a non-empty theme URI");
             }
             
             if (settings.CustomThemeExtension != model.CustomThemeExtension)
             {
-                settings.CustomThemeExtension = model.CustomThemeExtension;
-                settingsChanged = true;
+                // Require a custom theme to be defined in that case
+                if (string.IsNullOrEmpty(model.CustomThemeCssUri) && string.IsNullOrEmpty(settings.CustomThemeFileId))
+                {
+                    ModelState.AddModelError(nameof(settings.CustomThemeFile), "Please provide a custom theme");
+                }
+                else
+                {
+                    settings.CustomThemeExtension = model.CustomThemeExtension;
+                    settingsChanged = true;
+                }
             }
             
             if (settings.CustomTheme != model.CustomTheme)

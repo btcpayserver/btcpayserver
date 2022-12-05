@@ -89,17 +89,17 @@ namespace BTCPayServer.Controllers
 
             if (vm.WalletFile != null)
             {
-                if (!DerivationSchemeSettings.TryParseFromWalletFile(await ReadAllText(vm.WalletFile), network, out strategy))
+                if (!DerivationSchemeSettings.TryParseFromWalletFile(await ReadAllText(vm.WalletFile), network, out strategy, out var error))
                 {
-                    ModelState.AddModelError(nameof(vm.WalletFile), "Wallet file was not in the correct format");
+                    ModelState.AddModelError(nameof(vm.WalletFile), $"Importing wallet failed: {error}");
                     return View(vm.ViewName, vm);
                 }
             }
             else if (!string.IsNullOrEmpty(vm.WalletFileContent))
             {
-                if (!DerivationSchemeSettings.TryParseFromWalletFile(vm.WalletFileContent, network, out strategy))
+                if (!DerivationSchemeSettings.TryParseFromWalletFile(vm.WalletFileContent, network, out strategy, out var error))
                 {
-                    ModelState.AddModelError(nameof(vm.WalletFileContent), "QR import was not in the correct format");
+                    ModelState.AddModelError(nameof(vm.WalletFileContent), $"QR import failed: {error}");
                     return View(vm.ViewName, vm);
                 }
             }

@@ -462,7 +462,6 @@
         z-index: 1045;
         border-right: var(--menu-border);
         color: var(--btcpay-body-text);
-        visibility: hidden;
         background-color: inherit;
         background-clip: padding-box;
         outline: 0;
@@ -620,10 +619,6 @@
     #mainMenuHead {
         flex-wrap: wrap;
         padding: var(--btcpay-space-m) 1.5rem;
-    }
-
-    #mainNav {
-        visibility: visible !important;
     }
 
     #Notifications {

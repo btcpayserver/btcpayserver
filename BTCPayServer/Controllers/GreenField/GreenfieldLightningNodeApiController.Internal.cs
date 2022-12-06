@@ -125,6 +125,14 @@ namespace BTCPayServer.Controllers.Greenfield
             return base.CreateInvoice(cryptoCode, request, cancellationToken);
         }
 
+        [Authorize(Policy = Policies.CanUseInternalLightningNode,
+            AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [HttpGet("~/api/v1/server/lightning/{cryptoCode}/payments")]
+        public override Task<IActionResult> GetPayments(string cryptoCode, [FromQuery] bool? includePending, [FromQuery] long? offsetIndex, CancellationToken cancellationToken = default)
+        {
+            return base.GetPayments(cryptoCode, includePending, offsetIndex, cancellationToken);
+        }
+
         protected override async Task<ILightningClient> GetLightningClient(string cryptoCode, bool doingAdminThings)
         {
             var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);

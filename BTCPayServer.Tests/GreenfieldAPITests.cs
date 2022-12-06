@@ -2216,7 +2216,13 @@ namespace BTCPayServer.Tests
 
             // Amount received might be bigger because of internal implementation shit from lightning
             Assert.True(LightMoney.Satoshis(1000) <= invoice.AmountReceived);
+            
+            // check payments list for store node
+            var payments = await client.GetLightningPayments(user.StoreId, "BTC");
+            Assert.NotEmpty(payments);
+            Assert.Contains(payments, i => i.BOLT11 == merchantInvoice.BOLT11);
 
+            // Node info
             info = await client.GetLightningNodeInfo(user.StoreId, "BTC");
             Assert.Single(info.NodeURIs);
             Assert.NotEqual(0, info.BlockHeight);

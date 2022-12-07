@@ -14,6 +14,7 @@ using NBitcoin;
 using NBXplorer;
 using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Services.Wallets
 {
@@ -40,12 +41,14 @@ namespace BTCPayServer.Services.Wallets
     }
     public class BTCPayWallet
     {
+        public WalletRepository WalletRepository { get; }
         public NBXplorerConnectionFactory NbxplorerConnectionFactory { get; }
         public Logs Logs { get; }
 
         private readonly ExplorerClient _Client;
         private readonly IMemoryCache _MemoryCache;
         public BTCPayWallet(ExplorerClient client, IMemoryCache memoryCache, BTCPayNetwork network,
+            WalletRepository walletRepository,
             ApplicationDbContextFactory dbContextFactory, NBXplorerConnectionFactory nbxplorerConnectionFactory, Logs logs)
         {
             ArgumentNullException.ThrowIfNull(client);
@@ -53,6 +56,7 @@ namespace BTCPayServer.Services.Wallets
             Logs = logs;
             _Client = client;
             _Network = network;
+            WalletRepository = walletRepository;
             _dbContextFactory = dbContextFactory;
             NbxplorerConnectionFactory = nbxplorerConnectionFactory;
             _MemoryCache = memoryCache;
@@ -72,8 +76,10 @@ namespace BTCPayServer.Services.Wallets
 
         public TimeSpan CacheSpan { get; private set; } = TimeSpan.FromMinutes(5);
 
-        public async Task<KeyPathInformation> ReserveAddressAsync(DerivationStrategyBase derivationStrategy)
+        public async Task<KeyPathInformation> ReserveAddressAsync(string storeId, DerivationStrategyBase derivationStrategy, string generatedBy)
         {
+            if (storeId != null)
+                ArgumentNullException.ThrowIfNull(generatedBy);
             ArgumentNullException.ThrowIfNull(derivationStrategy);
             var pathInfo = await _Client.GetUnusedAsync(derivationStrategy, DerivationFeature.Deposit, 0, true).ConfigureAwait(false);
             // Might happen on some broken install
@@ -81,6 +87,12 @@ namespace BTCPayServer.Services.Wallets
             {
                 await _Client.TrackAsync(derivationStrategy).ConfigureAwait(false);
                 pathInfo = await _Client.GetUnusedAsync(derivationStrategy, DerivationFeature.Deposit, 0, true).ConfigureAwait(false);
+            }
+            if (storeId != null)
+            {
+                await WalletRepository.EnsureWalletObject(
+                    new WalletObjectId(new WalletId(storeId, Network.CryptoCode), WalletObjectData.Types.Script, pathInfo.ScriptPubKey.ToHex()),
+                    new JObject() { ["generatedBy"] = generatedBy });
             }
             return pathInfo;
         }

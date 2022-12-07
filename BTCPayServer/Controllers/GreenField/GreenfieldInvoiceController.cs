@@ -34,32 +34,28 @@ namespace BTCPayServer.Controllers.Greenfield
         private readonly UIInvoiceController _invoiceController;
         private readonly InvoiceRepository _invoiceRepository;
         private readonly LinkGenerator _linkGenerator;
-        private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
-        private readonly EventAggregator _eventAggregator;
-        private readonly PaymentMethodHandlerDictionary _paymentMethodHandlerDictionary;
         private readonly CurrencyNameTable _currencyNameTable;
         private readonly BTCPayNetworkProvider _networkProvider;
         private readonly PullPaymentHostedService _pullPaymentService;
         private readonly RateFetcher _rateProvider;
+        private readonly InvoiceActivator _invoiceActivator;
         private readonly ApplicationDbContextFactory _dbContextFactory;
 
         public LanguageService LanguageService { get; }
 
         public GreenfieldInvoiceController(UIInvoiceController invoiceController, InvoiceRepository invoiceRepository,
             LinkGenerator linkGenerator, LanguageService languageService, BTCPayNetworkProvider btcPayNetworkProvider,
-            EventAggregator eventAggregator, PaymentMethodHandlerDictionary paymentMethodHandlerDictionary, 
-            CurrencyNameTable currencyNameTable, BTCPayNetworkProvider networkProvider, RateFetcher rateProvider,
+            CurrencyNameTable currencyNameTable, RateFetcher rateProvider,
+            InvoiceActivator invoiceActivator,
             PullPaymentHostedService pullPaymentService, ApplicationDbContextFactory dbContextFactory)
         {
             _invoiceController = invoiceController;
             _invoiceRepository = invoiceRepository;
             _linkGenerator = linkGenerator;
-            _btcPayNetworkProvider = btcPayNetworkProvider;
-            _eventAggregator = eventAggregator;
-            _paymentMethodHandlerDictionary = paymentMethodHandlerDictionary;
             _currencyNameTable = currencyNameTable;
-            _networkProvider = networkProvider;
+            _networkProvider = btcPayNetworkProvider;
             _rateProvider = rateProvider;
+            _invoiceActivator = invoiceActivator;
             _pullPaymentService = pullPaymentService;
             _dbContextFactory = dbContextFactory;
             LanguageService = languageService;
@@ -342,8 +338,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
             if (PaymentMethodId.TryParse(paymentMethod, out var paymentMethodId))
             {
-                await _invoiceRepository.ActivateInvoicePaymentMethod(_eventAggregator, _btcPayNetworkProvider,
-                    _paymentMethodHandlerDictionary, store, invoice, paymentMethodId);
+                await _invoiceActivator.ActivateInvoicePaymentMethod(paymentMethodId, invoice, store);
                 return Ok();
             }
             ModelState.AddModelError(nameof(paymentMethod), "Invalid payment method");

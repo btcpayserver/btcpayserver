@@ -711,8 +711,7 @@ namespace BTCPayServer.Controllers
             var paymentMethodDetails = paymentMethod.GetPaymentMethodDetails();
             if (!paymentMethodDetails.Activated)
             {
-                if (await _InvoiceRepository.ActivateInvoicePaymentMethod(_EventAggregator, _NetworkProvider,
-                    _paymentMethodHandlerDictionary, store, invoice, paymentMethod.GetId()))
+                if (await _invoiceActivator.ActivateInvoicePaymentMethod(paymentMethod.GetId(), invoice, store))
                 {
                     return await GetInvoiceModel(invoiceId, paymentMethodId, lang);
                 }

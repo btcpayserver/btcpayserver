@@ -1,5 +1,43 @@
 # Changelog
 
+## 1.7.2
+
+### New features
+
+* Greenfield: Add `DescriptionHashOnly` to Lightning invoice creation endpoint (#4411) @NicolasDorier
+* Greenfield: Breaking change, `DescriptionHash` in the Lightning invoice creation endpoint has been removed (#4411) @NicolasDorier
+
+### Bug fixes
+
+* Fix Output Descriptor parsing for WSH multisig case (#4402) @dennisreimann
+* Greenfield: Fix lock user call return code and docs (#4377) @dennisreimann
+* UI: Fix store selector transition (#4400) @dennisreimann
+* PayButton: Fix CSP problems in Firefox (#4376) @dennisreimann
+* Fix bitbank and yadio rate providers (#4432) @NicolasDorier
+* Plugins built with newer version of BTCPay couldn't run on older version (#4441) @NicolasDorier
+
+### Improvement
+
+* Adapt LN payouts to handle unknown status (#4382) @Kukks
+* Upgrade Bootstrap to v5.2.3; Design System improvements (#4380 #4409) @dennisreimann
+* Wallet import: Surface detailed error messages (#4392) @dennisreimann
+* Local file system storage as default (#4386) @dennisreimann
+* Remove system plugins from the plugin list (#4429) @NicolasDorier
+* Allow more then 20 accounts when using BTCPayServer.Vault (#4430) @dennisreimann
+* Add BTCTurk rate provider (#4433) @NicolasDorier
+* Rate provider: Use better default than Coingecko when creating a new store (#4416) @NicolasDorier
+* Add DefaultDescription to LNURL withdrawal request (#4434) @bolatovumar
+* Disabled amount/currency update for payment request with active invoices (#4390) @bolatovumar
+* UI: Theme extensions (#4398) @dennisreimann
+* Add store logo to invoice receipt page (#4435) @bolatovumar
+* Add links to docs and API in the footer (#4431) @NicolasDorier
+
+### Miscellaneous
+
+* BTCPay Server will work on Core Lightning 22.11 outside of the Docker deployment
+* If running Core Lightning 22.11 outside of the Docker deployment, you don't need the plugin `invoicewithdescriptionhash` anymore
+* Added support for running Core Lightning with `allow-deprecated-apis=false`
+
 ## 1.7.1
 
 ### New features
@@ -20,7 +58,7 @@
 * Adjust currency name to be standard (#4369) @bolatovumar
 * Language update in checkout v1 for pt-BR and sv cultures
 
-### Miscalleneous
+### Miscellaneous
 
 * Mark MySql and SQLite backend deprecated
 

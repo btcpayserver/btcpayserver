@@ -76,18 +76,20 @@ namespace BTCPayServer.Controllers.Greenfield
             }
             return UserNotFound();
         }
+        
         [Authorize(Policy = Policies.CanModifyServerSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpPost("~/api/v1/users/{idOrEmail}/lock")]
-        public async Task<IActionResult> LockUser(string idOrEmail, LockUserRequest request )
+        public async Task<IActionResult> LockUser(string idOrEmail, LockUserRequest request)
         {
-            var user = (await _userManager.FindByIdAsync(idOrEmail) ) ?? await _userManager.FindByEmailAsync(idOrEmail);
+            var user = await _userManager.FindByIdAsync(idOrEmail) ?? await _userManager.FindByEmailAsync(idOrEmail);
             if (user is null)
             {
                 return UserNotFound();
             }
 
-            await _userService.ToggleUser(user.Id, request.Locked ? DateTimeOffset.MaxValue : null);
-            return Ok();
+            var success = await _userService.ToggleUser(user.Id, request.Locked ? DateTimeOffset.MaxValue : null);
+            return success.HasValue && success.Value ? Ok() : this.CreateAPIError("invalid-state",
+                $"{(request.Locked ? "Locking" : "Unlocking")} user failed");
         }
         
         [Authorize(Policy = Policies.CanViewUsers, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]

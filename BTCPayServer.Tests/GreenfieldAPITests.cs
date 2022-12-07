@@ -2920,8 +2920,7 @@ namespace BTCPayServer.Tests
             var newUserClient = await newUser.CreateClient(Policies.Unrestricted);
             Assert.False((await newUserClient.GetCurrentUser()).Disabled);
 
-            await adminClient.LockUser(newUser.UserId, true, CancellationToken.None);
-            
+            Assert.True(await adminClient.LockUser(newUser.UserId, true, CancellationToken.None));
             Assert.True((await adminClient.GetUserByIdOrEmail(newUser.UserId)).Disabled);
             await AssertAPIError("unauthenticated",async () =>
             {
@@ -2934,12 +2933,12 @@ namespace BTCPayServer.Tests
                 await newUserBasicClient.GetCurrentUser();
             });
 
-            await adminClient.LockUser(newUser.UserId, false, CancellationToken.None);
+            Assert.True(await adminClient.LockUser(newUser.UserId, false, CancellationToken.None));
             Assert.False((await adminClient.GetUserByIdOrEmail(newUser.UserId)).Disabled);
             await newUserClient.GetCurrentUser();
             await newUserBasicClient.GetCurrentUser();
             // Twice for good measure
-            await adminClient.LockUser(newUser.UserId, false, CancellationToken.None);
+            Assert.True(await adminClient.LockUser(newUser.UserId, false, CancellationToken.None));
             Assert.False((await adminClient.GetUserByIdOrEmail(newUser.UserId)).Disabled);
             await newUserClient.GetCurrentUser();
             await newUserBasicClient.GetCurrentUser();

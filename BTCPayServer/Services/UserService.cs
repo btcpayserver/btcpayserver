@@ -65,12 +65,12 @@ namespace BTCPayServer.Services
             return user.LockoutEnabled && user.LockoutEnd is not null &&
                    DateTimeOffset.UtcNow < user.LockoutEnd.Value.UtcDateTime;
         }
-        public async Task ToggleUser(string userId, DateTimeOffset? lockedOutDeadline)
+        public async Task<bool?> ToggleUser(string userId, DateTimeOffset? lockedOutDeadline)
         {
             var user = await _userManager.FindByIdAsync(userId);
             if (user is null)
             {
-                return;
+                return null;
             }
             if (lockedOutDeadline is not null)
             {
@@ -86,7 +86,8 @@ namespace BTCPayServer.Services
             {
                 _logger.LogError($"Failed to set lockout for user {user.Id}");
             }
-            
+
+            return res.Succeeded;
         }
 
         public async Task<bool> IsAdminUser(string userId)

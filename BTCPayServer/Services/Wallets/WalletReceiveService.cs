@@ -76,7 +76,7 @@ namespace BTCPayServer.Services.Wallets
             }
 
             var reserve = (await wallet.ReserveAddressAsync(derivationScheme.AccountDerivation));
-            await _walletRepository.AddWalletTransactionAttachment(walletId, reserve.ScriptPubKey.ToString(), new []{new Attachment("receive")},
+            await _walletRepository.AddWalletTransactionAttachment(walletId, reserve.ScriptPubKey.ToHex(), new []{new Attachment("receive")},
                 WalletObjectData.Types.Script);
             Set(walletId, reserve);
             return reserve;

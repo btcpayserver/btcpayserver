@@ -2183,6 +2183,36 @@ namespace BTCPayServer.Tests
             await AssertPermissionError("btcpay.store.canuselightningnode", () => client.GetLightningNodeInfo(user.StoreId, "BTC"));
         }
 
+        [Fact(Timeout = 60 * 20 * 1000)]
+        [Trait("Integration", "Integration")]
+        [Trait("Lightning", "Lightning")]
+        public async Task CanUseLightningAPI2()
+        {
+            using var tester = CreateServerTester();
+            tester.ActivateLightning();
+            await tester.StartAsync();
+            await tester.EnsureChannelsSetup();
+            var user = tester.NewAccount();
+            await user.GrantAccessAsync(true);
+            user.RegisterLightningNode("BTC", LightningConnectionType.LndREST, true);
+            var client = await user.CreateClient("btcpay.store.cancreatelightninginvoice");
+            var invoice = await client.CreateLightningInvoice(user.StoreId, "BTC", new CreateLightningInvoiceRequest()
+            {
+                Amount = LightMoney.Satoshis(1000),
+                Description = "lol",
+                Expiry = TimeSpan.FromSeconds(600),
+                DescriptionHashOnly = true
+            });
+            Assert.NotNull(BOLT11PaymentRequest.Parse(invoice.BOLT11, Network.RegTest).DescriptionHash);
+            invoice = await client.CreateLightningInvoice(user.StoreId, "BTC", new CreateLightningInvoiceRequest()
+            {
+                Amount = LightMoney.Satoshis(1000),
+                Description = "lol2",
+                Expiry = TimeSpan.FromSeconds(600),
+            });
+            Assert.Null(BOLT11PaymentRequest.Parse(invoice.BOLT11, Network.RegTest).DescriptionHash);
+        }
+
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task NotificationAPITests()

@@ -295,27 +295,28 @@ namespace BTCPayServer.Controllers.Greenfield
                 ModelState.AddModelError(nameof(request.Amount), "Amount should be more or equals to 0");
             }
 
+            if (request.Description is null && request.DescriptionHashOnly)
+            {
+                ModelState.AddModelError(nameof(request.Description), "Description is required when `descriptionHashOnly` is true");
+            }
+
             if (request.Expiry <= TimeSpan.Zero)
             {
                 ModelState.AddModelError(nameof(request.Expiry), "Expiry should be more than 0");
             }
-
             if (!ModelState.IsValid)
             {
                 return this.CreateValidationError(ModelState);
             }
-
+            
+            request.Description ??= "";
             try
             {
-                var param = request.DescriptionHash != null
-                    ? new CreateInvoiceParams(request.Amount, request.DescriptionHash, request.Expiry)
+                var param = new CreateInvoiceParams(request.Amount, request.Description, request.Expiry)
                     {
-                        PrivateRouteHints = request.PrivateRouteHints, Description = request.Description
-                    }
-                    : new CreateInvoiceParams(request.Amount, request.Description, request.Expiry)
-                    {
-                        PrivateRouteHints = request.PrivateRouteHints, DescriptionHash = request.DescriptionHash
-                    };
+                        PrivateRouteHints = request.PrivateRouteHints,
+                        DescriptionHashOnly = request.DescriptionHashOnly
+                };
                 var invoice = await lightningClient.CreateInvoice(param, cancellationToken);
                 return Ok(ToModel(invoice));
             }

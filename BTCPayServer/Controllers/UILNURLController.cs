@@ -565,14 +565,14 @@ namespace BTCPayServer
                         }
                     }
 
-                    var descriptionHash = new uint256(Hashes.SHA256(Encoding.UTF8.GetBytes(metadata)), false);
                     LightningInvoice invoice;
                     try
                     {
                         var expiry = i.ExpirationTime.ToUniversalTime() - DateTimeOffset.UtcNow;
-                        var param = new CreateInvoiceParams(amount.Value, descriptionHash, expiry)
+                        var param = new CreateInvoiceParams(amount.Value, metadata, expiry)
                         {
-                            PrivateRouteHints = blob.LightningPrivateRouteHints
+                            PrivateRouteHints = blob.LightningPrivateRouteHints,
+                            DescriptionHashOnly = true
                         };
                         invoice = await client.CreateInvoice(param);
                         if (!BOLT11PaymentRequest.Parse(invoice.BOLT11, network.NBitcoinNetwork)

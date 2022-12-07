@@ -22,8 +22,7 @@ namespace BTCPayServer.Client.Models
         [JsonConverter(typeof(JsonConverters.LightMoneyJsonConverter))]
         public LightMoney Amount { get; set; }
         public string Description { get; set; }
-        [JsonConverter(typeof(NBitcoin.JsonConverters.UInt256JsonConverter))]
-        public uint256 DescriptionHash { get; set; }
+        public bool DescriptionHashOnly { get; set; }
         [JsonConverter(typeof(JsonConverters.TimeSpanJsonConverter.Seconds))]
         public TimeSpan Expiry { get; set; }
         public bool PrivateRouteHints { get; set; }

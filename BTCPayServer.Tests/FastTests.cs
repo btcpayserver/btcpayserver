@@ -646,6 +646,49 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        public void CanParseDerivationSchemes()
+        {
+            var networkProvider = new BTCPayNetworkProvider(ChainName.Regtest);
+            var parser = new DerivationSchemeParser(networkProvider.BTC);
+
+            // xpub
+            var xpub = "xpub661MyMwAqRbcGVBsTGeNZN6QGVHmMHLdSA4FteGsRrEriu4pnVZMZWnruFFFXkMnyoBjyHndD3Qwcfz4MPzBUxjSevweNFQx7SAYZATtcDw";
+            DerivationStrategyBase strategyBase = parser.Parse(xpub);
+            Assert.IsType<DirectDerivationStrategy>(strategyBase);
+            Assert.True(((DirectDerivationStrategy)strategyBase).Segwit);
+            Assert.Equal("tpubD6NzVbkrYhZ4YHNiuTdTmHRmbcPRLfqgyneZFCL1mkzkUBjXriQShxTh9HL34FK2mhieasJVk9EzJrUfkFqRNQBjiXgx3n5BhPkxKBoFmaS", strategyBase.ToString());
+
+            // Multisig
+            var multisig = "wsh(sortedmulti(2,[62a7956f/84'/1'/0']tpubDDXgATYzdQkHHhZZCMcNJj8BGDENvzMVou5v9NdxiP4rxDLj33nS233dGFW4htpVZSJ6zds9eVqAV9RyRHHiKtwQKX8eR4n4KN3Dwmj7A3h/0/*,[11312aa2/84'/1'/0']tpubDC8a54NFtQtMQAZ97VhoU9V6jVTvi9w4Y5SaAXJSBYETKg3AoX5CCKndznhPWxJUBToPCpT44s86QbKdGpKAnSjcMTGW4kE6UQ8vpBjcybW/0/*,[8f71b834/84'/1'/0']tpubDChjnP9LXNrJp43biqjY7FH93wgRRNrNxB4Q8pH7PPRy8UPcH2S6V46WGVJ47zVGF7SyBJNCpnaogsFbsybVQckGtVhCkng3EtFn8qmxptS/0/*))";
+            var expected = "2-of-tpubDDXgATYzdQkHHhZZCMcNJj8BGDENvzMVou5v9NdxiP4rxDLj33nS233dGFW4htpVZSJ6zds9eVqAV9RyRHHiKtwQKX8eR4n4KN3Dwmj7A3h-tpubDC8a54NFtQtMQAZ97VhoU9V6jVTvi9w4Y5SaAXJSBYETKg3AoX5CCKndznhPWxJUBToPCpT44s86QbKdGpKAnSjcMTGW4kE6UQ8vpBjcybW-tpubDChjnP9LXNrJp43biqjY7FH93wgRRNrNxB4Q8pH7PPRy8UPcH2S6V46WGVJ47zVGF7SyBJNCpnaogsFbsybVQckGtVhCkng3EtFn8qmxptS";
+            (strategyBase, RootedKeyPath[] rootedKeyPath) = parser.ParseOutputDescriptor(multisig);
+            Assert.Equal(3, rootedKeyPath.Length);
+            Assert.IsType<P2WSHDerivationStrategy>(strategyBase);
+            Assert.IsType<MultisigDerivationStrategy>(((P2WSHDerivationStrategy)strategyBase).Inner);
+            Assert.Equal(expected, strategyBase.ToString());
+
+            var inner = (MultisigDerivationStrategy)((P2WSHDerivationStrategy)strategyBase).Inner;
+            Assert.False(inner.IsLegacy);
+            Assert.Equal(3, inner.Keys.Count);
+            Assert.Equal(2, inner.RequiredSignatures);
+            Assert.Equal(expected, inner.ToString());
+            
+            // Output Descriptor
+            networkProvider = new BTCPayNetworkProvider(ChainName.Mainnet);
+            parser = new DerivationSchemeParser(networkProvider.BTC);
+            var od = "wpkh([8bafd160/49h/0h/0h]xpub661MyMwAqRbcGVBsTGeNZN6QGVHmMHLdSA4FteGsRrEriu4pnVZMZWnruFFFXkMnyoBjyHndD3Qwcfz4MPzBUxjSevweNFQx7SAYZATtcDw/0/*)#9x4vkw48";
+            (strategyBase, rootedKeyPath) = parser.ParseOutputDescriptor(od);
+            Assert.Equal(1, rootedKeyPath.Length);
+            Assert.IsType<DirectDerivationStrategy>(strategyBase);
+            Assert.True(((DirectDerivationStrategy)strategyBase).Segwit);
+            
+            // Failure cases
+            Assert.Throws<FormatException>(() => { parser.Parse("xpub 661MyMwAqRbcGVBsTGeNZN6QGVHmMHLdSA4FteGsRrEriu4pnVZMZWnruFFFXkMnyoBjyHndD3Qwcfz4MPzBUxjSevweNFQx7SAYZATtcDw"); }); // invalid format because of space
+            Assert.Throws<ParsingException>(() => { parser.ParseOutputDescriptor("invalid"); }); // invalid in general
+            Assert.Throws<ParsingException>(() => { parser.ParseOutputDescriptor("wpkh([8b60afd1/49h/0h/0h]xpub661MyMwAFXkMnyoBjyHndD3QwRbcGVBsTGeNZN6QGVHcfz4MPzBUxjSevweNFQx7SqmMHLdSA4FteGsRrEriu4pnVZMZWnruFFAYZATtcDw/0/*)#9x4vkw48"); }); // invalid checksum
+        }
+
+        [Fact]
         public void ParseDerivationSchemeSettings()
         {
             var mainnet = new BTCPayNetworkProvider(ChainName.Mainnet).GetNetwork<BTCPayNetwork>("BTC");

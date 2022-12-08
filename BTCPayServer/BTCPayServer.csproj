@@ -59,7 +59,7 @@
     <PackageReference Include="QRCoder" Version="1.4.3" />
     <PackageReference Include="System.IO.Pipelines" Version="6.0.3" />
     <PackageReference Include="NBitpayClient" Version="1.0.0.39" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
     <PackageReference Include="NicolasDorier.CommandLine" Version="1.0.0.2" />
     <PackageReference Include="NicolasDorier.CommandLine.Configuration" Version="1.0.0.3" />
     <PackageReference Include="NicolasDorier.RateLimits" Version="1.2.3" />

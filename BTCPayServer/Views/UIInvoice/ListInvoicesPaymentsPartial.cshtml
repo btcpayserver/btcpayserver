@@ -5,7 +5,7 @@
     <table class="table table-hover mt-3 mb-4">
         <thead class="thead-inverse">
             <tr>
-                <th>Payment method</th>
+                <th style="width:8.5rem">Payment method</th>
                 @if (Model.ShowAddress)
                 {
                     <th>Address</th>
@@ -27,7 +27,7 @@
                     @if (Model.ShowAddress)
                     {
                         <td title="@payment.Address">
-                            <span class="text-truncate d-block" style="max-width: 400px">@payment.Address</span>
+                            <span class="text-truncate d-block" style="max-width:20rem">@payment.Address</span>
                         </td>
                     }
                     <td class="text-end">@payment.Rate</td>

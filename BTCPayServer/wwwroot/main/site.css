@@ -145,8 +145,17 @@ h2 svg.icon.icon-info {
 }
 
 /* Invoices */
-.invoice-details-row {
-    background: var(--btcpay-bg-tile);
+.invoice-payments {
+    padding-left: var(--btcpay-space-l);
+}
+.invoice-payments .table {
+    width: 100% !important;
+}
+.invoice-payments > :first-child {
+    margin-top: 0 !important;
+}
+.invoice-payments > :last-child {
+    margin-bottom: 0 !important;
 }
 .badge .dropdown-toggle {
     cursor: pointer;

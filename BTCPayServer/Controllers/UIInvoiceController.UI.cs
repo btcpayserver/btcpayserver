@@ -976,11 +976,13 @@ namespace BTCPayServer.Controllers
                 foreach (var i in l)
                     storeIds.Add(i);
             }
+
             if (storeId is not null)
             {
                 storeIds.Add(storeId);
                 model.StoreId = storeId;
             }
+
             model.StoreIds = storeIds.ToArray();
 
             InvoiceQuery invoiceQuery = GetInvoiceQuery(model.SearchTerm, model.TimezoneOffset ?? 0);
@@ -1010,6 +1012,13 @@ namespace BTCPayServer.Controllers
                     HasRefund = invoice.Refunds.Any(data => !data.PullPaymentData.Archived)
                 });
             }
+
+            if (model.Mode != "list")
+            {
+                model.PaginationQuery ??= new Dictionary<string, object>();
+                model.PaginationQuery.Add("mode", model.Mode);
+            }
+
             return View(model);
         }
 

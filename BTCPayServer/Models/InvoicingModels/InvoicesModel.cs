@@ -11,6 +11,7 @@ namespace BTCPayServer.Models.InvoicingModels
         public override int CurrentPageCount => Invoices.Count;
         public string[] StoreIds { get; set; }
         public string StoreId { get; set; }
+        public string Mode { get; set; } = "list";
         public bool IncludeArchived { get; set; }
     }
 

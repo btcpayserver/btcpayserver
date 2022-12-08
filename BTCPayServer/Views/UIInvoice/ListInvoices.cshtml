@@ -1,5 +1,6 @@
 @using BTCPayServer.Client
 @using BTCPayServer.Client.Models
+@using BTCPayServer.Payments
 @model InvoicesModel
 @{
     ViewData.SetActivePage(InvoiceNavPages.Index, "Invoices");
@@ -192,7 +193,7 @@
         </ul>
     </div>
 </div>
-<form class="@(Model.Invoices.Count > 0 ? "col-xl-7 col-xxl-8 " : "")mb-4" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" method="get">
+<form class="@(Model.Invoices.Count > 0 ? "col-xl-5 col-xxl-6 " : "")mb-4" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" method="get">
     <input type="hidden" asp-for="Count" />
     <input asp-for="TimezoneOffset" type="hidden" />
     <div class="input-group">
@@ -230,7 +231,7 @@
 @if (Model.Invoices.Count > 0)
 {
     <form method="post" id="MassAction" asp-action="MassAction" class="">
-        <div class="d-inline-flex align-items-center pb-2 float-xl-end mb-2 gap-3">
+        <div class="d-flex d-xl-inline-flex align-items-center pb-2 float-xl-end mb-2 gap-3">
             <input type="hidden" name="storeId" value="@Model.StoreId" />
             <div class="dropdown order-xl-1">
                 <button class="btn btn-secondary dropdown-toggle" type="button" id="ActionsDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -257,6 +258,10 @@
                     <vc:icon symbol="info" />
                 </a>
             </div>
+            <div class="btn-group order-5 ms-auto" role="group" aria-label="View mode">
+                <a asp-route-mode="list" class="btn btn-secondary px-3 @(Model.Mode == "list" ? "active" : "")">List</a>
+                <a asp-route-mode="v4v" class="btn btn-secondary px-3 @(Model.Mode == "v4v" ? "active" : "")">V4V</a>
+            </div>
         </div>
         <div style="clear:both"></div>
         <div class="table-responsive">
@@ -273,7 +278,15 @@
                             </div>
                         </th>
                         <th class="text-nowrap" style="width:13rem">Invoice Id</th>
-                        <th class="text-nowrap">Order Id</th>
+                        @if (Model.Mode == "v4v")
+                        {
+                            <th class="text-nowrap">Address</th>
+                            <th class="text-nowrap">Comment</th>
+                        }
+                        else
+                        {
+                            <th class="text-nowrap">Order Id</th>
+                        }
                         <th class="w-100px">Status</th>
                         <th class="text-end">Amount</th>
                         <th></th>
@@ -291,16 +304,28 @@
                             <td class="text-break">
                                 <a asp-action="Invoice" class="invoice-details-link" asp-route-invoiceId="@invoice.InvoiceId">@invoice.InvoiceId</a>
                             </td>
-                            <td style="max-width:120px;">
-                                @if (invoice.RedirectUrl != string.Empty)
-                                {
-                                    <a href="@invoice.RedirectUrl" class="wraptextAuto" rel="noreferrer noopener">@invoice.OrderId</a>
-                                }
-                                else
-                                {
-                                    <span class="wraptextAuto">@invoice.OrderId</span>
-                                }
-                            </td>
+                            @if (Model.Mode == "v4v")
+                            {
+                                var lnurlId = PaymentMethodId.Parse("BTC_LNURLPAY");
+                                var payment = invoice.Details.CryptoPayments.FirstOrDefault(p => p.PaymentMethodId == lnurlId);
+                                var details = (LNURLPayPaymentMethodDetails)payment?.PaymentMethodRaw.GetPaymentMethodDetails();
+                                
+                                <td>@(details != null ? details.ConsumedLightningAddress : "")</td>
+                                <td>@(details != null ? details.ProvidedComment : "")</td>
+                            }
+                            else
+                            {
+                                <td style="max-width:120px;">
+                                    @if (invoice.RedirectUrl != string.Empty)
+                                    {
+                                        <a href="@invoice.RedirectUrl" class="wraptextAuto" rel="noreferrer noopener">@invoice.OrderId</a>
+                                    }
+                                    else
+                                    {
+                                        <span class="wraptextAuto">@invoice.OrderId</span>
+                                    }
+                                </td>
+                            }
                             <td>
                                 @if (invoice.Details.Archived)
                                 {

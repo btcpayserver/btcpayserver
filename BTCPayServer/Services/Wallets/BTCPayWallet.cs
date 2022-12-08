@@ -27,6 +27,7 @@ namespace BTCPayServer.Services.Wallets
         public IMoney Value { get; set; }
         public Coin Coin { get; set; }
         public long Confirmations { get; set; }
+        public BitcoinAddress Address { get; set; }
     }
     public class NetworkCoins
     {
@@ -91,7 +92,7 @@ namespace BTCPayServer.Services.Wallets
             if (storeId != null)
             {
                 await WalletRepository.EnsureWalletObject(
-                    new WalletObjectId(new WalletId(storeId, Network.CryptoCode), WalletObjectData.Types.Script, pathInfo.ScriptPubKey.ToHex()),
+                    new WalletObjectId(new WalletId(storeId, Network.CryptoCode), WalletObjectData.Types.Address, pathInfo.Address.ToString()),
                     new JObject() { ["generatedBy"] = generatedBy });
             }
             return pathInfo;
@@ -360,7 +361,9 @@ namespace BTCPayServer.Services.Wallets
                               OutPoint = c.Outpoint,
                               ScriptPubKey = c.ScriptPubKey,
                               Coin = c.AsCoin(derivationStrategy),
-                              Confirmations = c.Confirmations
+                              Confirmations = c.Confirmations,
+                              // Some old version of NBX doesn't have Address in this call
+                              Address = c.Address ?? c.ScriptPubKey.GetDestinationAddress(Network.NBitcoinNetwork)
                           }).ToArray();
         }
 

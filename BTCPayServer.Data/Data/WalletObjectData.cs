@@ -21,7 +21,7 @@ namespace BTCPayServer.Data
             public const string PayjoinExposed = "pj-exposed";
             public const string Payout = "payout";
             public const string PullPayment = "pull-payment";
-            public const string Script = "script";
+            public const string Address = "address";
             public const string Utxo = "utxo";
         }
         public string WalletId { get; set; }

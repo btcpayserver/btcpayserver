@@ -173,7 +173,7 @@
         </main>
         @if (Env.CheatMode)
         {
-            <checkout-cheating v-if="isActive" invoice-id="@Model.InvoiceId" :btc-due="btcDue" :is-paid="isPaid" :payment-method-id="pmId"></checkout-cheating>
+            <checkout-cheating invoice-id="@Model.InvoiceId" :btc-due="btcDue" :is-paid="isPaid" :payment-method-id="pmId"></checkout-cheating>
         }
         <footer>
             <div>

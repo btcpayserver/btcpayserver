@@ -201,7 +201,7 @@ namespace BTCPayServer.Controllers
             var exchanges = GetSupportedExchanges();
             var storeBlob = CurrentStore.GetStoreBlob();
             var vm = new RatesViewModel();
-            vm.SetExchangeRates(exchanges, storeBlob.PreferredExchange ?? CoinGeckoRateProvider.CoinGeckoName);
+            vm.SetExchangeRates(exchanges, storeBlob.PreferredExchange ?? storeBlob.GetRecommendedExchange());
             vm.Spread = (double)(storeBlob.Spread * 100m);
             vm.StoreId = CurrentStore.Id;
             vm.Script = storeBlob.GetRateRules(_NetworkProvider).ToString();
@@ -225,7 +225,7 @@ namespace BTCPayServer.Controllers
             }
 
             var exchanges = GetSupportedExchanges();
-            model.SetExchangeRates(exchanges, model.PreferredExchange);
+            model.SetExchangeRates(exchanges, model.PreferredExchange ?? this.HttpContext.GetStoreData().GetStoreBlob().GetRecommendedExchange());
             model.StoreId = storeId ?? model.StoreId;
             CurrencyPair[]? currencyPairs = null;
             try

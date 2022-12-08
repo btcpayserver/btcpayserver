@@ -49,7 +49,7 @@ namespace BTCPayServer.Data
         {
             var result = storeData.StoreBlob == null ? new StoreBlob() : new Serializer(null).ToObject<StoreBlob>(storeData.StoreBlob);
             if (result.PreferredExchange == null)
-                result.PreferredExchange = CoinGeckoRateProvider.CoinGeckoName;
+                result.PreferredExchange = result.GetRecommendedExchange();
             if (result.PaymentMethodCriteria is null)
                 result.PaymentMethodCriteria = new List<PaymentMethodCriteria>();
             result.PaymentMethodCriteria.RemoveAll(criteria => criteria?.PaymentMethod is null);

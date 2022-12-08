@@ -9,6 +9,7 @@ namespace BTCPayServer.Services.Wallets
 {
     public class BTCPayWalletProvider
     {
+        public WalletRepository WalletRepository { get; }
         public Logs Logs { get; }
 
         private readonly ExplorerClientProvider _Client;
@@ -19,12 +20,14 @@ namespace BTCPayServer.Services.Wallets
                                     Data.ApplicationDbContextFactory dbContextFactory,
                                     BTCPayNetworkProvider networkProvider,
                                     NBXplorerConnectionFactory nbxplorerConnectionFactory,
+                                    WalletRepository walletRepository,
                                     Logs logs)
         {
             ArgumentNullException.ThrowIfNull(client);
             this.Logs = logs;
             _Client = client;
             _NetworkProvider = networkProvider;
+            WalletRepository = walletRepository;
             _Options = memoryCacheOption;
 
             foreach (var network in networkProvider.GetAll().OfType<BTCPayNetwork>())
@@ -32,7 +35,7 @@ namespace BTCPayServer.Services.Wallets
                 var explorerClient = _Client.GetExplorerClient(network.CryptoCode);
                 if (explorerClient == null)
                     continue;
-                _Wallets.Add(network.CryptoCode.ToUpperInvariant(), new BTCPayWallet(explorerClient, new MemoryCache(_Options), network, dbContextFactory,  nbxplorerConnectionFactory, Logs));
+                _Wallets.Add(network.CryptoCode.ToUpperInvariant(), new BTCPayWallet(explorerClient, new MemoryCache(_Options), network, WalletRepository, dbContextFactory,  nbxplorerConnectionFactory, Logs));
             }
         }
 

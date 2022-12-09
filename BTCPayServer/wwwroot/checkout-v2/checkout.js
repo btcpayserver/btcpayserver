@@ -80,7 +80,7 @@ const PaymentDetails = Vue.component('payment-details', {
 function initApp() {
     return new Vue({
         i18n,
-        el: '#Checkout',
+        el: '#Checkout-v2',
         components: {
             PaymentDetails
         },

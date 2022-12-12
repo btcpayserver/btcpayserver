@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.Runtime.InteropServices.ComTypes;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Configuration;
 using BTCPayServer.Storage.Services;
@@ -25,49 +24,35 @@ namespace BTCPayServer.Storage
             serviceCollection.AddSingleton<StoredFileRepository>();
             serviceCollection.AddSingleton<FileService>();
             serviceCollection.AddSingleton<IFileService>(provider => provider.GetRequiredService<FileService>());
-            //            serviceCollection.AddSingleton<IStorageProviderService, AmazonS3FileProviderService>();
             serviceCollection.AddSingleton<IStorageProviderService, AzureBlobStorageFileProviderService>();
             serviceCollection.AddSingleton<IStorageProviderService, FileSystemFileProviderService>();
-            //            serviceCollection.AddSingleton<IStorageProviderService, GoogleCloudStorageFileProviderService>();
         }
 
         public static void UseProviderStorage(this IApplicationBuilder builder, IOptions<DataDirectories> datadirs)
         {
             try
             {
-                DirectoryInfo dirInfo;
-                if (!Directory.Exists(datadirs.Value.StorageDir))
-                {
-                    dirInfo = Directory.CreateDirectory(datadirs.Value.StorageDir);
-                }
-                else
-                {
-                    dirInfo = new DirectoryInfo(datadirs.Value.StorageDir);
-                }
+                var dirInfo = Directory.Exists(datadirs.Value.StorageDir)
+                    ? new DirectoryInfo(datadirs.Value.StorageDir)
+                    : Directory.CreateDirectory(datadirs.Value.StorageDir);
                 
                 if (!Directory.Exists(datadirs.Value.TempDir))
                 {
                     Directory.CreateDirectory(datadirs.Value.TempDir);
                 }
 
-                DirectoryInfo tmpdirInfo;
-                if (!Directory.Exists(datadirs.Value.TempStorageDir))
-                {
-                    tmpdirInfo = Directory.CreateDirectory(datadirs.Value.TempStorageDir);
-                }
-                else
-                {
-                    tmpdirInfo = new DirectoryInfo(datadirs.Value.TempStorageDir);
-                }
+                var tmpdirInfo = Directory.Exists(datadirs.Value.TempStorageDir)
+                    ? new DirectoryInfo(datadirs.Value.TempStorageDir)
+                    : Directory.CreateDirectory(datadirs.Value.TempStorageDir);
 
-                builder.UseStaticFiles(new StaticFileOptions()
+                builder.UseStaticFiles(new StaticFileOptions
                 {
                     ServeUnknownFileTypes = true,
                     RequestPath = new PathString($"/{FileSystemFileProviderService.LocalStorageDirectoryName}"),
                     FileProvider = new PhysicalFileProvider(dirInfo.FullName),
                     OnPrepareResponse = HandleStaticFileResponse()
                 });
-                builder.UseStaticFiles(new StaticFileOptions()
+                builder.UseStaticFiles(new StaticFileOptions
                 {
                     ServeUnknownFileTypes = true,
                     RequestPath = new PathString($"/{FileSystemFileProviderService.LocalStorageDirectoryName}tmp"),
@@ -78,7 +63,7 @@ namespace BTCPayServer.Storage
             }
             catch (Exception e)
             {
-                Logs.Utils.LogError(e, $"Could not initialize the Local File Storage system(uploading and storing files locally)");
+                Logs.Utils.LogError(e, "Could not initialize the Local File Storage system (for uploading and storing files locally)");
             }
         }
 

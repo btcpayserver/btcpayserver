@@ -34,5 +34,6 @@ namespace BTCPayServer.Services
         public bool AddStoreToPayout { get; set; }
         public bool MigrateEmailServerDisableTLSCerts { get; set; }
         public bool MigrateWalletColors { get; set; }
+        public bool FileSystemStorageAsDefault { get; set; }
     }
 }

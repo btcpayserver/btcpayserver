@@ -19,6 +19,8 @@ using BTCPayServer.Plugins.PointOfSale.Models;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Stores;
+using BTCPayServer.Storage.Models;
+using BTCPayServer.Storage.Services.Providers.FileSystemStorage.Configuration;
 using ExchangeSharp;
 using Fido2NetLib.Objects;
 using Microsoft.AspNetCore.Identity;
@@ -87,13 +89,15 @@ namespace BTCPayServer.Hosting
                 var settings = (await _Settings.GetSettingAsync<MigrationSettings>());
                 if (settings is null)
                 {
-                    // If it is null, then it's the first run: let's skip all the migrations by migration flags to true
+                    // If it is null, then it's the first run: let's skip all the migrations by setting flags to true
                     settings = new MigrationSettings() { MigratedInvoiceTextSearchPages = int.MaxValue, MigratedTransactionLabels = int.MaxValue };
                     foreach (var prop in settings.GetType().GetProperties().Where(p => p.CanWrite && p.PropertyType == typeof(bool)))
                     {
                         prop.SetValue(settings, true);
                     }
+                    // Ensure these checks still get run
                     settings.CheckedFirstRun = false;
+                    settings.FileSystemStorageAsDefault = false;
                     await _Settings.UpdateSetting(settings);
                 }
 
@@ -220,6 +224,21 @@ namespace BTCPayServer.Hosting
                 {
                     await MigrateMigrateLabels();
                     settings.MigrateWalletColors = true;
+                    await _Settings.UpdateSetting(settings);
+                }
+                if (!settings.FileSystemStorageAsDefault)
+                {
+                    var storageSettings = await _Settings.GetSettingAsync<StorageSettings>();
+                    if (storageSettings is null)
+                    {
+                        storageSettings = new StorageSettings
+                        {
+                            Provider = StorageProvider.FileSystem,
+                            Configuration = JObject.FromObject(new FileSystemStorageConfiguration())
+                        };
+                        await _Settings.UpdateSetting(storageSettings);
+                    }
+                    settings.FileSystemStorageAsDefault = true;
                     await _Settings.UpdateSetting(settings);
                 }
             }

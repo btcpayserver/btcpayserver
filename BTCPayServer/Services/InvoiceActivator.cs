@@ -66,8 +66,8 @@ namespace BTCPayServer.Services
                             await _walletRepository.EnsureWalletObjectLink(
                             new WalletObjectId(
                                 walletId,
-                                WalletObjectData.Types.Script,
-                                address.ScriptPubKey.ToHex()),
+                                WalletObjectData.Types.Address,
+                                address.ToString()),
                             new WalletObjectId(
                                 walletId,
                                 WalletObjectData.Types.Invoice,

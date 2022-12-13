@@ -678,7 +678,7 @@ namespace BTCPayServer.Tests
             parser = new DerivationSchemeParser(networkProvider.BTC);
             var od = "wpkh([8bafd160/49h/0h/0h]xpub661MyMwAqRbcGVBsTGeNZN6QGVHmMHLdSA4FteGsRrEriu4pnVZMZWnruFFFXkMnyoBjyHndD3Qwcfz4MPzBUxjSevweNFQx7SAYZATtcDw/0/*)#9x4vkw48";
             (strategyBase, rootedKeyPath) = parser.ParseOutputDescriptor(od);
-            Assert.Equal(1, rootedKeyPath.Length);
+            Assert.Single(rootedKeyPath);
             Assert.IsType<DirectDerivationStrategy>(strategyBase);
             Assert.True(((DirectDerivationStrategy)strategyBase).Segwit);
             

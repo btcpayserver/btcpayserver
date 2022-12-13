@@ -90,7 +90,7 @@ services:
     expose:
       - "4444"
   nbxplorer:
-    image: nicolasdorier/nbxplorer:2.3.40
+    image: nicolasdorier/nbxplorer:2.3.54
     restart: unless-stopped
     ports:
       - "32838:32838"

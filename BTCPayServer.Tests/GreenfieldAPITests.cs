@@ -1936,7 +1936,7 @@ namespace BTCPayServer.Tests
                     }
                 });
             var invoiceObject = await client.GetOnChainWalletObject(user.StoreId, "BTC", new OnChainWalletObjectId("invoice", newInvoice.Id), false);
-            Assert.Contains(invoiceObject.Links.Select(l => l.Type), t => t == "script");
+            Assert.Contains(invoiceObject.Links.Select(l => l.Type), t => t == "address");
 
             Assert.EndsWith($"/i/{newInvoice.Id}", newInvoice.CheckoutLink);
             var controller = tester.PayTester.GetController<UIInvoiceController>(user.UserId, user.StoreId);
@@ -1972,7 +1972,7 @@ namespace BTCPayServer.Tests
 
             invoice = await client.CreateInvoice(user.StoreId, new CreateInvoiceRequest() { Amount = 1, Currency = "USD" });
             invoiceObject = await client.GetOnChainWalletObject(user.StoreId, "BTC", new OnChainWalletObjectId("invoice", invoice.Id), false);
-            Assert.DoesNotContain(invoiceObject.Links.Select(l => l.Type), t => t == "script");
+            Assert.DoesNotContain(invoiceObject.Links.Select(l => l.Type), t => t == "address");
 
 
             paymentMethods = await client.GetInvoicePaymentMethods(store.Id, invoice.Id);
@@ -1981,7 +1981,7 @@ namespace BTCPayServer.Tests
             await client.ActivateInvoicePaymentMethod(user.StoreId, invoice.Id,
                 paymentMethods.First().PaymentMethod);
             invoiceObject = await client.GetOnChainWalletObject(user.StoreId, "BTC", new OnChainWalletObjectId("invoice", invoice.Id), false);
-            Assert.Contains(invoiceObject.Links.Select(l => l.Type), t => t == "script");
+            Assert.Contains(invoiceObject.Links.Select(l => l.Type), t => t == "address");
 
             paymentMethods = await client.GetInvoicePaymentMethods(store.Id, invoice.Id);
             Assert.Single(paymentMethods);
@@ -2046,10 +2046,10 @@ namespace BTCPayServer.Tests
                 var pm = Assert.Single(await client.GetInvoicePaymentMethods(user.StoreId, invoice.Id));
                 Assert.Single(pm.Payments);
                 Assert.Equal(-0.0001m, pm.Due);
-            });
 
-            invoiceObject = await client.GetOnChainWalletObject(user.StoreId, "BTC", new OnChainWalletObjectId("invoice", invoice.Id), false);
-            Assert.Contains(invoiceObject.Links.Select(l => l.Type), t => t == "tx");
+                invoiceObject = await client.GetOnChainWalletObject(user.StoreId, "BTC", new OnChainWalletObjectId("invoice", invoice.Id), false);
+                Assert.Contains(invoiceObject.Links.Select(l => l.Type), t => t == "tx");
+            });
         }
 
         [Fact(Timeout = 60 * 20 * 1000)]

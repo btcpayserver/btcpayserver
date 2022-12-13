@@ -52,16 +52,11 @@ namespace BTCPayServer.Services
         public string[]? Ids { get; set; }
         public bool IncludeNeighbours { get; set; } = true;
         public bool UseInefficientPath { get; set; }
-        
-        public static ObjectTypeId Get(Script script)
-        {
-            return new ObjectTypeId(WalletObjectData.Types.Script, script.ToHex());
-        }
 
         public static IEnumerable<ObjectTypeId> Get(ReceivedCoin coin)
         {
             yield return new ObjectTypeId(WalletObjectData.Types.Tx, coin.OutPoint.Hash.ToString());
-            yield return Get(coin.ScriptPubKey);
+            yield return new ObjectTypeId(WalletObjectData.Types.Address, coin.Address.ToString());
             yield return new ObjectTypeId(WalletObjectData.Types.Utxo, coin.OutPoint.ToString());
         }
     }
@@ -250,7 +245,7 @@ namespace BTCPayServer.Services
         {
             var wos = await GetWalletObjects(
                 new GetWalletObjectsQuery(walletId, WalletObjectData.Types.Tx, transactionIds));
-            return await GetWalletTransactionsInfoCore(walletId, wos);
+            return GetWalletTransactionsInfoCore(walletId, wos);
         }
 
         public async Task<Dictionary<string, WalletTransactionInfo>> GetWalletTransactionsInfo(WalletId walletId,
@@ -259,10 +254,10 @@ namespace BTCPayServer.Services
             var wos = await GetWalletObjects(
                 new GetWalletObjectsQuery(walletId, transactionIds));
             
-            return await GetWalletTransactionsInfoCore(walletId, wos);
+            return GetWalletTransactionsInfoCore(walletId, wos);
         }
 
-        private async Task<Dictionary<string, WalletTransactionInfo>> GetWalletTransactionsInfoCore(WalletId walletId,
+        private Dictionary<string, WalletTransactionInfo> GetWalletTransactionsInfoCore(WalletId walletId,
             Dictionary<WalletObjectId, WalletObjectData> wos)
         {
        

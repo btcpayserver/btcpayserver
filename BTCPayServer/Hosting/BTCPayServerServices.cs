@@ -432,6 +432,7 @@ namespace BTCPayServer.Hosting
             services.AddTransient<UIPaymentRequestController>();
             // Add application services.
             services.AddSingleton<EmailSenderFactory>();
+            services.AddSingleton<InvoiceActivator>();
 
             //create a simple client which hooks up to the http scope
             services.AddScoped<BTCPayServerClient, LocalBTCPayServerClient>();

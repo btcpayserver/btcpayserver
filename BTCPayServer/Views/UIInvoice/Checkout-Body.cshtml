@@ -21,7 +21,7 @@
     <div class="timer-row" v-bind:class="{ 'expiring-soon': expiringSoon }">
         <div class="timer-row__progress-bar" v-bind:style="{ 'width': expirationPercentage+ '%' }"></div>
         <div class="timer-row__spinner" v-if="!invoiceUnpayable && !invoicePaid">
-            <partial name="Checkout-Spinner" />
+            @await Html.PartialAsync("~/Views/UIInvoice/Checkout-Spinner.cshtml")
         </div>
         <div class="timer-row__message">
             <span v-if="invoiceUnpayable">
@@ -80,7 +80,7 @@
                 </div>
             }
             <div class="payment__spinner" v-show="changingCurrencies || loading">
-                <partial name="Checkout-Spinner" />
+                @await Html.PartialAsync("~/Views/UIInvoice/Checkout-Spinner.cshtml")
             </div>
         </div>
     </div>
@@ -176,7 +176,7 @@
                     <button type="submit" class="action-button" style="margin-top: 15px;" v-bind:disabled="emailAddressFormSubmitting" v-bind:class="{ 'loading': emailAddressFormSubmitting }">
                         <span class="button-text">{{$t("Continue")}}</span>
                         <div class="loader-wrapper">
-                            <partial name="Checkout-Spinner" />
+                            @await Html.PartialAsync("~/Views/UIInvoice/Checkout-Spinner.cshtml")
                         </div>
                     </button>
                 </bp-loading-button>

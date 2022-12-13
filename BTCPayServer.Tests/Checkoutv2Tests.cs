@@ -46,6 +46,9 @@ namespace BTCPayServer.Tests
             var invoiceId = s.CreateInvoice(defaultPaymentMethod: "BTC_LightningLike");
             s.GoToInvoiceCheckout(invoiceId);
             
+            // Ensure we are seeing Checkout v2
+            s.Driver.WaitUntilAvailable(By.Id("Checkout-v2"));
+            
             Assert.Equal(2, s.Driver.FindElements(By.CssSelector(".payment-method")).Count);
             Assert.Contains("Lightning", s.Driver.WaitForElement(By.CssSelector(".payment-method.active")).Text);
             Assert.DoesNotContain("LNURL", s.Driver.PageSource);
@@ -195,10 +198,13 @@ namespace BTCPayServer.Tests
             var invoice = await s.Server.PayTester.InvoiceRepository.GetInvoice(invoiceId);
             s.Driver.Navigate()
                 .GoToUrl(new Uri(s.ServerUri, $"tests/index.html?invoice={invoiceId}"));
-            TestUtils.Eventually(() =>
-            {
-                Assert.True(s.Driver.FindElement(By.Name("btcpay")).Displayed);
-            });
+            s.Driver.WaitUntilAvailable(By.Name("btcpay"));
+            
+            var frameElement = s.Driver.FindElement(By.Name("btcpay"));
+            Assert.True(frameElement.Displayed);
+            var iframe = s.Driver.SwitchTo().Frame(frameElement);
+            iframe.WaitUntilAvailable(By.Id("Checkout-v2"));
+            
             await s.Server.ExplorerNode.SendToAddressAsync(BitcoinAddress.Create(invoice
                     .GetPaymentMethod(new PaymentMethodId("BTC", PaymentTypes.BTCLike))
                     .GetPaymentMethodDetails().GetPaymentDestination(), Network.RegTest),
@@ -207,8 +213,6 @@ namespace BTCPayServer.Tests
             IWebElement closebutton = null;
             TestUtils.Eventually(() =>
             {
-                var frameElement = s.Driver.FindElement(By.Name("btcpay"));
-                var iframe = s.Driver.SwitchTo().Frame(frameElement);
                 closebutton = iframe.FindElement(By.Id("close"));
                 Assert.True(closebutton.Displayed);
             });

@@ -52,6 +52,7 @@ namespace BTCPayServer.Plugins
             {
                 var p = v.ManifestInfo.ToObject<AvailablePlugin>();
                 p.Documentation = v.Documentation;
+                p.SystemPlugin = false;
                 return p;
             }).ToArray();
         }

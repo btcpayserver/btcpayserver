@@ -6,7 +6,7 @@
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.3.1" />
     <PackageReference Include="Microsoft.AspNet.WebApi.Client" Version="5.2.9" />
-    <PackageReference Include="NBitcoin" Version="7.0.14" />
+    <PackageReference Include="NBitcoin" Version="7.0.20" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="DigitalRuby.ExchangeSharp" Version="1.0.2" />
   </ItemGroup>

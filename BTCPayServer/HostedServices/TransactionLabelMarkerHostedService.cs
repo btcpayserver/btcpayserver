@@ -16,6 +16,7 @@ using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Labels;
 using BTCPayServer.Services.PaymentRequests;
 using NBitcoin;
+using NBXplorer.DerivationStrategy;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -25,9 +26,12 @@ namespace BTCPayServer.HostedServices
     {
         private readonly WalletRepository _walletRepository;
 
-        public TransactionLabelMarkerHostedService(EventAggregator eventAggregator, WalletRepository walletRepository, Logs logs) :
+        public BTCPayNetworkProvider NetworkProvider { get; }
+
+        public TransactionLabelMarkerHostedService(BTCPayNetworkProvider networkProvider, EventAggregator eventAggregator, WalletRepository walletRepository, Logs logs) :
             base(eventAggregator, logs)
         {
+            NetworkProvider = networkProvider;
             _walletRepository = walletRepository;
         }
 
@@ -44,36 +48,40 @@ namespace BTCPayServer.HostedServices
                 // any utxo or script object matching it.
                 // If we find, then we create a link between them and the tx object.
                 case NewOnChainTransactionEvent transactionEvent:
-                {
-                    var txHash = transactionEvent.NewTransactionEvent.TransactionData.TransactionHash.ToString();
-                    
-                    // find all wallet objects that fit this transaction
-                    // that means see if there are any utxo objects that match in/outs and scripts/addresses that match outs
-                    var matchedObjects = transactionEvent.NewTransactionEvent.TransactionData.Transaction.Inputs
-                        .Select(txIn => new ObjectTypeId(WalletObjectData.Types.Utxo, txIn.PrevOut.ToString()))
-                        .Concat(transactionEvent.NewTransactionEvent.TransactionData.Transaction.Outputs.AsIndexedOutputs().SelectMany(txOut =>
-                           
-                            new[]{
-                            new ObjectTypeId(WalletObjectData.Types.Script,txOut.TxOut.ScriptPubKey.ToHex()),
-                            new ObjectTypeId(WalletObjectData.Types.Utxo,txOut.ToCoin().Outpoint.ToString())
-                            
-                            } )).Distinct().ToArray();
-
-                    var objs = await _walletRepository.GetWalletObjects(new GetWalletObjectsQuery(){TypesIds = matchedObjects});
-
-                    foreach (var walletObjectDatas in objs.GroupBy(data => data.Key.WalletId))
                     {
-                        var txWalletObject = new WalletObjectId(walletObjectDatas.Key,
-                            WalletObjectData.Types.Tx, txHash);
-                        await _walletRepository.EnsureWalletObject(txWalletObject);
-                        foreach (var walletObjectData in walletObjectDatas)
-                        {
-                            await _walletRepository.EnsureWalletObjectLink(txWalletObject, walletObjectData.Key);
-                        }
-                    }
+                        var network = NetworkProvider.GetNetwork<BTCPayNetwork>(transactionEvent.CryptoCode);
+                        var derivation = transactionEvent.NewTransactionEvent.DerivationStrategy;
+                        if (network is null || derivation is null)
+                            break;
+                        var txHash = transactionEvent.NewTransactionEvent.TransactionData.TransactionHash.ToString();
 
-                    break;
-                }
+                        // find all wallet objects that fit this transaction
+                        // that means see if there are any utxo objects that match in/outs and scripts/addresses that match outs
+                        var matchedObjects = transactionEvent.NewTransactionEvent.TransactionData.Transaction.Inputs
+                            .Select<TxIn, ObjectTypeId>(txIn => new ObjectTypeId(WalletObjectData.Types.Utxo, txIn.PrevOut.ToString()))
+                            .Concat(transactionEvent.NewTransactionEvent.Outputs.SelectMany<NBXplorer.Models.MatchedOutput, ObjectTypeId>(txOut =>
+
+                                new[]{
+                            new ObjectTypeId(WalletObjectData.Types.Address, GetAddress(derivation, txOut, network).ToString()),
+                            new ObjectTypeId(WalletObjectData.Types.Utxo, new OutPoint(transactionEvent.NewTransactionEvent.TransactionData.TransactionHash, (uint)txOut.Index).ToString())
+
+                                })).Distinct().ToArray();
+
+                        var objs = await _walletRepository.GetWalletObjects(new GetWalletObjectsQuery() { TypesIds = matchedObjects });
+
+                        foreach (var walletObjectDatas in objs.GroupBy(data => data.Key.WalletId))
+                        {
+                            var txWalletObject = new WalletObjectId(walletObjectDatas.Key,
+                                WalletObjectData.Types.Tx, txHash);
+                            await _walletRepository.EnsureWalletObject(txWalletObject);
+                            foreach (var walletObjectData in walletObjectDatas)
+                            {
+                                await _walletRepository.EnsureWalletObjectLink(txWalletObject, walletObjectData.Key);
+                            }
+                        }
+
+                        break;
+                    }
                 case InvoiceEvent {Name: InvoiceEvent.ReceivedPayment} invoiceEvent when
                     invoiceEvent.Payment.GetPaymentMethodId()?.PaymentType == BitcoinPaymentType.Instance &&
                     invoiceEvent.Payment.GetCryptoPaymentData() is BitcoinLikePaymentData bitcoinLikePaymentData:
@@ -97,6 +105,12 @@ namespace BTCPayServer.HostedServices
                     break;
                 }
             }
+        }
+
+        private BitcoinAddress GetAddress(DerivationStrategyBase derivationStrategy, NBXplorer.Models.MatchedOutput txOut, BTCPayNetwork network)
+        {
+            // Old version of NBX doesn't give address in the event, so we need to guess
+            return (txOut.Address ?? network.NBXplorerNetwork.CreateAddress(derivationStrategy, txOut.KeyPath, txOut.ScriptPubKey));
         }
     }
 }

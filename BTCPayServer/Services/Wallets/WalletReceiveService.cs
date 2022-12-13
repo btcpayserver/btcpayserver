@@ -12,6 +12,7 @@ using NBitcoin;
 using NBXplorer;
 using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Services.Wallets
 {
@@ -75,9 +76,7 @@ namespace BTCPayServer.Services.Wallets
                 return null;
             }
 
-            var reserve = (await wallet.ReserveAddressAsync(derivationScheme.AccountDerivation));
-            await _walletRepository.AddWalletTransactionAttachment(walletId, reserve.ScriptPubKey.ToString(), new []{new Attachment("receive")},
-                WalletObjectData.Types.Script);
+            var reserve = (await wallet.ReserveAddressAsync(walletId.StoreId, derivationScheme.AccountDerivation, "receive"));
             Set(walletId, reserve);
             return reserve;
         }

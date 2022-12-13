@@ -186,15 +186,15 @@
                         <div class="dropdown-menu" aria-labelledby="markStatusDropdownMenuButton">
                             @if (Model.CanMarkInvalid)
                             {
-                                <a class="dropdown-item changeInvoiceState" href="#" data-id="@Model.Id" data-status="invalid" data-change-invoice-status-button>
-                                    Mark as invalid <span class="fa fa-times"></span>
-                                </a>
+                                <button type="button" class="dropdown-item lh-base changeInvoiceState" data-id="@Model.Id" data-status="invalid" data-change-invoice-status-button>
+                                    Mark as invalid
+                                </button>
                             }
                             @if (Model.CanMarkSettled)
                             {
-                                <a class="dropdown-item changeInvoiceState" href="#" data-id="@Model.Id" data-status="settled" data-change-invoice-status-button>
-                                    Mark as settled <span class="fa fa-check-circle"></span>
-                                </a>
+                                <button type="button" class="dropdown-item lh-base changeInvoiceState" href="#" data-id="@Model.Id" data-status="settled" data-change-invoice-status-button>
+                                    Mark as settled
+                                </button>
                             }
                         </div>
                     </div>

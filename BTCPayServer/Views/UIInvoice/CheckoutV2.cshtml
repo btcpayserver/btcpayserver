@@ -50,7 +50,7 @@
     }
 </head>
 <body class="min-vh-100">
-    <div id="Checkout" class="wrap" v-cloak v-waitForT>
+    <div id="Checkout-v2" class="wrap" v-cloak v-waitForT>
         <header>
             @if (!string.IsNullOrEmpty(logoUrl))
             {
@@ -173,7 +173,7 @@
         </main>
         @if (Env.CheatMode)
         {
-            <checkout-cheating v-if="isActive" invoice-id="@Model.InvoiceId" :btc-due="btcDue" :is-paid="isPaid" :payment-method-id="pmId"></checkout-cheating>
+            <checkout-cheating invoice-id="@Model.InvoiceId" :btc-due="btcDue" :is-paid="isPaid" :payment-method-id="pmId"></checkout-cheating>
         }
         <footer>
             <div>

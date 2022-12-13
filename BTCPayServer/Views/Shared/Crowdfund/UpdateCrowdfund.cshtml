@@ -92,7 +92,7 @@
                 <div class="form-group">
                     <label asp-for="TargetCurrency" class="form-label"></label>
                     <input asp-for="TargetCurrency" class="form-control w-auto" currency-selection />
-                    <small class="d-inline-block form-text text-muted">Uses the store's default currency (@Model.StoreDefaultCurrency) if empty.</small>
+                    <div class="form-text">Uses the store's default currency (@Model.StoreDefaultCurrency) if empty.</div>
                     <span asp-validation-for="TargetCurrency" class="text-danger"></span>
                 </div>
             </div>

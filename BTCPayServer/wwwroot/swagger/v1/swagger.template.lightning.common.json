@@ -25,12 +25,12 @@
                         "nullable": true,
                         "description": "Description of the invoice in the BOLT11"
                     },
-                  "descriptionHashOnly": {
-                    "type": "boolean",
-                    "nullable": true,
-                    "default": false,
-                    "description": "If `deschashonly` is `true` (default false), then the bolt11 returned contains a hash of the `description`, rather than the `description`, itself: this allows much longer descriptions, but they must be communicated via some other mechanism."
-                  },
+                    "descriptionHashOnly": {
+                        "type": "boolean",
+                        "nullable": true,
+                        "default": false,
+                        "description": "If `descriptionHashOnly` is `true` (default is `false`), then the BOLT11 returned contains a hash of the `description`, rather than the `description`, itself. This allows for much longer descriptions, but they must be communicated via some other mechanism."
+                    },
                     "expiry": {
                         "description": "Expiration time in seconds",
                         "allOf": [ {"$ref": "#/components/schemas/TimeSpanSeconds"}]

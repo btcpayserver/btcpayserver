@@ -25,11 +25,11 @@
                         "nullable": true,
                         "description": "Description of the invoice in the BOLT11"
                     },
-                    "descriptionHash": {
-                        "type": "string",
-                        "format": "hex",
+                    "descriptionHashOnly": {
+                        "type": "boolean",
                         "nullable": true,
-                        "description": "Description hash of the invoice in the BOLT11"
+                        "default": false,
+                        "description": "If `descriptionHashOnly` is `true` (default is `false`), then the BOLT11 returned contains a hash of the `description`, rather than the `description`, itself. This allows for much longer descriptions, but they must be communicated via some other mechanism."
                     },
                     "expiry": {
                         "description": "Expiration time in seconds",

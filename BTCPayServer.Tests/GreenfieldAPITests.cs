@@ -2197,6 +2197,49 @@ namespace BTCPayServer.Tests
             await AssertPermissionError("btcpay.store.canuselightningnode", () => client.GetLightningNodeInfo(user.StoreId, "BTC"));
         }
 
+        [Fact(Timeout = 60 * 20 * 1000)]
+        [Trait("Integration", "Integration")]
+        [Trait("Lightning", "Lightning")]
+        public async Task CanUseLightningAPI2()
+        {
+            using var tester = CreateServerTester();
+            tester.ActivateLightning();
+            await tester.StartAsync();
+            await tester.EnsureChannelsSetup();
+            var user = tester.NewAccount();
+            await user.GrantAccessAsync(true);
+
+            var types = new[] { LightningConnectionType.LndREST, LightningConnectionType.CLightning };
+            foreach (var type in types)
+            {
+                user.RegisterLightningNode("BTC", type);
+                var client = await user.CreateClient("btcpay.store.cancreatelightninginvoice");
+                var amount = LightMoney.Satoshis(1000);
+                var expiry = TimeSpan.FromSeconds(600);
+                
+                var invoice = await client.CreateLightningInvoice(user.StoreId, "BTC", new CreateLightningInvoiceRequest
+                {
+                    Amount = amount,
+                    Expiry = expiry,
+                    Description = "Hashed description",
+                    DescriptionHashOnly = true
+                });
+                var bolt11 = BOLT11PaymentRequest.Parse(invoice.BOLT11, Network.RegTest);
+                Assert.NotNull(bolt11.DescriptionHash);
+                Assert.Null(bolt11.ShortDescription);
+                
+                invoice = await client.CreateLightningInvoice(user.StoreId, "BTC", new CreateLightningInvoiceRequest
+                {
+                    Amount = amount,
+                    Expiry = expiry,
+                    Description = "Standard description",
+                });
+                bolt11 = BOLT11PaymentRequest.Parse(invoice.BOLT11, Network.RegTest);
+                Assert.Null(bolt11.DescriptionHash);
+                Assert.NotNull(bolt11.ShortDescription);
+            }
+        }
+
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task NotificationAPITests()

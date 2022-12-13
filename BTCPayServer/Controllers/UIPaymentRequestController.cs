@@ -102,11 +102,11 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             }
 
-            var prInvoices = (await _PaymentRequestService.GetPaymentRequest(payReqId, GetUserId())).Invoices;
+            var prInvoices = payReqId is null ? null : (await _PaymentRequestService.GetPaymentRequest(payReqId, GetUserId())).Invoices;
             var vm = new UpdatePaymentRequestViewModel(paymentRequest)
             {
                 StoreId = store.Id,
-                AmountAndCurrencyEditable = !prInvoices.Any()
+                AmountAndCurrencyEditable = payReqId is null || !prInvoices.Any()
             };
 
             vm.Currency ??= store.GetStoreBlob().DefaultCurrency;
@@ -133,17 +133,24 @@ namespace BTCPayServer.Controllers
             {
                 ModelState.AddModelError(string.Empty, "You cannot edit an archived payment request.");
             }
+            var data = paymentRequest ?? new PaymentRequestData();
+            data.StoreDataId = viewModel.StoreId;
+            data.Archived = viewModel.Archived;
+            var blob = data.GetBlob();
+
+            if (blob.Amount != viewModel.Amount && payReqId != null)
+            {
+                var prInvoices = (await _PaymentRequestService.GetPaymentRequest(payReqId, GetUserId())).Invoices;
+                if (prInvoices.Any())
+                    ModelState.AddModelError(nameof(viewModel.Amount), "Amount and currency not editable while payment request has active invoices");
+            }
 
             if (!ModelState.IsValid)
             {
                 return View(nameof(EditPaymentRequest), viewModel);
             }
 
-            var data = paymentRequest ?? new PaymentRequestData();
-            data.StoreDataId = viewModel.StoreId;
-            data.Archived = viewModel.Archived;
-
-            var blob = data.GetBlob();
+            
             blob.Title = viewModel.Title;
             blob.Email = viewModel.Email;
             blob.Description = viewModel.Description;

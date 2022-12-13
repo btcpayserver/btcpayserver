@@ -132,11 +132,11 @@
 {
     <h3 class="mb-4">Installed Plugins</h3>
     <div class="row mb-4">
-        @foreach (var plugin in Model.Installed)
+        @foreach (var plugin in Model.Installed.Where(i => !i.SystemPlugin))
         {
             var matchedAvailable = Model.Available.Where(availablePlugin => availablePlugin.Identifier == plugin.Identifier && availablePlugin.Version > plugin.Version).OrderByDescending(availablePlugin => availablePlugin.Version).ToArray();
             var x = matchedAvailable.FirstOrDefault(availablePlugin => DependenciesMet(availablePlugin.Dependencies)) ?? matchedAvailable.FirstOrDefault();
-            var updateAvailable = !plugin.SystemPlugin && matchedAvailable.Any();
+            var updateAvailable = matchedAvailable.Any();
             var tabId = plugin.Identifier.ToLowerInvariant().Replace(".", "_");
             <div class="col col-12 col-md-6 col-lg-12 col-xl-6 col-xxl-4 mb-4">
                 <div class="card h-100" id="@plugin.Identifier">
@@ -151,11 +151,7 @@
                         <div class="d-flex flex-wrap align-items-center mb-2">
                             <h5 class="text-muted d-flex align-items-center mt-1 gap-3">
                                 @plugin.Version
-                                @if (plugin.SystemPlugin)
-                                {
-                                    <div class="badge bg-light">System plugin</div>
-                                }
-                                else if (updateAvailable && x != null)
+                                @if (updateAvailable && x != null)
                                 {
                                     <div class="badge bg-info">
                                         @x.Version available
@@ -219,7 +215,7 @@
                     @{
                         var pendingAction = Model.Commands.Any(tuple => tuple.plugin.Equals(plugin.Identifier, StringComparison.InvariantCultureIgnoreCase));
                     }
-                    @if (!plugin.SystemPlugin && (pendingAction || (updateAvailable && x != null && DependenciesMet(x.Dependencies)) || !DependentOn(plugin.Identifier)))
+                    @if (pendingAction || (updateAvailable && x != null && DependenciesMet(x.Dependencies)) || !DependentOn(plugin.Identifier))
                     {
                         <div class="card-footer border-0 pb-3 d-flex">
                             @if (pendingAction)

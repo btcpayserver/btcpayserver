@@ -123,8 +123,12 @@ namespace BTCPayServer.Plugins
                     _plugins.Add(plugin);
                     var fileProvider = CreateEmbeddedFileProviderForAssembly(pluginAssembly);
                     loadedPlugins.Add((plugin, pluginAssembly, fileProvider));
-                    plugins.AddRange(GetAllPluginTypesFromAssembly(pluginAssembly)
-                        .Select(GetPluginInstanceFromType));
+                    foreach (var p in GetAllPluginTypesFromAssembly(pluginAssembly)
+                        .Select(GetPluginInstanceFromType))
+                    {
+                        p.SystemPlugin = false;
+                        plugins.Add(p);
+                    }
 
                 }
                 catch (Exception e)

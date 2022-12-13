@@ -178,20 +178,19 @@ namespace BTCPayServer.Data
             return rules;
         }
 
-        public string GetRecommendedExchange()
+        public static JObject RecommendedExchanges = new ()
         {
-            return DefaultCurrency switch
-            {
-                "EUR" => "kraken",
-                "USD" => "kraken",
-                "GBP" => "kraken",
-                "CHF" => "kraken",
-                "GTQ" => "bitpay",
-                "COP" => "yadio",
-                "JPY" => "bitbank",
-                _ => "coingecko"
-            };
-        }
+            { "EUR", "kraken" },
+            { "USD", "kraken" },
+            { "GBP", "kraken" },
+            { "CHF", "kraken" },
+            { "GTQ", "yadio" },
+            { "COP", "kraken" },
+            { "JPY", "bitbank" }
+        };
+
+        public string GetRecommendedExchange() =>
+            RecommendedExchanges.Property(DefaultCurrency)?.Value.ToString() ?? "coingecko";
 
         [Obsolete("Use GetExcludedPaymentMethods instead")]
         public string[] ExcludedPaymentMethods { get; set; }

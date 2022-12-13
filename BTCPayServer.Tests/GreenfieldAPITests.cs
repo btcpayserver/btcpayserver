@@ -2194,23 +2194,36 @@ namespace BTCPayServer.Tests
             await tester.EnsureChannelsSetup();
             var user = tester.NewAccount();
             await user.GrantAccessAsync(true);
-            user.RegisterLightningNode("BTC", LightningConnectionType.LndREST, true);
-            var client = await user.CreateClient("btcpay.store.cancreatelightninginvoice");
-            var invoice = await client.CreateLightningInvoice(user.StoreId, "BTC", new CreateLightningInvoiceRequest()
+
+            var types = new[] { LightningConnectionType.LndREST, LightningConnectionType.CLightning };
+            foreach (var type in types)
             {
-                Amount = LightMoney.Satoshis(1000),
-                Description = "lol",
-                Expiry = TimeSpan.FromSeconds(600),
-                DescriptionHashOnly = true
-            });
-            Assert.NotNull(BOLT11PaymentRequest.Parse(invoice.BOLT11, Network.RegTest).DescriptionHash);
-            invoice = await client.CreateLightningInvoice(user.StoreId, "BTC", new CreateLightningInvoiceRequest()
-            {
-                Amount = LightMoney.Satoshis(1000),
-                Description = "lol2",
-                Expiry = TimeSpan.FromSeconds(600),
-            });
-            Assert.Null(BOLT11PaymentRequest.Parse(invoice.BOLT11, Network.RegTest).DescriptionHash);
+                user.RegisterLightningNode("BTC", type);
+                var client = await user.CreateClient("btcpay.store.cancreatelightninginvoice");
+                var amount = LightMoney.Satoshis(1000);
+                var expiry = TimeSpan.FromSeconds(600);
+                
+                var invoice = await client.CreateLightningInvoice(user.StoreId, "BTC", new CreateLightningInvoiceRequest
+                {
+                    Amount = amount,
+                    Expiry = expiry,
+                    Description = "Hashed description",
+                    DescriptionHashOnly = true
+                });
+                var bolt11 = BOLT11PaymentRequest.Parse(invoice.BOLT11, Network.RegTest);
+                Assert.NotNull(bolt11.DescriptionHash);
+                Assert.Null(bolt11.ShortDescription);
+                
+                invoice = await client.CreateLightningInvoice(user.StoreId, "BTC", new CreateLightningInvoiceRequest
+                {
+                    Amount = amount,
+                    Expiry = expiry,
+                    Description = "Standard description",
+                });
+                bolt11 = BOLT11PaymentRequest.Parse(invoice.BOLT11, Network.RegTest);
+                Assert.Null(bolt11.DescriptionHash);
+                Assert.NotNull(bolt11.ShortDescription);
+            }
         }
 
         [Fact(Timeout = TestTimeout)]

@@ -193,6 +193,8 @@ namespace BTCPayServer.Tests
             Driver.WaitForElement(By.Id("OnChainWithLnInvoiceFallback"));
             Driver.SetCheckbox(By.Id("OnChainWithLnInvoiceFallback"), bip21);
             Driver.FindElement(By.Id("Save")).Click();
+            Assert.Contains("Store successfully updated", FindAlertMessage().Text);
+            Assert.True(Driver.FindElement(By.Id("UseNewCheckout")).Selected);
         }
 
         public Mnemonic GenerateWallet(string cryptoCode = "BTC", string seed = "", bool? importkeys = null, bool isHotWallet = false, ScriptPubKeyType format = ScriptPubKeyType.Segwit)

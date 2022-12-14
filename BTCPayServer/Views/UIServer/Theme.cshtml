@@ -1,9 +1,12 @@
 ﻿@using BTCPayServer.Abstractions.Contracts
+@using BTCPayServer.Services
 @model BTCPayServer.Services.ThemeSettings
 @inject IFileService FileService
 @{
     ViewData.SetActivePage(ServerNavPages.Theme, "Theme");
     var canUpload = await FileService.IsAvailable();
+    var themeExtension = ((ThemeExtension[])Enum.GetValues(typeof(ThemeExtension))).Select(t =>
+        new SelectListItem(typeof(ThemeExtension).DisplayName(t.ToString()), t == ThemeExtension.Custom ? null : t.ToString()));
 }
 
 @section PageFootContent {
@@ -15,22 +18,61 @@
 <div class="row">
     <div class="col-xl-8 col-xxl-constrain">
         <form method="post" enctype="multipart/form-data">
-            <p>Use the default Light or Dark Themes, or provide a CSS theme file below.</p>
+            <p>Use the default Light or Dark Themes, or provide a custom CSS theme file below.</p>
             
-            <div class="form-group d-flex align-items-center">
-                <input asp-for="CustomTheme" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#CustomThemeSettings" aria-expanded="@Model.CustomTheme" aria-controls="CustomThemeSettings" />
-                <label asp-for="CustomTheme" class="form-label mb-0"></label>
+            <div class="d-flex align-items-center mb-3">
+                <input asp-for="CustomTheme" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#CustomThemeSettings" aria-expanded="@(Model.CustomTheme)" aria-controls="CustomThemeSettings" />
+                <div>
+                    <label asp-for="CustomTheme" class="form-label"></label>
+                    <div class="text-muted">
+                        <a href="https://docs.btcpayserver.org/Development/Theme/#1-custom-themes" target="_blank" rel="noreferrer noopener">Adjust the design</a>
+                        of your BTCPay Server instance to your needs.
+                    </div>
+                </div>
             </div>
             <div class="collapse @(Model.CustomTheme ? "show" : "")" id="CustomThemeSettings">
-                <div class="form-group">
-                    <label asp-for="CustomThemeCssUri" class="form-label"></label>
-                    <a href="https://docs.btcpayserver.org/Development/Theme/#1-custom-themes" target="_blank" rel="noreferrer noopener">
-                        <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
-                    </a>
-                    <input asp-for="CustomThemeCssUri" class="form-control" />
-                    <span asp-validation-for="CustomThemeCssUri" class="text-danger"></span>
-                    <span asp-validation-for="CustomTheme" class="text-danger"></span>
-                </div>
+                @if (!string.IsNullOrEmpty(Model.CustomThemeCssUri))
+                {
+                    <div class="form-group mb-0 pt-2">
+                        <label asp-for="CustomThemeCssUri" class="form-label" data-required></label>
+                        <input asp-for="CustomThemeCssUri" class="form-control"/>
+                        <span asp-validation-for="CustomThemeCssUri" class="text-danger"></span>
+                    </div>
+                }
+                else
+                {
+                    <div class="form-group pt-2">
+                        <label asp-for="CustomThemeExtension" class="form-label" data-required></label>
+                        <select asp-for="CustomThemeExtension" asp-items="@themeExtension" class="form-select w-auto"></select>
+                    </div>
+                    <div class="form-group mb-0">
+                        <div class="d-flex align-items-center justify-content-between gap-2">
+                            <label asp-for="CustomThemeFile" class="form-label" data-required></label>
+                            @if (!string.IsNullOrEmpty(Model.CustomThemeFileId))
+                            {
+                                <button type="submit" class="btn btn-link p-0 text-danger" name="RemoveCustomThemeFile" value="true">
+                                    <span class="fa fa-times"></span> Remove
+                                </button>
+                            }
+                        </div>
+                        @if (canUpload)
+                        {
+                            <div class="d-flex align-items-center gap-3">
+                                <input asp-for="CustomThemeFile" type="file" class="form-control flex-grow">
+                                @if (!string.IsNullOrEmpty(Model.CustomThemeFileId))
+                                {
+                                    <a href="@(await FileService.GetFileUrl(Context.Request.GetAbsoluteRootUri(), Model.CustomThemeFileId))" target="_blank" rel="noreferrer noopener" class="text-nowrap">Custom CSS</a>
+                                }
+                            </div>
+                            <span asp-validation-for="CustomThemeFile" class="text-danger"></span>
+                        }
+                        else
+                        {
+                            <input asp-for="CustomThemeFile" type="file" class="form-control" disabled>
+                            <p class="form-text text-muted">In order to upload a theme file, a <a asp-controller="UIServer" asp-action="Files">file storage</a> must be configured.</p>
+                        }
+                    </div>
+                }
             </div>
             
             <h3 class="mt-5 mb-3">Branding</h3>

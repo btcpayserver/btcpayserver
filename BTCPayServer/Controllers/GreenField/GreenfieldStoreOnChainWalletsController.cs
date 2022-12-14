@@ -307,11 +307,18 @@ namespace BTCPayServer.Controllers.Greenfield
 
             var walletId = new WalletId(storeId, cryptoCode);
             var utxos = await wallet.GetUnspentCoins(derivationScheme.AccountDerivation);
-            var walletTransactionsInfoAsync = await _walletRepository.GetWalletTransactionsInfo(walletId,
-                utxos.Select(u => u.OutPoint.Hash.ToString()).ToHashSet().ToArray());
+            var walletTransactionsInfoAsync = await _walletRepository.GetWalletTransactionsInfo(walletId, 
+                utxos.SelectMany(GetWalletObjectsQuery.Get).Distinct().ToArray());
             return Ok(utxos.Select(coin =>
                 {
                     walletTransactionsInfoAsync.TryGetValue(coin.OutPoint.Hash.ToString(), out var info);
+                    walletTransactionsInfoAsync.TryGetValue(coin.ScriptPubKey.ToHex(), out var info2);
+                    
+                    if (info is not null && info2 is not null)
+                    {
+                        info.Merge(info2);
+                    }
+                    info ??= info2;
 
                     return new OnChainWalletUTXOData()
                     {

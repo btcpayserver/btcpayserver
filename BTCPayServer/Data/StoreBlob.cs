@@ -186,7 +186,8 @@ namespace BTCPayServer.Data
             { "CHF", "kraken" },
             { "GTQ", "yadio" },
             { "COP", "kraken" },
-            { "JPY", "bitbank" }
+            { "JPY", "bitbank" },
+            { "TRY", "btcturk" }
         };
 
         public string GetRecommendedExchange() =>

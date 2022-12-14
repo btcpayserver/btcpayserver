@@ -28,6 +28,7 @@ namespace BTCPayServer.Services.Rates
                     $"BitBank Rates API Error: {errorCode}. See https://github.com/bitbankinc/bitbank-api-docs/blob/master/errors.md for more details.");
             }
             return ((data as JArray) ?? new JArray())
+                .Where(p => p["buy"].Type != JTokenType.Null && p["sell"].Type != JTokenType.Null)
                 .Select(item => new PairRate(CurrencyPair.Parse(item["pair"].ToString()), CreateBidAsk(item as JObject)))
                 .ToArray();
         }

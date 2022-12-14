@@ -121,6 +121,7 @@ namespace BTCPayServer
                         LightMoneyUnit.BTC),
                 Tag = "withdrawRequest",
                 Callback = new Uri(Request.GetCurrentUrl()),
+                DefaultDescription = pp.GetBlob().Description ?? String.Empty,
             };
             if (pr is null)
             {

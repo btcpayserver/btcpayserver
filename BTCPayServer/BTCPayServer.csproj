@@ -53,7 +53,7 @@
     <PackageReference Include="Fido2" Version="2.0.2" />
     <PackageReference Include="Fido2.AspNet" Version="2.0.2" />
     <PackageReference Include="HtmlSanitizer" Version="5.0.372" />
-    <PackageReference Include="LNURL" Version="0.0.26" />
+    <PackageReference Include="LNURL" Version="0.0.27" />
     <PackageReference Include="MailKit" Version="3.3.0" />
     <PackageReference Include="McMaster.NETCore.Plugins.Mvc" Version="1.4.0" />
     <PackageReference Include="QRCoder" Version="1.4.3" />

@@ -53,7 +53,7 @@
                     <span asp-validation-for="Amount" class="text-danger"></span>
                     @if (!Model.AmountAndCurrencyEditable)
                     {
-                        <p class="text-warning mb-0 mt-2">Amount and currency not editable while payment request has active invoices</p>
+                        <p class="text-warning mb-0 mt-2">Amount and currency are not editable once payment request has invoices</p>
                     }
                 </div>
                 <div class="form-group">

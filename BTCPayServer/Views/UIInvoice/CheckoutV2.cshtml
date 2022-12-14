@@ -50,13 +50,13 @@
     }
 </head>
 <body class="min-vh-100">
-    <div id="Checkout-v2" class="wrap" v-cloak v-waitForT>
-        <header>
+    <div id="Checkout-v2" class="wrap gap-4" v-cloak v-waitForT>
+        <header class="store-header">
             @if (!string.IsNullOrEmpty(logoUrl))
             {
                 <img src="@logoUrl" alt="@Model.StoreName" class="logo @(!string.IsNullOrEmpty(Model.LogoFileId) ? "logo--square" : "")"/>
             }
-            <h1 class="h4 mb-0">@Model.StoreName</h1>
+            <h1>@Model.StoreName</h1>
         </header>
         <main class="shadow-lg">
             <nav v-if="isModal">

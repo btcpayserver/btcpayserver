@@ -214,7 +214,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 if (pr.Amount != data.Amount)
                 {
                     if (pr.Invoices.Any())
-                        ModelState.AddModelError(nameof(data.Amount), "Amount and currency not editable while payment request has active invoices");
+                        ModelState.AddModelError(nameof(data.Amount), "Amount and currency are not editable once payment request has invoices");
                 }
             }
             if (data.Amount <= 0)

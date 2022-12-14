@@ -170,13 +170,28 @@ namespace BTCPayServer.Data
                 }
             }
 
-            var preferredExchange = string.IsNullOrEmpty(PreferredExchange) ? CoinGeckoRateProvider.CoinGeckoName : PreferredExchange;
+            var preferredExchange = string.IsNullOrEmpty(PreferredExchange) ? GetRecommendedExchange() : PreferredExchange;
             builder.AppendLine(CultureInfo.InvariantCulture, $"X_X = {preferredExchange}(X_X);");
 
             BTCPayServer.Rating.RateRules.TryParse(builder.ToString(), out var rules);
             rules.Spread = Spread;
             return rules;
         }
+
+        public static JObject RecommendedExchanges = new ()
+        {
+            { "EUR", "kraken" },
+            { "USD", "kraken" },
+            { "GBP", "kraken" },
+            { "CHF", "kraken" },
+            { "GTQ", "bitpay" },
+            { "COP", "yadio" },
+            { "JPY", "bitbank" },
+            { "TRY", "btcturk" }
+        };
+
+        public string GetRecommendedExchange() =>
+            RecommendedExchanges.Property(DefaultCurrency)?.Value.ToString() ?? "coingecko";
 
         [Obsolete("Use GetExcludedPaymentMethods instead")]
         public string[] ExcludedPaymentMethods { get; set; }

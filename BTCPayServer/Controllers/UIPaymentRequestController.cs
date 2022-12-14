@@ -93,7 +93,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("/stores/{storeId}/payment-requests/edit/{payReqId?}")]
-        public IActionResult EditPaymentRequest(string storeId, string payReqId)
+        public async Task<IActionResult> EditPaymentRequest(string storeId, string payReqId)
         {
             var store = GetCurrentStore();
             var paymentRequest = GetCurrentPaymentRequest();
@@ -102,9 +102,11 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             }
 
+            var prInvoices = payReqId is null ? null : (await _PaymentRequestService.GetPaymentRequest(payReqId, GetUserId())).Invoices;
             var vm = new UpdatePaymentRequestViewModel(paymentRequest)
             {
-                StoreId = store.Id
+                StoreId = store.Id,
+                AmountAndCurrencyEditable = payReqId is null || !prInvoices.Any()
             };
 
             vm.Currency ??= store.GetStoreBlob().DefaultCurrency;
@@ -131,17 +133,24 @@ namespace BTCPayServer.Controllers
             {
                 ModelState.AddModelError(string.Empty, "You cannot edit an archived payment request.");
             }
+            var data = paymentRequest ?? new PaymentRequestData();
+            data.StoreDataId = viewModel.StoreId;
+            data.Archived = viewModel.Archived;
+            var blob = data.GetBlob();
+
+            if (blob.Amount != viewModel.Amount && payReqId != null)
+            {
+                var prInvoices = (await _PaymentRequestService.GetPaymentRequest(payReqId, GetUserId())).Invoices;
+                if (prInvoices.Any())
+                    ModelState.AddModelError(nameof(viewModel.Amount), "Amount and currency are not editable once payment request has invoices");
+            }
 
             if (!ModelState.IsValid)
             {
                 return View(nameof(EditPaymentRequest), viewModel);
             }
 
-            var data = paymentRequest ?? new PaymentRequestData();
-            data.StoreDataId = viewModel.StoreId;
-            data.Archived = viewModel.Archived;
-
-            var blob = data.GetBlob();
+            
             blob.Title = viewModel.Title;
             blob.Email = viewModel.Email;
             blob.Description = viewModel.Description;
@@ -343,10 +352,10 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("{payReqId}/clone")]
-        public IActionResult ClonePaymentRequest(string payReqId)
+        public async Task<IActionResult> ClonePaymentRequest(string payReqId)
         {
             var store = GetCurrentStore();
-            var result = EditPaymentRequest(store.Id, payReqId);
+            var result = await EditPaymentRequest(store.Id, payReqId);
             if (result is ViewResult viewResult)
             {
                 var model = (UpdatePaymentRequestViewModel)viewResult.Model;
@@ -364,7 +373,7 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> TogglePaymentRequestArchival(string payReqId)
         {
             var store = GetCurrentStore();
-            var result = EditPaymentRequest(store.Id, payReqId);
+            var result = await EditPaymentRequest(store.Id, payReqId);
             if (result is ViewResult viewResult)
             {
                 var model = (UpdatePaymentRequestViewModel)viewResult.Model;

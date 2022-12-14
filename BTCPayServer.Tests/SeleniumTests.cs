@@ -942,6 +942,11 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("ClearExpiryDate")).Click();
             s.Driver.FindElement(By.Id("SaveButton")).Click();
             s.Driver.FindElement(By.XPath("//a[starts-with(@id, 'Edit-')]")).Click();
+
+            // amount and currency should be editable, because no invoice exists
+            s.GoToUrl(editUrl);
+            Assert.True(s.Driver.FindElement(By.Id("Amount")).Enabled);
+            Assert.True(s.Driver.FindElement(By.Id("Currency")).Enabled);
             
             s.GoToUrl(viewUrl);
             s.Driver.AssertElementNotFound(By.CssSelector("[data-test='status']"));
@@ -953,8 +958,12 @@ namespace BTCPayServer.Tests
             s.Driver.WaitForElement(By.CssSelector("invoice"));
             Assert.Contains("Awaiting Payment", s.Driver.PageSource);
             
-            // archive (from details page)
+            // amount and currency should not be editable, because invoice exists
             s.GoToUrl(editUrl);
+            Assert.False(s.Driver.FindElement(By.Id("Amount")).Enabled);
+            Assert.False(s.Driver.FindElement(By.Id("Currency")).Enabled);
+            
+            // archive (from details page)
             var payReqId = s.Driver.Url.Split('/').Last();
             s.Driver.FindElement(By.Id("ArchivePaymentRequest")).Click();
             Assert.Contains("The payment request has been archived", s.FindAlertMessage().Text);

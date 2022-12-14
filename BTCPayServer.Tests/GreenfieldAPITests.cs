@@ -1409,6 +1409,12 @@ namespace BTCPayServer.Tests
             var invoiceData = await client.PayPaymentRequest(user.StoreId, paymentTestPaymentRequest.Id, new PayPaymentRequestRequest());
             await Pay(invoiceData.Id);
 
+            // Can't update amount once invoice has been created
+            await AssertValidationError(new[] { "Amount" }, () => client.UpdatePaymentRequest(user.StoreId, paymentTestPaymentRequest.Id, new UpdatePaymentRequestRequest()
+            {
+                Amount = 294m
+            }));
+
             // Let's tests some unhappy path
             paymentTestPaymentRequest = await client.CreatePaymentRequest(user.StoreId,
                 new CreatePaymentRequestRequest() { Amount = 0.1m, AllowCustomPaymentAmounts = false, Currency = "BTC", Title = "Payment test title" });

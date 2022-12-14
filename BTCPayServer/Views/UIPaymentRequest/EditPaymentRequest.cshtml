@@ -49,12 +49,16 @@
             <div class="d-flex justify-content-between">
                 <div class="form-group flex-fill me-4">
                     <label asp-for="Amount" class="form-label" data-required></label>
-                    <input type="number" inputmode="decimal" step="any" asp-for="Amount" class="form-control" required />
+                    <input type="number" inputmode="decimal" step="any" asp-for="Amount" class="form-control" required disabled="@(!Model.AmountAndCurrencyEditable)" />
                     <span asp-validation-for="Amount" class="text-danger"></span>
+                    @if (!Model.AmountAndCurrencyEditable)
+                    {
+                        <p class="text-warning mb-0 mt-2">Amount and currency are not editable once payment request has invoices</p>
+                    }
                 </div>
                 <div class="form-group">
                     <label asp-for="Currency" class="form-label"></label>
-                    <input asp-for="Currency" class="form-control w-auto" currency-selection />
+                    <input asp-for="Currency" class="form-control w-auto" currency-selection disabled="@(!Model.AmountAndCurrencyEditable)" />
                     <span asp-validation-for="Currency" class="text-danger"></span>
                 </div>
             </div>

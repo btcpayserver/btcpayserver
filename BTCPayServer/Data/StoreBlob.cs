@@ -184,8 +184,8 @@ namespace BTCPayServer.Data
             { "USD", "kraken" },
             { "GBP", "kraken" },
             { "CHF", "kraken" },
-            { "GTQ", "yadio" },
-            { "COP", "kraken" },
+            { "GTQ", "bitpay" },
+            { "COP", "yadio" },
             { "JPY", "bitbank" },
             { "TRY", "btcturk" }
         };

@@ -215,7 +215,7 @@ namespace BTCPayServer.Controllers
             return View(new InvoiceReceiptViewModel
             {
                 StoreName = store.StoreName,
-                StoreLogoFieldId = store.GetStoreBlob().LogoFileId,
+                StoreLogoFileId = store.GetStoreBlob().LogoFileId,
                 Status = i.Status.ToModernStatus(),
                 Amount = payments.Sum(p => p!.Paid),
                 Currency = i.Currency,

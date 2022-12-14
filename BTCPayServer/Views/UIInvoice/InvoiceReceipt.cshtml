@@ -39,9 +39,9 @@
                 <partial name="_StatusMessage" model="@(new ViewDataDictionary(ViewData) { { "Margin", "mb-4" } })"/>
                 
                 <div class="d-flex flex-column justify-content-center gap-4">
-                    @if (!string.IsNullOrEmpty(Model.StoreLogoFieldId))
+                    @if (!string.IsNullOrEmpty(Model.StoreLogoFileId))
                     {
-                        <img src="@(await FileService.GetFileUrl(Context.Request.GetAbsoluteRootUri(), Model.StoreLogoFieldId))" alt="@Model.StoreName" class="align-self-center w-150px" />
+                        <img src="@(await FileService.GetFileUrl(Context.Request.GetAbsoluteRootUri(), Model.StoreLogoFileId))" alt="@Model.StoreName" class="align-self-center w-150px" />
                     }
                     <h1 class="h3 text-center">@ViewData["Title"]</h1>
                     <div id="InvoiceSummary" class="bg-tile p-3 p-sm-4 rounded d-flex flex-wrap align-items-center">

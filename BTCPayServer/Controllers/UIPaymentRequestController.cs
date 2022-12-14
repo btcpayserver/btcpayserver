@@ -142,7 +142,7 @@ namespace BTCPayServer.Controllers
             {
                 var prInvoices = (await _PaymentRequestService.GetPaymentRequest(payReqId, GetUserId())).Invoices;
                 if (prInvoices.Any())
-                    ModelState.AddModelError(nameof(viewModel.Amount), "Amount and currency not editable while payment request has active invoices");
+                    ModelState.AddModelError(nameof(viewModel.Amount), "Amount and currency are not editable once payment request has invoices");
             }
 
             if (!ModelState.IsValid)

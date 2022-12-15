@@ -1,5 +1,4 @@
 :root {
-    --logo-size: 3rem;
     --navbutton-size: .8rem;
     --qr-size: 256px;
     --section-padding: 1.5rem;
@@ -11,18 +10,8 @@
     flex-direction: column;
     min-height: 100vh;
     margin: 0 auto;
-    padding: var(--btcpay-space-m);
+    padding: var(--btcpay-space-l); var(--btcpay-space-m);
     max-width: var(--wrap-max-width);
-}
-header,
-footer {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: var(--section-padding);
-}
-header {
-    gap: var(--btcpay-space-s);
 }
 main {
     position: relative;
@@ -94,13 +83,6 @@ section dl > div dd {
     text-align: right;
     word-wrap: break-word;
     word-break: break-word;
-}
-.logo {
-    height: var(--logo-size);
-}
-.logo--square {
-    width: var(--logo-size);
-    border-radius: 50%;
 }
 .info {
     color: var(--btcpay-neutral-700);
@@ -209,9 +191,12 @@ section dl > div dd {
     color: var(--btcpay-body-text-muted);
 }
 footer {
-    margin-top: auto;
-    padding-top: 2.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     gap: var(--btcpay-space-m);
+    margin-top: auto;
+    padding: var(--section-padding) var(--section-padding) 0;
 }
 footer,
 footer a,
@@ -249,7 +234,8 @@ footer a:hover .logo-brand-dark {
 
 @media (max-width: 400px) {
     .wrap {
-        padding: 0;
+        padding-left: 0;
+        padding-right: 0;
     }
     main {
         border-radius: 0;

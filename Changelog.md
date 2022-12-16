@@ -6,6 +6,7 @@
 
 * Greenfield: Add `DescriptionHashOnly` to Lightning invoice creation endpoint (#4411) @NicolasDorier
 * Greenfield: Breaking change, `DescriptionHash` in the Lightning invoice creation endpoint has been removed (#4411) @NicolasDorier
+* UI: Theme extensions (#4398) @dennisreimann
 
 ### Bug fixes
 
@@ -28,7 +29,6 @@
 * Rate provider: Use better default than Coingecko when creating a new store (#4416) @NicolasDorier
 * Add DefaultDescription to LNURL withdrawal request (#4434) @bolatovumar
 * Disabled amount/currency update for payment request with active invoices (#4390) @bolatovumar
-* UI: Theme extensions (#4398) @dennisreimann
 * Add store logo to invoice receipt page (#4435) @bolatovumar
 * Add links to docs and API in the footer (#4431) @NicolasDorier
 

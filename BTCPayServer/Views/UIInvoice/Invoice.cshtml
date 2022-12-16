@@ -103,7 +103,7 @@
         }
         @if (Model.CanRefund)
         {
-            <a asp-action="Refund" asp-route-invoiceId="@Model.Id" id="IssueRefund" class="btn btn-success text-nowrap" data-bs-toggle="modal" data-bs-target="#RefundModal">Issue Refund</a>
+            <a asp-action="Refund" asp-route-invoiceId="@Model.Id" id="IssueRefund" class="btn btn-primary text-nowrap" data-bs-toggle="modal" data-bs-target="#RefundModal">Issue Refund</a>
         }
         else
         {

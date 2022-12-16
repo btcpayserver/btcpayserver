@@ -73,12 +73,12 @@
                     <input asp-for="ApiKey" readonly class="form-control"/>
                     @if (string.IsNullOrEmpty(Model.ApiKey))
                     {
-                        <button class="btn btn-success ms-3" type="submit">Generate</button>
+                        <button class="btn btn-primary ms-3" type="submit">Generate</button>
                     }
                     else
                     {
                         <button class="btn btn-danger ms-3" type="submit" name="command" value="revoke">Revoke</button>
-                        <button class="btn btn-success ms-3" type="submit">Regenerate</button>
+                        <button class="btn btn-primary ms-3" type="submit">Regenerate</button>
                     }
                 </div>
             </div>

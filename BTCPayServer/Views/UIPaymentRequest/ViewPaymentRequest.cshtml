@@ -355,7 +355,7 @@
                                             </tr>
                                             <template v-for="payment of invoice.payments">
                                                 <tr class="table-borderless table-light">
-                                                    <td class="text-break"><code>bcrt1qa566r3y3ngwxrxl0wr97pp9q8kl5zpkv0u377zbcrt1qa566r3y3ngwxrxl0wr97pp9q8kl5zpkv0u377zbcrt1qa566r3y3ngwxrxl0wr97pp9q8kl5zpkv0u377zbcrt1qa566r3y3ngwxrxl0wr97pp9q8kl5zpkv0u377zbcrt1qa566r3y3ngwxrxl0wr97pp9q8kl5zpkv0u377zbcrt1qa566r3y3ngwxrxl0wr97pp9q8kl5zpkv0u377zbcrt1qa566r3y3ngwxrxl0wr97pp9q8kl5zpkv0u377zbcrt1qa566r3y3ngwxrxl0wr97pp9q8kl5zpkv0u377zbcrt1qa566r3y3ngwxrxl0wr97pp9q8kl5zpkv0u377zbcrt1qa566r3y3ngwxrxl0wr97pp9q8kl5zpkv0u377zbcrt1qa566r3y3ngwxrxl0wr97pp9q8kl5zpkv0u377zbcrt1qa566r3y3ngwxrxl0wr97pp9q8kl5zpkv0u377zbcrt1qa566r3y3ngwxrxl0wr97pp9q8kl5zpkv0u377zbcrt1qa566r3y3ngwxrxl0wr97pp9q8kl5zpkv0u377z</code></td>
+                                                                                                        <td class="text-break"><code>{{payment.destination}}</code></td>
                                                     <td v-text="formatDate(payment.receivedDate)"></td>
                                                     <td class="text-end">{{payment.paidFormatted}}</td>
                                                     <td class="text-end">{{payment.rateFormatted}}</td>

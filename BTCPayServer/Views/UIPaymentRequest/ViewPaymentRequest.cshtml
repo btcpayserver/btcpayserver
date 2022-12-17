@@ -63,6 +63,11 @@
         .invoice { margin-top: var(--btcpay-space-s); }
         .invoice + .invoice { margin-top: var(--btcpay-space-m); }
         .invoice .badge { font-size: var(--btcpay-font-size-s); }
+
+        @@media print {
+            @* This is to avoid table header showing up twice: https://github.com/btcpayserver/btcpayserver/issues/4341 *@
+            thead { display: table-row-group; }
+        }
     </style>
 </head>
 <body>

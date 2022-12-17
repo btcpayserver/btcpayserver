@@ -9,14 +9,21 @@ function confirmCopy(el, message) {
     }, 2500);
 }
 
-window.copyToClipboard = function (e, data) {
+window.copyToClipboard = async function (e, data) {
     e.preventDefault();
     const item = e.target.closest('[data-clipboard]') || e.target.closest('[data-clipboard-target]') || e.target;
     const confirm = item.dataset.clipboardConfirmElement
         ? document.getElementById(item.dataset.clipboardConfirmElement) || item
         : item.querySelector('[data-clipboard-confirm]') || item;
     const message = confirm.getAttribute('data-clipboard-confirm') || 'Copied';
-    if (navigator.clipboard) {
+    // Check compatibility and permissions:
+    // https://web.dev/async-clipboard/#security-and-permissions
+    let hasPermission = false;
+    try {
+        const permissionStatus = await navigator.permissions.query({ name: 'clipboard-write', allowWithoutGesture: false });
+        hasPermission = permissionStatus.state === 'granted';
+    } catch (err) {}
+    if (navigator.clipboard && hasPermission) {
         navigator.clipboard.writeText(data).then(function () {
             confirmCopy(confirm, message);
         });

@@ -21,7 +21,7 @@
     private string PaymentMethodName(PaymentModel.AvailableCrypto pm)
     {
         return Model.AltcoinsBuild
-            ? $"{pm.PaymentMethodName} {pm.CryptoCode}"
+            ? pm.PaymentMethodName
             : pm.PaymentMethodName.Replace("Bitcoin (", "").Replace(")", "").Replace("Lightning ", "");
     }
 

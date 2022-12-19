@@ -411,7 +411,3 @@
   --btcpay-dark-shadow: rgba(66, 70, 73, 0.33);
   --btcpay-dark-rgb: 33, 38, 45;
 }
-
-.service-box img {
-  filter: hue-rotate(318deg);
-}

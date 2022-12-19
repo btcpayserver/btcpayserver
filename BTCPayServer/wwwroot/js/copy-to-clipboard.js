@@ -18,15 +18,16 @@ window.copyToClipboard = async function (e, data) {
     const message = confirm.getAttribute('data-clipboard-confirm') || 'Copied';
     // Check compatibility and permissions:
     // https://web.dev/async-clipboard/#security-and-permissions
-    let hasPermission = false;
-    try {
-        const permissionStatus = await navigator.permissions.query({ name: 'clipboard-write', allowWithoutGesture: false });
-        hasPermission = permissionStatus.state === 'granted';
-    } catch (err) {}
+    let hasPermission = true;
+    if (navigator.clipboard && navigator.permissions) {
+        try {
+            const permissionStatus = await navigator.permissions.query({ name: 'clipboard-write', allowWithoutGesture: false });
+            hasPermission = permissionStatus.state === 'granted';
+        } catch (err) {}
+    }
     if (navigator.clipboard && hasPermission) {
-        navigator.clipboard.writeText(data).then(function () {
-            confirmCopy(confirm, message);
-        });
+        await navigator.clipboard.writeText(data);
+        confirmCopy(confirm, message);
     } else {
         const copyEl = document.createElement('textarea');
         copyEl.style.position = 'absolute';

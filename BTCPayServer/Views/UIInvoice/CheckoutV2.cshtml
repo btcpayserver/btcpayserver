@@ -15,7 +15,7 @@
     var paymentMethodCount = Model.AvailableCryptos.Count;
     var logoUrl = !string.IsNullOrEmpty(Model.LogoFileId)
         ? await FileService.GetFileUrl(Context.Request.GetAbsoluteRootUri(), Model.LogoFileId)
-        : Model.CustomLogoLink;
+        : null;
 }
 @functions {
     private string PaymentMethodName(PaymentModel.AvailableCrypto pm)
@@ -36,27 +36,16 @@
     <partial name="LayoutHead"/>
     <meta name="robots" content="noindex,nofollow">
     <link href="~/checkout-v2/checkout.css" asp-append-version="true" rel="stylesheet" />
-    @if (!string.IsNullOrEmpty(Model.BrandColor))
-    {
-        <style>
-            :root {
-                --btcpay-primary: @Model.BrandColor;
-                --btcpay-primary-bg-hover: @Model.BrandColor;
-                --btcpay-primary-bg-active: @Model.BrandColor;
-                --btcpay-primary-shadow: @Model.BrandColor;
-                --btcpay-body-link-accent: @Model.BrandColor;
-            }
-        </style>
-    }
+    <partial name="LayoutHeadStoreBranding" model="@(Model.BrandColor, Model.CssFileId)" />
 </head>
 <body class="min-vh-100">
     <div id="Checkout-v2" class="wrap gap-4" v-cloak v-waitForT>
         <header class="store-header">
             @if (!string.IsNullOrEmpty(logoUrl))
             {
-                <img src="@logoUrl" alt="@Model.StoreName" class="logo @(!string.IsNullOrEmpty(Model.LogoFileId) ? "logo--square" : "")"/>
+                <img src="@logoUrl" alt="@Model.StoreName" class="store-logo"/>
             }
-            <h1>@Model.StoreName</h1>
+            <h1 class="store-name">@Model.StoreName</h1>
         </header>
         <main class="shadow-lg">
             <nav v-if="isModal">

@@ -207,24 +207,24 @@ h2 small .fa-question-circle-o {
 
 /* Store header */
 .store-header {
-    --logo-size: 3rem;
-    
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: var(--btcpay-space-s);
 }
 
-.store-header .logo {
-    height: var(--logo-size);
-}
+.store-logo {
+    --logo-size: 3rem;
+    --logo-bg: transparent;
+    --logo-radius: 50%;
 
-.store-header .logo--square {
     width: var(--logo-size);
-    border-radius: 50%;
+    height: var(--logo-size);
+    background: var(--logo-bg);
+    border-radius: var(--logo-radius);
 }
 
-.store-header h1 {
+.store-name {
     font-size: 1.3rem;
 }
 

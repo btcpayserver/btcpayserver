@@ -604,6 +604,7 @@ namespace BTCPayServer.Controllers
                 StoreName = store.StoreName,
                 StoreWebsite = store.StoreWebsite,
                 LogoFileId = storeBlob.LogoFileId,
+                CssFileId = storeBlob.CssFileId,
                 BrandColor = storeBlob.BrandColor,
                 NetworkFeeMode = storeBlob.NetworkFeeMode,
                 AnyoneCanCreateInvoice = storeBlob.AnyoneCanInvoice,
@@ -618,7 +619,10 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost("{storeId}/settings")]
-        public async Task<IActionResult> GeneralSettings(GeneralSettingsViewModel model, [FromForm] bool RemoveLogoFile = false)
+        public async Task<IActionResult> GeneralSettings(
+            GeneralSettingsViewModel model,
+            [FromForm] bool RemoveLogoFile = false,
+            [FromForm] bool RemoveCssFile = false)
         {
             bool needUpdate = false;
             if (CurrentStore.StoreName != model.StoreName)
@@ -681,6 +685,39 @@ namespace BTCPayServer.Controllers
             {
                 await _fileService.RemoveFile(blob.LogoFileId, userId);
                 blob.LogoFileId = null;
+                needUpdate = true;
+            }
+            
+            if (model.CssFile != null)
+            {
+                if (model.CssFile.ContentType.Equals("text/css", StringComparison.InvariantCulture))
+                {
+                    // delete existing CSS file
+                    if (!string.IsNullOrEmpty(blob.CssFileId))
+                    {
+                        await _fileService.RemoveFile(blob.CssFileId, userId);
+                    }
+                    
+                    // add new CSS file
+                    try
+                    {
+                        var storedFile = await _fileService.AddFile(model.CssFile, userId);
+                        blob.CssFileId = storedFile.Id;
+                    }
+                    catch (Exception e)
+                    {
+                        TempData[WellKnownTempData.ErrorMessage] = $"Could not save CSS file: {e.Message}";
+                    }
+                }
+                else
+                {
+                    TempData[WellKnownTempData.ErrorMessage] = "The uploaded file needs to be a CSS file";
+                }
+            }
+            else if (RemoveCssFile && !string.IsNullOrEmpty(blob.CssFileId))
+            {
+                await _fileService.RemoveFile(blob.CssFileId, userId);
+                blob.CssFileId = null;
                 needUpdate = true;
             }
             

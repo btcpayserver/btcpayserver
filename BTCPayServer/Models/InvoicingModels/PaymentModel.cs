@@ -24,6 +24,7 @@ namespace BTCPayServer.Models.InvoicingModels
         }
         public string CustomCSSLink { get; set; }
         public string CustomLogoLink { get; set; }
+        public string CssFileId { get; set; }
         public string LogoFileId { get; set; }
         public string BrandColor { get; set; }
         public string HtmlTitle { get; set; }

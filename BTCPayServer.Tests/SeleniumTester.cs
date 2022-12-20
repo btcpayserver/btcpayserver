@@ -192,7 +192,7 @@ namespace BTCPayServer.Tests
             Driver.SetCheckbox(By.Id("UseNewCheckout"), true);
             Driver.WaitForElement(By.Id("OnChainWithLnInvoiceFallback"));
             Driver.SetCheckbox(By.Id("OnChainWithLnInvoiceFallback"), bip21);
-            Driver.FindElement(By.Id("Save")).Click();
+            Driver.FindElement(By.Id("Save")).SendKeys(Keys.Enter);
             Assert.Contains("Store successfully updated", FindAlertMessage().Text);
             Assert.True(Driver.FindElement(By.Id("UseNewCheckout")).Selected);
         }

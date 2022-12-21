@@ -25,18 +25,20 @@ namespace BTCPayServer.Controllers.Greenfield
         private readonly AppService _appService;
         private readonly StoreRepository _storeRepository;
         private readonly CurrencyNameTable _currencies;
+        private readonly UserManager<ApplicationUser> _userManager;
 
         public GreenfieldAppsController(
             AppService appService,
             StoreRepository storeRepository,
-            UserManager<ApplicationUser> userManager,
             BTCPayNetworkProvider btcPayNetworkProvider,
-            CurrencyNameTable currencies
+            CurrencyNameTable currencies,
+            UserManager<ApplicationUser> userManager
         )
         {
             _appService = appService;
             _storeRepository = storeRepository;
             _currencies = currencies;
+            _userManager = userManager;
         }
 
         [HttpPost("~/api/v1/stores/{storeId}/apps/crowdfund")]
@@ -143,6 +145,24 @@ namespace BTCPayServer.Controllers.Greenfield
             }
         }
 
+        [HttpGet("~/api/v1/apps")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        public async Task<IActionResult> GetAllApps()
+        {
+            var apps = await _appService.GetAllApps(_userManager.GetUserId(User));
+
+            return Ok(apps.Select(ToModel).ToArray());
+        }
+
+        [HttpGet("~/api/v1/stores/{storeId}/apps")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        public async Task<IActionResult> GetAllApps(string storeId)
+        {
+            var apps = await _appService.GetAllApps(_userManager.GetUserId(User), allowNoUser: false, storeId);
+
+            return Ok(apps.Select(ToModel).ToArray());
+        }
+
         [HttpGet("~/api/v1/apps/{appId}")]
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> GetApp(string appId)
@@ -246,6 +266,18 @@ namespace BTCPayServer.Controllers.Greenfield
                 AppType = appData.AppType,
                 Name = appData.Name,
                 StoreId = appData.StoreDataId,
+                Created = appData.Created,
+            };
+        }
+
+        private AppDataBase ToModel(Models.AppViewModels.ListAppsViewModel.ListAppViewModel appData)
+        {
+            return new AppDataBase
+            {
+                Id = appData.Id,
+                AppType = appData.AppType,
+                Name = appData.AppName,
+                StoreId = appData.StoreId,
                 Created = appData.Created,
             };
         }

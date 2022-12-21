@@ -51,6 +51,24 @@ namespace BTCPayServer.Client
                     method: HttpMethod.Get), token);
             return await HandleResponse<AppDataBase>(response);
         }
+        
+        public virtual async Task<AppDataBase[]> GetAllApps(string storeId, CancellationToken token = default)
+        {
+            if (storeId == null)
+                throw new ArgumentNullException(nameof(storeId));
+            var response = await _httpClient.SendAsync(
+                CreateHttpRequest($"api/v1/stores/{storeId}/apps",
+                    method: HttpMethod.Get), token);
+            return await HandleResponse<AppDataBase[]>(response);
+        }
+
+        public virtual async Task<AppDataBase[]> GetAllApps(CancellationToken token = default)
+        {
+            var response = await _httpClient.SendAsync(
+                CreateHttpRequest($"api/v1/apps",
+                    method: HttpMethod.Get), token);
+            return await HandleResponse<AppDataBase[]>(response);
+        }
 
         public virtual async Task DeleteApp(string appId, CancellationToken token = default)
         {

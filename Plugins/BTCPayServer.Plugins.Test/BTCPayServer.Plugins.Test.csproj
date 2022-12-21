@@ -9,7 +9,7 @@
   </PropertyGroup>
     <ItemGroup>
       <FrameworkReference Include="Microsoft.AspNetCore.App" />
-      <ProjectReference Include="..\BTCPayServer.Abstractions\BTCPayServer.Abstractions.csproj" />
+      <ProjectReference Include="..\..\BTCPayServer.Abstractions\BTCPayServer.Abstractions.csproj" />
       <EmbeddedResource Include="Resources\**" />
     </ItemGroup>
     <ItemGroup>

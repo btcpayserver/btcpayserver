@@ -31,7 +31,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BTCPayServer.Client", "BTCP
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BTCPayServer.Abstractions", "BTCPayServer.Abstractions\BTCPayServer.Abstractions.csproj", "{A0D50BB6-FE2C-4671-8693-F7582B66178F}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BTCPayServer.Plugins.Test", "BTCPayServer.Plugins.Test\BTCPayServer.Plugins.Test.csproj", "{545AFC8E-7BC2-43D9-84CA-F9468F4FF295}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BTCPayServer.Plugins.Test", "Plugins\BTCPayServer.Plugins.Test\BTCPayServer.Plugins.Test.csproj", "{545AFC8E-7BC2-43D9-84CA-F9468F4FF295}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Plugins", "Plugins", "{1FC7F660-ADF1-4D55-B61A-85C6AB083C33}"
 EndProject

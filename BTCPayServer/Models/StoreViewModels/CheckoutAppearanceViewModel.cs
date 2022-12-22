@@ -55,6 +55,10 @@ namespace BTCPayServer.Models.StoreViewModels
         [Display(Name = "Custom HTML title to display on Checkout page")]
         public string HtmlTitle { get; set; }
 
+        [Display(Name = "Show expiration timer once … minutes are left")]
+        [Range(1, 60 * 24 * 24)]
+        public int TimerExpiration { get; set; }
+
         public class ReceiptOptionsViewModel
         {
             public static ReceiptOptionsViewModel Create(Client.Models.InvoiceDataBase.ReceiptOptions opts)

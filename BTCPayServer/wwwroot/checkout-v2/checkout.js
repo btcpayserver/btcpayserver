@@ -113,7 +113,8 @@ function initApp() {
                 return this.showTimer || this.showPaymentDueInfo;
             },
             showTimer () {
-                return this.isActive && (this.expirationPercentage >= 75 || this.minutesLeft < 5);
+                return this.isActive && (this.expirationPercentage >= 75 ||
+                    this.remainingSeconds < this.srvModel.timerExpirationSeconds);
             },
             showPaymentDueInfo () {
                 return this.btcPaid > 0 && this.btcDue > 0;

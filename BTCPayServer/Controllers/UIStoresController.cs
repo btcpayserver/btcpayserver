@@ -390,6 +390,7 @@ namespace BTCPayServer.Controllers
             vm.CustomCSS = storeBlob.CustomCSS;
             vm.CustomLogo = storeBlob.CustomLogo;
             vm.HtmlTitle = storeBlob.HtmlTitle;
+            vm.TimerExpiration = (int)storeBlob.TimerExpiration.TotalMinutes;
             vm.ReceiptOptions = CheckoutAppearanceViewModel.ReceiptOptionsViewModel.Create(storeBlob.ReceiptOptions);
             vm.AutoDetectLanguage = storeBlob.AutoDetectLanguage;
             vm.SetLanguages(_LangService, storeBlob.DefaultLang);
@@ -436,8 +437,7 @@ namespace BTCPayServer.Controllers
             return defaultChoice is null ? null : choices.FirstOrDefault(c => defaultChoice.ToString().Equals(c.Value, StringComparison.OrdinalIgnoreCase));
         }
 
-        [HttpPost]
-        [Route("{storeId}/checkout")]
+        [HttpPost("{storeId}/checkout")]
         public async Task<IActionResult> CheckoutAppearance(CheckoutAppearanceViewModel model)
         {
             bool needUpdate = false;
@@ -513,6 +513,7 @@ namespace BTCPayServer.Controllers
             blob.CustomLogo = model.CustomLogo;
             blob.CustomCSS = model.CustomCSS;
             blob.HtmlTitle = string.IsNullOrWhiteSpace(model.HtmlTitle) ? null : model.HtmlTitle;
+            blob.TimerExpiration = TimeSpan.FromMinutes(model.TimerExpiration);
             blob.AutoDetectLanguage = model.AutoDetectLanguage;
             blob.DefaultLang = model.DefaultLang;
             blob.NormalizeToRelativeLinks(Request);

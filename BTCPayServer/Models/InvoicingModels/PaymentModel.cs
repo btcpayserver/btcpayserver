@@ -40,6 +40,7 @@ namespace BTCPayServer.Models.InvoicingModels
         public bool ShowRecommendedFee { get; set; }
         public decimal FeeRate { get; set; }
         public int ExpirationSeconds { get; set; }
+        public int TimerExpirationSeconds { get; set; }
         public string Status { get; set; }
         public string MerchantRefLink { get; set; }
         public int MaxTimeSeconds { get; set; }

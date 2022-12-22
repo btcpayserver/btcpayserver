@@ -27,13 +27,13 @@
                     <div class="accordion-body">
                         <ul class="navbar-nav">
                             <li class="nav-item">
-                                <a asp-area="" asp-controller="UIStores" asp-action="Dashboard" asp-route-storeId="@Model.Store.Id" class="nav-link js-scroll-trigger @ViewData.IsActivePage(StoreNavPages.Dashboard)" id="StoreNav-Dashboard">
+                                <a asp-area="" asp-controller="UIStores" asp-action="Dashboard" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.IsActivePage(StoreNavPages.Dashboard)" id="StoreNav-Dashboard">
                                     <vc:icon symbol="home"/>
                                     <span>Dashboard</span>
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a asp-area="" asp-controller="UIStores" asp-action="GeneralSettings" asp-route-storeId="@Model.Store.Id" class="nav-link js-scroll-trigger @ViewData.IsActivePage(new [] {StoreNavPages.Rates, StoreNavPages.CheckoutAppearance, StoreNavPages.General, StoreNavPages.Tokens, StoreNavPages.Users, StoreNavPages.Plugins, StoreNavPages.Webhooks, StoreNavPages.PayoutProcessors, StoreNavPages.Emails})" id="StoreNav-StoreSettings">
+                                <a asp-area="" asp-controller="UIStores" asp-action="GeneralSettings" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.IsActivePage(new [] {StoreNavPages.Rates, StoreNavPages.CheckoutAppearance, StoreNavPages.General, StoreNavPages.Tokens, StoreNavPages.Users, StoreNavPages.Plugins, StoreNavPages.Webhooks, StoreNavPages.PayoutProcessors, StoreNavPages.Emails})" id="StoreNav-StoreSettings">
                                     <vc:icon symbol="settings"/>
                                     <span>Settings</span>
                                 </a>
@@ -56,7 +56,7 @@
                                     <li class="nav-item">
                                         @if (isSetUp && scheme.WalletSupported)
                                         {
-                                            <a asp-area="" asp-controller="UIWallets" asp-action="WalletTransactions" asp-route-walletId="@scheme.WalletId" class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(WalletsNavPages), scheme.WalletId.ToString()) @ViewData.IsActivePage(StoreNavPages.OnchainSettings)" id="@($"StoreNav-Wallet{scheme.Crypto}")">
+                                            <a asp-area="" asp-controller="UIWallets" asp-action="WalletTransactions" asp-route-walletId="@scheme.WalletId" class="nav-link @ViewData.IsActiveCategory(typeof(WalletsNavPages), scheme.WalletId.ToString()) @ViewData.IsActivePage(StoreNavPages.OnchainSettings)" id="@($"StoreNav-Wallet{scheme.Crypto}")">
                                                 <span class="me-2 btcpay-status btcpay-status--@(scheme.Enabled ? "enabled" : "pending")"></span>
                                                 <span>@(Model.AltcoinsBuild ? $"{scheme.Crypto} Wallet" : "Bitcoin")</span>
                                             </a>
@@ -97,7 +97,7 @@
                                     @foreach (var custodianAccount in Model.CustodianAccounts)
                                     {
                                         <li class="nav-item">
-                                            <a asp-area="" asp-controller="UICustodianAccounts" asp-action="ViewCustodianAccount" asp-route-storeId="@custodianAccount.StoreId" asp-route-accountId="@custodianAccount.Id" class="nav-link js-scroll-trigger @ViewData.IsActivePage(CustodianAccountsNavPages.View, custodianAccount.Id)" id="@($"StoreNav-CustodianAccount-{custodianAccount.Id}")">
+                                            <a asp-area="" asp-controller="UICustodianAccounts" asp-action="ViewCustodianAccount" asp-route-storeId="@custodianAccount.StoreId" asp-route-accountId="@custodianAccount.Id" class="nav-link @ViewData.IsActivePage(CustodianAccountsNavPages.View, custodianAccount.Id)" id="@($"StoreNav-CustodianAccount-{custodianAccount.Id}")">
                                                 @* TODO which icon should we use? *@
                                                 <span>@custodianAccount.Name</span>
                                                 <span class="badge bg-warning ms-1" style="font-size:10px;">Experimental</span>
@@ -105,7 +105,7 @@
                                         </li>
                                     }
                                     <li class="nav-item">
-                                        <a asp-area="" asp-controller="UICustodianAccounts" asp-action="CreateCustodianAccount" asp-route-storeId="@Model.Store.Id" class="nav-link js-scroll-trigger @ViewData.IsActivePage(CustodianAccountsNavPages.Create)" id="StoreNav-CreateCustodianAccount">
+                                        <a asp-area="" asp-controller="UICustodianAccounts" asp-action="CreateCustodianAccount" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.IsActivePage(CustodianAccountsNavPages.Create)" id="StoreNav-CreateCustodianAccount">
                                             <vc:icon symbol="new"/>
                                             <span>Add Custodian</span>
                                             <span class="badge bg-warning ms-1" style="font-size:10px;">Experimental</span>
@@ -127,13 +127,13 @@
                             <div class="accordion-body">
                                 <ul class="navbar-nav">
                                     <li class="nav-item" permission="@Policies.CanViewInvoices">
-                                        <a asp-area="" asp-controller="UIInvoice" asp-action="ListInvoices" asp-route-storeId="@Model.Store.Id" class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(InvoiceNavPages))" id="StoreNav-Invoices">
+                                        <a asp-area="" asp-controller="UIInvoice" asp-action="ListInvoices" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.IsActiveCategory(typeof(InvoiceNavPages))" id="StoreNav-Invoices">
                                             <vc:icon symbol="invoice"/>
                                             <span>Invoices</span>
                                         </a>
                                     </li>
                                     <li class="nav-item" permission="@Policies.CanModifyStoreSettings">
-                                        <a asp-area="" asp-controller="UIPaymentRequest" asp-action="GetPaymentRequests" asp-route-storeId="@Model.Store.Id" class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(PaymentRequestsNavPages))" id="StoreNav-PaymentRequests">
+                                        <a asp-area="" asp-controller="UIPaymentRequest" asp-action="GetPaymentRequests" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.IsActiveCategory(typeof(PaymentRequestsNavPages))" id="StoreNav-PaymentRequests">
                                             <vc:icon symbol="payment-requests"/>
                                             <span>Requests</span>
                                         </a>
@@ -170,7 +170,7 @@
                                     <vc:ui-extension-point location="apps-nav" model="@app"/>
                                 }
                                 <li class="nav-item">
-                                    <a asp-area="" asp-controller="UIApps" asp-action="CreateApp" asp-route-storeId="@Model.Store.Id" class="nav-link js-scroll-trigger @ViewData.IsActivePage(AppsNavPages.Create)" id="StoreNav-CreateApp">
+                                    <a asp-area="" asp-controller="UIApps" asp-action="CreateApp" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.IsActivePage(AppsNavPages.Create)" id="StoreNav-CreateApp">
                                         <vc:icon symbol="new"/>
                                         <span>New App</span>
                                     </a>
@@ -196,7 +196,7 @@
                                 <vc:ui-extension-point location="store-integrations-nav" model="@Model"/>
                             }
                             <li class="nav-item" permission="@Policies.CanModifyServerSettings">
-                                <a asp-area="" asp-controller="UIServer" asp-action="ListPlugins" class="nav-link js-scroll-trigger @ViewData.IsActivePage(ServerNavPages.Plugins)" id="Nav-ManagePlugins">
+                                <a asp-area="" asp-controller="UIServer" asp-action="ListPlugins" class="nav-link @ViewData.IsActivePage(ServerNavPages.Plugins)" id="Nav-ManagePlugins">
                                     <vc:icon symbol="new"/>
                                     <span>Manage Plugins</span>
                                 </a>
@@ -234,11 +234,11 @@
                 @if (!PoliciesSettings.LockSubscription)
                 {
                     <li class="nav-item">
-                        <a asp-area="" asp-controller="UIAccount" asp-action="Register" class="nav-link js-scroll-trigger" id="Nav-Register">Register</a>
+                        <a asp-area="" asp-controller="UIAccount" asp-action="Register" class="nav-link" id="Nav-Register">Register</a>
                     </li>
                 }
                 <li class="nav-item">
-                    <a asp-area="" asp-controller="UIAccount" asp-action="Login" class="nav-link js-scroll-trigger" id="Nav-Login">Log in</a>
+                    <a asp-area="" asp-controller="UIAccount" asp-action="Login" class="nav-link" id="Nav-Login">Log in</a>
                 </li>
             </ul>
         }
@@ -247,13 +247,13 @@
     {
         <ul id="mainNavSettings" class="navbar-nav border-top p-3 px-lg-4">
             <li class="nav-item" permission="@Policies.CanModifyServerSettings">
-                <a asp-area="" asp-controller="UIServer" asp-action="ListUsers" class="nav-link js-scroll-trigger @ViewData.IsActivePage(ServerNavPages.Users) @ViewData.IsActivePage(ServerNavPages.Emails) @ViewData.IsActivePage(ServerNavPages.Policies) @ViewData.IsActivePage(ServerNavPages.Services) @ViewData.IsActivePage(ServerNavPages.Theme) @ViewData.IsActivePage(ServerNavPages.Maintenance) @ViewData.IsActivePage(ServerNavPages.Logs) @ViewData.IsActivePage(ServerNavPages.Files)" id="Nav-ServerSettings">
+                <a asp-area="" asp-controller="UIServer" asp-action="ListUsers" class="nav-link @ViewData.IsActivePage(ServerNavPages.Users) @ViewData.IsActivePage(ServerNavPages.Emails) @ViewData.IsActivePage(ServerNavPages.Policies) @ViewData.IsActivePage(ServerNavPages.Services) @ViewData.IsActivePage(ServerNavPages.Theme) @ViewData.IsActivePage(ServerNavPages.Maintenance) @ViewData.IsActivePage(ServerNavPages.Logs) @ViewData.IsActivePage(ServerNavPages.Files)" id="Nav-ServerSettings">
                     <vc:icon symbol="server-settings"/>
                     <span>Server Settings</span>
                 </a>
             </li>
             <li class="nav-item dropup">
-                <a class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(ManageNavPages))" role="button" data-bs-toggle="dropdown" aria-expanded="false" id="Nav-Account">
+                <a class="nav-link @ViewData.IsActiveCategory(typeof(ManageNavPages))" role="button" data-bs-toggle="dropdown" aria-expanded="false" id="Nav-Account">
                     <vc:icon symbol="account"/>
                     <span>Account</span>
                 </a>   

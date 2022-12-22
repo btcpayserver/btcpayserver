@@ -12,6 +12,7 @@ using BTCPayServer.Security;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using StoreData = BTCPayServer.Data.StoreData;
@@ -149,7 +150,7 @@ namespace BTCPayServer.Controllers.Greenfield
             };
         }
 
-        private static void ToModel(StoreBaseData restModel, Data.StoreData model, PaymentMethodId defaultPaymentMethod)
+        private void ToModel(StoreBaseData restModel, Data.StoreData model, PaymentMethodId defaultPaymentMethod)
         {
             var blob = model.GetStoreBlob();
             model.StoreName = restModel.Name;
@@ -185,6 +186,7 @@ namespace BTCPayServer.Controllers.Greenfield
             blob.LightningDescriptionTemplate = restModel.LightningDescriptionTemplate;
             blob.PaymentTolerance = restModel.PaymentTolerance;
             blob.PayJoinEnabled = restModel.PayJoinEnabled;
+            blob.NormalizeToRelativeLinks(Request);
             model.SetStoreBlob(blob);
         }
 

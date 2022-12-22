@@ -505,7 +505,7 @@ namespace BTCPayServer.Controllers
             {
                 blob.OnChainWithLnInvoiceFallback = model.OnChainWithLnInvoiceFallback;
             }
-            
+
             blob.RequiresRefundEmail = model.RequiresRefundEmail;
             blob.LazyPaymentMethods = model.LazyPaymentMethods;
             blob.RedirectAutomatically = model.RedirectAutomatically;
@@ -515,7 +515,7 @@ namespace BTCPayServer.Controllers
             blob.HtmlTitle = string.IsNullOrWhiteSpace(model.HtmlTitle) ? null : model.HtmlTitle;
             blob.AutoDetectLanguage = model.AutoDetectLanguage;
             blob.DefaultLang = model.DefaultLang;
-
+            blob.NormalizeToRelativeLinks(Request);
             if (CurrentStore.SetStoreBlob(blob))
             {
                 needUpdate = true;

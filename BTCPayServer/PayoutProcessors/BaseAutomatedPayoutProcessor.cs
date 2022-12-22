@@ -40,6 +40,7 @@ public abstract class BaseAutomatedPayoutProcessor<T> : BaseAsyncService where T
         _applicationDbContextFactory = applicationDbContextFactory;
         _pullPaymentHostedService = pullPaymentHostedService;
         _btcPayNetworkProvider = btcPayNetworkProvider;
+        this.NoLogsOnExit = true;
     }
 
     internal override Task[] InitializeTasks()

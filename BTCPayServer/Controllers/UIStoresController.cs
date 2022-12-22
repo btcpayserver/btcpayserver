@@ -506,19 +506,16 @@ namespace BTCPayServer.Controllers
                 blob.OnChainWithLnInvoiceFallback = model.OnChainWithLnInvoiceFallback;
             }
 
-            var schemeAndHost = $"{Request.Scheme}://{Request.Host.ToString()}";
-            
             blob.RequiresRefundEmail = model.RequiresRefundEmail;
             blob.LazyPaymentMethods = model.LazyPaymentMethods;
             blob.RedirectAutomatically = model.RedirectAutomatically;
             blob.ReceiptOptions = model.ReceiptOptions.ToDTO();
-            // Replace absolute URL with relative to avoid this issue: https://github.com/btcpayserver/btcpayserver/discussions/4195
-            blob.CustomLogo = model.CustomLogo?.IndexOf(schemeAndHost) == 0 ? model.CustomLogo?.Replace(schemeAndHost, String.Empty) : model.CustomLogo;
-            blob.CustomCSS = model.CustomCSS?.IndexOf(schemeAndHost) == 0 ? model.CustomCSS?.Replace(schemeAndHost, String.Empty) : model.CustomCSS;
+            blob.CustomLogo = model.CustomLogo;
+            blob.CustomCSS = model.CustomCSS;
             blob.HtmlTitle = string.IsNullOrWhiteSpace(model.HtmlTitle) ? null : model.HtmlTitle;
             blob.AutoDetectLanguage = model.AutoDetectLanguage;
             blob.DefaultLang = model.DefaultLang;
-
+            blob.NormalizeToRelativeLinks(Request);
             if (CurrentStore.SetStoreBlob(blob))
             {
                 needUpdate = true;

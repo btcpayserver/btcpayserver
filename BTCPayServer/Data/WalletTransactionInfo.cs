@@ -84,21 +84,31 @@ namespace BTCPayServer.Data
 
         public string Type { get; set; }
 
-        public void Merge(WalletTransactionInfo? value)
+        public WalletTransactionInfo Merge(WalletTransactionInfo? value)
         {
+            var result = new WalletTransactionInfo(WalletId);
             if (value is null)
-                return;
+                return result;
 
+            if (result.WalletId != value.WalletId)
+            {
+                return result;
+            }
+
+            result.LabelColors = new Dictionary<string, string>(LabelColors);
+            result.Attachments = new List<Attachment>(Attachments);
             foreach (var valueLabelColor in value.LabelColors)
             {
-                LabelColors.TryAdd(valueLabelColor.Key, valueLabelColor.Value);
+                result.LabelColors.TryAdd(valueLabelColor.Key, valueLabelColor.Value);
             }
             
             foreach (var valueAttachment in value.Attachments.Where(valueAttachment => !Attachments.Any(attachment =>
                          attachment.Id == valueAttachment.Id && attachment.Type == valueAttachment.Type)))
             {
-                Attachments.Add(valueAttachment);
+                result.Attachments.Add(valueAttachment);
             }
+
+            return result;
         }
     }
 }

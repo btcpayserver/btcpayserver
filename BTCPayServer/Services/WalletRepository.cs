@@ -256,6 +256,25 @@ namespace BTCPayServer.Services
             
             return GetWalletTransactionsInfoCore(walletId, wos);
         }
+        
+        public WalletTransactionInfo Merge(params WalletTransactionInfo[] infos)
+        {
+            WalletTransactionInfo result = null;
+            foreach (WalletTransactionInfo walletTransactionInfo in infos.Where(info => info is not null))
+            {
+                if (result is null)
+                {
+                    result ??= walletTransactionInfo;
+                }
+                else
+                {
+                    
+                    result = result.Merge(walletTransactionInfo);
+                }
+            }
+
+            return result;
+        }
 
         private Dictionary<string, WalletTransactionInfo> GetWalletTransactionsInfoCore(WalletId walletId,
             Dictionary<WalletObjectId, WalletObjectData> wos)
@@ -275,7 +294,7 @@ namespace BTCPayServer.Services
                     var neighbourData = neighbour.Data is null ? null : JObject.Parse(neighbour.Data);
                     if (neighbour.Type == WalletObjectData.Types.Label)
                     {
-                        info.LabelColors.TryAdd(neighbour.Id, neighbourData?["color"]?.Value<string>() ?? "#000");
+                        info.LabelColors.TryAdd(neighbour.Id, neighbourData?["color"]?.Value<string>() ?? ColorPalette.Default.DeterministicColor(neighbour.Id));
                     }
                     else
                     {
@@ -295,7 +314,16 @@ namespace BTCPayServer.Services
             return (await
                     ctx.WalletObjects.AsNoTracking().Where(w => w.WalletId == walletId.ToString() && w.Type == WalletObjectData.Types.Label)
                     .ToArrayAsync())
-                    .Select(o => (o.Id, JObject.Parse(o.Data)["color"]!.Value<string>()!)).ToArray();
+                    .Select(o =>
+                    {
+                        if (o.Data is null)
+                        {
+                            return (o.Id,ColorPalette.Default.DeterministicColor(o.Id));
+                        }
+                        return (o.Id,
+                            JObject.Parse(o.Data)["color"]?.Value<string>() ??
+                            ColorPalette.Default.DeterministicColor(o.Id));
+                    }).ToArray();
         }
 
         public async Task<bool> RemoveWalletObjects(WalletObjectId walletObjectId)

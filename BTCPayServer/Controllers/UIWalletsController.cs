@@ -582,14 +582,10 @@ namespace BTCPayServer.Controllers
                     utxos.SelectMany(u => GetWalletObjectsQuery.Get(u)).Distinct().ToArray());
                 vm.InputsAvailable = utxos.Select(coin =>
                 {
-                    walletTransactionsInfoAsync.TryGetValue(coin.OutPoint.Hash.ToString(), out var info);
-                    walletTransactionsInfoAsync.TryGetValue(coin.ScriptPubKey.ToHex(), out var info2);
-                    
-                    if (info is not null && info2 is not null)
-                    {
-                        info.Merge(info2);
-                    }
-                    info ??= info2;
+                    walletTransactionsInfoAsync.TryGetValue(coin.OutPoint.Hash.ToString(), out var info1);
+                    walletTransactionsInfoAsync.TryGetValue(coin.Address.ToString(), out var info2);
+                    walletTransactionsInfoAsync.TryGetValue(coin.OutPoint.ToString(), out var info3);
+                    var info = WalletRepository.Merge(info1, info2, info3);
                     return new WalletSendModel.InputSelectionOption()
                     {
                         Outpoint = coin.OutPoint.ToString(),

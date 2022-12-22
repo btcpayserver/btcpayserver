@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.7.3
+
+### Bug fixes
+
+* Checkout v2: Fix modal iframe clipboard permissions (#4453) @dennisreimann
+* Checkout: Fix cutoff language dropdown (#4465) @cdmoss
+* Fix a crash on coin selection if we weren't able to guess the color of a label (053426) @kukks
+* If using LNBank, LN invoices are not generated after upgrade to v1.7.2.0. You still need to also update the plugin. (#4458) @dennisreimann
+* Fix BTCPay invoice not settling after successful Lightning payment (CLN + Lightning Charge) (#4383) @dennisreimann
+
+### Improvement
+
+* Make sure payment request print view doesn't show table header twice (#4447) @bolatovumar
+* Automated payout processors shouldn't spam logs on shutdown (#4193) @NicolasDorier
+* Checkout v2: Reduce Altcoin name on payment method pill (#4456) @dennisreimann
+* Checkout: Make CSS and logo paths relative (#4354) @bolatovumar
+* Checkout: Add persian language back (#4457) @NicolasDorier
+* Frontend cleanups (#4449 #4463 #4473) @dennisreimann
+
 ## 1.7.2
 
 ### New features

@@ -672,10 +672,12 @@ namespace BTCPayServer.Tests
         public async Task CanUsePullPaymentViaAPI()
         {
             using var tester = CreateServerTester();
+            tester.ActivateLightning();
             await tester.StartAsync();
+            await tester.EnsureChannelsSetup();
             var acc = tester.NewAccount();
-            acc.Register();
-            await acc.CreateStoreAsync();
+            await acc.GrantAccessAsync(true);
+            acc.RegisterLightningNode("BTC", LightningConnectionType.CLightning, false);
             var storeId = (await acc.RegisterDerivationSchemeAsync("BTC", importKeysToNBX: true)).StoreId;
             var client = await acc.CreateClient();
             var result = await client.CreatePullPayment(storeId, new CreatePullPaymentRequest()
@@ -856,6 +858,8 @@ namespace BTCPayServer.Tests
                 PaymentMethods = new[] { "BTC" }
             });
 
+            await this.AssertAPIError("ln-url-not-supported", async () => await unauthenticated.GetLNURLs(pp.Id));
+
             destination = (await tester.ExplorerNode.GetNewAddressAsync()).ToString();
             TestLogs.LogInformation("Try to pay it in BTC");
             payout = await unauthenticated.CreatePayout(pp.Id, new CreatePayoutRequest()
@@ -906,6 +910,18 @@ namespace BTCPayServer.Tests
             payout = (await client.GetPayouts(payout.PullPaymentId)).First(data => data.Id == payout.Id);
             Assert.Equal(PayoutState.Completed, payout.State);
             await AssertAPIError("invalid-state", async () => await client.MarkPayoutPaid(storeId, payout.Id));
+
+            // Test LNURL values
+            var test4 = await client.CreatePullPayment(storeId, new Client.Models.CreatePullPaymentRequest()
+            {
+                Name = "Test 3",
+                Amount = 12.303228134m,
+                Currency = "BTC",
+                PaymentMethods = new[] { "BTC", "BTC-LightningNetwork", "BTC_LightningLike" }
+            });
+            var lnrURLs = await unauthenticated.GetLNURLs(test4.Id);
+            Assert.IsType<string>(lnrURLs.LNURLBech32);
+            Assert.IsType<string>(lnrURLs.LNURLUri);
         }
 
         [Fact]

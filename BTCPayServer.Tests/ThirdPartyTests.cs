@@ -235,15 +235,22 @@ namespace BTCPayServer.Tests
                     "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:75.0) Gecko/20100101 Firefox/75.0");
                 using var cts = new CancellationTokenSource(5_000);
                 var response = await httpClient.SendAsync(request, cts.Token);
-                Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-                if (uri.Fragment.Length != 0)
+                if (response.StatusCode == HttpStatusCode.TooManyRequests)
                 {
-                    var fragment = uri.Fragment.Substring(1);
-                    var contents = await response.Content.ReadAsStringAsync();
-                    Assert.Matches($"id=\"{fragment}\"", contents);
+                    TestLogs.LogInformation($"TooManyRequests, skipping: {url} ({file})");
                 }
+                else
+                {
+                    Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+                    if (uri.Fragment.Length != 0)
+                    {
+                        var fragment = uri.Fragment.Substring(1);
+                        var contents = await response.Content.ReadAsStringAsync();
+                        Assert.Matches($"id=\"{fragment}\"", contents);
+                    }
 
-                TestLogs.LogInformation($"OK: {url} ({file})");
+                    TestLogs.LogInformation($"OK: {url} ({file})");
+                }
             }
             catch (Exception ex) when (ex is MatchesException)
             {

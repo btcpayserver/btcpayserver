@@ -53,9 +53,12 @@
                 <partial name="_Form" model="Model.ConfigForm" />
             }
             
-            <div class="form-group mt-4">
-                <input type="submit" value="Continue" class="btn btn-primary" id="Continue" />
-            </div>
+            @if (Model.Custodians.Count() > 0)
+            {
+                <div class="form-group mt-4">
+                    <input type="submit" value="Continue" class="btn btn-primary" id="Continue"/>
+                </div>
+            }
         </form>
     </div>
 </div>

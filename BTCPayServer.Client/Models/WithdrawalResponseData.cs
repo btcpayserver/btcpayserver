@@ -5,18 +5,13 @@ using Newtonsoft.Json.Converters;
 
 namespace BTCPayServer.Client.Models;
 
-public class WithdrawalResponseData
+public class WithdrawalResponseData : WithdrawalBaseResponseData
 {
-    public string Asset { get; }
-    public string PaymentMethod { get; }
-    public List<LedgerEntryData> LedgerEntries { get; }
-    public string WithdrawalId { get; }
-    public string AccountId { get; }
-    public string CustodianCode { get; }
-
+   
     [JsonConverter(typeof(StringEnumConverter))]
     public WithdrawalStatus Status { get; }
 
+    public string WithdrawalId { get; }
     public DateTimeOffset CreatedTime { get; }
 
     public string TransactionId { get; }
@@ -24,14 +19,10 @@ public class WithdrawalResponseData
     public string TargetAddress { get; }
 
     public WithdrawalResponseData(string paymentMethod, string asset, List<LedgerEntryData> ledgerEntries, string withdrawalId, string accountId,
-        string custodianCode, WithdrawalStatus status, DateTimeOffset createdTime, string targetAddress, string transactionId)
+        string custodianCode, WithdrawalStatus status, DateTimeOffset createdTime, string targetAddress, string transactionId) : base(paymentMethod, asset, ledgerEntries, accountId,
+        custodianCode)
     {
-        PaymentMethod = paymentMethod;
-        Asset = asset;
-        LedgerEntries = ledgerEntries;
         WithdrawalId = withdrawalId;
-        AccountId = accountId;
-        CustodianCode = custodianCode;
         TargetAddress = targetAddress;
         TransactionId = transactionId;
         Status = status;

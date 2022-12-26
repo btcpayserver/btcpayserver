@@ -50,7 +50,7 @@ namespace BTCPayServer.Client
             await HandleResponse(response);
         }
 
-        public virtual async Task<DepositAddressData> GetDepositAddress(string storeId, string accountId, string paymentMethod, CancellationToken token = default)
+        public virtual async Task<DepositAddressData> GetCustodianAccountDepositAddress(string storeId, string accountId, string paymentMethod, CancellationToken token = default)
         {
             var response = await _httpClient.SendAsync(CreateHttpRequest($"api/v1/stores/{storeId}/custodian-accounts/{accountId}/addresses/{paymentMethod}"), token);
             return await HandleResponse<DepositAddressData>(response);
@@ -66,13 +66,13 @@ namespace BTCPayServer.Client
             return await HandleResponse<MarketTradeResponseData>(response);
         }
 
-        public virtual async Task<MarketTradeResponseData> GetTradeInfo(string storeId, string accountId, string tradeId, CancellationToken token = default)
+        public virtual async Task<MarketTradeResponseData> GetCustodianAccountTradeInfo(string storeId, string accountId, string tradeId, CancellationToken token = default)
         {
             var response = await _httpClient.SendAsync(CreateHttpRequest($"api/v1/stores/{storeId}/custodian-accounts/{accountId}/trades/{tradeId}", method: HttpMethod.Get), token);
             return await HandleResponse<MarketTradeResponseData>(response);
         }
 
-        public virtual async Task<TradeQuoteResponseData> GetTradeQuote(string storeId, string accountId, string fromAsset, string toAsset, CancellationToken token = default)
+        public virtual async Task<TradeQuoteResponseData> GetCustodianAccountTradeQuote(string storeId, string accountId, string fromAsset, string toAsset, CancellationToken token = default)
         {
             var queryPayload = new Dictionary<string, object>();
             queryPayload.Add("fromAsset", fromAsset);
@@ -81,19 +81,19 @@ namespace BTCPayServer.Client
             return await HandleResponse<TradeQuoteResponseData>(response);
         }
         
-        public virtual async Task<WithdrawalResponseData> CreateWithdrawal(string storeId, string accountId,  WithdrawRequestData request, CancellationToken token = default)
+        public virtual async Task<WithdrawalResponseData> CreateCustodianAccountWithdrawal(string storeId, string accountId,  WithdrawRequestData request, CancellationToken token = default)
         {
             var response = await _httpClient.SendAsync(CreateHttpRequest($"api/v1/stores/{storeId}/custodian-accounts/{accountId}/withdrawals", bodyPayload: request, method: HttpMethod.Post), token);
             return await HandleResponse<WithdrawalResponseData>(response);
         }
         
-        public virtual async Task<WithdrawalSimulationResponseData> SimulateWithdrawal(string storeId, string accountId, WithdrawRequestData request, CancellationToken token = default)
+        public virtual async Task<WithdrawalSimulationResponseData> SimulateCustodianAccountWithdrawal(string storeId, string accountId, WithdrawRequestData request, CancellationToken token = default)
         {
             var response = await _httpClient.SendAsync(CreateHttpRequest($"api/v1/stores/{storeId}/custodian-accounts/{accountId}/withdrawals/simulation", bodyPayload: request, method: HttpMethod.Post), token);
             return await HandleResponse<WithdrawalSimulationResponseData>(response);
         }
 
-        public virtual async Task<WithdrawalResponseData> GetWithdrawalInfo(string storeId, string accountId, string paymentMethod, string withdrawalId, CancellationToken token = default)
+        public virtual async Task<WithdrawalResponseData> GetCustodianAccountWithdrawalInfo(string storeId, string accountId, string paymentMethod, string withdrawalId, CancellationToken token = default)
         {
             var response = await _httpClient.SendAsync(CreateHttpRequest($"api/v1/stores/{storeId}/custodian-accounts/{accountId}/withdrawals/{paymentMethod}/{withdrawalId}", method: HttpMethod.Get), token);
             return await HandleResponse<WithdrawalResponseData>(response);

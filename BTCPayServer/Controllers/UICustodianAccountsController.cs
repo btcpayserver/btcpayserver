@@ -582,7 +582,7 @@ namespace BTCPayServer.Controllers
                     try
                     {
                         var simulateWithdrawal =
-                            await _btcPayServerClient.SimulateWithdrawal(storeId, accountId, withdrawRequestData,
+                            await _btcPayServerClient.SimulateCustodianAccountWithdrawal(storeId, accountId, withdrawRequestData,
                                 default);
                         vm = new WithdrawalPrepareViewModel(simulateWithdrawal);
 
@@ -629,7 +629,7 @@ namespace BTCPayServer.Controllers
         {
             try
             {
-                var result = await _btcPayServerClient.CreateWithdrawal(storeId, accountId, request);
+                var result = await _btcPayServerClient.CreateCustodianAccountWithdrawal(storeId, accountId, request);
                 return Ok(result);
             }
             catch (GreenfieldAPIException e)

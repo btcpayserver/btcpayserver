@@ -222,14 +222,14 @@ namespace BTCPayServer.Controllers.Greenfield
                 await GetController<GreenfieldCustodianAccountController>().MarketTradeCustodianAccountAsset(storeId, accountId, request, cancellationToken));
         }
         
-        public override async Task<WithdrawalSimulationResponseData> SimulateWithdrawal(string storeId, string accountId,
+        public override async Task<WithdrawalSimulationResponseData> SimulateCustodianAccountWithdrawal(string storeId, string accountId,
             WithdrawRequestData request, CancellationToken cancellationToken = default)
         {
             return GetFromActionResult<WithdrawalSimulationResponseData>(
                 await GetController<GreenfieldCustodianAccountController>().SimulateWithdrawal(storeId, accountId, request, cancellationToken));
         }
         
-        public override async Task<WithdrawalResponseData> CreateWithdrawal(string storeId, string accountId,
+        public override async Task<WithdrawalResponseData> CreateCustodianAccountWithdrawal(string storeId, string accountId,
             WithdrawRequestData request, CancellationToken cancellationToken = default)
         {
             return GetFromActionResult<WithdrawalResponseData>(

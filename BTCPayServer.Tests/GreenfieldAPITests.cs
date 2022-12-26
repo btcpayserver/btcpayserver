@@ -3617,22 +3617,22 @@ clientBasic.PreviewUpdateStoreRateConfiguration(user.StoreId, new StoreRateConfi
 
 
             // Test: GetDepositAddress, unauth
-            await AssertHttpError(401, async () => await unauthClient.GetDepositAddress(storeId, accountId, MockCustodian.DepositPaymentMethod));
+            await AssertHttpError(401, async () => await unauthClient.GetCustodianAccountDepositAddress(storeId, accountId, MockCustodian.DepositPaymentMethod));
             
             // Test: GetDepositAddress, auth, but wrong permission
-            await AssertHttpError(403, async () => await managerClient.GetDepositAddress(storeId, accountId, MockCustodian.DepositPaymentMethod));
+            await AssertHttpError(403, async () => await managerClient.GetCustodianAccountDepositAddress(storeId, accountId, MockCustodian.DepositPaymentMethod));
             
             // Test: GetDepositAddress, wrong payment method
-            await AssertApiError( 400, "unsupported-payment-method", async () => await depositClient.GetDepositAddress(storeId, accountId, "WRONG-PaymentMethod"));
+            await AssertApiError( 400, "unsupported-payment-method", async () => await depositClient.GetCustodianAccountDepositAddress(storeId, accountId, "WRONG-PaymentMethod"));
             
             // Test: GetDepositAddress, wrong store ID
-            await AssertHttpError(403, async () => await depositClient.GetDepositAddress("WRONG-STORE", accountId, MockCustodian.DepositPaymentMethod));
+            await AssertHttpError(403, async () => await depositClient.GetCustodianAccountDepositAddress("WRONG-STORE", accountId, MockCustodian.DepositPaymentMethod));
             
             // Test: GetDepositAddress, wrong account ID
-            await AssertHttpError(404, async () => await depositClient.GetDepositAddress(storeId, "WRONG-ACCOUNT-ID", MockCustodian.DepositPaymentMethod));
+            await AssertHttpError(404, async () => await depositClient.GetCustodianAccountDepositAddress(storeId, "WRONG-ACCOUNT-ID", MockCustodian.DepositPaymentMethod));
             
             // Test: GetDepositAddress, correct payment method
-            var depositAddress = await depositClient.GetDepositAddress(storeId, accountId, MockCustodian.DepositPaymentMethod);
+            var depositAddress = await depositClient.GetCustodianAccountDepositAddress(storeId, accountId, MockCustodian.DepositPaymentMethod);
             Assert.NotNull(depositAddress);
             Assert.Equal(MockCustodian.DepositAddress, depositAddress.Address);
             
@@ -3690,13 +3690,13 @@ clientBasic.PreviewUpdateStoreRateConfiguration(user.StoreId, new StoreRateConfi
 
 
             // Test: GetTradeQuote, unauth
-            await AssertHttpError(401, async () => await unauthClient.GetTradeQuote(storeId, accountId,  MockCustodian.TradeFromAsset, MockCustodian.TradeToAsset));
+            await AssertHttpError(401, async () => await unauthClient.GetCustodianAccountTradeQuote(storeId, accountId,  MockCustodian.TradeFromAsset, MockCustodian.TradeToAsset));
             
             // Test: GetTradeQuote, auth, but wrong permission
-            await AssertHttpError(403, async () => await managerClient.GetTradeQuote(storeId, accountId,  MockCustodian.TradeFromAsset, MockCustodian.TradeToAsset));
+            await AssertHttpError(403, async () => await managerClient.GetCustodianAccountTradeQuote(storeId, accountId,  MockCustodian.TradeFromAsset, MockCustodian.TradeToAsset));
             
             // Test: GetTradeQuote, auth, correct permission
-            var tradeQuote = await tradeClient.GetTradeQuote(storeId, accountId, MockCustodian.TradeFromAsset, MockCustodian.TradeToAsset);
+            var tradeQuote = await tradeClient.GetCustodianAccountTradeQuote(storeId, accountId, MockCustodian.TradeFromAsset, MockCustodian.TradeToAsset);
             Assert.NotNull(tradeQuote);
             Assert.Equal(MockCustodian.TradeFromAsset, tradeQuote.FromAsset);
             Assert.Equal(MockCustodian.TradeToAsset, tradeQuote.ToAsset);
@@ -3704,30 +3704,30 @@ clientBasic.PreviewUpdateStoreRateConfiguration(user.StoreId, new StoreRateConfi
             Assert.Equal(MockCustodian.BtcPriceInEuro, tradeQuote.Ask);
             
             // Test: GetTradeQuote, SATS
-            await AssertApiError(400, "use-asset-synonym", async () => await tradeClient.GetTradeQuote(storeId, accountId,  MockCustodian.TradeFromAsset, "SATS"));
+            await AssertApiError(400, "use-asset-synonym", async () => await tradeClient.GetCustodianAccountTradeQuote(storeId, accountId,  MockCustodian.TradeFromAsset, "SATS"));
             
             // Test: GetTradeQuote, wrong asset
-            await AssertHttpError(404, async () => await tradeClient.GetTradeQuote(storeId, accountId,  "WRONG-ASSET", MockCustodian.TradeToAsset));
-            await AssertHttpError(404, async () => await tradeClient.GetTradeQuote(storeId, accountId, MockCustodian.TradeFromAsset , "WRONG-ASSET"));
+            await AssertHttpError(404, async () => await tradeClient.GetCustodianAccountTradeQuote(storeId, accountId,  "WRONG-ASSET", MockCustodian.TradeToAsset));
+            await AssertHttpError(404, async () => await tradeClient.GetCustodianAccountTradeQuote(storeId, accountId, MockCustodian.TradeFromAsset , "WRONG-ASSET"));
 
             // Test: wrong account ID
-            await AssertHttpError(404, async () => await tradeClient.GetTradeQuote(storeId, "WRONG-ACCOUNT-ID",  MockCustodian.TradeFromAsset, MockCustodian.TradeToAsset));
+            await AssertHttpError(404, async () => await tradeClient.GetCustodianAccountTradeQuote(storeId, "WRONG-ACCOUNT-ID",  MockCustodian.TradeFromAsset, MockCustodian.TradeToAsset));
             
             // Test: wrong store ID
-            await AssertHttpError(403, async () => await tradeClient.GetTradeQuote("WRONG-STORE-ID", accountId,  MockCustodian.TradeFromAsset, MockCustodian.TradeToAsset));
+            await AssertHttpError(403, async () => await tradeClient.GetCustodianAccountTradeQuote("WRONG-STORE-ID", accountId,  MockCustodian.TradeFromAsset, MockCustodian.TradeToAsset));
 
             
 
 
 
             // Test: GetTradeInfo, unauth
-            await AssertHttpError(401, async () => await unauthClient.GetTradeInfo(storeId, accountId,  MockCustodian.TradeId));
+            await AssertHttpError(401, async () => await unauthClient.GetCustodianAccountTradeInfo(storeId, accountId,  MockCustodian.TradeId));
             
             // Test: GetTradeInfo, auth, but wrong permission
-            await AssertHttpError(403, async () => await managerClient.GetTradeInfo(storeId, accountId,  MockCustodian.TradeId));
+            await AssertHttpError(403, async () => await managerClient.GetCustodianAccountTradeInfo(storeId, accountId,  MockCustodian.TradeId));
             
             // Test: GetTradeInfo, auth, correct permission
-            var tradeResult = await tradeClient.GetTradeInfo(storeId, accountId, MockCustodian.TradeId);
+            var tradeResult = await tradeClient.GetCustodianAccountTradeInfo(storeId, accountId, MockCustodian.TradeId);
             Assert.NotNull(tradeResult);
             Assert.Equal(accountId, tradeResult.AccountId);
             Assert.Equal(mockCustodian.Code, tradeResult.CustodianCode);
@@ -3747,91 +3747,91 @@ clientBasic.PreviewUpdateStoreRateConfiguration(user.StoreId, new StoreRateConfi
             Assert.Equal(LedgerEntryData.LedgerEntryType.Fee , tradeResult.LedgerEntries[2].Type);
             
             // Test: GetTradeInfo, wrong trade ID
-            await AssertHttpError(404, async () => await tradeClient.GetTradeInfo(storeId, accountId, "WRONG-TRADE-ID"));
+            await AssertHttpError(404, async () => await tradeClient.GetCustodianAccountTradeInfo(storeId, accountId, "WRONG-TRADE-ID"));
             
             // Test: wrong account ID
-            await AssertHttpError(404, async () => await tradeClient.GetTradeInfo(storeId, "WRONG-ACCOUNT-ID", MockCustodian.TradeId));
+            await AssertHttpError(404, async () => await tradeClient.GetCustodianAccountTradeInfo(storeId, "WRONG-ACCOUNT-ID", MockCustodian.TradeId));
             
             // Test: wrong store ID
-            await AssertHttpError(403, async () => await tradeClient.GetTradeInfo("WRONG-STORE-ID", accountId, MockCustodian.TradeId));
+            await AssertHttpError(403, async () => await tradeClient.GetCustodianAccountTradeInfo("WRONG-STORE-ID", accountId, MockCustodian.TradeId));
 
             var qty = MockCustodian.WithdrawalAmount.ToString(CultureInfo.InvariantCulture);
              // Test: SimulateWithdrawal, unauth
             var simulateWithdrawalRequest = new WithdrawRequestData(MockCustodian.WithdrawalPaymentMethod, qty);
-            await AssertHttpError(401, async () => await unauthClient.SimulateWithdrawal(storeId, accountId, simulateWithdrawalRequest));
+            await AssertHttpError(401, async () => await unauthClient.SimulateCustodianAccountWithdrawal(storeId, accountId, simulateWithdrawalRequest));
             
             // Test: SimulateWithdrawal, auth, but wrong permission
-            await AssertHttpError(403, async () => await managerClient.SimulateWithdrawal(storeId, accountId, simulateWithdrawalRequest));
+            await AssertHttpError(403, async () => await managerClient.SimulateCustodianAccountWithdrawal(storeId, accountId, simulateWithdrawalRequest));
             
             // Test: SimulateWithdrawal, correct payment method, correct amount
-            var simulateWithdrawResponse = await withdrawalClient.SimulateWithdrawal(storeId, accountId, simulateWithdrawalRequest);
+            var simulateWithdrawResponse = await withdrawalClient.SimulateCustodianAccountWithdrawal(storeId, accountId, simulateWithdrawalRequest);
             AssertMockWithdrawal(simulateWithdrawResponse, custodianAccountData);
             
             // Test: SimulateWithdrawal, wrong payment method
             var wrongPaymentMethodSimulateWithdrawalRequest = new WithdrawRequestData("WRONG-PAYMENT-METHOD", qty);
-            await AssertApiError( 400, "unsupported-payment-method", async () => await withdrawalClient.SimulateWithdrawal(storeId, accountId, wrongPaymentMethodSimulateWithdrawalRequest));
+            await AssertApiError( 400, "unsupported-payment-method", async () => await withdrawalClient.SimulateCustodianAccountWithdrawal(storeId, accountId, wrongPaymentMethodSimulateWithdrawalRequest));
             
             // Test: SimulateWithdrawal, wrong account ID
-            await AssertHttpError(404, async () => await withdrawalClient.SimulateWithdrawal(storeId, "WRONG-ACCOUNT-ID", simulateWithdrawalRequest));
+            await AssertHttpError(404, async () => await withdrawalClient.SimulateCustodianAccountWithdrawal(storeId, "WRONG-ACCOUNT-ID", simulateWithdrawalRequest));
             
             // Test: SimulateWithdrawal, wrong store ID
             // TODO it is wierd that 403 is considered normal, but it is like this for all calls where the store is wrong... I'd have preferred a 404 error, because the store cannot be found.
-            await AssertHttpError(403, async () => await withdrawalClient.SimulateWithdrawal( "WRONG-STORE-ID",accountId, simulateWithdrawalRequest));
+            await AssertHttpError(403, async () => await withdrawalClient.SimulateCustodianAccountWithdrawal( "WRONG-STORE-ID",accountId, simulateWithdrawalRequest));
             
             // Test: SimulateWithdrawal, correct payment method, wrong amount
             var wrongAmountSimulateWithdrawalRequest = new WithdrawRequestData(MockCustodian.WithdrawalPaymentMethod, "0.666");
-            await AssertHttpError(400, async () => await withdrawalClient.SimulateWithdrawal(storeId, accountId, wrongAmountSimulateWithdrawalRequest));
+            await AssertHttpError(400, async () => await withdrawalClient.SimulateCustodianAccountWithdrawal(storeId, accountId, wrongAmountSimulateWithdrawalRequest));
 
             // Test: CreateWithdrawal, unauth
             var createWithdrawalRequest = new WithdrawRequestData(MockCustodian.WithdrawalPaymentMethod, qty);
             var createWithdrawalRequestPercentage = new WithdrawRequestData(MockCustodian.WithdrawalPaymentMethod, qty);
-            await AssertHttpError(401, async () => await unauthClient.CreateWithdrawal(storeId, accountId, createWithdrawalRequest));
+            await AssertHttpError(401, async () => await unauthClient.CreateCustodianAccountWithdrawal(storeId, accountId, createWithdrawalRequest));
             
             // Test: CreateWithdrawal, auth, but wrong permission
-            await AssertHttpError(403, async () => await managerClient.CreateWithdrawal(storeId, accountId, createWithdrawalRequest));
+            await AssertHttpError(403, async () => await managerClient.CreateCustodianAccountWithdrawal(storeId, accountId, createWithdrawalRequest));
             
             // Test: CreateWithdrawal, correct payment method, correct amount
-            var withdrawResponse = await withdrawalClient.CreateWithdrawal(storeId, accountId, createWithdrawalRequest);
+            var withdrawResponse = await withdrawalClient.CreateCustodianAccountWithdrawal(storeId, accountId, createWithdrawalRequest);
             AssertMockWithdrawal(withdrawResponse, custodianAccountData);
             
             // Test: CreateWithdrawal, correct payment method, correct amount, but as a percentage
-            var withdrawWithPercentageResponse = await withdrawalClient.CreateWithdrawal(storeId, accountId, createWithdrawalRequestPercentage);
+            var withdrawWithPercentageResponse = await withdrawalClient.CreateCustodianAccountWithdrawal(storeId, accountId, createWithdrawalRequestPercentage);
             AssertMockWithdrawal(withdrawWithPercentageResponse, custodianAccountData);
             
             // Test: CreateWithdrawal, wrong payment method
             var wrongPaymentMethodCreateWithdrawalRequest = new WithdrawRequestData("WRONG-PAYMENT-METHOD", qty);
-            await AssertApiError( 400, "unsupported-payment-method", async () => await withdrawalClient.CreateWithdrawal(storeId, accountId, wrongPaymentMethodCreateWithdrawalRequest));
+            await AssertApiError( 400, "unsupported-payment-method", async () => await withdrawalClient.CreateCustodianAccountWithdrawal(storeId, accountId, wrongPaymentMethodCreateWithdrawalRequest));
             
             // Test: CreateWithdrawal, wrong account ID
-            await AssertHttpError(404, async () => await withdrawalClient.CreateWithdrawal(storeId, "WRONG-ACCOUNT-ID", createWithdrawalRequest));
+            await AssertHttpError(404, async () => await withdrawalClient.CreateCustodianAccountWithdrawal(storeId, "WRONG-ACCOUNT-ID", createWithdrawalRequest));
             
             // Test: CreateWithdrawal, wrong store ID
             // TODO it is wierd that 403 is considered normal, but it is like this for all calls where the store is wrong... I'd have preferred a 404 error, because the store cannot be found.
-            await AssertHttpError(403, async () => await withdrawalClient.CreateWithdrawal( "WRONG-STORE-ID",accountId, createWithdrawalRequest));
+            await AssertHttpError(403, async () => await withdrawalClient.CreateCustodianAccountWithdrawal( "WRONG-STORE-ID",accountId, createWithdrawalRequest));
             
             // Test: CreateWithdrawal, correct payment method, wrong amount
             var wrongAmountCreateWithdrawalRequest = new WithdrawRequestData(MockCustodian.WithdrawalPaymentMethod, "0.666");
-            await AssertHttpError(400, async () => await withdrawalClient.CreateWithdrawal(storeId, accountId, wrongAmountCreateWithdrawalRequest));
+            await AssertHttpError(400, async () => await withdrawalClient.CreateCustodianAccountWithdrawal(storeId, accountId, wrongAmountCreateWithdrawalRequest));
 
             // Test: GetWithdrawalInfo, unauth
-            await AssertHttpError(401, async () => await unauthClient.GetWithdrawalInfo(storeId, accountId, MockCustodian.WithdrawalPaymentMethod, MockCustodian.WithdrawalId));
+            await AssertHttpError(401, async () => await unauthClient.GetCustodianAccountWithdrawalInfo(storeId, accountId, MockCustodian.WithdrawalPaymentMethod, MockCustodian.WithdrawalId));
             
             // Test: GetWithdrawalInfo, auth, but wrong permission
-            await AssertHttpError(403, async () => await managerClient.GetWithdrawalInfo(storeId, accountId, MockCustodian.WithdrawalPaymentMethod, MockCustodian.WithdrawalId));
+            await AssertHttpError(403, async () => await managerClient.GetCustodianAccountWithdrawalInfo(storeId, accountId, MockCustodian.WithdrawalPaymentMethod, MockCustodian.WithdrawalId));
             
             // Test: GetWithdrawalInfo, auth, correct permission
-            var withdrawalInfo = await withdrawalClient.GetWithdrawalInfo(storeId, accountId, MockCustodian.WithdrawalPaymentMethod, MockCustodian.WithdrawalId);
+            var withdrawalInfo = await withdrawalClient.GetCustodianAccountWithdrawalInfo(storeId, accountId, MockCustodian.WithdrawalPaymentMethod, MockCustodian.WithdrawalId);
             AssertMockWithdrawal(withdrawalInfo, custodianAccountData);
 
             // Test: GetWithdrawalInfo, wrong withdrawal ID
-            await AssertHttpError(404, async () => await withdrawalClient.GetWithdrawalInfo(storeId, accountId, MockCustodian.WithdrawalPaymentMethod, "WRONG-WITHDRAWAL-ID"));
+            await AssertHttpError(404, async () => await withdrawalClient.GetCustodianAccountWithdrawalInfo(storeId, accountId, MockCustodian.WithdrawalPaymentMethod, "WRONG-WITHDRAWAL-ID"));
             
             // Test: wrong account ID
-            await AssertHttpError(404, async () => await withdrawalClient.GetWithdrawalInfo(storeId, "WRONG-ACCOUNT-ID", MockCustodian.WithdrawalPaymentMethod, MockCustodian.WithdrawalId));
+            await AssertHttpError(404, async () => await withdrawalClient.GetCustodianAccountWithdrawalInfo(storeId, "WRONG-ACCOUNT-ID", MockCustodian.WithdrawalPaymentMethod, MockCustodian.WithdrawalId));
             
             // Test: wrong store ID
             // TODO shouldn't this be 404? I cannot change this without bigger impact, as it would affect all API endpoints that are store centered
-            await AssertHttpError(403, async () => await withdrawalClient.GetWithdrawalInfo("WRONG-STORE-ID", accountId, MockCustodian.WithdrawalPaymentMethod, MockCustodian.WithdrawalId));
+            await AssertHttpError(403, async () => await withdrawalClient.GetCustodianAccountWithdrawalInfo("WRONG-STORE-ID", accountId, MockCustodian.WithdrawalPaymentMethod, MockCustodian.WithdrawalId));
             
             // TODO assert API error codes, not just status codes by using AssertCustodianApiError()
             // TODO also test withdrawals for the various "Status" (Queued, Complete, Failed)

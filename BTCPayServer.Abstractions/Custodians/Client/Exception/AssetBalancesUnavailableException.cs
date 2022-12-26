@@ -7,5 +7,7 @@ public class AssetBalancesUnavailableException : CustodianApiException
     {
     }
 
-    
+    public AssetBalancesUnavailableException(string errorMsg) : base(500, "asset-balances-unavailable", $"Cannot fetch the asset balances: {errorMsg}")
+    {
+    }
 }

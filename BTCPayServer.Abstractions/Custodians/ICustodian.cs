@@ -23,4 +23,6 @@ public interface ICustodian
     public Task<Form.Form> GetConfigForm(JObject config, string locale,
         CancellationToken cancellationToken = default);
 
+    public JObject cleanupConfigBeforeSave(JObject config);
+
 }

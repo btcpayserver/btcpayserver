@@ -61,6 +61,11 @@ public class MockCustodian : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
         return null;
     }
 
+    public JObject cleanupConfigBeforeSave(JObject config)
+    {
+        return config;
+    }
+
     public Task<DepositAddressData> GetDepositAddressAsync(string paymentMethod, JObject config, CancellationToken cancellationToken)
     {
         if (paymentMethod.Equals(DepositPaymentMethod))

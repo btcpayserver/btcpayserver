@@ -56,6 +56,11 @@ public class FakeCustodian : ICustodian
         return Task.FromResult(form);
     }
 
+    public JObject cleanupConfigBeforeSave(JObject config)
+    {
+        return config;
+    }
+
     private FakeCustodianConfig ParseConfig(JObject config)
     {
         return config?.ToObject<FakeCustodianConfig>() ?? throw new InvalidOperationException("Invalid config");

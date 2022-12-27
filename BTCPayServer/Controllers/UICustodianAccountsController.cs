@@ -260,7 +260,7 @@ namespace BTCPayServer.Controllers
                 }
             }
 
-            // TODO Maybe cast to KrakenConfig (or whatever type the custodian plugin uses) and back into JObject so superfluous data is removed from the JSON?
+            newData = custodian.cleanupConfigBeforeSave(newData);
             var newConfigForm = await custodian.GetConfigForm(newData, locale);
 
             if (newConfigForm.IsValid())

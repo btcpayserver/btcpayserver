@@ -76,6 +76,7 @@
         };
     </script>
     <div id="Dashboard" class="mt-4">
+        <vc:ui-extension-point location="dashboard-start" model="@Model"/>
         @if (Model.WalletEnabled)
         {
             <vc:store-wallet-balance store="@store"/>
@@ -119,6 +120,7 @@
             <vc:app-sales vm="@(new AppSalesViewModel { App = app, InitialRendering = true })"/>
             <vc:app-top-items vm="@(new AppTopItemsViewModel { App = app, InitialRendering = true })"/>
         }
+        <vc:ui-extension-point location="dashboard-end" model="@Model"/>
     </div>
 }
 else

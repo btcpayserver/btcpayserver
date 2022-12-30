@@ -2,7 +2,6 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
@@ -46,7 +45,14 @@ namespace BTCPayServer.Controllers.Greenfield
             return Ok(new LightningNodeInformationData
             {
                 BlockHeight = info.BlockHeight,
-                NodeURIs = info.NodeInfoList.Select(nodeInfo => nodeInfo).ToArray()
+                NodeURIs = info.NodeInfoList.Select(nodeInfo => nodeInfo).ToArray(),
+                Alias = info.Alias,
+                Color = info.Color,
+                Version = info.Version,
+                PeersCount = info.PeersCount,
+                ActiveChannelsCount = info.ActiveChannelsCount,
+                InactiveChannelsCount = info.InactiveChannelsCount,
+                PendingChannelsCount = info.PendingChannelsCount
             });
         }
 
@@ -202,9 +208,10 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             var lightningClient = await GetLightningClient(cryptoCode, true);
             var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
-
-            if (lightningInvoice?.BOLT11 is null ||
-                !BOLT11PaymentRequest.TryParse(lightningInvoice.BOLT11, out _, network.NBitcoinNetwork))
+            BOLT11PaymentRequest bolt11 = null;
+            
+            if (string.IsNullOrEmpty(lightningInvoice.BOLT11) ||
+                !BOLT11PaymentRequest.TryParse(lightningInvoice.BOLT11, out bolt11, network.NBitcoinNetwork))
             {
                 ModelState.AddModelError(nameof(lightningInvoice.BOLT11), "The BOLT11 invoice was invalid.");
             }
@@ -214,21 +221,54 @@ namespace BTCPayServer.Controllers.Greenfield
                 return this.CreateValidationError(ModelState);
             }
             
-            var param = lightningInvoice?.MaxFeeFlat != null || lightningInvoice?.MaxFeePercent != null || lightningInvoice?.Amount != null
-                ? new PayInvoiceParams { MaxFeePercent = lightningInvoice.MaxFeePercent, MaxFeeFlat = lightningInvoice.MaxFeeFlat, Amount = lightningInvoice.Amount }
+            var param = lightningInvoice.MaxFeeFlat != null || lightningInvoice.MaxFeePercent != null
+                    || lightningInvoice.Amount != null || lightningInvoice.SendTimeout != null
+                ? new PayInvoiceParams
+                {
+                    MaxFeePercent = lightningInvoice.MaxFeePercent,
+                    MaxFeeFlat = lightningInvoice.MaxFeeFlat,
+                    Amount = lightningInvoice.Amount,
+                    SendTimeout = lightningInvoice.SendTimeout
+                }
                 : null;
             var result = await lightningClient.Pay(lightningInvoice.BOLT11, param, cancellationToken);
+            
+            if (result.Result is PayResult.Ok or PayResult.Unknown && bolt11?.PaymentHash is not null)
+            {
+                // get a new instance of the LN client, because the old one might have disposed its HTTPClient
+                lightningClient = await GetLightningClient(cryptoCode, true);
+                
+                var paymentHash = bolt11.PaymentHash.ToString();
+                var payment = await lightningClient.GetPayment(paymentHash, cancellationToken);
+                var data = new LightningPaymentData
+                {
+                    Id = payment.Id,
+                    PaymentHash = paymentHash,
+                    Status = payment.Status,
+                    BOLT11 = payment.BOLT11,
+                    Preimage = payment.Preimage,
+                    CreatedAt = payment.CreatedAt,
+                    TotalAmount = payment.AmountSent,
+                    FeeAmount = payment.Fee,
+                };
+                return result.Result is PayResult.Ok ? Ok(data) : Accepted(data);
+            }
             
             return result.Result switch
             {
                 PayResult.CouldNotFindRoute => this.CreateAPIError("could-not-find-route", "Impossible to find a route to the peer"),
                 PayResult.Error => this.CreateAPIError("generic-error", result.ErrorDetail),
+                PayResult.Unknown => Accepted(new LightningPaymentData
+                {
+                    Status = LightningPaymentStatus.Unknown
+                }),
                 PayResult.Ok => Ok(new LightningPaymentData
                 {
+                    Status = LightningPaymentStatus.Complete,
                     TotalAmount = result.Details?.TotalAmount, 
                     FeeAmount = result.Details?.FeeAmount
                 }),
-                _ => throw new NotSupportedException("Unsupported Payresult")
+                _ => throw new NotSupportedException("Unsupported PayResult")
             };
         }
 
@@ -239,6 +279,14 @@ namespace BTCPayServer.Controllers.Greenfield
             return inv == null ? this.CreateAPIError(404, "invoice-not-found", "Impossible to find a lightning invoice with this id") : Ok(ToModel(inv));
         }
 
+        public virtual async Task<IActionResult> GetInvoices(string cryptoCode, [FromQuery] bool? pendingOnly, [FromQuery] long? offsetIndex, CancellationToken cancellationToken = default)
+        {
+            var lightningClient = await GetLightningClient(cryptoCode, false);
+            var param = new ListInvoicesParams { PendingOnly = pendingOnly, OffsetIndex = offsetIndex };
+            var invoices = await lightningClient.ListInvoices(param, cancellationToken);
+            return Ok(invoices.Select(ToModel));
+        }
+
         public virtual async Task<IActionResult> CreateInvoice(string cryptoCode, CreateLightningInvoiceRequest request, CancellationToken cancellationToken = default)
         {
             var lightningClient = await GetLightningClient(cryptoCode, false);
@@ -247,27 +295,28 @@ namespace BTCPayServer.Controllers.Greenfield
                 ModelState.AddModelError(nameof(request.Amount), "Amount should be more or equals to 0");
             }
 
+            if (request.Description is null && request.DescriptionHashOnly)
+            {
+                ModelState.AddModelError(nameof(request.Description), "Description is required when `descriptionHashOnly` is true");
+            }
+
             if (request.Expiry <= TimeSpan.Zero)
             {
                 ModelState.AddModelError(nameof(request.Expiry), "Expiry should be more than 0");
             }
-
             if (!ModelState.IsValid)
             {
                 return this.CreateValidationError(ModelState);
             }
-
+            
+            request.Description ??= "";
             try
             {
-                var param = request.DescriptionHash != null
-                    ? new CreateInvoiceParams(request.Amount, request.DescriptionHash, request.Expiry)
+                var param = new CreateInvoiceParams(request.Amount, request.Description, request.Expiry)
                     {
-                        PrivateRouteHints = request.PrivateRouteHints, Description = request.Description
-                    }
-                    : new CreateInvoiceParams(request.Amount, request.Description, request.Expiry)
-                    {
-                        PrivateRouteHints = request.PrivateRouteHints, DescriptionHash = request.DescriptionHash
-                    };
+                        PrivateRouteHints = request.PrivateRouteHints,
+                        DescriptionHashOnly = request.DescriptionHashOnly
+                };
                 var invoice = await lightningClient.CreateInvoice(param, cancellationToken);
                 return Ok(ToModel(invoice));
             }
@@ -296,7 +345,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
         private LightningInvoiceData ToModel(LightningInvoice invoice)
         {
-            return new LightningInvoiceData
+            var data = new LightningInvoiceData
             {
                 Amount = invoice.Amount,
                 Id = invoice.Id,
@@ -306,6 +355,12 @@ namespace BTCPayServer.Controllers.Greenfield
                 BOLT11 = invoice.BOLT11,
                 ExpiresAt = invoice.ExpiresAt
             };
+
+            if (invoice.CustomRecords != null)
+            {
+                data.CustomRecords = invoice.CustomRecords;
+            }
+            return data;
         }
 
         private LightningPaymentData ToModel(LightningPayment payment)

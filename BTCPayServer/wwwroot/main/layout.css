@@ -135,6 +135,17 @@
     height: 1px;
 }
 
+#StoreSelectorHome {
+    position: relative;
+}
+
+#StoreSelectorHome .badge {
+    position: absolute;
+    top: .25rem;
+    left: 100%;
+    font-size: 9px;
+}
+
 #StoreSelectorDropdown,
 #StoreSelectorToggle {
     width: 100%;
@@ -144,20 +155,41 @@
     display: flex;
     align-items: center;
     color: var(--btcpay-header-link);
+    background-color: var(--btcpay-header-bg);
+}
+
+#StoreSelectorToggle.empty-state {
+    color: var(--btcpay-body-text-muted);
 }
 
 #StoreSelectorToggle::after {
     content: none;
 }
 
+#StoreSelectorToggle,
+#StoreSelectorToggle .logo,
+#StoreSelectorToggle .icon {
+    transition: unset;
+    transition-property: color, border-color;
+    transition-timing-function: ease, ease;
+    transition-duration: var(--btcpay-transition-duration-fast), var(--btcpay-transition-duration-fast);
+}
+
+#StoreSelectorToggle .logo,
 #StoreSelectorToggle .icon {
     width: 1.5rem;
     height: 1.5rem;
-    transition: color 0.15s ease-in-out;
+    /* Fixes seemingly delayed icon animation */
+    -webkit-transition-duration: 0.05s, var(--btcpay-transition-duration-fast);
 }
 
+#StoreSelectorToggle .logo,
 #StoreSelectorToggle .icon.icon-store {
     margin-right: var(--btcpay-space-s);
+}
+
+#StoreSelectorToggle .logo {
+    border-radius: 50%;
 }
 
 #StoreSelectorToggle .icon.icon-caret-down {
@@ -185,24 +217,35 @@
 }
 
 /* Logo */
+#mainMenuHead .main-logo {
+    display: inline-block;
+    height: 2rem;
+}
+
 @media (max-width: 575px) {
-    .logo {
-        width: 1.125rem;
-        height: 2rem;
+    #mainMenuHead .main-logo-custom {
+        max-width: 25vw;
     }
 
-    .logo-large {
+    #mainMenuHead .main-logo-btcpay {
+        width: 1.125rem;
+    }
+
+    #mainMenuHead .main-logo-btcpay .main-logo-btcpay--large {
         display: none;
     }
 }
 
 @media (min-width: 576px) {
-    .logo {
-        width: 4.6rem;
-        height: 2rem;
+    #mainMenuHead .main-logo-custom {
+        max-width: 10.5rem;
     }
 
-    .logo-small {
+    #mainMenuHead .main-logo-btcpay {
+        width: 4.625rem;
+    }
+
+    #mainMenuHead .main-logo-btcpay .main-logo-btcpay--small {
         display: none;
     }
 }
@@ -372,7 +415,7 @@
 .btcpay-footer {
     font-size: var(--btcpay-font-size-s);
     overflow: hidden;
-    padding: .5em 0;
+    padding: 0 var(--content-padding-horizontal) 1rem;
     color: var(--btcpay-footer-text);
     background: var(--btcpay-footer-bg);
 }
@@ -419,7 +462,6 @@
         z-index: 1045;
         border-right: var(--menu-border);
         color: var(--btcpay-body-text);
-        visibility: hidden;
         background-color: inherit;
         background-clip: padding-box;
         outline: 0;
@@ -579,10 +621,6 @@
         padding: var(--btcpay-space-m) 1.5rem;
     }
 
-    #mainNav {
-        visibility: visible !important;
-    }
-
     #Notifications {
         order: 1;
         margin-left: auto;
@@ -613,15 +651,9 @@
         max-width: calc(100vw - var(--sidebar-width) - (2 * var(--btcpay-space-xl)) - 1rem); /* 1rem for scrollbar */
     }
 
-    #mainContent > section,
-    .btcpay-footer > .container {
+    #mainContent > section {
         margin: 0;
         max-width: none;
-    }
-    
-    .btcpay-footer {
-        padding-left: var(--btcpay-space-xl);
-        padding-right: var(--btcpay-space-xl);
     }
 
     #SectionNav .nav {

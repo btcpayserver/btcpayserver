@@ -1,10 +1,25 @@
 @using BTCPayServer.Abstractions.Extensions
 @using BTCPayServer.Services
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using BTCPayServer.Abstractions.Contracts
 @inject ThemeSettings Theme
+@inject IFileService FileService
 
-@if (Theme.CustomTheme)
-{
+@if (Theme.CustomTheme && !string.IsNullOrEmpty(Theme.CssUri))
+{   // legacy customization with CSS URI - keep it for backwards-compatibility
     <link href="@Context.Request.GetRelativePathOrAbsolute(Theme.CssUri)" rel="stylesheet" asp-append-version="true" />
+}
+else if (Theme.CustomTheme && !string.IsNullOrEmpty(Theme.CustomThemeFileId))
+{   // new customization uses theme file id provided by upload
+    @if (Theme.CustomThemeExtension != ThemeExtension.Custom)
+    {   // needs to be added for light and dark, because dark extends light
+        <link href="~/main/themes/default.css" rel="stylesheet" asp-append-version="true" />
+    }
+    @if (Theme.CustomThemeExtension == ThemeExtension.Dark)
+    {
+        <link href="~/main/themes/default-dark.css" rel="stylesheet" asp-append-version="true" />
+    }
+    <link href="@(await FileService.GetFileUrl(Context.Request.GetAbsoluteRootUri(), Theme.CustomThemeFileId))" rel="stylesheet" asp-append-version="true" />
 }
 else
 {

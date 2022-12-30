@@ -44,9 +44,6 @@ namespace BTCPayServer.Services.Rates
         {
             if (notFoundSymbols.TryGetValue(ticker.Key, out _))
                 return null;
-            if (ticker.Key.Contains("XMR"))
-            {
-            }
             try
             {
                 CurrencyPair pair;

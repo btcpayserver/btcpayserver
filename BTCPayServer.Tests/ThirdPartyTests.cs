@@ -75,11 +75,11 @@ namespace BTCPayServer.Tests
         public async Task CanQueryDirectProviders()
         {
             // TODO: Check once in a while whether or not they are working again
-            string[] brokenShitcoinCasinos = { };
+            string[] brokenShitcoinCasinos = {};
+            var skipped = 0;
             var factory = FastTests.CreateBTCPayRateFactory();
             var directlySupported = factory.GetSupportedExchanges().Where(s => s.Source == RateSource.Direct)
                 .Select(s => s.Id).ToHashSet();
-            var all = string.Join("\r\n", factory.GetSupportedExchanges().Select(e => e.Id).ToArray());
             foreach (var result in factory
                 .Providers
                 .Where(p => p.Value is BackgroundFetcherRateProvider bf &&
@@ -91,14 +91,26 @@ namespace BTCPayServer.Tests
                 var name = result.ExpectedName;
                 if (brokenShitcoinCasinos.Contains(name))
                 {
-                    TestLogs.LogInformation($"Skipping {name}");
+                    TestLogs.LogInformation($"Skipping {name}: Broken shitcoin casino");
+                    skipped++;
                     continue;
                 }
                 
                 TestLogs.LogInformation($"Testing {name}");
 
                 result.Fetcher.InvalidateCache();
-                var exchangeRates = new ExchangeRates(name, result.ResultAsync.Result);
+
+                ExchangeRates exchangeRates = null;
+                try
+                {
+                    exchangeRates = new ExchangeRates(name, result.ResultAsync.Result);
+                }
+                catch (Exception exception)
+                {
+                    TestLogs.LogInformation($"Skipping {name}: {exception.Message}");
+                    skipped++;
+                    continue;
+                }
                 result.Fetcher.InvalidateCache();
                 Assert.NotNull(exchangeRates);
                 Assert.NotEmpty(exchangeRates);
@@ -160,11 +172,12 @@ namespace BTCPayServer.Tests
             // Kraken emit one request only after first GetRates
             factory.Providers["kraken"].GetRatesAsync(default).GetAwaiter().GetResult();
 
-
             var p = new KrakenExchangeRateProvider();
             var rates = await p.GetRatesAsync(default);
             Assert.Contains(rates, e => e.CurrencyPair == new CurrencyPair("XMR", "BTC") && e.BidAsk.Bid < 1.0m);
             
+            // Check we didn't skip too many exchanges
+            Assert.InRange(skipped, 0, 3);
         }
 
         [Fact]
@@ -222,15 +235,22 @@ namespace BTCPayServer.Tests
                     "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:75.0) Gecko/20100101 Firefox/75.0");
                 using var cts = new CancellationTokenSource(5_000);
                 var response = await httpClient.SendAsync(request, cts.Token);
-                Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-                if (uri.Fragment.Length != 0)
+                if (response.StatusCode == HttpStatusCode.TooManyRequests)
                 {
-                    var fragment = uri.Fragment.Substring(1);
-                    var contents = await response.Content.ReadAsStringAsync();
-                    Assert.Matches($"id=\"{fragment}\"", contents);
+                    TestLogs.LogInformation($"TooManyRequests, skipping: {url} ({file})");
                 }
+                else
+                {
+                    Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+                    if (uri.Fragment.Length != 0)
+                    {
+                        var fragment = uri.Fragment.Substring(1);
+                        var contents = await response.Content.ReadAsStringAsync();
+                        Assert.Matches($"id=\"{fragment}\"", contents);
+                    }
 
-                TestLogs.LogInformation($"OK: {url} ({file})");
+                    TestLogs.LogInformation($"OK: {url} ({file})");
+                }
             }
             catch (Exception ex) when (ex is MatchesException)
             {
@@ -298,17 +318,39 @@ namespace BTCPayServer.Tests
         {
             // This test verify that no malicious js is added in the minified files.
             // We should extend the tests to other js files, but we can do as we go...
-
-            using HttpClient client = new HttpClient();
-            var actual = GetFileContent("BTCPayServer", "wwwroot", "vendor", "bootstrap", "bootstrap.bundle.min.js");
+            using var client = new HttpClient();
+            var actual = GetFileContent("BTCPayServer", "wwwroot", "vendor", "bootstrap", "bootstrap.bundle.min.js").Trim();
             var version = Regex.Match(actual, "Bootstrap v([0-9]+.[0-9]+.[0-9]+)").Groups[1].Value;
-            var expected = await (await client.GetAsync($"https://cdn.jsdelivr.net/npm/bootstrap@{version}/dist/js/bootstrap.bundle.min.js")).Content.ReadAsStringAsync();
-            Assert.Equal(expected, actual.Replace("\r\n", "\n", StringComparison.OrdinalIgnoreCase));
+            var expected = (await (await client.GetAsync($"https://cdn.jsdelivr.net/npm/bootstrap@{version}/dist/js/bootstrap.bundle.min.js")).Content.ReadAsStringAsync()).Trim();
+            Assert.Equal(expected, actual);
 
             actual = GetFileContent("BTCPayServer", "wwwroot", "vendor", "clipboard.js", "clipboard.js");
-            expected = await (await client.GetAsync($"https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.8/clipboard.js")).Content.ReadAsStringAsync();
-            Assert.Equal(expected, actual.Replace("\r\n", "\n", StringComparison.OrdinalIgnoreCase));
+            expected = (await (await client.GetAsync("https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.8/clipboard.js")).Content.ReadAsStringAsync()).Trim();
+            Assert.Equal(expected, actual);
+
+            actual = GetFileContent("BTCPayServer", "wwwroot", "vendor", "vuejs", "vue.min.js").Trim();
+            version = Regex.Match(actual, "Vue\\.js v([0-9]+.[0-9]+.[0-9]+)").Groups[1].Value;
+            expected = (await (await client.GetAsync($"https://cdnjs.cloudflare.com/ajax/libs/vue/{version}/vue.min.js")).Content.ReadAsStringAsync()).Trim();
+            Assert.Equal(expected, actual);
+
+            actual = GetFileContent("BTCPayServer", "wwwroot", "vendor", "i18next", "i18next.min.js").Trim();
+            expected = (await (await client.GetAsync("https://cdnjs.cloudflare.com/ajax/libs/i18next/22.0.6/i18next.min.js")).Content.ReadAsStringAsync()).Trim();
+            Assert.Equal(expected, actual);
+
+            actual = GetFileContent("BTCPayServer", "wwwroot", "vendor", "i18next", "i18nextHttpBackend.min.js").Trim();
+            expected = (await (await client.GetAsync("https://cdnjs.cloudflare.com/ajax/libs/i18next-http-backend/2.0.1/i18nextHttpBackend.min.js")).Content.ReadAsStringAsync()).Trim();
+            Assert.Equal(expected, actual);
+
+            actual = GetFileContent("BTCPayServer", "wwwroot", "vendor", "i18next", "vue-i18next.js").Trim();
+            expected = (await (await client.GetAsync("https://unpkg.com/@panter/vue-i18next@0.15.2/dist/vue-i18next.js")).Content.ReadAsStringAsync()).Trim();
+            Assert.Equal(expected, actual);
+
+            actual = GetFileContent("BTCPayServer", "wwwroot", "vendor", "vue-qrcode", "vue-qrcode.min.js").Trim();
+            version = Regex.Match(actual, "vue-qrcode v([0-9]+.[0-9]+.[0-9]+)").Groups[1].Value;
+            expected = (await (await client.GetAsync($"https://unpkg.com/@chenfengyuan/vue-qrcode@{version}/dist/vue-qrcode.min.js")).Content.ReadAsStringAsync()).Trim();
+            Assert.Equal(expected, actual);
         }
+        
         string GetFileContent(params string[] path)
         {
             var l = path.ToList();

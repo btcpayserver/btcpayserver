@@ -420,7 +420,7 @@ namespace BTCPayServer.Payments.Bitcoin
                 btc.GetDepositAddress(wallet.Network.NBitcoinNetwork).ScriptPubKey == paymentData.ScriptPubKey &&
                 paymentMethod.Calculate().Due > Money.Zero)
             {
-                var address = await wallet.ReserveAddressAsync(strategy);
+                var address = await wallet.ReserveAddressAsync(invoice.StoreId, strategy, "invoice");
                 btc.DepositAddress = address.Address.ToString();
                 btc.KeyPath = address.KeyPath;
                 await _InvoiceRepository.NewPaymentDetails(invoice.Id, btc, wallet.Network);

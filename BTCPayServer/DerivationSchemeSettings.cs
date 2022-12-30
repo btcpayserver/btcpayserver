@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using BTCPayServer.Payments;
 using NBitcoin;
 using NBitcoin.DataEncoders;
@@ -16,17 +17,18 @@ namespace BTCPayServer
     {
         public static DerivationSchemeSettings Parse(string derivationStrategy, BTCPayNetwork network)
         {
+            string error = null;
             ArgumentNullException.ThrowIfNull(network);
             ArgumentNullException.ThrowIfNull(derivationStrategy);
             var result = new DerivationSchemeSettings();
             result.Network = network;
             var parser = new DerivationSchemeParser(network);
-            if (TryParseXpub(derivationStrategy, parser, ref result, false) || TryParseXpub(derivationStrategy, parser, ref result, true))
+            if (TryParseXpub(derivationStrategy, parser, ref result, ref error, false) || TryParseXpub(derivationStrategy, parser, ref result, ref error, true))
             {
                 return result;
             }
 
-            throw new FormatException("Invalid Derivation Scheme");
+            throw new FormatException($"Invalid Derivation Scheme: {error}");
         }
 
         public static bool TryParseFromJson(string config, BTCPayNetwork network, out DerivationSchemeSettings strategy)
@@ -47,10 +49,11 @@ namespace BTCPayServer
         {
             return AccountDerivation is null ? null : DBUtils.nbxv1_get_wallet_id(Network.CryptoCode, AccountDerivation.ToString());
         }
-        private static bool TryParseXpub(string xpub, DerivationSchemeParser derivationSchemeParser, ref DerivationSchemeSettings derivationSchemeSettings, bool electrum = true)
+        private static bool TryParseXpub(string xpub, DerivationSchemeParser derivationSchemeParser, ref DerivationSchemeSettings derivationSchemeSettings, ref string error, bool electrum = true)
         {
             if (!electrum)
             {
+                var isOD = Regex.Match(xpub, @"\(.*?\)").Success;
                 try
                 {
                     var result = derivationSchemeParser.ParseOutputDescriptor(xpub);
@@ -64,9 +67,13 @@ namespace BTCPayServer
                     }).ToArray();
                     return true;
                 }
-                catch (Exception)
+                catch (Exception exception)
                 {
-                    // ignored
+                    error = exception.Message;
+                    if (isOD)
+                    {
+                        return false;
+                    } // otherwise continue and try to parse input as xpub
                 }
             }
             try
@@ -82,20 +89,22 @@ namespace BTCPayServer
                     derivationSchemeSettings.AccountOriginal = null; // Saving this would be confusing for user, as xpub of electrum is legacy derivation, but for btcpay, it is segwit derivation
                 return true;
             }
-            catch (Exception)
+            catch (Exception exception)
             {
+                error = exception.Message;
                 return false;
             }
         }
 
-        public static bool TryParseFromWalletFile(string fileContents, BTCPayNetwork network, out DerivationSchemeSettings settings)
+        public static bool TryParseFromWalletFile(string fileContents, BTCPayNetwork network, out DerivationSchemeSettings settings, out string error)
         {
             settings = null;
+            error = null;
             ArgumentNullException.ThrowIfNull(fileContents);
             ArgumentNullException.ThrowIfNull(network);
             var result = new DerivationSchemeSettings();
             var derivationSchemeParser = new DerivationSchemeParser(network);
-            JObject jobj = null;
+            JObject jobj;
             try
             {
                 if (HexEncoder.IsWellFormed(fileContents))
@@ -107,8 +116,8 @@ namespace BTCPayServer
             catch
             {
                 result.Source = "GenericFile";
-                if (TryParseXpub(fileContents, derivationSchemeParser, ref result) ||
-                    TryParseXpub(fileContents, derivationSchemeParser, ref result, false))
+                if (TryParseXpub(fileContents, derivationSchemeParser, ref result, ref error) ||
+                    TryParseXpub(fileContents, derivationSchemeParser, ref result, ref error, false))
                 {
                     settings = result;
                     settings.Network = network;
@@ -125,7 +134,7 @@ namespace BTCPayServer
                 jobj = (JObject)jobj["keystore"];
 
                 if (!jobj.ContainsKey("xpub") ||
-                    !TryParseXpub(jobj["xpub"].Value<string>(), derivationSchemeParser, ref result))
+                    !TryParseXpub(jobj["xpub"].Value<string>(), derivationSchemeParser, ref result, ref error))
                 {
                     return false;
                 }
@@ -162,7 +171,7 @@ namespace BTCPayServer
             {
                 result.Source = "SpecterFile";
 
-                if (!TryParseXpub(jobj["descriptor"].Value<string>(), derivationSchemeParser, ref result, false))
+                if (!TryParseXpub(jobj["descriptor"].Value<string>(), derivationSchemeParser, ref result, ref error, false))
                 {
                     return false;
                 }
@@ -181,7 +190,7 @@ namespace BTCPayServer
             {
                 result.Source = "WasabiFile";
                 if (!jobj.ContainsKey("ExtPubKey") ||
-                    !TryParseXpub(jobj["ExtPubKey"].Value<string>(), derivationSchemeParser, ref result, false))
+                    !TryParseXpub(jobj["ExtPubKey"].Value<string>(), derivationSchemeParser, ref result, ref error, false))
                 {
                     return false;
                 }

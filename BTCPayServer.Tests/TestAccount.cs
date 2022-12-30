@@ -174,7 +174,7 @@ namespace BTCPayServer.Tests
                 await RegisterAsync();
             }
             var store = GetController<UIUserStoresController>();
-            await store.CreateStore(new CreateStoreViewModel { Name = "Test Store" });
+            await store.CreateStore(new CreateStoreViewModel { Name = "Test Store", PreferredExchange = "coingecko" });
             StoreId = store.CreatedStoreId;
             parent.Stores.Add(StoreId);
         }

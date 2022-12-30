@@ -15,7 +15,9 @@ namespace BTCPayServer.Client.Models
         [JsonConverter(typeof(OutpointJsonConverter))]
         public OutPoint Outpoint { get; set; }
         public string Link { get; set; }
+#pragma warning disable CS0612 // Type or member is obsolete
         public Dictionary<string, LabelData> Labels { get; set; }
+#pragma warning restore CS0612 // Type or member is obsolete
         [JsonConverter(typeof(DateTimeToUnixTimeConverter))]
         public DateTimeOffset Timestamp { get; set; }
         [JsonConverter(typeof(KeyPathJsonConverter))]

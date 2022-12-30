@@ -89,17 +89,17 @@ namespace BTCPayServer.Controllers
 
             if (vm.WalletFile != null)
             {
-                if (!DerivationSchemeSettings.TryParseFromWalletFile(await ReadAllText(vm.WalletFile), network, out strategy))
+                if (!DerivationSchemeSettings.TryParseFromWalletFile(await ReadAllText(vm.WalletFile), network, out strategy, out var error))
                 {
-                    ModelState.AddModelError(nameof(vm.WalletFile), "Wallet file was not in the correct format");
+                    ModelState.AddModelError(nameof(vm.WalletFile), $"Importing wallet failed: {error}");
                     return View(vm.ViewName, vm);
                 }
             }
             else if (!string.IsNullOrEmpty(vm.WalletFileContent))
             {
-                if (!DerivationSchemeSettings.TryParseFromWalletFile(vm.WalletFileContent, network, out strategy))
+                if (!DerivationSchemeSettings.TryParseFromWalletFile(vm.WalletFileContent, network, out strategy, out var error))
                 {
-                    ModelState.AddModelError(nameof(vm.WalletFileContent), "QR import was not in the correct format");
+                    ModelState.AddModelError(nameof(vm.WalletFileContent), $"QR import failed: {error}");
                     return View(vm.ViewName, vm);
                 }
             }
@@ -119,17 +119,16 @@ namespace BTCPayServer.Controllers
                             accountSettings.AccountKeyPath =
                                 vm.KeyPath == null ? null : KeyPath.Parse(vm.KeyPath);
                             accountSettings.RootFingerprint = string.IsNullOrEmpty(vm.RootFingerprint)
-                                ? (HDFingerprint?)null
-                                : new HDFingerprint(
-                                    NBitcoin.DataEncoders.Encoders.Hex.DecodeData(vm.RootFingerprint));
+                                ? null
+                                : new HDFingerprint(Encoders.Hex.DecodeData(vm.RootFingerprint));
                         }
                     }
                     vm.DerivationScheme = strategy.AccountDerivation.ToString();
                     ModelState.Remove(nameof(vm.DerivationScheme));
                 }
-                catch
+                catch (Exception ex)
                 {
-                    ModelState.AddModelError(nameof(vm.DerivationScheme), "Invalid wallet format");
+                    ModelState.AddModelError(nameof(vm.DerivationScheme), $"Invalid wallet format: {ex.Message}");
                     return View(vm.ViewName, vm);
                 }
             }

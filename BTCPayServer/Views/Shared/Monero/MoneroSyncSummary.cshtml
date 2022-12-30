@@ -8,12 +8,18 @@
     {
         @if (summary.Value != null)
         {
-            <h4>@summary.Key</h4>
-            <ul >
-                <li >Node available: @summary.Value.DaemonAvailable</li>
-                <li >Wallet available: @summary.Value.WalletAvailable</li>
-                <li >Last updated: @summary.Value.UpdatedAt</li>
-                <li >Synced: @summary.Value.Synced (@summary.Value.CurrentHeight / @summary.Value.TargetHeight)</li>
+            var status = summary.Value.DaemonAvailable
+                ? summary.Value.Synced ? "enabled" : "pending"
+                : "disabled";
+            <h5 class="d-flex align-items-center fw-semibold">
+                <span class="me-2 btcpay-status btcpay-status--@status"></span>
+                @summary.Key
+            </h5>
+            <ul>
+                <li>Node available: @summary.Value.DaemonAvailable</li>
+                <li>Wallet available: @summary.Value.WalletAvailable</li>
+                <li>Last updated: @summary.Value.UpdatedAt</li>
+                <li>Synced: @summary.Value.Synced (@summary.Value.CurrentHeight / @summary.Value.TargetHeight)</li>
             </ul>
         }
     }

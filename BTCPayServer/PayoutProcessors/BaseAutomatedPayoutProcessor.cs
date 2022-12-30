@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -40,6 +40,7 @@ public abstract class BaseAutomatedPayoutProcessor<T> : BaseAsyncService where T
         _applicationDbContextFactory = applicationDbContextFactory;
         _pullPaymentHostedService = pullPaymentHostedService;
         _btcPayNetworkProvider = btcPayNetworkProvider;
+        this.NoLogsOnExit = true;
     }
 
     internal override Task[] InitializeTasks()

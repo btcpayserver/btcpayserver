@@ -41,7 +41,7 @@ namespace BTCPayServer.Services.Wallets.Export
                 
                 if (_walletTransactionsInfo.TryGetValue(tx.TransactionId.ToString(), out var transactionInfo))
                 {
-                    model.Labels = transactionInfo.Labels?.Select(l => l.Value.Text).ToList();
+                    model.Labels = transactionInfo.LabelColors?.Select(l => l.Key).ToList();
                     model.Comment = transactionInfo.Comment;
                 }
 

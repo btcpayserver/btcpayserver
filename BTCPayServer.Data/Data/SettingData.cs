@@ -1,3 +1,6 @@
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+
 namespace BTCPayServer.Data
 {
     public class SettingData
@@ -5,5 +8,15 @@ namespace BTCPayServer.Data
         public string Id { get; set; }
 
         public string Value { get; set; }
+
+        public static void OnModelCreating(ModelBuilder builder, DatabaseFacade databaseFacade)
+        {
+            if (databaseFacade.IsNpgsql())
+            {
+                builder.Entity<SettingData>()
+                    .Property(o => o.Value)
+                    .HasColumnType("JSONB");
+            }
+        }
     }
 }

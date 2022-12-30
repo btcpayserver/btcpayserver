@@ -2,8 +2,11 @@ using System;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Services.Wallets;
 using BTCPayServer.Tests.Logging;
 using Microsoft.AspNetCore.Mvc;
+using NBXplorer.DerivationStrategy;
+using NBXplorer.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using OpenQA.Selenium;
@@ -15,6 +18,10 @@ namespace BTCPayServer.Tests
 {
     public static class Extensions
     {
+        public static Task<KeyPathInformation> ReserveAddressAsync(this BTCPayWallet wallet, DerivationStrategyBase derivationStrategyBase)
+        {
+            return wallet.ReserveAddressAsync(null, derivationStrategyBase, "test");
+        }
         private static readonly JsonSerializerSettings JsonSettings = new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() };
         public static string ToJson(this object o) => JsonConvert.SerializeObject(o, Formatting.None, JsonSettings);
 
@@ -124,6 +131,12 @@ retry:
             wait.Until(d => el.Displayed);
 
             return el;
+        }
+
+        public static void FillIn(this IWebElement el, string text)
+        {
+            el.Clear();
+            el.SendKeys(text);
         }
         
         public static void ScrollTo(this IWebDriver driver, IWebElement element)

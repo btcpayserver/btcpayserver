@@ -16,7 +16,7 @@ namespace BTCPayServer.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "6.0.1");
+            modelBuilder.HasAnnotation("ProductVersion", "6.0.9");
 
             modelBuilder.Entity("BTCPayServer.Data.AddressInvoiceData", b =>
                 {
@@ -189,6 +189,7 @@ namespace BTCPayServer.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
+                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("TEXT");
 
@@ -845,6 +846,54 @@ namespace BTCPayServer.Migrations
                     b.ToTable("Wallets");
                 });
 
+            modelBuilder.Entity("BTCPayServer.Data.WalletObjectData", b =>
+                {
+                    b.Property<string>("WalletId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Type")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Data")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("WalletId", "Type", "Id");
+
+                    b.HasIndex("Type", "Id");
+
+                    b.ToTable("WalletObjects");
+                });
+
+            modelBuilder.Entity("BTCPayServer.Data.WalletObjectLinkData", b =>
+                {
+                    b.Property<string>("WalletId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("AType")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("AId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("BType")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("BId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Data")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("WalletId", "AType", "AId", "BType", "BId");
+
+                    b.HasIndex("WalletId", "BType", "BId");
+
+                    b.ToTable("WalletObjectLinks");
+                });
+
             modelBuilder.Entity("BTCPayServer.Data.WalletTransactionData", b =>
                 {
                     b.Property<string>("WalletDataId")
@@ -1333,6 +1382,25 @@ namespace BTCPayServer.Migrations
                     b.Navigation("StoreData");
                 });
 
+            modelBuilder.Entity("BTCPayServer.Data.WalletObjectLinkData", b =>
+                {
+                    b.HasOne("BTCPayServer.Data.WalletObjectData", "A")
+                        .WithMany("Bs")
+                        .HasForeignKey("WalletId", "AType", "AId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BTCPayServer.Data.WalletObjectData", "B")
+                        .WithMany("As")
+                        .HasForeignKey("WalletId", "BType", "BId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("A");
+
+                    b.Navigation("B");
+                });
+
             modelBuilder.Entity("BTCPayServer.Data.WalletTransactionData", b =>
                 {
                     b.HasOne("BTCPayServer.Data.WalletData", "WalletData")
@@ -1473,6 +1541,13 @@ namespace BTCPayServer.Migrations
             modelBuilder.Entity("BTCPayServer.Data.WalletData", b =>
                 {
                     b.Navigation("WalletTransactions");
+                });
+
+            modelBuilder.Entity("BTCPayServer.Data.WalletObjectData", b =>
+                {
+                    b.Navigation("As");
+
+                    b.Navigation("Bs");
                 });
 
             modelBuilder.Entity("BTCPayServer.Data.WebhookData", b =>

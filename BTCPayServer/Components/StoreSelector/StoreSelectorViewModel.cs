@@ -6,6 +6,7 @@ namespace BTCPayServer.Components.StoreSelector
     {
         public List<StoreSelectorOption> Options { get; set; }
         public string CurrentStoreId { get; set; }
+        public string CurrentStoreLogoFileId { get; set; }
         public string CurrentDisplayName { get; set; }
         public bool CurrentStoreIsOwner { get; set; }
     }

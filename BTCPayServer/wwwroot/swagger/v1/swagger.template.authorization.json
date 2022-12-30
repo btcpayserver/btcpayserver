@@ -82,12 +82,17 @@
                     "200": {
                         "description": "A HTML form that a user can use to confirm permissions to grant",
                         "content": {
-                            "text/html": {
-                            }
+                            "text/html": {}
                         }
                     },
                     "307": {
                         "description": "Makes browser do an HTTP POST request to the specified url in `redirect` with a JSON body consisting of `apiKey` (the api key created or matched), `permissions` (the permissions the user consented to), and `userId` (the id of the user that consented) upon consent"
+                    },
+                    "401": {
+                        "description": "Missing authorization",
+                        "content": {
+                            "text/html": {}
+                        }
                     }
                 },
                 "security": []
@@ -96,7 +101,8 @@
     },
     "tags": [
         {
-            "name": "Authorization"
+            "name": "Authorization",
+            "description": "Authorization operations"
         }
     ]
 }

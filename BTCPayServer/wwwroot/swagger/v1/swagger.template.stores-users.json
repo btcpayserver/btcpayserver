@@ -53,6 +53,17 @@
                 "summary": "Add a store user",
                 "description": "Add a store user",
                 "operationId": "Stores_AddStoreUser",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store id",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
                 "requestBody": {
                     "x-name": "request",
                     "content": {
@@ -204,7 +215,8 @@
     },
     "tags": [
         {
-            "name": "Stores (Users)"
+            "name": "Stores (Users)",
+            "description": "Store Users operations"
         }
     ]
 }

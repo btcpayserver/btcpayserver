@@ -105,7 +105,7 @@ namespace BTCPayServer.Filters
                     {
                         hasSelf = group.Any(g => g.Value.Contains("'self'", StringComparison.OrdinalIgnoreCase));
                         if (!hasSelf && !group.Any(g => g.Value.Contains("'none'", StringComparison.OrdinalIgnoreCase) ||
-                                           g.Value.Contains("*", StringComparison.OrdinalIgnoreCase)))
+                                           g.Value.Contains('*', StringComparison.OrdinalIgnoreCase)))
                         {
                             policies.Add(new ConsentSecurityPolicy(group.Key, "'self'"));
                         }

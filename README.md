@@ -121,9 +121,9 @@ BTCPay Server is built and maintained entirely by volunteer contributors around 
 
 If you're a developer looking to help, but you're not sure where to begin, check the [good first issue label](https://github.com/btcpayserver/btcpayserver/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22), which contains small pieces of work that have been specifically flagged as being friendly to new contributors.
 
-Contributors looking to do something a bit more challenging, before opening a pull request, please join [our community chat](https://chat.btcpayserver.org/) or [start a GitHub discussion](https://github.com/btcpayserver/btcpayserver/discussions) to get early feedback, discuss best ways to tackle the problem and ensure there is no work duplication.
+Contributors looking to do something a bit more challenging, before opening a pull request, please join [our community chat](https://chat.btcpayserver.org/) or [start a GitHub discussion](https://github.com/btcpayserver/btcpayserver/discussions) to get early feedback, discuss the best ways to tackle the problem, and ensure there is no work duplication.
 
-There are many other ways to get involved with the project. Check our [contribution guidelines](https://docs.btcpayserver.org/Contribute/). To get the big-picture of the project development, visit our [evolving roadmap](https://github.com/orgs/btcpayserver/projects/9). We organize different types of community calls several times a month. [Subscribe to our calendar](https://github.com/btcpayserver/organization#calendar) and feel free to join our calls to discuss development, design, documentation and more.
+There are many other ways to get involved with the project. Check our [contribution guidelines](https://docs.btcpayserver.org/Contribute/). To get the big-picture of the project development, visit our [evolving roadmap](https://github.com/orgs/btcpayserver/projects/9). We organize different types of community calls several times a month. [Subscribe to our calendar](https://github.com/btcpayserver/organization#calendar) and feel free to join our calls to discuss development, design, documentation, and more.
 
 ## 🧑‍💻 Developing
 
@@ -169,11 +169,11 @@ On linux:
 
 ### How to debug
 
-If you want to debug, use Visual Studio Code or Visual Studio 2019.
+If you want to debug, use Jetbrain's Rider or Visual Studio 2022.
 
 You need to run the development time docker-compose as described [in the test guide](./BTCPayServer.Tests/README.md).
 
-You can then run the debugger by using the Launch Profile `Docker-Regtest` on either Visual Studio Code or Visual Studio 2017.
+You can then run the debugger by using the Launch Profile `Docker-Regtest`.
 
 If you need to debug ledger wallet interaction, install the development time certificate with:
 
@@ -181,6 +181,7 @@ If you need to debug ledger wallet interaction, install the development time cer
 # Install development time certificate in the trust store
 dotnet dev-certs https --trust
 ```
+
 Then use the `Docker-Regtest-https` debug profile.
 
 ### Other dependencies
@@ -212,83 +213,14 @@ BTCPay Server software, logo and designs are provided under [MIT License](https:
 
 The BTCPay Server Project is proudly supported by these entities through the [BTCPay Server Foundation](https://foundation.btcpayserver.org/).
 
-<table>
-  <tbody>
-    <tr>
-      <td align="center" valign="middle">
-        <a href="https://spiral.xyz" target="_blank">
-          <img src="BTCPayServer/wwwroot/img/spiral.svg" alt="Spiral" height=100>
-          <br/>
-          <span>Spiral</span>
-        </a>
-      </td>
-      <td align="center" valign="middle">
-        <a href="https://www.bailliegifford.com" target="_blank">
-          <img src="BTCPayServer/wwwroot/img/bailliegifford.svg" alt="Baillie Gifford" height=100>
-          <br/>
-          <span>Baillie Gifford</span>
-        </a>
-      </td>
-      <td align="center" valign="middle">
-        <a href="https://strike.me" target="_blank">
-          <img src="BTCPayServer/wwwroot/img/strike.svg" alt="Strike" height=100>
-          <br/>
-          <span>Strike</span>
-        </a>
-      </td>
-      <td align="center" valign="middle">
-        <a href="https://hrf.org" target="_blank">
-          <img src="BTCPayServer/wwwroot/img/hrf.svg" alt="Human Rights Foundation" width=100>
-          <br/>
-          <span>Human Rights Foundation</span>
-        </a>
-      </td>
-      <td align="center" valign="middle">
-        <a href="https://www.pnxbet.com" target="_blank">
-          <img src="BTCPayServer/wwwroot/img/pnxbet.png" alt="PNXBET" height=100>
-          <br/>
-          <span>PNXBET</span>
-        </a>
-      </td>
-      </tr>
-      <tr>
-      <td align="center" valign="middle">
-        <a href="https://lunanode.com" target="_blank">
-          <img  src="BTCPayServer/wwwroot/img/lunanode.svg" alt="LunaNode" height=100>
-          <br/>
-          <span>LunaNode</span>
-        </a>
-      </td>
-      <td align="center" valign="middle">
-        <a href="https://walletofsatoshi.com/" target="_blank">
-          <img src="BTCPayServer/wwwroot/img/walletofsatoshi.svg" alt="Wallet of Satoshi" height=100>
-          <br/>
-          <span>Wallet of Satoshi</span>
-        </a>
-      </td>
-       <td align="center" valign="middle">
-        <a href="https://nomics.com/" target="_blank">
-          <img src="BTCPayServer/wwwroot/img/nomics.svg" alt="Nomics" height=100>
-          <br/>
-          <span>Nomics</span>
-        </a>
-      </td>
-      <td align="center" valign="middle">
-       <a href="https://coincards.com/" target="_blank">
-         <img src="BTCPayServer/wwwroot/img/coincards.svg" alt="Coincards" height=100>
-         <br/>
-         <span>Coincards</span>
-       </a>
-     </td>
-     <td align="center" valign="middle">
-        <a href="https://ivpn.net/" target="_blank">
-          <img src="BTCPayServer/wwwroot/img/ivpn.svg?sanitize=true" alt="IVPN" height=100>
-          <br/>
-          <span>IVPN</span>
-        </a>
-      </td>
-    </tr>
-  </tbody>
-</table>
+[![Spiral](BTCPayServer/wwwroot/img/readme/supporter_spiral.svg)](https://spiral.xyz)
+[![Baillie Gifford](BTCPayServer/wwwroot/img/readme/supporter_bailliegifford.svg)](https://www.bailliegifford.com)
+[![Strike](BTCPayServer/wwwroot/img/readme/supporter_strike.svg)](https://strike.me)
+[![Human Rights Foundation](BTCPayServer/wwwroot/img/readme/supporter_hrf.svg)](https://hrf.org)
+[![PNXBET](BTCPayServer/wwwroot/img/readme/supporter_pnxbet.svg)](https://www.pnxbet.com)
+[![LunaNode](BTCPayServer/wwwroot/img/readme/supporter_lunanode.svg)](https://lunanode.com)
+[![Wallet of Satoshi](BTCPayServer/wwwroot/img/readme/supporter_walletofsatoshi.svg)](https://walletofsatoshi.com/)
+[![Coincards](BTCPayServer/wwwroot/img/readme/supporter_coincards.svg)](https://coincards.com/)
+[![IVPN](BTCPayServer/wwwroot/img/readme/supporter_ivpn.svg)](https://ivpn.net/)
 
 If you'd like to support the project, please visit the [donation page](https://btcpayserver.org/donate/).

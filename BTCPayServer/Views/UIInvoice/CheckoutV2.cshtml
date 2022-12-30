@@ -1,0 +1,267 @@
+@inject LanguageService LangService
+@inject BTCPayServerEnvironment Env
+@inject IFileService FileService
+@inject IEnumerable<IUIExtension> UiExtensions 
+@inject PaymentMethodHandlerDictionary PaymentMethodHandlerDictionary
+@using BTCPayServer.Services
+@using BTCPayServer.Abstractions.Contracts
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@model PaymentModel
+@{
+    Layout = null;
+    ViewData["Title"] = Model.HtmlTitle;
+
+    var hasPaymentPlugins = UiExtensions.Any(extension => extension.Location == "checkout-payment-method");
+    var paymentMethodCount = Model.AvailableCryptos.Count;
+    var logoUrl = !string.IsNullOrEmpty(Model.LogoFileId)
+        ? await FileService.GetFileUrl(Context.Request.GetAbsoluteRootUri(), Model.LogoFileId)
+        : Model.CustomLogoLink;
+}
+@functions {
+    private string PaymentMethodName(PaymentModel.AvailableCrypto pm)
+    {
+        return Model.AltcoinsBuild
+            ? pm.PaymentMethodName
+            : pm.PaymentMethodName.Replace("Bitcoin (", "").Replace(")", "").Replace("Lightning ", "");
+    }
+
+    private string ToJsValue(object value)
+    {
+        return Safe.Json(value).ToString()?.Replace("\"", "'");
+    }
+}
+<!DOCTYPE html>
+<html lang="@Model.DefaultLang" class="@(Model.IsModal ? "checkout-modal" : "")"@(Env.IsDeveloping ? " data-devenv" : "")>
+<head>
+    <partial name="LayoutHead"/>
+    <meta name="robots" content="noindex,nofollow">
+    <link href="~/checkout-v2/checkout.css" asp-append-version="true" rel="stylesheet" />
+    @if (!string.IsNullOrEmpty(Model.BrandColor))
+    {
+        <style>
+            :root {
+                --btcpay-primary: @Model.BrandColor;
+                --btcpay-primary-bg-hover: @Model.BrandColor;
+                --btcpay-primary-bg-active: @Model.BrandColor;
+                --btcpay-primary-shadow: @Model.BrandColor;
+                --btcpay-body-link-accent: @Model.BrandColor;
+            }
+        </style>
+    }
+</head>
+<body class="min-vh-100">
+    <div id="Checkout-v2" class="wrap gap-4" v-cloak v-waitForT>
+        <header class="store-header">
+            @if (!string.IsNullOrEmpty(logoUrl))
+            {
+                <img src="@logoUrl" alt="@Model.StoreName" class="logo @(!string.IsNullOrEmpty(Model.LogoFileId) ? "logo--square" : "")"/>
+            }
+            <h1>@Model.StoreName</h1>
+        </header>
+        <main class="shadow-lg">
+            <nav v-if="isModal">
+                <button type="button" v-if="isModal" id="close" v-on:click="close">
+                    <vc:icon symbol="close"/>
+                </button>
+            </nav>
+            <section id="payment" v-if="isActive">
+                <h5 class="text-center mt-1 mb-3 fw-semibold" v-if="srvModel.itemDesc" v-text="srvModel.itemDesc">@Model.ItemDesc</h5>
+                @if (Model.IsUnsetTopUp)
+                {
+                    <h2 id="AmountDue" class="text-center mb-3" v-t="'any_amount'"></h2>
+                }
+                else
+                {
+                    <h2 id="AmountDue" class="text-center" v-text="`${srvModel.btcDue} ${srvModel.cryptoCode}`" :data-clipboard="srvModel.btcDue" :data-clipboard-confirm="$t('copy_confirm')" :data-amount-due="btcDue">@Model.BtcDue @Model.CryptoCode</h2>
+                }
+                <div id="PaymentInfo" class="info mt-3 mb-2" v-collapsible="showInfo">
+                    <div>
+                        <div class="timer" v-if="showTimer">
+                            <span class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden"></span></span>
+                            <span v-t="'expiry_info'"></span> <span class="expiryTime">{{timeText}}</span>
+                        </div>
+                        <div class="payment-due" v-if="showPaymentDueInfo">
+                            <vc:icon symbol="info"/>
+                            <span v-t="'partial_payment_info'"></span>
+                        </div>
+                        <div v-if="showPaymentDueInfo" v-html="replaceNewlines($t('still_due', { amount: `${srvModel.btcDue} ${srvModel.cryptoCode}` }))"></div>
+                    </div>
+                </div>
+                <button id="DetailsToggle" class="d-flex align-items-center gap-1 btn btn-link payment-details-button mb-2" type="button" :aria-expanded="displayPaymentDetails ? 'true' : 'false'" v-on:click="displayPaymentDetails = !displayPaymentDetails">
+                    <span class="fw-semibold" v-t="'view_details'"></span>
+                    <vc:icon symbol="caret-down"/>
+                </button>
+                <div id="PaymentDetails" class="payment-details" v-collapsible="displayPaymentDetails">
+                    <payment-details :srv-model="srvModel" :is-active="isActive" class="pb-4"></payment-details>
+                </div>
+                @if (paymentMethodCount > 1 || hasPaymentPlugins)
+                {
+                    <div class="mt-3 mb-2">
+                        <h6 class="text-center mb-3" v-t="'pay_with'"></h6>
+                        <div class="btcpay-pills d-flex flex-wrap align-items-center justify-content-center gap-2 pb-2">
+                            @foreach (var crypto in Model.AvailableCryptos)
+                            {
+                                <a asp-action="Checkout" asp-route-invoiceId="@Model.InvoiceId" asp-route-paymentMethodId="@crypto.PaymentMethodId"
+                                   class="btcpay-pill m-0 payment-method"
+                                   :class="{ active: pmId === @ToJsValue(crypto.PaymentMethodId) }"
+                                   v-on:click.prevent="changePaymentMethod(@ToJsValue(crypto.PaymentMethodId))">
+                                    @PaymentMethodName(crypto)
+                                </a>
+                            }
+                            @await Component.InvokeAsync("UiExtensionPoint", new { location = "checkout-payment-method", model = Model })
+                        </div>
+                    </div>
+                }
+                <component v-if="paymentMethodComponent" :is="paymentMethodComponent" :model="srvModel" />
+            </section>
+            <section id="result" v-else>
+                <div id="paid" v-if="isPaid">
+                    <div class="top">
+                        <span class="icn">
+                            <vc:icon symbol="payment-complete"/>
+                        </span>
+                        <h4 v-t="'invoice_paid'"></h4>
+                        <dl class="mb-0">
+                            <div>
+                                <dt v-t="'invoice_id'"></dt>
+                                <dd v-text="srvModel.invoiceId"></dd>
+                            </div>
+                            <div v-if="srvModel.orderId">
+                                <dt v-t="'order_id'"></dt>
+                                <dd v-text="srvModel.orderId"></dd>
+                            </div>
+                        </dl>
+                        <payment-details :srv-model="srvModel" :is-active="isActive" class="mb-5"></payment-details>
+                    </div>
+                    <div class="buttons">
+                        <a v-if="srvModel.receiptLink" class="btn btn-primary rounded-pill w-100" :href="srvModel.receiptLink" :target="isModal ? '_top' : null" v-t="'view_receipt'" id="ReceiptLink"></a>
+                        <a v-if="storeLink" class="btn btn-secondary rounded-pill w-100" :href="storeLink" :target="isModal ? '_top' : null" v-t="{ path: 'return_to_store', args: { storeName: srvModel.storeName }}" id="StoreLink"></a>
+                        <button v-else-if="isModal" class="btn btn-secondary rounded-pill w-100" v-on:click="close" v-t="'Close'"></button>
+                    </div>
+                </div>
+                <div id="expired" v-if="isUnpayable">
+                    <div class="top">
+                        <span class="icn">
+                            <vc:icon symbol="invoice-expired"/>
+                        </span>
+                        <h4 v-t="'invoice_expired'"></h4>
+                        <dl class="mb-0">
+                            <div>
+                                <dt v-t="'invoice_id'"></dt>
+                                <dd v-text="srvModel.invoiceId"></dd>
+                            </div>
+                            <div v-if="srvModel.orderId">
+                                <dt v-t="'order_id'"></dt>
+                                <dd v-text="srvModel.orderId"></dd>
+                            </div>
+                        </dl>
+                        <div id="PaymentDetails" class="payment-details" v-collapsible="displayPaymentDetails">
+                            <payment-details :srv-model="srvModel" :is-active="isActive"></payment-details>
+                        </div>
+                        <button class="d-flex align-items-center gap-1 btn btn-link payment-details-button" type="button" :aria-expanded="displayPaymentDetails ? 'true' : 'false'" v-on:click="displayPaymentDetails = !displayPaymentDetails">
+                            <span class="fw-semibold" v-t="'view_details'"></span>
+                            <vc:icon symbol="caret-down"/>
+                        </button>
+                        <p class="text-center mt-3" v-html="replaceNewlines($t('invoice_expired_body', { storeName: srvModel.storeName, minutes: @Model.MaxTimeMinutes }))"></p>
+                    </div>
+                    <div class="buttons">
+                        <a v-if="storeLink" class="btn btn-primary rounded-pill w-100" :href="storeLink" :target="isModal ? '_top' : null" v-t="{ path: 'return_to_store', args: { storeName: srvModel.storeName }}" id="StoreLink"></a>
+                        <button v-else-if="isModal" class="btn btn-primary rounded-pill w-100" v-on:click="close" v-t="'Close'"></button>
+                    </div>
+                </div>
+            </section>
+        </main>
+        @if (Env.CheatMode)
+        {
+            <checkout-cheating invoice-id="@Model.InvoiceId" :btc-due="btcDue" :is-paid="isPaid" :payment-method-id="pmId"></checkout-cheating>
+        }
+        <footer>
+            <div>
+                <a href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">
+                    {{$t("powered_by")}}
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 84" role="img" alt="BTCPay Server" class="ms-1"><path d="M5.206 83.433a4.86 4.86 0 01-4.859-4.861V5.431a4.86 4.86 0 119.719 0v73.141a4.861 4.861 0 01-4.86 4.861" fill="currentColor" class="logo-brand-light"/><path d="M5.209 83.433a4.862 4.862 0 01-2.086-9.253L32.43 60.274 2.323 38.093a4.861 4.861 0 015.766-7.826l36.647 26.999a4.864 4.864 0 01-.799 8.306L7.289 82.964a4.866 4.866 0 01-2.08.469" fill="currentColor" class="logo-brand-medium"/><path d="M5.211 54.684a4.86 4.86 0 01-2.887-8.774L32.43 23.73 3.123 9.821a4.861 4.861 0 014.166-8.784l36.648 17.394a4.86 4.86 0 01.799 8.305l-36.647 27a4.844 4.844 0 01-2.878.948" fill="currentColor" class="logo-brand-light"/><path d="M10.066 31.725v20.553L24.01 42.006z" fill="currentColor" class="logo-brand-dark"/><path d="M10.066 5.431A4.861 4.861 0 005.206.57 4.86 4.86 0 00.347 5.431v61.165h9.72V5.431h-.001z" fill="currentColor" class="logo-brand-light"/><path d="M74.355 41.412c3.114.884 4.84 3.704 4.84 7.238 0 5.513-3.368 8.082-7.955 8.082H60.761V27.271h9.259c4.504 0 7.997 2.146 7.997 7.743 0 2.821-1.179 5.43-3.662 6.398m-4.293-.716c3.324 0 6.018-1.179 6.018-5.724 0-4.586-2.776-5.808-6.145-5.808h-7.197v11.531h7.324v.001zm1.052 14.099c3.366 0 6.06-1.768 6.06-6.145 0-4.713-3.072-6.144-6.901-6.144h-7.534v12.288h8.375v.001zM98.893 27.271v1.81h-8.122v27.651h-1.979V29.081h-8.123v-1.81zM112.738 26.85c5.01 0 9.554 2.524 10.987 8.543h-1.895c-1.348-4.923-5.303-6.732-9.134-6.732-6.944 0-10.605 5.681-10.605 13.341 0 8.08 3.661 13.256 10.646 13.256 4.125 0 7.828-1.85 9.26-7.279h1.895c-1.264 6.271-6.229 9.174-11.154 9.174-7.87 0-12.583-5.808-12.583-15.15 0-8.966 4.969-15.153 12.583-15.153M138.709 27.271c5.091 0 8.795 3.326 8.795 9.764 0 6.06-3.704 9.722-8.795 9.722h-7.746v9.976h-1.935V27.271h9.681zm0 17.549c3.745 0 6.816-2.397 6.816-7.827 0-5.429-2.947-7.869-6.816-7.869h-7.746V44.82h7.746zM147.841 56.732v-.255l11.741-29.29h.885l11.615 29.29v.255h-2.062l-3.322-8.501H153.27l-3.324 8.501h-2.105zm12.164-26.052l-6.059 15.697h12.078l-6.019-15.697zM189.551 27.271h2.104v.293l-9.176 16.92v12.248h-2.02V44.484l-9.216-16.961v-.252h2.147l3.997 7.492 4.043 7.786h.04l4.081-7.786z" fill="currentColor" class="logo-brand-text"/></svg>
+                </a>
+            </div>
+            @* TODO: Re-add this once checkout v2 has been translated
+            <select asp-for="DefaultLang" asp-items="@LangService.GetLanguageSelectListItems()" class="form-select w-auto" v-on:change="changeLanguage"></select>
+            *@
+        </footer>
+    </div>
+    <noscript>
+        <div class="p-5 text-center">
+            <h2>Javascript is currently disabled in your browser.</h2>
+            <h5>Please enable Javascript and refresh this page for the best experience.</h5>
+            <p>
+                Alternatively, click below to continue to our
+                <a asp-action="CheckoutNoScript" asp-route-invoiceId="@Model.InvoiceId">HTML-only invoice</a>.
+            </p>
+        </div>
+    </noscript>
+    <dl id="payment-details" v-cloak>
+        <div v-if="orderAmount > 0">
+            <dt v-t="'total_price'"></dt>
+            <dd :data-clipboard="srvModel.orderAmount" :data-clipboard-confirm="$t('copy_confirm')">{{srvModel.orderAmount}} {{ srvModel.cryptoCode }}</dd>
+        </div>
+        <div v-if="orderAmount > 0 && srvModel.orderAmountFiat">
+            <dt v-t="'total_fiat'"></dt>
+            <dd :data-clipboard="srvModel.orderAmountFiat" :data-clipboard-confirm="$t('copy_confirm')">{{srvModel.orderAmountFiat}}</dd>
+        </div>
+        <div v-if="srvModel.rate && srvModel.cryptoCode">
+            <dt v-t="'exchange_rate'"></dt>
+            <dd :data-clipboard="srvModel.rate" :data-clipboard-confirm="$t('copy_confirm')">
+                <template v-if="srvModel.cryptoCodeSrv === 'Sats'">1 Sat = {{ srvModel.rate }}</template>
+                <template v-else>1 {{ srvModel.cryptoCodeSrv }} = {{ srvModel.rate }}</template>
+            </dd>
+        </div>
+        <div v-if="srvModel.networkFee">
+            <dt v-t="'network_cost'"></dt>
+            <dd :data-clipboard="srvModel.networkFee" :data-clipboard-confirm="$t('copy_confirm')">
+                <template v-if="srvModel.txCountForFee > 0">
+                    {{$t('tx_count', { count: srvModel.txCount })}} x
+                </template>
+                {{ srvModel.networkFee }} {{ srvModel.cryptoCode }}
+            </dd>
+        </div>
+        <div v-if="btcPaid > 0">
+            <dt v-t="'amount_paid'"></dt>
+            <dd :data-clipboard="srvModel.btcPaid" :data-clipboard-confirm="$t('copy_confirm')">{{srvModel.btcPaid }} {{ srvModel.cryptoCode }}</dd>
+        </div>
+        <div v-if="btcDue > 0">
+            <dt v-t="'amount_due'"></dt>
+            <dd :data-clipboard="srvModel.btcDue" :data-clipboard-confirm="$t('copy_confirm')">{{srvModel.btcDue}} {{ srvModel.cryptoCode }}</dd>
+        </div>
+        <div v-if="showRecommendedFee">
+            <dt v-t="'recommended_fee'"></dt>
+            <dd :data-clipboard="srvModel.feeRate" :data-clipboard-confirm="$t('copy_confirm')" v-t="{ path: 'fee_rate', args: { feeRate: srvModel.feeRate } }"></dd>
+        </div>
+    </dl>
+    <script>
+        const i18nUrl = @Safe.Json($"{Model.RootPath}locales/checkout/{{{{lng}}}}.json");
+        const statusUrl = @Safe.Json(Url.Action("GetStatus", new { invoiceId = Model.InvoiceId }));
+        const statusWsUrl = @Safe.Json(Url.Action("GetStatusWebSocket", new { invoiceId = Model.InvoiceId }));
+        const availableLanguages = ['en']; // @Safe.Json(LangService.GetLanguages().Select(language => language.Code));
+        const initialSrvModel = @Safe.Json(Model);
+        const qrOptions = { margin: 1, type: 'svg', color: { dark: '#000', light: '#fff' } };
+    </script>
+    <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/vue-qrcode/vue-qrcode.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/i18next/i18next.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/i18next/i18nextHttpBackend.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/i18next/vue-i18next.js" asp-append-version="true"></script>
+    <script src="~/js/copy-to-clipboard.js" asp-append-version="true"></script>
+    <script src="~/main/utils.js" asp-append-version="true"></script>
+    <script src="~/checkout-v2/checkout.js" asp-append-version="true"></script>
+    @if (Env.CheatMode)
+    {
+        <partial name="Checkout-Cheating" model="@Model" />
+    }
+    @foreach (var paymentMethodHandler in PaymentMethodHandlerDictionary
+        .Select(handler => handler.GetCheckoutUISettings())
+        .Where(settings => settings != null)
+        .DistinctBy(pm => pm.ExtensionPartial))
+    {
+        <partial name="@paymentMethodHandler.ExtensionPartial-v2" model="@Model"/>
+    }
+    @await Component.InvokeAsync("UiExtensionPoint", new { location = "checkout-payment", model = Model })
+</body>
+</html>

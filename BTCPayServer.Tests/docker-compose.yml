@@ -68,7 +68,7 @@ services:
         - "sshd_datadir:/root/.ssh"
 
   devlnd:
-    image: btcpayserver/bitcoin:22.0
+    image: btcpayserver/bitcoin:24.0
     environment:
       BITCOIN_NETWORK: regtest
       BITCOIN_WALLETDIR: "/data/wallets"
@@ -87,7 +87,7 @@ services:
     expose:
       - "4444"
   nbxplorer:
-    image: nicolasdorier/nbxplorer:2.3.14
+    image: nicolasdorier/nbxplorer:2.3.54
     restart: unless-stopped
     ports:
       - "32838:32838"
@@ -113,7 +113,7 @@ services:
 
   bitcoind:
     restart: unless-stopped
-    image: btcpayserver/bitcoin:22.0
+    image: btcpayserver/bitcoin:24.0
     environment:
       BITCOIN_NETWORK: regtest
       BITCOIN_WALLETDIR: "/data/wallets"
@@ -141,7 +141,7 @@ services:
       - "bitcoin_datadir:/data"
 
   customer_lightningd:
-    image: btcpayserver/lightning:v0.10.1-1-dev
+    image: btcpayserver/lightning:v22.11-dev
     stop_signal: SIGKILL
     restart: unless-stopped
     environment:
@@ -151,7 +151,7 @@ services:
       LIGHTNINGD_OPT: |
         bitcoin-datadir=/etc/bitcoin
         bitcoin-rpcconnect=bitcoind
-        announce-addr=customer_lightningd
+        announce-addr=customer_lightningd:9735
         log-level=debug
         funding-confirms=1
         dev-fast-gossip
@@ -190,7 +190,7 @@ services:
       - merchant_lightningd
 
   merchant_lightningd:
-    image: btcpayserver/lightning:v0.10.1-1-dev
+    image: btcpayserver/lightning:v22.11-dev
     stop_signal: SIGKILL
     environment:
       EXPOSE_TCP: "true"
@@ -199,7 +199,7 @@ services:
       LIGHTNINGD_OPT: |
         bitcoin-datadir=/etc/bitcoin
         bitcoin-rpcconnect=bitcoind
-        announce-addr=merchant_lightningd
+        announce-addr=merchant_lightningd:9735
         funding-confirms=1
         log-level=debug
         dev-fast-gossip
@@ -225,7 +225,7 @@ services:
       - "5432"
 
   merchant_lnd:
-    image: btcpayserver/lnd:v0.15.0-beta
+    image: btcpayserver/lnd:v0.15.4-beta-1
     restart: unless-stopped
     environment:
       LND_CHAIN: "btc"
@@ -262,7 +262,7 @@ services:
       - bitcoind
 
   customer_lnd:
-    image: btcpayserver/lnd:v0.15.0-beta
+    image: btcpayserver/lnd:v0.15.4-beta-1
     restart: unless-stopped
     environment:
       LND_CHAIN: "btc"

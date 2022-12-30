@@ -33,6 +33,13 @@ namespace BTCPayServer.Services
         [Display(Name = "Disable non-admins access to the user creation API endpoint")]
         public bool DisableNonAdminCreateUserApi { get; set; }
 
+        public const string DefaultPluginSource = "https://plugin-builder.btcpayserver.org";
+        [UriAttribute]
+        [Display(Name = "Plugin server")]
+        public string PluginSource { get; set; }
+        [Display(Name = "Show plugins in pre-release")]
+        public bool PluginPreReleases { get; set; }
+
         public bool DisableSSHService { get; set; }
 
         [Display(Name = "Display app on website root")]

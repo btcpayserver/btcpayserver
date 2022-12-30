@@ -36,6 +36,10 @@ namespace BTCPayServer.Configuration
                                 $"Valid example: 'server=https://btcpay.example.com/rtl/btc/;cookiefile=/etc/clightning_bitcoin_rtl/.cookie'" + Environment.NewLine +
                                 "Error: {1}",
                                 "Ride The Lightning");
+            Load(configuration, cryptoCode, "torq", ExternalServiceTypes.Torq, "Invalid setting {0}, " + Environment.NewLine +
+                                $"Valid example: 'server=https://btcpay.example.com/torq/cookie-login/;cookiefile=/etc/lnd_bitcoin_rtl/.cookie'" + Environment.NewLine +
+                                "Error: {1}",
+                                "Torq");
             Load(configuration, cryptoCode, "thunderhub", ExternalServiceTypes.ThunderHub, "Invalid setting {0}, " + Environment.NewLine +
                                 $"Valid example: 'server=https://btcpay.example.com/thub/;cookiefile=/etc/clightning_bitcoin_rtl/.cookie'" + Environment.NewLine +
                                 "Error: {1}",
@@ -93,7 +97,8 @@ namespace BTCPayServer.Configuration
         {
             ExternalServiceTypes.Spark,
             ExternalServiceTypes.RTL,
-            ExternalServiceTypes.ThunderHub
+            ExternalServiceTypes.ThunderHub,
+            ExternalServiceTypes.Torq
         };
         
         public static readonly string[] LightningServiceNames =
@@ -130,6 +135,7 @@ namespace BTCPayServer.Configuration
         P2P,
         RPC,
         Configurator,
-        CLightningRest
+        CLightningRest,
+        Torq
     }
 }

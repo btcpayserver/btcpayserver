@@ -33,7 +33,6 @@ namespace BTCPayServer
                         {
                             throw new FormatException("Custom change paths are not supported.");
                         }
-
                         return (Parse($"{hd.Extkey}{suffix}"), null);
                     case PubKeyProvider.Origin origin:
                         var innerResult = ExtractFromPkProvider(origin.Inner, suffix);
@@ -42,7 +41,16 @@ namespace BTCPayServer
                         throw new ArgumentOutOfRangeException();
                 }
             }
-
+            
+            (DerivationStrategyBase, RootedKeyPath[]) ExtractFromMulti(OutputDescriptor.Multi multi)
+            {
+                var xpubs = multi.PkProviders.Select(provider => ExtractFromPkProvider(provider));
+                return (
+                    Parse(
+                        $"{multi.Threshold}-of-{(string.Join('-', xpubs.Select(tuple => tuple.Item1.ToString())))}{(multi.IsSorted ? "" : "-[keeporder]")}"),
+                    xpubs.SelectMany(tuple => tuple.Item2).ToArray());
+            }
+            
             ArgumentNullException.ThrowIfNull(str);
             str = str.Trim();
             var outputDescriptor = OutputDescriptor.Parse(str, Network);
@@ -55,11 +63,7 @@ namespace BTCPayServer
                 case OutputDescriptor.Combo _:
                     throw new FormatException("Only output descriptors of one format are supported.");
                 case OutputDescriptor.Multi multi:
-                    var xpubs = multi.PkProviders.Select(provider => ExtractFromPkProvider(provider));
-                    return (
-                        Parse(
-                            $"{multi.Threshold}-of-{(string.Join('-', xpubs.Select(tuple => tuple.Item1.ToString())))}{(multi.IsSorted ? "" : "-[keeporder]")}"),
-                        xpubs.SelectMany(tuple => tuple.Item2).ToArray());
+                    return ExtractFromMulti(multi);
                 case OutputDescriptor.PKH pkh:
                     return ExtractFromPkProvider(pkh.PkProvider, "-[legacy]");
                 case OutputDescriptor.SH sh:
@@ -79,11 +83,9 @@ namespace BTCPayServer
                     throw new FormatException("sh descriptors are only supported with multsig(legacy or p2wsh) and segwit(p2wpkh)");
                 case OutputDescriptor.WPKH wpkh:
                     return ExtractFromPkProvider(wpkh.PkProvider, "");
-                case OutputDescriptor.WSH wsh:
-                    if (wsh.Inner is OutputDescriptor.Multi)
-                    {
-                        return ParseOutputDescriptor(wsh.Inner.ToString());
-                    }
+                case OutputDescriptor.WSH { Inner: OutputDescriptor.Multi multi }:
+                    return ExtractFromMulti(multi);
+                case OutputDescriptor.WSH:
                     throw new FormatException("wsh descriptors are only supported with multisig");
                 default:
                     throw new ArgumentOutOfRangeException(nameof(outputDescriptor));

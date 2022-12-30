@@ -147,15 +147,10 @@ namespace BTCPayServer.Payments.Lightning
                                                                 (!string.IsNullOrEmpty(ex.InnerException?.Message) ? $" ({ex.InnerException.Message})" : ""));
                 }
 
+                // Node info might be empty if there are no public URIs to announce. The UI also supports this.
                 var nodeInfo = preferOnion != null && info.NodeInfoList.Any(i => i.IsTor == preferOnion)
                     ? info.NodeInfoList.Where(i => i.IsTor == preferOnion.Value).ToArray()
                     : info.NodeInfoList.Select(i => i).ToArray();
-
-                // Maybe the user does not have an  easily accessible ln node. Node info should be optional. The UI also supports this.
-                // if (!nodeInfo.Any())
-                // {
-                //     throw new PaymentMethodUnavailableException("No lightning node public address has been configured");
-                // }
 
                 var blocksGap = summary.Status.ChainHeight - info.BlockHeight;
                 if (blocksGap > 10)

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
@@ -20,6 +21,7 @@ using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Plugins.PointOfSale.Models;
+using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
@@ -31,6 +33,7 @@ using Microsoft.AspNetCore.Routing;
 using NBitcoin;
 using NBitcoin.Crypto;
 using Newtonsoft.Json;
+using MarkPayoutRequest = BTCPayServer.HostedServices.MarkPayoutRequest;
 
 namespace BTCPayServer
 {
@@ -50,6 +53,7 @@ namespace BTCPayServer
         private readonly LightningAddressService _lightningAddressService;
         private readonly LightningLikePayoutHandler _lightningLikePayoutHandler;
         private readonly PullPaymentHostedService _pullPaymentHostedService;
+        private readonly BTCPayNetworkJsonSerializerSettings _btcPayNetworkJsonSerializerSettings;
 
         public UILNURLController(InvoiceRepository invoiceRepository,
             EventAggregator eventAggregator,
@@ -61,7 +65,8 @@ namespace BTCPayServer
             LinkGenerator linkGenerator,
             LightningAddressService lightningAddressService,
             LightningLikePayoutHandler lightningLikePayoutHandler,
-            PullPaymentHostedService pullPaymentHostedService)
+            PullPaymentHostedService pullPaymentHostedService,
+            BTCPayNetworkJsonSerializerSettings btcPayNetworkJsonSerializerSettings)
         {
             _invoiceRepository = invoiceRepository;
             _eventAggregator = eventAggregator;
@@ -74,11 +79,12 @@ namespace BTCPayServer
             _lightningAddressService = lightningAddressService;
             _lightningLikePayoutHandler = lightningLikePayoutHandler;
             _pullPaymentHostedService = pullPaymentHostedService;
+            _btcPayNetworkJsonSerializerSettings = btcPayNetworkJsonSerializerSettings;
         }
 
 
         [HttpGet("withdraw/pp/{pullPaymentId}")]
-        public async Task<IActionResult> GetLNURLForPullPayment(string cryptoCode, string pullPaymentId, string pr)
+        public async Task<IActionResult> GetLNURLForPullPayment(string cryptoCode, string pullPaymentId, string pr, CancellationToken cancellationToken)
         {
             
             var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
@@ -115,6 +121,7 @@ namespace BTCPayServer
                         LightMoneyUnit.BTC),
                 Tag = "withdrawRequest",
                 Callback = new Uri(Request.GetCurrentUrl()),
+                DefaultDescription = pp.GetBlob().Description ?? String.Empty,
             };
             if (pr is null)
             {
@@ -154,36 +161,39 @@ namespace BTCPayServer
                 {
                     var client =
                         _lightningLikePaymentHandler.CreateLightningClient(pm, network);
-                    PayResponse payResult;
-                    try
-                    {
-                        payResult = await client.Pay(pr);
-                    }
-                    catch (Exception e)
-                    {
-                        payResult = new PayResponse(PayResult.Error, e.Message);
-                    }
-
+                    var payResult = await UILightningLikePayoutController.TrypayBolt(client,
+                        claimResponse.PayoutData.GetBlob(_btcPayNetworkJsonSerializerSettings),
+                        claimResponse.PayoutData, result, pmi, cancellationToken);
+                   
                     switch (payResult.Result)
                     {
                         case PayResult.Ok:
-                            await _pullPaymentHostedService.MarkPaid(new PayoutPaidRequest()
+                        case PayResult.Unknown:
+                            await _pullPaymentHostedService.MarkPaid(new MarkPayoutRequest()
                             {
-                                PayoutId = claimResponse.PayoutData.Id, Proof = new ManualPayoutProof { }
+                                PayoutId = claimResponse.PayoutData.Id, 
+                                State = claimResponse.PayoutData.State,
+                                Proof = claimResponse.PayoutData.GetProofBlobJson()
                             });
 
-                            return Ok(new LNUrlStatusResponse {Status = "OK"});
+                            return Ok(new LNUrlStatusResponse
+                            {
+                                Status = "OK",
+                                Reason = payResult.Message
+                            });
+                        case PayResult.CouldNotFindRoute:
+                        case PayResult.Error:
                         default:
                             await _pullPaymentHostedService.Cancel(
                                 new PullPaymentHostedService.CancelRequest(new string[]
                                 {
                                     claimResponse.PayoutData.Id
-                                }));
+                                }, null));
 
                             return Ok(new LNUrlStatusResponse
                             {
                                 Status = "ERROR",
-                                Reason = $"Pr could not be paid because {payResult.ErrorDetail}"
+                                Reason = payResult.Message
                             });
                     }
                 }
@@ -556,14 +566,14 @@ namespace BTCPayServer
                         }
                     }
 
-                    var descriptionHash = new uint256(Hashes.SHA256(Encoding.UTF8.GetBytes(metadata)), false);
                     LightningInvoice invoice;
                     try
                     {
                         var expiry = i.ExpirationTime.ToUniversalTime() - DateTimeOffset.UtcNow;
-                        var param = new CreateInvoiceParams(amount.Value, descriptionHash, expiry)
+                        var param = new CreateInvoiceParams(amount.Value, metadata, expiry)
                         {
-                            PrivateRouteHints = blob.LightningPrivateRouteHints
+                            PrivateRouteHints = blob.LightningPrivateRouteHints,
+                            DescriptionHashOnly = true
                         };
                         invoice = await client.CreateInvoice(param);
                         if (!BOLT11PaymentRequest.Parse(invoice.BOLT11, network.NBitcoinNetwork)

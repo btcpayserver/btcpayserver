@@ -13,7 +13,8 @@ namespace BTCPayServer.Data
         public HashSet<uint256> Candidates { get; set; } = new HashSet<uint256>();
 
         [JsonIgnore] public string LinkTemplate { get; set; }
-        public string ProofType { get; } = "PayoutTransactionOnChainBlob";
+        public string ProofType { get; } = Type;
+        public const string Type  = "PayoutTransactionOnChainBlob";
 
         [JsonIgnore]
         public string Link

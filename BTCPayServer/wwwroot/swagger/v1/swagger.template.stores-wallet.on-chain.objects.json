@@ -1,0 +1,561 @@
+{
+    "paths": {
+        "/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/objects": {
+            "get": {
+                "tags": [
+                    "Store Wallet (On Chain)"
+                ],
+                "summary": "Get store on-chain wallet objects",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store to fetch",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "cryptoCode",
+                        "in": "path",
+                        "required": true,
+                        "description": "The crypto code of the payment method to fetch",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "BTC"
+                    },
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "required": false,
+                        "description": "The type of object to fetch",
+                        "schema": { "type": "string" },
+                        "example": "tx"
+                    },
+                    {
+                        "name": "ids",
+                        "in": "query",
+                        "required": false,
+                        "description": "The ids of objects to fetch, if used, type should be specified",
+                        "schema": {
+                            "type": "array",
+                            "items": { "type": "string" }
+                        },
+                        "example": "03abcde..."
+                    },
+                    {
+                        "name": "includeNeighbourData",
+                        "in": "query",
+                        "required": false,
+                        "description": "Whether or not you should include neighbour's node data in the result (ie, `links.objectData`)",
+                        "schema": { "type": "boolean", "default": true }
+                    }
+                ],
+                "description": "View wallet objects",
+                "operationId": "StoreOnChainWallets_GetOnChainWalletObjects",
+                "responses": {
+                    "200": {
+                        "description": "Selected objects and their links",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/OnChainWalletObjectData"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to view the specified store"
+                    },
+                    "404": {
+                        "description": "The key is not found for this store/wallet"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Store Wallet (On Chain)"
+                ],
+                "summary": "Add/Update store on-chain wallet objects",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store to fetch",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "cryptoCode",
+                        "in": "path",
+                        "required": true,
+                        "description": "The crypto code of the payment method to fetch",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "BTC"
+                    }
+                ],
+                "description": "Add/Update wallet objects",
+                "operationId": "StoreOnChainWallets_AddOrUpdateOnChainWalletObjects",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/OnChainWalletObjectData"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Wallet object's data and its links",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/OnChainWalletObjectData"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to view the specified store"
+                    },
+                    "404": {
+                        "description": "The key is not found for this store/wallet"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/objects/{objectType}/{objectId}": {
+            "get": {
+                "tags": [
+                    "Store Wallet (On Chain)"
+                ],
+                "summary": "Get store on-chain wallet object",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store to fetch",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "cryptoCode",
+                        "in": "path",
+                        "required": true,
+                        "description": "The crypto code of the payment method to fetch",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "BTC"
+                    },
+                    {
+                        "name": "objectType",
+                        "in": "path",
+                        "required": true,
+                        "description": "The object type to fetch",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "tx"
+                    },
+                    {
+                        "name": "objectId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The object id to fetch",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "abc392..."
+                    },
+                    {
+                        "name": "includeNeighbourData",
+                        "in": "query",
+                        "required": false,
+                        "description": "Whether or not you should include neighbour's node data in the result (ie, `links.objectData`)",
+                        "schema": {
+                            "type": "boolean",
+                            "default": true
+                        }
+                    }
+                ],
+                "description": "View wallet object",
+                "operationId": "StoreOnChainWallets_GetOnChainWalletObject",
+                "responses": {
+                    "200": {
+                        "description": "Wallet object's data and its links",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/OnChainWalletObjectData"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to view the specified store"
+                    },
+                    "404": {
+                        "description": "The key is not found for this store/wallet"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Store Wallet (On Chain)"
+                ],
+                "summary": "Remove store on-chain wallet objects",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store to fetch",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "cryptoCode",
+                        "in": "path",
+                        "required": true,
+                        "description": "The crypto code of the payment method to fetch",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "BTC"
+                    },
+                    {
+                        "name": "objectType",
+                        "in": "path",
+                        "required": true,
+                        "description": "The object type to fetch",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "tx"
+                    },
+                    {
+                        "name": "objectId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The object id to fetch",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "abc392..."
+                    }
+                ],
+                "description": "Remove wallet object",
+                "operationId": "StoreOnChainWallets_RemoveOnChainWalletObject",
+                "responses": {
+                    "200": {
+                        "description": "successful removal of filtered object"
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to view the specified store"
+                    },
+                    "404": {
+                        "description": "The key is not found for this store/wallet"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/objects/{objectType}/{objectId}/links": {
+            "post": {
+                "tags": [
+                    "Store Wallet (On Chain)"
+                ],
+                "summary": "Add/Update store on-chain wallet object link",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store to fetch",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "cryptoCode",
+                        "in": "path",
+                        "required": true,
+                        "description": "The crypto code of the payment method to fetch",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "BTC"
+                    },
+                    {
+                        "name": "objectType",
+                        "in": "path",
+                        "required": true,
+                        "description": "The object type to fetch",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "tx"
+                    },
+                    {
+                        "name": "objectId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The object id to fetch",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "abc392..."
+                    }
+                ],
+                "description": "Add/Update wallet object link",
+                "operationId": "StoreOnChainWallets_AddOrUpdateOnChainWalletLink",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AddOnChainWalletObjectLinkRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "action completed"
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to view the specified store"
+                    },
+                    "404": {
+                        "description": "The key is not found for this store/wallet"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/objects/{objectType}/{objectId}/links/{linkType}/{linkId}": {
+            "delete": {
+                "tags": [
+                    "Store Wallet (On Chain)"
+                ],
+                "summary": "Remove store on-chain wallet object links",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store to fetch",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "cryptoCode",
+                        "in": "path",
+                        "required": true,
+                        "description": "The crypto code of the payment method to fetch",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "BTC"
+                    },
+                    {
+                        "name": "objectType",
+                        "in": "path",
+                        "required": true,
+                        "description": "The object type to fetch",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "tx"
+                    },
+                    {
+                        "name": "objectId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The object id to fetch",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "abc392..."
+                    },
+                    {
+                        "name": "linkType",
+                        "in": "path",
+                        "required": true,
+                        "description": "The object type of the linked neighbour",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "tx"
+                    },
+                    {
+                        "name": "linkId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The object id of the linked neighbour",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "abc392..."
+                    }
+                ],
+                "description": "Remove wallet object link",
+                "operationId": "StoreOnChainWallets_RemoveOnChainWalletLink",
+                "responses": {
+                    "200": {
+                        "description": "successful removal of filtered object link"
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to view the specified store"
+                    },
+                    "404": {
+                        "description": "The key is not found for this store/wallet"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "OnChainWalletObjectId": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "description": "The type of wallet object"
+                    },
+                    "id": {
+                        "type": "string",
+                        "description": "The identifier of the wallet object (unique per type, per wallet)"
+                    }
+                }
+            },
+            "AddOnChainWalletObjectLinkRequest": {
+                "type": "object",
+                "additionalProperties": false,
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/OnChainWalletObjectId"
+                    }
+                ],
+                "properties": {
+                    "data": {
+                        "type": "object",
+                        "additionalProperties": true,
+                        "description": "The data of the link"
+                    }
+                }
+            },
+            "OnChainWalletObjectLink": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "description": "The type of wallet object"
+                    },
+                    "id": {
+                        "type": "string",
+                        "description": "The identifier of the wallet object (unique per type, per wallet)"
+                    },
+                    "linkData": {
+                        "type": "object",
+                        "additionalProperties": true,
+                        "description": "The data of the link"
+                    },
+                    "objectData": {
+                        "type": "object",
+                        "additionalProperties": true,
+                        "description": "The data of the neighbour's node (`null` if there isn't any data or `includeNeighbourData` is `false`)"
+                    }
+                }
+            },
+            "OnChainWalletObjectData": {
+                "type": "object",
+                "additionalProperties": false,
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/OnChainWalletObjectId"
+                    }
+                ],
+                "properties": {
+                    "data": {
+                        "type": "object",
+                        "additionalProperties": true
+                    },
+                    "links": {
+                        "nullable": true,
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/OnChainWalletObjectLink"
+                        },
+                        "description": "Links of this object"
+                    }
+                }
+            }
+        }
+    }
+}

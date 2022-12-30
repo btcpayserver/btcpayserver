@@ -65,11 +65,11 @@ namespace BTCPayServer.Configuration
             if (conf.GetOrDefault<bool>("launchsettings", false) && NetworkType != ChainName.Regtest)
                 throw new ConfigException($"You need to run BTCPayServer with the run.sh or run.ps1 script");
 
-
-
-            BundleJsCss = conf.GetOrDefault<bool>("bundlejscss", true);
+            if (conf.GetOrDefault<string>("SQLITEFILE", null) != null)
+                Logs.Configuration.LogWarning("SQLITE backend support is deprecated and will be soon out of support");
+            if (conf.GetOrDefault<string>("MYSQL", null) != null)
+                Logs.Configuration.LogWarning("MYSQL backend support is deprecated and will be soon out of support");
             DockerDeployment = conf.GetOrDefault<bool>("dockerdeployment", true);
-
             TorrcFile = conf.GetOrDefault<string>("torrcfile", null);
             TorServices = conf.GetOrDefault<string>("torservices", null)
                 ?.Split(new[] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries);
@@ -112,9 +112,9 @@ namespace BTCPayServer.Configuration
                 {
                     Logs.Configuration.LogWarning($"The SSH key is not supported ({ex.Message}), try to generate the key with ssh-keygen using \"-m PEM\". Skipping SSH configuration...");
                 }
-                catch
+                catch (Exception ex)
                 {
-                    throw new ConfigException($"sshkeyfilepassword is invalid");
+                    Logs.Configuration.LogWarning(ex, "Error while loading SSH settings");
                 }
             }
 
@@ -144,14 +144,15 @@ namespace BTCPayServer.Configuration
             }
 
             DisableRegistration = conf.GetOrDefault<bool>("disable-registration", true);
-            PluginRemote = conf.GetOrDefault("plugin-remote", "btcpayserver/btcpayserver-plugins");
+            var pluginRemote = conf.GetOrDefault<string>("plugin-remote", null);
+            if (pluginRemote != null)
+                Logs.Configuration.LogWarning("plugin-remote is an obsolete configuration setting, please remove it from configuration");
             RecommendedPlugins = conf.GetOrDefault("recommended-plugins", "").ToLowerInvariant().Split('\r', '\n', '\t', ' ').Where(s => !string.IsNullOrEmpty(s)).Distinct().ToArray();
             CheatMode = conf.GetOrDefault("cheatmode", false);
             if (CheatMode && this.NetworkType == ChainName.Mainnet)
                 throw new ConfigException($"cheatmode can't be used on mainnet");
         }
 
-        public string PluginRemote { get; set; }
         public string[] RecommendedPlugins { get; set; }
         public bool CheatMode { get; set; }
 
@@ -192,16 +193,7 @@ namespace BTCPayServer.Configuration
 
         public string RootPath { get; set; }
         public bool DockerDeployment { get; set; }
-        public bool BundleJsCss
-        {
-            get;
-            set;
-        }
-        public SSHSettings SSHSettings
-        {
-            get;
-            set;
-        }
+        public SSHSettings SSHSettings { get; set; }
         public string TorrcFile { get; set; }
         public string[] TorServices { get; set; }
         public Uri UpdateUrl { get; set; }

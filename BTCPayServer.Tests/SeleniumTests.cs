@@ -65,6 +65,61 @@ namespace BTCPayServer.Tests
         }
         
         [Fact(Timeout = TestTimeout)]
+        public async Task CanUseForms()
+        {
+            using var s = CreateSeleniumTester();
+            await s.StartAsync();
+            s.RegisterNewUser(true);
+            s.CreateNewStore();
+            s.GenerateWallet(isHotWallet: true);
+            
+            // Point Of Sale
+            s.Driver.FindElement(By.Id("StoreNav-CreateApp")).Click();
+            new SelectElement(s.Driver.FindElement(By.Id("SelectedAppType"))).SelectByValue("PointOfSale");
+            s.Driver.FindElement(By.Id("AppName")).SendKeys(Guid.NewGuid().ToString());
+            s.Driver.FindElement(By.Id("Create")).Click();
+            Assert.Contains("App successfully created", s.FindAlertMessage().Text);
+            
+            new SelectElement(s.Driver.FindElement(By.Id("FormId"))).SelectByValue("Email");
+            s.Driver.FindElement(By.Id("SaveSettings")).Click();
+            Assert.Contains("App updated", s.FindAlertMessage().Text);
+
+            s.Driver.FindElement(By.Id("ViewApp")).Click();
+            var windows = s.Driver.WindowHandles;
+            Assert.Equal(2, windows.Count);
+            s.Driver.SwitchTo().Window(windows[1]);
+            s.Driver.FindElement(By.CssSelector("button[type='submit']")).Click();
+            
+            Assert.Contains("Enter your email", s.Driver.PageSource);
+            s.Driver.FindElement(By.Name("buyerEmail")).SendKeys("aa@aa.com");
+            s.Driver.FindElement(By.CssSelector("input[type='submit']")).Click();
+            
+            s.PayInvoice(true);
+            var invoiceId = s.Driver.Url[(s.Driver.Url.LastIndexOf("/", StringComparison.Ordinal) + 1)..];
+            s.GoToInvoice(invoiceId);
+            Assert.Contains("aa@aa.com", s.Driver.PageSource);
+            
+            // Payment Request
+            s.Driver.FindElement(By.Id("StoreNav-PaymentRequests")).Click();
+            s.Driver.FindElement(By.Id("CreatePaymentRequest")).Click();
+            s.Driver.FindElement(By.Id("Title")).SendKeys("Pay123");
+            s.Driver.FindElement(By.Id("Amount")).SendKeys("700");
+            new SelectElement(s.Driver.FindElement(By.Id("FormId"))).SelectByValue("Email");
+            s.Driver.FindElement(By.Id("SaveButton")).Click();
+            
+            s.Driver.FindElement(By.XPath("//a[starts-with(@id, 'Edit-')]")).Click();
+            var editUrl = s.Driver.Url;
+            s.Driver.FindElement(By.Id("ViewPaymentRequest")).Click();
+            s.Driver.FindElement(By.CssSelector("[data-test='form-button']")).Click();
+            Assert.Contains("Enter your email", s.Driver.PageSource);
+            
+            s.Driver.FindElement(By.Name("buyerEmail")).SendKeys("aa@aa.com");
+            s.Driver.FindElement(By.CssSelector("input[type='submit']")).Click();
+            s.Driver.Navigate().GoToUrl(editUrl);
+            Assert.Contains("aa@aa.com", s.Driver.PageSource);
+        }
+        
+        [Fact(Timeout = TestTimeout)]
         public async Task CanUseCPFP()
         {
             using var s = CreateSeleniumTester();
@@ -644,15 +699,26 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("enable-pay-button")).Click();
             s.Driver.FindElement(By.Id("disable-pay-button")).Click();
             s.FindAlertMessage();
-            s.GoToStore(StoreNavPages.General);
+            s.GoToStore();
             Assert.False(s.Driver.FindElement(By.Id("AnyoneCanCreateInvoice")).Selected);
             s.Driver.SetCheckbox(By.Id("AnyoneCanCreateInvoice"), true);
             s.Driver.FindElement(By.Id("Save")).Click();
             s.FindAlertMessage();
             Assert.True(s.Driver.FindElement(By.Id("AnyoneCanCreateInvoice")).Selected);
 
+            // Store settings: Set and unset brand color
+            s.GoToStore();
+            s.Driver.FindElement(By.Id("BrandColor")).SendKeys("#f7931a");
+            s.Driver.FindElement(By.Id("Save")).Click();
+            Assert.Contains("Store successfully updated", s.FindAlertMessage().Text);
+            Assert.Equal("#f7931a", s.Driver.FindElement(By.Id("BrandColor")).GetAttribute("value"));
+            s.Driver.FindElement(By.Id("BrandColor")).Clear();
+            s.Driver.FindElement(By.Id("Save")).Click();
+            Assert.Contains("Store successfully updated", s.FindAlertMessage().Text);
+            Assert.Equal(string.Empty, s.Driver.FindElement(By.Id("BrandColor")).GetAttribute("value"));
+
             // Alice should be able to delete the store
-            s.GoToStore(StoreNavPages.General);
+            s.GoToStore();
             s.Driver.FindElement(By.Id("DeleteStore")).Click();
             s.Driver.WaitForElement(By.Id("ConfirmInput")).SendKeys("DELETE");
             s.Driver.FindElement(By.Id("ConfirmContinue")).Click();
@@ -860,9 +926,8 @@ namespace BTCPayServer.Tests
             var viewUrl = s.Driver.Url;
             
             Assert.Equal("Amount due", s.Driver.FindElement(By.CssSelector("[data-test='amount-due-title']")).Text);
-            Assert.Equal("Pay Invoice",
-                s.Driver.FindElement(By.CssSelector("[data-test='pay-button']")).Text.Trim());
-
+            Assert.Equal("Pay Invoice", s.Driver.FindElement(By.CssSelector("[data-test='pay-button']")).Text.Trim());
+            
             // expire
             s.GoToUrl(editUrl);
             s.Driver.ExecuteJavaScript("document.getElementById('ExpiryDate').value = '2021-01-21T21:00:00.000Z'");
@@ -877,14 +942,28 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("ClearExpiryDate")).Click();
             s.Driver.FindElement(By.Id("SaveButton")).Click();
             s.Driver.FindElement(By.XPath("//a[starts-with(@id, 'Edit-')]")).Click();
+
+            // amount and currency should be editable, because no invoice exists
+            s.GoToUrl(editUrl);
+            Assert.True(s.Driver.FindElement(By.Id("Amount")).Enabled);
+            Assert.True(s.Driver.FindElement(By.Id("Currency")).Enabled);
             
             s.GoToUrl(viewUrl);
             s.Driver.AssertElementNotFound(By.CssSelector("[data-test='status']"));
-            Assert.Equal("Pay Invoice",
-                s.Driver.FindElement(By.CssSelector("[data-test='pay-button']")).Text.Trim());
+            Assert.Equal("Pay Invoice", s.Driver.FindElement(By.CssSelector("[data-test='pay-button']")).Text.Trim());
+            
+            // test invoice creation, click with JS, because the button is inside a sticky header
+            s.Driver.ExecuteJavaScript("document.querySelector('[data-test=\"pay-button\"]').click()");
+            // checkout v1
+            s.Driver.WaitForElement(By.CssSelector("invoice"));
+            Assert.Contains("Awaiting Payment", s.Driver.PageSource);
+            
+            // amount and currency should not be editable, because invoice exists
+            s.GoToUrl(editUrl);
+            Assert.False(s.Driver.FindElement(By.Id("Amount")).Enabled);
+            Assert.False(s.Driver.FindElement(By.Id("Currency")).Enabled);
             
             // archive (from details page)
-            s.GoToUrl(editUrl);
             var payReqId = s.Driver.Url.Split('/').Last();
             s.Driver.FindElement(By.Id("ArchivePaymentRequest")).Click();
             Assert.Contains("The payment request has been archived", s.FindAlertMessage().Text);
@@ -1010,10 +1089,10 @@ namespace BTCPayServer.Tests
             }
 
             // This one should be checked
-            Assert.Contains($"value=\"InvoiceProcessing\" checked", s.Driver.PageSource);
-            Assert.Contains($"value=\"InvoiceCreated\" checked", s.Driver.PageSource);
+            Assert.Contains("value=\"InvoiceProcessing\" checked", s.Driver.PageSource);
+            Assert.Contains("value=\"InvoiceCreated\" checked", s.Driver.PageSource);
             // This one never been checked
-            Assert.DoesNotContain($"value=\"InvoiceReceivedPayment\" checked", s.Driver.PageSource);
+            Assert.DoesNotContain("value=\"InvoiceReceivedPayment\" checked", s.Driver.PageSource);
 
             s.Driver.FindElement(By.Name("update")).Click();
             s.FindAlertMessage();
@@ -1044,6 +1123,7 @@ namespace BTCPayServer.Tests
             s.GoToStore(StoreNavPages.Webhooks);
             s.Driver.FindElement(By.LinkText("Modify")).Click();
             var elements = s.Driver.FindElements(By.ClassName("redeliver"));
+            
             // One worked, one failed
             s.Driver.FindElement(By.ClassName("fa-times"));
             s.Driver.FindElement(By.ClassName("fa-check"));

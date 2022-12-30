@@ -80,7 +80,24 @@ a.unobtrusive-link {
     text-decoration: inherit;
 }
 
+.btn.btn-link:focus {
+    box-shadow: none;
+}
+
+[aria-expanded] > svg.icon-caret-down {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    margin-left: auto;
+    transition: transform 0.2s ease-in-out;
+}
+
+[aria-expanded="true"] > svg.icon-caret-down {
+    transform: rotate(-180deg);
+}
+
 /* Badges */
+.badge-pending,
 .badge-new {
     background: #d4edda;
     color: #000;
@@ -159,8 +176,8 @@ h2 small .fa-question-circle-o {
     background-color: lightgray;
 }
 
-[v-cloak] { display:none }
-[v-cloak-loading] > * { display:none }
+[v-cloak] { display: none !important; }
+[v-cloak-loading] > * { display: none !important; }
 [v-cloak-loading]::before { content: "loading…" }
 
 .list-group-item a:not(.btn) {
@@ -186,6 +203,29 @@ h2 small .fa-question-circle-o {
 [class*="field-validation"]:not(:empty) {
     display: inline-block;
     margin-top: .5rem;
+}
+
+/* Store header */
+.store-header {
+    --logo-size: 3rem;
+    
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--btcpay-space-s);
+}
+
+.store-header .logo {
+    height: var(--logo-size);
+}
+
+.store-header .logo--square {
+    width: var(--logo-size);
+    border-radius: 50%;
+}
+
+.store-header h1 {
+    font-size: 1.3rem;
 }
 
 /* Print */

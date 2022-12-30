@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Validation;
+using Microsoft.AspNetCore.Http;
 
 namespace BTCPayServer.Models.StoreViewModels
 {
@@ -21,6 +22,13 @@ namespace BTCPayServer.Models.StoreViewModels
         [MaxLength(500)]
         public string StoreWebsite { get; set; }
 
+        [Display(Name = "Logo")]
+        public IFormFile LogoFile { get; set; }
+        public string LogoFileId { get; set; }
+
+        [Display(Name = "Brand Color")]
+        public string BrandColor { get; set; }
+        
         public bool CanDelete { get; set; }
 
         [Display(Name = "Allow anyone to create invoice")]

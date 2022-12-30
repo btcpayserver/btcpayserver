@@ -19,6 +19,8 @@ using BTCPayServer.Plugins.PointOfSale.Models;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Stores;
+using BTCPayServer.Storage.Models;
+using BTCPayServer.Storage.Services.Providers.FileSystemStorage.Configuration;
 using ExchangeSharp;
 using Fido2NetLib.Objects;
 using Microsoft.AspNetCore.Identity;
@@ -28,6 +30,7 @@ using Microsoft.Extensions.Options;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using NBXplorer;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using PeterO.Cbor;
 using PayoutData = BTCPayServer.Data.PayoutData;
@@ -86,13 +89,15 @@ namespace BTCPayServer.Hosting
                 var settings = (await _Settings.GetSettingAsync<MigrationSettings>());
                 if (settings is null)
                 {
-                    // If it is null, then it's the first run: let's skip all the migrations by migration flags to true
-                    settings = new MigrationSettings() { MigratedInvoiceTextSearchPages = int.MaxValue };
+                    // If it is null, then it's the first run: let's skip all the migrations by setting flags to true
+                    settings = new MigrationSettings() { MigratedInvoiceTextSearchPages = int.MaxValue, MigratedTransactionLabels = int.MaxValue };
                     foreach (var prop in settings.GetType().GetProperties().Where(p => p.CanWrite && p.PropertyType == typeof(bool)))
                     {
                         prop.SetValue(settings, true);
                     }
+                    // Ensure these checks still get run
                     settings.CheckedFirstRun = false;
+                    settings.FileSystemStorageAsDefault = false;
                     await _Settings.UpdateSetting(settings);
                 }
 
@@ -215,6 +220,27 @@ namespace BTCPayServer.Hosting
                     settings.MigrateEmailServerDisableTLSCerts = true;
                     await _Settings.UpdateSetting(settings);
                 }
+                if (!settings.MigrateWalletColors)
+                {
+                    await MigrateMigrateLabels();
+                    settings.MigrateWalletColors = true;
+                    await _Settings.UpdateSetting(settings);
+                }
+                if (!settings.FileSystemStorageAsDefault)
+                {
+                    var storageSettings = await _Settings.GetSettingAsync<StorageSettings>();
+                    if (storageSettings is null)
+                    {
+                        storageSettings = new StorageSettings
+                        {
+                            Provider = StorageProvider.FileSystem,
+                            Configuration = JObject.FromObject(new FileSystemStorageConfiguration())
+                        };
+                        await _Settings.UpdateSetting(storageSettings);
+                    }
+                    settings.FileSystemStorageAsDefault = true;
+                    await _Settings.UpdateSetting(settings);
+                }
             }
             catch (Exception ex)
             {
@@ -222,6 +248,59 @@ namespace BTCPayServer.Hosting
                 throw;
             }
         }
+
+#pragma warning disable CS0612 // Type or member is obsolete
+
+        static WalletBlobInfo GetBlobInfo(WalletData walletData)
+        {
+            if (walletData.Blob == null || walletData.Blob.Length == 0)
+            {
+                return new WalletBlobInfo();
+            }
+            var blobInfo = JsonConvert.DeserializeObject<WalletBlobInfo>(ZipUtils.Unzip(walletData.Blob));
+            return blobInfo;
+        }
+
+        private async Task MigrateMigrateLabels()
+        {
+            await using var ctx = _DBContextFactory.CreateContext();
+            var wallets = await ctx.Wallets.AsNoTracking().ToArrayAsync();
+            foreach (var wallet in wallets)
+            {
+                var blob = GetBlobInfo(wallet);
+                HashSet<string> labels = new HashSet<string>(blob.LabelColors.Count);
+                foreach (var label in blob.LabelColors)
+                {
+                    var labelId = label.Key;
+                    if (labelId.StartsWith("{", StringComparison.OrdinalIgnoreCase))
+                    {
+                        try
+                        {
+                            labelId = JObject.Parse(label.Key)["value"].Value<string>();
+                        }
+                        catch
+                        {
+                        }
+                    }
+                    if (!labels.Add(labelId))
+                        continue;
+                    var obj = new JObject();
+                    obj.Add("color", label.Value);
+                    var labelObjId = new WalletObjectId(WalletId.Parse(wallet.Id),
+                        WalletObjectData.Types.Label,
+                        labelId);
+                    ctx.WalletObjects.Add(new WalletObjectData()
+                    {
+                        WalletId = wallet.Id,
+                        Type = WalletObjectData.Types.Label,
+                        Id = labelId,
+                        Data = obj.ToString()
+                    });
+                }
+            }
+            await ctx.SaveChangesAsync();
+        }
+#pragma warning restore CS0612 // Type or member is obsolete
 
         // In the past, if a server was considered local network, then we would disable TLS checks.
         // Now we don't do it anymore, as we have an explicit flag (DisableCertificateCheck) to control the behavior.
@@ -363,7 +442,7 @@ WHERE cte.""Id""=p.""Id""
                 {
                     continue;
                 }
-                var claim = await handler?.ParseClaimDestination(pmi, payoutData.GetBlob(_btcPayNetworkJsonSerializerSettings).Destination);
+                var claim = await handler?.ParseClaimDestination(pmi, payoutData.GetBlob(_btcPayNetworkJsonSerializerSettings).Destination, default);
                 payoutData.Destination = claim.destination?.Id;
             }
             await ctx.SaveChangesAsync();

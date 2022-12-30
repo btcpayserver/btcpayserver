@@ -288,10 +288,6 @@ __pycache__/
 *.xsd.cs
 /BTCPayServer/Build/dockerfiles
 
-# Bundling JS/CSS
-BTCPayServer/wwwroot/bundles/*
-!BTCPayServer/wwwroot/bundles/.gitignore
-
 .vscode/*
 !.vscode/launch.json
 !.vscode/tasks.json

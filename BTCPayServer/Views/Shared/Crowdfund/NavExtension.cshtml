@@ -11,7 +11,7 @@
 @if (store != null && Model.AppType == AppType.Crowdfund)
 {
     <li class="nav-item" permission="@Policies.CanModifyStoreSettings">
-        <a asp-area="" asp-controller="UICrowdfund" asp-action="UpdateCrowdfund" asp-route-appId="@Model.Id" class="nav-link js-scroll-trigger @ViewData.IsActivePage(AppsNavPages.Update, Model.Id)" id="@($"StoreNav-App-{Model.Id}")">
+        <a asp-area="" asp-controller="UICrowdfund" asp-action="UpdateCrowdfund" asp-route-appId="@Model.Id" class="nav-link @ViewData.IsActivePage(AppsNavPages.Update, Model.Id)" id="@($"StoreNav-App-{Model.Id}")">
             <vc:icon symbol="@Model.AppType.ToString().ToLower()"/>
             <span>@Model.AppName</span>
         </a>

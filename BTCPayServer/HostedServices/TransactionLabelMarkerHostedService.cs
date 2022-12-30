@@ -1,9 +1,11 @@
+#nullable enable
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Logging;
@@ -14,164 +16,101 @@ using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Labels;
 using BTCPayServer.Services.PaymentRequests;
 using NBitcoin;
+using NBXplorer.DerivationStrategy;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.HostedServices
 {
     public class TransactionLabelMarkerHostedService : EventHostedServiceBase
     {
-        private readonly EventAggregator _eventAggregator;
         private readonly WalletRepository _walletRepository;
 
-        public TransactionLabelMarkerHostedService(EventAggregator eventAggregator, WalletRepository walletRepository, Logs logs) :
+        public BTCPayNetworkProvider NetworkProvider { get; }
+
+        public TransactionLabelMarkerHostedService(BTCPayNetworkProvider networkProvider, EventAggregator eventAggregator, WalletRepository walletRepository, Logs logs) :
             base(eventAggregator, logs)
         {
-            _eventAggregator = eventAggregator;
+            NetworkProvider = networkProvider;
             _walletRepository = walletRepository;
         }
 
         protected override void SubscribeToEvents()
         {
             Subscribe<InvoiceEvent>();
-            Subscribe<UpdateTransactionLabel>();
+            Subscribe<NewOnChainTransactionEvent>();
         }
         protected override async Task ProcessEvent(object evt, CancellationToken cancellationToken)
         {
-            if (evt is InvoiceEvent invoiceEvent && invoiceEvent.Name == InvoiceEvent.ReceivedPayment &&
-                invoiceEvent.Payment.GetPaymentMethodId()?.PaymentType == BitcoinPaymentType.Instance &&
-                invoiceEvent.Payment.GetCryptoPaymentData() is BitcoinLikePaymentData bitcoinLikePaymentData)
+            switch (evt)
             {
-                var walletId = new WalletId(invoiceEvent.Invoice.StoreId, invoiceEvent.Payment.GetCryptoCode());
-                var transactionId = bitcoinLikePaymentData.Outpoint.Hash;
-                var labels = new List<(string color, Label label)>
-                {
-                    UpdateTransactionLabel.InvoiceLabelTemplate(invoiceEvent.Invoice.Id)
-                };
-                foreach (var paymentId in PaymentRequestRepository.GetPaymentIdsFromInternalTags(invoiceEvent.Invoice))
-                {
-                    labels.Add(UpdateTransactionLabel.PaymentRequestLabelTemplate(paymentId));
-                }
-                foreach (var appId in AppService.GetAppInternalTags(invoiceEvent.Invoice))
-                {
-                    labels.Add(UpdateTransactionLabel.AppLabelTemplate(appId));
-                }
-
-
-
-                _eventAggregator.Publish(new UpdateTransactionLabel(walletId, transactionId, labels));
-            }
-            else if (evt is UpdateTransactionLabel updateTransactionLabel)
-            {
-                var walletTransactionsInfo =
-                    await _walletRepository.GetWalletTransactionsInfo(updateTransactionLabel.WalletId);
-                var walletBlobInfo = await _walletRepository.GetWalletInfo(updateTransactionLabel.WalletId);
-                await Task.WhenAll(updateTransactionLabel.TransactionLabels.Select(async pair =>
-                {
-                    var txId = pair.Key.ToString();
-                    var coloredLabels = pair.Value;
-                    if (!walletTransactionsInfo.TryGetValue(txId, out var walletTransactionInfo))
+                // For each new transaction that we detect, we check if we can find
+                // any utxo or script object matching it.
+                // If we find, then we create a link between them and the tx object.
+                case NewOnChainTransactionEvent transactionEvent:
                     {
-                        walletTransactionInfo = new WalletTransactionInfo();
-                    }
+                        var network = NetworkProvider.GetNetwork<BTCPayNetwork>(transactionEvent.CryptoCode);
+                        var derivation = transactionEvent.NewTransactionEvent.DerivationStrategy;
+                        if (network is null || derivation is null)
+                            break;
+                        var txHash = transactionEvent.NewTransactionEvent.TransactionData.TransactionHash.ToString();
 
-                    bool walletNeedUpdate = false;
-                    foreach (var cl in coloredLabels)
-                    {
-                        if (walletBlobInfo.LabelColors.TryGetValue(cl.label.Text, out var currentColor))
+                        // find all wallet objects that fit this transaction
+                        // that means see if there are any utxo objects that match in/outs and scripts/addresses that match outs
+                        var matchedObjects = transactionEvent.NewTransactionEvent.TransactionData.Transaction.Inputs
+                            .Select<TxIn, ObjectTypeId>(txIn => new ObjectTypeId(WalletObjectData.Types.Utxo, txIn.PrevOut.ToString()))
+                            .Concat(transactionEvent.NewTransactionEvent.Outputs.SelectMany<NBXplorer.Models.MatchedOutput, ObjectTypeId>(txOut =>
+
+                                new[]{
+                            new ObjectTypeId(WalletObjectData.Types.Address, GetAddress(derivation, txOut, network).ToString()),
+                            new ObjectTypeId(WalletObjectData.Types.Utxo, new OutPoint(transactionEvent.NewTransactionEvent.TransactionData.TransactionHash, (uint)txOut.Index).ToString())
+
+                                })).Distinct().ToArray();
+
+                        var objs = await _walletRepository.GetWalletObjects(new GetWalletObjectsQuery() { TypesIds = matchedObjects });
+
+                        foreach (var walletObjectDatas in objs.GroupBy(data => data.Key.WalletId))
                         {
-                            if (currentColor != cl.color)
+                            var txWalletObject = new WalletObjectId(walletObjectDatas.Key,
+                                WalletObjectData.Types.Tx, txHash);
+                            await _walletRepository.EnsureWalletObject(txWalletObject);
+                            foreach (var walletObjectData in walletObjectDatas)
                             {
-                                walletNeedUpdate = true;
-                                walletBlobInfo.LabelColors[cl.label.Text] = currentColor;
+                                await _walletRepository.EnsureWalletObjectLink(txWalletObject, walletObjectData.Key);
                             }
                         }
-                        else
-                        {
-                            walletNeedUpdate = true;
-                            walletBlobInfo.LabelColors.AddOrReplace(cl.label.Text, cl.color);
-                        }
-                    }
 
-                    if (walletNeedUpdate)
-                        await _walletRepository.SetWalletInfo(updateTransactionLabel.WalletId, walletBlobInfo);
-                    foreach (var cl in coloredLabels)
+                        break;
+                    }
+                case InvoiceEvent {Name: InvoiceEvent.ReceivedPayment} invoiceEvent when
+                    invoiceEvent.Payment.GetPaymentMethodId()?.PaymentType == BitcoinPaymentType.Instance &&
+                    invoiceEvent.Payment.GetCryptoPaymentData() is BitcoinLikePaymentData bitcoinLikePaymentData:
+                {
+                    var walletId = new WalletId(invoiceEvent.Invoice.StoreId, invoiceEvent.Payment.GetCryptoCode());
+                    var transactionId = bitcoinLikePaymentData.Outpoint.Hash;
+                    var labels = new List<Attachment>
                     {
-                        var label = cl.label;
-                        if (walletTransactionInfo.Labels.TryGetValue(label.Text, out var existingLabel))
-                        {
-                            label = label.Merge(existingLabel);
-                        }
-
-                        walletTransactionInfo.Labels.AddOrReplace(label.Text, label);
+                        Attachment.Invoice(invoiceEvent.Invoice.Id)
+                    };
+                    foreach (var paymentId in PaymentRequestRepository.GetPaymentIdsFromInternalTags(invoiceEvent.Invoice))
+                    {
+                        labels.Add(Attachment.PaymentRequest(paymentId));
+                    }
+                    foreach (var appId in AppService.GetAppInternalTags(invoiceEvent.Invoice))
+                    {
+                        labels.Add(Attachment.App(appId));
                     }
 
-                    await _walletRepository.SetWalletTransactionInfo(updateTransactionLabel.WalletId,
-                        txId, walletTransactionInfo);
-                }));
+                    await _walletRepository.AddWalletTransactionAttachment(walletId, transactionId, labels);
+                    break;
+                }
             }
         }
-    }
 
-    public class UpdateTransactionLabel
-    {
-        public UpdateTransactionLabel()
+        private BitcoinAddress GetAddress(DerivationStrategyBase derivationStrategy, NBXplorer.Models.MatchedOutput txOut, BTCPayNetwork network)
         {
-
-        }
-        public UpdateTransactionLabel(WalletId walletId, uint256 txId, (string color, Label label) colorLabel)
-        {
-            WalletId = walletId;
-            TransactionLabels = new Dictionary<uint256, List<(string color, Label label)>>();
-            TransactionLabels.Add(txId, new List<(string color, Label label)>() { colorLabel });
-        }
-        public UpdateTransactionLabel(WalletId walletId, uint256 txId, List<(string color, Label label)> colorLabels)
-        {
-            WalletId = walletId;
-            TransactionLabels = new Dictionary<uint256, List<(string color, Label label)>>();
-            TransactionLabels.Add(txId, colorLabels);
-        }
-        public static (string color, Label label) PayjoinLabelTemplate()
-        {
-            return ("#51b13e", new RawLabel("payjoin"));
-        }
-
-        public static (string color, Label label) InvoiceLabelTemplate(string invoice)
-        {
-            return ("#cedc21", new ReferenceLabel("invoice", invoice));
-        }
-        public static (string color, Label label) PaymentRequestLabelTemplate(string paymentRequestId)
-        {
-            return ("#489D77", new ReferenceLabel("payment-request", paymentRequestId));
-        }
-        public static (string color, Label label) AppLabelTemplate(string appId)
-        {
-            return ("#5093B6", new ReferenceLabel("app", appId));
-        }
-
-        public static (string color, Label label) PayjoinExposedLabelTemplate(string invoice)
-        {
-            return ("#51b13e", new ReferenceLabel("pj-exposed", invoice));
-        }
-
-        public static (string color, Label label) PayoutTemplate(Dictionary<string, List<string>> pullPaymentToPayouts, string walletId)
-        {
-            return ("#3F88AF", new PayoutLabel()
-            {
-                PullPaymentPayouts = pullPaymentToPayouts,
-                WalletId = walletId
-            });
-        }
-        public WalletId WalletId { get; set; }
-        public Dictionary<uint256, List<(string color, Label label)>> TransactionLabels { get; set; }
-        public override string ToString()
-        {
-            var result = new StringBuilder();
-            foreach (var transactionLabel in TransactionLabels)
-            {
-                result.AppendLine(CultureInfo.InvariantCulture,
-                    $"Adding {transactionLabel.Value.Count} labels to {transactionLabel.Key} in wallet {WalletId}");
-            }
-
-            return result.ToString();
+            // Old version of NBX doesn't give address in the event, so we need to guess
+            return (txOut.Address ?? network.NBXplorerNetwork.CreateAddress(derivationStrategy, txOut.KeyPath, txOut.ScriptPubKey));
         }
     }
 }

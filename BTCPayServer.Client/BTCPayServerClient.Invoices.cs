@@ -128,5 +128,18 @@ namespace BTCPayServer.Client
                     method: HttpMethod.Post), token);
             await HandleResponse(response);
         }
+
+        public virtual async Task<PullPaymentData> RefundInvoice(
+            string storeId,
+            string invoiceId,
+            RefundInvoiceRequest request,
+            CancellationToken token = default
+        )
+        {
+            var response = await _httpClient.SendAsync(
+                CreateHttpRequest($"api/v1/stores/{storeId}/invoices/{invoiceId}/refund", bodyPayload: request,
+                    method: HttpMethod.Post), token);
+            return await HandleResponse<PullPaymentData>(response);
+        }
     }
 }

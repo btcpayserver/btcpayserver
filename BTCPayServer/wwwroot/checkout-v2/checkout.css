@@ -129,6 +129,8 @@ section dl > div dd {
 }
 .payment-box .qr-container {
     min-height: var(--qr-size);
+    padding: var(--btcpay-space-xs);
+    border-color: transparent;
 }
 .payment-box .qr-container svg {
     border-radius: var(--btcpay-border-radius);

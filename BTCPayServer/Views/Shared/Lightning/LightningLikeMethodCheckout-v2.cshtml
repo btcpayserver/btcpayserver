@@ -1,17 +1,19 @@
 @model BTCPayServer.Models.InvoicingModels.PaymentModel
-
+@{
+    var qrTextId = $"QR_Text_{Model.PaymentMethodId}";
+}
 <template id="lightning-method-checkout-template">
     <div class="payment-box">
-        <div class="qr-container" data-clipboard-confirm-element="QR_Text_@Model.PaymentMethodId" :data-clipboard="model.invoiceBitcoinUrl" :data-destination="model.btcAddress">
+        <div class="qr-container form-control" data-clipboard-confirm-element="@qrTextId" :data-clipboard="model.btcAddress" :data-clipboard-confirm="$t('copy_confirm')">
             <qrcode v-if="model.invoiceBitcoinUrlQR" :value="model.invoiceBitcoinUrlQR" tag="div" :options="qrOptions" />
         </div>
         <div class="mt-2 mb-4">
-            <small class="qr-text" id="QR_Text_@Model.PaymentMethodId" v-t="'qr_text'"></small>
-            @*
-            <input type="text" class="form-control form-control-sm" :value="model.btcAddress"
-                   :data-clipboard="model.invoiceBitcoinUrl" :data-clipboard-confirm="$t('copy_confirm')"
-                    data-clipboard-confirm-element="QR_Text_@Model.PaymentMethodId" readonly>
-            *@
+            <small class="qr-text" id="@qrTextId" v-t="'qr_text'"></small>
+            <div v-if="model.btcAddress" class="form-floating mt-3">
+                <input id="Address_@Model.PaymentMethodId" class="form-control form-control-sm" readonly="readonly" :value="model.btcAddress"
+                       data-clipboard :data-clipboard-confirm="$t('copy_confirm')" data-clipboard-confirm-element="@qrTextId"/>
+                <label for="Address_@Model.PaymentMethodId" v-t="'lightning'"></label>
+            </div>
         </div>
         <a v-if="model.invoiceBitcoinUrl" class="btn btn-primary rounded-pill w-100" target="_top"
            :href="model.invoiceBitcoinUrl" v-t="'pay_in_wallet'"></a>

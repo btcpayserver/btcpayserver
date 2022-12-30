@@ -241,7 +241,7 @@
         const statusWsUrl = @Safe.Json(Url.Action("GetStatusWebSocket", new { invoiceId = Model.InvoiceId }));
         const availableLanguages = ['en']; // @Safe.Json(LangService.GetLanguages().Select(language => language.Code));
         const initialSrvModel = @Safe.Json(Model);
-        const qrOptions = { margin: 1, type: 'svg', color: { dark: '#000', light: '#fff' } };
+        const qrOptions = { margin: 0, type: 'svg', color: { dark: '#000', light: '#fff' } };
     </script>
     <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
     <script src="~/vendor/vue-qrcode/vue-qrcode.min.js" asp-append-version="true"></script>

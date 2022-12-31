@@ -11,7 +11,7 @@
         const updateRecommended = currency => {
             const source = exchanges[currency] || 'coingecko'
             const name = source.charAt(0).toUpperCase() + source.slice(1)
-            recommended.innerText = `Recommended (${name})`
+            recommended.innerText = `${name} (Recommended)`
         }
         updateRecommended(@Safe.Json(Model.DefaultCurrency))
         delegate('change', '#DefaultCurrency', e => updateRecommended(e.target.value))

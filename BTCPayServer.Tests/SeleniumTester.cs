@@ -176,7 +176,9 @@ namespace BTCPayServer.Tests
             var name = "Store" + RandomUtils.GetUInt64();
             TestLogs.LogInformation($"Created store {name}");
             Driver.WaitForElement(By.Id("Name")).SendKeys(name);
-            new SelectElement(Driver.FindElement(By.Id("PreferredExchange"))).SelectByText("CoinGecko");
+            var rateSource = new SelectElement(Driver.FindElement(By.Id("PreferredExchange")));
+            Assert.Equal("Kraken (Recommended)", rateSource.SelectedOption.Text);
+            rateSource.SelectByText("CoinGecko");
             Driver.WaitForElement(By.Id("Create")).Click();
             Driver.FindElement(By.Id("StoreNav-StoreSettings")).Click();
             Driver.FindElement(By.Id($"SectionNav-{StoreNavPages.General.ToString()}")).Click();

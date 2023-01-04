@@ -109,11 +109,11 @@ namespace BTCPayServer.Controllers.Greenfield
             }
 
             return ActivatorUtilities.CreateInstance<LocalBTCPayServerClient>(_serviceProvider,
-                new LocalHttpContextAccessor() {HttpContext = context});
+                new LocalHttpContextAccessor() { HttpContext = context });
 
         }
     }
-    
+
 
     public class LocalHttpContextAccessor : IHttpContextAccessor
     {
@@ -124,7 +124,7 @@ namespace BTCPayServer.Controllers.Greenfield
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IServiceProvider _serviceProvider;
-        
+
 
         public LocalBTCPayServerClient(
             IHttpContextAccessor httpContextAccessor,
@@ -133,7 +133,7 @@ namespace BTCPayServer.Controllers.Greenfield
             _httpContextAccessor = httpContextAccessor;
             _serviceProvider = serviceProvider;
         }
-        
+
         private T GetController<T>() where T : ControllerBase
         {
             var authoverride = new AuthorizationService(new GreenfieldAuthorizationHandler(_httpContextAccessor,
@@ -141,7 +141,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 _serviceProvider.GetService<StoreRepository>(),
                 _serviceProvider.GetService<IPluginHookService>()));
 
-            var controller =  _serviceProvider.GetService<T>();
+            var controller = _serviceProvider.GetService<T>();
             controller.ControllerContext.HttpContext = _httpContextAccessor.HttpContext;
             var authInterface = typeof(IAuthorizationService);
             var type = controller.GetType();
@@ -686,7 +686,7 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             return GetFromActionResult<NotificationData>(
                 await GetController<GreenfieldNotificationsController>().UpdateNotification(notificationId,
-                    new UpdateNotification() {Seen = seen}));
+                    new UpdateNotification() { Seen = seen }));
         }
 
         public override async Task RemoveNotification(string notificationId, CancellationToken token = default)
@@ -1056,7 +1056,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
         public override async Task<OnChainWalletTransactionData> PatchOnChainWalletTransaction(string storeId,
             string cryptoCode, string transactionId,
-            PatchOnChainTransactionRequest request, bool force = false,CancellationToken token = default)
+            PatchOnChainTransactionRequest request, bool force = false, CancellationToken token = default)
         {
             return GetFromActionResult<OnChainWalletTransactionData>(
                 await GetController<GreenfieldStoreOnChainWalletsController>().PatchOnChainWalletTransaction(storeId, cryptoCode, transactionId,

@@ -12,7 +12,7 @@ namespace BTCPayServer.Client.Models
         [JsonConverter(typeof(NBitcoin.JsonConverters.DateTimeToUnixTimeConverter))]
         public DateTimeOffset Created { get; set; }
     }
-    
+
     public class PointOfSaleAppData : AppDataBase
     {
         // We can add POS specific things here later

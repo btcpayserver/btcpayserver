@@ -91,7 +91,7 @@ namespace BTCPayServer.Models
         public string Description { get; set; }
         public string EmbeddedCSS { get; set; }
         public string CustomCSSLink { get; set; }
-        public List<PayoutLine> Payouts { get; set; } = new ();
+        public List<PayoutLine> Payouts { get; set; } = new();
         public DateTimeOffset StartDate { get; set; }
         public DateTime LastRefreshed { get; set; }
         public CurrencyData CurrencyData { get; set; }

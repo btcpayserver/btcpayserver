@@ -75,7 +75,7 @@ namespace BTCPayServer.Tests
         public async Task CanQueryDirectProviders()
         {
             // TODO: Check once in a while whether or not they are working again
-            string[] brokenShitcoinCasinos = {};
+            string[] brokenShitcoinCasinos = { };
             var skipped = 0;
             var factory = FastTests.CreateBTCPayRateFactory();
             var directlySupported = factory.GetSupportedExchanges().Where(s => s.Source == RateSource.Direct)
@@ -95,7 +95,7 @@ namespace BTCPayServer.Tests
                     skipped++;
                     continue;
                 }
-                
+
                 TestLogs.LogInformation($"Testing {name}");
 
                 result.Fetcher.InvalidateCache();
@@ -175,7 +175,7 @@ namespace BTCPayServer.Tests
             var p = new KrakenExchangeRateProvider();
             var rates = await p.GetRatesAsync(default);
             Assert.Contains(rates, e => e.CurrencyPair == new CurrencyPair("XMR", "BTC") && e.BidAsk.Bid < 1.0m);
-            
+
             // Check we didn't skip too many exchanges
             Assert.InRange(skipped, 0, 3);
         }
@@ -225,7 +225,7 @@ namespace BTCPayServer.Tests
         {
             var uri = new Uri(url);
             int retryLeft = 3;
-            retry:
+retry:
             try
             {
                 using var request = new HttpRequestMessage(HttpMethod.Get, uri);
@@ -350,7 +350,7 @@ namespace BTCPayServer.Tests
             expected = (await (await client.GetAsync($"https://unpkg.com/@chenfengyuan/vue-qrcode@{version}/dist/vue-qrcode.min.js")).Content.ReadAsStringAsync()).Trim();
             Assert.Equal(expected, actual);
         }
-        
+
         string GetFileContent(params string[] path)
         {
             var l = path.ToList();

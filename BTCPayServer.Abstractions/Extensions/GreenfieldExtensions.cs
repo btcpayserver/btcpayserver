@@ -30,12 +30,12 @@ public static class GreenfieldExtensions
     {
         return controller.BadRequest(new GreenfieldAPIError(errorCode, errorMessage));
     }
-        
+
     public static IActionResult CreateAPIError(this ControllerBase controller, int httpCode, string errorCode, string errorMessage)
     {
         return controller.StatusCode(httpCode, new GreenfieldAPIError(errorCode, errorMessage));
     }
-        
+
     public static IActionResult CreateAPIPermissionError(this ControllerBase controller, string missingPermission, string message = null)
     {
         return controller.StatusCode(403, new GreenfieldPermissionAPIError(missingPermission, message));

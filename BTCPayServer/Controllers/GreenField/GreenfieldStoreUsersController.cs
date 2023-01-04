@@ -29,7 +29,7 @@ namespace BTCPayServer.Controllers.Greenfield
         [HttpGet("~/api/v1/stores/{storeId}/users")]
         public IActionResult GetStoreUsers()
         {
-            
+
             var store = HttpContext.GetStoreData();
             return store == null ? StoreNotFound() : Ok(FromModel(store));
         }
@@ -45,10 +45,10 @@ namespace BTCPayServer.Controllers.Greenfield
 
             if (await _storeRepository.RemoveStoreUser(storeId, userId))
             {
-                
+
                 return Ok();
             }
-            
+
             return this.CreateAPIError(409, "store-user-role-orphaned", "Removing this user would result in the store having no owner.");
         }
 
@@ -72,7 +72,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
         private IEnumerable<StoreUserData> FromModel(Data.StoreData data)
         {
-            return data.UserStores.Select(store => new StoreUserData() { UserId = store.ApplicationUserId, Role = store.Role});
+            return data.UserStores.Select(store => new StoreUserData() { UserId = store.ApplicationUserId, Role = store.Role });
         }
         private IActionResult StoreNotFound()
         {

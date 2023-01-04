@@ -44,7 +44,7 @@ namespace BTCPayServer.PayoutProcessors.OnChain
             PayoutProcessorData payoutProcesserSettings,
             PullPaymentHostedService pullPaymentHostedService,
             BTCPayNetworkProvider btcPayNetworkProvider) :
-            base(logger, storeRepository, payoutProcesserSettings, applicationDbContextFactory,pullPaymentHostedService,
+            base(logger, storeRepository, payoutProcesserSettings, applicationDbContextFactory, pullPaymentHostedService,
                 btcPayNetworkProvider)
         {
             _explorerClientProvider = explorerClientProvider;
@@ -62,7 +62,7 @@ namespace BTCPayServer.PayoutProcessors.OnChain
             var storePaymentMethod = paymentMethod as DerivationSchemeSettings;
             if (storePaymentMethod?.IsHotWallet is not true)
             {
-                
+
                 return;
             }
 
@@ -93,9 +93,9 @@ namespace BTCPayServer.PayoutProcessors.OnChain
             decimal? failedAmount = null;
             var changeAddress = await explorerClient.GetUnusedAsync(
                 storePaymentMethod.AccountDerivation, DerivationFeature.Change, 0, true);
-            
+
             var processorBlob = GetBlob(_PayoutProcesserSettings);
-            var feeRate = await explorerClient.GetFeeRateAsync(processorBlob.FeeTargetBlock,new FeeRate(1m));
+            var feeRate = await explorerClient.GetFeeRateAsync(processorBlob.FeeTargetBlock, new FeeRate(1m));
 
             var transfersProcessing = new List<PayoutData>();
             foreach (var transferRequest in payouts)
@@ -117,7 +117,7 @@ namespace BTCPayServer.PayoutProcessors.OnChain
                 var txBuilder = network.NBitcoinNetwork.CreateTransactionBuilder()
                     .AddCoins(coins)
                     .AddKeys(keys);
-               
+
                 if (workingTx is not null)
                 {
                     foreach (var txout in workingTx.Outputs.Where(txout =>
@@ -139,7 +139,7 @@ namespace BTCPayServer.PayoutProcessors.OnChain
                 }
                 catch (NotEnoughFundsException)
                 {
-                    
+
                     failedAmount = blob.CryptoAmount;
                     //keep going, we prioritize withdraws by time but if there is some other we can fit, we should
                 }
@@ -184,7 +184,7 @@ namespace BTCPayServer.PayoutProcessors.OnChain
                 catch (OperationCanceledException)
                 {
                 }
-                catch(Exception e)
+                catch (Exception e)
                 {
                     Logs.PayServer.LogError(e, "Could not finalize and broadcast");
                 }

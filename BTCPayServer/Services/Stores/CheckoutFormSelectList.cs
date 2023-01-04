@@ -7,14 +7,14 @@ namespace BTCPayServer.Services.Stores;
 
 public enum GenericFormOption
 {
-   [Display(Name = "Do not request any information")]
-   None,
+    [Display(Name = "Do not request any information")]
+    None,
 
-   [Display(Name = "Request email address only")]
-   Email,
+    [Display(Name = "Request email address only")]
+    Email,
 
-   [Display(Name = "Request shipping address")]
-   Address
+    [Display(Name = "Request shipping address")]
+    Address
 }
 
 public static class CheckoutFormSelectList
@@ -27,12 +27,12 @@ public static class CheckoutFormSelectList
             GenericOptionItem(GenericFormOption.Email),
             GenericOptionItem(GenericFormOption.Address)
         };
-        
+
         var chosen = choices.FirstOrDefault(t => t.Value == selectedFormId);
         return new SelectList(choices, nameof(SelectListItem.Value), nameof(SelectListItem.Text), chosen?.Value);
     }
 
-    private static string DisplayName(GenericFormOption opt) => 
+    private static string DisplayName(GenericFormOption opt) =>
         typeof(GenericFormOption).DisplayName(opt.ToString());
 
     private static SelectListItem GenericOptionItem(GenericFormOption opt) =>

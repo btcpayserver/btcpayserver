@@ -23,7 +23,7 @@ namespace BTCPayServer.Services.Rates
         {
             await new SynchronizationContextRemover();
 
-            var exchangeAPI = (T) await ExchangeAPI.GetExchangeAPIAsync<T>();
+            var exchangeAPI = (T)await ExchangeAPI.GetExchangeAPIAsync<T>();
             exchangeAPI.RequestMaker = new HttpClientRequestMaker(exchangeAPI, _httpClient, cancellationToken);
             var rates = await exchangeAPI.GetTickersAsync();
 

@@ -26,7 +26,7 @@ namespace BTCPayServer.HostedServices
                 Invoice = invoice;
             }
             public InvoiceEntity Invoice { get; set; }
-            public List<object> Events { get; set; } = new ();
+            public List<object> Events { get; set; } = new();
 
             bool _dirty;
 
@@ -68,7 +68,7 @@ namespace BTCPayServer.HostedServices
             Logs = logs;
         }
 
-        readonly CompositeDisposable _leases = new ();
+        readonly CompositeDisposable _leases = new();
 
 
         private void UpdateInvoice(UpdateInvoiceContext context)

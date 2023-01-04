@@ -17,7 +17,7 @@ public class Field
             Label = label,
             Name = name,
             Value = value,
-            OriginalValue = value,  
+            OriginalValue = value,
             Required = required,
             HelpText = helpText,
             Type = type

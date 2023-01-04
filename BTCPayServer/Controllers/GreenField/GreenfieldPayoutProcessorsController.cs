@@ -20,7 +20,7 @@ namespace BTCPayServer.Controllers.Greenfield
     {
         private readonly IEnumerable<IPayoutProcessorFactory> _factories;
 
-        public GreenfieldPayoutProcessorsController(IEnumerable<IPayoutProcessorFactory>factories)
+        public GreenfieldPayoutProcessorsController(IEnumerable<IPayoutProcessorFactory> factories)
         {
             _factories = factories;
         }
@@ -39,5 +39,5 @@ namespace BTCPayServer.Controllers.Greenfield
         }
     }
 
-    
+
 }

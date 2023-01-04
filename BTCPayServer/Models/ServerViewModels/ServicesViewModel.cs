@@ -11,9 +11,9 @@ namespace BTCPayServer.Models.ServerViewModels
             public string Link { get; set; }
         }
 
-        public List<ExternalService> ExternalServices { get; set; } = new ();
-        public List<OtherExternalService> OtherExternalServices { get; set; } = new ();
-        public List<OtherExternalService> TorHttpServices { get; set; } = new ();
-        public List<OtherExternalService> TorOtherServices { get; set; } = new ();
+        public List<ExternalService> ExternalServices { get; set; } = new();
+        public List<OtherExternalService> OtherExternalServices { get; set; } = new();
+        public List<OtherExternalService> TorHttpServices { get; set; } = new();
+        public List<OtherExternalService> TorOtherServices { get; set; } = new();
     }
 }

@@ -71,7 +71,7 @@ namespace BTCPayServer.Controllers
 
             return RedirectToAction("ListPlugins");
         }
-        
+
         [HttpPost("server/plugins/cancel")]
         public IActionResult CancelPluginCommands(
             [FromServices] PluginService pluginService, string plugin)
@@ -132,7 +132,7 @@ namespace BTCPayServer.Controllers
 
             TempData.SetStatusMessageModel(new StatusMessageModel()
             {
-                Message = "Files uploaded, restart server to load plugins" ,
+                Message = "Files uploaded, restart server to load plugins",
                 Severity = StatusMessageModel.StatusSeverity.Success
             });
             return RedirectToAction("ListPlugins");

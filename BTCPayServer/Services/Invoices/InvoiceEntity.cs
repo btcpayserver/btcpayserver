@@ -442,7 +442,7 @@ namespace BTCPayServer.Services.Invoices
         public InvoiceType Type { get; set; }
 
         public List<RefundData> Refunds { get; set; }
-        
+
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public InvoiceDataBase.ReceiptOptions ReceiptOptions { get; set; }
 

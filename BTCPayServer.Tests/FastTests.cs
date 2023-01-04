@@ -672,7 +672,7 @@ namespace BTCPayServer.Tests
             Assert.Equal(3, inner.Keys.Count);
             Assert.Equal(2, inner.RequiredSignatures);
             Assert.Equal(expected, inner.ToString());
-            
+
             // Output Descriptor
             networkProvider = new BTCPayNetworkProvider(ChainName.Mainnet);
             parser = new DerivationSchemeParser(networkProvider.BTC);
@@ -681,7 +681,7 @@ namespace BTCPayServer.Tests
             Assert.Single(rootedKeyPath);
             Assert.IsType<DirectDerivationStrategy>(strategyBase);
             Assert.True(((DirectDerivationStrategy)strategyBase).Segwit);
-            
+
             // Failure cases
             Assert.Throws<FormatException>(() => { parser.Parse("xpub 661MyMwAqRbcGVBsTGeNZN6QGVHmMHLdSA4FteGsRrEriu4pnVZMZWnruFFFXkMnyoBjyHndD3Qwcfz4MPzBUxjSevweNFQx7SAYZATtcDw"); }); // invalid format because of space
             Assert.Throws<ParsingException>(() => { parser.ParseOutputDescriptor("invalid"); }); // invalid in general
@@ -744,7 +744,7 @@ namespace BTCPayServer.Tests
             Assert.Equal("49'/0'/0'", specter.AccountKeySettings[0].AccountKeyPath.ToString());
             Assert.Equal("Specter", specter.Label);
             Assert.Null(error);
-            
+
             // Failure case
             Assert.False(DerivationSchemeSettings.TryParseFromWalletFile(
                 "{\"keystore\": {\"ckcc_xpub\": \"tpubFailure\", \"xpub\": \"tpubFailure\", \"label\": \"Failure\"}, \"wallet_type\": \"standard\"}",
@@ -1077,7 +1077,8 @@ namespace BTCPayServer.Tests
         {
             MultiProcessingQueueTest t = new MultiProcessingQueueTest();
             t.Tcs = new TaskCompletionSource();
-            q.Enqueue(queueName, async (cancellationToken) => {
+            q.Enqueue(queueName, async (cancellationToken) =>
+            {
                 t.Started = true;
                 try
                 {
@@ -1774,11 +1775,11 @@ namespace BTCPayServer.Tests
         {
             foreach (var policy in Policies.AllPolicies)
             {
-               Assert.True( UIManageController.AddApiKeyViewModel.PermissionValueItem.PermissionDescriptions.ContainsKey(policy));
-               if (Policies.IsStorePolicy(policy))
-               {
-                   Assert.True( UIManageController.AddApiKeyViewModel.PermissionValueItem.PermissionDescriptions.ContainsKey($"{policy}:"));
-               }
+                Assert.True(UIManageController.AddApiKeyViewModel.PermissionValueItem.PermissionDescriptions.ContainsKey(policy));
+                if (Policies.IsStorePolicy(policy))
+                {
+                    Assert.True(UIManageController.AddApiKeyViewModel.PermissionValueItem.PermissionDescriptions.ContainsKey($"{policy}:"));
+                }
             }
         }
         [Fact]
@@ -1804,8 +1805,8 @@ namespace BTCPayServer.Tests
                     PaymentMethod = new PaymentMethodId("BTC", PaymentTypes.BTCLike)
                 }
             };
-            var newBlob = new Serializer(null).ToString(blob).Replace( "paymentMethod\":\"BTC\"","paymentMethod\":\"ETH_ZYC\"");
-            Assert.Empty(StoreDataExtensions.GetStoreBlob(new StoreData() {StoreBlob = newBlob}).PaymentMethodCriteria);
+            var newBlob = new Serializer(null).ToString(blob).Replace("paymentMethod\":\"BTC\"", "paymentMethod\":\"ETH_ZYC\"");
+            Assert.Empty(StoreDataExtensions.GetStoreBlob(new StoreData() { StoreBlob = newBlob }).PaymentMethodCriteria);
         }
     }
 }

@@ -35,31 +35,34 @@ public class StoreRecentInvoices : ViewComponent
 
     public async Task<IViewComponentResult> InvokeAsync(StoreRecentInvoicesViewModel vm)
     {
-        if (vm.Store == null) throw new ArgumentNullException(nameof(vm.Store));
-        if (vm.CryptoCode == null) throw new ArgumentNullException(nameof(vm.CryptoCode));
-        if (vm.InitialRendering) return View(vm);
-        
+        if (vm.Store == null)
+            throw new ArgumentNullException(nameof(vm.Store));
+        if (vm.CryptoCode == null)
+            throw new ArgumentNullException(nameof(vm.CryptoCode));
+        if (vm.InitialRendering)
+            return View(vm);
+
         var userId = _userManager.GetUserId(UserClaimsPrincipal);
         var invoiceEntities = await _invoiceRepo.GetInvoices(new InvoiceQuery
-            {
-                UserId = userId,
-                StoreId = new [] { vm.Store.Id },
-                IncludeArchived = false,
-                IncludeRefunds = true,
-                Take = 5
-            });
-        
+        {
+            UserId = userId,
+            StoreId = new[] { vm.Store.Id },
+            IncludeArchived = false,
+            IncludeRefunds = true,
+            Take = 5
+        });
+
         vm.Invoices = (from invoice in invoiceEntities
-            let state = invoice.GetInvoiceState()
-            select new StoreRecentInvoiceViewModel
-            {
-                Date = invoice.InvoiceTime,
-                Status = state,
-                HasRefund = invoice.Refunds.Any(),
-                InvoiceId = invoice.Id,
-                OrderId = invoice.Metadata.OrderId ?? string.Empty,
-                AmountCurrency = _currencyNameTable.DisplayFormatCurrency(invoice.Price, invoice.Currency),
-            }).ToList();
+                       let state = invoice.GetInvoiceState()
+                       select new StoreRecentInvoiceViewModel
+                       {
+                           Date = invoice.InvoiceTime,
+                           Status = state,
+                           HasRefund = invoice.Refunds.Any(),
+                           InvoiceId = invoice.Id,
+                           OrderId = invoice.Metadata.OrderId ?? string.Empty,
+                           AmountCurrency = _currencyNameTable.DisplayFormatCurrency(invoice.Price, invoice.Currency),
+                       }).ToList();
 
         return View(vm);
     }

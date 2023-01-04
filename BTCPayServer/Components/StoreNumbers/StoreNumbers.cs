@@ -1,5 +1,4 @@
 using System;
-using Dapper;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
@@ -9,6 +8,7 @@ using BTCPayServer.Data;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
+using Dapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -41,13 +41,16 @@ public class StoreNumbers : ViewComponent
 
     public async Task<IViewComponentResult> InvokeAsync(StoreNumbersViewModel vm)
     {
-        if (vm.Store == null) throw new ArgumentNullException(nameof(vm.Store));
-        if (vm.CryptoCode == null) throw new ArgumentNullException(nameof(vm.CryptoCode));
-        
+        if (vm.Store == null)
+            throw new ArgumentNullException(nameof(vm.Store));
+        if (vm.CryptoCode == null)
+            throw new ArgumentNullException(nameof(vm.CryptoCode));
+
         vm.WalletId = new WalletId(vm.Store.Id, vm.CryptoCode);
 
-        if (vm.InitialRendering) return View(vm);
-        
+        if (vm.InitialRendering)
+            return View(vm);
+
         await using var ctx = _dbContextFactory.CreateContext();
         var payoutsCount = await ctx.Payouts
             .Where(p => p.PullPaymentData.StoreId == vm.Store.Id && !p.PullPaymentData.Archived && p.State == PayoutState.AwaitingApproval)
@@ -55,7 +58,7 @@ public class StoreNumbers : ViewComponent
         var refundsCount = await ctx.Invoices
             .Where(i => i.StoreData.Id == vm.Store.Id && !i.Archived && i.CurrentRefundId != null)
             .CountAsync();
-        
+
         var derivation = vm.Store.GetDerivationSchemeSettings(_networkProvider, vm.CryptoCode);
         int? transactionsCount = null;
         if (derivation != null && _nbxConnectionFactory.Available)

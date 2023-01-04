@@ -16,6 +16,9 @@ space_before_self_closing = true
 [*.json]
 indent_size = 2
 
+[swagger*.json]
+indent_size = 4
+
 # C# files
 [*.cs]
 # New line preferences

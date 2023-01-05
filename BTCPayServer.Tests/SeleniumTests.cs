@@ -1888,12 +1888,12 @@ namespace BTCPayServer.Tests
             Assert.Equal(0.0000001m, fetchedReuqest.MaxSendable.ToDecimal(LightMoneyUnit.BTC));
             Assert.Equal(0.0000001m, fetchedReuqest.MinSendable.ToDecimal(LightMoneyUnit.BTC));
 
-            await Assert.ThrowsAsync<HttpRequestException>(async () =>
+            await Assert.ThrowsAsync<LNUrlException>(async () =>
             {
                 await fetchedReuqest.SendRequest(new LightMoney(0.0000002m, LightMoneyUnit.BTC),
                     network, new HttpClient());
             });
-            await Assert.ThrowsAsync<HttpRequestException>(async () =>
+            await Assert.ThrowsAsync<LNUrlException>(async () =>
             {
                 await fetchedReuqest.SendRequest(new LightMoney(0.00000005m, LightMoneyUnit.BTC),
                     network, new HttpClient());
@@ -2014,7 +2014,6 @@ namespace BTCPayServer.Tests
                 var payoutsData = await ctx.Payouts.Where(p => p.PullPaymentDataId == pullPaymentId).ToListAsync();
                 Assert.True(payoutsData.All(p => p.State == PayoutState.Completed));
             });
-            
         }
 
         [Fact]

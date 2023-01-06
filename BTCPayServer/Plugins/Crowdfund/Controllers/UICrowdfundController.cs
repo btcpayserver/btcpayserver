@@ -51,7 +51,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
         private readonly AppService _appService;
         private readonly UIInvoiceController _invoiceController;
         private readonly UserManager<ApplicationUser> _userManager;
-        
+
         [HttpGet("/")]
         [HttpGet("/apps/{appId}/crowdfund")]
         [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.AllowAll)]
@@ -173,20 +173,20 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
             try
             {
                 var invoice = await _invoiceController.CreateInvoiceCore(new BitpayCreateInvoiceRequest()
-                    {
-                        OrderId = AppService.GetAppOrderId(app),
-                        Currency = settings.TargetCurrency,
-                        ItemCode = request.ChoiceKey ?? string.Empty,
-                        ItemDesc = title,
-                        BuyerEmail = request.Email,
-                        Price = price,
-                        NotificationURL = settings.NotificationUrl,
-                        FullNotifications = true,
-                        ExtendedNotifications = true,
-                        SupportedTransactionCurrencies = paymentMethods,
-                        RedirectURL = request.RedirectUrl ?? Request.GetDisplayUrl(),
-                    }, store, HttpContext.Request.GetAbsoluteRoot(),
-                    new List<string>() {AppService.GetAppInternalTag(appId)},
+                {
+                    OrderId = AppService.GetAppOrderId(app),
+                    Currency = settings.TargetCurrency,
+                    ItemCode = request.ChoiceKey ?? string.Empty,
+                    ItemDesc = title,
+                    BuyerEmail = request.Email,
+                    Price = price,
+                    NotificationURL = settings.NotificationUrl,
+                    FullNotifications = true,
+                    ExtendedNotifications = true,
+                    SupportedTransactionCurrencies = paymentMethods,
+                    RedirectURL = request.RedirectUrl ?? Request.GetDisplayUrl(),
+                }, store, HttpContext.Request.GetAbsoluteRoot(),
+                    new List<string>() { AppService.GetAppInternalTag(appId) },
                     cancellationToken, (entity) =>
                     {
                         entity.Metadata.OrderUrl = Request.GetDisplayUrl();
@@ -195,7 +195,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                 if (request.RedirectToCheckout)
                 {
                     return RedirectToAction(nameof(UIInvoiceController.Checkout), "UIInvoice",
-                        new {invoiceId = invoice.Data.Id});
+                        new { invoiceId = invoice.Data.Id });
                 }
 
                 return Ok(invoice.Data.Id);
@@ -205,7 +205,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                 return BadRequest(e.Message);
             }
         }
-        
+
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [HttpGet("{appId}/settings/crowdfund")]
         public async Task<IActionResult> UpdateCrowdfund(string appId)
@@ -389,11 +389,11 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
             }
             return currency.Trim().ToUpperInvariant();
         }
-        
+
         private AppData GetCurrentApp() => HttpContext.GetAppData();
 
         private string GetUserId() => _userManager.GetUserId(User);
-        
+
         private async Task<ViewCrowdfundViewModel> GetAppInfo(string appId)
         {
             var info = (ViewCrowdfundViewModel)await _appService.GetAppInfo(appId);

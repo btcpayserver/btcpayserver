@@ -70,7 +70,7 @@
                         <span class="badge bg-warning ms-2">Experimental</span>
                     </label>
                     <span asp-validation-for="UseNewCheckout" class="text-danger"></span>
-                    <div class="text-muted">
+                    <div class="form-text">
                         Since v1.7.0 a new version of the checkout is available. Note: For now, the new version is English-only.<br/>
                         We are still collecting <a href="https://github.com/btcpayserver/btcpayserver/discussions/4308" target="_blank" rel="noreferrer noopener">feedback</a> and offer this as an opt-in feature.
                     </div>
@@ -96,7 +96,7 @@
                     <div class="form-check">
                         <input asp-for="AutoDetectLanguage" type="checkbox" class="form-check-input"/>
                         <label asp-for="AutoDetectLanguage" class="form-check-label"></label>
-                        <p class="text-muted">Detects the language of the customer's browser with 99.9% accuracy.</p>
+                        <div class="form-text">Detects the language of the customer's browser with 99.9% accuracy.</div>
                     </div>
                 </div>
                 <div class="form-group">
@@ -118,12 +118,12 @@
                     </a>
                     <input asp-for="CustomCSS" class="form-control" />
                     <span asp-validation-for="CustomCSS" class="text-danger"></span>
-                    <p class="form-text text-muted">
+                    <div class="form-text">
                         Bundled Themes:
                         <a href="#" class="setTheme" data-theme="default">Default</a> |
                         <a href="#" class="setTheme" data-theme="dark">Dark</a> |
                         <a href="#" class="setTheme" data-theme="legacy">Legacy</a>
-                    </p>
+                    </div>
                     @await Component.InvokeAsync("UiExtensionPoint", new { location = "invoice-checkout-theme-options", model = Model })
                 </div>
             </div>

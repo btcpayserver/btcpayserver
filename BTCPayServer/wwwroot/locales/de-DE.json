@@ -49,5 +49,5 @@
   "Close": "Schließen",
   "NotPaid_ExtraTransaction": "Die Rechnung wurde nicht vollständig bezahlt. Bitte senden Sie den fehlenden Betrag, um die Rechnung zu begleichen.",
   "Recommended_Fee": "Empfohlene Netzwerk Gebührenrate: {{feeRate}} sat/byte",
-  "View receipt": "View receipt"
+  "View receipt": "Quittung anzeigen"
 }

@@ -3,13 +3,13 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
+using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
-using BTCPayServer.Abstractions.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Identity;
@@ -86,7 +86,7 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 return validationResult;
             }
-            
+
             var appData = new AppData
             {
                 StoreDataId = storeId,
@@ -112,7 +112,7 @@ namespace BTCPayServer.Controllers.Greenfield
             }
 
             var settings = app.GetSettings<PointOfSaleSettings>();
-            
+
             // This is not obvious but we must have a non-null currency or else request validation may work incorrectly
             request.Currency = request.Currency ?? settings.Currency;
 
@@ -124,7 +124,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
             app.Name = request.AppName;
             app.SetSettings(ToPointOfSaleSettings(request));
-            
+
             await _appService.UpdateOrCreateApp(app);
 
             return Ok(ToPointOfSaleModel(app));
@@ -152,7 +152,7 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 return AppNotFound();
             }
-                
+
             return Ok(ToModel(app));
         }
 
@@ -164,7 +164,7 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 return AppNotFound();
             }
-                
+
             await _appService.DeleteApp(app);
 
             return Ok();
@@ -281,7 +281,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     ModelState.AddModelError(nameof(request.Template), "Invalid template");
                 }
             }
-            
+
             if (!ModelState.IsValid)
             {
                 validationResult = this.CreateValidationError(ModelState);
@@ -304,7 +304,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
         private string[]? ValidateStringArray(string[]? arr)
         {
-            if (arr == null || !arr.Any()) 
+            if (arr == null || !arr.Any())
             {
                 return null;
             }
@@ -359,7 +359,7 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 ModelState.AddModelError(nameof(request.EndDate), "End date cannot be before start date");
             }
-            
+
             if (!ModelState.IsValid)
             {
                 validationResult = this.CreateValidationError(ModelState);

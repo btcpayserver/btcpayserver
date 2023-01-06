@@ -2,8 +2,11 @@ using System;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Services.Wallets;
 using BTCPayServer.Tests.Logging;
 using Microsoft.AspNetCore.Mvc;
+using NBXplorer.DerivationStrategy;
+using NBXplorer.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using OpenQA.Selenium;
@@ -15,6 +18,10 @@ namespace BTCPayServer.Tests
 {
     public static class Extensions
     {
+        public static Task<KeyPathInformation> ReserveAddressAsync(this BTCPayWallet wallet, DerivationStrategyBase derivationStrategyBase)
+        {
+            return wallet.ReserveAddressAsync(null, derivationStrategyBase, "test");
+        }
         private static readonly JsonSerializerSettings JsonSettings = new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() };
         public static string ToJson(this object o) => JsonConvert.SerializeObject(o, Formatting.None, JsonSettings);
 
@@ -131,7 +138,7 @@ retry:
             el.Clear();
             el.SendKeys(text);
         }
-        
+
         public static void ScrollTo(this IWebDriver driver, IWebElement element)
         {
             driver.ExecuteJavaScript("arguments[0].scrollIntoView();", element);
@@ -141,7 +148,7 @@ retry:
         {
             ScrollTo(driver, driver.FindElement(selector));
         }
-        
+
         public static void WaitUntilAvailable(this IWebDriver driver, By selector, TimeSpan? waitTime = null)
         {
             // Try fast path
@@ -158,7 +165,7 @@ retry:
             wait.UntilJsIsReady();
 
             int retriesLeft = 4;
-            retry:
+retry:
             try
             {
                 var el = driver.FindElement(selector);
@@ -169,18 +176,19 @@ retry:
             catch (NoSuchElementException) when (retriesLeft > 0)
             {
                 retriesLeft--;
-                if (waitTime != null) Thread.Sleep(waitTime.Value);
+                if (waitTime != null)
+                    Thread.Sleep(waitTime.Value);
                 goto retry;
             }
             wait.UntilJsIsReady();
         }
-        
+
         public static void WaitForAndClick(this IWebDriver driver, By selector)
         {
             driver.WaitUntilAvailable(selector);
             driver.FindElement(selector).Click();
         }
-        
+
         public static bool ElementDoesNotExist(this IWebDriver driver, By selector)
         {
             Assert.Throws<NoSuchElementException>(() =>

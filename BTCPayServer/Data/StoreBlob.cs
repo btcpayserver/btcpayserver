@@ -12,6 +12,7 @@ using BTCPayServer.Payments;
 using BTCPayServer.Rating;
 using BTCPayServer.Services.Mails;
 using BTCPayServer.Services.Rates;
+using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -20,7 +21,7 @@ namespace BTCPayServer.Data
     public class StoreBlob
     {
         public static string StandardDefaultCurrency = "USD";
-        
+
         public StoreBlob()
         {
             InvoiceExpiration = TimeSpan.FromMinutes(15);
@@ -32,7 +33,7 @@ namespace BTCPayServer.Data
             PaymentMethodCriteria = new List<PaymentMethodCriteria>();
             ReceiptOptions = InvoiceDataBase.ReceiptOptions.CreateDefault();
         }
-        
+
         [JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
         public NetworkFeeMode NetworkFeeMode { get; set; }
 
@@ -170,13 +171,28 @@ namespace BTCPayServer.Data
                 }
             }
 
-            var preferredExchange = string.IsNullOrEmpty(PreferredExchange) ? CoinGeckoRateProvider.CoinGeckoName : PreferredExchange;
+            var preferredExchange = string.IsNullOrEmpty(PreferredExchange) ? GetRecommendedExchange() : PreferredExchange;
             builder.AppendLine(CultureInfo.InvariantCulture, $"X_X = {preferredExchange}(X_X);");
 
             BTCPayServer.Rating.RateRules.TryParse(builder.ToString(), out var rules);
             rules.Spread = Spread;
             return rules;
         }
+
+        public static JObject RecommendedExchanges = new()
+        {
+            { "EUR", "kraken" },
+            { "USD", "kraken" },
+            { "GBP", "kraken" },
+            { "CHF", "kraken" },
+            { "GTQ", "bitpay" },
+            { "COP", "yadio" },
+            { "JPY", "bitbank" },
+            { "TRY", "btcturk" }
+        };
+
+        public string GetRecommendedExchange() =>
+            RecommendedExchanges.Property(DefaultCurrency)?.Value.ToString() ?? "coingecko";
 
         [Obsolete("Use GetExcludedPaymentMethods instead")]
         public string[] ExcludedPaymentMethods { get; set; }
@@ -223,6 +239,30 @@ namespace BTCPayServer.Data
                 methods.Remove(paymentMethodId.ToString());
             ExcludedPaymentMethods = methods.ToArray();
 #pragma warning restore CS0618 // Type or member is obsolete
+        }
+
+        // Replace absolute URL with relative to avoid this issue: https://github.com/btcpayserver/btcpayserver/discussions/4195
+        public void NormalizeToRelativeLinks(HttpRequest request)
+        {
+            var schemeAndHost = $"{request.Scheme}://{request.Host.ToString()}/";
+            this.CustomLogo = EnsureRelativeLinks(this.CustomLogo, schemeAndHost);
+            this.CustomCSS = EnsureRelativeLinks(this.CustomCSS, schemeAndHost);
+        }
+
+        /// <summary>
+        /// Make a link relative if possible
+        /// </summary>
+        /// <param name="value">Example: https://mystore.com/toto.png</param>
+        /// <param name="schemeAndHost">Example: https://mystore.com/</param>
+        /// <returns>/toto.png</returns>
+        private string EnsureRelativeLinks(string value, string schemeAndHost)
+        {
+            if (value is null)
+                return null;
+            value = value.Trim();
+            if (value.StartsWith(schemeAndHost, StringComparison.OrdinalIgnoreCase))
+                return value.Substring(schemeAndHost.Length - 1);
+            return value;
         }
     }
     public class PaymentMethodCriteria

@@ -45,7 +45,7 @@
 
     @if (!string.IsNullOrEmpty(Model.CustomCSSLink))
     {
-        <link href="@Model.CustomCSSLink" rel="stylesheet" />
+        <link href="@Model.CustomCSSLink" rel="stylesheet" asp-append-version="true"/>
     }
 
     @if (Model.IsModal)
@@ -86,7 +86,7 @@
 
     <invoice>
         <div class="no-bounce" id="checkoutCtrl" v-cloak>
-            <div class="modal page">
+            <div class="modal page" style="min-height:100vh">
                 <div class="modal-dialog open opened" role="document" v-bind:class="{ 'expired': invoiceUnpayable, 'paid': invoicePaid, 'enter-purchaser-email': showEmailForm}">
                     <div class="modal-content long">
                         <div class="content">

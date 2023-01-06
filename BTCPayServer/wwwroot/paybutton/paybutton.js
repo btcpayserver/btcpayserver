@@ -107,7 +107,7 @@ function inputChanges(event, buttonSize) {
         // Styles
         getStyles('template-paybutton-styles') + (srvModel.buttonType == '2' ? getStyles('template-slider-styles') : '') +
         // Form
-        '<form method="POST"' + (srvModel.useModal ? ' onsubmit="onBTCPayFormSubmit(event);return false"' : '') + ' action="' + esc(srvModel.urlRoot) + actionUrl + '" class="btcpay-form btcpay-form--' + (srvModel.fitButtonInline ? 'inline' : 'block') +'">\n' +
+        '<form method="POST" action="' + esc(srvModel.urlRoot) + actionUrl + '" class="btcpay-form btcpay-form--' + (srvModel.fitButtonInline ? 'inline' : 'block') +'">\n' +
             addInput("storeId", srvModel.storeId);
     
     if (app) {
@@ -147,7 +147,7 @@ function inputChanges(event, buttonSize) {
         const max = srvModel.max == null ? null : parseInt(srvModel.max);
 
         html += '  <div class="btcpay-custom-container">\n';
-        html += addInputPrice(priceInputName, srvModel.price, width, min, max, step, 'handleSliderChange(event);return false');
+        html += addInputPrice(priceInputName, srvModel.price, width, min, max, step);
         if (allowCurrencySelection) html += addSelectCurrency(srvModel.currency);
         html += addSlider(srvModel.price, srvModel.min, srvModel.max, srvModel.step, width);
         html += '  </div>\n';
@@ -206,17 +206,17 @@ function addPlusMinusButton(type, step, min, max) {
     min = min == null ? 1 : parseInt(min);
     max = max == null ? null : parseInt(max);
     
-    return `      <button class="plus-minus" type="button" onclick="handlePlusMinus(event);return false" data-type="${type}" data-step="${step}" data-min="${min}" data-max="${max}">${type}</button>\n`;
+    return `      <button class="plus-minus" type="button" data-type="${type}" data-step="${step}" data-min="${min}" data-max="${max}">${type}</button>\n`;
 }
 
-function addInputPrice(name, price, widthInput, min = 0, max = 'none', step = 'any', onChange = null) {
+function addInputPrice(name, price, widthInput, min = 0, max = 'none', step = 'any') {
     if (!price) price = min
-    return `      <input class="btcpay-input-price" type="number" name="${esc(name)}" min="${min}" max="${max}" step="${step}" value="${price}" data-price="${price}" style="width:${widthInput};" oninput="handlePriceInput(event);return false"${onChange ? ` onchange="${onChange}"` : ''} />\n`;
+    return `      <input class="btcpay-input-price" type="number" name="${esc(name)}" min="${min}" max="${max}" step="${step}" value="${price}" data-price="${price}" style="width:${widthInput};" />\n`;
 }
 
 function addSlider(price, min, max, step, width) {
     if (!price) price = min
-    return `    <input type="range" class="btcpay-input-range" min="${min}" max="${max}" step="${step}" value="${price}" style="width:${width};margin-bottom:15px;" oninput="handleSliderInput(event);return false" />\n`;
+    return `    <input type="range" class="btcpay-input-range" min="${min}" max="${max}" step="${step}" value="${price}" style="width:${width};margin-bottom:15px;" />\n`;
 }
 
 function addSelectCurrency(currency) {

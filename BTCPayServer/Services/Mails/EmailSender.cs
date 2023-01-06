@@ -21,11 +21,11 @@ namespace BTCPayServer.Services.Mails
 
         public void SendEmail(MailboxAddress email, string subject, string message)
         {
-            SendEmail(new[] {email}, Array.Empty<MailboxAddress>(), Array.Empty<MailboxAddress>(), subject, message);
+            SendEmail(new[] { email }, Array.Empty<MailboxAddress>(), Array.Empty<MailboxAddress>(), subject, message);
         }
 
         public void SendEmail(MailboxAddress[] email, MailboxAddress[] cc, MailboxAddress[] bcc, string subject, string message)
-        { 
+        {
             _JobClient.Schedule(async (cancellationToken) =>
             {
                 var emailSettings = await GetEmailSettings();

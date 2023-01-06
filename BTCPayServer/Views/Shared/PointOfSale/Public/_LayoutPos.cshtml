@@ -25,7 +25,12 @@
         var jObject = JObject.Parse(await reader.ReadToEndAsync());
         jObject["short_name"] = title;
         jObject["name"] = $"BTCPay Server: {title}";
-        return $"data:application/manifest+json, {jObject.ToString(Formatting.None)}";
+        foreach (var jToken in jObject["icons"]!)
+        {
+            var icon = (JObject)jToken;
+            icon["src"] = $"{Context.Request.GetAbsoluteRoot()}/{icon["src"]}";
+        }
+        return $"data:application/manifest+json,{Safe.Json(jObject)}";
     }
 }
 
@@ -45,11 +50,10 @@
     <link href="~/main/fonts/OpenSans.css" asp-append-version="true"  rel="stylesheet" />
     <link href="~/main/layout.css" asp-append-version="true"  rel="stylesheet" />
     <link href="~/main/site.css" asp-append-version="true"  rel="stylesheet" />
-
     <link href="@Context.Request.GetRelativePathOrAbsolute(Theme.CssUri)" rel="stylesheet" asp-append-version="true"/>
     @if (Model.CustomCSSLink != null)
     {
-        <link href="@Model.CustomCSSLink" rel="stylesheet" />
+        <link href="@Model.CustomCSSLink" rel="stylesheet" asp-append-version="true" />
     }
     <link href="~/vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" asp-append-version="true" />
 

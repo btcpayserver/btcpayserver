@@ -47,9 +47,7 @@
             <div class="form-group">
                 <label asp-for="Settings.Login" class="form-label"></label>
                 <input asp-for="Settings.Login" class="form-control"/>
-                <small class="form-text text-muted">
-                    For many email providers (like Gmail) your login is your email address.
-                </small>
+                <div class="form-text">For many email providers (like Gmail) your login is your email address.</div>
                 <span asp-validation-for="Settings.Login" class="text-danger"></span>
             </div>
             <div class="form-group">

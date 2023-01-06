@@ -50,21 +50,21 @@
                 <div class="form-check">
                     <input id="RateThenOption" asp-for="SelectedRefundOption" type="radio" value="RateThen" class="form-check-input"/>
                     <label for="RateThenOption" class="form-check-label">@Model.RateThenText</label>
-                    <div class="form-text text-muted">The crypto currency price, at the rate the invoice got paid.</div>
+                    <div class="form-text">The crypto currency price, at the rate the invoice got paid.</div>
                 </div>
             </div>
             <div class="form-group">
                 <div class="form-check">
                     <input id="CurrentRateOption" asp-for="SelectedRefundOption" type="radio" value="CurrentRate" class="form-check-input"/>
                     <label for="CurrentRateOption" class="form-check-label">@Model.CurrentRateText</label>
-                    <div class="form-text text-muted">The crypto currency price, at the current rate.</div>
+                    <div class="form-text">The crypto currency price, at the current rate.</div>
                 </div>
             </div>
             <div class="form-group">
                 <div class="form-check">
                     <input id="FiatOption" asp-for="SelectedRefundOption" type="radio" value="Fiat" class="form-check-input"/>
                     <label for="FiatOption" class="form-check-label">@Model.FiatText</label>
-                    <div class="form-text text-muted">The invoice currency, at the rate when the refund will be sent.</div>
+                    <div class="form-text">The invoice currency, at the rate when the refund will be sent.</div>
                 </div>
             </div>
 
@@ -72,7 +72,7 @@
                 <div class="form-check">
                     <input id="CustomOption" asp-for="SelectedRefundOption" type="radio" value="Custom" class="form-check-input"/>
                     <label for="CustomOption" class="form-check-label">Custom amount</label>
-                    <div class="form-text text-muted">The specified amount with the specified currency, at the rate when the refund will be sent.</div>
+                    <div class="form-text">The specified amount with the specified currency, at the rate when the refund will be sent.</div>
                     <div class="form-group pt-2">
                         <label asp-for="CustomAmount" class="form-label"></label>
                         <div class="input-group">

@@ -649,6 +649,123 @@
                     }
                 ]
             }
+        },
+    "/api/v1/stores/{storeId}/invoices/{invoiceId}/refund": {
+            "post": {
+                "tags": [
+          "Invoices"
+                ],
+                "summary": "Refund invoice",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store to query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "invoiceId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The invoice to refund",
+                        "schema": {
+                            "type": "string"
+                        }
+          }
+        ],
+        "description": "Refund invoice",
+        "operationId": "Invoices_Refund",
+        "requestBody": {
+                        "required": true,
+          "content": {
+            "application/json": {
+                        "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Name of the pull payment (Default: 'Refund' followed by the invoice id)",
+                    "nullable": true
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Description of the pull payment"
+                  },
+                  "paymentMethod": {
+                    "type": "string",
+                    "description": "The payment method to use for the refund",
+                    "example": "BTC"
+                  },
+                  "refundVariant": {
+                    "type": "string",
+                    "description": "* `RateThen`: Refund the crypto currency price, at the rate the invoice got paid.\r\n* `CurrentRate`: Refund the crypto currency price, at the current rate.\r\n*`Fiat`: Refund the invoice currency, at the rate when the refund will be sent.\r\n*`Custom`: Specify the amount, currency, and rate of the refund. (see `customAmount` and `customCurrency`)",
+                    "x-enumNames": [
+                      "RateThen",
+                      "CurrentRate",
+                      "Fiat",
+                      "Custom"
+                    ],
+                    "enum": [
+                      "RateThen",
+                      "CurrentRate",
+                      "Fiat",
+                      "Custom"
+                    ]
+                  },
+                  "customAmount": {
+                    "type": "string",
+                    "format": "decimal",
+                    "description": "The amount to refund if the `refundVariant` is `Custom`.",
+                    "example": "5.00"
+                  },
+                  "customCurrency": {
+                    "type": "string",
+                    "description": "The currency to refund if the `refundVariant` is `Custom`",
+                    "example": "USD"
+                  }
+                }
+              }
+                        }
+                    }
+        },
+                "responses": {
+                    "200": {
+                        "description": "Pull payment for refunding the invoice",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PullPaymentData"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "A list of errors that occurred when refunding the invoice",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to refund the invoice"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
         }
     },
     "components": {

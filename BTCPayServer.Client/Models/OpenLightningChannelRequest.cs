@@ -11,7 +11,7 @@ namespace BTCPayServer.Client.Models
     {
         [JsonConverter(typeof(NodeUriJsonConverter))]
         [JsonProperty("nodeURI")]
-        public NodeInfo NodeURI { get; set; }
+        public BTCPayServer.Lightning.NodeInfo NodeURI { get; set; }
         [JsonConverter(typeof(MoneyJsonConverter))]
         public Money ChannelAmount { get; set; }
 

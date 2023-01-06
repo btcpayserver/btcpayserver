@@ -347,7 +347,7 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<IHostedService, WebhookSender>(o => o.GetRequiredService<WebhookSender>());
             services.AddSingleton<IHostedService, StoreEmailRuleProcessorSender>();
             services.AddHttpClient(WebhookSender.OnionNamedClient)
-                .ConfigurePrimaryHttpMessageHandler<Socks5HttpClientHandler>(); 
+                .ConfigurePrimaryHttpMessageHandler<Socks5HttpClientHandler>();
             services.AddHttpClient(WebhookSender.LoopbackNamedClient)
                 .ConfigurePrimaryHttpMessageHandler(_ => new HttpClientHandler
                 {
@@ -432,6 +432,7 @@ namespace BTCPayServer.Hosting
             services.AddTransient<UIPaymentRequestController>();
             // Add application services.
             services.AddSingleton<EmailSenderFactory>();
+            services.AddSingleton<InvoiceActivator>();
 
             //create a simple client which hooks up to the http scope
             services.AddScoped<BTCPayServerClient, LocalBTCPayServerClient>();

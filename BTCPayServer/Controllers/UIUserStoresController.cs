@@ -44,7 +44,7 @@ namespace BTCPayServer.Controllers
             var vm = new CreateStoreViewModel
             {
                 DefaultCurrency = StoreBlob.StandardDefaultCurrency,
-                Exchanges = GetExchangesSelectList(CoinGeckoRateProvider.CoinGeckoName)
+                Exchanges = GetExchangesSelectList(null)
             };
 
             return View(vm);
@@ -59,10 +59,10 @@ namespace BTCPayServer.Controllers
                 vm.Exchanges = GetExchangesSelectList(vm.PreferredExchange);
                 return View(vm);
             }
-            
+
             var store = await _repo.CreateStore(GetUserId(), vm.Name, vm.DefaultCurrency, vm.PreferredExchange);
             CreatedStoreId = store.Id;
-                
+
             TempData[WellKnownTempData.SuccessMessage] = "Store successfully created";
             return RedirectToAction(nameof(UIStoresController.Dashboard), "UIStores", new
             {
@@ -94,12 +94,15 @@ namespace BTCPayServer.Controllers
         }
 
         private string GetUserId() => _userManager.GetUserId(User);
-        
-        private SelectList GetExchangesSelectList(string selected) {
+
+        private SelectList GetExchangesSelectList(string selected)
+        {
             var exchanges = _rateFactory.RateProviderFactory
                 .GetSupportedExchanges()
                 .Where(r => !string.IsNullOrWhiteSpace(r.Name))
-                .OrderBy(s => s.Id, StringComparer.OrdinalIgnoreCase);
+                .OrderBy(s => s.Id, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+            exchanges.Insert(0, new AvailableRateProvider(null, "Recommended", ""));
             var chosen = exchanges.FirstOrDefault(f => f.Id == selected) ?? exchanges.First();
             return new SelectList(exchanges, nameof(chosen.Id), nameof(chosen.Name), chosen.Id);
         }

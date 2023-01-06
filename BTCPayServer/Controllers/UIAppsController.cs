@@ -35,7 +35,7 @@ namespace BTCPayServer.Controllers
         private readonly AppService _appService;
 
         public string CreatedAppId { get; set; }
-        
+
         public class AppUpdated
         {
             public string AppId { get; set; }
@@ -46,14 +46,14 @@ namespace BTCPayServer.Controllers
                 return string.Empty;
             }
         }
-        
+
         [HttpGet("/apps/{appId}")]
         public async Task<IActionResult> RedirectToApp(string appId)
         {
             var app = await _appService.GetApp(appId, null);
             if (app is null)
                 return NotFound();
-            
+
             return app.AppType switch
             {
                 nameof(AppType.Crowdfund) => RedirectToAction(nameof(UICrowdfundController.ViewCrowdfund), "UICrowdfund", new { appId }),

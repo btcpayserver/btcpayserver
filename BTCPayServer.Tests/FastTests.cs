@@ -646,6 +646,49 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        public void CanParseDerivationSchemes()
+        {
+            var networkProvider = new BTCPayNetworkProvider(ChainName.Regtest);
+            var parser = new DerivationSchemeParser(networkProvider.BTC);
+
+            // xpub
+            var xpub = "xpub661MyMwAqRbcGVBsTGeNZN6QGVHmMHLdSA4FteGsRrEriu4pnVZMZWnruFFFXkMnyoBjyHndD3Qwcfz4MPzBUxjSevweNFQx7SAYZATtcDw";
+            DerivationStrategyBase strategyBase = parser.Parse(xpub);
+            Assert.IsType<DirectDerivationStrategy>(strategyBase);
+            Assert.True(((DirectDerivationStrategy)strategyBase).Segwit);
+            Assert.Equal("tpubD6NzVbkrYhZ4YHNiuTdTmHRmbcPRLfqgyneZFCL1mkzkUBjXriQShxTh9HL34FK2mhieasJVk9EzJrUfkFqRNQBjiXgx3n5BhPkxKBoFmaS", strategyBase.ToString());
+
+            // Multisig
+            var multisig = "wsh(sortedmulti(2,[62a7956f/84'/1'/0']tpubDDXgATYzdQkHHhZZCMcNJj8BGDENvzMVou5v9NdxiP4rxDLj33nS233dGFW4htpVZSJ6zds9eVqAV9RyRHHiKtwQKX8eR4n4KN3Dwmj7A3h/0/*,[11312aa2/84'/1'/0']tpubDC8a54NFtQtMQAZ97VhoU9V6jVTvi9w4Y5SaAXJSBYETKg3AoX5CCKndznhPWxJUBToPCpT44s86QbKdGpKAnSjcMTGW4kE6UQ8vpBjcybW/0/*,[8f71b834/84'/1'/0']tpubDChjnP9LXNrJp43biqjY7FH93wgRRNrNxB4Q8pH7PPRy8UPcH2S6V46WGVJ47zVGF7SyBJNCpnaogsFbsybVQckGtVhCkng3EtFn8qmxptS/0/*))";
+            var expected = "2-of-tpubDDXgATYzdQkHHhZZCMcNJj8BGDENvzMVou5v9NdxiP4rxDLj33nS233dGFW4htpVZSJ6zds9eVqAV9RyRHHiKtwQKX8eR4n4KN3Dwmj7A3h-tpubDC8a54NFtQtMQAZ97VhoU9V6jVTvi9w4Y5SaAXJSBYETKg3AoX5CCKndznhPWxJUBToPCpT44s86QbKdGpKAnSjcMTGW4kE6UQ8vpBjcybW-tpubDChjnP9LXNrJp43biqjY7FH93wgRRNrNxB4Q8pH7PPRy8UPcH2S6V46WGVJ47zVGF7SyBJNCpnaogsFbsybVQckGtVhCkng3EtFn8qmxptS";
+            (strategyBase, RootedKeyPath[] rootedKeyPath) = parser.ParseOutputDescriptor(multisig);
+            Assert.Equal(3, rootedKeyPath.Length);
+            Assert.IsType<P2WSHDerivationStrategy>(strategyBase);
+            Assert.IsType<MultisigDerivationStrategy>(((P2WSHDerivationStrategy)strategyBase).Inner);
+            Assert.Equal(expected, strategyBase.ToString());
+
+            var inner = (MultisigDerivationStrategy)((P2WSHDerivationStrategy)strategyBase).Inner;
+            Assert.False(inner.IsLegacy);
+            Assert.Equal(3, inner.Keys.Count);
+            Assert.Equal(2, inner.RequiredSignatures);
+            Assert.Equal(expected, inner.ToString());
+
+            // Output Descriptor
+            networkProvider = new BTCPayNetworkProvider(ChainName.Mainnet);
+            parser = new DerivationSchemeParser(networkProvider.BTC);
+            var od = "wpkh([8bafd160/49h/0h/0h]xpub661MyMwAqRbcGVBsTGeNZN6QGVHmMHLdSA4FteGsRrEriu4pnVZMZWnruFFFXkMnyoBjyHndD3Qwcfz4MPzBUxjSevweNFQx7SAYZATtcDw/0/*)#9x4vkw48";
+            (strategyBase, rootedKeyPath) = parser.ParseOutputDescriptor(od);
+            Assert.Single(rootedKeyPath);
+            Assert.IsType<DirectDerivationStrategy>(strategyBase);
+            Assert.True(((DirectDerivationStrategy)strategyBase).Segwit);
+
+            // Failure cases
+            Assert.Throws<FormatException>(() => { parser.Parse("xpub 661MyMwAqRbcGVBsTGeNZN6QGVHmMHLdSA4FteGsRrEriu4pnVZMZWnruFFFXkMnyoBjyHndD3Qwcfz4MPzBUxjSevweNFQx7SAYZATtcDw"); }); // invalid format because of space
+            Assert.Throws<ParsingException>(() => { parser.ParseOutputDescriptor("invalid"); }); // invalid in general
+            Assert.Throws<ParsingException>(() => { parser.ParseOutputDescriptor("wpkh([8b60afd1/49h/0h/0h]xpub661MyMwAFXkMnyoBjyHndD3QwRbcGVBsTGeNZN6QGVHcfz4MPzBUxjSevweNFQx7SqmMHLdSA4FteGsRrEriu4pnVZMZWnruFFAYZATtcDw/0/*)#9x4vkw48"); }); // invalid checksum
+        }
+
+        [Fact]
         public void ParseDerivationSchemeSettings()
         {
             var mainnet = new BTCPayNetworkProvider(ChainName.Mainnet).GetNetwork<BTCPayNetwork>("BTC");
@@ -656,7 +699,8 @@ namespace BTCPayServer.Tests
             // ColdCard
             Assert.True(DerivationSchemeSettings.TryParseFromWalletFile(
                 "{\"keystore\": {\"ckcc_xpub\": \"xpub661MyMwAqRbcGVBsTGeNZN6QGVHmMHLdSA4FteGsRrEriu4pnVZMZWnruFFFXkMnyoBjyHndD3Qwcfz4MPzBUxjSevweNFQx7SAYZATtcDw\", \"xpub\": \"ypub6WWc2gWwHbdnAAyJDnR4SPL1phRh7REqrPBfZeizaQ1EmTshieRXJC3Z5YoU4wkcdKHEjQGkh6AYEzCQC1Kz3DNaWSwdc1pc8416hAjzqyD\", \"label\": \"Coldcard Import 0x60d1af8b\", \"ckcc_xfp\": 1624354699, \"type\": \"hardware\", \"hw_type\": \"coldcard\", \"derivation\": \"m/49'/0'/0'\"}, \"wallet_type\": \"standard\", \"use_encryption\": false, \"seed_version\": 17}",
-                mainnet, out var settings));
+                mainnet, out var settings, out var error));
+            Assert.Null(error);
             Assert.Equal(root.GetPublicKey().GetHDFingerPrint(), settings.AccountKeySettings[0].RootFingerprint);
             Assert.Equal(settings.AccountKeySettings[0].RootFingerprint,
                 HDFingerprint.TryParse("8bafd160", out var hd) ? hd : default);
@@ -672,30 +716,41 @@ namespace BTCPayServer.Tests
             // Should be legacy
             Assert.True(DerivationSchemeSettings.TryParseFromWalletFile(
                 "{\"keystore\": {\"ckcc_xpub\": \"tpubD6NzVbkrYhZ4YHNiuTdTmHRmbcPRLfqgyneZFCL1mkzkUBjXriQShxTh9HL34FK2mhieasJVk9EzJrUfkFqRNQBjiXgx3n5BhPkxKBoFmaS\", \"xpub\": \"tpubDDWYqT3P24znfsaGX7kZcQhNc5LAjnQiKQvUCHF2jS6dsgJBRtymopEU5uGpMaR5YChjuiExZG1X2aTbqXkp82KqH5qnqwWHp6EWis9ZvKr\", \"label\": \"Coldcard Import 0x60d1af8b\", \"ckcc_xfp\": 1624354699, \"type\": \"hardware\", \"hw_type\": \"coldcard\", \"derivation\": \"m/44'/1'/0'\"}, \"wallet_type\": \"standard\", \"use_encryption\": false, \"seed_version\": 17}",
-                testnet, out settings));
+                testnet, out settings, out error));
             Assert.True(settings.AccountDerivation is DirectDerivationStrategy s && !s.Segwit);
+            Assert.Null(error);
 
             // Should be segwit p2sh
             Assert.True(DerivationSchemeSettings.TryParseFromWalletFile(
                 "{\"keystore\": {\"ckcc_xpub\": \"tpubD6NzVbkrYhZ4YHNiuTdTmHRmbcPRLfqgyneZFCL1mkzkUBjXriQShxTh9HL34FK2mhieasJVk9EzJrUfkFqRNQBjiXgx3n5BhPkxKBoFmaS\", \"xpub\": \"upub5DSddA9NoRUyJrQ4p86nsCiTSY7kLHrSxx3joEJXjHd4HPARhdXUATuk585FdWPVC2GdjsMePHb6BMDmf7c6KG4K4RPX6LVqBLtDcWpQJmh\", \"label\": \"Coldcard Import 0x60d1af8b\", \"ckcc_xfp\": 1624354699, \"type\": \"hardware\", \"hw_type\": \"coldcard\", \"derivation\": \"m/49'/1'/0'\"}, \"wallet_type\": \"standard\", \"use_encryption\": false, \"seed_version\": 17}",
-                testnet, out settings));
+                testnet, out settings, out error));
             Assert.True(settings.AccountDerivation is P2SHDerivationStrategy p &&
                         p.Inner is DirectDerivationStrategy s2 && s2.Segwit);
+            Assert.Null(error);
 
             // Should be segwit
             Assert.True(DerivationSchemeSettings.TryParseFromWalletFile(
                 "{\"keystore\": {\"ckcc_xpub\": \"tpubD6NzVbkrYhZ4YHNiuTdTmHRmbcPRLfqgyneZFCL1mkzkUBjXriQShxTh9HL34FK2mhieasJVk9EzJrUfkFqRNQBjiXgx3n5BhPkxKBoFmaS\", \"xpub\": \"vpub5YjYxTemJ39tFRnuAhwduyxG2tKGjoEpmvqVQRPqdYrqa6YGoeSzBtHXaJUYB19zDbXs3JjbEcVWERjQBPf9bEfUUMZNMv1QnMyHV8JPqyf\", \"label\": \"Coldcard Import 0x60d1af8b\", \"ckcc_xfp\": 1624354699, \"type\": \"hardware\", \"hw_type\": \"coldcard\", \"derivation\": \"m/84'/1'/0'\"}, \"wallet_type\": \"standard\", \"use_encryption\": false, \"seed_version\": 17}",
-                testnet, out settings));
+                testnet, out settings, out error));
             Assert.True(settings.AccountDerivation is DirectDerivationStrategy s3 && s3.Segwit);
+            Assert.Null(error);
 
             // Specter
             Assert.True(DerivationSchemeSettings.TryParseFromWalletFile(
                 "{\"label\": \"Specter\", \"blockheight\": 123456, \"descriptor\": \"wpkh([8bafd160/49h/0h/0h]xpub661MyMwAqRbcGVBsTGeNZN6QGVHmMHLdSA4FteGsRrEriu4pnVZMZWnruFFFXkMnyoBjyHndD3Qwcfz4MPzBUxjSevweNFQx7SAYZATtcDw/0/*)#9x4vkw48\"}",
-                mainnet, out var specter));
+                mainnet, out var specter, out error));
             Assert.Equal(root.GetPublicKey().GetHDFingerPrint(), specter.AccountKeySettings[0].RootFingerprint);
             Assert.Equal(specter.AccountKeySettings[0].RootFingerprint, hd);
             Assert.Equal("49'/0'/0'", specter.AccountKeySettings[0].AccountKeyPath.ToString());
             Assert.Equal("Specter", specter.Label);
+            Assert.Null(error);
+
+            // Failure case
+            Assert.False(DerivationSchemeSettings.TryParseFromWalletFile(
+                "{\"keystore\": {\"ckcc_xpub\": \"tpubFailure\", \"xpub\": \"tpubFailure\", \"label\": \"Failure\"}, \"wallet_type\": \"standard\"}",
+                testnet, out settings, out error));
+            Assert.Null(settings);
+            Assert.NotNull(error);
         }
 
         [Fact]
@@ -1022,7 +1077,8 @@ namespace BTCPayServer.Tests
         {
             MultiProcessingQueueTest t = new MultiProcessingQueueTest();
             t.Tcs = new TaskCompletionSource();
-            q.Enqueue(queueName, async (cancellationToken) => {
+            q.Enqueue(queueName, async (cancellationToken) =>
+            {
                 t.Started = true;
                 try
                 {
@@ -1719,11 +1775,11 @@ namespace BTCPayServer.Tests
         {
             foreach (var policy in Policies.AllPolicies)
             {
-               Assert.True( UIManageController.AddApiKeyViewModel.PermissionValueItem.PermissionDescriptions.ContainsKey(policy));
-               if (Policies.IsStorePolicy(policy))
-               {
-                   Assert.True( UIManageController.AddApiKeyViewModel.PermissionValueItem.PermissionDescriptions.ContainsKey($"{policy}:"));
-               }
+                Assert.True(UIManageController.AddApiKeyViewModel.PermissionValueItem.PermissionDescriptions.ContainsKey(policy));
+                if (Policies.IsStorePolicy(policy))
+                {
+                    Assert.True(UIManageController.AddApiKeyViewModel.PermissionValueItem.PermissionDescriptions.ContainsKey($"{policy}:"));
+                }
             }
         }
         [Fact]
@@ -1749,9 +1805,8 @@ namespace BTCPayServer.Tests
                     PaymentMethod = new PaymentMethodId("BTC", PaymentTypes.BTCLike)
                 }
             };
-            var newBlob = Encoding.UTF8.GetBytes(
-                new Serializer(null).ToString(blob).Replace( "paymentMethod\":\"BTC\"","paymentMethod\":\"ETH_ZYC\""));
-            Assert.Empty(StoreDataExtensions.GetStoreBlob(new StoreData() {StoreBlob = newBlob}).PaymentMethodCriteria);
+            var newBlob = new Serializer(null).ToString(blob).Replace("paymentMethod\":\"BTC\"", "paymentMethod\":\"ETH_ZYC\"");
+            Assert.Empty(StoreDataExtensions.GetStoreBlob(new StoreData() { StoreBlob = newBlob }).PaymentMethodCriteria);
         }
     }
 }

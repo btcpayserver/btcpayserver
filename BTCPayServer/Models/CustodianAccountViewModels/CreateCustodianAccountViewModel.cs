@@ -9,7 +9,7 @@ namespace BTCPayServer.Models.CustodianAccountViewModels
 {
     public class CreateCustodianAccountViewModel
     {
-        
+
         public void SetCustodianRegistry(IEnumerable<ICustodian> custodianRegistry)
         {
             var choices = custodianRegistry.Select(o => new Format
@@ -20,13 +20,13 @@ namespace BTCPayServer.Models.CustodianAccountViewModels
             var chosen = choices.FirstOrDefault();
             Custodians = new SelectList(choices, nameof(chosen.Value), nameof(chosen.Name), chosen);
         }
-        
+
         class Format
         {
             public string Name { get; set; }
             public string Value { get; set; }
         }
-        
+
         [Required]
         [MaxLength(50)]
         [MinLength(1)]
@@ -41,7 +41,7 @@ namespace BTCPayServer.Models.CustodianAccountViewModels
         public string SelectedCustodian { get; set; }
         //
         public SelectList Custodians { get; set; }
-        
+
         public Form ConfigForm { get; set; }
 
     }

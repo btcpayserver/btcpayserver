@@ -205,6 +205,29 @@ h2 small .fa-question-circle-o {
     margin-top: .5rem;
 }
 
+/* Store header */
+.store-header {
+    --logo-size: 3rem;
+    
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--btcpay-space-s);
+}
+
+.store-header .logo {
+    height: var(--logo-size);
+}
+
+.store-header .logo--square {
+    width: var(--logo-size);
+    border-radius: 50%;
+}
+
+.store-header h1 {
+    font-size: 1.3rem;
+}
+
 /* Print */
 @media print {
     .table td,

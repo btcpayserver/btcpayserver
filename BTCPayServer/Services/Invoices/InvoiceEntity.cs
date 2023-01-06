@@ -442,7 +442,7 @@ namespace BTCPayServer.Services.Invoices
         public InvoiceType Type { get; set; }
 
         public List<RefundData> Refunds { get; set; }
-        
+
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public InvoiceDataBase.ReceiptOptions ReceiptOptions { get; set; }
 
@@ -833,6 +833,17 @@ namespace BTCPayServer.Services.Invoices
                    ((Status == InvoiceStatusLegacy.New || Status == InvoiceStatusLegacy.Expired) && ExceptionStatus == InvoiceExceptionStatus.PaidPartial) ||
                    ((Status == InvoiceStatusLegacy.New || Status == InvoiceStatusLegacy.Expired) && ExceptionStatus == InvoiceExceptionStatus.PaidLate) ||
                    (Status != InvoiceStatusLegacy.Invalid && ExceptionStatus == InvoiceExceptionStatus.Marked);
+        }
+
+        public bool CanRefund()
+        {
+            return Status == InvoiceStatusLegacy.Confirmed ||
+                Status == InvoiceStatusLegacy.Complete ||
+                (Status == InvoiceStatusLegacy.Expired &&
+                (ExceptionStatus == InvoiceExceptionStatus.PaidLate ||
+                ExceptionStatus == InvoiceExceptionStatus.PaidOver ||
+                ExceptionStatus == InvoiceExceptionStatus.PaidPartial)) ||
+                Status == InvoiceStatusLegacy.Invalid;
         }
 
         public override int GetHashCode()

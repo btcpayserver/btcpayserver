@@ -9,17 +9,25 @@ function confirmCopy(el, message) {
     }, 2500);
 }
 
-window.copyToClipboard = function (e, data) {
+window.copyToClipboard = async function (e, data) {
     e.preventDefault();
     const item = e.target.closest('[data-clipboard]') || e.target.closest('[data-clipboard-target]') || e.target;
     const confirm = item.dataset.clipboardConfirmElement
         ? document.getElementById(item.dataset.clipboardConfirmElement) || item
         : item.querySelector('[data-clipboard-confirm]') || item;
     const message = confirm.getAttribute('data-clipboard-confirm') || 'Copied';
-    if (navigator.clipboard) {
-        navigator.clipboard.writeText(data).then(function () {
-            confirmCopy(confirm, message);
-        });
+    // Check compatibility and permissions:
+    // https://web.dev/async-clipboard/#security-and-permissions
+    let hasPermission = true;
+    if (navigator.clipboard && navigator.permissions) {
+        try {
+            const permissionStatus = await navigator.permissions.query({ name: 'clipboard-write', allowWithoutGesture: false });
+            hasPermission = permissionStatus.state === 'granted';
+        } catch (err) {}
+    }
+    if (navigator.clipboard && hasPermission) {
+        await navigator.clipboard.writeText(data);
+        confirmCopy(confirm, message);
     } else {
         const copyEl = document.createElement('textarea');
         copyEl.style.position = 'absolute';

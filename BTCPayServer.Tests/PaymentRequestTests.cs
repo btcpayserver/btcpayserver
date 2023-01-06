@@ -53,7 +53,7 @@ namespace BTCPayServer.Tests
 
             // Permission guard for guests editing 
             Assert
-                .IsType<NotFoundResult>(guestpaymentRequestController.EditPaymentRequest(user.StoreId, id));
+                .IsType<NotFoundResult>(await guestpaymentRequestController.EditPaymentRequest(user.StoreId, id));
 
             request.Title = "update";
             Assert.IsType<RedirectToActionResult>(await paymentRequestController.EditPaymentRequest(id, request));

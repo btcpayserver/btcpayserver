@@ -47,17 +47,7 @@
   "Pay with CoinSwitch": "Pay with CoinSwitch",
   "Pay with Changelly": "Pay with Changelly",
   "Close": "Close",
-  "NotPaid_ExtraTransaction": "The invoice hasn't been paid in full. Please send another transaction to cover amount due.",
+  "NotPaid_ExtraTransaction": "The invoice hasn't been paid in full. Please send another transaction to cover amount Due.",
   "Recommended_Fee": "Recommended fee: {{feeRate}} sat/byte",
-  "View receipt": "View receipt",
-  "View Details": "View Details",
-  "QR_Text": "Scan the QR code, or tap to copy the address.",
-  "Total Price": "Total Price",
-  "Exchange Rate": "Exchange Rate",
-  "Recommended Fee": "Recommended Fee",
-  "Feerate": "{{feeRate}} sat/byte",
-  "Amount Paid": "Amount Paid",
-  "Amount Due": "Amount Due",
-  "Pay in wallet": "Pay in wallet",
-  "Invoice paid": "Invoice paid"
+  "View receipt": "View receipt"
 }

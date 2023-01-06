@@ -1,4 +1,4 @@
-﻿using BTCPayServer.Data.Data;
+using BTCPayServer.Data.Data;
 using BTCPayServer.Payments;
 using BTCPayServer.PayoutProcessors.Lightning;
 using BTCPayServer.PayoutProcessors.OnChain;
@@ -14,9 +14,8 @@ public static class PayoutProcessorsExtensions
         serviceCollection.AddSingleton<IPayoutProcessorFactory>(provider => provider.GetRequiredService<OnChainAutomatedPayoutSenderFactory>());
         serviceCollection.AddSingleton<LightningAutomatedPayoutSenderFactory>();
         serviceCollection.AddSingleton<IPayoutProcessorFactory>(provider => provider.GetRequiredService<LightningAutomatedPayoutSenderFactory>());
-        serviceCollection.AddHostedService<PayoutProcessorService>();
         serviceCollection.AddSingleton<PayoutProcessorService>();
-        serviceCollection.AddHostedService(s=> s.GetRequiredService<PayoutProcessorService>());
+        serviceCollection.AddHostedService(s => s.GetRequiredService<PayoutProcessorService>());
     }
 
     public static PaymentMethodId GetPaymentMethodId(this PayoutProcessorData data)

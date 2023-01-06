@@ -14,7 +14,7 @@
     <option name="PROJECT_KIND" value="DotNetCore" />
     <option name="PROJECT_TFM" value=".NETCoreApp,Version=v3.1" />
     <method v="2">
-      <option name="Build" default="false" projectName="BTCPayServer.Plugins.Test" projectPath="C:\Git\btcpayserver\BTCPayServer.Plugins.Test\BTCPayServer.Plugins.Test.csproj" />
+      <option name="Build" default="false" projectName="BTCPayServer.Plugins.Test" projectPath="C:\Git\btcpayserver\Plugins\BTCPayServer.Plugins.Test\BTCPayServer.Plugins.Test.csproj" />
       <option name="Build" />
     </method>
   </configuration>

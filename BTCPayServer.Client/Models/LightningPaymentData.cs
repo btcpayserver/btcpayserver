@@ -17,12 +17,12 @@ namespace BTCPayServer.Client.Models
 
         [JsonProperty("BOLT11")]
         public string BOLT11 { get; set; }
-        
+
         public string Preimage { get; set; }
 
         [JsonConverter(typeof(NBitcoin.JsonConverters.DateTimeToUnixTimeConverter))]
         public DateTimeOffset? CreatedAt { get; set; }
-        
+
         [JsonConverter(typeof(LightMoneyJsonConverter))]
         public LightMoney TotalAmount { get; set; }
 

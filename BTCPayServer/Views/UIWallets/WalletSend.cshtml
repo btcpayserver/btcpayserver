@@ -104,14 +104,14 @@
                 </div>
             </div>
             <span asp-validation-for="Outputs[0].Amount" class="text-danger"></span>
-            <p class="form-text text-secondary mb-0 crypto-info">
+            <div class="form-text crypto-info">
                 Your available balance is
                 <button type="button" class="crypto-balance-link btn btn-link p-0 align-baseline">@Model.CurrentBalance</button> <span>@Model.CryptoCode</span>.
                 @if (Model.ImmatureBalance > 0)
                 {
                     <span><br><span class="text-warning">⚠</span> @Model.ImmatureBalance @Model.CryptoCode are still immature and require additional confirmations.</span>
                 }
-            </p>
+            </div>
         </div>
     }
     else
@@ -141,14 +141,14 @@
                                 <span class="input-group-text p-0 border-0">@Model.Fiat</span>
                             </div>
                         </div>
-                        <p class="form-text text-secondary crypto-info mb-2">
+                        <div class="form-text crypto-info">
                             Your available balance is
                             <button type="button" class="crypto-balance-link btn btn-link p-0 align-baseline">@Model.CurrentBalance</button> <span>@Model.CryptoCode</span>.
                             @if (Model.ImmatureBalance > 0)
                             {
                                 <span><br>Note: @Model.ImmatureBalance @Model.CryptoCode are still immature and require additional confirmations.</span>
                             }
-                        </p>
+                        </div>
                         <span asp-validation-for="Outputs[index].Amount" class="text-danger"></span>
                     </div>
                     <div class="form-check">

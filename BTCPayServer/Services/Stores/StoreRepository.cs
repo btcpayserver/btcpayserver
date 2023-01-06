@@ -135,7 +135,8 @@ namespace BTCPayServer.Services.Stores
             await using var ctx = _ContextFactory.CreateContext();
             if (!await ctx.UserStore.AnyAsync(store =>
                     store.StoreDataId == storeId && store.Role == StoreRoles.Owner &&
-                    userId != store.ApplicationUserId)) return false;
+                    userId != store.ApplicationUserId))
+                return false;
             var userStore = new UserStore() { StoreDataId = storeId, ApplicationUserId = userId };
             ctx.UserStore.Add(userStore);
             ctx.Entry(userStore).State = EntityState.Deleted;
@@ -188,7 +189,7 @@ namespace BTCPayServer.Services.Stores
             blob.DefaultCurrency = defaultCurrency;
             blob.PreferredExchange = preferredExchange;
             store.SetStoreBlob(blob);
-            
+
             await CreateStore(ownerId, store);
             return store;
         }
@@ -309,7 +310,7 @@ namespace BTCPayServer.Services.Stores
                 .FirstOrDefaultAsync();
             if (hook is null)
                 return;
-            
+
             if (string.IsNullOrEmpty(webhookBlob.Secret))
             {
                 webhookBlob.Secret = hook.GetBlob().Secret;
@@ -358,7 +359,7 @@ namespace BTCPayServer.Services.Stores
             foreach (var w in webhooks)
                 ctx.Webhooks.Remove(w);
             ctx.Stores.Remove(store);
-            retry:
+retry:
             try
             {
                 await ctx.SaveChangesAsync();

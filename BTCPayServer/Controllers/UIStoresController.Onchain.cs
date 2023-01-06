@@ -89,17 +89,17 @@ namespace BTCPayServer.Controllers
 
             if (vm.WalletFile != null)
             {
-                if (!DerivationSchemeSettings.TryParseFromWalletFile(await ReadAllText(vm.WalletFile), network, out strategy))
+                if (!DerivationSchemeSettings.TryParseFromWalletFile(await ReadAllText(vm.WalletFile), network, out strategy, out var error))
                 {
-                    ModelState.AddModelError(nameof(vm.WalletFile), "Wallet file was not in the correct format");
+                    ModelState.AddModelError(nameof(vm.WalletFile), $"Importing wallet failed: {error}");
                     return View(vm.ViewName, vm);
                 }
             }
             else if (!string.IsNullOrEmpty(vm.WalletFileContent))
             {
-                if (!DerivationSchemeSettings.TryParseFromWalletFile(vm.WalletFileContent, network, out strategy))
+                if (!DerivationSchemeSettings.TryParseFromWalletFile(vm.WalletFileContent, network, out strategy, out var error))
                 {
-                    ModelState.AddModelError(nameof(vm.WalletFileContent), "QR import was not in the correct format");
+                    ModelState.AddModelError(nameof(vm.WalletFileContent), $"QR import failed: {error}");
                     return View(vm.ViewName, vm);
                 }
             }
@@ -451,13 +451,13 @@ namespace BTCPayServer.Controllers
             bool enabledChanged = currentlyEnabled != vm.Enabled;
             bool needUpdate = enabledChanged;
             string errorMessage = null;
-            
+
             if (enabledChanged)
             {
                 storeBlob.SetExcluded(derivation.PaymentId, !vm.Enabled);
                 store.SetStoreBlob(storeBlob);
             }
-            
+
             if (derivation.Label != vm.Label)
             {
                 needUpdate = true;
@@ -527,7 +527,7 @@ namespace BTCPayServer.Controllers
                         _EventAggregator.Publish(new WalletChangedEvent { WalletId = new WalletId(vm.StoreId, vm.CryptoCode) });
                         successMessage += $" {vm.CryptoCode} on-chain payments are now {(vm.Enabled ? "enabled" : "disabled")} for this store.";
                     }
-                
+
                     TempData[WellKnownTempData.SuccessMessage] = successMessage;
                 }
                 else

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.Metadata;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
@@ -15,6 +16,7 @@ using BTCPayServer.Services.PaymentRequests;
 using BTCPayServer.Services.Rates;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using PaymentRequestData = BTCPayServer.Data.PaymentRequestData;
@@ -30,6 +32,7 @@ namespace BTCPayServer.Controllers.Greenfield
         private readonly UIInvoiceController _invoiceController;
         private readonly PaymentRequestRepository _paymentRequestRepository;
         private readonly CurrencyNameTable _currencyNameTable;
+        private readonly UserManager<ApplicationUser> _userManager;
         private readonly LinkGenerator _linkGenerator;
 
         public GreenfieldPaymentRequestsController(
@@ -38,6 +41,7 @@ namespace BTCPayServer.Controllers.Greenfield
             PaymentRequestRepository paymentRequestRepository,
             PaymentRequestService paymentRequestService,
             CurrencyNameTable currencyNameTable,
+            UserManager<ApplicationUser> userManager,
             LinkGenerator linkGenerator)
         {
             _InvoiceRepository = invoiceRepository;
@@ -45,6 +49,7 @@ namespace BTCPayServer.Controllers.Greenfield
             _paymentRequestRepository = paymentRequestRepository;
             PaymentRequestService = paymentRequestService;
             _currencyNameTable = currencyNameTable;
+            _userManager = userManager;
             _linkGenerator = linkGenerator;
         }
 
@@ -152,7 +157,7 @@ namespace BTCPayServer.Controllers.Greenfield
         public async Task<IActionResult> CreatePaymentRequest(string storeId,
             CreatePaymentRequestRequest request)
         {
-            var validationResult = Validate(request);
+            var validationResult = await Validate(null, request);
             if (validationResult != null)
             {
                 return validationResult;
@@ -178,7 +183,7 @@ namespace BTCPayServer.Controllers.Greenfield
         public async Task<IActionResult> UpdatePaymentRequest(string storeId,
             string paymentRequestId, [FromBody] UpdatePaymentRequestRequest request)
         {
-            var validationResult = Validate(request);
+            var validationResult = await Validate(paymentRequestId, request);
             if (validationResult != null)
             {
                 return validationResult;
@@ -196,11 +201,22 @@ namespace BTCPayServer.Controllers.Greenfield
 
             return Ok(FromModel(await _paymentRequestRepository.CreateOrUpdatePaymentRequest(updatedPr)));
         }
+        private string GetUserId() => _userManager.GetUserId(User);
 
-        private IActionResult Validate(PaymentRequestBaseData data)
+        private async Task<IActionResult> Validate(string id, PaymentRequestBaseData data)
         {
             if (data is null)
                 return BadRequest();
+
+            if (id != null)
+            {
+                var pr = await this.PaymentRequestService.GetPaymentRequest(id, GetUserId());
+                if (pr.Amount != data.Amount)
+                {
+                    if (pr.Invoices.Any())
+                        ModelState.AddModelError(nameof(data.Amount), "Amount and currency are not editable once payment request has invoices");
+                }
+            }
             if (data.Amount <= 0)
             {
                 ModelState.AddModelError(nameof(data.Amount), "Please provide an amount greater than 0");

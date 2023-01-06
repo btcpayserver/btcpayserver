@@ -23,12 +23,12 @@ namespace BTCPayServer.Controllers.GreenField
         private readonly EmailSenderFactory _emailSenderFactory;
         private readonly StoreRepository _storeRepository;
 
-        public GreenfieldStoreEmailController(EmailSenderFactory  emailSenderFactory, StoreRepository storeRepository)
+        public GreenfieldStoreEmailController(EmailSenderFactory emailSenderFactory, StoreRepository storeRepository)
         {
             _emailSenderFactory = emailSenderFactory;
             _storeRepository = storeRepository;
         }
-        
+
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpPost("~/api/v1/stores/{storeId}/email/send")]
         public async Task<IActionResult> SendEmailFromStore(string storeId,
@@ -47,17 +47,17 @@ namespace BTCPayServer.Controllers.GreenField
             var emailSender = await _emailSenderFactory.GetEmailSender(storeId);
             if (emailSender is null)
             {
-                return this.CreateAPIError(404,"smtp-not-configured", "Store does not have an SMTP server configured.");
+                return this.CreateAPIError(404, "smtp-not-configured", "Store does not have an SMTP server configured.");
             }
             emailSender.SendEmail(to, request.Subject, request.Body);
             return Ok();
         }
-        
+
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/email")]
         public IActionResult GetStoreEmailSettings()
         {
-            
+
             var store = HttpContext.GetStoreData();
             return store == null ? StoreNotFound() : Ok(FromModel(store));
         }
@@ -89,7 +89,7 @@ namespace BTCPayServer.Controllers.GreenField
         }
         private EmailSettings FromModel(Data.StoreData data)
         {
-            return data.GetStoreBlob().EmailSettings??new();
+            return data.GetStoreBlob().EmailSettings ?? new();
         }
         private IActionResult StoreNotFound()
         {

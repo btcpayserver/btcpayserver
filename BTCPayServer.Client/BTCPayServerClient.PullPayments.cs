@@ -52,17 +52,17 @@ namespace BTCPayServer.Client
         {
             var response = await _httpClient.SendAsync(CreateHttpRequest($"api/v1/pull-payments/{HttpUtility.UrlEncode(pullPaymentId)}/payouts", bodyPayload: payoutRequest, method: HttpMethod.Post), cancellationToken);
             return await HandleResponse<PayoutData>(response);
-        } 
+        }
         public virtual async Task<PayoutData> GetPullPaymentPayout(string pullPaymentId, string payoutId, CancellationToken cancellationToken = default)
         {
             var response = await _httpClient.SendAsync(CreateHttpRequest($"api/v1/pull-payments/{HttpUtility.UrlEncode(pullPaymentId)}/payouts/{payoutId}", method: HttpMethod.Get), cancellationToken);
             return await HandleResponse<PayoutData>(response);
-        } 
+        }
         public virtual async Task<PayoutData> GetStorePayout(string storeId, string payoutId, CancellationToken cancellationToken = default)
         {
             var response = await _httpClient.SendAsync(CreateHttpRequest($"api/v1/stores/{storeId}/payouts/{payoutId}", method: HttpMethod.Get), cancellationToken);
             return await HandleResponse<PayoutData>(response);
-        } 
+        }
         public virtual async Task<PayoutData> CreatePayout(string storeId, CreatePayoutThroughStoreRequest payoutRequest, CancellationToken cancellationToken = default)
         {
             var response = await _httpClient.SendAsync(CreateHttpRequest($"api/v1/stores/{storeId}/payouts", bodyPayload: payoutRequest, method: HttpMethod.Post), cancellationToken);

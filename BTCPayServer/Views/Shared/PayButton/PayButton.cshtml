@@ -1,14 +1,7 @@
-@inject Security.ContentSecurityPolicies csp 
 @using BTCPayServer.Views.Stores
 @model BTCPayServer.Plugins.PayButton.Models.PayButtonViewModel
 @{
     ViewData.SetActivePage(StoreNavPages.PayButton, "Pay Button", Context.GetStoreData().Id);
-    csp.AllowUnsafeHashes("onBTCPayFormSubmit(event);return false");
-    csp.AllowUnsafeHashes("handleSliderChange(event);return false");
-    csp.AllowUnsafeHashes("handleSliderInput(event);return false");
-    csp.AllowUnsafeHashes("handlePriceSlider(event);return false");
-    csp.AllowUnsafeHashes("handlePriceInput(event);return false");
-    csp.AllowUnsafeHashes("handlePlusMinus(event);return false");
 }
 
 @section PageHeadContent {
@@ -19,7 +12,6 @@
     <script src="~/vendor/highlightjs/highlight.min.js" asp-append-version="true"></script>
     <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
     <script src="~/vendor/vuejs-vee-validate/vee-validate.js" asp-append-version="true"></script>
-    <script src="~/vendor/clipboard.js/clipboard.js" asp-append-version="true"></script>
     <script src="~/paybutton/paybutton.js" asp-append-version="true"></script>
     <template id="template-modal" csp-allow>
     if (!window.btcpay) {
@@ -27,7 +19,7 @@
         script.src = @(Safe.Json(Model.UrlRoot + "modal/btcpay.js"));
         document.getElementsByTagName('head')[0].append(script);
     }
-    function onBTCPayFormSubmit(event) {
+    function handleFormSubmit(event) {
         event.preventDefault();
         var xhttp = new XMLHttpRequest();
         xhttp.onreadystatechange = function() {
@@ -38,6 +30,12 @@
         xhttp.open('POST', event.target.getAttribute('action'), true);
         xhttp.send(new FormData(event.target));
     }
+    document.querySelectorAll(".btcpay-form").forEach(function(el) {
+        if (!el.dataset.initialized) {
+            el.addEventListener('submit', handleFormSubmit);
+            el.dataset.initialized = true;
+        }
+    });
     </template>
     <template id="template-price-buttons" csp-allow>
     function handlePlusMinus(event) {
@@ -55,6 +53,12 @@
             el.value = price + step > max ? max : price + step;
         }
     }
+    document.querySelectorAll(".btcpay-form .plus-minus").forEach(function(el) {
+        if (!el.dataset.initialized) {
+            el.addEventListener('click', handlePlusMinus);
+            el.dataset.initialized = true;
+        }
+    });
     </template>
     <template id="template-price-input" csp-allow>
     function handlePriceInput(event) {
@@ -70,6 +74,12 @@
             event.target.value = max;
         }
     }
+    document.querySelectorAll(".btcpay-form .btcpay-input-price").forEach(function(el) {
+        if (!el.dataset.initialized) {
+            el.addEventListener('input', handlePriceInput);
+            el.dataset.initialized = true;
+        }
+    });
     </template>
     <template id="template-price-slider" csp-allow>
     function handleSliderChange(event) {
@@ -86,12 +96,22 @@
         } 
         root.querySelector('.btcpay-input-range').value = el.value;
     }
-    
     function handleSliderInput(event) {
         event.target.closest('.btcpay-form').querySelector('.btcpay-input-price').value = event.target.value;
     }
+    document.querySelectorAll(".btcpay-form .btcpay-input-range").forEach(function(el) {
+        if (!el.dataset.initialized) {
+            el.addEventListener('input', handleSliderInput);
+            el.dataset.initialized = true;
+        }
+    });
+    document.querySelectorAll(".btcpay-form .btcpay-input-price").forEach(function(el) {
+        if (!el.dataset.initialized) {
+            el.addEventListener('change', handleSliderChange);
+            el.dataset.initialized = true;
+        }
+    });
     </template>
-    
     
     <script>
         const srvModel = @Safe.Json(Model);
@@ -305,9 +325,7 @@
                        v-model="srvModel.serverIpn" v-on:change="inputChanges"
                        v-validate="'url'" :class="{'is-invalid': errors.has('serverIpn') }">
                 <small class="text-danger">{{ errors.first('serverIpn') }}</small>
-                <p class="form-text text-muted">
-                    The URL to post purchase data.
-                </p>
+                <div class="form-text">The URL to post purchase data.</div>
             </div>
             <div class="form-group" v-if="!srvModel.appIdEndpoint">
                 <label class="form-label" for="email-notifications">Email Notifications</label>
@@ -316,9 +334,7 @@
                        v-model="srvModel.notifyEmail" v-on:change="inputChanges"
                        v-validate="'email'" :class="{'is-invalid': errors.has('notifyEmail') }">
                 <small class="text-danger">{{ errors.first('notifyEmail') }}</small>
-                <p class="form-text text-muted">
-                    Receive email notification updates.
-                </p>
+                <div class="form-text">Receive email notification updates.</div>
             </div>
             <div class="form-group">
                 <label class="form-label" for="browser-redirect">Browser Redirect</label>
@@ -326,9 +342,7 @@
                        v-model="srvModel.browserRedirect" v-on:change="inputChanges"
                        v-validate="'url'" :class="{'is-invalid': errors.has('browserRedirect') }">
                 <small class="text-danger">{{ errors.first('browserRedirect') }}</small>
-                <p class="form-text text-muted">
-                    Where to redirect the customer after payment is complete.
-                </p>
+                <div class="form-text">Where to redirect the customer after payment is complete</div>
             </div>
         </div>
     </div>

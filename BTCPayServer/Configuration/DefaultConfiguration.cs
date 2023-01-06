@@ -27,9 +27,9 @@ namespace BTCPayServer.Configuration
             app.Option("--signet | -signet", $"Use signet (deprecated, use --network instead)", CommandOptionType.BoolValue);
             app.Option("--chains | -c", $"Chains to support as a comma separated (default: btc; available: {chains})", CommandOptionType.SingleValue);
             app.Option("--postgres", $"Connection string to a PostgreSQL database", CommandOptionType.SingleValue);
-            app.Option("--mysql", $"Connection string to a MySQL database", CommandOptionType.SingleValue);
+            app.Option("--mysql", $"DEPRECATED: Connection string to a MySQL database", CommandOptionType.SingleValue);
             app.Option("--nocsp", $"Disable CSP (default false)", CommandOptionType.BoolValue);
-            app.Option("--sqlitefile", $"File name to an SQLite database file inside the data directory", CommandOptionType.SingleValue);
+            app.Option("--sqlitefile", $"DEPRECATED: File name to an SQLite database file inside the data directory", CommandOptionType.SingleValue);
             app.Option("--externalservices", $"Links added to external services inside Server Settings / Services under the format service1:path2;service2:path2.(default: empty)", CommandOptionType.SingleValue);
             app.Option("--rootpath", "The root path in the URL to access BTCPay (default: /)", CommandOptionType.SingleValue);
             app.Option("--sshconnection", "SSH server to manage BTCPay under the form user@server:port (default: root@externalhost or empty)", CommandOptionType.SingleValue);

@@ -41,11 +41,11 @@ namespace BTCPayServer.Services
         public async Task<List<ApplicationUserData>> GetUsersWithRoles()
         {
             await using var context = _applicationDbContextFactory.CreateContext();
-            return await  (context.Users.Select(p => FromModel(p, p.UserRoles.Join(context.Roles, userRole => userRole.RoleId, role => role.Id,
-                (userRole, role) => role.Name).ToArray()))).ToListAsync();
+            return await (context.Users.Select(p => FromModel(p, p.UserRoles.Join(context.Roles, userRole => userRole.RoleId, role => role.Id,
+               (userRole, role) => role.Name).ToArray()))).ToListAsync();
         }
-        
-        
+
+
         public static ApplicationUserData FromModel(ApplicationUser data, string[] roles)
         {
             return new ApplicationUserData()
@@ -65,12 +65,12 @@ namespace BTCPayServer.Services
             return user.LockoutEnabled && user.LockoutEnd is not null &&
                    DateTimeOffset.UtcNow < user.LockoutEnd.Value.UtcDateTime;
         }
-        public async Task ToggleUser(string userId, DateTimeOffset? lockedOutDeadline)
+        public async Task<bool?> ToggleUser(string userId, DateTimeOffset? lockedOutDeadline)
         {
             var user = await _userManager.FindByIdAsync(userId);
             if (user is null)
             {
-                return;
+                return null;
             }
             if (lockedOutDeadline is not null)
             {
@@ -86,7 +86,8 @@ namespace BTCPayServer.Services
             {
                 _logger.LogError($"Failed to set lockout for user {user.Id}");
             }
-            
+
+            return res.Succeeded;
         }
 
         public async Task<bool> IsAdminUser(string userId)
@@ -143,7 +144,7 @@ namespace BTCPayServer.Services
             else
             {
                 _logger.LogError($"Failed to delete user {user.Id}");
-            } 
+            }
 
             await _storeRepository.CleanUnreachableStores();
         }

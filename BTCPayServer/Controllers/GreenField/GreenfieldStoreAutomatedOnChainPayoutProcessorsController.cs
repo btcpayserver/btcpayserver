@@ -42,9 +42,9 @@ namespace BTCPayServer.Controllers.Greenfield
                 await _payoutProcessorService.GetProcessors(
                     new PayoutProcessorService.PayoutProcessorQuery()
                     {
-                        Stores = new[] {storeId},
-                        Processors = new[] {OnChainAutomatedPayoutSenderFactory.ProcessorName},
-                        PaymentMethods = paymentMethod is null ? null : new[] {paymentMethod}
+                        Stores = new[] { storeId },
+                        Processors = new[] { OnChainAutomatedPayoutSenderFactory.ProcessorName },
+                        PaymentMethods = paymentMethod is null ? null : new[] { paymentMethod }
                     });
 
             return Ok(configured.Select(ToModel).ToArray());
@@ -65,7 +65,7 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             return new OnChainAutomatedPayoutBlob()
             {
-                FeeTargetBlock = data.FeeBlockTarget ?? 1, 
+                FeeTargetBlock = data.FeeBlockTarget ?? 1,
                 Interval = data.IntervalSeconds
             };
         }
@@ -81,9 +81,9 @@ namespace BTCPayServer.Controllers.Greenfield
                 (await _payoutProcessorService.GetProcessors(
                     new PayoutProcessorService.PayoutProcessorQuery()
                     {
-                        Stores = new[] {storeId},
-                        Processors = new[] {OnChainAutomatedPayoutSenderFactory.ProcessorName},
-                        PaymentMethods = new[] {paymentMethod}
+                        Stores = new[] { storeId },
+                        Processors = new[] { OnChainAutomatedPayoutSenderFactory.ProcessorName },
+                        PaymentMethods = new[] { paymentMethod }
                     }))
                 .FirstOrDefault();
             activeProcessor ??= new PayoutProcessorData();
@@ -94,7 +94,9 @@ namespace BTCPayServer.Controllers.Greenfield
             var tcs = new TaskCompletionSource();
             _eventAggregator.Publish(new PayoutProcessorUpdated()
             {
-                Data = activeProcessor, Id = activeProcessor.Id, Processed = tcs
+                Data = activeProcessor,
+                Id = activeProcessor.Id,
+                Processed = tcs
             });
             await tcs.Task;
             return Ok(ToModel(activeProcessor));

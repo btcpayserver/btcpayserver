@@ -12,7 +12,7 @@ public interface ICustodian
      * Get the unique code that identifies this custodian.
      */
     string Code { get; }
-    
+
     string Name { get; }
 
     /**

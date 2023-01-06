@@ -77,7 +77,7 @@ public class MockCustodian : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
     public List<AssetPairData> GetTradableAssetPairs()
     {
         var r = new List<AssetPairData>();
-        r.Add(new AssetPairData("BTC", "EUR", (decimal) 0.0001));
+        r.Add(new AssetPairData("BTC", "EUR", (decimal)0.0001));
         return r;
     }
 

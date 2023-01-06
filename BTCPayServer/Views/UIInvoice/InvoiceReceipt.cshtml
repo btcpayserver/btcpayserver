@@ -5,10 +5,12 @@
 @inject BTCPayServer.Services.BTCPayServerEnvironment env
 @inject BTCPayServer.Services.ThemeSettings Theme
 @inject CurrencyNameTable CurrencyNameTable
+@using BTCPayServer.Abstractions.Contracts
+@inject IFileService FileService
 
 @{
     Layout = null;
-    ViewData["Title"] = $"Receipt from {Model.StoreName}";
+    ViewData["Title"] = Model.StoreName;
     var isProcessing = Model.Status == InvoiceStatus.Processing;
     var isSettled = Model.Status == InvoiceStatus.Settled;
 }
@@ -37,7 +39,13 @@
                 <partial name="_StatusMessage" model="@(new ViewDataDictionary(ViewData) { { "Margin", "mb-4" } })"/>
                 
                 <div class="d-flex flex-column justify-content-center gap-4">
-                    <h1 class="h3 text-center">@ViewData["Title"]</h1>
+                    <header class="store-header">
+                        @if (!string.IsNullOrEmpty(Model.StoreLogoFileId))
+                        {
+                            <img src="@(await FileService.GetFileUrl(Context.Request.GetAbsoluteRootUri(), Model.StoreLogoFileId))" alt="@Model.StoreName" class="logo @(!string.IsNullOrEmpty(Model.StoreLogoFileId) ? "logo--square" : "")" />
+                        }
+                        <h1>@ViewData["Title"]</h1>
+                    </header>
                     <div id="InvoiceSummary" class="bg-tile p-3 p-sm-4 rounded d-flex flex-wrap align-items-center">
                         @if (isProcessing)
                         {

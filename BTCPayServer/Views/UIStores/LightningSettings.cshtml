@@ -75,10 +75,10 @@
                         <label asp-for="LightningDescriptionTemplate" class="form-label"></label>
                         <input asp-for="LightningDescriptionTemplate" class="form-control"/>
                         <span asp-validation-for="LightningDescriptionTemplate" class="text-danger"></span>
-                        <p class="form-text text-muted">
+                        <div class="form-text">
                             Available placeholders:
                             <code>{StoreName} {ItemDescription} {OrderId}</code>
-                        </p>
+                        </div>
                     </div>
                     
                     <h3 class="mt-5 mb-3" id="ln-url">LNURL</h3>
@@ -94,8 +94,7 @@
                                 <div class="">
                                     <label asp-for="LNURLBech32Mode" class="form-label mb-0 me-1"></label>
                                     <span asp-validation-for="LNURLBech32Mode" class="text-danger"></span>
-
-                                    <p class="form-text text-muted mb-0">For wallet compatibility: Bech32 encoded (classic) vs. cleartext URL (upcoming)</p>
+                                    <div class="form-text">For wallet compatibility: Bech32 encoded (classic) vs. cleartext URL (upcoming)</div>
                                 </div>
                             </label>
                         </div>
@@ -105,7 +104,7 @@
                                 <input type="checkbox" asp-for="LNURLStandardInvoiceEnabled" class="btcpay-toggle me-3" />
                                 <div class="">
                                     <label asp-for="LNURLStandardInvoiceEnabled" class="form-label mb-0 me-1"></label>
-                                    <p class="form-text text-muted mb-0">Required for Lightning Address, the pay button and apps.</p>
+                                    <div class="form-text">Required for Lightning Address, the pay button and apps.</div>
                                 </div>
                             </label>
                         </div>
@@ -115,7 +114,7 @@
                                 <input type="checkbox" asp-for="DisableBolt11PaymentMethod" class="btcpay-toggle me-3" />
                                 <div class="">
                                     <label asp-for="DisableBolt11PaymentMethod" class="form-label mb-0 me-1"></label>
-                                    <p class="form-text text-muted mb-0">Performance: Turn it off if users should pay only via LNURL.</p>
+                                    <div class="form-text">Performance: Turn it off if users should pay only via LNURL.</div>
                                 </div>
                             </label>
                         </div>

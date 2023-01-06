@@ -47,26 +47,29 @@ public class StoreLightningBalance : ViewComponent
 
     public async Task<IViewComponentResult> InvokeAsync(StoreLightningBalanceViewModel vm)
     {
-        if (vm.Store == null) throw new ArgumentNullException(nameof(vm.Store));
-        if (vm.CryptoCode == null) throw new ArgumentNullException(nameof(vm.CryptoCode));
-        
+        if (vm.Store == null)
+            throw new ArgumentNullException(nameof(vm.Store));
+        if (vm.CryptoCode == null)
+            throw new ArgumentNullException(nameof(vm.CryptoCode));
+
         vm.DefaultCurrency = vm.Store.GetStoreBlob().DefaultCurrency;
         vm.CurrencyData = _currencies.GetCurrencyData(vm.DefaultCurrency, true);
 
-        if (vm.InitialRendering) return View(vm);
-        
+        if (vm.InitialRendering)
+            return View(vm);
+
         try
         {
             var lightningClient = GetLightningClient(vm.Store, vm.CryptoCode);
             var balance = await lightningClient.GetBalance();
             vm.Balance = balance;
             vm.TotalOnchain = balance.OnchainBalance != null
-                ? (balance.OnchainBalance.Confirmed?? 0L) + (balance.OnchainBalance.Reserved ?? 0L) +
+                ? (balance.OnchainBalance.Confirmed ?? 0L) + (balance.OnchainBalance.Reserved ?? 0L) +
                   (balance.OnchainBalance.Unconfirmed ?? 0L)
                 : null;
             vm.TotalOffchain = balance.OffchainBalance != null
-                ? (balance.OffchainBalance.Opening?? 0) + (balance.OffchainBalance.Local?? 0) +
-                  (balance.OffchainBalance.Closing?? 0)
+                ? (balance.OffchainBalance.Opening ?? 0) + (balance.OffchainBalance.Local ?? 0) +
+                  (balance.OffchainBalance.Closing ?? 0)
                 : null;
         }
         catch (NotSupportedException)
@@ -81,7 +84,7 @@ public class StoreLightningBalance : ViewComponent
         }
         return View(vm);
     }
-    
+
     private ILightningClient GetLightningClient(StoreData store, string cryptoCode)
     {
         var network = _networkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
@@ -89,9 +92,10 @@ public class StoreLightningBalance : ViewComponent
         var existing = store.GetSupportedPaymentMethods(_networkProvider)
             .OfType<LightningSupportedPaymentMethod>()
             .FirstOrDefault(d => d.PaymentId == id);
-        if (existing == null) return null;
-        
-        if (existing.GetExternalLightningUrl() is {} connectionString)
+        if (existing == null)
+            return null;
+
+        if (existing.GetExternalLightningUrl() is { } connectionString)
         {
             return _lightningClientFactory.Create(connectionString, network);
         }

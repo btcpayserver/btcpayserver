@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
@@ -17,7 +16,6 @@ using BTCPayServer.Data.Payouts.LightningLike;
 using BTCPayServer.Events;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Lightning;
-using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Plugins.PointOfSale.Models;
@@ -31,7 +29,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using NBitcoin;
-using NBitcoin.Crypto;
 using Newtonsoft.Json;
 using MarkPayoutRequest = BTCPayServer.HostedServices.MarkPayoutRequest;
 
@@ -528,7 +525,7 @@ namespace BTCPayServer
                 if ((i.ReceiptOptions?.Enabled ?? blob.ReceiptOptions.Enabled) is true)
                 {
                     successAction =
-                        new LNURLPayRequest.LNURLPayRequestCallbackResponse.LNURLPayRequestSuccessActionUrl()
+                        new LNURLPayRequest.LNURLPayRequestCallbackResponse.LNURLPayRequestSuccessActionUrl
                         {
                             Tag = "url",
                             Description = "Thank you for your purchase. Here is your receipt",
@@ -582,16 +579,17 @@ namespace BTCPayServer
                             return BadRequest(new LNUrlStatusResponse
                             {
                                 Status = "ERROR",
-                                Reason = "Lightning node could not generate invoice with a VALID description hash"
+                                Reason = "Lightning node could not generate invoice with a valid description hash"
                             });
                         }
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
                         return BadRequest(new LNUrlStatusResponse
                         {
                             Status = "ERROR",
-                            Reason = "Lightning node could not generate invoice with description hash"
+                            Reason = "Lightning node could not generate invoice with description hash" + (
+                                string.IsNullOrEmpty(ex.Message) ? "" : $": {ex.Message}")
                         });
                     }
 
@@ -643,8 +641,7 @@ namespace BTCPayServer
                 Reason = "Invoice not in a valid payable state"
             });
         }
-
-
+        
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [HttpGet("~/stores/{storeId}/plugins/lightning-address")]

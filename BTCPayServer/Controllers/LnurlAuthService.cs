@@ -63,13 +63,12 @@ namespace BTCPayServer
                     return false;
                 }
 
-                if (!global::LNURL.LNAuthRequest.VerifyChallenge(sig, pubKey, k1))
+                if (!LNURL.LNAuthRequest.VerifyChallenge(sig, pubKey, k1))
                 {
                     return false;
                 }
 
                 var newCredential = new Fido2Credential() { Name = name, ApplicationUserId = userId, Type = Fido2Credential.CredentialType.LNURLAuth, Blob = pubkeyBytes };
-
                 await dbContext.Fido2Credentials.AddAsync(newCredential);
                 await dbContext.SaveChangesAsync();
                 CreationStore.Remove(userId, out _);
@@ -131,7 +130,7 @@ namespace BTCPayServer
             {
                 return false;
             }
-            if (!global::LNURL.LNAuthRequest.VerifyChallenge(sig, pubKey, k1))
+            if (!LNURL.LNAuthRequest.VerifyChallenge(sig, pubKey, k1))
             {
                 return false;
             }

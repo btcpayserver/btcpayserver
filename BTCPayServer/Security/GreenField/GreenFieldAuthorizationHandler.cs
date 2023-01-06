@@ -31,7 +31,7 @@ namespace BTCPayServer.Security.Greenfield
         }
         protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, PolicyRequirement requirement)
         {
-            var withuser  = context.User.Identity?.AuthenticationType == $"Local{GreenfieldConstants.AuthenticationType}WithUser";
+            var withuser = context.User.Identity?.AuthenticationType == $"Local{GreenfieldConstants.AuthenticationType}WithUser";
             if (withuser)
             {
                 var newUser = new ClaimsPrincipal(new ClaimsIdentity(context.User.Claims,
@@ -40,7 +40,7 @@ namespace BTCPayServer.Security.Greenfield
                 return new GreenfieldAuthorizationHandler(
                     _httpContextAccessor, _userManager, _storeRepository, _pluginHookService).HandleAsync(newContext);
             }
-            
+
             var succeed = context.User.Identity.AuthenticationType == $"Local{GreenfieldConstants.AuthenticationType}";
 
             if (succeed)
@@ -50,7 +50,7 @@ namespace BTCPayServer.Security.Greenfield
             return Task.CompletedTask;
         }
     }
-    
+
     public class GreenfieldAuthorizationHandler : AuthorizationHandler<PolicyRequirement>
     {
         private readonly HttpContext _httpContext;

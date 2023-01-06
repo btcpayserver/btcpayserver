@@ -451,13 +451,13 @@ namespace BTCPayServer.Controllers
             bool enabledChanged = currentlyEnabled != vm.Enabled;
             bool needUpdate = enabledChanged;
             string errorMessage = null;
-            
+
             if (enabledChanged)
             {
                 storeBlob.SetExcluded(derivation.PaymentId, !vm.Enabled);
                 store.SetStoreBlob(storeBlob);
             }
-            
+
             if (derivation.Label != vm.Label)
             {
                 needUpdate = true;
@@ -527,7 +527,7 @@ namespace BTCPayServer.Controllers
                         _EventAggregator.Publish(new WalletChangedEvent { WalletId = new WalletId(vm.StoreId, vm.CryptoCode) });
                         successMessage += $" {vm.CryptoCode} on-chain payments are now {(vm.Enabled ? "enabled" : "disabled")} for this store.";
                     }
-                
+
                     TempData[WellKnownTempData.SuccessMessage] = successMessage;
                 }
                 else

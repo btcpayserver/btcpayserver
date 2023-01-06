@@ -1,8 +1,8 @@
 using System;
 using System.Globalization;
-using System.Security.Claims;
 using System.Linq;
 using System.Net.Http;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
@@ -160,7 +160,7 @@ namespace BTCPayServer.Controllers
 
                 var fido2Devices = await _fido2Service.HasCredentials(user.Id);
                 var lnurlAuthCredentials = await _lnurlAuthService.HasCredentials(user.Id);
-                if (!await _userManager.IsLockedOutAsync(user) &&  (fido2Devices  || lnurlAuthCredentials))
+                if (!await _userManager.IsLockedOutAsync(user) && (fido2Devices || lnurlAuthCredentials))
                 {
                     if (await _userManager.CheckPasswordAsync(user, model.Password))
                     {
@@ -179,8 +179,8 @@ namespace BTCPayServer.Controllers
                         return View("SecondaryLogin", new SecondaryLoginViewModel()
                         {
                             LoginWith2FaViewModel = twoFModel,
-                            LoginWithFido2ViewModel = fido2Devices? await BuildFido2ViewModel(model.RememberMe, user): null, 
-                            LoginWithLNURLAuthViewModel = lnurlAuthCredentials? await BuildLNURLAuthViewModel(model.RememberMe, user): null, 
+                            LoginWithFido2ViewModel = fido2Devices ? await BuildFido2ViewModel(model.RememberMe, user) : null,
+                            LoginWithLNURLAuthViewModel = lnurlAuthCredentials ? await BuildLNURLAuthViewModel(model.RememberMe, user) : null,
                         });
                     }
                     else
@@ -212,7 +212,7 @@ namespace BTCPayServer.Controllers
                 if (result.IsLockedOut)
                 {
                     _logger.LogWarning($"User '{user.Id}' account locked out.");
-                    return RedirectToAction(nameof(Lockout), new { user.LockoutEnd});
+                    return RedirectToAction(nameof(Lockout), new { user.LockoutEnd });
                 }
                 else
                 {
@@ -256,18 +256,18 @@ namespace BTCPayServer.Controllers
                 }
                 return new LoginWithLNURLAuthViewModel()
                 {
-                    
+
                     RememberMe = rememberMe,
                     UserId = user.Id,
                     LNURLEndpoint = new Uri(_linkGenerator.GetUriByAction(
                     action: nameof(UILNURLAuthController.LoginResponse),
                     controller: "UILNURLAuth",
-                    values: new { userId = user.Id, action="login", tag="login", k1= Encoders.Hex.EncodeData(r)  }, Request.Scheme, Request.Host, Request.PathBase))
+                    values: new { userId = user.Id, action = "login", tag = "login", k1 = Encoders.Hex.EncodeData(r) }, Request.Scheme, Request.Host, Request.PathBase))
                 };
             }
             return null;
         }
-        
+
         [HttpPost("/login/lnurlauth")]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
@@ -309,7 +309,7 @@ namespace BTCPayServer.Controllers
             ModelState.AddModelError(string.Empty, errorMessage);
             return View("SecondaryLogin", new SecondaryLoginViewModel()
             {
-                
+
                 LoginWithFido2ViewModel = (await _fido2Service.HasCredentials(user.Id)) ? await BuildFido2ViewModel(viewModel.RememberMe, user) : null,
                 LoginWithLNURLAuthViewModel = viewModel,
                 LoginWith2FaViewModel = !user.TwoFactorEnabled
@@ -320,7 +320,7 @@ namespace BTCPayServer.Controllers
                     }
             });
         }
-        
+
 
         [HttpPost("/login/fido2")]
         [AllowAnonymous]
@@ -431,7 +431,7 @@ namespace BTCPayServer.Controllers
             else if (result.IsLockedOut)
             {
                 _logger.LogWarning("User with ID {UserId} account locked out.", user.Id);
-                return RedirectToAction(nameof(Lockout), new { user.LockoutEnd});
+                return RedirectToAction(nameof(Lockout), new { user.LockoutEnd });
             }
             else
             {
@@ -500,8 +500,8 @@ namespace BTCPayServer.Controllers
             if (result.IsLockedOut)
             {
                 _logger.LogWarning("User with ID {UserId} account locked out.", user.Id);
-                
-                return RedirectToAction(nameof(Lockout), new { user.LockoutEnd});
+
+                return RedirectToAction(nameof(Lockout), new { user.LockoutEnd });
             }
             else
             {

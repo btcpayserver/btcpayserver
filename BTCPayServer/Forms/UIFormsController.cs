@@ -30,7 +30,7 @@ public class UIFormsController : Controller
     {
         if (!IsValidRedirectUri(redirectUrl))
             return BadRequest();
-        
+
         FormData? formData = string.IsNullOrEmpty(formId) ? null : GetFormData(formId);
         if (formData == null)
         {
@@ -38,7 +38,7 @@ public class UIFormsController : Controller
                 ? NotFound()
                 : Redirect(redirectUrl);
         }
-        
+
         return GetFormView(formData, redirectUrl);
     }
 
@@ -52,11 +52,11 @@ public class UIFormsController : Controller
     {
         if (!IsValidRedirectUri(redirectUrl))
             return BadRequest();
-        
+
         var formData = GetFormData(formId);
         if (formData?.Config is null)
             return NotFound();
-        
+
         if (!Request.HasFormContentType)
             return GetFormView(formData, redirectUrl);
 
@@ -68,7 +68,7 @@ public class UIFormsController : Controller
         var form = new MultiValueDictionary<string, string>();
         foreach (var kv in Request.Form)
             form.Add(kv.Key, kv.Value);
-        
+
         // With redirect, the form comes from another entity that we need to send the data back to
         if (!string.IsNullOrEmpty(redirectUrl))
         {
@@ -102,7 +102,7 @@ public class UIFormsController : Controller
         };
         return form;
     }
-    
+
     private bool IsValidRedirectUri(string? redirectUrl) =>
         !string.IsNullOrEmpty(redirectUrl) && Uri.TryCreate(redirectUrl, UriKind.RelativeOrAbsolute, out var uri) &&
         (Url.IsLocalUrl(redirectUrl) || uri.Host.Equals(Request.Host.Host));

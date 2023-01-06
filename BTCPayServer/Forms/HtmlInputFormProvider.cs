@@ -6,7 +6,7 @@ using BTCPayServer.Validation;
 
 namespace BTCPayServer.Forms;
 
-public class HtmlInputFormProvider: FormComponentProviderBase
+public class HtmlInputFormProvider : FormComponentProviderBase
 {
     public override void Register(Dictionary<string, IFormComponentProvider> typeToComponentProvider)
     {

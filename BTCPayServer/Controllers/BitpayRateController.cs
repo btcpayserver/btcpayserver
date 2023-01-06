@@ -25,7 +25,7 @@ namespace BTCPayServer.Controllers
     [Authorize(Policy = ServerPolicies.CanGetRates.Key, AuthenticationSchemes = AuthenticationSchemes.Bitpay)]
     public class BitpayRateController : Controller
     {
-        
+
         readonly RateFetcher _rateProviderFactory;
         readonly BTCPayNetworkProvider _networkProvider;
         readonly CurrencyNameTable _currencyNameTable;
@@ -67,7 +67,7 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> GetCurrencyPairRate(string baseCurrency, string currency, CancellationToken cancellationToken)
         {
             var result = await GetRates2($"{baseCurrency}_{currency}", null, cancellationToken);
-            return (result as JsonResult)?.Value is not Rate[] rates 
+            return (result as JsonResult)?.Value is not Rate[] rates
                 ? result
                 : Json(new DataWrapper<Rate>(rates.First()));
         }
@@ -152,7 +152,7 @@ namespace BTCPayServer.Controllers
 
             [JsonProperty(PropertyName = "name")]
             public string Name { get; set; }
-            
+
             [JsonProperty(PropertyName = "cryptoCode")]
             public string CryptoCode { get; set; }
 
@@ -161,7 +161,7 @@ namespace BTCPayServer.Controllers
 
             [JsonProperty(PropertyName = "code")]
             public string Code { get; set; }
-            
+
             [JsonProperty(PropertyName = "rate")]
             public decimal Value { get; set; }
         }

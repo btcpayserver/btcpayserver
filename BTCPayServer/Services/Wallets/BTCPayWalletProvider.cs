@@ -35,7 +35,7 @@ namespace BTCPayServer.Services.Wallets
                 var explorerClient = _Client.GetExplorerClient(network.CryptoCode);
                 if (explorerClient == null)
                     continue;
-                _Wallets.Add(network.CryptoCode.ToUpperInvariant(), new BTCPayWallet(explorerClient, new MemoryCache(_Options), network, WalletRepository, dbContextFactory,  nbxplorerConnectionFactory, Logs));
+                _Wallets.Add(network.CryptoCode.ToUpperInvariant(), new BTCPayWallet(explorerClient, new MemoryCache(_Options), network, WalletRepository, dbContextFactory, nbxplorerConnectionFactory, Logs));
             }
         }
 

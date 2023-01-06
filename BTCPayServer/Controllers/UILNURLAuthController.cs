@@ -49,7 +49,8 @@ namespace BTCPayServer
 
             TempData.SetStatusMessageModel(new StatusMessageModel
             {
-                Severity = StatusMessageModel.StatusSeverity.Success, Html = "LNURL Auth was removed successfully."
+                Severity = StatusMessageModel.StatusSeverity.Success,
+                Html = "LNURL Auth was removed successfully."
             });
 
             return RedirectToList();
@@ -108,7 +109,8 @@ namespace BTCPayServer
 
             return BadRequest(new LNUrlStatusResponse
             {
-                Reason = "The challenge could not be verified", Status = "ERROR"
+                Reason = "The challenge could not be verified",
+                Status = "ERROR"
             });
         }
 
@@ -132,7 +134,8 @@ namespace BTCPayServer
 
             return BadRequest(new LNUrlStatusResponse
             {
-                Reason = "The challenge could not be verified", Status = "ERROR"
+                Reason = "The challenge could not be verified",
+                Status = "ERROR"
             });
         }
 

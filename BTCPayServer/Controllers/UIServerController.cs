@@ -300,7 +300,7 @@ namespace BTCPayServer.Controllers
         {
             ViewBag.UpdateUrlPresent = _Options.UpdateUrl != null;
             ViewBag.AppsList = await GetAppSelectList();
-            
+
             if (command == "add-domain")
             {
                 ModelState.Clear();
@@ -403,7 +403,7 @@ namespace BTCPayServer.Controllers
                     });
                 }
             }
-            
+
             return View(result);
         }
 
@@ -989,11 +989,11 @@ namespace BTCPayServer.Controllers
         {
             var settingsChanged = false;
             var settings = await _SettingsRepository.GetSettingAsync<ThemeSettings>() ?? new ThemeSettings();
-            
+
             var userId = GetUserId();
             if (userId is null)
                 return NotFound();
-            
+
             if (model.CustomThemeFile != null)
             {
                 if (model.CustomThemeFile.ContentType.Equals("text/css", StringComparison.InvariantCulture))
@@ -1003,7 +1003,7 @@ namespace BTCPayServer.Controllers
                     {
                         await _fileService.RemoveFile(settings.CustomThemeFileId, userId);
                     }
-                    
+
                     // add new file
                     try
                     {
@@ -1027,7 +1027,7 @@ namespace BTCPayServer.Controllers
                 settings.CustomThemeFileId = null;
                 settingsChanged = true;
             }
-            
+
             if (model.LogoFile != null)
             {
                 if (model.LogoFile.ContentType.StartsWith("image/", StringComparison.InvariantCulture))
@@ -1037,7 +1037,7 @@ namespace BTCPayServer.Controllers
                     {
                         await _fileService.RemoveFile(settings.LogoFileId, userId);
                     }
-                    
+
                     // add new image
                     try
                     {
@@ -1061,12 +1061,12 @@ namespace BTCPayServer.Controllers
                 settings.LogoFileId = null;
                 settingsChanged = true;
             }
-            
+
             if (model.CustomTheme && !string.IsNullOrEmpty(model.CustomThemeCssUri) && !Uri.IsWellFormedUriString(model.CustomThemeCssUri, UriKind.RelativeOrAbsolute))
             {
                 ModelState.AddModelError(nameof(settings.CustomThemeCssUri), "Please provide a non-empty theme URI");
             }
-            
+
             if (settings.CustomThemeExtension != model.CustomThemeExtension)
             {
                 // Require a custom theme to be defined in that case
@@ -1080,7 +1080,7 @@ namespace BTCPayServer.Controllers
                     settingsChanged = true;
                 }
             }
-            
+
             if (settings.CustomTheme != model.CustomTheme)
             {
                 settings.CustomTheme = model.CustomTheme;

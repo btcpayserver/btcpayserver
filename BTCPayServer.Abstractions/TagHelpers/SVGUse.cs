@@ -29,5 +29,5 @@ public class SVGUse : UrlResolutionTagHelper2
         attr = _fileVersionProvider.AddFileVersionToPath(ViewContext.HttpContext.Request.PathBase, attr);
         output.Attributes.SetAttribute("href", attr);
         base.Process(context, output);
-    }  
+    }
 }

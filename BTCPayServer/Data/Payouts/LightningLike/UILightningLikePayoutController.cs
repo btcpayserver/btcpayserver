@@ -257,7 +257,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                     });
             }
         }
-        
+
         public static async Task<ResultVM> TrypayBolt(
             ILightningClient lightningClient, PayoutBlob payoutBlob, PayoutData payoutData, BOLT11PaymentRequest bolt11PaymentRequest,
             PaymentMethodId pmi, CancellationToken cancellationToken)
@@ -303,7 +303,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                         // ignored
                     }
                 }
-                else if(result.Result == PayResult.Unknown)
+                else if (result.Result == PayResult.Unknown)
                 {
                     payoutData.State = PayoutState.InProgress;
                     message = "The payment has been initiated but is still in-flight.";

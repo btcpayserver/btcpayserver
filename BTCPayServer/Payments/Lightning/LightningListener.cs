@@ -298,7 +298,7 @@ namespace BTCPayServer.Payments.Lightning
 
                         var prepObj =
                             _lightningLikePaymentHandler.PreparePayment(supportedMethod, store, paymentMethod.Network);
-                        
+
                         var pmis = invoice.GetPaymentMethods().Select(method => method.GetId()).ToHashSet();
                         var newPaymentMethodDetails =
                             (LightningLikePaymentMethodDetails)(await _lightningLikePaymentHandler

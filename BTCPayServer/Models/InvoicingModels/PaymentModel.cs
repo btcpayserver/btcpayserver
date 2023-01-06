@@ -28,7 +28,7 @@ namespace BTCPayServer.Models.InvoicingModels
         public string BrandColor { get; set; }
         public string HtmlTitle { get; set; }
         public string DefaultLang { get; set; }
-        public List<AvailableCrypto> AvailableCryptos { get; set; } = new ();
+        public List<AvailableCrypto> AvailableCryptos { get; set; } = new();
         public bool IsModal { get; set; }
         public bool IsUnsetTopUp { get; set; }
         public string CryptoCode { get; set; }

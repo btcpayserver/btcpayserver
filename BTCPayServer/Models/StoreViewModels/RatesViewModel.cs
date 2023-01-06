@@ -16,7 +16,7 @@ namespace BTCPayServer.Models.StoreViewModels
             public string Rule { get; set; }
             public bool Error { get; set; }
         }
-        
+
         public void SetExchangeRates(IEnumerable<AvailableRateProvider> supportedList, string preferredExchange)
         {
             supportedList = supportedList.Select(a => new AvailableRateProvider(a.Id, a.SourceId, a.DisplayName, a.Url, a.Source)).ToArray();

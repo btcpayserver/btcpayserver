@@ -91,7 +91,7 @@ namespace BTCPayServer.Controllers.Greenfield
             var custodianAccount = await ToModel(custodianAccountData, assetBalances, cancellationToken);
             return Ok(custodianAccount);
         }
-        
+
         // [HttpGet("~/api/v1/stores/{storeId}/custodian-accounts/{accountId}/config")]
         // [Authorize(Policy = Policies.CanManageCustodianAccounts,
         //     AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -276,7 +276,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 }
                 catch (CustodianApiException e)
                 {
-                    return this.CreateAPIError(e.HttpStatus,  e.Code,
+                    return this.CreateAPIError(e.HttpStatus, e.Code,
                         e.Message);
                 }
             }

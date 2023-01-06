@@ -15,7 +15,7 @@ public class FormDataService
 
     public static readonly Form StaticFormEmail = new()
     {
-        Fields = new List<Field>() {Field.Create("Enter your email", "buyerEmail", null, true, null, "email")}
+        Fields = new List<Field>() { Field.Create("Enter your email", "buyerEmail", null, true, null, "email") }
     };
 
     public static readonly Form StaticFormAddress = new()

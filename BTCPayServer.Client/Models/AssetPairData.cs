@@ -8,7 +8,7 @@ public class AssetPairData
     public AssetPairData()
     {
     }
-    
+
     public AssetPairData(string assetBought, string assetSold, decimal minimumTradeQty)
     {
         AssetBought = assetBought;
@@ -25,7 +25,7 @@ public class AssetPairData
     [JsonProperty]
     public decimal MinimumTradeQty { set; get; }
 
-    
+
     public override string ToString()
     {
         return AssetBought + "/" + AssetSold;

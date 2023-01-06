@@ -59,7 +59,7 @@ public class UIPayoutProcessorsController : Controller
             return new StorePayoutProcessorsView() { Factory = factory, Configured = conf };
         }).ToList());
     }
-    
+
     [HttpPost("~/stores/{storeId}/payout-processors/{id}/remove")]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
@@ -78,8 +78,8 @@ public class UIPayoutProcessorsController : Controller
             Message = "Payout Processor removed"
         });
         await tcs.Task;
-        return RedirectToAction("ConfigureStorePayoutProcessors",new {storeId});
-        
+        return RedirectToAction("ConfigureStorePayoutProcessors", new { storeId });
+
     }
 
     public class StorePayoutProcessorsView

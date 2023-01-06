@@ -63,7 +63,8 @@ namespace BTCPayServer.Client
             {
                 query.Add(nameof(statusFilter), statusFilter);
             }
-            if (labelFilter != null) {
+            if (labelFilter != null)
+            {
                 query.Add(nameof(labelFilter), labelFilter);
             }
             var response =

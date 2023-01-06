@@ -177,11 +177,11 @@ namespace BTCPayServer.Services.Rates
             var result = JsonConvert.DeserializeObject<T>(stringResult);
             if (result is JToken json)
             {
-                if (!(json is JArray) && json["result"] is JObject {Count: > 0} pairResult)
+                if (!(json is JArray) && json["result"] is JObject { Count: > 0 } pairResult)
                 {
                     return (T)(object)(pairResult);
-                } 
-                
+                }
+
                 if (!(json is JArray) && json["error"] is JArray error && error.Count != 0)
                 {
                     throw new APIException(string.Join("\n",

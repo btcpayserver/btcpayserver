@@ -101,7 +101,7 @@ namespace BTCPayServer.Data
             {
                 result.LabelColors.TryAdd(valueLabelColor.Key, valueLabelColor.Value);
             }
-            
+
             foreach (var valueAttachment in value.Attachments.Where(valueAttachment => !Attachments.Any(attachment =>
                          attachment.Id == valueAttachment.Id && attachment.Type == valueAttachment.Type)))
             {

@@ -254,7 +254,7 @@ namespace BTCPayServer.Tests
             get;
             set;
         }
-        
+
         public string Email
         {
             get;

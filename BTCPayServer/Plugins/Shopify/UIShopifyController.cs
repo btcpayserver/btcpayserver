@@ -161,11 +161,11 @@ namespace BTCPayServer.Plugins.Shopify
                     order = await client.GetOrder(orderId);
                 }
 
-                 return Ok(new
-                    {
-                        invoiceId = firstInvoiceSettled.Id,
-                        status = firstInvoiceSettled.Status.ToString().ToLowerInvariant()
-                    });
+                return Ok(new
+                {
+                    invoiceId = firstInvoiceSettled.Id,
+                    status = firstInvoiceSettled.Status.ToString().ToLowerInvariant()
+                });
             }
 
             if (checkOnly)
@@ -193,7 +193,7 @@ namespace BTCPayServer.Plugins.Shopify
                             ["shopifyOrderId"] = order.Id,
                             ["shopifyOrderNumber"] = order.OrderNumber
                         },
-                        AdditionalSearchTerms = new []
+                        AdditionalSearchTerms = new[]
                         {
                             order.OrderNumber.ToString(CultureInfo.InvariantCulture),
                             order.Id.ToString(CultureInfo.InvariantCulture),

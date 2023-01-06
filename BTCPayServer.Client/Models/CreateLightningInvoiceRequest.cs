@@ -11,14 +11,14 @@ namespace BTCPayServer.Client.Models
         {
 
         }
-        
+
         public CreateLightningInvoiceRequest(LightMoney amount, string description, TimeSpan expiry)
         {
             Amount = amount;
             Description = description;
             Expiry = expiry;
         }
-        
+
         [JsonConverter(typeof(JsonConverters.LightMoneyJsonConverter))]
         public LightMoney Amount { get; set; }
         public string Description { get; set; }

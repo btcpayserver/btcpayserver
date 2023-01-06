@@ -1,4 +1,4 @@
-﻿using BTCPayServer.PayoutProcessors.Settings;
+using BTCPayServer.PayoutProcessors.Settings;
 
 namespace BTCPayServer.PayoutProcessors.OnChain;
 

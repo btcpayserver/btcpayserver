@@ -82,16 +82,15 @@ function showErrorAlert(message, error) {
         el.classList.add("d-none");
     }    
     document.getElementById("error-message").classList.remove("d-none");
-    
 }
 
 function detectFIDOSupport() {
     if (window.PublicKeyCredential === undefined ||
         typeof window.PublicKeyCredential !== "function") {
-        //$('#register-button').attr("disabled", true);
-        //$('#login-button').attr("disabled", true);
-        var el = document.getElementById("error-message");
-        el.textContent = "Your browser does not support FIDO2/WebAuthN";
+        const el = document.getElementById("error-message");
+        el.textContent = location.protocol === "http:"
+            ? "FIDO2/WebAuthN requires HTTPS"
+            : "Your browser does not support FIDO2/WebAuthN";
         el.classList.remove("d-none");
         return false;
     }

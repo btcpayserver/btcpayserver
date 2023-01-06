@@ -158,15 +158,29 @@
     background-color: var(--btcpay-header-bg);
 }
 
+#StoreSelectorToggle.empty-state {
+    color: var(--btcpay-body-text-muted);
+}
+
 #StoreSelectorToggle::after {
     content: none;
+}
+
+#StoreSelectorToggle,
+#StoreSelectorToggle .logo,
+#StoreSelectorToggle .icon {
+    transition: unset;
+    transition-property: color, border-color;
+    transition-timing-function: ease, ease;
+    transition-duration: var(--btcpay-transition-duration-fast), var(--btcpay-transition-duration-fast);
 }
 
 #StoreSelectorToggle .logo,
 #StoreSelectorToggle .icon {
     width: 1.5rem;
     height: 1.5rem;
-    transition: color 0.15s ease-in-out;
+    /* Fixes seemingly delayed icon animation */
+    -webkit-transition-duration: 0.05s, var(--btcpay-transition-duration-fast);
 }
 
 #StoreSelectorToggle .logo,
@@ -448,7 +462,6 @@
         z-index: 1045;
         border-right: var(--menu-border);
         color: var(--btcpay-body-text);
-        visibility: hidden;
         background-color: inherit;
         background-clip: padding-box;
         outline: 0;
@@ -606,10 +619,6 @@
     #mainMenuHead {
         flex-wrap: wrap;
         padding: var(--btcpay-space-m) 1.5rem;
-    }
-
-    #mainNav {
-        visibility: visible !important;
     }
 
     #Notifications {

@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using BTCPayServer.Payments;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
+using BTCPayServer.Payments;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace BTCPayServer.Models.WalletViewModels
 {

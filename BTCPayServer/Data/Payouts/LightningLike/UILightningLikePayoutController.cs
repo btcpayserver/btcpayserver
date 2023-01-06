@@ -219,6 +219,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             await ctx.SaveChangesAsync();
             return View("LightningPayoutResult", results);
         }
+
         public static async Task<(BOLT11PaymentRequest, ResultVM)> GetInvoiceFromLNURL(PayoutData payoutData,
             LightningLikePayoutHandler handler, PayoutBlob blob, LNURLPayClaimDestinaton lnurlPayClaimDestinaton, Network network, CancellationToken cancellationToken)
         {
@@ -262,7 +263,6 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             }
         }
 
-
         public static readonly TimeSpan SendTimeout = TimeSpan.FromSeconds(20);
 
         public Logs Logs { get; }
@@ -293,6 +293,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                 // https://github.com/btcpayserver/BTCPayServer.Lightning/pull/106
                 using var timeout = new CancellationTokenSource(SendTimeout);
                 using var c = CancellationTokenSource.CreateLinkedTokenSource(timeout.Token, cancellationToken);
+
                 var result = await lightningClient.Pay(bolt11PaymentRequest.ToString(),
                     new PayInvoiceParams()
                     {
@@ -318,6 +319,11 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                     {
                         logs.PayServer.LogInformation("DDD");
                     }
+                }
+                else if (result.Result == PayResult.Unknown)
+                {
+                    payoutData.State = PayoutState.InProgress;
+                    message = "The payment has been initiated but is still in-flight.";
                 }
 
                 payoutData.SetProofBlob(proofBlob, null);
@@ -345,7 +351,6 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                 };
             }
         }
-
 
         private async Task SetStoreContext()
         {

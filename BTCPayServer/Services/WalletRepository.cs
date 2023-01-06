@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
+using BTCPayServer.Services.Wallets;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin;
 using Newtonsoft.Json;
@@ -37,8 +38,9 @@ namespace BTCPayServer.Services
             Type = type;
             Ids = ids;
         }
-        public GetWalletObjectsQuery(ObjectTypeId[]? typesIds)
+        public GetWalletObjectsQuery(WalletId? walletId, ObjectTypeId[]? typesIds)
         {
+            WalletId = walletId;
             TypesIds = typesIds;
         }
 
@@ -50,6 +52,13 @@ namespace BTCPayServer.Services
         public string[]? Ids { get; set; }
         public bool IncludeNeighbours { get; set; } = true;
         public bool UseInefficientPath { get; set; }
+
+        public static IEnumerable<ObjectTypeId> Get(ReceivedCoin coin)
+        {
+            yield return new ObjectTypeId(WalletObjectData.Types.Tx, coin.OutPoint.Hash.ToString());
+            yield return new ObjectTypeId(WalletObjectData.Types.Address, coin.Address.ToString());
+            yield return new ObjectTypeId(WalletObjectData.Types.Utxo, coin.OutPoint.ToString());
+        }
     }
 
 #nullable restore
@@ -230,9 +239,47 @@ namespace BTCPayServer.Services
             }
         }
 #nullable restore
-        public async Task<Dictionary<string, WalletTransactionInfo>> GetWalletTransactionsInfo(WalletId walletId, string[] transactionIds = null)
+
+        public async Task<Dictionary<string, WalletTransactionInfo>> GetWalletTransactionsInfo(WalletId walletId,
+            string[] transactionIds = null)
         {
-            var wos = await GetWalletObjects((GetWalletObjectsQuery)(new(walletId, WalletObjectData.Types.Tx, transactionIds)));
+            var wos = await GetWalletObjects(
+                new GetWalletObjectsQuery(walletId, WalletObjectData.Types.Tx, transactionIds));
+            return GetWalletTransactionsInfoCore(walletId, wos);
+        }
+
+        public async Task<Dictionary<string, WalletTransactionInfo>> GetWalletTransactionsInfo(WalletId walletId,
+            ObjectTypeId[] transactionIds = null)
+        {
+            var wos = await GetWalletObjects(
+                new GetWalletObjectsQuery(walletId, transactionIds));
+
+            return GetWalletTransactionsInfoCore(walletId, wos);
+        }
+
+        public WalletTransactionInfo Merge(params WalletTransactionInfo[] infos)
+        {
+            WalletTransactionInfo result = null;
+            foreach (WalletTransactionInfo walletTransactionInfo in infos.Where(info => info is not null))
+            {
+                if (result is null)
+                {
+                    result ??= walletTransactionInfo;
+                }
+                else
+                {
+
+                    result = result.Merge(walletTransactionInfo);
+                }
+            }
+
+            return result;
+        }
+
+        private Dictionary<string, WalletTransactionInfo> GetWalletTransactionsInfoCore(WalletId walletId,
+            Dictionary<WalletObjectId, WalletObjectData> wos)
+        {
+
             var result = new Dictionary<string, WalletTransactionInfo>(wos.Count);
             foreach (var obj in wos.Values)
             {
@@ -247,7 +294,7 @@ namespace BTCPayServer.Services
                     var neighbourData = neighbour.Data is null ? null : JObject.Parse(neighbour.Data);
                     if (neighbour.Type == WalletObjectData.Types.Label)
                     {
-                        info.LabelColors.TryAdd(neighbour.Id, neighbourData?["color"]?.Value<string>() ?? "#000");
+                        info.LabelColors.TryAdd(neighbour.Id, neighbourData?["color"]?.Value<string>() ?? ColorPalette.Default.DeterministicColor(neighbour.Id));
                     }
                     else
                     {
@@ -267,7 +314,16 @@ namespace BTCPayServer.Services
             return (await
                     ctx.WalletObjects.AsNoTracking().Where(w => w.WalletId == walletId.ToString() && w.Type == WalletObjectData.Types.Label)
                     .ToArrayAsync())
-                    .Select(o => (o.Id, JObject.Parse(o.Data)["color"]!.Value<string>()!)).ToArray();
+                    .Select(o =>
+                    {
+                        if (o.Data is null)
+                        {
+                            return (o.Id, ColorPalette.Default.DeterministicColor(o.Id));
+                        }
+                        return (o.Id,
+                            JObject.Parse(o.Data)["color"]?.Value<string>() ??
+                            ColorPalette.Default.DeterministicColor(o.Id));
+                    }).ToArray();
         }
 
         public async Task<bool> RemoveWalletObjects(WalletObjectId walletObjectId)
@@ -421,13 +477,20 @@ namespace BTCPayServer.Services
         }
         public Task AddWalletTransactionAttachment(WalletId walletId, uint256 txId, Attachment attachment)
         {
-            return AddWalletTransactionAttachment(walletId, txId, new[] { attachment });
+            return AddWalletTransactionAttachment(walletId, txId.ToString(), new[] { attachment }, WalletObjectData.Types.Tx);
         }
-        public async Task AddWalletTransactionAttachment(WalletId walletId, uint256 txId, IEnumerable<Attachment> attachments)
+
+        public Task AddWalletTransactionAttachment(WalletId walletId, uint256 txId,
+            IEnumerable<Attachment> attachments)
+        {
+            return AddWalletTransactionAttachment(walletId, txId.ToString(), attachments, WalletObjectData.Types.Tx);
+        }
+
+        public async Task AddWalletTransactionAttachment(WalletId walletId, string txId, IEnumerable<Attachment> attachments, string type)
         {
             ArgumentNullException.ThrowIfNull(walletId);
             ArgumentNullException.ThrowIfNull(txId);
-            var txObjId = new WalletObjectId(walletId, WalletObjectData.Types.Tx, txId.ToString());
+            var txObjId = new WalletObjectId(walletId, type, txId.ToString());
             await EnsureWalletObject(txObjId);
             foreach (var attachment in attachments)
             {

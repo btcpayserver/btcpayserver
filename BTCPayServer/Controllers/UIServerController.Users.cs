@@ -13,8 +13,8 @@ using BTCPayServer.Models.ServerViewModels;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.EntityFrameworkCore;
 using MimeKit;
 
 namespace BTCPayServer.Controllers
@@ -261,9 +261,9 @@ namespace BTCPayServer.Controllers
                 return View("Confirm", new ConfirmModel("Disable admin",
                     $"Unable to proceed: As the user <strong>{user.Email}</strong> is the last enabled admin, it cannot be disabled."));
             }
-            return View("Confirm", new ConfirmModel($"{(enable? "Enable" : "Disable")} user", $"The user <strong>{user.Email}</strong> will be {(enable? "enabled" : "disabled")}. Are you sure?", (enable? "Enable" : "Disable")));
+            return View("Confirm", new ConfirmModel($"{(enable ? "Enable" : "Disable")} user", $"The user <strong>{user.Email}</strong> will be {(enable ? "enabled" : "disabled")}. Are you sure?", (enable ? "Enable" : "Disable")));
         }
-        
+
         [HttpPost("server/users/{userId}/toggle")]
         public async Task<IActionResult> ToggleUserPost(string userId, bool enable)
         {
@@ -275,9 +275,9 @@ namespace BTCPayServer.Controllers
                 TempData[WellKnownTempData.SuccessMessage] = $"User was the last enabled admin and could not be disabled.";
                 return RedirectToAction(nameof(ListUsers));
             }
-            await _userService.ToggleUser(userId, enable? null: DateTimeOffset.MaxValue);
+            await _userService.ToggleUser(userId, enable ? null : DateTimeOffset.MaxValue);
 
-            TempData[WellKnownTempData.SuccessMessage] = $"User {(enable? "enabled": "disabled")}";
+            TempData[WellKnownTempData.SuccessMessage] = $"User {(enable ? "enabled" : "disabled")}";
             return RedirectToAction(nameof(ListUsers));
         }
 
@@ -287,7 +287,7 @@ namespace BTCPayServer.Controllers
             var user = userId == null ? null : await _UserManager.FindByIdAsync(userId);
             if (user == null)
                 return NotFound();
-            
+
             return View("Confirm", new ConfirmModel("Send verification email", $"This will send a verification email to <strong>{user.Email}</strong>.", "Send"));
         }
 

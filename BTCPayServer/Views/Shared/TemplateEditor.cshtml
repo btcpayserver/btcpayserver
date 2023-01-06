@@ -93,16 +93,12 @@
                             <div class="form-group">
                                 <label class="form-label">Inventory</label>
                                 <input type="number" inputmode="numeric" min="0" step="1" class="form-control mb-2" v-model="editingItem.inventory" ref="txtInventory" />
-                                <p class="form-text text-muted">
-                                    Leave blank to not use this feature.
-                                </p>
+                                <div class="form-text">Leave blank to not use this feature.</div>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">ID</label>
                                 <input type="text" required pattern="[^\*#]+" class="form-control mb-2" v-model="editingItem.id" ref="txtId" />
-                                <p class="form-text text-muted">
-                                    Leave blank to generate ID from title.
-                                </p>
+                                <div class="form-text">Leave blank to generate ID from title.</div>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Buy Button Text</label>

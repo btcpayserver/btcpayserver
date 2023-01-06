@@ -16,7 +16,7 @@ public class MarketTradeResponseData
     public string TradeId { get; }
 
     public string AccountId { get; }
-    
+
     public string CustodianCode { get; }
 
     public MarketTradeResponseData(string fromAsset, string toAsset, List<LedgerEntryData> ledgerEntries, string tradeId, string accountId, string custodianCode)

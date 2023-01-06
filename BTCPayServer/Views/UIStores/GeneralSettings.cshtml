@@ -54,15 +54,15 @@
                         }
                     </div>
                     <span asp-validation-for="LogoFile" class="text-danger"></span>
-                    <p class="form-text text-muted">
+                    <div class="form-text">
                         Please upload an image with square dimension, as it will be displayed in 1:1 format and circular.
                         Size should be around 100✕100px.
-                    </p>
+                    </div>
                 }
                 else
                 {
                     <input asp-for="LogoFile" type="file" class="form-control" disabled>
-                    <p class="form-text text-muted">In order to upload a logo, a <a asp-controller="UIServer" asp-action="Files">file storage</a> must be configured.</p>
+                    <div class="form-text">In order to upload a logo, a <a asp-controller="UIServer" asp-action="Files">file storage</a> must be configured.</div>
                 }
             </div>
             <div class="form-group">

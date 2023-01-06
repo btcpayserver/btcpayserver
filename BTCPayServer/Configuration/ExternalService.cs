@@ -92,7 +92,7 @@ namespace BTCPayServer.Configuration
                 &&
                 o.ServiceName.Equals(serviceName, StringComparison.OrdinalIgnoreCase));
         }
-    
+
         public static readonly ExternalServiceTypes[] LightningServiceTypes =
         {
             ExternalServiceTypes.Spark,
@@ -100,7 +100,7 @@ namespace BTCPayServer.Configuration
             ExternalServiceTypes.ThunderHub,
             ExternalServiceTypes.Torq
         };
-        
+
         public static readonly string[] LightningServiceNames =
         {
             "Lightning Terminal"
@@ -114,7 +114,7 @@ namespace BTCPayServer.Configuration
         public ExternalConnectionString ConnectionString { get; set; }
         public string CryptoCode { get; set; }
         public string ServiceName { get; set; }
-        
+
         public async Task<string> GetLink(Uri absoluteUriNoPathBase, ChainName networkType)
         {
             var connectionString = await ConnectionString.Expand(absoluteUriNoPathBase, Type, networkType);

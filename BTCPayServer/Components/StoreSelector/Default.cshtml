@@ -41,7 +41,7 @@ else
     @if (Model.Options.Count > 0)
     {
         <div id="StoreSelectorDropdown" class="dropdown only-for-js">
-            <button id="StoreSelectorToggle" class="btn btn-secondary dropdown-toggle rounded-pill px-3 @(Model.CurrentStoreId == null ? "text-secondary" : "")" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <button id="StoreSelectorToggle" class="btn btn-secondary dropdown-toggle rounded-pill px-3 @(Model.CurrentStoreId == null ? "empty-state" : "")" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                 @if (!string.IsNullOrEmpty(Model.CurrentStoreLogoFileId))
                 {
                     <img class="logo" src="@(await FileService.GetFileUrl(Context.Request.GetAbsoluteRootUri(), Model.CurrentStoreLogoFileId))" alt="@Model.CurrentDisplayName" />

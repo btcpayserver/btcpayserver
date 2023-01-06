@@ -19,7 +19,7 @@ namespace BTCPayServer.Migrations
             if (migrationBuilder.IsNpgsql())
             {
                 migrationBuilder.Sql("ALTER TABLE \"Settings\" ALTER COLUMN \"Value\" TYPE JSONB USING \"Value\"::JSONB");
-                migrationBuilder.Sql("ALTER TABLE \"Stores\" ALTER COLUMN \"StoreBlob\" TYPE JSONB USING regexp_replace(convert_from(\"StoreBlob\",'UTF8'), '\\u0000', '', 'g')::JSONB");
+                migrationBuilder.Sql("ALTER TABLE \"Stores\" ALTER COLUMN \"StoreBlob\" TYPE JSONB USING regexp_replace(convert_from(\"StoreBlob\",'UTF8'), '\\\\u0000', '', 'g')::JSONB");
             }
         }
 

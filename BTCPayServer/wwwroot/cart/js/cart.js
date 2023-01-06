@@ -340,7 +340,6 @@ Cart.prototype.updatePosData = function() {
       tip: this.tip? this.tip: 0,
       total: this.getTotal(true)
     };
-    console.warn(result);
     $('#js-cart-posdata').val(JSON.stringify(result));
 }
 

@@ -300,7 +300,7 @@ namespace BTCPayServer.Controllers
         {
             ViewBag.UpdateUrlPresent = _Options.UpdateUrl != null;
             ViewBag.AppsList = await GetAppSelectList();
-            
+
             if (command == "add-domain")
             {
                 ModelState.Clear();
@@ -403,7 +403,7 @@ namespace BTCPayServer.Controllers
                     });
                 }
             }
-            
+
             return View(result);
         }
 
@@ -982,15 +982,52 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost("server/theme")]
-        public async Task<IActionResult> Theme(ThemeSettings model, [FromForm] bool RemoveLogoFile)
+        public async Task<IActionResult> Theme(
+            ThemeSettings model,
+            [FromForm] bool RemoveLogoFile,
+            [FromForm] bool RemoveCustomThemeFile)
         {
             var settingsChanged = false;
             var settings = await _SettingsRepository.GetSettingAsync<ThemeSettings>() ?? new ThemeSettings();
-            
+
             var userId = GetUserId();
             if (userId is null)
                 return NotFound();
-            
+
+            if (model.CustomThemeFile != null)
+            {
+                if (model.CustomThemeFile.ContentType.Equals("text/css", StringComparison.InvariantCulture))
+                {
+                    // delete existing file
+                    if (!string.IsNullOrEmpty(settings.CustomThemeFileId))
+                    {
+                        await _fileService.RemoveFile(settings.CustomThemeFileId, userId);
+                    }
+
+                    // add new file
+                    try
+                    {
+                        var storedFile = await _fileService.AddFile(model.CustomThemeFile, userId);
+                        settings.CustomThemeFileId = storedFile.Id;
+                        settingsChanged = true;
+                    }
+                    catch (Exception e)
+                    {
+                        ModelState.AddModelError(nameof(settings.CustomThemeFile), $"Could not save theme file: {e.Message}");
+                    }
+                }
+                else
+                {
+                    ModelState.AddModelError(nameof(settings.CustomThemeFile), "The uploaded theme file needs to be a CSS file");
+                }
+            }
+            else if (RemoveCustomThemeFile && !string.IsNullOrEmpty(settings.CustomThemeFileId))
+            {
+                await _fileService.RemoveFile(settings.CustomThemeFileId, userId);
+                settings.CustomThemeFileId = null;
+                settingsChanged = true;
+            }
+
             if (model.LogoFile != null)
             {
                 if (model.LogoFile.ContentType.StartsWith("image/", StringComparison.InvariantCulture))
@@ -1000,7 +1037,7 @@ namespace BTCPayServer.Controllers
                     {
                         await _fileService.RemoveFile(settings.LogoFileId, userId);
                     }
-                    
+
                     // add new image
                     try
                     {
@@ -1010,12 +1047,12 @@ namespace BTCPayServer.Controllers
                     }
                     catch (Exception e)
                     {
-                        ModelState.AddModelError(nameof(model.LogoFile), $"Could not save logo: {e.Message}");
+                        ModelState.AddModelError(nameof(settings.LogoFile), $"Could not save logo: {e.Message}");
                     }
                 }
                 else
                 {
-                    ModelState.AddModelError(nameof(model.LogoFile), "The uploaded logo file needs to be an image");
+                    ModelState.AddModelError(nameof(settings.LogoFile), "The uploaded logo file needs to be an image");
                 }
             }
             else if (RemoveLogoFile && !string.IsNullOrEmpty(settings.LogoFileId))
@@ -1024,15 +1061,29 @@ namespace BTCPayServer.Controllers
                 settings.LogoFileId = null;
                 settingsChanged = true;
             }
-            
-            if (model.CustomTheme && !Uri.IsWellFormedUriString(model.CssUri, UriKind.RelativeOrAbsolute))
+
+            if (model.CustomTheme && !string.IsNullOrEmpty(model.CustomThemeCssUri) && !Uri.IsWellFormedUriString(model.CustomThemeCssUri, UriKind.RelativeOrAbsolute))
             {
-                ModelState.AddModelError(nameof(model.CustomTheme), "Please provide a non-empty theme URI");
+                ModelState.AddModelError(nameof(settings.CustomThemeCssUri), "Please provide a non-empty theme URI");
             }
-            else if (settings.CustomTheme != model.CustomTheme)
+
+            if (settings.CustomThemeExtension != model.CustomThemeExtension)
+            {
+                // Require a custom theme to be defined in that case
+                if (string.IsNullOrEmpty(model.CustomThemeCssUri) && string.IsNullOrEmpty(settings.CustomThemeFileId))
+                {
+                    ModelState.AddModelError(nameof(settings.CustomThemeFile), "Please provide a custom theme");
+                }
+                else
+                {
+                    settings.CustomThemeExtension = model.CustomThemeExtension;
+                    settingsChanged = true;
+                }
+            }
+
+            if (settings.CustomTheme != model.CustomTheme)
             {
                 settings.CustomTheme = model.CustomTheme;
-                settings.CustomThemeCssUri = model.CustomThemeCssUri;
                 settingsChanged = true;
             }
 

@@ -28,7 +28,7 @@ namespace BTCPayServer.Models.StoreViewModels
 
         [Display(Name = "Brand Color")]
         public string BrandColor { get; set; }
-        
+
         public bool CanDelete { get; set; }
 
         [Display(Name = "Allow anyone to create invoice")]

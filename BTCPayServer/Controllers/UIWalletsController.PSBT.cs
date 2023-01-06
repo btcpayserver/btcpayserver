@@ -119,8 +119,9 @@ namespace BTCPayServer.Controllers
             builder.SendEstimatedFees(targetFeeRate);
             builder.SendFees(bumpFee);
             builder.SendAll(returnAddress);
-            
-            try {
+
+            try
+            {
                 var psbt = builder.BuildPSBT(false);
                 psbt = (await explorer.UpdatePSBTAsync(new UpdatePSBTRequest()
                 {
@@ -143,7 +144,9 @@ namespace BTCPayServer.Controllers
                         { "returnUrl", returnUrl }
                     }
                 });
-            } catch (Exception ex) {
+            }
+            catch (Exception ex)
+            {
                 TempData[WellKnownTempData.ErrorMessage] = ex.Message;
 
                 return LocalRedirect(returnUrl);
@@ -156,9 +159,9 @@ namespace BTCPayServer.Controllers
         {
             var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
             var psbt = await vm.GetPSBT(network.NBitcoinNetwork);
-            
+
             vm.BackUrl ??= HttpContext.Request.GetTypedHeaders().Referer?.AbsolutePath;
-            
+
             if (psbt is null || vm.InvalidPSBT)
             {
                 ModelState.AddModelError(nameof(vm.PSBT), "Invalid PSBT");
@@ -193,7 +196,7 @@ namespace BTCPayServer.Controllers
                     {
                         return await SignWithSeed(walletId, new SignWithSeedViewModel
                         {
-                            SeedOrKey = extKey, 
+                            SeedOrKey = extKey,
                             SigningContext = vm.SigningContext,
                             ReturnUrl = vm.ReturnUrl,
                             BackUrl = vm.BackUrl
@@ -244,7 +247,7 @@ namespace BTCPayServer.Controllers
 
             vm.NBXSeedAvailable = await CanUseHotWallet() && derivationSchemeSettings.IsHotWallet;
             vm.BackUrl ??= HttpContext.Request.GetTypedHeaders().Referer?.AbsolutePath;
-            
+
             var psbt = await vm.GetPSBT(network.NBitcoinNetwork);
             if (vm.InvalidPSBT)
             {

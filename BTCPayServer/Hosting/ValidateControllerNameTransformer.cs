@@ -53,7 +53,7 @@ namespace BTCPayServer.Hosting
 
             public void OnProvidersExecuting(ApplicationModelProviderContext context)
             {
-                
+
             }
         }
 
@@ -72,5 +72,5 @@ namespace BTCPayServer.Hosting
         }
     }
 
-    
+
 }

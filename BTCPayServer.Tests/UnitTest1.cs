@@ -189,7 +189,7 @@ namespace BTCPayServer.Tests
 
             Assert.Equal(description, json["components"]["securitySchemes"]["API_Key"]["description"].Value<string>());
         }
-        
+
         [Fact]
         [Trait("Integration", "Integration")]
         public async void CanStoreArbitrarySettingsWithStore()
@@ -199,11 +199,11 @@ namespace BTCPayServer.Tests
             var user = tester.NewAccount();
             await user.GrantAccessAsync();
             var settingsRepo = tester.PayTester.ServiceProvider.GetRequiredService<IStoreRepository>();
-            var arbValue = await settingsRepo.GetSettingAsync<string>(user.StoreId,"arbitrary");
+            var arbValue = await settingsRepo.GetSettingAsync<string>(user.StoreId, "arbitrary");
             Assert.Null(arbValue);
             await settingsRepo.UpdateSetting(user.StoreId, "arbitrary", "saved");
 
-            arbValue = await settingsRepo.GetSettingAsync<string>(user.StoreId,"arbitrary");
+            arbValue = await settingsRepo.GetSettingAsync<string>(user.StoreId, "arbitrary");
             Assert.Equal("saved", arbValue);
 
             await settingsRepo.UpdateSetting<TestData>(user.StoreId, "arbitrary", new TestData() { Name = "hello" });
@@ -1934,8 +1934,8 @@ namespace BTCPayServer.Tests
                 Assert.Contains($",orderId,{invoice.Id},", paidresult.Content);
                 Assert.Contains($",On-Chain,BTC,0.0991,0.0001,5000.0", paidresult.Content);
                 Assert.Contains($",USD,5.00", paidresult.Content); // Seems hacky but some plateform does not render this decimal the same
-                    Assert.Contains("0,,\"Some \"\", description\",New (paidPartial),new,paidPartial",
-                    paidresult.Content);
+                Assert.Contains("0,,\"Some \"\", description\",New (paidPartial),new,paidPartial",
+                paidresult.Content);
             });
         }
 
@@ -2157,7 +2157,7 @@ namespace BTCPayServer.Tests
                 Assert.Equal("paidPartial", localInvoice.ExceptionStatus.ToString());
                 Assert.Equal(1, localInvoice.CryptoInfo[0].TxCount);
                 Assert.NotEqual(localInvoice.BitcoinAddress, invoice.BitcoinAddress); //New address
-                    Assert.True(IsMapped(invoice, ctx));
+                Assert.True(IsMapped(invoice, ctx));
                 Assert.True(IsMapped(localInvoice, ctx));
 
                 invoiceEntity = repo.GetInvoice(invoice.Id, true).GetAwaiter().GetResult();
@@ -2175,7 +2175,7 @@ namespace BTCPayServer.Tests
                 Assert.Equal(firstPayment + secondPayment, localInvoice.BtcPaid);
                 Assert.Equal(Money.Zero, localInvoice.BtcDue);
                 Assert.Equal(localInvoice.BitcoinAddress, invoiceAddress.ToString()); //no new address generated
-                    Assert.True(IsMapped(localInvoice, ctx));
+                Assert.True(IsMapped(localInvoice, ctx));
                 Assert.False((bool)((JValue)localInvoice.ExceptionStatus).Value);
             });
 

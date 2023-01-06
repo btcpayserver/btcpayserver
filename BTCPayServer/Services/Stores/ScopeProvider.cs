@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 using BTCPayServer.Abstractions.Contracts;
 using Microsoft.AspNetCore.Http;
 
@@ -13,7 +13,7 @@ public class ScopeProvider : IScopeProvider
         _httpContextAccessor = httpContextAccessor;
     }
     public string? GetCurrentStoreId()
-    { 
+    {
         return _httpContextAccessor.HttpContext.GetStoreData()?.Id;
     }
 }

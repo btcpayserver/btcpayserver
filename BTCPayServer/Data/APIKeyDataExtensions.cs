@@ -19,7 +19,7 @@ namespace BTCPayServer.Data
             apiKeyData.Blob = newBlob;
             return true;
         }
-        
+
         public static T GetBlob<T>(this byte[] data)
         {
             var result = data == null

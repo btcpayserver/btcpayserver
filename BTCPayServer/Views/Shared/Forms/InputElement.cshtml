@@ -27,9 +27,7 @@
 	}
     @if (!string.IsNullOrEmpty(Model.HelpText))
     {
-        <small id="@("HelpText" + Model.Name)" class="form-text text-muted">
-            @Model.HelpText
-        </small>
+        <div id="@("HelpText" + Model.Name)" class="form-text">@Model.HelpText</div>
     }
 
 

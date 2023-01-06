@@ -40,7 +40,7 @@ namespace BTCPayServer.Controllers.Greenfield
             _lightningClientFactory = lightningClientFactory;
             _btcPayNetworkProvider = btcPayNetworkProvider;
         }
-        
+
         [Authorize(Policy = Policies.CanUseLightningNodeInStore,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/lightning/{cryptoCode}/info")]
@@ -135,13 +135,13 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 throw ErrorCryptoCodeNotFound();
             }
-            
+
             var store = HttpContext.GetStoreData();
             if (store == null)
             {
                 throw new JsonHttpException(StoreNotFound());
             }
-            
+
             var id = new PaymentMethodId(cryptoCode, PaymentTypes.LightningLike);
             var existing = store.GetSupportedPaymentMethods(_btcPayNetworkProvider)
                 .OfType<LightningSupportedPaymentMethod>()
@@ -164,7 +164,7 @@ namespace BTCPayServer.Controllers.Greenfield
             }
             throw ErrorLightningNodeNotConfiguredForStore();
         }
-        
+
         private IActionResult StoreNotFound()
         {
             return this.CreateAPIError(404, "store-not-found", "The store was not found");

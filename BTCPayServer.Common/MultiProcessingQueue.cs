@@ -23,7 +23,7 @@ namespace BTCPayServer
             internal Task ProcessTask;
             public async Task Process(CancellationToken cancellationToken)
             {
-                retry:
+retry:
                 while (Chan.Reader.TryRead(out var item))
                 {
                     await item(cancellationToken);
@@ -52,7 +52,7 @@ namespace BTCPayServer
         {
             lock (_Queues)
             {
-                retry:
+retry:
                 if (stopped)
                     return;
                 Cleanup();

@@ -40,6 +40,9 @@
     iframe.style.zIndex = '2000';
     // Removed, see https://github.com/btcpayserver/btcpayserver/issues/2139#issuecomment-768223263
     // iframe.setAttribute('allowtransparency', 'true');
+    
+    // https://web.dev/async-clipboard/#permissions-policy-integration
+    iframe.setAttribute('allow', 'clipboard-read; clipboard-write')
 
     var origin = 'http://chat.btcpayserver.org join us there, and initialize this with your origin url through setApiUrlPrefix';
     var scriptMatch = thisScript.match(scriptSrcRegex)

@@ -103,7 +103,7 @@ namespace BTCPayServer.Services.Invoices.Export
                         InvoicePrice = invoice.Price,
                         InvoiceCurrency = invoice.Currency,
                         BuyerEmail = invoice.Metadata.BuyerEmail,
-                        Accounted = payment.Accounted                        
+                        Accounted = payment.Accounted
                     };
 
                     exportList.Add(target);

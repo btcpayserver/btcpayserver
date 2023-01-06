@@ -7,13 +7,13 @@ using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Services;
 
-public class DefaultSwaggerProvider: ISwaggerProvider
+public class DefaultSwaggerProvider : ISwaggerProvider
 {
     private readonly IFileProvider _fileProvider;
 
     public DefaultSwaggerProvider(IWebHostEnvironment webHostEnvironment, ISettingsAccessor<PoliciesSettings> policies)
     {
-                
+
         _fileProvider = webHostEnvironment.WebRootFileProvider;
         Policies = policies;
     }
@@ -23,7 +23,7 @@ public class DefaultSwaggerProvider: ISwaggerProvider
 
     public async Task<JObject> Fetch()
     {
-                
+
         JObject json = new JObject();
         var directoryContents = _fileProvider.GetDirectoryContents("swagger/v1");
         foreach (IFileInfo fi in directoryContents)

@@ -395,9 +395,9 @@ namespace BTCPayServer.Tests
                     s.GoToWallet(receiverWalletId, WalletsNavPages.Transactions);
                     Assert.Contains(invoiceId, s.Driver.PageSource);
                     Assert.Contains("payjoin", s.Driver.PageSource);
-                        //this label does not always show since input gets used
-                        // Assert.Contains("payjoin-exposed", s.Driver.PageSource);
-                    });
+                    //this label does not always show since input gets used
+                    // Assert.Contains("payjoin-exposed", s.Driver.PageSource);
+                });
             }
         }
 

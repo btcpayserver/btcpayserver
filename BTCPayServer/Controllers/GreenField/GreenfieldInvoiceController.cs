@@ -11,10 +11,10 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Payments;
+using BTCPayServer.Rating;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
-using BTCPayServer.Rating;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
@@ -34,32 +34,28 @@ namespace BTCPayServer.Controllers.Greenfield
         private readonly UIInvoiceController _invoiceController;
         private readonly InvoiceRepository _invoiceRepository;
         private readonly LinkGenerator _linkGenerator;
-        private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
-        private readonly EventAggregator _eventAggregator;
-        private readonly PaymentMethodHandlerDictionary _paymentMethodHandlerDictionary;
         private readonly CurrencyNameTable _currencyNameTable;
         private readonly BTCPayNetworkProvider _networkProvider;
         private readonly PullPaymentHostedService _pullPaymentService;
         private readonly RateFetcher _rateProvider;
+        private readonly InvoiceActivator _invoiceActivator;
         private readonly ApplicationDbContextFactory _dbContextFactory;
 
         public LanguageService LanguageService { get; }
 
         public GreenfieldInvoiceController(UIInvoiceController invoiceController, InvoiceRepository invoiceRepository,
             LinkGenerator linkGenerator, LanguageService languageService, BTCPayNetworkProvider btcPayNetworkProvider,
-            EventAggregator eventAggregator, PaymentMethodHandlerDictionary paymentMethodHandlerDictionary, 
-            CurrencyNameTable currencyNameTable, BTCPayNetworkProvider networkProvider, RateFetcher rateProvider,
+            CurrencyNameTable currencyNameTable, RateFetcher rateProvider,
+            InvoiceActivator invoiceActivator,
             PullPaymentHostedService pullPaymentService, ApplicationDbContextFactory dbContextFactory)
         {
             _invoiceController = invoiceController;
             _invoiceRepository = invoiceRepository;
             _linkGenerator = linkGenerator;
-            _btcPayNetworkProvider = btcPayNetworkProvider;
-            _eventAggregator = eventAggregator;
-            _paymentMethodHandlerDictionary = paymentMethodHandlerDictionary;
             _currencyNameTable = currencyNameTable;
-            _networkProvider = networkProvider;
+            _networkProvider = btcPayNetworkProvider;
             _rateProvider = rateProvider;
+            _invoiceActivator = invoiceActivator;
             _pullPaymentService = pullPaymentService;
             _dbContextFactory = dbContextFactory;
             LanguageService = languageService;
@@ -342,8 +338,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
             if (PaymentMethodId.TryParse(paymentMethod, out var paymentMethodId))
             {
-                await _invoiceRepository.ActivateInvoicePaymentMethod(_eventAggregator, _btcPayNetworkProvider,
-                    _paymentMethodHandlerDictionary, store, invoice, paymentMethodId);
+                await _invoiceActivator.ActivateInvoicePaymentMethod(paymentMethodId, invoice, store);
                 return Ok();
             }
             ModelState.AddModelError(nameof(paymentMethod), "Invalid payment method");
@@ -352,11 +347,10 @@ namespace BTCPayServer.Controllers.Greenfield
 
         [Authorize(Policy = Policies.CanModifyStoreSettings,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        [HttpPost("~/api/v1/stores/{storeId}/invoices/{invoiceId}/payment-methods/{paymentMethod}/refund")]
+        [HttpPost("~/api/v1/stores/{storeId}/invoices/{invoiceId}/refund")]
         public async Task<IActionResult> RefundInvoice(
             string storeId,
             string invoiceId,
-            string paymentMethod,
             RefundInvoiceRequest request,
             CancellationToken cancellationToken = default
         )
@@ -377,20 +371,24 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 return InvoiceNotFound();
             }
-
             if (!invoice.GetInvoiceState().CanRefund())
             {
                 return this.CreateAPIError("non-refundable", "Cannot refund this invoice");
             }
-
-            var paymentMethodId = PaymentMethodId.Parse(paymentMethod);
-            var invoicePaymentMethod = invoice.GetPaymentMethods().SingleOrDefault(method => method.GetId() == paymentMethodId);
-            if (invoicePaymentMethod == null)
+            PaymentMethod? invoicePaymentMethod = null;
+            PaymentMethodId? paymentMethodId = null;
+            if (request.PaymentMethod is not null && PaymentMethodId.TryParse(request.PaymentMethod, out paymentMethodId))
             {
-                this.ModelState.AddModelError(nameof(paymentMethod), "Please select one of the payment methods which were available for the original invoice");
-
-                return this.CreateValidationError(ModelState);
+                invoicePaymentMethod = invoice.GetPaymentMethods().SingleOrDefault(method => method.GetId() == paymentMethodId);
             }
+            if (invoicePaymentMethod is null)
+            {
+                this.ModelState.AddModelError(nameof(request.PaymentMethod), "Please select one of the payment methods which were available for the original invoice");
+            }
+            if (request.RefundVariant is null)
+                this.ModelState.AddModelError(nameof(request.RefundVariant), "`refundVariant` is mandatory");
+            if (!ModelState.IsValid || invoicePaymentMethod is null || paymentMethodId is null)
+                return this.CreateValidationError(ModelState);
 
             var cryptoPaid = invoicePaymentMethod.Calculate().Paid.ToDecimal(MoneyUnit.BTC);
             var cdCurrency = _currencyNameTable.GetCurrencyData(invoice.Currency, true);
@@ -410,6 +408,16 @@ namespace BTCPayServer.Controllers.Greenfield
                 PaymentMethodIds = new[] { paymentMethodId },
             };
 
+            if (request.RefundVariant != RefundVariant.Custom)
+            {
+                if (request.CustomAmount is not null)
+                    this.ModelState.AddModelError(nameof(request.CustomAmount), "CustomAmount should only be set if the refundVariant is Custom");
+                if (request.CustomCurrency is not null)
+                    this.ModelState.AddModelError(nameof(request.CustomCurrency), "CustomCurrency should only be set if the refundVariant is Custom");
+                if (!ModelState.IsValid)
+                    return this.CreateValidationError(ModelState);
+            }
+
             switch (request.RefundVariant)
             {
                 case RefundVariant.RateThen:
@@ -417,21 +425,22 @@ namespace BTCPayServer.Controllers.Greenfield
                     createPullPayment.Amount = cryptoPaid.RoundToSignificant(paymentMethodDivisibility);
                     createPullPayment.AutoApproveClaims = true;
                     break;
-                
+
                 case RefundVariant.CurrentRate:
                     createPullPayment.Currency = invoicePaymentMethod.GetId().CryptoCode;
                     createPullPayment.Amount = Math.Round(paidCurrency / rateResult.BidAsk.Bid, paymentMethodDivisibility);
                     createPullPayment.AutoApproveClaims = true;
                     break;
-                
+
                 case RefundVariant.Fiat:
                     createPullPayment.Currency = invoice.Currency;
                     createPullPayment.Amount = paidCurrency;
                     createPullPayment.AutoApproveClaims = false;
                     break;
-                
+
                 case RefundVariant.Custom:
-                    if (request.CustomAmount <= 0) {
+                    if (request.CustomAmount is null || (request.CustomAmount is decimal v && v <= 0))
+                    {
                         this.ModelState.AddModelError(nameof(request.CustomAmount), "Amount must be greater than 0");
                     }
 
@@ -449,23 +458,23 @@ namespace BTCPayServer.Controllers.Greenfield
                             $"Impossible to fetch rate: {rateResult.EvaluatedRule}");
                     }
 
-                    if (!ModelState.IsValid)
+                    if (!ModelState.IsValid || request.CustomAmount is null)
                     {
                         return this.CreateValidationError(ModelState);
                     }
 
                     createPullPayment.Currency = request.CustomCurrency;
-                    createPullPayment.Amount = request.CustomAmount;
+                    createPullPayment.Amount = request.CustomAmount.Value;
                     createPullPayment.AutoApproveClaims = paymentMethodId.CryptoCode == request.CustomCurrency;
                     break;
-                
+
                 default:
                     ModelState.AddModelError(nameof(request.RefundVariant), "Please select a valid refund option");
                     return this.CreateValidationError(ModelState);
             }
 
             var ppId = await _pullPaymentService.CreatePullPayment(createPullPayment);
-            
+
             await using var ctx = _dbContextFactory.CreateContext();
             (await ctx.Invoices.FindAsync(new[] { invoice.Id }, cancellationToken))!.CurrentRefundId = ppId;
             ctx.Refunds.Add(new RefundData
@@ -591,7 +600,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 Amount = entity.Price,
                 Type = entity.Type,
                 Id = entity.Id,
-                CheckoutLink = request is null? null: linkGenerator.CheckoutLink(entity.Id, request.Scheme, request.Host, request.PathBase),
+                CheckoutLink = request is null ? null : linkGenerator.CheckoutLink(entity.Id, request.Scheme, request.Host, request.PathBase),
                 Status = entity.Status.ToModernStatus(),
                 AdditionalStatus = entity.ExceptionStatus,
                 Currency = entity.Currency,

@@ -28,8 +28,8 @@ public class LightningAutomatedPayoutSenderFactory : IPayoutProcessorFactory
 
     public string ConfigureLink(string storeId, PaymentMethodId paymentMethodId, HttpRequest request)
     {
-        return _linkGenerator.GetUriByAction("Configure", 
-            "UILightningAutomatedPayoutProcessors",new
+        return _linkGenerator.GetUriByAction("Configure",
+            "UILightningAutomatedPayoutProcessors", new
             {
                 storeId,
                 cryptoCode = paymentMethodId.CryptoCode
@@ -39,7 +39,7 @@ public class LightningAutomatedPayoutSenderFactory : IPayoutProcessorFactory
     public static string ProcessorName => nameof(LightningAutomatedPayoutSenderFactory);
     public IEnumerable<PaymentMethodId> GetSupportedPaymentMethods()
     {
-        return  _btcPayNetworkProvider.GetAll().OfType<BTCPayNetwork>()
+        return _btcPayNetworkProvider.GetAll().OfType<BTCPayNetwork>()
             .Where(network => network.SupportLightning)
             .Select(network =>
                 new PaymentMethodId(network.CryptoCode, LightningPaymentType.Instance));

@@ -110,7 +110,7 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
         ParseProofType(payout.Proof, out var raw, out var proofType);
         if (proofType == PayoutTransactionOnChainBlob.Type)
         {
-            
+
             var res = raw.ToObject<PayoutTransactionOnChainBlob>(
                 JsonSerializer.Create(_jsonSerializerSettings.GetSerializer(paymentMethodId.CryptoCode)));
             var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(paymentMethodId.CryptoCode);
@@ -134,7 +134,7 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
         obj = JObject.Parse(Encoding.UTF8.GetString(proof));
         TryParseProofType(obj, out type);
     }
-    
+
     public static bool TryParseProofType(JObject proof, out string type)
     {
         type = null;
@@ -275,7 +275,7 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
                            && data.State == PayoutState.AwaitingPayment)
             .ToListAsync();
 
-        var pullPaymentIds = payouts.Select(data => data.PullPaymentDataId).Distinct().Where(s => s!= null).ToArray();
+        var pullPaymentIds = payouts.Select(data => data.PullPaymentDataId).Distinct().Where(s => s != null).ToArray();
         var storeId = payouts.First().StoreDataId;
         var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(paymentMethodId.CryptoCode);
         List<string> bip21 = new List<string>();
@@ -362,7 +362,7 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
                     }
                 }
 
-                if (proof.TransactionId is not  null && !proof.Candidates.Contains(proof.TransactionId))
+                if (proof.TransactionId is not null && !proof.Candidates.Contains(proof.TransactionId))
                 {
                     proof.TransactionId = null;
                 }

@@ -6,7 +6,6 @@ namespace BTCPayServer.Abstractions.Extensions;
 
 public static class StringExtensions
 {
-
     public static bool IsValidFileName(this string fileName)
     {
         return !fileName.ToCharArray().Any(c => Path.GetInvalidFileNameChars().Contains(c)
@@ -41,5 +40,4 @@ public static class StringExtensions
             return str.Substring(0, str.Length - 1);
         return str;
     }
-    
 }

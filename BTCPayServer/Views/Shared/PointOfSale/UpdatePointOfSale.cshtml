@@ -40,7 +40,7 @@
             <div class="form-group">
                 <label asp-for="Currency" class="form-label"></label>
                 <input asp-for="Currency" class="form-control w-auto" currency-selection />
-                <small class="d-inline-block form-text text-muted">Uses the store's default currency (@Model.StoreDefaultCurrency) if empty.</small>
+                <div class="form-text">Uses the store's default currency (@Model.StoreDefaultCurrency) if empty.</div>
                 <span asp-validation-for="Currency" class="text-danger"></span>
             </div>
         </div>
@@ -75,7 +75,7 @@
                 <label asp-for="DefaultView" class="form-label" data-required></label>
                 <select asp-for="DefaultView" asp-items="@Html.GetEnumSelectList<PosViewType>()" class="form-select" required></select>
                 <span asp-validation-for="DefaultView" class="text-danger"></span>
-                <p class="form-text text-muted">Choose the point of sale style for your customers.</p>
+                <div class="form-text">Choose the point of sale style for your customers.</div>
             </div>
             <div class="form-group" id="button-price-text">
                 <label asp-for="ButtonText" class="form-label" data-required></label>

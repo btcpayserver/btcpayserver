@@ -7,7 +7,7 @@ using Microsoft.Extensions.Hosting;
 
 namespace BTCPayServer.Plugins.Test;
 
-public class TestPluginMigrationRunner:IHostedService
+public class TestPluginMigrationRunner : IHostedService
 {
     public class TestPluginDataMigrationHistory
     {
@@ -35,7 +35,6 @@ public class TestPluginMigrationRunner:IHostedService
             settings.UpdatedSomething = true;
             await _settingsRepository.UpdateSetting(settings);
         }
-            
     }
 
     public Task StopAsync(CancellationToken cancellationToken)

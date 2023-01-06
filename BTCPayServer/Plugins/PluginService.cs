@@ -29,7 +29,7 @@ namespace BTCPayServer.Plugins
         public PluginService(
             ISettingsRepository settingsRepository,
             IEnumerable<IBTCPayServerPlugin> btcPayServerPlugins,
-            PluginBuilderClient pluginBuilderClient, 
+            PluginBuilderClient pluginBuilderClient,
             IOptions<DataDirectories> dataDirectories,
             PoliciesSettings policiesSettings,
             BTCPayServerEnvironment env)
@@ -52,6 +52,7 @@ namespace BTCPayServer.Plugins
             {
                 var p = v.ManifestInfo.ToObject<AvailablePlugin>();
                 p.Documentation = v.Documentation;
+                p.SystemPlugin = false;
                 return p;
             }).ToArray();
         }

@@ -39,7 +39,7 @@ namespace BTCPayServer.Client
                 parameters.Add("includeNeighbourData", v);
             var response =
                 await _httpClient.SendAsync(
-                    CreateHttpRequest($"api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/objects", parameters, method:HttpMethod.Get), token);
+                    CreateHttpRequest($"api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/objects", parameters, method: HttpMethod.Get), token);
             return await HandleResponse<OnChainWalletObjectData[]>(response);
         }
         public virtual async Task RemoveOnChainWalletObject(string storeId, string cryptoCode, OnChainWalletObjectId objectId,
@@ -47,7 +47,7 @@ namespace BTCPayServer.Client
         {
             var response =
                 await _httpClient.SendAsync(
-                    CreateHttpRequest($"api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/objects/{objectId.Type}/{objectId.Id}", method:HttpMethod.Delete), token);
+                    CreateHttpRequest($"api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/objects/{objectId.Type}/{objectId.Id}", method: HttpMethod.Delete), token);
             await HandleResponse(response);
         }
         public virtual async Task<OnChainWalletObjectData> AddOrUpdateOnChainWalletObject(string storeId, string cryptoCode, AddOnChainWalletObjectRequest request,
@@ -55,7 +55,7 @@ namespace BTCPayServer.Client
         {
             var response =
                 await _httpClient.SendAsync(
-                    CreateHttpRequest($"api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/objects", method:HttpMethod.Post, bodyPayload: request), token);
+                    CreateHttpRequest($"api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/objects", method: HttpMethod.Post, bodyPayload: request), token);
             return await HandleResponse<OnChainWalletObjectData>(response);
         }
         public virtual async Task AddOrUpdateOnChainWalletLink(string storeId, string cryptoCode,
@@ -65,7 +65,7 @@ namespace BTCPayServer.Client
         {
             var response =
                 await _httpClient.SendAsync(
-                    CreateHttpRequest($"api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/objects/{objectId.Type}/{objectId.Id}/links", method:HttpMethod.Post, bodyPayload: request), token);
+                    CreateHttpRequest($"api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/objects/{objectId.Type}/{objectId.Id}/links", method: HttpMethod.Post, bodyPayload: request), token);
             await HandleResponse(response);
         }
         public virtual async Task RemoveOnChainWalletLinks(string storeId, string cryptoCode,
@@ -75,7 +75,7 @@ namespace BTCPayServer.Client
         {
             var response =
                 await _httpClient.SendAsync(
-                    CreateHttpRequest($"api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/objects/{objectId.Type}/{objectId.Id}/links/{link.Type}/{link.Id}", method:HttpMethod.Delete), token);
+                    CreateHttpRequest($"api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/objects/{objectId.Type}/{objectId.Id}/links/{link.Type}/{link.Id}", method: HttpMethod.Delete), token);
             await HandleResponse(response);
         }
     }

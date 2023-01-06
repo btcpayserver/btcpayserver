@@ -75,7 +75,7 @@ namespace BTCPayServer.Tests
         public async Task CanQueryDirectProviders()
         {
             // TODO: Check once in a while whether or not they are working again
-            string[] brokenShitcoinCasinos = {};
+            string[] brokenShitcoinCasinos = { };
             var skipped = 0;
             var factory = FastTests.CreateBTCPayRateFactory();
             var directlySupported = factory.GetSupportedExchanges().Where(s => s.Source == RateSource.Direct)
@@ -95,7 +95,7 @@ namespace BTCPayServer.Tests
                     skipped++;
                     continue;
                 }
-                
+
                 TestLogs.LogInformation($"Testing {name}");
 
                 result.Fetcher.InvalidateCache();
@@ -175,7 +175,7 @@ namespace BTCPayServer.Tests
             var p = new KrakenExchangeRateProvider();
             var rates = await p.GetRatesAsync(default);
             Assert.Contains(rates, e => e.CurrencyPair == new CurrencyPair("XMR", "BTC") && e.BidAsk.Bid < 1.0m);
-            
+
             // Check we didn't skip too many exchanges
             Assert.InRange(skipped, 0, 3);
         }
@@ -225,7 +225,7 @@ namespace BTCPayServer.Tests
         {
             var uri = new Uri(url);
             int retryLeft = 3;
-            retry:
+retry:
             try
             {
                 using var request = new HttpRequestMessage(HttpMethod.Get, uri);
@@ -235,15 +235,22 @@ namespace BTCPayServer.Tests
                     "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:75.0) Gecko/20100101 Firefox/75.0");
                 using var cts = new CancellationTokenSource(5_000);
                 var response = await httpClient.SendAsync(request, cts.Token);
-                Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-                if (uri.Fragment.Length != 0)
+                if (response.StatusCode == HttpStatusCode.TooManyRequests)
                 {
-                    var fragment = uri.Fragment.Substring(1);
-                    var contents = await response.Content.ReadAsStringAsync();
-                    Assert.Matches($"id=\"{fragment}\"", contents);
+                    TestLogs.LogInformation($"TooManyRequests, skipping: {url} ({file})");
                 }
+                else
+                {
+                    Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+                    if (uri.Fragment.Length != 0)
+                    {
+                        var fragment = uri.Fragment.Substring(1);
+                        var contents = await response.Content.ReadAsStringAsync();
+                        Assert.Matches($"id=\"{fragment}\"", contents);
+                    }
 
-                TestLogs.LogInformation($"OK: {url} ({file})");
+                    TestLogs.LogInformation($"OK: {url} ({file})");
+                }
             }
             catch (Exception ex) when (ex is MatchesException)
             {
@@ -343,7 +350,7 @@ namespace BTCPayServer.Tests
             expected = (await (await client.GetAsync($"https://unpkg.com/@chenfengyuan/vue-qrcode@{version}/dist/vue-qrcode.min.js")).Content.ReadAsStringAsync()).Trim();
             Assert.Equal(expected, actual);
         }
-        
+
         string GetFileContent(params string[] path)
         {
             var l = path.ToList();

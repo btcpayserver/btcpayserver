@@ -186,7 +186,7 @@ namespace BTCPayServer.Controllers
         [HttpPost("{storeId}/users/{userId}/delete")]
         public async Task<IActionResult> DeleteStoreUserPost(string storeId, string userId)
         {
-            if(await _Repo.RemoveStoreUser(storeId, userId))
+            if (await _Repo.RemoveStoreUser(storeId, userId))
                 TempData[WellKnownTempData.SuccessMessage] = "User removed successfully.";
             else
             {
@@ -201,7 +201,7 @@ namespace BTCPayServer.Controllers
             var exchanges = GetSupportedExchanges();
             var storeBlob = CurrentStore.GetStoreBlob();
             var vm = new RatesViewModel();
-            vm.SetExchangeRates(exchanges, storeBlob.PreferredExchange ?? CoinGeckoRateProvider.CoinGeckoName);
+            vm.SetExchangeRates(exchanges, storeBlob.PreferredExchange ?? storeBlob.GetRecommendedExchange());
             vm.Spread = (double)(storeBlob.Spread * 100m);
             vm.StoreId = CurrentStore.Id;
             vm.Script = storeBlob.GetRateRules(_NetworkProvider).ToString();
@@ -225,7 +225,7 @@ namespace BTCPayServer.Controllers
             }
 
             var exchanges = GetSupportedExchanges();
-            model.SetExchangeRates(exchanges, model.PreferredExchange);
+            model.SetExchangeRates(exchanges, model.PreferredExchange ?? this.HttpContext.GetStoreData().GetStoreBlob().GetRecommendedExchange());
             model.StoreId = storeId ?? model.StoreId;
             CurrencyPair[]? currencyPairs = null;
             try
@@ -409,7 +409,7 @@ namespace BTCPayServer.Controllers
         public PaymentMethodOptionViewModel.Format[] GetEnabledPaymentMethodChoices(StoreData storeData)
         {
             var enabled = storeData.GetEnabledPaymentIds(_NetworkProvider);
-            
+
             return enabled
                 .Select(o =>
                     new PaymentMethodOptionViewModel.Format()
@@ -505,7 +505,7 @@ namespace BTCPayServer.Controllers
             {
                 blob.OnChainWithLnInvoiceFallback = model.OnChainWithLnInvoiceFallback;
             }
-            
+
             blob.RequiresRefundEmail = model.RequiresRefundEmail;
             blob.LazyPaymentMethods = model.LazyPaymentMethods;
             blob.RedirectAutomatically = model.RedirectAutomatically;
@@ -515,7 +515,7 @@ namespace BTCPayServer.Controllers
             blob.HtmlTitle = string.IsNullOrWhiteSpace(model.HtmlTitle) ? null : model.HtmlTitle;
             blob.AutoDetectLanguage = model.AutoDetectLanguage;
             blob.DefaultLang = model.DefaultLang;
-
+            blob.NormalizeToRelativeLinks(Request);
             if (CurrentStore.SetStoreBlob(blob))
             {
                 needUpdate = true;
@@ -646,11 +646,11 @@ namespace BTCPayServer.Controllers
                 return View(model);
             }
             blob.BrandColor = model.BrandColor;
-            
+
             var userId = GetUserId();
             if (userId is null)
                 return NotFound();
-            
+
             if (model.LogoFile != null)
             {
                 if (model.LogoFile.ContentType.StartsWith("image/", StringComparison.InvariantCulture))
@@ -660,7 +660,7 @@ namespace BTCPayServer.Controllers
                     {
                         await _fileService.RemoveFile(blob.LogoFileId, userId);
                     }
-                    
+
                     // add new image
                     try
                     {
@@ -683,7 +683,7 @@ namespace BTCPayServer.Controllers
                 blob.LogoFileId = null;
                 needUpdate = true;
             }
-            
+
             if (CurrentStore.SetStoreBlob(blob))
             {
                 needUpdate = true;
@@ -743,7 +743,7 @@ namespace BTCPayServer.Controllers
                 }).ToArray() ?? new AccountKeySettings[result.Item1.GetExtPubKeys().Count()];
                 return derivationSchemeSettings;
             }
-            
+
             var strategy = parser.Parse(derivationScheme);
             return new DerivationSchemeSettings(strategy, network);
         }
@@ -915,10 +915,10 @@ namespace BTCPayServer.Controllers
             var userId = GetUserId();
             if (userId == null)
                 return Challenge(AuthenticationSchemes.Cookie);
-            
+
             if (pairingCode == null)
                 return NotFound();
-            
+
             if (selectedStore != null)
             {
                 var store = await _Repo.FindStore(selectedStore, userId);
@@ -926,14 +926,14 @@ namespace BTCPayServer.Controllers
                     return NotFound();
                 HttpContext.SetStoreData(store);
             }
-            
+
             var pairing = await _TokenRepository.GetPairingAsync(pairingCode);
             if (pairing == null)
             {
                 TempData[WellKnownTempData.ErrorMessage] = "Unknown pairing code";
                 return RedirectToAction(nameof(UIHomeController.Index), "UIHome");
             }
-            
+
             var stores = await _Repo.GetStoresByUserId(userId);
             return View(new PairingModel
             {

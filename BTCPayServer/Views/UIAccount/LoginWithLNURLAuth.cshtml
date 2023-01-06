@@ -3,7 +3,7 @@
     Dictionary<string, string> formats = new Dictionary<string, string>()
     {
         { "Bech32", LNURL.LNURL.EncodeUri(Model.LNURLEndpoint, "login", true).ToString().ToUpperInvariant() },
-        { "URI", LNURL.LNURL.EncodeUri(Model.LNURLEndpoint, "login", true).ToString().ToUpperInvariant() }
+        { "URI", LNURL.LNURL.EncodeUri(Model.LNURLEndpoint, "login", false).ToString().ToUpperInvariant() }
     };
 }
 
@@ -12,28 +12,27 @@
         <input type="hidden" asp-for="LNURLEndpoint"/>
         <input type="hidden" asp-for="UserId"/>
     </form>
-    <h2 class="h3 mb-3">LNURL Auth</h2>
-    <div class="align-items-center">
-        <ul class="nav justify-content-center my-2">
-            @for (int i = 0; i < formats.Count; i++)
+    <h2 class="h3 mb-3">LNURL Authentication</h2>
+    <p>Scan the QR code with your Lightning wallet to sign in.</p>
+    <div class="align-items-center" style="width:256px">
+        <ul class="nav my-3 btcpay-pills align-items-center gap-2">
+            @for (var i = 0; i < formats.Count; i++)
             {
                 var mode = formats.ElementAt(i);
                 <li class="nav-item">
-                    <a class="btcpay-pill @(i == 0 ? "active" : "")"
-                       data-bs-toggle="tab" data-bs-target="#@mode.Key" role="tab"
-                       href="#">
+                    <a class="btcpay-pill @(i == 0 ? "active" : "")" data-bs-toggle="tab" data-bs-target="#@mode.Key" role="tab" href="#">
                         @mode.Key
                     </a>
                 </li>
             }
         </ul>
         <div class="tab-content">
-            @for (int i = 0; i < formats.Count; i++)
+            @for (var i = 0; i < formats.Count; i++)
             {
                 var mode = formats.ElementAt(i);
-                <div class="tab-pane text-center @(i == 0 ? "active" : "")" id="@mode.Key" role="tabpanel">
-                    <div class="qr-container" style="min-height: 256px;">
-                        <vc:qr-code data="@mode.Value"></vc:qr-code>
+                <div class="tab-pane @(i == 0 ? "active" : "")" id="@mode.Key" role="tabpanel">
+                    <div class="qr-container" style="min-height:256px">
+                        <vc:qr-code data="@mode.Value" />
                     </div>
                     <a href="@mode.Value" class="btn btn-primary mt-3" rel="noreferrer noopener">
                         Open in wallet
@@ -41,7 +40,6 @@
                 </div>
             }
         </div>
-        <p>Scan the QR code with your lightning wallet and link to your user account.</p>
     </div>
 </div>
 

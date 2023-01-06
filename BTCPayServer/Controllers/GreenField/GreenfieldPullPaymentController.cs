@@ -199,10 +199,10 @@ namespace BTCPayServer.Controllers.Greenfield
             var pp = await _pullPaymentService.GetPullPayment(pullPaymentId, true);
             if (pp is null)
                 return PullPaymentNotFound();
-            
-            var payouts =await _pullPaymentService.GetPayouts(new PullPaymentHostedService.PayoutQuery()
+
+            var payouts = await _pullPaymentService.GetPayouts(new PullPaymentHostedService.PayoutQuery()
             {
-                PullPayments = new[] {pullPaymentId},
+                PullPayments = new[] { pullPaymentId },
                 States = GetStateFilter(includeCancelled)
             });
             return base.Ok(payouts
@@ -219,10 +219,11 @@ namespace BTCPayServer.Controllers.Greenfield
 
             var payout = (await _pullPaymentService.GetPayouts(new PullPaymentHostedService.PayoutQuery()
             {
-                PullPayments = new[] {pullPaymentId}, PayoutIds = new[] {payoutId}
+                PullPayments = new[] { pullPaymentId },
+                PayoutIds = new[] { payoutId }
             })).FirstOrDefault();
-            
-            
+
+
             if (payout is null)
                 return PayoutNotFound();
             return base.Ok(ToModel(payout));
@@ -291,17 +292,17 @@ namespace BTCPayServer.Controllers.Greenfield
                 ModelState.AddModelError(nameof(request.Amount), $"Amount too small (should be at least {ppBlob.MinimumClaim})");
                 return this.CreateValidationError(ModelState);
             }
-             var result = await _pullPaymentService.Claim(new ClaimRequest()
+            var result = await _pullPaymentService.Claim(new ClaimRequest()
             {
                 Destination = destination.destination,
                 PullPaymentId = pullPaymentId,
                 Value = request.Amount,
                 PaymentMethodId = paymentMethodId,
             });
-            
-             return HandleClaimResult(result);
+
+            return HandleClaimResult(result);
         }
-        
+
         [HttpPost("~/api/v1/stores/{storeId}/payouts")]
         [Authorize(Policy = Policies.CanManagePullPayments, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> CreatePayoutThroughStore(string storeId, CreatePayoutThroughStoreRequest request)
@@ -413,11 +414,11 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             var payouts = await _pullPaymentService.GetPayouts(new PullPaymentHostedService.PayoutQuery()
             {
-                Stores = new[] {storeId},
+                Stores = new[] { storeId },
                 States = GetStateFilter(includeCancelled)
             });
-            
-            
+
+
             return base.Ok(payouts
                 .Select(ToModel).ToArray());
         }
@@ -426,7 +427,7 @@ namespace BTCPayServer.Controllers.Greenfield
         [Authorize(Policy = Policies.CanManagePullPayments, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> CancelPayout(string storeId, string payoutId)
         {
-            var res=  await _pullPaymentService.Cancel(new PullPaymentHostedService.CancelRequest(new[] { payoutId }, new []{storeId}));
+            var res = await _pullPaymentService.Cancel(new PullPaymentHostedService.CancelRequest(new[] { payoutId }, new[] { storeId }));
             return MapResult(res.First().Value);
         }
 
@@ -530,14 +531,15 @@ namespace BTCPayServer.Controllers.Greenfield
 
             var payout = (await _pullPaymentService.GetPayouts(new PullPaymentHostedService.PayoutQuery()
             {
-                Stores = new[] {storeId}, PayoutIds = new[] {payoutId}
+                Stores = new[] { storeId },
+                PayoutIds = new[] { payoutId }
             })).FirstOrDefault();
 
             if (payout is null)
                 return PayoutNotFound();
             return base.Ok(ToModel(payout));
         }
-        
+
         private IActionResult MapResult(MarkPayoutRequest.PayoutPaidResult result)
         {
             var errorMessage = MarkPayoutRequest.GetErrorMessage(result);

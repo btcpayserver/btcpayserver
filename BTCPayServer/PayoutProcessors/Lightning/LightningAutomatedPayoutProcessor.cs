@@ -96,7 +96,7 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Au
             }
         }
     }
-    
+
     //we group per store and init the transfers by each
     async Task<bool> TrypayBolt(ILightningClient lightningClient, PayoutBlob payoutBlob, PayoutData payoutData,
         BOLT11PaymentRequest bolt11PaymentRequest)

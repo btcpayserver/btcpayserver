@@ -26,9 +26,11 @@ public class AppSales : ViewComponent
 
     public async Task<IViewComponentResult> InvokeAsync(AppSalesViewModel vm)
     {
-        if (vm.App == null) throw new ArgumentNullException(nameof(vm.App));
-        if (vm.InitialRendering) return View(vm);
-        
+        if (vm.App == null)
+            throw new ArgumentNullException(nameof(vm.App));
+        if (vm.InitialRendering)
+            return View(vm);
+
         var stats = await _appService.GetSalesStats(vm.App);
 
         vm.SalesCount = stats.SalesCount;

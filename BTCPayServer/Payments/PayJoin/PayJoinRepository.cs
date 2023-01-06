@@ -19,7 +19,7 @@ namespace BTCPayServer.Payments.PayJoin
         public async Task<bool> TryLock(OutPoint outpoint)
         {
             using var ctx = _dbContextFactory.CreateContext();
-            ctx.PayjoinLocks.Add(new PayjoinLock() {Id = outpoint.ToString()});
+            ctx.PayjoinLocks.Add(new PayjoinLock() { Id = outpoint.ToString() });
             try
             {
                 return await ctx.SaveChangesAsync() == 1;
@@ -35,7 +35,7 @@ namespace BTCPayServer.Payments.PayJoin
             using var ctx = _dbContextFactory.CreateContext();
             foreach (OutPoint outPoint in outPoints)
             {
-                ctx.PayjoinLocks.Remove(new PayjoinLock() {Id = outPoint.ToString()});
+                ctx.PayjoinLocks.Remove(new PayjoinLock() { Id = outPoint.ToString() });
             }
 
             try

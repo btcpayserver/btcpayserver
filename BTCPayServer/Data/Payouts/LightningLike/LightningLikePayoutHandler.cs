@@ -44,7 +44,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
 
         public bool CanHandle(PaymentMethodId paymentMethod)
         {
-            return (paymentMethod.PaymentType == LightningPaymentType.Instance  ||  paymentMethod.PaymentType == LNURLPayPaymentType.Instance ) &&
+            return (paymentMethod.PaymentType == LightningPaymentType.Instance || paymentMethod.PaymentType == LNURLPayPaymentType.Instance) &&
                    _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(paymentMethod.CryptoCode)?.SupportLightning is true;
         }
 
@@ -190,6 +190,6 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             return Task.FromResult<IActionResult>(new RedirectToActionResult("ConfirmLightningPayout",
                 "UILightningLikePayout", new { cryptoCode = paymentMethodId.CryptoCode, payoutIds }));
         }
-        
+
     }
 }

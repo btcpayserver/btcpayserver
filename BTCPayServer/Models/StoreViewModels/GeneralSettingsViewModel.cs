@@ -7,7 +7,6 @@ namespace BTCPayServer.Models.StoreViewModels
 {
     public class GeneralSettingsViewModel
     {
-
         [Display(Name = "Store ID")]
         public string Id { get; set; }
 
@@ -22,9 +21,6 @@ namespace BTCPayServer.Models.StoreViewModels
         [MaxLength(500)]
         public string StoreWebsite { get; set; }
 
-        [Display(Name = "Brand Color")]
-        public string BrandColor { get; set; }
-
         [Display(Name = "Logo")]
         public IFormFile LogoFile { get; set; }
         public string LogoFileId { get; set; }
@@ -32,7 +28,10 @@ namespace BTCPayServer.Models.StoreViewModels
         [Display(Name = "Custom CSS")]
         public IFormFile CssFile { get; set; }
         public string CssFileId { get; set; }
-        
+
+        [Display(Name = "Brand Color")]
+        public string BrandColor { get; set; }
+
         public bool CanDelete { get; set; }
 
         [Display(Name = "Allow anyone to create invoice")]

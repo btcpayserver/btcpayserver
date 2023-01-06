@@ -29,7 +29,7 @@ namespace BTCPayServer.Storage.Services
         private readonly IHttpClientFactory _httpClientFactory;
 
         public FileService(StoredFileRepository fileRepository,
-            SettingsRepository settingsRepository, 
+            SettingsRepository settingsRepository,
             IEnumerable<IStorageProviderService> providers,
             IHttpClientFactory httpClientFactory,
             IOptions<DataDirectories> dataDirectories)
@@ -40,7 +40,7 @@ namespace BTCPayServer.Storage.Services
             _httpClientFactory = httpClientFactory;
             _dataDirectories = dataDirectories;
         }
-        
+
         public async Task<bool> IsAvailable()
         {
             var settings = await _settingsRepository.GetSettingAsync<StorageSettings>();
@@ -54,7 +54,7 @@ namespace BTCPayServer.Storage.Services
                 throw new InvalidOperationException("StoreSettings not configured");
             if (!file.FileName.IsValidFileName())
                 throw new InvalidOperationException("Invalid file name");
-            
+
             var provider = GetProvider(settings);
             var storedFile = await provider.AddFile(file, settings);
             storedFile.ApplicationUserId = userId;
@@ -66,11 +66,11 @@ namespace BTCPayServer.Storage.Services
         {
             if (!await IsAvailable())
                 throw new InvalidOperationException("StoreSettings not configured");
-            
+
             var fileName = Sanitize(Path.GetFileName(url.AbsolutePath));
             if (!fileName.IsValidFileName())
                 throw new InvalidOperationException("Invalid file name");
-            
+
             // download
             var filePath = Path.Join(_dataDirectories.Value.TempDir, fileName);
             var httClient = _httpClientFactory.CreateClient();
@@ -85,10 +85,10 @@ namespace BTCPayServer.Storage.Services
             await stream.FlushAsync();
 
             var storedFile = await AddFile(file, userId);
-            
+
             // cleanup
             File.Delete(filePath);
-            
+
             return storedFile;
         }
 
@@ -143,7 +143,7 @@ namespace BTCPayServer.Storage.Services
 
             return contentType;
         }
-        
+
         private static string Sanitize(string fileName)
         {
             var invalid = Path.GetInvalidFileNameChars().Concat(":").ToArray();

@@ -347,7 +347,7 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<IHostedService, WebhookSender>(o => o.GetRequiredService<WebhookSender>());
             services.AddSingleton<IHostedService, StoreEmailRuleProcessorSender>();
             services.AddHttpClient(WebhookSender.OnionNamedClient)
-                .ConfigurePrimaryHttpMessageHandler<Socks5HttpClientHandler>(); 
+                .ConfigurePrimaryHttpMessageHandler<Socks5HttpClientHandler>();
             services.AddHttpClient(WebhookSender.LoopbackNamedClient)
                 .ConfigurePrimaryHttpMessageHandler(_ => new HttpClientHandler
                 {

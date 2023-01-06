@@ -88,7 +88,7 @@ namespace BTCPayServer.Controllers
                     AmountFormatted = _Currencies.FormatCurrency(blob.Amount, blob.Currency)
                 };
             }).ToList();
-            
+
             return View(model);
         }
 
@@ -150,7 +150,7 @@ namespace BTCPayServer.Controllers
                 return View(nameof(EditPaymentRequest), viewModel);
             }
 
-            
+
             blob.Title = viewModel.Title;
             blob.Email = viewModel.Email;
             blob.Description = viewModel.Description;
@@ -239,7 +239,7 @@ namespace BTCPayServer.Controllers
                 }
             });
         }
-        
+
         [HttpGet("{payReqId}/pay")]
         [AllowAnonymous]
         public async Task<IActionResult> PayPaymentRequest(string payReqId, bool redirectToInvoice = true,

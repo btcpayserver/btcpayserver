@@ -1,7 +1,8 @@
 using System;
-using System.Linq;
 using System.IO;
+using System.Linq;
 using System.Net;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using BTCPayServer.Configuration;
 using BTCPayServer.Hosting;
@@ -11,7 +12,6 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using System.Reflection;
 
 [assembly: InternalsVisibleTo("BTCPayServer.Tests")]
 namespace BTCPayServer

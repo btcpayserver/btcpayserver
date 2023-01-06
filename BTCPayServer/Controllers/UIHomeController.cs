@@ -89,19 +89,19 @@ namespace BTCPayServer.Controllers
                         return RedirectToStore(store);
                     }
                 }
-                
+
                 var stores = await _storeRepository.GetStoresByUserId(userId);
                 if (stores.Any())
                 {
                     // redirect to first store
                     return RedirectToStore(stores.First());
                 }
-                
+
                 var vm = new HomeViewModel
                 {
                     HasStore = stores.Any()
                 };
-                
+
                 return View("Home", vm);
             }
 
@@ -177,8 +177,8 @@ namespace BTCPayServer.Controllers
 
         public RedirectToActionResult RedirectToStore(StoreData store)
         {
-            return store.Role == StoreRoles.Owner 
-                ? RedirectToAction("Dashboard", "UIStores", new { storeId = store.Id }) 
+            return store.Role == StoreRoles.Owner
+                ? RedirectToAction("Dashboard", "UIStores", new { storeId = store.Id })
                 : RedirectToAction("ListInvoices", "UIInvoice", new { storeId = store.Id });
         }
     }

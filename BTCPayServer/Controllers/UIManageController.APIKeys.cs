@@ -97,7 +97,7 @@ namespace BTCPayServer.Controllers
             permissions ??= Array.Empty<string>();
 
             var requestPermissions = Permission.ToPermissions(permissions).ToList();
-            
+
             if (redirect?.IsAbsoluteUri is false)
             {
                 redirect = null;
@@ -113,7 +113,7 @@ namespace BTCPayServer.Controllers
                 Permissions = string.Join(';', requestPermissions),
                 ApplicationIdentifier = applicationIdentifier
             };
-            
+
             var existingApiKey = await CheckForMatchingApiKey(requestPermissions, vm);
             if (existingApiKey != null)
             {
@@ -132,7 +132,7 @@ namespace BTCPayServer.Controllers
         {
             viewModel = await SetViewModelValues(viewModel);
             AdjustVMForAuthorization(viewModel);
-            
+
             var ar = HandleCommands(viewModel);
             if (ar != null)
             {
@@ -250,7 +250,7 @@ namespace BTCPayServer.Controllers
             {
                 return null;
             }
-                
+
             //check if there is an app identifier that matches and belongs to the current user
             var keys = await _apiKeyRepository.GetKeys(new APIKeyRepository.APIKeyQuery
             {
@@ -263,7 +263,7 @@ namespace BTCPayServer.Controllers
                 {
                     continue;
                 }
-                
+
                 var requestedGrouped = requestedPermissions.GroupBy(permission => permission.Policy);
                 var existingGrouped = Permission.ToPermissions(blob.Permissions).GroupBy(permission => permission.Policy);
 
@@ -280,8 +280,8 @@ namespace BTCPayServer.Controllers
 
                     if (Policies.IsStorePolicy(requested.Key))
                     {
-                        if ((vm.SelectiveStores && !existing.Any(p => p.Scope == vm.StoreId)) || 
-                            (!vm.SelectiveStores && existing.Any(p => !string.IsNullOrEmpty(p.Scope))) )
+                        if ((vm.SelectiveStores && !existing.Any(p => p.Scope == vm.StoreId)) ||
+                            (!vm.SelectiveStores && existing.Any(p => !string.IsNullOrEmpty(p.Scope))))
                         {
                             fail = true;
                             break;
@@ -305,9 +305,9 @@ namespace BTCPayServer.Controllers
         {
             var permissions = vm.Permissions?.Split(';') ?? Array.Empty<string>();
             var permissionsWithStoreIDs = new List<string>();
-            
+
             vm.NeedsStorePermission = vm.SelectiveStores && (permissions.Any(Policies.IsStorePolicy) || !vm.Strict);
-            
+
             // Go over each permission and associated store IDs and join them
             // so that permission for a specific store is parsed correctly
             foreach (var permission in permissions)
@@ -340,7 +340,7 @@ namespace BTCPayServer.Controllers
                     var commandParts = vm.Command?.Split(':', StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string>();
                     var command = commandParts.Length > 1 ? commandParts[1] : null;
                     var isPerformingAnAction = command == "change-store-mode" || command == "add-store";
-                    
+
                     // Don't want to accidentally change mode for the user if they are explicitly performing some action
                     if (isPerformingAnAction)
                     {
@@ -349,7 +349,7 @@ namespace BTCPayServer.Controllers
 
                     // Set the value to true and adjust the other fields based on the policy type
                     permissionValue.Value = true;
-                    
+
                     if (vm.SelectiveStores && Policies.IsStorePolicy(permissionValue.Permission) &&
                         wanted.Any(permission => !string.IsNullOrEmpty(permission.Scope)))
                     {
@@ -566,7 +566,7 @@ namespace BTCPayServer.Controllers
                 public bool Forbidden { get; set; }
 
                 public ApiKeyStoreMode StoreMode { get; set; } = ApiKeyStoreMode.AllStores;
-                public List<string> SpecificStores { get; set; } = new ();
+                public List<string> SpecificStores { get; set; } = new();
             }
         }
 

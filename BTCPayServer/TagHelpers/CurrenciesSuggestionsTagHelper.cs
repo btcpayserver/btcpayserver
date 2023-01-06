@@ -13,8 +13,8 @@ namespace BTCPayServer.TagHelpers
         public CurrenciesSuggestionsTagHelper(CurrencyNameTable currencies)
         {
             _currencies = currencies;
-            
         }
+        
         public override void Process(TagHelperContext context, TagHelperOutput output)
         {
             output.Attributes.RemoveAll("currency-selection");

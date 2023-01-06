@@ -22,10 +22,10 @@ public class Form
 #nullable restore
     // Messages to be shown at the top of the form indicating user feedback like "Saved successfully" or "Please change X because of Y." or a warning, etc...
     public List<AlertMessage> TopMessages { get; set; } = new();
-    
+
     // Groups of fields in the form
     public List<Field> Fields { get; set; } = new();
-    
+
     // Are all the fields valid in the form?
     public bool IsValid()
     {
@@ -36,7 +36,7 @@ public class Form
     {
         return GetFieldByName(name, Fields, null);
     }
-    
+
     private static Field GetFieldByName(string name, List<Field> fields, string prefix)
     {
         prefix ??= string.Empty;
@@ -45,7 +45,7 @@ public class Form
             var currentPrefix = prefix;
             if (!string.IsNullOrEmpty(field.Name))
             {
-                
+
                 currentPrefix = $"{prefix}{field.Name}";
                 if (currentPrefix.Equals(name, StringComparison.InvariantCultureIgnoreCase))
                 {
@@ -60,7 +60,7 @@ public class Form
             {
                 return subFieldResult;
             }
-            
+
         }
         return null;
     }
@@ -73,7 +73,7 @@ public class Form
     private static List<string> GetAllNames(List<Field> fields)
     {
         var names = new List<string>();
-        
+
         foreach (var field in fields)
         {
             string prefix = string.Empty;
@@ -85,7 +85,7 @@ public class Form
 
             if (field.Fields.Any())
             {
-                names.AddRange(GetAllNames(field.Fields).Select(s => $"{prefix}{s}" ));
+                names.AddRange(GetAllNames(field.Fields).Select(s => $"{prefix}{s}"));
             }
         }
 
@@ -105,7 +105,7 @@ public class Form
             }
         }
     }
-    
+
     public void ApplyValuesFromForm(IFormCollection form)
     {
         var names = GetAllNames();
@@ -125,7 +125,7 @@ public class Form
     {
         return GetValues(Fields);
     }
-    
+
     private static Dictionary<string, object> GetValues(List<Field> fields)
     {
         var result = new Dictionary<string, object>();
@@ -136,11 +136,12 @@ public class Form
             {
                 var values = GetValues(fields);
                 values.Remove(string.Empty, out var keylessValue);
-                
+
                 result.TryAdd(name, values);
 
-                if (keylessValue is not Dictionary<string, object> dict) continue;
-                foreach (KeyValuePair<string,object> keyValuePair in dict)
+                if (keylessValue is not Dictionary<string, object> dict)
+                    continue;
+                foreach (KeyValuePair<string, object> keyValuePair in dict)
                 {
                     result.TryAdd(keyValuePair.Key, keyValuePair.Value);
                 }

@@ -79,7 +79,7 @@ namespace BTCPayServer.Payments.Bitcoin
                 model.InvoiceBitcoinUrl = (cryptoInfo.PaymentUrls?.BIP21 ?? "") + lightningFallback;
                 model.InvoiceBitcoinUrlQR = (cryptoInfo.PaymentUrls?.BIP21 ?? "") + lightningFallback
                     .Replace("LIGHTNING=", "lightning=", StringComparison.OrdinalIgnoreCase);
-                
+
                 // Most wallets still don't support BITCOIN: schema, so we're leaving this for better days
                 // Ref: https://github.com/btcpayserver/btcpayserver/pull/2060#issuecomment-723828348
                 //model.InvoiceBitcoinUrlQR = cryptoInfo.PaymentUrls.BIP21
@@ -100,7 +100,7 @@ namespace BTCPayServer.Payments.Bitcoin
                 model.InvoiceBitcoinUrlQR = "";
             }
 
-           
+
         }
 
         public override string GetCryptoImage(PaymentMethodId paymentMethodId)
@@ -157,7 +157,7 @@ namespace BTCPayServer.Payments.Bitcoin
             DerivationSchemeSettings supportedPaymentMethod, PaymentMethod paymentMethod, StoreData store,
             BTCPayNetwork network, object preparePaymentObject, IEnumerable<PaymentMethodId> invoicePaymentMethods)
         {
-            
+
             if (!_ExplorerProvider.IsAvailable(network))
                 throw new PaymentMethodUnavailableException($"Full node not available");
             if (paymentMethod.ParentEntity.Type != InvoiceType.TopUp)
@@ -203,7 +203,7 @@ namespace BTCPayServer.Payments.Bitcoin
             }
 
             var reserved = await prepare.ReserveAddress;
-            
+
             onchainMethod.DepositAddress = reserved.Address.ToString();
             onchainMethod.KeyPath = reserved.KeyPath;
             onchainMethod.PayjoinEnabled = blob.PayJoinEnabled &&

@@ -19,7 +19,7 @@ public class WalletHistogramService
 {
     private readonly BTCPayNetworkProvider _networkProvider;
     private readonly NBXplorerConnectionFactory _connectionFactory;
-    
+
     public WalletHistogramService(
         BTCPayNetworkProvider networkProvider,
         NBXplorerConnectionFactory connectionFactory)
@@ -27,7 +27,7 @@ public class WalletHistogramService
         _networkProvider = networkProvider;
         _connectionFactory = connectionFactory;
     }
-    
+
     public async Task<WalletHistogramData> GetHistogram(StoreData store, WalletId walletId, WalletHistogramType type)
     {
         // https://github.com/dgarage/NBXplorer/blob/master/docs/Postgres-Schema.md
@@ -54,7 +54,7 @@ public class WalletHistogramService
                 var balance = await conn.ExecuteScalarAsync<decimal>(
                     "SELECT to_btc(available_balance) FROM wallets_balances WHERE wallet_id=@wallet_id AND code=@code AND asset_id=''",
                     new { code, wallet_id });
-                var rows = await conn.QueryAsync("SELECT date, to_btc(balance) balance FROM get_wallets_histogram(@wallet_id, @code, '', @from, @to, @interval)", 
+                var rows = await conn.QueryAsync("SELECT date, to_btc(balance) balance FROM get_wallets_histogram(@wallet_id, @code, '', @from, @to, @interval)",
                     new { code, wallet_id, from, to, interval });
                 var data = rows.AsList();
                 var series = new List<decimal>(pointCount);

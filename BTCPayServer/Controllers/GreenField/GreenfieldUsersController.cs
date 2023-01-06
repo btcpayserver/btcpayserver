@@ -69,14 +69,14 @@ namespace BTCPayServer.Controllers.Greenfield
         [HttpGet("~/api/v1/users/{idOrEmail}")]
         public async Task<IActionResult> GetUser(string idOrEmail)
         {
-            var user = (await _userManager.FindByIdAsync(idOrEmail) ) ?? await _userManager.FindByEmailAsync(idOrEmail);
+            var user = (await _userManager.FindByIdAsync(idOrEmail)) ?? await _userManager.FindByEmailAsync(idOrEmail);
             if (user != null)
             {
                 return Ok(await FromModel(user));
             }
             return UserNotFound();
         }
-        
+
         [Authorize(Policy = Policies.CanModifyServerSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpPost("~/api/v1/users/{idOrEmail}/lock")]
         public async Task<IActionResult> LockUser(string idOrEmail, LockUserRequest request)
@@ -91,7 +91,7 @@ namespace BTCPayServer.Controllers.Greenfield
             return success.HasValue && success.Value ? Ok() : this.CreateAPIError("invalid-state",
                 $"{(request.Locked ? "Locking" : "Unlocking")} user failed");
         }
-        
+
         [Authorize(Policy = Policies.CanViewUsers, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/users/")]
         public async Task<ActionResult<ApplicationUserData[]>> GetUsers()
@@ -254,7 +254,7 @@ namespace BTCPayServer.Controllers.Greenfield
             return UserService.FromModel(data, roles);
         }
 
-       
+
 
         private IActionResult UserNotFound()
         {

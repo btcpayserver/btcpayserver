@@ -186,7 +186,7 @@ namespace BTCPayServer.Controllers
         [HttpPost("{storeId}/users/{userId}/delete")]
         public async Task<IActionResult> DeleteStoreUserPost(string storeId, string userId)
         {
-            if(await _Repo.RemoveStoreUser(storeId, userId))
+            if (await _Repo.RemoveStoreUser(storeId, userId))
                 TempData[WellKnownTempData.SuccessMessage] = "User removed successfully.";
             else
             {
@@ -409,7 +409,7 @@ namespace BTCPayServer.Controllers
         public PaymentMethodOptionViewModel.Format[] GetEnabledPaymentMethodChoices(StoreData storeData)
         {
             var enabled = storeData.GetEnabledPaymentIds(_NetworkProvider);
-            
+
             return enabled
                 .Select(o =>
                     new PaymentMethodOptionViewModel.Format()
@@ -650,11 +650,11 @@ namespace BTCPayServer.Controllers
                 return View(model);
             }
             blob.BrandColor = model.BrandColor;
-            
+
             var userId = GetUserId();
             if (userId is null)
                 return NotFound();
-            
+
             if (model.LogoFile != null)
             {
                 if (model.LogoFile.ContentType.StartsWith("image/", StringComparison.InvariantCulture))
@@ -664,7 +664,7 @@ namespace BTCPayServer.Controllers
                     {
                         await _fileService.RemoveFile(blob.LogoFileId, userId);
                     }
-                    
+
                     // add new image
                     try
                     {
@@ -687,7 +687,7 @@ namespace BTCPayServer.Controllers
                 blob.LogoFileId = null;
                 needUpdate = true;
             }
-            
+
             if (model.CssFile != null)
             {
                 if (model.CssFile.ContentType.Equals("text/css", StringComparison.InvariantCulture))
@@ -720,7 +720,7 @@ namespace BTCPayServer.Controllers
                 blob.CssFileId = null;
                 needUpdate = true;
             }
-            
+
             if (CurrentStore.SetStoreBlob(blob))
             {
                 needUpdate = true;
@@ -780,7 +780,7 @@ namespace BTCPayServer.Controllers
                 }).ToArray() ?? new AccountKeySettings[result.Item1.GetExtPubKeys().Count()];
                 return derivationSchemeSettings;
             }
-            
+
             var strategy = parser.Parse(derivationScheme);
             return new DerivationSchemeSettings(strategy, network);
         }
@@ -952,10 +952,10 @@ namespace BTCPayServer.Controllers
             var userId = GetUserId();
             if (userId == null)
                 return Challenge(AuthenticationSchemes.Cookie);
-            
+
             if (pairingCode == null)
                 return NotFound();
-            
+
             if (selectedStore != null)
             {
                 var store = await _Repo.FindStore(selectedStore, userId);
@@ -963,14 +963,14 @@ namespace BTCPayServer.Controllers
                     return NotFound();
                 HttpContext.SetStoreData(store);
             }
-            
+
             var pairing = await _TokenRepository.GetPairingAsync(pairingCode);
             if (pairing == null)
             {
                 TempData[WellKnownTempData.ErrorMessage] = "Unknown pairing code";
                 return RedirectToAction(nameof(UIHomeController.Index), "UIHome");
             }
-            
+
             var stores = await _Repo.GetStoresByUserId(userId);
             return View(new PairingModel
             {

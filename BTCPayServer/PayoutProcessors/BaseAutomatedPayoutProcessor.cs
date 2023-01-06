@@ -17,7 +17,7 @@ using PayoutProcessorData = BTCPayServer.Data.Data.PayoutProcessorData;
 
 namespace BTCPayServer.PayoutProcessors;
 
-public abstract class BaseAutomatedPayoutProcessor<T> : BaseAsyncService where T:AutomatedPayoutBlob
+public abstract class BaseAutomatedPayoutProcessor<T> : BaseAsyncService where T : AutomatedPayoutBlob
 {
     protected readonly StoreRepository _storeRepository;
     protected readonly PayoutProcessorData _PayoutProcesserSettings;
@@ -56,18 +56,18 @@ public abstract class BaseAutomatedPayoutProcessor<T> : BaseAsyncService where T
         var paymentMethod = store?.GetEnabledPaymentMethods(_btcPayNetworkProvider)?.FirstOrDefault(
             method =>
                 method.PaymentId == PaymentMethodId);
-        
+
         var blob = GetBlob(_PayoutProcesserSettings);
         if (paymentMethod is not null)
         {
-            
+
             await using var context = _applicationDbContextFactory.CreateContext();
             var payouts = await _pullPaymentHostedService.GetPayouts(
                 new PullPaymentHostedService.PayoutQuery()
                 {
-                    States = new[] {PayoutState.AwaitingPayment},
-                    PaymentMethods = new[] {_PayoutProcesserSettings.PaymentMethod},
-                    Stores = new[] {_PayoutProcesserSettings.StoreId}
+                    States = new[] { PayoutState.AwaitingPayment },
+                    PaymentMethods = new[] { _PayoutProcesserSettings.PaymentMethod },
+                    Stores = new[] { _PayoutProcesserSettings.StoreId }
                 }, context);
             if (payouts.Any())
             {

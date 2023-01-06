@@ -9,7 +9,7 @@ public class AssetQuoteResult
 
     public AssetQuoteResult() { }
 
-    public AssetQuoteResult(string fromAsset, string toAsset,decimal bid, decimal ask)
+    public AssetQuoteResult(string fromAsset, string toAsset, decimal bid, decimal ask)
     {
         FromAsset = fromAsset;
         ToAsset = toAsset;

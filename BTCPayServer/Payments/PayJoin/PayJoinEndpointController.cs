@@ -523,8 +523,8 @@ namespace BTCPayServer.Payments.PayJoin
                 await _walletRepository.AddWalletTransactionAttachment(walletId, utxo.Key.Hash, Attachment.PayjoinExposed(invoice?.Id));
             }
             await _walletRepository.AddWalletTransactionAttachment(walletId, originalPaymentData.PayjoinInformation.CoinjoinTransactionHash, Attachment.Payjoin());
-            
-            
+
+
             ctx.Success();
             // BTCPay Server support PSBT set as hex
             if (psbtFormat && HexEncoder.IsWellFormed(rawBody))

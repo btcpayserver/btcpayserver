@@ -16,6 +16,7 @@ using BTCPayServer.Data.Payouts.LightningLike;
 using BTCPayServer.Events;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Lightning;
+using BTCPayServer.Logging;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Plugins.PointOfSale.Models;
@@ -78,12 +79,12 @@ namespace BTCPayServer
             _pullPaymentHostedService = pullPaymentHostedService;
             _btcPayNetworkJsonSerializerSettings = btcPayNetworkJsonSerializerSettings;
         }
-
+        
+        public Logs Logs { get; }
 
         [HttpGet("withdraw/pp/{pullPaymentId}")]
         public async Task<IActionResult> GetLNURLForPullPayment(string cryptoCode, string pullPaymentId, string pr, CancellationToken cancellationToken)
         {
-
             var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
             if (network is null || !network.SupportLightning)
             {
@@ -160,13 +161,13 @@ namespace BTCPayServer
                             _lightningLikePaymentHandler.CreateLightningClient(pm, network);
                         var payResult = await UILightningLikePayoutController.TrypayBolt(client,
                             claimResponse.PayoutData.GetBlob(_btcPayNetworkJsonSerializerSettings),
-                            claimResponse.PayoutData, result, pmi, cancellationToken);
+                            claimResponse.PayoutData, result, pmi, cancellationToken, Logs);
 
                         switch (payResult.Result)
                         {
                             case PayResult.Ok:
                             case PayResult.Unknown:
-                                await _pullPaymentHostedService.MarkPaid(new MarkPayoutRequest()
+                                await _pullPaymentHostedService.MarkPaid(new MarkPayoutRequest
                                 {
                                     PayoutId = claimResponse.PayoutData.Id,
                                     State = claimResponse.PayoutData.State,

@@ -264,9 +264,12 @@ namespace BTCPayServer.Controllers.Greenfield
                 }),
                 PayResult.Ok => Ok(new LightningPaymentData
                 {
+                    BOLT11 = bolt11?.ToString(),
                     Status = LightningPaymentStatus.Complete,
                     TotalAmount = result.Details?.TotalAmount,
-                    FeeAmount = result.Details?.FeeAmount
+                    FeeAmount = result.Details?.FeeAmount,
+                    PaymentHash = result.Details?.PaymentHash.ToString(),
+                    Preimage = result.Details?.Preimage.ToString()
                 }),
                 _ => throw new NotSupportedException("Unsupported PayResult")
             };
@@ -353,7 +356,9 @@ namespace BTCPayServer.Controllers.Greenfield
                 AmountReceived = invoice.AmountReceived,
                 PaidAt = invoice.PaidAt,
                 BOLT11 = invoice.BOLT11,
-                ExpiresAt = invoice.ExpiresAt
+                ExpiresAt = invoice.ExpiresAt,
+                PaymentHash = invoice.PaymentHash,
+                Preimage = invoice.Preimage
             };
 
             if (invoice.CustomRecords != null)

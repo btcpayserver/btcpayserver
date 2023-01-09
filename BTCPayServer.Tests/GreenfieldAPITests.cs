@@ -19,8 +19,6 @@ using BTCPayServer.Services;
 using BTCPayServer.Services.Custodian.Client.MockCustodian;
 using BTCPayServer.Services.Notifications;
 using BTCPayServer.Services.Notifications.Blobs;
-using BTCPayServer.Services.Stores;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin;
@@ -2104,9 +2102,13 @@ namespace BTCPayServer.Tests
             merchant.RegisterLightningNode("BTC", LightningConnectionType.LndREST);
             var merchantClient = await merchant.CreateClient($"{Policies.CanUseLightningNodeInStore}:{merchant.StoreId}");
             var merchantInvoice = await merchantClient.CreateLightningInvoice(merchant.StoreId, "BTC", new CreateLightningInvoiceRequest(LightMoney.Satoshis(1_000), "hey", TimeSpan.FromSeconds(60)));
+            Assert.NotNull(merchantInvoice.Id);
+            Assert.NotNull(merchantInvoice.PaymentHash);
+            Assert.Equal(merchantInvoice.Id, merchantInvoice.PaymentHash);
+            
             // The default client is using charge, so we should not be able to query channels
             var chargeClient = await user.CreateClient(Policies.CanUseInternalLightningNode);
-
+            
             var info = await chargeClient.GetLightningNodeInfo("BTC");
             Assert.Single(info.NodeURIs);
             Assert.NotEqual(0, info.BlockHeight);
@@ -2175,6 +2177,14 @@ namespace BTCPayServer.Tests
             Assert.NotNull(payResponse.FeeAmount);
             Assert.NotNull(payResponse.TotalAmount);
             Assert.NotNull(payResponse.PaymentHash);
+            
+            // check the get invoice response
+            var merchInvoice = await merchantClient.GetLightningInvoice(merchant.StoreId, "BTC", merchantInvoice.Id);
+            Assert.NotNull(merchInvoice);
+            Assert.NotNull(merchInvoice.Preimage);
+            Assert.NotNull(merchInvoice.PaymentHash);
+            Assert.Equal(payResponse.Preimage, merchInvoice.Preimage);
+            Assert.Equal(payResponse.PaymentHash, merchInvoice.PaymentHash);
 
             await Assert.ThrowsAsync<GreenfieldValidationException>(async () => await client.PayLightningInvoice(user.StoreId, "BTC", new PayLightningInvoiceRequest()
             {
@@ -2191,6 +2201,8 @@ namespace BTCPayServer.Tests
 
             var invoice = await merchantClient.GetLightningInvoice(merchant.StoreId, "BTC", merchantInvoice.Id);
             Assert.NotNull(invoice.PaidAt);
+            Assert.NotNull(invoice.PaymentHash);
+            Assert.NotNull(invoice.Preimage);
             Assert.Equal(LightMoney.Satoshis(1000), invoice.Amount);
 
             // check list for store with paid invoice

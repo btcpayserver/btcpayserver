@@ -11,6 +11,7 @@ using BTCPayServer.Plugins;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 [assembly: InternalsVisibleTo("BTCPayServer.Tests")]
@@ -52,7 +53,12 @@ namespace BTCPayServer
                         l.AddFilter("Fido2NetLib.DistributedCacheMetadataService", LogLevel.Error);
                         l.AddProvider(new CustomConsoleLogProvider(processor));
                     })
-                    .UseStartup<Startup>();
+                    .UseStartup<Startup>()
+                    .ConfigureServices(collection =>
+                        collection
+                            .AddSingleton<HostAccessor>()
+                            .AddSingleton(provider => provider.GetRequiredService<HostAccessor>().GetHost())
+                        );
 
                 // When we run the app with dotnet run (typically in dev env), the wwwroot isn't in the same directory
                 // than this assembly.
@@ -69,6 +75,7 @@ namespace BTCPayServer
                 host = builder.Build();
                 host.StartWithTasksAsync().GetAwaiter().GetResult();
                 var urls = host.ServerFeatures.Get<IServerAddressesFeature>().Addresses;
+                host.Services.GetService<HostAccessor>().Host = host;
                 foreach (var url in urls)
                 {
                     // Some tools such as dotnet watch parse this exact log to open the browser

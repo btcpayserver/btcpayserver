@@ -60,12 +60,10 @@ namespace BTCPayServer.Plugins
                 {
                     if (!isSystemPlugin && plugin.Identifier != pluginIdentifier)
                         continue;
-                    loadedPluginIdentifiers.Add(plugin.Identifier);
+                    if (!loadedPluginIdentifiers.Add(plugin.Identifier))
+                        continue;
                     plugins.Add(plugin);
                     plugin.SystemPlugin = isSystemPlugin;
-                    // Only one plugin per assembly if not system
-                    if (!isSystemPlugin)
-                        break;
                 }
             }
 
@@ -101,7 +99,7 @@ namespace BTCPayServer.Plugins
 
             foreach (var toLoad in pluginsToLoad)
             {
-                if (loadedPluginIdentifiers.Contains(toLoad.PluginIdentifier))
+                if (!loadedPluginIdentifiers.Add(toLoad.PluginIdentifier))
                     continue;
                 try
                 {

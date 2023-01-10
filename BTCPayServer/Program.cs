@@ -35,7 +35,11 @@ namespace BTCPayServer
             IConfiguration conf = null;
             try
             {
-                conf = new DefaultConfiguration() { Logger = logger }.CreateConfiguration(args);
+                var confBuilder = new DefaultConfiguration() { Logger = logger }.CreateConfigurationBuilder(args);
+#if DEBUG
+                confBuilder.AddJsonFile("appsettings.dev.json", true, false);
+#endif
+                conf = confBuilder.Build();
                 if (conf == null)
                     return;
 

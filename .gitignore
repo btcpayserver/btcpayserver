@@ -298,3 +298,4 @@ Packed Plugins
 Plugins/packed
 
 BTCPayServer/wwwroot/swagger/v1/openapi.json
+BTCPayServer/appsettings.dev.json

@@ -23,9 +23,7 @@ namespace BTCPayServer.Plugins
     {
         public const string BTCPayPluginSuffix = ".btcpay";
         private static readonly List<Assembly> _pluginAssemblies = new List<Assembly>();
-        private static ILogger _logger;
 
-        private static List<(PluginLoader, Assembly, IFileProvider)> loadedPlugins;
         public static bool IsExceptionByPlugin(Exception exception)
         {
             return _pluginAssemblies.Any(assembly => assembly?.FullName?.Contains(exception.Source!, StringComparison.OrdinalIgnoreCase) is true);
@@ -33,7 +31,7 @@ namespace BTCPayServer.Plugins
         public static IMvcBuilder AddPlugins(this IMvcBuilder mvcBuilder, IServiceCollection serviceCollection,
             IConfiguration config, ILoggerFactory loggerFactory)
         {
-            _logger = loggerFactory.CreateLogger(typeof(PluginManager));
+            var logger = loggerFactory.CreateLogger(typeof(PluginManager));
             var pluginsFolder = new DataDirectories().Configure(config).PluginDir;
             var plugins = new List<IBTCPayServerPlugin>();
             var loadedPluginIdentifiers = new HashSet<string>();
@@ -42,38 +40,40 @@ namespace BTCPayServer.Plugins
             {
                 options.Limits.MaxRequestBodySize = int.MaxValue; // if don't set default value is: 30 MB
             });
-            _logger.LogInformation($"Loading plugins from {pluginsFolder}");
+            logger.LogInformation($"Loading plugins from {pluginsFolder}");
             Directory.CreateDirectory(pluginsFolder);
             ExecuteCommands(pluginsFolder);
 
-
-            loadedPlugins = new List<(PluginLoader, Assembly, IFileProvider)>();
-
-            // System plugins directly hard coded in btcpay
-            var systemAssembly = typeof(Program).Assembly;
-            foreach (IBTCPayServerPlugin plugin in new IBTCPayServerPlugin[]
-            {
-                new Plugins.BTCPayServerPlugin(),
-                new Plugins.Shopify.ShopifyPlugin(),
-                new Plugins.PayButton.CrowdfundPlugin(),
-                new Plugins.PayButton.PayButtonPlugin(),
-                new Plugins.PayButton.PointOfSalePlugin(),
-            })
-            {
-                loadedPluginIdentifiers.Add(plugin.Identifier);
-                plugins.Add(plugin);
-                plugin.SystemPlugin = true;
-                loadedPlugins.Add((null, systemAssembly, CreateEmbeddedFileProviderForAssembly(systemAssembly)));
-            }
-
             var disabledPlugins = GetDisabledPlugins(pluginsFolder);
+            var systemAssembly = typeof(Program).Assembly;
+            // Load the referenced assembly plugins
+            // All referenced plugins should have at least one plugin with exact same plugin identifier
+            // as the assembly. Except for the system assembly (btcpayserver assembly) which are fake plugins
+            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                var pluginIdentifier = assembly.GetName().Name;
+                bool isSystemPlugin = assembly == systemAssembly;
+                if (!isSystemPlugin && disabledPlugins.Contains(pluginIdentifier))
+                    continue;
+
+                foreach (var plugin in GetPluginInstancesFromAssembly(assembly))
+                {
+                    if (!isSystemPlugin && plugin.Identifier != pluginIdentifier)
+                        continue;
+                    loadedPluginIdentifiers.Add(plugin.Identifier);
+                    plugins.Add(plugin);
+                    plugin.SystemPlugin = isSystemPlugin;
+                    // Only one plugin per assembly if not system
+                    if (!isSystemPlugin)
+                        break;
+                }
+            }
 
             var pluginsToLoad = new List<(string PluginIdentifier, string PluginFilePath)>();
 
 #if DEBUG
             // Load from DEBUG_PLUGINS, in an optional appsettings.dev.json
-            var debugPlugins = config["DEBUG_PLUGINS"];
-            debugPlugins.Split(';', StringSplitOptions.RemoveEmptyEntries);
+            var debugPlugins = config["DEBUG_PLUGINS"] ?? "";
             foreach (var plugin in debugPlugins.Split(';', StringSplitOptions.RemoveEmptyEntries))
             {
                 // Formatted either as "<PLUGIN_IDENTIFIER>::<PathToDll>" or "<PathToDll>"
@@ -117,31 +117,22 @@ namespace BTCPayServer.Plugins
                         });
                     var pluginAssembly = plugin.LoadDefaultAssembly();
 
-                    var p = GetPluginInstanceFromAssembly(pluginAssembly);
+                    var p = GetPluginInstanceFromAssembly(toLoad.PluginIdentifier, pluginAssembly);
                     if (p == null)
                     {
-                        _logger.LogError($"The plugin assembly doesn't contain any plugin: {toLoad.PluginIdentifier}");
+                        logger.LogError($"The plugin assembly doesn't contain the plugin {toLoad.PluginIdentifier}");
                     }
                     else
                     {
-                        if (toLoad.PluginIdentifier == p.Identifier)
-                        {
-                            mvcBuilder.AddPluginLoader(plugin);
-                            _pluginAssemblies.Add(pluginAssembly);
-                            var fileProvider = CreateEmbeddedFileProviderForAssembly(pluginAssembly);
-                            loadedPlugins.Add((plugin, pluginAssembly, fileProvider));
-                            p.SystemPlugin = false;
-                            plugins.Add(p);
-                        }
-                        else
-                        {
-                            _logger.LogError($"The plugin Identifier doesn't match the expected one: Expected: {toLoad.PluginIdentifier}, Actual: {p.Identifier}");
-                        }
+                        mvcBuilder.AddPluginLoader(plugin);
+                        _pluginAssemblies.Add(pluginAssembly);
+                        p.SystemPlugin = false;
+                        plugins.Add(p);
                     }
                 }
                 catch (Exception e)
                 {
-                    _logger.LogError(e,
+                    logger.LogError(e,
                         $"Error when loading plugin {toLoad.PluginIdentifier}");
                 }
             }
@@ -150,14 +141,14 @@ namespace BTCPayServer.Plugins
             {
                 try
                 {
-                    _logger.LogInformation(
+                    logger.LogInformation(
                         $"Adding and executing plugin {plugin.Identifier} - {plugin.Version}");
                     plugin.Execute(serviceCollection);
                     serviceCollection.AddSingleton(plugin);
                 }
                 catch (Exception e)
                 {
-                    _logger.LogError(
+                    logger.LogError(
                         $"Error when loading plugin {plugin.Identifier} - {plugin.Version}{Environment.NewLine}{e.Message}");
                 }
             }
@@ -188,33 +179,33 @@ namespace BTCPayServer.Plugins
 
         public static void UsePlugins(this IApplicationBuilder applicationBuilder)
         {
+            HashSet<Assembly> assemblies = new HashSet<Assembly>();
             foreach (var extension in applicationBuilder.ApplicationServices
                 .GetServices<IBTCPayServerPlugin>())
             {
                 extension.Execute(applicationBuilder,
                     applicationBuilder.ApplicationServices);
+                assemblies.Add(extension.GetType().Assembly);
             }
 
             var webHostEnvironment = applicationBuilder.ApplicationServices.GetService<IWebHostEnvironment>();
             List<IFileProvider> providers = new List<IFileProvider>() { webHostEnvironment.WebRootFileProvider };
-            providers.AddRange(loadedPlugins.Select(tuple => tuple.Item3));
+            providers.AddRange(assemblies.Select(a => new EmbeddedFileProvider(a)));
             webHostEnvironment.WebRootFileProvider = new CompositeFileProvider(providers);
         }
 
-        private static IBTCPayServerPlugin GetPluginInstanceFromAssembly(Assembly assembly)
+        private static IEnumerable<IBTCPayServerPlugin> GetPluginInstancesFromAssembly(Assembly assembly)
         {
-            var plugins = assembly.GetTypes().Where(type =>
+            return assembly.GetTypes().Where(type =>
                 typeof(IBTCPayServerPlugin).IsAssignableFrom(type) && type != typeof(PluginService.AvailablePlugin) &&
-                !type.IsAbstract).ToArray();
-            var type = plugins.FirstOrDefault();
-            if (type != null)
-                return (IBTCPayServerPlugin)Activator.CreateInstance(type, Array.Empty<object>());
-            return null;
+                !type.IsAbstract).
+                Select(type => (IBTCPayServerPlugin)Activator.CreateInstance(type, Array.Empty<object>()));
         }
-
-        private static IFileProvider CreateEmbeddedFileProviderForAssembly(Assembly assembly)
+        private static IBTCPayServerPlugin GetPluginInstanceFromAssembly(string pluginIdentifier, Assembly assembly)
         {
-            return new EmbeddedFileProvider(assembly);
+            return GetPluginInstancesFromAssembly(assembly)
+                .Where(plugin => plugin.Identifier == pluginIdentifier)
+                .FirstOrDefault();
         }
 
         private static void ExecuteCommands(string pluginsFolder)

@@ -1745,6 +1745,15 @@ namespace BTCPayServer.Tests
                 Assert.True(match.Success);
                 return decimal.Parse(match.Groups[1].Value.Trim(), CultureInfo.InvariantCulture);
             }
+            
+            async Task<object[]> GetExport(TestAccount account, string storeId = null)
+            {
+                var content = await account.GetController<UIInvoiceController>(false)
+                    .Export("json", storeId);
+                var result = Assert.IsType<ContentResult>(content);
+                Assert.Equal("application/json", result.ContentType);
+                return JsonConvert.DeserializeObject<object[]>(result.Content ?? "[]");
+            }
 
             using var tester = CreateServerTester();
             await tester.StartAsync();
@@ -1764,14 +1773,11 @@ namespace BTCPayServer.Tests
                 }, Facade.Merchant);
 
             var networkFee = new FeeRate(invoice.MinerFees["BTC"].SatoshiPerBytes).GetFee(100);
-            var jsonResult = user.GetController<UIInvoiceController>().Export("json").GetAwaiter().GetResult();
-            var result = Assert.IsType<ContentResult>(jsonResult);
-            Assert.Equal("application/json", result.ContentType);
-            Assert.Single(JArray.Parse(result.Content));
+            var result = await GetExport(user);
+            Assert.Single(result);
 
             var cashCow = tester.ExplorerNode;
             var invoiceAddress = BitcoinAddress.Create(invoice.CryptoInfo[0].Address, cashCow.Network);
-            //
             var firstPayment = invoice.CryptoInfo[0].TotalDue - 3 * networkFee;
             cashCow.SendToAddress(invoiceAddress, firstPayment);
             Thread.Sleep(1000); // prevent race conditions, ordering payments
@@ -1785,14 +1791,9 @@ namespace BTCPayServer.Tests
             cashCow.SendToAddress(invoiceAddress, 4 * networkFee);
             Thread.Sleep(1000);
 
-            TestUtils.Eventually(() =>
+            await TestUtils.EventuallyAsync(async () =>
             {
-                var jsonResultPaid =
-                    user.GetController<UIInvoiceController>().Export("json").GetAwaiter().GetResult();
-                var paidresult = Assert.IsType<ContentResult>(jsonResultPaid);
-                Assert.Equal("application/json", paidresult.ContentType);
-
-                var parsedJson = JsonConvert.DeserializeObject<object[]>(paidresult.Content);
+                var parsedJson = await GetExport(user);
                 Assert.Equal(3, parsedJson.Length);
 
                 var invoiceDueAfterFirstPayment = (3 * networkFee).ToDecimal(MoneyUnit.BTC) * invoice.Rate;
@@ -1809,6 +1810,32 @@ namespace BTCPayServer.Tests
                 var pay3str = parsedJson[2].ToString();
                 Assert.Contains("\"InvoiceDue\": 0", pay3str);
             });
+
+            // create an invoice for a new store and check responses with and without store id
+            var otherUser = tester.NewAccount();
+            await otherUser.GrantAccessAsync();
+            otherUser.RegisterDerivationScheme("BTC");
+            await otherUser.SetNetworkFeeMode(NetworkFeeMode.Always);
+            var newInvoice = await otherUser.BitPay.CreateInvoiceAsync(
+                new Invoice
+                {
+                    Price = 21,
+                    Currency = "USD",
+                    PosData = "posData",
+                    OrderId = "orderId",
+                    ItemDesc = "Some \", description",
+                    FullNotifications = true
+                }, Facade.Merchant);
+            
+            await otherUser.PayInvoice(newInvoice.Id);
+            Assert.Single(await GetExport(otherUser));
+            Assert.Single(await GetExport(otherUser, otherUser.StoreId));
+            Assert.Equal(3, (await GetExport(user, user.StoreId)).Length);
+            Assert.Equal(3, (await GetExport(user)).Length);
+            
+            await otherUser.AddOwner(user.UserId);
+            Assert.Equal(4, (await GetExport(user)).Length);
+            Assert.Single(await GetExport(user, otherUser.StoreId));
         }
 
         [Fact(Timeout = LongRunningTestTimeout)]

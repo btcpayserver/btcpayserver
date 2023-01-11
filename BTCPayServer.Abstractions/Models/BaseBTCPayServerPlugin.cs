@@ -8,18 +8,52 @@ namespace BTCPayServer.Abstractions.Models
 {
     public abstract class BaseBTCPayServerPlugin : IBTCPayServerPlugin
     {
-        public abstract string Identifier { get; }
-        public abstract string Name { get; }
+        public virtual string Identifier
+        {
+            get
+            {
+                return GetType().GetTypeInfo().Assembly.GetName().Name;
+            }
+        }
+        public virtual string Name
+        {
+            get
+            {
+                return GetType().GetTypeInfo().Assembly
+                        .GetCustomAttribute<AssemblyTitleAttribute>()?
+                        .Title ?? string.Empty;
+            }
+        }
 
         public virtual Version Version
         {
             get
             {
-                return Assembly.GetAssembly(GetType())?.GetName().Version ?? new Version(1, 0, 0, 0);
+                return GetVersion(GetType().GetTypeInfo().Assembly
+                        .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
+                        .InformationalVersion) ??
+                        Assembly.GetAssembly(GetType())?.GetName()?.Version ??
+                        new Version(1, 0, 0, 0);
             }
         }
 
-        public abstract string Description { get; }
+        private static Version GetVersion(string informationalVersion)
+        {
+            if (informationalVersion is null)
+                return null;
+            Version.TryParse(informationalVersion, out var r);
+            return r;
+        }
+
+        public virtual string Description
+        {
+            get
+            {
+                return GetType().GetTypeInfo().Assembly
+                        .GetCustomAttribute<AssemblyDescriptionAttribute>()?
+                        .Description ?? string.Empty;
+            }
+        }
         public bool SystemPlugin { get; set; }
         public virtual IBTCPayServerPlugin.PluginDependency[] Dependencies { get; } = Array.Empty<IBTCPayServerPlugin.PluginDependency>();
 

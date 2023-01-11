@@ -1721,7 +1721,7 @@ namespace BTCPayServer.Tests
             using var tester = CreateServerTester();
             await tester.StartAsync();
             var user = tester.NewAccount();
-            await user.GrantAccessAsync();
+            await user.GrantAccessAsync(true);
             await user.MakeAdmin();
             await user.SetupWebhook();
             var client = await user.CreateClient(Policies.Unrestricted);
@@ -2242,6 +2242,45 @@ namespace BTCPayServer.Tests
             client = await guest.CreateClient(Policies.CanUseLightningNodeInStore);
             // Can use lightning node is only granted to store's owner
             await AssertPermissionError("btcpay.store.canuselightningnode", () => client.GetLightningNodeInfo(user.StoreId, "BTC"));
+        }
+
+        [Fact(Timeout = 60 * 20 * 1000)]
+        [Trait("Integration", "Integration")]
+        [Trait("Lightning", "Lightning")]
+        public async Task CanAccessInvoiceLightningPaymentMethodDetails()
+        {
+            using var tester = CreateServerTester();
+            tester.ActivateLightning();
+            await tester.StartAsync();
+            await tester.EnsureChannelsSetup();
+            var user = tester.NewAccount();
+            await user.GrantAccessAsync(true);
+            user.RegisterLightningNode("BTC", LightningConnectionType.CLightning);
+            
+            var client = await user.CreateClient(Policies.Unrestricted);
+            var invoice = await client.CreateInvoice(user.StoreId,
+                new CreateInvoiceRequest
+                {
+                    Currency = "USD",
+                    Amount = 100,
+                    Checkout = new CreateInvoiceRequest.CheckoutOptions
+                    {
+                        PaymentMethods = new[] { "BTC-LightningNetwork" },
+                        DefaultPaymentMethod = "BTC_LightningLike"
+                    }
+                });
+            var pm = Assert.Single(await client.GetInvoicePaymentMethods(user.StoreId, invoice.Id));
+            Assert.False(pm.AdditionalData.HasValues);
+            
+            var resp = await tester.CustomerLightningD.Pay(pm.Destination);
+            Assert.Equal(PayResult.Ok, resp.Result);
+            Assert.NotNull(resp.Details.PaymentHash);
+            Assert.NotNull(resp.Details.Preimage);
+            
+            pm = Assert.Single(await client.GetInvoicePaymentMethods(user.StoreId, invoice.Id));
+            Assert.True(pm.AdditionalData.HasValues);
+            Assert.Equal(resp.Details.PaymentHash.ToString(), pm.AdditionalData.GetValue("paymentHash"));
+            Assert.Equal(resp.Details.Preimage.ToString(), pm.AdditionalData.GetValue("preimage"));
         }
 
         [Fact(Timeout = 60 * 20 * 1000)]

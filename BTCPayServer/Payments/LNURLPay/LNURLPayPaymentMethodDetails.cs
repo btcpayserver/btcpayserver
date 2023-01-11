@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using BTCPayServer.Client.JsonConverters;
 using BTCPayServer.Lightning;
 using BTCPayServer.Payments.Lightning;
+using BTCPayServer.Services.Invoices;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -35,9 +36,9 @@ namespace BTCPayServer.Payments
             return "LNURL/AdditionalPaymentMethodDetails";
         }
 
-        public override JObject GetAdditionalData()
+        public override JObject GetAdditionalData(IEnumerable<PaymentEntity> payments)
         {
-            var result = base.GetAdditionalData();
+            var result = base.GetAdditionalData(payments);
             if (!string.IsNullOrEmpty(ProvidedComment))
                 result.Add("providedComment", new JValue(ProvidedComment));
             if (!string.IsNullOrEmpty(ConsumedLightningAddress))

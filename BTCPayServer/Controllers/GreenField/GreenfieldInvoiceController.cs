@@ -534,7 +534,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     var payments = method.ParentEntity.GetPayments(includeAccountedPaymentOnly).Where(paymentEntity =>
                         paymentEntity.GetPaymentMethodId() == method.GetId());
 
-                    return new InvoicePaymentMethodDataModel()
+                    return new InvoicePaymentMethodDataModel
                     {
                         Activated = details.Activated,
                         PaymentMethod = method.GetId().ToStringNormalized(),
@@ -550,7 +550,7 @@ namespace BTCPayServer.Controllers.Greenfield
                             method.GetId().PaymentType.GetPaymentLink(method.Network, details, accounting.Due,
                                 Request.GetAbsoluteRoot()),
                         Payments = payments.Select(paymentEntity => ToPaymentModel(entity, paymentEntity)).ToList(),
-                        AdditionalData = details.GetAdditionalData()
+                        AdditionalData = details.GetAdditionalData(payments)
                     };
                 }).ToArray();
         }

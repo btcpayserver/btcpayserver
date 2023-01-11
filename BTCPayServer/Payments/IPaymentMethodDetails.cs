@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using BTCPayServer.Services.Invoices;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Payments
@@ -22,6 +23,6 @@ namespace BTCPayServer.Payments
 
         bool Activated { get; set; }
         virtual string GetAdditionalDataPartialName() => null;
-        virtual JObject GetAdditionalData() => new();
+        virtual JObject GetAdditionalData(IEnumerable<PaymentEntity> payments) => new();
     }
 }

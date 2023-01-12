@@ -25,7 +25,7 @@ namespace BTCPayServer.Data
         public StoreBlob()
         {
             InvoiceExpiration = TimeSpan.FromMinutes(15);
-            TimerExpiration = TimeSpan.FromMinutes(5);
+            DisplayExpirationTimer = TimeSpan.FromMinutes(5);
             RefundBOLT11Expiration = TimeSpan.FromDays(30);
             MonitoringExpiration = TimeSpan.FromDays(1);
             PaymentTolerance = 0;
@@ -100,7 +100,7 @@ namespace BTCPayServer.Data
         [DefaultValue(typeof(TimeSpan), "00:05:00")]
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
         [JsonConverter(typeof(TimeSpanJsonConverter.Minutes))]
-        public TimeSpan TimerExpiration { get; set; }
+        public TimeSpan DisplayExpirationTimer { get; set; }
 
         public decimal Spread { get; set; } = 0.0m;
 

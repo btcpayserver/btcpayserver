@@ -22,7 +22,7 @@ namespace BTCPayServer.Client.Models
 
         [JsonConverter(typeof(TimeSpanJsonConverter.Seconds))]
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public TimeSpan TimerExpiration { get; set; } = TimeSpan.FromMinutes(5);
+        public TimeSpan DisplayExpirationTimer { get; set; } = TimeSpan.FromMinutes(5);
 
         [JsonConverter(typeof(TimeSpanJsonConverter.Seconds))]
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]

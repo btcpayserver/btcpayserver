@@ -188,10 +188,10 @@ namespace BTCPayServer.Tests
             invoiceId = s.CreateInvoice();
             s.GoToHome();
             s.GoToStore(StoreNavPages.CheckoutAppearance);
-            var timerExpiration = s.Driver.FindElement(By.Id("TimerExpiration"));
-            Assert.Equal("5", timerExpiration.GetAttribute("value"));
-            timerExpiration.Clear();
-            timerExpiration.SendKeys("10");
+            var displayExpirationTimer = s.Driver.FindElement(By.Id("DisplayExpirationTimer"));
+            Assert.Equal("5", displayExpirationTimer.GetAttribute("value"));
+            displayExpirationTimer.Clear();
+            displayExpirationTimer.SendKeys("10");
             s.Driver.FindElement(By.Id("Save")).Click();
             Assert.Contains("Store successfully updated", s.FindAlertMessage().Text);
             

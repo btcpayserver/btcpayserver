@@ -390,7 +390,7 @@ namespace BTCPayServer.Controllers
             vm.CustomCSS = storeBlob.CustomCSS;
             vm.CustomLogo = storeBlob.CustomLogo;
             vm.HtmlTitle = storeBlob.HtmlTitle;
-            vm.TimerExpiration = (int)storeBlob.TimerExpiration.TotalMinutes;
+            vm.DisplayExpirationTimer = (int)storeBlob.DisplayExpirationTimer.TotalMinutes;
             vm.ReceiptOptions = CheckoutAppearanceViewModel.ReceiptOptionsViewModel.Create(storeBlob.ReceiptOptions);
             vm.AutoDetectLanguage = storeBlob.AutoDetectLanguage;
             vm.SetLanguages(_LangService, storeBlob.DefaultLang);
@@ -513,7 +513,7 @@ namespace BTCPayServer.Controllers
             blob.CustomLogo = model.CustomLogo;
             blob.CustomCSS = model.CustomCSS;
             blob.HtmlTitle = string.IsNullOrWhiteSpace(model.HtmlTitle) ? null : model.HtmlTitle;
-            blob.TimerExpiration = TimeSpan.FromMinutes(model.TimerExpiration);
+            blob.DisplayExpirationTimer = TimeSpan.FromMinutes(model.DisplayExpirationTimer);
             blob.AutoDetectLanguage = model.AutoDetectLanguage;
             blob.DefaultLang = model.DefaultLang;
             blob.NormalizeToRelativeLinks(Request);

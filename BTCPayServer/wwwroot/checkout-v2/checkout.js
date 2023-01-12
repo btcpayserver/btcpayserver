@@ -114,7 +114,7 @@ function initApp() {
             },
             showTimer () {
                 return this.isActive && (this.expirationPercentage >= 75 ||
-                    this.remainingSeconds < this.srvModel.timerExpirationSeconds);
+                    this.remainingSeconds < this.srvModel.displayExpirationTimer);
             },
             showPaymentDueInfo () {
                 return this.btcPaid > 0 && this.btcDue > 0;

@@ -308,7 +308,7 @@
                         "description": "The time after which an invoice is considered expired if not paid. The value will be rounded down to a minute.",
                         "allOf": [ { "$ref": "#/components/schemas/TimeSpanSeconds" } ]
                     },
-                    "timerExpiration": {
+                    "displayExpirationTimer": {
                         "default": 300,
                         "minimum": 60,
                         "maximum": 2073600,

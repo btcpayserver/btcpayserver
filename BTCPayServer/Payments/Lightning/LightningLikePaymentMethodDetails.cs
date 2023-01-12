@@ -46,20 +46,13 @@ namespace BTCPayServer.Payments.Lightning
             return null;
         }
 
-        public virtual JObject GetAdditionalData(IEnumerable<PaymentEntity> payments)
+        public virtual JObject GetAdditionalData()
         {
             var result = new JObject();
-            
-            // use set properties and fall back to values from payment data
-            var payment = payments.Select(p => p.GetCryptoPaymentData() as LightningLikePaymentData).FirstOrDefault();
-            var paymentHash = PaymentHash != null && PaymentHash != default ? PaymentHash : payment?.PaymentHash;
-            var preimage = Preimage != null && Preimage != default ? Preimage : payment?.Preimage;
-                
-            if (paymentHash != null && paymentHash != default)
-                result.Add("paymentHash", new JValue(paymentHash.ToString()));
-            if (preimage != null && preimage != default)
-                result.Add("preimage", new JValue(preimage.ToString()));
-                
+            if (PaymentHash != null && PaymentHash != default)
+                result.Add("paymentHash", new JValue(PaymentHash.ToString()));
+            if (Preimage != null && Preimage != default)
+                result.Add("preimage", new JValue(Preimage.ToString()));
             return result;
         }
     }

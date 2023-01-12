@@ -23,6 +23,6 @@ namespace BTCPayServer.Payments
 
         bool Activated { get; set; }
         virtual string GetAdditionalDataPartialName() => null;
-        virtual JObject GetAdditionalData(IEnumerable<PaymentEntity> payments) => new();
+        virtual JObject GetAdditionalData() => new();
     }
 }

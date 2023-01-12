@@ -36,9 +36,9 @@ namespace BTCPayServer.Payments
             return "LNURL/AdditionalPaymentMethodDetails";
         }
 
-        public override JObject GetAdditionalData(IEnumerable<PaymentEntity> payments)
+        public override JObject GetAdditionalData()
         {
-            var result = base.GetAdditionalData(payments);
+            var result = base.GetAdditionalData();
             if (!string.IsNullOrEmpty(ProvidedComment))
                 result.Add("providedComment", new JValue(ProvidedComment));
             if (!string.IsNullOrEmpty(ConsumedLightningAddress))

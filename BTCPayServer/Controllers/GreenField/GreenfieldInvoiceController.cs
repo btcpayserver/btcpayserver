@@ -550,7 +550,7 @@ namespace BTCPayServer.Controllers.Greenfield
                             method.GetId().PaymentType.GetPaymentLink(method.Network, details, accounting.Due,
                                 Request.GetAbsoluteRoot()),
                         Payments = payments.Select(paymentEntity => ToPaymentModel(entity, paymentEntity)).ToList(),
-                        AdditionalData = details.GetAdditionalData(payments)
+                        AdditionalData = details.GetAdditionalData()
                     };
                 }).ToArray();
         }

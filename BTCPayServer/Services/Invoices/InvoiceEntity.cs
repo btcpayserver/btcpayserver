@@ -9,6 +9,7 @@ using BTCPayServer.JsonConverters;
 using BTCPayServer.Models;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
+using BTCPayServer.Payments.Lightning;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using NBitpayClient;
@@ -989,25 +990,35 @@ namespace BTCPayServer.Services.Invoices
             // Legacy, old code does not have PaymentMethods
             if (string.IsNullOrEmpty(PaymentType) || PaymentMethodDetails == null)
             {
-                return new Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod()
+                return new BitcoinLikeOnChainPaymentMethod
                 {
                     FeeRate = FeeRate,
                     DepositAddress = string.IsNullOrEmpty(DepositAddress) ? null : DepositAddress,
                     NextNetworkFee = NextNetworkFee
                 };
             }
-            else
+            
+            IPaymentMethodDetails details = GetId().PaymentType.DeserializePaymentMethodDetails(Network, PaymentMethodDetails.ToString());
+            switch (details)
             {
-                IPaymentMethodDetails details = GetId().PaymentType.DeserializePaymentMethodDetails(Network, PaymentMethodDetails.ToString());
-                if (details is Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod btcLike)
-                {
+                case BitcoinLikeOnChainPaymentMethod btcLike:
                     btcLike.NextNetworkFee = NextNetworkFee;
                     btcLike.DepositAddress = string.IsNullOrEmpty(DepositAddress) ? null : DepositAddress;
                     btcLike.FeeRate = FeeRate;
-                }
-                return details;
+                    break;
+                case LightningLikePaymentMethodDetails lnLike:
+                    // use set properties and fall back to values from payment data
+                    var payments = ParentEntity.GetPayments(true).Where(paymentEntity =>
+                        paymentEntity.GetPaymentMethodId() == GetId());
+                    var payment = payments.Select(p => p.GetCryptoPaymentData() as LightningLikePaymentData).FirstOrDefault();
+                    var paymentHash = payment?.PaymentHash != null && payment.PaymentHash != default ? payment.PaymentHash : null;
+                    var preimage = payment?.Preimage != null && payment.Preimage != default ? payment.Preimage : null;
+                    lnLike.PaymentHash = lnLike.PaymentHash != null && lnLike.PaymentHash != default ? lnLike.PaymentHash : paymentHash;
+                    lnLike.Preimage = lnLike.Preimage != null && lnLike.Preimage != default ? lnLike.Preimage : preimage;
+                    break;
             }
-            throw new NotSupportedException(PaymentType);
+
+            return details;
 #pragma warning restore CS0618 // Type or member is obsolete
         }
 

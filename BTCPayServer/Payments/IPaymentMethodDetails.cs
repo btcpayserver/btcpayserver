@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using BTCPayServer.Services.Invoices;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Payments

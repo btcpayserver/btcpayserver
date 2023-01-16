@@ -534,7 +534,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     var payments = method.ParentEntity.GetPayments(includeAccountedPaymentOnly).Where(paymentEntity =>
                         paymentEntity.GetPaymentMethodId() == method.GetId());
 
-                    return new InvoicePaymentMethodDataModel()
+                    return new InvoicePaymentMethodDataModel
                     {
                         Activated = details.Activated,
                         PaymentMethod = method.GetId().ToStringNormalized(),

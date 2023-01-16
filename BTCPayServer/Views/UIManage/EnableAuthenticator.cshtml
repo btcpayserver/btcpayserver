@@ -6,7 +6,7 @@
 <div class="col-xl-8 col-xxl-constrain">
     <h3>Enable Authenticator</h3>
     <p class="my-3">To use an authenticator app go through the following steps:</p>
-    <ol class="list">
+    <ol class="ps-3">
         <li class="mb-5">
             <div class="mb-2">Download a two-factor authenticator app like …</div>
             <ul>
@@ -29,10 +29,10 @@
         </li>
         <li class="mb-5">
             <p class="mb-2">Scan the QR Code or enter the following key into your two-factor authenticator app:</p>
-            <p class="mb-4">
-                <code class="me-3">@Model.SharedKey</code>
-                <span class="text-secondary">(spaces and casing do not matter)</span>
-            </p>
+            <div class="input-group input-group-sm mb-4">
+                <input readonly class="form-control font-monospace" value="@Model.SharedKey" id="SharedKey" style="max-width:20rem">
+                <button type="button" class="btn btn-outline-secondary" data-clipboard-target="#SharedKey">Copy</button>
+            </div>
             <div id="qrCode"></div>
             <div id="qrCodeData" data-url="@Model.AuthenticatorUri"></div>
         </li>

@@ -1,6 +1,9 @@
 :root {
     --navbutton-size: .8rem;
     --qr-size: 256px;
+    --icon-size: 64px;
+    --icon-border-size: var(--btcpay-space-s);
+    --icon-border-color: var(--btcpay-body-text);
     --section-padding: 1.5rem;
     --border-radius: var(--btcpay-border-radius-l);
     --wrap-max-width: 400px;
@@ -123,18 +126,47 @@ section dl > div dd {
     margin: 0 auto;
     text-align: center;
 }
-.payment-box .qr-text {
-    display:  block;
-    color: var(--btcpay-light-text);
-}
 .payment-box .qr-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
     min-height: var(--qr-size);
 }
 .payment-box .qr-container svg {
     border-radius: var(--btcpay-border-radius);
-}
-.payment-box svg {
+    padding: var(--btcpay-space-s);
+    background: var(--btcpay-white);
     width: 100%;
+}
+.payment-box .qr-container img {
+    box-sizing: content-box;
+    position: absolute;
+    width: var(--icon-size);
+    border-radius: 50%;
+    padding: var(--icon-border-size);
+    background: var(--icon-border-color);
+}
+.payment-box .qr-container small {
+    display: none;
+}
+.payment-box .input-group {
+    align-items: flex-end;
+}
+.payment-box .input-group .form-control-plaintext {
+    padding-left: 3px;
+    padding-bottom: 0;
+    font-weight: var(--btcpay-font-weight-semibold);
+}
+.payment-box .input-group label {
+    padding-left: 0;
+    text-transform: uppercase;
+    letter-spacing: .1rem;
+    font-weight: var(--btcpay-font-weight-semibold);
+}
+.payment-box .input-group button {
+    padding: var(--btcpay-space-xs) 0;
+    font-weight: var(--btcpay-font-weight-semibold);
 }
 .payment-details dl {
     margin: 0;

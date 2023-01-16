@@ -594,6 +594,8 @@ namespace BTCPayServer
                     }
 
                     paymentMethodDetails.BOLT11 = invoice.BOLT11;
+                    paymentMethodDetails.PaymentHash = string.IsNullOrEmpty(invoice.PaymentHash) ? null : uint256.Parse(invoice.PaymentHash);
+                    paymentMethodDetails.Preimage = string.IsNullOrEmpty(invoice.Preimage) ? null : uint256.Parse(invoice.Preimage);
                     paymentMethodDetails.InvoiceId = invoice.Id;
                     paymentMethodDetails.GeneratedBoltAmount = new LightMoney(amount.Value);
                     if (lnurlSupportedPaymentMethod.LUD12Enabled)
@@ -603,7 +605,6 @@ namespace BTCPayServer
 
                     lightningPaymentMethod.SetPaymentMethodDetails(paymentMethodDetails);
                     await _invoiceRepository.UpdateInvoicePaymentMethod(invoiceId, lightningPaymentMethod);
-
 
                     _eventAggregator.Publish(new InvoiceNewPaymentDetailsEvent(invoiceId,
                         paymentMethodDetails, pmi));

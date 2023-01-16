@@ -17,7 +17,7 @@ namespace BTCPayServer.Services
         readonly TorServices torServices;
         public BTCPayServerEnvironment(IWebHostEnvironment env, BTCPayNetworkProvider provider, TorServices torServices, BTCPayServerOptions opts)
         {
-            Version = typeof(BTCPayServerEnvironment).GetTypeInfo().Assembly.GetCustomAttribute<AssemblyFileVersionAttribute>().Version;
+            Version = typeof(BTCPayServerEnvironment).GetTypeInfo().Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
             Commit = typeof(BTCPayServerEnvironment).GetTypeInfo().Assembly.GetCustomAttribute<GitCommitAttribute>()?.ShortSHA;
 #if DEBUG
             Build = "Debug";

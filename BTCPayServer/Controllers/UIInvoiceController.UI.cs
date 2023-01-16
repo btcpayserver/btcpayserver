@@ -1011,12 +1011,23 @@ namespace BTCPayServer.Controllers
         [HttpGet]
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanViewInvoices)]
         [BitpayAPIConstraint(false)]
-        public async Task<IActionResult> Export(string format, string? searchTerm = null, int timezoneOffset = 0)
+        public async Task<IActionResult> Export(string format, string? storeId = null, string? searchTerm = null, int timezoneOffset = 0)
         {
             var model = new InvoiceExport(_CurrencyNameTable);
+            var fs = new SearchString(searchTerm);
+            var storeIds = new HashSet<string>();
+            if (fs.GetFilterArray("storeid") is string[] l)
+            {
+                foreach (var i in l)
+                    storeIds.Add(i);
+            }
+            if (storeId is not null)
+            {
+                storeIds.Add(storeId);
+            }
 
             InvoiceQuery invoiceQuery = GetInvoiceQuery(searchTerm, timezoneOffset);
-            invoiceQuery.StoreId = new[] { GetCurrentStore().Id };
+            invoiceQuery.StoreId = storeIds.ToArray();
             invoiceQuery.Skip = 0;
             invoiceQuery.Take = int.MaxValue;
             var invoices = await _InvoiceRepository.GetInvoices(invoiceQuery);

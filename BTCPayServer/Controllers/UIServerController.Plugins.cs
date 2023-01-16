@@ -9,6 +9,7 @@ using BTCPayServer.Configuration;
 using BTCPayServer.Plugins;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using static BTCPayServer.Plugins.PluginService;
 
 namespace BTCPayServer.Controllers
 {
@@ -33,9 +34,9 @@ namespace BTCPayServer.Controllers
                 });
                 availablePlugins = Array.Empty<PluginService.AvailablePlugin>();
             }
-            var docsByIdentifier = new Dictionary<string, string>();
-            foreach (var p in availablePlugins.Where(p => !string.IsNullOrEmpty(p.Documentation)))
-                docsByIdentifier.TryAdd(p.Identifier, p.Documentation);
+            var availablePluginsByIdentifier = new Dictionary<string, AvailablePlugin>();
+            foreach (var p in availablePlugins)
+                availablePluginsByIdentifier.TryAdd(p.Identifier, p);
             var res = new ListPluginsViewModel()
             {
                 Installed = pluginService.LoadedPlugins,
@@ -43,7 +44,7 @@ namespace BTCPayServer.Controllers
                 Commands = pluginService.GetPendingCommands(),
                 Disabled = pluginService.GetDisabledPlugins(),
                 CanShowRestart = btcPayServerOptions.DockerDeployment,
-                DocsByIdentifier = docsByIdentifier
+                DownloadedPluginsByIdentifier = availablePluginsByIdentifier
             };
             return View(res);
         }
@@ -55,7 +56,7 @@ namespace BTCPayServer.Controllers
             public (string command, string plugin)[] Commands { get; set; }
             public bool CanShowRestart { get; set; }
             public string[] Disabled { get; set; }
-            public Dictionary<string, string> DocsByIdentifier { get; set; } = new Dictionary<string, string>();
+            public Dictionary<string, AvailablePlugin> DownloadedPluginsByIdentifier { get; set; } = new Dictionary<string, AvailablePlugin>();
         }
 
         [HttpPost("server/plugins/uninstall")]

@@ -1,5 +1,29 @@
 # Changelog
 
+## 1.7.4
+
+### Bug fixes
+
+* Fix LNURL authentication as 2FA method (#4501) @dennisreimann
+* Fix sync modal display (#4485) @dennisreimann
+* Checkout: Fix cutoff language dropdown (#4486) @dennisreimann
+* Point of Sale: Ensure only valid non-negative numbers in tip input (#4481) @bolatovumar
+* Invoice export: Fix export all stores case (#4516) @dennisreimann
+
+### Improvement
+
+* Checkout v2: Display and copy addresses (#4489) @dennisreimann
+* Checkout v2: Configure countdown timer (#4471) @dennisreimann
+* Unify 2FA login boxes (#4506) @dennisreimann
+* Add extension points for dashboard (#4483) @kukks
+* Text editor: Allow Twitter embeds (#4488) @dennisreimann
+* Update preferred price source copy label (#4492) @dstrukt
+* Display BTCPay Server version numbers in UI without zero suffix (#4521) @NicolasDorier
+* Redesign plugin list items (#4528) @NicolasDorier
+* Plugin development improvements (#4522 #4518) @NicolasDorier
+* Greenfield: Add payment hash and preimage to Lightning invoices (#4520) @dennisreimann
+* Greenfield: Add separate permission for viewing LN invoices (#4529) @ArttuPakarinen @dennisreimann
+
 ## 1.7.3
 
 ### Bug fixes

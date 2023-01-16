@@ -86,7 +86,7 @@ namespace BTCPayServer.Plugins
             // Load from the plugins folder
             foreach (var directory in Directory.GetDirectories(pluginsFolder))
             {
-                var pluginIdentifier = Path.GetDirectoryName(directory);
+                var pluginIdentifier = Path.GetFileName(directory);
                 var pluginFilePath = Path.Combine(directory, pluginIdentifier + ".dll");
                 if (!File.Exists(pluginFilePath))
                     continue;

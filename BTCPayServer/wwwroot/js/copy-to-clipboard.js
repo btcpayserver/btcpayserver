@@ -1,23 +1,38 @@
-const confirmCopy = (el, message) => {
-    el.innerText = message;
-    setTimeout(function () {
+function confirmCopy(el, message) {
+    if (!el.dataset.clipboardInitial) {
+        el.dataset.clipboardInitial = el.innerHTML;
+        el.style.minWidth = el.getBoundingClientRect().width + 'px';
+    }
+    el.innerHTML = `<span class="text-success">${message}</span>`;
+    if (el.dataset.clipboardHandler) {
+        clearTimeout(parseInt(el.dataset.clipboardHandler));
+    }
+    const timeoutId = setTimeout(function () {
         el.innerHTML = el.dataset.clipboardInitial;
+        el.dataset.clipboardHandler = null;
     }, 2500);
+    el.dataset.clipboardHandler = timeoutId.toString();
 }
 
-window.copyToClipboard = function (e, data) {
+window.copyToClipboard = async function (e, data) {
     e.preventDefault();
     const item = e.target.closest('[data-clipboard]') || e.target.closest('[data-clipboard-target]') || e.target;
-    const confirm = item.querySelector('[data-clipboard-confirm]') || item;
-    const message = confirm.getAttribute('data-clipboard-confirm') || 'Copied ✔';
-    if (!confirm.dataset.clipboardInitial) {
-        confirm.dataset.clipboardInitial = confirm.innerHTML;
-        confirm.style.minWidth = confirm.getBoundingClientRect().width + 'px';
+    const confirm = item.dataset.clipboardConfirmElement
+        ? document.getElementById(item.dataset.clipboardConfirmElement) || item
+        : item.querySelector('[data-clipboard-confirm]') || item;
+    const message = confirm.getAttribute('data-clipboard-confirm') || 'Copied';
+    // Check compatibility and permissions:
+    // https://web.dev/async-clipboard/#security-and-permissions
+    let hasPermission = true;
+    if (navigator.clipboard && navigator.permissions) {
+        try {
+            const permissionStatus = await navigator.permissions.query({ name: 'clipboard-write', allowWithoutGesture: false });
+            hasPermission = permissionStatus.state === 'granted';
+        } catch (err) {}
     }
-    if (navigator.clipboard) {
-        navigator.clipboard.writeText(data).then(function () {
-            confirmCopy(confirm, message);
-        });
+    if (navigator.clipboard && hasPermission) {
+        await navigator.clipboard.writeText(data);
+        confirmCopy(confirm, message);
     } else {
         const copyEl = document.createElement('textarea');
         copyEl.style.position = 'absolute';
@@ -36,15 +51,16 @@ window.copyUrlToClipboard = function (e) {
     window.copyToClipboard(e, window.location)
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-    delegate('click', '[data-clipboard]', e => {
-        const data = e.target.closest('[data-clipboard]').getAttribute('data-clipboard')
+document.addEventListener("DOMContentLoaded", function () {
+    delegate('click', '[data-clipboard]', function (e) {
+        const target = e.target.closest('[data-clipboard]');
+        const data = target.getAttribute('data-clipboard') ||  target.innerText || target.value;
         window.copyToClipboard(e, data)
     })
-    delegate('click', '[data-clipboard-target]', e => {
-        const selector = e.target.closest('[data-clipboard-target]').getAttribute('data-clipboard-target')
+    delegate('click', '[data-clipboard-target]', function (e) {
+        const selector = e.target.closest('[data-clipboard-target]').getAttribute('data-clipboard-target');
         const target = document.querySelector(selector)
-        const data = target.innerText
+        const data = target.innerText || target.value;
         window.copyToClipboard(e, data)
     })
 })

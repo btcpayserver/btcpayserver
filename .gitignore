@@ -288,10 +288,6 @@ __pycache__/
 *.xsd.cs
 /BTCPayServer/Build/dockerfiles
 
-# Bundling JS/CSS
-BTCPayServer/wwwroot/bundles/*
-!BTCPayServer/wwwroot/bundles/.gitignore
-
 .vscode/*
 !.vscode/launch.json
 !.vscode/tasks.json
@@ -302,3 +298,4 @@ Packed Plugins
 Plugins/packed
 
 BTCPayServer/wwwroot/swagger/v1/openapi.json
+BTCPayServer/appsettings.dev.json

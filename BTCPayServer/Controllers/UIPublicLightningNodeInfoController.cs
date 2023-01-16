@@ -13,7 +13,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BTCPayServer.Controllers
 {
-
     [Route("embed/{storeId}/{cryptoCode}/ln")]
     [AllowAnonymous]
     public class UIPublicLightningNodeInfoController : Controller
@@ -43,11 +42,11 @@ namespace BTCPayServer.Controllers
                 var paymentMethodDetails = GetExistingLightningSupportedPaymentMethod(cryptoCode, store);
                 var network = _BtcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
                 var nodeInfo =
-                    await _LightningLikePaymentHandler.GetNodeInfo(paymentMethodDetails, network, new InvoiceLogs());
+                    await _LightningLikePaymentHandler.GetNodeInfo(paymentMethodDetails, network, new InvoiceLogs(), throws: true);
 
                 return View(new ShowLightningNodeInfoViewModel
                 {
-                    Available = nodeInfo.Any(),
+                    Available = true,
                     NodeInfo = nodeInfo.Select(n => new ShowLightningNodeInfoViewModel.NodeData(n)).ToArray(),
                     CryptoCode = cryptoCode,
                     CryptoImage = GetImage(paymentMethodDetails.PaymentId, network),

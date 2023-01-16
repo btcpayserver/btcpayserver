@@ -22,7 +22,7 @@ namespace BTCPayServer.Services.PaymentRequests
 
         public async Task<PaymentRequestData> CreateOrUpdatePaymentRequest(PaymentRequestData entity)
         {
-            using var context = _ContextFactory.CreateContext();
+            await using var context = _ContextFactory.CreateContext();
             if (string.IsNullOrEmpty(entity.Id))
             {
                 entity.Id = Guid.NewGuid().ToString();
@@ -133,7 +133,9 @@ namespace BTCPayServer.Services.PaymentRequests
             }
 
             invoiceQuery.OrderId = new[] { GetOrderIdForPaymentRequest(paymentRequestId) };
-            return await _InvoiceRepository.GetInvoices(invoiceQuery);
+            return (await _InvoiceRepository.GetInvoices(invoiceQuery))
+                .Where(i => i.InternalTags.Contains(GetInternalTag(paymentRequestId)))
+                .ToArray();
         }
 
         public static string GetOrderIdForPaymentRequest(string paymentRequestId)

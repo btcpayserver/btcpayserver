@@ -49,5 +49,5 @@
   "Close": "Fechar",
   "NotPaid_ExtraTransaction": "A fatura não foi paga integralmente. Envie outra transação para cobrir o valor devido.",
   "Recommended_Fee": "Taxa recomendada: {{feeRate}} sat/byte",
-  "View receipt": "View receipt"
+  "View receipt": "Ver recibo"
 }

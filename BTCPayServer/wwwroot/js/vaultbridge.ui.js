@@ -245,18 +245,22 @@ var vaultui = (function () {
                     return await self.askForXPubs();
                 return false;
             }
-            var selectedXPubs = await self.getXpubSettings();
-            self.bridge.socket.send(JSON.stringify(selectedXPubs));
-            show(VaultFeedbacks.fetchingXpubs);
-            json = await self.bridge.waitBackendMessage();
-            if (json.hasOwnProperty("error")) {
-                if (await needRetry(json))
-                    return await self.askForXPubs();
-                return false;
+            try {
+                var selectedXPubs = await self.getXpubSettings();
+                self.bridge.socket.send(JSON.stringify(selectedXPubs));
+                show(VaultFeedbacks.fetchingXpubs);
+                json = await self.bridge.waitBackendMessage();
+                if (json.hasOwnProperty("error")) {
+                    if (await needRetry(json))
+                        return await self.askForXPubs();
+                    return false;
+                }
+                show(VaultFeedbacks.fetchedXpubs);
+                self.xpub = json;
+                return true;
+            } catch (err) {
+                showError({ error: true, message: err });
             }
-            show(VaultFeedbacks.fetchedXpubs);
-            self.xpub = json;
-            return true;
         };
 
         /**
@@ -273,10 +277,13 @@ var vaultui = (function () {
                     $("#vault-xpub").css("display", "none");
                     $("#vault-confirm").css("display", "none");
                     $(this).unbind();
-                    resolve({
-                        addressType: $("select[name=\"addressType\"]").val(),
-                        accountNumber: parseInt($("select[name=\"accountNumber\"]").val())
-                    });
+                    const addressType = $("select[name=\"addressType\"]").val();
+                    const accountNumber = parseInt($("input[name=\"accountNumber\"]").val());
+                    if (addressType && !isNaN(accountNumber)) {
+                        resolve({ addressType, accountNumber });
+                    } else {
+                        reject("Provide an address type and account number")
+                    }
                 });
             });
         };

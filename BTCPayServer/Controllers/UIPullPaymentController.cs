@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
@@ -65,7 +66,7 @@ namespace BTCPayServer.Controllers
             var totalPaid = payouts.Where(p => p.Entity.State != PayoutState.Cancelled).Select(p => p.Blob.Amount).Sum();
             var amountDue = blob.Limit - totalPaid;
 
-            ViewPullPaymentModel vm = new (pp, DateTimeOffset.UtcNow)
+            ViewPullPaymentModel vm = new(pp, DateTimeOffset.UtcNow)
             {
                 AmountFormatted = _currencyNameTable.FormatCurrency(blob.Limit, blob.Currency),
                 AmountCollected = totalPaid,
@@ -137,11 +138,11 @@ namespace BTCPayServer.Controllers
                 Email = null,
                 EmbeddedCSS = viewModel.EmbeddedCSS,
             };
-            
+
             pp.SetBlob(blob);
             ctx.PullPayments.Update(pp);
             await ctx.SaveChangesAsync();
-          
+
             TempData.SetStatusMessageModel(new StatusMessageModel
             {
                 Message = "Pull payment updated successfully",
@@ -153,7 +154,7 @@ namespace BTCPayServer.Controllers
 
         [AllowAnonymous]
         [HttpPost("pull-payments/{pullPaymentId}/claim")]
-        public async Task<IActionResult> ClaimPullPayment(string pullPaymentId, ViewPullPaymentModel vm)
+        public async Task<IActionResult> ClaimPullPayment(string pullPaymentId, ViewPullPaymentModel vm, CancellationToken cancellationToken)
         {
             using var ctx = _dbContextFactory.CreateContext();
             var pp = await ctx.PullPayments.FindAsync(pullPaymentId);
@@ -172,7 +173,7 @@ namespace BTCPayServer.Controllers
                 ModelState.AddModelError(nameof(vm.SelectedPaymentMethod), "Invalid destination with selected payment method");
                 return await ViewPullPayment(pullPaymentId);
             }
-            var destination = await payoutHandler.ParseAndValidateClaimDestination(paymentMethodId, vm.Destination, ppBlob);
+            var destination = await payoutHandler.ParseAndValidateClaimDestination(paymentMethodId, vm.Destination, ppBlob, cancellationToken);
             if (destination.destination is null)
             {
                 ModelState.AddModelError(nameof(vm.Destination), destination.error ?? "Invalid destination with selected payment method");
@@ -190,7 +191,7 @@ namespace BTCPayServer.Controllers
                 {
                     var implied = _currencyNameTable.DisplayFormatCurrency(destination.destination.Amount.Value, paymentMethodId.CryptoCode);
                     var provided = _currencyNameTable.DisplayFormatCurrency(vm.ClaimedAmount, ppBlob.Currency);
-                    ModelState.AddModelError(nameof(vm.ClaimedAmount), 
+                    ModelState.AddModelError(nameof(vm.ClaimedAmount),
                         $"Amount implied in destination ({implied}) does not match the payout amount provided ({provided}).");
                 }
             }
@@ -220,13 +221,13 @@ namespace BTCPayServer.Controllers
                 }
                 return await ViewPullPayment(pullPaymentId);
             }
-            
+
             TempData.SetStatusMessageModel(new StatusMessageModel
             {
-                Message = $"Your claim request of {_currencyNameTable.DisplayFormatCurrency(vm.ClaimedAmount, ppBlob.Currency)} to {vm.Destination} has been submitted and is awaiting {(result.PayoutData.State == PayoutState.AwaitingApproval? "approval": "payment")}.",
+                Message = $"Your claim request of {_currencyNameTable.DisplayFormatCurrency(vm.ClaimedAmount, ppBlob.Currency)} to {vm.Destination} has been submitted and is awaiting {(result.PayoutData.State == PayoutState.AwaitingApproval ? "approval" : "payment")}.",
                 Severity = StatusMessageModel.StatusSeverity.Success
             });
-            
+
             return RedirectToAction(nameof(ViewPullPayment), new { pullPaymentId });
         }
     }

@@ -21,7 +21,7 @@
     <div class="timer-row" v-bind:class="{ 'expiring-soon': expiringSoon }">
         <div class="timer-row__progress-bar" v-bind:style="{ 'width': expirationPercentage+ '%' }"></div>
         <div class="timer-row__spinner" v-if="!invoiceUnpayable && !invoicePaid">
-            <partial name="Checkout-Spinner" />
+            @await Html.PartialAsync("~/Views/UIInvoice/Checkout-Spinner.cshtml")
         </div>
         <div class="timer-row__message">
             <span v-if="invoiceUnpayable">
@@ -80,7 +80,7 @@
                 </div>
             }
             <div class="payment__spinner" v-show="changingCurrencies || loading">
-                <partial name="Checkout-Spinner" />
+                @await Html.PartialAsync("~/Views/UIInvoice/Checkout-Spinner.cshtml")
             </div>
         </div>
     </div>
@@ -176,7 +176,7 @@
                     <button type="submit" class="action-button" style="margin-top: 15px;" v-bind:disabled="emailAddressFormSubmitting" v-bind:class="{ 'loading': emailAddressFormSubmitting }">
                         <span class="button-text">{{$t("Continue")}}</span>
                         <div class="loader-wrapper">
-                            <partial name="Checkout-Spinner" />
+                            @await Html.PartialAsync("~/Views/UIInvoice/Checkout-Spinner.cshtml")
                         </div>
                     </button>
                 </bp-loading-button>
@@ -204,16 +204,9 @@
                     </div>
                 </div>
                 <div class="success-message">{{$t("This invoice has been paid")}}</div>
-                <a class="action-button" :href="srvModel.merchantRefLink" v-if="!isModal && srvModel.merchantRefLink">
-                    <span v-if="srvModel.receiptLink != srvModel.merchantRefLink" v-html="$t('Return to StoreName', srvModel)"></span>
-                    <span v-else v-html="$t('View receipt')" id="receipt-btn"></span>
-                </a> 
-                <a class="action-button" :href="srvModel.receiptLink" :target="isModal?'_blank':'_top'" v-if="srvModel.receiptLink &&  (srvModel.merchantRefLink != srvModel.receiptLink) || isModal">
-                    <span v-html="$t('View receipt')" id="receipt-btn"></span>
-                </a>
-                <button class="action-button close-action" v-show="isModal" v-on:click="close">
-                    <span v-html="$t('Close')"></span>
-                </button>
+                <a v-if="srvModel.receiptLink" class="action-button" :href="srvModel.receiptLink" :target="isModal ? '_top' : null" v-html="$t('View receipt')" id="receipt-btn"></a> 
+                <a v-if="storeLink" class="action-button" :href="storeLink" :target="isModal ? '_top' : null" v-html="$t('Return to StoreName', srvModel)"></a>
+                <button v-else-if="isModal" class="action-button close-action" v-on:click="close" v-html="$t('Close')"></button>
             </div>
         </div>
         <div class="button-wrapper refund-address-form-container" id="refund-overpayment-button">
@@ -232,7 +225,7 @@
                 <div class="expired__text">
                     {{$t("InvoiceExpired_Body_3")}}
                 </div>
-                <div class="expired__text expired__text__smaller">
+                <div class="expired__text expired__text__smaller" style="overflow-wrap:break-word">
                     <span class="expired__text__bullet">{{$t("Invoice ID")}}</span>:
                     {{srvModel.invoiceId}}
                     <br />
@@ -240,7 +233,7 @@
                     {{srvModel.orderId}}
                 </div>
             </div>
-            <a class="action-button" :href="srvModel.merchantRefLink" v-show="!isModal">
+            <a class="action-button" :href="storeLink" v-show="storeLink">
                 <span v-html="$t('Return to StoreName', srvModel)"></span>
             </a>
             <button class="action-button close-action" v-show="isModal" v-on:click="close">

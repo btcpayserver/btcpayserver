@@ -1,4 +1,4 @@
-﻿using BTCPayServer.Abstractions.Custodians;
+using BTCPayServer.Abstractions.Custodians;
 using BTCPayServer.Abstractions.Models;
 using Microsoft.Extensions.DependencyInjection;
 

@@ -1,14 +1,15 @@
 #nullable enable
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
+using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
-using BTCPayServer.Abstractions.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Identity;
@@ -38,6 +39,37 @@ namespace BTCPayServer.Controllers.Greenfield
             _currencies = currencies;
         }
 
+        [HttpPost("~/api/v1/stores/{storeId}/apps/crowdfund")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        public async Task<IActionResult> CreateCrowdfundApp(string storeId, CreateCrowdfundAppRequest request)
+        {
+            var store = await _storeRepository.FindStore(storeId);
+            if (store == null)
+                return this.CreateAPIError(404, "store-not-found", "The store was not found");
+
+            // This is not obvious but we must have a non-null currency or else request validation may work incorrectly
+            request.TargetCurrency = request.TargetCurrency ?? store.GetStoreBlob().DefaultCurrency;
+
+            var validationResult = ValidateCrowdfundAppRequest(request);
+            if (validationResult != null)
+            {
+                return validationResult;
+            }
+
+            var appData = new AppData
+            {
+                StoreDataId = storeId,
+                Name = request.AppName,
+                AppType = AppType.Crowdfund.ToString()
+            };
+
+            appData.SetSettings(ToCrowdfundSettings(request));
+
+            await _appService.UpdateOrCreateApp(appData);
+
+            return Ok(ToCrowdfundModel(appData));
+        }
+
         [HttpPost("~/api/v1/stores/{storeId}/apps/pos")]
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> CreatePointOfSaleApp(string storeId, CreatePointOfSaleAppRequest request)
@@ -54,7 +86,7 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 return validationResult;
             }
-            
+
             var appData = new AppData
             {
                 StoreDataId = storeId,
@@ -66,7 +98,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
             await _appService.UpdateOrCreateApp(appData);
 
-            return Ok(ToModel(appData));
+            return Ok(ToPointOfSaleModel(appData));
         }
 
         [HttpPut("~/api/v1/apps/pos/{appId}")]
@@ -80,7 +112,7 @@ namespace BTCPayServer.Controllers.Greenfield
             }
 
             var settings = app.GetSettings<PointOfSaleSettings>();
-            
+
             // This is not obvious but we must have a non-null currency or else request validation may work incorrectly
             request.Currency = request.Currency ?? settings.Currency;
 
@@ -92,10 +124,10 @@ namespace BTCPayServer.Controllers.Greenfield
 
             app.Name = request.AppName;
             app.SetSettings(ToPointOfSaleSettings(request));
-            
+
             await _appService.UpdateOrCreateApp(app);
 
-            return Ok(ToModel(app));
+            return Ok(ToPointOfSaleModel(app));
         }
 
         private RequiresRefundEmail? BoolToRequiresRefundEmail(bool? requiresRefundEmail)
@@ -115,12 +147,12 @@ namespace BTCPayServer.Controllers.Greenfield
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> GetApp(string appId)
         {
-            var app = await _appService.GetApp(appId, AppType.PointOfSale);
+            var app = await _appService.GetApp(appId, null);
             if (app == null)
             {
                 return AppNotFound();
             }
-                
+
             return Ok(ToModel(app));
         }
 
@@ -132,7 +164,7 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 return AppNotFound();
             }
-                
+
             await _appService.DeleteApp(app);
 
             return Ok();
@@ -141,6 +173,43 @@ namespace BTCPayServer.Controllers.Greenfield
         private IActionResult AppNotFound()
         {
             return this.CreateAPIError(404, "app-not-found", "The app with specified ID was not found");
+        }
+
+        private CrowdfundSettings ToCrowdfundSettings(CreateCrowdfundAppRequest request)
+        {
+            var parsedSounds = ValidateStringArray(request.Sounds);
+            var parsedColors = ValidateStringArray(request.AnimationColors);
+
+            return new CrowdfundSettings
+            {
+                Title = request.Title?.Trim(),
+                Enabled = request.Enabled ?? true,
+                EnforceTargetAmount = request.EnforceTargetAmount ?? false,
+                StartDate = request.StartDate?.UtcDateTime,
+                TargetCurrency = request.TargetCurrency?.Trim(),
+                Description = request.Description?.Trim(),
+                EndDate = request.EndDate?.UtcDateTime,
+                TargetAmount = request.TargetAmount,
+                CustomCSSLink = request.CustomCSSLink?.Trim(),
+                MainImageUrl = request.MainImageUrl?.Trim(),
+                EmbeddedCSS = request.EmbeddedCSS?.Trim(),
+                NotificationUrl = request.NotificationUrl?.Trim(),
+                Tagline = request.Tagline?.Trim(),
+                PerksTemplate = request.PerksTemplate != null ? _appService.SerializeTemplate(_appService.Parse(request.PerksTemplate?.Trim(), request.TargetCurrency)) : null,
+                // If Disqus shortname is not null or empty we assume that Disqus should be enabled
+                DisqusEnabled = !string.IsNullOrEmpty(request.DisqusShortname?.Trim()),
+                DisqusShortname = request.DisqusShortname?.Trim(),
+                // If explicit parameter is not passed for enabling sounds/animations, turn them on if custom sounds/colors are passed
+                SoundsEnabled = request.SoundsEnabled ?? parsedSounds != null,
+                AnimationsEnabled = request.AnimationsEnabled ?? parsedColors != null,
+                ResetEveryAmount = request.ResetEveryAmount ?? 1,
+                ResetEvery = (Services.Apps.CrowdfundResetEvery)request.ResetEvery,
+                DisplayPerksValue = request.DisplayPerksValue ?? false,
+                DisplayPerksRanking = request.DisplayPerksRanking ?? false,
+                SortPerksByPopularity = request.SortPerksByPopularity ?? false,
+                Sounds = parsedSounds ?? new CrowdfundSettings().Sounds,
+                AnimationColors = parsedColors ?? new CrowdfundSettings().AnimationColors
+            };
         }
 
         private PointOfSaleSettings ToPointOfSaleSettings(CreatePointOfSaleAppRequest request)
@@ -164,13 +233,25 @@ namespace BTCPayServer.Controllers.Greenfield
                 EmbeddedCSS = request.EmbeddedCSS,
                 RedirectAutomatically = request.RedirectAutomatically,
                 RequiresRefundEmail = BoolToRequiresRefundEmail(request.RequiresRefundEmail) ?? RequiresRefundEmail.InheritFromStore,
+                FormId = request.FormId,
+                CheckoutType = request.CheckoutType ?? CheckoutType.V1
             };
         }
 
-        private PointOfSaleAppData ToModel(AppData appData)
+        private AppDataBase ToModel(AppData appData)
         {
-            var settings = appData.GetSettings<PointOfSaleSettings>();
+            return new AppDataBase
+            {
+                Id = appData.Id,
+                AppType = appData.AppType,
+                Name = appData.Name,
+                StoreId = appData.StoreDataId,
+                Created = appData.Created,
+            };
+        }
 
+        private PointOfSaleAppData ToPointOfSaleModel(AppData appData)
+        {
             return new PointOfSaleAppData
             {
                 Id = appData.Id,
@@ -200,7 +281,85 @@ namespace BTCPayServer.Controllers.Greenfield
                     ModelState.AddModelError(nameof(request.Template), "Invalid template");
                 }
             }
-            
+
+            if (!ModelState.IsValid)
+            {
+                validationResult = this.CreateValidationError(ModelState);
+            }
+
+            return validationResult;
+        }
+
+        private CrowdfundAppData ToCrowdfundModel(AppData appData)
+        {
+            return new CrowdfundAppData
+            {
+                Id = appData.Id,
+                AppType = appData.AppType,
+                Name = appData.Name,
+                StoreId = appData.StoreDataId,
+                Created = appData.Created
+            };
+        }
+
+        private string[]? ValidateStringArray(string[]? arr)
+        {
+            if (arr == null || !arr.Any())
+            {
+                return null;
+            }
+
+            // Make sure it's not just an array of empty strings
+            if (arr.All(s => string.IsNullOrEmpty(s.Trim())))
+            {
+                return null;
+            }
+
+            return arr.Select(s => s.Trim()).ToArray();
+        }
+
+        private IActionResult? ValidateCrowdfundAppRequest(CreateCrowdfundAppRequest request)
+        {
+            var validationResult = ValidateCreateAppRequest(request);
+            if (request.TargetCurrency != null && _currencies.GetCurrencyData(request.TargetCurrency, false) == null)
+            {
+                ModelState.AddModelError(nameof(request.TargetCurrency), "Invalid currency");
+            }
+
+            try
+            {
+                _appService.SerializeTemplate(_appService.Parse(request.PerksTemplate, request.TargetCurrency));
+            }
+            catch
+            {
+                ModelState.AddModelError(nameof(request.PerksTemplate), "Invalid template");
+            }
+
+            if (request.ResetEvery != Client.Models.CrowdfundResetEvery.Never && request.StartDate == null)
+            {
+                ModelState.AddModelError(nameof(request.StartDate), "A start date is needed when the goal resets every X amount of time");
+            }
+
+            if (request.ResetEvery != Client.Models.CrowdfundResetEvery.Never && request.ResetEveryAmount <= 0)
+            {
+                ModelState.AddModelError(nameof(request.ResetEveryAmount), "You must reset the goal at a minimum of 1");
+            }
+
+            if (request.Sounds != null && ValidateStringArray(request.Sounds) == null)
+            {
+                ModelState.AddModelError(nameof(request.Sounds), "Sounds must be a non-empty array of non-empty strings");
+            }
+
+            if (request.AnimationColors != null && ValidateStringArray(request.AnimationColors) == null)
+            {
+                ModelState.AddModelError(nameof(request.AnimationColors), "Animation colors must be a non-empty array of non-empty strings");
+            }
+
+            if (request.StartDate != null && request.EndDate != null && DateTimeOffset.Compare((DateTimeOffset)request.StartDate, (DateTimeOffset)request.EndDate!) > 0)
+            {
+                ModelState.AddModelError(nameof(request.EndDate), "End date cannot be before start date");
+            }
+
             if (!ModelState.IsValid)
             {
                 validationResult = this.CreateValidationError(ModelState);

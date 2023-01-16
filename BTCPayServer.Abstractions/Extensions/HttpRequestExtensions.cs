@@ -11,7 +11,7 @@ public static class HttpRequestExtensions
             return false;
         return request.Host.Host.EndsWith(".onion", StringComparison.OrdinalIgnoreCase);
     }
-    
+
     public static string GetAbsoluteRoot(this HttpRequest request)
     {
         return string.Concat(

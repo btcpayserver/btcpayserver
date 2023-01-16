@@ -41,7 +41,7 @@
                     pavpill.replaceWith(statusHtml);
                 })
                 .fail(function (data) {
-                    pavpill.html(originalHtml.replace("dropdown-menu pull-right show", "dropdown-menu pull-right"));
+                    pavpill.html(originalHtml.replace("dropdown-menu show", "dropdown-menu"));
                     alert("Invoice state update failed");
                 });
         })
@@ -267,8 +267,8 @@
                     Export
                 </button>
                 <div class="dropdown-menu" aria-labelledby="ExportDropdownToggle">
-                    <a asp-action="Export" asp-route-timezoneoffset="0" asp-route-format="csv" asp-route-searchTerm="@Model.SearchTerm" class="dropdown-item export-link" target="_blank">CSV</a>
-                    <a asp-action="Export" asp-route-timezoneoffset="0" asp-route-format="json" asp-route-searchTerm="@Model.SearchTerm" class="dropdown-item export-link" target="_blank">JSON</a>
+                    <a asp-action="Export" asp-route-timezoneoffset="0" asp-route-format="csv" asp-route-storeId="@Model.StoreId" asp-route-searchTerm="@Model.SearchTerm" class="dropdown-item export-link" target="_blank">CSV</a>
+                    <a asp-action="Export" asp-route-timezoneoffset="0" asp-route-format="json" asp-route-storeId="@Model.StoreId" asp-route-searchTerm="@Model.SearchTerm" class="dropdown-item export-link" target="_blank">JSON</a>
                 </div>
                 <a href="https://docs.btcpayserver.org/Accounting/" target="_blank" rel="noreferrer noopener">
                     <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
@@ -282,9 +282,11 @@
                     <tr>
                         <th style="width:2rem;" class="only-for-js">
                             <input id="selectAllCheckbox" type="checkbox" class="form-check-input" />
-                        <th style="min-width:90px;" class="col-md-auto">
-                            Date
-                            <a id="switchTimeFormat" href="#" class="fa fa-clock-o" title="Switch date format"></a>
+                        <th class="w-150px">
+                            <div class="d-flex align-items-center gap-1">
+                                Date
+                                <button type="button" class="btn btn-link p-0 fa fa-clock-o switch-time-format only-for-js" title="Switch date format"></button>
+                            </div>
                         </th>
                         <th class="text-nowrap">Order Id</th>
                         <th class="text-nowrap">Invoice Id</th>
@@ -323,16 +325,16 @@
                                         <span class="dropdown-toggle changeInvoiceStateToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                             @invoice.Status.ToString()
                                         </span>
-                                        <div class="dropdown-menu pull-right">
+                                        <div class="dropdown-menu">
                                             @if (invoice.CanMarkInvalid)
                                             {
-                                                <button class="dropdown-item cursorPointer changeInvoiceState" data-invoice-id="@invoice.InvoiceId" data-new-state="invalid">
+                                                <button type="button" class="dropdown-item lh-base changeInvoiceState" data-invoice-id="@invoice.InvoiceId" data-new-state="invalid">
                                                     Mark as invalid
                                                 </button>
                                             }
                                             @if (invoice.CanMarkSettled)
                                             {
-                                                <button class="dropdown-item cursorPointer changeInvoiceState" data-invoice-id="@invoice.InvoiceId" data-new-state="settled">
+                                                <button type="button" class="dropdown-item lh-base changeInvoiceState" data-invoice-id="@invoice.InvoiceId" data-new-state="settled">
                                                     Mark as settled
                                                 </button>
                                             }

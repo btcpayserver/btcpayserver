@@ -20,10 +20,17 @@ namespace BTCPayServer.Models.StoreViewModels
             Languages = new SelectList(choices, nameof(chosen.Value), nameof(chosen.Name), chosen);
             DefaultLang = chosen.Value;
         }
+
         public SelectList Languages { get; set; }
+
+        [Display(Name = "Unify on-chain and lightning payment URL/QR code")]
+        public bool OnChainWithLnInvoiceFallback { get; set; }
 
         [Display(Name = "Default payment method on checkout")]
         public string DefaultPaymentMethod { get; set; }
+
+        [Display(Name = "Use the new checkout")]
+        public bool UseNewCheckout { get; set; }
 
         [Display(Name = "Requires a refund email")]
         public bool RequiresRefundEmail { get; set; }
@@ -56,7 +63,7 @@ namespace BTCPayServer.Models.StoreViewModels
             }
             [Display(Name = "Enable public receipt page for settled invoices")]
             public bool Enabled { get; set; }
-            
+
             [Display(Name = "Show the QR code of the receipt in the public receipt page")]
             public bool ShowQR { get; set; }
 

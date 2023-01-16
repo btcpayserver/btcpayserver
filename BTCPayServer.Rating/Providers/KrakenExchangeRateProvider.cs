@@ -168,7 +168,7 @@ namespace BTCPayServer.Services.Rates
             sb.Append(url);
             if (payload != null)
             {
-                sb.Append("?");
+                sb.Append('?');
                 sb.Append(String.Join('&', payload.Select(kv => $"{kv.Key}={kv.Value}").OfType<object>().ToArray()));
             }
             var request = new HttpRequestMessage(HttpMethod.Get, sb.ToString());
@@ -177,11 +177,11 @@ namespace BTCPayServer.Services.Rates
             var result = JsonConvert.DeserializeObject<T>(stringResult);
             if (result is JToken json)
             {
-                if (!(json is JArray) && json["result"] is JObject {Count: > 0} pairResult)
+                if (!(json is JArray) && json["result"] is JObject { Count: > 0 } pairResult)
                 {
                     return (T)(object)(pairResult);
-                } 
-                
+                }
+
                 if (!(json is JArray) && json["error"] is JArray error && error.Count != 0)
                 {
                     throw new APIException(string.Join("\n",

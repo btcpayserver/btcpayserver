@@ -4,10 +4,11 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Controllers;
-using BTCPayServer.Data;
 using BTCPayServer.Controllers.Greenfield;
+using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Services;
+using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Mails;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Routing;
@@ -62,7 +63,7 @@ public class StoreEmailRuleProcessorSender : EventHostedServiceBase
                     var sender = await _emailSenderFactory.GetEmailSender(invoiceEvent.Invoice.StoreId);
                     foreach (UIStoresController.StoreEmailRule actionableRule in actionableRules)
                     {
-                        var recipients = (actionableRule.To?.Split(",", StringSplitOptions.RemoveEmptyEntries)??Array.Empty<string>())
+                        var recipients = (actionableRule.To?.Split(",", StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string>())
                             .Select(o =>
                             {
                                 MailboxAddressValidator.TryParse(o, out var mb);
@@ -92,6 +93,7 @@ public class StoreEmailRuleProcessorSender : EventHostedServiceBase
             .Replace("{Invoice.Price}", i.Amount.ToString(CultureInfo.InvariantCulture))
             .Replace("{Invoice.Currency}", i.Currency)
             .Replace("{Invoice.Status}", i.Status.ToString())
-            .Replace("{Invoice.AdditionalStatus}", i.AdditionalStatus.ToString());
+            .Replace("{Invoice.AdditionalStatus}", i.AdditionalStatus.ToString())
+            .Replace("{Invoice.OrderId}", i.Metadata.ToObject<InvoiceMetadata>().OrderId);
     }
 }

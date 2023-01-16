@@ -18,13 +18,13 @@ namespace BTCPayServer.Controllers
             var app = HttpContext.GetAppData();
             if (app == null)
                 return NotFound();
-            
+
             app.StoreData = GetCurrentStore();
 
             var vm = new AppTopItemsViewModel { App = app };
             return ViewComponent("AppTopItems", new { vm });
         }
-        
+
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [HttpGet("{appId}/dashboard/app-sales")]
         public IActionResult AppSales(string appId)
@@ -32,13 +32,13 @@ namespace BTCPayServer.Controllers
             var app = HttpContext.GetAppData();
             if (app == null)
                 return NotFound();
-            
+
             app.StoreData = GetCurrentStore();
 
             var vm = new AppSalesViewModel { App = app };
             return ViewComponent("AppSales", new { vm });
         }
-        
+
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [HttpGet("{appId}/dashboard/app-sales/{period}")]
         public async Task<IActionResult> AppSales(string appId, AppSalesPeriod period)
@@ -46,9 +46,9 @@ namespace BTCPayServer.Controllers
             var app = HttpContext.GetAppData();
             if (app == null)
                 return NotFound();
-            
+
             app.StoreData = GetCurrentStore();
-            
+
             var days = period switch
             {
                 AppSalesPeriod.Week => 7,

@@ -42,9 +42,9 @@ namespace BTCPayServer.Controllers.Greenfield
                 await _payoutProcessorService.GetProcessors(
                     new PayoutProcessorService.PayoutProcessorQuery()
                     {
-                        Stores = new[] {storeId},
-                        Processors = new[] {LightningAutomatedPayoutSenderFactory.ProcessorName},
-                        PaymentMethods = paymentMethod is null ? null : new[] {paymentMethod}
+                        Stores = new[] { storeId },
+                        Processors = new[] { LightningAutomatedPayoutSenderFactory.ProcessorName },
+                        PaymentMethods = paymentMethod is null ? null : new[] { paymentMethod }
                     });
 
             return Ok(configured.Select(ToModel).ToArray());
@@ -61,7 +61,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
         private static AutomatedPayoutBlob FromModel(LightningAutomatedPayoutSettings data)
         {
-            return new AutomatedPayoutBlob() {Interval = data.IntervalSeconds};
+            return new AutomatedPayoutBlob() { Interval = data.IntervalSeconds };
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -75,9 +75,9 @@ namespace BTCPayServer.Controllers.Greenfield
                 (await _payoutProcessorService.GetProcessors(
                     new PayoutProcessorService.PayoutProcessorQuery()
                     {
-                        Stores = new[] {storeId},
-                        Processors = new[] {LightningAutomatedPayoutSenderFactory.ProcessorName},
-                        PaymentMethods = new[] {paymentMethod}
+                        Stores = new[] { storeId },
+                        Processors = new[] { LightningAutomatedPayoutSenderFactory.ProcessorName },
+                        PaymentMethods = new[] { paymentMethod }
                     }))
                 .FirstOrDefault();
             activeProcessor ??= new PayoutProcessorData();
@@ -88,7 +88,9 @@ namespace BTCPayServer.Controllers.Greenfield
             var tcs = new TaskCompletionSource();
             _eventAggregator.Publish(new PayoutProcessorUpdated()
             {
-                Data = activeProcessor, Id = activeProcessor.Id, Processed = tcs
+                Data = activeProcessor,
+                Id = activeProcessor.Id,
+                Processed = tcs
             });
             await tcs.Task;
             return Ok(ToModel(activeProcessor));

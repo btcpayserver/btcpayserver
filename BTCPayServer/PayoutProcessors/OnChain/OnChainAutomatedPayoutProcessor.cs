@@ -39,11 +39,12 @@ namespace BTCPayServer.PayoutProcessors.OnChain
             ILoggerFactory logger,
             BitcoinLikePayoutHandler bitcoinLikePayoutHandler,
             EventAggregator eventAggregator,
+            WalletRepository walletRepository,
             StoreRepository storeRepository,
             PayoutProcessorData payoutProcesserSettings,
             PullPaymentHostedService pullPaymentHostedService,
             BTCPayNetworkProvider btcPayNetworkProvider) :
-            base(logger, storeRepository, payoutProcesserSettings, applicationDbContextFactory,pullPaymentHostedService,
+            base(logger, storeRepository, payoutProcesserSettings, applicationDbContextFactory, pullPaymentHostedService,
                 btcPayNetworkProvider)
         {
             _explorerClientProvider = explorerClientProvider;
@@ -51,14 +52,17 @@ namespace BTCPayServer.PayoutProcessors.OnChain
             _btcPayNetworkJsonSerializerSettings = btcPayNetworkJsonSerializerSettings;
             _bitcoinLikePayoutHandler = bitcoinLikePayoutHandler;
             _eventAggregator = eventAggregator;
+            WalletRepository = walletRepository;
         }
+
+        public WalletRepository WalletRepository { get; }
 
         protected override async Task Process(ISupportedPaymentMethod paymentMethod, List<PayoutData> payouts)
         {
             var storePaymentMethod = paymentMethod as DerivationSchemeSettings;
             if (storePaymentMethod?.IsHotWallet is not true)
             {
-                
+
                 return;
             }
 
@@ -89,9 +93,9 @@ namespace BTCPayServer.PayoutProcessors.OnChain
             decimal? failedAmount = null;
             var changeAddress = await explorerClient.GetUnusedAsync(
                 storePaymentMethod.AccountDerivation, DerivationFeature.Change, 0, true);
-            
+
             var processorBlob = GetBlob(_PayoutProcesserSettings);
-            var feeRate = await explorerClient.GetFeeRateAsync(processorBlob.FeeTargetBlock,new FeeRate(1m));
+            var feeRate = await explorerClient.GetFeeRateAsync(processorBlob.FeeTargetBlock, new FeeRate(1m));
 
             var transfersProcessing = new List<PayoutData>();
             foreach (var transferRequest in payouts)
@@ -103,7 +107,7 @@ namespace BTCPayServer.PayoutProcessors.OnChain
                 }
 
                 var claimDestination =
-                    await _bitcoinLikePayoutHandler.ParseClaimDestination(paymentMethodId, blob.Destination);
+                    await _bitcoinLikePayoutHandler.ParseClaimDestination(paymentMethodId, blob.Destination, CancellationToken);
                 if (!string.IsNullOrEmpty(claimDestination.error))
                 {
                     continue;
@@ -113,7 +117,7 @@ namespace BTCPayServer.PayoutProcessors.OnChain
                 var txBuilder = network.NBitcoinNetwork.CreateTransactionBuilder()
                     .AddCoins(coins)
                     .AddKeys(keys);
-               
+
                 if (workingTx is not null)
                 {
                     foreach (var txout in workingTx.Outputs.Where(txout =>
@@ -135,7 +139,7 @@ namespace BTCPayServer.PayoutProcessors.OnChain
                 }
                 catch (NotEnoughFundsException)
                 {
-                    
+
                     failedAmount = blob.CryptoAmount;
                     //keep going, we prioritize withdraws by time but if there is some other we can fit, we should
                 }
@@ -171,19 +175,16 @@ namespace BTCPayServer.PayoutProcessors.OnChain
                     var walletId = new WalletId(_PayoutProcesserSettings.StoreId, PaymentMethodId.CryptoCode);
                     foreach (PayoutData payoutData in transfersProcessing)
                     {
-                        _eventAggregator.Publish(new UpdateTransactionLabel(walletId,
+                        await WalletRepository.AddWalletTransactionAttachment(walletId,
                             txHash,
-                            UpdateTransactionLabel.PayoutTemplate(new ()
-                            {
-                                {payoutData.PullPaymentDataId?? "", new List<string>{payoutData.Id}}
-                            }, walletId.ToString())));
+                            Attachment.Payout(payoutData.PullPaymentDataId, payoutData.Id));
                     }
                     await Task.WhenAny(tcs.Task, task);
                 }
                 catch (OperationCanceledException)
                 {
                 }
-                catch(Exception e)
+                catch (Exception e)
                 {
                     Logs.PayServer.LogError(e, "Could not finalize and broadcast");
                 }

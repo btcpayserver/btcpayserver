@@ -12,7 +12,6 @@ namespace BTCPayServer.Client.Models
         public DateTimeOffset CreatedTime { get; set; }
         public string Id { get; set; }
         public bool Archived { get; set; }
-
         public enum PaymentRequestStatus
         {
             Pending = 0,

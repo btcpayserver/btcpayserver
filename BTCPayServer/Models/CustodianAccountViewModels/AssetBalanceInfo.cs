@@ -5,7 +5,7 @@ namespace BTCPayServer.Models.CustodianAccountViewModels;
 
 public class AssetBalanceInfo
 {
-    
+
     public string Asset { get; set; }
     public decimal? Bid { get; set; }
     public decimal? Ask { get; set; }

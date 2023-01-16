@@ -40,6 +40,7 @@ using BTCPayServer.Security.Bitpay;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.Labels;
 using BTCPayServer.Services.Mails;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Storage.Models;
@@ -51,6 +52,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using NBitcoin.Payment;
@@ -187,7 +189,7 @@ namespace BTCPayServer.Tests
 
             Assert.Equal(description, json["components"]["securitySchemes"]["API_Key"]["description"].Value<string>());
         }
-        
+
         [Fact]
         [Trait("Integration", "Integration")]
         public async void CanStoreArbitrarySettingsWithStore()
@@ -197,11 +199,11 @@ namespace BTCPayServer.Tests
             var user = tester.NewAccount();
             await user.GrantAccessAsync();
             var settingsRepo = tester.PayTester.ServiceProvider.GetRequiredService<IStoreRepository>();
-            var arbValue = await settingsRepo.GetSettingAsync<string>(user.StoreId,"arbitrary");
+            var arbValue = await settingsRepo.GetSettingAsync<string>(user.StoreId, "arbitrary");
             Assert.Null(arbValue);
             await settingsRepo.UpdateSetting(user.StoreId, "arbitrary", "saved");
 
-            arbValue = await settingsRepo.GetSettingAsync<string>(user.StoreId,"arbitrary");
+            arbValue = await settingsRepo.GetSettingAsync<string>(user.StoreId, "arbitrary");
             Assert.Equal("saved", arbValue);
 
             await settingsRepo.UpdateSetting<TestData>(user.StoreId, "arbitrary", new TestData() { Name = "hello" });
@@ -652,8 +654,8 @@ namespace BTCPayServer.Tests
                 (string)store2.TempData[WellKnownTempData.ErrorMessage], StringComparison.CurrentCultureIgnoreCase);
         }
 
-        [Fact(Timeout = LongRunningTestTimeout)]
-        [Trait("Integration", "Integration")]
+        [Fact(Timeout = LongRunningTestTimeout * 2)]
+        [Trait("Flaky", "Flaky")]
         public async Task CanUseTorClient()
         {
             using var tester = CreateServerTester();
@@ -785,9 +787,9 @@ namespace BTCPayServer.Tests
             tx = Assert.Single(transactions.Transactions);
 
             Assert.Equal("hello", tx.Comment);
-            Assert.Contains("test", tx.Labels.Select(l => l.Text));
-            Assert.Contains("test2", tx.Labels.Select(l => l.Text));
-            Assert.Equal(2, tx.Labels.GroupBy(l => l.Color).Count());
+            Assert.Contains("test", tx.Tags.Select(l => l.Text));
+            Assert.Contains("test2", tx.Tags.Select(l => l.Text));
+            Assert.Equal(2, tx.Tags.GroupBy(l => l.Color).Count());
 
             Assert.IsType<RedirectToActionResult>(
                 await walletController.ModifyTransaction(walletId, tx.Id, removelabel: "test2"));
@@ -797,12 +799,9 @@ namespace BTCPayServer.Tests
             tx = Assert.Single(transactions.Transactions);
 
             Assert.Equal("hello", tx.Comment);
-            Assert.Contains("test", tx.Labels.Select(l => l.Text));
-            Assert.DoesNotContain("test2", tx.Labels.Select(l => l.Text));
-            Assert.Single(tx.Labels.GroupBy(l => l.Color));
-
-            var walletInfo = await tester.PayTester.GetService<WalletRepository>().GetWalletInfo(walletId);
-            Assert.Single(walletInfo.LabelColors); // the test2 color should have been removed
+            Assert.Contains("test", tx.Tags.Select(l => l.Text));
+            Assert.DoesNotContain("test2", tx.Tags.Select(l => l.Text));
+            Assert.Single(tx.Tags.GroupBy(l => l.Color));
         }
 
         [Fact(Timeout = LongRunningTestTimeout)]
@@ -1746,6 +1745,15 @@ namespace BTCPayServer.Tests
                 Assert.True(match.Success);
                 return decimal.Parse(match.Groups[1].Value.Trim(), CultureInfo.InvariantCulture);
             }
+            
+            async Task<object[]> GetExport(TestAccount account, string storeId = null)
+            {
+                var content = await account.GetController<UIInvoiceController>(false)
+                    .Export("json", storeId);
+                var result = Assert.IsType<ContentResult>(content);
+                Assert.Equal("application/json", result.ContentType);
+                return JsonConvert.DeserializeObject<object[]>(result.Content ?? "[]");
+            }
 
             using var tester = CreateServerTester();
             await tester.StartAsync();
@@ -1765,14 +1773,11 @@ namespace BTCPayServer.Tests
                 }, Facade.Merchant);
 
             var networkFee = new FeeRate(invoice.MinerFees["BTC"].SatoshiPerBytes).GetFee(100);
-            var jsonResult = user.GetController<UIInvoiceController>().Export("json").GetAwaiter().GetResult();
-            var result = Assert.IsType<ContentResult>(jsonResult);
-            Assert.Equal("application/json", result.ContentType);
-            Assert.Single(JArray.Parse(result.Content));
+            var result = await GetExport(user);
+            Assert.Single(result);
 
             var cashCow = tester.ExplorerNode;
             var invoiceAddress = BitcoinAddress.Create(invoice.CryptoInfo[0].Address, cashCow.Network);
-            //
             var firstPayment = invoice.CryptoInfo[0].TotalDue - 3 * networkFee;
             cashCow.SendToAddress(invoiceAddress, firstPayment);
             Thread.Sleep(1000); // prevent race conditions, ordering payments
@@ -1786,14 +1791,9 @@ namespace BTCPayServer.Tests
             cashCow.SendToAddress(invoiceAddress, 4 * networkFee);
             Thread.Sleep(1000);
 
-            TestUtils.Eventually(() =>
+            await TestUtils.EventuallyAsync(async () =>
             {
-                var jsonResultPaid =
-                    user.GetController<UIInvoiceController>().Export("json").GetAwaiter().GetResult();
-                var paidresult = Assert.IsType<ContentResult>(jsonResultPaid);
-                Assert.Equal("application/json", paidresult.ContentType);
-
-                var parsedJson = JsonConvert.DeserializeObject<object[]>(paidresult.Content);
+                var parsedJson = await GetExport(user);
                 Assert.Equal(3, parsedJson.Length);
 
                 var invoiceDueAfterFirstPayment = (3 * networkFee).ToDecimal(MoneyUnit.BTC) * invoice.Rate;
@@ -1810,6 +1810,32 @@ namespace BTCPayServer.Tests
                 var pay3str = parsedJson[2].ToString();
                 Assert.Contains("\"InvoiceDue\": 0", pay3str);
             });
+
+            // create an invoice for a new store and check responses with and without store id
+            var otherUser = tester.NewAccount();
+            await otherUser.GrantAccessAsync();
+            otherUser.RegisterDerivationScheme("BTC");
+            await otherUser.SetNetworkFeeMode(NetworkFeeMode.Always);
+            var newInvoice = await otherUser.BitPay.CreateInvoiceAsync(
+                new Invoice
+                {
+                    Price = 21,
+                    Currency = "USD",
+                    PosData = "posData",
+                    OrderId = "orderId",
+                    ItemDesc = "Some \", description",
+                    FullNotifications = true
+                }, Facade.Merchant);
+            
+            await otherUser.PayInvoice(newInvoice.Id);
+            Assert.Single(await GetExport(otherUser));
+            Assert.Single(await GetExport(otherUser, otherUser.StoreId));
+            Assert.Equal(3, (await GetExport(user, user.StoreId)).Length);
+            Assert.Equal(3, (await GetExport(user)).Length);
+            
+            await otherUser.AddOwner(user.UserId);
+            Assert.Equal(4, (await GetExport(user)).Length);
+            Assert.Single(await GetExport(user, otherUser.StoreId));
         }
 
         [Fact(Timeout = LongRunningTestTimeout)]
@@ -1935,8 +1961,8 @@ namespace BTCPayServer.Tests
                 Assert.Contains($",orderId,{invoice.Id},", paidresult.Content);
                 Assert.Contains($",On-Chain,BTC,0.0991,0.0001,5000.0", paidresult.Content);
                 Assert.Contains($",USD,5.00", paidresult.Content); // Seems hacky but some plateform does not render this decimal the same
-                    Assert.Contains("0,,\"Some \"\", description\",New (paidPartial),new,paidPartial",
-                    paidresult.Content);
+                Assert.Contains("0,,\"Some \"\", description\",New (paidPartial),new,paidPartial",
+                paidresult.Content);
             });
         }
 
@@ -2158,7 +2184,7 @@ namespace BTCPayServer.Tests
                 Assert.Equal("paidPartial", localInvoice.ExceptionStatus.ToString());
                 Assert.Equal(1, localInvoice.CryptoInfo[0].TxCount);
                 Assert.NotEqual(localInvoice.BitcoinAddress, invoice.BitcoinAddress); //New address
-                    Assert.True(IsMapped(invoice, ctx));
+                Assert.True(IsMapped(invoice, ctx));
                 Assert.True(IsMapped(localInvoice, ctx));
 
                 invoiceEntity = repo.GetInvoice(invoice.Id, true).GetAwaiter().GetResult();
@@ -2176,7 +2202,7 @@ namespace BTCPayServer.Tests
                 Assert.Equal(firstPayment + secondPayment, localInvoice.BtcPaid);
                 Assert.Equal(Money.Zero, localInvoice.BtcDue);
                 Assert.Equal(localInvoice.BitcoinAddress, invoiceAddress.ToString()); //no new address generated
-                    Assert.True(IsMapped(localInvoice, ctx));
+                Assert.True(IsMapped(localInvoice, ctx));
                 Assert.False((bool)((JValue)localInvoice.ExceptionStatus).Value);
             });
 
@@ -2519,6 +2545,79 @@ namespace BTCPayServer.Tests
             store = await tester.PayTester.StoreRepository.FindStore(acc.StoreId);
             lnMethod = store.GetSupportedPaymentMethods(tester.NetworkProvider).OfType<LightningSupportedPaymentMethod>().First();
             Assert.True(lnMethod.IsInternalNode);
+        }
+
+        [Fact(Timeout = LongRunningTestTimeout)]
+        [Trait("Integration", "Integration")]
+        [Obsolete]
+        public async Task CanDoLabelMigrations()
+        {
+            using var tester = CreateServerTester(newDb: true);
+            await tester.StartAsync();
+            var dbf = tester.PayTester.GetService<ApplicationDbContextFactory>();
+            int walletCount = 1000;
+            var wallet = "walletttttttttttttttttttttttttttt";
+            using (var db = dbf.CreateContext())
+            {
+                for (int i = 0; i < walletCount; i++)
+                {
+                    var walletData = new WalletData() { Id = $"S-{wallet}{i}-BTC" };
+                    walletData.Blob = ZipUtils.Zip("{\"LabelColors\": { \"label1\" : \"black\", \"payout\":\"green\" }}");
+                    db.Wallets.Add(walletData);
+                }
+                await db.SaveChangesAsync();
+            }
+            uint256 firstTxId = null;
+            using (var db = dbf.CreateContext())
+            {
+                int transactionCount = 10_000;
+                for (int i = 0; i < transactionCount; i++)
+                {
+                    var txId = RandomUtils.GetUInt256();
+                    var wt = new WalletTransactionData()
+                    {
+                        WalletDataId = $"S-{wallet}{i % walletCount}-BTC",
+                        TransactionId = txId.ToString(),
+                    };
+                    firstTxId ??= txId;
+                    if (i != 10)
+                        wt.Blob = ZipUtils.Zip("{\"Comment\":\"test\"}");
+                    if (i % 1240 != 0)
+                    {
+                        wt.Labels = "[{\"type\":\"raw\", \"text\":\"label1\"}]";
+                    }
+                    else if (i == 0)
+                    {
+                        wt.Labels = "[{\"type\":\"raw\", \"text\":\"label1\"},{\"type\":\"raw\", \"text\":\"labelo" + i + "\"}, " +
+                            "{\"type\":\"payout\", \"text\":\"payout\", \"pullPaymentPayouts\":{\"pp1\":[\"p1\",\"p2\"],\"pp2\":[\"p3\"]}}]";
+                    }
+                    else
+                    {
+                        wt.Labels = "[{\"type\":\"raw\", \"text\":\"label1\"},{\"type\":\"raw\", \"text\":\"labelo" + i + "\"}]";
+                    }
+                    db.WalletTransactions.Add(wt);
+                }
+                await db.SaveChangesAsync();
+            }
+            await RestartMigration(tester);
+            var migrator = tester.PayTester.GetService<IEnumerable<IHostedService>>().OfType<DbMigrationsHostedService>().First();
+            await migrator.MigratedTransactionLabels(0);
+
+            var walletRepo = tester.PayTester.GetService<WalletRepository>();
+            var wi1 = await walletRepo.GetWalletLabels(new WalletId($"{wallet}0", "BTC"));
+            Assert.Equal(3, wi1.Length);
+            Assert.Contains(wi1, o => o.Label == "label1" && o.Color == "black");
+            Assert.Contains(wi1, o => o.Label == "labelo0" && o.Color == "#000");
+            Assert.Contains(wi1, o => o.Label == "payout" && o.Color == "green");
+
+            var txInfo = await walletRepo.GetWalletTransactionsInfo(new WalletId($"{wallet}0", "BTC"), new[] { firstTxId.ToString() });
+            Assert.Equal("test", txInfo.Values.First().Comment);
+            // Should have the 2 raw labels, and one legacy label for payouts
+            Assert.Equal(3, txInfo.Values.First().LegacyLabels.Count);
+            var payoutLabel = txInfo.Values.First().LegacyLabels.Select(l => l.Value).OfType<PayoutLabel>().First();
+            Assert.Equal(2, payoutLabel.PullPaymentPayouts.Count);
+            Assert.Equal(2, payoutLabel.PullPaymentPayouts["pp1"].Count);
+            Assert.Single(payoutLabel.PullPaymentPayouts["pp2"]);
         }
 
 

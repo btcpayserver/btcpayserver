@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data.Data;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using PayoutProcessorData = BTCPayServer.Data.Data.PayoutProcessorData;
 
 namespace BTCPayServer.Data
@@ -36,7 +38,7 @@ namespace BTCPayServer.Data
 
         [NotMapped] public string Role { get; set; }
 
-        public byte[] StoreBlob { get; set; }
+        public string StoreBlob { get; set; }
 
         [Obsolete("Use GetDefaultPaymentId instead")]
         public string DefaultCrypto { get; set; }
@@ -48,5 +50,15 @@ namespace BTCPayServer.Data
         public IEnumerable<PayoutData> Payouts { get; set; }
         public IEnumerable<CustodianAccountData> CustodianAccounts { get; set; }
         public IEnumerable<StoreSettingData> Settings { get; set; }
+
+        internal static void OnModelCreating(ModelBuilder builder, DatabaseFacade databaseFacade)
+        {
+            if (databaseFacade.IsNpgsql())
+            {
+                builder.Entity<StoreData>()
+                    .Property(o => o.StoreBlob)
+                    .HasColumnType("JSONB");
+            }
+        }
     }
 }

@@ -84,7 +84,7 @@ a.unobtrusive-link {
     box-shadow: none;
 }
 
-[data-bs-toggle="collapse"] svg.icon {
+[aria-expanded] > svg.icon-caret-down {
     flex-shrink: 0;
     width: 24px;
     height: 24px;
@@ -92,19 +92,12 @@ a.unobtrusive-link {
     transition: transform 0.2s ease-in-out;
 }
 
-[data-bs-toggle="collapse"][aria-expanded="true"] svg.icon {
+[aria-expanded="true"] > svg.icon-caret-down {
     transform: rotate(-180deg);
 }
 
-time[datetime] {
-    display: block;
-    max-width: 125px;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-}
-
 /* Badges */
+.badge-pending,
 .badge-new {
     background: #d4edda;
     color: #000;
@@ -183,8 +176,8 @@ h2 small .fa-question-circle-o {
     background-color: lightgray;
 }
 
-[v-cloak] { display:none }
-[v-cloak-loading] > * { display:none }
+[v-cloak] { display: none !important; }
+[v-cloak-loading] > * { display: none !important; }
 [v-cloak-loading]::before { content: "loading…" }
 
 .list-group-item a:not(.btn) {
@@ -210,6 +203,29 @@ h2 small .fa-question-circle-o {
 [class*="field-validation"]:not(:empty) {
     display: inline-block;
     margin-top: .5rem;
+}
+
+/* Store header */
+.store-header {
+    --logo-size: 3rem;
+    
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--btcpay-space-s);
+}
+
+.store-header .logo {
+    height: var(--logo-size);
+}
+
+.store-header .logo--square {
+    width: var(--logo-size);
+    border-radius: 50%;
+}
+
+.store-header h1 {
+    font-size: 1.3rem;
 }
 
 /* Print */

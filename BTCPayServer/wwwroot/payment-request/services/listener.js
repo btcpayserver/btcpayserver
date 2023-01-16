@@ -44,10 +44,10 @@ var hubListener = function () {
     }
 
     eventAggregator.$on("pay", function (amount) {
-        connection.invoke("Pay", amount);
+        connection.invoke("Pay", srvModel.id, amount);
     });
     eventAggregator.$on("cancel-invoice", function () {
-        connection.invoke("CancelUnpaidPendingInvoice");
+        connection.invoke("CancelUnpaidPendingInvoice", srvModel.id);
     });
 
 

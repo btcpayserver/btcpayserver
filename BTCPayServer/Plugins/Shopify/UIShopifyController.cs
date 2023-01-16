@@ -77,10 +77,7 @@ namespace BTCPayServer.Plugins.Shopify
                 return _cachedShopifyJavascript;
             }
 
-            string[] fileList = _btcPayServerOptions.Value.BundleJsCss
-                ? new[] { "bundles/shopify-bundle.min.js" }
-                : new[] { "modal/btcpay.js", "shopify/btcpay-shopify.js" };
-
+            string[] fileList = new[] { "modal/btcpay.js", "shopify/btcpay-shopify.js" };
 
             foreach (var file in fileList)
             {
@@ -164,11 +161,11 @@ namespace BTCPayServer.Plugins.Shopify
                     order = await client.GetOrder(orderId);
                 }
 
-                 return Ok(new
-                    {
-                        invoiceId = firstInvoiceSettled.Id,
-                        status = firstInvoiceSettled.Status.ToString().ToLowerInvariant()
-                    });
+                return Ok(new
+                {
+                    invoiceId = firstInvoiceSettled.Id,
+                    status = firstInvoiceSettled.Status.ToString().ToLowerInvariant()
+                });
             }
 
             if (checkOnly)
@@ -196,7 +193,7 @@ namespace BTCPayServer.Plugins.Shopify
                             ["shopifyOrderId"] = order.Id,
                             ["shopifyOrderNumber"] = order.OrderNumber
                         },
-                        AdditionalSearchTerms = new []
+                        AdditionalSearchTerms = new[]
                         {
                             order.OrderNumber.ToString(CultureInfo.InvariantCulture),
                             order.Id.ToString(CultureInfo.InvariantCulture),
@@ -287,4 +284,3 @@ namespace BTCPayServer.Plugins.Shopify
     }
 
 }
-

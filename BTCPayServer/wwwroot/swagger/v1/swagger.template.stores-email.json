@@ -222,7 +222,8 @@
     },
     "tags": [
         {
-            "name": "Stores (Email)"
+            "name": "Stores (Email)",
+            "description": "Store Emails operations"
         }
     ]
 }

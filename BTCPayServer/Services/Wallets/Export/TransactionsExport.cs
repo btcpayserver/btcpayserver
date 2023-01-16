@@ -38,10 +38,10 @@ namespace BTCPayServer.Services.Wallets.Export
                     Currency = _wallet.Network.CryptoCode,
                     IsConfirmed = tx.Confirmations != 0
                 };
-                
+
                 if (_walletTransactionsInfo.TryGetValue(tx.TransactionId.ToString(), out var transactionInfo))
                 {
-                    model.Labels = transactionInfo.Labels?.Select(l => l.Value.Text).ToList();
+                    model.Labels = transactionInfo.LabelColors?.Select(l => l.Key).ToList();
                     model.Comment = transactionInfo.Comment;
                 }
 
@@ -74,7 +74,7 @@ namespace BTCPayServer.Services.Wallets.Export
             return writer.ToString();
         }
     }
-    
+
     public sealed class ExportTransactionMap : ClassMap<ExportTransaction>
     {
         public ExportTransactionMap()
@@ -91,7 +91,7 @@ namespace BTCPayServer.Services.Wallets.Export
         public DateTimeOffset Timestamp { get; set; }
         public string Amount { get; set; }
         public string Currency { get; set; }
-        
+
         [Name("Is Confirmed")]
         public bool IsConfirmed { get; set; }
         public string Comment { get; set; }

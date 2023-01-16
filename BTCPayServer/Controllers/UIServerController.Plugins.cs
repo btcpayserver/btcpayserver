@@ -33,13 +33,17 @@ namespace BTCPayServer.Controllers
                 });
                 availablePlugins = Array.Empty<PluginService.AvailablePlugin>();
             }
+            var docsByIdentifier = new Dictionary<string, string>();
+            foreach (var p in availablePlugins.Where(p => !string.IsNullOrEmpty(p.Documentation)))
+                docsByIdentifier.TryAdd(p.Identifier, p.Documentation);
             var res = new ListPluginsViewModel()
             {
                 Installed = pluginService.LoadedPlugins,
                 Available = availablePlugins,
                 Commands = pluginService.GetPendingCommands(),
                 Disabled = pluginService.GetDisabledPlugins(),
-                CanShowRestart = btcPayServerOptions.DockerDeployment
+                CanShowRestart = btcPayServerOptions.DockerDeployment,
+                DocsByIdentifier = docsByIdentifier
             };
             return View(res);
         }
@@ -51,6 +55,7 @@ namespace BTCPayServer.Controllers
             public (string command, string plugin)[] Commands { get; set; }
             public bool CanShowRestart { get; set; }
             public string[] Disabled { get; set; }
+            public Dictionary<string, string> DocsByIdentifier { get; set; } = new Dictionary<string, string>();
         }
 
         [HttpPost("server/plugins/uninstall")]
@@ -66,7 +71,7 @@ namespace BTCPayServer.Controllers
 
             return RedirectToAction("ListPlugins");
         }
-        
+
         [HttpPost("server/plugins/cancel")]
         public IActionResult CancelPluginCommands(
             [FromServices] PluginService pluginService, string plugin)
@@ -83,11 +88,11 @@ namespace BTCPayServer.Controllers
 
         [HttpPost("server/plugins/install")]
         public async Task<IActionResult> InstallPlugin(
-            [FromServices] PluginService pluginService, string plugin, bool update = false, string path ="")
+            [FromServices] PluginService pluginService, string plugin, bool update = false, string version = null)
         {
             try
             {
-                await pluginService.DownloadRemotePlugin(plugin, path);
+                await pluginService.DownloadRemotePlugin(plugin, version);
                 if (update)
                 {
                     pluginService.UpdatePlugin(plugin);
@@ -127,7 +132,7 @@ namespace BTCPayServer.Controllers
 
             TempData.SetStatusMessageModel(new StatusMessageModel()
             {
-                Message = "Files uploaded, restart server to load plugins" ,
+                Message = "Files uploaded, restart server to load plugins",
                 Severity = StatusMessageModel.StatusSeverity.Success
             });
             return RedirectToAction("ListPlugins");

@@ -31,6 +31,8 @@ namespace BTCPayServer.Client.Models
         public bool AnyoneCanCreateInvoice { get; set; }
         public string DefaultCurrency { get; set; }
         public bool RequiresRefundEmail { get; set; }
+        [JsonConverter(typeof(StringEnumConverter))]
+        public CheckoutType CheckoutType { get; set; }
         public bool LightningAmountInSatoshi { get; set; }
         public bool LightningPrivateRouteHints { get; set; }
         public bool OnChainWithLnInvoiceFallback { get; set; }
@@ -58,12 +60,18 @@ namespace BTCPayServer.Client.Models
         public NetworkFeeMode NetworkFeeMode { get; set; } = NetworkFeeMode.Never;
 
         public bool PayJoinEnabled { get; set; }
-        
+
         public InvoiceData.ReceiptOptions Receipt { get; set; }
 
 
         [JsonExtensionData]
         public IDictionary<string, JToken> AdditionalData { get; set; }
+    }
+
+    public enum CheckoutType
+    {
+        V1,
+        V2
     }
 
     public enum NetworkFeeMode

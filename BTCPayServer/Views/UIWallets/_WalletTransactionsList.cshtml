@@ -10,10 +10,10 @@
             @transaction.Timestamp.ToBrowserDate()
         </td>
         <td class="text-start">
-            @if (transaction.Labels.Any())
+            @if (transaction.Tags.Any())
             {
                 <div class="d-flex flex-wrap gap-2 align-items-center">
-                    @foreach (var label in transaction.Labels)
+                    @foreach (var label in transaction.Tags)
                     {
                         <div class="badge-container rounded-2" style="background-color:@label.Color;">
                             <div class="badge transactionLabel position-relative d-block"
@@ -79,7 +79,7 @@
                             <div class="py-2 px-3 d-flex flex-wrap gap-2">
                                 @foreach (var label in Model.Labels)
                                 {
-                                    @if (transaction.Labels.Contains(label))
+                                    @if (transaction.Tags.Any(l => l.Text == label.Text))
                                     {
                                         <button name="removelabel" class="bg-transparent border-0 p-0" type="submit" value="@label.Text"><span class="badge" style="background-color:@label.Color;color:@label.TextColor"><span class="fa fa-check"></span> @label.Text</span></button>
                                     }

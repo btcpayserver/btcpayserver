@@ -23,7 +23,7 @@ namespace BTCPayServer.Services.Rates
         {
             await new SynchronizationContextRemover();
 
-            var exchangeAPI = (T) await ExchangeAPI.GetExchangeAPIAsync<T>();
+            var exchangeAPI = (T)await ExchangeAPI.GetExchangeAPIAsync<T>();
             exchangeAPI.RequestMaker = new HttpClientRequestMaker(exchangeAPI, _httpClient, cancellationToken);
             var rates = await exchangeAPI.GetTickersAsync();
 
@@ -44,9 +44,6 @@ namespace BTCPayServer.Services.Rates
         {
             if (notFoundSymbols.TryGetValue(ticker.Key, out _))
                 return null;
-            if (ticker.Key.Contains("XMR"))
-            {
-            }
             try
             {
                 CurrencyPair pair;

@@ -41,7 +41,7 @@ namespace BTCPayServer.Controllers
                 Dictionary<string, string> directUrlByFiles = new Dictionary<string, string>();
                 foreach (string filename in fileIds)
                 {
-                    string fileUrl = await _FileService.GetFileUrl(Request.GetAbsoluteRootUri(), filename);
+                    string fileUrl = await _fileService.GetFileUrl(Request.GetAbsoluteRootUri(), filename);
                     if (fileUrl == null)
                     {
                         allFilesExist = false;
@@ -71,7 +71,7 @@ namespace BTCPayServer.Controllers
         {
             try
             {
-                await _FileService.RemoveFile(fileId, null);
+                await _fileService.RemoveFile(fileId, null);
                 return RedirectToAction(nameof(Files), new
                 {
                     fileIds = Array.Empty<string>(),
@@ -142,7 +142,7 @@ namespace BTCPayServer.Controllers
                     throw new ArgumentOutOfRangeException();
             }
 
-            var url = await _FileService.GetTemporaryFileUrl(Request.GetAbsoluteRootUri(), fileId, expiry, viewModel.IsDownload);
+            var url = await _fileService.GetTemporaryFileUrl(Request.GetAbsoluteRootUri(), fileId, expiry, viewModel.IsDownload);
             TempData.SetStatusMessageModel(new StatusMessageModel()
             {
                 Severity = StatusMessageModel.StatusSeverity.Success,
@@ -183,7 +183,7 @@ namespace BTCPayServer.Controllers
                         invalidFileNameCount++;
                         continue;
                     }
-                    var newFile = await _FileService.AddFile(file, GetUserId());
+                    var newFile = await _fileService.AddFile(file, GetUserId());
                     fileIds.Add(newFile.Id);
                 }
 

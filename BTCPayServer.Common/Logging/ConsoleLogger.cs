@@ -180,7 +180,7 @@ namespace BTCPayServer.Logging
             logBuilder.Append(": ");
             var lenAfter = logBuilder.ToString().Length;
             while (lenAfter++ < 18)
-                logBuilder.Append(" ");
+                logBuilder.Append(' ');
             // scope information
             GetScopeInformation(logBuilder);
 

@@ -19,14 +19,14 @@ namespace BTCPayServer.Services.Apps
         public const string PaymentReceived = "PaymentReceived";
         public const string InfoUpdated = "InfoUpdated";
         public const string InvoiceError = "InvoiceError";
-        
+
         private readonly UICrowdfundController _crowdfundController;
 
         public AppHub(UICrowdfundController crowdfundController)
         {
             _crowdfundController = crowdfundController;
         }
-        
+
         public async Task ListenToCrowdfundApp(string appId)
         {
             if (Context.Items.ContainsKey("app"))

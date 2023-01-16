@@ -89,7 +89,7 @@ namespace BTCPayServer.Payments.Lightning
             if (expiry < TimeSpan.Zero)
                 expiry = TimeSpan.FromSeconds(1);
 
-            LightningInvoice? lightningInvoice = null;
+            LightningInvoice? lightningInvoice;
 
             string description = storeBlob.LightningDescriptionTemplate;
             description = description.Replace("{StoreName}", store.StoreName ?? "", StringComparison.OrdinalIgnoreCase)
@@ -118,6 +118,7 @@ namespace BTCPayServer.Payments.Lightning
                 Activated = true,
                 BOLT11 = lightningInvoice.BOLT11,
                 PaymentHash = BOLT11PaymentRequest.Parse(lightningInvoice.BOLT11, network.NBitcoinNetwork).PaymentHash,
+                Preimage = string.IsNullOrEmpty(lightningInvoice.Preimage) ? null : uint256.Parse(lightningInvoice.Preimage),
                 InvoiceId = lightningInvoice.Id,
                 NodeInfo = (await nodeInfo).FirstOrDefault()?.ToString()
             };
@@ -147,15 +148,10 @@ namespace BTCPayServer.Payments.Lightning
                                                                 (!string.IsNullOrEmpty(ex.InnerException?.Message) ? $" ({ex.InnerException.Message})" : ""));
                 }
 
+                // Node info might be empty if there are no public URIs to announce. The UI also supports this.
                 var nodeInfo = preferOnion != null && info.NodeInfoList.Any(i => i.IsTor == preferOnion)
                     ? info.NodeInfoList.Where(i => i.IsTor == preferOnion.Value).ToArray()
                     : info.NodeInfoList.Select(i => i).ToArray();
-
-                // Maybe the user does not have an  easily accessible ln node. Node info should be optional. The UI also supports this.
-                // if (!nodeInfo.Any())
-                // {
-                //     throw new PaymentMethodUnavailableException("No lightning node public address has been configured");
-                // }
 
                 var blocksGap = summary.Status.ChainHeight - info.BlockHeight;
                 if (blocksGap > 10)

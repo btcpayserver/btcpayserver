@@ -1,5 +1,8 @@
 @model BTCPayServer.Models.InvoicingModels.CreateInvoiceModel
 @using BTCPayServer.Services.Apps
+@using BTCPayServer.TagHelpers
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using BTCPayServer.Abstractions.TagHelpers
 @{
     ViewData.SetActivePage(InvoiceNavPages.Create, "Create Invoice");
 }
@@ -86,12 +89,12 @@
             <h4 class="mt-5 mb-4">Customer Information</h4>
             <div class="form-group">
                 <label asp-for="BuyerEmail" class="form-label"></label>
-                <input asp-for="BuyerEmail" class="form-control" />
+                <input asp-for="BuyerEmail" class="form-control"/>
                 <span asp-validation-for="BuyerEmail" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="RequiresRefundEmail" class="form-label"></label>
-                <select asp-for="RequiresRefundEmail" asp-items="@Html.GetEnumSelectList<RequiresRefundEmail>()" class="form-select"></select>
+                <select asp-for="RequiresRefundEmail" asp-items="@Html.GetEnumSelectList<RequiresRefundEmail>()" class="form-select w-auto"></select>
                 <span asp-validation-for="RequiresRefundEmail" class="text-danger"></span>
             </div>
 
@@ -132,9 +135,7 @@
                                     <label asp-for="NotificationEmail" class="form-label"></label>
                                     <input asp-for="NotificationEmail" class="form-control" />
                                     <span asp-validation-for="NotificationEmail" class="text-danger"></span>
-                                    <p id="InvoiceEmailHelpBlock" class="form-text text-muted">
-                                        Receive updates for this invoice.
-                                    </p>
+                                    <div id="InvoiceEmailHelpBlock" class="form-text">Receive updates for this invoice.</div>
                                 </div>
                             </div>
                         </div>

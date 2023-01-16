@@ -1,0 +1,20 @@
+@using BTCPayServer.Services
+@using BTCPayServer.Abstractions.Contracts
+@using BTCPayServer.Abstractions.Extensions
+@using BTCPayServer.Abstractions.TagHelpers
+@inject ThemeSettings Theme
+@inject IFileService FileService
+@model BTCPayServer.Components.MainLogo.MainLogoViewModel
+
+@if (!string.IsNullOrEmpty(Theme.LogoFileId))
+{
+    var logoSrc = await FileService.GetFileUrl(Context.Request.GetAbsoluteRootUri(), Theme.LogoFileId);
+    <img src="@logoSrc" alt="BTCPay Server" class="main-logo main-logo-custom @Model.CssClass" />
+}
+else
+{
+    <svg xmlns="http://www.w3.org/2000/svg" role="img" alt="BTCPay Server" class="main-logo main-logo-btcpay @Model.CssClass">
+        <use href="~/img/logo.svg#small" class="main-logo-btcpay--small"/>
+        <use href="~/img/logo.svg#large" class="main-logo-btcpay--large"/>
+    </svg>
+}

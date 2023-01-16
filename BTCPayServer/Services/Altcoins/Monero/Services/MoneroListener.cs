@@ -240,7 +240,7 @@ namespace BTCPayServer.Services.Altcoins.Monero.Services
 
 
                     return HandlePaymentData(cryptoCode, transfer.Address, transfer.Amount, transfer.SubaddrIndex.Major,
-                        transfer.SubaddrIndex.Minor, transfer.Txid, transfer.Confirmations, transfer.Height, invoice,
+                        transfer.SubaddrIndex.Minor, transfer.Txid, transfer.Confirmations, transfer.Height, transfer.UnlockTime,invoice,
                         updatedPaymentEntities);
                 }));
             }
@@ -302,7 +302,7 @@ namespace BTCPayServer.Services.Altcoins.Monero.Services
                     transfer.Transfer.Txid,
                     transfer.Transfer.Confirmations,
                     transfer.Transfer.Height
-                    , invoice, paymentsToUpdate);
+                    , transfer.Transfer.UnlockTime,invoice, paymentsToUpdate);
             }
 
             if (paymentsToUpdate.Any())
@@ -320,7 +320,7 @@ namespace BTCPayServer.Services.Altcoins.Monero.Services
 
         private async Task HandlePaymentData(string cryptoCode, string address, long totalAmount, long subaccountIndex,
             long subaddressIndex,
-            string txId, long confirmations, long blockHeight, InvoiceEntity invoice,
+            string txId, long confirmations, long blockHeight, long locktime, InvoiceEntity invoice,
             BlockingCollection<(PaymentEntity Payment, InvoiceEntity invoice)> paymentsToUpdate)
         {
             //construct the payment data
@@ -333,7 +333,8 @@ namespace BTCPayServer.Services.Altcoins.Monero.Services
                 ConfirmationCount = confirmations,
                 Amount = totalAmount,
                 BlockHeight = blockHeight,
-                Network = _networkProvider.GetNetwork(cryptoCode)
+                Network = _networkProvider.GetNetwork(cryptoCode),
+                LockTime = locktime
             };
 
             //check if this tx exists as a payment to this invoice already

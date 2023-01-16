@@ -1,13 +1,13 @@
+using System;
+using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Configuration;
+using BTCPayServer.Logging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
-using BTCPayServer.Configuration;
-using Microsoft.Extensions.Options;
-using System.Data.Common;
-using System;
-using BTCPayServer.Logging;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Npgsql;
 
 namespace BTCPayServer.Services
@@ -45,7 +45,7 @@ namespace BTCPayServer.Services
         {
             int maxRetries = 10;
             int retries = maxRetries;
-            retry:
+retry:
             var conn = new Npgsql.NpgsqlConnection(connectionString);
             try
             {

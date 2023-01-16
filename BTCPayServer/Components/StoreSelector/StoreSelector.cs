@@ -50,12 +50,15 @@ namespace BTCPayServer.Components.StoreSelector
                 .OrderBy(s => s.Text)
                 .ToList();
 
+            var blob = currentStore?.GetStoreBlob();
+
             var vm = new StoreSelectorViewModel
             {
                 Options = options,
                 CurrentStoreId = currentStore?.Id,
                 CurrentDisplayName = currentStore?.StoreName,
-                CurrentStoreIsOwner = currentStore?.Role == StoreRoles.Owner
+                CurrentStoreIsOwner = currentStore?.Role == StoreRoles.Owner,
+                CurrentStoreLogoFileId = blob?.LogoFileId
             };
 
             return View(vm);

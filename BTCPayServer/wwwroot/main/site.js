@@ -3,14 +3,14 @@ const flatpickrInstances = [];
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DateTimeFormat/DateTimeFormat
 const dtFormatOpts = { dateStyle: 'short', timeStyle: 'short' };
 
-const formatDateTimes = mode => {
-    if (!mode) mode = 'localized';
+const formatDateTimes = format => {
     // select only elements which haven't been initialized before, those without data-localized
     document.querySelectorAll("time[datetime]:not([data-localized])").forEach($el => {
         const date = new Date($el.getAttribute("datetime"));
         // initialize and set localized attribute
         $el.dataset.localized = new Intl.DateTimeFormat('default', dtFormatOpts).format(date);
         // set text to chosen mode
+        const mode = format || $el.dataset.initial;
         if ($el.dataset[mode]) $el.innerText = $el.dataset[mode];
     });
 };
@@ -86,7 +86,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 row: 10
             },
             codeviewFilter: true,
-            codeviewFilterRegex: new RegExp($.summernote.options.codeviewFilterRegex.source + '|<.*?( on\\w+?=.*?)>', 'gi')
+            codeviewFilterRegex: new RegExp($.summernote.options.codeviewFilterRegex.source + '|<.*?( on\\w+?=.*?)>', 'gi'),
+            codeviewIframeWhitelistSrc: ['twitter.com', 'syndication.twitter.com']
         });
     }
 
@@ -139,7 +140,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     
     // Time Format
-    delegate('click', '#switchTimeFormat', switchTimeFormat);
+    delegate('click', '.switch-time-format', switchTimeFormat);
 
     // Theme Switch
     delegate('click', '.btcpay-theme-switch', e => {

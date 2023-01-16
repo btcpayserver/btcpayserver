@@ -46,7 +46,7 @@ namespace BTCPayServer.Tests
             // Reset this using `dotnet user-secrets remove RunSeleniumInBrowser`
 
             var chromeDriverPath = config["ChromeDriverDirectory"] ?? (Server.PayTester.InContainer ? "/usr/bin" : Directory.GetCurrentDirectory());
-            
+
             var options = new ChromeOptions();
             if (!runInBrowser)
             {
@@ -176,6 +176,9 @@ namespace BTCPayServer.Tests
             var name = "Store" + RandomUtils.GetUInt64();
             TestLogs.LogInformation($"Created store {name}");
             Driver.WaitForElement(By.Id("Name")).SendKeys(name);
+            var rateSource = new SelectElement(Driver.FindElement(By.Id("PreferredExchange")));
+            Assert.Equal("Kraken (Recommended)", rateSource.SelectedOption.Text);
+            rateSource.SelectByText("CoinGecko");
             Driver.WaitForElement(By.Id("Create")).Click();
             Driver.FindElement(By.Id("StoreNav-StoreSettings")).Click();
             Driver.FindElement(By.Id($"SectionNav-{StoreNavPages.General.ToString()}")).Click();
@@ -183,6 +186,17 @@ namespace BTCPayServer.Tests
             if (keepId)
                 StoreId = storeId;
             return (name, storeId);
+        }
+
+        public void EnableCheckoutV2(bool bip21 = false)
+        {
+            GoToStore(StoreNavPages.CheckoutAppearance);
+            Driver.SetCheckbox(By.Id("UseNewCheckout"), true);
+            Driver.WaitForElement(By.Id("OnChainWithLnInvoiceFallback"));
+            Driver.SetCheckbox(By.Id("OnChainWithLnInvoiceFallback"), bip21);
+            Driver.FindElement(By.Id("Save")).SendKeys(Keys.Enter);
+            Assert.Contains("Store successfully updated", FindAlertMessage().Text);
+            Assert.True(Driver.FindElement(By.Id("UseNewCheckout")).Selected);
         }
 
         public Mnemonic GenerateWallet(string cryptoCode = "BTC", string seed = "", bool? importkeys = null, bool isHotWallet = false, ScriptPubKeyType format = ScriptPubKeyType.Segwit)
@@ -270,12 +284,12 @@ namespace BTCPayServer.Tests
         {
             AddLightningNode(null, null, true);
         }
-        
+
         public void AddLightningNode(LightningConnectionType? connectionType = null, bool test = true)
         {
             AddLightningNode(null, connectionType, test);
         }
-        
+
         public void AddLightningNode(string cryptoCode = null, LightningConnectionType? connectionType = null, bool test = true)
         {
             cryptoCode ??= "BTC";
@@ -391,7 +405,7 @@ namespace BTCPayServer.Tests
         {
             GoToStore(null, storeNavPage);
         }
-        
+
         public void GoToStore(string storeId, StoreNavPages storeNavPage = StoreNavPages.General)
         {
             if (storeId is not null)
@@ -401,7 +415,7 @@ namespace BTCPayServer.Tests
                 if (WalletId != null)
                     WalletId = new WalletId(storeId, WalletId.CryptoCode);
             }
-                
+
             Driver.FindElement(By.Id("StoreNav-StoreSettings")).Click();
 
             if (storeNavPage != StoreNavPages.General)
@@ -420,7 +434,7 @@ namespace BTCPayServer.Tests
                 }
             }
         }
-        
+
         public void GoToWalletSettings(string cryptoCode = "BTC")
         {
             Driver.FindElement(By.Id($"StoreNav-Wallet{cryptoCode}")).Click();
@@ -541,7 +555,7 @@ namespace BTCPayServer.Tests
             for (var i = 0; i < coins; i++)
             {
                 bool mined = false;
-                retry:
+retry:
                 try
                 {
                     await Server.ExplorerNode.SendToAddressAsync(address, Money.Coins(denomination));

@@ -249,7 +249,7 @@
             }
         },
         "/api/v1/users/{idOrEmail}/lock": {
-            "delete": {
+            "post": {
                 "operationId": "Users_ToggleUserLock",
                 "tags": [
                     "Users"
@@ -359,7 +359,8 @@
     },
     "tags": [
         {
-            "name": "Users"
+            "name": "Users",
+            "description": "User operations"
         }
     ]
 }

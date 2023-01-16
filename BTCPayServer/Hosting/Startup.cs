@@ -113,8 +113,8 @@ namespace BTCPayServer.Hosting
             });
             services.AddScoped<Fido2Service>();
             services.AddSingleton<UserLoginCodeService>();
-			services.AddSingleton<LnurlAuthService>();
-			services.AddSingleton<LightningAddressService>();
+            services.AddSingleton<LnurlAuthService>();
+            services.AddSingleton<LightningAddressService>();
             var mvcBuilder = services.AddMvc(o =>
              {
                  o.Filters.Add(new XFrameOptionsAttribute("DENY"));

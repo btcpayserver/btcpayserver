@@ -1,5 +1,167 @@
 # Changelog
 
+## 1.7.3
+
+### Bug fixes
+
+* Checkout v2: Fix modal iframe clipboard permissions (#4453) @dennisreimann
+* Checkout: Fix cutoff language dropdown (#4465) @cdmoss
+* Fix a crash on coin selection if we weren't able to guess the color of a label (053426) @kukks
+* If using LNBank, LN invoices are not generated after upgrade to v1.7.2.0. You still need to also update the plugin. (#4458) @dennisreimann
+* Fix BTCPay invoice not settling after successful Lightning payment (CLN + Lightning Charge) (#4383) @dennisreimann
+
+### Improvement
+
+* Make sure payment request print view doesn't show table header twice (#4447) @bolatovumar
+* Automated payout processors shouldn't spam logs on shutdown (#4193) @NicolasDorier
+* Checkout v2: Reduce Altcoin name on payment method pill (#4456) @dennisreimann
+* Checkout: Make CSS and logo paths relative (#4354) @bolatovumar
+* Checkout: Add persian language back (#4457) @NicolasDorier
+* Frontend cleanups (#4449 #4463 #4473) @dennisreimann
+
+## 1.7.2
+
+### New features
+
+* Greenfield: Add `DescriptionHashOnly` to Lightning invoice creation endpoint (#4411) @NicolasDorier
+* Greenfield: Breaking change, `DescriptionHash` in the Lightning invoice creation endpoint has been removed (#4411) @NicolasDorier
+* UI: Theme extensions (#4398) @dennisreimann
+
+### Bug fixes
+
+* Fix Output Descriptor parsing for WSH multisig case (#4402) @dennisreimann
+* Greenfield: Fix lock user call return code and docs (#4377) @dennisreimann
+* UI: Fix store selector transition (#4400) @dennisreimann
+* PayButton: Fix CSP problems in Firefox (#4376) @dennisreimann
+* Fix bitbank and yadio rate providers (#4432) @NicolasDorier
+* Plugins built with newer version of BTCPay couldn't run on older version (#4441) @NicolasDorier
+
+### Improvement
+
+* Adapt LN payouts to handle unknown status (#4382) @Kukks
+* Upgrade Bootstrap to v5.2.3; Design System improvements (#4380 #4409) @dennisreimann
+* Wallet import: Surface detailed error messages (#4392) @dennisreimann
+* Local file system storage as default (#4386) @dennisreimann
+* Remove system plugins from the plugin list (#4429) @NicolasDorier
+* Allow more then 20 accounts when using BTCPayServer.Vault (#4430) @dennisreimann
+* Add BTCTurk rate provider (#4433) @NicolasDorier
+* Rate provider: Use better default than Coingecko when creating a new store (#4416) @NicolasDorier
+* Add DefaultDescription to LNURL withdrawal request (#4434) @bolatovumar
+* Disabled amount/currency update for payment request with active invoices (#4390) @bolatovumar
+* Add store logo to invoice receipt page (#4435) @bolatovumar
+* Add links to docs and API in the footer (#4431) @NicolasDorier
+
+### Miscellaneous
+
+* BTCPay Server will work on Core Lightning 22.11 outside of the Docker deployment
+* If running Core Lightning 22.11 outside of the Docker deployment, you don't need the plugin `invoicewithdescriptionhash` anymore
+* Added support for running Core Lightning with `allow-deprecated-apis=false`
+
+## 1.7.1
+
+### New features
+
+* Greenfield: API for create an invoice refund (#4238, #4181) @bolatovumar
+* Greenfield: Add metadata to invoice webhook event (#4370, #4223) @bolatovumar
+
+### Bug fixes
+
+* Fix error HTTP 500 happening on Point of Sale (#4355, #4368) @NicolasDorier
+* Some logos or images wouldn't show up properly if rootPath is used (#4367) @NicolasDorier
+* Fix malformed manifest on PoS app (#4373, #4363) @dennisreimann
+* Call to LND would start failing on some conditions @NicolasDorier
+* Checkout v2: Fix for BIP21 case with default payment method other than onchain BTC (#4375) @dennisreimann
+
+### Improvement
+
+* Adjust currency name to be standard (#4369) @bolatovumar
+* Language update in checkout v1 for pt-BR and sv cultures
+
+### Miscellaneous
+
+* Mark MySql and SQLite backend deprecated
+
+## 1.7.0
+
+### New features
+
+* New version of the checkout as opt-in feature (#4157 #4276 #4345) @dennisreimann @dstrukt
+* Request customer data with forms for email and shipping address (#4137) @Kukks
+* Server settings: Add option to customize the instance logo (#4258) @dennisreimann
+* Store settings: Add branding options (#4131) @dennisreimann
+* Greenfield: Store Rates Config (#3931) @Kukks
+* Greenfield: Get Lightning invoices (#4180) @dennisreimann
+* Greenfield: Create payment request invoices (#4243) @NicolasDorier
+* Greenfield: Allow marking payout status and payment proofs (#4244) @Kukks
+* Greenfield: Wallet Objects (#4274 #4297) @Kukks @NicolasDorier
+* Greenfield: Add crowdfund app create endpoint (#4068) @bolatovumar
+* Add Lightning Service Torq (#4296) @maxwedwards
+
+### Bug fixes
+
+* Do not crash startup if ssh settings aren't correct (0286c7) @NicolasDorier
+* UI: Fix missing timezone in browser dates (#4210) @dennisreimann
+* PayjoinController could throw HTTP 500 in corner cases (#4215) @NicolasDorier
+* Greenfield: The route to connect to a peer lightning node was always crashing (8b7921) @NicolasDorier
+* Greenfield: Fix missing payment data (#4233) @dennisreimann
+* Invoice's orderId equals to payreq id shouldn't appear part of the pay request (9e7326) @NicolasDorier
+* Fix Public Node Info View for IPv6 addresses (#4247) @dennisreimann
+* Confirm modal: Prevent form submit without confirmation (#4262) @dennisreimann
+* Do not activate onchain payment method if node is unavailable (#4291) @Kukks
+* Receipts: Fix amount paid discrepancy (#4287) @dennisreimann
+* Minor UI fixes (#4209 #4221 #4232 #4253 #4311) @dennisreimann
+* Show error message if reverse proxy domain isn't well configured (#4322) @NicolasDorier
+* Update incorrect `monitoringExpiration` field for invoice API docs (#4348) @bolatovumar
+
+### Improvement
+
+* Refactor labels (#4179 #4297 #4347) @NicolasDorier
+* Allow config to set default block explorer link (#4249) @Kukks
+* Import xpub: Surface error details (#4205) @dennisreimann
+* Sync modal improvements (#4260) @dennisreimann
+* Remove asset bundle minifier (#4222 #4225) @NicolasDorier @dennisreimann
+* Vault: Add warnings for Safari and Brave (#4226) @NicolasDorier
+* Greenfield: Graceful return for in-flight HTLCs (#4252) @dennisreimann
+* Greenfield: Docs improvements (#4231 #4235) @NicolasDorier @dennisreimann
+* Add donate link to footer(#4239) @dennisreimann
+* Improve access token pairing (#4237) @dennisreimann
+* Lightning: Better handling for non-public nodes (#4263) @dennisreimann
+* Use PluginLoader in the PluginPacker to prevent conflicts (#4277) @NicolasDorier
+* Remove dead shitcoin MUE (c8a102) @NicolasDorier
+* Unify payment request list with invoices (#4294) @dennisreimann
+* POS: Validate cart cost with explicit amount (#4307) @Kukks
+* Disable internal node options if no internal node configured (#4315) @NicolasDorier
+* Use the plugin builder website instead of docker to fetch plugins (#4285) @NicolasDorier
+* Update Code analysis (#4293) @JesterHodl
+* Server Settings: Update Policies page (#4326) @dennisreimann
+* Wallet Settings: Update speed policy wording (#4328) @ndeet
+* Plugins: Add documentation link (#4329) @NicolasDorier
+* Show the git commit of the current build of BTCPay (#4320) @NicolasDorier
+* Disable receipts for payment request invoices (#4342) @Kukks
+
+## 1.6.12
+
+### New features
+
+* Greenfield: Extend LN GetInfo data (#4167) @dennisreimann
+
+### Bug fixes
+
+* Always show overpaid amount if invoice is overpaid (#4192) @bolatovumar
+* Fix custodian Swagger docs missing some path parameters (#4196) @AryanJ-NYC
+* Fix receipts for Lightning Address invoices (#4169) @dennisreimann
+* POS: Fix keypad view without custom amount (#4183) @dennisreimann @bolatovumar
+* Fix truncated dates in wallet transaction list (#4191) @dennisreimann
+* Update default value for "showCustomAmount" in Swagger docs (#4200) @bolatovumar
+
+### Improvement
+
+* The wallet transaction list use infinity scroll rather than pagination (#4074) @HamroRamro @dennisreimann
+* Remove direct and temp link functionality from the File Storage (#4177) @daviogg
+* Fix warning error when rebooting the server caused by some shitcoin currency pair format @NicolasDorier
+* Add Invoice.OrderId to list of supported email interpolation strings (#4202) @bolatovumar
+* Do not hide errors happening in tasks spawned by BaseAsyncService @NicolasDorier
+
 ## 1.6.11
 
 ### New feature

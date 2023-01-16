@@ -154,9 +154,9 @@
                     <label asp-for="PreferredExchange" class="form-label"></label>
                     <select asp-for="PreferredExchange" asp-items="Model.Exchanges" class="form-select"></select>
                     <span asp-validation-for="PreferredExchange" class="text-danger"></span>
-                    <p id="PreferredExchangeHelpBlock" class="form-text text-muted">
+                    <div id="PreferredExchangeHelpBlock" class="form-text">
                         Current Rates source is <a href="@Model.RateSource" target="_blank" rel="noreferrer noopener">@Model.PreferredExchange</a>.
-                    </p>
+                    </div>
                 </div>
             }
             <div class="form-group">
@@ -164,9 +164,9 @@
                     <button type="submit" id="ShowScripting" class="btcpay-toggle me-3 @if (Model.ShowScripting) { @("btcpay-toggle--active") }" value="scripting-@(Model.ShowScripting ? "off" : "on")" name="command" data-bs-toggle="modal" data-bs-target="#ConfirmModal">@(Model.ShowScripting ? "Disable" : "Enable") advanced rate rule scripting</button>
                     <div class="">
                         <span>Advanced rate rule scripting</span>
-                        <p class="text-muted small form-text mb-0">
+                        <div class="form-text">
                             @(Model.ShowScripting ? "Disabling will delete your rate script." : "Enabling will modify your current rate sources. This is a feature for advanced users.")
-                        </p>
+                        </div>
                     </div>
                 </label>
             </div>

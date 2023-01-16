@@ -15,10 +15,9 @@ namespace BTCPayServer.Models.StoreViewModels
         [Display(Name = "Default currency")]
         public string DefaultCurrency { get; set; }
 
-        [Required]
         [Display(Name = "Preferred Price Source")]
         public string PreferredExchange { get; set; }
-        
+
         public SelectList Exchanges { get; set; }
     }
 }

@@ -18,6 +18,16 @@
                                 }
                             }
                         }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": []
@@ -40,7 +50,8 @@
     },
     "tags": [
         {
-            "name": "Health"
+            "name": "Health",
+            "description": "Health operations"
         }
     ]
 }

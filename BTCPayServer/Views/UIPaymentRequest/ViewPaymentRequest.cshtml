@@ -37,23 +37,36 @@
 <html lang="en" @(env.IsDeveloping ? " data-devenv" : "")>
 <head>
     <partial name="LayoutHead" />
-    <bundle name="wwwroot/bundles/payment-request-bundle.min.css" asp-append-version="true"></bundle>
+    <link href="~/vendor/font-awesome/css/font-awesome.min.css" asp-append-version="true"  rel="stylesheet" />
+    <link href="~/vendor/bootstrap-vue/bootstrap-vue.css" asp-append-version="true"  rel="stylesheet" />
+    <link href="~/main/site.css" asp-append-version="true"  rel="stylesheet" />
+
     @if (Model.CustomCSSLink != null)
     {
-        <link href="@Model.CustomCSSLink" rel="stylesheet" />
+        <link href="@Model.CustomCSSLink" rel="stylesheet" asp-append-version="true" />
     }
     <script type="text/javascript">
         var srvModel = @Safe.Json(Model);
     </script>
     <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
-    <bundle name="wwwroot/bundles/payment-request-bundle.min.js" asp-append-version="true"></bundle>
-    @*We need to make sure btcpay.js is not bundled, else it will not work if there is a RootPath*@
+    <script src="~/vendor/vue-toasted/vue-toasted.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/bootstrap-vue/bootstrap-vue.js" asp-append-version="true"></script>
+    <script src="~/vendor/signalr/signalr.js" asp-append-version="true"></script>
+    <script src="~/vendor/animejs/anime.min.js" asp-append-version="true"></script>
+    <script src="~/payment-request/app.js" asp-append-version="true"></script>
+    <script src="~/payment-request/helpers/math.js" asp-append-version="true"></script>
+    <script src="~/payment-request/services/listener.js" asp-append-version="true"></script>
     <script src="~/modal/btcpay.js" asp-append-version="true"></script>
     @Safe.Raw(Model.EmbeddedCSS)
     <style>
         .invoice { margin-top: var(--btcpay-space-s); }
         .invoice + .invoice { margin-top: var(--btcpay-space-m); }
         .invoice .badge { font-size: var(--btcpay-font-size-s); }
+
+        @@media print {
+            @* This is to avoid table header showing up twice: https://github.com/btcpayserver/btcpayserver/issues/4341 *@
+            thead { display: table-row-group; }
+        }
     </style>
 </head>
 <body>
@@ -135,7 +148,12 @@
                                 </div>
                             }
                         </noscript>
-                        <template v-if="srvModel.isPending && !srvModel.archived" class="d-print-none">
+                        <template v-if="srvModel.formId && srvModel.formId != 'None' && !srvModel.formSubmitted">
+                            <a asp-action="ViewPaymentRequestForm" asp-route-payReqId="@Model.Id" class="btn btn-primary w-100 d-flex d-print-none align-items-center justify-content-center text-nowrap btn-lg" data-test="form-button">
+                                Pay Invoice
+                            </a>
+                        </template>
+                        <template v-else-if="srvModel.isPending && !srvModel.archived">
                             <template v-if="srvModel.allowCustomPaymentAmounts && !srvModel.anyPendingInvoice">
                                 <form v-on:submit="submitCustomAmountForm" class="d-print-none">
                                     <div class="row">
@@ -372,7 +390,7 @@
                 </span>
                 @if (!Theme.CustomTheme)
                 {
-                    <vc:theme-switch css-class="text-muted mx-2" responsive="none"/>
+                    <vc:theme-switch css-class="text-muted mx-2" />
                 }
             </div>
         </footer>

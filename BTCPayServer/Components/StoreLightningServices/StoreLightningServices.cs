@@ -34,10 +34,14 @@ public class StoreLightningServices : ViewComponent
 
     public IViewComponentResult Invoke(StoreLightningServicesViewModel vm)
     {
-        if (vm.Store == null) throw new ArgumentNullException(nameof(vm.Store));
-        if (vm.CryptoCode == null) throw new ArgumentNullException(nameof(vm.CryptoCode));
-        if (vm.LightningNodeType != LightningNodeType.Internal) return View(vm);
-        if (!User.IsInRole(Roles.ServerAdmin)) return View(vm);
+        if (vm.Store == null)
+            throw new ArgumentNullException(nameof(vm.Store));
+        if (vm.CryptoCode == null)
+            throw new ArgumentNullException(nameof(vm.CryptoCode));
+        if (vm.LightningNodeType != LightningNodeType.Internal)
+            return View(vm);
+        if (!User.IsInRole(Roles.ServerAdmin))
+            return View(vm);
 
         var services = _externalServiceOptions.Value.ExternalServices.ToList()
             .Where(service => ExternalServices.LightningServiceTypes.Contains(service.Type))
@@ -62,7 +66,7 @@ public class StoreLightningServices : ViewComponent
             })
             .Select(t => t.Result)
             .ToList();
-            
+
         // other services
         foreach ((string key, Uri value) in _externalServiceOptions.Value.OtherExternalServices)
         {

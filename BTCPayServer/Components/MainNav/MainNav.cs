@@ -76,7 +76,7 @@ namespace BTCPayServer.Components.MainNav
                     AppName = a.AppName,
                     AppType = Enum.Parse<AppType>(a.AppType)
                 }).ToList();
-                
+
                 if (PoliciesSettings.Experimental)
                 {
                     // Custodian Accounts

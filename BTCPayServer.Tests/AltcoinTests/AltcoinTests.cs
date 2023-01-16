@@ -171,8 +171,9 @@ namespace BTCPayServer.Tests
 #pragma warning disable CS0618 // Type or member is obsolete
                     .OfType<DerivationSchemeSettings>().First(o => o.PaymentId.IsBTCOnChain);
 #pragma warning restore CS0618 // Type or member is obsolete
-                DerivationSchemeSettings.TryParseFromWalletFile(content, onchainBTC.Network, out var expected);
+                DerivationSchemeSettings.TryParseFromWalletFile(content, onchainBTC.Network, out var expected, out var error);
                 Assert.Equal(expected.ToJson(), onchainBTC.ToJson());
+                Assert.Null(error);
 
                 // Let's check that the root hdkey and account key path are taken into account when making a PSBT
                 invoice = await user.BitPay.CreateInvoiceAsync(

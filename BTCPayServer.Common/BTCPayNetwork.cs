@@ -137,6 +137,7 @@ namespace BTCPayServer
 
         public string CryptoImagePath { get; set; }
         public string[] DefaultRateRules { get; set; } = Array.Empty<string>();
+
         public override string ToString()
         {
             return CryptoCode;

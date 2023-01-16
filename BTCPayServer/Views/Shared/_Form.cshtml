@@ -1,34 +1,12 @@
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using BTCPayServer.Forms
 @model BTCPayServer.Abstractions.Form.Form
+@inject FormComponentProviders FormComponentProviders
 
-@foreach (var fieldset in Model.Fieldsets)
+@foreach (var field in Model.Fields)
 {
-    <fieldset>
-        <legend class="h3 mt-4 mb-3">@fieldset.Label</legend>
-        @foreach (var field in fieldset.Fields)
-        {
-@if ("text".Equals(field.Type))
-{
-    <div class="form-group">
-        @if (field.Required)
-        {
-            <label class="form-label" for="@field.Name" data-required>
-                @field.Label
-            </label>
-        }
-        else
-        {
-            <label class="form-label" for="@field.Name">
-                @field.Label
-            </label>
-        }
-
-        <input class="form-control @(field.IsValid() ? "" : "is-invalid")" id="@field.Name" type="text" required="@field.Required" name="@field.Name" value="@field.Value" aria-describedby="HelpText@field.Name"/>
-        <small id="HelpText@field.Name" class="form-text text-muted">
-            @field.HelpText
-        </small>
-
-    </div>
-}
-        }
-    </fieldset>
+    if (FormComponentProviders.TypeToComponentProvider.TryGetValue(field.Type, out var partial))
+    {
+        <partial name="@partial.View" for="@field"></partial>
+    }
 }

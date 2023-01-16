@@ -27,8 +27,8 @@ namespace BTCPayServer.Rating
             Url = url;
             Source = source;
         }
-        
-        public string DisplayName => 
+
+        public string DisplayName =>
             Source switch
             {
                 RateSource.Direct => Name,

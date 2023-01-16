@@ -139,6 +139,28 @@ namespace BTCPayServer.Services.Invoices
             await ctx.SaveChangesAsync().ConfigureAwait(false);
         }
 
+        public async Task UpdateInvoiceExpiry(string invoiceId, TimeSpan seconds)
+        {
+            await using var ctx = _applicationDbContextFactory.CreateContext();
+            var invoiceData = await ctx.Invoices.FindAsync(invoiceId);
+            var invoice = invoiceData.GetBlob(_btcPayNetworkProvider);
+            var expiry = DateTimeOffset.Now + seconds;
+            invoice.ExpirationTime = expiry;
+            invoice.MonitoringExpiration = expiry.AddHours(1);
+            invoiceData.Blob = ToBytes(invoice, _btcPayNetworkProvider.DefaultNetwork);
+
+            await ctx.SaveChangesAsync();
+
+            _eventAggregator.Publish(new InvoiceDataChangedEvent(invoice));
+            _ = InvoiceNeedUpdateEventLater(invoiceId, seconds);
+        }
+
+        async Task InvoiceNeedUpdateEventLater(string invoiceId, TimeSpan expirationIn)
+        {
+            await Task.Delay(expirationIn);
+            _eventAggregator.Publish(new InvoiceNeedUpdateEvent(invoiceId));
+        }
+
         public async Task ExtendInvoiceMonitor(string invoiceId)
         {
             using var ctx = _applicationDbContextFactory.CreateContext();
@@ -369,7 +391,7 @@ namespace BTCPayServer.Services.Invoices
             string term)
         {
             var query = context.InvoiceSearches.AsQueryable();
-            var filteredQuery = query.Where( st => st.InvoiceDataId.Equals(invoice.Id) && st.Value.Equals(term));
+            var filteredQuery = query.Where(st => st.InvoiceDataId.Equals(invoice.Id) && st.Value.Equals(term));
             context.InvoiceSearches.RemoveRange(filteredQuery);
         }
 
@@ -435,7 +457,7 @@ namespace BTCPayServer.Services.Invoices
                                             StringComparison.InvariantCultureIgnoreCase)))
                 return null;
             var blob = invoiceData.GetBlob(_btcPayNetworkProvider);
-            
+
             var newMetadata = InvoiceMetadata.FromJObject(metadata);
             var oldOrderId = blob.Metadata.OrderId;
             var newOrderId = newMetadata.OrderId;
@@ -444,13 +466,14 @@ namespace BTCPayServer.Services.Invoices
             {
                 // OrderId is saved in 2 places: (1) the invoice table and (2) in the metadata field. We are updating both for consistency.
                 invoiceData.OrderId = newOrderId;
-                
+
                 if (oldOrderId != null && (newOrderId is null || !newOrderId.Equals(oldOrderId, StringComparison.InvariantCulture)))
                 {
                     RemoveFromTextSearch(context, invoiceData, oldOrderId);
                 }
-                if (newOrderId != null) {
-                	AddToTextSearch(context, invoiceData, new[] { newOrderId });
+                if (newOrderId != null)
+                {
+                    AddToTextSearch(context, invoiceData, new[] { newOrderId });
                 }
             }
 

@@ -49,7 +49,8 @@ namespace BTCPayServer
 
             TempData.SetStatusMessageModel(new StatusMessageModel
             {
-                Severity = StatusMessageModel.StatusSeverity.Success, Html = "LNURL Auth was removed successfully."
+                Severity = StatusMessageModel.StatusSeverity.Success,
+                Html = "LNURL Auth was removed successfully."
             });
 
             return RedirectToList();
@@ -65,7 +66,7 @@ namespace BTCPayServer
                 TempData.SetStatusMessageModel(new StatusMessageModel
                 {
                     Severity = StatusMessageModel.StatusSeverity.Error,
-                    Html = "The lightning node could not be registered."
+                    Html = "The Lightning node could not be registered."
                 });
 
                 return RedirectToList();
@@ -103,12 +104,13 @@ namespace BTCPayServer
             if (await _lnurlAuthService.CompleteCreation(name, userId,
                 ECDSASignature.FromDER(Encoders.Hex.DecodeData(sig)), new PubKey(key)))
             {
-                return Ok(new LNUrlStatusResponse() { Status = "OK" });
+                return Ok(new LNUrlStatusResponse { Status = "OK" });
             }
 
-            return BadRequest(new LNUrlStatusResponse()
+            return BadRequest(new LNUrlStatusResponse
             {
-                Reason = "The challenge could not be verified", Status = "ERROR"
+                Reason = "The challenge could not be verified",
+                Status = "ERROR"
             });
         }
 
@@ -127,12 +129,13 @@ namespace BTCPayServer
             if (await _lnurlAuthService.CompleteLogin(userId,
                 ECDSASignature.FromDER(Encoders.Hex.DecodeData(sig)), new PubKey(key)))
             {
-                return Ok(new LNUrlStatusResponse() { Status = "OK" });
+                return Ok(new LNUrlStatusResponse { Status = "OK" });
             }
 
-            return BadRequest(new LNUrlStatusResponse()
+            return BadRequest(new LNUrlStatusResponse
             {
-                Reason = "The challenge could not be verified", Status = "ERROR"
+                Reason = "The challenge could not be verified",
+                Status = "ERROR"
             });
         }
 

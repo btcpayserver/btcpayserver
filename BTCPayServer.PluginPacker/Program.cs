@@ -8,6 +8,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
+using McMaster.NETCore.Plugins;
 using NBitcoin.Crypto;
 using NBitcoin.DataEncoders;
 using NBitcoin.Secp256k1;
@@ -33,7 +34,8 @@ namespace BTCPayServer.PluginPacker
                 throw new Exception($"{rootDLLPath} could not be found");
             }
 
-            var assembly = Assembly.LoadFrom(rootDLLPath);
+            var plugin = PluginLoader.CreateFromAssemblyFile(rootDLLPath, false, new[] { typeof(IBTCPayServerPlugin) });
+            var assembly = plugin.LoadAssembly(name);
             var extension = GetAllExtensionTypesFromAssembly(assembly).FirstOrDefault();
             if (extension is null)
             {
@@ -55,8 +57,8 @@ namespace BTCPayServer.PluginPacker
 
             var sha256sums = new StringBuilder();
             sha256sums.AppendLine(
-                $"{Encoders.Hex.EncodeData(Hashes.SHA256(Encoding.UTF8.GetBytes(json)))} {name}.btcpay.json"); 
-            
+                $"{Encoders.Hex.EncodeData(Hashes.SHA256(Encoding.UTF8.GetBytes(json)))} {name}.btcpay.json");
+
             sha256sums.AppendLine(
                 $"{Encoders.Hex.EncodeData(Hashes.SHA256(await File.ReadAllBytesAsync(outputFile + ".btcpay")))} {name}.btcpay");
 
@@ -66,7 +68,7 @@ namespace BTCPayServer.PluginPacker
                 File.Delete(sha256dirs);
             }
             await File.WriteAllTextAsync(sha256dirs, sha256sums.ToString());
-            
+
             // try Windows executable first, fall back to macOS/Linux PowerShell
             try
             {
@@ -84,7 +86,7 @@ namespace BTCPayServer.PluginPacker
                         $"Attempted to sign hashes with gpg but maybe powershell is not installed?\n{ex.Message}");
                 }
             }
-            
+
             Console.WriteLine($"Created {outputFile}.btcpay at {directory}");
         }
 

@@ -23,7 +23,7 @@ namespace BTCPayServer.Controllers
             var store = HttpContext.GetStoreData();
             if (store == null)
                 return NotFound();
-            
+
             var blob = store.GetStoreBlob();
             var data = blob.EmailSettings;
             if (data?.IsComplete() is not true)
@@ -31,7 +31,7 @@ namespace BTCPayServer.Controllers
                 TempData.SetStatusMessageModel(new StatusMessageModel
                 {
                     Severity = StatusMessageModel.StatusSeverity.Warning,
-                    Html =  $"You need to configure email settings before this feature works. <a class='alert-link' href='{Url.Action("StoreEmailSettings", new {storeId})}'>Configure now</a>."
+                    Html = $"You need to configure email settings before this feature works. <a class='alert-link' href='{Url.Action("StoreEmailSettings", new { storeId })}'>Configure now</a>."
                 });
             }
 
@@ -48,17 +48,18 @@ namespace BTCPayServer.Controllers
                 var item = command[(command.IndexOf(":", StringComparison.InvariantCultureIgnoreCase) + 1)..];
                 var index = int.Parse(item, CultureInfo.InvariantCulture);
                 vm.Rules.RemoveAt(index);
-            } else if (command == "add")
+            }
+            else if (command == "add")
             {
                 vm.Rules.Add(new StoreEmailRule());
-                
+
                 return View(vm);
             }
             if (!ModelState.IsValid)
             {
                 return View(vm);
             }
-            
+
             var store = HttpContext.GetStoreData();
             if (store == null)
                 return NotFound();
@@ -71,14 +72,14 @@ namespace BTCPayServer.Controllers
                 Severity = StatusMessageModel.StatusSeverity.Success,
                 Message = "Store email rules saved"
             });
-            return RedirectToAction("StoreEmails", new {storeId});
+            return RedirectToAction("StoreEmails", new { storeId });
         }
 
         public class StoreEmailRuleViewModel
         {
             public List<StoreEmailRule> Rules { get; set; }
         }
-        
+
         public class StoreEmailRule
         {
             [Required]
@@ -88,7 +89,7 @@ namespace BTCPayServer.Controllers
             public string Body { get; set; }
             public string Subject { get; set; }
         }
-        
+
         [HttpGet("{storeId}/email-settings")]
         public IActionResult StoreEmailSettings()
         {
@@ -105,7 +106,7 @@ namespace BTCPayServer.Controllers
             var store = HttpContext.GetStoreData();
             if (store == null)
                 return NotFound();
-            
+
             if (command == "Test")
             {
                 try

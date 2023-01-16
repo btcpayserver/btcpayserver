@@ -157,6 +157,7 @@ namespace BTCPayServer.HostedServices
                     webhookEvent.DeliveryId = delivery.Id;
                     webhookEvent.WebhookId = webhook.Id;
                     webhookEvent.OriginalDeliveryId = delivery.Id;
+                    webhookEvent.Metadata = invoiceEvent.Invoice.Metadata.ToJObject();
                     webhookEvent.IsRedelivery = false;
                     webhookEvent.Timestamp = delivery.Timestamp;
                     var context = new WebhookDeliveryRequest(webhook.Id, webhookEvent, delivery, webhookBlob);

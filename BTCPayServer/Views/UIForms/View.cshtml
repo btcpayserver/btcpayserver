@@ -1,0 +1,56 @@
+@using BTCPayServer.Components.ThemeSwitch
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@inject BTCPayServer.Services.BTCPayServerEnvironment env
+@inject BTCPayServer.Services.ThemeSettings Theme
+@model BTCPayServer.Forms.Models.FormViewModel
+@{
+    Layout = null;
+    ViewData["Title"] = Model.FormData.Name;
+}
+
+<!DOCTYPE html>
+<html lang="en" @(env.IsDeveloping ? " data-devenv" : "")>
+<head>
+    <partial name="LayoutHead"/>
+    <meta name="robots" content="noindex,nofollow">
+</head>
+<body>
+<div class="min-vh-100 d-flex flex-column">
+    <main class="flex-grow-1 py-5">
+        <div class="container" style="max-width:720px;">
+            <partial name="_StatusMessage" model="@(new ViewDataDictionary(ViewData) {{"Margin", "mb-4"}})"/>
+            @if (!ViewContext.ModelState.IsValid)
+            {
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            }
+            <partial name="_FormTopMessages" model="@Model.Form"/>
+            <div class="d-flex flex-column justify-content-center gap-4">
+                <h1 class="h3 text-center">@ViewData["Title"]</h1>
+                <div  class="bg-tile p-3 p-sm-4 rounded">
+                    <form asp-action="SubmitForm" asp-route-formId="@Model.FormData.Id">
+                        @if (!string.IsNullOrEmpty(Model.RedirectUrl))
+                        {
+                            <input type="hidden" asp-for="RedirectUrl" value="@Model.RedirectUrl"/>
+                        }
+                        <partial name="_Form" model="@Model.Form"/>
+                        <input type="submit" class="btn btn-primary" name="command" value="Submit"/>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+    <footer class="pt-2 pb-4 d-print-none">
+        <div class="container d-flex flex-wrap align-items-center justify-content-center">
+            <span class="text-muted mx-2">
+                Powered by <a href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">BTCPay Server</a>
+            </span>
+            @if (!Theme.CustomTheme)
+            {
+                <vc:theme-switch css-class="text-muted mx-2" responsive="none"/>
+            }
+        </div>
+    </footer>
+</div>
+<partial name="LayoutFoot"/>
+</body>
+</html>

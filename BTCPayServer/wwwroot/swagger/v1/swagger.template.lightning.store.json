@@ -514,7 +514,7 @@
                 "security": [
                     {
                         "API_Key": [
-                            "btcpay.store.cancreatelightninginvoice"
+                            "btcpay.store.canviewlightninginvoice"
                         ],
                         "Basic": []
                     }
@@ -710,7 +710,7 @@
                 "security": [
                     {
                         "API_Key": [
-                            "btcpay.store.cancreatelightninginvoice"
+                            "btcpay.store.canviewlightninginvoice"
                         ],
                         "Basic": []
                     }

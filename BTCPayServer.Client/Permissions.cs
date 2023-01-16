@@ -6,7 +6,9 @@ namespace BTCPayServer.Client
 {
     public class Policies
     {
+        public const string CanViewLightningInvoiceInternalNode = "btcpay.server.canviewlightninginvoiceinternalnode";
         public const string CanCreateLightningInvoiceInternalNode = "btcpay.server.cancreatelightninginvoiceinternalnode";
+        public const string CanViewLightningInvoiceInStore = "btcpay.store.canviewlightninginvoice";
         public const string CanCreateLightningInvoiceInStore = "btcpay.store.cancreatelightninginvoice";
         public const string CanUseInternalLightningNode = "btcpay.server.canuseinternallightningnode";
         public const string CanUseLightningNodeInStore = "btcpay.store.canuselightningnode";
@@ -56,8 +58,10 @@ namespace BTCPayServer.Client
                 yield return CanViewNotificationsForUser;
                 yield return Unrestricted;
                 yield return CanUseInternalLightningNode;
+                yield return CanViewLightningInvoiceInternalNode;
                 yield return CanCreateLightningInvoiceInternalNode;
                 yield return CanUseLightningNodeInStore;
+                yield return CanViewLightningInvoiceInStore;
                 yield return CanCreateLightningInvoiceInStore;
                 yield return CanManagePullPayments;
                 yield return CanViewCustodianAccounts;
@@ -195,7 +199,9 @@ namespace BTCPayServer.Client
                 case Policies.CanViewPaymentRequests when this.Policy == Policies.CanViewStoreSettings:
                 case Policies.CanViewPaymentRequests when this.Policy == Policies.CanModifyPaymentRequests:
                 case Policies.CanCreateLightningInvoiceInternalNode when this.Policy == Policies.CanUseInternalLightningNode:
+                case Policies.CanViewLightningInvoiceInternalNode when this.Policy == Policies.CanUseInternalLightningNode:
                 case Policies.CanCreateLightningInvoiceInStore when this.Policy == Policies.CanUseLightningNodeInStore:
+                case Policies.CanViewLightningInvoiceInStore when this.Policy == Policies.CanUseLightningNodeInStore:
                 case Policies.CanViewNotificationsForUser when this.Policy == Policies.CanManageNotificationsForUser:
                 case Policies.CanUseInternalLightningNode when this.Policy == Policies.CanModifyServerSettings:
                 case Policies.CanViewCustodianAccounts when this.Policy == Policies.CanManageCustodianAccounts:

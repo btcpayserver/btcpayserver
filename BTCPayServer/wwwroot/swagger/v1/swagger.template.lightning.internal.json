@@ -439,7 +439,7 @@
                 "security": [
                     {
                         "API_Key": [
-                            "btcpay.server.canuseinternallightningnode"
+                            "btcpay.server.canviewlightninginvoiceinternalnode"
                         ],
                         "Basic": []
                     }
@@ -619,7 +619,7 @@
                 "security": [
                     {
                         "API_Key": [
-                            "btcpay.server.canuseinternallightningnode"
+                            "btcpay.server.canviewlightninginvoiceinternalnode"
                         ],
                         "Basic": []
                     }

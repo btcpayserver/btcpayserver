@@ -93,7 +93,7 @@ namespace BTCPayServer.Controllers.Greenfield
             return base.GetPayment(cryptoCode, paymentHash, cancellationToken);
         }
 
-        [Authorize(Policy = Policies.CanUseInternalLightningNode,
+        [Authorize(Policy = Policies.CanViewLightningInvoiceInternalNode,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/server/lightning/{cryptoCode}/invoices/{id}")]
         public override Task<IActionResult> GetInvoice(string cryptoCode, string id, CancellationToken cancellationToken = default)
@@ -101,7 +101,7 @@ namespace BTCPayServer.Controllers.Greenfield
             return base.GetInvoice(cryptoCode, id, cancellationToken);
         }
 
-        [Authorize(Policy = Policies.CanUseInternalLightningNode,
+        [Authorize(Policy = Policies.CanViewLightningInvoiceInternalNode,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/server/lightning/{cryptoCode}/invoices")]
         public override Task<IActionResult> GetInvoices(string cryptoCode, [FromQuery] bool? pendingOnly, [FromQuery] long? offsetIndex, CancellationToken cancellationToken = default)

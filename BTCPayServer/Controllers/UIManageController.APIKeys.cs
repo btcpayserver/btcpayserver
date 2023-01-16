@@ -541,10 +541,13 @@ namespace BTCPayServer.Controllers
                     {Policies.CanManagePullPayments, ("Manage your pull payments", "The app will be able to view, modify, delete and create pull payments on all your stores.")},
                     {$"{Policies.CanManagePullPayments}:", ("Manage selected stores' pull payments", "The app will be able to view, modify, delete and create new pull payments on the selected stores.")},
                     {Policies.CanUseInternalLightningNode, ("Use the internal lightning node", "The app will be able to  use the internal BTCPay Server lightning node to create BOLT11 invoices, connect to other nodes, open new channels and pay BOLT11 invoices.")},
+                    {Policies.CanViewLightningInvoiceInternalNode, ("View invoices from internal lightning node", "The app will be able to use the internal BTCPay Server lightning node to view BOLT11 invoices.")},
                     {Policies.CanCreateLightningInvoiceInternalNode, ("Create invoices with internal lightning node", "The app will be able to use the internal BTCPay Server lightning node to create BOLT11 invoices.")},
                     {Policies.CanUseLightningNodeInStore, ("Use the lightning nodes associated with your stores", "The app will be able to use the lightning nodes connected to all your stores to create BOLT11 invoices, connect to other nodes, open new channels and pay BOLT11 invoices.")},
+                    {Policies.CanViewLightningInvoiceInStore, ("View the lightning invoices associated with your stores", "The app will be able to view the lightning invoices connected to all your stores.")},
                     {Policies.CanCreateLightningInvoiceInStore, ("Create invoices from the lightning nodes associated with your stores", "The app will be able to use the lightning nodes connected to all your stores to create BOLT11 invoices.")},
                     {$"{Policies.CanUseLightningNodeInStore}:", ("Use the lightning nodes associated with your stores", "The app will be able to use the lightning nodes connected to the selected stores to create BOLT11 invoices, connect to other nodes, open new channels and pay BOLT11 invoices.")},
+                    {$"{Policies.CanViewLightningInvoiceInStore}:", ("View the lightning invoices associated with your stores", "The app will be able to view the lightning invoices connected to the selected stores.")},
                     {$"{Policies.CanCreateLightningInvoiceInStore}:", ("Create invoices from the lightning nodes associated with your stores", "The app will be able to use the lightning nodes connected to the selected stores to create BOLT11 invoices.")},
                 };
                 public string Title

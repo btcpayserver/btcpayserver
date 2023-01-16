@@ -180,7 +180,35 @@ namespace BTCPayServer.Tests
 
             paymentInfo = s.Driver.WaitForElement(By.Id("PaymentInfo"));
             Assert.Contains("This invoice will expire in", paymentInfo.Text);
+            Assert.Contains("00:0", paymentInfo.Text);
             Assert.DoesNotContain("Please send", paymentInfo.Text);
+            
+            // Configure countdown timer
+            s.GoToHome();
+            invoiceId = s.CreateInvoice();
+            s.GoToHome();
+            s.GoToStore(StoreNavPages.CheckoutAppearance);
+            var displayExpirationTimer = s.Driver.FindElement(By.Id("DisplayExpirationTimer"));
+            Assert.Equal("5", displayExpirationTimer.GetAttribute("value"));
+            displayExpirationTimer.Clear();
+            displayExpirationTimer.SendKeys("10");
+            s.Driver.FindElement(By.Id("Save")).Click();
+            Assert.Contains("Store successfully updated", s.FindAlertMessage().Text);
+            
+            s.GoToInvoiceCheckout(invoiceId);
+            paymentInfo = s.Driver.FindElement(By.Id("PaymentInfo"));
+            Assert.False(paymentInfo.Displayed);
+            Assert.DoesNotContain("This invoice will expire in", paymentInfo.Text);
+            
+            expirySeconds = s.Driver.FindElement(By.Id("ExpirySeconds"));
+            expirySeconds.Clear();
+            expirySeconds.SendKeys("599");
+            s.Driver.FindElement(By.Id("Expire")).Click();
+
+            paymentInfo = s.Driver.WaitForElement(By.Id("PaymentInfo"));
+            Assert.True(paymentInfo.Displayed);
+            Assert.Contains("This invoice will expire in", paymentInfo.Text);
+            Assert.Contains("09:5", paymentInfo.Text);
         }
 
         [Fact(Timeout = TestTimeout)]

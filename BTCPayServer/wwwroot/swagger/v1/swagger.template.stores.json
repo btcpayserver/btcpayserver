@@ -308,6 +308,13 @@
                         "description": "The time after which an invoice is considered expired if not paid. The value will be rounded down to a minute.",
                         "allOf": [ { "$ref": "#/components/schemas/TimeSpanSeconds" } ]
                     },
+                    "displayExpirationTimer": {
+                        "default": 300,
+                        "minimum": 60,
+                        "maximum": 2073600,
+                        "description": "The time left that will trigger the countdown timer on the checkout page to be shown. The value will be rounded down to a minute.",
+                        "allOf": [ { "$ref": "#/components/schemas/TimeSpanSeconds" } ]
+                    },
                     "monitoringExpiration": {
                         "default": 3600,
                         "minimum": 600,

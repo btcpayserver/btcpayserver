@@ -20,8 +20,8 @@ namespace BTCPayServer.Abstractions.Models
             get
             {
                 return GetType().GetTypeInfo().Assembly
-                        .GetCustomAttribute<AssemblyTitleAttribute>()?
-                        .Title ?? string.Empty;
+                        .GetCustomAttribute<AssemblyProductAttribute>()?
+                        .Product ?? "???";
             }
         }
 

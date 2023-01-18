@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.IO.Compression;
@@ -24,9 +25,29 @@ namespace BTCPayServer.Plugins
         public const string BTCPayPluginSuffix = ".btcpay";
         private static readonly List<Assembly> _pluginAssemblies = new List<Assembly>();
 
-        public static bool IsExceptionByPlugin(Exception exception)
+        public static bool IsExceptionByPlugin(Exception exception, [MaybeNullWhen(false)] out string pluginName)
         {
-            return _pluginAssemblies.Any(assembly => assembly?.FullName?.Contains(exception.Source!, StringComparison.OrdinalIgnoreCase) is true);
+            foreach (var assembly in _pluginAssemblies)
+            {
+                var assemblyName = assembly.GetName().Name;
+                if (assemblyName is null)
+                    continue;
+                // Comparison is case sensitive as it is theorically possible to have a different plugin
+                // with same name but different casing.
+                if (exception.Source is not null &&
+                    assemblyName.Equals(exception.Source, StringComparison.Ordinal))
+                {
+                    pluginName = assemblyName;
+                    return true;
+                }
+                if (exception.Message.Contains(assemblyName, StringComparison.Ordinal))
+                {
+                    pluginName = assemblyName;
+                    return true;
+                }
+            }
+            pluginName = null;
+            return false;
         }
         public static IMvcBuilder AddPlugins(this IMvcBuilder mvcBuilder, IServiceCollection serviceCollection,
             IConfiguration config, ILoggerFactory loggerFactory)
@@ -51,14 +72,14 @@ namespace BTCPayServer.Plugins
             // as the assembly. Except for the system assembly (btcpayserver assembly) which are fake plugins
             foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
             {
-                var pluginIdentifier = assembly.GetName().Name;
+                var assemblyName = assembly.GetName().Name;
                 bool isSystemPlugin = assembly == systemAssembly;
-                if (!isSystemPlugin && disabledPlugins.Contains(pluginIdentifier))
+                if (!isSystemPlugin && disabledPlugins.Contains(assemblyName))
                     continue;
 
                 foreach (var plugin in GetPluginInstancesFromAssembly(assembly))
                 {
-                    if (!isSystemPlugin && plugin.Identifier != pluginIdentifier)
+                    if (!isSystemPlugin && plugin.Identifier != assemblyName)
                         continue;
                     if (!loadedPluginIdentifiers.Add(plugin.Identifier))
                         continue;
@@ -150,7 +171,6 @@ namespace BTCPayServer.Plugins
                         $"Error when loading plugin {plugin.Identifier} - {plugin.Version}{Environment.NewLine}{e.Message}");
                 }
             }
-
             return mvcBuilder;
         }
 

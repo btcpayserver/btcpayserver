@@ -132,7 +132,7 @@ namespace BTCPayServer.Plugins
 
                             // this ensures that the version of MVC is shared between this app and the plugin
                             config.PreferSharedTypes = true;
-                            config.IsUnloadable = true;
+                            config.IsUnloadable = false;
                         });
                     var pluginAssembly = plugin.LoadDefaultAssembly();
 

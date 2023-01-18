@@ -149,7 +149,7 @@
                     <div class="card-body">
                         <div class="d-flex align-items-baseline justify-content-between gap-2">
                             <h4 class="card-title" data-bs-toggle="tooltip" title="@plugin.Identifier">@plugin.Name</h4>
-                            @if (!string.IsNullOrEmpty(downloadInfo.Author))
+                            @if (!string.IsNullOrEmpty(downloadInfo?.Author))
                             {
                                 <span class="text-muted">
                                     by

@@ -1,0 +1,12 @@
+﻿<LNURLWithdrawContactless inline-template v-if="!srvModel.isUnsetTopUp">
+
+    <bp-loading-button>
+        <button v-on:click="startScan" class="action-button" style="margin-top: 15px;" v-bind:disabled="scanning || submitting" v-bind:class="{ 'loading': scanning || submitting }">
+            <span class="button-text" v-if="supported">Pay by NFC & LNURL-Withdraw</span>
+            <span class="button-text" v-else>Pay by LNURL-Withdraw</span>
+            <div class="loader-wrapper">
+                <partial name="Checkout-Spinner"/>
+            </div>
+        </button>
+    </bp-loading-button>
+</LNURLWithdrawContactless>

@@ -133,7 +133,6 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> Maintenance(MaintenanceViewModel vm, string command)
         {
             vm.CanUseSSH = _sshState.CanUseSSH;
-
             if (command != "soft-restart" && !vm.CanUseSSH)
             {
                 TempData[WellKnownTempData.ErrorMessage] = "Maintenance feature requires access to SSH properly configured in BTCPay Server configuration.";
@@ -221,12 +220,14 @@ namespace BTCPayServer.Controllers
                 var error = await RunSSH(vm, $"btcpay-restart.sh");
                 if (error != null)
                     return error;
+                Logs.PayServer.LogInformation("A hard restart has been requested");
                 TempData[WellKnownTempData.SuccessMessage] = $"BTCPay will restart momentarily.";
             }
             else if (command == "soft-restart")
             {
                 TempData[WellKnownTempData.SuccessMessage] = $"BTCPay will restart momentarily.";
-                ApplicationLifetime.StopApplication();
+                Logs.PayServer.LogInformation("A soft restart has been requested");
+                _ = Task.Delay(3000).ContinueWith((t) => ApplicationLifetime.StopApplication());
             }
             else
             {

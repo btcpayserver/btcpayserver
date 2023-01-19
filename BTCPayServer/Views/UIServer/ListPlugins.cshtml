@@ -127,7 +127,7 @@
         @if (Model.CanShowRestart)
         {
             <form method="post" asp-action="Maintenance" class="mt-2">
-                <button type="submit" name="command" value="restart" class="btn btn-info" asp-action="Maintenance">Restart now</button>
+                <button type="submit" name="command" value="soft-restart" class="btn btn-info" asp-action="Maintenance">Restart now</button>
             </form>
         }
     </div>
@@ -149,7 +149,7 @@
                     <div class="card-body">
                         <div class="d-flex flex-wrap align-items-baseline justify-content-between gap-2 mb-3">
                             <h4 class="card-title mb-0" data-bs-toggle="tooltip" title="@plugin.Identifier">@plugin.Name</h4>
-                            @if (!string.IsNullOrEmpty(downloadInfo.Author))
+                            @if (!string.IsNullOrEmpty(downloadInfo?.Author))
                             {
                                 <span class="text-muted text-nowrap">
                                     by
@@ -230,7 +230,7 @@
                             {
                                 <h6 class="text-muted fw-semibold mt-4">Resources</h6>
                                 <ul class="list-group list-group-flush list-unstyled">
-                                    @if (downloadInfo.Source is not null)
+                                    @if (downloadInfo?.Source is not null)
                                     {
                                         <li>
                                             <a href="@downloadInfo.Source" rel="noreferrer noopener" class="d-flex align-items-center" target="_blank">
@@ -239,7 +239,7 @@
                                             </a>
                                         </li>
                                     }
-                                    @if (!string.IsNullOrEmpty(downloadInfo.Documentation))
+                                    @if (!string.IsNullOrEmpty(downloadInfo?.Documentation))
                                     {
                                         <li>
                                             <a href="@downloadInfo.Documentation" rel="noreferrer noopener" class="d-flex align-items-center gap-2" target="_blank">

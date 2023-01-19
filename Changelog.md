@@ -12,6 +12,7 @@
 
 ### Improvement
 
+* After a plugin install or uninstall, restart now just kill the process instead of requiring SSH with docker install @NicolasDorier
 * Checkout v2: Display and copy addresses (#4489) @dennisreimann
 * Checkout v2: Configure countdown timer (#4471) @dennisreimann
 * Unify 2FA login boxes (#4506) @dennisreimann

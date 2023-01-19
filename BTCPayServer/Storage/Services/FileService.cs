@@ -120,8 +120,8 @@ namespace BTCPayServer.Storage.Services
                 return;
             var provider = GetProvider(settings);
             var storedFile = await _fileRepository.GetFile(fileId);
-            if (string.IsNullOrEmpty(userId) ||
-                storedFile.ApplicationUserId.Equals(userId, StringComparison.InvariantCultureIgnoreCase))
+            if (storedFile != null && (string.IsNullOrEmpty(userId) ||
+                storedFile.ApplicationUserId.Equals(userId, StringComparison.InvariantCultureIgnoreCase)))
             {
                 await provider.RemoveFile(storedFile, settings);
                 await _fileRepository.RemoveFile(storedFile);

@@ -33,6 +33,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MimeKit;
@@ -87,7 +88,8 @@ namespace BTCPayServer.Controllers
             IOptions<ExternalServicesOptions> externalServiceOptions,
             Logs logs,
             LinkGenerator linkGenerator,
-            EmailSenderFactory emailSenderFactory
+            EmailSenderFactory emailSenderFactory,
+            IHostApplicationLifetime applicationLifetime
         )
         {
             _policiesSettings = policiesSettings;
@@ -110,6 +112,7 @@ namespace BTCPayServer.Controllers
             Logs = logs;
             _linkGenerator = linkGenerator;
             _emailSenderFactory = emailSenderFactory;
+            ApplicationLifetime = applicationLifetime;
         }
 
         [Route("server/maintenance")]
@@ -131,7 +134,7 @@ namespace BTCPayServer.Controllers
         {
             vm.CanUseSSH = _sshState.CanUseSSH;
 
-            if (!vm.CanUseSSH)
+            if (command != "soft-restart" && !vm.CanUseSSH)
             {
                 TempData[WellKnownTempData.ErrorMessage] = "Maintenance feature requires access to SSH properly configured in BTCPay Server configuration.";
                 return View(vm);
@@ -220,6 +223,11 @@ namespace BTCPayServer.Controllers
                     return error;
                 TempData[WellKnownTempData.SuccessMessage] = $"BTCPay will restart momentarily.";
             }
+            else if (command == "soft-restart")
+            {
+                TempData[WellKnownTempData.SuccessMessage] = $"BTCPay will restart momentarily.";
+                ApplicationLifetime.StopApplication();
+            }
             else
             {
                 return NotFound();
@@ -286,6 +294,7 @@ namespace BTCPayServer.Controllers
         }
 
         public IHttpClientFactory HttpClientFactory { get; }
+        public IHostApplicationLifetime ApplicationLifetime { get; }
 
         [Route("server/policies")]
         public async Task<IActionResult> Policies()

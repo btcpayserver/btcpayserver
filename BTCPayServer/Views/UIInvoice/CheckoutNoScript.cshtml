@@ -70,5 +70,6 @@
     <p>
         <a asp-action="Checkout" asp-route-invoiceId="@Model.InvoiceId">Go back to Javascript enabled invoice</a>
     </p>
+    @await Component.InvokeAsync("UiExtensionPoint", new { location = "checkout-noscript-end", model = Model })
 </body>
 </html>

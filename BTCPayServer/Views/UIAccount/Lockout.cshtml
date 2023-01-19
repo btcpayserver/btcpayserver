@@ -5,23 +5,15 @@
     Layout = "_LayoutSignedOut";
 }
 
-<div class="row">
-    <div class="col-lg-12 section-heading">
-        <h2>@ViewData["Title"]</h2>
-        <hr class="primary">
-    </div>
-    <div class="col-lg-12 lead">
-        @if (DateTimeOffset.MaxValue - Model.Value < TimeSpan.FromSeconds(1))
-        {
-            <p>Your account has been disabled. Please contact server administrator.</p>
-        }
-        else if(Model is null)
-        {
-            <p>This account has been locked out because of multiple invalid login attempts. Please try again later.</p>  
-        }
-        else
-        {
-            <p>This account has been locked out.  Please try again <span data-timeago-unixms="@Model.Value.ToUnixTimeMilliseconds()">@Model.Value.ToTimeAgo()</span>.</p>  
-        }
-    </div>
-</div>
+@if (Model is null)
+{
+    <p class="mb-0">This account has been locked out because of multiple invalid login attempts. Please try again later.</p>  
+}
+else if (DateTimeOffset.MaxValue - Model.Value < TimeSpan.FromSeconds(1))
+{
+    <p class="mb-0">Your account has been disabled. Please contact server administrator.</p>
+}
+else
+{
+    <p class="mb-0">This account has been locked out. Please try again @Model.Value.ToBrowserDate(ViewsRazor.DateDisplayFormat.Relative).</p>  
+}

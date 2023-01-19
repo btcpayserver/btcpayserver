@@ -147,19 +147,19 @@
             <div class="col col-12 col-md-6 col-lg-12 col-xl-6 col-xxl-4 mb-4">
                 <div class="card h-100" id="@plugin.Identifier">
                     <div class="card-body">
-                        <div class="d-flex align-items-baseline justify-content-between gap-2">
-                            <h4 class="card-title" data-bs-toggle="tooltip" title="@plugin.Identifier">@plugin.Name</h4>
+                        <div class="d-flex flex-wrap align-items-baseline justify-content-between gap-2 mb-3">
+                            <h4 class="card-title mb-0" data-bs-toggle="tooltip" title="@plugin.Identifier">@plugin.Name</h4>
                             @if (!string.IsNullOrEmpty(downloadInfo?.Author))
                             {
-                                <span class="text-muted">
+                                <span class="text-muted text-nowrap">
                                     by
                                     <a href="@downloadInfo.AuthorLink" rel="noreferrer noopener" target="_blank">
-                                        <span>@downloadInfo.Author</span>
+                                        @downloadInfo.Author
                                     </a>
                                 </span>
                             }
                         </div>
-                        <div class="d-flex flex-wrap align-items-center mb-2">
+                        <div class="d-flex flex-wrap align-items-center mb-2 gap-3">
                             <h5 class="text-muted d-flex align-items-center mt-1 gap-3">
                                 @plugin.Version
                                 @if (updateAvailable && x != null)
@@ -172,8 +172,8 @@
                             @if (updateAvailable)
                             {
                                 <span class="nav version-switch mt-n1" role="tablist">
-                                    <a data-bs-toggle="tab" href="#@tabId-current" class="nav-link px-3 small text-info show active">Show current version</a>
-                                    <a data-bs-toggle="tab" href="#@tabId-update" class="nav-link px-3 small text-info">Show update information</a>
+                                    <a data-bs-toggle="tab" href="#@tabId-current" class="nav-link text-info p-0 show active">Show current info</a>
+                                    <a data-bs-toggle="tab" href="#@tabId-update" class="nav-link text-info p-0">Show update info</a>
                                 </span>
                             }
                         </div>
@@ -183,15 +183,17 @@
                                 <p class="card-text">@plugin.Description</p>
                                 @if (plugin.Dependencies.Any())
                                 {
-                                    <h5 class="text-muted">Dependencies</h5>
+                                    <h6 class="text-muted fw-semibold">Dependencies</h6>
                                     <ul class="list-group list-group-flush">
                                         @foreach (var dependency in plugin.Dependencies)
                                         {
-                                            <li class="list-group-item p-2">
+                                            <li class="list-group-item p-2 d-inline-flex align-items-center gap-2">
                                                 @dependency
                                                 @if (!DependencyMet(dependency))
                                                 {
-                                                    <span title="Dependency not met." data-bs-toggle="tooltip" class="fa fa-warning text-danger"></span>
+                                                    <span title="Dependency not met." data-bs-toggle="tooltip" class="text-danger">
+                                                        <vc:icon symbol="warning" />
+                                                    </span>
                                                 }
                                             </li>
                                         }
@@ -205,15 +207,17 @@
                                     <p class="card-text">@x.Description</p>
                                     @if (x.Dependencies.Any())
                                     {
-                                        <h5 class="text-muted">Dependencies</h5>
+                                        <h6 class="text-muted fw-semibold">Dependencies</h6>
                                         <ul class="list-group list-group-flush">
                                             @foreach (var dependency in x.Dependencies)
                                             {
-                                                <li class="list-group-item p-2">
+                                                <li class="list-group-item p-2 d-inline-flex align-items-center gap-2">
                                                     @dependency
                                                     @if (!DependencyMet(dependency))
                                                     {
-                                                        <span title="Dependency not met." data-bs-toggle="tooltip" class="fa fa-warning text-danger"></span>
+                                                        <span title="Dependency not met." data-bs-toggle="tooltip" class="text-danger">
+                                                            <vc:icon symbol="warning" />
+                                                        </span>
                                                     }
                                                 </li>
                                             }
@@ -224,7 +228,7 @@
 
                             @if (plugin != null)
                             {
-                                <h5 class="text-muted mt-4">Resources</h5>
+                                <h6 class="text-muted fw-semibold mt-4">Resources</h6>
                                 <ul class="list-group list-group-flush list-unstyled">
                                     @if (downloadInfo?.Source is not null)
                                     {
@@ -308,14 +312,14 @@
             <div class="col col-12 col-md-6 col-lg-12 col-xl-6 col-xxl-4 mb-4">
                 <div class="card h-100" id="@plugin.Identifier">
                     <div class="card-body">
-                        <div class="d-flex align-items-baseline justify-content-between gap-2">
-                            <h4 class="card-title" data-bs-toggle="tooltip" title="@plugin.Identifier">@plugin.Name</h4>
+                        <div class="d-flex flex-wrap align-items-baseline justify-content-between gap-2 mb-3">
+                            <h4 class="card-title mb-0" data-bs-toggle="tooltip" title="@plugin.Identifier">@plugin.Name</h4>
                             @if (!string.IsNullOrEmpty(plugin.Author))
                             {
-                                <span class="text-muted">
+                                <span class="text-muted text-nowrap">
                                     by
                                     <a href="@plugin.AuthorLink" rel="noreferrer noopener" target="_blank">
-                                        <span>@plugin.Author</span>
+                                        @plugin.Author
                                     </a>
                                 </span>
                             }
@@ -334,15 +338,17 @@
                         <p class="card-text">@plugin.Description</p>
                         @if (plugin.Dependencies?.Any() is true)
                         {
-                            <h5 class="text-muted">Dependencies</h5>
+                            <h6 class="text-muted fw-semibold">Dependencies</h6>
                             <ul class="list-group list-group-flush">
                                 @foreach (var dependency in plugin.Dependencies)
                                 {
-                                    <li class="list-group-item p-2">
+                                    <li class="list-group-item p-2 d-inline-flex align-items-center gap-2">
                                         @dependency
                                         @if (!DependencyMet(dependency))
                                         {
-                                            <span title="Dependency not met." data-bs-toggle="tooltip" class="fa fa-warning text-danger"></span>
+                                            <span title="Dependency not met." data-bs-toggle="tooltip" class="text-danger">
+                                                <vc:icon symbol="warning" />
+                                            </span>
                                         }
                                     </li>
                                 }
@@ -351,7 +357,7 @@
 
                         @if (plugin != null)
                         {
-                            <h5 class="text-muted mt-4">Resources</h5>
+                            <h6 class="text-muted fw-semibold mt-4">Resources</h6>
                             <ul class="list-group list-group-flush list-unstyled">
                                 @if (plugin.Source is not null)
                                 {

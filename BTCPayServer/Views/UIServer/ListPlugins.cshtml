@@ -226,7 +226,7 @@
                             {
                                 <h5 class="text-muted mt-4">Resources</h5>
                                 <ul class="list-group list-group-flush list-unstyled">
-                                    @if (downloadInfo.Source is not null)
+                                    @if (downloadInfo?.Source is not null)
                                     {
                                         <li>
                                             <a href="@downloadInfo.Source" rel="noreferrer noopener" class="d-flex align-items-center" target="_blank">
@@ -235,7 +235,7 @@
                                             </a>
                                         </li>
                                     }
-                                    @if (!string.IsNullOrEmpty(downloadInfo.Documentation))
+                                    @if (!string.IsNullOrEmpty(downloadInfo?.Documentation))
                                     {
                                         <li>
                                             <a href="@downloadInfo.Documentation" rel="noreferrer noopener" class="d-flex align-items-center gap-2" target="_blank">

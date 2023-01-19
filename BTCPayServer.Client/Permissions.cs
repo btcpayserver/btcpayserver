@@ -30,6 +30,8 @@ namespace BTCPayServer.Client
         public const string CanCreateUser = "btcpay.server.cancreateuser";
         public const string CanDeleteUser = "btcpay.user.candeleteuser";
         public const string CanManagePullPayments = "btcpay.store.canmanagepullpayments";
+        public const string CanCreatePullPayments = "btcpay.store.cancreatepullpayments";
+        public const string CanCreateNonApprovedPullPayments = "btcpay.store.cancreatenonapprovedpullpayments";
         public const string CanViewCustodianAccounts = "btcpay.store.canviewcustodianaccounts";
         public const string CanManageCustodianAccounts = "btcpay.store.canmanagecustodianaccounts";
         public const string CanDepositToCustodianAccounts = "btcpay.store.candeposittocustodianaccount";
@@ -64,6 +66,8 @@ namespace BTCPayServer.Client
                 yield return CanViewLightningInvoiceInStore;
                 yield return CanCreateLightningInvoiceInStore;
                 yield return CanManagePullPayments;
+                yield return CanCreatePullPayments;
+                yield return CanCreateNonApprovedPullPayments;
                 yield return CanViewCustodianAccounts;
                 yield return CanManageCustodianAccounts;
                 yield return CanDepositToCustodianAccounts;
@@ -95,6 +99,11 @@ namespace BTCPayServer.Client
     }
     public class Permission
     {
+        static Permission()
+        {
+            Init();
+        }
+        
         public static Permission Create(string policy, string scope = null)
         {
             if (TryCreatePermission(policy, scope, out var r))
@@ -179,39 +188,55 @@ namespace BTCPayServer.Client
 
         private bool ContainsPolicy(string subpolicy)
         {
-            if (this.Policy == Policies.Unrestricted)
+            return ContainsPolicy(Policy, subpolicy);
+        }
+
+        private static bool ContainsPolicy(string policy, string subpolicy)
+        {
+            if (policy == Policies.Unrestricted)
                 return true;
-            if (this.Policy == subpolicy)
+            if (policy == subpolicy)
                 return true;
-            switch (subpolicy)
+            if (!PolicyMap.TryGetValue(policy, out var subPolicies)) return false;
+            return subPolicies.Contains(subpolicy) || subPolicies.Any(s => ContainsPolicy(s, subpolicy));
+        }
+
+        private static Dictionary<string, HashSet<string>> PolicyMap = new();
+
+        private static void Init()
+        {
+            PolicyHasChild(Policies.CanModifyStoreSettings,
+                Policies.CanManageCustodianAccounts, Policies.CanManagePullPayments, Policies.CanModifyInvoices, Policies.CanViewStoreSettings, Policies.CanModifyStoreWebhooks, Policies.CanModifyPaymentRequests );
+            
+            PolicyHasChild(Policies.CanManagePullPayments, Policies.CanCreatePullPayments );
+            PolicyHasChild(Policies.CanCreatePullPayments, Policies.CanCreateNonApprovedPullPayments );
+            PolicyHasChild(Policies.CanModifyPaymentRequests, Policies.CanViewPaymentRequests );
+            PolicyHasChild(Policies.CanModifyProfile, Policies.CanViewProfile );
+            PolicyHasChild(Policies.CanUseLightningNodeInStore, Policies.CanViewLightningInvoiceInStore, Policies.CanCreateLightningInvoiceInStore );
+            PolicyHasChild(Policies.CanManageNotificationsForUser, Policies.CanViewNotificationsForUser );
+            PolicyHasChild(Policies.CanModifyServerSettings, Policies.CanUseInternalLightningNode );
+            PolicyHasChild(Policies.CanUseInternalLightningNode, Policies.CanCreateLightningInvoiceInternalNode,Policies.CanViewLightningInvoiceInternalNode );
+            PolicyHasChild(Policies.CanManageCustodianAccounts, Policies.CanViewCustodianAccounts );
+            PolicyHasChild(Policies.CanModifyInvoices, Policies.CanViewInvoices, Policies.CanCreateInvoice );
+            PolicyHasChild(Policies.CanViewStoreSettings, Policies.CanViewInvoices, Policies.CanViewPaymentRequests  );
+            
+        }
+
+        private static void PolicyHasChild(string policy, params string[] subPolicies)
+        {
+            if (PolicyMap.TryGetValue(policy, out var existingSubPolicies))
             {
-                case Policies.CanViewInvoices when this.Policy == Policies.CanModifyStoreSettings:
-                case Policies.CanViewInvoices when this.Policy == Policies.CanModifyInvoices:
-                case Policies.CanModifyStoreWebhooks when this.Policy == Policies.CanModifyStoreSettings:
-                case Policies.CanViewInvoices when this.Policy == Policies.CanViewStoreSettings:
-                case Policies.CanViewStoreSettings when this.Policy == Policies.CanModifyStoreSettings:
-                case Policies.CanCreateInvoice when this.Policy == Policies.CanModifyStoreSettings:
-                case Policies.CanModifyInvoices when this.Policy == Policies.CanModifyStoreSettings:
-                case Policies.CanViewProfile when this.Policy == Policies.CanModifyProfile:
-                case Policies.CanModifyPaymentRequests when this.Policy == Policies.CanModifyStoreSettings:
-                case Policies.CanViewPaymentRequests when this.Policy == Policies.CanModifyStoreSettings:
-                case Policies.CanManagePullPayments when this.Policy == Policies.CanModifyStoreSettings:
-                case Policies.CanViewPaymentRequests when this.Policy == Policies.CanViewStoreSettings:
-                case Policies.CanViewPaymentRequests when this.Policy == Policies.CanModifyPaymentRequests:
-                case Policies.CanCreateLightningInvoiceInternalNode when this.Policy == Policies.CanUseInternalLightningNode:
-                case Policies.CanViewLightningInvoiceInternalNode when this.Policy == Policies.CanUseInternalLightningNode:
-                case Policies.CanCreateLightningInvoiceInStore when this.Policy == Policies.CanUseLightningNodeInStore:
-                case Policies.CanViewLightningInvoiceInStore when this.Policy == Policies.CanUseLightningNodeInStore:
-                case Policies.CanViewNotificationsForUser when this.Policy == Policies.CanManageNotificationsForUser:
-                case Policies.CanUseInternalLightningNode when this.Policy == Policies.CanModifyServerSettings:
-                case Policies.CanViewCustodianAccounts when this.Policy == Policies.CanManageCustodianAccounts:
-                case Policies.CanViewCustodianAccounts when this.Policy == Policies.CanModifyStoreSettings:
-                case Policies.CanManageCustodianAccounts when this.Policy == Policies.CanModifyStoreSettings:
-                    return true;
-                default:
-                    return false;
+                foreach (string subPolicy in subPolicies)
+                {
+                    existingSubPolicies.Add(subPolicy);
+                }
+            }
+            else
+            {
+                PolicyMap.Add(policy,subPolicies.ToHashSet());
             }
         }
+        
 
         public string Scope { get; }
         public string Policy { get; }

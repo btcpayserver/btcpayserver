@@ -127,7 +127,7 @@
         @if (Model.CanShowRestart)
         {
             <form method="post" asp-action="Maintenance" class="mt-2">
-                <button type="submit" name="command" value="restart" class="btn btn-info" asp-action="Maintenance">Restart now</button>
+                <button type="submit" name="command" value="soft-restart" class="btn btn-info" asp-action="Maintenance">Restart now</button>
             </form>
         }
     </div>

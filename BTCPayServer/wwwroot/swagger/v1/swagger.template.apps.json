@@ -447,7 +447,19 @@
                             "defaultView": {
                                 "type": "string",
                                 "description": "App view type (e.g., static, cart, etc...)",
-                                "example": "Cart"
+                                "example": "Cart",
+                                "x-enumNames": [
+                                    "Static",
+                                    "Cart",
+                                    "Light",
+                                    "Print"
+                                ],
+                                "enum": [
+                                    "Static",
+                                    "Cart",
+                                    "Light",
+                                    "Print"
+                                ]
                             },
                             "showCustomAmount": {
                                 "type": "boolean",

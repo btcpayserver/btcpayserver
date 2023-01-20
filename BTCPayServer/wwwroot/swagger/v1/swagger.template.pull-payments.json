@@ -432,7 +432,7 @@
                       "description": "Pull payment not found"
                   },
                   "400": {
-                      "description": "Pull payment not found but does not support LNURL"
+                      "description": "Pull payment found but does not support LNURL"
                   }
               },
               "tags": [

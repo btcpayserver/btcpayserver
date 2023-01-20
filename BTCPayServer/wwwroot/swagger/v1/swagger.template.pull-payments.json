@@ -415,7 +415,7 @@
           ],
           "get": {
               "summary": "Get Pull Payment LNURL details",
-              "operationId": "PullPayments_LNURL",
+              "operationId": "PullPayments_GetPullPaymentLNURL",
               "description": "Get Pull Payment LNURL details",
               "responses": {
                   "200": {

@@ -2,6 +2,7 @@
 
 <template id="lightning-method-checkout-template">
     <div class="payment-box">
+        @await Component.InvokeAsync("UiExtensionPoint" ,  new { location="checkout-v2-lightning-pre-content", model = Model})
         <div v-if="model.invoiceBitcoinUrlQR" class="qr-container" :data-clipboard="model.btcAddress" data-clipboard-confirm-element="QR_Text_@Model.PaymentMethodId">
             <div>
                 <qrcode :value="model.invoiceBitcoinUrlQR" tag="div" :options="qrOptions" />
@@ -18,6 +19,7 @@
         </div>
         <a v-if="model.invoiceBitcoinUrl" class="btn btn-primary rounded-pill w-100 mt-4" target="_top"
            :href="model.invoiceBitcoinUrl" v-t="'pay_in_wallet'"></a>
+        @await Component.InvokeAsync("UiExtensionPoint", new {location = "checkout-v2-lightning-post-content", model = Model})
     </div>          
 </template>
 

@@ -17,8 +17,14 @@ namespace BTCPayServer.Plugins.NFC
         {
             applicationBuilder.AddSingleton<IUIExtension>(new UIExtension("NFC/CheckoutEnd",
                 "checkout-end"));
-            applicationBuilder.AddSingleton<IUIExtension>(new UIExtension("NFC/LightningCheckoutPostContent",
-                "checkout-lightning-post-content"));
+            applicationBuilder.AddSingleton<IUIExtension>(new UIExtension("NFC/LNURLNFCPostContent",
+                "checkout-lightning-post-content"));            
+            applicationBuilder.AddSingleton<IUIExtension>(new UIExtension("NFC/CheckoutEnd",
+                "checkout-v2-end"));
+            applicationBuilder.AddSingleton<IUIExtension>(new UIExtension("NFC/LNURLNFCPostContent",
+                "checkout-v2-lightning-post-content"));
+            applicationBuilder.AddSingleton<IUIExtension>(new UIExtension("NFC/LNURLNFCPostContent",
+                "checkout-v2-bitcoin-post-content"));
             base.Execute(applicationBuilder);
         }
     }

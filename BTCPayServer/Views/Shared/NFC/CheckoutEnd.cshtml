@@ -1,14 +1,36 @@
 @using BTCPayServer.Abstractions.Extensions
-@{
-    var url = Context.Request.GetAbsoluteUri(Url.Action("SubmitLNURLWithdrawForInvoice", "NFC"));
-}
 
+<template id="lnurl-withdraw-template">
+
+
+    <button v-if="v2" class="btn btn-primary rounded-pill w-100 mt-4" type="button" v-on:click="startScan" v-bind:disabled="scanning || submitting" v-bind:class="{ 'loading': scanning || submitting }">{{btnText}}</button>
+
+    <bp-loading-button v-else>
+        <button v-on:click="startScan" class="action-button" style="margin-top: 15px;" v-bind:disabled="scanning || submitting" v-bind:class="{ 'loading': scanning || submitting }">
+            <span class="button-text">{{btnText}}</span>
+            <div class="loader-wrapper">
+                <partial name="Checkout-Spinner" />
+            </div>
+        </button>
+    </bp-loading-button>
+</template>
 <script type="text/javascript">
-    window.lnurlWithdrawSubmitUrl = '@url';
-
-Vue.component("LNURLWithdrawContactless", {
+Vue.component("lnurl-withdraw-checkout", {
+    template: "#lnurl-withdraw-template",
+    computed: {
+        v2: function() {
+          return !!this.$parent.model;
+        },
+        destination: function (){
+            return this.$parent.BOLT11 || (this.$parent.srvModel || this.$parent.model).btcAddress;
+        },
+        btnText: function (){
+            return this.supported? "Pay by NFC & LNURL-Withdraw" : "Pay by LNURL-Withdraw";
+        }
+    },
     data: function () {
         return {
+            url : @Safe.Json(Context.Request.GetAbsoluteUri(Url.Action("SubmitLNURLWithdrawForInvoice", "NFC"))),
             supported: ('NDEFReader' in window && window.self === window.top),
             scanning: false,
             submitting: false,
@@ -62,9 +84,9 @@ Vue.component("LNURLWithdrawContactless", {
             this.submitting = true;
             //Post LNURLW data to server
             var xhr = new XMLHttpRequest()
-            xhr.open('POST', window.lnurlWithdrawSubmitUrl, true)
+            xhr.open('POST', this.url, true)
             xhr.setRequestHeader('Content-Type', 'application/json')
-            xhr.send(JSON.stringify({lnurl, destination: this.$parent.srvModel.btcAddress}))
+            xhr.send(JSON.stringify({lnurl, destination: this.destination}))
             const self = this;
             //User feedback, reset on failure
             xhr.onload = function () {

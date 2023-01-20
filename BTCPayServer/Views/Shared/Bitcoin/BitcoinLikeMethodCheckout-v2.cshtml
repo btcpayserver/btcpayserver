@@ -2,6 +2,7 @@
 @model BTCPayServer.Models.InvoicingModels.PaymentModel
 
 <template id="bitcoin-method-checkout-template">
+    @await Component.InvokeAsync("UiExtensionPoint", new {location = "checkout-v2-bitcoin-pre-content", model = Model})
     <div class="payment-box">
         <div v-if="model.invoiceBitcoinUrlQR" class="qr-container" :data-clipboard="model.btcAddress" data-clipboard-confirm-element="QR_Text_@Model.PaymentMethodId">
             <div>
@@ -26,6 +27,7 @@
         </div>
         <a v-if="model.invoiceBitcoinUrl" class="btn btn-primary rounded-pill w-100 mt-4" target="_top"
            :href="model.invoiceBitcoinUrl" :title="$t(hasPayjoin ? 'BIP21 payment link with PayJoin support' : 'BIP21 payment link')" v-t="'pay_in_wallet'"></a>
+        @await Component.InvokeAsync("UiExtensionPoint", new {location = "checkout-v2-bitcoin-post-content", model = Model})
     </div>
 </template>
 

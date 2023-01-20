@@ -237,5 +237,6 @@
         <partial name="@paymentMethodHandler.ExtensionPartial-v2" model="@Model"/>
     }
     @await Component.InvokeAsync("UiExtensionPoint", new { location = "checkout-payment", model = Model })
+    @await Component.InvokeAsync("UiExtensionPoint", new { location = "checkout-v2-end", model = Model })
 </body>
 </html>

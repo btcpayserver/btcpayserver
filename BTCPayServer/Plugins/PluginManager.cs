@@ -120,6 +120,12 @@ namespace BTCPayServer.Plugins
 
             foreach (var toLoad in pluginsToLoad)
             {
+                // This used to be a standalone plugin but due to popular demand has been made as part of core. If we detect an install, we remove the redundant plugin.
+                if (toLoad.PluginIdentifier == "BTCPayServer.Plugins.NFC")
+                {
+                    QueueCommands(pluginsFolder, ("delete", toLoad.PluginIdentifier));
+                    continue;
+                }
                 if (!loadedPluginIdentifiers.Add(toLoad.PluginIdentifier))
                     continue;
                 try

@@ -858,7 +858,7 @@ namespace BTCPayServer.Tests
                 PaymentMethods = new[] { "BTC" }
             });
 
-            await this.AssertAPIError("ln-url-not-supported", async () => await unauthenticated.GetLNURLs(pp.Id));
+            await this.AssertAPIError("ln-url-not-supported", async () => await unauthenticated.GetPullPaymentLNURL(pp.Id));
 
             destination = (await tester.ExplorerNode.GetNewAddressAsync()).ToString();
             TestLogs.LogInformation("Try to pay it in BTC");
@@ -919,7 +919,7 @@ namespace BTCPayServer.Tests
                 Currency = "BTC",
                 PaymentMethods = new[] { "BTC", "BTC-LightningNetwork", "BTC_LightningLike" }
             });
-            var lnrURLs = await unauthenticated.GetLNURLs(test4.Id);
+            var lnrURLs = await unauthenticated.GetPullPaymentLNURL(test4.Id);
             Assert.IsType<string>(lnrURLs.LNURLBech32);
             Assert.IsType<string>(lnrURLs.LNURLUri);
         }

@@ -98,7 +98,7 @@ namespace BTCPayServer.Client
             await HandleResponse(response);
         }
 
-        public virtual async Task<PullPaymentLNURL> GetLNURLs(string pullPaymentId,
+        public virtual async Task<PullPaymentLNURL> GetPullPaymentLNURL(string pullPaymentId,
             CancellationToken cancellationToken = default)
         {
             var response = await _httpClient.SendAsync(

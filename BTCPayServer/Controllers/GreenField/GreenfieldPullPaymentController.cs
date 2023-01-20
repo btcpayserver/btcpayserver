@@ -234,7 +234,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
         [HttpGet("~/api/v1/pull-payments/{pullPaymentId}/lnurl")]
         [AllowAnonymous]
-        public async Task<IActionResult> GetLNURLs(string pullPaymentId)
+        public async Task<IActionResult> GetPullPaymentLNURL(string pullPaymentId)
         {
             var pp = await _pullPaymentService.GetPullPayment(pullPaymentId, false);
             if (pp is null)

@@ -256,7 +256,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 });
             }
 
-            return this.CreateAPIError("ln-url-not-supported", "LNURL not supported for this pull payment");
+            return this.CreateAPIError("lnurl-not-supported", "LNURL not supported for this pull payment");
         }
 
         private Client.Models.PayoutData ToModel(Data.PayoutData p)

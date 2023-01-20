@@ -858,7 +858,7 @@ namespace BTCPayServer.Tests
                 PaymentMethods = new[] { "BTC" }
             });
 
-            await this.AssertAPIError("ln-url-not-supported", async () => await unauthenticated.GetPullPaymentLNURL(pp.Id));
+            await this.AssertAPIError("lnurl-not-supported", async () => await unauthenticated.GetPullPaymentLNURL(pp.Id));
 
             destination = (await tester.ExplorerNode.GetNewAddressAsync()).ToString();
             TestLogs.LogInformation("Try to pay it in BTC");

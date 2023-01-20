@@ -246,7 +246,7 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 var lnurlEndpoint = new Uri(Url.Action("GetLNURLForPullPayment", "UILNURL", new
                 {
-                    cryptoCode = "BTC",
+                    cryptoCode = _networkProvider.DefaultNetwork.CryptoCode,
                     pullPaymentId = pullPaymentId
                 }, Request.Scheme, Request.Host.ToString()));
 

@@ -1,4 +1,4 @@
-﻿@using BTCPayServer.Abstractions.Models
+@using BTCPayServer.Abstractions.Models
 @model UsersViewModel
 @{
     ViewData.SetActivePage(ServerNavPages.Users);
@@ -97,7 +97,7 @@
                 </td>
                 <td class="text-end">
                     @if (!user.Verified && !user.Disabled) {
-                        <a asp-action="SendVerificationEmail" asp-route-userId="@user.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="This will send a verification email to <strong>@user.Email</strong>.">Resend verification email</a>
+                        <a asp-action="SendVerificationEmail" asp-route-userId="@user.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="This will send a verification email to <strong>@Html.Encode(user.Email)</strong>.">Resend verification email</a>
                         <span>-</span>
                     }
                     <a asp-action="User" asp-route-userId="@user.Id">Edit</a> <span> - </span> <a asp-action="DeleteUser" asp-route-userId="@user.Id">Remove</a>

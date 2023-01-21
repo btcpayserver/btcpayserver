@@ -119,11 +119,11 @@
 
                         @if (device.Type == Fido2Credential.CredentialType.FIDO2)
                         {
-                            <a asp-controller="UIFido2" asp-action="Remove" asp-route-id="@device.Id" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-title="Remove security device" data-description="Your account will no longer have the security device <strong>@name</strong> as an option for two-factor authentication." data-confirm="Remove" data-confirm-input="REMOVE">Remove</a>
+                            <a asp-controller="UIFido2" asp-action="Remove" asp-route-id="@device.Id" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-title="Remove security device" data-description="Your account will no longer have the security device <strong>@Html.Encode(name)</strong> as an option for two-factor authentication." data-confirm="Remove" data-confirm-input="REMOVE">Remove</a>
                         }
                         else if (device.Type == Fido2Credential.CredentialType.LNURLAuth)
                         {
-                            <a asp-controller="UILNURLAuth" asp-action="Remove" asp-route-id="@device.Id" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-title="Remove Lightning security" data-description="Your account will no longer be linked to the lightning node <strong>@name</strong> as an option for two-factor authentication." data-confirm="Remove" data-confirm-input="REMOVE">Remove</a>
+                            <a asp-controller="UILNURLAuth" asp-action="Remove" asp-route-id="@device.Id" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-title="Remove Lightning security" data-description="Your account will no longer be linked to the lightning node <strong>@Html.Encode(name)</strong> as an option for two-factor authentication." data-confirm="Remove" data-confirm-input="REMOVE">Remove</a>
                         }
                     </div>
                 }

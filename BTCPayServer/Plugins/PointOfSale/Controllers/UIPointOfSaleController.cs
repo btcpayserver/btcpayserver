@@ -352,7 +352,6 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 RedirectUrl = settings.RedirectUrl,
                 SearchTerm = app.TagAllInvoices ? $"storeid:{app.StoreDataId}" : $"orderid:{AppService.GetAppOrderId(app)}",
                 RedirectAutomatically = settings.RedirectAutomatically.HasValue ? settings.RedirectAutomatically.Value ? "true" : "false" : "",
-                RequiresRefundEmail = settings.RequiresRefundEmail,
                 FormId = settings.FormId
             };
             if (HttpContext?.Request != null)
@@ -440,8 +439,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 Description = vm.Description,
                 EmbeddedCSS = vm.EmbeddedCSS,
                 RedirectAutomatically =
-                    string.IsNullOrEmpty(vm.RedirectAutomatically) ? (bool?)null : bool.Parse(vm.RedirectAutomatically),
-                RequiresRefundEmail = vm.RequiresRefundEmail
+                    string.IsNullOrEmpty(vm.RedirectAutomatically) ? (bool?)null : bool.Parse(vm.RedirectAutomatically)
             };
 
             settings.FormId = vm.FormId;

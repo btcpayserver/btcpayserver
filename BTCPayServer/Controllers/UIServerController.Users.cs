@@ -225,15 +225,15 @@ namespace BTCPayServer.Controllers
                 {
                     // return
                     return View("Confirm", new ConfirmModel("Delete admin",
-                        $"Unable to proceed: As the user <strong>{user.Email}</strong> is the last enabled admin, it cannot be removed."));
+                        $"Unable to proceed: As the user <strong>{Html.Encode(user.Email)}</strong> is the last enabled admin, it cannot be removed."));
                 }
 
                 return View("Confirm", new ConfirmModel("Delete admin",
-                    $"The admin <strong>{user.Email}</strong> will be permanently deleted. This action will also delete all accounts, users and data associated with the server account. Are you sure?",
+                    $"The admin <strong>{Html.Encode(user.Email)}</strong> will be permanently deleted. This action will also delete all accounts, users and data associated with the server account. Are you sure?",
                     "Delete"));
             }
 
-            return View("Confirm", new ConfirmModel("Delete user", $"The user <strong>{user.Email}</strong> will be permanently deleted. Are you sure?", "Delete"));
+            return View("Confirm", new ConfirmModel("Delete user", $"The user <strong>{Html.Encode(user.Email)}</strong> will be permanently deleted. Are you sure?", "Delete"));
         }
 
         [HttpPost("server/users/{userId}/delete")]
@@ -259,9 +259,9 @@ namespace BTCPayServer.Controllers
             if (!enable && await _userService.IsUserTheOnlyOneAdmin(user))
             {
                 return View("Confirm", new ConfirmModel("Disable admin",
-                    $"Unable to proceed: As the user <strong>{user.Email}</strong> is the last enabled admin, it cannot be disabled."));
+                    $"Unable to proceed: As the user <strong>{Html.Encode(user.Email)}</strong> is the last enabled admin, it cannot be disabled."));
             }
-            return View("Confirm", new ConfirmModel($"{(enable ? "Enable" : "Disable")} user", $"The user <strong>{user.Email}</strong> will be {(enable ? "enabled" : "disabled")}. Are you sure?", (enable ? "Enable" : "Disable")));
+            return View("Confirm", new ConfirmModel($"{(enable ? "Enable" : "Disable")} user", $"The user <strong>{Html.Encode(user.Email)}</strong> will be {(enable ? "enabled" : "disabled")}. Are you sure?", (enable ? "Enable" : "Disable")));
         }
 
         [HttpPost("server/users/{userId}/toggle")]
@@ -288,7 +288,7 @@ namespace BTCPayServer.Controllers
             if (user == null)
                 return NotFound();
 
-            return View("Confirm", new ConfirmModel("Send verification email", $"This will send a verification email to <strong>{user.Email}</strong>.", "Send"));
+            return View("Confirm", new ConfirmModel("Send verification email", $"This will send a verification email to <strong>{Html.Encode(user.Email)}</strong>.", "Send"));
         }
 
         [HttpPost("server/users/{userId}/verification-email")]

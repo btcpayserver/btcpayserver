@@ -65,7 +65,8 @@ namespace BTCPayServer.Controllers
             WebhookSender webhookNotificationManager,
             IDataProtectionProvider dataProtector,
             IOptions<LightningNetworkOptions> lightningNetworkOptions,
-            IOptions<ExternalServicesOptions> externalServiceOptions)
+            IOptions<ExternalServicesOptions> externalServiceOptions,
+            IHtmlHelper html)
         {
             _RateFactory = rateFactory;
             _Repo = repo;
@@ -89,6 +90,7 @@ namespace BTCPayServer.Controllers
             _BtcpayServerOptions = btcpayServerOptions;
             _BTCPayEnv = btcpayEnv;
             _externalServiceOptions = externalServiceOptions;
+            Html = html;
         }
 
         readonly BTCPayServerOptions _BtcpayServerOptions;
@@ -113,6 +115,7 @@ namespace BTCPayServer.Controllers
 
         public string? GeneratedPairingCode { get; set; }
         public WebhookSender WebhookNotificationManager { get; }
+        public IHtmlHelper Html { get; }
         public LightningNetworkOptions LightningNetworkOptions { get; }
         public IDataProtector DataProtector { get; }
 
@@ -180,7 +183,7 @@ namespace BTCPayServer.Controllers
             var user = await _UserManager.FindByIdAsync(userId);
             if (user == null)
                 return NotFound();
-            return View("Confirm", new ConfirmModel("Remove store user", $"This action will prevent <strong>{user.Email}</strong> from accessing this store and its settings. Are you sure?", "Remove"));
+            return View("Confirm", new ConfirmModel("Remove store user", $"This action will prevent <strong>{Html.Encode(user.Email)}</strong> from accessing this store and its settings. Are you sure?", "Remove"));
         }
 
         [HttpPost("{storeId}/users/{userId}/delete")]
@@ -776,7 +779,7 @@ namespace BTCPayServer.Controllers
             var token = await _TokenRepository.GetToken(tokenId);
             if (token == null || token.StoreId != CurrentStore.Id)
                 return NotFound();
-            return View("Confirm", new ConfirmModel("Revoke the token", $"The access token with the label <strong>{token.Label}</strong> will be revoked. Do you wish to continue?", "Revoke"));
+            return View("Confirm", new ConfirmModel("Revoke the token", $"The access token with the label <strong>{Html.Encode(token.Label)}</strong> will be revoked. Do you wish to continue?", "Revoke"));
         }
 
         [HttpPost("{storeId}/tokens/{tokenId}/revoke")]

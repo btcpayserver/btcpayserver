@@ -89,7 +89,8 @@ namespace BTCPayServer.Controllers
             Logs logs,
             LinkGenerator linkGenerator,
             EmailSenderFactory emailSenderFactory,
-            IHostApplicationLifetime applicationLifetime
+            IHostApplicationLifetime applicationLifetime,
+            IHtmlHelper html
         )
         {
             _policiesSettings = policiesSettings;
@@ -113,6 +114,7 @@ namespace BTCPayServer.Controllers
             _linkGenerator = linkGenerator;
             _emailSenderFactory = emailSenderFactory;
             ApplicationLifetime = applicationLifetime;
+            Html = html;
         }
 
         [Route("server/maintenance")]
@@ -296,6 +298,7 @@ namespace BTCPayServer.Controllers
 
         public IHttpClientFactory HttpClientFactory { get; }
         public IHostApplicationLifetime ApplicationLifetime { get; }
+        public IHtmlHelper Html { get; }
 
         [Route("server/policies")]
         public async Task<IActionResult> Policies()
@@ -836,7 +839,7 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             return View("Confirm",
                 new ConfirmModel("Delete dynamic DNS service",
-                    $"Deleting the dynamic DNS service for <strong>{hostname}</strong> means your BTCPay Server will stop updating the associated DNS record periodically.", "Delete"));
+                    $"Deleting the dynamic DNS service for <strong>{Html.Encode(hostname)}</strong> means your BTCPay Server will stop updating the associated DNS record periodically.", "Delete"));
         }
 
         [HttpPost("server/services/dynamic-dns/{hostname}/delete")]

@@ -800,9 +800,9 @@ namespace BTCPayServer.Controllers
                 ? ""
                 : " or imported it into an external wallet. If you no longer have access to your private key (recovery seed), immediately replace the wallet";
             return
-                $"<p class=\"text-danger fw-bold\">Please note that this is a <strong>{walletType} wallet</strong>!</p>" +
-                $"<p class=\"text-danger fw-bold\">Do not proceed if you have not backed up the wallet{additionalText}.</p>" +
-                $"<p class=\"text-start mb-0\">This action will erase the current wallet data from the server. {info}</p>";
+                $"<p class=\"text-danger fw-bold\">Please note that this is a <strong>{Html.Encode(walletType)} wallet</strong>!</p>" +
+                $"<p class=\"text-danger fw-bold\">Do not proceed if you have not backed up the wallet{Html.Encode(additionalText)}.</p>" +
+                $"<p class=\"text-start mb-0\">This action will erase the current wallet data from the server. {Html.Encode(info)}</p>";
         }
 
         private string WalletReplaceWarning(bool isHotWallet)

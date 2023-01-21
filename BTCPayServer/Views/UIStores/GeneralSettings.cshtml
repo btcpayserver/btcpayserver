@@ -138,7 +138,7 @@
         {
             <h3 class="mt-5 mb-3">Additional Actions</h3>
             <div id="danger-zone">
-                <a id="DeleteStore" class="btn btn-outline-danger mb-5 mt-2" asp-action="DeleteStore" asp-route-storeId="@Model.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The store <strong>@Model.StoreName</strong> will be permanently deleted. This action will also delete all invoices, apps and data associated with the store." data-confirm-input="DELETE">Delete this store</a>
+                <a id="DeleteStore" class="btn btn-outline-danger mb-5 mt-2" asp-action="DeleteStore" asp-route-storeId="@Model.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The store <strong>@Html.Encode(Model.StoreName)</strong> will be permanently deleted. This action will also delete all invoices, apps and data associated with the store." data-confirm-input="DELETE">Delete this store</a>
             </div>
         }
     </div>

@@ -2,9 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
+using BTCPayServer.Abstractions.Services;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Models;
@@ -41,7 +43,7 @@ namespace BTCPayServer.Controllers
             return View("Confirm", new ConfirmModel
             {
                 Title = "Delete API key",
-                Description = $"Any application using the API key <strong>{key.Label ?? key.Id}<strong> will immediately lose access.",
+                Description = $"Any application using the API key <strong>{Html.Encode(key.Label ?? key.Id)}<strong> will immediately lose access.",
                 Action = "Delete",
                 ActionName = nameof(DeleteAPIKeyPost)
             });

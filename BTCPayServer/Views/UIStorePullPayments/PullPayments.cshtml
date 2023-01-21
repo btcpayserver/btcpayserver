@@ -1,4 +1,4 @@
-﻿@using BTCPayServer.Views.Stores
+@using BTCPayServer.Views.Stores
 @using BTCPayServer.Abstractions.Extensions
 @using BTCPayServer.Abstractions.Models
 @using BTCPayServer.Client
@@ -148,7 +148,7 @@
                            asp-route-pullPaymentId="@pp.Id"
                            data-bs-toggle="modal"
                            data-bs-target="#ConfirmModal"
-                           data-description="Do you really want to archive the pull payment <strong>@pp.Name</strong>?">
+                           data-description="Do you really want to archive the pull payment <strong>@Html.Encode(pp.Name)</strong>?">
                             Archive
                         </a>
                     }

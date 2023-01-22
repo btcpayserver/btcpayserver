@@ -3428,6 +3428,9 @@ namespace BTCPayServer.Tests
                     new StoreRateConfiguration() { IsCustomScript = true, EffectiveScript = "BTC_XYZ = 1", Spread = 10m, }))
                 .IsCustomScript);
 
+            Assert.Equal(0.9m,
+                Assert.Single(await clientBasic.GetStoreRates(user.StoreId, new[] { "BTC_XYZ" })).Rate);
+            
             config = await clientBasic.GetStoreRateConfiguration(user.StoreId);
             Assert.NotNull(config);
             Assert.NotNull(config.EffectiveScript);

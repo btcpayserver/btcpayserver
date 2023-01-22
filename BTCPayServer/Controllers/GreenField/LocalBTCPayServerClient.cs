@@ -1196,12 +1196,18 @@ namespace BTCPayServer.Controllers.Greenfield
             return Task.FromResult(GetFromActionResult<StoreRateConfiguration>(GetController<GreenfieldStoreRateConfigurationController>().GetStoreRateConfiguration()));
         }
 
-        public override async Task<List<StoreRatePreviewResult>> PreviewUpdateStoreRateConfiguration(string storeId,
+        public override async Task<List<StoreRateResult>> GetStoreRates (string storeId, 
+            string[] currencyPair, CancellationToken token = default)
+        {
+            return GetFromActionResult<List<StoreRateResult>>(await GetController<GreenfieldStoreRatesController>().GetStoreRates(currencyPair));
+        }
+
+        public override async Task<List<StoreRateResult>> PreviewUpdateStoreRateConfiguration(string storeId,
             StoreRateConfiguration request,
             string[] currencyPair,
             CancellationToken token = default)
         {
-            return GetFromActionResult<List<StoreRatePreviewResult>>(
+            return GetFromActionResult<List<StoreRateResult>>(
                 await GetController<GreenfieldStoreRateConfigurationController>().PreviewUpdateStoreRateConfiguration(request,
                     currencyPair));
         }

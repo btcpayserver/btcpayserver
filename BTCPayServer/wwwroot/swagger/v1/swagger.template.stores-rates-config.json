@@ -165,7 +165,7 @@
                                 "schema": {
                                     "type": "array",
                                     "items": {
-                                        "$ref": "#/components/schemas/StoreRatePreviewResult"
+                                        "$ref": "#/components/schemas/StoreRateResult"
                                     }
                                 }
                             }
@@ -220,7 +220,7 @@
                     }
                 }
             },
-            "StoreRatePreviewResult": {
+            "StoreRateResult": {
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {

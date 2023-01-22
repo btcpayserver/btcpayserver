@@ -37,7 +37,7 @@ namespace BTCPayServer.Client
             return await HandleResponse<StoreRateConfiguration>(response);
         }
 
-        public virtual async Task<List<StoreRatePreviewResult>> PreviewUpdateStoreRateConfiguration(string storeId,
+        public virtual async Task<List<StoreRateResult>> PreviewUpdateStoreRateConfiguration(string storeId,
             StoreRateConfiguration request,
             string[] currencyPair,
             CancellationToken token = default)
@@ -47,7 +47,18 @@ namespace BTCPayServer.Client
                     queryPayload: new Dictionary<string, object>() { { "currencyPair", currencyPair } },
                     method: HttpMethod.Post),
                 token);
-            return await HandleResponse<List<StoreRatePreviewResult>>(response);
+            return await HandleResponse<List<StoreRateResult>>(response);
+        }
+
+        public virtual async Task<List<StoreRateResult>> GetStoreRates(string storeId, string[] currencyPair,
+            CancellationToken token = default)
+        {
+            using var response = await _httpClient.SendAsync(
+                CreateHttpRequest($"api/v1/stores/{storeId}/rates", 
+                    queryPayload: new Dictionary<string, object>() { { "currencyPair", currencyPair } },
+                    method: HttpMethod.Get),
+                token);
+            return await HandleResponse<List<StoreRateResult>>(response);
         }
     }
 }

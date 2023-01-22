@@ -139,7 +139,7 @@ namespace BTCPayServer.Tests
             var schema = JSchema.Parse(File.ReadAllText(TestUtils.GetTestDataFullPath("OpenAPI-Specification-schema.json")));
             IList<ValidationError> errors;
             bool valid = swagger.IsValid(schema, out errors);
-            //the schema is not fully compliant to the spec. We ARE allowed to have multiple security schemas. 
+            //the schema is not fully compliant to the spec. We ARE allowed to have multiple security schemas.
             var matchedError = errors.Where(error =>
                 error.Path == "components.securitySchemes.Basic" && error.ErrorType == ErrorType.OneOf).ToList();
             foreach (ValidationError validationError in matchedError)
@@ -230,8 +230,7 @@ namespace BTCPayServer.Tests
             {
                 "https://www.btse.com", // not allowing to be hit from circleci
                 "https://www.bitpay.com", // not allowing to be hit from circleci
-                "https://support.bitpay.com",
-                "https://www.pnxbet.com" //has geo blocking
+                "https://support.bitpay.com"
             };
 
             foreach (var match in regex.Matches(text).OfType<Match>())
@@ -1745,7 +1744,7 @@ namespace BTCPayServer.Tests
                 Assert.True(match.Success);
                 return decimal.Parse(match.Groups[1].Value.Trim(), CultureInfo.InvariantCulture);
             }
-            
+
             async Task<object[]> GetExport(TestAccount account, string storeId = null)
             {
                 var content = await account.GetController<UIInvoiceController>(false)
@@ -1826,13 +1825,13 @@ namespace BTCPayServer.Tests
                     ItemDesc = "Some \", description",
                     FullNotifications = true
                 }, Facade.Merchant);
-            
+
             await otherUser.PayInvoice(newInvoice.Id);
             Assert.Single(await GetExport(otherUser));
             Assert.Single(await GetExport(otherUser, otherUser.StoreId));
             Assert.Equal(3, (await GetExport(user, user.StoreId)).Length);
             Assert.Equal(3, (await GetExport(user)).Length);
-            
+
             await otherUser.AddOwner(user.UserId);
             Assert.Equal(4, (await GetExport(user)).Length);
             Assert.Single(await GetExport(user, otherUser.StoreId));
@@ -2798,7 +2797,7 @@ namespace BTCPayServer.Tests
                 .IsType<RedirectToActionResult>(await controller.StorageProvider("I am not a real provider"))
                 .ActionName));
 
-            //ok no more messing around, let's configure this shit. 
+            //ok no more messing around, let's configure this shit.
             var fileSystemStorageConfiguration = Assert.IsType<FileSystemStorageConfiguration>(Assert
                 .IsType<ViewResult>(await controller.StorageProvider(StorageProvider.FileSystem.ToString()))
                 .Model);

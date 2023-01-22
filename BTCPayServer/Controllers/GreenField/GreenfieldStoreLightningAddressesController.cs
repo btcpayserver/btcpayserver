@@ -33,7 +33,7 @@ namespace BTCPayServer.Controllers.Greenfield
             };
         }
 
-        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/lightning-addresses")]
         public async Task<IActionResult> GetStoreLightningAddresses(string storeId)
         {
@@ -54,7 +54,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
         }
 
-        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/lightning-addresses/{username}")]
         public async Task<IActionResult> GetStoreLightningAddress(string storeId, string username)
         {

@@ -46,7 +46,7 @@
                 return this.model.invoiceBitcoinUrl.indexOf('@PayjoinClient.BIP21EndpointKey=') !== -1;
             },
             BOLT11 () {
-                const match = this.model.invoiceBitcoinUrl.match(/&LIGHTNING=(.*)&?/i);
+                const match = this.model.invoiceBitcoinUrl.match(/&lightning=(.*)&?/i);
                 return match ? match[1].toLowerCase() : null;
             }
         }

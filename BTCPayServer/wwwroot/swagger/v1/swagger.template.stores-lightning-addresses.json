@@ -21,7 +21,7 @@
                 "operationId": "StoreLightningAddresses_GetStoreLightningAddresses",
                 "responses": {
                     "200": {
-                        "description": "lightning addresses configured in the store",
+                        "description": "The lightning addresses configured in the store",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -70,7 +70,7 @@
                         "name": "username",
                         "in": "path",
                         "required": true,
-                        "description": "the lightning address username",
+                        "description": "The lightning address username",
                         "schema": {
                             "type": "string"
                         }
@@ -80,7 +80,7 @@
                 "operationId": "StoreLightningAddresses_GetStoreLightningAddress",
                 "responses": {
                     "200": {
-                        "description": "lightning address configured in the store",
+                        "description": "The lightning address configured in the store",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -146,7 +146,7 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "lightning address configured in the store",
+                        "description": "The lightning address configured in the store",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -190,7 +190,7 @@
                         "name": "username",
                         "in": "path",
                         "required": true,
-                        "description": "the lightning address username",
+                        "description": "The lightning address username",
                         "schema": {
                             "type": "string"
                         }
@@ -200,7 +200,7 @@
                 "operationId": "StoreLightningAddresses_RemoveStoreLightningAddress",
                 "responses": {
                     "200": {
-                        "description": "lightning address removed"
+                        "description": "Lightning address removed"
                     },
                     "403": {
                         "description": "If you are authenticated but forbidden to view the specified store"

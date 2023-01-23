@@ -9,6 +9,7 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Payments;
 using BTCPayServer.Security;
+using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
@@ -147,11 +148,18 @@ namespace BTCPayServer.Controllers.Greenfield
                 AnyoneCanCreateInvoice = storeBlob.AnyoneCanInvoice,
                 LightningDescriptionTemplate = storeBlob.LightningDescriptionTemplate,
                 PaymentTolerance = storeBlob.PaymentTolerance,
-                PayJoinEnabled = storeBlob.PayJoinEnabled
+                PayJoinEnabled = storeBlob.PayJoinEnabled,
+                PaymentMethodCriteria = storeBlob.PaymentMethodCriteria?.Where(criteria => criteria.Value is not null)?.Select(criteria =>  new PaymentMethodCriteriaData()
+                {
+                    Above = criteria.Above,
+                    Amount = criteria.Value.Value,
+                    CurrencyCode = criteria.Value.Currency,
+                    PaymentMethod = criteria.PaymentMethod.ToStringNormalized()
+                })?.ToList()?? new List<PaymentMethodCriteriaData>()
             };
         }
 
-        private void ToModel(StoreBaseData restModel, Data.StoreData model, PaymentMethodId defaultPaymentMethod)
+        private void ToModel(StoreBaseData restModel, StoreData model, PaymentMethodId defaultPaymentMethod)
         {
             var blob = model.GetStoreBlob();
             model.StoreName = restModel.Name;
@@ -188,6 +196,17 @@ namespace BTCPayServer.Controllers.Greenfield
             blob.LightningDescriptionTemplate = restModel.LightningDescriptionTemplate;
             blob.PaymentTolerance = restModel.PaymentTolerance;
             blob.PayJoinEnabled = restModel.PayJoinEnabled;
+            blob.PaymentMethodCriteria = restModel.PaymentMethodCriteria?.Select(criteria =>
+                new PaymentMethodCriteria()
+                {
+                    Above = criteria.Above,
+                    Value = new CurrencyValue()
+                    {
+                        Currency = criteria.CurrencyCode,
+                        Value = criteria.Amount
+                    },
+                    PaymentMethod = PaymentMethodId.Parse(criteria.PaymentMethod)
+                }).ToList() ?? new List<PaymentMethodCriteria>();
             blob.NormalizeToRelativeLinks(Request);
             model.SetStoreBlob(blob);
         }
@@ -222,6 +241,30 @@ namespace BTCPayServer.Controllers.Greenfield
             if (request.PaymentTolerance < 0 && request.PaymentTolerance > 100)
                 ModelState.AddModelError(nameof(request.PaymentTolerance), "PaymentTolerance can only be between 0 and 100 percent");
 
+            if (request.PaymentMethodCriteria?.Any() is true)
+            {
+                for (int index = 0; index < request.PaymentMethodCriteria.Count; index++)
+                {
+                    PaymentMethodCriteriaData pmc = request.PaymentMethodCriteria[index];
+                    if (string.IsNullOrEmpty(pmc.CurrencyCode))
+                    {
+                        request.AddModelError(data => data.PaymentMethodCriteria[index].CurrencyCode, "CurrencyCode is required", this);
+                    }else if (CurrencyNameTable.Instance.GetCurrencyData(pmc.CurrencyCode, false) is null)
+                    {
+                        request.AddModelError(data => data.PaymentMethodCriteria[index].CurrencyCode, "CurrencyCode is invalid", this);
+                    }
+
+                    if (string.IsNullOrEmpty(pmc.PaymentMethod) || PaymentMethodId.TryParse(pmc.PaymentMethod) is null)
+                    {
+                        request.AddModelError(data => data.PaymentMethodCriteria[index].PaymentMethod, "Payment method was invalid", this);
+                    }
+
+                    if (pmc.Amount < 0)
+                    {
+                        request.AddModelError(data => data.PaymentMethodCriteria[index].Amount, "Amount must be greater than 0", this);
+                    }
+                }
+            }
             return !ModelState.IsValid ? this.CreateValidationError(ModelState) : null;
         }
 

@@ -1,14 +1,15 @@
 function confirmCopy(el, message) {
-    if (!el.dataset.clipboardInitial) {
-        el.dataset.clipboardInitial = el.innerHTML;
-        el.style.minWidth = el.getBoundingClientRect().width + 'px';
-    }
-    el.innerHTML = `<span class="text-success">${message}</span>`;
+    el.dataset.clipboardInitial = el.innerHTML;
+    el.style.minWidth = el.getBoundingClientRect().width + 'px';
+    const confirmHTML = `<span class="text-success">${message}</span>`;
+    el.innerHTML = confirmHTML;
     if (el.dataset.clipboardHandler) {
         clearTimeout(parseInt(el.dataset.clipboardHandler));
     }
     const timeoutId = setTimeout(function () {
-        el.innerHTML = el.dataset.clipboardInitial;
+        if (el.innerHTML === confirmHTML) {
+            el.innerHTML = el.dataset.clipboardInitial;
+        }
         el.dataset.clipboardHandler = null;
     }, 2500);
     el.dataset.clipboardHandler = timeoutId.toString();

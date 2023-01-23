@@ -2961,6 +2961,50 @@ namespace BTCPayServer.Tests
 
         }
 
+        [Fact(Timeout =TestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task StoreLightningAddressesAPITests()
+        {
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+            var admin = tester.NewAccount();
+            await admin.GrantAccessAsync(true);
+            var adminClient = await admin.CreateClient(Policies.Unrestricted);
+            var store = await adminClient.GetStore(admin.StoreId);
+
+            Assert.Empty(await adminClient.GetStorePaymentMethods(store.Id));
+            var store2 = (await adminClient.CreateStore(new CreateStoreRequest() {Name = "test2"})).Id;
+            var address1 = Guid.NewGuid().ToString("n").Substring(0, 8);
+            var address2 = Guid.NewGuid().ToString("n").Substring(0, 8);
+            
+            Assert.Empty(await  adminClient.GetStoreLightningAddresses(store.Id));
+            Assert.Empty(await  adminClient.GetStoreLightningAddresses(store2));
+            await adminClient.AddOrUpdateStoreLightningAddress(store.Id, address1, new LightningAddressData());
+           
+            await adminClient.AddOrUpdateStoreLightningAddress(store.Id, address1, new LightningAddressData()
+            {
+                Max = 1
+            });
+            await AssertAPIError("username-already-used", async () =>
+            {
+                await adminClient.AddOrUpdateStoreLightningAddress(store2, address1, new LightningAddressData());
+            });
+            Assert.Equal(1,Assert.Single(await adminClient.GetStoreLightningAddresses(store.Id)).Max);
+            Assert.Empty(await  adminClient.GetStoreLightningAddresses(store2));
+
+            await adminClient.AddOrUpdateStoreLightningAddress(store2, address2, new LightningAddressData());
+
+            Assert.Single(await adminClient.GetStoreLightningAddresses(store.Id));
+            Assert.Single(await adminClient.GetStoreLightningAddresses(store2));
+            await AssertHttpError(404, async () =>
+            {
+                await adminClient.RemoveStoreLightningAddress(store2, address1);
+            });
+            await adminClient.RemoveStoreLightningAddress(store2, address2);
+            
+            Assert.Empty(await  adminClient.GetStoreLightningAddresses(store2));
+        }
+
         [Fact(Timeout = 60 * 2 * 1000)]
         [Trait("Integration", "Integration")]
         public async Task StoreUsersAPITest()

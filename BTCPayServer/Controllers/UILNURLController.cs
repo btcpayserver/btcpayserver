@@ -30,6 +30,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using NBitcoin;
 using Newtonsoft.Json;
+using LightningAddressData = BTCPayServer.Data.LightningAddressData;
 using MarkPayoutRequest = BTCPayServer.HostedServices.MarkPayoutRequest;
 
 namespace BTCPayServer

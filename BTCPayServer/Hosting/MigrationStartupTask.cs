@@ -33,6 +33,7 @@ using NBXplorer;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using PeterO.Cbor;
+using LightningAddressData = BTCPayServer.Data.LightningAddressData;
 using PayoutData = BTCPayServer.Data.PayoutData;
 using PullPaymentData = BTCPayServer.Data.PullPaymentData;
 using StoreData = BTCPayServer.Data.StoreData;

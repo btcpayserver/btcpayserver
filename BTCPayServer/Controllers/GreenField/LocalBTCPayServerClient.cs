@@ -26,6 +26,7 @@ using NBXplorer.Models;
 using Newtonsoft.Json.Linq;
 using InvoiceData = BTCPayServer.Client.Models.InvoiceData;
 using Language = BTCPayServer.Client.Models.Language;
+using LightningAddressData = BTCPayServer.Client.Models.LightningAddressData;
 using NotificationData = BTCPayServer.Client.Models.NotificationData;
 using PaymentRequestData = BTCPayServer.Client.Models.PaymentRequestData;
 using PayoutData = BTCPayServer.Client.Models.PayoutData;
@@ -1231,6 +1232,28 @@ namespace BTCPayServer.Controllers.Greenfield
             CancellationToken cancellationToken = default)
         {
             return GetFromActionResult<PayoutData>(await GetController<GreenfieldPullPaymentController>().GetStorePayout(storeId, payoutId));
+        }
+
+        public override async Task<LightningAddressData[]> GetStoreLightningAddresses(string storeId,
+            CancellationToken token = default)
+        {
+            return GetFromActionResult<LightningAddressData[]>(await GetController<GreenfieldStoreLightningAddressesController>().GetStoreLightningAddresses(storeId));
+        }
+
+        public override async Task<LightningAddressData> GetStoreLightningAddress(string storeId, string username, CancellationToken token = default)
+        {
+            return GetFromActionResult<LightningAddressData>(await GetController<GreenfieldStoreLightningAddressesController>().GetStoreLightningAddress(storeId, username));
+        }
+
+        public override async Task<LightningAddressData> AddOrUpdateStoreLightningAddress(string storeId, string username, LightningAddressData data,
+            CancellationToken token = default)
+        {
+            return GetFromActionResult<LightningAddressData>(await GetController<GreenfieldStoreLightningAddressesController>().AddOrUpdateStoreLightningAddress(storeId, username, data));
+        }
+
+        public override async Task RemoveStoreLightningAddress(string storeId, string username, CancellationToken token = default)
+        {
+            HandleActionResult(await GetController<GreenfieldStoreLightningAddressesController>().RemoveStoreLightningAddress(storeId, username));
         }
     }
 }

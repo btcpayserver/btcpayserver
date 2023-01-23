@@ -63,23 +63,24 @@ namespace BTCPayServer.Payments.Bitcoin
             model.FeeRate = ((BitcoinLikeOnChainPaymentMethod)paymentMethod.GetPaymentMethodDetails()).GetFeeRate();
             model.PaymentMethodName = GetPaymentMethodName(network);
 
-            var lightningFallback = "";
+            string lightningFallback = null;
             if (model.Activated && network.SupportLightning && storeBlob.OnChainWithLnInvoiceFallback)
             {
                 var lightningInfo = invoiceResponse.CryptoInfo.FirstOrDefault(a =>
                     a.GetpaymentMethodId() == new PaymentMethodId(model.CryptoCode, PaymentTypes.LightningLike));
-                if (!string.IsNullOrEmpty(lightningInfo?.PaymentUrls?.BOLT11))
-                    lightningFallback = "&" + lightningInfo.PaymentUrls.BOLT11
-                        .Replace("lightning:", "lightning=", StringComparison.OrdinalIgnoreCase)
-                        .ToUpperInvariant();
+                lightningFallback = lightningInfo?.PaymentUrls?.BOLT11.Replace("lightning:", "lightning=", StringComparison.OrdinalIgnoreCase);
             }
 
             if (model.Activated)
             {
-                model.InvoiceBitcoinUrl = (cryptoInfo.PaymentUrls?.BIP21 ?? "") + lightningFallback;
-                model.InvoiceBitcoinUrlQR = (cryptoInfo.PaymentUrls?.BIP21 ?? "") + lightningFallback
-                    .Replace("LIGHTNING=", "lightning=", StringComparison.OrdinalIgnoreCase);
-
+                model.InvoiceBitcoinUrl = model.InvoiceBitcoinUrlQR = cryptoInfo.PaymentUrls?.BIP21 ?? "";
+                
+                if (!string.IsNullOrEmpty(lightningFallback))
+                {
+                    model.InvoiceBitcoinUrl += $"&{lightningFallback}";
+                    model.InvoiceBitcoinUrlQR += $"&{lightningFallback.ToUpperInvariant().Replace("LIGHTNING=", "lightning=", StringComparison.OrdinalIgnoreCase)}";
+                }
+                
                 // Most wallets still don't support BITCOIN: schema, so we're leaving this for better days
                 // Ref: https://github.com/btcpayserver/btcpayserver/pull/2060#issuecomment-723828348
                 //model.InvoiceBitcoinUrlQR = cryptoInfo.PaymentUrls.BIP21
@@ -96,11 +97,8 @@ namespace BTCPayServer.Payments.Bitcoin
             }
             else
             {
-                model.InvoiceBitcoinUrl = "";
-                model.InvoiceBitcoinUrlQR = "";
+                model.InvoiceBitcoinUrl = model.InvoiceBitcoinUrlQR = string.Empty;
             }
-
-
         }
 
         public override string GetCryptoImage(PaymentMethodId paymentMethodId)

@@ -11,6 +11,9 @@ namespace BTCPayServer.Services.Rates
     public class BitbankRateProvider : IRateProvider
     {
         private readonly HttpClient _httpClient;
+
+        public RateSourceInfo RateSourceInfo => new("bitbank", "Bitbank", "https://public.bitbank.cc/tickers");
+
         public BitbankRateProvider(HttpClient httpClient)
         {
             _httpClient = httpClient ?? new HttpClient();

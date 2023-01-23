@@ -15,6 +15,8 @@ namespace BTCPayServer.Services.Rates
             _httpClient = httpClient ?? new HttpClient();
         }
 
+        public RateSourceInfo RateSourceInfo => new("argoneum", "Argoneum", "https://rates.argoneum.net/rates");
+
         public async Task<PairRate[]> GetRatesAsync(CancellationToken cancellationToken)
         {
             // Example result: AGM to BTC rate: {"agm":5000000.000000}

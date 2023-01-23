@@ -14,6 +14,8 @@ public class BudaRateProvider : IRateProvider
         _httpClient = httpClient ?? new HttpClient();
     }
 
+    public RateSourceInfo RateSourceInfo => new RateSourceInfo("buda", "Buda", "https://www.buda.com/api/v2/markets/btc-clp/ticker");
+
     public async Task<PairRate[]> GetRatesAsync(CancellationToken cancellationToken)
     {
         var response = await _httpClient.GetAsync("https://www.buda.com/api/v2/markets/btc-clp/ticker", cancellationToken);

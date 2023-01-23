@@ -19,7 +19,7 @@ namespace BTCPayServer.Models.StoreViewModels
 
         public void SetExchangeRates(IEnumerable<AvailableRateProvider> supportedList, string preferredExchange)
         {
-            supportedList = supportedList.Select(a => new AvailableRateProvider(a.Id, a.SourceId, a.DisplayName, a.Url, a.Source)).ToArray();
+            supportedList = supportedList.Select(a => new AvailableRateProvider(a.Id, a.DisplayName, a.Url, a.Source)).ToArray();
             var chosen = supportedList.FirstOrDefault(f => f.Id == preferredExchange) ?? supportedList.FirstOrDefault();
             Exchanges = new SelectList(supportedList, nameof(chosen.Id), nameof(chosen.Name), chosen);
             PreferredExchange = chosen?.Id;

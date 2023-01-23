@@ -57,7 +57,7 @@ namespace BTCPayServer.Controllers.GreenField
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie + "," + AuthenticationSchemes.Greenfield)]
         public ActionResult<List<RateSource>> GetRateSources()
         {
-            return Ok(_rateProviderFactory.RateProviderFactory.GetSupportedExchanges().Select(provider =>
+            return Ok(_rateProviderFactory.RateProviderFactory.AvailableRateProviders.Select(provider =>
                 new RateSource() { Id = provider.Id, Name = provider.DisplayName }));
         }
 
@@ -180,7 +180,7 @@ $"The preferredSource is required if you aren't using custom scripts");
 
                 configuration.PreferredSource = _rateProviderFactory
                     .RateProviderFactory
-                    .GetSupportedExchanges()
+                    .AvailableRateProviders
                     .FirstOrDefault(s =>
                         s.Id.Equals(configuration.PreferredSource,
                             StringComparison.InvariantCultureIgnoreCase))?.Id;

@@ -98,7 +98,7 @@ namespace BTCPayServer.Controllers
         private SelectList GetExchangesSelectList(string selected)
         {
             var exchanges = _rateFactory.RateProviderFactory
-                .GetSupportedExchanges()
+                .AvailableRateProviders
                 .Where(r => !string.IsNullOrWhiteSpace(r.Name))
                 .OrderBy(s => s.Id, StringComparer.OrdinalIgnoreCase)
                 .ToList();

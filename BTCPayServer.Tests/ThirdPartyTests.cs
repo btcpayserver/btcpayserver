@@ -78,7 +78,7 @@ namespace BTCPayServer.Tests
             string[] brokenShitcoinCasinos = { };
             var skipped = 0;
             var factory = FastTests.CreateBTCPayRateFactory();
-            var directlySupported = factory.GetSupportedExchanges().Where(s => s.Source == RateSource.Direct)
+            var directlySupported = factory.AvailableRateProviders.Where(s => s.Source == RateSource.Direct)
                 .Select(s => s.Id).ToHashSet();
             foreach (var result in factory
                 .Providers

@@ -15,6 +15,8 @@ namespace BTCPayServer.Services.Rates
             _httpClient = httpClient ?? new HttpClient();
         }
 
+        public RateSourceInfo RateSourceInfo => new RateSourceInfo("bitflyer", "Bitflyer", "https://api.bitflyer.com/v1/ticker");
+
         public async Task<PairRate[]> GetRatesAsync(CancellationToken cancellationToken)
         {
             var response = await _httpClient.GetAsync("https://api.bitflyer.jp/v1/ticker", cancellationToken);

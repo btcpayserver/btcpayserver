@@ -19,6 +19,9 @@ namespace BTCPayServer.Rating.Providers
             public decimal? ask { get; set; }
         }
         private readonly HttpClient _httpClient;
+
+        public RateSourceInfo RateSourceInfo => new RateSourceInfo("btcturk", "BtcTurk", "https://api.btcturk.com/api/v2/ticker");
+
         public BtcTurkRateProvider(HttpClient httpClient)
         {
             _httpClient = httpClient ?? new HttpClient();

@@ -88,7 +88,6 @@ namespace BTCPayServer.Payments.Bitcoin
                 //
                 // The keys (e.g. "bitcoin:" or "lightning=" should be lowercase!
 
-
                 // cryptoInfo.PaymentUrls?.BIP21: bitcoin:bcrt1qxp2qa5?amount=0.00044007
                 model.InvoiceBitcoinUrl = model.InvoiceBitcoinUrlQR = cryptoInfo.PaymentUrls?.BIP21 ?? "";
                 // model.InvoiceBitcoinUrl: bitcoin:bcrt1qxp2qa5?amount=0.00044007
@@ -96,15 +95,17 @@ namespace BTCPayServer.Payments.Bitcoin
 
                 if (!string.IsNullOrEmpty(lightningFallback))
                 {
-                    model.InvoiceBitcoinUrl += $"&{lightningFallback}";
+                    var delimiterUrl = model.InvoiceBitcoinUrl.Contains("?") ? "&" : "?";
+                    model.InvoiceBitcoinUrl += $"{delimiterUrl}{lightningFallback}";
                     // model.InvoiceBitcoinUrl: bitcoin:bcrt1qxp2qa5dhn7?amount=0.00044007&lightning=lnbcrt440070n1...
-                    model.InvoiceBitcoinUrlQR += $"&{lightningFallback.ToUpperInvariant().Replace("LIGHTNING=", "lightning=", StringComparison.OrdinalIgnoreCase)}";
-                    // model.InvoiceBitcoinUrlQR: bitcoin:bcrt1qxp2qa5dhn7?amount=0.00044007&LIGHTNING=LNBCRT4400...
+                    
+                    var delimiterUrlQR = model.InvoiceBitcoinUrlQR.Contains("?") ? "&" : "?";
+                    model.InvoiceBitcoinUrlQR += $"{delimiterUrlQR}{lightningFallback.ToUpperInvariant().Replace("LIGHTNING=", "lightning=", StringComparison.OrdinalIgnoreCase)}";
+                    // model.InvoiceBitcoinUrlQR: bitcoin:bcrt1qxp2qa5dhn7?amount=0.00044007&lightning=LNBCRT4400...
                 }
 
                 if (network.CryptoCode.Equals("BTC", StringComparison.InvariantCultureIgnoreCase) && _bech32Prefix.TryGetValue(model.CryptoCode, out var prefix) && model.BtcAddress.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
                 {
-                    
                     model.InvoiceBitcoinUrlQR = model.InvoiceBitcoinUrlQR.Replace(
                         $"{network.NBitcoinNetwork.UriScheme}:{model.BtcAddress}", $"{network.NBitcoinNetwork.UriScheme}:{model.BtcAddress.ToUpperInvariant()}",
                         StringComparison.OrdinalIgnoreCase);

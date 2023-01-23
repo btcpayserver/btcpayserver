@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
+using BTCPayServer.Common;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Logging;
@@ -68,8 +69,13 @@ namespace BTCPayServer.Payments.Bitcoin
             {
                 var lightningInfo = invoiceResponse.CryptoInfo.FirstOrDefault(a =>
                     a.GetpaymentMethodId() == new PaymentMethodId(model.CryptoCode, PaymentTypes.LightningLike));
+
+
                 // Turn the colon into an equal sign to trun the whole into the lightning part of the query string
+
+                // lightningInfo?.PaymentUrls?.BOLT11:  lightning:lnbcrt440070n1p3ua9np...
                 lightningFallback = lightningInfo?.PaymentUrls?.BOLT11.Replace("lightning:", "lightning=", StringComparison.OrdinalIgnoreCase);
+                // lightningFallback: lightning=lnbcrt440070n1p3ua9np...
             }
 
             if (model.Activated)
@@ -81,25 +87,28 @@ namespace BTCPayServer.Payments.Bitcoin
                 // - uppercase in QR version
                 //
                 // The keys (e.g. "bitcoin:" or "lightning=" should be lowercase!
-                //
-                // Most wallets still don't support BITCOIN: schema, so we're leaving this for better days
-                // Ref: https://github.com/btcpayserver/btcpayserver/pull/2060#issuecomment-723828348
-                //model.InvoiceBitcoinUrlQR = cryptoInfo.PaymentUrls.BIP21
-                //    .Replace("bitcoin:", "BITCOIN:", StringComparison.OrdinalIgnoreCase)
+
+
+                // cryptoInfo.PaymentUrls?.BIP21: bitcoin:bcrt1qxp2qa5?amount=0.00044007
                 model.InvoiceBitcoinUrl = model.InvoiceBitcoinUrlQR = cryptoInfo.PaymentUrls?.BIP21 ?? "";
-                
+                // model.InvoiceBitcoinUrl: bitcoin:bcrt1qxp2qa5?amount=0.00044007
+                // model.InvoiceBitcoinUrlQR: bitcoin:bcrt1qxp2qa5?amount=0.00044007
+
                 if (!string.IsNullOrEmpty(lightningFallback))
                 {
                     model.InvoiceBitcoinUrl += $"&{lightningFallback}";
+                    // model.InvoiceBitcoinUrl: bitcoin:bcrt1qxp2qa5dhn7?amount=0.00044007&lightning=lnbcrt440070n1...
                     model.InvoiceBitcoinUrlQR += $"&{lightningFallback.ToUpperInvariant().Replace("LIGHTNING=", "lightning=", StringComparison.OrdinalIgnoreCase)}";
+                    // model.InvoiceBitcoinUrlQR: bitcoin:bcrt1qxp2qa5dhn7?amount=0.00044007&LIGHTNING=LNBCRT4400...
                 }
-                
+
                 if (network.CryptoCode.Equals("BTC", StringComparison.InvariantCultureIgnoreCase) && _bech32Prefix.TryGetValue(model.CryptoCode, out var prefix) && model.BtcAddress.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
                 {
+                    
                     model.InvoiceBitcoinUrlQR = model.InvoiceBitcoinUrlQR.Replace(
                         $"{network.NBitcoinNetwork.UriScheme}:{model.BtcAddress}", $"{network.NBitcoinNetwork.UriScheme}:{model.BtcAddress.ToUpperInvariant()}",
-                        StringComparison.OrdinalIgnoreCase
-                    );
+                        StringComparison.OrdinalIgnoreCase);
+                    // model.InvoiceBitcoinUrlQR: bitcoin:BCRT1QXP2QA5DHN...?amount=0.00044007&lightning=LNBCRT4400...
                 }
             }
             else

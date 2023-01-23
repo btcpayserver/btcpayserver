@@ -651,12 +651,13 @@ namespace BTCPayServer.Controllers
             if (paymentMethodId is null)
             {
                 var enabledPaymentIds = store.GetEnabledPaymentIds(_NetworkProvider)
-                    // Exclude LNURL for Checkout v2
-                    .Where(pmId => storeBlob.CheckoutType == CheckoutType.V1 || pmId.PaymentType is not LNURLPayPaymentType)
+                    // Exclude LNURL for Checkout v2 + non-top up invoices
+                    .Where(pmId => storeBlob.CheckoutType == CheckoutType.V1 || 
+                                   pmId.PaymentType is not LNURLPayPaymentType || invoice.IsUnsetTopUp())
                     .ToArray();
 
                 // Exclude Lightning if OnChainWithLnInvoiceFallback is active and we have both payment methods
-                if (storeBlob.CheckoutType == CheckoutType.V2 && storeBlob.OnChainWithLnInvoiceFallback &&
+                if (storeBlob is { CheckoutType: CheckoutType.V2, OnChainWithLnInvoiceFallback: true } &&
                     enabledPaymentIds.Contains(btcId) && enabledPaymentIds.Contains(lnId))
                 {
                     enabledPaymentIds = enabledPaymentIds.Where(pmId => pmId != lnId).ToArray();
@@ -800,8 +801,10 @@ namespace BTCPayServer.Controllers
                 StoreId = store.Id,
                 AvailableCryptos = invoice.GetPaymentMethods()
                                           .Where(i => i.Network != null &&
-                                              // Exclude LNURL for Checkout v2
-                                              (storeBlob.CheckoutType == CheckoutType.V1 || i.GetId().PaymentType is not LNURLPayPaymentType))
+                                              // Exclude LNURL for Checkout v2 + non-top up invoices
+                                              (storeBlob.CheckoutType == CheckoutType.V1 ||
+                                               i.GetId().PaymentType is not LNURLPayPaymentType ||
+                                               invoice.IsUnsetTopUp()))
                                           .Select(kv =>
                                           {
                                               var availableCryptoPaymentMethodId = kv.GetId();
@@ -827,7 +830,7 @@ namespace BTCPayServer.Controllers
             };
 
             // Exclude Lightning if OnChainWithLnInvoiceFallback is active and we have both payment methods
-            if (storeBlob.CheckoutType == CheckoutType.V2 && storeBlob.OnChainWithLnInvoiceFallback)
+            if (storeBlob is { CheckoutType: CheckoutType.V2, OnChainWithLnInvoiceFallback: true })
             {
                 var onchainPM = model.AvailableCryptos.Find(c => c.PaymentMethodId == btcId.ToString());
                 var lightningPM = model.AvailableCryptos.Find(c => c.PaymentMethodId == lnId.ToString());

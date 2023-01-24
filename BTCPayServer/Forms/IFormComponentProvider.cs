@@ -9,12 +9,18 @@ public interface IFormComponentProvider
     string View { get; }
     void Validate(Form form, Field field);
     void Register(Dictionary<string, IFormComponentProvider> typeToComponentProvider);
+    string GetValue(Form form, Field field);
 }
 
 public abstract class FormComponentProviderBase : IFormComponentProvider
 {
     public abstract string View { get; }
     public abstract void Register(Dictionary<string, IFormComponentProvider> typeToComponentProvider);
+    public virtual string GetValue(Form form, Field field)
+    {
+        return field.Value;
+    }
+
     public abstract void Validate(Form form, Field field);
 
     public void ValidateField<T>(Field field) where T : ValidationAttribute, new()

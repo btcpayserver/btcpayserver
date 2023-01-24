@@ -871,6 +871,14 @@ namespace BTCPayServer.Controllers.Greenfield
                         paymentMethod.Enabled)));
         }
 
+        public override async Task<CurrencyPairRate> GetRates(string storeId, string currencyPair,
+            CancellationToken token = default
+        )
+        {
+            return GetFromActionResult<CurrencyPairRate>(
+                await GetController<GreenfieldStoresController>().GetRates(storeId, currencyPair));
+        }
+
         public override async Task<IEnumerable<InvoiceData>> GetInvoices(string storeId, string[] orderId = null,
             InvoiceStatus[] status = null,
             DateTimeOffset? startDate = null,

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
@@ -8,14 +9,14 @@ using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Payments;
-using BTCPayServer.Security;
+using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
+using BTCPayServer.Rating;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Controllers.Greenfield
 {
@@ -24,14 +25,27 @@ namespace BTCPayServer.Controllers.Greenfield
     [EnableCors(CorsPolicies.All)]
     public class GreenfieldStoresController : ControllerBase
     {
+        private readonly RateFetcher _rateProvider;
         private readonly StoreRepository _storeRepository;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
+        readonly CurrencyNameTable _currencyNameTable;
 
-        public GreenfieldStoresController(StoreRepository storeRepository, UserManager<ApplicationUser> userManager)
+        public GreenfieldStoresController(
+            RateFetcher rateProvider,
+            StoreRepository storeRepository,
+            UserManager<ApplicationUser> userManager,
+            BTCPayNetworkProvider btcPayNetworkProvider,
+            CurrencyNameTable currencyNameTable
+        )
         {
+            _rateProvider = rateProvider;
             _storeRepository = storeRepository;
             _userManager = userManager;
+            _btcPayNetworkProvider = btcPayNetworkProvider;
+            _currencyNameTable = currencyNameTable;
         }
+
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores")]
         public Task<ActionResult<IEnumerable<Client.Models.StoreData>>> GetStores()
@@ -109,6 +123,39 @@ namespace BTCPayServer.Controllers.Greenfield
             ToModel(request, store, defaultPaymentMethodId);
             await _storeRepository.UpdateStore(store);
             return Ok(FromModel(store));
+        }
+
+        [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [HttpGet("~/api/v1/stores/{storeId}/rates/{currencyPair}")]
+        public async Task<IActionResult> GetRates(string storeId, string currencyPair, CancellationToken cancellationToken = default)
+        {
+            var store = HttpContext.GetStoreData();
+            if (store == null)
+            {
+                return StoreNotFound();
+            }
+
+            if (!CurrencyPair.TryParse(currencyPair, out var pair))
+            {
+                ModelState.AddModelError(nameof(currencyPair), $"Currency pair {currencyPair} incorrectly formatted");
+
+                return this.CreateValidationError(ModelState);
+            }
+
+            var rate = await _rateProvider.FetchRate(
+                pair,
+                store.GetStoreBlob().GetRateRules(_btcPayNetworkProvider),
+                cancellationToken
+            );
+
+            return Ok(new CurrencyPairRate
+            {
+                CryptoCode = pair.Left,
+                Code = pair.Right,
+                CurrencyPair = pair.ToString(),
+                Name = _currencyNameTable.GetCurrencyData(pair.Right, true).Name,
+                Value = rate.BidAsk.Bid
+            });
         }
 
         private Client.Models.StoreData FromModel(Data.StoreData data)

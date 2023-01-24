@@ -8,16 +8,15 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Models;
 using BTCPayServer.Rating;
 using BTCPayServer.Security;
-using BTCPayServer.Security.Bitpay;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
 
 namespace BTCPayServer.Controllers
 {
@@ -31,7 +30,7 @@ namespace BTCPayServer.Controllers
         readonly CurrencyNameTable _currencyNameTable;
         readonly StoreRepository _storeRepo;
 
-        private StoreData CurrentStore => HttpContext.GetStoreData();
+        private BTCPayServer.Data.StoreData CurrentStore => HttpContext.GetStoreData();
 
         public BitpayRateController(
             RateFetcher rateProviderFactory,
@@ -58,8 +57,8 @@ namespace BTCPayServer.Controllers
             var currencypairs = BuildCurrencyPairs(currencyCodes, baseCurrency);
 
             var result = await GetRates2(currencypairs, null, cancellationToken);
-            var rates = (result as JsonResult)?.Value as Rate[];
-            return rates == null ? result : Json(new DataWrapper<Rate[]>(rates));
+            var rates = (result as JsonResult)?.Value as CurrencyPairRate[];
+            return rates == null ? result : Json(new DataWrapper<CurrencyPairRate[]>(rates));
         }
 
         [HttpGet("rates/{baseCurrency}/{currency}")]
@@ -67,9 +66,9 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> GetCurrencyPairRate(string baseCurrency, string currency, CancellationToken cancellationToken)
         {
             var result = await GetRates2($"{baseCurrency}_{currency}", null, cancellationToken);
-            return (result as JsonResult)?.Value is not Rate[] rates
+            return (result as JsonResult)?.Value is not CurrencyPairRate[] rates 
                 ? result
-                : Json(new DataWrapper<Rate>(rates.First()));
+                : Json(new DataWrapper<CurrencyPairRate>(rates.First()));
         }
 
         [HttpGet("rates")]
@@ -77,9 +76,9 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> GetRates(string currencyPairs, string storeId = null, CancellationToken cancellationToken = default)
         {
             var result = await GetRates2(currencyPairs, storeId, cancellationToken);
-            return (result as JsonResult)?.Value is not Rate[] rates
+            return (result as JsonResult)?.Value is not CurrencyPairRate[] rates
                 ? result
-                : Json(new DataWrapper<Rate[]>(rates));
+                : Json(new DataWrapper<CurrencyPairRate[]>(rates));
         }
 
         [AllowAnonymous]
@@ -123,7 +122,7 @@ namespace BTCPayServer.Controllers
                             .Select(r => (Pair: r, Value: fetching[r].GetAwaiter().GetResult().BidAsk?.Bid))
                             .Where(r => r.Value.HasValue)
                             .Select(r =>
-                            new Rate
+                            new CurrencyPairRate
                             {
                                 CryptoCode = r.Pair.Left,
                                 Code = r.Pair.Right,
@@ -145,25 +144,6 @@ namespace BTCPayServer.Controllers
                 currencyPairsBuilder.Append(CultureInfo.InvariantCulture, $"{baseCrypto}_{currencyCode}");
             }
             return currencyPairsBuilder.ToString();
-        }
-
-        public class Rate
-        {
-
-            [JsonProperty(PropertyName = "name")]
-            public string Name { get; set; }
-
-            [JsonProperty(PropertyName = "cryptoCode")]
-            public string CryptoCode { get; set; }
-
-            [JsonProperty(PropertyName = "currencyPair")]
-            public string CurrencyPair { get; set; }
-
-            [JsonProperty(PropertyName = "code")]
-            public string Code { get; set; }
-
-            [JsonProperty(PropertyName = "rate")]
-            public decimal Value { get; set; }
         }
     }
 }

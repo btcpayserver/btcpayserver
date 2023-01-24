@@ -47,5 +47,10 @@ namespace BTCPayServer.Client
             return await HandleResponse<StoreData>(response);
         }
 
+        public virtual async Task<CurrencyPairRate> GetRates(string storeId, string currencyPair, CancellationToken token = default)
+        {
+            var response = await _httpClient.SendAsync(CreateHttpRequest($"api/v1/stores/{storeId}/rates/{currencyPair}"), token);
+            return await HandleResponse<CurrencyPairRate>(response);
+        }
     }
 }

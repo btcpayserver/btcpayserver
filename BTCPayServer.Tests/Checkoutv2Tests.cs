@@ -152,7 +152,7 @@ namespace BTCPayServer.Tests
             Assert.Empty(s.Driver.FindElements(By.CssSelector(".payment-method")));
             payUrl = s.Driver.FindElement(By.CssSelector(".btn-primary")).GetAttribute("href");
             Assert.StartsWith("bitcoin:", payUrl);
-            Assert.Contains("&LIGHTNING=", payUrl);
+            Assert.Contains("&lightning=", payUrl);
 
             // BIP21 with LN as default payment method
             s.GoToHome();
@@ -161,7 +161,7 @@ namespace BTCPayServer.Tests
             Assert.Empty(s.Driver.FindElements(By.CssSelector(".payment-method")));
             payUrl = s.Driver.FindElement(By.CssSelector(".btn-primary")).GetAttribute("href");
             Assert.StartsWith("bitcoin:", payUrl);
-            Assert.Contains("&LIGHTNING=", payUrl);
+            Assert.Contains("&lightning=", payUrl);
 
             // BIP21 with topup invoice (which is only available with Bitcoin onchain)
             s.GoToHome();
@@ -170,7 +170,7 @@ namespace BTCPayServer.Tests
             Assert.Empty(s.Driver.FindElements(By.CssSelector(".payment-method")));
             payUrl = s.Driver.FindElement(By.CssSelector(".btn-primary")).GetAttribute("href");
             Assert.StartsWith("bitcoin:", payUrl);
-            Assert.DoesNotContain("&LIGHTNING=", payUrl);
+            Assert.DoesNotContain("&lightning=", payUrl);
 
             // Expiry message should not show amount for topup invoice
             expirySeconds = s.Driver.FindElement(By.Id("ExpirySeconds"));

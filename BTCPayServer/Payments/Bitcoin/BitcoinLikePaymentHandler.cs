@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
+using BTCPayServer.Common;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Logging;
@@ -63,44 +64,58 @@ namespace BTCPayServer.Payments.Bitcoin
             model.FeeRate = ((BitcoinLikeOnChainPaymentMethod)paymentMethod.GetPaymentMethodDetails()).GetFeeRate();
             model.PaymentMethodName = GetPaymentMethodName(network);
 
-            var lightningFallback = "";
+            string lightningFallback = null;
             if (model.Activated && network.SupportLightning && storeBlob.OnChainWithLnInvoiceFallback)
             {
                 var lightningInfo = invoiceResponse.CryptoInfo.FirstOrDefault(a =>
                     a.GetpaymentMethodId() == new PaymentMethodId(model.CryptoCode, PaymentTypes.LightningLike));
-                if (!string.IsNullOrEmpty(lightningInfo?.PaymentUrls?.BOLT11))
-                    lightningFallback = "&" + lightningInfo.PaymentUrls.BOLT11
-                        .Replace("lightning:", "lightning=", StringComparison.OrdinalIgnoreCase)
-                        .ToUpperInvariant();
+
+
+                // Turn the colon into an equal sign to trun the whole into the lightning part of the query string
+
+                // lightningInfo?.PaymentUrls?.BOLT11:  lightning:lnbcrt440070n1p3ua9np...
+                lightningFallback = lightningInfo?.PaymentUrls?.BOLT11.Replace("lightning:", "lightning=", StringComparison.OrdinalIgnoreCase);
+                // lightningFallback: lightning=lnbcrt440070n1p3ua9np...
             }
 
             if (model.Activated)
             {
-                model.InvoiceBitcoinUrl = (cryptoInfo.PaymentUrls?.BIP21 ?? "") + lightningFallback;
-                model.InvoiceBitcoinUrlQR = (cryptoInfo.PaymentUrls?.BIP21 ?? "") + lightningFallback
-                    .Replace("LIGHTNING=", "lightning=", StringComparison.OrdinalIgnoreCase);
-
-                // Most wallets still don't support BITCOIN: schema, so we're leaving this for better days
-                // Ref: https://github.com/btcpayserver/btcpayserver/pull/2060#issuecomment-723828348
-                //model.InvoiceBitcoinUrlQR = cryptoInfo.PaymentUrls.BIP21
-                //    .Replace("bitcoin:", "BITCOIN:", StringComparison.OrdinalIgnoreCase)
-
                 // We're leading the way in Bitcoin community with adding UPPERCASE Bech32 addresses in QR Code
+                //
+                // Correct casing: Addresses in payment URI need to be …
+                // - lowercase in link version
+                // - uppercase in QR version
+                //
+                // The keys (e.g. "bitcoin:" or "lightning=" should be lowercase!
+
+                // cryptoInfo.PaymentUrls?.BIP21: bitcoin:bcrt1qxp2qa5?amount=0.00044007
+                model.InvoiceBitcoinUrl = model.InvoiceBitcoinUrlQR = cryptoInfo.PaymentUrls?.BIP21 ?? "";
+                // model.InvoiceBitcoinUrl: bitcoin:bcrt1qxp2qa5?amount=0.00044007
+                // model.InvoiceBitcoinUrlQR: bitcoin:bcrt1qxp2qa5?amount=0.00044007
+
+                if (!string.IsNullOrEmpty(lightningFallback))
+                {
+                    var delimiterUrl = model.InvoiceBitcoinUrl.Contains("?") ? "&" : "?";
+                    model.InvoiceBitcoinUrl += $"{delimiterUrl}{lightningFallback}";
+                    // model.InvoiceBitcoinUrl: bitcoin:bcrt1qxp2qa5dhn7?amount=0.00044007&lightning=lnbcrt440070n1...
+                    
+                    var delimiterUrlQR = model.InvoiceBitcoinUrlQR.Contains("?") ? "&" : "?";
+                    model.InvoiceBitcoinUrlQR += $"{delimiterUrlQR}{lightningFallback.ToUpperInvariant().Replace("LIGHTNING=", "lightning=", StringComparison.OrdinalIgnoreCase)}";
+                    // model.InvoiceBitcoinUrlQR: bitcoin:bcrt1qxp2qa5dhn7?amount=0.00044007&lightning=LNBCRT4400...
+                }
+
                 if (network.CryptoCode.Equals("BTC", StringComparison.InvariantCultureIgnoreCase) && _bech32Prefix.TryGetValue(model.CryptoCode, out var prefix) && model.BtcAddress.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
                 {
                     model.InvoiceBitcoinUrlQR = model.InvoiceBitcoinUrlQR.Replace(
                         $"{network.NBitcoinNetwork.UriScheme}:{model.BtcAddress}", $"{network.NBitcoinNetwork.UriScheme}:{model.BtcAddress.ToUpperInvariant()}",
-                        StringComparison.OrdinalIgnoreCase
-                    );
+                        StringComparison.OrdinalIgnoreCase);
+                    // model.InvoiceBitcoinUrlQR: bitcoin:BCRT1QXP2QA5DHN...?amount=0.00044007&lightning=LNBCRT4400...
                 }
             }
             else
             {
-                model.InvoiceBitcoinUrl = "";
-                model.InvoiceBitcoinUrlQR = "";
+                model.InvoiceBitcoinUrl = model.InvoiceBitcoinUrlQR = string.Empty;
             }
-
-
         }
 
         public override string GetCryptoImage(PaymentMethodId paymentMethodId)

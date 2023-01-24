@@ -82,8 +82,8 @@
         </div>
     </div>
     <div class="row">
-        <div class="col-xl-8 col-xxl-constrain">
-            <h3 class="mt-5 mb-4">Appearance</h3>
+        <div class="col-sm-10 col-md-9 col-xl-7 col-xxl-6">
+            <h3 class="mt-5 mb-4">Checkout</h3>
             <div class="form-group" id="button-price-text">
                 <label asp-for="ButtonText" class="form-label" data-required></label>
                 <input asp-for="ButtonText" class="form-control" required />
@@ -94,52 +94,43 @@
                 <select asp-for="FormId" class="form-select w-auto" asp-items="@checkoutFormOptions"></select>
                 <span asp-validation-for="FormId" class="text-danger"></span>
             </div>
-            <section id="discounts" class="p-0">
-                <h3 class="mt-5 mb-4">Discounts</h3>
-                <div class="form-group d-flex align-items-center">
-                    <input asp-for="ShowDiscount" type="checkbox" class="btcpay-toggle me-3" />
-                    <div>
-                        <label asp-for="ShowDiscount" class="form-label mb-0"></label>
-                        <div class="text-muted">Not recommended for customer self-checkout.</div>
-                    </div>
-                    <span asp-validation-for="ShowDiscount" class="text-danger"></span>
+            <div class="form-group d-flex align-items-center">
+                <input asp-for="ShowDiscount" type="checkbox" class="btcpay-toggle me-3" />
+                <div>
+                    <label asp-for="ShowDiscount" class="form-label mb-0"></label>
+                    <div class="text-muted">Not recommended for customer self-checkout.</div>
                 </div>
-            </section>
-            <section id="custom-payments" class="p-0">
-                <h3 class="mt-5 mb-4">Custom Payments</h3>
-                <div class="form-group mb-4 d-flex align-items-center">
-                    <input asp-for="ShowCustomAmount" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#CustomAmountSettings" aria-expanded="@Model.ShowCustomAmount" aria-controls="CustomAmountSettings"/>
-                    <label asp-for="ShowCustomAmount" class="form-label mb-0"></label>
-                    <span asp-validation-for="ShowCustomAmount" class="text-danger"></span>
+                <span asp-validation-for="ShowDiscount" class="text-danger"></span>
+            </div>
+            <div class="form-group mb-4 d-flex align-items-center">
+                <input asp-for="ShowCustomAmount" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#CustomAmountSettings" aria-expanded="@Model.ShowCustomAmount" aria-controls="CustomAmountSettings"/>
+                <label asp-for="ShowCustomAmount" class="form-label mb-0"></label>
+                <span asp-validation-for="ShowCustomAmount" class="text-danger"></span>
+            </div>
+            <div class="collapse @(Model.ShowCustomAmount ? "show" : "")" id="CustomAmountSettings">
+                <div class="form-group">
+                    <label asp-for="CustomButtonText" class="form-label" data-required></label>
+                    <input asp-for="CustomButtonText" class="form-control" required />
+                    <span asp-validation-for="CustomButtonText" class="text-danger"></span>
                 </div>
-                <div class="collapse @(Model.ShowCustomAmount ? "show" : "")" id="CustomAmountSettings">
-                    <div class="form-group mb-0 pb-3">
-                        <label asp-for="CustomButtonText" class="form-label" data-required></label>
-                        <input asp-for="CustomButtonText" class="form-control" required />
-                        <span asp-validation-for="CustomButtonText" class="text-danger"></span>
-                    </div>
+            </div>
+            <div class="form-group d-flex align-items-center pt-2">
+                <input asp-for="EnableTips" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#CustomTipsSettings" aria-expanded="@Model.EnableTips" aria-controls="CustomTipsSettings" />
+                <label asp-for="EnableTips" class="form-label mb-0"></label>
+                <span asp-validation-for="EnableTips" class="text-danger"></span>
+            </div>
+            <div class="collapse @(Model.EnableTips ? "show" : "")" id="CustomTipsSettings">
+                <div class="form-group">
+                    <label asp-for="CustomTipText" class="form-label" data-required></label>
+                    <input asp-for="CustomTipText" class="form-control" required />
+                    <span asp-validation-for="CustomTipText" class="text-danger"></span>
                 </div>
-            </section>
-            <section id="tips" class="p-0">
-                <h3 class="mt-5 mb-4">Tips</h3>
-                <div class="form-group d-flex align-items-center">
-                    <input asp-for="EnableTips" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#CustomTipsSettings" aria-expanded="@Model.EnableTips" aria-controls="CustomTipsSettings" />
-                    <label asp-for="EnableTips" class="form-label mb-0"></label>
-                    <span asp-validation-for="EnableTips" class="text-danger"></span>
+                <div class="form-group mb-0">
+                    <label asp-for="CustomTipPercentages" class="form-label"></label>
+                    <input asp-for="CustomTipPercentages" class="form-control" />
+                    <span asp-validation-for="CustomTipPercentages" class="text-danger"></span>
                 </div>
-                <div class="collapse @(Model.EnableTips ? "show" : "")" id="CustomTipsSettings">
-                    <div class="form-group pt-3">
-                        <label asp-for="CustomTipText" class="form-label" data-required></label>
-                        <input asp-for="CustomTipText" class="form-control" required />
-                        <span asp-validation-for="CustomTipText" class="text-danger"></span>
-                    </div>
-                    <div class="form-group mb-0">
-                        <label asp-for="CustomTipPercentages" class="form-label"></label>
-                        <input asp-for="CustomTipPercentages" class="form-control" />
-                        <span asp-validation-for="CustomTipPercentages" class="text-danger"></span>
-                    </div>
-                </div>
-            </section>
+            </div>
         </div>
     </div>
     <div class="row">

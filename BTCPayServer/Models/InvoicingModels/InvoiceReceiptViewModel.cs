@@ -13,7 +13,9 @@ namespace BTCPayServer.Models.InvoicingModels
         public string OrderId { get; set; }
         public string Currency { get; set; }
         public string StoreName { get; set; }
-        public string StoreLogoFileId { get; set; }
+        public string BrandColor { get; set; }
+        public string LogoFileId { get; set; }
+        public string CssFileId { get; set; }
         public decimal Amount { get; set; }
         public DateTimeOffset Timestamp { get; set; }
         public Dictionary<string, object> AdditionalData { get; set; }

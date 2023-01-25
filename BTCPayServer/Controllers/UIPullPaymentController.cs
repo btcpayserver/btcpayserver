@@ -15,6 +15,7 @@ using BTCPayServer.Models.WalletViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Rates;
+using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -29,18 +30,21 @@ namespace BTCPayServer.Controllers
         private readonly PullPaymentHostedService _pullPaymentHostedService;
         private readonly BTCPayNetworkJsonSerializerSettings _serializerSettings;
         private readonly IEnumerable<IPayoutHandler> _payoutHandlers;
+        private readonly StoreRepository _storeRepository;
 
         public UIPullPaymentController(ApplicationDbContextFactory dbContextFactory,
             CurrencyNameTable currencyNameTable,
             PullPaymentHostedService pullPaymentHostedService,
             BTCPayNetworkJsonSerializerSettings serializerSettings,
-            IEnumerable<IPayoutHandler> payoutHandlers)
+            IEnumerable<IPayoutHandler> payoutHandlers,
+            StoreRepository storeRepository)
         {
             _dbContextFactory = dbContextFactory;
             _currencyNameTable = currencyNameTable;
             _pullPaymentHostedService = pullPaymentHostedService;
             _serializerSettings = serializerSettings;
             _payoutHandlers = payoutHandlers;
+            _storeRepository = storeRepository;
         }
 
         [AllowAnonymous]
@@ -53,6 +57,11 @@ namespace BTCPayServer.Controllers
                 return NotFound();
 
             var blob = pp.GetBlob();
+            var store = await _storeRepository.FindStore(pp.StoreId);
+            if (store is null)
+                return NotFound();
+            
+            var storeBlob = store.GetStoreBlob();
             var payouts = (await ctx.Payouts.GetPayoutInPeriod(pp)
                                            .OrderByDescending(o => o.Date)
                                            .ToListAsync())
@@ -68,6 +77,8 @@ namespace BTCPayServer.Controllers
 
             ViewPullPaymentModel vm = new(pp, DateTimeOffset.UtcNow)
             {
+                BrandColor = storeBlob.BrandColor,
+                CssFileId = storeBlob.CssFileId,
                 AmountFormatted = _currencyNameTable.FormatCurrency(blob.Limit, blob.Currency),
                 AmountCollected = totalPaid,
                 AmountCollectedFormatted = _currencyNameTable.FormatCurrency(totalPaid, blob.Currency),

@@ -14,12 +14,10 @@
             margin-bottom: 0;
         }
     }
-    .card { display: inline-block; width: 300px; page-break-inside: avoid; margin: 2em 1em 0 1em; }
 </style>
-
 @{
     var store = await StoreRepository.FindStore(Model.StoreId);
-    Layout = "PointOfSale/Public/_LayoutPos";
+    Layout = "PointOfSale/Public/_Layout";
     Context.Request.Query.TryGetValue("cryptocode", out var cryptoCodeValues);
     var cryptoCode = cryptoCodeValues.FirstOrDefault() ?? "BTC";
     var supported = store.GetSupportedPaymentMethods(BTCPayNetworkProvider).OfType<LNURLPaySupportedPaymentMethod>().OrderBy(method => method.CryptoCode == cryptoCode).FirstOrDefault();
@@ -38,16 +36,25 @@
         </a>
     </div>
 }
-<div class="container d-flex">
-    <div class="justify-content-center align-self-center text-center mx-auto px-2 py-5 w-100 m-auto">
-        <h1 class="mb-4">@Model.Title</h1>
-        @if (!string.IsNullOrEmpty(Model.Description))
-        {
-            <div class="row">
-                <div class="overflow-hidden col-12">@Safe.Raw(Model.Description)</div>
-            </div>
-        }
-
+else
+{
+    <div class="alert alert-info alert-dismissible d-flex align-items-center justify-content-center sticky-top mb-0 rounded-0 d-print-none fade show" role="alert">
+        <button type="button" class="btn btn-info me-4 border border-light" onclick="window.print()">
+            <i class="fa fa-print"></i>&nbsp;Print
+        </button>
+        This view is intended for printing only —
+        
+        <a asp-route-viewType="static" class="alert-link">Regular version</a>
+    </div>
+}
+<div class="container public-page-wrap flex-column">
+    <partial name="_StatusMessage" />
+    <partial name="_StoreHeader" model="(string.IsNullOrEmpty(Model.Title) ? Model.StoreName : Model.Title, Model.LogoFileId)" />
+    @if (!string.IsNullOrEmpty(Model.Description))
+    {
+        <div class="lead text-center">@Safe.Raw(Model.Description)</div>
+    }
+    <main class="flex-grow-1 justify-content-center align-self-center mx-auto py-3">
         @if (supported is not null)
         {
             if (Model.ShowCustomAmount)
@@ -67,17 +74,10 @@
                     }
                 }).ToArray();
             }
-            <div class="alert alert-info alert-dismissible d-flex align-items-center justify-content-center sticky-top mb-0 rounded-0 d-print-none fade show" role="alert">
-                <button type="button" class="btn btn-info me-4 border border-light" onclick="window.print()">
-                    <i class="fa fa-print"></i>&nbsp;Print
-                </button>
-                This view is intended for printing only —
-                <a asp-route-viewType="static" class="alert-link">Regular version</a>
-            </div>
         }
 
-        <div class="container text-center">
-            @for (int x = 0; x < Model.Items.Length; x++)
+        <div class="card-deck mx-auto">
+            @for (var x = 0; x < Model.Items.Length; x++)
             {
                 var item = Model.Items[x];
                 <div class="card" data-id="@x">
@@ -115,12 +115,19 @@
                                     ItemCode = item.Id
                                 }, Context.Request.Scheme, Context.Request.Host.ToString()));
                                 var lnUrl = LNURL.EncodeUri(lnurlEndpoint, "payRequest", supported.UseBech32Scheme);
-                                <a href="@lnUrl" rel="noreferrer noopener"><vc:qr-code data="@lnUrl.ToString().ToUpperInvariant()" /></a>
+                                <a href="@lnUrl" rel="noreferrer noopener" class="d-block mx-auto text-center">
+                                    <vc:qr-code data="@lnUrl.ToString().ToUpperInvariant()" />
+                                </a>
                             }
                         }
                     </div>
                 </div>
             }
         </div>
-    </div>
+    </main>
+    <footer class="store-footer">
+        <a href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">
+            Powered by <partial name="_StoreFooterLogo" />
+        </a>
+    </footer>
 </div>

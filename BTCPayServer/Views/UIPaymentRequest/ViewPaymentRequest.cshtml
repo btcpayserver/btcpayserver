@@ -1,10 +1,8 @@
 @using BTCPayServer.Services.Invoices
 @using BTCPayServer.Client.Models
 @using BTCPayServer.Client
-@using BTCPayServer.Components.ThemeSwitch
 @model BTCPayServer.Models.PaymentRequestViewModels.ViewPaymentRequestViewModel
-@inject BTCPayServer.Services.BTCPayServerEnvironment env
-@inject BTCPayServer.Services.ThemeSettings Theme
+@inject BTCPayServer.Services.BTCPayServerEnvironment Env
 @{
     ViewData["Title"] = Model.Title;
     Layout = null;
@@ -34,17 +32,11 @@
 }
 
 <!DOCTYPE html>
-<html lang="en" @(env.IsDeveloping ? " data-devenv" : "")>
+<html lang="en" @(Env.IsDeveloping ? " data-devenv" : "")>
 <head>
     <partial name="LayoutHead" />
-    <link href="~/vendor/font-awesome/css/font-awesome.min.css" asp-append-version="true"  rel="stylesheet" />
+    <partial name="LayoutHeadStoreBranding" model="@(Model.BrandColor, Model.CssFileId, Model.CustomCSSLink, Model.EmbeddedCSS)" />
     <link href="~/vendor/bootstrap-vue/bootstrap-vue.css" asp-append-version="true"  rel="stylesheet" />
-    <link href="~/main/site.css" asp-append-version="true"  rel="stylesheet" />
-
-    @if (Model.CustomCSSLink != null)
-    {
-        <link href="@Model.CustomCSSLink" rel="stylesheet" asp-append-version="true" />
-    }
     <script type="text/javascript">
         var srvModel = @Safe.Json(Model);
     </script>
@@ -57,7 +49,6 @@
     <script src="~/payment-request/helpers/math.js" asp-append-version="true"></script>
     <script src="~/payment-request/services/listener.js" asp-append-version="true"></script>
     <script src="~/modal/btcpay.js" asp-append-version="true"></script>
-    @Safe.Raw(Model.EmbeddedCSS)
     <style>
         .invoice { margin-top: var(--btcpay-space-s); }
         .invoice + .invoice { margin-top: var(--btcpay-space-m); }
@@ -69,8 +60,8 @@
         }
     </style>
 </head>
-<body>
-    <div id="app" class="min-vh-100 d-flex flex-column">
+<body class="min-vh-100">
+    <div id="app" class="d-flex flex-column min-vh-100 pb-l">
         <nav class="btcpay-header navbar sticky-top py-3 py-lg-4 d-print-block">
             <div class="container">
                 <div class="row align-items-center" style="width:calc(100% + 30px)">
@@ -378,21 +369,15 @@
                 </div>
             </div>
         </main>
-        <footer class="pt-2 pb-4 d-print-none">
-            <p class="container text-center" permission="@Policies.CanModifyStoreSettings">
+        <footer class="store-footer">
+            <p permission="@Policies.CanModifyStoreSettings">
                 <a asp-controller="UIPaymentRequest" asp-action="EditPaymentRequest" asp-route-storeId="@Model.StoreId" asp-route-payReqId="@Model.Id">
                     Edit payment request
                 </a>
             </p>
-            <div class="container d-flex flex-wrap align-items-center justify-content-center">
-                <span class="text-muted mx-2">
-                    Powered by <a href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">BTCPay Server</a>
-                </span>
-                @if (!Theme.CustomTheme)
-                {
-                    <vc:theme-switch css-class="text-muted mx-2" />
-                }
-            </div>
+            <a href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">
+                Powered by <partial name="_StoreFooterLogo" />
+            </a>
         </footer>
     </div>
     <partial name="LayoutFoot"/>

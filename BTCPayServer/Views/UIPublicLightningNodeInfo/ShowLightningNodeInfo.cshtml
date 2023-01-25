@@ -1,10 +1,11 @@
+@inject BTCPayServer.Services.BTCPayServerEnvironment Env
 @model BTCPayServer.Controllers.ShowLightningNodeInfoViewModel
 @{
     Layout = null;
     ViewData["Title"] = $"{Model.StoreName} – {Model.CryptoCode} Lightning Node";
 }
 <!DOCTYPE html>
-<html>
+<html lang="en" @(Env.IsDeveloping ? " data-devenv" : "")>
 <head>
     <partial name="LayoutHead" />
     <link href="~/main/qrcode.css" rel="stylesheet" asp-append-version="true" />

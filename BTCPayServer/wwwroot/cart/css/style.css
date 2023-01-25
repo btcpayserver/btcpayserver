@@ -51,10 +51,6 @@
     background-color: #dee2e6;
 }
 
-#js-cart-confirm {
-    border-radius: 0;
-}
-
 .js-search-reset {
     position: absolute;
     right: 0px;
@@ -74,8 +70,10 @@
 }
 
 #sidebar {
-    width: 400px;
     position: fixed;
+    width: 400px;
+    display: flex;
+    flex-direction: column;
     top: 0;
     right: 0;
     height: 100vh;
@@ -85,6 +83,7 @@
     color: var(--btcpay-white);
     background: var(--btcpay-bg-dark);
     transition: all 0.3s;
+    padding-bottom: var(--btcpay-space-l);
     -webkit-overflow-scrolling: touch;
 }
 

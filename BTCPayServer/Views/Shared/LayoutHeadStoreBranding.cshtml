@@ -1,4 +1,4 @@
-@model (string BrandColor, string CssFileId)
+@model (string BrandColor, string CssFileId, string CustomCSSLink, string EmbeddedCSS)
 @using BTCPayServer.Abstractions.Extensions
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @using BTCPayServer.Abstractions.Contracts
@@ -23,4 +23,13 @@
 @if (!string.IsNullOrEmpty(cssUrl))
 {
     <link href="@cssUrl" asp-append-version="true" rel="stylesheet" />
+}
+@* Deprecated, but added for backwards-compatibility *@
+@if (!string.IsNullOrEmpty(Model.CustomCSSLink))
+{
+    <link href="@Model.CustomCSSLink" asp-append-version="true" rel="stylesheet" />
+}
+@if (!string.IsNullOrEmpty(Model.EmbeddedCSS))
+{
+    @Safe.Raw(Model.EmbeddedCSS)
 }

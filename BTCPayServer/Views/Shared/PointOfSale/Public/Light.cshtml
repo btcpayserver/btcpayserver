@@ -1,18 +1,26 @@
 @model BTCPayServer.Plugins.PointOfSale.Models.ViewPointOfSaleViewModel
 @{
-    Layout = "PointOfSale/Public/_LayoutPos";
+    Layout = "PointOfSale/Public/_Layout";
 }
 
-<partial name="_StatusMessage" />
+<div class="public-page-wrap flex-column">
+    <partial name="_StatusMessage" />
+    <partial name="_StoreHeader" model="(string.IsNullOrEmpty(Model.Title) ? Model.StoreName : Model.Title, Model.LogoFileId)" />
 
-@if (Context.Request.Query.ContainsKey("simple"))
-{
-    <partial name="PointOfSale/Public/MinimalLight" model="Model" />
-}
-else
-{
-    <noscript>
+    @if (Context.Request.Query.ContainsKey("simple"))
+    {
         <partial name="PointOfSale/Public/MinimalLight" model="Model" />
-    </noscript>
-    <partial name="PointOfSale/Public/VueLight" model="Model" />
-}
+    }
+    else
+    {
+        <noscript>
+            <partial name="PointOfSale/Public/MinimalLight" model="Model" />
+        </noscript>
+        <partial name="PointOfSale/Public/VueLight" model="Model" />
+    }
+    <footer class="store-footer">
+        <a href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">
+            Powered by <partial name="_StoreFooterLogo" />
+        </a>
+    </footer>
+</div>

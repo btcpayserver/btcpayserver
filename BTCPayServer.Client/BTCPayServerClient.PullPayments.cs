@@ -97,5 +97,15 @@ namespace BTCPayServer.Client
                     method: HttpMethod.Post, bodyPayload: request), cancellationToken);
             await HandleResponse(response);
         }
+
+        public virtual async Task<PullPaymentLNURL> GetPullPaymentLNURL(string pullPaymentId,
+            CancellationToken cancellationToken = default)
+        {
+            var response = await _httpClient.SendAsync(
+                CreateHttpRequest(
+                    $"/api/v1/pull-payments/{pullPaymentId}/lnurl",
+                    method: HttpMethod.Get), cancellationToken);
+            return await HandleResponse<PullPaymentLNURL>(response);
+        }
     }
 }

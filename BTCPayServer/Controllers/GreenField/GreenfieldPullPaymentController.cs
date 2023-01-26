@@ -34,6 +34,7 @@ namespace BTCPayServer.Controllers.Greenfield
         private readonly CurrencyNameTable _currencyNameTable;
         private readonly BTCPayNetworkJsonSerializerSettings _serializerSettings;
         private readonly IEnumerable<IPayoutHandler> _payoutHandlers;
+        private readonly BTCPayNetworkProvider _networkProvider;
         private readonly IAuthorizationService _authorizationService;
 
         public GreenfieldPullPaymentController(PullPaymentHostedService pullPaymentService,
@@ -42,6 +43,7 @@ namespace BTCPayServer.Controllers.Greenfield
             CurrencyNameTable currencyNameTable,
             Services.BTCPayNetworkJsonSerializerSettings serializerSettings,
             IEnumerable<IPayoutHandler> payoutHandlers,
+            BTCPayNetworkProvider btcPayNetworkProvider,
             IAuthorizationService authorizationService)
         {
             _pullPaymentService = pullPaymentService;
@@ -50,6 +52,7 @@ namespace BTCPayServer.Controllers.Greenfield
             _currencyNameTable = currencyNameTable;
             _serializerSettings = serializerSettings;
             _payoutHandlers = payoutHandlers;
+            _networkProvider = btcPayNetworkProvider;
             _authorizationService = authorizationService;
         }
 
@@ -241,6 +244,33 @@ namespace BTCPayServer.Controllers.Greenfield
             if (payout is null)
                 return PayoutNotFound();
             return base.Ok(ToModel(payout));
+        }
+
+        [HttpGet("~/api/v1/pull-payments/{pullPaymentId}/lnurl")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetPullPaymentLNURL(string pullPaymentId)
+        {
+            var pp = await _pullPaymentService.GetPullPayment(pullPaymentId, false);
+            if (pp is null)
+                return PullPaymentNotFound();
+
+            var blob = pp.GetBlob();
+            var pms = blob.SupportedPaymentMethods.FirstOrDefault(id => id.PaymentType == LightningPaymentType.Instance && _networkProvider.DefaultNetwork.CryptoCode == id.CryptoCode);
+            if (pms is not null && blob.Currency.Equals(pms.CryptoCode, StringComparison.InvariantCultureIgnoreCase))
+            {
+                var lnurlEndpoint = new Uri(Url.Action("GetLNURLForPullPayment", "UILNURL", new
+                {
+                    cryptoCode = _networkProvider.DefaultNetwork.CryptoCode,
+                    pullPaymentId = pullPaymentId
+                }, Request.Scheme, Request.Host.ToString()));
+
+                return base.Ok(new PullPaymentLNURL() {
+                    LNURLBech32 = LNURL.LNURL.EncodeUri(lnurlEndpoint, "withdrawRequest", true).ToString(),
+                    LNURLUri = LNURL.LNURL.EncodeUri(lnurlEndpoint, "withdrawRequest", false).ToString()
+                });
+            }
+
+            return this.CreateAPIError("lnurl-not-supported", "LNURL not supported for this pull payment");
         }
 
         private Client.Models.PayoutData ToModel(Data.PayoutData p)

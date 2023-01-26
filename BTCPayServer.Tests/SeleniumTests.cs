@@ -782,6 +782,7 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("Create")).Click();
             Assert.Contains("App successfully created", s.FindAlertMessage().Text);
 
+            s.Driver.FindElement(By.CssSelector("label[for='DefaultView_Cart']")).Click();
             s.Driver.FindElement(By.CssSelector(".template-item:nth-of-type(1) .btn-primary")).Click();
             s.Driver.FindElement(By.Id("BuyButtonText")).SendKeys("Take my money");
             s.Driver.FindElement(By.Id("SaveItemChanges")).Click();
@@ -790,7 +791,6 @@ namespace BTCPayServer.Tests
             var template = s.Driver.FindElement(By.Id("Template")).GetAttribute("value");
             Assert.Contains("buyButtonText: Take my money", template);
 
-            s.Driver.FindElement(By.Id("DefaultView")).SendKeys("Item list and cart");
             s.Driver.FindElement(By.Id("SaveSettings")).Click();
             Assert.Contains("App updated", s.FindAlertMessage().Text);
 
@@ -1796,8 +1796,7 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("AppName")).SendKeys(Guid.NewGuid().ToString());
             s.Driver.FindElement(By.Id("Create")).Click();
             TestUtils.Eventually(() => Assert.Contains("App successfully created", s.FindAlertMessage().Text));
-            s.Driver.FindElement(By.Id("DefaultView")).Click();
-            s.Driver.FindElement(By.CssSelector("option[value='3']")).Click();
+            s.Driver.FindElement(By.CssSelector("label[for='DefaultView_Print']")).Click();
             s.Driver.FindElement(By.Id("SaveSettings")).Click();
             Assert.Contains("App updated", s.FindAlertMessage().Text);
 

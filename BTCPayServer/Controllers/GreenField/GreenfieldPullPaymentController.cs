@@ -11,6 +11,7 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Payments;
+using BTCPayServer.Security;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Rates;
 using Microsoft.AspNetCore.Authorization;
@@ -33,13 +34,15 @@ namespace BTCPayServer.Controllers.Greenfield
         private readonly CurrencyNameTable _currencyNameTable;
         private readonly BTCPayNetworkJsonSerializerSettings _serializerSettings;
         private readonly IEnumerable<IPayoutHandler> _payoutHandlers;
+        private readonly IAuthorizationService _authorizationService;
 
         public GreenfieldPullPaymentController(PullPaymentHostedService pullPaymentService,
             LinkGenerator linkGenerator,
             ApplicationDbContextFactory dbContextFactory,
             CurrencyNameTable currencyNameTable,
             Services.BTCPayNetworkJsonSerializerSettings serializerSettings,
-            IEnumerable<IPayoutHandler> payoutHandlers)
+            IEnumerable<IPayoutHandler> payoutHandlers,
+            IAuthorizationService authorizationService)
         {
             _pullPaymentService = pullPaymentService;
             _linkGenerator = linkGenerator;
@@ -47,6 +50,7 @@ namespace BTCPayServer.Controllers.Greenfield
             _currencyNameTable = currencyNameTable;
             _serializerSettings = serializerSettings;
             _payoutHandlers = payoutHandlers;
+            _authorizationService = authorizationService;
         }
 
         [HttpGet("~/api/v1/stores/{storeId}/pull-payments")]
@@ -62,13 +66,23 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
         [HttpPost("~/api/v1/stores/{storeId}/pull-payments")]
-        [Authorize(Policy = Policies.CanManagePullPayments, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [Authorize(Policy = Policies.CanCreateNonApprovedPullPayments, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> CreatePullPayment(string storeId, CreatePullPaymentRequest request)
         {
             if (request is null)
             {
                 ModelState.AddModelError(string.Empty, "Missing body");
                 return this.CreateValidationError(ModelState);
+            }
+
+            if (request.AutoApproveClaims)
+            {
+                if (!(await _authorizationService.AuthorizeAsync(User, null,
+                        new PolicyRequirement(Policies.CanCreatePullPayments))).Succeeded)
+                {
+                    return this.CreateAPIPermissionError(Policies.CanCreatePullPayments);
+                }
+
             }
             if (request.Amount <= 0.0m)
             {
@@ -304,9 +318,18 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
         [HttpPost("~/api/v1/stores/{storeId}/payouts")]
-        [Authorize(Policy = Policies.CanManagePullPayments, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [Authorize(Policy = Policies.CanCreateNonApprovedPullPayments, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> CreatePayoutThroughStore(string storeId, CreatePayoutThroughStoreRequest request)
         {
+            if (request.Approved is true)
+            {
+                if (!(await _authorizationService.AuthorizeAsync(User, null,
+                        new PolicyRequirement(Policies.CanCreatePullPayments))).Succeeded)
+                {
+                    return this.CreateAPIPermissionError(Policies.CanCreatePullPayments);
+                }
+            }
+            
             if (request is null || !PaymentMethodId.TryParse(request?.PaymentMethod, out var paymentMethodId))
             {
                 ModelState.AddModelError(nameof(request.PaymentMethod), "Invalid payment method");

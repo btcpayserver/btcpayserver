@@ -922,6 +922,48 @@ namespace BTCPayServer.Tests
             var lnrURLs = await unauthenticated.GetPullPaymentLNURL(test4.Id);
             Assert.IsType<string>(lnrURLs.LNURLBech32);
             Assert.IsType<string>(lnrURLs.LNURLUri);
+            
+            //permission test around auto approved pps and payouts
+            var nonApproved = await acc.CreateClient(Policies.CanCreateNonApprovedPullPayments);
+            var approved = await acc.CreateClient(Policies.CanCreatePullPayments);
+            await AssertPermissionError(Policies.CanCreatePullPayments, async () =>
+            {
+                var pullPayment = await nonApproved.CreatePullPayment(acc.StoreId, new CreatePullPaymentRequest()
+                {
+                    Amount = 100,
+                    Currency = "USD",
+                    Name = "pull payment",
+                    PaymentMethods = new[] { "BTC" },
+                    AutoApproveClaims = true
+                });
+            });
+            await AssertPermissionError(Policies.CanCreatePullPayments, async () =>
+            {
+                var pullPayment = await nonApproved.CreatePayout(acc.StoreId, new CreatePayoutThroughStoreRequest()
+                {
+                    Amount = 100,
+                    PaymentMethod = "BTC",
+                    Approved = true,
+                    Destination = new Key().GetAddress(ScriptPubKeyType.TaprootBIP86, Network.RegTest).ToString()
+                });
+            });
+            
+            var pullPayment = await approved.CreatePullPayment(acc.StoreId, new CreatePullPaymentRequest()
+            {
+                Amount = 100,
+                Currency = "USD",
+                Name = "pull payment",
+                PaymentMethods = new[] { "BTC" },
+                AutoApproveClaims = true
+            });
+            
+            var p = await approved.CreatePayout(acc.StoreId, new CreatePayoutThroughStoreRequest()
+            {
+                Amount = 100,
+                PaymentMethod = "BTC",
+                Approved = true,
+                Destination = new Key().GetAddress(ScriptPubKeyType.TaprootBIP86, Network.RegTest).ToString()
+            });
         }
 
         [Fact]

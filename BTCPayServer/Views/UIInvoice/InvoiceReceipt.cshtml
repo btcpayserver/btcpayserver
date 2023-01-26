@@ -7,14 +7,15 @@
 @inject CurrencyNameTable CurrencyNameTable
 @using BTCPayServer.Abstractions.Contracts
 @inject IFileService FileService
-
 @{
     Layout = null;
-    ViewData["Title"] = Model.StoreName;
+    ViewData["Title"] = $"Receipt from {Model.StoreName}";
     var isProcessing = Model.Status == InvoiceStatus.Processing;
     var isSettled = Model.Status == InvoiceStatus.Settled;
+    var logoUrl = !string.IsNullOrEmpty(Model.LogoFileId)
+        ? await FileService.GetFileUrl(Context.Request.GetAbsoluteRootUri(), Model.LogoFileId)
+        : null;
 }
-
 <!DOCTYPE html>
 <html lang="en" @(env.IsDeveloping ? " data-devenv" : "")>
 <head>
@@ -31,6 +32,7 @@
         #posData td > table:last-child { margin-bottom: 0 !important; }
         #posData table > tbody > tr:first-child > td > h4 { margin-top: 0 !important; }
     </style>
+    <partial name="LayoutHeadStoreBranding" model="@(Model.BrandColor, Model.CssFileId)" />
 </head>
 <body>
     <div class="min-vh-100 d-flex flex-column">
@@ -40,11 +42,11 @@
                 
                 <div class="d-flex flex-column justify-content-center gap-4">
                     <header class="store-header">
-                        @if (!string.IsNullOrEmpty(Model.StoreLogoFileId))
+                        @if (!string.IsNullOrEmpty(logoUrl))
                         {
-                            <img src="@(await FileService.GetFileUrl(Context.Request.GetAbsoluteRootUri(), Model.StoreLogoFileId))" alt="@Model.StoreName" class="logo @(!string.IsNullOrEmpty(Model.StoreLogoFileId) ? "logo--square" : "")" />
+                            <img src="@logoUrl" alt="@Model.StoreName" class="store-logo" />
                         }
-                        <h1>@ViewData["Title"]</h1>
+                        <h1 class="store-name">@Model.StoreName</h1>
                     </header>
                     <div id="InvoiceSummary" class="bg-tile p-3 p-sm-4 rounded d-flex flex-wrap align-items-center">
                         @if (isProcessing)

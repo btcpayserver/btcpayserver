@@ -207,24 +207,24 @@ h2 small .fa-question-circle-o {
 
 /* Store header */
 .store-header {
-    --logo-size: 3rem;
-    
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: var(--btcpay-space-s);
 }
 
-.store-header .logo {
-    height: var(--logo-size);
-}
+.store-logo {
+    --logo-size: 3rem;
+    --logo-bg: transparent;
+    --logo-radius: 50%;
 
-.store-header .logo--square {
     width: var(--logo-size);
-    border-radius: 50%;
+    height: var(--logo-size);
+    background: var(--logo-bg);
+    border-radius: var(--logo-radius);
 }
 
-.store-header h1 {
+.store-name {
     font-size: 1.3rem;
 }
 
@@ -588,3 +588,41 @@ svg.icon-note {
 }
 
 .modal-footer .modal-footer-left{ margin-right: auto; }
+
+/* List Select */
+.btcpay-list-select {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--btcpay-space-s);
+}
+.btcpay-list-select > input {
+    display: none;
+}
+.btcpay-list-select-item {
+    display: flex;
+    flex: 1 1 45%; 
+    align-items: center;
+    border: 1px solid var(--btcpay-form-border);
+    padding: .75rem var(--btcpay-space-s);
+    background-color: var(--btcpay-form-bg);
+    border-radius: var(--btcpay-border-radius);
+    transition: border-color 0.15s ease-in-out;
+    cursor: pointer;
+}
+@media (max-width: 575px) {
+    .btcpay-list-select-item {
+        flex-basis: 100%;
+    }
+}
+.btcpay-list-select-item .icon {
+    width: 1.5rem;
+    height: 1.5rem;
+    margin: 0 var(--btcpay-space-s);
+}
+.btcpay-list-select-item:hover {
+    border-color: var(--btcpay-form-border-hover);
+    background-color: var(--btcpay-form-bg-hover);
+}
+input:checked + .btcpay-list-select-item {
+    border-color: var(--btcpay-form-border-focus);
+}

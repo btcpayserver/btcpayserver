@@ -15,7 +15,7 @@
     var paymentMethodCount = Model.AvailableCryptos.Count;
     var logoUrl = !string.IsNullOrEmpty(Model.LogoFileId)
         ? await FileService.GetFileUrl(Context.Request.GetAbsoluteRootUri(), Model.LogoFileId)
-        : Model.CustomLogoLink;
+        : null;
 }
 @functions {
     private string PaymentMethodName(PaymentModel.AvailableCrypto pm)
@@ -36,27 +36,16 @@
     <partial name="LayoutHead"/>
     <meta name="robots" content="noindex,nofollow">
     <link href="~/checkout-v2/checkout.css" asp-append-version="true" rel="stylesheet" />
-    @if (!string.IsNullOrEmpty(Model.BrandColor))
-    {
-        <style>
-            :root {
-                --btcpay-primary: @Model.BrandColor;
-                --btcpay-primary-bg-hover: @Model.BrandColor;
-                --btcpay-primary-bg-active: @Model.BrandColor;
-                --btcpay-primary-shadow: @Model.BrandColor;
-                --btcpay-body-link-accent: @Model.BrandColor;
-            }
-        </style>
-    }
+    <partial name="LayoutHeadStoreBranding" model="@(Model.BrandColor, Model.CssFileId)" />
 </head>
 <body class="min-vh-100">
     <div id="Checkout-v2" class="wrap gap-4" v-cloak v-waitForT>
         <header class="store-header">
             @if (!string.IsNullOrEmpty(logoUrl))
             {
-                <img src="@logoUrl" alt="@Model.StoreName" class="logo @(!string.IsNullOrEmpty(Model.LogoFileId) ? "logo--square" : "")"/>
+                <img src="@logoUrl" alt="@Model.StoreName" class="store-logo"/>
             }
-            <h1>@Model.StoreName</h1>
+            <h1 class="store-name">@Model.StoreName</h1>
         </header>
         <main class="shadow-lg">
             <nav v-if="isModal">
@@ -72,7 +61,7 @@
                 }
                 else
                 {
-                    <h2 id="AmountDue" class="text-center" v-text="`${srvModel.btcDue} ${srvModel.cryptoCode}`" :data-clipboard="srvModel.btcDue" :data-clipboard-confirm="$t('copy_confirm')" :data-amount-due="btcDue">@Model.BtcDue @Model.CryptoCode</h2>
+                    <h2 id="AmountDue" class="text-center" v-text="`${srvModel.btcDue} ${srvModel.cryptoCode}`" :data-clipboard="srvModel.btcDue" :data-clipboard-confirm="$t('copy_confirm')" :data-amount-due="srvModel.btcDue">@Model.BtcDue @Model.CryptoCode</h2>
                 }
                 <div id="PaymentInfo" class="info mt-3 mb-2" v-collapsible="showInfo">
                     <div>
@@ -173,7 +162,7 @@
         </main>
         @if (Env.CheatMode)
         {
-            <checkout-cheating invoice-id="@Model.InvoiceId" :btc-due="btcDue" :is-paid="isPaid" :payment-method-id="pmId"></checkout-cheating>
+            <checkout-cheating invoice-id="@Model.InvoiceId" :btc-due="srvModel.btcDue" :is-paid="isPaid" :payment-method-id="pmId"></checkout-cheating>
         }
         <footer>
             <div>
@@ -216,19 +205,17 @@
         <div v-if="srvModel.networkFee">
             <dt v-t="'network_cost'"></dt>
             <dd :data-clipboard="srvModel.networkFee" :data-clipboard-confirm="$t('copy_confirm')">
-                <template v-if="srvModel.txCountForFee > 0">
-                    {{$t('tx_count', { count: srvModel.txCount })}} x
-                </template>
-                {{ srvModel.networkFee }} {{ srvModel.cryptoCode }}
+                <div v-if="srvModel.txCountForFee > 0" v-t="{ path: 'tx_count', args: { count: srvModel.txCount } }"></div>
+                <div v-text="`${srvModel.networkFee} ${srvModel.cryptoCode}`"></div>
             </dd>
         </div>
         <div v-if="btcPaid > 0">
             <dt v-t="'amount_paid'"></dt>
-            <dd :data-clipboard="srvModel.btcPaid" :data-clipboard-confirm="$t('copy_confirm')">{{srvModel.btcPaid }} {{ srvModel.cryptoCode }}</dd>
+            <dd :data-clipboard="srvModel.btcPaid" :data-clipboard-confirm="$t('copy_confirm')" v-text="`${srvModel.btcPaid} ${srvModel.cryptoCode}`"></dd>
         </div>
         <div v-if="btcDue > 0">
             <dt v-t="'amount_due'"></dt>
-            <dd :data-clipboard="srvModel.btcDue" :data-clipboard-confirm="$t('copy_confirm')">{{srvModel.btcDue}} {{ srvModel.cryptoCode }}</dd>
+            <dd :data-clipboard="srvModel.btcDue" :data-clipboard-confirm="$t('copy_confirm')" v-text="`${srvModel.btcDue} ${srvModel.cryptoCode}`"></dd>
         </div>
         <div v-if="showRecommendedFee">
             <dt v-t="'recommended_fee'"></dt>

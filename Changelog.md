@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.7.5
+
+### New features
+
+* Greenfield: Lightning addresses API (#4546) @kukks
+
+### Bug fixes
+
+* Fix several HTML injections (#4545) @NicolasDorier
+* BIP21: Uppercase addresses only in QR, not in payment URL (#4553) @dennisreimann
+* Checkout v2: UI fixes (#4552) @dennisreimann
+
+### Improvement
+
+* Checkout v2: Re-add LNURL for top-up invoices (#4556) @dennisreimann
+
 ## 1.7.4
 
 Note for integrators such as Raspiblitz or Umbrel: As part of our effort to make BTCPay Server more welcoming to plugins, we have made a change that may impact you.
@@ -7,6 +23,7 @@ Note for integrators such as Raspiblitz or Umbrel: As part of our effort to make
 Previously, when a user uninstalled or installed a new plugin, BTCPay Server would prompt them to restart the server by clicking on a button. Prior to version 1.7.4, this restart button was not functional due to being coupled to our own Docker deployment stack.
 
 As of now, the restart button will instead terminate the BTCPay Server process. The process manager, such as systemd or docker should then automatically restart BTCPay Server. Please ensure that automatic restart capability exists.
+
 ### Bug fixes
 
 * Fix LNURL authentication as 2FA method (#4501) @dennisreimann

@@ -2,8 +2,8 @@
     --navbutton-size: .8rem;
     --qr-size: 256px;
     --icon-size: 64px;
-    --icon-border-size: var(--btcpay-space-s);
-    --icon-border-color: var(--btcpay-body-text);
+    --icon-border-size: var(--btcpay-space-xs);
+    --icon-border-color: var(--btcpay-white);
     --section-padding: 1.5rem;
     --border-radius: var(--btcpay-border-radius-l);
     --wrap-max-width: 400px;

@@ -166,17 +166,28 @@ namespace BTCPayServer.Controllers
 
             if (receipt.Enabled is not true)
                 return NotFound();
+
+            var storeBlob = store.GetStoreBlob();
+            var vm = new InvoiceReceiptViewModel
+            {
+                InvoiceId = i.Id,
+                OrderId = i.Metadata?.OrderId,
+                OrderUrl = i.Metadata?.OrderUrl,
+                Status = i.Status.ToModernStatus(),
+                Currency = i.Currency,
+                Timestamp = i.InvoiceTime,
+                StoreName = store.StoreName,
+                BrandColor = storeBlob.BrandColor,
+                LogoFileId = storeBlob.LogoFileId,
+                CssFileId = storeBlob.CssFileId,
+                ReceiptOptions = receipt
+            };
+            
             if (i.Status.ToModernStatus() != InvoiceStatus.Settled)
             {
-                return View(new InvoiceReceiptViewModel
-                {
-                    InvoiceId = i.Id,
-                    OrderId = i.Metadata?.OrderId,
-                    OrderUrl = i.Metadata?.OrderUrl,
-                    StoreName = store.StoreName,
-                    Status = i.Status.ToModernStatus()
-                });
+                return View(vm);
             }
+            
             JToken? receiptData = null;
             i.Metadata?.AdditionalData?.TryGetValue("receiptData", out receiptData);
 
@@ -213,23 +224,13 @@ namespace BTCPayServer.Controllers
                 .Where(payment => payment != null)
                 .ToList();
 
-            return View(new InvoiceReceiptViewModel
-            {
-                StoreName = store.StoreName,
-                StoreLogoFileId = store.GetStoreBlob().LogoFileId,
-                Status = i.Status.ToModernStatus(),
-                Amount = payments.Sum(p => p!.Paid),
-                Currency = i.Currency,
-                Timestamp = i.InvoiceTime,
-                InvoiceId = i.Id,
-                OrderId = i.Metadata?.OrderId,
-                OrderUrl = i.Metadata?.OrderUrl,
-                Payments = receipt.ShowPayments is false ? null : payments,
-                ReceiptOptions = receipt,
-                AdditionalData = receiptData is null
-                    ? new Dictionary<string, object>()
-                    : PosDataParser.ParsePosData(receiptData.ToString())
-            });
+            vm.Amount = payments.Sum(p => p!.Paid);
+            vm.Payments = receipt.ShowPayments is false ? null : payments;
+            vm.AdditionalData = receiptData is null
+                ? new Dictionary<string, object>()
+                : PosDataParser.ParsePosData(receiptData.ToString());
+
+            return View(vm);
         }
         private string? GetTransactionLink(PaymentMethodId paymentMethodId, string txId)
         {
@@ -651,12 +652,13 @@ namespace BTCPayServer.Controllers
             if (paymentMethodId is null)
             {
                 var enabledPaymentIds = store.GetEnabledPaymentIds(_NetworkProvider)
-                    // Exclude LNURL for Checkout v2
-                    .Where(pmId => storeBlob.CheckoutType == CheckoutType.V1 || pmId.PaymentType is not LNURLPayPaymentType)
+                    // Exclude LNURL for Checkout v2 + non-top up invoices
+                    .Where(pmId => storeBlob.CheckoutType == CheckoutType.V1 || 
+                                   pmId.PaymentType is not LNURLPayPaymentType || invoice.IsUnsetTopUp())
                     .ToArray();
 
                 // Exclude Lightning if OnChainWithLnInvoiceFallback is active and we have both payment methods
-                if (storeBlob.CheckoutType == CheckoutType.V2 && storeBlob.OnChainWithLnInvoiceFallback &&
+                if (storeBlob is { CheckoutType: CheckoutType.V2, OnChainWithLnInvoiceFallback: true } &&
                     enabledPaymentIds.Contains(btcId) && enabledPaymentIds.Contains(lnId))
                 {
                     enabledPaymentIds = enabledPaymentIds.Where(pmId => pmId != lnId).ToArray();
@@ -761,6 +763,7 @@ namespace BTCPayServer.Controllers
                 CustomCSSLink = storeBlob.CustomCSS,
                 CustomLogoLink = storeBlob.CustomLogo,
                 LogoFileId = storeBlob.LogoFileId,
+                CssFileId = storeBlob.CssFileId,
                 BrandColor = storeBlob.BrandColor,
                 CheckoutType = invoice.CheckoutType ?? storeBlob.CheckoutType,
                 HtmlTitle = storeBlob.HtmlTitle ?? "BTCPay Invoice",
@@ -800,8 +803,10 @@ namespace BTCPayServer.Controllers
                 StoreId = store.Id,
                 AvailableCryptos = invoice.GetPaymentMethods()
                                           .Where(i => i.Network != null &&
-                                              // Exclude LNURL for Checkout v2
-                                              (storeBlob.CheckoutType == CheckoutType.V1 || i.GetId().PaymentType is not LNURLPayPaymentType))
+                                              // Exclude LNURL for Checkout v2 + non-top up invoices
+                                              (storeBlob.CheckoutType == CheckoutType.V1 ||
+                                               i.GetId().PaymentType is not LNURLPayPaymentType ||
+                                               invoice.IsUnsetTopUp()))
                                           .Select(kv =>
                                           {
                                               var availableCryptoPaymentMethodId = kv.GetId();
@@ -827,7 +832,7 @@ namespace BTCPayServer.Controllers
             };
 
             // Exclude Lightning if OnChainWithLnInvoiceFallback is active and we have both payment methods
-            if (storeBlob.CheckoutType == CheckoutType.V2 && storeBlob.OnChainWithLnInvoiceFallback)
+            if (storeBlob is { CheckoutType: CheckoutType.V2, OnChainWithLnInvoiceFallback: true })
             {
                 var onchainPM = model.AvailableCryptos.Find(c => c.PaymentMethodId == btcId.ToString());
                 var lightningPM = model.AvailableCryptos.Find(c => c.PaymentMethodId == lnId.ToString());

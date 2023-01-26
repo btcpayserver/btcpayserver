@@ -159,7 +159,8 @@
                 "security": [
                     {
                         "API_Key": [
-                            "btcpay.store.canmanagepullpayments"
+                            "btcpay.store.cancreatepullpayments",
+                            "btcpay.store.cancreatenonapprovedpullpayments"
                         ],
                         "Basic": []
                     }
@@ -510,7 +511,8 @@
                 "security": [
                     {
                         "API_Key": [
-                            "btcpay.store.canmanagepullpayments"
+                            "btcpay.store.cancreatepullpayments",
+                            "btcpay.store.cancreatenonapprovedpullpayments"
                         ],
                         "Basic": []
                     }

@@ -75,6 +75,7 @@ namespace BTCPayServer.Storage
                 {
                     context.Context.Response.Headers["Content-Disposition"] = "attachment";
                 }
+                context.Context.Response.Headers["Content-Security-Policy"] = "script-src 'self'";
             };
         }
     }

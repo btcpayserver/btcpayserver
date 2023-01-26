@@ -791,6 +791,105 @@
                     }
                 ]
             }
+        },
+        "/api/v1/stores/{storeId}/lightning/{cryptoCode}/payments": {
+            "get": {
+                "tags": [
+                    "Lightning (Store)"
+                ],
+                "summary": "Get payments",
+                "parameters": [
+                    {
+                        "name": "cryptoCode",
+                        "in": "path",
+                        "required": true,
+                        "description": "The cryptoCode of the lightning-node to query",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "BTC"
+                    },
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store id with the lightning-node configuration to query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "includePending",
+                        "in": "query",
+                        "required": false,
+                        "description": "Also include pending payments",
+                        "schema": {
+                            "type": "boolean",
+                            "nullable": true,
+                            "default": false
+                        }
+                    },
+                    {
+                        "name": "offsetIndex",
+                        "in": "query",
+                        "required": false,
+                        "description": "The index of an invoice that will be used as the start of the list",
+                        "schema": {
+                            "type": "number",
+                            "nullable": true,
+                            "default": 0
+                        }
+                    }
+                ],
+                "description": "View information about the lightning payments",
+                "operationId": "StoreLightningNodeApi_GetPayments",
+                "responses": {
+                    "200": {
+                        "description": "Lightning payment data",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/LightningPaymentData"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing authorization",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Unable to access the lightning node"
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.cancreatelightninginvoice"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
         }
     },
     "tags": [

@@ -436,6 +436,13 @@ namespace BTCPayServer.Controllers.Greenfield
                 await GetController<GreenfieldStoreLightningNodeApiController>().GetInvoices(cryptoCode, pendingOnly, offsetIndex, token));
         }
 
+        public override async Task<LightningPaymentData[]> GetLightningPayments(string storeId, string cryptoCode,
+            bool? includePending = null, long? offsetIndex = null, CancellationToken token = default)
+        {
+            return GetFromActionResult<LightningPaymentData[]>(
+                await GetController<GreenfieldStoreLightningNodeApiController>().GetPayments(cryptoCode, includePending, offsetIndex, token));
+        }
+
         public override async Task<LightningInvoiceData> CreateLightningInvoice(string storeId, string cryptoCode,
             CreateLightningInvoiceRequest request, CancellationToken token = default)
         {
@@ -502,6 +509,13 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             return GetFromActionResult<LightningInvoiceData[]>(
                 await GetController<GreenfieldInternalLightningNodeApiController>().GetInvoices(cryptoCode, pendingOnly, offsetIndex, token));
+        }
+
+        public override async Task<LightningPaymentData[]> GetLightningPayments(string cryptoCode,
+            bool? includePending = null, long? offsetIndex = null, CancellationToken token = default)
+        {
+            return GetFromActionResult<LightningPaymentData[]>(
+                await GetController<GreenfieldInternalLightningNodeApiController>().GetPayments(cryptoCode, includePending, offsetIndex, token));
         }
 
         public override async Task<LightningInvoiceData> CreateLightningInvoice(string cryptoCode,

@@ -560,8 +560,9 @@
                             },
                             "requiresRefundEmail": {
                                 "type": "boolean",
-                                "description": "Whether refund email is required when paying the invoice",
-                                "example": false
+                                "description": "Whether refund email is required when paying the invoice. Defaults to `null` if not explicitly set.",
+                                "example": false,
+                                "nullable": true
                             }
                         }
                     }

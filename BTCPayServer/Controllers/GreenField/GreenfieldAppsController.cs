@@ -101,7 +101,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
             await _appService.UpdateOrCreateApp(appData);
 
-            return Ok(await ToPointOfSaleModel(appData));
+            return Ok(ToPointOfSaleModel(appData));
         }
 
         [HttpPut("~/api/v1/apps/pos/{appId}")]
@@ -130,7 +130,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
             await _appService.UpdateOrCreateApp(app);
 
-            return Ok(await ToPointOfSaleModel(app));
+            return Ok(ToPointOfSaleModel(app));
         }
 
         private RequiresRefundEmail? BoolToRequiresRefundEmail(bool? requiresRefundEmail)
@@ -187,7 +187,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 return AppNotFound();
             }
                 
-            return Ok(await ToPointOfSaleModel(app));
+            return Ok(ToPointOfSaleModel(app));
         }
 
         [HttpGet("~/api/v1/apps/crowdfund/{appId}")]
@@ -309,10 +309,9 @@ namespace BTCPayServer.Controllers.Greenfield
             };
         }
 
-        async private Task<PointOfSaleAppData> ToPointOfSaleModel(AppData appData)
+        private PointOfSaleAppData ToPointOfSaleModel(AppData appData)
         {
             var settings = appData.GetSettings<PointOfSaleSettings>();
-            var store = await _storeRepository.FindStore(appData.StoreDataId);
 
             return new PointOfSaleAppData
             {
@@ -346,7 +345,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 Description = settings.Description,
                 EmbeddedCSS = settings.EmbeddedCSS,
                 RedirectAutomatically = settings.RedirectAutomatically ?? false,
-                RequiresRefundEmail = settings.RequiresRefundEmail == RequiresRefundEmail.InheritFromStore ? store.GetStoreBlob().RequiresRefundEmail : settings.RequiresRefundEmail == RequiresRefundEmail.On,
+                RequiresRefundEmail = settings.RequiresRefundEmail == RequiresRefundEmail.InheritFromStore ? null : settings.RequiresRefundEmail == RequiresRefundEmail.On,
             };
         }
 

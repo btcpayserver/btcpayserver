@@ -1423,6 +1423,14 @@ namespace BTCPayServer.Controllers
                 {
                     model.Tooltip = $"This UTXO was part of a PayJoin transaction.";
                 }
+                else
+                {
+                    model.Tooltip = tag.Data?.TryGetValue("tooltip", StringComparison.InvariantCultureIgnoreCase, out var tooltip) is true ? tooltip.ToString() : tag.Id;
+                    if (tag.Data?.TryGetValue("link", StringComparison.InvariantCultureIgnoreCase, out var link) is true)
+                    {
+                        model.Link = link.ToString();
+                    }
+                }
             }
             foreach (var label in transactionInfo.LabelColors)
                 models.TryAdd(label.Key, new TransactionTagModel

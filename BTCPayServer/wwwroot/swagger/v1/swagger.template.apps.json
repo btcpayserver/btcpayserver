@@ -481,10 +481,6 @@
                                 "description": "Currency used for the app",
                                 "example": "BTC"
                             },
-                            "template": {
-                                "type": "string",
-                                "description": "YAML template for app items"
-                            },
                             "items": {
                                 "type": "object",
                                 "description": "JSON object of app items",
@@ -629,11 +625,6 @@
                             "embeddedCSS": {
                                 "type": "string",
                                 "description": "Custom CSS embedded into the app"
-                            },
-                            "perksTemplate": {
-                                "type": "string",
-                                "description": "YAML template of perks available in the app",
-                                "example": "test_perk:\r\n  price: 100\r\n  title: test perk\r\n  price_type: \"fixed\" \r\n  disabled: false"
                             },
                             "perks": {
                                 "type": "object",

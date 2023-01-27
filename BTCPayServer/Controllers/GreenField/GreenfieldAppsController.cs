@@ -326,7 +326,6 @@ namespace BTCPayServer.Controllers.Greenfield
                 ShowDiscount = settings.ShowDiscount,
                 EnableTips = settings.EnableTips,
                 Currency = settings.Currency,
-                Template = settings.Template,
                 Items = JsonConvert.DeserializeObject(
                     JsonConvert.SerializeObject(
                         _appService.Parse(settings.Template, settings.Currency), 
@@ -401,7 +400,6 @@ namespace BTCPayServer.Controllers.Greenfield
                 EmbeddedCSS = settings.EmbeddedCSS,
                 NotificationUrl = settings.NotificationUrl,
                 Tagline = settings.Tagline,
-                PerksTemplate = settings.PerksTemplate,
                 Perks = JsonConvert.DeserializeObject(
                     JsonConvert.SerializeObject(
                         _appService.Parse(settings.PerksTemplate, settings.TargetCurrency), 

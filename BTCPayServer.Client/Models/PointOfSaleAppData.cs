@@ -21,7 +21,6 @@ namespace BTCPayServer.Client.Models
         public bool ShowDiscount { get; set; }
         public bool EnableTips { get; set; }
         public string Currency { get; set; }
-        public string Template { get; set; }
         public object Items { get; set; }
         public string FixedAmountPayButtonText { get; set; }
         public string CustomAmountPayButtonText { get; set; }
@@ -52,7 +51,6 @@ namespace BTCPayServer.Client.Models
         public string EmbeddedCSS { get; set; }
         public string NotificationUrl { get; set; }
         public string Tagline { get; set; }
-        public string PerksTemplate { get; set; }
         public object Perks { get; set; }
         public bool DisqusEnabled { get; set; }
         public string DisqusShortname { get; set; }

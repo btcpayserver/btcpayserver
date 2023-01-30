@@ -446,6 +446,7 @@ namespace BTCPayServer.Services.Apps
                             Id = app.Id,
                             Created = app.Created,
                         })
+                .OrderBy(b => b.Created)
                 .ToArrayAsync();
 
             foreach (ListAppsViewModel.ListAppViewModel app in listApps)

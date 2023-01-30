@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
-using BTCPayServer.Common;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Logging;
@@ -12,7 +11,6 @@ using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using NBXplorer.Models;
@@ -27,24 +25,19 @@ namespace BTCPayServer.Payments.Bitcoin
         private readonly IFeeProviderFactory _FeeRateProviderFactory;
         private readonly NBXplorerDashboard _dashboard;
         private readonly Services.Wallets.BTCPayWalletProvider _WalletProvider;
-        private readonly LinkGenerator _linkGenerator;
-        private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly Dictionary<string, string> _bech32Prefix;
 
         public BitcoinLikePaymentHandler(ExplorerClientProvider provider,
             BTCPayNetworkProvider networkProvider,
             IFeeProviderFactory feeRateProviderFactory,
             NBXplorerDashboard dashboard,
-            Services.Wallets.BTCPayWalletProvider walletProvider,
-            LinkGenerator linkGenerator, IHttpContextAccessor httpContextAccessor)
+            Services.Wallets.BTCPayWalletProvider walletProvider)
         {
             _ExplorerProvider = provider;
             _networkProvider = networkProvider;
             _FeeRateProviderFactory = feeRateProviderFactory;
             _dashboard = dashboard;
             _WalletProvider = walletProvider;
-            _linkGenerator = linkGenerator;
-            _httpContextAccessor = httpContextAccessor;
 
             _bech32Prefix = networkProvider.GetAll().OfType<BTCPayNetwork>()
                 .Where(network => network.NBitcoinNetwork?.Consensus?.SupportSegwit is true).ToDictionary(network => network.CryptoCode,
@@ -89,19 +82,9 @@ namespace BTCPayServer.Payments.Bitcoin
                 {
                     var lnurl = invoiceResponse.CryptoInfo.FirstOrDefault(a =>
                         a.GetpaymentMethodId() == new PaymentMethodId(model.CryptoCode, PaymentTypes.LNURLPay));
-
-                    if (lnurl is not null && _httpContextAccessor.HttpContext is not null)
+                    if (lnurl is not null)
                     {
-
-                        var uri = _linkGenerator.GetUriByAction(
-                            nameof(UILNURLController.GetLNURLForInvoice),
-                            "UILNURL",
-                            new {model.InvoiceId, model.CryptoCode},
-                            _httpContextAccessor.HttpContext.Request.Scheme,
-                            _httpContextAccessor.HttpContext.Request.Host,
-                            _httpContextAccessor.HttpContext.Request.PathBase);
-
-                        var lnurlEncoded = LNURL.LNURL.EncodeUri(new Uri(uri), "payRequest", true).ToString();
+                        var lnurlEncoded = LNURL.LNURL.EncodeUri(new Uri(lnurl.Url), "payRequest", true).ToString();
                         lightningFallback = lnurlEncoded
                             .Replace("lightning:", "lightning=", StringComparison.OrdinalIgnoreCase)
                             .ToUpperInvariant();

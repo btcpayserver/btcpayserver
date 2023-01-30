@@ -1,26 +1,44 @@
+using System.Reflection.Metadata;
 using BTCPayServer.Services.Invoices;
+using Newtonsoft.Json;
 
 namespace BTCPayServer.Data
 {
     public static class InvoiceDataExtensions
     {
+        public static void SetBlob(this InvoiceData invoiceData, InvoiceEntity blob)
+        {
+            if (blob.Metadata is null)
+                blob.Metadata = new InvoiceMetadata();
+            invoiceData.HasTypedBlob<InvoiceEntity>().SetBlob(blob);
+        }
         public static InvoiceEntity GetBlob(this InvoiceData invoiceData, BTCPayNetworkProvider networks)
         {
-
-            var entity = InvoiceRepository.FromBytes<InvoiceEntity>(invoiceData.Blob);
-            entity.Networks = networks;
-            if (entity.Metadata is null)
+#pragma warning disable CS0618 // Type or member is obsolete
+            if (invoiceData.Blob is not null && invoiceData.Blob.Length != 0)
             {
-                if (entity.Version < InvoiceEntity.GreenfieldInvoices_Version)
+                var entity = JsonConvert.DeserializeObject<InvoiceEntity>(ZipUtils.Unzip(invoiceData.Blob), InvoiceRepository.DefaultSerializerSettings);
+                entity.Networks = networks;
+                if (entity.Metadata is null)
                 {
-                    entity.MigrateLegacyInvoice();
+                    if (entity.Version < InvoiceEntity.GreenfieldInvoices_Version)
+                    {
+                        entity.MigrateLegacyInvoice();
+                    }
+                    else
+                    {
+                        entity.Metadata = new InvoiceMetadata();
+                    }
                 }
-                else
-                {
-                    entity.Metadata = new InvoiceMetadata();
-                }
+                return entity;
             }
-            return entity;
+            else
+            {
+                var entity =  invoiceData.HasTypedBlob<InvoiceEntity>().GetBlob();
+                entity.Networks = networks;
+                return entity;
+            }
+#pragma warning restore CS0618 // Type or member is obsolete
         }
         public static InvoiceState GetInvoiceState(this InvoiceData invoiceData)
         {

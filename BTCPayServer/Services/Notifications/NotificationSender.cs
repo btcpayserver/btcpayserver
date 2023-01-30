@@ -40,16 +40,15 @@ namespace BTCPayServer.Services.Notifications
             {
                 foreach (var uid in users)
                 {
-                    var obj = JsonConvert.SerializeObject(notification);
                     var data = new NotificationData
                     {
                         Id = Guid.NewGuid().ToString(),
                         Created = DateTimeOffset.UtcNow,
                         ApplicationUserId = uid,
                         NotificationType = notification.NotificationType,
-                        Blob = ZipUtils.Zip(obj),
                         Seen = false
                     };
+                    data.HasTypedBlob<BaseNotification>().SetBlob(notification);
                     await db.Notifications.AddAsync(data);
                 }
                 await db.SaveChangesAsync();

@@ -6,10 +6,9 @@ using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
-using BTCPayServer.Data.Data;
+using BTCPayServer.Data;
 using BTCPayServer.Payments;
 using BTCPayServer.PayoutProcessors.OnChain;
-using BTCPayServer.PayoutProcessors.Settings;
 using BTCPayServer.Services.Invoices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -90,7 +89,7 @@ public class UILightningAutomatedPayoutProcessorsController : Controller
                 }))
             .FirstOrDefault();
         activeProcessor ??= new PayoutProcessorData();
-        activeProcessor.Blob = InvoiceRepository.ToBytes(automatedTransferBlob.ToBlob());
+        activeProcessor.HasTypedBlob<AutomatedPayoutBlob>().SetBlob(automatedTransferBlob.ToBlob());
         activeProcessor.StoreId = storeId;
         activeProcessor.PaymentMethod = new PaymentMethodId(cryptoCode, LightningPaymentType.Instance).ToString();
         activeProcessor.Processor = _lightningAutomatedPayoutSenderFactory.Processor;

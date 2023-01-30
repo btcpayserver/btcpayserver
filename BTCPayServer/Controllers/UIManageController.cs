@@ -107,10 +107,8 @@ namespace BTCPayServer.Controllers
 
             var blob = user.GetBlob();
             blob.ShowInvoiceStatusChangeHint = false;
-            if (user.SetBlob(blob))
-            {
-                await _userManager.UpdateAsync(user);
-            }
+            user.SetBlob(blob);
+            await _userManager.UpdateAsync(user);
             return RedirectToAction(nameof(Index));
         }
 

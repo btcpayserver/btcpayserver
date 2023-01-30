@@ -4,15 +4,14 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
-using BTCPayServer.Data.Data;
+using BTCPayServer.Data;
 using BTCPayServer.Payments;
 using BTCPayServer.PayoutProcessors;
 using BTCPayServer.PayoutProcessors.OnChain;
-using BTCPayServer.PayoutProcessors.Settings;
 using BTCPayServer.Services.Invoices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using PayoutProcessorData = BTCPayServer.Data.Data.PayoutProcessorData;
+using PayoutProcessorData = BTCPayServer.Data.PayoutProcessorData;
 
 namespace BTCPayServer.Controllers.Greenfield
 {
@@ -87,7 +86,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     }))
                 .FirstOrDefault();
             activeProcessor ??= new PayoutProcessorData();
-            activeProcessor.Blob = InvoiceRepository.ToBytes(FromModel(request));
+            activeProcessor.HasTypedBlob<OnChainAutomatedPayoutBlob>().SetBlob(FromModel(request));
             activeProcessor.StoreId = storeId;
             activeProcessor.PaymentMethod = paymentMethod;
             activeProcessor.Processor = OnChainAutomatedPayoutSenderFactory.ProcessorName;

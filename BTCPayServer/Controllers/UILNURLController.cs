@@ -336,7 +336,7 @@ namespace BTCPayServer
                 return NotFound("Unknown username");
             }
 
-            var blob = lightningAddressSettings.Blob.GetBlob<LightningAddressDataBlob>();
+            var blob = lightningAddressSettings.GetBlob();
             return await GetLNURL("BTC", lightningAddressSettings.StoreDataId, blob.CurrencyCode, blob.Min, blob.Max,
                 () => (username, null, null, null, null, true));
         }
@@ -684,7 +684,7 @@ namespace BTCPayServer
             {
                 Items = addresses.Select(s =>
                     {
-                        var blob = s.Blob.GetBlob<LightningAddressDataBlob>();
+                        var blob = s.GetBlob();
                         return new EditLightningAddressVM.EditLightningAddressItem
                         {
                             Max = blob.Max,
@@ -722,14 +722,13 @@ namespace BTCPayServer
                 if (await _lightningAddressService.Set(new LightningAddressData()
                 {
                     StoreDataId = storeId,
-                    Username = vm.Add.Username,
-                    Blob = new LightningAddressDataBlob()
-                    {
-                        Max = vm.Add.Max,
-                        Min = vm.Add.Min,
-                        CurrencyCode = vm.Add.CurrencyCode
-                    }.SerializeBlob()
-                }))
+                    Username = vm.Add.Username
+                }.SetBlob(new LightningAddressDataBlob()
+                {
+                    Max = vm.Add.Max,
+                    Min = vm.Add.Min,
+                    CurrencyCode = vm.Add.CurrencyCode
+                })))
                 {
                     TempData.SetStatusMessageModel(new StatusMessageModel
                     {

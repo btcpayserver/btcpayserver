@@ -35,7 +35,7 @@ namespace BTCPayServer.Storage
                 var dirInfo = Directory.Exists(datadirs.Value.StorageDir)
                     ? new DirectoryInfo(datadirs.Value.StorageDir)
                     : Directory.CreateDirectory(datadirs.Value.StorageDir);
-                
+
                 if (!Directory.Exists(datadirs.Value.TempDir))
                 {
                     Directory.CreateDirectory(datadirs.Value.TempDir);
@@ -75,6 +75,7 @@ namespace BTCPayServer.Storage
                 {
                     context.Context.Response.Headers["Content-Disposition"] = "attachment";
                 }
+                context.Context.Response.Headers["Content-Security-Policy"] = "script-src 'self'";
             };
         }
     }

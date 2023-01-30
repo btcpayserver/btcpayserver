@@ -1,4 +1,4 @@
-﻿@using BTCPayServer.Views.Stores
+@using BTCPayServer.Views.Stores
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @using BTCPayServer.Abstractions.Extensions
 @using BTCPayServer.Abstractions.Models
@@ -44,7 +44,7 @@
                                 {
                                     <a href="@processorsView.Factory.ConfigureLink(storeId, conf.Key, Context.Request)">Modify</a>
                                     <span>-</span>
-                                    <a asp-action="Remove" asp-route-storeId="@storeId" asp-route-id="@conf.Value.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The @processorsView.Factory.FriendlyName for @conf.Key.CryptoCode will be removed from your store.">Remove</a>
+                                    <a asp-action="Remove" asp-route-storeId="@storeId" asp-route-id="@conf.Value.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The @Html.Encode(processorsView.Factory.FriendlyName) for @Html.Encode(conf.Key.CryptoCode) will be removed from your store.">Remove</a>
                                 }
                             </td>
                         </tr>

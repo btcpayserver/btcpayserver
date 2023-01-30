@@ -44,7 +44,7 @@ namespace BTCPayServer.Client
         {
             using var response = await _httpClient.SendAsync(
                 CreateHttpRequest($"api/v1/stores/{storeId}/rates/configuration/preview", bodyPayload: request,
-                    queryPayload: new Dictionary<string, object>() {{"currencyPair", currencyPair}},
+                    queryPayload: new Dictionary<string, object>() { { "currencyPair", currencyPair } },
                     method: HttpMethod.Post),
                 token);
             return await HandleResponse<List<StoreRatePreviewResult>>(response);

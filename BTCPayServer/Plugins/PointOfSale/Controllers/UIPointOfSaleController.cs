@@ -68,7 +68,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             if (app == null)
                 return NotFound();
             var settings = app.GetSettings<PointOfSaleSettings>();
-            var numberFormatInfo = _appService.Currencies.GetNumberFormatInfo(settings.Currency) ?? 
+            var numberFormatInfo = _appService.Currencies.GetNumberFormatInfo(settings.Currency) ??
                                    _appService.Currencies.GetNumberFormatInfo("USD");
             double step = Math.Pow(10, -numberFormatInfo.CurrencyDecimalDigits);
             viewType ??= settings.EnableShoppingCart ? PosViewType.Cart : settings.DefaultView;
@@ -138,7 +138,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             var settings = app.GetSettings<PointOfSaleSettings>();
             settings.DefaultView = settings.EnableShoppingCart ? PosViewType.Cart : settings.DefaultView;
             var currentView = viewType ?? settings.DefaultView;
-            if (string.IsNullOrEmpty(choiceKey) && !settings.ShowCustomAmount && 
+            if (string.IsNullOrEmpty(choiceKey) && !settings.ShowCustomAmount &&
                 currentView != PosViewType.Cart && currentView != PosViewType.Light)
             {
                 return RedirectToAction(nameof(ViewPointOfSale), new { appId, viewType });
@@ -180,7 +180,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             {
                 if (!settings.ShowCustomAmount && currentView != PosViewType.Cart && currentView != PosViewType.Light)
                     return NotFound();
-                
+
                 price = amount;
                 title = settings.Title;
 
@@ -242,13 +242,13 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                         formResponse = JObject.FromObject(formData.GetValues());
                         break;
                     }
-                    
+
                     var query = new QueryBuilder(Request.Query);
                     foreach (var keyValuePair in Request.Form)
                     {
                         query.Add(keyValuePair.Key, keyValuePair.Value.ToArray());
                     }
-                    
+
                     // GET or empty form data case: Redirect to form
                     return View("PostRedirect", new PostRedirectViewModel
                     {
@@ -276,7 +276,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                     OrderId = orderId ?? AppService.GetAppOrderId(app),
                     NotificationURL =
                             string.IsNullOrEmpty(notificationUrl) ? settings.NotificationUrl : notificationUrl,
-                    RedirectURL =  !string.IsNullOrEmpty(redirectUrl) ? redirectUrl
+                    RedirectURL = !string.IsNullOrEmpty(redirectUrl) ? redirectUrl
                         : !string.IsNullOrEmpty(settings.RedirectUrl) ? settings.RedirectUrl
                         : Request.GetDisplayUrl(),
                     FullNotifications = true,
@@ -292,14 +292,14 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                     cancellationToken, (entity) =>
                     {
                         entity.Metadata.OrderUrl = Request.GetDisplayUrl();
-                        
+
                         if (formResponse is not null)
                         {
                             var meta = entity.Metadata.ToJObject();
                             meta.Merge(formResponse);
                             entity.Metadata = InvoiceMetadata.FromJObject(meta);
                         }
-                    } );
+                    });
                 return RedirectToAction(nameof(UIInvoiceController.Checkout), "UIInvoice", new { invoiceId = invoice.Data.Id });
             }
             catch (BitpayHttpException e)
@@ -313,7 +313,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 return RedirectToAction(nameof(ViewPointOfSale), new { appId = appId });
             }
         }
-        
+
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [HttpGet("{appId}/settings/pos")]
         public async Task<IActionResult> UpdatePointOfSale(string appId)
@@ -352,7 +352,6 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 RedirectUrl = settings.RedirectUrl,
                 SearchTerm = app.TagAllInvoices ? $"storeid:{app.StoreDataId}" : $"orderid:{AppService.GetAppOrderId(app)}",
                 RedirectAutomatically = settings.RedirectAutomatically.HasValue ? settings.RedirectAutomatically.Value ? "true" : "false" : "",
-                RequiresRefundEmail = settings.RequiresRefundEmail,
                 FormId = settings.FormId
             };
             if (HttpContext?.Request != null)
@@ -440,8 +439,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 Description = vm.Description,
                 EmbeddedCSS = vm.EmbeddedCSS,
                 RedirectAutomatically =
-                    string.IsNullOrEmpty(vm.RedirectAutomatically) ? (bool?)null : bool.Parse(vm.RedirectAutomatically),
-                RequiresRefundEmail = vm.RequiresRefundEmail
+                    string.IsNullOrEmpty(vm.RedirectAutomatically) ? (bool?)null : bool.Parse(vm.RedirectAutomatically)
             };
 
             settings.FormId = vm.FormId;
@@ -476,7 +474,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
         }
 
         private StoreData GetCurrentStore() => HttpContext.GetStoreData();
-        
+
         private AppData GetCurrentApp() => HttpContext.GetAppData();
     }
 }

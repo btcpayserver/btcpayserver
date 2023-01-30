@@ -64,7 +64,7 @@ namespace Microsoft.AspNetCore.Mvc
                 scheme, host, pathbase);
         }
 
-        public static string PayoutLink(this LinkGenerator urlHelper, string walletIdOrStoreId, string pullPaymentId, PayoutState payoutState,string scheme, HostString host, string pathbase)
+        public static string PayoutLink(this LinkGenerator urlHelper, string walletIdOrStoreId, string pullPaymentId, PayoutState payoutState, string scheme, HostString host, string pathbase)
         {
             WalletId.TryParse(walletIdOrStoreId, out var wallet);
             return urlHelper.GetUriByAction(

@@ -33,6 +33,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MimeKit;
@@ -87,7 +88,9 @@ namespace BTCPayServer.Controllers
             IOptions<ExternalServicesOptions> externalServiceOptions,
             Logs logs,
             LinkGenerator linkGenerator,
-            EmailSenderFactory emailSenderFactory
+            EmailSenderFactory emailSenderFactory,
+            IHostApplicationLifetime applicationLifetime,
+            IHtmlHelper html
         )
         {
             _policiesSettings = policiesSettings;
@@ -110,6 +113,8 @@ namespace BTCPayServer.Controllers
             Logs = logs;
             _linkGenerator = linkGenerator;
             _emailSenderFactory = emailSenderFactory;
+            ApplicationLifetime = applicationLifetime;
+            Html = html;
         }
 
         [Route("server/maintenance")]
@@ -130,8 +135,7 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> Maintenance(MaintenanceViewModel vm, string command)
         {
             vm.CanUseSSH = _sshState.CanUseSSH;
-
-            if (!vm.CanUseSSH)
+            if (command != "soft-restart" && !vm.CanUseSSH)
             {
                 TempData[WellKnownTempData.ErrorMessage] = "Maintenance feature requires access to SSH properly configured in BTCPay Server configuration.";
                 return View(vm);
@@ -218,7 +222,14 @@ namespace BTCPayServer.Controllers
                 var error = await RunSSH(vm, $"btcpay-restart.sh");
                 if (error != null)
                     return error;
+                Logs.PayServer.LogInformation("A hard restart has been requested");
                 TempData[WellKnownTempData.SuccessMessage] = $"BTCPay will restart momentarily.";
+            }
+            else if (command == "soft-restart")
+            {
+                TempData[WellKnownTempData.SuccessMessage] = $"BTCPay will restart momentarily.";
+                Logs.PayServer.LogInformation("A soft restart has been requested");
+                _ = Task.Delay(3000).ContinueWith((t) => ApplicationLifetime.StopApplication());
             }
             else
             {
@@ -286,6 +297,8 @@ namespace BTCPayServer.Controllers
         }
 
         public IHttpClientFactory HttpClientFactory { get; }
+        public IHostApplicationLifetime ApplicationLifetime { get; }
+        public IHtmlHelper Html { get; }
 
         [Route("server/policies")]
         public async Task<IActionResult> Policies()
@@ -300,7 +313,7 @@ namespace BTCPayServer.Controllers
         {
             ViewBag.UpdateUrlPresent = _Options.UpdateUrl != null;
             ViewBag.AppsList = await GetAppSelectList();
-            
+
             if (command == "add-domain")
             {
                 ModelState.Clear();
@@ -403,7 +416,7 @@ namespace BTCPayServer.Controllers
                     });
                 }
             }
-            
+
             return View(result);
         }
 
@@ -826,7 +839,7 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             return View("Confirm",
                 new ConfirmModel("Delete dynamic DNS service",
-                    $"Deleting the dynamic DNS service for <strong>{hostname}</strong> means your BTCPay Server will stop updating the associated DNS record periodically.", "Delete"));
+                    $"Deleting the dynamic DNS service for <strong>{Html.Encode(hostname)}</strong> means your BTCPay Server will stop updating the associated DNS record periodically.", "Delete"));
         }
 
         [HttpPost("server/services/dynamic-dns/{hostname}/delete")]
@@ -989,11 +1002,11 @@ namespace BTCPayServer.Controllers
         {
             var settingsChanged = false;
             var settings = await _SettingsRepository.GetSettingAsync<ThemeSettings>() ?? new ThemeSettings();
-            
+
             var userId = GetUserId();
             if (userId is null)
                 return NotFound();
-            
+
             if (model.CustomThemeFile != null)
             {
                 if (model.CustomThemeFile.ContentType.Equals("text/css", StringComparison.InvariantCulture))
@@ -1003,7 +1016,7 @@ namespace BTCPayServer.Controllers
                     {
                         await _fileService.RemoveFile(settings.CustomThemeFileId, userId);
                     }
-                    
+
                     // add new file
                     try
                     {
@@ -1027,7 +1040,7 @@ namespace BTCPayServer.Controllers
                 settings.CustomThemeFileId = null;
                 settingsChanged = true;
             }
-            
+
             if (model.LogoFile != null)
             {
                 if (model.LogoFile.ContentType.StartsWith("image/", StringComparison.InvariantCulture))
@@ -1037,7 +1050,7 @@ namespace BTCPayServer.Controllers
                     {
                         await _fileService.RemoveFile(settings.LogoFileId, userId);
                     }
-                    
+
                     // add new image
                     try
                     {
@@ -1061,12 +1074,12 @@ namespace BTCPayServer.Controllers
                 settings.LogoFileId = null;
                 settingsChanged = true;
             }
-            
+
             if (model.CustomTheme && !string.IsNullOrEmpty(model.CustomThemeCssUri) && !Uri.IsWellFormedUriString(model.CustomThemeCssUri, UriKind.RelativeOrAbsolute))
             {
                 ModelState.AddModelError(nameof(settings.CustomThemeCssUri), "Please provide a non-empty theme URI");
             }
-            
+
             if (settings.CustomThemeExtension != model.CustomThemeExtension)
             {
                 // Require a custom theme to be defined in that case
@@ -1080,7 +1093,7 @@ namespace BTCPayServer.Controllers
                     settingsChanged = true;
                 }
             }
-            
+
             if (settings.CustomTheme != model.CustomTheme)
             {
                 settings.CustomTheme = model.CustomTheme;

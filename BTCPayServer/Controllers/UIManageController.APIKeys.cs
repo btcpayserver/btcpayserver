@@ -2,9 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
+using BTCPayServer.Abstractions.Services;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Models;
@@ -41,7 +43,7 @@ namespace BTCPayServer.Controllers
             return View("Confirm", new ConfirmModel
             {
                 Title = "Delete API key",
-                Description = $"Any application using the API key <strong>{key.Label ?? key.Id}<strong> will immediately lose access.",
+                Description = $"Any application using the API key <strong>{Html.Encode(key.Label ?? key.Id)}<strong> will immediately lose access.",
                 Action = "Delete",
                 ActionName = nameof(DeleteAPIKeyPost)
             });
@@ -97,7 +99,7 @@ namespace BTCPayServer.Controllers
             permissions ??= Array.Empty<string>();
 
             var requestPermissions = Permission.ToPermissions(permissions).ToList();
-            
+
             if (redirect?.IsAbsoluteUri is false)
             {
                 redirect = null;
@@ -113,7 +115,7 @@ namespace BTCPayServer.Controllers
                 Permissions = string.Join(';', requestPermissions),
                 ApplicationIdentifier = applicationIdentifier
             };
-            
+
             var existingApiKey = await CheckForMatchingApiKey(requestPermissions, vm);
             if (existingApiKey != null)
             {
@@ -132,7 +134,7 @@ namespace BTCPayServer.Controllers
         {
             viewModel = await SetViewModelValues(viewModel);
             AdjustVMForAuthorization(viewModel);
-            
+
             var ar = HandleCommands(viewModel);
             if (ar != null)
             {
@@ -250,7 +252,7 @@ namespace BTCPayServer.Controllers
             {
                 return null;
             }
-                
+
             //check if there is an app identifier that matches and belongs to the current user
             var keys = await _apiKeyRepository.GetKeys(new APIKeyRepository.APIKeyQuery
             {
@@ -263,7 +265,7 @@ namespace BTCPayServer.Controllers
                 {
                     continue;
                 }
-                
+
                 var requestedGrouped = requestedPermissions.GroupBy(permission => permission.Policy);
                 var existingGrouped = Permission.ToPermissions(blob.Permissions).GroupBy(permission => permission.Policy);
 
@@ -280,8 +282,8 @@ namespace BTCPayServer.Controllers
 
                     if (Policies.IsStorePolicy(requested.Key))
                     {
-                        if ((vm.SelectiveStores && !existing.Any(p => p.Scope == vm.StoreId)) || 
-                            (!vm.SelectiveStores && existing.Any(p => !string.IsNullOrEmpty(p.Scope))) )
+                        if ((vm.SelectiveStores && !existing.Any(p => p.Scope == vm.StoreId)) ||
+                            (!vm.SelectiveStores && existing.Any(p => !string.IsNullOrEmpty(p.Scope))))
                         {
                             fail = true;
                             break;
@@ -305,9 +307,9 @@ namespace BTCPayServer.Controllers
         {
             var permissions = vm.Permissions?.Split(';') ?? Array.Empty<string>();
             var permissionsWithStoreIDs = new List<string>();
-            
+
             vm.NeedsStorePermission = vm.SelectiveStores && (permissions.Any(Policies.IsStorePolicy) || !vm.Strict);
-            
+
             // Go over each permission and associated store IDs and join them
             // so that permission for a specific store is parsed correctly
             foreach (var permission in permissions)
@@ -340,7 +342,7 @@ namespace BTCPayServer.Controllers
                     var commandParts = vm.Command?.Split(':', StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string>();
                     var command = commandParts.Length > 1 ? commandParts[1] : null;
                     var isPerformingAnAction = command == "change-store-mode" || command == "add-store";
-                    
+
                     // Don't want to accidentally change mode for the user if they are explicitly performing some action
                     if (isPerformingAnAction)
                     {
@@ -349,7 +351,7 @@ namespace BTCPayServer.Controllers
 
                     // Set the value to true and adjust the other fields based on the policy type
                     permissionValue.Value = true;
-                    
+
                     if (vm.SelectiveStores && Policies.IsStorePolicy(permissionValue.Permission) &&
                         wanted.Any(permission => !string.IsNullOrEmpty(permission.Scope)))
                     {
@@ -540,11 +542,18 @@ namespace BTCPayServer.Controllers
                     {$"{Policies.CanViewPaymentRequests}:", ("View your payment requests", "The app will be able to view the selected stores' payment requests.")},
                     {Policies.CanManagePullPayments, ("Manage your pull payments", "The app will be able to view, modify, delete and create pull payments on all your stores.")},
                     {$"{Policies.CanManagePullPayments}:", ("Manage selected stores' pull payments", "The app will be able to view, modify, delete and create new pull payments on the selected stores.")},
+                    {Policies.CanCreatePullPayments, ("Create pull payments", "The app will be able to create pull payments on all your stores.")},
+                    {$"{Policies.CanCreatePullPayments}:", ("Create pull payments in selected stores", "The app will be able to create new pull payments on the selected stores.")},
+                    {Policies.CanCreateNonApprovedPullPayments, ("Create non-approved pull payments", "The app will be able to create pull payments without automatic approval on all your stores.")},
+                    {$"{Policies.CanCreateNonApprovedPullPayments}:", ("Create non-approved pull payments in selected stores", "The app will be able to view, modify, delete and create pull payments without automatic approval on the selected stores.")},
                     {Policies.CanUseInternalLightningNode, ("Use the internal lightning node", "The app will be able to  use the internal BTCPay Server lightning node to create BOLT11 invoices, connect to other nodes, open new channels and pay BOLT11 invoices.")},
+                    {Policies.CanViewLightningInvoiceInternalNode, ("View invoices from internal lightning node", "The app will be able to use the internal BTCPay Server lightning node to view BOLT11 invoices.")},
                     {Policies.CanCreateLightningInvoiceInternalNode, ("Create invoices with internal lightning node", "The app will be able to use the internal BTCPay Server lightning node to create BOLT11 invoices.")},
                     {Policies.CanUseLightningNodeInStore, ("Use the lightning nodes associated with your stores", "The app will be able to use the lightning nodes connected to all your stores to create BOLT11 invoices, connect to other nodes, open new channels and pay BOLT11 invoices.")},
+                    {Policies.CanViewLightningInvoiceInStore, ("View the lightning invoices associated with your stores", "The app will be able to view the lightning invoices connected to all your stores.")},
                     {Policies.CanCreateLightningInvoiceInStore, ("Create invoices from the lightning nodes associated with your stores", "The app will be able to use the lightning nodes connected to all your stores to create BOLT11 invoices.")},
                     {$"{Policies.CanUseLightningNodeInStore}:", ("Use the lightning nodes associated with your stores", "The app will be able to use the lightning nodes connected to the selected stores to create BOLT11 invoices, connect to other nodes, open new channels and pay BOLT11 invoices.")},
+                    {$"{Policies.CanViewLightningInvoiceInStore}:", ("View the lightning invoices associated with your stores", "The app will be able to view the lightning invoices connected to the selected stores.")},
                     {$"{Policies.CanCreateLightningInvoiceInStore}:", ("Create invoices from the lightning nodes associated with your stores", "The app will be able to use the lightning nodes connected to the selected stores to create BOLT11 invoices.")},
                 };
                 public string Title
@@ -566,7 +575,7 @@ namespace BTCPayServer.Controllers
                 public bool Forbidden { get; set; }
 
                 public ApiKeyStoreMode StoreMode { get; set; } = ApiKeyStoreMode.AllStores;
-                public List<string> SpecificStores { get; set; } = new ();
+                public List<string> SpecificStores { get; set; } = new();
             }
         }
 

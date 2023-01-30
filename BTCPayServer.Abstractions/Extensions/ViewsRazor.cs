@@ -50,7 +50,7 @@ namespace BTCPayServer.Abstractions.Extensions
         {
             return IsActiveCategory(viewData, category.ToString(), id);
         }
-        
+
         public static string IsActiveCategory(this ViewDataDictionary viewData, string category, object id = null)
         {
             if (!viewData.ContainsKey(ACTIVE_CATEGORY_KEY))
@@ -77,7 +77,7 @@ namespace BTCPayServer.Abstractions.Extensions
                 ? ActivePageClass
                 : null;
         }
-        
+
         public static string IsActivePage(this ViewDataDictionary viewData, string page, string category, object id = null)
         {
             if (!viewData.ContainsKey(ACTIVE_PAGE_KEY))
@@ -126,7 +126,7 @@ namespace BTCPayServer.Abstractions.Extensions
             {
                 return $"{(int)timeSpan.TotalMinutes} minute{Plural((int)timeSpan.TotalMinutes)}";
             }
-            return timeSpan.Days < 1 
+            return timeSpan.Days < 1
                 ? $"{(int)timeSpan.TotalHours} hour{Plural((int)timeSpan.TotalHours)}"
                 : $"{(int)timeSpan.TotalDays} day{Plural((int)timeSpan.TotalDays)}";
         }

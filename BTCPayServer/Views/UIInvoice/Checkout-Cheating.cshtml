@@ -1,10 +1,10 @@
 @model PaymentModel
 
-<main id="checkout-cheating" class="shadow-lg" v-cloak>
+<main id="checkout-cheating" class="shadow-lg" v-cloak v-if="display">
     <section>
         <p id="CheatSuccessMessage" class="alert alert-success text-break" v-if="successMessage" v-text="successMessage"></p>
         <p id="CheatErrorMessage" class="alert alert-danger text-break" v-if="errorMessage" v-text="errorMessage"></p>
-        <form id="test-payment" :action="`/i/${invoiceId}/test-payment`" method="post" v-on:submit.prevent="handleFormSubmit($event, 'paying')" v-if="!isPaid">
+        <form id="test-payment" :action="`/i/${invoiceId}/test-payment`" method="post" v-on:submit.prevent="handleFormSubmit($event, 'paying')" v-if="displayPayment">
             <input name="CryptoCode" type="hidden" value="@Model.CryptoCode">
             <input name="PaymentMethodId" type="hidden" :value="paymentMethodId">
             <label for="FakePayAmount" class="control-label form-label">Fake a @Model.CryptoCode payment for testing</label>
@@ -16,7 +16,7 @@
                 <button class="btn btn-secondary flex-shrink-0 px-3 w-100px" type="submit" :disabled="paying" id="FakePay">Pay</button>
             </div>
         </form>
-        <form id="mine-block" :action="`/i/${invoiceId}/mine-blocks`" method="post" class="mt-4" v-on:submit.prevent="handleFormSubmit($event, 'mining')" v-if="paymentMethodId === 'BTC'">
+        <form id="mine-block" :action="`/i/${invoiceId}/mine-blocks`" method="post" class="mt-4" v-on:submit.prevent="handleFormSubmit($event, 'mining')" v-if="displayMine">
             <label for="BlockCount" class="control-label form-label">Mine to test processing and settlement</label>
             <div class="d-flex gap-2">
                 <div class="input-group">
@@ -26,7 +26,7 @@
                 <button class="btn btn-secondary flex-shrink-0 px-3 w-100px" type="submit" :disabled="mining" id="Mine">Mine</button>
             </div>
         </form>
-        <form id="expire-invoice" :action="`/i/${invoiceId}/expire`" method="post" class="mt-4" v-on:submit.prevent="handleFormSubmit($event, 'expiring')" v-if="!isPaid">
+        <form id="expire-invoice" :action="`/i/${invoiceId}/expire`" method="post" class="mt-4" v-on:submit.prevent="handleFormSubmit($event, 'expiring')" v-if="displayExpire">
             <label for="ExpirySeconds" class="control-label form-label">Expire invoice in …</label>
             <div class="d-flex gap-2">
                 <div class="input-group">
@@ -57,6 +57,20 @@
             paymentMethodId: String,
             btcDue: Number,
             isPaid: Boolean
+        },
+        computed: {
+            display() {
+                return this.successMessage || this.errorMessage || this.displayPayment || this.displayMine || this.displayExpire;
+            },
+            displayPayment () {
+                return !this.isPaid;
+            },
+            displayExpire () {
+                return !this.isPaid;
+            },
+            displayMine () {
+                return this.paymentMethodId === 'BTC';
+            }
         },
         methods: {
             async handleFormSubmit (e, processing) {

@@ -5,14 +5,17 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Configuration;
+using BTCPayServer.Lightning.CLightning;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.FileSystemGlobbing;
 using Microsoft.Extensions.Options;
 using NBitcoin.DataEncoders;
 using Newtonsoft.Json;
@@ -29,7 +32,7 @@ namespace BTCPayServer.Plugins
         public PluginService(
             ISettingsRepository settingsRepository,
             IEnumerable<IBTCPayServerPlugin> btcPayServerPlugins,
-            PluginBuilderClient pluginBuilderClient, 
+            PluginBuilderClient pluginBuilderClient,
             IOptions<DataDirectories> dataDirectories,
             PoliciesSettings policiesSettings,
             BTCPayServerEnvironment env)
@@ -52,6 +55,13 @@ namespace BTCPayServer.Plugins
             {
                 var p = v.ManifestInfo.ToObject<AvailablePlugin>();
                 p.Documentation = v.Documentation;
+                var github = v.BuildInfo.GetGithubRepository();
+                if (github != null)
+                {
+                    p.Source = github.GetSourceUrl(v.BuildInfo.gitCommit, v.BuildInfo.pluginDir);
+                    p.Author = github.Owner;
+                    p.AuthorLink = $"https://github.com/{github.Owner}";
+                }
                 p.SystemPlugin = false;
                 return p;
             }).ToArray();
@@ -108,6 +118,9 @@ namespace BTCPayServer.Plugins
 
             public IBTCPayServerPlugin.PluginDependency[] Dependencies { get; set; } = Array.Empty<IBTCPayServerPlugin.PluginDependency>();
             public string Documentation { get; set; }
+            public string Source { get; set; }
+            public string Author { get; set; }
+            public string AuthorLink { get; set; }
 
             public void Execute(IApplicationBuilder applicationBuilder,
                 IServiceProvider applicationBuilderApplicationServices)
@@ -142,7 +155,7 @@ namespace BTCPayServer.Plugins
 
         public string[] GetDisabledPlugins()
         {
-            return PluginManager.GetDisabledPlugins(_dataDirectories.Value.PluginDir);
+            return PluginManager.GetDisabledPlugins(_dataDirectories.Value.PluginDir).ToArray();
         }
     }
 }

@@ -18,8 +18,8 @@ namespace BTCPayServer.Services.Invoices
         private readonly InvoiceRepository _invoiceRepository;
         private readonly EventAggregator _eventAggregator;
 
-        public PaymentService(EventAggregator eventAggregator, 
-            ApplicationDbContextFactory applicationDbContextFactory, 
+        public PaymentService(EventAggregator eventAggregator,
+            ApplicationDbContextFactory applicationDbContextFactory,
             BTCPayNetworkProvider btcPayNetworkProvider, InvoiceRepository invoiceRepository)
         {
             _applicationDbContextFactory = applicationDbContextFactory;

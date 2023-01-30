@@ -34,7 +34,7 @@ public class UIOnChainAutomatedPayoutProcessorsController : Controller
         _payoutProcessorService = payoutProcessorService;
     }
 
-    
+
     [HttpGet("~/stores/{storeId}/payout-processors/onchain-automated/{cryptocode}")]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
@@ -64,7 +64,7 @@ public class UIOnChainAutomatedPayoutProcessorsController : Controller
                 new PayoutProcessorService.PayoutProcessorQuery()
                 {
                     Stores = new[] { storeId },
-                    Processors = new []{ _onChainAutomatedPayoutSenderFactory.Processor},
+                    Processors = new[] { _onChainAutomatedPayoutSenderFactory.Processor },
                     PaymentMethods = new[]
                     {
                         new PaymentMethodId(cryptoCode, BitcoinPaymentType.Instance).ToString()
@@ -72,9 +72,9 @@ public class UIOnChainAutomatedPayoutProcessorsController : Controller
                 }))
             .FirstOrDefault();
 
-        return View (new OnChainTransferViewModel(activeProcessor is null? new OnChainAutomatedPayoutBlob() : OnChainAutomatedPayoutProcessor.GetBlob(activeProcessor)));
+        return View(new OnChainTransferViewModel(activeProcessor is null ? new OnChainAutomatedPayoutBlob() : OnChainAutomatedPayoutProcessor.GetBlob(activeProcessor)));
     }
-    
+
     [HttpPost("~/stores/{storeId}/payout-processors/onchain-automated/{cryptocode}")]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
@@ -95,7 +95,7 @@ public class UIOnChainAutomatedPayoutProcessorsController : Controller
                 new PayoutProcessorService.PayoutProcessorQuery()
                 {
                     Stores = new[] { storeId },
-                    Processors = new []{ OnChainAutomatedPayoutSenderFactory.ProcessorName},
+                    Processors = new[] { OnChainAutomatedPayoutSenderFactory.ProcessorName },
                     PaymentMethods = new[]
                     {
                         new PaymentMethodId(cryptoCode, BitcoinPaymentType.Instance).ToString()
@@ -120,14 +120,14 @@ public class UIOnChainAutomatedPayoutProcessorsController : Controller
             Message = "Processor updated."
         });
         await tcs.Task;
-        return RedirectToAction("ConfigureStorePayoutProcessors", "UiPayoutProcessors", new {storeId});
+        return RedirectToAction("ConfigureStorePayoutProcessors", "UiPayoutProcessors", new { storeId });
     }
 
     public class OnChainTransferViewModel
     {
         public OnChainTransferViewModel()
         {
-            
+
         }
 
         public OnChainTransferViewModel(OnChainAutomatedPayoutBlob blob)

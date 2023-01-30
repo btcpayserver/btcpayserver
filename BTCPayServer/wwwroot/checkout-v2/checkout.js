@@ -90,7 +90,6 @@ function initApp() {
                 srvModel,
                 displayPaymentDetails: false,
                 remainingSeconds: srvModel.expirationSeconds,
-                expirationPercentage: 0,
                 emailAddressInput: "",
                 emailAddressInputDirty: false,
                 emailAddressInputInvalid: false,
@@ -113,7 +112,7 @@ function initApp() {
                 return this.showTimer || this.showPaymentDueInfo;
             },
             showTimer () {
-                return this.isActive && (this.expirationPercentage >= 75 || this.minutesLeft < 5);
+                return this.isActive && this.remainingSeconds < this.srvModel.displayExpirationTimer;
             },
             showPaymentDueInfo () {
                 return this.btcPaid > 0 && this.btcDue > 0;
@@ -190,7 +189,6 @@ function initApp() {
             },
             updateTimer () {
                 this.remainingSeconds = Math.floor((this.endDate.getTime() - new Date().getTime())/1000);
-                this.expirationPercentage = 100 - Math.floor((this.remainingSeconds / this.srvModel.maxTimeSeconds) * 100);
                 if (this.isActive) {
                     setTimeout(this.updateTimer, 500);
                 }

@@ -20,13 +20,15 @@ public class AppTopItems : ViewComponent
 
     public async Task<IViewComponentResult> InvokeAsync(AppTopItemsViewModel vm)
     {
-        if (vm.App == null) throw new ArgumentNullException(nameof(vm.App));
-        if (vm.InitialRendering) return View(vm);
-        
+        if (vm.App == null)
+            throw new ArgumentNullException(nameof(vm.App));
+        if (vm.InitialRendering)
+            return View(vm);
+
         var entries = Enum.Parse<AppType>(vm.App.AppType) == AppType.Crowdfund
             ? await _appService.GetPerkStats(vm.App)
             : await _appService.GetItemStats(vm.App);
-        
+
         vm.Entries = entries.ToList();
 
         return View(vm);

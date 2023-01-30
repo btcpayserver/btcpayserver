@@ -1,4 +1,4 @@
-﻿@using BTCPayServer.Abstractions.Models
+@using BTCPayServer.Abstractions.Models
 @model StoreUsersViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
@@ -51,7 +51,7 @@
                         <td>@user.Email</td>
                         <td>@user.Role</td>
                         <td style="text-align:right">
-                            <a asp-action="DeleteStoreUser" asp-route-storeId="@Model.StoreId" asp-route-userId="@user.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="This action will prevent <strong>@user.Email</strong> from accessing this store and its settings." data-confirm-input="REMOVE">Remove</a>
+                            <a asp-action="DeleteStoreUser" asp-route-storeId="@Model.StoreId" asp-route-userId="@user.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="This action will prevent <strong>@Html.Encode(user.Email)</strong> from accessing this store and its settings." data-confirm-input="REMOVE">Remove</a>
                         </td>
                     </tr>
                 }

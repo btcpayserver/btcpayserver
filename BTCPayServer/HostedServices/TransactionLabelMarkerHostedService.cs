@@ -82,28 +82,28 @@ namespace BTCPayServer.HostedServices
 
                         break;
                     }
-                case InvoiceEvent {Name: InvoiceEvent.ReceivedPayment} invoiceEvent when
+                case InvoiceEvent { Name: InvoiceEvent.ReceivedPayment } invoiceEvent when
                     invoiceEvent.Payment.GetPaymentMethodId()?.PaymentType == BitcoinPaymentType.Instance &&
                     invoiceEvent.Payment.GetCryptoPaymentData() is BitcoinLikePaymentData bitcoinLikePaymentData:
-                {
-                    var walletId = new WalletId(invoiceEvent.Invoice.StoreId, invoiceEvent.Payment.GetCryptoCode());
-                    var transactionId = bitcoinLikePaymentData.Outpoint.Hash;
-                    var labels = new List<Attachment>
+                    {
+                        var walletId = new WalletId(invoiceEvent.Invoice.StoreId, invoiceEvent.Payment.GetCryptoCode());
+                        var transactionId = bitcoinLikePaymentData.Outpoint.Hash;
+                        var labels = new List<Attachment>
                     {
                         Attachment.Invoice(invoiceEvent.Invoice.Id)
                     };
-                    foreach (var paymentId in PaymentRequestRepository.GetPaymentIdsFromInternalTags(invoiceEvent.Invoice))
-                    {
-                        labels.Add(Attachment.PaymentRequest(paymentId));
-                    }
-                    foreach (var appId in AppService.GetAppInternalTags(invoiceEvent.Invoice))
-                    {
-                        labels.Add(Attachment.App(appId));
-                    }
+                        foreach (var paymentId in PaymentRequestRepository.GetPaymentIdsFromInternalTags(invoiceEvent.Invoice))
+                        {
+                            labels.Add(Attachment.PaymentRequest(paymentId));
+                        }
+                        foreach (var appId in AppService.GetAppInternalTags(invoiceEvent.Invoice))
+                        {
+                            labels.Add(Attachment.App(appId));
+                        }
 
-                    await _walletRepository.AddWalletTransactionAttachment(walletId, transactionId, labels);
-                    break;
-                }
+                        await _walletRepository.AddWalletTransactionAttachment(walletId, transactionId, labels);
+                        break;
+                    }
             }
         }
 

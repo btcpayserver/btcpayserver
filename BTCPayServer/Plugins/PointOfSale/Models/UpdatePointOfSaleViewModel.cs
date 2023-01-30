@@ -98,11 +98,8 @@ namespace BTCPayServer.Plugins.PointOfSale.Models
         [Display(Name = "Custom CSS Code")]
         public string EmbeddedCSS { get; set; }
         public string Description { get; set; }
-        
-        [Display(Name = "Require refund email on checkout")]
-        public RequiresRefundEmail RequiresRefundEmail { get; set; } = RequiresRefundEmail.InheritFromStore;
 
         [Display(Name = "Request customer data on checkout")]
-        public string FormId { get; set; } = null;
+        public string FormId { get; set; }
     }
 }

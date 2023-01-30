@@ -149,6 +149,15 @@
                         "type": "string",
                         "description": "The amount received in millisatoshi"
                     },
+                    "paymentHash": {
+                        "type": "string",
+                        "description": "The payment hash"
+                    },
+                    "preimage": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "The payment preimage (available when status is complete)"
+                    },
                     "customRecords": {
                         "type": "object",
                         "nullable": true,

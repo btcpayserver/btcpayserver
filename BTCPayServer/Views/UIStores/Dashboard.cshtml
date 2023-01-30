@@ -76,6 +76,7 @@
         };
     </script>
     <div id="Dashboard" class="mt-4">
+        <vc:ui-extension-point location="dashboard" model="@Model"/>
         @if (Model.WalletEnabled)
         {
             <vc:store-wallet-balance store="@store"/>

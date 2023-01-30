@@ -11,11 +11,19 @@ namespace BTCPayServer.Payments.Lightning
     {
         [JsonIgnore]
         public BTCPayNetworkBase Network { get; set; }
+        
         [JsonConverter(typeof(LightMoneyJsonConverter))]
         public LightMoney Amount { get; set; }
+        
         public string BOLT11 { get; set; }
+        
         [JsonConverter(typeof(NBitcoin.JsonConverters.UInt256JsonConverter))]
         public uint256 PaymentHash { get; set; }
+        
+        [JsonConverter(typeof(NBitcoin.JsonConverters.UInt256JsonConverter))]
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public uint256 Preimage { get; set; }
+        
         public string PaymentType { get; set; }
 
         public string GetDestination()
@@ -24,7 +32,6 @@ namespace BTCPayServer.Payments.Lightning
         }
 
         public decimal NetworkFee { get; set; }
-
 
         public string GetPaymentId()
         {

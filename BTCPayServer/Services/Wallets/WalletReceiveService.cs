@@ -31,7 +31,7 @@ namespace BTCPayServer.Services.Wallets
 
         public WalletReceiveService(EventAggregator eventAggregator, ExplorerClientProvider explorerClientProvider,
             BTCPayWalletProvider btcPayWalletProvider, BTCPayNetworkProvider btcPayNetworkProvider,
-            StoreRepository storeRepository, WalletRepository walletRepository )
+            StoreRepository storeRepository, WalletRepository walletRepository)
         {
             _eventAggregator = eventAggregator;
             _explorerClientProvider = explorerClientProvider;

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using BTCPayServer.Client.JsonConverters;
 using BTCPayServer.Lightning;
 using BTCPayServer.Payments.Lightning;
+using BTCPayServer.Services.Invoices;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 

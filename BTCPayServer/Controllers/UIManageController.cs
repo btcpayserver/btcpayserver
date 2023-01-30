@@ -16,6 +16,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Logging;
 using MimeKit;
@@ -38,6 +39,7 @@ namespace BTCPayServer.Controllers
         private readonly Fido2Service _fido2Service;
         private readonly LinkGenerator _linkGenerator;
         private readonly UserLoginCodeService _userLoginCodeService;
+        private readonly IHtmlHelper Html;
         private readonly UserService _userService;
         readonly StoreRepository _StoreRepository;
 
@@ -54,7 +56,8 @@ namespace BTCPayServer.Controllers
           Fido2Service fido2Service,
           LinkGenerator linkGenerator,
           UserService userService,
-          UserLoginCodeService userLoginCodeService
+          UserLoginCodeService userLoginCodeService,
+          IHtmlHelper htmlHelper
           )
         {
             _userManager = userManager;
@@ -68,6 +71,7 @@ namespace BTCPayServer.Controllers
             _fido2Service = fido2Service;
             _linkGenerator = linkGenerator;
             _userLoginCodeService = userLoginCodeService;
+            Html = htmlHelper;
             _userService = userService;
             _StoreRepository = storeRepository;
         }

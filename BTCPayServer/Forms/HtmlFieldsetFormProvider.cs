@@ -4,7 +4,7 @@ using BTCPayServer.Abstractions.Form;
 
 namespace BTCPayServer.Forms;
 
-public class HtmlFieldsetFormProvider: IFormComponentProvider
+public class HtmlFieldsetFormProvider : IFormComponentProvider
 {
     public string View => "Forms/FieldSetElement";
 

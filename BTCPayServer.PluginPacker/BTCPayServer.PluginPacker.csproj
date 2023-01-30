@@ -27,7 +27,7 @@
 
   <ItemGroup>
       <PackageReference Include="BTCPayServer.NETCore.Plugins.Mvc" Version="1.4.4" />
-      <ProjectReference Include="..\BTCPayServer.Abstractions\BTCPayServer.Abstractions.csproj" />
+      <ProjectReference Include="..\BTCPayServer\BTCPayServer.csproj" />
       <None Include="icon.png" Pack="true" PackagePath="\" />
   </ItemGroup>
 </Project>

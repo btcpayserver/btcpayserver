@@ -58,7 +58,7 @@ namespace BTCPayServer.Controllers.GreenField
         public ActionResult<List<RateSource>> GetRateSources()
         {
             return Ok(_rateProviderFactory.RateProviderFactory.GetSupportedExchanges().Select(provider =>
-                new RateSource() {Id = provider.Id, Name = provider.DisplayName}));
+                new RateSource() { Id = provider.Id, Name = provider.DisplayName }));
         }
 
         [HttpPut("")]

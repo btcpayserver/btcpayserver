@@ -1,4 +1,4 @@
-﻿@using BTCPayServer.Views.Stores
+@using BTCPayServer.Views.Stores
 @using BTCPayServer.Abstractions.Extensions
 @using BTCPayServer.Abstractions.Models
 @model UILNURLController.EditLightningAddressVM
@@ -139,7 +139,7 @@
                             </td>
                             <td class="text-end">
                                 <button type="submit" title="Remove" name="command" value="@($"remove:{Model.Items[index].Username}")"
-                                        class="btn btn-link px-0 remove" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The Lightning Address <strong>@address</strong> will be removed." data-confirm-input="REMOVE">
+				class="btn btn-link px-0 remove" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The Lightning Address <strong>@Html.Encode(address)</strong> will be removed." data-confirm-input="REMOVE">
                                     Remove
                                 </button>
                             </td>

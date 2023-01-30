@@ -34,8 +34,8 @@ public class PayoutProcessorService : EventHostedServiceBase
     private ConcurrentDictionary<string, IHostedService> Services { get; set; } = new();
     public PayoutProcessorService(
         ApplicationDbContextFactory applicationDbContextFactory,
-        EventAggregator eventAggregator, 
-        Logs logs, 
+        EventAggregator eventAggregator,
+        Logs logs,
         IEnumerable<IPayoutProcessorFactory> payoutProcessorFactories) : base(eventAggregator, logs)
     {
         _applicationDbContextFactory = applicationDbContextFactory;
@@ -51,7 +51,7 @@ public class PayoutProcessorService : EventHostedServiceBase
 
     public async Task<List<PayoutProcessorData>> GetProcessors(PayoutProcessorQuery query)
     {
-        
+
         await using var context = _applicationDbContextFactory.CreateContext();
         var queryable = context.PayoutProcessors.AsQueryable();
         if (query.Processors is not null)
@@ -82,7 +82,7 @@ public class PayoutProcessorService : EventHostedServiceBase
 
     private async Task AddOrUpdateProcessor(PayoutProcessorData data)
     {
-        
+
         await using var context = _applicationDbContextFactory.CreateContext();
         if (string.IsNullOrEmpty(data.Id))
         {
@@ -95,7 +95,7 @@ public class PayoutProcessorService : EventHostedServiceBase
         await context.SaveChangesAsync();
         await StartOrUpdateProcessor(data, CancellationToken.None);
     }
-    
+
     protected override void SubscribeToEvents()
     {
         base.SubscribeToEvents();
@@ -103,7 +103,7 @@ public class PayoutProcessorService : EventHostedServiceBase
     }
 
     public override async Task StartAsync(CancellationToken cancellationToken)
-    {       
+    {
         await base.StartAsync(cancellationToken);
         var activeProcessors = await GetProcessors(new PayoutProcessorQuery());
         var tasks = activeProcessors.Select(data => StartOrUpdateProcessor(data, cancellationToken));
@@ -123,7 +123,7 @@ public class PayoutProcessorService : EventHostedServiceBase
     {
         var matchedProcessor = _payoutProcessorFactories.FirstOrDefault(factory =>
             factory.Processor == data.Processor);
-        
+
         if (matchedProcessor is not null)
         {
             await StopProcessor(data.Id, cancellationToken);
@@ -131,7 +131,7 @@ public class PayoutProcessorService : EventHostedServiceBase
             await processor.StartAsync(cancellationToken);
             Services.TryAdd(data.Id, processor);
         }
-        
+
     }
 
     public override async Task StopAsync(CancellationToken cancellationToken)
@@ -142,7 +142,7 @@ public class PayoutProcessorService : EventHostedServiceBase
 
     private async Task StopAllService(CancellationToken cancellationToken)
     {
-        foreach (KeyValuePair<string,IHostedService> service in Services)
+        foreach (KeyValuePair<string, IHostedService> service in Services)
         {
             await service.Value.StopAsync(cancellationToken);
         }

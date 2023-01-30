@@ -86,7 +86,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 row: 10
             },
             codeviewFilter: true,
-            codeviewFilterRegex: new RegExp($.summernote.options.codeviewFilterRegex.source + '|<.*?( on\\w+?=.*?)>', 'gi')
+            codeviewFilterRegex: new RegExp($.summernote.options.codeviewFilterRegex.source + '|<.*?( on\\w+?=.*?)>', 'gi'),
+            codeviewIframeWhitelistSrc: ['twitter.com', 'syndication.twitter.com']
         });
     }
 

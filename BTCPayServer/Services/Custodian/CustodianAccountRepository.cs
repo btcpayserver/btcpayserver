@@ -53,7 +53,7 @@ namespace BTCPayServer.Services.Custodian.Client
             IQueryable<CustodianAccountData> query = context.CustodianAccount
                 .Where(ca => ca.StoreId == storeId);
 
-            var data = await query.ToArrayAsync( cancellationToken).ConfigureAwait(false);
+            var data = await query.ToArrayAsync(cancellationToken).ConfigureAwait(false);
             return data;
         }
 

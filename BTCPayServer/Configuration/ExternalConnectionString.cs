@@ -97,7 +97,7 @@ namespace BTCPayServer.Configuration
                         }
                     }
                     connectionString.CookieFilePath = null;
-                    
+
                     if (serviceType == ExternalServiceTypes.RTL || serviceType == ExternalServiceTypes.Configurator ||
                         serviceType == ExternalServiceTypes.ThunderHub || serviceType == ExternalServiceTypes.Torq)
                     {

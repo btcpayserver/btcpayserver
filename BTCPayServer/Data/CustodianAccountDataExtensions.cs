@@ -18,7 +18,7 @@ public static class CustodianAccountDataExtensions
         var original = custodianAccountData.GetBlob();
         if (JToken.DeepEquals(original, blob))
             return false;
-        
+
         custodianAccountData.Blob = blob is null ? null : InvoiceRepository.ToBytes(blob);
         return true;
     }

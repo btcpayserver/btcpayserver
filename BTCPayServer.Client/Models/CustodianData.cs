@@ -9,5 +9,5 @@ public class CustodianData
     public Dictionary<string, AssetPairData> TradableAssetPairs { get; set; }
     public string[] WithdrawablePaymentMethods { get; set; }
     public string[] DepositablePaymentMethods { get; set; }
-    
+
 }

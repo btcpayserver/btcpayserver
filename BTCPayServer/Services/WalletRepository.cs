@@ -38,7 +38,7 @@ namespace BTCPayServer.Services
             Type = type;
             Ids = ids;
         }
-        public GetWalletObjectsQuery(WalletId? walletId,ObjectTypeId[]? typesIds)
+        public GetWalletObjectsQuery(WalletId? walletId, ObjectTypeId[]? typesIds)
         {
             WalletId = walletId;
             TypesIds = typesIds;
@@ -253,10 +253,10 @@ namespace BTCPayServer.Services
         {
             var wos = await GetWalletObjects(
                 new GetWalletObjectsQuery(walletId, transactionIds));
-            
+
             return GetWalletTransactionsInfoCore(walletId, wos);
         }
-        
+
         public WalletTransactionInfo Merge(params WalletTransactionInfo[] infos)
         {
             WalletTransactionInfo result = null;
@@ -268,7 +268,7 @@ namespace BTCPayServer.Services
                 }
                 else
                 {
-                    
+
                     result = result.Merge(walletTransactionInfo);
                 }
             }
@@ -279,7 +279,7 @@ namespace BTCPayServer.Services
         private Dictionary<string, WalletTransactionInfo> GetWalletTransactionsInfoCore(WalletId walletId,
             Dictionary<WalletObjectId, WalletObjectData> wos)
         {
-       
+
             var result = new Dictionary<string, WalletTransactionInfo>(wos.Count);
             foreach (var obj in wos.Values)
             {
@@ -318,7 +318,7 @@ namespace BTCPayServer.Services
                     {
                         if (o.Data is null)
                         {
-                            return (o.Id,ColorPalette.Default.DeterministicColor(o.Id));
+                            return (o.Id, ColorPalette.Default.DeterministicColor(o.Id));
                         }
                         return (o.Id,
                             JObject.Parse(o.Data)["color"]?.Value<string>() ??
@@ -477,7 +477,7 @@ namespace BTCPayServer.Services
         }
         public Task AddWalletTransactionAttachment(WalletId walletId, uint256 txId, Attachment attachment)
         {
-            return AddWalletTransactionAttachment(walletId, txId.ToString(), new []{attachment}, WalletObjectData.Types.Tx);
+            return AddWalletTransactionAttachment(walletId, txId.ToString(), new[] { attachment }, WalletObjectData.Types.Tx);
         }
 
         public Task AddWalletTransactionAttachment(WalletId walletId, uint256 txId,
@@ -485,7 +485,7 @@ namespace BTCPayServer.Services
         {
             return AddWalletTransactionAttachment(walletId, txId.ToString(), attachments, WalletObjectData.Types.Tx);
         }
-        
+
         public async Task AddWalletTransactionAttachment(WalletId walletId, string txId, IEnumerable<Attachment> attachments, string type)
         {
             ArgumentNullException.ThrowIfNull(walletId);

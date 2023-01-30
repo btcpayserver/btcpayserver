@@ -51,7 +51,7 @@ public class UILightningAutomatedPayoutProcessorsController : Controller
                 new PayoutProcessorService.PayoutProcessorQuery()
                 {
                     Stores = new[] { storeId },
-                    Processors = new []{ _lightningAutomatedPayoutSenderFactory.Processor},
+                    Processors = new[] { _lightningAutomatedPayoutSenderFactory.Processor },
                     PaymentMethods = new[]
                     {
                         new PaymentMethodId(cryptoCode, LightningPaymentType.Instance).ToString()
@@ -59,9 +59,9 @@ public class UILightningAutomatedPayoutProcessorsController : Controller
                 }))
             .FirstOrDefault();
 
-        return View (new LightningTransferViewModel(activeProcessor is null? new AutomatedPayoutBlob() : OnChainAutomatedPayoutProcessor.GetBlob(activeProcessor)));
+        return View(new LightningTransferViewModel(activeProcessor is null ? new AutomatedPayoutBlob() : OnChainAutomatedPayoutProcessor.GetBlob(activeProcessor)));
     }
-    
+
     [HttpPost("~/stores/{storeId}/payout-processors/lightning-automated/{cryptocode}")]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
@@ -82,7 +82,7 @@ public class UILightningAutomatedPayoutProcessorsController : Controller
                 new PayoutProcessorService.PayoutProcessorQuery()
                 {
                     Stores = new[] { storeId },
-                    Processors = new []{ _lightningAutomatedPayoutSenderFactory.Processor},
+                    Processors = new[] { _lightningAutomatedPayoutSenderFactory.Processor },
                     PaymentMethods = new[]
                     {
                         new PaymentMethodId(cryptoCode, LightningPaymentType.Instance).ToString()
@@ -107,21 +107,21 @@ public class UILightningAutomatedPayoutProcessorsController : Controller
             Message = "Processor updated."
         });
         await tcs.Task;
-        return RedirectToAction("ConfigureStorePayoutProcessors", "UiPayoutProcessors", new {storeId});
+        return RedirectToAction("ConfigureStorePayoutProcessors", "UiPayoutProcessors", new { storeId });
     }
 
     public class LightningTransferViewModel
     {
         public LightningTransferViewModel()
         {
-            
+
         }
 
         public LightningTransferViewModel(AutomatedPayoutBlob blob)
         {
             IntervalMinutes = blob.Interval.TotalMinutes;
         }
-        
+
         public double IntervalMinutes { get; set; }
 
         public AutomatedPayoutBlob ToBlob()

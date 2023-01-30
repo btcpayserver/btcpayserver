@@ -93,7 +93,7 @@ namespace BTCPayServer.Controllers.Greenfield
             return base.GetPayment(cryptoCode, paymentHash, cancellationToken);
         }
 
-        [Authorize(Policy = Policies.CanUseInternalLightningNode,
+        [Authorize(Policy = Policies.CanViewLightningInvoiceInternalNode,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/server/lightning/{cryptoCode}/invoices/{id}")]
         public override Task<IActionResult> GetInvoice(string cryptoCode, string id, CancellationToken cancellationToken = default)
@@ -101,7 +101,7 @@ namespace BTCPayServer.Controllers.Greenfield
             return base.GetInvoice(cryptoCode, id, cancellationToken);
         }
 
-        [Authorize(Policy = Policies.CanUseInternalLightningNode,
+        [Authorize(Policy = Policies.CanViewLightningInvoiceInternalNode,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/server/lightning/{cryptoCode}/invoices")]
         public override Task<IActionResult> GetInvoices(string cryptoCode, [FromQuery] bool? pendingOnly, [FromQuery] long? offsetIndex, CancellationToken cancellationToken = default)
@@ -123,6 +123,14 @@ namespace BTCPayServer.Controllers.Greenfield
         public override Task<IActionResult> CreateInvoice(string cryptoCode, CreateLightningInvoiceRequest request, CancellationToken cancellationToken = default)
         {
             return base.CreateInvoice(cryptoCode, request, cancellationToken);
+        }
+
+        [Authorize(Policy = Policies.CanUseInternalLightningNode,
+            AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [HttpGet("~/api/v1/server/lightning/{cryptoCode}/payments")]
+        public override Task<IActionResult> GetPayments(string cryptoCode, [FromQuery] bool? includePending, [FromQuery] long? offsetIndex, CancellationToken cancellationToken = default)
+        {
+            return base.GetPayments(cryptoCode, includePending, offsetIndex, cancellationToken);
         }
 
         protected override async Task<ILightningClient> GetLightningClient(string cryptoCode, bool doingAdminThings)

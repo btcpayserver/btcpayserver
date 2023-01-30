@@ -17,16 +17,16 @@ public class AlertMessage
         Danger,
         Info
     }
-    
+
     [JsonConverter(typeof(StringEnumConverter))]
     public AlertMessageType Type;
-    
+
     // The translated message to be shown to the user
     public string Message;
 
     public AlertMessage()
     {
-        
+
     }
 
     public AlertMessage(AlertMessageType type, string message)

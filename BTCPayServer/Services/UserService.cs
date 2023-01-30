@@ -41,11 +41,11 @@ namespace BTCPayServer.Services
         public async Task<List<ApplicationUserData>> GetUsersWithRoles()
         {
             await using var context = _applicationDbContextFactory.CreateContext();
-            return await  (context.Users.Select(p => FromModel(p, p.UserRoles.Join(context.Roles, userRole => userRole.RoleId, role => role.Id,
-                (userRole, role) => role.Name).ToArray()))).ToListAsync();
+            return await (context.Users.Select(p => FromModel(p, p.UserRoles.Join(context.Roles, userRole => userRole.RoleId, role => role.Id,
+               (userRole, role) => role.Name).ToArray()))).ToListAsync();
         }
-        
-        
+
+
         public static ApplicationUserData FromModel(ApplicationUser data, string[] roles)
         {
             return new ApplicationUserData()
@@ -144,7 +144,7 @@ namespace BTCPayServer.Services
             else
             {
                 _logger.LogError($"Failed to delete user {user.Id}");
-            } 
+            }
 
             await _storeRepository.CleanUnreachableStores();
         }

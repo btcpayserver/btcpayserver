@@ -1,0 +1,26 @@
+@model (string BrandColor, string CssFileId)
+@using BTCPayServer.Abstractions.Extensions
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using BTCPayServer.Abstractions.Contracts
+@inject IFileService FileService
+@{
+    var cssUrl = !string.IsNullOrEmpty(Model.CssFileId)
+        ? await FileService.GetFileUrl(Context.Request.GetAbsoluteRootUri(), Model.CssFileId)
+        : null;
+}
+@if (!string.IsNullOrEmpty(Model.BrandColor))
+{
+    <style>
+        :root {
+            --btcpay-primary: @Model.BrandColor;
+            --btcpay-primary-bg-hover: @Model.BrandColor;
+            --btcpay-primary-bg-active: @Model.BrandColor;
+            --btcpay-primary-shadow: @Model.BrandColor;
+            --btcpay-body-link-accent: @Model.BrandColor;
+        }
+    </style>
+}
+@if (!string.IsNullOrEmpty(cssUrl))
+{
+    <link href="@cssUrl" asp-append-version="true" rel="stylesheet" />
+}

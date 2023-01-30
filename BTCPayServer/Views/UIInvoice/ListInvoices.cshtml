@@ -267,8 +267,8 @@
                     Export
                 </button>
                 <div class="dropdown-menu" aria-labelledby="ExportDropdownToggle">
-                    <a asp-action="Export" asp-route-timezoneoffset="0" asp-route-format="csv" asp-route-searchTerm="@Model.SearchTerm" class="dropdown-item export-link" target="_blank">CSV</a>
-                    <a asp-action="Export" asp-route-timezoneoffset="0" asp-route-format="json" asp-route-searchTerm="@Model.SearchTerm" class="dropdown-item export-link" target="_blank">JSON</a>
+                    <a asp-action="Export" asp-route-timezoneoffset="0" asp-route-format="csv" asp-route-storeId="@Model.StoreId" asp-route-searchTerm="@Model.SearchTerm" class="dropdown-item export-link" target="_blank">CSV</a>
+                    <a asp-action="Export" asp-route-timezoneoffset="0" asp-route-format="json" asp-route-storeId="@Model.StoreId" asp-route-searchTerm="@Model.SearchTerm" class="dropdown-item export-link" target="_blank">JSON</a>
                 </div>
                 <a href="https://docs.btcpayserver.org/Accounting/" target="_blank" rel="noreferrer noopener">
                     <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>

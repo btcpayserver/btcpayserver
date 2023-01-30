@@ -11,12 +11,13 @@ namespace BTCPayServer.Services.Apps
 
     public enum PosViewType
     {
-        [Display(Name = "Item list only")]
+        [Display(Name = "Product list")]
         Static,
-        [Display(Name = "Item list and cart")]
+        [Display(Name = "Product list with cart")]
         Cart,
         [Display(Name = "Keypad only")]
         Light,
+        [Display(Name = "Print display")]
         Print
     }
 

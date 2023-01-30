@@ -138,7 +138,7 @@ retry:
             el.Clear();
             el.SendKeys(text);
         }
-        
+
         public static void ScrollTo(this IWebDriver driver, IWebElement element)
         {
             driver.ExecuteJavaScript("arguments[0].scrollIntoView();", element);
@@ -148,7 +148,7 @@ retry:
         {
             ScrollTo(driver, driver.FindElement(selector));
         }
-        
+
         public static void WaitUntilAvailable(this IWebDriver driver, By selector, TimeSpan? waitTime = null)
         {
             // Try fast path
@@ -165,7 +165,7 @@ retry:
             wait.UntilJsIsReady();
 
             int retriesLeft = 4;
-            retry:
+retry:
             try
             {
                 var el = driver.FindElement(selector);
@@ -176,18 +176,19 @@ retry:
             catch (NoSuchElementException) when (retriesLeft > 0)
             {
                 retriesLeft--;
-                if (waitTime != null) Thread.Sleep(waitTime.Value);
+                if (waitTime != null)
+                    Thread.Sleep(waitTime.Value);
                 goto retry;
             }
             wait.UntilJsIsReady();
         }
-        
+
         public static void WaitForAndClick(this IWebDriver driver, By selector)
         {
             driver.WaitUntilAvailable(selector);
             driver.FindElement(selector).Click();
         }
-        
+
         public static bool ElementDoesNotExist(this IWebDriver driver, By selector)
         {
             Assert.Throws<NoSuchElementException>(() =>

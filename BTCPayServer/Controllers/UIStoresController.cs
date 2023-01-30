@@ -65,7 +65,8 @@ namespace BTCPayServer.Controllers
             WebhookSender webhookNotificationManager,
             IDataProtectionProvider dataProtector,
             IOptions<LightningNetworkOptions> lightningNetworkOptions,
-            IOptions<ExternalServicesOptions> externalServiceOptions)
+            IOptions<ExternalServicesOptions> externalServiceOptions,
+            IHtmlHelper html)
         {
             _RateFactory = rateFactory;
             _Repo = repo;
@@ -89,6 +90,7 @@ namespace BTCPayServer.Controllers
             _BtcpayServerOptions = btcpayServerOptions;
             _BTCPayEnv = btcpayEnv;
             _externalServiceOptions = externalServiceOptions;
+            Html = html;
         }
 
         readonly BTCPayServerOptions _BtcpayServerOptions;
@@ -113,6 +115,7 @@ namespace BTCPayServer.Controllers
 
         public string? GeneratedPairingCode { get; set; }
         public WebhookSender WebhookNotificationManager { get; }
+        public IHtmlHelper Html { get; }
         public LightningNetworkOptions LightningNetworkOptions { get; }
         public IDataProtector DataProtector { get; }
 
@@ -180,13 +183,13 @@ namespace BTCPayServer.Controllers
             var user = await _UserManager.FindByIdAsync(userId);
             if (user == null)
                 return NotFound();
-            return View("Confirm", new ConfirmModel("Remove store user", $"This action will prevent <strong>{user.Email}</strong> from accessing this store and its settings. Are you sure?", "Remove"));
+            return View("Confirm", new ConfirmModel("Remove store user", $"This action will prevent <strong>{Html.Encode(user.Email)}</strong> from accessing this store and its settings. Are you sure?", "Remove"));
         }
 
         [HttpPost("{storeId}/users/{userId}/delete")]
         public async Task<IActionResult> DeleteStoreUserPost(string storeId, string userId)
         {
-            if(await _Repo.RemoveStoreUser(storeId, userId))
+            if (await _Repo.RemoveStoreUser(storeId, userId))
                 TempData[WellKnownTempData.SuccessMessage] = "User removed successfully.";
             else
             {
@@ -390,6 +393,7 @@ namespace BTCPayServer.Controllers
             vm.CustomCSS = storeBlob.CustomCSS;
             vm.CustomLogo = storeBlob.CustomLogo;
             vm.HtmlTitle = storeBlob.HtmlTitle;
+            vm.DisplayExpirationTimer = (int)storeBlob.DisplayExpirationTimer.TotalMinutes;
             vm.ReceiptOptions = CheckoutAppearanceViewModel.ReceiptOptionsViewModel.Create(storeBlob.ReceiptOptions);
             vm.AutoDetectLanguage = storeBlob.AutoDetectLanguage;
             vm.SetLanguages(_LangService, storeBlob.DefaultLang);
@@ -409,7 +413,7 @@ namespace BTCPayServer.Controllers
         public PaymentMethodOptionViewModel.Format[] GetEnabledPaymentMethodChoices(StoreData storeData)
         {
             var enabled = storeData.GetEnabledPaymentIds(_NetworkProvider);
-            
+
             return enabled
                 .Select(o =>
                     new PaymentMethodOptionViewModel.Format()
@@ -436,8 +440,7 @@ namespace BTCPayServer.Controllers
             return defaultChoice is null ? null : choices.FirstOrDefault(c => defaultChoice.ToString().Equals(c.Value, StringComparison.OrdinalIgnoreCase));
         }
 
-        [HttpPost]
-        [Route("{storeId}/checkout")]
+        [HttpPost("{storeId}/checkout")]
         public async Task<IActionResult> CheckoutAppearance(CheckoutAppearanceViewModel model)
         {
             bool needUpdate = false;
@@ -513,6 +516,7 @@ namespace BTCPayServer.Controllers
             blob.CustomLogo = model.CustomLogo;
             blob.CustomCSS = model.CustomCSS;
             blob.HtmlTitle = string.IsNullOrWhiteSpace(model.HtmlTitle) ? null : model.HtmlTitle;
+            blob.DisplayExpirationTimer = TimeSpan.FromMinutes(model.DisplayExpirationTimer);
             blob.AutoDetectLanguage = model.AutoDetectLanguage;
             blob.DefaultLang = model.DefaultLang;
             blob.NormalizeToRelativeLinks(Request);
@@ -604,6 +608,7 @@ namespace BTCPayServer.Controllers
                 StoreName = store.StoreName,
                 StoreWebsite = store.StoreWebsite,
                 LogoFileId = storeBlob.LogoFileId,
+                CssFileId = storeBlob.CssFileId,
                 BrandColor = storeBlob.BrandColor,
                 NetworkFeeMode = storeBlob.NetworkFeeMode,
                 AnyoneCanCreateInvoice = storeBlob.AnyoneCanInvoice,
@@ -618,7 +623,10 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost("{storeId}/settings")]
-        public async Task<IActionResult> GeneralSettings(GeneralSettingsViewModel model, [FromForm] bool RemoveLogoFile = false)
+        public async Task<IActionResult> GeneralSettings(
+            GeneralSettingsViewModel model,
+            [FromForm] bool RemoveLogoFile = false,
+            [FromForm] bool RemoveCssFile = false)
         {
             bool needUpdate = false;
             if (CurrentStore.StoreName != model.StoreName)
@@ -646,11 +654,11 @@ namespace BTCPayServer.Controllers
                 return View(model);
             }
             blob.BrandColor = model.BrandColor;
-            
+
             var userId = GetUserId();
             if (userId is null)
                 return NotFound();
-            
+
             if (model.LogoFile != null)
             {
                 if (model.LogoFile.ContentType.StartsWith("image/", StringComparison.InvariantCulture))
@@ -660,7 +668,7 @@ namespace BTCPayServer.Controllers
                     {
                         await _fileService.RemoveFile(blob.LogoFileId, userId);
                     }
-                    
+
                     // add new image
                     try
                     {
@@ -683,7 +691,40 @@ namespace BTCPayServer.Controllers
                 blob.LogoFileId = null;
                 needUpdate = true;
             }
-            
+
+            if (model.CssFile != null)
+            {
+                if (model.CssFile.ContentType.Equals("text/css", StringComparison.InvariantCulture))
+                {
+                    // delete existing CSS file
+                    if (!string.IsNullOrEmpty(blob.CssFileId))
+                    {
+                        await _fileService.RemoveFile(blob.CssFileId, userId);
+                    }
+                    
+                    // add new CSS file
+                    try
+                    {
+                        var storedFile = await _fileService.AddFile(model.CssFile, userId);
+                        blob.CssFileId = storedFile.Id;
+                    }
+                    catch (Exception e)
+                    {
+                        TempData[WellKnownTempData.ErrorMessage] = $"Could not save CSS file: {e.Message}";
+                    }
+                }
+                else
+                {
+                    TempData[WellKnownTempData.ErrorMessage] = "The uploaded file needs to be a CSS file";
+                }
+            }
+            else if (RemoveCssFile && !string.IsNullOrEmpty(blob.CssFileId))
+            {
+                await _fileService.RemoveFile(blob.CssFileId, userId);
+                blob.CssFileId = null;
+                needUpdate = true;
+            }
+
             if (CurrentStore.SetStoreBlob(blob))
             {
                 needUpdate = true;
@@ -743,7 +784,7 @@ namespace BTCPayServer.Controllers
                 }).ToArray() ?? new AccountKeySettings[result.Item1.GetExtPubKeys().Count()];
                 return derivationSchemeSettings;
             }
-            
+
             var strategy = parser.Parse(derivationScheme);
             return new DerivationSchemeSettings(strategy, network);
         }
@@ -775,7 +816,7 @@ namespace BTCPayServer.Controllers
             var token = await _TokenRepository.GetToken(tokenId);
             if (token == null || token.StoreId != CurrentStore.Id)
                 return NotFound();
-            return View("Confirm", new ConfirmModel("Revoke the token", $"The access token with the label <strong>{token.Label}</strong> will be revoked. Do you wish to continue?", "Revoke"));
+            return View("Confirm", new ConfirmModel("Revoke the token", $"The access token with the label <strong>{Html.Encode(token.Label)}</strong> will be revoked. Do you wish to continue?", "Revoke"));
         }
 
         [HttpPost("{storeId}/tokens/{tokenId}/revoke")]
@@ -915,10 +956,10 @@ namespace BTCPayServer.Controllers
             var userId = GetUserId();
             if (userId == null)
                 return Challenge(AuthenticationSchemes.Cookie);
-            
+
             if (pairingCode == null)
                 return NotFound();
-            
+
             if (selectedStore != null)
             {
                 var store = await _Repo.FindStore(selectedStore, userId);
@@ -926,14 +967,14 @@ namespace BTCPayServer.Controllers
                     return NotFound();
                 HttpContext.SetStoreData(store);
             }
-            
+
             var pairing = await _TokenRepository.GetPairingAsync(pairingCode);
             if (pairing == null)
             {
                 TempData[WellKnownTempData.ErrorMessage] = "Unknown pairing code";
                 return RedirectToAction(nameof(UIHomeController.Index), "UIHome");
             }
-            
+
             var stores = await _Repo.GetStoresByUserId(userId);
             return View(new PairingModel
             {

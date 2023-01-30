@@ -1,7 +1,7 @@
 @using BTCPayServer.Configuration
-@using BTCPayServer.Abstractions.Contracts
 @using BTCPayServer.Plugins
-@model BTCPayServer.Controllers.UIServerController.ListPluginsViewModel 
+@using BTCPayServer.Abstractions.Contracts
+@model BTCPayServer.Controllers.UIServerController.ListPluginsViewModel
 @inject BTCPayServerOptions BTCPayServerOptions
 @{
     Layout = "_Layout";
@@ -19,7 +19,7 @@
         var ordered = availableAndNotInstalledItem.OrderByDescending(plugin => plugin.Version).ToArray();
         availableAndNotInstalled.Add(ordered.FirstOrDefault(availablePlugin => DependenciesMet(availablePlugin.Dependencies)) ?? ordered.FirstOrDefault());
     }
-    
+
     bool DependentOn(string plugin)
     {
         foreach (var installedPlugin in Model.Installed)
@@ -102,8 +102,13 @@
 }
 
 <style>
-    .version-switch .nav-link { display: inline; }
-    .version-switch .nav-link.active { display: none; }
+  .version-switch .nav-link {
+	  display: inline;
+  }
+
+	  .version-switch .nav-link.active {
+		  display: none;
+	  }
 </style>
 
 <partial name="_StatusMessage" />
@@ -112,7 +117,7 @@
 {
     <div class="alert alert-danger mb-4 d-flex align-items-center justify-content-between">
         Some plugins were disabled due to fatal errors. They may be incompatible with this version of BTCPay Server.
-       <button class="btn btn-danger" data-bs-toggle="collapse" data-bs-target="#disabled-plugins">View disabled plugins</button>
+        <button class="btn btn-danger" data-bs-toggle="collapse" data-bs-target="#disabled-plugins">View disabled plugins</button>
     </div>
 }
 @if (Model.Commands.Any())
@@ -122,7 +127,7 @@
         @if (Model.CanShowRestart)
         {
             <form method="post" asp-action="Maintenance" class="mt-2">
-                <button type="submit" name="command" value="restart" class="btn btn-info" asp-action="Maintenance">Restart now</button>
+                <button type="submit" name="command" value="soft-restart" class="btn btn-info" asp-action="Maintenance">Restart now</button>
             </form>
         }
     </div>
@@ -134,6 +139,7 @@
     <div class="row mb-4">
         @foreach (var plugin in Model.Installed.Where(i => !i.SystemPlugin))
         {
+            Model.DownloadedPluginsByIdentifier.TryGetValue(plugin.Identifier, out var downloadInfo);
             var matchedAvailable = Model.Available.Where(availablePlugin => availablePlugin.Identifier == plugin.Identifier && availablePlugin.Version > plugin.Version).OrderByDescending(availablePlugin => availablePlugin.Version).ToArray();
             var x = matchedAvailable.FirstOrDefault(availablePlugin => DependenciesMet(availablePlugin.Dependencies)) ?? matchedAvailable.FirstOrDefault();
             var updateAvailable = matchedAvailable.Any();
@@ -141,14 +147,19 @@
             <div class="col col-12 col-md-6 col-lg-12 col-xl-6 col-xxl-4 mb-4">
                 <div class="card h-100" id="@plugin.Identifier">
                     <div class="card-body">
-						<div class="d-flex align-items-baseline justify-content-between gap-2">
-							<h4 class="card-title" title="@plugin.Identifier" data-bs-toggle="tooltip">@plugin.Name</h4>
-							@if (Model.DocsByIdentifier.ContainsKey(plugin.Identifier))
-							{
-								<a href="@Model.DocsByIdentifier[plugin.Identifier]" rel="noreferrer noopener" target="_blank">Documentation</a>
-							}
-						</div>
-                        <div class="d-flex flex-wrap align-items-center mb-2">
+                        <div class="d-flex flex-wrap align-items-baseline justify-content-between gap-2 mb-3">
+                            <h4 class="card-title mb-0" data-bs-toggle="tooltip" title="@plugin.Identifier">@plugin.Name</h4>
+                            @if (!string.IsNullOrEmpty(downloadInfo?.Author))
+                            {
+                                <span class="text-muted text-nowrap">
+                                    by
+                                    <a href="@downloadInfo.AuthorLink" rel="noreferrer noopener" target="_blank">
+                                        @downloadInfo.Author
+                                    </a>
+                                </span>
+                            }
+                        </div>
+                        <div class="d-flex flex-wrap align-items-center mb-2 gap-3">
                             <h5 class="text-muted d-flex align-items-center mt-1 gap-3">
                                 @plugin.Version
                                 @if (updateAvailable && x != null)
@@ -161,8 +172,8 @@
                             @if (updateAvailable)
                             {
                                 <span class="nav version-switch mt-n1" role="tablist">
-                                    <a data-bs-toggle="tab" href="#@tabId-current" class="nav-link px-3 small text-info show active">Show current version</a>
-                                    <a data-bs-toggle="tab" href="#@tabId-update" class="nav-link px-3 small text-info">Show update information</a>
+                                    <a data-bs-toggle="tab" href="#@tabId-current" class="nav-link text-info p-0 show active">Show current info</a>
+                                    <a data-bs-toggle="tab" href="#@tabId-update" class="nav-link text-info p-0">Show update info</a>
                                 </span>
                             }
                         </div>
@@ -172,15 +183,17 @@
                                 <p class="card-text">@plugin.Description</p>
                                 @if (plugin.Dependencies.Any())
                                 {
-                                    <h5 class="text-muted">Dependencies</h5>
+                                    <h6 class="text-muted fw-semibold">Dependencies</h6>
                                     <ul class="list-group list-group-flush">
                                         @foreach (var dependency in plugin.Dependencies)
                                         {
-                                            <li class="list-group-item p-2">
+                                            <li class="list-group-item p-2 d-inline-flex align-items-center gap-2">
                                                 @dependency
                                                 @if (!DependencyMet(dependency))
                                                 {
-                                                    <span title="Dependency not met." data-bs-toggle="tooltip" class="fa fa-warning text-danger"></span>
+                                                    <span title="Dependency not met." data-bs-toggle="tooltip" class="text-danger">
+                                                        <vc:icon symbol="warning" />
+                                                    </span>
                                                 }
                                             </li>
                                         }
@@ -194,21 +207,57 @@
                                     <p class="card-text">@x.Description</p>
                                     @if (x.Dependencies.Any())
                                     {
-                                        <h5 class="text-muted">Dependencies</h5>
+                                        <h6 class="text-muted fw-semibold">Dependencies</h6>
                                         <ul class="list-group list-group-flush">
                                             @foreach (var dependency in x.Dependencies)
                                             {
-                                                <li class="list-group-item p-2">
+                                                <li class="list-group-item p-2 d-inline-flex align-items-center gap-2">
                                                     @dependency
                                                     @if (!DependencyMet(dependency))
                                                     {
-                                                        <span title="Dependency not met." data-bs-toggle="tooltip" class="fa fa-warning text-danger"></span>
+                                                        <span title="Dependency not met." data-bs-toggle="tooltip" class="text-danger">
+                                                            <vc:icon symbol="warning" />
+                                                        </span>
                                                     }
                                                 </li>
                                             }
                                         </ul>
                                     }
                                 </div>
+                            }
+
+                            @if (plugin != null)
+                            {
+                                <h6 class="text-muted fw-semibold mt-4">Resources</h6>
+                                <ul class="list-group list-group-flush list-unstyled">
+                                    @if (downloadInfo?.Source is not null)
+                                    {
+                                        <li>
+                                            <a href="@downloadInfo.Source" rel="noreferrer noopener" class="d-flex align-items-center" target="_blank">
+                                                <vc:icon symbol="github" />
+                                                <span style="margin-left:.4rem">Sources</span>
+                                            </a>
+                                        </li>
+                                    }
+                                    @if (!string.IsNullOrEmpty(downloadInfo?.Documentation))
+                                    {
+                                        <li>
+                                            <a href="@downloadInfo.Documentation" rel="noreferrer noopener" class="d-flex align-items-center gap-2" target="_blank">
+                                                <vc:icon symbol="docs" />
+                                                <span>Documentation</span>
+                                            </a>
+                                        </li>
+                                    }
+                                    else
+                                    {
+                                        <li>
+                                            <span rel="noreferrer noopener" class="d-flex align-items-center gap-2 text-danger" target="_blank">
+                                                <vc:icon symbol="docs" />
+                                                <span>No documentation</span>
+                                            </span>
+                                        </li>
+                                    }
+                                </ul>
                             }
                         </div>
                     </div>
@@ -259,20 +308,25 @@
         {
             var recommended = BTCPayServerOptions.RecommendedPlugins.Contains(plugin.Identifier.ToLowerInvariant());
             var disabled = Model.Disabled?.Contains(plugin.Identifier) ?? false;
-            
+
             <div class="col col-12 col-md-6 col-lg-12 col-xl-6 col-xxl-4 mb-4">
                 <div class="card h-100" id="@plugin.Identifier">
                     <div class="card-body">
-						<div class="d-flex align-items-baseline justify-content-between gap-2">
-							<h4 class="card-title" data-bs-toggle="tooltip" title="@plugin.Identifier">@plugin.Name</h4>
-							@if (!string.IsNullOrEmpty(plugin.Documentation))
-							{
-								<a href="@plugin.Documentation" rel="noreferrer noopener" target="_blank">Documentation</a>
-							}
-						</div>
+                        <div class="d-flex flex-wrap align-items-baseline justify-content-between gap-2 mb-3">
+                            <h4 class="card-title mb-0" data-bs-toggle="tooltip" title="@plugin.Identifier">@plugin.Name</h4>
+                            @if (!string.IsNullOrEmpty(plugin.Author))
+                            {
+                                <span class="text-muted text-nowrap">
+                                    by
+                                    <a href="@plugin.AuthorLink" rel="noreferrer noopener" target="_blank">
+                                        @plugin.Author
+                                    </a>
+                                </span>
+                            }
+                        </div>
                         <h5 class="text-muted d-flex align-items-center mt-1 gap-2">
                             @plugin.Version
-                            @if (disabled) 
+                            @if (disabled)
                             {
                                 <div class="badge bg-light">Disabled</div>
                             }
@@ -284,23 +338,61 @@
                         <p class="card-text">@plugin.Description</p>
                         @if (plugin.Dependencies?.Any() is true)
                         {
-                            <h5 class="text-muted">Dependencies</h5>
+                            <h6 class="text-muted fw-semibold">Dependencies</h6>
                             <ul class="list-group list-group-flush">
                                 @foreach (var dependency in plugin.Dependencies)
                                 {
-                                    <li class="list-group-item p-2">
+                                    <li class="list-group-item p-2 d-inline-flex align-items-center gap-2">
                                         @dependency
                                         @if (!DependencyMet(dependency))
                                         {
-                                            <span title="Dependency not met." data-bs-toggle="tooltip" class="fa fa-warning text-danger"></span>
+                                            <span title="Dependency not met." data-bs-toggle="tooltip" class="text-danger">
+                                                <vc:icon symbol="warning" />
+                                            </span>
                                         }
+                                    </li>
+                                }
+                            </ul>
+                        }
+
+                        @if (plugin != null)
+                        {
+                            <h6 class="text-muted fw-semibold mt-4">Resources</h6>
+                            <ul class="list-group list-group-flush list-unstyled">
+                                @if (plugin.Source is not null)
+                                {
+                                    <li>
+                                        <a href="@plugin.Source" rel="noreferrer noopener" class="d-flex align-items-center" target="_blank">
+                                            <vc:icon symbol="github" />
+                                            <span style="margin-left:.4rem">Sources</span>
+                                        </a>
+                                    </li>
+                                }
+                                @if (!string.IsNullOrEmpty(plugin.Documentation))
+                                {
+                                    <li>
+                                        <a href="@plugin.Documentation" rel="noreferrer noopener" class="d-flex align-items-center gap-2" target="_blank">
+                                            <vc:icon symbol="docs" />
+                                            <span>Documentation</span>
+                                        </a>
+                                    </li>
+                                }
+                                else
+                                {
+                                    <li>
+                                        <span rel="noreferrer noopener" class="d-flex align-items-center gap-2 text-danger" target="_blank">
+                                            <vc:icon symbol="docs" />
+                                            <span>No documentation</span>
+                                        </span>
                                     </li>
                                 }
                             </ul>
                         }
                     </div>
                     <div class="card-footer border-0 pb-3">
-                        @{ var pending = Model.Commands.LastOrDefault(tuple => tuple.plugin.Equals(plugin.Identifier, StringComparison.InvariantCultureIgnoreCase)); }
+                        @{
+                            var pending = Model.Commands.LastOrDefault(tuple => tuple.plugin.Equals(plugin.Identifier, StringComparison.InvariantCultureIgnoreCase));
+                        }
                         @if (!pending.Equals(default))
                         {
                             <form asp-action="CancelPluginCommands" asp-route-plugin="@plugin.Identifier">
@@ -309,7 +401,7 @@
                         }
                         else if (DependenciesMet(plugin.Dependencies))
                         {
-                            @* Don't show the "Install" button if plugin has been disabled *@
+							@* Don't show the "Install" button if plugin has been disabled *@
                             @if (!disabled)
                             {
                                 <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" asp-route-version="@plugin.Version">
@@ -323,7 +415,7 @@
                                 Cannot install until dependencies are met.
                             </div>
                         }
-					</div>
+                    </div>
                 </div>
             </div>
         }
@@ -356,34 +448,34 @@
 
 @if (Model.Commands.Any())
 {
-<div class="mb-4">
-    <h3 class="mb-4">Pending Action</h3>
-    <button class="btn btn-secondary mb-4" type="button" data-bs-toggle="collapse" data-bs-target="#pending-actions">
-        Pending Actions
-    </button>
-    <div class="row collapse" id="pending-actions">
-        <div class="col col-12 col-lg-6 mb-4">
-            <div class="card">
-                <div class="card-body">
-                    <h4 class="card-title">Pending actions</h4>
-                    <ul class="list-group list-group-flush">
-                        @foreach (var extComm in Model.Commands.GroupBy(tuple => tuple.plugin))
-                        {
-                            <li class="list-group-item p-2">
-                                <div class="d-flex flex-wrap align-items-center justify-content-between">
-                                    <span class="my-2 me-3">@extComm.Key</span>
-                                    <form asp-action="CancelPluginCommands" asp-route-plugin="@extComm.Key">
-                                        <button type="submit" class="btn btn-outline-secondary">Cancel pending @extComm.Last().command</button>
-                                    </form>
-                                </div>
-                            </li>
-                        }
-                    </ul>
+    <div class="mb-4">
+        <h3 class="mb-4">Pending Action</h3>
+        <button class="btn btn-secondary mb-4" type="button" data-bs-toggle="collapse" data-bs-target="#pending-actions">
+            Pending Actions
+        </button>
+        <div class="row collapse" id="pending-actions">
+            <div class="col col-12 col-lg-6 mb-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title">Pending actions</h4>
+                        <ul class="list-group list-group-flush">
+                            @foreach (var extComm in Model.Commands.GroupBy(tuple => tuple.plugin))
+                            {
+                                <li class="list-group-item p-2">
+                                    <div class="d-flex flex-wrap align-items-center justify-content-between">
+                                        <span class="my-2 me-3">@extComm.Key</span>
+                                        <form asp-action="CancelPluginCommands" asp-route-plugin="@extComm.Key">
+                                            <button type="submit" class="btn btn-outline-secondary">Cancel pending @extComm.Last().command</button>
+                                        </form>
+                                    </div>
+                                </li>
+                            }
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 }
 @if (Model.Disabled.Any())
 {

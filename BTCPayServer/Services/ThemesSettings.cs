@@ -18,7 +18,7 @@ public class ThemeSettings
 {
     [Display(Name = "Use custom theme")]
     public bool CustomTheme { get; set; }
-    
+
     [Display(Name = "Custom Theme Extension Type")]
     public ThemeExtension CustomThemeExtension { get; set; }
 
@@ -30,13 +30,13 @@ public class ThemeSettings
     [Display(Name = "Custom Theme File")]
     [JsonIgnore]
     public IFormFile CustomThemeFile { get; set; }
-    
+
     public string CustomThemeFileId { get; set; }
-    
+
     [Display(Name = "Logo")]
     [JsonIgnore]
     public IFormFile LogoFile { get; set; }
-    
+
     public string LogoFileId { get; set; }
 
     public bool FirstRun { get; set; }

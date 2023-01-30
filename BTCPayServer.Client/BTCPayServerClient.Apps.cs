@@ -19,7 +19,7 @@ namespace BTCPayServer.Client
                     method: HttpMethod.Post), token);
             return await HandleResponse<PointOfSaleAppData>(response);
         }
-        
+
         public virtual async Task<CrowdfundAppData> CreateCrowdfundApp(string storeId,
             CreateCrowdfundAppRequest request, CancellationToken token = default)
         {

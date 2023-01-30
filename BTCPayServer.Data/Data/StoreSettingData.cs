@@ -11,7 +11,7 @@ public class StoreSettingData
     public string Value { get; set; }
 
     public StoreData Store { get; set; }
-        
+
     public static void OnModelCreating(ModelBuilder builder, DatabaseFacade databaseFacade)
     {
         builder.Entity<StoreSettingData>().HasKey(data => new { data.StoreId, data.Name });

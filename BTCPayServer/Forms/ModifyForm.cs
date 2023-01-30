@@ -8,4 +8,7 @@ public class ModifyForm
 
     [DisplayName("Form configuration (JSON)")]
     public string FormConfig { get; set; }
+    
+    [DisplayName("Allow form for public use")]
+    public string Public { get; set; }
 }

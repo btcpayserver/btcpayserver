@@ -3,46 +3,63 @@
 @model BTCPayServer.Forms.Models.FormViewModel
 @{
     Layout = null;
-    ViewData["Title"] = Model.FormData.Name;
+    ViewData["Title"] = Model.FormName;
 }
 
 <!DOCTYPE html>
 <html lang="en" @(env.IsDeveloping ? " data-devenv" : "")>
 <head>
-    <partial name="LayoutHead"/>
+    <partial name="LayoutHead" />
     <meta name="robots" content="noindex,nofollow">
 </head>
 <body class="min-vh-100">
-    <div class="public-page-wrap flex-column">
-        <main class="flex-grow-1">
-            <div class="container" style="max-width:720px;">
-                <partial name="_StatusMessage" model="@(new ViewDataDictionary(ViewData) {{"Margin", "mb-4"}})"/>
-                @if (!ViewContext.ModelState.IsValid)
-                {
-                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-                }
-                <partial name="_FormTopMessages" model="@Model.Form"/>
-                <div class="d-flex flex-column justify-content-center gap-4">
-                    <h1 class="h3 text-center">@ViewData["Title"]</h1>
-                    <div  class="bg-tile p-3 p-sm-4 rounded">
-                        <form asp-action="SubmitForm" asp-route-formId="@Model.FormData.Id">
+<div class="public-page-wrap flex-column">
+    <main class="flex-grow-1">
+        <div class="container" style="max-width:720px;">
+            <partial name="_StatusMessage" model="@(new ViewDataDictionary(ViewData) {{"Margin", "mb-4"}})" />
+            @if (!ViewContext.ModelState.IsValid)
+            {
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            }
+            <partial name="_FormTopMessages" model="@Model.Form" />
+            <div class="d-flex flex-column justify-content-center gap-4">
+                <h1 class="h3 text-center">@ViewData["Title"]</h1>
+                <div class="bg-tile p-3 p-sm-4 rounded">
+
+
+                    @if (string.IsNullOrEmpty(Model.AspAction))
+                    {
+                        <form method="post">
                             @if (!string.IsNullOrEmpty(Model.RedirectUrl))
                             {
-                                <input type="hidden" asp-for="RedirectUrl" value="@Model.RedirectUrl"/>
+                                <input type="hidden" asp-for="RedirectUrl" value="@Model.RedirectUrl" />
                             }
-                            <partial name="_Form" model="@Model.Form"/>
-                            <input type="submit" class="btn btn-primary" name="command" value="Submit"/>
+                            <partial name="_Form" model="@Model.Form" />
+                            <input type="submit" class="btn btn-primary" name="command" value="Submit" />
                         </form>
-                    </div>
+                    }
+                    else
+                    {
+                        <form method="post" asp-action="@Model.AspAction" asp-controller="@Model.AspController" asp-all-route-data="Model.RouteParameters">
+
+                            @if (!string.IsNullOrEmpty(Model.RedirectUrl))
+                            {
+                                <input type="hidden" asp-for="RedirectUrl" value="@Model.RedirectUrl" />
+                            }
+                            <partial name="_Form" model="@Model.Form" />
+                            <input type="submit" class="btn btn-primary" name="command" value="Submit" />
+                        </form>
+                    }
                 </div>
             </div>
-        </main>
-        <footer class="store-footer">
-            <a href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">
-                Powered by <partial name="_StoreFooterLogo" />
-            </a>
-        </footer>
-    </div>
-    <partial name="LayoutFoot"/>
+        </div>
+    </main>
+    <footer class="store-footer">
+        <a href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">
+            Powered by <partial name="_StoreFooterLogo" />
+        </a>
+    </footer>
+</div>
+<partial name="LayoutFoot" />
 </body>
 </html>

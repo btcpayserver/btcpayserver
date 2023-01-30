@@ -2,12 +2,14 @@
 @using BTCPayServer.Abstractions.Models
 @using BTCPayServer.Views.Apps
 @using BTCPayServer.Abstractions.Extensions
+@using BTCPayServer.Forms
 @using BTCPayServer.Services.Stores
+@inject FormDataService FormDataService
 @model BTCPayServer.Plugins.PointOfSale.Models.UpdatePointOfSaleViewModel
 @{
     ViewData.SetActivePage(AppsNavPages.Update, "Update Point of Sale", Model.Id);
-    
-    var checkoutFormOptions = CheckoutFormSelectList.WithSelected(Model.FormId);
+
+    var checkoutFormOptions = await FormDataService.GetSelect(Model.StoreId, Model.FormId);
 }
 
 <form method="post">

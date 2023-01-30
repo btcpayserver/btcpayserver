@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using AngleSharp.Common;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Newtonsoft.Json.Linq;
@@ -105,12 +106,17 @@ public class Form
             }
         }
     }
-
-    public void ApplyValuesFromForm(IFormCollection form)
+    
+    public void ApplyValuesFromForm(IFormCollection form, string ignorePrefix = null)
     {
         var names = GetAllNames();
         foreach (var name in names)
         {
+            if (ignorePrefix is not null && name.StartsWith(ignorePrefix))
+            {
+                continue;
+            }
+
             var field = GetFieldByName(name);
             if (field is null || !form.TryGetValue(name, out var val))
             {
@@ -118,6 +124,39 @@ public class Form
             }
 
             field.Value = val;
+        }
+    }
+
+    public void SetValues(Dictionary<string, object> values)
+    {
+        SetValues(values, null, null);
+    }
+    private void SetValues(Dictionary<string, object> values, List<Field> fields = null,string prefix = null)
+    {
+        foreach (var v in values)
+        {
+            var field = GetFieldByName(v.Key, fields?? Fields, prefix);
+            if (field is null )
+            {
+                continue;
+            }
+
+            if (field.Fields.Any())
+            {
+                if (v.Value is Dictionary<string, object> dict)
+                {
+                    SetValues(dict, field.Fields, field.Name + "_");
+                }else if (v.Value is JObject jObject)
+                {
+                    dict = jObject.ToObject<Dictionary<string, object>>();
+                    SetValues(dict, field.Fields, field.Name + "_");
+                }
+            }
+            else
+            {
+                field.Value = (string) v.Value;
+            }
+
         }
     }
 

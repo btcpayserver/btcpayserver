@@ -89,6 +89,8 @@ namespace BTCPayServer.Models
         public DateTime? ExpiryDate { get; set; }
         public string Title { get; set; }
         public string Description { get; set; }
+        public string BrandColor { get; set; }
+        public string CssFileId { get; set; }
         public string EmbeddedCSS { get; set; }
         public string CustomCSSLink { get; set; }
         public List<PayoutLine> Payouts { get; set; } = new();

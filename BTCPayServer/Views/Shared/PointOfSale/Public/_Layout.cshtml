@@ -1,17 +1,15 @@
-@inject BTCPayServer.Services.ThemeSettings Theme
-@inject IWebHostEnvironment WebHostEnvironment
 @using BTCPayServer.Services.Apps
 @using BTCPayServer.Abstractions.Extensions
 @using BTCPayServer.Abstractions.TagHelpers
 @using Microsoft.AspNetCore.Hosting
 @using Microsoft.AspNetCore.Mvc.TagHelpers
-@using Newtonsoft.Json
 @using Newtonsoft.Json.Linq
 @using System.IO
+@inject IWebHostEnvironment WebHostEnvironment
+@inject BTCPayServer.Services.BTCPayServerEnvironment Env
 @model BTCPayServer.Plugins.PointOfSale.Models.ViewPointOfSaleViewModel
-
 @{
-    ViewData["Title"] = Model.Title;
+    ViewData["Title"] = string.IsNullOrEmpty(Model.Title) ? Model.StoreName : Model.Title;
     Layout = null;
     
     async Task<string> GetDynamicManifest(string title)
@@ -33,69 +31,53 @@
         return $"data:application/manifest+json,{Safe.Json(jObject)}";
     }
 }
-
 <!DOCTYPE html>
-<html class="h-100">
+<html class="h-100" lang="en" @(Env.IsDeveloping ? " data-devenv" : "")>
 <head>
-    <title>@Model.Title</title>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <partial name="LayoutHead"/>
+    <partial name="LayoutHeadStoreBranding" model="@(Model.BrandColor, Model.CssFileId, Model.CustomCSSLink, Model.EmbeddedCSS)" />
     <meta name="apple-mobile-web-app-capable" content="yes">
     <link rel="apple-touch-icon" href="~/img/icons/icon-512x512.png">
     <link rel="apple-touch-startup-image" href="~/img/splash.png">
-    <link rel="manifest" href="@(await GetDynamicManifest(Model.Title))">
-    <link href="~/main/bootstrap/bootstrap.css" asp-append-version="true"  rel="stylesheet" />
-    <link href="~/vendor/font-awesome/css/font-awesome.css" asp-append-version="true"  rel="stylesheet" />
-    <link href="~/vendor/flatpickr/flatpickr.css" asp-append-version="true"  rel="stylesheet" />
-    <link href="~/main/fonts/OpenSans.css" asp-append-version="true"  rel="stylesheet" />
-    <link href="~/main/layout.css" asp-append-version="true"  rel="stylesheet" />
-    <link href="~/main/site.css" asp-append-version="true"  rel="stylesheet" />
-    <link href="@Context.Request.GetRelativePathOrAbsolute(Theme.CssUri)" rel="stylesheet" asp-append-version="true"/>
+    <link rel="manifest" href="@(await GetDynamicManifest(ViewData["Title"]!.ToString()))">
     @if (Model.CustomCSSLink != null)
     {
         <link href="@Model.CustomCSSLink" rel="stylesheet" asp-append-version="true" />
     }
-    <link href="~/vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" asp-append-version="true" />
-
     @if (Model.ViewType == PosViewType.Cart)
     {
         <link rel="stylesheet" href="~/cart/css/style.css" asp-append-version="true">
-        <script type="text/javascript">
-            var srvModel = @Safe.Json(Model);
-        </script>
+        <script>var srvModel = @Safe.Json(Model);</script>
         <script src="~/vendor/jquery/jquery.min.js" asp-append-version="true"></script>
         <script src="~/vendor/bootstrap/bootstrap.bundle.min.js" asp-append-version="true"></script>
-
         <script src="~/cart/js/cart.js" asp-append-version="true"></script>
         <script src="~/cart/js/cart.jquery.js" asp-append-version="true"></script>
-
     }
     @if (Model.ViewType == PosViewType.Light)
     {
         <link href="~/light-pos/styles/main.css" asp-append-version="true"  rel="stylesheet" />
-
-        <script type="text/javascript">
-            var srvModel = @Safe.Json(Model);
-        </script>
+        <script>var srvModel = @Safe.Json(Model);</script>
         <script src="~/vendor/jquery/jquery.min.js" asp-append-version="true"></script>
         <script src="~/vendor/bootstrap/bootstrap.bundle.min.js" asp-append-version="true"></script>
-
         <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
         <script src="~/light-pos/app.js" asp-append-version="true"></script>
-
     }
     <style>
+        .lead :last-child {
+            margin-bottom: 0;
+        }
         .card-deck {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             grid-gap: 1.5rem;
         }
-
+        .card { 
+            page-break-inside: avoid;
+        }
         .card:only-of-type {
             max-width: 320px;
             margin: auto !important;
         }
-
         .js-cart-item-minus .fa,
         .js-cart-item-plus .fa {
             background: #fff;
@@ -112,7 +94,7 @@
         @Safe.Raw($"<style>{Model.EmbeddedCSS}</style>");
     }
 </head>
-<body class="h-100">
+<body class="min-vh-100">
     @RenderBody()
 </body>
 </html>

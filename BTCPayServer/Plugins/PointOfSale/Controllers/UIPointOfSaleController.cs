@@ -78,6 +78,10 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             return View($"PointOfSale/Public/{viewType}", new ViewPointOfSaleViewModel
             {
                 Title = settings.Title,
+                StoreName = store.StoreName,
+                BrandColor = storeBlob.BrandColor,
+                CssFileId = storeBlob.CssFileId,
+                LogoFileId = storeBlob.LogoFileId,
                 Step = step.ToString(CultureInfo.InvariantCulture),
                 ViewType = (PosViewType)viewType,
                 ShowCustomAmount = settings.ShowCustomAmount,

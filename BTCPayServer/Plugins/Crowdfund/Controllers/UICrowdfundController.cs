@@ -93,7 +93,6 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
         [RateLimitsFilter(ZoneLimits.PublicInvoices, Scope = RateLimitsScope.RemoteAddress)]
         public async Task<IActionResult> ContributeToCrowdfund(string appId, ContributeToCrowdfund request, CancellationToken cancellationToken)
         {
-
             var app = await _appService.GetApp(appId, AppType.Crowdfund, true);
 
             if (app == null)

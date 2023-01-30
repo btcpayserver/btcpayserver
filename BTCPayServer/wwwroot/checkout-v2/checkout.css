@@ -8,12 +8,8 @@
     --border-radius: var(--btcpay-border-radius-l);
     --wrap-max-width: 400px;
 }
-.wrap {
-    display: flex;
+.public-page-wrap {
     flex-direction: column;
-    min-height: 100vh;
-    margin: 0 auto;
-    padding: var(--btcpay-space-l); var(--btcpay-space-m);
     max-width: var(--wrap-max-width);
 }
 main {
@@ -222,27 +218,8 @@ section dl > div dd {
 #result #expired .top .icn .icon {
     color: var(--btcpay-body-text-muted);
 }
-footer {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--btcpay-space-m);
-    margin-top: auto;
-    padding: var(--section-padding) var(--section-padding) 0;
-}
-footer,
-footer a,
 #DefaultLang {
     color: var(--btcpay-body-text-muted);
-}
-footer a {
-    transition-duration: unset;
-}
-footer a svg {
-    height: 2rem;
-    width: 4rem;
-}
-#DefaultLang {
     background-color: transparent;
     box-shadow: none;
     border: none;
@@ -250,25 +227,11 @@ footer a svg {
     cursor: pointer;
     margin-left: -4.5rem; /* Adjust for visual center */
 }
-footer a:hover,
 #DefaultLang:hover {
     color: var(--btcpay-body-text-hover);
 }
-footer a:hover .logo-brand-light {
-    color: var(--btcpay-brand-secondary);
-}
-footer a:hover .logo-brand-medium {
-    color: var(--btcpay-brand-primary);
-}
-footer a:hover .logo-brand-dark {
-    color: var(--btcpay-brand-tertiary);
-}
 
 @media (max-width: 400px) {
-    .wrap {
-        padding-left: 0;
-        padding-right: 0;
-    }
     main {
         border-radius: 0;
     }

@@ -205,29 +205,6 @@ h2 small .fa-question-circle-o {
     margin-top: .5rem;
 }
 
-/* Store header */
-.store-header {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--btcpay-space-s);
-}
-
-.store-logo {
-    --logo-size: 3rem;
-    --logo-bg: transparent;
-    --logo-radius: 50%;
-
-    width: var(--logo-size);
-    height: var(--logo-size);
-    background: var(--logo-bg);
-    border-radius: var(--logo-radius);
-}
-
-.store-name {
-    font-size: 1.3rem;
-}
-
 /* Print */
 @media print {
     .table td,
@@ -625,4 +602,74 @@ svg.icon-note {
 }
 input:checked + .btcpay-list-select-item {
     border-color: var(--btcpay-form-border-focus);
+}
+
+/* Public pages */
+.public-page-wrap {
+    display: flex;
+    gap: 1.5rem;
+    min-height: 100vh;
+    margin: 0 auto;
+    padding: var(--btcpay-space-l) var(--btcpay-space-m);
+}
+@media (max-width: 400px) {
+    .public-page-wrap {
+        padding-left: 0;
+        padding-right: 0;
+    }
+}
+
+.store-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--btcpay-space-s);
+}
+
+.store-logo {
+    --logo-size: 3rem;
+    --logo-bg: transparent;
+    --logo-radius: 50%;
+
+    width: var(--logo-size);
+    height: var(--logo-size);
+    background: var(--logo-bg);
+    border-radius: var(--logo-radius);
+}
+
+.store-name {
+    font-size: 1.3rem;
+}
+
+.store-footer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--btcpay-space-m);
+    margin-top: auto;
+    color: var(--btcpay-body-text-muted);
+    padding: 1.5rem 1.5rem 0;
+}
+.store-footer,
+.store-footer a {
+    color: var(--btcpay-body-text-muted);
+}
+.store-footer a {
+    transition-duration: unset;
+}
+.store-footer a svg {
+    height: 2rem;
+    width: 4rem;
+}
+.store-footer a:hover {
+    color: var(--btcpay-body-text-hover);
+}
+.store-footer a:hover .logo-brand-light {
+    color: var(--btcpay-brand-secondary);
+}
+.store-footer a:hover .logo-brand-medium {
+    color: var(--btcpay-brand-primary);
+}
+.store-footer a:hover .logo-brand-dark {
+    color: var(--btcpay-brand-tertiary);
 }

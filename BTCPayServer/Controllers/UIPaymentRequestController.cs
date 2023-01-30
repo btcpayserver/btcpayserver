@@ -180,14 +180,25 @@ namespace BTCPayServer.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> ViewPaymentRequest(string payReqId)
         {
-            var result = await _PaymentRequestService.GetPaymentRequest(payReqId, GetUserId());
-            if (result == null)
+            var vm = await _PaymentRequestService.GetPaymentRequest(payReqId, GetUserId());
+            if (vm == null)
             {
                 return NotFound();
             }
-
-            result.HubPath = PaymentRequestHub.GetHubPath(Request);
-            return View(result);
+            var store = await _storeRepository.FindStore(vm.StoreId);
+            if (store == null)
+            {
+                return NotFound();
+            }
+            
+            var storeBlob = store.GetStoreBlob();
+            vm.StoreName = store.StoreName;
+            vm.BrandColor = storeBlob.BrandColor;
+            vm.LogoFileId = storeBlob.LogoFileId;
+            vm.CssFileId = storeBlob.CssFileId;
+            vm.HubPath = PaymentRequestHub.GetHubPath(Request);
+            
+            return View(vm);
         }
 
         [HttpGet("{payReqId}/form")]

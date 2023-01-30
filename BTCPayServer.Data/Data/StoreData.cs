@@ -58,6 +58,10 @@ namespace BTCPayServer.Data
                 builder.Entity<StoreData>()
                     .Property(o => o.StoreBlob)
                     .HasColumnType("JSONB");
+
+                builder.Entity<StoreData>()
+                    .Property(o => o.DerivationStrategies)
+                    .HasColumnType("JSONB");
             }
         }
     }

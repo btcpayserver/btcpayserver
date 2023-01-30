@@ -10,7 +10,7 @@
 }
 
 @section PageFootContent {
-    <partial name="_ValidationScriptsPartial"/>
+    <partial name="_ValidationScriptsPartial" />
     <script>
         delegate('click', '.setTheme', e => {
             e.preventDefault();
@@ -60,7 +60,7 @@
                     </table>
                 </div>
             }
-            
+
             <h3 class="mt-5 mb-3">Checkout</h3>
             <div class="d-flex align-items-center mb-3">
                 <input asp-for="UseNewCheckout" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target=".checkout-settings" aria-expanded="@(Model.UseNewCheckout)" aria-controls="NewCheckoutSettings" />
@@ -71,30 +71,29 @@
                     </label>
                     <span asp-validation-for="UseNewCheckout" class="text-danger"></span>
                     <div class="form-text">
-                        Since v1.7.0 a new version of the checkout is available. Note: For now, the new version is English-only.<br/>
+                        Since v1.7.0 a new version of the checkout is available. Note: For now, the new version is English-only.<br />
                         We are still collecting <a href="https://github.com/btcpayserver/btcpayserver/discussions/4308" target="_blank" rel="noreferrer noopener">feedback</a> and offer this as an opt-in feature.
                     </div>
                 </div>
             </div>
-                            
+
             <div class="checkout-settings collapse @(Model.UseNewCheckout ? "show" : "")" id="NewCheckoutSettings">
-                <div class="form-check">
-                    <input asp-for="OnChainWithLnInvoiceFallback" type="checkbox" class="form-check-input"/>
-                    <label asp-for="OnChainWithLnInvoiceFallback" class="form-check-label"></label>
-                    <a href="https://bitcoinqr.dev/" target="_blank" rel="noreferrer noopener">
-                        <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
-                    </a>
-                </div>
                 <div class="form-group">
                     <label asp-for="DisplayExpirationTimer" class="form-label"></label>
                     <div class="input-group">
-                        <input inputmode="numeric" asp-for="DisplayExpirationTimer" class="form-control" style="max-width:10ch;"/>
+                        <input inputmode="numeric" asp-for="DisplayExpirationTimer" class="form-control" style="max-width:10ch;" />
                         <span class="input-group-text">minutes</span>
                     </div>
                     <span asp-validation-for="DisplayExpirationTimer" class="text-danger"></span>
                 </div>
             </div>
-                            
+            <div class="form-check">
+                <input asp-for="OnChainWithLnInvoiceFallback" type="checkbox" class="form-check-input" />
+                <label asp-for="OnChainWithLnInvoiceFallback" class="form-check-label"></label>
+                <a href="https://bitcoinqr.dev/" target="_blank" rel="noreferrer noopener">
+                    <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+                </a>
+            </div>
             <div class="checkout-settings collapse @(Model.UseNewCheckout ? "" : "show")" id="OldCheckoutSettings">
                 <div class="form-check">
                     <input asp-for="RequiresRefundEmail" type="checkbox" class="form-check-input" />
@@ -102,7 +101,7 @@
                 </div>
                 <div class="form-group">
                     <div class="form-check">
-                        <input asp-for="AutoDetectLanguage" type="checkbox" class="form-check-input"/>
+                        <input asp-for="AutoDetectLanguage" type="checkbox" class="form-check-input" />
                         <label asp-for="AutoDetectLanguage" class="form-check-label"></label>
                         <div class="form-text">Detects the language of the customer's browser with 99.9% accuracy.</div>
                     </div>
@@ -132,7 +131,7 @@
                         <a href="#" class="setTheme" data-theme="dark">Dark</a> |
                         <a href="#" class="setTheme" data-theme="legacy">Legacy</a>
                     </div>
-                    @await Component.InvokeAsync("UiExtensionPoint", new { location = "invoice-checkout-theme-options", model = Model })
+                    @await Component.InvokeAsync("UiExtensionPoint", new {location = "invoice-checkout-theme-options", model = Model})
                 </div>
             </div>
 
@@ -141,7 +140,6 @@
                 <input asp-for="HtmlTitle" class="form-control" />
                 <span asp-validation-for="HtmlTitle" class="text-danger"></span>
             </div>
-            
             <div class="form-check my-3">
                 <input asp-for="LazyPaymentMethods" type="checkbox" class="form-check-input" />
                 <label asp-for="LazyPaymentMethods" class="form-check-label"></label>
@@ -150,7 +148,6 @@
                 <input asp-for="RedirectAutomatically" type="checkbox" class="form-check-input" />
                 <label asp-for="RedirectAutomatically" class="form-check-label"></label>
             </div>
-            
             <h3 class="mt-5 mb-3">Public receipt</h3>
             <div class="form-check my-3">
                 <input asp-for="ReceiptOptions.Enabled" type="checkbox" class="form-check-input" />
@@ -164,7 +161,6 @@
                 <input asp-for="ReceiptOptions.ShowQR" type="checkbox" class="form-check-input" />
                 <label asp-for="ReceiptOptions.ShowQR" class="form-check-label"></label>
             </div>
-            
             <button type="submit" class="btn btn-primary mt-4" id="Save">Save</button>
         </form>
     </div>

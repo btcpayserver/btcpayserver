@@ -443,7 +443,8 @@ namespace BTCPayServer.Services.Apps
                             StoreName = us.StoreData.StoreName,
                             AppName = app.Name,
                             AppType = app.AppType,
-                            Id = app.Id
+                            Id = app.Id,
+                            Created = app.Created,
                         })
                 .ToArrayAsync();
 

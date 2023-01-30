@@ -267,7 +267,84 @@
                     }
                 ]
             }
-        }
+        },
+        "/api/v1/stores/{storeId}/apps": {
+            "parameters": [
+                {
+                    "name": "storeId",
+                    "in": "path",
+                    "required": true,
+                    "description": "The store ID",
+                    "schema": {
+                        "type": "string"
+                    }
+                }
+            ],
+            "get": {
+              "tags": [
+                "Apps"
+              ],
+              "operationId": "Apps_GetAllAppsForStore",
+              "summary": "Get basic app data for all apps for a store",
+              "description": "Returns basic app data for all apps for a store",
+              "responses": {
+                  "200": {
+                      "description": "Array of basic app data object",
+                      "content": {
+                        "application/json": {
+                          "schema": {
+                              "type": "array",
+                              "items": {
+                                  "$ref": "#/components/schemas/BasicAppData"
+                              }
+                          }
+                        }
+                      }
+                  }
+              },
+              "security": [
+                  {
+                      "API_Key": [
+                          "btcpay.store.canmodifystoresettings"
+                      ],
+                      "Basic": []
+                  }
+              ]
+            }
+        },
+        "/api/v1/apps": {
+          "get": {
+            "tags": [
+              "Apps"
+            ],
+            "operationId": "Apps_GetAllApps",
+            "summary": "Get basic app data for all apps for all stores for a user",
+            "description": "Returns basic app data for all apps for all stores",
+            "responses": {
+                "200": {
+                    "description": "Array of basic app data object",
+                    "content": {
+                      "application/json": {
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/components/schemas/BasicAppData"
+                            }
+                        }
+                      }
+                    }
+                }
+            },
+            "security": [
+                {
+                    "API_Key": [
+                        "btcpay.store.canmodifystoresettings"
+                    ],
+                    "Basic": []
+                }
+            ]
+          }
+      }
     },
     "components": {
         "schemas": {

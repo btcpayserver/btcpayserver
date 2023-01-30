@@ -402,6 +402,64 @@ namespace BTCPayServer.Tests
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
+        public async Task CanGetAllApps()
+        {
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+            var user = tester.NewAccount();
+            await user.RegisterDerivationSchemeAsync("BTC");
+            var client = await user.CreateClient();
+
+            var posApp = await client.CreatePointOfSaleApp(
+                user.StoreId,
+                new CreatePointOfSaleAppRequest()
+                {
+                    AppName = "test app from API",
+                    Currency = "JPY"
+                }
+            );
+            var crowdfundApp = await client.CreateCrowdfundApp(user.StoreId, new CreateCrowdfundAppRequest() { AppName = "test app from API" });
+           
+           // Create another store and one app on it so we can get all apps from all stores for the user below
+            var newStore = await client.CreateStore(new CreateStoreRequest() { Name = "A" });
+            var newApp = await client.CreateCrowdfundApp(newStore.Id, new CreateCrowdfundAppRequest() { AppName = "new app" });
+
+            Assert.NotEqual(newApp.Id, user.StoreId);
+
+            // Get all apps for a specific store first
+            var apps = await client.GetAllApps(user.StoreId);
+
+            Assert.Equal(2, apps.Length);
+
+            Assert.Equal(posApp.Name, apps[0].Name);
+            Assert.Equal(posApp.StoreId, apps[0].StoreId);
+            Assert.Equal(posApp.AppType, apps[0].AppType);
+
+            Assert.Equal(crowdfundApp.Name, apps[1].Name);
+            Assert.Equal(crowdfundApp.StoreId, apps[1].StoreId);
+            Assert.Equal(crowdfundApp.AppType, apps[1].AppType);
+
+            // Get all apps for all store now
+            apps = await client.GetAllApps();
+
+            Assert.Equal(3, apps.Length);
+
+            Assert.Equal(posApp.Name, apps[0].Name);
+            Assert.Equal(posApp.StoreId, apps[0].StoreId);
+            Assert.Equal(posApp.AppType, apps[0].AppType);
+
+            Assert.Equal(crowdfundApp.Name, apps[1].Name);
+            Assert.Equal(crowdfundApp.StoreId, apps[1].StoreId);
+            Assert.Equal(crowdfundApp.AppType, apps[1].AppType);
+            
+            Assert.Equal(newApp.Name, apps[2].Name);
+            Assert.Equal(newApp.StoreId, apps[2].StoreId);
+            Assert.Equal(newApp.AppType, apps[2].AppType);
+
+        }
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
         public async Task CanDeleteUsersViaApi()
         {
             using var tester = CreateServerTester(newDb: true);

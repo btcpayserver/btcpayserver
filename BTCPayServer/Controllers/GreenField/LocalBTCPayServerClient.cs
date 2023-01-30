@@ -1196,6 +1196,18 @@ namespace BTCPayServer.Controllers.Greenfield
                 await GetController<GreenfieldAppsController>().GetApp(appId));
         }
 
+        public override async Task<AppDataBase[]> GetAllApps(string storeId, CancellationToken token = default)
+        {
+            return GetFromActionResult<AppDataBase[]>(
+                await GetController<GreenfieldAppsController>().GetAllApps(storeId));
+        }
+
+        public override async Task<AppDataBase[]> GetAllApps(CancellationToken token = default)
+        {
+            return GetFromActionResult<AppDataBase[]>(
+                await GetController<GreenfieldAppsController>().GetAllApps());
+        }
+
         public override async Task DeleteApp(string appId, CancellationToken token = default)
         {
             HandleActionResult(await GetController<GreenfieldAppsController>().DeleteApp(appId));

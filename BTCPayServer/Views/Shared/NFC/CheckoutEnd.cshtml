@@ -1,15 +1,15 @@
 @using BTCPayServer.Abstractions.Extensions
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @using BTCPayServer.Abstractions.TagHelpers
-Pay@using BTCPayServer.Abstractions.Extensions
-
 <template id="lnurl-withdraw-template">
-
-
-    <button v-if="v2" class="btn btn-primary rounded-pill w-100 mt-4" type="button" v-on:click="startScan" v-bind:disabled="scanning || submitting" v-bind:class="{ 'loading': scanning || submitting }">{{btnText}}</button>
+    <button v-if="v2" class="btn rounded-pill w-100 mt-4" type="button" 
+            v-on:click="startScan" 
+            v-bind:disabled="scanning || submitting" 
+            v-bind:class="{ 'loading': scanning || submitting, 'btn-primary': supported, 'btn-text': !supported }">{{btnText}}</button>
 
     <bp-loading-button v-else>
-        <button v-on:click="startScan" class="action-button" style="margin-top: 15px;" v-bind:disabled="scanning || submitting" v-bind:class="{ 'loading': scanning || submitting }">
+        <button v-on:click="startScan"  style="margin-top: 15px;" v-bind:disabled="scanning || submitting"
+                v-bind:class="{ 'loading': scanning || submitting, 'action-button': supported, 'btn btn-text w-100': !supported  }">
             <span class="button-text">{{btnText}}</span>
             <div class="loader-wrapper">
                 <partial name="Checkout-Spinner" />
@@ -23,6 +23,9 @@ Vue.component("lnurl-withdraw-checkout", {
     computed: {
         v2: function() {
           return !!this.$parent.model;
+        },
+        topup: function (){
+           return (this.$parent.srvModel || this.$parent.model).isUnsetTopUp;
         },
         destination: function (){
             return (this.$parent.srvModel || this.$parent.model).invoiceId;
@@ -38,6 +41,7 @@ Vue.component("lnurl-withdraw-checkout", {
             scanning: false,
             submitting: false,
             readerAbortController: null,
+            amount: 0
         }
     },
     methods: {
@@ -46,6 +50,19 @@ Vue.component("lnurl-withdraw-checkout", {
                 if (this.scanning || this.submitting) {
                     return;
                 }
+                if (this.topup) {
+                    const amountStr = prompt("How many sats do you want to pay?")
+                    if (amountStr){
+                        try {
+                            this.amount = parseInt(amountStr)
+                        } catch {
+                            alert("Please provide a valid number amount in sats");
+                        }
+                    }else{
+                        return;    
+                    }
+                }
+                
                 const self = this;
                 self.submitting = false;
                 self.scanning = true;
@@ -89,7 +106,7 @@ Vue.component("lnurl-withdraw-checkout", {
             var xhr = new XMLHttpRequest()
             xhr.open('POST', this.url, true)
             xhr.setRequestHeader('Content-Type', 'application/json')
-            xhr.send(JSON.stringify({lnurl, invoiceId: this.destination}))
+            xhr.send(JSON.stringify({lnurl, invoiceId: this.destination, amount: this.amount}))
             const self = this;
             //User feedback, reset on failure
             xhr.onload = function () {

@@ -1,6 +1,7 @@
 using System;
 using System.Net.Http;
 using System.Threading.Tasks;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Data.Payouts.LightningLike;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
@@ -10,6 +11,7 @@ using BTCPayServer.Services.Stores;
 using LNURL;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using NBitcoin;
 
 namespace BTCPayServer.Plugins.NFC
 {
@@ -39,6 +41,7 @@ namespace BTCPayServer.Plugins.NFC
         {
             public string Lnurl { get; set; }
             public string InvoiceId { get; set; }
+            public long? Amount { get; set; }
         }
 
         [AllowAnonymous]
@@ -107,11 +110,21 @@ namespace BTCPayServer.Plugins.NFC
                 }
 
                 lnPMD = lnPaymentMethod.GetPaymentMethodDetails() as LightningLikePaymentMethodDetails;
-
-                var due = lnPaymentMethod.Calculate().Due;
+                Money due;
+                if (invoice.Type == InvoiceType.TopUp && request.Amount is not null)
+                {
+                    due = new Money(request.Amount.Value, MoneyUnit.Satoshi);
+                }else if (invoice.Type == InvoiceType.TopUp)
+                {
+                    return BadRequest("This is a topup invoice and you need to provide the amount in sats to pay.");
+                }
+                else
+                {
+                    due =  lnPaymentMethod.Calculate().Due;
+                }
                 if (info.MinWithdrawable > due || due > info.MaxWithdrawable)
                 {
-                    return BadRequest("invocie amount is not payable with the lnurl allowed amounts.");
+                    return BadRequest("invoice amount is not payable with the lnurl allowed amounts.");
                 }
 
                 if (lnPMD?.Activated is true)
@@ -122,10 +135,17 @@ namespace BTCPayServer.Plugins.NFC
 
             if (lnurlPaymentMethod is not null)
             {
-                var due = lnurlPaymentMethod.Calculate().Due;
-                if (info.MinWithdrawable > due || due > info.MaxWithdrawable)
+                Money due;
+                if (invoice.Type == InvoiceType.TopUp && request.Amount is not null)
                 {
-                    return BadRequest("invocie amount is not payable with the lnurl allowed amounts.");
+                    due = new Money(request.Amount.Value, MoneyUnit.Satoshi);
+                }else if (invoice.Type == InvoiceType.TopUp)
+                {
+                    return BadRequest("This is a topup invoice and you need to provide the amount in sats to pay.");
+                }
+                else
+                {
+                    due =  lnurlPaymentMethod.Calculate().Due;
                 }
 
                 var response = await _uilnurlController.GetLNURLForInvoice(request.InvoiceId, "BTC",

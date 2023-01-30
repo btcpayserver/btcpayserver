@@ -16,6 +16,7 @@ using BTCPayServer.Configuration;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
+using BTCPayServer.Hosting;
 using BTCPayServer.JsonConverters;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
@@ -29,6 +30,7 @@ using BTCPayServer.Validation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Configuration.Memory;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using NBitcoin;
 using NBitcoin.DataEncoders;
@@ -787,12 +789,18 @@ namespace BTCPayServer.Tests
 
         public static RateProviderFactory CreateBTCPayRateFactory()
         {
-            return new RateProviderFactory(TestUtils.CreateHttpFactory());
+            ServiceCollection services = new ServiceCollection();
+            services.AddHttpClient();
+            BTCPayServerServices.RegisterRateSources(services);
+            var o = services.BuildServiceProvider();
+            return new RateProviderFactory(TestUtils.CreateHttpFactory(), o.GetService<IEnumerable<IRateProvider>>());
         }
 
         class SpyRateProvider : IRateProvider
         {
             public bool Hit { get; set; }
+
+            public RateSourceInfo RateSourceInfo => new("spy", "SPY", "https://spy.org");
 
             public Task<PairRate[]> GetRatesAsync(CancellationToken cancellationToken)
             {

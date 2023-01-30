@@ -12,6 +12,7 @@ namespace BTCPayServer.Rating
 {
     public class HitBTCRateProvider : IRateProvider
     {
+        public RateSourceInfo RateSourceInfo => new("hitbtc", "HitBTC", "https://api.hitbtc.com/api/2/public/ticker");
         private readonly HttpClient _httpClient;
         public HitBTCRateProvider(HttpClient httpClient)
         {

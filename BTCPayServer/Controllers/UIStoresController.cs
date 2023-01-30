@@ -759,8 +759,7 @@ namespace BTCPayServer.Controllers
 
         private IEnumerable<AvailableRateProvider> GetSupportedExchanges()
         {
-            var exchanges = _RateFactory.RateProviderFactory.GetSupportedExchanges();
-            return exchanges
+            return _RateFactory.RateProviderFactory.AvailableRateProviders
                 .Where(r => !string.IsNullOrWhiteSpace(r.Name))
                 .OrderBy(s => s.Id, StringComparer.OrdinalIgnoreCase);
 

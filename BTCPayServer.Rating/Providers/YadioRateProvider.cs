@@ -14,6 +14,7 @@ namespace BTCPayServer.Services.Rates
 {
     public class YadioRateProvider : IRateProvider
     {
+        public RateSourceInfo RateSourceInfo => new("yadio", "Yadio", "https://api.yadio.io/exrates/BTC");
         private readonly HttpClient _httpClient;
         public YadioRateProvider(HttpClient httpClient)
         {

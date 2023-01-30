@@ -222,6 +222,8 @@ namespace BTCPayServer.Services.Rates
             }
         }
 
+        public RateSourceInfo RateSourceInfo => _Inner.RateSourceInfo;
+
         private async Task<LatestFetch> Fetch(CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();

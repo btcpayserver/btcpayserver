@@ -15,6 +15,8 @@ namespace BTCPayServer.Services.Rates
             _httpClient = httpClient ?? new HttpClient();
         }
 
+        public RateSourceInfo RateSourceInfo => new("bitpay", "Bitpay", "https://bitpay.com/rates");
+
         public async Task<PairRate[]> GetRatesAsync(CancellationToken cancellationToken)
         {
             var response = await _httpClient.GetAsync("https://bitpay.com/rates", cancellationToken);

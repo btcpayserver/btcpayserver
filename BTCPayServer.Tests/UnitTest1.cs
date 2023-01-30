@@ -2627,6 +2627,28 @@ namespace BTCPayServer.Tests
             Assert.Single(payoutLabel.PullPaymentPayouts["pp2"]);
         }
 
+        [Fact(Timeout = LongRunningTestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task CanDoRateSourceMigration()
+        {
+            using var tester = CreateServerTester(newDb: true);
+            await tester.StartAsync();
+            var acc = tester.NewAccount();
+            await acc.CreateStoreAsync();
+            var db = tester.PayTester.GetService<ApplicationDbContextFactory>();
+            using var ctx = db.CreateContext();
+            var store = (await ctx.Stores.AsNoTracking().ToListAsync())[0];
+            var b = store.GetStoreBlob();
+            b.PreferredExchange = "coinaverage";
+            store.SetStoreBlob(b);
+            await ctx.SaveChangesAsync();
+            await ctx.Database.ExecuteSqlRawAsync("DELETE FROM \"__EFMigrationsHistory\" WHERE \"MigrationId\"='20230123062447_migrateoldratesource'");
+            await ctx.Database.MigrateAsync();
+            store = (await ctx.Stores.AsNoTracking().ToListAsync())[0];
+            b = store.GetStoreBlob();
+            Assert.Equal("coingecko", b.PreferredExchange);
+        }
+
 
         [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Integration", "Integration")]

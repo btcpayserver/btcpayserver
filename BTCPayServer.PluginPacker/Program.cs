@@ -34,7 +34,7 @@ namespace BTCPayServer.PluginPacker
                 throw new Exception($"{rootDLLPath} could not be found");
             }
 
-            var plugin = PluginLoader.CreateFromAssemblyFile(rootDLLPath, false, new[] { typeof(IBTCPayServerPlugin) });
+            var plugin = PluginLoader.CreateFromAssemblyFile(rootDLLPath, false, new[] { typeof(IBTCPayServerPlugin) }, o => o.PreferSharedTypes = true);
             var assembly = plugin.LoadAssembly(name);
             var extension = GetAllExtensionTypesFromAssembly(assembly).FirstOrDefault();
             if (extension is null)

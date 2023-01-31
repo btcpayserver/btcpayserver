@@ -1,9 +1,15 @@
 @model BTCPayServer.Plugins.Crowdfund.Models.ViewCrowdfundViewModel
 @using BTCPayServer.Plugins.Crowdfund.Models
 @inject BTCPayServer.Services.BTCPayServerEnvironment Env
+@inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @{
     ViewData["Title"] = Model.Title;
     Layout = null;
+    if (!string.IsNullOrEmpty(Model.DisqusShortname))
+    {
+        Csp.Add("script-src", $"https://{Model.DisqusShortname}.disqus.com");
+        Csp.Add("script-src", "https://c.disquscdn.com");
+    }
 }
 <!DOCTYPE html>
 <html class="h-100" @(Env.IsDeveloping ? " data-devenv" : "")>

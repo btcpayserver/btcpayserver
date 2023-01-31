@@ -18,6 +18,7 @@
                     {
                         "name": "currencyPair",
                         "description": "The currency pairs to fetch rates for",
+                        "example": [ "BTC_USD", "BTC_EUR" ],
                         "in": "query",
                         "style": "form",
                         "explode": true,

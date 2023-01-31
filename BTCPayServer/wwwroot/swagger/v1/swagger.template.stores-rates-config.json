@@ -165,7 +165,7 @@
                                 "schema": {
                                     "type": "array",
                                     "items": {
-                                        "$ref": "#/components/schemas/StoreRatePreviewResult"
+                                        "$ref": "#/components/schemas/StoreRateResult"
                                     }
                                 }
                             }
@@ -220,13 +220,14 @@
                     }
                 }
             },
-            "StoreRatePreviewResult": {
+            "StoreRateResult": {
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
                     "currencyPair": {
                         "type": "string",
-                        "description": "Currency pair in the format of BTC_USD"
+                        "example": "BTC_USD",
+                        "description": "Currency pair in the format of `BTC_USD`"
                     },
                     "errors": {
                         "type": "array",
@@ -237,8 +238,9 @@
                         "description": "Errors relating to this currency pair fetching based on your config"
                     },
                     "rate": {
-                        "type": "string",
-                        "description": "the rate fetched based on th currency pair"
+                        "type": "number",
+                        "example": 24520.23,
+                        "description": "the rate fetched based on the currency pair"
                     }
                 }
             }

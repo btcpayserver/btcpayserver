@@ -1,0 +1,84 @@
+{
+    "paths": {
+        "/api/v1/stores/{storeId}/rates": {
+            "get": {
+                "tags": [
+                    "Stores (Rates)"
+                ],
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store to fetch",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "currencyPair",
+                        "description": "The currency pairs to fetch rates for",
+                        "example": [ "BTC_USD", "BTC_EUR" ],
+                        "in": "query",
+                        "style": "form",
+                        "explode": true,
+                        "schema": {
+                            "type": "array",
+                            "nullable": true,
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "x-position": 1
+                    }
+                ],
+                "summary": "Get rates",
+                "description": "Get rates on the store",
+                "operationId": "Stores_GetStoreRates",
+                
+                "responses": {
+                    "200": {
+                        "description": "The settings were executed and a preview was returned",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/StoreRateResult"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "A list of errors that occurred when previewing the settings",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to modify the store"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canviewstoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Stores (Rates)",
+            "description": "Store Rates operations"
+        }
+    ]
+}

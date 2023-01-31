@@ -85,24 +85,31 @@ namespace BTCPayServer.Controllers.GreenField
         [HttpPost("preview")]
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> PreviewUpdateStoreRateConfiguration(
-            StoreRateConfiguration configuration, [FromQuery] string[] currencyPair)
+            StoreRateConfiguration configuration, [FromQuery] string[]? currencyPair)
         {
             var data = HttpContext.GetStoreData();
             var blob = data.GetStoreBlob();
             var parsedCurrencyPairs = new HashSet<CurrencyPair>();
 
-
-            foreach (var pair in currencyPair ?? Array.Empty<string>())
+            if (currencyPair?.Any() is true)
             {
-                if (!CurrencyPair.TryParse(pair, out var currencyPairParsed))
+                foreach (var pair in currencyPair)
                 {
-                    ModelState.AddModelError(nameof(currencyPair),
-                        $"Invalid currency pair '{pair}' (it should be formatted like BTC_USD,BTC_CAD)");
-                    break;
-                }
+                    if (!CurrencyPair.TryParse(pair, out var currencyPairParsed))
+                    {
+                        ModelState.AddModelError(nameof(currencyPair),
+                            $"Invalid currency pair '{pair}' (it should be formatted like BTC_USD,BTC_CAD)");
+                        break;
+                    }
 
-                parsedCurrencyPairs.Add(currencyPairParsed);
+                    parsedCurrencyPairs.Add(currencyPairParsed);
+                }
             }
+            else
+            {
+                parsedCurrencyPairs = blob.DefaultCurrencyPairs.ToHashSet();
+            }
+            
             ValidateAndSanitizeConfiguration(configuration, blob);
             if (!ModelState.IsValid)
                 return this.CreateValidationError(ModelState);
@@ -113,12 +120,12 @@ namespace BTCPayServer.Controllers.GreenField
 
             var rateTasks = _rateProviderFactory.FetchRates(parsedCurrencyPairs, rules, CancellationToken.None);
             await Task.WhenAll(rateTasks.Values);
-            var result = new List<StoreRatePreviewResult>();
+            var result = new List<StoreRateResult>();
             foreach (var rateTask in rateTasks)
             {
                 var rateTaskResult = rateTask.Value.Result;
 
-                result.Add(new StoreRatePreviewResult()
+                result.Add(new StoreRateResult()
                 {
                     CurrencyPair = rateTask.Key.ToString(),
                     Errors = rateTaskResult.Errors.Select(errors => errors.ToString()).ToList(),

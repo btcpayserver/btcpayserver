@@ -758,27 +758,21 @@ namespace BTCPayServer.Controllers
             {
                 return Redirect(returnUrl);
             }
-            
+
             // After login, if there is an app on "/", we should redirect to BTCPay explicit home route, and not to the app.
             if (PoliciesSettings.RootAppId is not null && PoliciesSettings.RootAppType is not null)
                 return RedirectToAction(nameof(UIHomeController.Home), "UIHome");
 
-            if (PoliciesSettings.DomainToAppMapping is not { } mapping)
-                return RedirectToAction(nameof(UIHomeController.Index), "UIHome");
-            
-            var matchedDomainMapping = mapping.FirstOrDefault(item =>
+            if (PoliciesSettings.DomainToAppMapping is { } mapping)
             {
-                Uri.TryCreate(item.Domain, UriKind.Absolute, out var uri);
-                var host = HttpContext.Request.Host.Value;
-                var domain = uri?.Authority ?? item.Domain;
-                return domain!.Equals(host, StringComparison.InvariantCultureIgnoreCase);
-            });
-
-            return RedirectToAction(matchedDomainMapping is not null
-                ? nameof(UIHomeController.Home)
-                : nameof(UIHomeController.Index), "UIHome");
+                var matchedDomainMapping = mapping.FirstOrDefault(item =>
+                    item.Domain.Equals(HttpContext.Request.Host.Host, StringComparison.InvariantCultureIgnoreCase));
+                if (matchedDomainMapping is not null)
+                    return RedirectToAction(nameof(UIHomeController.Home), "UIHome");
+            }
+            
+            return RedirectToAction(nameof(UIHomeController.Index), "UIHome");
         }
-
 
         private bool CanLoginOrRegister()
         {

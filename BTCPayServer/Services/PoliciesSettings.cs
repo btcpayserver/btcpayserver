@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Validation;
-using Microsoft.AspNetCore.Routing;
 using Newtonsoft.Json;
 
 namespace BTCPayServer.Services
@@ -63,7 +62,7 @@ namespace BTCPayServer.Services
 
         public class DomainToAppMappingItem
         {
-            [Display(Name = "Domain")] [Required] [Uri] public string Domain { get; set; }
+            [Display(Name = "Domain")] [Required] [HostName] public string Domain { get; set; }
             [Display(Name = "App")] [Required] public string AppId { get; set; }
 
             public AppType AppType { get; set; }

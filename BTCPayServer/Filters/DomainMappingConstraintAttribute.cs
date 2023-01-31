@@ -35,29 +35,20 @@ namespace BTCPayServer.Filters
                 var matchedDomainMapping = mapping.FirstOrDefault(item => item.AppId == appId);
                 
                 // App is accessed via path, redirect to canonical domain
-                if (matchedDomainMapping != null && matchedDomainMapping.Domain.StartsWith("http"))
+                if (matchedDomainMapping != null)
                 {
-                    context.RouteContext.HttpContext.Response.Redirect(matchedDomainMapping.Domain);
+                    var req = context.RouteContext.HttpContext.Request;
+                    var url = new UriBuilder(req.Scheme, matchedDomainMapping.Domain).ToString();
+                    context.RouteContext.HttpContext.Response.Redirect(url);
                     return true;
                 }
             }
             
             if (hasDomainMapping)
             {
-                var matchedDomainMapping = mapping.FirstOrDefault(item =>
-                {
-                    if (Uri.CheckHostName(item.Domain) != UriHostNameType.Unknown)
-                    {
-                        return item.Domain.Equals(context.RouteContext.HttpContext.Request.Host.Value,
-                            StringComparison.InvariantCultureIgnoreCase);
-                    }
-                    if (Uri.TryCreate(item.Domain, UriKind.Absolute, out var uri))
-                    {
-                        return uri.Authority.Equals(context.RouteContext.HttpContext.Request.Host.Value,
-                            StringComparison.InvariantCultureIgnoreCase);
-                    }
-                    return false;
-                });
+                var matchedDomainMapping = mapping.FirstOrDefault(item => 
+                    item.Domain.Equals(context.RouteContext.HttpContext.Request.Host.Host,
+                        StringComparison.InvariantCultureIgnoreCase));
                 if (matchedDomainMapping != null)
                 {
                     if (AppType is not { } appType)

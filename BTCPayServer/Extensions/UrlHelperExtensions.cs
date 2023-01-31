@@ -1,4 +1,5 @@
 
+using System;
 using BTCPayServer;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers;
@@ -10,6 +11,18 @@ namespace Microsoft.AspNetCore.Mvc
 {
     public static class UrlHelperExtensions
     {
+#nullable enable
+        public static string? EnsureLocal(this IUrlHelper helper, string? url, HttpRequest? httpRequest = null)
+        {
+            if (url is null || helper.IsLocalUrl(url))
+                return url;
+            if (httpRequest is null)
+                return null;
+            if (Uri.TryCreate(url, UriKind.Absolute, out var r) && r.Host.Equals(httpRequest.Host.Host))
+                return url;
+            return null;
+        }
+#nullable restore
         public static string EmailConfirmationLink(this LinkGenerator urlHelper, string userId, string code, string scheme, HostString host, string pathbase)
         {
             return urlHelper.GetUriByAction(nameof(UIAccountController.ConfirmEmail), "UIAccount",

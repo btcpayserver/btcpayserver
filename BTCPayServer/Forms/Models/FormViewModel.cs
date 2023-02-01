@@ -5,7 +5,10 @@ namespace BTCPayServer.Forms.Models;
 
 public class FormViewModel
 {
-
+    public string LogoFileId { get; set; }
+    public string CssFileId { get; set; }
+    public string BrandColor { get; set; }
+    public string StoreName { get; set; }
     public string FormName { get; set; }
     public string RedirectUrl { get; set; }
     public Form Form { get; set; }

@@ -141,14 +141,20 @@ public class UIFormsController : Controller
         return GetFormView(formData);
     }
 
-    ViewResult GetFormView(FormData formData)
+    ViewResult GetFormView(FormData formData, Form? form = null)
     {
-        return View("View", new FormViewModel {FormName = formData.Name, Form = Form.Parse(formData.Config)});
-    }
-
-    ViewResult GetFormView(Form form, string name)
-    {
-        return View("View", new FormViewModel {FormName = name, Form = form});
+        var store = formData.Store;
+        var storeBlob = store?.GetStoreBlob();
+        
+        return View("View", new FormViewModel
+        {
+            FormName = formData.Name,
+            Form = form ?? Form.Parse(formData.Config),
+            StoreName = store?.StoreName,
+            BrandColor = storeBlob?.BrandColor,
+            CssFileId = storeBlob?.CssFileId,
+            LogoFileId = storeBlob?.LogoFileId,
+        });
     }
 
     [AllowAnonymous]
@@ -176,8 +182,7 @@ public class UIFormsController : Controller
         form.ApplyValuesFromForm(Request.Form);
 
         if (!await _formDataService.Validate(form, ModelState))
-            return GetFormView(form, formData.Name);
-
+            return GetFormView(formData, form);
 
         // Create invoice after public form has been filled
         var store = await storeRepository.FindStore(formData.StoreId);

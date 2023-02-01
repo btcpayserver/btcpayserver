@@ -337,11 +337,16 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 Request.Form.Where(pair => pair.Key != "__RequestVerificationToken").ToDictionary(p => p.Key, p => p.Value.ToString());
             myDictionary.Add("appId", appId);
             var controller = nameof(UIPointOfSaleController).TrimEnd("Controller", StringComparison.InvariantCulture);
-            var redirectUrl = Url.Action(nameof(ViewPointOfSale), controller, myDictionary );
+            var redirectUrl = Url.Action(nameof(ViewPointOfSale), controller, myDictionary);
+            var store = await _appService.GetStore(app);
+            var storeBlob = store.GetStoreBlob();
             
-                
-            return View("Views/UIForms/View", new FormViewModel()
+            return View("Views/UIForms/View", new FormViewModel
             {
+                StoreName = store.StoreName,
+                BrandColor = storeBlob.BrandColor,
+                CssFileId = storeBlob.CssFileId,
+                LogoFileId = storeBlob.LogoFileId,
                 Form = Form.Parse(formData.Config),
                 RedirectUrl = redirectUrl,
                 AspController = controller,

@@ -7,7 +7,6 @@ using System.Text.Encodings.Web;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using AngleSharp.Common;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Form;
@@ -29,7 +28,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Routing;
 using NBitpayClient;
 using Newtonsoft.Json.Linq;
 using NicolasDorier.RateLimits;
@@ -248,7 +246,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                             AspAction = nameof(POSForm),
                             RouteParameters = new Dictionary<string, string>()
                             {
-                                { "appId", appId}
+                                { "appId", appId }
                             },
                             AspController = nameof(UIPointOfSaleController).TrimEnd("Controller", StringComparison.InvariantCulture),
                             FormParameters = new MultiValueDictionary<string, string>(Request.Form.Select(pair => new KeyValuePair<string, IReadOnlyCollection<string>>(pair.Key, pair.Value)))
@@ -317,24 +315,24 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                     Severity = StatusMessageModel.StatusSeverity.Error,
                     AllowDismiss = true
                 });
-                return RedirectToAction(nameof(ViewPointOfSale), new { appId = appId });
+                return RedirectToAction(nameof(ViewPointOfSale), new { appId });
             }
         }
 
         [HttpPost("/apps/{appId}/pos/form")]
-
         public async Task<IActionResult> POSForm(string appId)
         {
-            
             var app = await _appService.GetApp(appId, AppType.PointOfSale);
             if (app == null)
                 return NotFound();
+            
             var settings = app.GetSettings<PointOfSaleSettings>();
             var formData = settings.FormId is null ? null : (await FormDataService.GetForm( settings.FormId));
             if (formData is null)
             {
-                return RedirectToAction(nameof(ViewPointOfSale), new {appId });
+                return RedirectToAction(nameof(ViewPointOfSale), new { appId });
             }
+            
             var myDictionary = 
                 Request.Form.Where(pair => pair.Key != "__RequestVerificationToken").ToDictionary(p => p.Key, p => p.Value.ToString());
             myDictionary.Add("appId", appId);

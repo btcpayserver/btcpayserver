@@ -171,8 +171,7 @@ public class UIFormsController : Controller
 
         if (!Request.HasFormContentType)
             return GetFormView(formData);
-
-
+        
         var form = Form.Parse(formData.Config);
         form.ApplyValuesFromForm(Request.Form);
 

@@ -151,6 +151,9 @@ namespace BTCPayServer.HostedServices
             public string[] PayoutIds { get; set; }
             public string[] PaymentMethods { get; set; }
             public string[] Stores { get; set; }
+            public bool IncludeArchived { get; set; }
+            public bool IncludeStoreData { get; set; }
+            public bool IncludePullPaymentData { get; set; }
         }
 
         public async Task<List<PayoutData>> GetPayouts(PayoutQuery payoutQuery)
@@ -159,7 +162,8 @@ namespace BTCPayServer.HostedServices
             return await GetPayouts(payoutQuery, ctx);
         }
 
-        public async Task<List<PayoutData>> GetPayouts(PayoutQuery payoutQuery, ApplicationDbContext ctx)
+        public static async Task<List<PayoutData>> GetPayouts(PayoutQuery payoutQuery, ApplicationDbContext ctx,
+            CancellationToken cancellationToken = default)
         {
             var query = ctx.Payouts.AsQueryable();
             if (payoutQuery.States is not null)
@@ -186,8 +190,23 @@ namespace BTCPayServer.HostedServices
             {
                 query = query.Where(data => payoutQuery.Stores.Contains(data.StoreDataId));
             }
+            if (payoutQuery.IncludeStoreData)
+            {
+                query = query.Include(data => data.StoreData);
+            }
+            
+            if (payoutQuery.IncludePullPaymentData || !payoutQuery.IncludeArchived)
+            {
+                query = query.Include(data => data.PullPaymentData);
+            }
 
-            return await query.ToListAsync();
+            if (!payoutQuery.IncludeArchived)
+            {
+                query = query.Where(data =>
+                    data.PullPaymentData == null || !data.PullPaymentData.Archived);
+            }
+
+            return await query.ToListAsync(cancellationToken);
         }
 
         public async Task<Data.PullPaymentData> GetPullPayment(string pullPaymentId, bool includePayouts)
@@ -769,7 +788,7 @@ namespace BTCPayServer.HostedServices
 
         public string PayoutId { get; set; }
         public JObject Proof { get; set; }
-        public PayoutState State { get; set; }
+        public PayoutState State { get; set; } = PayoutState.Completed;
 
         public static string GetErrorMessage(PayoutPaidResult result)
         {

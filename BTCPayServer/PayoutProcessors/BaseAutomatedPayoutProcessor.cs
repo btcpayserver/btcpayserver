@@ -62,7 +62,7 @@ public abstract class BaseAutomatedPayoutProcessor<T> : BaseAsyncService where T
         {
 
             await using var context = _applicationDbContextFactory.CreateContext();
-            var payouts = await _pullPaymentHostedService.GetPayouts(
+            var payouts = await PullPaymentHostedService.GetPayouts(
                 new PullPaymentHostedService.PayoutQuery()
                 {
                     States = new[] { PayoutState.AwaitingPayment },

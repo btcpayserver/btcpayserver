@@ -448,15 +448,14 @@ namespace BTCPayServer.Controllers
             ApplicationDbContext ctx, string[] payoutIds,
             string storeId, CancellationToken cancellationToken)
         {
-            var payouts = (await ctx.Payouts
-                    .Include(p => p.PullPaymentData)
-                    .Include(p => p.StoreData)
-                    .Where(p => payoutIds.Contains(p.Id))
-                    .Where(p => p.StoreDataId == storeId && (p.PullPaymentDataId == null || !p.PullPaymentData.Archived))
-                    .ToListAsync(cancellationToken))
-                .Where(p => p.GetPaymentMethodId() == paymentMethodId)
-                .ToList();
-            return payouts;
+            return await PullPaymentHostedService.GetPayouts(new PullPaymentHostedService.PayoutQuery()
+            {
+                IncludeArchived = false,
+                IncludeStoreData = true,
+                Stores = new[] {storeId},
+                PayoutIds = payoutIds,
+                PaymentMethods = new[] {paymentMethodId.ToString()}
+            }, ctx, cancellationToken);
         }
 
         [HttpGet("stores/{storeId}/pull-payments/{pullPaymentId}/payouts")]

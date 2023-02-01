@@ -202,12 +202,10 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
             case "mark-paid":
                 await using (var context = _dbContextFactory.CreateContext())
                 {
-                    var payouts = (await context.Payouts
-                            .Include(p => p.PullPaymentData)
-                            .Include(p => p.PullPaymentData.StoreData)
-                            .Where(p => payoutIds.Contains(p.Id))
-                            .Where(p => p.PullPaymentData.StoreId == storeId && !p.PullPaymentData.Archived && p.State == PayoutState.AwaitingPayment)
-                            .ToListAsync()).Where(data =>
+                    var payouts = (await PullPaymentHostedService.GetPayouts(new PullPaymentHostedService.PayoutQuery()
+                        {
+                            States = new[] {PayoutState.AwaitingPayment}, Stores = new[] {storeId}, PayoutIds = payoutIds
+                        }, context)).Where(data =>
                             PaymentMethodId.TryParse(data.PaymentMethodId, out var paymentMethodId) &&
                             CanHandle(paymentMethodId))
                         .Select(data => (data, ParseProof(data) as PayoutTransactionOnChainBlob)).Where(tuple => tuple.Item2 != null && tuple.Item2.TransactionId != null && tuple.Item2.Accounted == false);
@@ -217,24 +215,20 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
                         valueTuple.data.State = PayoutState.InProgress;
                         SetProofBlob(valueTuple.data, valueTuple.Item2);
                     }
-
                     await context.SaveChangesAsync();
                 }
-
                 return new StatusMessageModel()
                 {
                     Message = "Payout payments have been marked confirmed",
                     Severity = StatusMessageModel.StatusSeverity.Success
                 };
             case "reject-payment":
-                await using (var context = _dbContextFactory.CreateContext())
+               await using (var context = _dbContextFactory.CreateContext())
                 {
-                    var payouts = (await context.Payouts
-                            .Include(p => p.PullPaymentData)
-                            .Include(p => p.PullPaymentData.StoreData)
-                            .Where(p => payoutIds.Contains(p.Id))
-                            .Where(p => p.PullPaymentData.StoreId == storeId && !p.PullPaymentData.Archived && p.State == PayoutState.AwaitingPayment)
-                            .ToListAsync()).Where(data =>
+                    var payouts = (await PullPaymentHostedService.GetPayouts(new PullPaymentHostedService.PayoutQuery()
+                        {
+                            States = new[] {PayoutState.AwaitingPayment}, Stores = new[] {storeId}, PayoutIds = payoutIds
+                        }, context)).Where(data =>
                             PaymentMethodId.TryParse(data.PaymentMethodId, out var paymentMethodId) &&
                             CanHandle(paymentMethodId))
                         .Select(data => (data, ParseProof(data) as PayoutTransactionOnChainBlob)).Where(tuple => tuple.Item2 != null && tuple.Item2.TransactionId != null && tuple.Item2.Accounted == true);

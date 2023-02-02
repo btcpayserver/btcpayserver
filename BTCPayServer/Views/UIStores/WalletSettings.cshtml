@@ -52,7 +52,7 @@
                            data-bs-toggle="modal"
                            data-bs-target="#ConfirmModal"
                            data-title="Replace @Model.CryptoCode wallet"
-                           data-description="@Html.Encode(ViewData["ReplaceDescription"])"
+                           data-description="@ViewData["ReplaceDescription"]"
                            data-confirm="Setup new wallet"
                            data-confirm-input="REPLACE">
                             Replace wallet
@@ -64,7 +64,7 @@
                                     data-bs-toggle="modal"
                                     data-bs-target="#ConfirmModal"
                                     data-title="Remove @Model.CryptoCode wallet"
-                                    data-description="@Html.Encode(ViewData["RemoveDescription"])"
+                                    data-description="@ViewData["RemoveDescription"]"
                                     data-confirm="Remove"
                                     data-confirm-input="REMOVE">Remove wallet</button>
                         </form>

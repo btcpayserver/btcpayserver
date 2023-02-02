@@ -203,7 +203,6 @@ namespace BTCPayServer.Tests
         {
             var isImport = !string.IsNullOrEmpty(seed);
             GoToWalletSettings(cryptoCode);
-
             // Replace previous wallet case
             if (Driver.PageSource.Contains("id=\"ChangeWalletLink\""))
             {

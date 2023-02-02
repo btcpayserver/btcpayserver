@@ -758,22 +758,21 @@ namespace BTCPayServer.Controllers
             {
                 return Redirect(returnUrl);
             }
-            else
-            {
-                // After login, if there is an app on "/", we should redirect to BTCPay explicit home route, and not to the app.
-                if (PoliciesSettings.RootAppId is not null && PoliciesSettings.RootAppType is not null)
-                    return RedirectToAction(nameof(UIHomeController.Home), "UIHome");
-                if (PoliciesSettings.DomainToAppMapping is { } mapping)
-                {
-                    var matchedDomainMapping = mapping.FirstOrDefault(item =>
-                    item.Domain.Equals(this.HttpContext.Request.Host.Host, StringComparison.InvariantCultureIgnoreCase));
-                    if (matchedDomainMapping is not null)
-                        return RedirectToAction(nameof(UIHomeController.Home), "UIHome");
-                }
-                return RedirectToAction(nameof(UIHomeController.Index), "UIHome");
-            }
-        }
 
+            // After login, if there is an app on "/", we should redirect to BTCPay explicit home route, and not to the app.
+            if (PoliciesSettings.RootAppId is not null && PoliciesSettings.RootAppType is not null)
+                return RedirectToAction(nameof(UIHomeController.Home), "UIHome");
+
+            if (PoliciesSettings.DomainToAppMapping is { } mapping)
+            {
+                var matchedDomainMapping = mapping.FirstOrDefault(item =>
+                    item.Domain.Equals(HttpContext.Request.Host.Host, StringComparison.InvariantCultureIgnoreCase));
+                if (matchedDomainMapping is not null)
+                    return RedirectToAction(nameof(UIHomeController.Home), "UIHome");
+            }
+            
+            return RedirectToAction(nameof(UIHomeController.Index), "UIHome");
+        }
 
         private bool CanLoginOrRegister()
         {

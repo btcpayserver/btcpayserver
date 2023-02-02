@@ -843,6 +843,7 @@ namespace BTCPayServer.Tests
             select = new SelectElement(s.Driver.FindElement(By.Id("DomainToAppMapping_0__AppId")));
             select.SelectByText("Point of", true);
             s.Driver.FindElement(By.Id("SaveButton")).Click();
+            Assert.Contains("Policies updated successfully", s.FindAlertMessage().Text);
 
             s.Logout();
             s.LogIn(userId);

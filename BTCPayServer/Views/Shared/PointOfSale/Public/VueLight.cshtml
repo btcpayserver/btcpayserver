@@ -1,90 +1,75 @@
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @model BTCPayServer.Plugins.PointOfSale.Models.ViewPointOfSaleViewModel
 
-<div id="app" class="l-pos-wrapper" v-cloak>
-    <form method="post" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" data-buy v-on:submit="handleFormSubmit">
-        <div ref="display"  class="l-pos-display pb-3 px-1"><div class="text-muted">{{srvModel.currencyCode}}</div><span ref="amount"  v-bind:style="{fontSize: fontSize + 'px'}">{{ payTotal }}</span></div>
-        <div class="l-pos-keypad">
-            <template
-                v-for="(key, index) in keys"
-                :key="index">
-                <div v-if="key !== ''" class="btn"
-                     v-bind:class="{ 'btn-primary' : (isNaN(key) === false) || key === '.', 'btn-dark' : isNaN(key) && key !== '.' }"
-                     v-on:click="buttonClicked(key)">{{ key }}</div>
-                <div v-else class="btn btn-empty"></div>
-            </template>
+<form id="app" method="post" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" data-buy v-on:submit="handleFormSubmit" class="d-flex flex-column gap-4 flex-fill" v-cloak>
+    <div ref="display" class="d-flex flex-column align-items-center px-4 mb-auto">
+        <div class="fw-semibold text-muted">{{srvModel.currencyCode}}</div>
+        <div class="fw-bold lh-sm" ref="amount" v-bind:style="{ fontSize: `${fontSize}px` }">{{ payTotal }}</div>
+    </div>
+    <div id="ModeTabs" class="tab-content">
+        <div id="Mode-Discount" class="tab-pane fade px-4" :class="{ show: mode === 'discount', active: mode === 'discount' }" role="tabpanel" aria-labelledby="ModeTablist-Discount" v-if="srvModel.showDiscount">
+            <div class="input-group">
+                <input
+                    class="form-control form-control-lg"
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="1"
+                    v-model="discountPercent"
+                    v-on:change="onDiscountChange"
+                    name="discount"
+                    placeholder="Discount in %"
+                >
+                <button type="button" class="btn btn-outline-danger" v-on:click="removeDiscount">
+                    <vc:icon symbol="close"/>
+                </button>
+            </div>
         </div>
-        <div class="d-flex align-items-center justify-content-center mt-4 gap-3">
-            <div class="btn btn-outline-secondary btn-lg flex-fill" v-on:click="clearTotal">Clear</div>
-            <button class="btn btn-primary btn-lg flex-fill" id="pay-button" type="submit" v-bind:disabled="payButtonLoading">
-                <div v-if="payButtonLoading" class="spinner-border spinner-border-sm" id="pay-button-spinner" role="status">
-                    <span class="sr-only">Loading...</span>
-                </div>
-                Pay
-            </button>
+        <div id="Mode-Tip" class="tab-pane fade px-4" :class="{ show: mode === 'tip', active: mode === 'tip' }" role="tabpanel" aria-labelledby="ModeTablist-Tip" v-if="srvModel.enableTips">
+            <div class="d-flex flex-wrap align-items-center justify-content-center mb-3 gap-3" v-if="srvModel.customTipPercentages && srvModel.customTipPercentages.length > 0">
+                <button
+                    v-for="percentage in srvModel.customTipPercentages"
+                    type="button"
+                    class="btn btn-sm btn-secondary"
+                    v-on:click.prevent="tipClicked(percentage)">
+                    {{ percentage }}%
+                </button>
+            </div>
+            <div class="input-group">
+                <input
+                    class="form-control form-control-lg"
+                    type="number"
+                    min="0"
+                    step="@Model.Step"
+                    v-model="tipTotal"
+                    name="tip"
+                    placeholder="Tip in @(Model.CurrencyInfo.CurrencySymbol ?? Model.CurrencyCode)">
+                <button type="button" class="btn btn-outline-danger" v-on:click.prevent="removeTip">
+                    <vc:icon symbol="close"/>
+                </button>
+            </div>
         </div>
-
-        <input class="form-control" type="hidden" name="amount" v-model="payTotalNumeric">
-    </form>
-
-    @if (Model.ShowDiscount)
-    {
-        <div class="input-group mt-4">
-            <span class="input-group-text"><i class="fa fa-percent fa-fw"></i></span>
-            <input
-                class="js-cart-discount form-control"
-                type="number"
-                min="0"
-                max="100"
-                step="1"
-                v-model="discountPercent"
-                v-on:change="onDiscountChange"
-                name="discount"
-                placeholder="Discount in %"
-            >
-            <a
-                class="js-cart-discount-remove btn btn-danger"
-                href="#"
-                v-on:click="removeDiscount"
-            ><i class="fa fa-times"></i></a>
-        </div>
-    }
-
-    @if (Model.EnableTips)
-    {
-        <p class="pt-5 h5">@Model.CustomTipText</p>
-        <div class="input-group mb-2">
-            <span class="input-group-text"><i class="fa fa-money fa-fw"></i></span>
-            <input
-                class="js-cart-tip form-control form-control-lg"
-                disabled
-                type="number"
-                min="0"
-                step="@Model.Step"
-                v-model="tipTotal"
-                name="tip"
-                placeholder="Tip in @(Model.CurrencyInfo.CurrencySymbol ?? Model.CurrencyCode)"
-            >
-            <a
-                class="js-cart-tip-remove btn btn-lg btn-danger"
-                href="#"
-                v-on:click="removeTip"
-            ><i class="fa fa-times"></i></a>
-        </div>
-        <div class="d-flex align-items-center justify-content-center mt-2 gap-3">
-            @if (Model.CustomTipPercentages != null && Model.CustomTipPercentages.Length > 0)
-            {
-                @foreach (var percentage in Model.CustomTipPercentages)
-                {
-                    <button
-                        class="js-cart-tip-btn btn btn-lg btn-light w-100 border mb-2"
-                        data-tip="@percentage"
-                        v-on:click="tipClicked(@percentage)"
-                    >
-                        @percentage%
-                    </button>
-                }
-            }
-        </div>
-    }
-</div>
+    </div>
+    <div id="ModeTablist" class="nav btcpay-pills align-items-center justify-content-center" role="tablist" v-if="modes.length > 1">
+        <template v-for="m in modes" :key="m.value">
+            <input :id="`ModeTablist-${m.value}`" name="mode" :value="m.value" type="radio" role="tab" data-bs-toggle="pill" :data-bs-target="`#Mode-${m.value}`" :aria-controls="`Mode-${m.value}`" :aria-selected="mode === m.value" :checked="mode === m.value" v-on:click="mode = m.value">
+            <label :for="`ModeTablist-${m.value}`">{{ m.title }}</label>
+        </template>
+    </div>
+    <div class="keypad">
+        <button v-for="k in keys" :key="k" v-on:click.prevent="keyPressed(k)" type="button" class="btn btn-secondary btn-lg" :data-key="k">
+            <template v-if="k === 'del'"><vc:icon symbol="caret-right"/></template>
+            <template v-else>{{ k }}</template>
+        </button>
+    </div>
+    <div class="actions px-4 gap-4">
+        <button class="btn btn-lg btn-secondary" type="reset" v-on:click.prevent="clearTotal">Clear</button>
+        <button class="btn btn-lg btn-primary" type="submit" :disabled="payButtonLoading" id="pay-button">
+            <div v-if="payButtonLoading" class="spinner-border spinner-border-sm" id="pay-button-spinner" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+            <template v-else>Charge</template>
+        </button>
+    </div>
+    <input class="form-control" type="hidden" name="amount" v-model="payTotalNumeric">
+</form>

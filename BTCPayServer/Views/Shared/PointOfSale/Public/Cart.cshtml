@@ -5,118 +5,138 @@
     var customTipPercentages = Model.CustomTipPercentages;
     var anyInventoryItems = Model.Items.Any(item => item.Inventory.HasValue);
 }
-
-<script id="template-cart-item" type="text/template">
-    <tr data-id="{id}">
-        <td class="align-middle pe-0" width="1%">{image}</td>
-        <td class="align-middle pe-0 ps-2"><b>{title}</b></td>
-        <td class="align-middle px-0">
-            <a class="js-cart-item-remove btn btn-link" href="#"><i class="fa fa-trash text-muted"></i></a>
-        </td>
-        <td class="align-middle px-0">
-            <div class="input-group align-items-center">
-                <a class="js-cart-item-minus btn btn-link px-2" href="#"><i class="fa fa-minus-circle fa-fw text-danger"></i></a>
-                <input class="js-cart-item-count form-control form-control-sm pull-left hide-number-spin text-end" type="number" step="1" name="count" placeholder="Qty" max="{inventory}"  value="{count}" data-prev="{count}">
-                <a class="input-group-text js-cart-item-plus btn btn-link px-2" href="#">
-                    <i class="fa fa-plus-circle fa-fw text-success"></i>
-                </a>
-            </div>
-        </td>
-        <td class="align-middle text-end">{price}</td>
-    </tr>
-</script>
-
-<script id="template-cart-item-image" type="text/template">
-    <img class="cart-item-image" src="{image}" alt="">
-</script>
-
-<script id="template-cart-custom-amount" type="text/template">
-    <tr>
-        <td colspan="5">
-            <div class="input-group">
-                <span class="input-group-text"><i class="fa fa-shopping-cart fa-fw"></i></span>
-                <input class="js-cart-custom-amount form-control" type="number" min="0" step="@Model.Step" name="amount" placeholder="Pay what you want">
-                <div class="input-group-text">
-                    <a class="js-cart-custom-amount-remove btn btn-danger" href="#"><i class="fa fa-times"></i></a>
+@section PageHeadContent {
+    <link rel="stylesheet" href="~/cart/css/style.css" asp-append-version="true">
+    <style>
+        .js-cart-item-minus .fa,
+        .js-cart-item-plus .fa {
+            background: #fff;
+            border-radius: 50%;
+            width: 17px;
+            height: 17px;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+}
+@section PageFootContent {
+    <script>var srvModel = @Safe.Json(Model);</script>
+    <script src="~/cart/js/cart.js" asp-append-version="true"></script>
+    <script src="~/cart/js/cart.jquery.js" asp-append-version="true"></script>
+    <script id="template-cart-item" type="text/template">
+        <tr data-id="{id}">
+            <td class="align-middle pe-0" width="1%">{image}</td>
+            <td class="align-middle pe-0 ps-2"><b>{title}</b></td>
+            <td class="align-middle px-0">
+                <a class="js-cart-item-remove btn btn-link" href="#"><i class="fa fa-trash text-muted"></i></a>
+            </td>
+            <td class="align-middle px-0">
+                <div class="input-group align-items-center">
+                    <a class="js-cart-item-minus btn btn-link px-2" href="#"><i class="fa fa-minus-circle fa-fw text-danger"></i></a>
+                    <input class="js-cart-item-count form-control form-control-sm pull-left hide-number-spin text-end" type="number" step="1" name="count" placeholder="Qty" max="{inventory}"  value="{count}" data-prev="{count}">
+                    <a class="input-group-text js-cart-item-plus btn btn-link px-2" href="#">
+                        <i class="fa fa-plus-circle fa-fw text-success"></i>
+                    </a>
                 </div>
-            </div>
-        </td>
-    </tr>
-</script>
+            </td>
+            <td class="align-middle text-end">{price}</td>
+        </tr>
+    </script>
 
-<script id="template-cart-extra" type="text/template">
-   @if(Model.ShowCustomAmount){
+    <script id="template-cart-item-image" type="text/template">
+        <img class="cart-item-image" src="{image}" alt="">
+    </script>
+
+    <script id="template-cart-custom-amount" type="text/template">
         <tr>
-            <th colspan="5" class="border-0 pb-0">
+            <td colspan="5">
                 <div class="input-group">
                     <span class="input-group-text"><i class="fa fa-shopping-cart fa-fw"></i></span>
-                    <input class="js-cart-custom-amount form-control" type="number" min="0" step="@Model.Step" name="amount" value="{customAmount}" placeholder="Pay what you want">
-                    <a class="js-cart-custom-amount-remove btn btn-danger" href="#"><i class="fa fa-times"></i></a>
+                    <input class="js-cart-custom-amount form-control" type="number" min="0" step="@Model.Step" name="amount" placeholder="Pay what you want">
+                    <div class="input-group-text">
+                        <a class="js-cart-custom-amount-remove btn btn-danger" href="#"><i class="fa fa-times"></i></a>
+                    </div>
                 </div>
-            </th>
+            </td>
         </tr>
-    }
-    @if (Model.ShowDiscount)
-    {
-        <tr>
-            <th colspan="5" class="border-top-0">
-                <div class="input-group">
-                    <span class="input-group-text"><i class="fa fa-percent fa-fw"></i></span>
-                    <input class="js-cart-discount form-control" type="number" min="0" step="@Model.Step" value="{discount}" name="discount" placeholder="Discount in %">
-                    <a class="js-cart-discount-remove btn btn-danger" href="#"><i class="fa fa-times"></i></a>
-                </div>
-            </th>
-        </tr>
-    }
-</script>
+    </script>
 
-<script id="template-cart-tip" type="text/template">
-    @if (Model.EnableTips)
-    {
-        <tr>
-            <th colspan="5" class="border-top-0 pt-4 h5">@Model.CustomTipText</th>
-        </tr>
-        <tr>
-            <th colspan="5" class="border-0">
-                <div class="input-group mb-2">
-                    <span class="input-group-text"><i class="fa fa-money fa-fw"></i></span>
-                    <input
-                        class="js-cart-tip form-control form-control-lg"
-                        type="number"
-                        min="0"
-                        step="@Model.Step"
-                        value="{tip}"
-                        name="tip"
-                        placeholder="Tip in @(Model.CurrencyInfo.CurrencySymbol != null ? Model.CurrencyInfo.CurrencySymbol : Model.CurrencyCode)"
-                    />
-                    <a class="js-cart-tip-remove btn btn-lg btn-danger" href="#"><i class="fa fa-times"></i></a>
-                </div>
-                <div class="row mb-1">
-                    @if (customTipPercentages != null && customTipPercentages.Length > 0)
-                    {
-                        @for (int i = 0; i < customTipPercentages.Length; i++)
+    <script id="template-cart-extra" type="text/template">
+       @if (Model.ShowCustomAmount)
+       {
+           <tr>
+                <th colspan="5" class="border-0 pb-0">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fa fa-shopping-cart fa-fw"></i></span>
+                        <input class="js-cart-custom-amount form-control" type="number" min="0" step="@Model.Step" name="amount" value="{customAmount}" placeholder="Pay what you want">
+                        <a class="js-cart-custom-amount-remove btn btn-danger" href="#"><i class="fa fa-times"></i></a>
+                    </div>
+                </th>
+            </tr>
+       }
+        @if (Model.ShowDiscount)
+        {
+            <tr>
+                <th colspan="5" class="border-top-0">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fa fa-percent fa-fw"></i></span>
+                        <input class="js-cart-discount form-control" type="number" min="0" step="@Model.Step" value="{discount}" name="discount" placeholder="Discount in %">
+                        <a class="js-cart-discount-remove btn btn-danger" href="#"><i class="fa fa-times"></i></a>
+                    </div>
+                </th>
+            </tr>
+        }
+    </script>
+
+    <script id="template-cart-tip" type="text/template">
+        @if (Model.EnableTips)
+        {
+            <tr>
+                <th colspan="5" class="border-top-0 pt-4 h5">@Model.CustomTipText</th>
+            </tr>
+            <tr>
+                <th colspan="5" class="border-0">
+                    <div class="input-group mb-2">
+                        <span class="input-group-text"><i class="fa fa-money fa-fw"></i></span>
+                        <input
+                            class="js-cart-tip form-control form-control-lg"
+                            type="number"
+                            min="0"
+                            step="@Model.Step"
+                            value="{tip}"
+                            name="tip"
+                            placeholder="Tip in @(Model.CurrencyInfo.CurrencySymbol != null ? Model.CurrencyInfo.CurrencySymbol : Model.CurrencyCode)"
+                        />
+                        <a class="js-cart-tip-remove btn btn-lg btn-danger" href="#"><i class="fa fa-times"></i></a>
+                    </div>
+                    <div class="row mb-1">
+                        @if (customTipPercentages != null && customTipPercentages.Length > 0)
                         {
-                            var percentage = customTipPercentages[i];
-                            <div class="col">
-                                <a class="js-cart-tip-btn btn btn-lg btn-light w-100 border mb-2" href="#" data-tip="@percentage">@percentage%</a>
-                            </div>
+                            @for (int i = 0; i < customTipPercentages.Length; i++)
+                            {
+                                var percentage = customTipPercentages[i];
+                                <div class="col">
+                                    <a class="js-cart-tip-btn btn btn-lg btn-light w-100 border mb-2" href="#" data-tip="@percentage">@percentage%</a>
+                                </div>
+                            }
                         }
-                    }
 
-                </div>
+                    </div>
+                </th>
+            </tr>
+            }
+    </script>
+
+    <script id="template-cart-total" type="text/template">
+        <tr>
+            <th colspan="1" class="pb-4 h4">Total</th>
+            <th colspan="4" class="pb-4 h4 text-end">
+                <span class="js-cart-total">{total}</span>
             </th>
-        </tr>}
-</script>
-
-<script id="template-cart-total" type="text/template">
-    <tr>
-        <th colspan="1" class="pb-4 h4">Total</th>
-        <th colspan="4" class="pb-4 h4 text-end">
-            <span class="js-cart-total">{total}</span>
-        </th>
-    </tr>
-</script>
-
+        </tr>
+    </script>
+}
 <div id="cartModal" class="modal" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">
         <div class="modal-content">

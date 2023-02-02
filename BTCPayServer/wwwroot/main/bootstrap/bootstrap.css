@@ -11168,16 +11168,16 @@ ul:not([class]) li {
 
 /* Button */
 .btn-outline-secondary {
-  color: var(--btcpay-secondary-text);
+  --btcpay-btn-color: var(--btcpay-secondary-text);
 }
 
 .btn-outline-secondary:hover {
-  color: var(--btcpay-secondary-text-hover);
-  border-color: var(--btcpay-secondary-border-hover);
+  --btcpay-btn-color: var(--btcpay-secondary-text-hover);
+  --btcpay-btn-border-color: var(--btcpay-secondary-border-hover);
 }
 
 .btn-outline-secondary:active {
-  color: var(--btcpay-secondary-text-active);
+  --btcpay-btn-color: var(--btcpay-secondary-text-active);
 }
 
 .btn .icon {
@@ -11695,8 +11695,9 @@ html[data-devenv]:before {
     color: var(--btcpay-secondary-text);
     opacity: .7;
     padding: 4px 5px 3px 7px;
-    font-size: 10px;
-    border-top-left-radius: 4px;
+    font-size: var(--btcpay-font-size-xs);
+    font-family: var(--btcpay-font-family-monospace);
+    border-top-left-radius: var(--btcpay-border-radius);
 }
 
 @media (max-width: 575px) { html[data-devenv]:before { content: 'XS'; } }

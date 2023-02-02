@@ -33,7 +33,7 @@ namespace BTCPayServer.Migrations
                     Name = table.Column<string>(type: "TEXT", nullable: true),
                     StoreId = table.Column<string>(type: "TEXT", nullable: true),
                     Config = table.Column<string>(type: migrationBuilder.IsNpgsql() ? "JSONB" : "TEXT", nullable: true),
-                    Public = table.Column<bool>(type: "INTEGER", nullable: false)
+                    Public = table.Column<bool>(nullable: false)
                 },
                 constraints: table =>
                 {

@@ -26,6 +26,7 @@ using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using LNURL;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using NBitcoin;
@@ -320,6 +321,8 @@ namespace BTCPayServer
         }
 
         [HttpGet("~/.well-known/lnurlp/{username}")]
+        [EnableCors(CorsPolicies.All)]
+        [IgnoreAntiforgeryToken]
         public async Task<IActionResult> ResolveLightningAddress(string username)
         {
             var lightningAddressSettings = await _lightningAddressService.ResolveByAddress(username);

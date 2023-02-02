@@ -230,8 +230,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
 
             var store = await _appService.GetStore(app);
             var posFormId = settings.FormId;
-
-            var formData = posFormId is null ? null : (await FormDataService.GetForm(posFormId));
+            var formData = posFormId is null ? null : await FormDataService.GetForm(posFormId);
          
             JObject formResponseJObject = null;
             switch (formData)
@@ -244,14 +243,10 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                         return View("PostRedirect", new PostRedirectViewModel
                         {
                             AspAction = nameof(POSForm),
-                            RouteParameters = new Dictionary<string, string>()
-                            {
-                                { "appId", appId }
-                            },
+                            RouteParameters = new Dictionary<string, string> { { "appId", appId } },
                             AspController = nameof(UIPointOfSaleController).TrimEnd("Controller", StringComparison.InvariantCulture),
                             FormParameters = new MultiValueDictionary<string, string>(Request.Form.Select(pair => new KeyValuePair<string, IReadOnlyCollection<string>>(pair.Key, pair.Value)))
                         });
-
                     }
 
                     formResponseJObject = JObject.Parse(formResponse);
@@ -294,7 +289,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                         : requiresRefundEmail == RequiresRefundEmail.On,
                 }, store, HttpContext.Request.GetAbsoluteRoot(),
                     new List<string> { AppService.GetAppInternalTag(appId) },
-                    cancellationToken, (entity) =>
+                    cancellationToken, entity =>
                     {
                         entity.Metadata.OrderUrl = Request.GetDisplayUrl();
 
@@ -340,6 +335,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             var redirectUrl = Url.Action(nameof(ViewPointOfSale), controller, myDictionary);
             var store = await _appService.GetStore(app);
             var storeBlob = store.GetStoreBlob();
+            var form = Form.Parse(formData.Config);
             
             return View("Views/UIForms/View", new FormViewModel
             {
@@ -347,11 +343,12 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 BrandColor = storeBlob.BrandColor,
                 CssFileId = storeBlob.CssFileId,
                 LogoFileId = storeBlob.LogoFileId,
-                Form = Form.Parse(formData.Config),
+                FormName = formData.Name,
+                Form = form,
                 RedirectUrl = redirectUrl,
                 AspController = controller,
                 AspAction = nameof(POSFormSubmit),
-                RouteParameters = new Dictionary<string, string>(){{"appId", appId}},
+                RouteParameters = new Dictionary<string, string> { { "appId", appId } },
             });
         }
         

@@ -33,6 +33,11 @@
             --btn-icon-size: 2.25rem;
             transform: rotate(180deg);
         }
+        .btcpay-pills label,
+        .btn-secondary.rounded-pill {
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
         
         /* make borders collapse by shifting rows and columns by 1px */
         /* second column */
@@ -63,7 +68,7 @@
             flex:  1 1 50%;
         }
 
-        @@media (max-height: 800px) {
+        @@media (max-height: 700px) {
             .store-header {
                 display: none !important;
             }
@@ -83,9 +88,9 @@
         }
         /* fix sticky hover effect on mobile browsers */
         @@media (hover: none) {
-            .btn-secondary:hover {
-                background-color: var(--btcpay-secondary) !important;
-                border-color: var(--btcpay-secondary-border) !important;
+            .keypad .btn-secondary:hover,
+            .actions .btn-secondary:hover {
+                border-color: var(--btcpay-secondary-border-active) !important;
             }
         }
     </style>

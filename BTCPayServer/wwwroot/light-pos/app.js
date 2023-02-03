@@ -6,36 +6,85 @@ document.addEventListener("DOMContentLoaded",function () {
             return {
                 srvModel: window.srvModel,
                 mode: 'amount',
-                payTotal: '0',
-                payTotalNumeric: 0,
-                tipTotal: null,
-                tipTotalNumeric: 0,
+                amount: null,
+                tip: null,
+                tipPercent: null,
+                discount: null,
                 discountPercent: null,
-                discountTotalNumeric: 0,
                 fontSize: displayFontSize,
                 defaultFontSize: displayFontSize,
                 keys: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', 'del'],
-                payButtonLoading: false,
+                payButtonLoading: false
             }
         },
         computed: {
             modes () {
-                const modes = [{ title: 'Amount', value: 'amount' }]
-                if (this.srvModel.showDiscount) modes.push({ title: 'Discount', value: 'discount' })
-                if (this.srvModel.enableTips) modes.push({ title: 'Tip', value: 'tip' })
+                const modes = [{ title: 'Amount', type: 'amount' }]
+                if (this.srvModel.showDiscount) modes.push({ title: 'Discount', type: 'discount' })
+                if (this.srvModel.enableTips) modes.push({ title: 'Tip', type: 'tip'})
                 return modes
+            },
+            keypadTarget () {
+                switch (this.mode) {
+                    case 'amount':
+                        return 'amount';
+                    case 'discount':
+                        return 'discountPercent';
+                    case 'tip':
+                        return 'tip';
+                }
+            },
+            calculation () {
+                if (!this.tipNumeric && !this.discountNumeric) return null
+                let calc = this.formatCurrency(this.amountNumeric, true)
+                if (this.discountNumeric > 0) calc += ` - ${this.formatCurrency(this.discountNumeric, true)} (${this.discountPercent}%)`
+                if (this.tipNumeric > 0) calc += ` + ${this.formatCurrency(this.tipNumeric, true)}`
+                if (this.tipPercent) calc += ` (${this.tipPercent}%)`
+                return calc
+            },
+            amountNumeric () {
+                const value = parseFloat(this.amount)
+                return isNaN(value) ? 0.0 : value
+            },
+            discountPercentNumeric () {
+                const value = parseFloat(this.discountPercent)
+                return isNaN(value) ? 0.0 : value;
+            },
+            discountNumeric () {
+                return this.amountNumeric && this.discountPercentNumeric
+                    ? this.amountNumeric * (this.discountPercentNumeric / 100)
+                    : 0.0;
+            },
+            amountMinusDiscountNumeric () {
+                return this.amountNumeric - this.discountNumeric;
+            },
+            tipNumeric () {
+                if (this.tipPercent) {
+                    return this.amountMinusDiscountNumeric * (this.tipPercent / 100);
+                } else {
+                    const value = parseFloat(this.tip)
+                    return isNaN(value) ? 0.0 : value;
+                }
+            },
+            total () {
+                return (this.amountNumeric - this.discountNumeric + this.tipNumeric);
+            },
+            totalNumeric () {
+                return parseFloat(this.total);
             }
         },
-        created () {
-            /** We need to unset state in case user clicks the browser back button */
-            window.addEventListener('pagehide', this.unsetPayButtonLoading);
-        },
-        destroyed () {
-            window.removeEventListener('pagehide', this.unsetPayButtonLoading);
-        },
         watch: {
-            payTotal () {
-                // This must be timeouted because the updated width is not available yet
+            discountPercent (val) {
+                const value = parseFloat(val)
+                if (isNaN(value)) this.discountPercent = null
+                else if (value > 100) this.discountPercent = '100'
+                else this.discountPercent = value.toString();
+            },
+            tip (val) {
+                this.tipPercent = null;
+            },
+            total () {
+                // This must be timed out because the updated width is not available yet
                 this.$nextTick(function () {
                     const displayWidth = this.getWidth(this.$refs.display),
                         amountWidth = this.getWidth(this.$refs.amount),
@@ -58,16 +107,11 @@ document.addEventListener("DOMContentLoaded",function () {
                     width = parseFloat(el.clientWidth),
                     padL = parseFloat(styles.paddingLeft),
                     padR = parseFloat(styles.paddingRight);
-
                 return width - padL - padR;
             },
-            clearTotal () {
-                this.payTotal = '0';
-                this.payTotalNumeric = 0;
-                this.tipTotal = null;
-                this.tipTotalNumeric = 0;
-                this.discountPercent = null;
-                this.discountTotalNumeric = 0;
+            clear () {
+                this.amount = this.tip = this.discount = this.tipPercent = this.discountPercent = null;
+                this.mode = 'amount';
             },
             handleFormSubmit () {
                 this.payButtonLoading = true;
@@ -75,75 +119,64 @@ document.addEventListener("DOMContentLoaded",function () {
             unsetPayButtonLoading () {
                 this.payButtonLoading = false;
             },
-            keyPressed (key) {
-                let payTotal = this.payTotal;
-
+            formatCrypto (value, withSymbol) {
+                const symbol = withSymbol ? ` ${this.srvModel.currencySymbol || this.srvModel.currencyCode}` : '';
+                const divisibility = this.srvModel.currencyInfo.divisibility;
+                return parseFloat(value).toFixed(divisibility) + symbol;
+            },
+            formatCurrency (value, withSymbol) {
+                const currency = this.srvModel.currencyCode;
+                if (currency === 'BTC' || currency === 'SATS') return this.formatCrypto(value, withSymbol); 
+                const divisibility = this.srvModel.currencyInfo.divisibility;
+                const locale = currency === 'USD' ? 'en-US' : navigator.language;
+                const style = withSymbol ? 'currency' : 'decimal';
+                const opts = { currency, style, maximumFractionDigits: divisibility, minimumFractionDigits: divisibility };
+                try {
+                    return new Intl.NumberFormat(locale, opts).format(value);
+                } catch (err) {
+                    return this.formatCrypto(value, withSymbol);
+                }
+            },
+            applyKeyToValue (key, value) {
+                if (!value) value = '';
                 if (key === 'del') {
-                    payTotal = payTotal.substring(0, payTotal.length - 1);
-                    payTotal = payTotal === '' ? '0' : payTotal;
+                    value = value.substring(0, value.length - 1);
+                    value = value === '' ? '0' : value;
                 } else if (key === '.') {
                     // Only add decimal point if it doesn't exist yet
-                    if (payTotal.indexOf('.') === -1) {
-                        payTotal += key;
+                    if (value.indexOf('.') === -1) {
+                        value += key;
                     }
                 } else { // Is a digit
-                    if (payTotal === '0') {
-                        payTotal = '';
+                    if (!value || value === '0') {
+                        value = '';
                     }
-                    payTotal += key;
-
+                    value += key;
                     const { divisibility } = this.srvModel.currencyInfo;
-                    const decimalIndex = payTotal.indexOf('.')
-                    if (decimalIndex !== -1 && (payTotal.length - decimalIndex - 1  > divisibility)) {
-                        payTotal = payTotal.replace(".", "");
-                        payTotal = payTotal.substr(0, payTotal.length - divisibility) + "." + 
-                            payTotal.substr(payTotal.length - divisibility);
+                    const decimalIndex = value.indexOf('.')
+                    if (decimalIndex !== -1 && (value.length - decimalIndex - 1  > divisibility)) {
+                        value = value.replace('.', '');
+                        value = value.substr(0, value.length - divisibility) + '.' +
+                            value.substr(value.length - divisibility);
                     }
                 }
-
-                this.payTotal = payTotal;
-                this.payTotalNumeric = parseFloat(payTotal);
-                this.tipTotalNumeric = 0;
-                this.tipTotal = null;
-                this.discountTotalNumeric = 0;
-                this.discountTotalNumeric = 0;
-                this.discountPercent = null;
+                return value;
             },
-            tipClicked (percentage) {
-                const { divisibility } = this.srvModel.currencyInfo;
-                this.payTotalNumeric -= this.tipTotalNumeric;
-                this.tipTotalNumeric = parseFloat((this.payTotalNumeric * (percentage / 100)).toFixed(divisibility));
-                this.payTotalNumeric = parseFloat((this.payTotalNumeric + this.tipTotalNumeric).toFixed(divisibility));
-                this.payTotal = this.payTotalNumeric.toString(10);
-                this.tipTotal = this.tipTotalNumeric === 0 ? null : this.tipTotalNumeric.toFixed(divisibility);
+            keyPressed (key) {
+                this[this.keypadTarget] = this.applyKeyToValue(key, this[this.keypadTarget]);
             },
-            removeTip () {
-                this.payTotalNumeric -= this.tipTotalNumeric;
-                this.payTotal = this.payTotalNumeric.toString(10);
-                this.tipTotalNumeric = 0;
-                this.tipTotal = null;
-            },
-            removeDiscount () {
-                this.payTotalNumeric += this.discountTotalNumeric;
-                this.payTotal = this.payTotalNumeric.toString(10);
-                this.discountTotalNumeric = 0;
-                this.discountPercent = null;
-
-                // Remove the tips as well as it won't be the right number anymore after discount is removed
-                this.removeTip();
-            },
-            onDiscountChange (e){
-                // Remove tip if we are changing discount % as it won't be the right number anymore
-                this.removeTip();
-
-                const discountPercent = parseFloat(e.target.value);
-                const { divisibility } = this.srvModel.currencyInfo;
-
-                this.payTotalNumeric += this.discountTotalNumeric;
-                this.discountTotalNumeric = parseFloat((this.payTotalNumeric * (discountPercent / 100)).toFixed(divisibility));
-                this.payTotalNumeric = parseFloat((this.payTotalNumeric - this.discountTotalNumeric).toFixed(divisibility));
-                this.payTotal = this.payTotalNumeric.toString(10);
-            },
+            tipPercentage (percentage) {
+                this.tipPercent = this.tipPercent !== percentage
+                    ? percentage
+                    : null;
+            }
+        },
+        created () {
+            /** We need to unset state in case user clicks the browser back button */
+            window.addEventListener('pagehide', this.unsetPayButtonLoading);
+        },
+        destroyed () {
+            window.removeEventListener('pagehide', this.unsetPayButtonLoading);
         }
     });
 });

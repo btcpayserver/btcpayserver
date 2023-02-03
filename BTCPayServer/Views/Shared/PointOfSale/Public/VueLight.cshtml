@@ -4,56 +4,45 @@
 <form id="app" method="post" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" data-buy v-on:submit="handleFormSubmit" class="d-flex flex-column gap-4 flex-fill" v-cloak>
     <div ref="display" class="d-flex flex-column align-items-center px-4 mb-auto">
         <div class="fw-semibold text-muted">{{srvModel.currencyCode}}</div>
-        <div class="fw-bold lh-sm" ref="amount" v-bind:style="{ fontSize: `${fontSize}px` }">{{ payTotal }}</div>
+        <div class="fw-bold lh-sm" ref="amount" v-bind:style="{ fontSize: `${fontSize}px` }">{{ formatCurrency(total, false) }}</div>
+        <div class="text-muted text-center" v-if="calculation">{{ calculation }}</div>
     </div>
-    <div id="ModeTabs" class="tab-content">
-        <div id="Mode-Discount" class="tab-pane fade px-4" :class="{ show: mode === 'discount', active: mode === 'discount' }" role="tabpanel" aria-labelledby="ModeTablist-Discount" v-if="srvModel.showDiscount">
-            <div class="input-group">
-                <input
-                    class="form-control form-control-lg"
-                    type="number"
-                    min="0"
-                    max="100"
-                    step="1"
-                    v-model="discountPercent"
-                    v-on:change="onDiscountChange"
-                    name="discount"
-                    placeholder="Discount in %"
-                >
-                <button type="button" class="btn btn-outline-danger" v-on:click="removeDiscount">
-                    <vc:icon symbol="close"/>
-                </button>
+    <div id="ModeTabs" class="tab-content mb-n2">
+        <div id="Mode-Discount" class="tab-pane fade px-2" :class="{ show: mode === 'discount', active: mode === 'discount' }" role="tabpanel" aria-labelledby="ModeTablist-Discount" v-if="srvModel.showDiscount">
+            <div class="h4 fw-semibold text-muted text-center">
+                {{discountPercent || 0}}% discount
             </div>
         </div>
-        <div id="Mode-Tip" class="tab-pane fade px-4" :class="{ show: mode === 'tip', active: mode === 'tip' }" role="tabpanel" aria-labelledby="ModeTablist-Tip" v-if="srvModel.enableTips">
-            <div class="d-flex flex-wrap align-items-center justify-content-center mb-3 gap-3" v-if="srvModel.customTipPercentages && srvModel.customTipPercentages.length > 0">
-                <button
-                    v-for="percentage in srvModel.customTipPercentages"
-                    type="button"
-                    class="btn btn-sm btn-secondary"
-                    v-on:click.prevent="tipClicked(percentage)">
-                    {{ percentage }}%
-                </button>
-            </div>
-            <div class="input-group">
-                <input
-                    class="form-control form-control-lg"
-                    type="number"
-                    min="0"
-                    step="@Model.Step"
-                    v-model="tipTotal"
-                    name="tip"
-                    placeholder="Tip in @(Model.CurrencyInfo.CurrencySymbol ?? Model.CurrencyCode)">
-                <button type="button" class="btn btn-outline-danger" v-on:click.prevent="removeTip">
-                    <vc:icon symbol="close"/>
-                </button>
+        <div id="Mode-Tip" class="tab-pane fade px-2" :class="{ show: mode === 'tip', active: mode === 'tip' }" role="tabpanel" aria-labelledby="ModeTablist-Tip" v-if="srvModel.enableTips">
+            <div class="d-flex flex-wrap align-items-center justify-content-center gap-2">
+                <template v-if="srvModel.customTipPercentages">
+                    <button
+                        type="button"
+                        class="btn btn-secondary rounded-pill"
+                        :class="{ active: !tipPercent }"
+                        v-on:click.prevent="tipPercent = null">
+                        <template v-if="tip && tip > 0">{{formatCurrency(tip, true)}}</template>
+                        <template v-else>Custom</template>
+                    </button>
+                    <button
+                        v-for="percentage in srvModel.customTipPercentages"
+                        type="button"
+                        class="btn btn-secondary rounded-pill"
+                        :class="{ active: tipPercent == percentage }"
+                        v-on:click.prevent="tipPercentage(percentage)">
+                        {{ percentage }}%
+                    </button>
+                </template>
+                <div v-else class="h5 fw-semibold text-muted text-center">
+                    Amount<template v-if="tip">: {{formatCurrency(tip, true)}}</template>
+                </div>
             </div>
         </div>
     </div>
-    <div id="ModeTablist" class="nav btcpay-pills align-items-center justify-content-center" role="tablist" v-if="modes.length > 1">
+    <div id="ModeTablist" class="nav btcpay-pills align-items-center justify-content-center mb-n2" role="tablist" v-if="modes.length > 1">
         <template v-for="m in modes" :key="m.value">
-            <input :id="`ModeTablist-${m.value}`" name="mode" :value="m.value" type="radio" role="tab" data-bs-toggle="pill" :data-bs-target="`#Mode-${m.value}`" :aria-controls="`Mode-${m.value}`" :aria-selected="mode === m.value" :checked="mode === m.value" v-on:click="mode = m.value">
-            <label :for="`ModeTablist-${m.value}`">{{ m.title }}</label>
+            <input :id="`ModeTablist-${m.type}`" name="mode" :value="m.type" type="radio" role="tab" data-bs-toggle="pill" :data-bs-target="`#Mode-${m.type}`" :disabled="m.type != 'amount' && amountNumeric == 0" :aria-controls="`Mode-${m.type}`" :aria-selected="mode === m.type" :checked="mode === m.type" v-on:click="mode = m.type">
+            <label :for="`ModeTablist-${m.type}`">{{ m.title }}</label>
         </template>
     </div>
     <div class="keypad">
@@ -63,7 +52,7 @@
         </button>
     </div>
     <div class="actions px-4 gap-4">
-        <button class="btn btn-lg btn-secondary" type="reset" v-on:click.prevent="clearTotal">Clear</button>
+        <button class="btn btn-lg btn-secondary" type="reset" v-on:click.prevent="clear">Clear</button>
         <button class="btn btn-lg btn-primary" type="submit" :disabled="payButtonLoading" id="pay-button">
             <div v-if="payButtonLoading" class="spinner-border spinner-border-sm" id="pay-button-spinner" role="status">
                 <span class="sr-only">Loading...</span>
@@ -71,5 +60,5 @@
             <template v-else>Charge</template>
         </button>
     </div>
-    <input class="form-control" type="hidden" name="amount" v-model="payTotalNumeric">
+    <input class="form-control" type="hidden" name="amount" v-model="totalNumeric">
 </form>

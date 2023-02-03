@@ -254,7 +254,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("invoices/{invoiceId}/refund")]
-        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+        [Authorize(Policy = Policies.CanCreateNonApprovedPullPayments, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> Refund([FromServices] IEnumerable<IPayoutHandler> payoutHandlers, string invoiceId, CancellationToken cancellationToken)
         {
             await using var ctx = _dbContextFactory.CreateContext();
@@ -317,7 +317,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost("invoices/{invoiceId}/refund")]
-        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+        [Authorize(Policy = Policies.CanCreateNonApprovedPullPayments, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> Refund(string invoiceId, RefundModel model, CancellationToken cancellationToken)
         {
             await using var ctx = _dbContextFactory.CreateContext();
@@ -385,18 +385,21 @@ namespace BTCPayServer.Controllers
                         StoreId = invoice.StoreId,
                         BOLT11Expiration = store.GetStoreBlob().RefundBOLT11Expiration
                     };
+                    var authorizedForAutoApprove = (await
+                            _authorizationService.AuthorizeAsync(User, invoice.StoreId, Policies.CanCreatePullPayments))
+                        .Succeeded;
                     switch (model.SelectedRefundOption)
                     {
                         case "RateThen":
                             createPullPayment.Currency = paymentMethodId.CryptoCode;
                             createPullPayment.Amount = model.CryptoAmountThen;
-                            createPullPayment.AutoApproveClaims = true;
+                            createPullPayment.AutoApproveClaims = authorizedForAutoApprove;
                             break;
 
                         case "CurrentRate":
                             createPullPayment.Currency = paymentMethodId.CryptoCode;
                             createPullPayment.Amount = model.CryptoAmountNow;
-                            createPullPayment.AutoApproveClaims = true;
+                            createPullPayment.AutoApproveClaims = authorizedForAutoApprove;
                             break;
 
                         case "Fiat":
@@ -441,7 +444,7 @@ namespace BTCPayServer.Controllers
 
                             createPullPayment.Currency = model.CustomCurrency;
                             createPullPayment.Amount = model.CustomAmount;
-                            createPullPayment.AutoApproveClaims = paymentMethodId.CryptoCode == model.CustomCurrency;
+                            createPullPayment.AutoApproveClaims = authorizedForAutoApprove && paymentMethodId.CryptoCode == model.CustomCurrency;
                             break;
 
                         default:

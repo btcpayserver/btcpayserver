@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Contracts;
@@ -12,6 +13,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Routing;
+using NBitpayClient;
+using Policy = Amazon.Auth.AccessControlPolicy.Policy;
 
 namespace BTCPayServer.Security
 {
@@ -124,38 +127,37 @@ namespace BTCPayServer.Security
                 store = await _storeRepository.FindStore(storeId, userId);
             }
 
-            switch (requirement.Policy)
+            if (Policies.IsServerPolicy(requirement.Policy) && isAdmin)
             {
-                case Policies.CanModifyServerSettings:
-                    if (isAdmin)
-                        success = true;
-                    break;
-                case Policies.CanModifyStoreSettings:
-                    if (store != null && (store.Role == StoreRoles.Owner))
-                        success = true;
-                    break;
-                case Policies.CanViewInvoices:
-                case Policies.CanViewStoreSettings:
-                case Policies.CanCreateInvoice:
-                    if (store != null)
-                        success = true;
-                    break;
-                case Policies.CanViewProfile:
-                case Policies.CanViewNotificationsForUser:
-                case Policies.CanManageNotificationsForUser:
-                case Policies.CanModifyStoreSettingsUnscoped:
-                    if (context.User != null)
-                        success = true;
-                    break;
-                default:
-                    if (Policies.IsPluginPolicy(requirement.Policy))
+                success = true;
+            }else if(Policies.IsStorePolicy(requirement.Policy) && store is not null)
+            {
+
+                var requestedPermission = Permission.Create(requirement.Policy, store.Id);
+                var givenPermissions = store.Role == StoreRoles.Owner
+                    ? new[] {Permission.Create(Policies.CanModifyStoreSettings, store.Id)}
+                    : new[]
                     {
-                        var handle = (AuthorizationFilterHandle)await _pluginHookService.ApplyFilter("handle-authorization-requirement",
-                            new AuthorizationFilterHandle(context, requirement, _httpContext));
-                        success = handle.Success;
-                    }
-                    break;
+                        Permission.Create(Policies.CanViewStoreSettings, store.Id),
+                        Permission.Create(Policies.CanViewInvoices, store.Id),
+                        Permission.Create(Policies.CanCreateInvoice, store.Id),
+                    };
+                if (givenPermissions.Any( p=> p.Contains(requestedPermission)))
+                {
+                    success = true;
+                }
+                else if (Policies.IsUserPolicy(requirement.Policy) && context.User is not null)
+                {
+                    success = true;
+
+                }
+            }else if (Policies.IsPluginPolicy(requirement.Policy))
+            {
+                var handle = (AuthorizationFilterHandle)await _pluginHookService.ApplyFilter("handle-authorization-requirement",
+                    new AuthorizationFilterHandle(context, requirement, _httpContext));
+                success = handle.Success;
             }
+            
 
             if (success)
             {

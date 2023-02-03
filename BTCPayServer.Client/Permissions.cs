@@ -98,6 +98,10 @@ namespace BTCPayServer.Client
         {
             return policy.StartsWith("btcpay.plugin", StringComparison.OrdinalIgnoreCase);
         }
+        public static bool IsUserPolicy(string policy)
+        {
+            return policy.StartsWith("btcpay.user", StringComparison.OrdinalIgnoreCase);
+        }
     }
     public class Permission
     {
@@ -213,7 +217,8 @@ namespace BTCPayServer.Client
                 Policies.CanModifyInvoices,
                 Policies.CanViewStoreSettings,
                 Policies.CanModifyStoreWebhooks,
-                Policies.CanModifyPaymentRequests);
+                Policies.CanModifyPaymentRequests, 
+                Policies.CanUseLightningNodeInStore);
 
             PolicyHasChild(Policies.CanManageUsers, Policies.CanCreateUser);
             PolicyHasChild(Policies.CanManagePullPayments, Policies.CanCreatePullPayments );

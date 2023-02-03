@@ -1,6 +1,8 @@
-@inject BTCPayServer.Services.BTCPayServerEnvironment env
+@inject BTCPayServerEnvironment env
 @using BTCPayServer.Controllers
 @using BTCPayServer.Components.QRCode
+@using BTCPayServer.Services
+@using YamlDotNet.Core.Tokens
 @model BTCPayServer.Controllers.WalletReceiveViewModel
 @{
     var walletId = Context.GetRouteValue("walletId").ToString();
@@ -89,6 +91,10 @@
                 <a class="btcpay-pill active" data-bs-toggle="tab" href="#address-tab">Address</a>
                 <a class="btcpay-pill " data-bs-toggle="tab" href="#link-tab">Link</a>
             </div>
+        </div>
+        <div class="m-2">
+           <vc:label-manager selected-labels="Model.SelectedLabels" wallet-object-id="new WalletObjectId(WalletId.Parse(walletId), WalletObjectData.Types.Address, Model.Address )"></vc:label-manager>
+
         </div>
 
         <div class="d-grid gap-3 col-sm-8 col-sm-6 col-lg-5 mx-auto mt-5">

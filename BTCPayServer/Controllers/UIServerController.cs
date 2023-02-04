@@ -1079,6 +1079,11 @@ namespace BTCPayServer.Controllers
             {
                 ModelState.AddModelError(nameof(settings.CustomThemeCssUri), "Please provide a non-empty theme URI");
             }
+            else if (settings.CustomThemeCssUri != model.CustomThemeCssUri)
+            {
+                settings.CustomThemeCssUri = model.CustomThemeCssUri;
+                settingsChanged = true;
+            }
 
             if (settings.CustomThemeExtension != model.CustomThemeExtension)
             {

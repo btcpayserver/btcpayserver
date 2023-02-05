@@ -38,7 +38,7 @@
     </style>
     <vc:ui-extension-point location="crowdfund-head" model="@Model"></vc:ui-extension-point>
 </head>
-<body class="min-vh-100">
+<body class="bg-tile min-vh-100">
 @if (!Model.Enabled)
 {
     <div class="alert alert-warning text-center sticky-top mb-0 rounded-0" role="alert">
@@ -242,8 +242,9 @@
                 </b-tabs>
             </template>
             <template v-else>
-                <div class="row mt-4">
-                    <div class="col-md-8 col-sm-12" id="crowdfund-body-description-container">
+                <div class="row mt-4 justify-content-between">
+                    <div class="col-md-7 col-sm-12" id="crowdfund-body-description-container">
+                        <h3 class="mb-3">Details</h3>
                         <div class="overflow-hidden" v-html="srvModel.description" id="crowdfund-body-description">
                             @Safe.Raw(Model.Description)
                         </div>
@@ -261,8 +262,8 @@
                 </div>
             </template>
             <noscript>
-                <div class="row">
-                    <div class="col-md-8 col-sm-12">
+                <div class="row justify-content-between">
+                    <div class="col-md-7  col-sm-12">
                         <div class="overflow-hidden">@Safe.Raw(Model.Description)</div>
                     </div>
                     <div class="col-md-4 col-sm-12">
@@ -274,7 +275,7 @@
                 </div>
             </noscript>
             <div class="text-muted d-flex flex-wrap align-items-center">
-                <div class="me-3" v-text="`Updated ${lastUpdated}`">Updated @Model.Info.LastUpdated</div>
+                <div class="me-3 text-center" v-text="`Updated ${lastUpdated}`">Updated @Model.Info.LastUpdated</div>
                 <div class="form-check me-3 my-0 only-for-js" v-if="srvModel.animationsEnabled || animation">
                     <input class="form-check-input" type="checkbox" id="cbAnime" v-model="animation">
                     <label class="form-check-label" for="cbAnime">Animations</label>

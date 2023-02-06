@@ -2,13 +2,12 @@
 @using NBitcoin
 @using BTCPayServer.Abstractions.TagHelpers
 @model BTCPayServer.Components.LabelManager.LabelViewModel
-
 @inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
-
 @{
     var commonCall = Model.ObjectId.Type + Model.ObjectId.Id;
-    var elementId = "a" +Encoders.Base58.EncodeData(RandomUtils.GetBytes(16));
+    var elementId = "a" + Encoders.Base58.EncodeData(RandomUtils.GetBytes(16));
 }
+
 <link href="~/vendor/tom-select/tom-select.bootstrap5.min.css" rel="stylesheet">
 <script src="~/vendor/tom-select/tom-select.complete.min.js"></script>
 <script>
@@ -23,8 +22,8 @@
     const elementId = @Safe.Json(elementId);
     if (!window[commonCall]) {
         window[commonCall] = fetch(getUrl, {
-            method: "GET",
-            credentials: "include",
+            method: 'GET',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json',
                 'RequestVerificationToken': requestToken
@@ -33,8 +32,6 @@
             return response.json();
         });
     }
-
-
 
     document.addEventListener("DOMContentLoaded", async () => {
         const element = document.querySelector(`#${elementId}`);
@@ -60,10 +57,8 @@
                     }
                 },
                 onItemAdd: (val) => {
-                    window[commonCall] = window[commonCall].then((labels) => {
-                        return [...labels, {
-                            label: val
-                        }]
+                    window[commonCall] = window[commonCall].then(labels => {
+                        return [...labels, { label: val }]
                     });
 
                     document.dispatchEvent(new CustomEvent(`${commonCall}-option-added`, {
@@ -100,17 +95,13 @@
 
             document.addEventListener(`${commonCall}-option-added`, evt => {
                 if (!(evt.detail in select.options)) {
-
                     select.addOption({
                         label: evt.detail
                     })
                 }
             })
-
         }
     })
 </script>
 
-<select multiple id="@elementId" placeholder="Select labels to associate with this object" autocomplete="off">
-
-</select>
+<input id="@elementId" placeholder="Select labels to associate with this object" autocomplete="off" class="form-control"/>

@@ -695,3 +695,78 @@ input:checked + .btcpay-list-select-item {
 .store-footer a:hover .logo-brand-dark {
     color: var(--btcpay-brand-tertiary);
 }
+
+/* Tom Select */
+.ts-wrapper.form-control .ts-control {
+    padding: .5rem .75rem .2rem .5rem !important;
+}
+
+.ts-wrapper.form-control .ts-control > .item {
+    margin: 0 .3rem .3rem 0 !important;
+}
+
+.ts-wrapper.form-control .ts-control > input {
+    margin: 0 0 .3rem .5rem !important;
+}
+
+.form-floating .ts-wrapper {
+    margin-top: 1.85rem;
+}
+
+/* Payment Box */
+.payment-box {
+    --qr-size: 256px;
+    --icon-size: 64px;
+    --icon-border-size: var(--btcpay-space-xs);
+    --icon-border-color: var(--btcpay-white);
+    
+    max-width: 300px;
+    min-width: var(--qr-size);
+    margin: 0 auto;
+    text-align: center;
+}
+.payment-box .qr-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    min-height: var(--qr-size);
+}
+.payment-box .qr-container svg,
+.payment-box .qr-container img.qr-code {
+    border-radius: var(--btcpay-border-radius);
+    background: var(--btcpay-white);
+    width: 100%;
+}
+.payment-box .qr-container svg {
+    padding: var(--btcpay-space-s);
+}
+.payment-box .qr-container img.qr-icon {
+    box-sizing: content-box;
+    position: absolute;
+    width: var(--icon-size);
+    border-radius: 50%;
+    padding: var(--icon-border-size);
+    background: var(--icon-border-color);
+}
+.payment-box .qr-container small {
+    display: none;
+}
+.payment-box .input-group {
+    align-items: flex-end;
+}
+.payment-box .input-group .form-control-plaintext {
+    padding-left: 3px;
+    padding-bottom: 0;
+    font-weight: var(--btcpay-font-weight-semibold);
+}
+.payment-box .input-group label {
+    padding-left: 0;
+    text-transform: uppercase;
+    letter-spacing: .1rem;
+    font-weight: var(--btcpay-font-weight-semibold);
+}
+.payment-box .input-group button {
+    padding: var(--btcpay-space-xs) 0;
+    font-weight: var(--btcpay-font-weight-semibold);
+}

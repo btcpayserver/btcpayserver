@@ -265,8 +265,11 @@ namespace BTCPayServer
                     break;
             }
 
+            var escapedItemId = Extensions.UnescapeBackSlashUriString(itemCode);
             var item = items.FirstOrDefault(item1 =>
-                item1.Id.Equals(itemCode, StringComparison.InvariantCultureIgnoreCase));
+                item1.Id.Equals(itemCode, StringComparison.InvariantCultureIgnoreCase) ||
+                item1.Id.Equals(escapedItemId, StringComparison.InvariantCultureIgnoreCase));
+
             if (item is null ||
                 item.Inventory <= 0 ||
                 (item.PaymentMethods?.Any() is true &&

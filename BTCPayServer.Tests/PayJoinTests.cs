@@ -109,13 +109,12 @@ namespace BTCPayServer.Tests
             var network = tester.NetworkProvider.GetNetwork<BTCPayNetwork>("BTC");
             var controller = tester.PayTester.GetService<PayJoinEndpointController>();
 
-            //Only one utxo, so obvious result
-            var utxos = new[] { FakeUTXO(1.0m) };
+            var utxos = new[] { FakeUTXO(1m) };
             var paymentAmount = 0.5m;
             var otherOutputs = new[] { 0.5m };
             var inputs = new[] { 1m };
             var result = await controller.SelectUTXO(network, utxos, inputs, paymentAmount, otherOutputs);
-            Assert.Equal(PayJoinEndpointController.PayjoinUtxoSelectionType.Ordered, result.selectionType);
+            Assert.Equal(PayJoinEndpointController.PayjoinUtxoSelectionType.HeuristicBased, result.selectionType);
             Assert.Contains(result.selectedUTXO, utxo => utxos.Contains(utxo));
 
             //no matter what here, no good selection, it seems that payment with 1 utxo generally makes payjoin coin selection unperformant
@@ -124,7 +123,7 @@ namespace BTCPayServer.Tests
             otherOutputs = new[] { 0.5m };
             inputs = new[] { 1m };
             result = await controller.SelectUTXO(network, utxos, inputs, paymentAmount, otherOutputs);
-            Assert.Equal(PayJoinEndpointController.PayjoinUtxoSelectionType.Ordered, result.selectionType);
+            Assert.Equal(PayJoinEndpointController.PayjoinUtxoSelectionType.HeuristicBased, result.selectionType);
 
             //when there is no change, anything works
             utxos = new[] { FakeUTXO(1), FakeUTXO(0.1m), FakeUTXO(0.001m), FakeUTXO(0.003m) };
@@ -132,7 +131,31 @@ namespace BTCPayServer.Tests
             otherOutputs = new decimal[0];
             inputs = new[] { 0.03m, 0.07m };
             result = await controller.SelectUTXO(network, utxos, inputs, paymentAmount, otherOutputs);
+
+
+            // We want to make a transaction such that
+            // min(out) < min(in)
+
+            // Original transaction is:
+            // 0.5      -> 0.3 , 0.1
+            // When chosing a new utxo x, we have the modified tx
+            // 0.5 , x -> 0.3 , (0.1+x)
+            // We need:
+            // min(0.3, 0.1+x) < min(0.5, x)
+            // Any x > 0.3 should be fine
+            utxos = new[] { FakeUTXO(0.2m), FakeUTXO(0.3m), FakeUTXO(0.31m) };
+            paymentAmount = 0.1m;
+            otherOutputs = new decimal[] { 0.3m };
+            inputs = new[] { 0.5m };
+            result = await controller.SelectUTXO(network, utxos, inputs, paymentAmount, otherOutputs);
             Assert.Equal(PayJoinEndpointController.PayjoinUtxoSelectionType.HeuristicBased, result.selectionType);
+            Assert.Equal(0.31m, result.selectedUTXO[0].Value.GetValue(network));
+
+            // If the 0.31m wasn't available, no selection heuristic based
+            utxos = new[] { FakeUTXO(0.2m), FakeUTXO(0.3m) };
+            result = await controller.SelectUTXO(network, utxos, inputs, paymentAmount, otherOutputs);
+            Assert.Equal(PayJoinEndpointController.PayjoinUtxoSelectionType.Ordered, result.selectionType);
+            Assert.Equal(0.2m, result.selectedUTXO[0].Value.GetValue(network));
         }
 
 

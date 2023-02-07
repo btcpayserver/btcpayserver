@@ -39,7 +39,7 @@
             </div>
         </div>
     </div>
-    <div id="ModeTablist" class="nav btcpay-pills align-items-center justify-content-center mb-n2" role="tablist" v-if="modes.length > 1">
+    <div id="ModeTablist" class="nav btcpay-pills align-items-center justify-content-center mb-n2 pb-1" role="tablist" v-if="modes.length > 1">
         <template v-for="m in modes" :key="m.value">
             <input :id="`ModeTablist-${m.type}`" name="mode" :value="m.type" type="radio" role="tab" data-bs-toggle="pill" :data-bs-target="`#Mode-${m.type}`" :disabled="m.type != 'amount' && amountNumeric == 0" :aria-controls="`Mode-${m.type}`" :aria-selected="mode === m.type" :checked="mode === m.type" v-on:click="mode = m.type">
             <label :for="`ModeTablist-${m.type}`">{{ m.title }}</label>

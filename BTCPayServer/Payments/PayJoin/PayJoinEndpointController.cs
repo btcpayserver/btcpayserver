@@ -1,6 +1,7 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
@@ -585,62 +586,64 @@ namespace BTCPayServer.Payments.PayJoin
             Ordered
         }
         [NonAction]
-        public async Task<(UTXO[] selectedUTXO, PayjoinUtxoSelectionType selectionType)> SelectUTXO(BTCPayNetwork network, UTXO[] availableUtxos, decimal[] otherInputs, decimal mainPaymentOutput,
+        public async Task<(UTXO[] selectedUTXO, PayjoinUtxoSelectionType selectionType)> SelectUTXO(BTCPayNetwork network, UTXO[] availableUtxos, decimal[] otherInputs, decimal originalPaymentOutput,
             IEnumerable<decimal> otherOutputs)
         {
             if (availableUtxos.Length == 0)
                 return (Array.Empty<UTXO>(), PayjoinUtxoSelectionType.Unavailable);
-            // Assume the merchant wants to get rid of the dust
             HashSet<OutPoint> locked = new HashSet<OutPoint>();
-            // We don't want to make too many db roundtrip which would be inconvenient for the sender
-            int maxTries = 30;
-            int currentTry = 0;
-            // UIH = "unnecessary input heuristic", basically "a wallet wouldn't choose more utxos to spend in this scenario".
-            //
-            // "UIH1" : one output is smaller than any input. This heuristically implies that that output is not a payment, and must therefore be a change output.
-            //
-            // "UIH2": one input is larger than any output. This heuristically implies that no output is a payment, or, to say it better, it implies that this is not a normal wallet-created payment, it's something strange/exotic.
-            //src: https://gist.github.com/AdamISZ/4551b947789d3216bacfcb7af25e029e#gistcomment-2796539
+
+            TimeSpan timeout = TimeSpan.FromSeconds(30.0);
+            Stopwatch watch = new Stopwatch();
+            watch.Start();
+
+            // BlockSci UIH1 and UIH2:
+            // if min(out) < min(in) then UIH1 else UIH2
+            // https://eprint.iacr.org/2022/589.pdf
+
+
+            var origMinOut = otherOutputs.Concat(new[] { decimal.MaxValue }).Min();
+            var origMinIn = otherInputs.Concat(new[] { decimal.MaxValue }).Min();
 
             foreach (var availableUtxo in availableUtxos)
             {
-                if (currentTry >= maxTries)
+                if (watch.Elapsed > timeout)
                     break;
 
-                var invalid = false;
-                foreach (var input in otherInputs.Concat(new[] { availableUtxo.Value.GetValue(network) }))
+                var utxoValue = availableUtxo.Value.GetValue(network);
+                var newPaymentOutput = originalPaymentOutput + utxoValue;
+                var minOut = Math.Min(origMinOut, newPaymentOutput);
+                var minIn = Math.Min(origMinIn, utxoValue);
+
+                if (minOut < minIn)
                 {
-                    var computedOutputs =
-                        otherOutputs.Concat(new[] { mainPaymentOutput + availableUtxo.Value.GetValue(network) });
-                    if (computedOutputs.Any(output => input > output))
+                    // UIH1: Optimal change, smallest output is the change address.
+                    if (await _utxoLocker.TryLock(availableUtxo.Outpoint))
                     {
-                        //UIH 1 & 2
-                        invalid = true;
-                        break;
+                        return (new[] { availableUtxo }, PayjoinUtxoSelectionType.HeuristicBased);
+                    }
+                    else
+                    {
+                        locked.Add(availableUtxo.Outpoint);
+                        continue;
                     }
                 }
-
-                if (invalid)
+                else
                 {
+                    // UIH2: Unnecessary input, let's try to get an optimal change by using a different output
                     continue;
                 }
-                if (await _utxoLocker.TryLock(availableUtxo.Outpoint))
-                {
-                    return (new[] { availableUtxo }, PayjoinUtxoSelectionType.HeuristicBased);
-                }
-
-                locked.Add(availableUtxo.Outpoint);
-                currentTry++;
             }
+
             foreach (var utxo in availableUtxos.Where(u => !locked.Contains(u.Outpoint)))
             {
-                if (currentTry >= maxTries)
+                if (watch.Elapsed > timeout)
                     break;
                 if (await _utxoLocker.TryLock(utxo.Outpoint))
                 {
                     return (new[] { utxo }, PayjoinUtxoSelectionType.Ordered);
                 }
-                currentTry++;
+                locked.Add(utxo.Outpoint);
             }
             return (Array.Empty<UTXO>(), PayjoinUtxoSelectionType.Unavailable);
         }

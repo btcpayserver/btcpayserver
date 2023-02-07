@@ -214,52 +214,37 @@
         <button v-if="active" id="crowdfund-body-header-cta" class="btn btn-lg btn-primary py-2 px-5 only-for-js" v-on:click="contributeModalOpen = true">Contribute</button>
     </div>
 
-    <template v-if="srvModel.disqusEnabled && srvModel.disqusShortname">
-        <b-tabs>
-            <b-tab title="Details" active>
-                <div class="row mt-4">
-                    <div class="col-md-8 col-sm-12" id="crowdfund-body-description-container">
-                        <div class="overflow-hidden" v-html="srvModel.description" id="crowdfund-body-description">
+    <div class="row mt-4 justify-content-between gap-5">
+        <div class="col-lg-7 col-sm-12" id="crowdfund-body-description-container">
+            <template v-if="srvModel.disqusEnabled && srvModel.disqusShortname">
+                <b-tabs>
+                    <b-tab title="Details" active>
+                        <div class="overflow-hidden pt-3" v-html="srvModel.description" id="crowdfund-body-description">
                             @Safe.Raw(Model.Description)
                         </div>
-                    </div>
-                    <div class="col-md-4 col-sm-12" id="crowdfund-body-contribution-container">
-                        <contribute :target-currency="srvModel.targetCurrency"
-                                    :display-perks-ranking="srvModel.displayPerksRanking"
-                                    :perks-value="srvModel.perksValue"
-                                    :active="active"
-                                    :loading="loading"
-                                    :in-modal="false"
-                                    :perks="perks">
-                        </contribute>
-                    </div>
-                </div>
-            </b-tab>
-            <b-tab title="Discussion">
-                <div id="disqus_thread" class="mt-4"></div>
-            </b-tab>
-        </b-tabs>
-    </template>
-    <template v-else>
-        <div class="row mt-4 justify-content-between">
-            <div class="col-md-7 col-sm-12" id="crowdfund-body-description-container">
-                <h3 class="mb-3">Details</h3>
+                    </b-tab>
+                    <b-tab title="Discussion">
+                        <div id="disqus_thread" class="mt-4"></div>
+                    </b-tab>
+                </b-tabs>
+            </template>
+            <template v-else>
                 <div class="overflow-hidden" v-html="srvModel.description" id="crowdfund-body-description">
                     @Safe.Raw(Model.Description)
                 </div>
-            </div>
-            <div class="col-md-4 col-sm-12" id="crowdfund-body-contribution-container">
-                <contribute :target-currency="srvModel.targetCurrency"
-                            :loading="loading"
-                            :display-perks-ranking="srvModel.displayPerksRanking"
-                            :perks-value="srvModel.perksValue"
-                            :active="active"
-                            :in-modal="false"
-                            :perks="perks">
-                </contribute>
-            </div>
+            </template>
         </div>
-    </template>
+        <div class="col-lg-4 col-sm-12" id="crowdfund-body-contribution-container">
+            <contribute :target-currency="srvModel.targetCurrency"
+                        :loading="loading"
+                        :display-perks-ranking="srvModel.displayPerksRanking"
+                        :perks-value="srvModel.perksValue"
+                        :active="active"
+                        :in-modal="false"
+                        :perks="perks">
+            </contribute>
+        </div>
+    </div>
     <noscript>
         <div class="row justify-content-between">
             <div class="col-md-7  col-sm-12">

@@ -16,15 +16,6 @@ namespace BTCPayServer.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AlterColumn<string>(
-                name: "StoreBlob",
-                table: "Stores",
-                type: "TEXT",
-                nullable: true,
-                oldClrType: typeof(byte[]),
-                oldType: "BLOB",
-                oldNullable: true);
-
             migrationBuilder.CreateTable(
                 name: "Forms",
                 columns: table => new
@@ -57,14 +48,6 @@ namespace BTCPayServer.Migrations
             migrationBuilder.DropTable(
                 name: "Forms");
 
-            migrationBuilder.AlterColumn<byte[]>(
-                name: "StoreBlob",
-                table: "Stores",
-                type: "BLOB",
-                nullable: true,
-                oldClrType: typeof(string),
-                oldType: "TEXT",
-                oldNullable: true);
         }
     }
 }

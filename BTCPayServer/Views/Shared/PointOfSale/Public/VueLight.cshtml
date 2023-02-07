@@ -10,7 +10,7 @@
     <div id="ModeTabs" class="tab-content mb-n2">
         <div id="Mode-Discount" class="tab-pane fade px-2" :class="{ show: mode === 'discount', active: mode === 'discount' }" role="tabpanel" aria-labelledby="ModeTablist-Discount" v-if="srvModel.showDiscount">
             <div class="h4 fw-semibold text-muted text-center">
-                {{discountPercent || 0}}% discount
+                <span class="h3 text-body me-1">{{discountPercent || 0}}%</span> discount
             </div>
         </div>
         <div id="Mode-Tip" class="tab-pane fade px-2" :class="{ show: mode === 'tip', active: mode === 'tip' }" role="tabpanel" aria-labelledby="ModeTablist-Tip" v-if="srvModel.enableTips">

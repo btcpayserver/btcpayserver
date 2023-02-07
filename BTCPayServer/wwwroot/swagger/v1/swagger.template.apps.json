@@ -124,6 +124,84 @@
                         "Basic": []
                     }
                 ]
+            },
+            "get": {
+                "tags": [
+                    "Apps",
+                    "POS",
+                    "Point of Sale"
+                ],
+                "operationId": "Apps_GetPointOfSaleApp",
+                "summary": "Get Point of Sale app data",
+                "description": "Returns POS app data",
+                "responses": {
+                    "200": {
+                        "description": "POS app data",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PointOfSaleAppData"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "POS app with specified ID was not found"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/apps/crowdfund/{appId}": {
+            "parameters": [
+                {
+                    "name": "appId",
+                    "in": "path",
+                    "required": true,
+                    "description": "Crowdfund app ID",
+                    "schema": {
+                        "type": "string"
+                    }
+                }
+            ],
+            "get": {
+                "tags": [
+                    "Apps",
+                    "Crowdfund"
+                ],
+                "operationId": "Apps_GetCrowdfundApp",
+                "summary": "Get crowdfund app data",
+                "description": "Returns crowdfund app data",
+                "responses": {
+                    "200": {
+                        "description": "Crowdfund app data",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CrowdfundAppData"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Crowdfund app with specified ID was not found"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
             }
         },
         "/api/v1/stores/{storeId}/apps/crowdfund": {
@@ -194,7 +272,7 @@
                 "tags": [
                     "Apps"
                 ],
-                "operationId": "Apps_GetPointOfSaleApp",
+                "operationId": "Apps_GetApp",
                 "summary": "Get basic app data",
                 "description": "Returns basic app data shared between all types of apps",
                 "parameters": [
@@ -236,7 +314,7 @@
                 "tags": [
                     "Apps"
                 ],
-                "operationId": "Apps_DeletePointOfSaleApp",
+                "operationId": "Apps_DeleteApp",
                 "summary": "Delete app",
                 "description": "Deletes apps with specified ID",
                 "parameters": [
@@ -354,6 +432,135 @@
                         "$ref": "#/components/schemas/BasicAppData"
                     },
                     {
+                        "type": "object",
+                        "properties": {
+                            "title": {
+                                "type": "string",
+                                "description": "Display title of the app",
+                                "example": "My PoS app"
+                            },
+                            "description": {
+                                "type": "string",
+                                "description": "App description",
+                                "example": "This is my amazing PoS app"
+                            },
+                            "defaultView": {
+                                "type": "string",
+                                "description": "App view type (e.g., static, cart, etc...)",
+                                "example": "Cart",
+                                "x-enumNames": [
+                                    "Static",
+                                    "Cart",
+                                    "Light",
+                                    "Print"
+                                ],
+                                "enum": [
+                                    "Static",
+                                    "Cart",
+                                    "Light",
+                                    "Print"
+                                ]
+                            },
+                            "showCustomAmount": {
+                                "type": "boolean",
+                                "description": "Whether the option to enter a custom amount is shown",
+                                "example": true
+                            },
+                            "showDiscount": {
+                                "type": "boolean",
+                                "description": "Whether the option to enter a discount is shown",
+                                "example": false
+                            },
+                            "enableTips": {
+                                "type": "boolean",
+                                "description": "Whether the option to enter a tip is shown",
+                                "example": true
+                            },
+                            "currency": {
+                                "type": "string",
+                                "description": "Currency used for the app",
+                                "example": "BTC"
+                            },
+                            "items": {
+                                "type": "object",
+                                "description": "JSON object of app items",
+                                "example": [
+                                    {
+                                        "description": "Lovely, fresh and tender, Meng Ding Gan Lu ('sweet dew') is grown in the lush Meng Ding Mountains of the southwestern province of Sichuan where it has been cultivated for over a thousand years.",
+                                        "id": "green tea",
+                                        "image": "~/img/pos-sample/green-tea.jpg",
+                                        "price": {
+                                            "type": 2,
+                                            "formatted": "$1.00",
+                                            "value": 1.0
+                                        },
+                                        "title": "Green Tea",
+                                        "buyButtonText": null,
+                                        "inventory": 5,
+                                        "paymentMethods": null,
+                                        "disabled": false
+                                    },
+                                    {
+                                        "description": "Tian Jian Tian Jian means 'heavenly tippy tea' in Chinese, and it describes the finest grade of dark tea. Our Tian Jian dark tea is from Hunan province which is famous for making some of the best dark teas available.",
+                                        "id": "black tea",
+                                        "image": "~/img/pos-sample/black-tea.jpg",
+                                        "price": {
+                                            "type": 2,
+                                            "formatted": "$1.00",
+                                            "value": 1.0
+                                        },
+                                        "title": "Black Tea",
+                                        "buyButtonText": "Test Buy Button Text",
+                                        "inventory": null,
+                                        "paymentMethods": null,
+                                        "disabled": false
+                                    }
+                                ]
+                            },
+                            "fixedAmountPayButtonText": {
+                                "type": "string",
+                                "description": "Payment button text template for items with a set price",
+                                "example": "Buy for {0}"
+                            },
+                            "customAmountPayButtonText": {
+                                "type": "string",
+                                "description": "Payment button text which appears for items which allow user to input a custom amount",
+                                "example": "Pay"
+                            },
+                            "tipText": {
+                                "type": "string",
+                                "description": "Prompt which appears next to the tip amount field if tipping is enabled",
+                                "example": "Do you want to leave a tip?"
+                            },
+                            "customCSSLink": {
+                                "type": "string",
+                                "description": "Link to a custom CSS stylesheet to be used in the app",
+                                "example": "https://bootswatch.com/4/slate/bootstrap.min.css"
+                            },
+                            "notificationUrl": {
+                                "type": "string",
+                                "description": "Callback notification url to POST to once when invoice is paid for and once when there are enough blockchain confirmations"
+                            },
+                            "redirectUrl": {
+                                "type": "string",
+                                "description": "URL user is redirected to once invoice is paid"
+                            },
+                            "embeddedCSS": {
+                                "type": "string",
+                                "description": "Custom CSS embedded into the app"
+                            },
+                            "redirectAutomatically": {
+                                "type": "boolean",
+                                "description": "Whether user is redirected to specified redirect URL automatically after the invoice is paid",
+                                "example": true
+                            },
+                            "requiresRefundEmail": {
+                                "type": "boolean",
+                                "description": "Whether refund email is required when paying the invoice. Defaults to `null` if not explicitly set.",
+                                "example": false,
+                                "nullable": true
+                            }
+                        }
                     }
                 ]
             },
@@ -363,6 +570,177 @@
                         "$ref": "#/components/schemas/BasicAppData"
                     },
                     {
+                        "type": "object",
+                        "properties": {
+                            "title": {
+                                "type": "string",
+                                "description": "Display title of the app",
+                                "example": "My crowdfund app"
+                            },
+                            "description": {
+                                "type": "string",
+                                "description": "App description",
+                                "example": "My crowdfund description"
+                            },
+                            "enabled": {
+                                "type": "boolean",
+                                "description": "Whether the app is enabled to be viewed by everyone",
+                                "example": true
+                            },
+                            "enforceTargetAmount": {
+                                "type": "boolean",
+                                "description": "Whether contributions over the set target amount are allowed",
+                                "example": false
+                            },
+                            "startDate": {
+                                "type": "number",
+                                "description": "UNIX timestamp for crowdfund start time (https://www.unixtimestamp.com/)",
+                                "allOf": [ {"$ref": "#/components/schemas/UnixTimestamp"}],
+                                "example": 768658369
+                            },
+                            "endDate": {
+                                "type": "number",
+                                "description": "UNIX timestamp for crowdfund end time (https://www.unixtimestamp.com/)",
+                                "allOf": [ {"$ref": "#/components/schemas/UnixTimestamp"}],
+                                "example": 771336769
+                            },
+                            "targetCurrency": {
+                                "type": "string",
+                                "description": "Target currency for the crowdfund",
+                                "example": "BTC"
+                            },
+                            "targetAmount": {
+                                "type": "number",
+                                "description": "Target amount for the crowdfund",
+                                "example": 420.69
+                            },
+                            "customCSSLink": {
+                                "type": "string",
+                                "description": "Link to a custom CSS stylesheet to be used in the app"
+                            },
+                            "mainImageUrl": {
+                                "type": "string",
+                                "description": "URL for image used as a cover image for the app"
+                            },
+                            "embeddedCSS": {
+                                "type": "string",
+                                "description": "Custom CSS embedded into the app"
+                            },
+                            "perks": {
+                                "type": "object",
+                                "description": "JSON of perks available in the app",
+                                "example": [
+                                    {
+                                        "description": null,
+                                        "id": "test perk",
+                                        "image": null,
+                                        "price": {
+                                            "type": 2,
+                                            "formatted": "$100.00",
+                                            "value": 100.0
+                                        },
+                                        "title": "test perk",
+                                        "buyButtonText": null,
+                                        "inventory": null,
+                                        "paymentMethods": null,
+                                        "disabled": false
+                                    },
+                                    {
+                                        "description": "this is an amazing perk",
+                                        "id": "test test",
+                                        "image": "https://mainnet.demo.btcpayserver.org/img/errorpages/404_nicolas.jpg",
+                                        "price": {
+                                            "type": 1,
+                                            "formatted": "$69.42",
+                                            "value": 69.42
+                                        },
+                                        "title": "test test",
+                                        "buyButtonText": null,
+                                        "inventory": 5,
+                                        "paymentMethods": null,
+                                        "disabled": false
+                                    },
+                                    {
+                                        "description": null,
+                                        "id": "f$t45hj764325",
+                                        "image": null,
+                                        "price": {
+                                            "type": 0,
+                                            "formatted": null,
+                                            "value": null
+                                        },
+                                        "title": "amazing perk",
+                                        "buyButtonText": "button text",
+                                        "inventory": null,
+                                        "paymentMethods": null,
+                                        "disabled": true
+                                    }
+                                ]
+                            },
+                            "notificationUrl": {
+                                "type": "string",
+                                "description": "Callback notification url to POST to once when invoice is paid for and once when there are enough blockchain confirmations"
+                            },
+                            "tagline": {
+                                "type": "string",
+                                "description": "Tagline for the app displayed to user",
+                                "example": "I can't believe it's not butter"
+                            },
+                            "disqusEnabled": {
+                                "type": "boolean",
+                                "description": "Whether Disqus is enabled for the app"
+                            },
+                            "disqusShortname": {
+                                "type": "string",
+                                "description": "Disqus shortname to used for the app"
+                            },
+                            "soundsEnabled": {
+                                "type": "boolean",
+                                "description": "Whether sounds on new contributions are enabled",
+                                "example": false
+                            },
+                            "animationsEnabled": {
+                                "type": "boolean",
+                                "description": "Whether background animations on new contributions are enabled",
+                                "example": true
+                            },
+                            "resetEveryAmount": {
+                                "type": "number",
+                                "description": "Contribution goal reset frequency amount",
+                                "example": 1
+                            },
+                            "resetEvery": {
+                                "type": "string",
+                                "description": "Contribution goal reset frequency",
+                                "example": "Day"
+                            },
+                            "displayPerksValue": {
+                                "type": "boolean",
+                                "description": "Whether perk values are displayed",
+                                "example": false
+                            },
+                            "sortPerksByPopularity": {
+                                "type": "boolean",
+                                "description": "Whether perks are sorted by popularity",
+                                "default": true
+                            },
+                            "sounds": {
+                                "type": "array",
+                                "description": "Array of custom sounds which can be used on new contributions",
+                                "items": {
+                                    "type": "string"
+                                },
+                                "example": ["https://github.com/ClaudiuHKS/AdvancedQuakeSounds/raw/master/sound/AQS/doublekill.wav"]
+                            },
+                            "animationColors": {
+                                "type": "array",
+                                "description": "Array of custom HEX colors which can be used for background animations on new contributions",
+                                "items": {
+                                    "type": "string"
+                                },
+                                "example": ["#FF0000", "#00FF00", "#0000FF"]
+                            }
+                        }
                     }
                 ]
             },
@@ -505,7 +883,7 @@
                     },
                     "requiresRefundEmail": {
                         "type": "boolean",
-                        "description": "Whether to redirect user to redirect URL automatically once invoice is paid. Defaults to what is set in the store settings",
+                        "description": "Whether refund email is required when paying the invoice. Defaults to what is set in the store settings",
                         "nullable": true
                     },
                     "checkoutType": {
@@ -654,7 +1032,7 @@
                     },
                     "displayPerksValue": {
                         "type": "boolean",
-                        "description": "Enables background animations on new contributions if set to true",
+                        "description": "Displays values of perks if set to true",
                         "default": false,
                         "nullable": true
                     },

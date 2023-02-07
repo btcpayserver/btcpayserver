@@ -251,17 +251,22 @@ namespace BTCPayServer.Tests
                 new CreatePointOfSaleAppRequest()
                 {
                     AppName = "test app from API",
-                    Currency = "JPY"
+                    Currency = "JPY",
+                    Title = "test app title"
                 }
             );
             Assert.Equal("test app from API", app.Name);
             Assert.Equal(user.StoreId, app.StoreId);
             Assert.Equal("PointOfSale", app.AppType);
+            Assert.Equal("test app title", app.Title);
 
             // Make sure we return a 404 if we try to get an app that doesn't exist
             await AssertHttpError(404, async () =>
             {
                 await client.GetApp("some random ID lol");
+            });
+            await AssertHttpError(404, async () => {
+                await client.GetPosApp("some random ID lol");
             });
 
             // Test that we can retrieve the app data
@@ -271,9 +276,22 @@ namespace BTCPayServer.Tests
             Assert.Equal(app.AppType, retrievedApp.AppType);
 
             // Test that we can update the app data
-            await client.UpdatePointOfSaleApp(app.Id, new CreatePointOfSaleAppRequest() { AppName = "new app name" });
+            await client.UpdatePointOfSaleApp(
+                app.Id,
+                new CreatePointOfSaleAppRequest()
+                {
+                    AppName = "new app name",
+                    Title = "new app title"
+                }
+            );
+            // Test generic GET app endpoint first
             retrievedApp = await client.GetApp(app.Id);
             Assert.Equal("new app name", retrievedApp.Name);
+
+            // Test the POS-specific endpoint also
+            var retrievedPosApp = await client.GetPosApp(app.Id);
+            Assert.Equal("new app name", retrievedPosApp.Name);
+            Assert.Equal("new app title", retrievedPosApp.Title);
 
             // Make sure we return a 404 if we try to delete an app that doesn't exist
             await AssertHttpError(404, async () =>
@@ -291,7 +309,7 @@ namespace BTCPayServer.Tests
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
-        public async Task CanCreateCrowdfundApp()
+        public async Task CanCreateReadAndDeleteCrowdfundApp()
         {
             using var tester = CreateServerTester();
             await tester.StartAsync();
@@ -394,10 +412,48 @@ namespace BTCPayServer.Tests
             );
 
             // Test creating a crowdfund app
-            var app = await client.CreateCrowdfundApp(user.StoreId, new CreateCrowdfundAppRequest() { AppName = "test app from API" });
+            var app = await client.CreateCrowdfundApp(
+                user.StoreId,
+                new CreateCrowdfundAppRequest() 
+                {
+                    AppName = "test app from API",
+                    Title = "test app title"
+                }
+            );
             Assert.Equal("test app from API", app.Name);
             Assert.Equal(user.StoreId, app.StoreId);
             Assert.Equal("Crowdfund", app.AppType);
+
+            // Make sure we return a 404 if we try to get an app that doesn't exist
+            await AssertHttpError(404, async () => {
+                await client.GetApp("some random ID lol");
+            });
+            await AssertHttpError(404, async () => {
+                await client.GetCrowdfundApp("some random ID lol");
+            });
+
+            // Test that we can retrieve the app data
+            var retrievedApp = await client.GetApp(app.Id);
+            Assert.Equal(app.Name, retrievedApp.Name);
+            Assert.Equal(app.StoreId, retrievedApp.StoreId);
+            Assert.Equal(app.AppType, retrievedApp.AppType);
+
+            // Test the crowdfund-specific endpoint also
+            var retrievedPosApp = await client.GetCrowdfundApp(app.Id);
+            Assert.Equal(app.Name, retrievedPosApp.Name);
+            Assert.Equal(app.Title, retrievedPosApp.Title);
+
+            // Make sure we return a 404 if we try to delete an app that doesn't exist
+            await AssertHttpError(404, async () =>
+            {
+                await client.DeleteApp("some random ID lol");
+            });
+
+            // Test deleting the newly created app
+            await client.DeleteApp(retrievedApp.Id);
+            await AssertHttpError(404, async () => {
+                await client.GetApp(retrievedApp.Id);
+            });
         }
 
         [Fact(Timeout = TestTimeout)]

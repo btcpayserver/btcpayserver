@@ -1292,5 +1292,17 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             HandleActionResult(await GetController<GreenfieldStoreLightningAddressesController>().RemoveStoreLightningAddress(storeId, username));
         }
+
+        public override async Task<PointOfSaleAppData> GetPosApp(string appId,
+            CancellationToken cancellationToken = default)
+        {
+            return GetFromActionResult<PointOfSaleAppData>(await GetController<GreenfieldAppsController>().GetPosApp(appId));
+        }
+
+        public override async Task<CrowdfundAppData> GetCrowdfundApp(string appId,
+            CancellationToken cancellationToken = default)
+        {
+            return GetFromActionResult<CrowdfundAppData>(await GetController<GreenfieldAppsController>().GetCrowdfundApp(appId));
+        }
     }
 }

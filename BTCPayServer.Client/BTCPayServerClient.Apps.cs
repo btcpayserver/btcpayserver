@@ -70,6 +70,26 @@ namespace BTCPayServer.Client
             return await HandleResponse<AppDataBase[]>(response);
         }
 
+        public virtual async Task<PointOfSaleAppData> GetPosApp(string appId, CancellationToken token = default)
+        {
+            if (appId == null)
+                throw new ArgumentNullException(nameof(appId));
+            var response = await _httpClient.SendAsync(
+                CreateHttpRequest($"api/v1/apps/pos/{appId}",
+                    method: HttpMethod.Get), token);
+            return await HandleResponse<PointOfSaleAppData>(response);
+        }
+
+        public virtual async Task<CrowdfundAppData> GetCrowdfundApp(string appId, CancellationToken token = default)
+        {
+            if (appId == null)
+                throw new ArgumentNullException(nameof(appId));
+            var response = await _httpClient.SendAsync(
+                CreateHttpRequest($"api/v1/apps/crowdfund/{appId}",
+                    method: HttpMethod.Get), token);
+            return await HandleResponse<CrowdfundAppData>(response);
+        }
+
         public virtual async Task DeleteApp(string appId, CancellationToken token = default)
         {
             if (appId == null)

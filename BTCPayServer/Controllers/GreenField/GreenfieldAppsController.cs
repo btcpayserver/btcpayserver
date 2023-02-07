@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 
 namespace BTCPayServer.Controllers.Greenfield
 {
@@ -176,6 +177,32 @@ namespace BTCPayServer.Controllers.Greenfield
             return Ok(ToModel(app));
         }
 
+        [HttpGet("~/api/v1/apps/pos/{appId}")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        public async Task<IActionResult> GetPosApp(string appId)
+        {
+            var app = await _appService.GetApp(appId, AppType.PointOfSale);
+            if (app == null)
+            {
+                return AppNotFound();
+            }
+                
+            return Ok(ToPointOfSaleModel(app));
+        }
+
+        [HttpGet("~/api/v1/apps/crowdfund/{appId}")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        public async Task<IActionResult> GetCrowdfundApp(string appId)
+        {
+            var app = await _appService.GetApp(appId, AppType.Crowdfund);
+            if (app == null)
+            {
+                return AppNotFound();
+            }
+                
+            return Ok(ToCrowdfundModel(app));
+        }
+
         [HttpDelete("~/api/v1/apps/{appId}")]
         public async Task<IActionResult> DeleteApp(string appId)
         {
@@ -284,6 +311,8 @@ namespace BTCPayServer.Controllers.Greenfield
 
         private PointOfSaleAppData ToPointOfSaleModel(AppData appData)
         {
+            var settings = appData.GetSettings<PointOfSaleSettings>();
+
             return new PointOfSaleAppData
             {
                 Id = appData.Id,
@@ -291,6 +320,31 @@ namespace BTCPayServer.Controllers.Greenfield
                 Name = appData.Name,
                 StoreId = appData.StoreDataId,
                 Created = appData.Created,
+                Title = settings.Title,
+                DefaultView = settings.DefaultView.ToString(),
+                ShowCustomAmount = settings.ShowCustomAmount,
+                ShowDiscount = settings.ShowDiscount,
+                EnableTips = settings.EnableTips,
+                Currency = settings.Currency,
+                Items = JsonConvert.DeserializeObject(
+                    JsonConvert.SerializeObject(
+                        _appService.Parse(settings.Template, settings.Currency), 
+                        new JsonSerializerSettings
+                        { 
+                            ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver() 
+                        }
+                    )
+                ),
+                FixedAmountPayButtonText = settings.ButtonText,
+                CustomAmountPayButtonText = settings.CustomButtonText,
+                TipText = settings.CustomTipText,
+                CustomCSSLink = settings.CustomCSSLink,
+                NotificationUrl = settings.NotificationUrl,
+                RedirectUrl = settings.RedirectUrl,
+                Description = settings.Description,
+                EmbeddedCSS = settings.EmbeddedCSS,
+                RedirectAutomatically = settings.RedirectAutomatically ?? false,
+                RequiresRefundEmail = settings.RequiresRefundEmail == RequiresRefundEmail.InheritFromStore ? null : settings.RequiresRefundEmail == RequiresRefundEmail.On,
             };
         }
 
@@ -324,13 +378,48 @@ namespace BTCPayServer.Controllers.Greenfield
 
         private CrowdfundAppData ToCrowdfundModel(AppData appData)
         {
+            var settings = appData.GetSettings<CrowdfundSettings>();
+
             return new CrowdfundAppData
             {
                 Id = appData.Id,
                 AppType = appData.AppType,
                 Name = appData.Name,
                 StoreId = appData.StoreDataId,
-                Created = appData.Created
+                Created = appData.Created,
+                Title = settings.Title,
+                Enabled = settings.Enabled,
+                EnforceTargetAmount = settings.EnforceTargetAmount,
+                StartDate = settings.StartDate,
+                TargetCurrency = settings.TargetCurrency,
+                Description = settings.Description,
+                EndDate = settings.EndDate,
+                TargetAmount = settings.TargetAmount,
+                CustomCSSLink = settings.CustomCSSLink,
+                MainImageUrl = settings.MainImageUrl,
+                EmbeddedCSS = settings.EmbeddedCSS,
+                NotificationUrl = settings.NotificationUrl,
+                Tagline = settings.Tagline,
+                Perks = JsonConvert.DeserializeObject(
+                    JsonConvert.SerializeObject(
+                        _appService.Parse(settings.PerksTemplate, settings.TargetCurrency), 
+                        new JsonSerializerSettings
+                        { 
+                            ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver() 
+                        }
+                    )
+                ),
+                DisqusEnabled = settings.DisqusEnabled,
+                DisqusShortname = settings.DisqusShortname,
+                SoundsEnabled = settings.SoundsEnabled,
+                AnimationsEnabled = settings.AnimationsEnabled,
+                ResetEveryAmount = settings.ResetEveryAmount,
+                ResetEvery = settings.ResetEvery.ToString(),
+                DisplayPerksValue = settings.DisplayPerksValue,
+                DisplayPerksRanking = settings.DisplayPerksRanking,
+                SortPerksByPopularity = settings.SortPerksByPopularity,
+                Sounds = settings.Sounds,
+                AnimationColors = settings.AnimationColors
             };
         }
 

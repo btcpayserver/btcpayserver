@@ -14,11 +14,11 @@
             </div>
         </div>
         <div id="Mode-Tip" class="tab-pane fade px-2" :class="{ show: mode === 'tip', active: mode === 'tip' }" role="tabpanel" aria-labelledby="ModeTablist-Tip" v-if="srvModel.enableTips">
-            <div class="d-flex flex-wrap align-items-center justify-content-center gap-2">
+            <div class="btcpay-pills d-flex flex-wrap align-items-center justify-content-center gap-2">
                 <template v-if="srvModel.customTipPercentages">
                     <button
                         type="button"
-                        class="btn btn-secondary rounded-pill"
+                        class="btcpay-pill"
                         :class="{ active: !tipPercent }"
                         v-on:click.prevent="tipPercent = null">
                         <template v-if="tip && tip > 0">{{formatCurrency(tip, true)}}</template>
@@ -27,7 +27,7 @@
                     <button
                         v-for="percentage in srvModel.customTipPercentages"
                         type="button"
-                        class="btn btn-secondary rounded-pill"
+                        class="btcpay-pill"
                         :class="{ active: tipPercent == percentage }"
                         v-on:click.prevent="tipPercentage(percentage)">
                         {{ percentage }}%

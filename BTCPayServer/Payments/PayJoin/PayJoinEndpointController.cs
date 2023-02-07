@@ -1,6 +1,7 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
@@ -591,8 +592,10 @@ namespace BTCPayServer.Payments.PayJoin
             if (availableUtxos.Length == 0)
                 return (Array.Empty<UTXO>(), PayjoinUtxoSelectionType.Unavailable);
             HashSet<OutPoint> locked = new HashSet<OutPoint>();
-            // We don't want to make too many db roundtrip which would be inconvenient for the sender
-            int maxTries = 30;
+
+            TimeSpan timeout = TimeSpan.FromSeconds(30.0);
+            Stopwatch watch = new Stopwatch();
+            watch.Start();
 
             // BlockSci UIH1 and UIH2:
             // if min(out) < min(in) then UIH1 else UIH2
@@ -604,7 +607,7 @@ namespace BTCPayServer.Payments.PayJoin
 
             foreach (var availableUtxo in availableUtxos)
             {
-                if (locked.Count >= maxTries)
+                if (watch.Elapsed > timeout)
                     break;
 
                 var utxoValue = availableUtxo.Value.GetValue(network);
@@ -634,7 +637,7 @@ namespace BTCPayServer.Payments.PayJoin
 
             foreach (var utxo in availableUtxos.Where(u => !locked.Contains(u.Outpoint)))
             {
-                if (locked.Count >= maxTries)
+                if (watch.Elapsed > timeout)
                     break;
                 if (await _utxoLocker.TryLock(utxo.Outpoint))
                 {

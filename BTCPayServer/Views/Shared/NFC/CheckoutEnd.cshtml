@@ -2,10 +2,10 @@
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @using BTCPayServer.Abstractions.TagHelpers
 <template id="lnurl-withdraw-template">
-    <button v-if="v2" class="btn rounded-pill w-100 mt-4" type="button" 
+    <button v-if="v2" class="btn btn-secondary rounded-pill w-100 mt-4" type="button" 
             v-on:click="startScan" 
             v-bind:disabled="scanning || submitting" 
-            v-bind:class="{ 'loading': scanning || submitting, 'btn-primary': supported, 'btn-text': !supported }">{{btnText}}</button>
+            v-bind:class="{ 'loading': scanning || submitting, 'text-secondary': !supported }">{{btnText}}</button>
 
     <bp-loading-button v-else>
         <button v-on:click="startScan"  style="margin-top: 15px;" v-bind:disabled="scanning || submitting"
@@ -67,7 +67,7 @@ Vue.component("lnurl-withdraw-checkout", {
                 self.submitting = false;
                 self.scanning = true;
                 if (!this.supported) {
-                    const result = prompt("enter lnurl withdraw");
+                    const result = prompt("Enter LNURL withdraw");
                     if (result) {
                         self.sendData.bind(self)(result);
                         return;

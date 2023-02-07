@@ -75,11 +75,11 @@
 @section Navbar {
     @if (backUrl != null)
     {
-        <a href="@backUrl" id="GoBack">
+        <a href="@Url.EnsureLocal(backUrl)" id="GoBack">
             <vc:icon symbol="back" />
         </a>
     }
-    <a href="@cancelUrl" id="CancelWizard" class="cancel">
+    <a href="@Url.EnsureLocal(cancelUrl)" id="CancelWizard" class="cancel">
         <vc:icon symbol="close" />
     </a>
 }

@@ -23,7 +23,7 @@ namespace BTCPayServer.HostedServices
 
         protected BaseAsyncService(ILogger logger)
         {
-            Logs = new Logs() { PayServer = logger, Events = logger, Configuration = logger};
+            Logs = new Logs() { PayServer = logger, Events = logger, Configuration = logger };
         }
 
         public virtual Task StartAsync(CancellationToken cancellationToken)

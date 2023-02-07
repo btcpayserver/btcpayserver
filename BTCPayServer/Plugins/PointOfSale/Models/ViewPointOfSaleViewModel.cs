@@ -41,8 +41,11 @@ namespace BTCPayServer.Plugins.PointOfSale.Models
             public bool SymbolSpace { get; set; }
         }
 
+        public string LogoFileId { get; set; }
+        public string CssFileId { get; set; }
+        public string BrandColor { get; set; }
+        public string StoreName { get; set; }
         public CurrencyInfoData CurrencyInfo { get; set; }
-
         public PosViewType ViewType { get; set; }
         public bool ShowCustomAmount { get; set; }
         public bool ShowDiscount { get; set; }

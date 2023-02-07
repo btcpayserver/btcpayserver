@@ -1,7 +1,8 @@
 using System;
-using System.Linq;
 using System.IO;
+using System.Linq;
 using System.Net;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using BTCPayServer.Configuration;
 using BTCPayServer.Hosting;
@@ -11,7 +12,6 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using System.Reflection;
 
 [assembly: InternalsVisibleTo("BTCPayServer.Tests")]
 namespace BTCPayServer
@@ -35,7 +35,11 @@ namespace BTCPayServer
             IConfiguration conf = null;
             try
             {
-                conf = new DefaultConfiguration() { Logger = logger }.CreateConfiguration(args);
+                var confBuilder = new DefaultConfiguration() { Logger = logger }.CreateConfigurationBuilder(args);
+#if DEBUG
+                confBuilder.AddJsonFile("appsettings.dev.json", true, false);
+#endif
+                conf = confBuilder.Build();
                 if (conf == null)
                     return;
 
@@ -81,11 +85,11 @@ namespace BTCPayServer
                 if (!string.IsNullOrEmpty(ex.Message))
                     logs.Configuration.LogError(ex.Message);
             }
-            catch (Exception e) when (PluginManager.IsExceptionByPlugin(e))
+            catch (Exception e) when (PluginManager.IsExceptionByPlugin(e, out var pluginName))
             {
-                logs.Configuration.LogError(e, $"Disabling plugin {e.Source} as it crashed on startup");
+                logs.Configuration.LogError(e, $"Disabling plugin {pluginName} as it crashed on startup");
                 var pluginDir = new DataDirectories().Configure(conf).PluginDir;
-                PluginManager.DisablePlugin(pluginDir, e.Source);
+                PluginManager.DisablePlugin(pluginDir, pluginName);
             }
             finally
             {

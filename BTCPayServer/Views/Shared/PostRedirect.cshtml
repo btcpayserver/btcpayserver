@@ -38,7 +38,7 @@
 	}
 	else
 	{
-		<form method="post" id="postform" action="@Model.FormUrl" rel="noreferrer noopener">
+		<form method="post" id="postform" action="@Url.EnsureLocal(Model.FormUrl, this.Context.Request)" rel="noreferrer noopener">
 			@Html.AntiForgeryToken()
 			@foreach (var o in Model.FormParameters)
 			{

@@ -4,8 +4,8 @@
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
-    <PackageReference Include="NBXplorer.Client" Version="4.2.2" />
-    <PackageReference Include="NicolasDorier.StandardConfiguration" Version="1.0.0.18" />
+    <PackageReference Include="NBXplorer.Client" Version="4.2.3" />
+    <PackageReference Include="NicolasDorier.StandardConfiguration" Version="2.0.1" />
   </ItemGroup>
   <ItemGroup Condition="'$(Altcoins)' != 'true'">
     <Compile Remove="Altcoins\**\*.cs"></Compile>

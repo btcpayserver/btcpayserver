@@ -1,4 +1,4 @@
-﻿@inject BTCPayServer.Services.BTCPayServerEnvironment env
+@inject BTCPayServer.Services.BTCPayServerEnvironment env
 @using BTCPayServer.Controllers
 @using BTCPayServer.Components.QRCode
 @model BTCPayServer.Controllers.WalletReceiveViewModel
@@ -15,7 +15,7 @@
 }
 
 @section Navbar {
-    <a href="@returnUrl" id="CancelWizard" class="cancel">
+    <a href="@Url.EnsureLocal(returnUrl)" id="CancelWizard" class="cancel">
         <vc:icon symbol="close" />
     </a>
 }

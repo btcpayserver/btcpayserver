@@ -18,6 +18,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using NBitcoin;
 using NBXplorer;
 
 namespace BTCPayServer.Payments.Lightning
@@ -298,7 +299,7 @@ namespace BTCPayServer.Payments.Lightning
 
                         var prepObj =
                             _lightningLikePaymentHandler.PreparePayment(supportedMethod, store, paymentMethod.Network);
-                        
+
                         var pmis = invoice.GetPaymentMethods().Select(method => method.GetId()).ToHashSet();
                         var newPaymentMethodDetails =
                             (LightningLikePaymentMethodDetails)(await _lightningLikePaymentHandler
@@ -529,10 +530,11 @@ namespace BTCPayServer.Payments.Lightning
 
         public async Task<bool> AddPayment(LightningInvoice notification, string invoiceId, PaymentType paymentType)
         {
-            var payment = await _paymentService.AddPayment(invoiceId, notification.PaidAt.Value, new LightningLikePaymentData()
+            var payment = await _paymentService.AddPayment(invoiceId, notification.PaidAt.Value, new LightningLikePaymentData
             {
                 BOLT11 = notification.BOLT11,
                 PaymentHash = BOLT11PaymentRequest.Parse(notification.BOLT11, _network.NBitcoinNetwork).PaymentHash,
+                Preimage = string.IsNullOrEmpty(notification.Preimage) ? null : uint256.Parse(notification.Preimage),
                 Amount = notification.AmountReceived ?? notification.Amount, // if running old version amount received might be unavailable,
                 PaymentType = paymentType.ToString()
             }, _network, accounted: true);

@@ -41,7 +41,7 @@ namespace BTCPayServer
                         throw new ArgumentOutOfRangeException();
                 }
             }
-            
+
             (DerivationStrategyBase, RootedKeyPath[]) ExtractFromMulti(OutputDescriptor.Multi multi)
             {
                 var xpubs = multi.PkProviders.Select(provider => ExtractFromPkProvider(provider));
@@ -50,7 +50,7 @@ namespace BTCPayServer
                         $"{multi.Threshold}-of-{(string.Join('-', xpubs.Select(tuple => tuple.Item1.ToString())))}{(multi.IsSorted ? "" : "-[keeporder]")}"),
                     xpubs.SelectMany(tuple => tuple.Item2).ToArray());
             }
-            
+
             ArgumentNullException.ThrowIfNull(str);
             str = str.Trim();
             var outputDescriptor = OutputDescriptor.Parse(str, Network);

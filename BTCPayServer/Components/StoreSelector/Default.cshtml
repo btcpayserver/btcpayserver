@@ -15,7 +15,8 @@
         @if (Env.NetworkType != NBitcoin.ChainName.Mainnet)
         {
             var type = Env.NetworkType.ToString();
-            <small class="badge bg-warning rounded-pill ms-1 ms-sm-0" title="@type">@type.Replace("Testnet", "TN").Replace("Regtest", "RT")</small>
+            var displayType = type.Replace("Testnet", "TN").Replace("Regtest", "RT").Replace("Signet", "SN");
+            <small class="badge bg-warning rounded-pill ms-1 ms-sm-0" title="@type">@displayType</small>
         }
     }
     private static string StoreName(string title)
@@ -38,7 +39,7 @@ else
 }
 
 <div id="StoreSelector">
-    @if (Model.Options.Count > 0)
+    @if (Model.Options.Any())
     {
         <div id="StoreSelectorDropdown" class="dropdown only-for-js">
             <button id="StoreSelectorToggle" class="btn btn-secondary dropdown-toggle rounded-pill px-3 @(Model.CurrentStoreId == null ? "empty-state" : "")" type="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -74,6 +75,6 @@ else
     }
     else if (SignInManager.IsSignedIn(User))
     {
-        <a asp-controller="UIUserStores" asp-action="CreateStore" class="btn btn-primary w-100 rounded-pill" id="StoreSelectorCreate">Create Store</a>
+        <a asp-controller="UIUserStores" asp-action="CreateStore" class="btn btn-primary w-100 rounded-pill text-nowrap" id="StoreSelectorCreate">Create Store</a>
     }
 </div>

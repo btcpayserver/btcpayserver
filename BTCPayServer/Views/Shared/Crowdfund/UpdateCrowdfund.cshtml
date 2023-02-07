@@ -42,30 +42,27 @@
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
     <div class="row">
-        <div class="col-xl-8 col-xxl-constrain">
-            <div class="form-group">
-                <label asp-for="AppName" class="form-label" data-required></label>
-                <input asp-for="AppName" class="form-control" required />
-                <span asp-validation-for="AppName" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Title" class="form-label" data-required></label>
-                <input asp-for="Title" class="form-control" required />
-                <span asp-validation-for="Title" class="text-danger"></span>
+        <div class="col-sm-10 col-md-9 col-xl-7 col-xxl-6">
+            <div class="row">
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label asp-for="AppName" class="form-label" data-required></label>
+                        <input asp-for="AppName" class="form-control" required />
+                        <span asp-validation-for="AppName" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label asp-for="Title" class="form-label" data-required></label>
+                        <input asp-for="Title" class="form-control" required />
+                        <span asp-validation-for="Title" class="text-danger"></span>
+                    </div>
+                </div>
             </div>
             <div class="form-group">
                 <label asp-for="Tagline" class="form-label"></label>
                 <input asp-for="Tagline" class="form-control" />
                 <span asp-validation-for="Tagline" class="text-danger"></span>
-            </div>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-xl-10 col-xxl-constrain">
-            <div class="form-group">
-                <label asp-for="Description" class="form-label" data-required></label>
-                <textarea asp-for="Description" rows="20" cols="40" class="form-control richtext"></textarea>
-                <span asp-validation-for="Description" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <div class="d-flex align-items-center">
@@ -73,10 +70,18 @@
                     <div>
                         <label asp-for="Enabled" class="form-label mb-0"></label>
                         <span asp-validation-for="Enabled" class="text-danger"></span>
-                        <div class="text-muted" hidden="@Model.Enabled">The crowdfund is only visible to you. To make it visible to anyone else, enable this.</div>
-                        <div class="text-muted" hidden="@(!Model.Enabled)">The crowdfund is visible to anyone. To make it only visible to you, disable this.</div>
+                        <div class="text-muted">The crowdfund will be visible to anyone.</div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+    <div class="row mt-3">
+        <div class="col-xl-10 col-xxl-constrain">
+            <div class="form-group">
+                <label asp-for="Description" class="form-label" data-required></label>
+                <textarea asp-for="Description" rows="20" cols="40" class="form-control richtext"></textarea>
+                <span asp-validation-for="Description" class="text-danger"></span>
             </div>
         </div>
     </div>
@@ -334,7 +339,7 @@
 
 <div class="d-flex gap-3 mt-3">
     <a class="btn btn-secondary" asp-action="ListInvoices" asp-controller="UIInvoice" asp-route-storeId="@Model.StoreId" asp-route-searchterm="@Model.SearchTerm">Invoices</a>
-    <a id="DeleteApp" class="btn btn-outline-danger" asp-controller="UIApps" asp-action="DeleteApp" asp-route-appId="@Model.AppId" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The app <strong>@Model.AppName</strong> and its settings will be permanently deleted." data-confirm-input="DELETE">Delete this app</a>
+    <a id="DeleteApp" class="btn btn-outline-danger" asp-controller="UIApps" asp-action="DeleteApp" asp-route-appId="@Model.AppId" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The app <strong>@Html.Encode(Model.AppName)</strong> and its settings will be permanently deleted." data-confirm-input="DELETE">Delete this app</a>
 </div>
 
 <partial name="_Confirm" model="@(new ConfirmModel("Delete app", "This app will be removed from this store.", "Delete"))" />

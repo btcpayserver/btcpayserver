@@ -451,13 +451,13 @@ namespace BTCPayServer.Controllers
             bool enabledChanged = currentlyEnabled != vm.Enabled;
             bool needUpdate = enabledChanged;
             string errorMessage = null;
-            
+
             if (enabledChanged)
             {
                 storeBlob.SetExcluded(derivation.PaymentId, !vm.Enabled);
                 store.SetStoreBlob(storeBlob);
             }
-            
+
             if (derivation.Label != vm.Label)
             {
                 needUpdate = true;
@@ -527,7 +527,7 @@ namespace BTCPayServer.Controllers
                         _EventAggregator.Publish(new WalletChangedEvent { WalletId = new WalletId(vm.StoreId, vm.CryptoCode) });
                         successMessage += $" {vm.CryptoCode} on-chain payments are now {(vm.Enabled ? "enabled" : "disabled")} for this store.";
                     }
-                
+
                     TempData[WellKnownTempData.SuccessMessage] = successMessage;
                 }
                 else
@@ -800,9 +800,9 @@ namespace BTCPayServer.Controllers
                 ? ""
                 : " or imported it into an external wallet. If you no longer have access to your private key (recovery seed), immediately replace the wallet";
             return
-                $"<p class=\"text-danger fw-bold\">Please note that this is a <strong>{walletType} wallet</strong>!</p>" +
-                $"<p class=\"text-danger fw-bold\">Do not proceed if you have not backed up the wallet{additionalText}.</p>" +
-                $"<p class=\"text-start mb-0\">This action will erase the current wallet data from the server. {info}</p>";
+                $"<p class=\"text-danger fw-bold\">Please note that this is a <strong>{Html.Encode(walletType)} wallet</strong>!</p>" +
+                $"<p class=\"text-danger fw-bold\">Do not proceed if you have not backed up the wallet{Html.Encode(additionalText)}.</p>" +
+                $"<p class=\"text-start mb-0\">This action will erase the current wallet data from the server. {Html.Encode(info)}</p>";
         }
 
         private string WalletReplaceWarning(bool isHotWallet)

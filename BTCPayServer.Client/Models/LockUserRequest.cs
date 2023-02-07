@@ -1,4 +1,4 @@
-﻿namespace BTCPayServer.Client;
+namespace BTCPayServer.Client;
 
 public class LockUserRequest
 {

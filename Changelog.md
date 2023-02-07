@@ -1,5 +1,52 @@
 # Changelog
 
+## 1.7.5
+
+### New features
+
+* Greenfield: Lightning addresses API (#4546) @kukks
+
+### Bug fixes
+
+* Fix several HTML injections (#4545) @NicolasDorier
+* BIP21: Uppercase addresses only in QR, not in payment URL (#4553) @dennisreimann
+* Checkout v2: UI fixes (#4552) @dennisreimann
+
+### Improvement
+
+* Checkout v2: Re-add LNURL for top-up invoices (#4556) @dennisreimann
+
+## 1.7.4
+
+Note for integrators such as Raspiblitz or Umbrel: As part of our effort to make BTCPay Server more welcoming to plugins, we have made a change that may impact you.
+
+Previously, when a user uninstalled or installed a new plugin, BTCPay Server would prompt them to restart the server by clicking on a button. Prior to version 1.7.4, this restart button was not functional due to being coupled to our own Docker deployment stack.
+
+As of now, the restart button will instead terminate the BTCPay Server process. The process manager, such as systemd or docker should then automatically restart BTCPay Server. Please ensure that automatic restart capability exists.
+
+### Bug fixes
+
+* Fix LNURL authentication as 2FA method (#4501) @dennisreimann
+* Fix sync modal display (#4485) @dennisreimann
+* Checkout: Fix cutoff language dropdown (#4486) @dennisreimann
+* Point of Sale: Ensure only valid non-negative numbers in tip input (#4481) @bolatovumar
+* Invoice export: Fix export all stores case (#4516) @dennisreimann
+
+### Improvement
+
+* After a plugin install or uninstall, restart now just kill the process instead of requiring SSH with docker install @NicolasDorier
+* Checkout v2: Display and copy addresses (#4489) @dennisreimann
+* Checkout v2: Configure countdown timer (#4471) @dennisreimann
+* Unify 2FA login boxes (#4506) @dennisreimann
+* Add extension points for dashboard (#4483) @kukks
+* Text editor: Allow Twitter embeds (#4488) @dennisreimann
+* Update preferred price source copy label (#4492) @dstrukt
+* Display BTCPay Server version numbers in UI without zero suffix (#4521) @NicolasDorier
+* Redesign plugin list items (#4528) @NicolasDorier
+* Plugin development improvements (#4522 #4518) @NicolasDorier
+* Greenfield: Add payment hash and preimage to Lightning invoices (#4520) @dennisreimann
+* Greenfield: Add separate permission for viewing LN invoices (#4529) @ArttuPakarinen @dennisreimann
+
 ## 1.7.3
 
 ### Bug fixes

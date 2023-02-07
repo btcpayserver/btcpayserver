@@ -33,7 +33,7 @@ public class StoreWalletBalance : ViewComponent
     public StoreWalletBalance(
         StoreRepository storeRepo,
         CurrencyNameTable currencies,
-        WalletHistogramService walletHistogramService, 
+        WalletHistogramService walletHistogramService,
         BTCPayWalletProvider walletProvider,
         BTCPayNetworkProvider networkProvider)
     {
@@ -50,7 +50,7 @@ public class StoreWalletBalance : ViewComponent
         var walletId = new WalletId(store.Id, cryptoCode);
         var data = await _walletHistogramService.GetHistogram(store, walletId, DefaultType);
         var defaultCurrency = store.GetStoreBlob().DefaultCurrency;
-        
+
         var vm = new StoreWalletBalanceViewModel
         {
             Store = store,
@@ -69,7 +69,7 @@ public class StoreWalletBalance : ViewComponent
         }
         else
         {
-            using CancellationTokenSource cts = new (TimeSpan.FromSeconds(3));
+            using CancellationTokenSource cts = new(TimeSpan.FromSeconds(3));
             var wallet = _walletProvider.GetWallet(_networkProvider.DefaultNetwork);
             var derivation = store.GetDerivationSchemeSettings(_networkProvider, walletId.CryptoCode);
             if (derivation is not null)

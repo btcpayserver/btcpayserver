@@ -7,7 +7,7 @@ namespace BTCPayServer.Client.Models
         /// </summary>
         public string Id { get; set; }
     }
-    
+
     public class StoreUserData
     {
         /// <summary>

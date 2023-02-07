@@ -89,7 +89,7 @@ namespace BTCPayServer.Payments.Lightning
             if (expiry < TimeSpan.Zero)
                 expiry = TimeSpan.FromSeconds(1);
 
-            LightningInvoice? lightningInvoice = null;
+            LightningInvoice? lightningInvoice;
 
             string description = storeBlob.LightningDescriptionTemplate;
             description = description.Replace("{StoreName}", store.StoreName ?? "", StringComparison.OrdinalIgnoreCase)
@@ -118,6 +118,7 @@ namespace BTCPayServer.Payments.Lightning
                 Activated = true,
                 BOLT11 = lightningInvoice.BOLT11,
                 PaymentHash = BOLT11PaymentRequest.Parse(lightningInvoice.BOLT11, network.NBitcoinNetwork).PaymentHash,
+                Preimage = string.IsNullOrEmpty(lightningInvoice.Preimage) ? null : uint256.Parse(lightningInvoice.Preimage),
                 InvoiceId = lightningInvoice.Id,
                 NodeInfo = (await nodeInfo).FirstOrDefault()?.ToString()
             };

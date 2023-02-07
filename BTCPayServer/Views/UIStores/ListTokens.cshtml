@@ -48,7 +48,7 @@
                         <td>@token.Label</td>
                         <td class="text-end">
                             <a asp-action="ShowToken" asp-route-storeId="@Context.GetRouteValue("storeId")" asp-route-tokenId="@token.Id">See information</a> - 
-                            <a asp-action="RevokeToken" asp-route-storeId="@Context.GetRouteValue("storeId")" asp-route-tokenId="@token.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The access token with the label <strong>@token.Label</strong> will be revoked." data-confirm-input="REVOKE">Revoke</a>
+                            <a asp-action="RevokeToken" asp-route-storeId="@Context.GetRouteValue("storeId")" asp-route-tokenId="@token.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The access token with the label <strong>@Html.Encode(token.Label)</strong> will be revoked." data-confirm-input="REVOKE">Revoke</a>
                         </td>
                     </tr>
                 }

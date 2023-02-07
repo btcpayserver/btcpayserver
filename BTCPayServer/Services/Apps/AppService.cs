@@ -48,7 +48,7 @@ namespace BTCPayServer.Services.Apps
             _storeRepository = storeRepository;
             _HtmlSanitizer = htmlSanitizer;
         }
-        
+
         public async Task<object> GetAppInfo(string appId)
         {
             var app = await GetApp(appId, AppType.Crowdfund, true);
@@ -120,7 +120,7 @@ namespace BTCPayServer.Services.Apps
                             return rate * value;
                         })));
             }
-            
+
             var perks = Parse(settings.PerksTemplate, settings.TargetCurrency);
             if (settings.SortPerksByPopularity)
             {
@@ -134,6 +134,9 @@ namespace BTCPayServer.Services.Apps
                 perks = newPerksOrder.ToArray();
             }
 
+            var store = appData.StoreData;
+            var storeBlob = store.GetStoreBlob();
+
             return new ViewCrowdfundViewModel
             {
                 Title = settings.Title,
@@ -142,6 +145,10 @@ namespace BTCPayServer.Services.Apps
                 CustomCSSLink = settings.CustomCSSLink,
                 MainImageUrl = settings.MainImageUrl,
                 EmbeddedCSS = settings.EmbeddedCSS,
+                StoreName = store.StoreName,
+                CssFileId = storeBlob.CssFileId,
+                LogoFileId = storeBlob.LogoFileId,
+                BrandColor = storeBlob.BrandColor,
                 StoreId = appData.StoreDataId,
                 AppId = appData.Id,
                 StartDate = settings.StartDate?.ToUniversalTime(),
@@ -202,7 +209,7 @@ namespace BTCPayServer.Services.Apps
             var currencyData = _Currencies.GetCurrencyData(settings.TargetCurrency, true);
             var perks = Parse(settings.PerksTemplate, settings.TargetCurrency);
             var perkCount = paidInvoices
-                .Where(entity => entity.Currency.Equals(settings.TargetCurrency, StringComparison.OrdinalIgnoreCase) && 
+                .Where(entity => entity.Currency.Equals(settings.TargetCurrency, StringComparison.OrdinalIgnoreCase) &&
                     // we need the item code to know which perk it is and group by that
                     !string.IsNullOrEmpty(entity.Metadata.ItemCode))
                 .GroupBy(entity => entity.Metadata.ItemCode)
@@ -210,7 +217,8 @@ namespace BTCPayServer.Services.Apps
                 {
                     var total = entities
                         .Sum(entity => entity.GetPayments(true)
-                            .Sum(pay => {
+                            .Sum(pay =>
+                            {
                                 var paymentMethodId = pay.GetPaymentMethodId();
                                 var value = pay.GetCryptoPaymentData().GetValue() - pay.NetworkFee;
                                 var rate = entity.GetPaymentMethod(paymentMethodId).Rate;
@@ -228,7 +236,7 @@ namespace BTCPayServer.Services.Apps
                     };
                 })
                 .OrderByDescending(stats => stats.SalesCount);
-            
+
             return perkCount;
         }
 
@@ -263,7 +271,7 @@ namespace BTCPayServer.Services.Apps
                     };
                 })
                 .OrderByDescending(stats => stats.SalesCount);
-            
+
             return itemCount;
         }
 
@@ -281,7 +289,7 @@ namespace BTCPayServer.Services.Apps
                     items = Parse(posS.Template, posS.Currency);
                     break;
             }
-            
+
             var invoices = await GetInvoicesForApp(app);
             var paidInvoices = invoices.Where(IsPaid).ToArray();
             var series = paidInvoices
@@ -308,7 +316,7 @@ namespace BTCPayServer.Services.Apps
                     });
                 }
             }
-            
+
             return new SalesStats
             {
                 SalesCount = series.Sum(i => i.SalesCount),
@@ -322,7 +330,7 @@ namespace BTCPayServer.Services.Apps
             public decimal FiatPrice { get; set; }
             public DateTime Date { get; set; }
         }
-        
+
         private static Func<List<InvoiceStatsItem>, InvoiceEntity, List<InvoiceStatsItem>> AggregateInvoiceEntitiesForStats(ViewPointOfSaleViewModel.Item[] items)
         {
             return (res, e) =>
@@ -331,12 +339,14 @@ namespace BTCPayServer.Services.Apps
                 {
                     // flatten single items from POS data
                     var data = JsonConvert.DeserializeObject<PosAppData>(e.Metadata.PosData);
-                    if (data is not { Cart.Length: > 0 }) return res;
+                    if (data is not { Cart.Length: > 0 })
+                        return res;
                     foreach (var lineItem in data.Cart)
                     {
                         var item = items.FirstOrDefault(p => p.Id == lineItem.Id);
-                        if (item == null) continue;
-                        
+                        if (item == null)
+                            continue;
+
                         for (var i = 0; i < lineItem.Count; i++)
                         {
                             res.Add(new InvoiceStatsItem
@@ -386,7 +396,7 @@ namespace BTCPayServer.Services.Apps
         {
             return invoice.GetInternalTags("APP#");
         }
-        
+
         private async Task<InvoiceEntity[]> GetInvoicesForApp(AppData appData, DateTime? startDate = null)
         {
             var invoices = await _InvoiceRepository.GetInvoices(new InvoiceQuery()
@@ -433,16 +443,24 @@ namespace BTCPayServer.Services.Apps
                     (storeId == null || us.StoreDataId == storeId))
                 .Join(ctx.Apps, us => us.StoreDataId, app => app.StoreDataId,
                     (us, app) =>
-                        new ListAppsViewModel.ListAppViewModel()
+                        new ListAppsViewModel.ListAppViewModel
                         {
                             IsOwner = us.Role == StoreRoles.Owner,
                             StoreId = us.StoreDataId,
                             StoreName = us.StoreData.StoreName,
                             AppName = app.Name,
                             AppType = app.AppType,
-                            Id = app.Id
+                            Id = app.Id,
+                            Created = app.Created,
                         })
+                .OrderBy(b => b.Created)
                 .ToArrayAsync();
+            
+            // allowNoUser can lead to apps being included twice, unify them with distinct
+            if (allowNoUser)
+            {
+                listApps = listApps.DistinctBy(a => a.Id).ToArray();
+            }
 
             foreach (ListAppsViewModel.ListAppViewModel app in listApps)
             {
@@ -781,13 +799,13 @@ namespace BTCPayServer.Services.Apps
         public decimal Total { get; set; }
         public string TotalFormatted { get; set; }
     }
-    
+
     public class SalesStats
     {
         public int SalesCount { get; set; }
         public IEnumerable<SalesStatsItem> Series { get; set; }
     }
-    
+
     public class SalesStatsItem
     {
         public DateTime Date { get; set; }

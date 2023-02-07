@@ -42,7 +42,7 @@ namespace BTCPayServer.Components.WalletNav
             var wallet = _walletProvider.GetWallet(network);
             var derivation = store.GetDerivationSchemeSettings(_networkProvider, walletId.CryptoCode);
             var balance = await _walletsController.GetBalanceString(wallet, derivation?.AccountDerivation);
-            
+
             var vm = new WalletNavViewModel
             {
                 WalletId = walletId,

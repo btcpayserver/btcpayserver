@@ -151,7 +151,7 @@ namespace BTCPayServer.Controllers
 
             return View(model);
         }
-        
+
         [HttpGet("i/{invoiceId}/receipt")]
         public async Task<IActionResult> InvoiceReceipt(string invoiceId)
         {
@@ -164,21 +164,33 @@ namespace BTCPayServer.Controllers
 
             var receipt = InvoiceDataBase.ReceiptOptions.Merge(store.GetStoreBlob().ReceiptOptions, i.ReceiptOptions);
 
-            if (receipt.Enabled is not true) return NotFound();
+            if (receipt.Enabled is not true)
+                return NotFound();
+
+            var storeBlob = store.GetStoreBlob();
+            var vm = new InvoiceReceiptViewModel
+            {
+                InvoiceId = i.Id,
+                OrderId = i.Metadata?.OrderId,
+                OrderUrl = i.Metadata?.OrderUrl,
+                Status = i.Status.ToModernStatus(),
+                Currency = i.Currency,
+                Timestamp = i.InvoiceTime,
+                StoreName = store.StoreName,
+                BrandColor = storeBlob.BrandColor,
+                LogoFileId = storeBlob.LogoFileId,
+                CssFileId = storeBlob.CssFileId,
+                ReceiptOptions = receipt
+            };
+            
             if (i.Status.ToModernStatus() != InvoiceStatus.Settled)
             {
-                return View(new InvoiceReceiptViewModel
-                {
-                    InvoiceId = i.Id,
-                    OrderId = i.Metadata?.OrderId,
-                    OrderUrl = i.Metadata?.OrderUrl,
-                    StoreName = store.StoreName,
-                    Status = i.Status.ToModernStatus()
-                });
+                return View(vm);
             }
+            
             JToken? receiptData = null;
             i.Metadata?.AdditionalData?.TryGetValue("receiptData", out receiptData);
-                
+
             var payments = i.GetPayments(true)
                 .Select(paymentEntity =>
                 {
@@ -211,24 +223,14 @@ namespace BTCPayServer.Controllers
                 })
                 .Where(payment => payment != null)
                 .ToList();
-            
-            return View(new InvoiceReceiptViewModel
-            {
-                StoreName = store.StoreName,
-                StoreLogoFileId = store.GetStoreBlob().LogoFileId,
-                Status = i.Status.ToModernStatus(),
-                Amount = payments.Sum(p => p!.Paid),
-                Currency = i.Currency,
-                Timestamp = i.InvoiceTime,
-                InvoiceId = i.Id,
-                OrderId = i.Metadata?.OrderId,
-                OrderUrl = i.Metadata?.OrderUrl,
-                Payments = receipt.ShowPayments is false ? null : payments,
-                ReceiptOptions = receipt,
-                AdditionalData = receiptData is null
-                    ? new Dictionary<string, object>()
-                    : PosDataParser.ParsePosData(receiptData.ToString())
-            });
+
+            vm.Amount = payments.Sum(p => p!.Paid);
+            vm.Payments = receipt.ShowPayments is false ? null : payments;
+            vm.AdditionalData = receiptData is null
+                ? new Dictionary<string, object>()
+                : PosDataParser.ParsePosData(receiptData.ToString());
+
+            return View(vm);
         }
         private string? GetTransactionLink(PaymentMethodId paymentMethodId, string txId)
         {
@@ -272,7 +274,7 @@ namespace BTCPayServer.Controllers
             if (!options.Any())
             {
                 var vm = new RefundModel { Title = "No matching payment method" };
-                ModelState.AddModelError(nameof(vm.AvailablePaymentMethods), 
+                ModelState.AddModelError(nameof(vm.AvailablePaymentMethods),
                     "There are no payment methods available to provide refunds with for this invoice.");
                 return View("_RefundModal", vm);
             }
@@ -377,24 +379,24 @@ namespace BTCPayServer.Controllers
                             createPullPayment.Amount = model.CryptoAmountThen;
                             createPullPayment.AutoApproveClaims = true;
                             break;
-                        
+
                         case "CurrentRate":
                             createPullPayment.Currency = paymentMethodId.CryptoCode;
                             createPullPayment.Amount = model.CryptoAmountNow;
                             createPullPayment.AutoApproveClaims = true;
                             break;
-                        
+
                         case "Fiat":
                             createPullPayment.Currency = invoice.Currency;
                             createPullPayment.Amount = model.FiatAmount;
                             createPullPayment.AutoApproveClaims = false;
                             break;
-                        
+
                         case "Custom":
                             model.Title = "How much to refund?";
-                            
+
                             model.RefundStep = RefundSteps.SelectRate;
-                            
+
                             if (model.CustomAmount <= 0)
                             {
                                 model.AddModelError(refundModel => refundModel.CustomAmount, "Amount must be greater than 0", this);
@@ -415,7 +417,7 @@ namespace BTCPayServer.Controllers
                             rateResult = await _RateProvider.FetchRate(
                                 new CurrencyPair(paymentMethodId.CryptoCode, model.CustomCurrency), rules,
                                 cancellationToken);
-                            
+
                             //TODO: What if fetching rate failed?
                             if (rateResult.BidAsk is null)
                             {
@@ -428,13 +430,13 @@ namespace BTCPayServer.Controllers
                             createPullPayment.Amount = model.CustomAmount;
                             createPullPayment.AutoApproveClaims = paymentMethodId.CryptoCode == model.CustomCurrency;
                             break;
-                        
+
                         default:
                             ModelState.AddModelError(nameof(model.SelectedRefundOption), "Please select an option before proceeding");
                             return View("_RefundModal", model);
                     }
                     break;
-                
+
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -452,7 +454,7 @@ namespace BTCPayServer.Controllers
                 PullPaymentDataId = ppId
             });
             await ctx.SaveChangesAsync(cancellationToken);
-            
+
             // TODO: Having dedicated UI later on
             return RedirectToAction(nameof(UIPullPaymentController.ViewPullPayment),
                 "UIPullPayment",
@@ -557,7 +559,7 @@ namespace BTCPayServer.Controllers
                             return NotSupported("This feature is only available to BTC wallets");
                         if (this.GetCurrentStore().Role != StoreRoles.Owner)
                             return Forbid();
-                        
+
                         var derivationScheme = (this.GetCurrentStore().GetDerivationSchemeSettings(_NetworkProvider, network.CryptoCode))?.AccountDerivation;
                         if (derivationScheme is null)
                             return NotSupported("This feature is only available to BTC wallets");
@@ -603,10 +605,10 @@ namespace BTCPayServer.Controllers
         {
             // Keep compatibility with Bitpay
             invoiceId ??= id;
-            
+
             if (invoiceId is null)
                 return NotFound();
-            
+
             var model = await GetInvoiceModel(invoiceId, paymentMethodId == null ? null : PaymentMethodId.Parse(paymentMethodId), lang);
             if (model == null)
                 return NotFound();
@@ -638,11 +640,11 @@ namespace BTCPayServer.Controllers
             var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
             if (invoice == null)
                 return null;
-            
+
             var store = await _StoreRepository.FindStore(invoice.StoreId);
             if (store == null)
                 return null;
-            
+
             bool isDefaultPaymentId = false;
             var storeBlob = store.GetStoreBlob();
             var btcId = PaymentMethodId.Parse("BTC");
@@ -650,17 +652,18 @@ namespace BTCPayServer.Controllers
             if (paymentMethodId is null)
             {
                 var enabledPaymentIds = store.GetEnabledPaymentIds(_NetworkProvider)
-                    // Exclude LNURL for Checkout v2
-                    .Where(pmId => storeBlob.CheckoutType == CheckoutType.V1 || pmId.PaymentType is not LNURLPayPaymentType)
+                    // Exclude LNURL for Checkout v2 + non-top up invoices
+                    .Where(pmId => storeBlob.CheckoutType == CheckoutType.V1 || 
+                                   pmId.PaymentType is not LNURLPayPaymentType || invoice.IsUnsetTopUp())
                     .ToArray();
-                
+
                 // Exclude Lightning if OnChainWithLnInvoiceFallback is active and we have both payment methods
-                if (storeBlob.CheckoutType == CheckoutType.V2 && storeBlob.OnChainWithLnInvoiceFallback &&
+                if (storeBlob is { CheckoutType: CheckoutType.V2, OnChainWithLnInvoiceFallback: true } &&
                     enabledPaymentIds.Contains(btcId) && enabledPaymentIds.Contains(lnId))
                 {
                     enabledPaymentIds = enabledPaymentIds.Where(pmId => pmId != lnId).ToArray();
                 }
-                
+
                 PaymentMethodId? invoicePaymentId = invoice.GetDefaultPaymentMethod();
                 PaymentMethodId? storePaymentId = store.GetDefaultPaymentId();
                 if (invoicePaymentId is not null)
@@ -691,7 +694,7 @@ namespace BTCPayServer.Controllers
             }
             if (paymentMethodId is null)
                 return null;
-            
+
             BTCPayNetworkBase network = _NetworkProvider.GetNetwork<BTCPayNetworkBase>(paymentMethodId.CryptoCode);
             if (network is null || !invoice.Support(paymentMethodId))
             {
@@ -717,7 +720,7 @@ namespace BTCPayServer.Controllers
                     return await GetInvoiceModel(invoiceId, paymentMethodId, lang);
                 }
             }
-            
+
             var dto = invoice.EntityToDTO();
             var accounting = paymentMethod.Calculate();
             var paymentMethodHandler = _paymentMethodHandlerDictionary[paymentMethodId];
@@ -738,10 +741,10 @@ namespace BTCPayServer.Controllers
             lang ??= storeBlob.DefaultLang;
 
             var receiptEnabled = InvoiceDataBase.ReceiptOptions.Merge(storeBlob.ReceiptOptions, invoice.ReceiptOptions).Enabled is true;
-            var receiptUrl = receiptEnabled? _linkGenerator.GetUriByAction(
+            var receiptUrl = receiptEnabled ? _linkGenerator.GetUriByAction(
                 nameof(InvoiceReceipt),
                 "UIInvoice",
-                new {invoiceId},
+                new { invoiceId },
                 Request.Scheme,
                 Request.Host,
                 Request.PathBase) : null;
@@ -760,6 +763,7 @@ namespace BTCPayServer.Controllers
                 CustomCSSLink = storeBlob.CustomCSS,
                 CustomLogoLink = storeBlob.CustomLogo,
                 LogoFileId = storeBlob.LogoFileId,
+                CssFileId = storeBlob.CssFileId,
                 BrandColor = storeBlob.BrandColor,
                 CheckoutType = invoice.CheckoutType ?? storeBlob.CheckoutType,
                 HtmlTitle = storeBlob.HtmlTitle ?? "BTCPay Invoice",
@@ -773,11 +777,12 @@ namespace BTCPayServer.Controllers
                 CustomerEmail = invoice.RefundMail,
                 RequiresRefundEmail = invoice.RequiresRefundEmail ?? storeBlob.RequiresRefundEmail,
                 ExpirationSeconds = Math.Max(0, (int)(invoice.ExpirationTime - DateTimeOffset.UtcNow).TotalSeconds),
+                DisplayExpirationTimer = (int)storeBlob.DisplayExpirationTimer.TotalSeconds,
                 MaxTimeSeconds = (int)(invoice.ExpirationTime - invoice.InvoiceTime).TotalSeconds,
                 MaxTimeMinutes = (int)(invoice.ExpirationTime - invoice.InvoiceTime).TotalMinutes,
                 ItemDesc = invoice.Metadata.ItemDesc,
                 Rate = ExchangeRate(paymentMethod),
-                MerchantRefLink = invoice.RedirectURL?.AbsoluteUri ?? receiptUrl ??  "/",
+                MerchantRefLink = invoice.RedirectURL?.AbsoluteUri ?? receiptUrl ?? "/",
                 ReceiptLink = receiptUrl,
                 RedirectAutomatically = invoice.RedirectAutomatically,
                 StoreName = store.StoreName,
@@ -798,8 +803,10 @@ namespace BTCPayServer.Controllers
                 StoreId = store.Id,
                 AvailableCryptos = invoice.GetPaymentMethods()
                                           .Where(i => i.Network != null &&
-                                              // Exclude LNURL for Checkout v2
-                                              (storeBlob.CheckoutType == CheckoutType.V1 || i.GetId().PaymentType is not LNURLPayPaymentType))
+                                              // Exclude LNURL for Checkout v2 + non-top up invoices
+                                              (storeBlob.CheckoutType == CheckoutType.V1 ||
+                                               i.GetId().PaymentType is not LNURLPayPaymentType ||
+                                               invoice.IsUnsetTopUp()))
                                           .Select(kv =>
                                           {
                                               var availableCryptoPaymentMethodId = kv.GetId();
@@ -823,18 +830,18 @@ namespace BTCPayServer.Controllers
                                           .OrderByDescending(a => a.CryptoCode == _NetworkProvider.DefaultNetwork.CryptoCode).ThenBy(a => a.PaymentMethodName).ThenBy(a => a.IsLightning ? 1 : 0)
                                           .ToList()
             };
-            
+
             // Exclude Lightning if OnChainWithLnInvoiceFallback is active and we have both payment methods
-            if (storeBlob.CheckoutType == CheckoutType.V2 && storeBlob.OnChainWithLnInvoiceFallback)
+            if (storeBlob is { CheckoutType: CheckoutType.V2, OnChainWithLnInvoiceFallback: true })
             {
                 var onchainPM = model.AvailableCryptos.Find(c => c.PaymentMethodId == btcId.ToString());
-                var lightningPM = model.AvailableCryptos.Find(c => c.PaymentMethodId == lnId.ToString()); 
+                var lightningPM = model.AvailableCryptos.Find(c => c.PaymentMethodId == lnId.ToString());
                 if (onchainPM != null && lightningPM != null)
                 {
                     model.AvailableCryptos.Remove(lightningPM);
                 }
             }
-            
+
             paymentMethodHandler.PreparePaymentModel(model, dto, storeBlob, paymentMethod);
             model.UISettings = paymentMethodHandler.GetCheckoutUISettings();
             model.PaymentMethodId = paymentMethodId.ToString();
@@ -1010,12 +1017,23 @@ namespace BTCPayServer.Controllers
         [HttpGet]
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanViewInvoices)]
         [BitpayAPIConstraint(false)]
-        public async Task<IActionResult> Export(string format, string? searchTerm = null, int timezoneOffset = 0)
+        public async Task<IActionResult> Export(string format, string? storeId = null, string? searchTerm = null, int timezoneOffset = 0)
         {
             var model = new InvoiceExport(_CurrencyNameTable);
+            var fs = new SearchString(searchTerm);
+            var storeIds = new HashSet<string>();
+            if (fs.GetFilterArray("storeid") is string[] l)
+            {
+                foreach (var i in l)
+                    storeIds.Add(i);
+            }
+            if (storeId is not null)
+            {
+                storeIds.Add(storeId);
+            }
 
             InvoiceQuery invoiceQuery = GetInvoiceQuery(searchTerm, timezoneOffset);
-            invoiceQuery.StoreId = new[] { GetCurrentStore().Id };
+            invoiceQuery.StoreId = storeIds.ToArray();
             invoiceQuery.Skip = 0;
             invoiceQuery.Take = int.MaxValue;
             var invoices = await _InvoiceRepository.GetInvoices(invoiceQuery);
@@ -1047,7 +1065,7 @@ namespace BTCPayServer.Controllers
         {
             var storeBlob = store.GetStoreBlob();
             var excludeFilter = storeBlob.GetExcludedPaymentMethods();
-            
+
             return store.GetSupportedPaymentMethods(_NetworkProvider).Where(s => !excludeFilter.Match(s.PaymentId)).Any();
         }
 
@@ -1103,7 +1121,7 @@ namespace BTCPayServer.Controllers
             var storeBlob = store.GetStoreBlob();
             model.UseNewCheckout = storeBlob.CheckoutType == CheckoutType.V2;
             model.AvailablePaymentMethods = GetPaymentMethodsSelectList();
-            
+
             if (!ModelState.IsValid)
             {
                 return View(model);

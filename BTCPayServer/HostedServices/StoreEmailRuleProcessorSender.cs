@@ -4,15 +4,15 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Controllers;
-using BTCPayServer.Data;
 using BTCPayServer.Controllers.Greenfield;
+using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Services;
+using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Mails;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Logging;
-using BTCPayServer.Services.Invoices;
 using InvoiceData = BTCPayServer.Client.Models.InvoiceData;
 
 namespace BTCPayServer.HostedServices;
@@ -63,7 +63,7 @@ public class StoreEmailRuleProcessorSender : EventHostedServiceBase
                     var sender = await _emailSenderFactory.GetEmailSender(invoiceEvent.Invoice.StoreId);
                     foreach (UIStoresController.StoreEmailRule actionableRule in actionableRules)
                     {
-                        var recipients = (actionableRule.To?.Split(",", StringSplitOptions.RemoveEmptyEntries)??Array.Empty<string>())
+                        var recipients = (actionableRule.To?.Split(",", StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string>())
                             .Select(o =>
                             {
                                 MailboxAddressValidator.TryParse(o, out var mb);

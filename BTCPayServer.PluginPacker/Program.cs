@@ -28,13 +28,13 @@ namespace BTCPayServer.PluginPacker
             var name = args[1];
             var outputDir = Path.Combine(args[2], name);
             var outputFile = Path.Combine(outputDir, name);
-            var rootDLLPath = Path.Combine(directory, name + ".dll");
+            var rootDLLPath = Path.GetFullPath(Path.Combine(directory, name + ".dll"));
             if (!File.Exists(rootDLLPath))
             {
                 throw new Exception($"{rootDLLPath} could not be found");
             }
 
-            var plugin = PluginLoader.CreateFromAssemblyFile(rootDLLPath, false, new[] { typeof(IBTCPayServerPlugin) });
+            var plugin = PluginLoader.CreateFromAssemblyFile(rootDLLPath, false, new[] { typeof(IBTCPayServerPlugin) }, o => o.PreferSharedTypes = true);
             var assembly = plugin.LoadAssembly(name);
             var extension = GetAllExtensionTypesFromAssembly(assembly).FirstOrDefault();
             if (extension is null)
@@ -57,8 +57,8 @@ namespace BTCPayServer.PluginPacker
 
             var sha256sums = new StringBuilder();
             sha256sums.AppendLine(
-                $"{Encoders.Hex.EncodeData(Hashes.SHA256(Encoding.UTF8.GetBytes(json)))} {name}.btcpay.json"); 
-            
+                $"{Encoders.Hex.EncodeData(Hashes.SHA256(Encoding.UTF8.GetBytes(json)))} {name}.btcpay.json");
+
             sha256sums.AppendLine(
                 $"{Encoders.Hex.EncodeData(Hashes.SHA256(await File.ReadAllBytesAsync(outputFile + ".btcpay")))} {name}.btcpay");
 
@@ -68,7 +68,7 @@ namespace BTCPayServer.PluginPacker
                 File.Delete(sha256dirs);
             }
             await File.WriteAllTextAsync(sha256dirs, sha256sums.ToString());
-            
+
             // try Windows executable first, fall back to macOS/Linux PowerShell
             try
             {
@@ -86,7 +86,7 @@ namespace BTCPayServer.PluginPacker
                         $"Attempted to sign hashes with gpg but maybe powershell is not installed?\n{ex.Message}");
                 }
             }
-            
+
             Console.WriteLine($"Created {outputFile}.btcpay at {directory}");
         }
 

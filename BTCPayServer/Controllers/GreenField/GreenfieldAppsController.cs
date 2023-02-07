@@ -3,17 +3,18 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
+using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
-using BTCPayServer.Abstractions.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 
 namespace BTCPayServer.Controllers.Greenfield
 {
@@ -25,18 +26,20 @@ namespace BTCPayServer.Controllers.Greenfield
         private readonly AppService _appService;
         private readonly StoreRepository _storeRepository;
         private readonly CurrencyNameTable _currencies;
+        private readonly UserManager<ApplicationUser> _userManager;
 
         public GreenfieldAppsController(
             AppService appService,
             StoreRepository storeRepository,
-            UserManager<ApplicationUser> userManager,
             BTCPayNetworkProvider btcPayNetworkProvider,
-            CurrencyNameTable currencies
+            CurrencyNameTable currencies,
+            UserManager<ApplicationUser> userManager
         )
         {
             _appService = appService;
             _storeRepository = storeRepository;
             _currencies = currencies;
+            _userManager = userManager;
         }
 
         [HttpPost("~/api/v1/stores/{storeId}/apps/crowdfund")]
@@ -86,7 +89,7 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 return validationResult;
             }
-            
+
             var appData = new AppData
             {
                 StoreDataId = storeId,
@@ -112,7 +115,7 @@ namespace BTCPayServer.Controllers.Greenfield
             }
 
             var settings = app.GetSettings<PointOfSaleSettings>();
-            
+
             // This is not obvious but we must have a non-null currency or else request validation may work incorrectly
             request.Currency = request.Currency ?? settings.Currency;
 
@@ -124,7 +127,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
             app.Name = request.AppName;
             app.SetSettings(ToPointOfSaleSettings(request));
-            
+
             await _appService.UpdateOrCreateApp(app);
 
             return Ok(ToPointOfSaleModel(app));
@@ -143,6 +146,24 @@ namespace BTCPayServer.Controllers.Greenfield
             }
         }
 
+        [HttpGet("~/api/v1/apps")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        public async Task<IActionResult> GetAllApps()
+        {
+            var apps = await _appService.GetAllApps(_userManager.GetUserId(User));
+
+            return Ok(apps.Select(ToModel).ToArray());
+        }
+
+        [HttpGet("~/api/v1/stores/{storeId}/apps")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        public async Task<IActionResult> GetAllApps(string storeId)
+        {
+            var apps = await _appService.GetAllApps(_userManager.GetUserId(User), allowNoUser: false, storeId);
+
+            return Ok(apps.Select(ToModel).ToArray());
+        }
+
         [HttpGet("~/api/v1/apps/{appId}")]
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> GetApp(string appId)
@@ -152,8 +173,34 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 return AppNotFound();
             }
-                
+
             return Ok(ToModel(app));
+        }
+
+        [HttpGet("~/api/v1/apps/pos/{appId}")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        public async Task<IActionResult> GetPosApp(string appId)
+        {
+            var app = await _appService.GetApp(appId, AppType.PointOfSale);
+            if (app == null)
+            {
+                return AppNotFound();
+            }
+                
+            return Ok(ToPointOfSaleModel(app));
+        }
+
+        [HttpGet("~/api/v1/apps/crowdfund/{appId}")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        public async Task<IActionResult> GetCrowdfundApp(string appId)
+        {
+            var app = await _appService.GetApp(appId, AppType.Crowdfund);
+            if (app == null)
+            {
+                return AppNotFound();
+            }
+                
+            return Ok(ToCrowdfundModel(app));
         }
 
         [HttpDelete("~/api/v1/apps/{appId}")]
@@ -164,7 +211,7 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 return AppNotFound();
             }
-                
+
             await _appService.DeleteApp(app);
 
             return Ok();
@@ -250,8 +297,22 @@ namespace BTCPayServer.Controllers.Greenfield
             };
         }
 
+        private AppDataBase ToModel(Models.AppViewModels.ListAppsViewModel.ListAppViewModel appData)
+        {
+            return new AppDataBase
+            {
+                Id = appData.Id,
+                AppType = appData.AppType,
+                Name = appData.AppName,
+                StoreId = appData.StoreId,
+                Created = appData.Created,
+            };
+        }
+
         private PointOfSaleAppData ToPointOfSaleModel(AppData appData)
         {
+            var settings = appData.GetSettings<PointOfSaleSettings>();
+
             return new PointOfSaleAppData
             {
                 Id = appData.Id,
@@ -259,6 +320,31 @@ namespace BTCPayServer.Controllers.Greenfield
                 Name = appData.Name,
                 StoreId = appData.StoreDataId,
                 Created = appData.Created,
+                Title = settings.Title,
+                DefaultView = settings.DefaultView.ToString(),
+                ShowCustomAmount = settings.ShowCustomAmount,
+                ShowDiscount = settings.ShowDiscount,
+                EnableTips = settings.EnableTips,
+                Currency = settings.Currency,
+                Items = JsonConvert.DeserializeObject(
+                    JsonConvert.SerializeObject(
+                        _appService.Parse(settings.Template, settings.Currency), 
+                        new JsonSerializerSettings
+                        { 
+                            ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver() 
+                        }
+                    )
+                ),
+                FixedAmountPayButtonText = settings.ButtonText,
+                CustomAmountPayButtonText = settings.CustomButtonText,
+                TipText = settings.CustomTipText,
+                CustomCSSLink = settings.CustomCSSLink,
+                NotificationUrl = settings.NotificationUrl,
+                RedirectUrl = settings.RedirectUrl,
+                Description = settings.Description,
+                EmbeddedCSS = settings.EmbeddedCSS,
+                RedirectAutomatically = settings.RedirectAutomatically ?? false,
+                RequiresRefundEmail = settings.RequiresRefundEmail == RequiresRefundEmail.InheritFromStore ? null : settings.RequiresRefundEmail == RequiresRefundEmail.On,
             };
         }
 
@@ -281,7 +367,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     ModelState.AddModelError(nameof(request.Template), "Invalid template");
                 }
             }
-            
+
             if (!ModelState.IsValid)
             {
                 validationResult = this.CreateValidationError(ModelState);
@@ -292,19 +378,54 @@ namespace BTCPayServer.Controllers.Greenfield
 
         private CrowdfundAppData ToCrowdfundModel(AppData appData)
         {
+            var settings = appData.GetSettings<CrowdfundSettings>();
+
             return new CrowdfundAppData
             {
                 Id = appData.Id,
                 AppType = appData.AppType,
                 Name = appData.Name,
                 StoreId = appData.StoreDataId,
-                Created = appData.Created
+                Created = appData.Created,
+                Title = settings.Title,
+                Enabled = settings.Enabled,
+                EnforceTargetAmount = settings.EnforceTargetAmount,
+                StartDate = settings.StartDate,
+                TargetCurrency = settings.TargetCurrency,
+                Description = settings.Description,
+                EndDate = settings.EndDate,
+                TargetAmount = settings.TargetAmount,
+                CustomCSSLink = settings.CustomCSSLink,
+                MainImageUrl = settings.MainImageUrl,
+                EmbeddedCSS = settings.EmbeddedCSS,
+                NotificationUrl = settings.NotificationUrl,
+                Tagline = settings.Tagline,
+                Perks = JsonConvert.DeserializeObject(
+                    JsonConvert.SerializeObject(
+                        _appService.Parse(settings.PerksTemplate, settings.TargetCurrency), 
+                        new JsonSerializerSettings
+                        { 
+                            ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver() 
+                        }
+                    )
+                ),
+                DisqusEnabled = settings.DisqusEnabled,
+                DisqusShortname = settings.DisqusShortname,
+                SoundsEnabled = settings.SoundsEnabled,
+                AnimationsEnabled = settings.AnimationsEnabled,
+                ResetEveryAmount = settings.ResetEveryAmount,
+                ResetEvery = settings.ResetEvery.ToString(),
+                DisplayPerksValue = settings.DisplayPerksValue,
+                DisplayPerksRanking = settings.DisplayPerksRanking,
+                SortPerksByPopularity = settings.SortPerksByPopularity,
+                Sounds = settings.Sounds,
+                AnimationColors = settings.AnimationColors
             };
         }
 
         private string[]? ValidateStringArray(string[]? arr)
         {
-            if (arr == null || !arr.Any()) 
+            if (arr == null || !arr.Any())
             {
                 return null;
             }
@@ -359,7 +480,7 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 ModelState.AddModelError(nameof(request.EndDate), "End date cannot be before start date");
             }
-            
+
             if (!ModelState.IsValid)
             {
                 validationResult = this.CreateValidationError(ModelState);

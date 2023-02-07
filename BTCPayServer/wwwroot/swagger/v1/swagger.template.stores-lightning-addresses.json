@@ -1,0 +1,252 @@
+{
+    "paths": {
+        "/api/v1/stores/{storeId}/lightning-addresses": {
+            "get": {
+                "tags": [
+                    "Lightning address"
+                ],
+                "summary": "Get store configured lightning addresses",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store to fetch",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "description": "Get store configured lightning addresses",
+                "operationId": "StoreLightningAddresses_GetStoreLightningAddresses",
+                "responses": {
+                    "200": {
+                        "description": "The lightning addresses configured in the store",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/LightningAddressData"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to view the specified store"
+                    },
+                    "404": {
+                        "description": "The key is not found for this store/wallet"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canviewstoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/stores/{storeId}/lightning-addresses/{username}": {
+            "get": {
+                "tags": [
+                    "Lightning address"
+                ],
+                "summary": "Get store configured lightning address",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store to fetch",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "username",
+                        "in": "path",
+                        "required": true,
+                        "description": "The lightning address username",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "description": "Get store configured lightning address",
+                "operationId": "StoreLightningAddresses_GetStoreLightningAddress",
+                "responses": {
+                    "200": {
+                        "description": "The lightning address configured in the store",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LightningAddressData"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to view the specified store"
+                    },
+                    "404": {
+                        "description": "The key is not found for this store/wallet"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canviewstoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Lightning address"
+                ],
+                "summary": "Add or update store configured lightning address",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store to fetch",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "username",
+                        "in": "path",
+                        "required": true,
+                        "description": "the lightning address username",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "description": "Add or update store configured lightning address",
+                "operationId": "StoreLightningAddresses_AddOrUpdateStoreLightningAddress",
+                "requestBody": {
+                    "x-name": "request",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LightningAddressData"
+                            }
+                        }
+                    },
+                    "required": true,
+                    "x-position": 1
+                },
+                "responses": {
+                    "200": {
+                        "description": "The lightning address configured in the store",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LightningAddressData"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to view the specified store"
+                    },
+                    "404": {
+                        "description": "The key is not found for this store/wallet"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Lightning address"
+                ],
+                "summary": "Remove configured lightning address",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store to fetch",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "username",
+                        "in": "path",
+                        "required": true,
+                        "description": "The lightning address username",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "description": "Remove store configured lightning address",
+                "operationId": "StoreLightningAddresses_RemoveStoreLightningAddress",
+                "responses": {
+                    "200": {
+                        "description": "Lightning address removed"
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to view the specified store"
+                    },
+                    "404": {
+                        "description": "The key is not found for this store/wallet"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "LightningAddressData": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "username": {
+                        "type": "string",
+                        "description": "The username of the lightning address"
+                    },
+                    "currencyCode": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "The currency to generate the invoices for this lightning address in. Leave null lto use the store default."
+                    },
+                    "min": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "The minimum amount in sats this ln address allows"
+                    },
+                    "max": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "The maximum amount in sats this ln address allows"
+                    }
+                }
+            }
+        }
+    }
+}

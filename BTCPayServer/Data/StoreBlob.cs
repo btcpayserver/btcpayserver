@@ -21,10 +21,11 @@ namespace BTCPayServer.Data
     public class StoreBlob
     {
         public static string StandardDefaultCurrency = "USD";
-        
+
         public StoreBlob()
         {
             InvoiceExpiration = TimeSpan.FromMinutes(15);
+            DisplayExpirationTimer = TimeSpan.FromMinutes(5);
             RefundBOLT11Expiration = TimeSpan.FromDays(30);
             MonitoringExpiration = TimeSpan.FromDays(1);
             PaymentTolerance = 0;
@@ -33,7 +34,7 @@ namespace BTCPayServer.Data
             PaymentMethodCriteria = new List<PaymentMethodCriteria>();
             ReceiptOptions = InvoiceDataBase.ReceiptOptions.CreateDefault();
         }
-        
+
         [JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
         public NetworkFeeMode NetworkFeeMode { get; set; }
 
@@ -95,6 +96,11 @@ namespace BTCPayServer.Data
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
         [JsonConverter(typeof(TimeSpanJsonConverter.Minutes))]
         public TimeSpan InvoiceExpiration { get; set; }
+
+        [DefaultValue(typeof(TimeSpan), "00:05:00")]
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
+        [JsonConverter(typeof(TimeSpanJsonConverter.Minutes))]
+        public TimeSpan DisplayExpirationTimer { get; set; }
 
         public decimal Spread { get; set; } = 0.0m;
 
@@ -179,7 +185,7 @@ namespace BTCPayServer.Data
             return rules;
         }
 
-        public static JObject RecommendedExchanges = new ()
+        public static JObject RecommendedExchanges = new()
         {
             { "EUR", "kraken" },
             { "USD", "kraken" },
@@ -209,8 +215,9 @@ namespace BTCPayServer.Data
         public TimeSpan RefundBOLT11Expiration { get; set; }
 
         public List<UIStoresController.StoreEmailRule> EmailRules { get; set; }
-        public string LogoFileId { get; set; }
         public string BrandColor { get; set; }
+        public string LogoFileId { get; set; }
+        public string CssFileId { get; set; }
 
         public IPaymentFilter GetExcludedPaymentMethods()
         {

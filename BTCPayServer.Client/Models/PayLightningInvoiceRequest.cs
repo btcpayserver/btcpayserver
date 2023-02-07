@@ -11,13 +11,13 @@ namespace BTCPayServer.Client.Models
     {
         [JsonProperty("BOLT11")]
         public string BOLT11 { get; set; }
-        
+
         [JsonProperty(ItemConverterType = typeof(NumericStringJsonConverter))]
         public float? MaxFeePercent { get; set; }
-        
+
         [JsonConverter(typeof(MoneyJsonConverter))]
         public Money MaxFeeFlat { get; set; }
-    
+
         [JsonConverter(typeof(LightMoneyJsonConverter))]
         public LightMoney Amount { get; set; }
 

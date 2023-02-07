@@ -59,10 +59,10 @@ namespace BTCPayServer.Controllers
                 vm.Exchanges = GetExchangesSelectList(vm.PreferredExchange);
                 return View(vm);
             }
-            
+
             var store = await _repo.CreateStore(GetUserId(), vm.Name, vm.DefaultCurrency, vm.PreferredExchange);
             CreatedStoreId = store.Id;
-                
+
             TempData[WellKnownTempData.SuccessMessage] = "Store successfully created";
             return RedirectToAction(nameof(UIStoresController.Dashboard), "UIStores", new
             {
@@ -94,10 +94,11 @@ namespace BTCPayServer.Controllers
         }
 
         private string GetUserId() => _userManager.GetUserId(User);
-        
-        private SelectList GetExchangesSelectList(string selected) {
+
+        private SelectList GetExchangesSelectList(string selected)
+        {
             var exchanges = _rateFactory.RateProviderFactory
-                .GetSupportedExchanges()
+                .AvailableRateProviders
                 .Where(r => !string.IsNullOrWhiteSpace(r.Name))
                 .OrderBy(s => s.Id, StringComparer.OrdinalIgnoreCase)
                 .ToList();

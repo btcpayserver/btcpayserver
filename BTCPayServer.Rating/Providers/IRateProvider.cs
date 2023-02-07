@@ -6,6 +6,7 @@ namespace BTCPayServer.Services.Rates
 {
     public interface IRateProvider
     {
+        RateSourceInfo RateSourceInfo { get; }
         Task<PairRate[]> GetRatesAsync(CancellationToken cancellationToken);
     }
 }

@@ -2,18 +2,21 @@
 
 <template id="lightning-method-checkout-template">
     <div class="payment-box">
-        <div class="qr-container" data-clipboard-confirm-element="QR_Text_@Model.PaymentMethodId" :data-clipboard="model.invoiceBitcoinUrl" :data-destination="model.btcAddress">
-            <qrcode v-if="model.invoiceBitcoinUrlQR" :value="model.invoiceBitcoinUrlQR" tag="div" :options="qrOptions" />
-        </div>
-        <div class="mt-2 mb-4">
+        <div v-if="model.invoiceBitcoinUrlQR" class="qr-container" :data-clipboard="model.btcAddress" data-clipboard-confirm-element="QR_Text_@Model.PaymentMethodId">
+            <div>
+                <qrcode :value="model.invoiceBitcoinUrlQR" tag="div" :options="qrOptions" />
+            </div>
+            <img class="qr-icon" :src="model.cryptoImage" :alt="model.paymentMethodName"/>
             <small class="qr-text" id="QR_Text_@Model.PaymentMethodId" v-t="'qr_text'"></small>
-            @*
-            <input type="text" class="form-control form-control-sm" :value="model.btcAddress"
-                   :data-clipboard="model.invoiceBitcoinUrl" :data-clipboard-confirm="$t('copy_confirm')"
-                    data-clipboard-confirm-element="QR_Text_@Model.PaymentMethodId" readonly>
-            *@
         </div>
-        <a v-if="model.invoiceBitcoinUrl" class="btn btn-primary rounded-pill w-100" target="_top"
+        <div v-if="model.btcAddress" class="input-group mt-3">
+            <div class="form-floating">
+                <input id="Address_@Model.PaymentMethodId" class="form-control-plaintext" readonly="readonly" :value="model.btcAddress">
+                <label for="Address_@Model.PaymentMethodId" v-t="'lightning'"></label>
+            </div>
+            <button type="button" class="btn btn-link" data-clipboard-target="#Address_@Model.PaymentMethodId" :data-clipboard-confirm="$t('copy_confirm')" v-t="'copy'"></button>
+        </div>
+        <a v-if="model.invoiceBitcoinUrl" class="btn btn-primary rounded-pill w-100 mt-4" target="_top"
            :href="model.invoiceBitcoinUrl" v-t="'pay_in_wallet'"></a>
     </div>          
 </template>

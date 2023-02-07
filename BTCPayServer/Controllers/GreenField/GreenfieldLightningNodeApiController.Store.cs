@@ -40,7 +40,7 @@ namespace BTCPayServer.Controllers.Greenfield
             _lightningClientFactory = lightningClientFactory;
             _btcPayNetworkProvider = btcPayNetworkProvider;
         }
-        
+
         [Authorize(Policy = Policies.CanUseLightningNodeInStore,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/lightning/{cryptoCode}/info")]
@@ -103,7 +103,7 @@ namespace BTCPayServer.Controllers.Greenfield
             return base.PayInvoice(cryptoCode, lightningInvoice, cancellationToken);
         }
 
-        [Authorize(Policy = Policies.CanUseLightningNodeInStore,
+        [Authorize(Policy = Policies.CanViewLightningInvoiceInStore,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/lightning/{cryptoCode}/invoices/{id}")]
         public override Task<IActionResult> GetInvoice(string cryptoCode, string id, CancellationToken cancellationToken = default)
@@ -111,7 +111,7 @@ namespace BTCPayServer.Controllers.Greenfield
             return base.GetInvoice(cryptoCode, id, cancellationToken);
         }
 
-        [Authorize(Policy = Policies.CanUseLightningNodeInStore,
+        [Authorize(Policy = Policies.CanViewLightningInvoiceInStore,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/lightning/{cryptoCode}/invoices")]
         public override Task<IActionResult> GetInvoices(string cryptoCode, [FromQuery] bool? pendingOnly, [FromQuery] long? offsetIndex, CancellationToken cancellationToken = default)
@@ -127,6 +127,14 @@ namespace BTCPayServer.Controllers.Greenfield
             return base.CreateInvoice(cryptoCode, request, cancellationToken);
         }
 
+        [Authorize(Policy = Policies.CanUseLightningNodeInStore,
+            AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [HttpGet("~/api/v1/stores/{storeId}/lightning/{cryptoCode}/payments")]
+        public override Task<IActionResult> GetPayments(string cryptoCode, [FromQuery] bool? includePending, [FromQuery] long? offsetIndex, CancellationToken cancellationToken = default)
+        {
+            return base.GetPayments(cryptoCode, includePending, offsetIndex, cancellationToken);
+        }
+
         protected override Task<ILightningClient> GetLightningClient(string cryptoCode,
             bool doingAdminThings)
         {
@@ -135,13 +143,13 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 throw ErrorCryptoCodeNotFound();
             }
-            
+
             var store = HttpContext.GetStoreData();
             if (store == null)
             {
                 throw new JsonHttpException(StoreNotFound());
             }
-            
+
             var id = new PaymentMethodId(cryptoCode, PaymentTypes.LightningLike);
             var existing = store.GetSupportedPaymentMethods(_btcPayNetworkProvider)
                 .OfType<LightningSupportedPaymentMethod>()
@@ -164,7 +172,7 @@ namespace BTCPayServer.Controllers.Greenfield
             }
             throw ErrorLightningNodeNotConfiguredForStore();
         }
-        
+
         private IActionResult StoreNotFound()
         {
             return this.CreateAPIError(404, "store-not-found", "The store was not found");

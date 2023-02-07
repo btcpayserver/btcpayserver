@@ -22,6 +22,10 @@ namespace BTCPayServer.Client.Models
 
         [JsonConverter(typeof(TimeSpanJsonConverter.Seconds))]
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public TimeSpan DisplayExpirationTimer { get; set; } = TimeSpan.FromMinutes(5);
+
+        [JsonConverter(typeof(TimeSpanJsonConverter.Seconds))]
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public TimeSpan MonitoringExpiration { get; set; } = TimeSpan.FromMinutes(60);
 
         [JsonConverter(typeof(StringEnumConverter))]
@@ -60,7 +64,7 @@ namespace BTCPayServer.Client.Models
         public NetworkFeeMode NetworkFeeMode { get; set; } = NetworkFeeMode.Never;
 
         public bool PayJoinEnabled { get; set; }
-        
+
         public InvoiceData.ReceiptOptions Receipt { get; set; }
 
 

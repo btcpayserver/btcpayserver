@@ -2,23 +2,20 @@
 @using BTCPayServer.Client
 @using BTCPayServer.Client.Models
 @using BTCPayServer.Services.Rates
-@inject BTCPayServer.Services.BTCPayServerEnvironment env
+@inject BTCPayServer.Services.BTCPayServerEnvironment Env
 @inject BTCPayServer.Services.ThemeSettings Theme
 @inject CurrencyNameTable CurrencyNameTable
-@using BTCPayServer.Abstractions.Contracts
-@inject IFileService FileService
-
 @{
     Layout = null;
-    ViewData["Title"] = Model.StoreName;
+    ViewData["Title"] = $"Receipt from {Model.StoreName}";
     var isProcessing = Model.Status == InvoiceStatus.Processing;
     var isSettled = Model.Status == InvoiceStatus.Settled;
 }
-
 <!DOCTYPE html>
-<html lang="en" @(env.IsDeveloping ? " data-devenv" : "")>
+<html lang="en" @(Env.IsDeveloping ? " data-devenv" : "")>
 <head>
     <partial name="LayoutHead" />
+    <partial name="LayoutHeadStoreBranding" model="@(Model.BrandColor, Model.CssFileId, "", "")" />
     <meta name="robots" content="noindex,nofollow">
     @if (isProcessing)
     {
@@ -32,30 +29,24 @@
         #posData table > tbody > tr:first-child > td > h4 { margin-top: 0 !important; }
     </style>
 </head>
-<body>
-    <div class="min-vh-100 d-flex flex-column">
-        <main class="flex-grow-1 py-5">
+<body class="min-vh-100">
+    <div class="public-page-wrap flex-column">
+        <main class="flex-grow-1">
             <div class="container" style="max-width:720px;">
                 <partial name="_StatusMessage" model="@(new ViewDataDictionary(ViewData) { { "Margin", "mb-4" } })"/>
                 
                 <div class="d-flex flex-column justify-content-center gap-4">
-                    <header class="store-header">
-                        @if (!string.IsNullOrEmpty(Model.StoreLogoFileId))
-                        {
-                            <img src="@(await FileService.GetFileUrl(Context.Request.GetAbsoluteRootUri(), Model.StoreLogoFileId))" alt="@Model.StoreName" class="logo @(!string.IsNullOrEmpty(Model.StoreLogoFileId) ? "logo--square" : "")" />
-                        }
-                        <h1>@ViewData["Title"]</h1>
-                    </header>
+                    <partial name="_StoreHeader" model="(Model.StoreName, Model.LogoFileId)" />
                     <div id="InvoiceSummary" class="bg-tile p-3 p-sm-4 rounded d-flex flex-wrap align-items-center">
                         @if (isProcessing)
                         {
-                            <div class="lead text-center text-muted py-5 px-4 fw-semibold" id="invoice-processing">
+                            <div class="lead text-center p-4 fw-semibold" id="invoice-processing">
                                 The invoice has detected a payment but is still waiting to be settled.
                             </div>
                         }
                         else if (!isSettled)
                         {
-                            <div class="lead text-center text-muted py-5 px-4 fw-semibold" id="invoice-unsettled">
+                            <div class="lead text-center p-4 fw-semibold" id="invoice-unsettled">
                                 The invoice is not settled.
                             </div>
                         }
@@ -171,21 +162,15 @@
                 </div>
             </div>
         </main>
-        <footer class="pt-2 pb-4 d-print-none">
-            <p class="container text-center" permission="@Policies.CanViewInvoices">
+        <footer class="store-footer">
+            <p permission="@Policies.CanViewInvoices">
                 <a asp-action="Invoice" asp-route-invoiceId="@Model.InvoiceId">
                     Admin details
                 </a>
             </p>
-            <div class="container d-flex flex-wrap align-items-center justify-content-center">
-                <span class="text-muted mx-2">
-                    Powered by <a href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">BTCPay Server</a>
-                </span>
-                @if (!Theme.CustomTheme)
-                {
-                    <vc:theme-switch css-class="text-muted mx-2" />
-                }
-            </div>
+            <a href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">
+                Powered by <partial name="_StoreFooterLogo" />
+            </a>
         </footer>
     </div>
     <partial name="LayoutFoot"/>

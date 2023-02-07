@@ -98,7 +98,7 @@ namespace BTCPayServer.Payments.Bitcoin
                 {
                     if (_Wallets.IsAvailable(wallet.Network))
                     {
-                        _ =  Listen(wallet);
+                        _ = Listen(wallet);
                     }
                 }
             }, null, 0, (int)PollInterval.TotalMilliseconds);

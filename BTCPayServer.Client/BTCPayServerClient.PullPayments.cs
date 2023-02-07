@@ -52,17 +52,17 @@ namespace BTCPayServer.Client
         {
             var response = await _httpClient.SendAsync(CreateHttpRequest($"api/v1/pull-payments/{HttpUtility.UrlEncode(pullPaymentId)}/payouts", bodyPayload: payoutRequest, method: HttpMethod.Post), cancellationToken);
             return await HandleResponse<PayoutData>(response);
-        } 
+        }
         public virtual async Task<PayoutData> GetPullPaymentPayout(string pullPaymentId, string payoutId, CancellationToken cancellationToken = default)
         {
             var response = await _httpClient.SendAsync(CreateHttpRequest($"api/v1/pull-payments/{HttpUtility.UrlEncode(pullPaymentId)}/payouts/{payoutId}", method: HttpMethod.Get), cancellationToken);
             return await HandleResponse<PayoutData>(response);
-        } 
+        }
         public virtual async Task<PayoutData> GetStorePayout(string storeId, string payoutId, CancellationToken cancellationToken = default)
         {
             var response = await _httpClient.SendAsync(CreateHttpRequest($"api/v1/stores/{storeId}/payouts/{payoutId}", method: HttpMethod.Get), cancellationToken);
             return await HandleResponse<PayoutData>(response);
-        } 
+        }
         public virtual async Task<PayoutData> CreatePayout(string storeId, CreatePayoutThroughStoreRequest payoutRequest, CancellationToken cancellationToken = default)
         {
             var response = await _httpClient.SendAsync(CreateHttpRequest($"api/v1/stores/{storeId}/payouts", bodyPayload: payoutRequest, method: HttpMethod.Post), cancellationToken);
@@ -96,6 +96,16 @@ namespace BTCPayServer.Client
                     $"api/v1/stores/{HttpUtility.UrlEncode(storeId)}/payouts/{HttpUtility.UrlEncode(payoutId)}/mark",
                     method: HttpMethod.Post, bodyPayload: request), cancellationToken);
             await HandleResponse(response);
+        }
+
+        public virtual async Task<PullPaymentLNURL> GetPullPaymentLNURL(string pullPaymentId,
+            CancellationToken cancellationToken = default)
+        {
+            var response = await _httpClient.SendAsync(
+                CreateHttpRequest(
+                    $"/api/v1/pull-payments/{pullPaymentId}/lnurl",
+                    method: HttpMethod.Get), cancellationToken);
+            return await HandleResponse<PullPaymentLNURL>(response);
         }
     }
 }

@@ -11,6 +11,7 @@ namespace BTCPayServer.Services.Rates
 {
     public class CryptoMarketExchangeRateProvider : IRateProvider
     {
+        public RateSourceInfo RateSourceInfo => new("cryptomarket", "CryptoMarket", "https://api.exchange.cryptomkt.com/api/3/public/ticker/");
         private readonly HttpClient _httpClient;
         public CryptoMarketExchangeRateProvider(HttpClient httpClient)
         {

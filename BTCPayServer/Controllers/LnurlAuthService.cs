@@ -18,7 +18,7 @@ namespace BTCPayServer
         public Uri LNURLEndpoint { get; set; }
         public bool RememberMe { get; set; }
     }
-    
+
     public class LnurlAuthService
     {
         public readonly ConcurrentDictionary<string, byte[]> CreationStore =
@@ -38,16 +38,16 @@ namespace BTCPayServer
 
         public async Task<byte[]> RequestCreation(string userId)
         {
-             await using var dbContext = _contextFactory.CreateContext();
-             var user = await dbContext.Users.Include(applicationUser => applicationUser.Fido2Credentials)
-                 .FirstOrDefaultAsync(applicationUser => applicationUser.Id == userId);
-             if (user == null)
-             {
-                 return null;
-             }
-             var k1 = RandomUtils.GetBytes(32);
-             CreationStore.AddOrReplace(userId, k1);
-             return k1;
+            await using var dbContext = _contextFactory.CreateContext();
+            var user = await dbContext.Users.Include(applicationUser => applicationUser.Fido2Credentials)
+                .FirstOrDefaultAsync(applicationUser => applicationUser.Id == userId);
+            if (user == null)
+            {
+                return null;
+            }
+            var k1 = RandomUtils.GetBytes(32);
+            CreationStore.AddOrReplace(userId, k1);
+            return k1;
         }
 
         public async Task<bool> CompleteCreation(string name, string userId, ECDSASignature sig, PubKey pubKey)
@@ -58,18 +58,17 @@ namespace BTCPayServer
                 var user = await dbContext.Users.Include(applicationUser => applicationUser.Fido2Credentials)
                     .FirstOrDefaultAsync(applicationUser => applicationUser.Id == userId);
                 var pubkeyBytes = pubKey.ToBytes();
-                if (!CreationStore.TryGetValue(userId.ToLowerInvariant(), out var k1) || user == null ||  await dbContext.Fido2Credentials.AnyAsync(credential => credential.Type == Fido2Credential.CredentialType.LNURLAuth && credential.Blob == pubkeyBytes))
+                if (!CreationStore.TryGetValue(userId.ToLowerInvariant(), out var k1) || user == null || await dbContext.Fido2Credentials.AnyAsync(credential => credential.Type == Fido2Credential.CredentialType.LNURLAuth && credential.Blob == pubkeyBytes))
                 {
                     return false;
                 }
 
-                if (!global::LNURL.LNAuthRequest.VerifyChallenge(sig, pubKey, k1))
+                if (!LNURL.LNAuthRequest.VerifyChallenge(sig, pubKey, k1))
                 {
                     return false;
                 }
 
-                var newCredential = new Fido2Credential() {Name = name, ApplicationUserId = userId, Type = Fido2Credential.CredentialType.LNURLAuth, Blob = pubkeyBytes};
-
+                var newCredential = new Fido2Credential() { Name = name, ApplicationUserId = userId, Type = Fido2Credential.CredentialType.LNURLAuth, Blob = pubkeyBytes };
                 await dbContext.Fido2Credentials.AddAsync(newCredential);
                 await dbContext.SaveChangesAsync();
                 CreationStore.Remove(userId, out _);
@@ -84,7 +83,7 @@ namespace BTCPayServer
         public async Task Remove(string id, string userId)
         {
             await using var context = _contextFactory.CreateContext();
-            var device = await context.Fido2Credentials.FindAsync( id);
+            var device = await context.Fido2Credentials.FindAsync(id);
             if (device == null || !device.ApplicationUserId.Equals(userId, StringComparison.InvariantCulture))
             {
                 return;
@@ -93,7 +92,7 @@ namespace BTCPayServer
             context.Fido2Credentials.Remove(device);
             await context.SaveChangesAsync();
         }
-        
+
 
         public async Task<byte[]> RequestLogin(string userId)
         {
@@ -104,15 +103,16 @@ namespace BTCPayServer
             {
                 return null;
             }
-           
+
             var k1 = RandomUtils.GetBytes(32);
 
             FinalLoginStore.TryRemove(userId, out _);
             LoginStore.AddOrReplace(userId, k1);
             return k1;
         }
-        
-        public async Task<bool> CompleteLogin(string userId, ECDSASignature sig, PubKey pubKey){
+
+        public async Task<bool> CompleteLogin(string userId, ECDSASignature sig, PubKey pubKey)
+        {
             await using var dbContext = _contextFactory.CreateContext();
             userId = userId.ToLowerInvariant();
             var user = await dbContext.Users.Include(applicationUser => applicationUser.Fido2Credentials)
@@ -130,7 +130,7 @@ namespace BTCPayServer
             {
                 return false;
             }
-            if (!global::LNURL.LNAuthRequest.VerifyChallenge(sig, pubKey, k1))
+            if (!LNURL.LNAuthRequest.VerifyChallenge(sig, pubKey, k1))
             {
                 return false;
             }

@@ -309,7 +309,9 @@ namespace BTCPayServer.Controllers
 
             var custodianAccountData = new CustodianAccountData
             {
-                CustodianCode = vm.SelectedCustodian, StoreId = vm.StoreId, Name = custodian.Name
+                CustodianCode = vm.SelectedCustodian,
+                StoreId = vm.StoreId,
+                Name = custodian.Name
             };
 
 

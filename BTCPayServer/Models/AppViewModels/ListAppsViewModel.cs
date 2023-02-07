@@ -1,3 +1,6 @@
+using System;
+
+
 namespace BTCPayServer.Models.AppViewModels
 {
     public class ListAppsViewModel
@@ -14,6 +17,7 @@ namespace BTCPayServer.Models.AppViewModels
 
             public string UpdateAction { get { return "Update" + AppType; } }
             public string ViewAction { get { return "View" + AppType; } }
+            public DateTimeOffset Created { get; set; }
         }
 
         public ListAppViewModel[] Apps { get; set; }

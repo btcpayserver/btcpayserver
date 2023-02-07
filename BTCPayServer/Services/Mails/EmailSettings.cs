@@ -39,7 +39,7 @@ namespace BTCPayServer.Services.Mails
         }
 
         public MimeMessage CreateMailMessage(MailboxAddress to, string subject, string message, bool isHtml) =>
-            CreateMailMessage(new[] {to}, null, null, subject, message, isHtml);
+            CreateMailMessage(new[] { to }, null, null, subject, message, isHtml);
         public MimeMessage CreateMailMessage(MailboxAddress[] to, MailboxAddress[] cc, MailboxAddress[] bcc, string subject, string message, bool isHtml)
         {
             var bodyBuilder = new BodyBuilder();

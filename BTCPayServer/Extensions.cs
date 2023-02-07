@@ -36,6 +36,20 @@ namespace BTCPayServer
 {
     public static class Extensions
     {
+        /// <summary>
+        /// Unescape Uri string for %2F
+        /// See details at: https://github.com/dotnet/aspnetcore/issues/14170#issuecomment-533342396
+        /// </summary>
+        /// <param name="uriString">The Uri string.</param>
+        /// <returns>Unescaped back slash Uri string.</returns>
+        public static string UnescapeBackSlashUriString(string uriString)
+        {
+            if (uriString == null)
+            {
+                return null;
+            }
+            return uriString.Replace("%2f", "%2F").Replace("%2F", "/");
+        }
         public static bool IsValidEmail(this string email)
         {
             if (string.IsNullOrEmpty(email))
@@ -45,7 +59,7 @@ namespace BTCPayServer
 
             return MailboxAddressValidator.TryParse(email, out var ma) && ma.ToString() == ma.Address;
         }
-        
+
         public static bool TryGetPayjoinEndpoint(this BitcoinUrlBuilder bip21, out Uri endpoint)
         {
             endpoint = bip21.UnknownParameters.TryGetValue($"{PayjoinClient.BIP21EndpointKey}", out var uri) ? new Uri(uri, UriKind.Absolute) : null;
@@ -82,7 +96,7 @@ namespace BTCPayServer
             builder.Append(CultureInfo.InvariantCulture, $"{expiration.Minutes.ToString("00", CultureInfo.InvariantCulture)}:{expiration.Seconds.ToString("00", CultureInfo.InvariantCulture)}");
             return builder.ToString();
         }
-        
+
         public static decimal RoundUp(decimal value, int precision)
         {
             for (int i = 0; i < precision; i++)
@@ -101,7 +115,7 @@ namespace BTCPayServer
         {
             return new PaymentMethodId(info.CryptoCode, PaymentTypes.Parse(info.PaymentType));
         }
-        
+
         public static async Task CloseSocket(this WebSocket webSocket)
         {
             try

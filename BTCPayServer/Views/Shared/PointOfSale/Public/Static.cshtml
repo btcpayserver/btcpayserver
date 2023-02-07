@@ -1,28 +1,25 @@
 @using BTCPayServer.Plugins.PointOfSale.Models
 @model BTCPayServer.Plugins.PointOfSale.Models.ViewPointOfSaleViewModel
 @{
-    Layout = "PointOfSale/Public/_LayoutPos";
+    Layout = "PointOfSale/Public/_Layout";
     var anyInventoryItems = Model.Items.Any(item => item.Inventory.HasValue);
 }
 
-<div class="container d-flex h-100">
-    <div class="justify-content-center align-self-center text-center mx-auto px-2 py-3 w-100 m-auto">
-        <partial name="_StatusMessage" />
-
-        <h1 class="mb-4">@Model.Title</h1>
-        @if (!string.IsNullOrEmpty(Model.Description))
-        {
-            <div class="row">
-                <div class="overflow-hidden col-12">@Safe.Raw(Model.Description)</div>
-            </div>
-        }
-        <div class="card-deck my-3 mx-auto">
+<div class="container public-page-wrap flex-column">
+    <partial name="_StatusMessage" />
+    <partial name="_StoreHeader" model="(string.IsNullOrEmpty(Model.Title) ? Model.StoreName : Model.Title, Model.LogoFileId)" />
+    @if (!string.IsNullOrEmpty(Model.Description))
+    {
+        <div class="lead text-center">@Safe.Raw(Model.Description)</div>
+    }
+    <main class="flex-grow-1 justify-content-center align-self-center text-center mx-auto py-3">
+        <div class="card-deck mx-auto">
             @for (var x = 0; x < Model.Items.Length; x++)
             {
                 var item = Model.Items[x];
                 var buttonText = string.IsNullOrEmpty(item.BuyButtonText) ? item.Price.Type != ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Fixed ? Model.CustomButtonText : Model.ButtonText : item.BuyButtonText;
-                buttonText = buttonText.Replace("{0}",item.Price.Formatted).Replace("{Price}",item.Price.Formatted);
-                
+                buttonText = buttonText.Replace("{0}", item.Price.Formatted).Replace("{Price}", item.Price.Formatted);
+
                 <div class="card px-0" data-id="@x">
                     @if (!string.IsNullOrWhiteSpace(item.Image))
                     {
@@ -33,21 +30,21 @@
                         @if (!item.Inventory.HasValue || item.Inventory.Value > 0)
                         {
                             @if (item.Price.Type != ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Topup)
-                                {
-                                    <form method="post" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" data-buy>
-                                        <input type="hidden" name="choicekey" value="@item.Id"/>
-                                        @{PayFormInputContent(item.BuyButtonText ?? Model.CustomButtonText, item.Price.Type, item.Price.Value, item.Price.Value);}
-                                    </form>
-                                }
-                                else
-                                {
-                                    <form method="post" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false">
-                                        <input type="hidden" name="requiresRefundEmail" value="@Model.RequiresRefundEmail.ToString()" />
-                                        <button type="submit" name="choiceKey" class="js-add-cart btn btn-primary" value="@item.Id">
-                                            @Safe.Raw(buttonText)
-                                        </button>
-                                    </form>
-                                }
+                            {
+                                <form method="post" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" data-buy>
+                                    <input type="hidden" name="choicekey" value="@item.Id" />
+                                    @{PayFormInputContent(item.BuyButtonText ?? Model.CustomButtonText, item.Price.Type, item.Price.Value, item.Price.Value);}
+                                </form>
+                            }
+                            else
+                            {
+                                <form method="post" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false">
+                                    <input type="hidden" name="requiresRefundEmail" value="@Model.RequiresRefundEmail.ToString()" />
+                                    <button type="submit" name="choiceKey" class="js-add-cart btn btn-primary" value="@item.Id">
+                                        @Safe.Raw(buttonText)
+                                    </button>
+                                </form>
+                            }
                         }
                         @if (item.Inventory.HasValue)
                         {
@@ -85,7 +82,12 @@
                 </div>
             }
         </div>
-    </div>
+    </main>
+    <footer class="store-footer">
+        <a href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">
+            Powered by <partial name="_StoreFooterLogo" />
+        </a>
+    </footer>
 </div>
 
 @functions {

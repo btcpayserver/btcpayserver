@@ -23,7 +23,7 @@ namespace BTCPayServer.Services.Rates
         {
             await new SynchronizationContextRemover();
 
-            var exchangeAPI = (T) await ExchangeAPI.GetExchangeAPIAsync<T>();
+            var exchangeAPI = (T)await ExchangeAPI.GetExchangeAPIAsync<T>();
             exchangeAPI.RequestMaker = new HttpClientRequestMaker(exchangeAPI, _httpClient, cancellationToken);
             var rates = await exchangeAPI.GetTickersAsync();
 
@@ -40,6 +40,9 @@ namespace BTCPayServer.Services.Rates
 
         // ExchangeSymbolToGlobalSymbol throws exception which would kill perf
         readonly ConcurrentDictionary<string, string> notFoundSymbols = new ConcurrentDictionary<string, string>();
+
+        public RateSourceInfo RateSourceInfo { get; set; }
+
         private async Task<PairRate> CreateExchangeRate(T exchangeAPI, KeyValuePair<string, ExchangeTicker> ticker)
         {
             if (notFoundSymbols.TryGetValue(ticker.Key, out _))

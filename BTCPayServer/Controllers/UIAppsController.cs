@@ -13,6 +13,7 @@ using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace BTCPayServer.Controllers
 {
@@ -23,11 +24,13 @@ namespace BTCPayServer.Controllers
         public UIAppsController(
             UserManager<ApplicationUser> userManager,
             StoreRepository storeRepository,
-            AppService appService)
+            AppService appService,
+            IHtmlHelper html)
         {
             _userManager = userManager;
             _storeRepository = storeRepository;
             _appService = appService;
+            Html = html;
         }
 
         private readonly UserManager<ApplicationUser> _userManager;
@@ -35,7 +38,8 @@ namespace BTCPayServer.Controllers
         private readonly AppService _appService;
 
         public string CreatedAppId { get; set; }
-        
+        public IHtmlHelper Html { get; }
+
         public class AppUpdated
         {
             public string AppId { get; set; }
@@ -46,14 +50,14 @@ namespace BTCPayServer.Controllers
                 return string.Empty;
             }
         }
-        
+
         [HttpGet("/apps/{appId}")]
         public async Task<IActionResult> RedirectToApp(string appId)
         {
             var app = await _appService.GetApp(appId, null);
             if (app is null)
                 return NotFound();
-            
+
             return app.AppType switch
             {
                 nameof(AppType.Crowdfund) => RedirectToAction(nameof(UICrowdfundController.ViewCrowdfund), "UICrowdfund", new { appId }),
@@ -175,7 +179,7 @@ namespace BTCPayServer.Controllers
             if (app == null)
                 return NotFound();
 
-            return View("Confirm", new ConfirmModel("Delete app", $"The app <strong>{app.Name}</strong> and its settings will be permanently deleted. Are you sure?", "Delete"));
+            return View("Confirm", new ConfirmModel("Delete app", $"The app <strong>{Html.Encode(app.Name)}</strong> and its settings will be permanently deleted. Are you sure?", "Delete"));
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]

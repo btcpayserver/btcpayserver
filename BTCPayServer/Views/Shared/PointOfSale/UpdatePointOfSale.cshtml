@@ -26,18 +26,37 @@
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
     <div class="row">
-        <div class="col-xl-8 col-xxl-constrain">
-            <div class="form-group">
-                <label asp-for="AppName" class="form-label" data-required></label>
-                <input asp-for="AppName" class="form-control" required />
-                <span asp-validation-for="AppName" class="text-danger"></span>
+        <div class="col-sm-10 col-md-9 col-xl-7 col-xxl-6">
+            <div class="row">
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label asp-for="AppName" class="form-label" data-required></label>
+                        <input asp-for="AppName" class="form-control" required />
+                        <span asp-validation-for="AppName" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label asp-for="Title" class="form-label" data-required></label>
+                        <input asp-for="Title" class="form-control" required />
+                        <span asp-validation-for="Title" class="text-danger"></span>
+                    </div>
+                </div>
             </div>
             <div class="form-group">
-                <label asp-for="Title" class="form-label" data-required></label>
-                <input asp-for="Title" class="form-control" required />
-                <span asp-validation-for="Title" class="text-danger"></span>
+                <label asp-for="DefaultView" class="form-label" data-required>Choose Point of Sale Style</label>
+                <div class="btcpay-list-select">
+                    @foreach (var type in Enum.GetValues<PosViewType>())
+                    {
+                        <input type="radio" asp-for="DefaultView" value="@type" id="DefaultView_@type">
+                        <label for="DefaultView_@type" class="btcpay-list-select-item">
+                            <vc:icon symbol="pos-@type.ToString().ToLowerInvariant()" />
+                            @typeof(PosViewType).DisplayName(type.ToString())
+                        </label>
+                    }
+                </div>
             </div>
-            <div class="form-group">
+            <div class="form-group mb-0">
                 <label asp-for="Currency" class="form-label"></label>
                 <input asp-for="Currency" class="form-control w-auto" currency-selection />
                 <div class="form-text">Uses the store's default currency (@Model.StoreDefaultCurrency) if empty.</div>
@@ -45,7 +64,7 @@
             </div>
         </div>
     </div>
-    <div class="row">
+    <div id="description" class="row mt-4">
         <div class="col-xl-10 col-xxl-constrain">
             <div class="form-group mb-0">
                 <label asp-for="Description" class="form-label"></label>
@@ -54,46 +73,59 @@
             </div>
         </div>
     </div>
-    <div class="row">
-        <div class="col-xxl-constrain">
-            <partial name="TemplateEditor" model="@(nameof(Model.Template), "Products", Model.Currency ?? Model.StoreDefaultCurrency)" />
-        </div>
-    </div>
-    <div class="row collapse" id="RawEditor">
-        <div class="col-xxl-constrain">
-            <div class="form-group pt-3">
-                <label asp-for="Template" class="form-label"></label>
-                <textarea asp-for="Template" rows="10" cols="40" class="form-control"></textarea>
-                <span asp-validation-for="Template" class="text-danger"></span>
+    <div id="products">
+        <div class="row">
+            <div class="col-xxl-constrain">
+                <partial name="TemplateEditor" model="@(nameof(Model.Template), "Products", Model.Currency ?? Model.StoreDefaultCurrency)" />
             </div>
         </div>
+        <div class="row collapse" id="RawEditor">
+            <div class="col-xxl-constrain">
+                <div class="form-group pt-3">
+                    <label asp-for="Template" class="form-label"></label>
+                    <textarea asp-for="Template" rows="10" cols="40" class="form-control"></textarea>
+                    <span asp-validation-for="Template" class="text-danger"></span>
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="row">
-        <div class="col-xl-8 col-xxl-constrain">
-            <h3 class="mt-5 mb-4">Appearance</h3>
-            <div class="form-group">
-                <label asp-for="DefaultView" class="form-label" data-required></label>
-                <select asp-for="DefaultView" asp-items="@Html.GetEnumSelectList<PosViewType>()" class="form-select" required></select>
-                <span asp-validation-for="DefaultView" class="text-danger"></span>
-                <div class="form-text">Choose the point of sale style for your customers.</div>
-            </div>
-            <div class="form-group" id="button-price-text">
-                <label asp-for="ButtonText" class="form-label" data-required></label>
-                <input asp-for="ButtonText" class="form-control" required />
-                <span asp-validation-for="ButtonText" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="FormId" class="form-label"></label>
-                <select asp-for="FormId" class="form-select w-auto" asp-items="@checkoutFormOptions"></select>
-                <span asp-validation-for="FormId" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="RequiresRefundEmail" class="form-label"></label>
-                <select asp-for="RequiresRefundEmail" asp-items="@Html.GetEnumSelectList<RequiresRefundEmail>()" class="form-select w-auto"></select>
-                <span asp-validation-for="RequiresRefundEmail" class="text-danger"></span>
-            </div>
-            <section id="discounts" class="p-0">
-                <h3 class="mt-5 mb-4">Discounts</h3>
+    <div class="row mt-5">
+        <div class="col-sm-10 col-md-9 col-xl-7 col-xxl-6">
+            <h3 class="mb-4">Checkout</h3>
+            <fieldset>
+                <div class="form-group" id="button-price-text">
+                    <label asp-for="ButtonText" class="form-label" data-required></label>
+                    <input asp-for="ButtonText" class="form-control" required />
+                    <span asp-validation-for="ButtonText" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="FormId" class="form-label"></label>
+                    <select asp-for="FormId" class="form-select w-auto" asp-items="@checkoutFormOptions"></select>
+                    <span asp-validation-for="FormId" class="text-danger"></span>
+                </div>
+            </fieldset>
+            <fieldset id="tips" class="mt-2">
+                <legend class="h5 mb-3 fw-semibold">Tips</legend>
+                <div class="form-group d-flex align-items-center pt-2">
+                    <input asp-for="EnableTips" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#CustomTipsSettings" aria-expanded="@Model.EnableTips" aria-controls="CustomTipsSettings" />
+                    <label asp-for="EnableTips" class="form-label mb-0"></label>
+                    <span asp-validation-for="EnableTips" class="text-danger"></span>
+                </div>
+                <div class="collapse @(Model.EnableTips ? "show" : "")" id="CustomTipsSettings">
+                    <div class="form-group">
+                        <label asp-for="CustomTipText" class="form-label" data-required></label>
+                        <input asp-for="CustomTipText" class="form-control" required />
+                        <span asp-validation-for="CustomTipText" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="CustomTipPercentages" class="form-label"></label>
+                        <input asp-for="CustomTipPercentages" class="form-control" />
+                        <span asp-validation-for="CustomTipPercentages" class="text-danger"></span>
+                    </div>
+                </div>
+            </fieldset>
+            <fieldset id="discounts" class="mt-2">
+                <legend class="h5 mb-3 fw-semibold">Discounts</legend>
                 <div class="form-group d-flex align-items-center">
                     <input asp-for="ShowDiscount" type="checkbox" class="btcpay-toggle me-3" />
                     <div>
@@ -102,47 +134,27 @@
                     </div>
                     <span asp-validation-for="ShowDiscount" class="text-danger"></span>
                 </div>
-            </section>
-            <section id="custom-payments" class="p-0">
-                <h3 class="mt-5 mb-4">Custom Payments</h3>
+            </fieldset>
+            <fieldset id="custom-payments" class="mt-2">
+                <legend class="h5 mb-3 fw-semibold">Custom Payments</legend>
                 <div class="form-group mb-4 d-flex align-items-center">
                     <input asp-for="ShowCustomAmount" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#CustomAmountSettings" aria-expanded="@Model.ShowCustomAmount" aria-controls="CustomAmountSettings"/>
                     <label asp-for="ShowCustomAmount" class="form-label mb-0"></label>
                     <span asp-validation-for="ShowCustomAmount" class="text-danger"></span>
                 </div>
                 <div class="collapse @(Model.ShowCustomAmount ? "show" : "")" id="CustomAmountSettings">
-                    <div class="form-group mb-0 pb-3">
+                    <div class="form-group">
                         <label asp-for="CustomButtonText" class="form-label" data-required></label>
                         <input asp-for="CustomButtonText" class="form-control" required />
                         <span asp-validation-for="CustomButtonText" class="text-danger"></span>
                     </div>
                 </div>
-            </section>
-            <section id="tips" class="p-0">
-                <h3 class="mt-5 mb-4">Tips</h3>
-                <div class="form-group d-flex align-items-center">
-                    <input asp-for="EnableTips" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#CustomTipsSettings" aria-expanded="@Model.EnableTips" aria-controls="CustomTipsSettings" />
-                    <label asp-for="EnableTips" class="form-label mb-0"></label>
-                    <span asp-validation-for="EnableTips" class="text-danger"></span>
-                </div>
-                <div class="collapse @(Model.EnableTips ? "show" : "")" id="CustomTipsSettings">
-                    <div class="form-group pt-3">
-                        <label asp-for="CustomTipText" class="form-label" data-required></label>
-                        <input asp-for="CustomTipText" class="form-control" required />
-                        <span asp-validation-for="CustomTipText" class="text-danger"></span>
-                    </div>
-                    <div class="form-group mb-0">
-                        <label asp-for="CustomTipPercentages" class="form-label"></label>
-                        <input asp-for="CustomTipPercentages" class="form-control" />
-                        <span asp-validation-for="CustomTipPercentages" class="text-danger"></span>
-                    </div>
-                </div>
-            </section>
+            </fieldset>
         </div>
     </div>
-    <div class="row">
+    <div class="row" style="margin-top:2.25rem;">
         <div class="col-xl-8 col-xxl-constrain">
-            <h3 class="mt-5 mb-2">Additional Options</h3>
+            <h3 class="mb-2">Additional Options</h3>
             <div class="form-group">
                 <div class="accordion" id="additional">
                     <div class="accordion-item">
@@ -265,7 +277,7 @@
 
 <div class="d-flex gap-3 mt-3">
     <a class="btn btn-secondary" asp-action="ListInvoices" asp-controller="UIInvoice" asp-route-storeId="@Model.StoreId" asp-route-searchterm="@Model.SearchTerm">Invoices</a>
-    <a id="DeleteApp" class="btn btn-outline-danger" asp-controller="UIApps" asp-action="DeleteApp" asp-route-appId="@Model.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The app <strong>@Model.AppName</strong> and its settings will be permanently deleted." data-confirm-input="DELETE">Delete this app</a>
+  <a id="DeleteApp" class="btn btn-outline-danger" asp-controller="UIApps" asp-action="DeleteApp" asp-route-appId="@Model.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The app <strong>@Html.Encode(Model.AppName)</strong> and its settings will be permanently deleted." data-confirm-input="DELETE">Delete this app</a>
 </div>
 
 <partial name="_Confirm" model="@(new ConfirmModel("Delete app", "This app will be removed from this store.", "Delete"))" />
@@ -334,104 +346,61 @@
         </div>
     </script>
     <script>
-        const posStyleSelector = document.getElementById('DefaultView');
-        posStyleSelector.addEventListener('change', function(e) {
-            handleStyleSelected(e.target.value);
-        });
-
-        function handleStyleSelected(style) {
-            switch (style) {
-                case '0': // Item list only
-                case '3': // Print
-                    hideDiscountsSection();
-                    hideButtonPriceTextSection();
-                    showCustomPaymentAmountSection();
-                    hideTipsSection();
+        const description = document.getElementById('description');
+        const products = document.getElementById('products');
+        const tips = document.getElementById('tips');
+        const discounts = document.getElementById('discounts');
+        const buttonPriceText = document.getElementById('button-price-text');
+        const customPayments = document.getElementById('custom-payments');
+        
+        function hide(el) {
+            el.setAttribute('hidden', true);
+        }
+        function show(el) {
+            el.removeAttribute('hidden');
+        }
+        function updateFormForDefaultView(type) {
+            console.log(type)
+            switch (type) {
+                case 'Static':
+                case 'Print':
+                    hide(tips);
+                    hide(discounts);
+                    hide(buttonPriceText);
+                    show(description);
+                    show(products);
+                    show(customPayments);
                     break;
-                case '1': // Item list and cart
-                    showDiscountsSection();
-                    showButtonPriceTextSection();
-                    showCustomPaymentAmountSection();
-                    showTipsSection();
+                case 'Cart':
+                    show(tips);
+                    show(products);
+                    show(discounts);
+                    show(description);
+                    show(buttonPriceText);
+                    show(customPayments);
                     break;
-                case '2': // Keypad only
-                    showDiscountsSection();
-                    hideButtonPriceTextSection();
-                    hideCustomPaymentAmountSection();
-                    showTipsSection();
+                case 'Light':
+                    show(tips);
+                    show(discounts);
+                    hide(products);
+                    hide(description);
+                    hide(buttonPriceText);
+                    hide(customPayments);
                     break;
             }
         }
 
-        /** Show/hide discounts section */
-
-        const discountsSection = document.getElementById('discounts');
-
-        function hideDiscountsSection() {
-            hideElement(discountsSection);
-        }
-
-        function showDiscountsSection() {
-            showElement(discountsSection);
-        }
-
-        /***************************************/
-
-        /** Show/hide button text section */
-
-        const buttonPriceTextSection = document.getElementById('button-price-text');
-
-        function hideButtonPriceTextSection() {
-            hideElement(buttonPriceTextSection);
-        }
-
-        function showButtonPriceTextSection() {
-            showElement(buttonPriceTextSection);
-        }
-
-        /***************************************/
-
-        /** Show/hide custom payments amount seciton */
-
-        const customPaymentAmountSection = document.getElementById('custom-payments');
-
-        function hideCustomPaymentAmountSection() {
-           hideElement(customPaymentAmountSection);
-        }
-
-        function showCustomPaymentAmountSection() {
-            showElement(customPaymentAmountSection);
-        }
-
-        /***************************************/
-
-        /** Show/hide tips seciton */
-
-        const tipsSection = document.getElementById('tips');
-
-        function hideTipsSection() {
-           hideElement(tipsSection);
-        }
-
-        function showTipsSection() {
-            showElement(tipsSection);
-        }
-
-        /***************************************/
-
-        function hideElement(el) {
-            el.setAttribute('hidden', true);
-        }
-
-        function showElement(el) {
-            el.removeAttribute('hidden');
-        }
-
-        document.addEventListener("DOMContentLoaded", function() {
-            handleStyleSelected(posStyleSelector.value);
+        document.addEventListener('DOMContentLoaded', () => {
+            const defaultView = document.querySelector('input[name="DefaultView"]:checked'); 
+            if (defaultView) {
+                updateFormForDefaultView(defaultView.value);
+            }
+        });
+        
+        delegate('change', 'input[name="DefaultView"]', e => {
+            updateFormForDefaultView(e.target.value);
         });
     </script>
-
     <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
     <script src="~/vendor/summernote/summernote-bs5.js" asp-append-version="true"></script>
 }

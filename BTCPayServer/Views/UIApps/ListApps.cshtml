@@ -1,4 +1,4 @@
-﻿@using BTCPayServer.Services.Apps
+@using BTCPayServer.Services.Apps
 @using BTCPayServer.Abstractions.Models
 @model ListAppsViewModel
 @{
@@ -103,7 +103,7 @@
                                 <a asp-action="@app.UpdateAction" asp-controller="UIApps" asp-route-appId="@app.Id" asp-route-storeId="@app.StoreId">Settings</a>
                                 <span> - </span>
                             }
-                            <a asp-action="DeleteApp" asp-route-appId="@app.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The app <strong>@app.AppName</strong> and its settings will be permanently deleted from your store <strong>@app.StoreName</strong>." data-confirm-input="DELETE">Delete</a>
+					<a asp-action="DeleteApp" asp-route-appId="@app.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The app <strong>@Html.Encode(app.AppName)</strong> and its settings will be permanently deleted from your store <strong>@Html.Encode(app.StoreName)</strong>." data-confirm-input="DELETE">Delete</a>
                         </td>
                     </tr>
                 }

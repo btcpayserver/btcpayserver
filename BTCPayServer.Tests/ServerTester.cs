@@ -58,6 +58,7 @@ namespace BTCPayServer.Tests
                 var r = RandomUtils.GetUInt32();
                 PayTester.Postgres = PayTester.Postgres.Replace("btcpayserver", $"btcpayserver{r}");
                 PayTester.MySQL = PayTester.MySQL.Replace("btcpayserver", $"btcpayserver{r}");
+                TestLogs.LogInformation($"Database used: btcpayserver{r}");
             }
             PayTester.Port = int.Parse(GetEnvironment("TESTS_PORT", Utils.FreeTcpPort().ToString(CultureInfo.InvariantCulture)), CultureInfo.InvariantCulture);
             PayTester.HostName = GetEnvironment("TESTS_HOSTNAME", "127.0.0.1");

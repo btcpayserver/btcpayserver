@@ -13,6 +13,7 @@ namespace BTCPayServer.Services.Rates
 {
     public class RipioExchangeProvider : IRateProvider
     {
+        public RateSourceInfo RateSourceInfo => new("ripio", "Ripio", "https://api.exchange.ripio.com/api/v1/rate/all/");
         private readonly HttpClient _httpClient;
         public RipioExchangeProvider(HttpClient httpClient)
         {

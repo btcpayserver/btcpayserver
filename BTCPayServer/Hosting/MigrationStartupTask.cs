@@ -33,6 +33,7 @@ using NBXplorer;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using PeterO.Cbor;
+using LightningAddressData = BTCPayServer.Data.LightningAddressData;
 using PayoutData = BTCPayServer.Data.PayoutData;
 using PullPaymentData = BTCPayServer.Data.PullPaymentData;
 using StoreData = BTCPayServer.Data.StoreData;
@@ -343,11 +344,12 @@ namespace BTCPayServer.Hosting
             }
 
             var storeids = lightningAddressSettings.StoreToItemMap.Keys.ToArray();
-            var existingStores = (await ctx.Stores.Where(data => storeids.Contains(data.Id)).Select(data => data.Id ).ToArrayAsync()).ToHashSet();
+            var existingStores = (await ctx.Stores.Where(data => storeids.Contains(data.Id)).Select(data => data.Id).ToArrayAsync()).ToHashSet();
 
             foreach (var storeMap in lightningAddressSettings.StoreToItemMap)
             {
-                if (!existingStores.Contains(storeMap.Key)) continue;
+                if (!existingStores.Contains(storeMap.Key))
+                    continue;
                 foreach (var storeitem in storeMap.Value)
                 {
                     if (lightningAddressSettings.Items.TryGetValue(storeitem, out var val))
@@ -374,11 +376,11 @@ namespace BTCPayServer.Hosting
 
         private async Task MigrateLighingAddressSettingRename()
         {
-           var old = await _Settings.GetSettingAsync<UILNURLController.LightningAddressSettings>("BTCPayServer.LNURLController+LightningAddressSettings");
-           if (old is not null)
-           {
-              await _Settings.UpdateSetting(old, nameof(UILNURLController.LightningAddressSettings));
-           }
+            var old = await _Settings.GetSettingAsync<UILNURLController.LightningAddressSettings>("BTCPayServer.LNURLController+LightningAddressSettings");
+            if (old is not null)
+            {
+                await _Settings.UpdateSetting(old, nameof(UILNURLController.LightningAddressSettings));
+            }
         }
 
         private async Task MigrateAddStoreToPayout()
@@ -404,14 +406,14 @@ WHERE cte.""Id""=p.""Id""
                 var queryable = ctx.Payouts.Where(data => data.StoreDataId == null);
                 var count = await queryable.CountAsync();
                 _logger.LogInformation($"Migrating {count} payouts to have a store id explicitly");
-                for (int i = 0; i < count; i+=1000)
+                for (int i = 0; i < count; i += 1000)
                 {
                     await queryable.Include(data => data.PullPaymentData).Skip(i).Take(1000)
                         .ForEachAsync(data => data.StoreDataId = data.PullPaymentData.StoreId);
-                
+
                     await ctx.SaveChangesAsync();
-                
-                    _logger.LogInformation($"Migrated {i+1000}/{count} payouts to have a store id explicitly");
+
+                    _logger.LogInformation($"Migrated {i + 1000}/{count} payouts to have a store id explicitly");
                 }
             }
         }

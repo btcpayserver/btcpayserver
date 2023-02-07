@@ -62,7 +62,7 @@ namespace BTCPayServer.Controllers
                     })
                     .Select(t => t.Result)
                     .ToList();
-            
+
                 // other services
                 foreach ((string key, Uri value) in _externalServiceOptions.Value.OtherExternalServices)
                 {
@@ -80,7 +80,7 @@ namespace BTCPayServer.Controllers
 
                 vm.Services = services;
             }
-            
+
             return View(vm);
         }
 
@@ -226,13 +226,13 @@ namespace BTCPayServer.Controllers
             var storeBlob = store.GetStoreBlob();
             var excludeFilters = storeBlob.GetExcludedPaymentMethods();
             var lightning = GetExistingLightningSupportedPaymentMethod(cryptoCode, store);
-            if (lightning == null) 
+            if (lightning == null)
             {
                 TempData[WellKnownTempData.ErrorMessage] = "You need to connect to a Lightning node before adjusting its settings.";
 
                 return RedirectToAction(nameof(SetupLightningNode), new { storeId, cryptoCode });
             }
-            
+
             var vm = new LightningSettingsViewModel
             {
                 CryptoCode = cryptoCode,
@@ -344,7 +344,7 @@ namespace BTCPayServer.Controllers
 
             if (cryptoCode == null)
                 return NotFound();
-                
+
             var network = _ExplorerProvider.GetNetwork(cryptoCode);
             var lightning = GetExistingLightningSupportedPaymentMethod(cryptoCode, store);
             if (lightning == null)
@@ -393,7 +393,7 @@ namespace BTCPayServer.Controllers
                 .FirstOrDefault(d => d.PaymentId == id);
             return existing;
         }
-        
+
         private LNURLPaySupportedPaymentMethod? GetExistingLNURLSupportedPaymentMethod(string cryptoCode, StoreData store)
         {
             var id = new PaymentMethodId(cryptoCode, PaymentTypes.LNURLPay);

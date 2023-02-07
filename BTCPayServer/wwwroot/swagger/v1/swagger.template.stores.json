@@ -292,6 +292,7 @@
                     },
                     "website": {
                         "type": "string",
+                        "nullable": true,
                         "description": "The absolute url of the store",
                         "format": "url"
                     },

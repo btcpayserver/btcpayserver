@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using AngleSharp.Common;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Abstractions.Form;
@@ -106,7 +104,7 @@ public class Form
             }
         }
     }
-    
+
     public void ApplyValuesFromForm(IFormCollection form, string ignorePrefix = null)
     {
         var names = GetAllNames();
@@ -129,9 +127,10 @@ public class Form
 
     public void SetValues(Dictionary<string, object> values)
     {
-        SetValues(values, null, null);
+        SetValues(values, null);
     }
-    private void SetValues(Dictionary<string, object> values, List<Field> fields = null,string prefix = null)
+
+    private void SetValues(Dictionary<string, object> values, List<Field> fields = null, string prefix = null)
     {
         foreach (var v in values)
         {

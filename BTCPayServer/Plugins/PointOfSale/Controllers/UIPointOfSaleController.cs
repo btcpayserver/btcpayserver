@@ -260,7 +260,6 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                     }
 
                     formResponseJObject = JObject.FromObject(form.GetValues());
-
                     break;
             }
         
@@ -328,8 +327,9 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 return RedirectToAction(nameof(ViewPointOfSale), new { appId });
             }
             
-            var myDictionary = 
-                Request.Form.Where(pair => pair.Key != "__RequestVerificationToken").ToDictionary(p => p.Key, p => p.Value.ToString());
+            var myDictionary = Request.Form
+                .Where(pair => pair.Key != "__RequestVerificationToken")
+                .ToDictionary(p => p.Key, p => p.Value.ToString());
             myDictionary.Add("appId", appId);
             var controller = nameof(UIPointOfSaleController).TrimEnd("Controller", StringComparison.InvariantCulture);
             var redirectUrl = Url.Action(nameof(ViewPointOfSale), controller, myDictionary);
@@ -351,7 +351,6 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 RouteParameters = new Dictionary<string, string> { { "appId", appId } },
             });
         }
-        
 
         [HttpPost("/apps/{appId}/pos/form/submit")]
         public async Task<IActionResult> POSFormSubmit(string appId, FormViewModel viewModel)
@@ -387,8 +386,8 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
 
             viewModel.FormName = formData.Name;
             viewModel.Form = form;
+            
             return View("Views/UIForms/View", viewModel);
-
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]

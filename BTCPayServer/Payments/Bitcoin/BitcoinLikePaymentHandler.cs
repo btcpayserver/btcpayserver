@@ -69,28 +69,23 @@ namespace BTCPayServer.Payments.Bitcoin
             {
                 var lightningInfo = invoiceResponse.CryptoInfo.FirstOrDefault(a =>
                     a.GetpaymentMethodId() == new PaymentMethodId(model.CryptoCode, PaymentTypes.LightningLike));
-                if (lightningInfo is not null)
+                if (lightningInfo is not null && !string.IsNullOrEmpty(lightningInfo.PaymentUrls?.BOLT11))
                 {
-
-                    if (!string.IsNullOrEmpty(lightningInfo?.PaymentUrls?.BOLT11))
-                        lightningFallback = lightningInfo.PaymentUrls.BOLT11
-                            .Replace("lightning:", "lightning=", StringComparison.OrdinalIgnoreCase)
-                            .ToUpperInvariant();
-
-                }
+                    lightningFallback = lightningInfo.PaymentUrls.BOLT11;
+                }   
                 else
                 {
                     var lnurl = invoiceResponse.CryptoInfo.FirstOrDefault(a =>
                         a.GetpaymentMethodId() == new PaymentMethodId(model.CryptoCode, PaymentTypes.LNURLPay));
                     if (lnurl is not null)
                     {
-                        var lnurlEncoded = LNURL.LNURL.EncodeUri(new Uri(lnurl.Url), "payRequest", true).ToString();
-                        lightningFallback = lnurlEncoded
-                            .Replace("lightning:", "lightning=", StringComparison.OrdinalIgnoreCase)
-                            .ToUpperInvariant();
+                        lightningFallback = LNURL.LNURL.EncodeUri(new Uri(lnurl.Url), "payRequest", true).ToString();
                     }
-                   
-                    
+                }
+                if (!string.IsNullOrEmpty(lightningFallback))
+                {
+                    lightningFallback = lightningFallback
+                        .Replace("lightning:", "lightning=", StringComparison.OrdinalIgnoreCase);
                 }
             }
 

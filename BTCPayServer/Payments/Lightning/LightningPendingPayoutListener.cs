@@ -56,7 +56,7 @@ public class LightningPendingPayoutListener : BaseAsyncService
             .ToDictionary(network => new PaymentMethodId(network.CryptoCode, PaymentTypes.LightningLike));
 
 
-        var payouts = await _pullPaymentHostedService.GetPayouts(
+        var payouts = await PullPaymentHostedService.GetPayouts(
             new PullPaymentHostedService.PayoutQuery()
             {
                 States = new PayoutState[] { PayoutState.InProgress },

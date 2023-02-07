@@ -178,7 +178,15 @@ namespace BTCPayServer.HostedServices
 
             if (payoutQuery.PayoutIds is not null)
             {
-                query = query.Where(data => payoutQuery.PayoutIds.Contains(data.Id));
+                if (payoutQuery.PayoutIds.Length == 1)
+                {
+                    var payoutId = payoutQuery.PayoutIds[0];
+                    query = query.Where(data => data.Id == payoutId);
+                }
+                else
+                {
+                    query = query.Where(data => payoutQuery.PayoutIds.Contains(data.Id));
+                }
             }
 
             if (payoutQuery.PaymentMethods is not null)

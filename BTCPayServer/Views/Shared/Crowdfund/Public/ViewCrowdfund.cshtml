@@ -294,7 +294,7 @@
 <template id="perks-template">
     <div class="perks-container">
         <perk v-if="!perks || perks.length === 0"
-              :perk="{title: 'Donate Custom Amount', price: { type: 0, value: null}}"
+              :perk="{title: 'Donate Custom Amount', price: { type: 0, value: null }}"
               :target-currency="targetCurrency"
               :active="active"
               :loading="loading"
@@ -330,15 +330,14 @@
             <input type="hidden" :value="perk.id" id="choiceKey"/>
             <img v-if="perk.image && perk.image != 'null'" class="card-img-top" :src="perk.image"/>
             <div class="card-body">
-                <div class="card-title d-flex justify-content-between">
-                    <span class="h5">{{perk.title ? perk.title : perk.id}}</span>
+                <div class="card-title d-flex justify-content-between" :class="{ 'mb-0': !perk.description }">
+                    <span class="h5" :class="{ 'mb-0': !perk.description }">{{perk.title ? perk.title : perk.id}}</span>
                     <span class="text-muted">
                         <template v-if="perk.price && perk.price.value">
                             {{formatAmount(perk.price.value.noExponents(), srvModel.currencyData.divisibility)}}
                             {{targetCurrency}}
                             <template v-if="perk.price.type == 1">or more</template>
                         </template>
-                        
                         <template v-else-if="perk.price.type === 2 && !perk.price.value">
                             Free
                         </template>
@@ -349,7 +348,6 @@
                 </div>
                 <p class="card-text overflow-hidden" v-if="perk.description" v-html="perk.description"></p>
 
-               
                 <div class="input-group" style="max-width:500px;" v-if="expanded" :id="'perk-form'+ perk.id">
                     <template v-if="perk.price.type !== 0 && !(perk.price.type === 2 && !perk.price.value)"> 
                         <input

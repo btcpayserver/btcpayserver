@@ -649,12 +649,13 @@ namespace BTCPayServer.Controllers
             var storeBlob = store.GetStoreBlob();
             var btcId = PaymentMethodId.Parse("BTC");
             var lnId = PaymentMethodId.Parse("BTC_LightningLike");
+            var lnurlId = PaymentMethodId.Parse("BTC_LNURLPAY");
             if (paymentMethodId is null)
             {
                 var enabledPaymentIds = store.GetEnabledPaymentIds(_NetworkProvider)
-                    // Exclude LNURL for Checkout v2 + non-top up invoices
-                    .Where(pmId => storeBlob.CheckoutType == CheckoutType.V1 || 
-                                   pmId.PaymentType is not LNURLPayPaymentType || invoice.IsUnsetTopUp())
+                    .Where(pmId => storeBlob.CheckoutType == CheckoutType.V1 ||
+                        // Exclude LNURL for Checkout v2 + non-top up invoices
+                        (pmId.PaymentType is not LNURLPayPaymentType || invoice.IsUnsetTopUp()))
                     .ToArray();
 
                 // Exclude Lightning if OnChainWithLnInvoiceFallback is active and we have both payment methods
@@ -802,11 +803,9 @@ namespace BTCPayServer.Controllers
                 IsMultiCurrency = invoice.GetPayments(false).Select(p => p.GetPaymentMethodId()).Concat(new[] { paymentMethod.GetId() }).Distinct().Count() > 1,
                 StoreId = store.Id,
                 AvailableCryptos = invoice.GetPaymentMethods()
-                                          .Where(i => i.Network != null &&
+                                          .Where(i => i.Network != null && storeBlob.CheckoutType == CheckoutType.V1 ||
                                               // Exclude LNURL for Checkout v2 + non-top up invoices
-                                              (storeBlob.CheckoutType == CheckoutType.V1 ||
-                                               i.GetId().PaymentType is not LNURLPayPaymentType ||
-                                               invoice.IsUnsetTopUp()))
+                                              i.GetId().PaymentType is not LNURLPayPaymentType || invoice.IsUnsetTopUp())
                                           .Select(kv =>
                                           {
                                               var availableCryptoPaymentMethodId = kv.GetId();
@@ -836,9 +835,14 @@ namespace BTCPayServer.Controllers
             {
                 var onchainPM = model.AvailableCryptos.Find(c => c.PaymentMethodId == btcId.ToString());
                 var lightningPM = model.AvailableCryptos.Find(c => c.PaymentMethodId == lnId.ToString());
+                var lnurlPM = model.AvailableCryptos.Find(c => c.PaymentMethodId == lnurlId.ToString());
                 if (onchainPM != null && lightningPM != null)
                 {
                     model.AvailableCryptos.Remove(lightningPM);
+                }
+                if (onchainPM != null && lnurlPM != null)
+                {
+                    model.AvailableCryptos.Remove(lnurlPM);
                 }
             }
 

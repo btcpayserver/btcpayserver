@@ -274,17 +274,7 @@
                     </div>
                 </div>
             </noscript>
-            <div class="text-muted d-flex flex-wrap align-items-center">
-                <div class="me-3 text-center" v-text="`Updated ${lastUpdated}`">Updated @Model.Info.LastUpdated</div>
-                <div class="form-check me-3 my-0 only-for-js" v-if="srvModel.animationsEnabled || animation">
-                    <input class="form-check-input" type="checkbox" id="cbAnime" v-model="animation">
-                    <label class="form-check-label" for="cbAnime">Animations</label>
-                </div>
-                <div class="form-check me-3 my-0 only-for-js" v-if="srvModel.soundsEnabled|| sound">
-                    <input class="form-check-input" type="checkbox" id="cbSounds" v-model="sound">
-                    <label class="form-check-label" for="cbSounds">Sounds</label>
-                </div>
-            </div>
+            <div class="text-center text-muted mt-4" v-text="`Updated ${lastUpdated}`">Updated @Model.Info.LastUpdated</div>
         </div>
     </div>
     <b-modal title="Contribute" v-model="contributeModalOpen" size="lg" ok-only="true" ok-variant="secondary" ok-title="Close" ref="modalContribute">

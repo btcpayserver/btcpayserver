@@ -2,6 +2,7 @@ using System;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -117,6 +118,68 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.CssSelector("input[type='submit']")).Click();
             s.Driver.Navigate().GoToUrl(editUrl);
             Assert.Contains("aa@aa.com", s.Driver.PageSource);
+
+            //Custom Forms
+            s.GoToStore(StoreNavPages.Forms);
+            Assert.Contains("There are no forms yet.", s.Driver.PageSource);
+            s.Driver.FindElement(By.Id("CreateForm")).Click();
+            s.Driver.FindElement(By.Name("Name")).SendKeys("Custom Form 1");
+            s.Driver.FindElement((By.CssSelector("[data-form-template='email']"))).Click();
+            var emailtemplate = s.Driver.FindElement(By.Name("FormConfig")).GetAttribute("value");
+            Assert.Contains("buyerEmail", emailtemplate);
+            s.Driver.FindElement(By.Name("FormConfig")).Clear();
+            s.Driver.FindElement(By.Name("FormConfig"))
+                .SendKeys(emailtemplate.Replace("Enter your email", "CustomFormInputTest"));
+            s.Driver.FindElement(By.Id("SaveButton")).Click();
+            s.Driver.FindElement(By.Id("ViewForm")).Click();
+
+
+            var formurl = s.Driver.Url;
+            Assert.Contains("CustomFormInputTest", s.Driver.PageSource);
+            s.Driver.FindElement(By.Name("buyerEmail")).SendKeys("aa@aa.com");
+            s.Driver.FindElement(By.CssSelector("input[type='submit']")).Click();
+            s.PayInvoice(true);
+            var result = await s.Server.PayTester.HttpClient.GetAsync(formurl);
+            Assert.Equal(HttpStatusCode.NotFound, result.StatusCode);
+
+            s.GoToHome();
+            s.GoToStore(StoreNavPages.Forms);
+            Assert.Contains("Custom Form 1", s.Driver.PageSource);
+            s.Driver.FindElement(By.LinkText("Remove")).Click();
+            s.Driver.WaitForElement(By.Id("ConfirmInput")).SendKeys("DELETE");
+            s.Driver.FindElement(By.Id("ConfirmContinue")).Click();
+            
+            Assert.DoesNotContain("Custom Form 1", s.Driver.PageSource);
+            s.Driver.FindElement(By.Id("CreateForm")).Click();
+            s.Driver.FindElement(By.Name("Name")).SendKeys("Custom Form 2");
+            s.Driver.FindElement((By.CssSelector("[data-form-template='email']"))).Click();
+            s.Driver.SetCheckbox(By.Name("Public"), true);
+
+            s.Driver.FindElement(By.Name("FormConfig")).Clear();
+            s.Driver.FindElement(By.Name("FormConfig"))
+                .SendKeys(emailtemplate.Replace("Enter your email", "CustomFormInputTest2"));
+            s.Driver.FindElement(By.Id("SaveButton")).Click();
+            s.Driver.FindElement(By.Id("ViewForm")).Click();
+            formurl = s.Driver.Url;
+            result = await s.Server.PayTester.HttpClient.GetAsync(formurl);
+            Assert.NotEqual(HttpStatusCode.NotFound, result.StatusCode);
+            
+            s.GoToHome();
+            s.GoToStore(StoreNavPages.Forms);
+            Assert.Contains("Custom Form 2", s.Driver.PageSource);
+            
+            s.Driver.FindElement(By.LinkText("Custom Form 2")).Click();
+            
+            s.Driver.FindElement(By.Name("Name")).Clear();
+            s.Driver.FindElement(By.Name("Name")).SendKeys("Custom Form 3");
+            s.Driver.FindElement(By.Id("SaveButton")).Click();
+            s.GoToStore(StoreNavPages.Forms);
+            Assert.Contains("Custom Form 3", s.Driver.PageSource);
+            
+            s.Driver.FindElement(By.Id("StoreNav-PaymentRequests")).Click();
+            s.Driver.FindElement(By.Id("CreatePaymentRequest")).Click();
+           Assert.Equal(4,  new SelectElement(s.Driver.FindElement(By.Id("FormId"))).Options.Count);
+            
         }
 
         [Fact(Timeout = TestTimeout)]

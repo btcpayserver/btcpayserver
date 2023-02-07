@@ -56,7 +56,7 @@ public class UIFormsController : Controller
         if (form is null) return NotFound();
 
         var config = Form.Parse(form.Config);
-        return View(new ModifyForm {Name = form.Name, FormConfig = config.ToString()});
+        return View(new ModifyForm {Name = form.Name, FormConfig = config.ToString(), Public = form.Public});
     }
 
     [HttpPost("~/stores/{storeId}/forms/modify/{id?}")]
@@ -89,7 +89,7 @@ public class UIFormsController : Controller
         {
             var form = new FormData
             {
-                Id = id, StoreId = storeId, Name = modifyForm.Name, Config = modifyForm.FormConfig
+                Id = id, StoreId = storeId, Name = modifyForm.Name, Config = modifyForm.FormConfig,Public = modifyForm.Public
             };
             var isNew = id is null;
             await _formDataService.AddOrUpdateForm(form);

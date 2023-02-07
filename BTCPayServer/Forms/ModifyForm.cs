@@ -10,5 +10,5 @@ public class ModifyForm
     public string FormConfig { get; set; }
     
     [DisplayName("Allow form for public use")]
-    public string Public { get; set; }
+    public bool Public { get; set; }
 }

@@ -86,8 +86,14 @@ namespace BTCPayServer.Tests
             Driver.AssertNoError();
         }
 
-        public void PayInvoice(bool mine = false)
+        public void PayInvoice(bool mine = false, decimal? amount= null)
         {
+
+            if (amount is not null)
+            {
+                Driver.FindElement(By.Id("test-payment-amount")).Clear();
+                Driver.FindElement(By.Id("test-payment-amount")).SendKeys(amount.ToString());
+            }
             Driver.FindElement(By.Id("FakePayment")).Click();
             if (mine)
             {

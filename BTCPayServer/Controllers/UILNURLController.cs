@@ -418,8 +418,15 @@ namespace BTCPayServer
                         OrderId = AppService.GetAppOrderId(app)
                     }.ToJObject();
             }
-
-            var i = await _invoiceController.CreateInvoiceCoreRaw(invoiceRequest, store, Request.GetAbsoluteRoot(), additionalTags);
+            InvoiceEntity i;
+            try
+            {
+                i = await _invoiceController.CreateInvoiceCoreRaw(invoiceRequest, store, Request.GetAbsoluteRoot(), additionalTags);
+            }
+            catch (Exception e)
+            {
+                return this.CreateAPIError(null, e.Message);
+            }
             if (i.Type != InvoiceType.TopUp)
             {
                 min = i.GetPaymentMethod(pmi).Calculate().Due.ToDecimal(MoneyUnit.Satoshi);

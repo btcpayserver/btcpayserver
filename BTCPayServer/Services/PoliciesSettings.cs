@@ -44,7 +44,7 @@ namespace BTCPayServer.Services
 
         [Display(Name = "Display app on website root")]
         public string RootAppId { get; set; }
-        public AppType? RootAppType { get; set; }
+        public string? RootAppType { get; set; }
 
 
         [Display(Name = "Override the block explorers used")]
@@ -65,7 +65,7 @@ namespace BTCPayServer.Services
             [Display(Name = "Domain")] [Required] [HostName] public string Domain { get; set; }
             [Display(Name = "App")] [Required] public string AppId { get; set; }
 
-            public AppType AppType { get; set; }
+            public string AppType { get; set; }
         }
     }
 }

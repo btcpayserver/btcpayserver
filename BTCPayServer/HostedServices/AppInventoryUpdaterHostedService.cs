@@ -34,13 +34,13 @@ namespace BTCPayServer.HostedServices
                 //get all apps that were tagged that have manageable inventory that has an item that matches the item code in the invoice
                 var apps = (await _appService.GetApps(updateAppInventory.AppId)).Select(data =>
                     {
-                        switch (Enum.Parse<AppType>(data.AppType))
+                        switch (data.AppType)
                         {
-                            case AppType.PointOfSale:
+                            case AppTypes.PointOfSale:
                                 var possettings = data.GetSettings<PointOfSaleSettings>();
                                 return (Data: data, Settings: (object)possettings,
                                     Items: _appService.Parse(possettings.Template, possettings.Currency));
-                            case AppType.Crowdfund:
+                            case AppTypes.Crowdfund:
                                 var cfsettings = data.GetSettings<CrowdfundSettings>();
                                 return (Data: data, Settings: (object)cfsettings,
                                     Items: _appService.Parse(cfsettings.PerksTemplate, cfsettings.TargetCurrency));
@@ -65,14 +65,14 @@ namespace BTCPayServer.HostedServices
                         }
                     }
 
-                    switch (Enum.Parse<AppType>(valueTuple.Data.AppType))
+                    switch (valueTuple.Data.AppType)
                     {
-                        case AppType.PointOfSale:
+                        case AppTypes.PointOfSale:
 
                             ((PointOfSaleSettings)valueTuple.Settings).Template =
                                 _appService.SerializeTemplate(valueTuple.Items);
                             break;
-                        case AppType.Crowdfund:
+                        case AppTypes.Crowdfund:
                             ((CrowdfundSettings)valueTuple.Settings).PerksTemplate =
                                 _appService.SerializeTemplate(valueTuple.Items);
                             break;

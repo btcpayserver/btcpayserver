@@ -61,10 +61,10 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
         [HttpGet("/")]
         [HttpGet("/apps/{appId}/pos/{viewType?}")]
         [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.AllowAll)]
-        [DomainMappingConstraint(AppType.PointOfSale)]
+        [DomainMappingConstraint(AppTypes.PointOfSale)]
         public async Task<IActionResult> ViewPointOfSale(string appId, PosViewType? viewType = null)
         {
-            var app = await _appService.GetApp(appId, AppType.PointOfSale);
+            var app = await _appService.GetApp(appId, AppTypes.PointOfSale);
             if (app == null)
                 return NotFound();
             var settings = app.GetSettings<PointOfSaleSettings>();
@@ -118,7 +118,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
         [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.AllowAll)]
         [IgnoreAntiforgeryToken]
         [EnableCors(CorsPolicies.All)]
-        [DomainMappingConstraint(AppType.PointOfSale)]
+        [DomainMappingConstraint(AppTypes.PointOfSale)]
         [RateLimitsFilter(ZoneLimits.PublicInvoices, Scope = RateLimitsScope.RemoteAddress)]
         public async Task<IActionResult> ViewPointOfSale(string appId,
                                                         PosViewType? viewType,
@@ -132,7 +132,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                                                         RequiresRefundEmail requiresRefundEmail = RequiresRefundEmail.InheritFromStore,
                                                         CancellationToken cancellationToken = default)
         {
-            var app = await _appService.GetApp(appId, AppType.PointOfSale);
+            var app = await _appService.GetApp(appId, AppTypes.PointOfSale);
             if (string.IsNullOrEmpty(choiceKey) && amount <= 0)
             {
                 return RedirectToAction(nameof(ViewPointOfSale), new { appId });

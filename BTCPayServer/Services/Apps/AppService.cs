@@ -5,16 +5,20 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
+using BTCPayServer.Configuration;
 using BTCPayServer.Data;
 using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Payments;
+using BTCPayServer.Plugins.Crowdfund.Controllers;
 using BTCPayServer.Plugins.Crowdfund.Models;
+using BTCPayServer.Plugins.PointOfSale.Controllers;
 using BTCPayServer.Plugins.PointOfSale.Models;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using ExchangeSharp;
 using Ganss.XSS;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin;
 using NBitcoin.DataEncoders;
@@ -30,18 +34,26 @@ namespace BTCPayServer.Services.Apps
 {
     public class AppService
     {
+        private readonly LinkGenerator _linkGenerator;
+        private readonly IEnumerable<IApp> _apps;
+        private readonly BTCPayServerOptions _options;
         readonly ApplicationDbContextFactory _ContextFactory;
         private readonly InvoiceRepository _InvoiceRepository;
         readonly CurrencyNameTable _Currencies;
         private readonly StoreRepository _storeRepository;
         private readonly HtmlSanitizer _HtmlSanitizer;
         public CurrencyNameTable Currencies => _Currencies;
-        public AppService(ApplicationDbContextFactory contextFactory,
+        public AppService(
+            LinkGenerator linkGenerator, IEnumerable<IApp> apps, BTCPayServerOptions options,
+            ApplicationDbContextFactory contextFactory,
                           InvoiceRepository invoiceRepository,
                           CurrencyNameTable currencies,
                           StoreRepository storeRepository,
                           HtmlSanitizer htmlSanitizer)
         {
+            _linkGenerator = linkGenerator;
+            _apps = apps;
+            _options = options;
             _ContextFactory = contextFactory;
             _InvoiceRepository = invoiceRepository;
             _Currencies = currencies;
@@ -49,9 +61,45 @@ namespace BTCPayServer.Services.Apps
             _HtmlSanitizer = htmlSanitizer;
         }
 
+        
+        public Dictionary<string, string> GetAvailableAppTypes()
+        {
+            var result =  new Dictionary<string, string>() {{AppTypes.PointOfSale, "Point of Sale"}, {"Crowdfund", "Crowdfund"}};
+            foreach (IApp app in _apps)
+            {
+                result.TryAdd(app.Type, app.Description);
+            }
+
+            return result;
+        }
+    
+    
+    
+        public string ConfigureLink(string appId, string vmSelectedAppType)
+        {
+
+            switch (vmSelectedAppType)
+            {
+                case  AppTypes.PointOfSale: return _linkGenerator.GetPathByAction(nameof(UIPointOfSaleController.UpdatePointOfSale),
+                    "UIPointOfSale", new {appId}, _options.RootPath);
+                case  AppTypes.Crowdfund: return _linkGenerator.GetPathByAction(nameof(UICrowdfundController.UpdateCrowdfund),
+                    "UICrowdfund", new {appId}, _options.RootPath);
+                default:
+                    return GetAppForType(vmSelectedAppType).ConfigureLink(appId);
+            }
+        
+
+        }
+
+        private IApp GetAppForType(string appType)
+        {
+            return _apps.First(app => app.Type == appType);
+        }
+
+        
         public async Task<object> GetAppInfo(string appId)
         {
-            var app = await GetApp(appId, AppType.Crowdfund, true);
+            var app = await GetApp(appId, AppTypes.Crowdfund, true);
             if (app != null)
             {
                 return await GetInfo(app);
@@ -201,11 +249,9 @@ namespace BTCPayServer.Services.Apps
             return entity.Status == InvoiceStatusLegacy.Complete || entity.Status == InvoiceStatusLegacy.Confirmed;
         }
 
-        public async Task<IEnumerable<ItemStats>> GetPerkStats(AppData appData)
+        public async Task<IEnumerable<ItemStats>> GetPerkStats(AppData appData, InvoiceEntity[] paidInvoices)
         {
             var settings = appData.GetSettings<CrowdfundSettings>();
-            var invoices = await GetInvoicesForApp(appData);
-            var paidInvoices = invoices.Where(IsPaid).ToArray();
             var currencyData = _Currencies.GetCurrencyData(settings.TargetCurrency, true);
             var perks = Parse(settings.PerksTemplate, settings.TargetCurrency);
             var perkCount = paidInvoices
@@ -242,9 +288,23 @@ namespace BTCPayServer.Services.Apps
 
         public async Task<IEnumerable<ItemStats>> GetItemStats(AppData appData)
         {
+            var paidInvoices = await GetInvoicesForApp(appData,
+                null, new []
+                {
+                    InvoiceState.ToString(InvoiceStatusLegacy.Paid),
+                    InvoiceState.ToString(InvoiceStatusLegacy.Confirmed),
+                    InvoiceState.ToString(InvoiceStatusLegacy.Complete)
+                });
+            switch (appData.AppType)
+            {
+                case AppTypes.PointOfSale:
+                    break;
+                case AppTypes.Crowdfund:
+                    return await GetPerkStats(appData, paidInvoices);
+                default: return await GetAppForType(appData.AppType).GetItemStats(appData, paidInvoices);
+            }
+            
             var settings = appData.GetSettings<PointOfSaleSettings>();
-            var invoices = await GetInvoicesForApp(appData);
-            var paidInvoices = invoices.Where(IsPaid).ToArray();
             var currencyData = _Currencies.GetCurrencyData(settings.Currency, true);
             var items = Parse(settings.Template, settings.Currency);
             var itemCount = paidInvoices
@@ -278,22 +338,28 @@ namespace BTCPayServer.Services.Apps
         public async Task<SalesStats> GetSalesStats(AppData app, int numberOfDays = 7)
         {
             ViewPointOfSaleViewModel.Item[] items = null;
+            var paidInvoices = await GetInvoicesForApp(app, DateTimeOffset.UtcNow - TimeSpan.FromDays(numberOfDays),
+                new []
+                {
+                    InvoiceState.ToString(InvoiceStatusLegacy.Paid),
+                    InvoiceState.ToString(InvoiceStatusLegacy.Confirmed),
+                    InvoiceState.ToString(InvoiceStatusLegacy.Complete)
+                });
             switch (app.AppType)
             {
-                case nameof(AppType.Crowdfund):
+                case nameof(AppTypes.Crowdfund):
                     var cfS = app.GetSettings<CrowdfundSettings>();
                     items = Parse(cfS.PerksTemplate, cfS.TargetCurrency);
                     break;
-                case nameof(AppType.PointOfSale):
+                case nameof(AppTypes.PointOfSale):
                     var posS = app.GetSettings<PointOfSaleSettings>();
                     items = Parse(posS.Template, posS.Currency);
                     break;
+                default:
+                    return await GetAppForType(app.AppType).GetSaleStates(app, paidInvoices,numberOfDays);
             }
 
-            var invoices = await GetInvoicesForApp(app);
-            var paidInvoices = invoices.Where(IsPaid).ToArray();
             var series = paidInvoices
-                .Where(entity => entity.InvoiceTime > DateTimeOffset.UtcNow - TimeSpan.FromDays(numberOfDays))
                 .Aggregate(new List<InvoiceStatsItem>(), AggregateInvoiceEntitiesForStats(items))
                 .GroupBy(entity => entity.Date)
                 .Select(entities => new SalesStatsItem
@@ -324,7 +390,7 @@ namespace BTCPayServer.Services.Apps
             };
         }
 
-        private class InvoiceStatsItem
+        public class InvoiceStatsItem
         {
             public string ItemCode { get; set; }
             public decimal FiatPrice { get; set; }
@@ -383,12 +449,13 @@ namespace BTCPayServer.Services.Apps
             return entity.Status == InvoiceStatusLegacy.Complete || entity.Status == InvoiceStatusLegacy.Confirmed || entity.Status == InvoiceStatusLegacy.Paid;
         }
 
-        public static string GetAppOrderId(AppData app) =>
-            app.AppType switch
+        public static string GetAppOrderId(AppData app) => GetAppOrderId(app.AppType, app.Id);
+        public static string GetAppOrderId(string appType, string appId) =>
+            appType switch
             {
-                nameof(AppType.Crowdfund) => $"crowdfund-app_{app.Id}",
-                nameof(AppType.PointOfSale) => $"pos-app_{app.Id}",
-                _ => throw new ArgumentOutOfRangeException(nameof(app), app.AppType)
+                nameof(AppTypes.Crowdfund) => $"crowdfund-app_{appId}",
+                nameof(AppTypes.PointOfSale) => $"pos-app_{appId}",
+                _ => $"{appType}_{appId}"
             };
 
         public static string GetAppInternalTag(string appId) => $"APP#{appId}";
@@ -397,13 +464,13 @@ namespace BTCPayServer.Services.Apps
             return invoice.GetInternalTags("APP#");
         }
 
-        private async Task<InvoiceEntity[]> GetInvoicesForApp(AppData appData, DateTime? startDate = null)
+        public async Task<InvoiceEntity[]> GetInvoicesForApp(AppData appData, DateTimeOffset? startDate = null,  string[] status = null)
         {
             var invoices = await _InvoiceRepository.GetInvoices(new InvoiceQuery()
             {
                 StoreId = new[] { appData.StoreData.Id },
                 OrderId = appData.TagAllInvoices ? null : new[] { GetAppOrderId(appData) },
-                Status = new[]{
+                Status = status?? new[]{
                     InvoiceState.ToString(InvoiceStatusLegacy.New),
                     InvoiceState.ToString(InvoiceStatusLegacy.Paid),
                     InvoiceState.ToString(InvoiceStatusLegacy.Confirmed),
@@ -472,18 +539,17 @@ namespace BTCPayServer.Services.Apps
 
         public async Task<string> GetAppViewStyleAsync(string appId, string appType)
         {
-            AppType appTypeEnum = Enum.Parse<AppType>(appType);
-            AppData appData = await GetApp(appId, appTypeEnum, false);
+            AppData appData = await GetApp(appId, appType, false);
             var settings = appData.GetSettings<PointOfSaleSettings>();
 
             string style;
-            switch (appTypeEnum)
+            switch (appType)
             {
-                case AppType.PointOfSale:
+                case AppTypes.PointOfSale:
                     string posViewStyle = (settings.EnableShoppingCart ? PosViewType.Cart : settings.DefaultView).ToString();
                     style = typeof(PosViewType).DisplayName(posViewStyle);
                     break;
-                case AppType.Crowdfund:
+                case AppTypes.Crowdfund:
                     style = string.Empty;
                     break;
                 default:
@@ -507,12 +573,12 @@ namespace BTCPayServer.Services.Apps
             return await query.ToListAsync();
         }
 
-        public async Task<AppData> GetApp(string appId, AppType? appType, bool includeStore = false)
+        public async Task<AppData> GetApp(string appId, string? appType, bool includeStore = false)
         {
-            using var ctx = _ContextFactory.CreateContext();
+            await using var ctx = _ContextFactory.CreateContext();
             var query = ctx.Apps
                 .Where(us => us.Id == appId &&
-                             (appType == null || us.AppType == appType.ToString()));
+                             (appType == null || us.AppType == appType));
 
             if (includeStore)
             {
@@ -729,25 +795,25 @@ namespace BTCPayServer.Services.Apps
             public YamlScalarNode Value { get; set; }
         }
 
-        public async Task<AppData> GetAppDataIfOwner(string userId, string appId, AppType? type = null)
+        public async Task<AppData> GetAppDataIfOwner(string userId, string appId, string? type = null)
         {
             if (userId == null || appId == null)
                 return null;
-            using var ctx = _ContextFactory.CreateContext();
+            await using var ctx = _ContextFactory.CreateContext();
             var app = await ctx.UserStore
                             .Where(us => us.ApplicationUserId == userId && us.Role == StoreRoles.Owner)
                             .SelectMany(us => us.StoreData.Apps.Where(a => a.Id == appId))
                .FirstOrDefaultAsync();
             if (app == null)
                 return null;
-            if (type != null && type.Value.ToString() != app.AppType)
+            if (type != null && type != app.AppType)
                 return null;
             return app;
         }
 
         public async Task UpdateOrCreateApp(AppData app)
         {
-            using var ctx = _ContextFactory.CreateContext();
+            await using var ctx = _ContextFactory.CreateContext();
             if (string.IsNullOrEmpty(app.Id))
             {
                 app.Id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(20));

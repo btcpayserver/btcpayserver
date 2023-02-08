@@ -55,16 +55,16 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
         [HttpGet("/")]
         [HttpGet("/apps/{appId}/crowdfund")]
         [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.AllowAll)]
-        [DomainMappingConstraint(AppType.Crowdfund)]
+        [DomainMappingConstraint(AppTypes.Crowdfund)]
         public async Task<IActionResult> ViewCrowdfund(string appId, string statusMessage)
         {
-            var app = await _appService.GetApp(appId, AppType.Crowdfund, true);
+            var app = await _appService.GetApp(appId, AppTypes.Crowdfund, true);
 
             if (app == null)
                 return NotFound();
             var settings = app.GetSettings<CrowdfundSettings>();
 
-            var isAdmin = await _appService.GetAppDataIfOwner(GetUserId(), appId, AppType.Crowdfund) != null;
+            var isAdmin = await _appService.GetAppDataIfOwner(GetUserId(), appId, AppTypes.Crowdfund) != null;
 
             var hasEnoughSettingsToLoad = !string.IsNullOrEmpty(settings.TargetCurrency);
             if (!hasEnoughSettingsToLoad)
@@ -89,17 +89,17 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
         [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.AllowAll)]
         [IgnoreAntiforgeryToken]
         [EnableCors(CorsPolicies.All)]
-        [DomainMappingConstraint(AppType.Crowdfund)]
+        [DomainMappingConstraint(AppTypes.Crowdfund)]
         [RateLimitsFilter(ZoneLimits.PublicInvoices, Scope = RateLimitsScope.RemoteAddress)]
         public async Task<IActionResult> ContributeToCrowdfund(string appId, ContributeToCrowdfund request, CancellationToken cancellationToken)
         {
-            var app = await _appService.GetApp(appId, AppType.Crowdfund, true);
+            var app = await _appService.GetApp(appId, AppTypes.Crowdfund, true);
 
             if (app == null)
                 return NotFound();
             var settings = app.GetSettings<CrowdfundSettings>();
 
-            var isAdmin = await _appService.GetAppDataIfOwner(GetUserId(), appId, AppType.Crowdfund) != null;
+            var isAdmin = await _appService.GetAppDataIfOwner(GetUserId(), appId, AppTypes.Crowdfund) != null;
 
             if (!settings.Enabled && !isAdmin)
             {

@@ -5,7 +5,7 @@
 @{
     var controller = $"UI{Model.App.AppType}";
     var action = $"Update{Model.App.AppType}";
-    var label = Model.App.AppType == nameof(AppType.Crowdfund) ? "Contributions" : "Sales";
+    var label = Model.App.AppType == nameof(AppTypes.Crowdfund) ? "Contributions" : "Sales";
 }
 
 <div id="AppSales-@Model.App.Id" class="widget app-sales">

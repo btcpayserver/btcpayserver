@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Services.Apps;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -9,14 +10,9 @@ namespace BTCPayServer.Models.AppViewModels
 {
     public class CreateAppViewModel
     {
-        public CreateAppViewModel()
+        public CreateAppViewModel(AppService appService)
         {
-            SetApps();
-        }
-        class Format
-        {
-            public string Name { get; set; }
-            public string Value { get; set; }
+            SetApps(appService);
         }
         [Required]
         [MaxLength(50)]
@@ -33,16 +29,14 @@ namespace BTCPayServer.Models.AppViewModels
 
         public SelectList AppTypes { get; set; }
 
-        void SetApps()
+        private void SetApps(AppService appService)
         {
-            var defaultAppType = AppType.PointOfSale.ToString();
-            var choices = typeof(AppType).GetEnumNames().Select(o => new Format
-            {
-                Name = typeof(AppType).DisplayName(o),
-                Value = o
-            }).ToArray();
+            var defaultAppType = Services.Apps.AppTypes.PointOfSale;
+            var choices = appService.GetAvailableAppTypes().Select(pair =>
+                new SelectListItem(pair.Value, pair.Key, pair.Key == defaultAppType));
+                
             var chosen = choices.FirstOrDefault(f => f.Value == defaultAppType) ?? choices.FirstOrDefault();
-            AppTypes = new SelectList(choices, nameof(chosen.Value), nameof(chosen.Name), chosen);
+            AppTypes = new SelectList(choices, nameof(chosen.Value), nameof(chosen.Text), chosen);
             SelectedAppType = chosen.Value;
         }
 

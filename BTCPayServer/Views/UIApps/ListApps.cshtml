@@ -1,6 +1,7 @@
 @using BTCPayServer.Services.Apps
 @using BTCPayServer.Abstractions.Models
 @model ListAppsViewModel
+@inject AppService AppService
 @{
     ViewData.SetActivePage(AppsNavPages.Index, "Apps");
     var storeNameSortOrder = (string)ViewData["StoreNameSortOrder"];
@@ -89,13 +90,16 @@
                         </td>
                         <td>@app.AppName</td>
                         <td>
-                            @typeof(AppType).DisplayName(app.AppType) 
-                            @if (app.AppType != AppType.Crowdfund.ToString())
-                            {
-                                <span>-</span> 
+                            @AppService.GetAvailableAppTypes()[app.AppType]
+                            @{
+                                var viewStyle = @app.ViewStyle;
                             }
+                            @if (!string.IsNullOrEmpty(viewStyle))
+                            {
+                                <span>-</span>@Safe.Raw(viewStyle)
+                            }
+
                             
-                            @app.ViewStyle
                         </td>
                         <td class="text-end">
                             @if (app.IsOwner)

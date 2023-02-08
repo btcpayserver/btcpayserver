@@ -1,12 +1,24 @@
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Threading.Tasks;
+using BTCPayServer.Data;
+using BTCPayServer.Services.Invoices;
 
 namespace BTCPayServer.Services.Apps
 {
-    public enum AppType
+    public interface IApp
     {
-        [Display(Name = "Point of Sale")]
-        PointOfSale,
-        Crowdfund
+        public string Description { get;  }
+        public string Type { get; }
+        string ConfigureLink(string appId);
+        Task<SalesStats> GetSaleStates(AppData app, InvoiceEntity[] paidInvoices, int numberOfDays);
+        Task<IEnumerable<ItemStats>> GetItemStats(AppData appData, InvoiceEntity[] invoiceEntities);
+    }
+    
+    public static class AppTypes
+    {
+        public const  string PointOfSale = nameof(PointOfSale);
+        public const  string Crowdfund = nameof(Crowdfund);
     }
 
     public enum PosViewType

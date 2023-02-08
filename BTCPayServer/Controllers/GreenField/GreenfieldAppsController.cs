@@ -63,7 +63,7 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 StoreDataId = storeId,
                 Name = request.AppName,
-                AppType = AppType.Crowdfund.ToString()
+                AppType = AppTypes.Crowdfund
             };
 
             appData.SetSettings(ToCrowdfundSettings(request));
@@ -94,7 +94,7 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 StoreDataId = storeId,
                 Name = request.AppName,
-                AppType = AppType.PointOfSale.ToString()
+                AppType = AppTypes.PointOfSale
             };
 
             appData.SetSettings(ToPointOfSaleSettings(request));
@@ -108,7 +108,7 @@ namespace BTCPayServer.Controllers.Greenfield
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> UpdatePointOfSaleApp(string appId, CreatePointOfSaleAppRequest request)
         {
-            var app = await _appService.GetApp(appId, AppType.PointOfSale);
+            var app = await _appService.GetApp(appId, AppTypes.PointOfSale);
             if (app == null)
             {
                 return AppNotFound();
@@ -181,7 +181,7 @@ namespace BTCPayServer.Controllers.Greenfield
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> GetPosApp(string appId)
         {
-            var app = await _appService.GetApp(appId, AppType.PointOfSale);
+            var app = await _appService.GetApp(appId, AppTypes.PointOfSale);
             if (app == null)
             {
                 return AppNotFound();
@@ -194,7 +194,7 @@ namespace BTCPayServer.Controllers.Greenfield
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> GetCrowdfundApp(string appId)
         {
-            var app = await _appService.GetApp(appId, AppType.Crowdfund);
+            var app = await _appService.GetApp(appId, AppTypes.Crowdfund);
             if (app == null)
             {
                 return AppNotFound();

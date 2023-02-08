@@ -25,9 +25,7 @@ public class AppTopItems : ViewComponent
         if (vm.InitialRendering)
             return View(vm);
 
-        var entries = Enum.Parse<AppType>(vm.App.AppType) == AppType.Crowdfund
-            ? await _appService.GetPerkStats(vm.App)
-            : await _appService.GetItemStats(vm.App);
+        var entries = await _appService.GetItemStats(vm.App);
 
         vm.Entries = entries.ToList();
 

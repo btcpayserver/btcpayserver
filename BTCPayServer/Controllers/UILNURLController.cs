@@ -255,12 +255,12 @@ namespace BTCPayServer
             string currencyCode = null;
             switch (app.AppType)
             {
-                case nameof(AppType.Crowdfund):
+                case nameof(AppTypes.Crowdfund):
                     var cfS = app.GetSettings<CrowdfundSettings>();
                     currencyCode = cfS.TargetCurrency;
                     items = _appService.Parse(cfS.PerksTemplate, cfS.TargetCurrency);
                     break;
-                case nameof(AppType.PointOfSale):
+                case nameof(AppTypes.PointOfSale):
                     var posS = app.GetSettings<PointOfSaleSettings>();
                     currencyCode = posS.Currency;
                     items = _appService.Parse(posS.Template, posS.Currency);
@@ -391,7 +391,7 @@ namespace BTCPayServer
 
             var redirectUrl = app?.AppType switch
             {
-                nameof(AppType.PointOfSale) => app.GetSettings<PointOfSaleSettings>().RedirectUrl ??
+                nameof(AppTypes.PointOfSale) => app.GetSettings<PointOfSaleSettings>().RedirectUrl ??
                                                HttpContext.Request.GetAbsoluteUri($"/apps/{app.Id}/pos"),
                 _ => null
             };

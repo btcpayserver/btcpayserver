@@ -459,7 +459,7 @@ WHERE cte.""Id""=p.""Id""
                 string newTemplate;
                 switch (app.AppType)
                 {
-                    case nameof(AppType.Crowdfund):
+                    case nameof(AppTypes.Crowdfund):
                         var settings1 = app.GetSettings<CrowdfundSettings>();
                         if (string.IsNullOrEmpty(settings1.TargetCurrency))
                         {
@@ -475,7 +475,7 @@ WHERE cte.""Id""=p.""Id""
                         };
                         break;
 
-                    case nameof(AppType.PointOfSale):
+                    case nameof(AppTypes.PointOfSale):
 
                         var settings2 = app.GetSettings<PointOfSaleSettings>();
                         if (string.IsNullOrEmpty(settings2.Currency))

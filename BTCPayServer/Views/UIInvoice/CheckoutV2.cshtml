@@ -47,7 +47,7 @@
                 <h5 class="text-center mt-1 mb-3 fw-semibold" v-if="srvModel.itemDesc" v-text="srvModel.itemDesc">@Model.ItemDesc</h5>
                 @if (Model.IsUnsetTopUp)
                 {
-                    <h2 id="AmountDue" class="text-center mb-3" v-t="'any_amount'"></h2>
+                    <h2 id="AmountDue" class="text-center" v-t="'any_amount'"></h2>
                 }
                 else
                 {
@@ -237,5 +237,6 @@
         <partial name="@paymentMethodHandler.ExtensionPartial-v2" model="@Model"/>
     }
     @await Component.InvokeAsync("UiExtensionPoint", new { location = "checkout-payment", model = Model })
+    @await Component.InvokeAsync("UiExtensionPoint", new { location = "checkout-v2-end", model = Model })
 </body>
 </html>

@@ -61,14 +61,14 @@ namespace BTCPayServer.Tests
             Assert.Contains("LNURL", s.Driver.FindElement(By.CssSelector(".payment-method:nth-child(2)")).Text);
             var payUrl = s.Driver.FindElement(By.CssSelector(".btn-primary")).GetAttribute("href");
             Assert.StartsWith("bitcoin:", payUrl);
-            Assert.DoesNotContain("&lightning=", payUrl);
+            Assert.DoesNotContain("lightning=", payUrl);
             
             // Switch to LNURL
             s.Driver.FindElement(By.CssSelector(".payment-method:nth-child(2)")).Click();
             TestUtils.Eventually(() =>
             {
                 payUrl = s.Driver.FindElement(By.CssSelector(".btn-primary")).GetAttribute("href");
-                Assert.StartsWith("lightning:", payUrl);
+                Assert.StartsWith("lightning:lnurl", payUrl);
             });
 
             // Default payment method
@@ -78,9 +78,9 @@ namespace BTCPayServer.Tests
 
             Assert.Equal(2, s.Driver.FindElements(By.CssSelector(".payment-method")).Count);
             Assert.Contains("Lightning", s.Driver.WaitForElement(By.CssSelector(".payment-method.active")).Text);
-            Assert.DoesNotContain("LNURL", s.Driver.PageSource);
+            Assert.Contains("Bitcoin", s.Driver.WaitForElement(By.CssSelector(".payment-method")).Text);
             payUrl = s.Driver.FindElement(By.CssSelector(".btn-primary")).GetAttribute("href");
-            Assert.StartsWith("lightning:", payUrl);
+            Assert.StartsWith("lightning:lnbcrt", payUrl);
 
             // Lightning amount in Sats
             Assert.Contains("BTC", s.Driver.FindElement(By.Id("AmountDue")).Text);
@@ -188,17 +188,16 @@ namespace BTCPayServer.Tests
             Assert.Empty(s.Driver.FindElements(By.CssSelector(".payment-method")));
             payUrl = s.Driver.FindElement(By.CssSelector(".btn-primary")).GetAttribute("href");
             Assert.StartsWith("bitcoin:", payUrl);
-            Assert.Contains("&lightning=", payUrl);
+            Assert.Contains("&lightning=lnbcrt", payUrl);
 
             // BIP21 with topup invoice
             s.GoToHome();
             invoiceId = s.CreateInvoice(amount: null);
             s.GoToInvoiceCheckout(invoiceId);
-            Assert.Equal(2, s.Driver.FindElements(By.CssSelector(".payment-method")).Count);
-            Assert.Contains("Bitcoin", s.Driver.FindElement(By.CssSelector(".payment-method.active")).Text);
-            Assert.Contains("LNURL", s.Driver.FindElement(By.CssSelector(".payment-method:nth-child(2)")).Text);
+            Assert.Empty(s.Driver.FindElements(By.CssSelector(".payment-method")));
             payUrl = s.Driver.FindElement(By.CssSelector(".btn-primary")).GetAttribute("href");
-            Assert.DoesNotContain("&lightning=", payUrl);
+            Assert.StartsWith("bitcoin:", payUrl);
+            Assert.DoesNotContain("&lightning=lnurl", payUrl);
 
             // Expiry message should not show amount for topup invoice
             expirySeconds = s.Driver.FindElement(By.Id("ExpirySeconds"));

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
-using BTCPayServer.Common;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Logging;
@@ -11,6 +10,7 @@ using BTCPayServer.Models;
 using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
+using Microsoft.AspNetCore.Http;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using NBXplorer.Models;
@@ -69,13 +69,24 @@ namespace BTCPayServer.Payments.Bitcoin
             {
                 var lightningInfo = invoiceResponse.CryptoInfo.FirstOrDefault(a =>
                     a.GetpaymentMethodId() == new PaymentMethodId(model.CryptoCode, PaymentTypes.LightningLike));
-
-
-                // Turn the colon into an equal sign to trun the whole into the lightning part of the query string
-
-                // lightningInfo?.PaymentUrls?.BOLT11:  lightning:lnbcrt440070n1p3ua9np...
-                lightningFallback = lightningInfo?.PaymentUrls?.BOLT11.Replace("lightning:", "lightning=", StringComparison.OrdinalIgnoreCase);
-                // lightningFallback: lightning=lnbcrt440070n1p3ua9np...
+                if (lightningInfo is not null && !string.IsNullOrEmpty(lightningInfo.PaymentUrls?.BOLT11))
+                {
+                    lightningFallback = lightningInfo.PaymentUrls.BOLT11;
+                }   
+                else
+                {
+                    var lnurl = invoiceResponse.CryptoInfo.FirstOrDefault(a =>
+                        a.GetpaymentMethodId() == new PaymentMethodId(model.CryptoCode, PaymentTypes.LNURLPay));
+                    if (lnurl is not null)
+                    {
+                        lightningFallback = LNURL.LNURL.EncodeUri(new Uri(lnurl.Url), "payRequest", true).ToString();
+                    }
+                }
+                if (!string.IsNullOrEmpty(lightningFallback))
+                {
+                    lightningFallback = lightningFallback
+                        .Replace("lightning:", "lightning=", StringComparison.OrdinalIgnoreCase);
+                }
             }
 
             if (model.Activated)

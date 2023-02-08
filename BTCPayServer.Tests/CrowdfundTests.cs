@@ -8,7 +8,6 @@ using BTCPayServer.Plugins.Crowdfund.Controllers;
 using BTCPayServer.Plugins.Crowdfund.Models;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
-using BTCPayServer.Tests.Logging;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 using NBitpayClient;
@@ -34,12 +33,11 @@ namespace BTCPayServer.Tests
             await user.GrantAccessAsync();
             var user2 = tester.NewAccount();
             await user2.GrantAccessAsync();
-            var stores = user.GetController<UIStoresController>();
             var apps = user.GetController<UIAppsController>();
             var apps2 = user2.GetController<UIAppsController>();
             var crowdfund = user.GetController<UICrowdfundController>();
             var vm = Assert.IsType<CreateAppViewModel>(Assert.IsType<ViewResult>(apps.CreateApp(user.StoreId)).Model);
-            var appType = AppTypes.Crowdfund.ToString();
+            var appType = AppTypes.Crowdfund;
             Assert.NotNull(vm.SelectedAppType);
             Assert.Null(vm.AppName);
             vm.AppName = "test";
@@ -62,7 +60,7 @@ namespace BTCPayServer.Tests
             Assert.IsType<NotFoundResult>(apps2.DeleteApp(appList.Apps[0].Id));
             Assert.IsType<ViewResult>(apps.DeleteApp(appList.Apps[0].Id));
             redirectToAction = Assert.IsType<RedirectToActionResult>(apps.DeleteAppPost(appList.Apps[0].Id).Result);
-            Assert.Equal(nameof(stores.Dashboard), redirectToAction.ActionName);
+            Assert.Equal(nameof(UIStoresController.Dashboard), redirectToAction.ActionName);
             appList = await apps.ListApps(user.StoreId).AssertViewModelAsync<ListAppsViewModel>();
             Assert.Empty(appList.Apps);
         }
@@ -79,7 +77,7 @@ namespace BTCPayServer.Tests
             var apps = user.GetController<UIAppsController>();
             var crowdfund = user.GetController<UICrowdfundController>();
             var vm = (await apps.CreateApp(user.StoreId)).AssertViewModel<CreateAppViewModel>();
-            var appType = AppTypes.Crowdfund.ToString();
+            var appType = AppTypes.Crowdfund;
             vm.AppName = "test";
             vm.SelectedAppType = appType;
             Assert.IsType<RedirectToActionResult>(apps.CreateApp(user.StoreId, vm).Result);
@@ -170,7 +168,7 @@ namespace BTCPayServer.Tests
             var apps = user.GetController<UIAppsController>();
             var crowdfund = user.GetController<UICrowdfundController>();
             var vm = Assert.IsType<CreateAppViewModel>(Assert.IsType<ViewResult>(apps.CreateApp(user.StoreId)).Model);
-            var appType = AppTypes.Crowdfund.ToString();
+            var appType = AppTypes.Crowdfund;
             vm.AppName = "test";
             vm.SelectedAppType = appType;
             Assert.IsType<RedirectToActionResult>(apps.CreateApp(user.StoreId, vm).Result);
@@ -193,7 +191,7 @@ namespace BTCPayServer.Tests
             var publicApps = user.GetController<UICrowdfundController>();
 
             var model = Assert.IsType<ViewCrowdfundViewModel>(Assert
-                .IsType<ViewResult>(publicApps.ViewCrowdfund(app.Id, String.Empty).Result).Model);
+                .IsType<ViewResult>(publicApps.ViewCrowdfund(app.Id, string.Empty).Result).Model);
 
             Assert.Equal(crowdfundViewModel.TargetAmount, model.TargetAmount);
             Assert.Equal(crowdfundViewModel.EndDate, model.EndDate);
@@ -226,12 +224,12 @@ namespace BTCPayServer.Tests
 
             TestLogs.LogInformation("Let's check current amount change once payment is confirmed");
             var invoiceAddress = BitcoinAddress.Create(invoice.CryptoInfo[0].Address, tester.ExplorerNode.Network);
-            tester.ExplorerNode.SendToAddress(invoiceAddress, invoice.BtcDue);
-            tester.ExplorerNode.Generate(1); // By default invoice confirmed at 1 block
+            await tester.ExplorerNode.SendToAddressAsync(invoiceAddress, invoice.BtcDue);
+            await tester.ExplorerNode.GenerateAsync(1); // By default invoice confirmed at 1 block
             TestUtils.Eventually(() =>
             {
                 model = Assert.IsType<ViewCrowdfundViewModel>(Assert
-                .IsType<ViewResult>(publicApps.ViewCrowdfund(app.Id, String.Empty).Result).Model);
+                .IsType<ViewResult>(publicApps.ViewCrowdfund(app.Id, string.Empty).Result).Model);
                 Assert.Equal(1m, model.Info.CurrentAmount);
                 Assert.Equal(0m, model.Info.CurrentPendingAmount);
             });

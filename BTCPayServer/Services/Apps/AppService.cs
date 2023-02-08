@@ -249,7 +249,7 @@ namespace BTCPayServer.Services.Apps
             return entity.Status == InvoiceStatusLegacy.Complete || entity.Status == InvoiceStatusLegacy.Confirmed;
         }
 
-        public async Task<IEnumerable<ItemStats>> GetPerkStats(AppData appData, InvoiceEntity[] paidInvoices)
+        private IEnumerable<ItemStats> GetPerkStats(AppData appData, InvoiceEntity[] paidInvoices)
         {
             var settings = appData.GetSettings<CrowdfundSettings>();
             var currencyData = _Currencies.GetCurrencyData(settings.TargetCurrency, true);
@@ -300,7 +300,7 @@ namespace BTCPayServer.Services.Apps
                 case AppTypes.PointOfSale:
                     break;
                 case AppTypes.Crowdfund:
-                    return await GetPerkStats(appData, paidInvoices);
+                    return GetPerkStats(appData, paidInvoices);
                 default: return await GetAppForType(appData.AppType).GetItemStats(appData, paidInvoices);
             }
             
@@ -337,7 +337,7 @@ namespace BTCPayServer.Services.Apps
 
         public async Task<SalesStats> GetSalesStats(AppData app, int numberOfDays = 7)
         {
-            ViewPointOfSaleViewModel.Item[] items = null;
+            ViewPointOfSaleViewModel.Item[] items;
             var paidInvoices = await GetInvoicesForApp(app, DateTimeOffset.UtcNow - TimeSpan.FromDays(numberOfDays),
                 new []
                 {
@@ -486,7 +486,7 @@ namespace BTCPayServer.Services.Apps
 
         public async Task<StoreData[]> GetOwnedStores(string userId)
         {
-            using var ctx = _ContextFactory.CreateContext();
+            await using var ctx = _ContextFactory.CreateContext();
             return await ctx.UserStore
                 .Where(us => us.ApplicationUserId == userId && us.Role == StoreRoles.Owner)
                 .Select(u => u.StoreData)
@@ -495,7 +495,7 @@ namespace BTCPayServer.Services.Apps
 
         public async Task<bool> DeleteApp(AppData appData)
         {
-            using var ctx = _ContextFactory.CreateContext();
+            await using var ctx = _ContextFactory.CreateContext();
             ctx.Apps.Add(appData);
             ctx.Entry(appData).State = EntityState.Deleted;
             return await ctx.SaveChangesAsync() == 1;
@@ -503,7 +503,7 @@ namespace BTCPayServer.Services.Apps
 
         public async Task<ListAppsViewModel.ListAppViewModel[]> GetAllApps(string userId, bool allowNoUser = false, string storeId = null)
         {
-            using var ctx = _ContextFactory.CreateContext();
+            await using var ctx = _ContextFactory.CreateContext();
             var listApps = await ctx.UserStore
                 .Where(us =>
                     (allowNoUser && string.IsNullOrEmpty(userId) || us.ApplicationUserId == userId) &&
@@ -539,7 +539,7 @@ namespace BTCPayServer.Services.Apps
 
         public async Task<string> GetAppViewStyleAsync(string appId, string appType)
         {
-            AppData appData = await GetApp(appId, appType, false);
+            AppData appData = await GetApp(appId, appType);
             var settings = appData.GetSettings<PointOfSaleSettings>();
 
             string style;
@@ -562,7 +562,7 @@ namespace BTCPayServer.Services.Apps
 
         public async Task<List<AppData>> GetApps(string[] appIds, bool includeStore = false)
         {
-            using var ctx = _ContextFactory.CreateContext();
+            await using var ctx = _ContextFactory.CreateContext();
             var query = ctx.Apps
                 .Where(us => appIds.Contains(us.Id));
 
@@ -685,7 +685,7 @@ namespace BTCPayServer.Services.Apps
                         BuyButtonText = c.GetDetailString("buyButtonText"),
                         Inventory =
                             string.IsNullOrEmpty(c.GetDetailString("inventory"))
-                                ? (int?)null
+                                ? null
                                 : int.Parse(c.GetDetailString("inventory"), CultureInfo.InvariantCulture),
                         PaymentMethods = c.GetDetailStringList("payment_methods"),
                         Disabled = c.GetDetailString("disabled") == "true"
@@ -795,7 +795,7 @@ namespace BTCPayServer.Services.Apps
             public YamlScalarNode Value { get; set; }
         }
 
-        public async Task<AppData> GetAppDataIfOwner(string userId, string appId, string? type = null)
+        public async Task<AppData> GetAppDataIfOwner(string userId, string appId, string type = null)
         {
             if (userId == null || appId == null)
                 return null;

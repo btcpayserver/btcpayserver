@@ -39,7 +39,7 @@ namespace BTCPayServer.Tests
             var apps2 = user2.GetController<UIAppsController>();
             var crowdfund = user.GetController<UICrowdfundController>();
             var vm = Assert.IsType<CreateAppViewModel>(Assert.IsType<ViewResult>(apps.CreateApp(user.StoreId)).Model);
-            var appType = AppType.Crowdfund.ToString();
+            var appType = AppTypes.Crowdfund.ToString();
             Assert.NotNull(vm.SelectedAppType);
             Assert.Null(vm.AppName);
             vm.AppName = "test";
@@ -78,8 +78,8 @@ namespace BTCPayServer.Tests
             user.RegisterDerivationScheme("BTC");
             var apps = user.GetController<UIAppsController>();
             var crowdfund = user.GetController<UICrowdfundController>();
-            var vm = apps.CreateApp(user.StoreId).AssertViewModel<CreateAppViewModel>();
-            var appType = AppType.Crowdfund.ToString();
+            var vm = (await apps.CreateApp(user.StoreId)).AssertViewModel<CreateAppViewModel>();
+            var appType = AppTypes.Crowdfund.ToString();
             vm.AppName = "test";
             vm.SelectedAppType = appType;
             Assert.IsType<RedirectToActionResult>(apps.CreateApp(user.StoreId, vm).Result);
@@ -170,7 +170,7 @@ namespace BTCPayServer.Tests
             var apps = user.GetController<UIAppsController>();
             var crowdfund = user.GetController<UICrowdfundController>();
             var vm = Assert.IsType<CreateAppViewModel>(Assert.IsType<ViewResult>(apps.CreateApp(user.StoreId)).Model);
-            var appType = AppType.Crowdfund.ToString();
+            var appType = AppTypes.Crowdfund.ToString();
             vm.AppName = "test";
             vm.SelectedAppType = appType;
             Assert.IsType<RedirectToActionResult>(apps.CreateApp(user.StoreId, vm).Result);

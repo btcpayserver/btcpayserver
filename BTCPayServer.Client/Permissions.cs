@@ -79,7 +79,9 @@ namespace BTCPayServer.Client
         }
         public static bool IsValidPolicy(string policy)
         {
-            return AllPolicies.Any(p => p.Equals(policy, StringComparison.OrdinalIgnoreCase));
+            return AllPolicies.Any(p => 
+                p.Equals(policy, StringComparison.OrdinalIgnoreCase)) ||
+                policy.Equals(CanModifyStoreSettingsUnscoped);
         }
 
         public static bool IsStorePolicy(string policy)
@@ -125,7 +127,7 @@ namespace BTCPayServer.Client
             policy = policy.Trim().ToLowerInvariant();
             if (!Policies.IsValidPolicy(policy))
                 return false;
-            if (scope != null && !Policies.IsStorePolicy(policy))
+            if (!string.IsNullOrEmpty(scope) && !Policies.IsStorePolicy(policy))
                 return false;
             permission = new Permission(policy, scope);
             return true;
@@ -178,7 +180,7 @@ namespace BTCPayServer.Client
             }
             if (!Policies.IsStorePolicy(subpermission.Policy))
                 return true;
-            return Scope == null || subpermission.Scope == this.Scope;
+            return Scope == null || subpermission.Scope == Scope;
         }
 
         public static IEnumerable<Permission> ToPermissions(string[] permissions)
@@ -234,7 +236,6 @@ namespace BTCPayServer.Client
             PolicyHasChild(Policies.CanManageCustodianAccounts, Policies.CanViewCustodianAccounts );
             PolicyHasChild(Policies.CanModifyInvoices, Policies.CanViewInvoices, Policies.CanCreateInvoice );
             PolicyHasChild(Policies.CanViewStoreSettings, Policies.CanViewInvoices, Policies.CanViewPaymentRequests  );
-            
         }
 
         private static void PolicyHasChild(string policy, params string[] subPolicies)
@@ -251,30 +252,23 @@ namespace BTCPayServer.Client
                 PolicyMap.Add(policy,subPolicies.ToHashSet());
             }
         }
-        
 
         public string Scope { get; }
         public string Policy { get; }
 
         public override string ToString()
         {
-            if (Scope != null)
-            {
-                return $"{Policy}:{Scope}";
-            }
-            return Policy;
+            return Scope != null ? $"{Policy}:{Scope}" : Policy;
         }
 
         public override bool Equals(object obj)
         {
             Permission item = obj as Permission;
-            if (item == null)
-                return false;
-            return ToString().Equals(item.ToString());
+            return item != null && ToString().Equals(item.ToString());
         }
         public static bool operator ==(Permission a, Permission b)
         {
-            if (System.Object.ReferenceEquals(a, b))
+            if (ReferenceEquals(a, b))
                 return true;
             if (((object)a == null) || ((object)b == null))
                 return false;

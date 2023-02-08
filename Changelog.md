@@ -1,5 +1,42 @@
 # Changelog
 
+## 1.7.6
+
+There are two vulnerabilities fixed in this release.
+Those are not severe, as it requires the victim to actively click on a malicious link, but we recommend to update.
+
+We also introduce a breaking change in the Greenfield API route `/api/v1/stores/{storeId}/rates/configuration/preview`. (#4607)
+This breaking change shouldn't impact the majority of people.
+
+### New features
+
+* Make Lightning NFC built in (#4541) @Kukks
+* Greenfield get app details (#4102) @bolatovumar
+* Greenfield: Add store rates api (#4550) @Kukks
+* Server Theme: Allow to unset CustomThemeCssUri @dennisreimann
+* Store Branding: Add custom CSS option (#4459, #4527) @dennisreimann
+* Store branding on invoice and receipts, payment requests and pull payments, point of sale and crowdfunding (#3842, #4568) @dennisreimann
+* Add Greenfield API endpoint for pull payment LNURL items (#4472) @bolatovumar
+* Greenfield: Add lightning payments list endpoint (#4407) @dennisreimann
+* Add additional permission for pull payments (#4539) @Kukks
+
+### Bug fixes
+
+* Fix: Mark selected payouts as already paid had an unexpected result (#4579) @Kukks
+* Fix: Payjoin wasn't always properly choosing utxo for optimal change (#4600) @NicolasDorier
+* Fix: If PoS item code contains a /, LNUrl would not work (#4601, #4602) @NicolasDorier
+* Fix: a bunch of open redirect (#4575). Credit to @gonzxph. @NicolasDorier
+* Fix: Disqus integration in Crowdfunding store (#4580, #4572) @dennisreimann
+* Fix: XSS on uploaded files to the file storage (#4567) Credit to @ctflearner. @NicolasDorier
+* Fix: Greenfield currency rate should be strings (#4607) @NicolasDorier
+
+### Improvements
+
+* If a domain name is mapped to an app, always redirect the ugly /apps/{appId} to it (#4391) @dennisreimann
+* Add missing CORS to LN Address/LNUrl route (Compatibility with Beach Wallet) (#4587) @NicolasDorier
+* Make plugin able to register rate providers (#4551) @NicolasDorier
+* Point of Sale: Improve merchant view (#4560) @dennisreimann
+
 ## 1.7.5
 
 ### New features

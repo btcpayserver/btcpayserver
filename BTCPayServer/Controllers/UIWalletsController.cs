@@ -1295,7 +1295,7 @@ namespace BTCPayServer.Controllers
                 return NotFound();
 
             var wallet = _walletProvider.GetWallet(paymentMethod.Network);
-            var walletTransactionsInfoAsync = WalletRepository.GetWalletTransactionsInfo(walletId, (string[])null);
+            var walletTransactionsInfoAsync = WalletRepository.GetWalletTransactionsInfo(walletId, (string[]?)null);
             var input = await wallet.FetchTransactionHistory(paymentMethod.AccountDerivation, null, null);
             var walletTransactionsInfo = await walletTransactionsInfoAsync;
             var export = new TransactionsExport(wallet, walletTransactionsInfo);

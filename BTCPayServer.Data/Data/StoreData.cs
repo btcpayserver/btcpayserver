@@ -25,7 +25,6 @@ namespace BTCPayServer.Data
         [Obsolete("Use GetDerivationStrategies instead")]
         public string DerivationStrategy { get; set; }
 
-        [Obsolete("Use GetDerivationStrategies instead")]
         public string DerivationStrategies { get; set; }
 
         public string StoreName { get; set; }

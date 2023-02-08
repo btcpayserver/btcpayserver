@@ -1260,6 +1260,7 @@
                     "rate": {
                         "type": "string",
                         "format": "decimal",
+                        "example": "64392.23",
                         "description": "The rate between this payment method's currency and the invoice currency"
                     },
                     "paymentMethodPaid": {

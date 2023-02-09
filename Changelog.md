@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.7.7
+
+Some users experienced Error 500 after login on to BTCPay Server from the 1.7.6.
+If it is your case, to update on docker deployments via the UI, you need to:
+
+1. Start a browser session in incognito/private mode.
+2. Browse to `https://{yourserver}/server/maintenance`
+3. Hit update button
+
+### Bug fixes
+
+* Fix crash for installations supporting zcash or monero (#4610) @NicolasDorier
+
 ## 1.7.6
 
 There are two vulnerabilities fixed in this release.

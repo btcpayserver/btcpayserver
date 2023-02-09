@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 using BTCPayServer.Data.Data;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -29,6 +30,11 @@ namespace BTCPayServer.Data
             : base(options)
         {
             _designTime = designTime;
+        }
+
+        public async Task<string?> GetMigrationState()
+        {
+            return (await Settings.FromSqlRaw("SELECT \"Id\", \"Value\" FROM \"Settings\" WHERE \"Id\"='MigrationData'").AsNoTracking().FirstOrDefaultAsync())?.Value;
         }
 
         public DbSet<AddressInvoiceData> AddressInvoices { get; set; }

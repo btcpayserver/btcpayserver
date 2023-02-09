@@ -65,10 +65,14 @@ namespace BTCPayServer.Configuration
             if (conf.GetOrDefault<bool>("launchsettings", false) && NetworkType != ChainName.Regtest)
                 throw new ConfigException($"You need to run BTCPayServer with the run.sh or run.ps1 script");
 
-            if (conf.GetOrDefault<string>("SQLITEFILE", null) != null)
-                Logs.Configuration.LogWarning("SQLITE backend support is deprecated and will be soon out of support");
-            if (conf.GetOrDefault<string>("MYSQL", null) != null)
-                Logs.Configuration.LogWarning("MYSQL backend support is deprecated and will be soon out of support");
+            if (conf.GetOrDefault<string>("POSTGRES", null) == null)
+            {
+
+                if (conf.GetOrDefault<string>("SQLITEFILE", null) != null)
+                    Logs.Configuration.LogWarning("SQLITE backend support is out of support. Please migrate to Postgres by following the following instructions https://github.com/btcpayserver/btcpayserver/blob/master/docs/db-migration.md");
+                if (conf.GetOrDefault<string>("MYSQL", null) != null)
+                    Logs.Configuration.LogWarning("MYSQL backend support is out of support. Please migrate to Postgres by following the following instructions (https://github.com/btcpayserver/btcpayserver/blob/master/docs/db-migration.md)");
+            }
             DockerDeployment = conf.GetOrDefault<bool>("dockerdeployment", true);
             TorrcFile = conf.GetOrDefault<string>("torrcfile", null);
             TorServices = conf.GetOrDefault<string>("torservices", null)

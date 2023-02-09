@@ -686,9 +686,16 @@ WHERE cte.""Id""=p.""Id""
 retry:
                 try
                 {
-                    await _DBContextFactory.CreateContext().Database.MigrateAsync();
+                    var db = _DBContextFactory.CreateContext();
+                    await db.Database.MigrateAsync();
+                    if (db.Database.IsNpgsql())
+                    {
+                        if (await db.GetMigrationState() == "pending")
+                            throw new ConfigException("This database hasn't been completely migrated, please retry migration by setting the BTCPAY_SQLITEFILE or BTCPAY_MYSQL setting on top of BTCPAY_POSTGRES");
+                    }
                 }
                 // Starting up
+                catch (ConfigException) { throw; }
                 catch when (!cts.Token.IsCancellationRequested)
                 {
                     try

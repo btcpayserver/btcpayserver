@@ -4,7 +4,7 @@
 <template id="bitcoin-method-checkout-template">
     @await Component.InvokeAsync("UiExtensionPoint", new {location = "checkout-v2-bitcoin-pre-content", model = Model})
     <div class="payment-box">
-        <div v-if="model.invoiceBitcoinUrlQR" class="qr-container" :data-clipboard="model.btcAddress" data-clipboard-confirm-element="QR_Text_@Model.PaymentMethodId">
+        <div v-if="model.invoiceBitcoinUrlQR" class="qr-container" :data-qr-value="model.invoiceBitcoinUrlQR" :data-clipboard="model.btcAddress" data-clipboard-confirm-element="QR_Text_@Model.PaymentMethodId">
             <div>
                 <qrcode :value="model.invoiceBitcoinUrlQR" tag="div" :options="qrOptions" />
             </div>

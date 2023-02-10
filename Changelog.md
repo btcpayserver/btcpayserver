@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.7.8
+
+With this release, we are providing a migration path for legacy MySql and SQLite installations.
+
+If you are a BTCPay Server integrators such as developer of Raspiblitz, Umbrel, Embassy OS or anybody running BTCPay Server on SQLite or MySql, please refer to [the documentation](docs/db-migration.md).
+
+While SQLite and MySQL should still be working for one year or two, we will not fix bugs related to those backend. (unless it impacts migration)
+
+### New feature
+
+* Add ability to migrate from MySQL/SQLite to Postgres backend. (#4614) Please read [the documentation](docs/db-migration.md). @NicolasDorier
+
+### Bug fixes
+
+* Fix: MySQL install were crashing during db update @NicolasDorier
+* In case of the unified invoice, the LNURL wasn't correct (#4616, #4609) @dennisreimann
+* Fixes missing uppercasing for the QR code in case of non-unified QR. @dennisreimann
+* Fix: snort.social still didn't play with our lnaddress implementation (#4615, #4617) @dennisreimann
+
 ## 1.7.7
 
 Some users experienced Error 500 after login on to BTCPay Server from the 1.7.6.

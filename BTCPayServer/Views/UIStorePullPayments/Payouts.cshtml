@@ -49,13 +49,37 @@
 }
 
 @section PageFootContent {
-    <script>delegate('click', '.selectAll', e => {
+    <script>
+        delegate('click', '.selectAll', e => {
             const { payoutState } = e.target.dataset;
             document.querySelectorAll(`.selection-item-${payoutState}`).forEach(checkbox => {
                 checkbox.checked = e.target.checked;
             });
-        });</script>
+        });
+    </script>
 }
+
+<div class="sticky-header-setup"></div>
+<div class="sticky-header d-flex align-items-center justify-content-between">
+    <h2 class="mb-0">
+        @ViewData["Title"]
+        <a href="#descriptor" data-bs-toggle="collapse">
+            <vc:icon symbol="info" />
+        </a>
+    </h2>
+</div>
+
+<div id="descriptor" class="collapse">
+    <div class="d-flex px-4 py-4 mb-4 bg-tile rounded">
+        <div class="flex-fill">
+            <p class="mb-3">Payouts allow you to process pull payments, in the form of refunds, salary payouts, or withdrawals.</p>
+            <a href="https://docs.btcpayserver.org/Payouts/" target="_blank" rel="noreferrer noopener">Learn More</a>
+        </div>
+        <button type="button" class="btn-close ms-auto" data-bs-toggle="collapse" data-bs-target="#descriptor" aria-expanded="false" aria-label="Close">
+            <vc:icon symbol="close" />
+        </button>
+    </div>
+</div>
 
 <partial name="_StatusMessage" />
 
@@ -71,37 +95,6 @@
         <a class="alert-link p-0" asp-action="ConfigureStorePayoutProcessors" asp-controller="UIPayoutProcessors" asp-route-storeId="@storeId">Configure now</a>
     </div>
 }
-<h2 class="mt-1 mb-4">
-    @ViewData["Title"]
-    <small>
-        <a href="https://docs.btcpayserver.org/Payouts/" target="_blank" rel="noreferrer noopener">
-            <vc:icon symbol="info" />
-        </a>
-    </small>
-</h2>
-
-<div class="sticky-header-setup"></div>
-<div class="sticky-header d-flex align-items-center justify-content-between">
-    <h2 class="mb-0">
-        @ViewData["Title"]
-        <a href="#descriptor" data-bs-toggle="collapse">
-            <vc:icon symbol="info" />
-        </a>
-    </h2>
-</div>
-
-<div id="descriptor" class="collapse">
-    <div class="d-flex px-4 py-4 mb-4 bg-tile rounded">
-        <div class="flex-fill">
-            <p class="mb-3">This feature allows you to process pull payments, in the form of refunds, salary payouts, or withdrawals.</p>
-            <a href="https://docs.btcpayserver.org/Payouts/" target="_blank" rel="noreferrer noopener">Learn More</a>
-        </div>
-        <button type="button" class="btn-close ms-auto" data-bs-toggle="collapse" data-bs-target="#descriptor" aria-expanded="false" aria-label="Close">
-            <vc:icon symbol="close" />
-        </button>
-    </div>
-</div>
-
 
 <form method="post" id="Payouts">
     <input type="hidden" asp-for="PaymentMethodId" />

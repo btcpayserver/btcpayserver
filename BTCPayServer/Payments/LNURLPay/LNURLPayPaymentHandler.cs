@@ -41,6 +41,8 @@ namespace BTCPayServer.Payments.Lightning
 
         public override PaymentType PaymentType => PaymentTypes.LightningLike;
 
+        private const string UriScheme = "lightning:";
+        
         public IOptions<LightningNetworkOptions> Options { get; }
 
         public override async Task<IPaymentMethodDetails> CreatePaymentMethodDetails(
@@ -107,12 +109,13 @@ namespace BTCPayServer.Payments.Lightning
             StoreBlob storeBlob, IPaymentMethod paymentMethod)
         {
             var paymentMethodId = paymentMethod.GetId();
-            var cryptoInfo = invoiceResponse.CryptoInfo.First(o => o.GetpaymentMethodId() == paymentMethodId);
             var network = _networkProvider.GetNetwork<BTCPayNetwork>(model.CryptoCode);
+            var cryptoInfo = invoiceResponse.CryptoInfo.First(o => o.GetpaymentMethodId() == paymentMethodId);
+            var lnurl = cryptoInfo.PaymentUrls?.AdditionalData["LNURLP"].ToObject<string>();
             model.PaymentMethodName = GetPaymentMethodName(network);
-            model.InvoiceBitcoinUrl = cryptoInfo.PaymentUrls?.AdditionalData["LNURLP"].ToObject<string>();
-            model.InvoiceBitcoinUrlQR = model.InvoiceBitcoinUrl;
-            model.BtcAddress = model.InvoiceBitcoinUrl;
+            model.BtcAddress = lnurl?.Replace(UriScheme, "");
+            model.InvoiceBitcoinUrl = lnurl;
+            model.InvoiceBitcoinUrlQR = lnurl?.ToUpperInvariant().Replace(UriScheme.ToUpperInvariant(), UriScheme);
             model.PeerInfo = ((LNURLPayPaymentMethodDetails)paymentMethod.GetPaymentMethodDetails()).NodeInfo;
             if (storeBlob.LightningAmountInSatoshi && model.CryptoCode == "BTC")
             {

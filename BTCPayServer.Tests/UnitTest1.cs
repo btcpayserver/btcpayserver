@@ -1613,10 +1613,10 @@ namespace BTCPayServer.Tests
             var paymentMethodUnified = Assert.IsType<PaymentModel>(
                 Assert.IsType<ViewResult>(res).Model
             );
-            Assert.StartsWith("bitcoin:", paymentMethodUnified.InvoiceBitcoinUrl);
-            Assert.StartsWith("bitcoin:", paymentMethodUnified.InvoiceBitcoinUrlQR);
-            Assert.Contains("&lightning=", paymentMethodUnified.InvoiceBitcoinUrl);
-            Assert.Contains("&lightning=", paymentMethodUnified.InvoiceBitcoinUrlQR);
+            Assert.StartsWith("bitcoin:bcrt", paymentMethodUnified.InvoiceBitcoinUrl);
+            Assert.StartsWith("bitcoin:BCRT", paymentMethodUnified.InvoiceBitcoinUrlQR);
+            Assert.Contains("&lightning=lnbcrt", paymentMethodUnified.InvoiceBitcoinUrl);
+            Assert.Contains("&lightning=LNBCRT", paymentMethodUnified.InvoiceBitcoinUrlQR);
 
             // Check correct casing: Addresses in payment URI need to be …
             // - lowercase in link version

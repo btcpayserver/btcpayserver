@@ -22,7 +22,7 @@ Please keep us informed if you experience any issues while migrating on [our com
 
 ## Procedure
 
-In order to successfully migrate, you will need to run BTCPay Server `1.7.8 or older`.
+In order to successfully migrate, you will need to run BTCPay Server `1.7.8 or newer`.
 
 As a reminder there are three settings controlling the choice of backend of BTCPay Server which can be controller by command line, environment variable or configuration settings.
 

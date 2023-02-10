@@ -893,7 +893,7 @@ namespace BTCPayServer.Tests
             Assert.Equal(2, windows.Count);
             s.Driver.SwitchTo().Window(windows[1]);
 
-            Assert.Equal("currently active!",
+            Assert.Equal("Currently active!",
                 s.Driver.FindElement(By.CssSelector("[data-test='time-state']")).Text);
 
             s.Driver.Close();

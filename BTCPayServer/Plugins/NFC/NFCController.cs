@@ -3,6 +3,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data.Payouts.LightningLike;
+using BTCPayServer.Lightning;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Services;
@@ -110,17 +111,17 @@ namespace BTCPayServer.Plugins.NFC
                 }
 
                 lnPMD = lnPaymentMethod.GetPaymentMethodDetails() as LightningLikePaymentMethodDetails;
-                Money due;
+                LightMoney due;
                 if (invoice.Type == InvoiceType.TopUp && request.Amount is not null)
                 {
-                    due = new Money(request.Amount.Value, MoneyUnit.Satoshi);
+                    due = new LightMoney(request.Amount.Value, LightMoneyUnit.Satoshi);
                 }else if (invoice.Type == InvoiceType.TopUp)
                 {
                     return BadRequest("This is a topup invoice and you need to provide the amount in sats to pay.");
                 }
                 else
                 {
-                    due =  lnPaymentMethod.Calculate().Due;
+                    due =  new LightMoney(lnPaymentMethod.Calculate().Due);
                 }
                 if (info.MinWithdrawable > due || due > info.MaxWithdrawable)
                 {

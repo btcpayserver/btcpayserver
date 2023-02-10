@@ -2,11 +2,104 @@
 @{
     Layout = "PointOfSale/Public/_Layout";
 }
+@section PageHeadContent {
+    <style>
+        .public-page-wrap {
+            max-width: 560px;
+            overflow: hidden;
+        }
+        .keypad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+        }
+        .keypad .btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            position: relative;
+            border-radius: 0;
+            font-weight: var(--btcpay-font-weight-semibold);
+            font-size: 24px;
+            min-height: 3.5rem;
+            height: 8vh;
+            max-height: 6rem;
+            color: var(--btcpay-body-text);
+        }
+        .keypad .btn[data-key="del"] svg {
+            --btn-icon-size: 2.25rem;
+            transform: rotate(180deg);
+        }
+        .btcpay-pills label,
+        .btn-secondary.rounded-pill {
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+        
+        /* make borders collapse by shifting rows and columns by 1px */
+        /* second column */
+        .keypad .btn:nth-child(3n-1) {
+            margin-left: -1px;
+        }
+        /* third column */
+        .keypad .btn:nth-child(3n) {
+            margin-left: -1px;
+        }
+        /* from second row downwards */
+        .keypad .btn:nth-child(n+4) {
+            margin-top: -1px;
+        }
+        /* ensure highlighted button is topmost */
+        .keypad .btn:hover,
+        .keypad .btn:focus,
+        .keypad .btn:active {
+            z-index: 1;
+        }
+        
+        .actions {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .actions .btn {
+            flex:  1 1 50%;
+        }
 
+        @@media (max-height: 700px) {
+            .store-header {
+                display: none !important;
+            }
+        }
+        @@media (max-width: 575px) {
+            .public-page-wrap {
+                padding-right: 0;
+                padding-left: 0;
+            }
+            .keypad {
+                margin-left: -1px;
+                margin-right: -1px;
+            }
+            .store-footer {
+                display: none !important;
+            }
+        }
+        /* fix sticky hover effect on mobile browsers */
+        @@media (hover: none) {
+            .keypad .btn-secondary:hover,
+            .actions .btn-secondary:hover {
+                border-color: var(--btcpay-secondary-border-active) !important;
+            }
+        }
+    </style>
+}
+@section PageFootContent {
+    <script>var srvModel = @Safe.Json(Model);</script>
+    <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
+    <script src="~/light-pos/app.js" asp-append-version="true"></script>
+}
 <div class="public-page-wrap flex-column">
     <partial name="_StatusMessage" />
     <partial name="_StoreHeader" model="(string.IsNullOrEmpty(Model.Title) ? Model.StoreName : Model.Title, Model.LogoFileId)" />
-
     @if (Context.Request.Query.ContainsKey("simple"))
     {
         <partial name="PointOfSale/Public/MinimalLight" model="Model" />

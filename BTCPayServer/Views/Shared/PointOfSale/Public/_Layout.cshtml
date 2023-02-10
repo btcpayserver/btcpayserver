@@ -1,6 +1,4 @@
-@using BTCPayServer.Services.Apps
 @using BTCPayServer.Abstractions.Extensions
-@using BTCPayServer.Abstractions.TagHelpers
 @using Microsoft.AspNetCore.Hosting
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @using Newtonsoft.Json.Linq
@@ -40,28 +38,6 @@
     <link rel="apple-touch-icon" href="~/img/icons/icon-512x512.png">
     <link rel="apple-touch-startup-image" href="~/img/splash.png">
     <link rel="manifest" href="@(await GetDynamicManifest(ViewData["Title"]!.ToString()))">
-    @if (Model.CustomCSSLink != null)
-    {
-        <link href="@Model.CustomCSSLink" rel="stylesheet" asp-append-version="true" />
-    }
-    @if (Model.ViewType == PosViewType.Cart)
-    {
-        <link rel="stylesheet" href="~/cart/css/style.css" asp-append-version="true">
-        <script>var srvModel = @Safe.Json(Model);</script>
-        <script src="~/vendor/jquery/jquery.min.js" asp-append-version="true"></script>
-        <script src="~/vendor/bootstrap/bootstrap.bundle.min.js" asp-append-version="true"></script>
-        <script src="~/cart/js/cart.js" asp-append-version="true"></script>
-        <script src="~/cart/js/cart.jquery.js" asp-append-version="true"></script>
-    }
-    @if (Model.ViewType == PosViewType.Light)
-    {
-        <link href="~/light-pos/styles/main.css" asp-append-version="true"  rel="stylesheet" />
-        <script>var srvModel = @Safe.Json(Model);</script>
-        <script src="~/vendor/jquery/jquery.min.js" asp-append-version="true"></script>
-        <script src="~/vendor/bootstrap/bootstrap.bundle.min.js" asp-append-version="true"></script>
-        <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
-        <script src="~/light-pos/app.js" asp-append-version="true"></script>
-    }
     <style>
         .lead :last-child {
             margin-bottom: 0;
@@ -78,23 +54,12 @@
             max-width: 320px;
             margin: auto !important;
         }
-        .js-cart-item-minus .fa,
-        .js-cart-item-plus .fa {
-            background: #fff;
-            border-radius: 50%;
-            width: 17px;
-            height: 17px;
-            display: inline-flex;
-            justify-content: center;
-            align-items: center;
-        }
     </style>
-    @if (!string.IsNullOrEmpty(Model.EmbeddedCSS))
-    {
-        @Safe.Raw($"<style>{Model.EmbeddedCSS}</style>");
-    }
+    @await RenderSectionAsync("PageHeadContent", false)
 </head>
 <body class="min-vh-100">
     @RenderBody()
+    <partial name="LayoutFoot"/>
+    @await RenderSectionAsync("PageFootContent", false)
 </body>
 </html>

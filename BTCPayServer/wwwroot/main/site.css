@@ -608,10 +608,17 @@ input:checked + .btcpay-list-select-item {
 .public-page-wrap {
     display: flex;
     gap: 1.5rem;
-    min-height: 100vh;
     margin: 0 auto;
     padding: var(--btcpay-space-l) var(--btcpay-space-m);
 }
+
+/* gradually try to set better but less supported values and units */
+.min-vh-100,
+.public-page-wrap {
+    min-height: -webkit-fill-available !important;
+    min-height: 100dvh !important;
+}
+
 @media (max-width: 400px) {
     .public-page-wrap {
         padding-left: 0;

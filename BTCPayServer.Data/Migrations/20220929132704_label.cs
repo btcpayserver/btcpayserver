@@ -17,13 +17,15 @@ namespace BTCPayServer.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            int? maxlength = migrationBuilder.IsMySql() ? 255 : null;
+
             migrationBuilder.CreateTable(
                 name: "WalletObjects",
                 columns: table => new
                 {
-                    WalletId = table.Column<string>(type: "TEXT", nullable: false),
-                    Type = table.Column<string>(type: "TEXT", nullable: false),
-                    Id = table.Column<string>(type: "TEXT", nullable: false),
+                    WalletId = table.Column<string>(nullable: false, maxLength: maxlength),
+                    Type = table.Column<string>(nullable: false, maxLength: maxlength),
+                    Id = table.Column<string>(nullable: false, maxLength: maxlength),
                     Data = table.Column<string>(type: migrationBuilder.IsNpgsql() ? "JSONB" : "TEXT", nullable: true)
                 },
                 constraints: table =>
@@ -35,15 +37,17 @@ namespace BTCPayServer.Migrations
                 table: "WalletObjects",
                 columns: new[] { "Type", "Id" });
 
+
+            maxlength = migrationBuilder.IsMySql() ? 100 : null;
             migrationBuilder.CreateTable(
                 name: "WalletObjectLinks",
                 columns: table => new
                 {
-                    WalletId = table.Column<string>(type: "TEXT", nullable: false),
-                    AType = table.Column<string>(type: "TEXT", nullable: false),
-                    AId = table.Column<string>(type: "TEXT", nullable: false),
-                    BType = table.Column<string>(type: "TEXT", nullable: false),
-                    BId = table.Column<string>(type: "TEXT", nullable: false),
+                    WalletId = table.Column<string>(nullable: false, maxLength: maxlength),
+                    AType = table.Column<string>(nullable: false, maxLength: maxlength),
+                    AId = table.Column<string>(nullable: false, maxLength: maxlength),
+                    BType = table.Column<string>(nullable: false, maxLength: maxlength),
+                    BId = table.Column<string>(nullable: false, maxLength: maxlength),
                     Data = table.Column<string>(type: migrationBuilder.IsNpgsql() ? "JSONB" : "TEXT", nullable: true)
                 },
                 constraints: table =>

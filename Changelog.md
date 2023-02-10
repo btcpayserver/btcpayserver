@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.7.9
+
+### Bug fixes
+
+* Fix: Top-Up Invoices display fiat amounts to 9 decimal places in emails (#4570) @Kukks
+* LNURL NFC support did not work for lower amount invoices (#4618) @Kukks
+
 ## 1.7.8
 
 With this release, we are providing a migration path for legacy MySql and SQLite installations.

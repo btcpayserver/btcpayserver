@@ -242,7 +242,10 @@ namespace BTCPayServer.Hosting
 
         private static async Task<string?> GetMigrationState(ApplicationDbContext postgresContext)
         {
-            return (await postgresContext.Settings.FromSqlRaw("SELECT \"Id\", \"Value\" FROM \"Settings\" WHERE \"Id\"='MigrationData'").AsNoTracking().FirstOrDefaultAsync())?.Value;
+            var o = (await postgresContext.Settings.FromSqlRaw("SELECT \"Id\", \"Value\" FROM \"Settings\" WHERE \"Id\"='MigrationData'").AsNoTracking().FirstOrDefaultAsync())?.Value;
+            if (o is null)
+                return null;
+            return JObject.Parse(o)["state"]?.Value<string>();
         }
         private static async Task SetMigrationState(ApplicationDbContext postgresContext, string migratingFrom, string state)
         {

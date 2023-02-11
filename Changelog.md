@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.7.10
+
+### Bug fix
+
+* After successful migration from SQLite or MySql, there is an error after a restart @NicolasDorier
+
 ## 1.7.9
 
 ### Bug fixes

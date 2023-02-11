@@ -19,6 +19,8 @@ namespace BTCPayServer.Services.Notifications.Blobs
 
             protected override void FillViewModel(NewVersionNotification notification, NotificationViewModel vm)
             {
+                vm.Identifier = notification.Identifier;
+                vm.Type = notification.NotificationType;
                 vm.Body = $"New version {notification.Version} released!";
                 vm.ActionLink = $"https://github.com/btcpayserver/btcpayserver/releases/tag/v{notification.Version}";
             }

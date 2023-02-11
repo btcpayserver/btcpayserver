@@ -1,5 +1,4 @@
 #if DEBUG
-using System.Data;
 using BTCPayServer.Abstractions.Contracts;
 
 namespace BTCPayServer.Services.Notifications.Blobs
@@ -20,7 +19,7 @@ namespace BTCPayServer.Services.Notifications.Blobs
 
             protected override void FillViewModel(JunkNotification notification, NotificationViewModel vm)
             {
-                vm.Body = $"All your junk r belong to us!";
+                vm.Body = "All your junk r belong to us!";
             }
         }
 

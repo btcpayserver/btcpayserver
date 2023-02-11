@@ -19,6 +19,8 @@ namespace BTCPayServer.Abstractions.Contracts
     public class NotificationViewModel
     {
         public string Id { get; set; }
+        public string Identifier { get; set; }
+        public string Type { get; set; }
         public DateTimeOffset Created { get; set; }
         public string Body { get; set; }
         public string ActionLink { get; set; }

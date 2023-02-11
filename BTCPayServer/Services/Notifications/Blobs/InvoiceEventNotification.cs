@@ -4,7 +4,7 @@ using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Configuration;
 using BTCPayServer.Controllers;
 using BTCPayServer.Events;
-using BTCPayServer.Models.NotificationViewModels;
+using ExchangeSharp;
 using Microsoft.AspNetCore.Routing;
 
 namespace BTCPayServer.Services.Notifications.Blobs
@@ -52,6 +52,8 @@ namespace BTCPayServer.Services.Notifications.Blobs
                 {
                     vm.Body = $"{baseStr} {TextMapping[notification.Event]}";
                 }
+                vm.Identifier = notification.Identifier;
+                vm.Type = notification.NotificationType;
                 vm.ActionLink = _linkGenerator.GetPathByAction(nameof(UIInvoiceController.Invoice),
                     "UIInvoice",
                     new { invoiceId = notification.InvoiceId }, _options.RootPath);
@@ -75,7 +77,7 @@ namespace BTCPayServer.Services.Notifications.Blobs
 
         public string InvoiceId { get; set; }
         public string Event { get; set; }
-        public override string Identifier => $"{TYPE}_{Event}";
+        public override string Identifier => Event is null ? TYPE : Event.ToStringLowerInvariant();
         public override string NotificationType => TYPE;
     }
 }

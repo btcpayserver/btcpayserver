@@ -40,7 +40,7 @@ namespace BTCPayServer.Services.Notifications
 
             return await _memoryCache.GetOrCreateAsync(cacheKey, async entry =>
             {
-                var resp = await GetNotifications(new NotificationsQuery()
+                var resp = await GetNotifications(new NotificationsQuery
                 {
                     Seen = false,
                     Skip = 0,
@@ -119,7 +119,6 @@ namespace BTCPayServer.Services.Notifications
             return (queryable, queryable2);
         }
 
-
         public async Task<List<NotificationViewModel>> ToggleSeen(NotificationsQuery notificationsQuery, bool? setSeen)
         {
             await using var dbContext = _factory.CreateContext();
@@ -156,7 +155,13 @@ namespace BTCPayServer.Services.Notifications
             if (handler is null)
                 return null;
             var notification = JsonConvert.DeserializeObject(ZipUtils.Unzip(data.Blob), handler.NotificationBlobType);
-            var obj = new NotificationViewModel { Id = data.Id, Created = data.Created, Seen = data.Seen };
+            var obj = new NotificationViewModel
+            {
+                Id = data.Id,
+                Type = data.NotificationType,
+                Created = data.Created,
+                Seen = data.Seen
+            };
             handler.FillViewModel(notification, obj);
             return obj;
         }

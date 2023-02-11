@@ -354,6 +354,11 @@
     border: 1px solid var(--btcpay-body-border-medium);
 }
 
+#NotificationsList svg {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
 /* Section Navigation / Subnav */
 #SectionNav {
     --border-size: 2px;

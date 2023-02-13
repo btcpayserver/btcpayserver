@@ -23,10 +23,16 @@ public class SVGUse : UrlResolutionTagHelper2
     {
         _fileVersionProvider = fileVersionProvider;
     }
+    
     public override void Process(TagHelperContext context, TagHelperOutput output)
     {
         var attr = output.Attributes["href"].Value.ToString();
-        attr = _fileVersionProvider.AddFileVersionToPath(ViewContext.HttpContext.Request.PathBase, attr);
+        var filePath = attr.Substring(attr.IndexOf("~") + 1, attr.IndexOf("#"));
+        if (!string.IsNullOrEmpty(filePath))
+        {
+            var versioned = _fileVersionProvider.AddFileVersionToPath(ViewContext.HttpContext.Request.PathBase, filePath);
+            attr = attr.Replace(filePath, versioned);
+        }
         output.Attributes.SetAttribute("href", attr);
         base.Process(context, output);
     }

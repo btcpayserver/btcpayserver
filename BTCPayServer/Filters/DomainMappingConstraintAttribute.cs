@@ -38,8 +38,9 @@ namespace BTCPayServer.Filters
                 if (matchedDomainMapping != null)
                 {
                     var req = context.RouteContext.HttpContext.Request;
-                    var url = new UriBuilder(req.Scheme, matchedDomainMapping.Domain).ToString();
-                    context.RouteContext.HttpContext.Response.Redirect(url);
+                    var uri = new UriBuilder(req.Scheme, matchedDomainMapping.Domain);
+                    if (req.Host.Port.HasValue) uri.Port = req.Host.Port.Value;
+                    context.RouteContext.HttpContext.Response.Redirect(uri.ToString());
                     return true;
                 }
             }
@@ -55,15 +56,17 @@ namespace BTCPayServer.Filters
                         return false;
                     if (appType != matchedDomainMapping.AppType)
                         return false;
-                    context.RouteContext.RouteData.Values.Add("appId", matchedDomainMapping.AppId);
-                    return true;
+                    if (!hasAppId)
+                    {
+                        context.RouteContext.RouteData.Values.Add("appId", matchedDomainMapping.AppId);
+                        return true;
+                    }
                 }
             }
 
-            if (AppType == policies.RootAppType)
+            if (AppType == policies.RootAppType && !hasAppId && !string.IsNullOrEmpty(policies.RootAppId))
             {
                 context.RouteContext.RouteData.Values.Add("appId", policies.RootAppId);
-
                 return true;
             }
 

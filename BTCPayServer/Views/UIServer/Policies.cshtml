@@ -24,7 +24,7 @@
                     <input asp-for="AllowLightningInternalNodeForAll" type="checkbox" class="form-check-input"/>
                     <label asp-for="AllowLightningInternalNodeForAll" class="form-check-label"></label>
                     <a href="https://docs.btcpayserver.org/FAQ/LightningNetwork/#how-many-users-can-use-lightning-network-in-btcpay" target="_blank" rel="noreferrer noopener">
-                        <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+                        <vc:icon symbol="info" />
                     </a>
                     <span asp-validation-for="AllowLightningInternalNodeForAll" class="text-danger"></span>
                 </div>
@@ -32,7 +32,7 @@
                     <input asp-for="AllowHotWalletForAll" type="checkbox" class="form-check-input"/>
                     <label asp-for="AllowHotWalletForAll" class="form-check-label"></label>
                     <a href="https://docs.btcpayserver.org/CreateWallet/#requirements-to-create-wallets" target="_blank" rel="noreferrer noopener">
-                        <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+                        <vc:icon symbol="info" />
                     </a>
                     <span asp-validation-for="AllowHotWalletForAll" class="text-danger"></span>
                 </div>
@@ -55,7 +55,7 @@
                     <input asp-for="RequiresConfirmedEmail" type="checkbox" class="form-check-input" disabled="@(isEmailConfigured ? null : "disabled")"/>
                     <label asp-for="RequiresConfirmedEmail" class="form-check-label"></label>
                     <a href="https://docs.btcpayserver.org/FAQ/ServerSettings/#how-to-allow-registration-on-my-btcpay-server" target="_blank" rel="noreferrer noopener">
-                        <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+                        <vc:icon symbol="info" />
                     </a>
                     <span asp-validation-for="RequiresConfirmedEmail" class="text-danger"></span>
                     @if (!isEmailConfigured)
@@ -84,7 +84,7 @@
                     <input asp-for="DisableInstantNotifications" type="checkbox" class="form-check-input"/>
                     <label asp-for="DisableInstantNotifications" class="form-check-label"></label>
                     <a href="https://docs.btcpayserver.org/Notifications/#notifications" target="_blank" rel="noreferrer noopener">
-                        <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+                        <vc:icon symbol="info" />
                     </a>
                     <span asp-validation-for="DisableInstantNotifications" class="text-danger"></span>
                 </div>
@@ -92,7 +92,7 @@
                     <input asp-for="DisableStoresToUseServerEmailSettings" type="checkbox" class="form-check-input"/>
                     <label asp-for="DisableStoresToUseServerEmailSettings" class="form-check-label"></label>
                     <a href="https://docs.btcpayserver.org/Notifications/#server-emails" target="_blank" rel="noreferrer noopener">
-                        <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+                        <vc:icon symbol="info" />
                     </a>
                     <span asp-validation-for="DisableStoresToUseServerEmailSettings" class="text-danger"></span>
                 </div>
@@ -112,7 +112,7 @@
                     <input asp-for="DiscourageSearchEngines" type="checkbox" class="form-check-input"/>
                     <label asp-for="DiscourageSearchEngines" class="form-check-label"></label>
                     <a href="https://docs.btcpayserver.org/FAQ/ServerSettings/#how-to-hide-my-btcpay-server-from-search-engines" target="_blank" rel="noreferrer noopener">
-                        <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+                        <vc:icon symbol="info" />
                     </a>
                     <span asp-validation-for="DiscourageSearchEngines" class="text-danger"></span>
                 </div>

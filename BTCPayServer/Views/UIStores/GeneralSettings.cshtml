@@ -113,14 +113,14 @@
             <div class="form-group d-flex align-items-center">
                 <input asp-for="AnyoneCanCreateInvoice" type="checkbox" class="btcpay-toggle me-3"/>
                 <label asp-for="AnyoneCanCreateInvoice" class="form-label mb-0 me-1"></label>
-                <a href="https://docs.btcpayserver.org/FAQ/Stores/#allow-anyone-to-create-invoice" target="_blank" rel="noreferrer noopener">
-                    <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+                <a href="https://docs.btcpayserver.org/FAQ/Stores/#allow-anyone-to-create-invoice" target="_blank" rel="noreferrer noopener" title="More information...">
+                    <vc:icon symbol="info"/>
                 </a>
             </div>
             <div class="form-group mt-4">
                 <label asp-for="NetworkFeeMode" class="form-label"></label>
-                <a href="https://docs.btcpayserver.org/FAQ/Stores/#add-network-fee-to-invoice-vary-with-mining-fees" target="_blank" rel="noreferrer noopener">
-                    <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+                <a href="https://docs.btcpayserver.org/FAQ/Stores/#add-network-fee-to-invoice-vary-with-mining-fees" target="_blank" rel="noreferrer noopener" title="More information...">
+                    <vc:icon symbol="info"/>
                 </a>
                 @* For whatever reason wrapping the select with this div fixes this Safari bug: https://github.com/btcpayserver/btcpayserver/issues/3699 *@
                 <div class="overflow-hidden">
@@ -133,8 +133,8 @@
             </div>
             <div class="form-group">
                 <label asp-for="InvoiceExpiration" class="form-label"></label>
-                <a href="https://docs.btcpayserver.org/FAQ/Stores/#invoice-expires-if-the-full-amount-has-not-been-paid-after-minutes" target="_blank" rel="noreferrer noopener">
-                    <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+                <a href="https://docs.btcpayserver.org/FAQ/Stores/#invoice-expires-if-the-full-amount-has-not-been-paid-after-minutes" target="_blank" rel="noreferrer noopener" title="More information...">
+                    <vc:icon symbol="info"/>
                 </a>
                 <div class="input-group">
                     <input inputmode="numeric" asp-for="InvoiceExpiration" class="form-control" style="max-width:10ch;"/>
@@ -144,8 +144,8 @@
             </div>
             <div class="form-group">
                 <label asp-for="PaymentTolerance" class="form-label"></label>
-                <a href="https://docs.btcpayserver.org/FAQ/Stores/#consider-the-invoice-paid-even-if-the-paid-amount-is-less-than-expected" target="_blank" rel="noreferrer noopener">
-                    <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+                <a href="https://docs.btcpayserver.org/FAQ/Stores/#consider-the-invoice-paid-even-if-the-paid-amount-is-less-than-expected" target="_blank" rel="noreferrer noopener" title="More information...">
+                    <vc:icon symbol="info"/>
                 </a>
                 <div class="input-group">
                     <input inputmode="decimal" asp-for="PaymentTolerance" class="form-control" style="max-width:10ch;"/>

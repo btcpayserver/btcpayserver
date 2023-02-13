@@ -146,8 +146,8 @@
                         <div class="d-flex align-items-center">
                             <input asp-for="PayJoinEnabled" type="checkbox" class="btcpay-toggle me-2"/>
                             <label asp-for="PayJoinEnabled" class="form-label mb-0 me-1"></label>
-                            <a href="https://docs.btcpayserver.org/Payjoin/" target="_blank" rel="noreferrer noopener">
-                                <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+                            <a href="https://docs.btcpayserver.org/Payjoin/" target="_blank" rel="noreferrer noopener" title="More information...">
+                                <vc:icon symbol="info"/>
                             </a>
                         </div>
                         <span asp-validation-for="PayJoinEnabled" class="text-danger"></span>
@@ -155,8 +155,8 @@
                 }
                 <div class="form-group">
                     <label asp-for="MonitoringExpiration" class="form-label"></label>
-                    <a href="https://docs.btcpayserver.org/FAQ/Stores/#payment-invalid-if-transactions-fails-to-confirm-minutes-after-invoice-expiration" target="_blank" rel="noreferrer noopener">
-                        <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+                    <a href="https://docs.btcpayserver.org/FAQ/Stores/#payment-invalid-if-transactions-fails-to-confirm-minutes-after-invoice-expiration" target="_blank" rel="noreferrer noopener" title="More information...">
+                        <vc:icon symbol="info"/>
                     </a>
                     <div class="input-group">
                         <input inputmode="numeric" asp-for="MonitoringExpiration" class="form-control" style="max-width:10ch;"/>
@@ -166,8 +166,8 @@
                 </div>
                 <div class="form-group">
                     <label asp-for="SpeedPolicy" class="form-label"></label>
-                    <a href="https://docs.btcpayserver.org/FAQ/Stores/#consider-the-invoice-confirmed-when-the-payment-transaction" target="_blank" rel="noreferrer noopener">
-                        <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+                    <a href="https://docs.btcpayserver.org/FAQ/Stores/#consider-the-invoice-confirmed-when-the-payment-transaction" target="_blank" rel="noreferrer noopener" title="More information...">
+                        <vc:icon symbol="info"/>
                     </a>
                     <select asp-for="SpeedPolicy" class="form-select w-auto" onchange="document.getElementById('unconfirmed-warning').hidden = this.value !== '0';">
                         <option value="0">Is unconfirmed</option>

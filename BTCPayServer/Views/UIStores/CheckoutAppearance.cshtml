@@ -91,7 +91,7 @@
                 <input asp-for="OnChainWithLnInvoiceFallback" type="checkbox" class="form-check-input" />
                 <label asp-for="OnChainWithLnInvoiceFallback" class="form-check-label"></label>
                 <a href="https://bitcoinqr.dev/" target="_blank" rel="noreferrer noopener">
-                    <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+                    <vc:icon symbol="info" />
                 </a>
             </div>
             <div class="checkout-settings collapse @(Model.UseNewCheckout ? "" : "show")" id="OldCheckoutSettings">
@@ -113,7 +113,7 @@
                 <div class="form-group">
                     <label asp-for="CustomLogo" class="form-label"></label>
                     <a href="https://docs.btcpayserver.org/Development/Theme/#checkout-page-themes" target="_blank" rel="noreferrer noopener">
-                        <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+                        <vc:icon symbol="info" />
                     </a>
                     <input asp-for="CustomLogo" class="form-control" />
                     <span asp-validation-for="CustomLogo" class="text-danger"></span>
@@ -121,7 +121,7 @@
                 <div class="form-group">
                     <label asp-for="CustomCSS" class="form-label"></label>
                     <a href="https://docs.btcpayserver.org/Development/Theme/#checkout-page-themes" target="_blank" rel="noreferrer noopener">
-                        <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+                        <vc:icon symbol="info" />
                     </a>
                     <input asp-for="CustomCSS" class="form-control" />
                     <span asp-validation-for="CustomCSS" class="text-danger"></span>

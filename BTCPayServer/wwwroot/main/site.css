@@ -124,10 +124,25 @@ a.unobtrusive-link {
 }
 
 /* Info icons in main headline */
-h2 small .fa-question-circle-o {
+svg.icon.icon-info {
     position: relative;
-    top: -.1rem;
-    font-size: var(--btcpay-font-size-l);
+    top: -.05em;
+    color: var(--btcpay-neutral-500);
+    transition: 200ms;
+}
+
+svg.icon.icon-info:hover {
+    color: var(--btcpay-primary);
+}
+
+h2 svg.icon.icon-info {
+    width: 1.2rem;
+    height: 1.2rem;
+    top: -.0125em;
+}
+
+#descriptor p {
+    max-width: 40em;
 }
 
 /* Invoices */

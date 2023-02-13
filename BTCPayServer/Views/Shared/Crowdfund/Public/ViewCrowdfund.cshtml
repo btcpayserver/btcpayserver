@@ -82,14 +82,14 @@
                 {
                     <span v-if="srvModel.enforceTargetAmount" class="h5 ms-2">
                         Hardcap Goal
-                        <span class="fa fa-question-circle" v-b-tooltip title="No contributions allowed after the goal has been reached"></span>
+                        <span v-b-tooltip title="No contributions allowed after the goal has been reached"><vc:icon symbol="info" /></span>
                     </span>
                 }
                 else
                 {
                     <span v-if="!srvModel.enforceTargetAmount" class="h5 ms-2">
                         Softcap Goal
-                        <span class="fa fa-question-circle" v-b-tooltip title="Contributions allowed even after goal is reached"></span>
+                        <span v-b-tooltip title="Contributions allowed even after goal is reached"><vc:icon symbol="info" /></span>
                     </span>
                 }
             </span>

@@ -252,12 +252,12 @@ function initApp() {
                 eventBus.$emit('data-fetched', this.srvModel);
     
                 const self = this;
-                if (this.isPaid && data.redirectAutomatically && data.merchantRefLink) {
+                if (self.isPaid && data.redirectAutomatically && self.storeLink) {
                     setTimeout(function () {
-                        if (self.isModal && window.top.location === data.merchantRefLink){
+                        if (self.isModal && window.top.location === self.storeLink){
                             self.close();
                         } else {
-                            window.top.location = data.merchantRefLink;
+                            window.top.location = self.storeLink;
                         }
                     }, 2000);
                 }

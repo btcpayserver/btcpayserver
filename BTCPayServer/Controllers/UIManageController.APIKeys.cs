@@ -181,6 +181,7 @@ namespace BTCPayServer.Controllers
                         var permissions = key.GetBlob().Permissions;
                         var redirectVm = new PostRedirectViewModel()
                         {
+                            AllowExternal = true,
                             FormUrl = viewModel.RedirectUrl.AbsoluteUri,
                             FormParameters =
                             {

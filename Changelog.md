@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.7.11
+
+### Improvement
+
+* Better descriptions of some feature in the UI (#3831) @dstrukt @dennisreimann
+
+### Bug fix
+
+* Fix XSS on public instances #4629 (Credit to @d47sec) @NicolasDorier
+* Fix an exception happening on some app with mapped dommain (#4622) @dennisreimann
+* Fix error thrown in the pairing flow to woocommerce or other external apps (#4627 #4630) @Kukks
+* Fix HTML appearing in pull payment's LN Url descriptions (#4624 #4630) @Kukks
+
 ## 1.7.10
 
 ### Bug fix

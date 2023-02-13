@@ -57,13 +57,13 @@ namespace BTCPayServer.Controllers
             var app = await _appService.GetApp(appId, null);
             if (app is null)
                 return NotFound();
-
-            return app.AppType switch
+            var res = _appService.ViewLink(app);
+            if (res is null)
             {
-                nameof(AppTypes.Crowdfund) => RedirectToAction(nameof(UICrowdfundController.ViewCrowdfund), "UICrowdfund", new { appId }),
-                nameof(AppTypes.PointOfSale) => RedirectToAction(nameof(UIPointOfSaleController.ViewPointOfSale), "UIPointOfSale", new { appId }),
-                _ => NotFound()
-            };
+                return NotFound();
+            }
+
+            return Redirect(res);
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
@@ -114,7 +114,7 @@ namespace BTCPayServer.Controllers
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [HttpGet("/stores/{storeId}/apps/create")]
-        public async Task<IActionResult> CreateApp(string storeId)
+        public IActionResult CreateApp(string storeId)
         {
             var vm = new CreateAppViewModel (_appService){StoreId = GetCurrentStore().Id};
             return View(vm);
@@ -143,20 +143,8 @@ namespace BTCPayServer.Controllers
             };
 
             var defaultCurrency = await GetStoreDefaultCurrentIfEmpty(appData.StoreDataId, null);
-            switch (vm.SelectedAppType)
-            {
-                case AppTypes.Crowdfund:
-                    var emptyCrowdfund = new CrowdfundSettings { TargetCurrency = defaultCurrency };
-                    appData.SetSettings(emptyCrowdfund);
-                    break;
-                case AppTypes.PointOfSale:
-                    var empty = new PointOfSaleSettings { Currency = defaultCurrency };
-                    appData.SetSettings(empty);
-                    break;
-                default:
-                    appData.SetSettings(null);
-                    break;
-            }
+            await _appService.SetDefaultSettings(appData, defaultCurrency);
+            
 
             await _appService.UpdateOrCreateApp(appData);
             TempData[WellKnownTempData.SuccessMessage] = "App successfully created";

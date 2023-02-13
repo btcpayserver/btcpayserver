@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Controllers;
 using BTCPayServer.Events;
 using BTCPayServer.Logging;
+using BTCPayServer.Plugins.PayButton;
 using BTCPayServer.Services.Apps;
 
 namespace BTCPayServer.HostedServices
@@ -36,11 +37,11 @@ namespace BTCPayServer.HostedServices
                     {
                         switch (data.AppType)
                         {
-                            case AppTypes.PointOfSale:
+                            case PointOfSaleApp.AppType:
                                 var possettings = data.GetSettings<PointOfSaleSettings>();
                                 return (Data: data, Settings: (object)possettings,
                                     Items: _appService.Parse(possettings.Template, possettings.Currency));
-                            case AppTypes.Crowdfund:
+                            case CrowdfundApp.AppType:
                                 var cfsettings = data.GetSettings<CrowdfundSettings>();
                                 return (Data: data, Settings: (object)cfsettings,
                                     Items: _appService.Parse(cfsettings.PerksTemplate, cfsettings.TargetCurrency));
@@ -67,12 +68,12 @@ namespace BTCPayServer.HostedServices
 
                     switch (valueTuple.Data.AppType)
                     {
-                        case AppTypes.PointOfSale:
+                        case PointOfSaleApp.AppType:
 
                             ((PointOfSaleSettings)valueTuple.Settings).Template =
                                 _appService.SerializeTemplate(valueTuple.Items);
                             break;
-                        case AppTypes.Crowdfund:
+                        case CrowdfundApp.AppType:
                             ((CrowdfundSettings)valueTuple.Settings).PerksTemplate =
                                 _appService.SerializeTemplate(valueTuple.Items);
                             break;

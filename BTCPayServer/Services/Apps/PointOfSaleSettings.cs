@@ -1,5 +1,6 @@
 using BTCPayServer.Client.Models;
 using BTCPayServer.Services.Stores;
+using PosViewType = BTCPayServer.Plugins.PayButton.PosViewType;
 
 namespace BTCPayServer.Services.Apps
 {

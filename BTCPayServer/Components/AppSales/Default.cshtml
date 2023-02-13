@@ -1,11 +1,14 @@
 @using BTCPayServer.Services.Apps
 @using BTCPayServer.Components.AppSales
+@using BTCPayServer.Plugins.PayButton
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using BTCPayServer.Abstractions.TagHelpers
 @model BTCPayServer.Components.AppSales.AppSalesViewModel
 
 @{
     var controller = $"UI{Model.App.AppType}";
     var action = $"Update{Model.App.AppType}";
-    var label = Model.App.AppType == nameof(AppTypes.Crowdfund) ? "Contributions" : "Sales";
+    var label = Model.App.AppType == CrowdfundApp.AppType? "Contributions" : "Sales";
 }
 
 <div id="AppSales-@Model.App.Id" class="widget app-sales">

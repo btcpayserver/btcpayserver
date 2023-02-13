@@ -18,6 +18,7 @@ using BTCPayServer.Filters;
 using BTCPayServer.Forms;
 using BTCPayServer.ModelBinders;
 using BTCPayServer.Models;
+using BTCPayServer.Plugins.PayButton;
 using BTCPayServer.Plugins.PointOfSale.Models;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
@@ -61,10 +62,10 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
         [HttpGet("/")]
         [HttpGet("/apps/{appId}/pos/{viewType?}")]
         [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.AllowAll)]
-        [DomainMappingConstraint(AppTypes.PointOfSale)]
+        [DomainMappingConstraint(PointOfSaleApp.AppType)]
         public async Task<IActionResult> ViewPointOfSale(string appId, PosViewType? viewType = null)
         {
-            var app = await _appService.GetApp(appId, AppTypes.PointOfSale);
+            var app = await _appService.GetApp(appId, PointOfSaleApp.AppType);
             if (app == null)
                 return NotFound();
             var settings = app.GetSettings<PointOfSaleSettings>();
@@ -118,7 +119,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
         [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.AllowAll)]
         [IgnoreAntiforgeryToken]
         [EnableCors(CorsPolicies.All)]
-        [DomainMappingConstraint(AppTypes.PointOfSale)]
+        [DomainMappingConstraint(PointOfSaleApp.AppType)]
         [RateLimitsFilter(ZoneLimits.PublicInvoices, Scope = RateLimitsScope.RemoteAddress)]
         public async Task<IActionResult> ViewPointOfSale(string appId,
                                                         PosViewType? viewType,
@@ -132,7 +133,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                                                         RequiresRefundEmail requiresRefundEmail = RequiresRefundEmail.InheritFromStore,
                                                         CancellationToken cancellationToken = default)
         {
-            var app = await _appService.GetApp(appId, AppTypes.PointOfSale);
+            var app = await _appService.GetApp(appId, PointOfSaleApp.AppType);
             if (string.IsNullOrEmpty(choiceKey) && amount <= 0)
             {
                 return RedirectToAction(nameof(ViewPointOfSale), new { appId });

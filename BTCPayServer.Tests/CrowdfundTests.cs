@@ -6,6 +6,7 @@ using BTCPayServer.Data;
 using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Plugins.Crowdfund.Controllers;
 using BTCPayServer.Plugins.Crowdfund.Models;
+using BTCPayServer.Plugins.PayButton;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
 using Microsoft.AspNetCore.Mvc;
@@ -37,7 +38,7 @@ namespace BTCPayServer.Tests
             var apps2 = user2.GetController<UIAppsController>();
             var crowdfund = user.GetController<UICrowdfundController>();
             var vm = Assert.IsType<CreateAppViewModel>(Assert.IsType<ViewResult>(apps.CreateApp(user.StoreId)).Model);
-            var appType = AppTypes.Crowdfund;
+            var appType = CrowdfundApp.AppType;
             Assert.NotNull(vm.SelectedAppType);
             Assert.Null(vm.AppName);
             vm.AppName = "test";
@@ -76,8 +77,8 @@ namespace BTCPayServer.Tests
             user.RegisterDerivationScheme("BTC");
             var apps = user.GetController<UIAppsController>();
             var crowdfund = user.GetController<UICrowdfundController>();
-            var vm = (await apps.CreateApp(user.StoreId)).AssertViewModel<CreateAppViewModel>();
-            var appType = AppTypes.Crowdfund;
+            var vm = apps.CreateApp(user.StoreId).AssertViewModel<CreateAppViewModel>();
+            var appType = CrowdfundApp.AppType;
             vm.AppName = "test";
             vm.SelectedAppType = appType;
             Assert.IsType<RedirectToActionResult>(apps.CreateApp(user.StoreId, vm).Result);
@@ -103,7 +104,7 @@ namespace BTCPayServer.Tests
                 Amount = new decimal(0.01)
             }, default));
 
-            Assert.IsType<NotFoundResult>(await anonAppPubsController.ViewCrowdfund(app.Id, string.Empty));
+            Assert.IsType<NotFoundResult>(await anonAppPubsController.ViewCrowdfund(app.Id));
 
             //Scenario 2: Not Enabled But Admin - Allowed
             Assert.IsType<OkObjectResult>(await crowdfundController.ContributeToCrowdfund(app.Id, new ContributeToCrowdfund()
@@ -111,8 +112,8 @@ namespace BTCPayServer.Tests
                 RedirectToCheckout = false,
                 Amount = new decimal(0.01)
             }, default));
-            Assert.IsType<ViewResult>(await crowdfundController.ViewCrowdfund(app.Id, string.Empty));
-            Assert.IsType<NotFoundResult>(await anonAppPubsController.ViewCrowdfund(app.Id, string.Empty));
+            Assert.IsType<ViewResult>(await crowdfundController.ViewCrowdfund(app.Id));
+            Assert.IsType<NotFoundResult>(await anonAppPubsController.ViewCrowdfund(app.Id));
 
             //Scenario 3: Enabled But Start Date > Now - Not Allowed
             crowdfundViewModel.StartDate = DateTime.Today.AddDays(2);
@@ -168,7 +169,7 @@ namespace BTCPayServer.Tests
             var apps = user.GetController<UIAppsController>();
             var crowdfund = user.GetController<UICrowdfundController>();
             var vm = Assert.IsType<CreateAppViewModel>(Assert.IsType<ViewResult>(apps.CreateApp(user.StoreId)).Model);
-            var appType = AppTypes.Crowdfund;
+            var appType = CrowdfundApp.AppType;
             vm.AppName = "test";
             vm.SelectedAppType = appType;
             Assert.IsType<RedirectToActionResult>(apps.CreateApp(user.StoreId, vm).Result);
@@ -191,7 +192,7 @@ namespace BTCPayServer.Tests
             var publicApps = user.GetController<UICrowdfundController>();
 
             var model = Assert.IsType<ViewCrowdfundViewModel>(Assert
-                .IsType<ViewResult>(publicApps.ViewCrowdfund(app.Id, string.Empty).Result).Model);
+                .IsType<ViewResult>(publicApps.ViewCrowdfund(app.Id).Result).Model);
 
             Assert.Equal(crowdfundViewModel.TargetAmount, model.TargetAmount);
             Assert.Equal(crowdfundViewModel.EndDate, model.EndDate);
@@ -215,7 +216,7 @@ namespace BTCPayServer.Tests
             }, Facade.Merchant);
 
             model = Assert.IsType<ViewCrowdfundViewModel>(Assert
-                .IsType<ViewResult>(publicApps.ViewCrowdfund(app.Id, string.Empty).Result).Model);
+                .IsType<ViewResult>(publicApps.ViewCrowdfund(app.Id).Result).Model);
 
             Assert.Equal(0m, model.Info.CurrentAmount);
             Assert.Equal(1m, model.Info.CurrentPendingAmount);
@@ -229,7 +230,7 @@ namespace BTCPayServer.Tests
             TestUtils.Eventually(() =>
             {
                 model = Assert.IsType<ViewCrowdfundViewModel>(Assert
-                .IsType<ViewResult>(publicApps.ViewCrowdfund(app.Id, string.Empty).Result).Model);
+                .IsType<ViewResult>(publicApps.ViewCrowdfund(app.Id).Result).Model);
                 Assert.Equal(1m, model.Info.CurrentAmount);
                 Assert.Equal(0m, model.Info.CurrentPendingAmount);
             });
@@ -277,7 +278,7 @@ namespace BTCPayServer.Tests
             TestUtils.Eventually(() =>
             {
                 model = Assert.IsType<ViewCrowdfundViewModel>(Assert
-                .IsType<ViewResult>(publicApps.ViewCrowdfund(app.Id, string.Empty).Result).Model);
+                .IsType<ViewResult>(publicApps.ViewCrowdfund(app.Id).Result).Model);
                 Assert.Equal(0.7m, model.Info.CurrentPendingAmount);
             });
         }

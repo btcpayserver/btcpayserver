@@ -11,6 +11,7 @@ using BTCPayServer.Data;
 using BTCPayServer.Filters;
 using BTCPayServer.Models;
 using BTCPayServer.Plugins.Crowdfund.Models;
+using BTCPayServer.Plugins.PayButton;
 using BTCPayServer.Plugins.PointOfSale.Models;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Rates;
@@ -35,11 +36,13 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
             EventAggregator eventAggregator,
             StoreRepository storeRepository,
             UIInvoiceController invoiceController,
-            UserManager<ApplicationUser> userManager)
+            UserManager<ApplicationUser> userManager,
+            CrowdfundApp app)
         {
             _currencies = currencies;
             _appService = appService;
             _userManager = userManager;
+            _app = app;
             _storeRepository = storeRepository;
             _eventAggregator = eventAggregator;
             _invoiceController = invoiceController;
@@ -51,20 +54,21 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
         private readonly AppService _appService;
         private readonly UIInvoiceController _invoiceController;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly CrowdfundApp _app;
 
         [HttpGet("/")]
         [HttpGet("/apps/{appId}/crowdfund")]
         [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.AllowAll)]
-        [DomainMappingConstraint(AppTypes.Crowdfund)]
-        public async Task<IActionResult> ViewCrowdfund(string appId, string statusMessage)
+        [DomainMappingConstraint(CrowdfundApp.AppType)]
+        public async Task<IActionResult> ViewCrowdfund(string appId)
         {
-            var app = await _appService.GetApp(appId, AppTypes.Crowdfund, true);
+            var app = await _appService.GetApp(appId, CrowdfundApp.AppType, true);
 
             if (app == null)
                 return NotFound();
             var settings = app.GetSettings<CrowdfundSettings>();
 
-            var isAdmin = await _appService.GetAppDataIfOwner(GetUserId(), appId, AppTypes.Crowdfund) != null;
+            var isAdmin = await _appService.GetAppDataIfOwner(GetUserId(), appId, CrowdfundApp.AppType) != null;
 
             var hasEnoughSettingsToLoad = !string.IsNullOrEmpty(settings.TargetCurrency);
             if (!hasEnoughSettingsToLoad)
@@ -89,17 +93,17 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
         [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.AllowAll)]
         [IgnoreAntiforgeryToken]
         [EnableCors(CorsPolicies.All)]
-        [DomainMappingConstraint(AppTypes.Crowdfund)]
+        [DomainMappingConstraint(CrowdfundApp.AppType)]
         [RateLimitsFilter(ZoneLimits.PublicInvoices, Scope = RateLimitsScope.RemoteAddress)]
         public async Task<IActionResult> ContributeToCrowdfund(string appId, ContributeToCrowdfund request, CancellationToken cancellationToken)
         {
-            var app = await _appService.GetApp(appId, AppTypes.Crowdfund, true);
+            var app = await _appService.GetApp(appId, CrowdfundApp.AppType, true);
 
             if (app == null)
                 return NotFound();
             var settings = app.GetSettings<CrowdfundSettings>();
 
-            var isAdmin = await _appService.GetAppDataIfOwner(GetUserId(), appId, AppTypes.Crowdfund) != null;
+            var isAdmin = await _appService.GetAppDataIfOwner(GetUserId(), appId, CrowdfundApp.AppType) != null;
 
             if (!settings.Enabled && !isAdmin)
             {
@@ -395,7 +399,12 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
 
         private async Task<ViewCrowdfundViewModel> GetAppInfo(string appId)
         {
-            var info = (ViewCrowdfundViewModel)await _appService.GetAppInfo(appId);
+            var app = await _appService.GetApp(appId, CrowdfundApp.AppType);
+            if (app is null)
+            {
+                return null;
+            }
+            var info = (ViewCrowdfundViewModel) await _app.GetInfo(app);
             info.HubPath = AppHub.GetHubPath(Request);
             info.SimpleDisplay = Request.Query.ContainsKey("simple");
             return info;

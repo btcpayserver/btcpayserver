@@ -3,6 +3,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
+using BTCPayServer.Plugins.PayButton;
 using BTCPayServer.Services.Apps;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
@@ -10,6 +11,10 @@ namespace BTCPayServer.Models.AppViewModels
 {
     public class CreateAppViewModel
     {
+        public CreateAppViewModel()
+        {
+            
+        }
         public CreateAppViewModel(AppService appService)
         {
             SetApps(appService);
@@ -31,7 +36,7 @@ namespace BTCPayServer.Models.AppViewModels
 
         private void SetApps(AppService appService)
         {
-            var defaultAppType = Services.Apps.AppTypes.PointOfSale;
+            var defaultAppType = PointOfSaleApp.AppType;
             var choices = appService.GetAvailableAppTypes().Select(pair =>
                 new SelectListItem(pair.Value, pair.Key, pair.Key == defaultAppType));
                 

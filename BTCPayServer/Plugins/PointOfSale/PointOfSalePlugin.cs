@@ -1,7 +1,21 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Abstractions.Services;
+using BTCPayServer.Configuration;
+using BTCPayServer.Data;
+using BTCPayServer.Plugins.PointOfSale.Controllers;
+using BTCPayServer.Services.Apps;
+using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.Rates;
+using Ganss.XSS;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace BTCPayServer.Plugins.PayButton
 {
@@ -14,7 +28,103 @@ namespace BTCPayServer.Plugins.PayButton
         public override void Execute(IServiceCollection services)
         {
             services.AddSingleton<IUIExtension>(new UIExtension("PointOfSale/NavExtension", "apps-nav"));
+            services.AddSingleton<IApp,PointOfSaleApp>();
             base.Execute(services);
+        }
+    }
+    
+
+    public enum PosViewType
+    {
+        [Display(Name = "Product list")]
+        Static,
+        [Display(Name = "Product list with cart")]
+        Cart,
+        [Display(Name = "Keypad only")]
+        Light,
+        [Display(Name = "Print display")]
+        Print
+    }
+    public class PointOfSaleApp: IApp
+    {
+        private readonly LinkGenerator _linkGenerator;
+        private readonly IOptions<BTCPayServerOptions> _btcPayServerOptions;
+        private readonly CurrencyNameTable _currencyNameTable;
+        private readonly HtmlSanitizer _htmlSanitizer;
+        public const string AppType = "PointOfSale";
+        public string Description => "Point of Sale";
+        public string Type => AppType;
+
+        public PointOfSaleApp(LinkGenerator linkGenerator, IOptions<BTCPayServerOptions> btcPayServerOptions, CurrencyNameTable currencyNameTable, HtmlSanitizer htmlSanitizer)
+        {
+            _linkGenerator = linkGenerator;
+            _btcPayServerOptions = btcPayServerOptions;
+            _currencyNameTable = currencyNameTable;
+            _htmlSanitizer = htmlSanitizer;
+        }
+        public string ConfigureLink(string appId)
+        {
+            return  _linkGenerator.GetPathByAction(nameof(UIPointOfSaleController.UpdatePointOfSale),
+                "UIPointOfSale", new {appId}, _btcPayServerOptions.Value.RootPath);;
+        }
+
+        public Task<SalesStats> GetSaleStates(AppData app, InvoiceEntity[] paidInvoices, int numberOfDays)
+        {
+            var posS = app.GetSettings<PointOfSaleSettings>();
+            var items = AppService.Parse(_htmlSanitizer, _currencyNameTable,posS.Template, posS.Currency);
+            return AppService.GetSalesStatswithPOSItems(items, paidInvoices, numberOfDays);
+        }
+
+        public Task<IEnumerable<ItemStats>> GetItemStats(AppData appData, InvoiceEntity[] paidInvoices)
+        {
+            var settings = appData.GetSettings<PointOfSaleSettings>();
+            var currencyData = _currencyNameTable.GetCurrencyData(settings.Currency, true);
+            var items = AppService.Parse(_htmlSanitizer, _currencyNameTable,settings.Template, settings.Currency);
+            var itemCount = paidInvoices
+                .Where(entity => entity.Currency.Equals(settings.Currency, StringComparison.OrdinalIgnoreCase) && (
+                    // The POS data is present for the cart view, where multiple items can be bought
+                    !string.IsNullOrEmpty(entity.Metadata.PosData) ||
+                    // The item code should be present for all types other than the cart and keypad
+                    !string.IsNullOrEmpty(entity.Metadata.ItemCode)
+                ))
+                .Aggregate(new List<AppService.InvoiceStatsItem>(), AppService.AggregateInvoiceEntitiesForStats(items))
+                .GroupBy(entity => entity.ItemCode)
+                .Select(entities =>
+                {
+                    var total = entities.Sum(entity => entity.FiatPrice);
+                    var itemCode = entities.Key;
+                    var item = items.FirstOrDefault(p => p.Id == itemCode);
+                    return new ItemStats
+                    {
+                        ItemCode = itemCode,
+                        Title = item?.Title ?? itemCode,
+                        SalesCount = entities.Count(),
+                        Total = total,
+                        TotalFormatted = $"{total.ShowMoney(currencyData.Divisibility)} {settings.Currency}"
+                    };
+                })
+                .OrderByDescending(stats => stats.SalesCount);
+
+            return Task.FromResult<IEnumerable<ItemStats>>(itemCount);
+        }
+
+        public Task<object> GetInfo(AppData appData)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public Task SetDefaultSettings(AppData appData, string defaultCurrency)
+        {
+            var empty = new PointOfSaleSettings { Currency = defaultCurrency };
+            appData.SetSettings(empty);
+            return Task.CompletedTask;
+        }
+
+        public string ViewLink(AppData app)
+        {
+            
+            return _linkGenerator.GetPathByAction(nameof(UIPointOfSaleController.ViewPointOfSale),
+                "UIPointOfSale", new {appId =app.Id}, _btcPayServerOptions.Value.RootPath);
         }
     }
 }

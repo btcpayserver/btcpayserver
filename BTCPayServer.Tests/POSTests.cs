@@ -2,6 +2,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.Models.AppViewModels;
+using BTCPayServer.Plugins.PayButton;
 using BTCPayServer.Plugins.PointOfSale.Controllers;
 using BTCPayServer.Plugins.PointOfSale.Models;
 using BTCPayServer.Services.Apps;
@@ -32,7 +33,7 @@ namespace BTCPayServer.Tests
             var apps = user.GetController<UIAppsController>();
             var pos = user.GetController<UIPointOfSaleController>();
             var vm = Assert.IsType<CreateAppViewModel>(Assert.IsType<ViewResult>(apps.CreateApp(user.StoreId)).Model);
-            var appType = AppTypes.PointOfSale.ToString();
+            var appType = PointOfSaleApp.AppType;
             vm.AppName = "test";
             vm.SelectedAppType = appType;
             Assert.IsType<RedirectToActionResult>(apps.CreateApp(user.StoreId, vm).Result);

@@ -18,6 +18,7 @@ using BTCPayServer.HostedServices;
 using BTCPayServer.Lightning;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
+using BTCPayServer.Plugins.PayButton;
 using BTCPayServer.Plugins.PointOfSale.Models;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
@@ -253,35 +254,47 @@ namespace BTCPayServer
 
             ViewPointOfSaleViewModel.Item[] items = null;
             string currencyCode = null;
+            PointOfSaleSettings posS = null;
             switch (app.AppType)
             {
-                case nameof(AppTypes.Crowdfund):
+                case CrowdfundApp.AppType:
                     var cfS = app.GetSettings<CrowdfundSettings>();
                     currencyCode = cfS.TargetCurrency;
                     items = _appService.Parse(cfS.PerksTemplate, cfS.TargetCurrency);
                     break;
-                case nameof(AppTypes.PointOfSale):
-                    var posS = app.GetSettings<PointOfSaleSettings>();
+                case PointOfSaleApp.AppType:
+                    posS = app.GetSettings<PointOfSaleSettings>();
                     currencyCode = posS.Currency;
                     items = _appService.Parse(posS.Template, posS.Currency);
                     break;
+                default:
+                    //TODO: Allow other apps to define lnurl support
+                    return NotFound();
             }
 
-            var escapedItemId = Extensions.UnescapeBackSlashUriString(itemCode);
-            var item = items.FirstOrDefault(item1 =>
-                item1.Id.Equals(itemCode, StringComparison.InvariantCultureIgnoreCase) ||
-                item1.Id.Equals(escapedItemId, StringComparison.InvariantCultureIgnoreCase));
+            ViewPointOfSaleViewModel.Item item = null;
+            if (!string.IsNullOrEmpty(itemCode))
+            {
+                var escapedItemId = Extensions.UnescapeBackSlashUriString(itemCode);
+                item = items.FirstOrDefault(item1 =>
+                    item1.Id.Equals(itemCode, StringComparison.InvariantCultureIgnoreCase) ||
+                    item1.Id.Equals(escapedItemId, StringComparison.InvariantCultureIgnoreCase));
 
-            if (item is null ||
-                item.Inventory <= 0 ||
-                (item.PaymentMethods?.Any() is true &&
-                 item.PaymentMethods?.Any(s => PaymentMethodId.Parse(s) == pmi) is false))
+                if (item is null ||
+                    item.Inventory <= 0 ||
+                    (item.PaymentMethods?.Any() is true &&
+                     item.PaymentMethods?.Any(s => PaymentMethodId.Parse(s) == pmi) is false))
+                {
+                    return NotFound();
+                }
+            }else if (app.AppType == PointOfSaleApp.AppType && posS?.ShowCustomAmount is not true)
             {
                 return NotFound();
             }
+           
 
             return await GetLNURL(cryptoCode, app.StoreDataId, currencyCode, null, null,
-                () => (null, app, item, new List<string> { AppService.GetAppInternalTag(appId) }, item.Price.Value, true));
+                () => (null, app, item, new List<string> { AppService.GetAppInternalTag(appId) }, item?.Price.Value, true));
         }
 
         public class EditLightningAddressVM
@@ -344,7 +357,7 @@ namespace BTCPayServer
         [HttpGet("pay")]
         public async Task<IActionResult> GetLNURL(string cryptoCode, string storeId, string currencyCode = null,
             decimal? min = null, decimal? max = null,
-            Func<(string username, AppData app, ViewPointOfSaleViewModel.Item item, List<string> additionalTags, decimal? invoiceAmount, bool? anyoneCanInvoice)>
+            Func<(string username, AppData app, ViewPointOfSaleViewModel.Item? item, List<string> additionalTags, decimal? invoiceAmount, bool? anyoneCanInvoice)>
                 internalDetails = null)
         {
             var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
@@ -391,7 +404,7 @@ namespace BTCPayServer
 
             var redirectUrl = app?.AppType switch
             {
-                nameof(AppTypes.PointOfSale) => app.GetSettings<PointOfSaleSettings>().RedirectUrl ??
+                PointOfSaleApp.AppType => app.GetSettings<PointOfSaleSettings>().RedirectUrl ??
                                                HttpContext.Request.GetAbsoluteUri($"/apps/{app.Id}/pos"),
                 _ => null
             };

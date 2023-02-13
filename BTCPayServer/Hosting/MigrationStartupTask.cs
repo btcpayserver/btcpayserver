@@ -15,6 +15,7 @@ using BTCPayServer.Logging;
 using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
+using BTCPayServer.Plugins.PayButton;
 using BTCPayServer.Plugins.PointOfSale.Models;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
@@ -459,7 +460,7 @@ WHERE cte.""Id""=p.""Id""
                 string newTemplate;
                 switch (app.AppType)
                 {
-                    case nameof(AppTypes.Crowdfund):
+                    case CrowdfundApp.AppType:
                         var settings1 = app.GetSettings<CrowdfundSettings>();
                         if (string.IsNullOrEmpty(settings1.TargetCurrency))
                         {
@@ -475,7 +476,7 @@ WHERE cte.""Id""=p.""Id""
                         };
                         break;
 
-                    case nameof(AppTypes.PointOfSale):
+                    case PointOfSaleApp.AppType:
 
                         var settings2 = app.GetSettings<PointOfSaleSettings>();
                         if (string.IsNullOrEmpty(settings2.Currency))

@@ -18,18 +18,18 @@ namespace BTCPayServer.PaymentRequest
     {
         private readonly PaymentRequestRepository _PaymentRequestRepository;
         private readonly BTCPayNetworkProvider _BtcPayNetworkProvider;
-        private readonly AppService _AppService;
+        private readonly InvoiceRepository _invoiceRepository;
         private readonly CurrencyNameTable _currencies;
 
         public PaymentRequestService(
             PaymentRequestRepository paymentRequestRepository,
             BTCPayNetworkProvider btcPayNetworkProvider,
-            AppService appService,
+            InvoiceRepository invoiceRepository,
             CurrencyNameTable currencies)
         {
             _PaymentRequestRepository = paymentRequestRepository;
             _BtcPayNetworkProvider = btcPayNetworkProvider;
-            _AppService = appService;
+            _invoiceRepository = invoiceRepository;
             _currencies = currencies;
         }
 
@@ -56,7 +56,7 @@ namespace BTCPayServer.PaymentRequest
             if (currentStatus != Client.Models.PaymentRequestData.PaymentRequestStatus.Expired)
             {
                 var invoices = await _PaymentRequestRepository.GetInvoicesForPaymentRequest(pr.Id);
-                var contributions = _AppService.GetContributionsByPaymentMethodId(blob.Currency, invoices, true);
+                var contributions = _invoiceRepository.GetContributionsByPaymentMethodId(blob.Currency, invoices, true);
 
                 currentStatus = contributions.TotalCurrency >= blob.Amount
                     ? Client.Models.PaymentRequestData.PaymentRequestStatus.Completed
@@ -82,7 +82,7 @@ namespace BTCPayServer.PaymentRequest
 
             var invoices = await _PaymentRequestRepository.GetInvoicesForPaymentRequest(id);
 
-            var paymentStats = _AppService.GetContributionsByPaymentMethodId(blob.Currency, invoices, true);
+            var paymentStats = _invoiceRepository.GetContributionsByPaymentMethodId(blob.Currency, invoices, true);
             var amountDue = blob.Amount - paymentStats.TotalCurrency;
             var pendingInvoice = invoices.OrderByDescending(entity => entity.InvoiceTime)
                 .FirstOrDefault(entity => entity.Status == InvoiceStatusLegacy.New);

@@ -35,6 +35,7 @@ using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Payments.PayJoin.Sender;
+using BTCPayServer.Plugins.PayButton;
 using BTCPayServer.Plugins.PointOfSale.Controllers;
 using BTCPayServer.Security.Bitpay;
 using BTCPayServer.Services;
@@ -1988,7 +1989,7 @@ namespace BTCPayServer.Tests
             var apps2 = user2.GetController<UIAppsController>();
             var pos = user.GetController<UIPointOfSaleController>();
             var vm = Assert.IsType<CreateAppViewModel>(Assert.IsType<ViewResult>(apps.CreateApp(user.StoreId)).Model);
-            var appType = AppTypes.PointOfSale.ToString();
+            var appType = PointOfSaleApp.AppType;
             Assert.NotNull(vm.SelectedAppType);
             Assert.Null(vm.AppName);
             vm.AppName = "test";

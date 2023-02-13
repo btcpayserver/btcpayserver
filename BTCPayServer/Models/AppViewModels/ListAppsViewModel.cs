@@ -1,4 +1,5 @@
 using System;
+using BTCPayServer.Data;
 
 
 namespace BTCPayServer.Models.AppViewModels
@@ -18,6 +19,7 @@ namespace BTCPayServer.Models.AppViewModels
             public string UpdateAction { get { return "Update" + AppType; } }
             public string ViewAction { get { return "View" + AppType; } }
             public DateTimeOffset Created { get; set; }
+            public AppData App { get; set; }
         }
 
         public ListAppViewModel[] Apps { get; set; }

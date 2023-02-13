@@ -13,24 +13,9 @@ namespace BTCPayServer.Services.Apps
         string ConfigureLink(string appId);
         Task<SalesStats> GetSaleStates(AppData app, InvoiceEntity[] paidInvoices, int numberOfDays);
         Task<IEnumerable<ItemStats>> GetItemStats(AppData appData, InvoiceEntity[] invoiceEntities);
-    }
-    
-    public static class AppTypes
-    {
-        public const  string PointOfSale = nameof(PointOfSale);
-        public const  string Crowdfund = nameof(Crowdfund);
-    }
-
-    public enum PosViewType
-    {
-        [Display(Name = "Product list")]
-        Static,
-        [Display(Name = "Product list with cart")]
-        Cart,
-        [Display(Name = "Keypad only")]
-        Light,
-        [Display(Name = "Print display")]
-        Print
+        Task<object> GetInfo(AppData appData);
+        Task SetDefaultSettings(AppData appData, string defaultCurrency);
+        string ViewLink(AppData app);
     }
 
     public enum RequiresRefundEmail

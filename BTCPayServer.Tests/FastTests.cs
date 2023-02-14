@@ -582,6 +582,22 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        public void CanDetectImage()
+        {
+            Assert.True(FileTypeDetector.IsPicture(new byte[] { 0x42, 0x4D }, "test.bmp"));
+            Assert.False(FileTypeDetector.IsPicture(new byte[] { 0x42, 0x4D }, ".bmp"));
+            Assert.False(FileTypeDetector.IsPicture(new byte[] { 0x42, 0x4D }, "test.svg"));
+            Assert.True(FileTypeDetector.IsPicture(new byte[] { 0xFF, 0xD8, 0xFF, 0xD9 }, "test.jpg"));
+            Assert.True(FileTypeDetector.IsPicture(new byte[] { 0xFF, 0xD8, 0xFF, 0xD9 }, "test.jpeg"));
+            Assert.False(FileTypeDetector.IsPicture(new byte[] { 0xFF, 0xD8, 0xFF, 0xDA }, "test.jpg"));
+            Assert.False(FileTypeDetector.IsPicture(new byte[] { 0xFF, 0xD8, 0xFF }, "test.jpg"));
+            Assert.True(FileTypeDetector.IsPicture(new byte[] { 0x3C, 0x73, 0x76, 0x67 }, "test.svg"));
+            Assert.False(FileTypeDetector.IsPicture(new byte[] { 0x3C, 0x73, 0x76, 0x67 }, "test.jpg"));
+            Assert.False(FileTypeDetector.IsPicture(new byte[] { 0xFF }, "e.jpg"));
+            Assert.False(FileTypeDetector.IsPicture(new byte[] { }, "empty.jpg"));
+        }
+
+        [Fact]
         public void RoundupCurrenciesCorrectly()
         {
             foreach (var test in new[]

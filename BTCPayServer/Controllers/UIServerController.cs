@@ -1043,29 +1043,42 @@ namespace BTCPayServer.Controllers
 
             if (model.LogoFile != null)
             {
-                if (model.LogoFile.ContentType.StartsWith("image/", StringComparison.InvariantCulture))
+                if (model.LogoFile.Length > 1_000_000)
                 {
-                    // delete existing image
-                    if (!string.IsNullOrEmpty(settings.LogoFileId))
-                    {
-                        await _fileService.RemoveFile(settings.LogoFileId, userId);
-                    }
-
-                    // add new image
-                    try
-                    {
-                        var storedFile = await _fileService.AddFile(model.LogoFile, userId);
-                        settings.LogoFileId = storedFile.Id;
-                        settingsChanged = true;
-                    }
-                    catch (Exception e)
-                    {
-                        ModelState.AddModelError(nameof(settings.LogoFile), $"Could not save logo: {e.Message}");
-                    }
+                    TempData[WellKnownTempData.ErrorMessage] = "The uploaded logo file should be less than 1MB";
+                }
+                else if (!model.LogoFile.ContentType.StartsWith("image/", StringComparison.InvariantCulture))
+                {
+                    TempData[WellKnownTempData.ErrorMessage] = "The uploaded logo file needs to be an image";
                 }
                 else
                 {
-                    ModelState.AddModelError(nameof(settings.LogoFile), "The uploaded logo file needs to be an image");
+                    var formFile = await model.LogoFile.Bufferize();
+                    if (!FileTypeDetector.IsPicture(formFile.Buffer, formFile.FileName))
+                    {
+                        TempData[WellKnownTempData.ErrorMessage] = "The uploaded logo file needs to be an image";
+                    }
+                    else
+                    {
+                        model.LogoFile = formFile;
+                        // delete existing image
+                        if (!string.IsNullOrEmpty(settings.LogoFileId))
+                        {
+                            await _fileService.RemoveFile(settings.LogoFileId, userId);
+                        }
+
+                        // add new image
+                        try
+                        {
+                            var storedFile = await _fileService.AddFile(model.LogoFile, userId);
+                            settings.LogoFileId = storedFile.Id;
+                            settingsChanged = true;
+                        }
+                        catch (Exception e)
+                        {
+                            ModelState.AddModelError(nameof(settings.LogoFile), $"Could not save logo: {e.Message}");
+                        }
+                    }
                 }
             }
             else if (RemoveLogoFile && !string.IsNullOrEmpty(settings.LogoFileId))

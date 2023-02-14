@@ -233,7 +233,7 @@ namespace BTCPayServer.Controllers
             if (Request.Method == "POST" && Request.HasFormContentType)
             {
                 form.ApplyValuesFromForm(Request.Form);
-                if (await FormDataService.Validate(form, ModelState))
+                if (FormDataService.Validate(form, ModelState))
                 {  prBlob.FormResponse = JObject.FromObject(form.GetValues());
                     result.SetBlob(prBlob);
                     await _PaymentRequestRepository.CreateOrUpdatePaymentRequest(result);

@@ -45,7 +45,6 @@
                     else
                     {
                         <form method="post" asp-action="@Model.AspAction" asp-controller="@Model.AspController" asp-all-route-data="Model.RouteParameters">
-
                             @if (!string.IsNullOrEmpty(Model.RedirectUrl))
                             {
                                 <input type="hidden" asp-for="RedirectUrl" value="@Model.RedirectUrl" />

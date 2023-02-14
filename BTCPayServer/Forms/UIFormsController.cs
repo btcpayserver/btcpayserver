@@ -181,7 +181,7 @@ public class UIFormsController : Controller
         var form = Form.Parse(formData.Config);
         form.ApplyValuesFromForm(Request.Form);
 
-        if (!await _formDataService.Validate(form, ModelState))
+        if (!_formDataService.Validate(form, ModelState))
             return GetFormView(formData, form);
 
         // Create invoice after public form has been filled

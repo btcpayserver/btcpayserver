@@ -33,12 +33,12 @@ public class FormDataService
 
     public static readonly Form StaticFormEmail = new()
     {
-        Fields = new List<Field>() { Field.Create("Enter your email", "buyerEmail", null, true, null, "email") }
+        Fields = new List<Field> { Field.Create("Enter your email", "buyerEmail", null, true, null, "email") }
     };
 
     public static readonly Form StaticFormAddress = new()
     {
-        Fields = new List<Field>()
+        Fields = new List<Field>
         {
             Field.Create("Enter your email", "buyerEmail", null, true, null, "email"),
             Field.Create("Name", "buyerName", null, true, null),
@@ -50,9 +50,10 @@ public class FormDataService
             Field.Create("Country", "buyerCountry", null, true, null)
         }
     };
-    private static Dictionary<string, (string selectText, string name, Form form)> HardcodedOptions  = new()
+    
+    private static readonly Dictionary<string, (string selectText, string name, Form form)> _hardcodedOptions = new()
     {
-        {"", ("Do not request any information", null, null)},
+        {"", ("Do not request any information", null, null)!},
         {"Email", ("Request email address only", "Provide your email address", StaticFormEmail )},
         {"Address", ("Request shipping address", "Provide your address", StaticFormAddress)},
     };
@@ -60,10 +61,9 @@ public class FormDataService
     public async Task<SelectList> GetSelect(string storeId ,string selectedFormId)
     {
         var forms = await GetForms(storeId);
-        return new SelectList(HardcodedOptions.Select(pair => new SelectListItem(pair.Value.selectText, pair.Key, selectedFormId == pair.Key)).Concat(forms.Select(data => new SelectListItem(data.Name, data.Id, data.Id == selectedFormId))),
+        return new SelectList(_hardcodedOptions.Select(pair => new SelectListItem(pair.Value.selectText, pair.Key, selectedFormId == pair.Key)).Concat(forms.Select(data => new SelectListItem(data.Name, data.Id, data.Id == selectedFormId))),
             nameof(SelectListItem.Value), nameof(SelectListItem.Text));
     }
-    
     
     public async Task<List<FormData>> GetForms(string storeId)
     {
@@ -84,7 +84,7 @@ public class FormDataService
             return null;
         }
 
-        if (HardcodedOptions.TryGetValue(id, out var hardcodedForm))
+        if (_hardcodedOptions.TryGetValue(id, out var hardcodedForm))
         {
             return new FormData
             {
@@ -115,7 +115,7 @@ public class FormDataService
         await context.SaveChangesAsync();
     }
 
-    public async Task<bool> Validate(Form form, ModelStateDictionary modelState)
+    public bool Validate(Form form, ModelStateDictionary modelState)
     {
         return _formProviders.Validate(form, modelState);
     }

@@ -1,25 +1,14 @@
 @model BTCPayServer.Abstractions.Form.Field
 @{
-	var isInvalid = this.ViewContext.ModelState[Model.Name]?.ValidationState is Microsoft.AspNetCore.Mvc.ModelBinding.ModelValidationState.Invalid;
-	var errors = isInvalid ? this.ViewContext.ModelState[Model.Name].Errors : null;
-
+	var isInvalid = ViewContext.ModelState[Model.Name]?.ValidationState is Microsoft.AspNetCore.Mvc.ModelBinding.ModelValidationState.Invalid;
+	var errors = isInvalid ? ViewContext.ModelState[Model.Name].Errors : null;
 }
 <div class="form-group">
-    @if (Model.Required)
-    {
-        <label class="form-label" for="@Model.Name" data-required>
-            @Model.Label
-        </label>
-    }
-    else
-    {
-        <label class="form-label" for="@Model.Name">
-            @Model.Label
-        </label>
-    }
-
-    <input class="form-control @(errors is null ? "" : "is-invalid")" id="@Model.Name" type="@Model.Type" required="@Model.Required" name="@Model.Name" value="@Model.Value" aria-describedby="@("HelpText" + Model.Name)"/>
-	@if(isInvalid)
+    <label class="form-label" for="@Model.Name"@(Model.Required ? " data-required" : "")>
+        @Model.Label
+    </label>
+    <input class="form-control @(errors is null ? "" : "is-invalid")" id="@Model.Name" type="@Model.Type" required="@Model.Required" name="@Model.Name" value="@Model.Value" aria-describedby="@($"HelpText-{Model.Name}")"/>
+	@if (isInvalid)
 	{
 	    @foreach (var error in errors)
 	    {
@@ -28,8 +17,6 @@
 	}
     @if (!string.IsNullOrEmpty(Model.HelpText))
     {
-        <div id="@("HelpText" + Model.Name)" class="form-text">@Model.HelpText</div>
+        <div id="@($"HelpText-{Model.Name}")" class="form-text">@Model.HelpText</div>
     }
-
-
 </div>

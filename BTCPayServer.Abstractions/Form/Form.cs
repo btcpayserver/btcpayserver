@@ -19,6 +19,7 @@ public class Form
         return JObject.FromObject(this, CamelCaseSerializerSettings.Serializer).ToString(Newtonsoft.Json.Formatting.Indented);
     }
 #nullable restore
+    
     // Messages to be shown at the top of the form indicating user feedback like "Saved successfully" or "Please change X because of Y." or a warning, etc...
     public List<AlertMessage> TopMessages { get; set; } = new();
 
@@ -44,7 +45,6 @@ public class Form
             var currentPrefix = prefix;
             if (!string.IsNullOrEmpty(field.Name))
             {
-
                 currentPrefix = $"{prefix}{field.Name}";
                 if (currentPrefix.Equals(name, StringComparison.InvariantCultureIgnoreCase))
                 {
@@ -130,7 +130,7 @@ public class Form
         SetValues(values, null);
     }
 
-    private void SetValues(Dictionary<string, object> values, List<Field> fields = null, string prefix = null)
+    private void SetValues(Dictionary<string, object> values, List<Field> fields, string prefix = null)
     {
         foreach (var v in values)
         {
@@ -145,7 +145,8 @@ public class Form
                 if (v.Value is Dictionary<string, object> dict)
                 {
                     SetValues(dict, field.Fields, field.Name + "_");
-                }else if (v.Value is JObject jObject)
+                }
+                else if (v.Value is JObject jObject)
                 {
                     dict = jObject.ToObject<Dictionary<string, object>>();
                     SetValues(dict, field.Fields, field.Name + "_");
@@ -155,7 +156,6 @@ public class Form
             {
                 field.Value = (string) v.Value;
             }
-
         }
     }
 

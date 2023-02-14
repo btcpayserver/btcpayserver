@@ -253,7 +253,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                     var formValues = formResponseJObject.ToObject<Dictionary<string, object>>();
                     var form = Form.Parse(formData.Config);
                     form.SetValues(formValues);
-                    if (!await FormDataService.Validate(form, ModelState))
+                    if (!FormDataService.Validate(form, ModelState))
                     {
                         //someone tried to bypass validation
                         return RedirectToAction(nameof(ViewPointOfSale), new {appId});
@@ -369,16 +369,14 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             if (Request.Method == "POST" && Request.HasFormContentType)
             {
                 form.ApplyValuesFromForm(Request.Form);
-                if (await FormDataService.Validate(form, ModelState))
+                if (FormDataService.Validate(form, ModelState))
                 {
-                    
                     return View("PostRedirect", new PostRedirectViewModel
                     {
                         FormUrl = viewModel.RedirectUrl,
                         FormParameters =
                         {
                             { "formResponse", JObject.FromObject(form.GetValues()).ToString() }
-
                         }
                     });
                 }
@@ -398,7 +396,6 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             if (app == null)
                 return NotFound();
 
-            var storeBlob = GetCurrentStore().GetStoreBlob();
             var settings = app.GetSettings<PointOfSaleSettings>();
             settings.DefaultView = settings.EnableShoppingCart ? PosViewType.Cart : settings.DefaultView;
             settings.EnableShoppingCart = false;
@@ -430,13 +427,13 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 RedirectAutomatically = settings.RedirectAutomatically.HasValue ? settings.RedirectAutomatically.Value ? "true" : "false" : "",
                 FormId = settings.FormId
             };
-            if (HttpContext?.Request != null)
+            if (HttpContext.Request != null)
             {
                 var appUrl = HttpContext.Request.GetAbsoluteUri($"/apps/{appId}/pos");
                 var encoder = HtmlEncoder.Default;
                 if (settings.ShowCustomAmount)
                 {
-                    StringBuilder builder = new StringBuilder();
+                    var builder = new StringBuilder();
                     builder.AppendLine(CultureInfo.InvariantCulture, $"<form method=\"POST\" action=\"{encoder.Encode(appUrl)}\">");
                     builder.AppendLine($"  <input type=\"hidden\" name=\"amount\" value=\"100\" />");
                     builder.AppendLine($"  <input type=\"hidden\" name=\"email\" value=\"customer@example.com\" />");
@@ -515,7 +512,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 Description = vm.Description,
                 EmbeddedCSS = vm.EmbeddedCSS,
                 RedirectAutomatically =
-                    string.IsNullOrEmpty(vm.RedirectAutomatically) ? (bool?)null : bool.Parse(vm.RedirectAutomatically)
+                    string.IsNullOrEmpty(vm.RedirectAutomatically) ? null : bool.Parse(vm.RedirectAutomatically)
             };
 
             settings.FormId = vm.FormId;

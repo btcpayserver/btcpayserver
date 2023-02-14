@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Plugins.Crowdfund;
-using BTCPayServer.Plugins.PayButton;
+using BTCPayServer.Plugins.PointOfSale;
 using BTCPayServer.Plugins.PointOfSale.Models;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
@@ -22,7 +22,7 @@ using Newtonsoft.Json.Linq;
 using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
 using YamlDotNet.Serialization;
-using PosViewType = BTCPayServer.Plugins.PayButton.PosViewType;
+using PosViewType = BTCPayServer.Plugins.PointOfSale.PosViewType;
 using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Services.Apps

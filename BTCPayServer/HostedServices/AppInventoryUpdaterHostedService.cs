@@ -3,11 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using BTCPayServer.Controllers;
 using BTCPayServer.Events;
 using BTCPayServer.Logging;
 using BTCPayServer.Plugins.Crowdfund;
-using BTCPayServer.Plugins.PayButton;
+using BTCPayServer.Plugins.PointOfSale;
 using BTCPayServer.Services.Apps;
 
 namespace BTCPayServer.HostedServices

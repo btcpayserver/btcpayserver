@@ -8,7 +8,7 @@ using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Plugins.Crowdfund;
-using BTCPayServer.Plugins.PayButton;
+using BTCPayServer.Plugins.PointOfSale;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
@@ -17,7 +17,7 @@ using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
-using PosViewType = BTCPayServer.Plugins.PayButton.PosViewType;
+using PosViewType = BTCPayServer.Plugins.PointOfSale.PosViewType;
 
 namespace BTCPayServer.Controllers.Greenfield
 {

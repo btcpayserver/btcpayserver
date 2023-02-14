@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using BTCPayServer.Plugins.PayButton;
 using BTCPayServer.Services.Apps;
 
 namespace BTCPayServer.Plugins.PointOfSale.Models

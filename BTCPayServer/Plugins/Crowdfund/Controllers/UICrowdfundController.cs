@@ -11,7 +11,6 @@ using BTCPayServer.Data;
 using BTCPayServer.Filters;
 using BTCPayServer.Models;
 using BTCPayServer.Plugins.Crowdfund.Models;
-using BTCPayServer.Plugins.PayButton;
 using BTCPayServer.Plugins.PointOfSale.Models;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Rates;

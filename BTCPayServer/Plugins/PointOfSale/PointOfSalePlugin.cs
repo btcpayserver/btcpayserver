@@ -17,7 +17,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
-namespace BTCPayServer.Plugins.PayButton
+namespace BTCPayServer.Plugins.PointOfSale
 {
     public class PointOfSalePlugin : BaseBTCPayServerPlugin
     {
@@ -33,7 +33,6 @@ namespace BTCPayServer.Plugins.PayButton
         }
     }
     
-
     public enum PosViewType
     {
         [Display(Name = "Product list")]
@@ -45,6 +44,7 @@ namespace BTCPayServer.Plugins.PayButton
         [Display(Name = "Print display")]
         Print
     }
+
     public class PointOfSaleApp: IApp
     {
         private readonly LinkGenerator _linkGenerator;

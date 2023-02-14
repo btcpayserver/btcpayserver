@@ -18,7 +18,6 @@ using BTCPayServer.Filters;
 using BTCPayServer.Forms;
 using BTCPayServer.ModelBinders;
 using BTCPayServer.Models;
-using BTCPayServer.Plugins.PayButton;
 using BTCPayServer.Plugins.PointOfSale.Models;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;

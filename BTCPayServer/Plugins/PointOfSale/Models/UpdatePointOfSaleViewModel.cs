@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using BTCPayServer.Plugins.PayButton;
 using BTCPayServer.Validation;
 using Microsoft.AspNetCore.Mvc.Rendering;
 

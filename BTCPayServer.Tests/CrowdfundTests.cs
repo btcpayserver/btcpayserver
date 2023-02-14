@@ -43,8 +43,8 @@ namespace BTCPayServer.Tests
             Assert.Null(vm.AppName);
             vm.AppName = "test";
             vm.SelectedAppType = appType;
-            var redirectToAction = Assert.IsType<RedirectToActionResult>(apps.CreateApp(user.StoreId, vm).Result);
-            Assert.Equal(nameof(crowdfund.UpdateCrowdfund), redirectToAction.ActionName);
+            var redirect = Assert.IsType<RedirectResult>(apps.CreateApp(user.StoreId, vm).Result);
+            Assert.EndsWith("/settings/crowdfund", redirect.Url);
             var appList = Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps.ListApps(user.StoreId).Result).Model);
             var app = appList.Apps[0];
             var appData = new AppData { Id = app.Id, StoreDataId = app.StoreId, Name = app.AppName, AppType = appType };
@@ -60,7 +60,7 @@ namespace BTCPayServer.Tests
             Assert.Equal(user.StoreId, appList.Apps[0].StoreId);
             Assert.IsType<NotFoundResult>(apps2.DeleteApp(appList.Apps[0].Id));
             Assert.IsType<ViewResult>(apps.DeleteApp(appList.Apps[0].Id));
-            redirectToAction = Assert.IsType<RedirectToActionResult>(apps.DeleteAppPost(appList.Apps[0].Id).Result);
+            var redirectToAction = Assert.IsType<RedirectToActionResult>(apps.DeleteAppPost(appList.Apps[0].Id).Result);
             Assert.Equal(nameof(UIStoresController.Dashboard), redirectToAction.ActionName);
             appList = await apps.ListApps(user.StoreId).AssertViewModelAsync<ListAppsViewModel>();
             Assert.Empty(appList.Apps);
@@ -81,7 +81,8 @@ namespace BTCPayServer.Tests
             var appType = CrowdfundApp.AppType;
             vm.AppName = "test";
             vm.SelectedAppType = appType;
-            Assert.IsType<RedirectToActionResult>(apps.CreateApp(user.StoreId, vm).Result);
+            var redirect = Assert.IsType<RedirectResult>(apps.CreateApp(user.StoreId, vm).Result);
+            Assert.EndsWith("/settings/crowdfund", redirect.Url);
             var appList = Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps.ListApps(user.StoreId).Result).Model);
             var app = appList.Apps[0];
             var appData = new AppData { Id = app.Id, StoreDataId = app.StoreId, Name = app.AppName, AppType = appType };
@@ -172,7 +173,7 @@ namespace BTCPayServer.Tests
             var appType = CrowdfundApp.AppType;
             vm.AppName = "test";
             vm.SelectedAppType = appType;
-            Assert.IsType<RedirectToActionResult>(apps.CreateApp(user.StoreId, vm).Result);
+            Assert.IsType<RedirectResult>(apps.CreateApp(user.StoreId, vm).Result);
             var appList = Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps.ListApps(user.StoreId).Result).Model);
             var app = appList.Apps[0];
             var appData = new AppData { Id = app.Id, StoreDataId = app.StoreId, Name = app.AppName, AppType = appType };

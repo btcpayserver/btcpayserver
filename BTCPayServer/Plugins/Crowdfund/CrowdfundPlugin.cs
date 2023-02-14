@@ -17,7 +17,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
-namespace BTCPayServer.Plugins.PayButton
+namespace BTCPayServer.Plugins.Crowdfund
 {
     public class CrowdfundPlugin : BaseBTCPayServerPlugin
     {

@@ -7,6 +7,7 @@ using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
+using BTCPayServer.Plugins.Crowdfund;
 using BTCPayServer.Plugins.PayButton;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Rates;

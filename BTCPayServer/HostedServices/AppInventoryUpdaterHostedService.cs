@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Controllers;
 using BTCPayServer.Events;
 using BTCPayServer.Logging;
+using BTCPayServer.Plugins.Crowdfund;
 using BTCPayServer.Plugins.PayButton;
 using BTCPayServer.Services.Apps;
 

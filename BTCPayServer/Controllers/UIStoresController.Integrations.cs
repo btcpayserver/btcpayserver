@@ -118,6 +118,8 @@ namespace BTCPayServer.Controllers
             var webhook = await _Repo.GetWebhook(CurrentStore.Id, webhookId);
             if (webhook is null)
                 return NotFound();
+            if (!ModelState.IsValid)
+                return View(nameof(ModifyWebhook), viewModel);
 
             await _Repo.UpdateWebhook(CurrentStore.Id, webhookId, viewModel.CreateBlob());
             TempData[WellKnownTempData.SuccessMessage] = "The webhook has been updated";

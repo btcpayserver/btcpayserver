@@ -36,7 +36,8 @@ namespace BTCPayServer.Tests
             var appType = PointOfSaleApp.AppType;
             vm.AppName = "test";
             vm.SelectedAppType = appType;
-            Assert.IsType<RedirectToActionResult>(apps.CreateApp(user.StoreId, vm).Result);
+            var redirect = Assert.IsType<RedirectResult>(apps.CreateApp(user.StoreId, vm).Result);
+            Assert.EndsWith("/settings/pos", redirect.Url);
             var appList = Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps.ListApps(user.StoreId).Result).Model);
             var app = appList.Apps[0];
             var appData = new AppData { Id = app.Id, StoreDataId = app.StoreId, Name = app.AppName, AppType = appType };

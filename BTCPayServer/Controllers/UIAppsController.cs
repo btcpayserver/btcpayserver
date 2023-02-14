@@ -144,9 +144,8 @@ namespace BTCPayServer.Controllers
 
             var defaultCurrency = await GetStoreDefaultCurrentIfEmpty(appData.StoreDataId, null);
             await _appService.SetDefaultSettings(appData, defaultCurrency);
-            
-
             await _appService.UpdateOrCreateApp(appData);
+            
             TempData[WellKnownTempData.SuccessMessage] = "App successfully created";
             CreatedAppId = appData.Id;
 

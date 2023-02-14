@@ -399,7 +399,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
 
         private async Task<ViewCrowdfundViewModel> GetAppInfo(string appId)
         {
-            var app = await _appService.GetApp(appId, CrowdfundApp.AppType);
+            var app = await _appService.GetApp(appId, CrowdfundApp.AppType, true);
             if (app is null)
             {
                 return null;

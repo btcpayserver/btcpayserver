@@ -4,22 +4,15 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using BTCPayServer.Client.Models;
-using BTCPayServer.Configuration;
 using BTCPayServer.Data;
 using BTCPayServer.Models.AppViewModels;
-using BTCPayServer.Payments;
-using BTCPayServer.Plugins.Crowdfund.Controllers;
-using BTCPayServer.Plugins.Crowdfund.Models;
 using BTCPayServer.Plugins.PayButton;
-using BTCPayServer.Plugins.PointOfSale.Controllers;
 using BTCPayServer.Plugins.PointOfSale.Models;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using ExchangeSharp;
 using Ganss.XSS;
-using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin;
 using NBitcoin.DataEncoders;
@@ -28,7 +21,6 @@ using Newtonsoft.Json.Linq;
 using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
 using YamlDotNet.Serialization;
-using static BTCPayServer.Plugins.Crowdfund.Models.ViewCrowdfundViewModel;
 using PosViewType = BTCPayServer.Plugins.PayButton.PosViewType;
 using StoreData = BTCPayServer.Data.StoreData;
 
@@ -36,9 +28,7 @@ namespace BTCPayServer.Services.Apps
 {
     public class AppService
     {
-        private readonly LinkGenerator _linkGenerator;
         private readonly IEnumerable<IApp> _apps;
-        private readonly BTCPayServerOptions _options;
         readonly ApplicationDbContextFactory _ContextFactory;
         private readonly InvoiceRepository _InvoiceRepository;
         readonly CurrencyNameTable _Currencies;
@@ -46,16 +36,14 @@ namespace BTCPayServer.Services.Apps
         private readonly HtmlSanitizer _HtmlSanitizer;
         public CurrencyNameTable Currencies => _Currencies;
         public AppService(
-            LinkGenerator linkGenerator, IEnumerable<IApp> apps, BTCPayServerOptions options,
+            IEnumerable<IApp> apps,
             ApplicationDbContextFactory contextFactory,
-                          InvoiceRepository invoiceRepository,
-                          CurrencyNameTable currencies,
-                          StoreRepository storeRepository,
-                          HtmlSanitizer htmlSanitizer)
+            InvoiceRepository invoiceRepository,
+            CurrencyNameTable currencies,
+            StoreRepository storeRepository,
+            HtmlSanitizer htmlSanitizer)
         {
-            _linkGenerator = linkGenerator;
             _apps = apps;
-            _options = options;
             _ContextFactory = contextFactory;
             _InvoiceRepository = invoiceRepository;
             _Currencies = currencies;
@@ -78,6 +66,7 @@ namespace BTCPayServer.Services.Apps
         {
             return _apps.First(app => app.Type == appType);
         }
+        
         public async Task<object> GetInfo(string appId)
         {
             var appData = await GetApp(appId, null);
@@ -94,7 +83,6 @@ namespace BTCPayServer.Services.Apps
             return app.GetInfo(appData);
         }
         
-
         public async Task<IEnumerable<ItemStats>> GetItemStats(AppData appData)
         {
             var paidInvoices = await GetInvoicesForApp(_InvoiceRepository,appData,
@@ -110,7 +98,6 @@ namespace BTCPayServer.Services.Apps
         public static Task<SalesStats> GetSalesStatswithPOSItems(ViewPointOfSaleViewModel.Item[] items,
             InvoiceEntity[] paidInvoices,  int numberOfDays)
         {
-            
             var series = paidInvoices
                 .Aggregate(new List<InvoiceStatsItem>(), AggregateInvoiceEntitiesForStats(items))
                 .GroupBy(entity => entity.Date)
@@ -152,7 +139,6 @@ namespace BTCPayServer.Services.Apps
                     InvoiceState.ToString(InvoiceStatusLegacy.Complete)
                 });
             return await GetAppForType(app.AppType).GetSaleStates(app, paidInvoices,numberOfDays);
-
         }
 
         public class InvoiceStatsItem
@@ -227,9 +213,9 @@ namespace BTCPayServer.Services.Apps
 
         public static async Task<InvoiceEntity[]> GetInvoicesForApp(InvoiceRepository invoiceRepository, AppData appData, DateTimeOffset? startDate = null,  string[] status = null)
         {
-            var invoices = await invoiceRepository.GetInvoices(new InvoiceQuery()
+            var invoices = await invoiceRepository.GetInvoices(new InvoiceQuery
             {
-                StoreId = new[] { appData.StoreData.Id },
+                StoreId = new[] { appData.StoreDataId },
                 OrderId = appData.TagAllInvoices ? null : new[] { GetAppOrderId(appData) },
                 Status = status?? new[]{
                     InvoiceState.ToString(InvoiceStatusLegacy.New),
@@ -301,16 +287,15 @@ namespace BTCPayServer.Services.Apps
 
         public string GetAppViewStyle(AppData app, string appType)
         {
-
             string style;
             switch (appType)
             {
                 case PointOfSaleApp.AppType:
-                    
                     var settings = app.GetSettings<PointOfSaleSettings>();
                     string posViewStyle = (settings.EnableShoppingCart ? PosViewType.Cart : settings.DefaultView).ToString();
                     style = typeof(PosViewType).DisplayName(posViewStyle);
                     break;
+                
                 default:
                     style = string.Empty;
                     break;

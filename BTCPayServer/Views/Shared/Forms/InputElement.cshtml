@@ -7,14 +7,18 @@
     <label class="form-label" for="@Model.Name"@(Model.Required ? " data-required" : "")>
         @Model.Label
     </label>
-    <input class="form-control @(errors is null ? "" : "is-invalid")" id="@Model.Name" type="@Model.Type" required="@Model.Required" name="@Model.Name" value="@Model.Value" aria-describedby="@($"HelpText-{Model.Name}")"/>
-	@if (isInvalid)
-	{
-	    @foreach (var error in errors)
-	    {
-	        <span class="invalid-feedback">@error.ErrorMessage</span>
-	    }
-	}
+    <input id="@Model.Name" type="@Model.Type" class="form-control @(errors is null ? "" : "is-invalid")"
+           name="@Model.Name" value="@Model.Value" data-val="true"
+           @if (!string.IsNullOrEmpty(Model.HelpText))
+           {
+               @Safe.Raw($" aria-describedby=\"HelpText-{Model.Name}\"")
+           }
+           @if (Model.Required)
+           {
+               @Safe.Raw($" data-val-required=\"{Model.Label} is required.\" required")
+           }
+    />
+    <span class="text-danger" data-valmsg-for="@Model.Name" data-valmsg-replace="true">@(isInvalid && errors.Any() ? errors.First().ErrorMessage : string.Empty)</span>
     @if (!string.IsNullOrEmpty(Model.HelpText))
     {
         <div id="@($"HelpText-{Model.Name}")" class="form-text">@Model.HelpText</div>

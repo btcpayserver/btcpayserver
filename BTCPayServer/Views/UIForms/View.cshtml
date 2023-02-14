@@ -33,7 +33,7 @@
                 <div class="bg-tile p-3 p-sm-4 rounded">
                     @if (string.IsNullOrEmpty(Model.AspAction))
                     {
-                        <form method="post">
+                        <form method="post" novalidate="novalidate">
                             @if (!string.IsNullOrEmpty(Model.RedirectUrl))
                             {
                                 <input type="hidden" asp-for="RedirectUrl" value="@Model.RedirectUrl" />
@@ -63,5 +63,6 @@
         </footer>
     </div>
     <partial name="LayoutFoot" />
+    <partial name="_ValidationScriptsPartial"/>
 </body>
 </html>

@@ -54,6 +54,7 @@ namespace BTCPayServer.Plugins.Crowdfund
             _htmlSanitizer = htmlSanitizer;
             _invoiceRepository = invoiceRepository;
         }
+
         public string ConfigureLink(string appId)
         {
             return _linkGenerator.GetPathByAction(nameof(UICrowdfundController.UpdateCrowdfund),

@@ -70,7 +70,6 @@ namespace BTCPayServer.HostedServices
                     switch (valueTuple.Data.AppType)
                     {
                         case PointOfSaleApp.AppType:
-
                             ((PointOfSaleSettings)valueTuple.Settings).Template =
                                 _appService.SerializeTemplate(valueTuple.Items);
                             break;

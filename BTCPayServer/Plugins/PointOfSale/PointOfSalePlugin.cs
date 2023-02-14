@@ -62,6 +62,7 @@ namespace BTCPayServer.Plugins.PayButton
             _currencyNameTable = currencyNameTable;
             _htmlSanitizer = htmlSanitizer;
         }
+
         public string ConfigureLink(string appId)
         {
             return  _linkGenerator.GetPathByAction(nameof(UIPointOfSaleController.UpdatePointOfSale),
@@ -110,7 +111,7 @@ namespace BTCPayServer.Plugins.PayButton
 
         public Task<object> GetInfo(AppData appData)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         public Task SetDefaultSettings(AppData appData, string defaultCurrency)
@@ -122,7 +123,6 @@ namespace BTCPayServer.Plugins.PayButton
 
         public string ViewLink(AppData app)
         {
-            
             return _linkGenerator.GetPathByAction(nameof(UIPointOfSaleController.ViewPointOfSale),
                 "UIPointOfSale", new {appId =app.Id}, _btcPayServerOptions.Value.RootPath);
         }

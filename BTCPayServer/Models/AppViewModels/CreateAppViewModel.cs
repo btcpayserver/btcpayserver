@@ -13,16 +13,16 @@ namespace BTCPayServer.Models.AppViewModels
     {
         public CreateAppViewModel()
         {
-            
         }
+        
         public CreateAppViewModel(AppService appService)
         {
             SetApps(appService);
         }
+        
         [Required]
         [MaxLength(50)]
         [MinLength(1)]
-
         [Display(Name = "App Name")]
         public string AppName { get; set; }
 

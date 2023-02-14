@@ -48,7 +48,6 @@ namespace BTCPayServer
         private readonly LightningLikePaymentHandler _lightningLikePaymentHandler;
         private readonly StoreRepository _storeRepository;
         private readonly AppService _appService;
-
         private readonly UIInvoiceController _invoiceController;
         private readonly LinkGenerator _linkGenerator;
         private readonly LightningAddressService _lightningAddressService;
@@ -86,7 +85,6 @@ namespace BTCPayServer
         [HttpGet("withdraw/pp/{pullPaymentId}")]
         public async Task<IActionResult> GetLNURLForPullPayment(string cryptoCode, string pullPaymentId, string pr, CancellationToken cancellationToken)
         {
-
             var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
             if (network is null || !network.SupportLightning)
             {
@@ -157,6 +155,7 @@ namespace BTCPayServer
 
             if (claimResponse.Result != ClaimRequest.ClaimResult.Ok)
                 return BadRequest(new LNUrlStatusResponse { Status = "ERROR", Reason = "Pr could not be paid" });
+            
             switch (claimResponse.PayoutData.State)
             {
                 case PayoutState.AwaitingPayment:
@@ -253,8 +252,8 @@ namespace BTCPayServer
                 return NotFound();
             }
 
-            ViewPointOfSaleViewModel.Item[] items = null;
-            string currencyCode = null;
+            ViewPointOfSaleViewModel.Item[] items;
+            string currencyCode;
             PointOfSaleSettings posS = null;
             switch (app.AppType)
             {
@@ -288,12 +287,12 @@ namespace BTCPayServer
                 {
                     return NotFound();
                 }
-            }else if (app.AppType == PointOfSaleApp.AppType && posS?.ShowCustomAmount is not true)
+            }
+            else if (app.AppType == PointOfSaleApp.AppType && posS?.ShowCustomAmount is not true)
             {
                 return NotFound();
             }
            
-
             return await GetLNURL(cryptoCode, app.StoreDataId, currencyCode, null, null,
                 () => (null, app, item, new List<string> { AppService.GetAppInternalTag(appId) }, item?.Price.Value, true));
         }
@@ -327,11 +326,8 @@ namespace BTCPayServer
                 public decimal? Max { get; set; }
             }
 
-            public ConcurrentDictionary<string, LightningAddressItem> Items { get; set; } =
-                new ConcurrentDictionary<string, LightningAddressItem>();
-
-            public ConcurrentDictionary<string, string[]> StoreToItemMap { get; set; } =
-                new ConcurrentDictionary<string, string[]>();
+            public ConcurrentDictionary<string, LightningAddressItem> Items { get; } = new ();
+            public ConcurrentDictionary<string, string[]> StoreToItemMap { get; } = new ();
 
             public override string ToString()
             {

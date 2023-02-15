@@ -374,6 +374,7 @@ namespace BTCPayServer.Controllers
                 model.Archived = false;
                 model.ExpiryDate = null;
                 model.Title = $"Clone of {model.Title}";
+                model.AmountAndCurrencyEditable = true;
                 return View("EditPaymentRequest", model);
             }
 

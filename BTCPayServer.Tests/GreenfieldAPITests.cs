@@ -655,15 +655,8 @@ namespace BTCPayServer.Tests
             tester.PayTester.DisableRegistration = true;
             await tester.StartAsync();
             var unauthClient = new BTCPayServerClient(tester.PayTester.ServerUri);
-            await AssertValidationError(new[] { "Email", "Password" },
+            await AssertValidationError(new[] { "Email" },
                 async () => await unauthClient.CreateUser(new CreateApplicationUserRequest()));
-            await AssertValidationError(new[] { "Password" },
-                async () => await unauthClient.CreateUser(
-                    new CreateApplicationUserRequest() { Email = "test@gmail.com" }));
-            // Pass too simple
-            await AssertValidationError(new[] { "Password" },
-                async () => await unauthClient.CreateUser(
-                    new CreateApplicationUserRequest() { Email = "test3@gmail.com", Password = "a" }));
 
             // We have no admin, so it should work
             var user1 = await unauthClient.CreateUser(
@@ -1346,10 +1339,6 @@ namespace BTCPayServer.Tests
                     Email = $"{Guid.NewGuid()}",
                     Password = Guid.NewGuid().ToString()
                 }));
-
-            await AssertValidationError(new[] { "Password" }, async () =>
-                await clientServer.CreateUser(
-                    new CreateApplicationUserRequest() { Email = $"{Guid.NewGuid()}@g.com", }));
 
             await AssertValidationError(new[] { "Email" }, async () =>
                 await clientServer.CreateUser(

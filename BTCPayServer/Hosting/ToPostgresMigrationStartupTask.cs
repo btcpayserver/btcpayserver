@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -213,12 +214,28 @@ namespace BTCPayServer.Hosting
                     var typeMapping = t.EntityTypeMappings.Single();
                     var query = (IQueryable<object>)otherContext.GetType().GetMethod("Set", new Type[0])!.MakeGenericMethod(typeMapping.EntityType.ClrType).Invoke(otherContext, null)!;
                     Logger.LogInformation($"Migrating table: " + t.Name);
+
+                    List<PropertyInfo> datetimeProperties = new List<PropertyInfo>();
+                    foreach (var col in t.Columns)
+                        if (col.PropertyMappings.Single().Property.ClrType == typeof(DateTime))
+                        {
+                            datetimeProperties.Add(col.PropertyMappings.Single().Property.PropertyInfo!);
+                        }
                     var rows = await query.ToListAsync();
                     foreach (var row in rows)
                     {
                         // There is as circular deps between invoice and refund.
                         if (row is InvoiceData id)
                             id.CurrentRefundId = null;
+                        foreach (var prop in datetimeProperties)
+                        {
+                            var v = (DateTime)prop.GetValue(row)!;
+                            if (v.Kind == DateTimeKind.Unspecified)
+                            {
+                                v = new DateTime(v.Ticks, DateTimeKind.Utc);
+                                prop.SetValue(row, v);
+                            }
+                        }
                         postgresContext.Entry(row).State = EntityState.Added;
                     }
                     await postgresContext.SaveChangesAsync();

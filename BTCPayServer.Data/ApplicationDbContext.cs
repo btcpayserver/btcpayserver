@@ -31,12 +31,12 @@ namespace BTCPayServer.Data
         {
             _designTime = designTime;
         }
-
+#nullable enable
         public async Task<string?> GetMigrationState()
         {
             return (await Settings.FromSqlRaw("SELECT \"Id\", \"Value\" FROM \"Settings\" WHERE \"Id\"='MigrationData'").AsNoTracking().FirstOrDefaultAsync())?.Value;
         }
-
+#nullable restore
         public DbSet<AddressInvoiceData> AddressInvoices { get; set; }
         public DbSet<APIKeyData> ApiKeys { get; set; }
         public DbSet<AppData> Apps { get; set; }

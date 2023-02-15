@@ -9,13 +9,14 @@ using BTCPayServer.Services.Stores;
 using BTCPayServer.Storage.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace BTCPayServer.Services
 {
     public class UserService
     {
-        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IServiceProvider _serviceProvider;
         private readonly StoredFileRepository _storedFileRepository;
         private readonly FileService _fileService;
         private readonly StoreRepository _storeRepository;
@@ -23,14 +24,14 @@ namespace BTCPayServer.Services
         private readonly ILogger<UserService> _logger;
 
         public UserService(
-            UserManager<ApplicationUser> userManager,
+            IServiceProvider serviceProvider,
             StoredFileRepository storedFileRepository,
             FileService fileService,
             StoreRepository storeRepository,
             ApplicationDbContextFactory applicationDbContextFactory,
             ILogger<UserService> logger)
         {
-            _userManager = userManager;
+            _serviceProvider = serviceProvider;
             _storedFileRepository = storedFileRepository;
             _fileService = fileService;
             _storeRepository = storeRepository;
@@ -67,17 +68,19 @@ namespace BTCPayServer.Services
         }
         public async Task<bool?> ToggleUser(string userId, DateTimeOffset? lockedOutDeadline)
         {
-            var user = await _userManager.FindByIdAsync(userId);
+            using var scope = _serviceProvider.CreateScope();
+            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+            var user = await userManager.FindByIdAsync(userId);
             if (user is null)
             {
                 return null;
             }
             if (lockedOutDeadline is not null)
             {
-                await _userManager.SetLockoutEnabledAsync(user, true);
+                await userManager.SetLockoutEnabledAsync(user, true);
             }
 
-            var res = await _userManager.SetLockoutEndDateAsync(user, lockedOutDeadline);
+            var res = await userManager.SetLockoutEndDateAsync(user, lockedOutDeadline);
             if (res.Succeeded)
             {
                 _logger.LogInformation($"User {user.Id} is now {(lockedOutDeadline is null ? "unlocked" : "locked")}");
@@ -92,25 +95,31 @@ namespace BTCPayServer.Services
 
         public async Task<bool> IsAdminUser(string userId)
         {
-            return IsRoleAdmin(await _userManager.GetRolesAsync(new ApplicationUser() { Id = userId }));
+            using var scope = _serviceProvider.CreateScope();
+            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+            return Roles.HasServerAdmin(await userManager.GetRolesAsync(new ApplicationUser() { Id = userId }));
         }
 
         public async Task<bool> IsAdminUser(ApplicationUser user)
         {
-            return IsRoleAdmin(await _userManager.GetRolesAsync(user));
+            using var scope = _serviceProvider.CreateScope();
+            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+            return Roles.HasServerAdmin(await userManager.GetRolesAsync(user));
         }
 
         public async Task<bool> SetAdminUser(string userId, bool enableAdmin)
         {
-            var user = await _userManager.FindByIdAsync(userId);
+            using var scope = _serviceProvider.CreateScope();
+            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+            var user = await userManager.FindByIdAsync(userId);
             IdentityResult res;
             if (enableAdmin)
             {
-                res = await _userManager.AddToRoleAsync(user, Roles.ServerAdmin);
+                res = await userManager.AddToRoleAsync(user, Roles.ServerAdmin);
             }
             else
             {
-                res = await _userManager.RemoveFromRoleAsync(user, Roles.ServerAdmin);
+                res = await userManager.RemoveFromRoleAsync(user, Roles.ServerAdmin);
             }
 
             if (res.Succeeded)
@@ -127,6 +136,9 @@ namespace BTCPayServer.Services
 
         public async Task DeleteUserAndAssociatedData(ApplicationUser user)
         {
+            using var scope = _serviceProvider.CreateScope();
+            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+
             var userId = user.Id;
             var files = await _storedFileRepository.GetFiles(new StoredFileRepository.FilesQuery()
             {
@@ -135,8 +147,8 @@ namespace BTCPayServer.Services
 
             await Task.WhenAll(files.Select(file => _fileService.RemoveFile(file.Id, userId)));
 
-            user = await _userManager.FindByIdAsync(userId);
-            var res = await _userManager.DeleteAsync(user);
+            user = await userManager.FindByIdAsync(userId);
+            var res = await userManager.DeleteAsync(user);
             if (res.Succeeded)
             {
                 _logger.LogInformation($"User {user.Id} was successfully deleted");
@@ -149,21 +161,17 @@ namespace BTCPayServer.Services
             await _storeRepository.CleanUnreachableStores();
         }
 
-        public bool IsRoleAdmin(IList<string> roles)
-        {
-            return roles.Contains(Roles.ServerAdmin, StringComparer.Ordinal);
-        }
-
 
         public async Task<bool> IsUserTheOnlyOneAdmin(ApplicationUser user)
         {
-            var isUserAdmin = await IsAdminUser(user);
-            if (!isUserAdmin)
+            using var scope = _serviceProvider.CreateScope();
+            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+            var roles = await userManager.GetRolesAsync(user);
+            if (!Roles.HasServerAdmin(roles))
             {
                 return false;
             }
-
-            var adminUsers = await _userManager.GetUsersInRoleAsync(Roles.ServerAdmin);
+            var adminUsers = await userManager.GetUsersInRoleAsync(Roles.ServerAdmin);
             var enabledAdminUsers = adminUsers
                                         .Where(applicationUser => !IsDisabled(applicationUser))
                                         .Select(applicationUser => applicationUser.Id).ToList();

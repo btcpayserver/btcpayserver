@@ -10,6 +10,7 @@ using BTCPayServer.Models;
 using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
+using Dapper;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using NBXplorer.Models;
@@ -23,6 +24,7 @@ namespace BTCPayServer.Payments.Bitcoin
         private readonly BTCPayNetworkProvider _networkProvider;
         private readonly IFeeProviderFactory _FeeRateProviderFactory;
         private readonly NBXplorerDashboard _dashboard;
+        private readonly NBXplorerConnectionFactory _nbxConnectionFactory;
         private readonly Services.Wallets.BTCPayWalletProvider _WalletProvider;
         private readonly Dictionary<string, string> _bech32Prefix;
 
@@ -30,12 +32,14 @@ namespace BTCPayServer.Payments.Bitcoin
             BTCPayNetworkProvider networkProvider,
             IFeeProviderFactory feeRateProviderFactory,
             NBXplorerDashboard dashboard,
+            NBXplorerConnectionFactory nbxConnectionFactory,
             Services.Wallets.BTCPayWalletProvider walletProvider)
         {
             _ExplorerProvider = provider;
             _networkProvider = networkProvider;
             _FeeRateProviderFactory = feeRateProviderFactory;
             _dashboard = dashboard;
+            _nbxConnectionFactory = nbxConnectionFactory;
             _WalletProvider = walletProvider;
 
             _bech32Prefix = networkProvider.GetAll().OfType<BTCPayNetwork>()
@@ -50,6 +54,7 @@ namespace BTCPayServer.Payments.Bitcoin
             public Task<FeeRate> GetFeeRate;
             public Task<FeeRate> GetNetworkFeeRate;
             public Task<KeyPathInformation> ReserveAddress;
+            public Task<bool> HasUTXO;
         }
 
         public override void PreparePaymentModel(PaymentModel model, InvoiceResponse invoiceResponse,
@@ -180,8 +185,22 @@ namespace BTCPayServer.Payments.Bitcoin
                     ? null
                     : _FeeRateProviderFactory.CreateFeeProvider(network).GetFeeRateAsync(),
                 ReserveAddress = _WalletProvider.GetWallet(network)
-                    .ReserveAddressAsync(store.Id, supportedPaymentMethod.AccountDerivation, "invoice")
+                    .ReserveAddressAsync(store.Id, supportedPaymentMethod.AccountDerivation, "invoice"),
+                HasUTXO = HasUTXO(supportedPaymentMethod, storeBlob) 
             };
+        }
+
+        private async Task<bool> HasUTXO(DerivationSchemeSettings supportedPaymentMethod, StoreBlob storeBlob)
+        {
+            if (!_nbxConnectionFactory.Available || !storeBlob.PayJoinEnabled)
+                return true; // If no nbx or payjoin not enabled, we don't care about the result of this call.
+            using var conn = await _nbxConnectionFactory.OpenConnection();
+            return await conn.ExecuteScalarAsync<bool>("SELECT exists(SELECT 1 FROM wallets_utxos WHERE code=@code AND wallet_id=nbxv1_get_wallet_id(@code, @scheme) LIMIT 1);",
+                new
+                {
+                        code = supportedPaymentMethod.Network.CryptoCode,
+                        scheme = supportedPaymentMethod.AccountDerivation.ToString()
+                });
         }
 
         public override PaymentType PaymentType => PaymentTypes.BTCLike;
@@ -254,6 +273,11 @@ namespace BTCPayServer.Payments.Bitcoin
                     logs.Write($"{prefix} Payjoin should have been enabled, but your store is not a hotwallet", InvoiceEventData.EventSeverity.Warning);
                 if (!nodeSupport)
                     logs.Write($"{prefix} Payjoin should have been enabled, but your version of NBXplorer or full node does not support it.", InvoiceEventData.EventSeverity.Warning);
+                if (!await prepare.HasUTXO)
+                {
+                    logs.Write($"{prefix} Payjoin should have been enabled, but your wallet doesn't have any utxo.", InvoiceEventData.EventSeverity.Warning);
+                    onchainMethod.PayjoinEnabled = false;
+                }
                 if (onchainMethod.PayjoinEnabled)
                     logs.Write($"{prefix} Payjoin is enabled for this invoice.", InvoiceEventData.EventSeverity.Info);
             }

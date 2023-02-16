@@ -1,5 +1,25 @@
 # Changelog
 
+## 1.7.12
+
+Update recommended for shared instances.
+
+### Bug fixes
+
+* Fix second order XSS: Harden file type input (#4635) @NicolasDorier
+* UI: The standalone confirmation modal design was broken @dennisreimann
+*  Fix: Setting the password of a new created user via API shouldn't be required (#4534, #4647) @NicolasDorier
+* Fix: If user get locked out, unlocking or deleting user fails (#4641, #4644) @NicolasDorier
+* Fix: Migrating from SQLite was crashing in some conditions (#4623) @NicolasDorier
+* Fix: Unable to Edit amount when cloning paid Payment Request (#4639) @NicolasDorier
+* Webhook: Add missing model validation (#4636) @dennisreimann
+* Checkout v2: Fix automatic redirect after paid (#4633) @dennisreimann
+
+### Improvement
+
+* Preferred paging count is saved into user preferences cookie (#4637) @dennisreimann
+* Fix typo in error message when vault is opening a wallet from the wrong chain (#4640) @eltociear 
+
 ## 1.7.11
 
 ### Improvement

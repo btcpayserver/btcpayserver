@@ -1,1 +1,4 @@
-dotnet run --no-launch-profile --no-build -c Release --project .\BTCPayServer\BTCPayServer.csproj -- $args
+pushd
+cd BTCPayServer/bin/Release/publish/
+dotnet "BTCPayServer.dll" $args
+popd

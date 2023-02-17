@@ -1,42 +1,46 @@
 @using BTCPayServer.Abstractions.Extensions
-@using Microsoft.AspNetCore.Mvc.TagHelpers
 @using BTCPayServer.Abstractions.TagHelpers
 <template id="lnurl-withdraw-template">
-    <button v-if="v2" class="btn btn-secondary rounded-pill w-100 mt-4" type="button" 
-            v-on:click="startScan" 
-            v-bind:disabled="scanning || submitting" 
+    <template v-if="display">
+        <button v-if="isV2" class="btn btn-secondary rounded-pill w-100 mt-4" type="button"
+            v-on:click="startScan"
+            v-bind:disabled="scanning || submitting"
             v-bind:class="{ 'loading': scanning || submitting, 'text-secondary': !supported }">{{btnText}}</button>
-
-    <bp-loading-button v-else>
-        <button v-on:click="startScan"  style="margin-top: 15px;" v-bind:disabled="scanning || submitting"
-                v-bind:class="{ 'loading': scanning || submitting, 'action-button': supported, 'btn btn-text w-100': !supported  }">
-            <span class="button-text">{{btnText}}</span>
-            <div class="loader-wrapper">
-                <partial name="Checkout-Spinner" />
-            </div>
-        </button>
-    </bp-loading-button>
+        <bp-loading-button v-else>
+            <button v-on:click="startScan" class="action-button" style="margin: 0 45px;width:calc(100% - 90px) !important" v-bind:disabled="scanning || submitting"
+                    v-bind:class="{ 'loading': scanning || submitting, 'action-button': supported, 'btn btn-text w-100': !supported  }">
+                <span class="button-text">{{btnText}}</span>
+                <div class="loader-wrapper">
+                    @await Html.PartialAsync("~/Views/UIInvoice/Checkout-Spinner.cshtml")
+                </div>
+            </button>
+        </bp-loading-button>
+    </template>
 </template>
 <script type="text/javascript">
 Vue.component("lnurl-withdraw-checkout", {
     template: "#lnurl-withdraw-template",
+    props: {
+        model: Object,
+        isV2: Boolean
+    },
     computed: {
-        v2: function() {
-          return !!this.$parent.model;
+        display: function () {
+            return (
+                this.model.paymentMethodId === 'BTC_LNURLPAY' || (
+                    this.model.paymentMethodId === 'BTC' && this.model.invoiceBitcoinUrl.match(/lightning=lnurl/i)));
         },
-        topup: function (){
-           return (this.$parent.srvModel || this.$parent.model).isUnsetTopUp;
-        },
-        destination: function (){
-            return (this.$parent.srvModel || this.$parent.model).invoiceId;
-        },
-        btnText: function (){
-            return this.supported? "Pay by NFC & LNURL-Withdraw" : "Pay by LNURL-Withdraw";
+        btnText: function () {
+            if (this.supported) {
+                return this.isV2 ? this.$t('pay_by_nfc') : 'Pay by NFC (LNURL-Withdraw)'
+            } else {
+                return this.isV2 ? this.$t('pay_by_lnurl') : 'Pay by LNURL-Withdraw'
+            }
         }
     },
     data: function () {
         return {
-            url : @Safe.Json(Context.Request.GetAbsoluteUri(Url.Action("SubmitLNURLWithdrawForInvoice", "NFC"))),
+            url: @Safe.Json(Context.Request.GetAbsoluteUri(Url.Action("SubmitLNURLWithdrawForInvoice", "NFC"))),
             supported: ('NDEFReader' in window && window.self === window.top),
             scanning: false,
             submitting: false,
@@ -50,7 +54,7 @@ Vue.component("lnurl-withdraw-checkout", {
                 if (this.scanning || this.submitting) {
                     return;
                 }
-                if (this.topup) {
+                if (this.model.isUnsetTopUp) {
                     const amountStr = prompt("How many sats do you want to pay?")
                     if (amountStr){
                         try {
@@ -100,13 +104,12 @@ Vue.component("lnurl-withdraw-checkout", {
             }
         },
         sendData: function (lnurl) {
-
             this.submitting = true;
             //Post LNURLW data to server
             var xhr = new XMLHttpRequest()
             xhr.open('POST', this.url, true)
             xhr.setRequestHeader('Content-Type', 'application/json')
-            xhr.send(JSON.stringify({lnurl, invoiceId: this.destination, amount: this.amount}))
+            xhr.send(JSON.stringify({lnurl, invoiceId: this.model.invoiceId, amount: this.amount}))
             const self = this;
             //User feedback, reset on failure
             xhr.onload = function () {
@@ -128,6 +131,4 @@ Vue.component("lnurl-withdraw-checkout", {
         }
     }
 });
-
-
 </script>

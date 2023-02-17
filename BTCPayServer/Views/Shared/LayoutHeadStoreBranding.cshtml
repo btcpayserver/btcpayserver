@@ -31,5 +31,7 @@
 }
 @if (!string.IsNullOrEmpty(Model.EmbeddedCSS))
 {
-    @Safe.Raw(Model.EmbeddedCSS)
+    <style>
+        @Safe.Raw(Model.EmbeddedCSS)
+    </style>
 }

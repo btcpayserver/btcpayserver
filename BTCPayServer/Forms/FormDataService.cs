@@ -1,10 +1,12 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Form;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Data.Data;
 using BTCPayServer.Models;
@@ -20,6 +22,7 @@ namespace BTCPayServer.Forms;
 
 public class FormDataService
 {
+    public const string InvoiceParameterPrefix = "invoice_";
     private readonly ApplicationDbContextFactory _applicationDbContextFactory;
     private readonly FormComponentProviders _formProviders;
 
@@ -77,7 +80,7 @@ public class FormDataService
         await using var context = _applicationDbContextFactory.CreateContext();
         return await context.Forms.Where(data => data.Id == id && data.StoreId == storeId).FirstOrDefaultAsync();
     }
-    public async Task<FormData?> GetForm(string id)
+    public async Task<FormData?> GetForm(string? id)
     {
         if (id is null)
         {
@@ -118,5 +121,45 @@ public class FormDataService
     public bool Validate(Form form, ModelStateDictionary modelState)
     {
         return _formProviders.Validate(form, modelState);
+    }
+    
+    public bool IsFormSchemaValid(string schema, out Form form, out string error)
+    {
+        error = null;
+        form = null;
+        try
+        {
+            form = Form.Parse(schema);
+            var names = form.GetAllNames();
+            //check if names in list are unique
+            var duplicates = names.GroupBy(x => x)
+                .Where(g => g.Count() > 1)
+                .Select(y => y.Key)
+                .ToList();
+            if (duplicates.Any())
+            {
+                error = $"Form contains duplicate field names ({(string.Join(",", duplicates))})";
+                
+            }
+            
+        }
+        catch (Exception ex)
+        {
+            error =  $"Form config was invalid: {ex.Message}";
+        }
+        return error is null && form is not null;
+    }
+
+    public CreateInvoiceRequest GenerateInvoiceParametersFromForm(Form form)
+    {
+        var amt = form.GetFieldByName($"{InvoiceParameterPrefix}amount")?.Value;
+        return new CreateInvoiceRequest
+        {
+            Currency = form.GetFieldByName($"{InvoiceParameterPrefix}currency")?.Value,
+            Amount = string.IsNullOrEmpty(amt) ? null : decimal.Parse(amt, CultureInfo.InvariantCulture),
+            
+            Metadata = JObject.FromObject(form.GetValues()) ,
+            
+        };
     }
 }

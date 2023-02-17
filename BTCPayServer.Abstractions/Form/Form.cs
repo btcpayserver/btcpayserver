@@ -55,10 +55,12 @@ public class Form
             }
 
             var subFieldResult = GetFieldByName(name, field.Fields, currentPrefix);
-            if (subFieldResult is not null)
+            if (subFieldResult is null) continue;
+            if (field.Hidden)
             {
-                return subFieldResult;
+                subFieldResult.Hidden = true;
             }
+            return subFieldResult;
 
         }
         return null;
@@ -105,18 +107,13 @@ public class Form
         }
     }
 
-    public void ApplyValuesFromForm(IFormCollection form, string ignorePrefix = null)
+    public void ApplyValuesFromForm(IFormCollection form,  bool ignoreHidden = true)
     {
         var names = GetAllNames();
         foreach (var name in names)
         {
-            if (ignorePrefix is not null && name.StartsWith(ignorePrefix))
-            {
-                continue;
-            }
-
             var field = GetFieldByName(name);
-            if (field is null || !form.TryGetValue(name, out var val))
+            if (field is null || (ignoreHidden && field.Hidden)|| !form.TryGetValue(name, out var val))
             {
                 continue;
             }
@@ -159,20 +156,25 @@ public class Form
         }
     }
 
-    public Dictionary<string, object> GetValues()
+    public Dictionary<string, object> GetValues(string prefix = null)
     {
-        return GetValues(Fields);
+            return GetValues(Fields);
+        
     }
 
-    private static Dictionary<string, object> GetValues(List<Field> fields)
+    private static Dictionary<string, object> GetValues(List<Field> fields, string prefix = null)
     {
         var result = new Dictionary<string, object>();
         foreach (Field field in fields)
         {
             var name = field.Name ?? string.Empty;
+            if (!string.IsNullOrEmpty(prefix) && !name.StartsWith(prefix))
+            {
+                continue;
+            }
             if (field.Fields.Any())
             {
-                var values = GetValues(fields);
+                var values = GetValues(field.Fields, string.IsNullOrEmpty(name)? prefix : null);
                 values.Remove(string.Empty, out var keylessValue);
 
                 result.TryAdd(name, values);

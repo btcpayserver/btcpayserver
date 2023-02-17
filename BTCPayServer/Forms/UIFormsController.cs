@@ -1,6 +1,7 @@
 #nullable enable
 using System;
 using System.Globalization;
+using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
@@ -64,21 +65,23 @@ public class UIFormsController : Controller
     {
         if (id is not null)
         {
-            var form = await _formDataService.GetForm(storeId, id);
-            if (form is null)
+            if (await _formDataService.GetForm(storeId, id) is null)
             {
                 return NotFound();
             }
         }
 
-        try
+        if (!_formDataService.IsFormSchemaValid(modifyForm.FormConfig, out var form, out var error))
         {
-            modifyForm.FormConfig = Form.Parse(modifyForm.FormConfig).ToString();
+            
+            ModelState.AddModelError(nameof(modifyForm.FormConfig),
+                $"Form config was invalid: {error})");
         }
-        catch (Exception ex)
+        else
         {
-            ModelState.AddModelError(nameof(modifyForm.FormConfig), $"Form config was invalid: {ex.Message}");
+            modifyForm.FormConfig = form.ToString();
         }
+        
 
         if (!ModelState.IsValid)
         {
@@ -87,12 +90,12 @@ public class UIFormsController : Controller
 
         try
         {
-            var form = new FormData
+            var formData = new FormData
             {
                 Id = id, StoreId = storeId, Name = modifyForm.Name, Config = modifyForm.FormConfig,Public = modifyForm.Public
             };
             var isNew = id is null;
-            await _formDataService.AddOrUpdateForm(form);
+            await _formDataService.AddOrUpdateForm(formData);
             TempData.SetStatusMessageModel(new StatusMessageModel
             {
                 Severity = StatusMessageModel.StatusSeverity.Success,
@@ -100,7 +103,7 @@ public class UIFormsController : Controller
             });
             if (isNew)
             {
-                return RedirectToAction("Modify", new {storeId, id = form.Id});
+                return RedirectToAction("Modify", new {storeId, id = formData.Id});
             }
         }
         catch (Exception e)
@@ -189,13 +192,7 @@ public class UIFormsController : Controller
         if (store is null)
             return NotFound();
 
-        var amt = form.GetFieldByName("internal_amount")?.Value;
-        var request = new CreateInvoiceRequest
-        {
-            Currency = form.GetFieldByName("internal_currency")?.Value ?? store.GetStoreBlob().DefaultCurrency,
-            Amount = string.IsNullOrEmpty(amt) ? null : decimal.Parse(amt, CultureInfo.InvariantCulture),
-            Metadata = JObject.FromObject(form.GetValues())
-        };
+        var request = _formDataService.GenerateInvoiceParametersFromForm(form);
         var inv = await invoiceController.CreateInvoiceCoreRaw(request, store, Request.GetAbsoluteRoot());
 
         return RedirectToAction("Checkout", "UIInvoice", new {invoiceId = inv.Id});

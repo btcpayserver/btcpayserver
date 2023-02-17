@@ -75,8 +75,12 @@ public class FormDataService
         return await context.Forms.Where(data => data.StoreId == storeId).ToListAsync();
     }
 
-    public async Task<FormData?> GetForm(string storeId, string id)
+    public async Task<FormData?> GetForm(string storeId, string? id)
     {
+        if (id is null)
+        {
+            return null;
+        }
         await using var context = _applicationDbContextFactory.CreateContext();
         return await context.Forms.Where(data => data.Id == id && data.StoreId == storeId).FirstOrDefaultAsync();
     }

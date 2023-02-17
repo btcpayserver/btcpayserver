@@ -222,7 +222,7 @@ namespace BTCPayServer.Controllers
                 return RedirectToAction("PayPaymentRequest", new {payReqId});
             }
             var prFormId = prBlob.FormId;
-            var formData = prFormId is null ? null : (await FormDataService.GetForm(prFormId));
+            var formData = await FormDataService.GetForm(prFormId);
             if (formData is null)
             {
                 

@@ -114,5 +114,48 @@ public class FormTests : UnitTestBase
                     break;
             }
         }
+        
+        form = new Form()
+        {
+            Fields = new List<Field>
+            {
+                Field.Create("Enter your email", "item1", 1.ToString(), true, null, "email"),
+                Field.Create("Name", "item2", 2.ToString(), true, null),
+                Field.Create("Name", "invoice_item3", 2.ToString(), true, null),
+                new Field
+                {
+                    Name = "invoice",
+                    Type = "fieldset",
+                    Hidden = true,
+                    Fields = new List<Field>
+                    {
+                        new() {Name = "test", Type = "text", Value = "original"}
+                    }
+                }
+            }
+        };
+        form.ApplyValuesFromForm(new FormCollection(new Dictionary<string, StringValues>()
+        {
+            {"item1", new StringValues("updated")},
+            {"item2", new StringValues("updated")},
+            {"invoice_item3", new StringValues("updated")},
+            {"invoice_test", new StringValues("updated")}
+        }));
+        
+        foreach (string name in form.GetAllNames())
+        {
+            var field = form.GetFieldByName(name);
+            if (field.Type == "fieldset")
+                continue;
+            switch (name)
+            {
+                case "invoice_test":
+                    Assert.Equal("original", field.Value);
+                    break;
+                default:
+                    Assert.Equal("updated", field.Value);
+                    break;
+            }
+        }
     }
 }

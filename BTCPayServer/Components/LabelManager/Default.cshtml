@@ -78,7 +78,7 @@
                             body: JSON.stringify({
                                 objectType: @Safe.Json(Model.ObjectId.Type),
                                 objectId: @Safe.Json(Model.ObjectId.Id),
-                                labels: values
+                                labels: select.items
                             })
                         });
                         if (!response.ok) {

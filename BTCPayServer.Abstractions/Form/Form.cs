@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Primitives;
 using Newtonsoft.Json.Linq;
 using Npgsql.Internal.TypeHandlers.GeometricHandlers;
 
@@ -96,11 +97,12 @@ public class Form
         }
     }
 
-    public void ApplyValuesFromForm(IFormCollection form)
+    public void ApplyValuesFromForm(IEnumerable<KeyValuePair<string, StringValues>> form)
     {
+        var values = form.GroupBy(f => f.Key, f => f.Value).ToDictionary(g => g.Key, g => g.First());
         foreach (var f in GetAllFields())
         {
-            if (f.Field.Constant || !form.TryGetValue(f.FullName, out var val))
+            if (f.Field.Constant || !values.TryGetValue(f.FullName, out var val))
                 continue;
 
             f.Field.Value = val;
@@ -127,7 +129,7 @@ public class Form
             else if (prop.Value.Type == JTokenType.String)
             {
                 var fullname = String.Join('_', propPath);
-                if (fields.TryGetValue(fullname, out var f))
+                if (fields.TryGetValue(fullname, out var f) && !f.Constant)
                     f.Value = prop.Value.Value<string>();
             }
         }

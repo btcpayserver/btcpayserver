@@ -15,6 +15,7 @@ using BTCPayServer.Data.Data;
 using BTCPayServer.Forms.Models;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json.Linq;
 
@@ -146,13 +147,15 @@ public class UIFormsController : Controller
 
     ViewResult GetFormView(FormData formData, Form? form = null)
     {
+        form ??= Form.Parse(formData.Config);
+        form.ApplyValuesFromForm(Request.Query);
         var store = formData.Store;
         var storeBlob = store?.GetStoreBlob();
         
         return View("View", new FormViewModel
         {
             FormName = formData.Name,
-            Form = form ?? Form.Parse(formData.Config),
+            Form = form,
             StoreName = store?.StoreName,
             BrandColor = storeBlob?.BrandColor,
             CssFileId = storeBlob?.CssFileId,

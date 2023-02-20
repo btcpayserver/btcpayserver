@@ -720,7 +720,7 @@ input:checked + .btcpay-list-select-item {
     --icon-border-size: var(--btcpay-space-xs);
     --icon-border-color: var(--btcpay-white);
     
-    max-width: 300px;
+    max-width: 320px;
     min-width: var(--qr-size);
     margin: 0 auto;
     text-align: center;

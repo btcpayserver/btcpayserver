@@ -708,10 +708,11 @@ namespace BTCPayServer.Controllers
                     .FirstOrDefault(pm =>
                     {
                         var pmId = pm.GetId();
-                        return paymentMethodId.CryptoCode == pmId.CryptoCode && pmId != lnurlId;
+                        return paymentMethodId.CryptoCode == pmId.CryptoCode &&
+                               ((invoice.IsUnsetTopUp() && !storeBlob.OnChainWithLnInvoiceFallback) || pmId != lnurlId);
                     });
                 if (paymentMethodTemp == null)
-                    paymentMethodTemp = invoice.GetPaymentMethods().FirstOrDefault(pm => pm.GetId() != lnurlId);
+                    paymentMethodTemp = invoice.GetPaymentMethods().FirstOrDefault();
                 if (paymentMethodTemp is null)
                     return null;
                 network = paymentMethodTemp.Network;

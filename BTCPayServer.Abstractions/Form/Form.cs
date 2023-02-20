@@ -86,8 +86,8 @@ public class Form
 
             foreach (var child in field.Fields)
             {
-                if (field.Hidden)
-                    child.Hidden = true;
+                if (field.Constant)
+                    child.Constant = true;
                 foreach (var descendant in GetAllFieldsCore(thisPath, field.Fields))
                 {
                     yield return descendant;
@@ -100,7 +100,7 @@ public class Form
     {
         foreach (var f in GetAllFields())
         {
-            if (f.Field.Hidden || !form.TryGetValue(f.FullName, out var val))
+            if (f.Field.Constant || !form.TryGetValue(f.FullName, out var val))
                 continue;
 
             f.Field.Value = val;

@@ -86,7 +86,7 @@ public class FormTests : UnitTestBase
                     Type = "fieldset",
                     Fields = new List<Field>
                     {
-                        new() {Name = "test", Type = "text", Hidden = true, Value = "original"}
+                        new() {Name = "test", Type = "text", Constant = true, Value = "original"}
                     }
                 }
             }
@@ -126,7 +126,7 @@ public class FormTests : UnitTestBase
                 {
                     Name = "invoice",
                     Type = "fieldset",
-                    Hidden = true,
+                    Constant = true,
                     Fields = new List<Field>
                     {
                         new() {Name = "test", Type = "text", Value = "original"}

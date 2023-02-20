@@ -26,7 +26,7 @@ public class Field
     // The name of the HTML5 node. Should be used as the key for the posted data.
     public string Name;
 
-    public bool Hidden;
+    public bool Constant;
 
     // HTML5 compatible type string like "text", "textarea", "email", "password", etc. Each type is a class and may contain more fields (i.e. "select" would have options).
     public string Type;

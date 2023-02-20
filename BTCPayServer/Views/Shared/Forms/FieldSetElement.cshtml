@@ -2,7 +2,7 @@
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @inject FormComponentProviders FormComponentProviders
 @model BTCPayServer.Abstractions.Form.Field
-@if (!Model.Hidden)
+@if (!Model.Constant)
 {
     <fieldset>
         <legend class="h3 mt-4 mb-3">@Model.Label</legend>

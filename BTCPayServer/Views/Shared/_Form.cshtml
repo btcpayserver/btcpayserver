@@ -7,6 +7,6 @@
 {
     if (FormComponentProviders.TypeToComponentProvider.TryGetValue(field.Type, out var partial))
     {
-        <partial name="@partial.View" for="@field"></partial>
+        <partial name="@partial.View" for="@field" />
     }
 }

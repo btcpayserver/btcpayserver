@@ -16,6 +16,7 @@ using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
 using BTCPayServer.Forms;
+using BTCPayServer.Forms.Models;
 using BTCPayServer.ModelBinders;
 using BTCPayServer.Models;
 using BTCPayServer.Plugins.PointOfSale.Models;
@@ -42,21 +43,20 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             CurrencyNameTable currencies,
             StoreRepository storeRepository,
             UIInvoiceController invoiceController,
-            FormComponentProviders formProviders)
+            FormDataService formDataService)
         {
             _currencies = currencies;
             _appService = appService;
             _storeRepository = storeRepository;
             _invoiceController = invoiceController;
-            FormProviders = formProviders;
+            FormDataService = formDataService;
         }
 
         private readonly CurrencyNameTable _currencies;
         private readonly StoreRepository _storeRepository;
         private readonly AppService _appService;
         private readonly UIInvoiceController _invoiceController;
-
-        public FormComponentProviders FormProviders { get; }
+        public FormDataService FormDataService { get; }
 
         [HttpGet("/")]
         [HttpGet("/apps/{appId}/pos/{viewType?}")]
@@ -121,14 +121,15 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
         [DomainMappingConstraint(AppType.PointOfSale)]
         [RateLimitsFilter(ZoneLimits.PublicInvoices, Scope = RateLimitsScope.RemoteAddress)]
         public async Task<IActionResult> ViewPointOfSale(string appId,
-                                                        PosViewType? viewType,
-                                                        [ModelBinder(typeof(InvariantDecimalModelBinder))] decimal? amount,
-                                                        string email,
-                                                        string orderId,
-                                                        string notificationUrl,
-                                                        string redirectUrl,
-                                                        string choiceKey,
+                                                        PosViewType? viewType = null,
+                                                        [ModelBinder(typeof(InvariantDecimalModelBinder))] decimal? amount = null,
+                                                        string email = null,
+                                                        string orderId = null,
+                                                        string notificationUrl = null,
+                                                        string redirectUrl = null,
+                                                        string choiceKey = null,
                                                         string posData = null,
+                                                        string formResponse = null,
                                                         RequiresRefundEmail requiresRefundEmail = RequiresRefundEmail.InheritFromStore,
                                                         CancellationToken cancellationToken = default)
         {
@@ -229,45 +230,38 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
 
             var store = await _appService.GetStore(app);
             var posFormId = settings.FormId;
-
-            var formConfig = posFormId is null ? null : Forms.UIFormsController.GetFormData(posFormId)?.Config;
-            JObject formResponse = null;
-            switch (formConfig)
+            var formData = await FormDataService.GetForm(posFormId);
+         
+            JObject formResponseJObject = null;
+            switch (formData)
             {
                 case null:
-                case { } when !this.Request.HasFormContentType:
                     break;
-                default:
-                    var formData = Form.Parse(formConfig);
-                    formData.ApplyValuesFromForm(this.Request.Form);
-
-                    if (FormProviders.Validate(formData, ModelState))
+                case not null:
+                    if (formResponse is null)
                     {
-                        formResponse = JObject.FromObject(formData.GetValues());
-                        break;
+                        return View("PostRedirect", new PostRedirectViewModel
+                        {
+                            AspAction = nameof(POSForm),
+                            RouteParameters = new Dictionary<string, string> { { "appId", appId } },
+                            AspController = nameof(UIPointOfSaleController).TrimEnd("Controller", StringComparison.InvariantCulture),
+                            FormParameters = new MultiValueDictionary<string, string>(Request.Form.Select(pair => new KeyValuePair<string, IReadOnlyCollection<string>>(pair.Key, pair.Value)))
+                        });
                     }
 
-                    var query = new QueryBuilder(Request.Query);
-                    foreach (var keyValuePair in Request.Form)
+                    formResponseJObject = JObject.Parse(formResponse);
+                    var form = Form.Parse(formData.Config);
+                    form.SetValues(formResponseJObject);
+                    if (!FormDataService.Validate(form, ModelState))
                     {
-                        query.Add(keyValuePair.Key, keyValuePair.Value.ToArray());
+                        //someone tried to bypass validation
+                        return RedirectToAction(nameof(ViewPointOfSale), new {appId});
                     }
 
-                    // GET or empty form data case: Redirect to form
-                    return View("PostRedirect", new PostRedirectViewModel
-                    {
-                        AspController = "UIForms",
-                        AspAction = "ViewPublicForm",
-                        RouteParameters =
-                        {
-                            { "formId", posFormId }
-                        },
-                        FormParameters =
-                        {
-                            { "redirectUrl", Request.GetCurrentUrl() + query }
-                        }
-                    });
+                    formResponseJObject = form.GetValues();
+                    break;
             }
+        
             try
             {
                 var invoice = await _invoiceController.CreateInvoiceCore(new BitpayCreateInvoiceRequest
@@ -293,14 +287,14 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                         : requiresRefundEmail == RequiresRefundEmail.On,
                 }, store, HttpContext.Request.GetAbsoluteRoot(),
                     new List<string> { AppService.GetAppInternalTag(appId) },
-                    cancellationToken, (entity) =>
+                    cancellationToken, entity =>
                     {
                         entity.Metadata.OrderUrl = Request.GetDisplayUrl();
 
-                        if (formResponse is not null)
+                        if (formResponseJObject is not null)
                         {
                             var meta = entity.Metadata.ToJObject();
-                            meta.Merge(formResponse);
+                            meta.Merge(formResponseJObject);
                             entity.Metadata = InvoiceMetadata.FromJObject(meta);
                         }
                     });
@@ -314,8 +308,83 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                     Severity = StatusMessageModel.StatusSeverity.Error,
                     AllowDismiss = true
                 });
-                return RedirectToAction(nameof(ViewPointOfSale), new { appId = appId });
+                return RedirectToAction(nameof(ViewPointOfSale), new { appId });
             }
+        }
+
+        [HttpPost("/apps/{appId}/pos/form")]
+        public async Task<IActionResult> POSForm(string appId)
+        {
+            var app = await _appService.GetApp(appId, AppType.PointOfSale);
+            if (app == null)
+                return NotFound();
+            
+            var settings = app.GetSettings<PointOfSaleSettings>();
+            var formData = await FormDataService.GetForm(settings.FormId);
+            if (formData is null)
+            {
+                return RedirectToAction(nameof(ViewPointOfSale), new { appId });
+            }
+            
+            var myDictionary = Request.Form
+                .Where(pair => pair.Key != "__RequestVerificationToken")
+                .ToDictionary(p => p.Key, p => p.Value.ToString());
+            myDictionary.Add("appId", appId);
+            var controller = nameof(UIPointOfSaleController).TrimEnd("Controller", StringComparison.InvariantCulture);
+            var redirectUrl = Url.Action(nameof(ViewPointOfSale), controller, myDictionary);
+            var store = await _appService.GetStore(app);
+            var storeBlob = store.GetStoreBlob();
+            var form = Form.Parse(formData.Config);
+            
+            return View("Views/UIForms/View", new FormViewModel
+            {
+                StoreName = store.StoreName,
+                BrandColor = storeBlob.BrandColor,
+                CssFileId = storeBlob.CssFileId,
+                LogoFileId = storeBlob.LogoFileId,
+                FormName = formData.Name,
+                Form = form,
+                RedirectUrl = redirectUrl,
+                AspController = controller,
+                AspAction = nameof(POSFormSubmit),
+                RouteParameters = new Dictionary<string, string> { { "appId", appId } },
+            });
+        }
+
+        [HttpPost("/apps/{appId}/pos/form/submit")]
+        public async Task<IActionResult> POSFormSubmit(string appId, FormViewModel viewModel)
+        {
+            var app = await _appService.GetApp(appId, AppType.PointOfSale);
+            if (app == null)
+                return NotFound();
+            var settings = app.GetSettings<PointOfSaleSettings>();
+            var formData = await FormDataService.GetForm(settings.FormId);
+            if (formData is null || viewModel.RedirectUrl is null)
+            {
+                return RedirectToAction(nameof(ViewPointOfSale), new {appId });
+            }
+
+            var form = Form.Parse(formData.Config);
+            if (Request.Method == "POST" && Request.HasFormContentType)
+            {
+                form.ApplyValuesFromForm(Request.Form);
+                if (FormDataService.Validate(form, ModelState))
+                {
+                    return View("PostRedirect", new PostRedirectViewModel
+                    {
+                        FormUrl = viewModel.RedirectUrl,
+                        FormParameters =
+                        {
+                            { "formResponse", form.GetValues().ToString() }
+                        }
+                    });
+                }
+            }
+
+            viewModel.FormName = formData.Name;
+            viewModel.Form = form;
+            
+            return View("Views/UIForms/View", viewModel);
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
@@ -326,7 +395,6 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             if (app == null)
                 return NotFound();
 
-            var storeBlob = GetCurrentStore().GetStoreBlob();
             var settings = app.GetSettings<PointOfSaleSettings>();
             settings.DefaultView = settings.EnableShoppingCart ? PosViewType.Cart : settings.DefaultView;
             settings.EnableShoppingCart = false;
@@ -358,13 +426,13 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 RedirectAutomatically = settings.RedirectAutomatically.HasValue ? settings.RedirectAutomatically.Value ? "true" : "false" : "",
                 FormId = settings.FormId
             };
-            if (HttpContext?.Request != null)
+            if (HttpContext.Request != null)
             {
                 var appUrl = HttpContext.Request.GetAbsoluteUri($"/apps/{appId}/pos");
                 var encoder = HtmlEncoder.Default;
                 if (settings.ShowCustomAmount)
                 {
-                    StringBuilder builder = new StringBuilder();
+                    var builder = new StringBuilder();
                     builder.AppendLine(CultureInfo.InvariantCulture, $"<form method=\"POST\" action=\"{encoder.Encode(appUrl)}\">");
                     builder.AppendLine($"  <input type=\"hidden\" name=\"amount\" value=\"100\" />");
                     builder.AppendLine($"  <input type=\"hidden\" name=\"email\" value=\"customer@example.com\" />");
@@ -443,7 +511,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 Description = vm.Description,
                 EmbeddedCSS = vm.EmbeddedCSS,
                 RedirectAutomatically =
-                    string.IsNullOrEmpty(vm.RedirectAutomatically) ? (bool?)null : bool.Parse(vm.RedirectAutomatically)
+                    string.IsNullOrEmpty(vm.RedirectAutomatically) ? null : bool.Parse(vm.RedirectAutomatically)
             };
 
             settings.FormId = vm.FormId;

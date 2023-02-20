@@ -1,34 +1,26 @@
-@using BTCPayServer.Abstractions.Form
-@using Newtonsoft.Json.Linq
 @model BTCPayServer.Abstractions.Form.Field
 @{
-	var isInvalid = this.ViewContext.ModelState[Model.Name]?.ValidationState is Microsoft.AspNetCore.Mvc.ModelBinding.ModelValidationState.Invalid;
-	var error = isInvalid ? this.ViewContext.ModelState[Model.Name].Errors[0].ErrorMessage : null;
-
+	var isInvalid = ViewContext.ModelState[Model.Name]?.ValidationState is Microsoft.AspNetCore.Mvc.ModelBinding.ModelValidationState.Invalid;
+	var errors = isInvalid ? ViewContext.ModelState[Model.Name].Errors : null;
 }
 <div class="form-group">
-    @if (Model.Required)
-    {
-        <label class="form-label" for="@Model.Name" data-required>
-            @Model.Label
-        </label>
-    }
-    else
-    {
-        <label class="form-label" for="@Model.Name">
-            @Model.Label
-        </label>
-    }
-
-    <input class="form-control @(Model.IsValid() ? "" : "is-invalid")" id="@Model.Name" type="@Model.Type" required="@Model.Required" name="@Model.Name" value="@Model.Value" aria-describedby="@("HelpText" + Model.Name)"/>
-	@if(isInvalid)
-	{
-		<span class="text-danger">@error</span>
-	}
+    <label class="form-label" for="@Model.Name"@(Model.Required ? " data-required" : "")>
+        @Model.Label
+    </label>
+    <input id="@Model.Name" type="@Model.Type" class="form-control @(errors is null ? "" : "is-invalid")"
+           name="@Model.Name" value="@Model.Value" data-val="true"
+           @if (!string.IsNullOrEmpty(Model.HelpText))
+           {
+               @Safe.Raw($" aria-describedby=\"HelpText-{Model.Name}\"")
+           }
+           @if (Model.Required)
+           {
+               @Safe.Raw($" data-val-required=\"{Model.Label} is required.\" required")
+           }
+    />
+    <span class="text-danger" data-valmsg-for="@Model.Name" data-valmsg-replace="true">@(isInvalid && errors.Any() ? errors.First().ErrorMessage : string.Empty)</span>
     @if (!string.IsNullOrEmpty(Model.HelpText))
     {
-        <div id="@("HelpText" + Model.Name)" class="form-text">@Model.HelpText</div>
+        <div id="@($"HelpText-{Model.Name}")" class="form-text">@Model.HelpText</div>
     }
-
-
 </div>

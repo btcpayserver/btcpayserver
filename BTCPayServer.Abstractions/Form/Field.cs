@@ -12,7 +12,7 @@ public class Field
 {
     public static Field Create(string label, string name, string value, bool required, string helpText, string type = "text")
     {
-        return new Field()
+        return new Field
         {
             Label = label,
             Name = name,
@@ -26,14 +26,14 @@ public class Field
     // The name of the HTML5 node. Should be used as the key for the posted data.
     public string Name;
 
-    public bool Hidden;
+    public bool Constant;
 
     // HTML5 compatible type string like "text", "textarea", "email", "password", etc. Each type is a class and may contain more fields (i.e. "select" would have options).
     public string Type;
 
     public static Field CreateFieldset()
     {
-        return new Field() { Type = "fieldset" };
+        return new Field { Type = "fieldset" };
     }
 
     // The value field is what is currently in the DB or what the user entered, but possibly not saved yet due to validation errors.
@@ -52,10 +52,10 @@ public class Field
     public string HelpText;
 
     [JsonExtensionData] public IDictionary<string, JToken> AdditionalData { get; set; }
-    public List<Field> Fields { get; set; } = new();
+    public List<Field> Fields { get; set; } = new ();
 
     // The field is considered "valid" if there are no validation errors
-    public List<string> ValidationErrors = new List<string>();
+    public List<string> ValidationErrors = new ();
 
     public virtual bool IsValid()
     {

@@ -2,10 +2,9 @@
 @using BTCPayServer.Abstractions.TagHelpers
 <template id="lnurl-withdraw-template">
     <template v-if="display">
-        <button v-if="isV2" class="btn btn-secondary rounded-pill w-100 mt-4" type="button"
-            v-on:click="startScan"
-            v-bind:disabled="scanning || submitting"
-            v-bind:class="{ 'loading': scanning || submitting, 'text-secondary': !supported }">{{btnText}}</button>
+        <button v-if="isV2" class="btn btn-secondary rounded-pill w-100 mt-4" type="button" v-on:click="startScan"
+            :disabled="scanning || submitting"
+            :class="{ 'loading': scanning || submitting, 'text-secondary': !supported }">{{btnText}}</button>
         <bp-loading-button v-else>
             <button v-on:click="startScan" class="action-button" style="margin: 0 45px;width:calc(100% - 90px) !important" v-bind:disabled="scanning || submitting"
                     v-bind:class="{ 'loading': scanning || submitting, 'action-button': supported, 'btn btn-text w-100': !supported  }">
@@ -26,9 +25,7 @@ Vue.component("lnurl-withdraw-checkout", {
     },
     computed: {
         display: function () {
-            return (
-                this.model.paymentMethodId === 'BTC_LNURLPAY' || (
-                    this.model.paymentMethodId === 'BTC' && this.model.invoiceBitcoinUrl.match(/lightning=lnurl/i)));
+              return !!this.model.availableCryptos.find(pm => pm.paymentMethodId === 'BTC_LNURLPAY');
         },
         btnText: function () {
             if (this.supported) {

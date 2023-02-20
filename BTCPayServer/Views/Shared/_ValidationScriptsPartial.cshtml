@@ -9,7 +9,7 @@
             $(element.form).find(`[data-valmsg-for="${element.id}"]`).addClass('invalid-feedback');
         },
         unhighlight: function (element) {
-            $(element).addClass("is-valid").removeClass("is-invalid");
+            $(element).removeClass("is-invalid");
             $(element.form).find(`[data-valmsg-for="${element.id}"]`).removeClass('invalid-feedback');
         }
     });

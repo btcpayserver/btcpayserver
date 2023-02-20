@@ -1324,14 +1324,17 @@ namespace BTCPayServer.Controllers
 
         public class UpdateLabelsRequest
         {
-            public string ObjectId { get; set; }
-            public string ObjectType { get; set; }
-            public string[] Labels { get; set; }
+            public string? ObjectId { get; set; }
+            public string? ObjectType { get; set; }
+            public string[]? Labels { get; set; }
         }
         
         [HttpPost("{walletId}/update-labels")]
         public async Task<IActionResult> UpdateLabels( [ModelBinder(typeof(WalletIdModelBinder))] WalletId walletId, [FromBody] UpdateLabelsRequest request)
         {
+            if (request.ObjectId is null || request.ObjectType is null || request.Labels is null)
+                return BadRequest();
+                    
             var objid = new WalletObjectId(walletId, request.ObjectType, request.ObjectId);
            var obj = await WalletRepository.GetWalletObject(objid);
            if (obj is null)
@@ -1500,7 +1503,7 @@ namespace BTCPayServer.Controllers
         public string? Address { get; set; }
         public string? PaymentLink { get; set; }
         public string? ReturnUrl { get; set; }
-        public string[] SelectedLabels { get; set; }
+        public string[]? SelectedLabels { get; set; }
     }
 
     public class SendToAddressResult

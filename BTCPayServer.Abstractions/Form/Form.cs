@@ -107,13 +107,13 @@ public class Form
         }
     }
 
-    public void ApplyValuesFromForm(IFormCollection form,  bool ignoreHidden = true)
+    public void ApplyValuesFromForm(IFormCollection form)
     {
         var names = GetAllNames();
         foreach (var name in names)
         {
             var field = GetFieldByName(name);
-            if (field is null || (ignoreHidden && field.Hidden)|| !form.TryGetValue(name, out var val))
+            if (field is null || field.Hidden || !form.TryGetValue(name, out var val))
             {
                 continue;
             }

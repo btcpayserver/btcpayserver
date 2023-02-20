@@ -129,7 +129,7 @@ public class UIFormsController : Controller
     [HttpGet("~/forms/{formId}")]
     public async Task<IActionResult> ViewPublicForm(string? formId)
     {
-        FormData? formData = string.IsNullOrEmpty(formId) ? null : await _formDataService.GetForm(formId);
+        FormData? formData = await _formDataService.GetForm(formId);
         if (formData?.Config is null)
         {
             return NotFound();

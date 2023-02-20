@@ -1271,12 +1271,22 @@ namespace BTCPayServer.Tests
             Assert.True(s.Driver.ElementDoesNotExist(By.Id("GoBack")));
             var receiveAddr = s.Driver.FindElement(By.Id("Address")).GetAttribute("value");
 
+            s.Driver.WaitForElement(By.CssSelector("div.label-manager input ")).Click();
+            s.Driver.WaitForElement(By.CssSelector("div.label-manager input ")).SendKeys("test-label" + Keys.Enter);
+            s.Driver.Navigate().Refresh();
+            Assert.Contains("test-label", s.Driver.PageSource);
             //unreserve
             s.Driver.FindElement(By.CssSelector("button[value=unreserve-current-address]")).Click();
             //generate it again, should be the same one as before as nothing got used in the meantime
             s.Driver.FindElement(By.CssSelector("button[value=generate-new-address]")).Click();
             Assert.True(s.Driver.FindElement(By.CssSelector("#address-tab .qr-container")).Displayed);
             Assert.Equal(receiveAddr, s.Driver.FindElement(By.Id("Address")).GetAttribute("value"));
+
+            Assert.Contains("test-label", s.Driver.PageSource);
+            s.Driver.FindElement(By.CssSelector("[data-value='test-label']")).Click();
+            s.Driver.WaitForElement(By.CssSelector("[data-value='test-label']")).SendKeys(Keys.Delete);
+            s.Driver.Navigate().Refresh();
+            Assert.DoesNotContain("test-label", s.Driver.PageSource);
             Assert.True(s.Driver.ElementDoesNotExist(By.Id("GoBack")));
 
             //send money to addr and ensure it changed

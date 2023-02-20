@@ -1,4 +1,7 @@
+using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using BTCPayServer.Abstractions.Form;
 using BTCPayServer.Forms;
 using Microsoft.AspNetCore.Http;
@@ -161,8 +164,7 @@ public class FormTests : UnitTestBase
         var obj = form.GetValues();
         Assert.Equal("original", obj["invoice"]["test"].Value<string>());
         Assert.Equal("updated", obj["invoice_item3"].Value<string>());
-        foreach (var f in form.GetAllFields())
-            f.Field.Value = null;
+        Clear(form);
         form.SetValues(obj);
         obj = form.GetValues();
         Assert.Equal("original", obj["invoice"]["test"].Value<string>());
@@ -187,5 +189,11 @@ public class FormTests : UnitTestBase
         form.SetValues(new JObject{ ["test"] = "hello" });
         obj = form.GetValues();
         Assert.Equal("hello", obj["test"].Value<string>());
+    }
+
+    private void Clear(Form form)
+    {
+        foreach (var f in form.Fields.Where(f => !f.Constant))
+            f.Value = null;
     }
 }

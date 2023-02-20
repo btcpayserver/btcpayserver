@@ -276,7 +276,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                             string.IsNullOrEmpty(notificationUrl) ? settings.NotificationUrl : notificationUrl,
                     RedirectURL = !string.IsNullOrEmpty(redirectUrl) ? redirectUrl
                         : !string.IsNullOrEmpty(settings.RedirectUrl) ? settings.RedirectUrl
-                        : Url.ActionLink(nameof(ViewPointOfSale), "UIPointOfSale", new { appId, viewType }),
+                        : Url.Action(nameof(ViewPointOfSale), "UIPointOfSale", new { appId, viewType }),
                     FullNotifications = true,
                     ExtendedNotifications = true,
                     PosData = string.IsNullOrEmpty(posData) ? null : posData,

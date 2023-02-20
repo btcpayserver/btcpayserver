@@ -135,18 +135,10 @@ public class FormDataService
         try
         {
             form = Form.Parse(schema);
-            var names = form.GetAllNames();
-            //check if names in list are unique
-            var duplicates = names.GroupBy(x => x)
-                .Where(g => g.Count() > 1)
-                .Select(y => y.Key)
-                .ToList();
-            if (duplicates.Any())
+            if (!form.ValidateFieldNames(out var errors))
             {
-                error = $"Form contains duplicate field names ({(string.Join(",", duplicates))})";
-                
+                error = errors.First();
             }
-            
         }
         catch (Exception ex)
         {
@@ -157,13 +149,13 @@ public class FormDataService
 
     public CreateInvoiceRequest GenerateInvoiceParametersFromForm(Form form)
     {
-        var amt = form.GetFieldByName($"{InvoiceParameterPrefix}amount")?.Value;
+        var amt = form.GetFieldByFullName($"{InvoiceParameterPrefix}amount")?.Value;
         return new CreateInvoiceRequest
         {
-            Currency = form.GetFieldByName($"{InvoiceParameterPrefix}currency")?.Value,
+            Currency = form.GetFieldByFullName($"{InvoiceParameterPrefix}currency")?.Value,
             Amount = string.IsNullOrEmpty(amt) ? null : decimal.Parse(amt, CultureInfo.InvariantCulture),
             
-            Metadata = JObject.FromObject(form.GetValues()) ,
+            Metadata = form.GetValues(),
             
         };
     }

@@ -1,8 +1,9 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using BTCPayServer.Abstractions.Form;
 using BTCPayServer.Forms;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Primitives;
+using Newtonsoft.Json.Linq;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -65,12 +66,11 @@ public class FormTests : UnitTestBase
             {"invoice_item3", new StringValues("updated")},
             {"invoice_test", new StringValues("updated")}
         }));
-        foreach (string name in form.GetAllNames())
+        foreach (var f in form.GetAllFields())
         {
-            var field = form.GetFieldByName(name);
-            if (field.Type == "fieldset")
+            if (f.Field.Type == "fieldset")
                 continue;
-            Assert.Equal("updated", field.Value);
+            Assert.Equal("updated", f.Field.Value);
         }
 
         form = new Form()
@@ -99,12 +99,12 @@ public class FormTests : UnitTestBase
             {"invoice_test", new StringValues("updated")}
         }));
 
-        foreach (string name in form.GetAllNames())
+        foreach (var f in form.GetAllFields())
         {
-            var field = form.GetFieldByName(name);
+            var field = f.Field;
             if (field.Type == "fieldset")
                 continue;
-            switch (name)
+            switch (f.FullName)
             {
                 case "invoice_test":
                     Assert.Equal("original", field.Value);
@@ -142,12 +142,12 @@ public class FormTests : UnitTestBase
             {"invoice_test", new StringValues("updated")}
         }));
         
-        foreach (string name in form.GetAllNames())
+        foreach (var f in form.GetAllFields())
         {
-            var field = form.GetFieldByName(name);
+            var field = f.Field;
             if (field.Type == "fieldset")
                 continue;
-            switch (name)
+            switch (f.FullName)
             {
                 case "invoice_test":
                     Assert.Equal("original", field.Value);
@@ -157,5 +157,35 @@ public class FormTests : UnitTestBase
                     break;
             }
         }
+
+        var obj = form.GetValues();
+        Assert.Equal("original", obj["invoice"]["test"].Value<string>());
+        Assert.Equal("updated", obj["invoice_item3"].Value<string>());
+        foreach (var f in form.GetAllFields())
+            f.Field.Value = null;
+        form.SetValues(obj);
+        obj = form.GetValues();
+        Assert.Equal("original", obj["invoice"]["test"].Value<string>());
+        Assert.Equal("updated", obj["invoice_item3"].Value<string>());
+
+        form = new Form()
+        {
+            Fields = new List<Field>(){
+                new Field
+                {
+                    Type = "fieldset",
+                    Fields = new List<Field>
+                    {
+                        new() {Name = "test", Type = "text"}
+                    }
+                }
+            }
+        };
+        form.SetValues(obj);
+        obj = form.GetValues();
+        Assert.Null(obj["test"].Value<string>());
+        form.SetValues(new JObject{ ["test"] = "hello" });
+        obj = form.GetValues();
+        Assert.Equal("hello", obj["test"].Value<string>());
     }
 }

@@ -370,7 +370,7 @@ namespace BTCPayServer.Controllers
                 storedKeys.Add(item.Key);
             }
 
-            var formKeys = form.GetAllNames();
+            var formKeys = form.GetAllFields().Select(f => f.FullName).ToHashSet();
 
             foreach (var item in newData)
             {

@@ -250,16 +250,15 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                     }
 
                     formResponseJObject = JObject.Parse(formResponse);
-                    var formValues = formResponseJObject.ToObject<Dictionary<string, object>>();
                     var form = Form.Parse(formData.Config);
-                    form.SetValues(formValues);
+                    form.SetValues(formResponseJObject);
                     if (!FormDataService.Validate(form, ModelState))
                     {
                         //someone tried to bypass validation
                         return RedirectToAction(nameof(ViewPointOfSale), new {appId});
                     }
 
-                    formResponseJObject = JObject.FromObject(form.GetValues());
+                    formResponseJObject = form.GetValues();
                     break;
             }
         
@@ -376,7 +375,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                         FormUrl = viewModel.RedirectUrl,
                         FormParameters =
                         {
-                            { "formResponse", JObject.FromObject(form.GetValues()).ToString() }
+                            { "formResponse", form.GetValues().ToString() }
                         }
                     });
                 }

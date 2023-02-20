@@ -1,6 +1,7 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -127,7 +128,7 @@ public class FormDataService
         return _formProviders.Validate(form, modelState);
     }
     
-    public bool IsFormSchemaValid(string schema, out Form form, out string error)
+    public bool IsFormSchemaValid(string schema, [MaybeNullWhen(false)] out Form form, [MaybeNullWhen(false)] out string error)
     {
         error = null;
         form = null;

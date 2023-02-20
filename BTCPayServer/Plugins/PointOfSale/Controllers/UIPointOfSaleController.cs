@@ -230,7 +230,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
 
             var store = await _appService.GetStore(app);
             var posFormId = settings.FormId;
-            var formData = posFormId is null ? null : await FormDataService.GetForm(posFormId);
+            var formData = await FormDataService.GetForm(posFormId);
          
             JObject formResponseJObject = null;
             switch (formData)
@@ -321,7 +321,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 return NotFound();
             
             var settings = app.GetSettings<PointOfSaleSettings>();
-            var formData = settings.FormId is null ? null : (await FormDataService.GetForm( settings.FormId));
+            var formData = await FormDataService.GetForm(settings.FormId);
             if (formData is null)
             {
                 return RedirectToAction(nameof(ViewPointOfSale), new { appId });
@@ -359,7 +359,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             if (app == null)
                 return NotFound();
             var settings = app.GetSettings<PointOfSaleSettings>();
-            var formData = settings.FormId is null ? null : (await FormDataService.GetForm( settings.FormId));
+            var formData = await FormDataService.GetForm(settings.FormId);
             if (formData is null || viewModel.RedirectUrl is null)
             {
                 return RedirectToAction(nameof(ViewPointOfSale), new {appId });

@@ -1,5 +1,30 @@
 # Changelog
 
+## 1.8.0
+
+### New feature
+
+* Generic Forms (#4561 #4668 #4697) @Kukks @dennisreimann
+* Add labels to addresses (#4594) @Kukks
+* Greenfield: Admins can create/delete API keys of any user (#4680) @NicolasDorier
+
+### Bug fix
+
+* Fix build and run scripts (#4655) @NicolasDorier
+* Fix missing style tag around embedded CSS (#4659) @dennisreimann
+* Fix crash during migration on some SQLite instances (#4623) @NicolasDorier
+* Fix HTML injection in payment request/posData/receiptData (#4679) @NicolasDorier
+
+### Improvements
+
+* Different icons for notifications (#2510) @dstrukt @dennisreimann
+* POS: Track values (subtotal, discount, tip, total) individually (#4668) @dennisreimann
+* Start using JSONB column instead of app side compressed data (#4574) @NicolasDorier
+* Update transaction label display (#4700) @dennisreimann
+* Remove JSON in strings from JObjects (#4703) @NicolasDorier
+* Do not require docker for plugin restart @Kukks
+* POS: Align Keypad centered vertically (#4690) @dennisreimann
+
 ## 1.7.12
 
 Update recommended for shared instances.
@@ -8,7 +33,7 @@ Update recommended for shared instances.
 
 * Fix second order XSS: Harden file type input (#4635) @NicolasDorier
 * UI: The standalone confirmation modal design was broken @dennisreimann
-*  Fix: Setting the password of a new created user via API shouldn't be required (#4534, #4647) @NicolasDorier
+* Fix: Setting the password of a new created user via API shouldn't be required (#4534, #4647) @NicolasDorier
 * Fix: If user get locked out, unlocking or deleting user fails (#4641, #4644) @NicolasDorier
 * Fix: Migrating from SQLite was crashing in some conditions (#4623) @NicolasDorier
 * Fix: Unable to Edit amount when cloning paid Payment Request (#4639) @NicolasDorier
@@ -18,7 +43,7 @@ Update recommended for shared instances.
 ### Improvement
 
 * Preferred paging count is saved into user preferences cookie (#4637) @dennisreimann
-* Fix typo in error message when vault is opening a wallet from the wrong chain (#4640) @eltociear 
+* Fix typo in error message when vault is opening a wallet from the wrong chain (#4640) @eltociear
 
 ## 1.7.11
 

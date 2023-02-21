@@ -1,0 +1,11 @@
+@model BTCPayServer.Forms.Models.FormViewModel
+@if (!string.IsNullOrEmpty(Model.RedirectUrl))
+{
+    <input type="hidden" asp-for="RedirectUrl" value="@Model.RedirectUrl" />
+}
+@foreach (var param in Model.FormParameters)
+{
+    <input type="hidden" name="@param.Key" value="@param.Value" />
+}
+<partial name="_Form" model="@Model.Form" />
+<input type="submit" class="btn btn-primary" name="command" value="Submit" />

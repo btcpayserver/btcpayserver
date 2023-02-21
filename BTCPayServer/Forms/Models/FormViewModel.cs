@@ -15,4 +15,5 @@ public class FormViewModel
     public string AspController { get; set; }
     public string AspAction { get; set; }
     public Dictionary<string, string> RouteParameters { get; set; } = new();
+    public Dictionary<string, string> FormParameters { get; set; } = new();
 }

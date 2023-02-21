@@ -331,10 +331,9 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 return RedirectToAction(nameof(ViewPointOfSale), new { appId, viewType });
             }
             
-            var myDictionary = Request.Form
+            var formParameters = Request.Form
                 .Where(pair => pair.Key != "__RequestVerificationToken")
                 .ToDictionary(p => p.Key, p => p.Value.ToString());
-            myDictionary.Add("appId", appId);
             var controller = nameof(UIPointOfSaleController).TrimEnd("Controller", StringComparison.InvariantCulture);
             var redirectUrl = Request.GetAbsoluteUri(Url.Action(nameof(ViewPointOfSale), controller, new { appId, viewType }));
             var store = await _appService.GetStore(app);
@@ -352,6 +351,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 AspController = controller,
                 AspAction = nameof(POSFormSubmit),
                 RouteParameters = new Dictionary<string, string> { { "appId", appId } },
+                FormParameters = formParameters
             };
             if (viewType.HasValue)
             {
@@ -375,19 +375,20 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 return RedirectToAction(nameof(ViewPointOfSale), new { appId, viewType });
             }
 
+            var formParameters = Request.Form
+                .Where(pair => pair.Key != "__RequestVerificationToken")
+                .ToMultiValueDictionary(p => p.Key, p => p.Value.ToString());
             var form = Form.Parse(formData.Config);
             if (Request is { Method: "POST", HasFormContentType: true })
             {
                 form.ApplyValuesFromForm(Request.Form);
+                formParameters.Add("formResponse", form.GetValues().ToString());
                 if (FormDataService.Validate(form, ModelState))
                 {
                     return View("PostRedirect", new PostRedirectViewModel
                     {
                         FormUrl = viewModel.RedirectUrl,
-                        FormParameters =
-                        {
-                            { "formResponse", form.GetValues().ToString() }
-                        }
+                        FormParameters = formParameters
                     });
                 }
             }

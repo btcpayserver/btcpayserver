@@ -3,9 +3,12 @@
 {
     <input type="hidden" asp-for="RedirectUrl" value="@Model.RedirectUrl" />
 }
-@foreach (var param in Model.FormParameters)
+@foreach (var o in Model.FormParameters)
 {
-    <input type="hidden" name="@param.Key" value="@param.Value" />
+	foreach (var v in o.Value)
+	{
+		<input type="hidden" name="@o.Key" value="@v" />
+	}
 }
 <partial name="_Form" model="@Model.Form" />
 <input type="submit" class="btn btn-primary" name="command" value="Submit" />

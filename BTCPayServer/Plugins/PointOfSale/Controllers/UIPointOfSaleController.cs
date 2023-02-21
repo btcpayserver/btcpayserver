@@ -333,7 +333,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             
             var formParameters = Request.Form
                 .Where(pair => pair.Key != "__RequestVerificationToken")
-                .ToDictionary(p => p.Key, p => p.Value.ToString());
+                .ToMultiValueDictionary(p => p.Key, p => p.Value.ToString());
             var controller = nameof(UIPointOfSaleController).TrimEnd("Controller", StringComparison.InvariantCulture);
             var redirectUrl = Request.GetAbsoluteUri(Url.Action(nameof(ViewPointOfSale), controller, new { appId, viewType }));
             var store = await _appService.GetStore(app);

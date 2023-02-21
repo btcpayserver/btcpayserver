@@ -11,7 +11,6 @@ using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
-using BTCPayServer.Data.Data;
 using BTCPayServer.Forms.Models;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;

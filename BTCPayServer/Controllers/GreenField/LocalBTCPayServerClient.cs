@@ -34,6 +34,7 @@ using PullPaymentData = BTCPayServer.Client.Models.PullPaymentData;
 using StoreData = BTCPayServer.Client.Models.StoreData;
 using StoreWebhookData = BTCPayServer.Client.Models.StoreWebhookData;
 using WebhookDeliveryData = BTCPayServer.Client.Models.WebhookDeliveryData;
+using PayoutProcessorData = BTCPayServer.Client.Models.PayoutProcessorData;
 
 namespace BTCPayServer.Controllers.Greenfield
 {

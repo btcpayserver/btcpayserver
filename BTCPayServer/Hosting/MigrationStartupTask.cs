@@ -358,14 +358,14 @@ namespace BTCPayServer.Hosting
                             new LightningAddressData()
                             {
                                 StoreDataId = storeMap.Key,
-                                Username = storeitem,
-                                Blob = new LightningAddressDataBlob()
-                                {
-                                    Max = val.Max,
-                                    Min = val.Min,
-                                    CurrencyCode = val.CurrencyCode
-                                }.SerializeBlob()
-                            }, ctx);
+                                Username = storeitem
+                            }
+                            .SetBlob(new LightningAddressDataBlob()
+                            {
+                                Max = val.Max,
+                                Min = val.Min,
+                                CurrencyCode = val.CurrencyCode
+                            }), ctx);
                     }
                 }
             }

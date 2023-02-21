@@ -1274,7 +1274,6 @@ namespace BTCPayServer.Services.Invoices
             if (string.IsNullOrEmpty(CryptoPaymentDataType))
             {
                 paymentType = BitcoinPaymentType.Instance;
-                ;
             }
             else if (!PaymentTypes.TryParse(CryptoPaymentDataType, out paymentType))
             {

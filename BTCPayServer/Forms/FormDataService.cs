@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Form;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
-using BTCPayServer.Data.Data;
 using BTCPayServer.Models;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Http;

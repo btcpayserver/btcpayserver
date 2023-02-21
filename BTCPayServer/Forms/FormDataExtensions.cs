@@ -1,5 +1,5 @@
-﻿using BTCPayServer.Abstractions.Form;
-using BTCPayServer.Data.Data;
+using BTCPayServer.Abstractions.Form;
+using BTCPayServer.Data;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;

@@ -1,7 +1,6 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using BTCPayServer.Data.Data;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
@@ -90,23 +89,23 @@ namespace BTCPayServer.Data
 
             // some of the data models don't have OnModelCreating for now, commenting them
 
-            ApplicationUser.OnModelCreating(builder);
+            ApplicationUser.OnModelCreating(builder, Database);
             AddressInvoiceData.OnModelCreating(builder);
-            APIKeyData.OnModelCreating(builder);
+            APIKeyData.OnModelCreating(builder, Database);
             AppData.OnModelCreating(builder);
-            CustodianAccountData.OnModelCreating(builder);
+            CustodianAccountData.OnModelCreating(builder, Database);
             //StoredFile.OnModelCreating(builder);
             InvoiceEventData.OnModelCreating(builder);
             InvoiceSearchData.OnModelCreating(builder);
             InvoiceWebhookDeliveryData.OnModelCreating(builder);
-            InvoiceData.OnModelCreating(builder);
-            NotificationData.OnModelCreating(builder);
+            InvoiceData.OnModelCreating(builder, Database);
+            NotificationData.OnModelCreating(builder, Database);
             //OffchainTransactionData.OnModelCreating(builder);
             BTCPayServer.Data.PairedSINData.OnModelCreating(builder);
             PairingCodeData.OnModelCreating(builder);
             //PayjoinLock.OnModelCreating(builder);
-            PaymentRequestData.OnModelCreating(builder);
-            PaymentData.OnModelCreating(builder);
+            PaymentRequestData.OnModelCreating(builder, Database);
+            PaymentData.OnModelCreating(builder, Database);
             PayoutData.OnModelCreating(builder);
             PendingInvoiceData.OnModelCreating(builder);
             //PlannedTransaction.OnModelCreating(builder);
@@ -117,7 +116,7 @@ namespace BTCPayServer.Data
             StoreWebhookData.OnModelCreating(builder);
             StoreData.OnModelCreating(builder, Database);
             U2FDevice.OnModelCreating(builder);
-            Fido2Credential.OnModelCreating(builder);
+            Fido2Credential.OnModelCreating(builder, Database);
             BTCPayServer.Data.UserStore.OnModelCreating(builder);
             //WalletData.OnModelCreating(builder);
             WalletObjectData.OnModelCreating(builder, Database);
@@ -125,14 +124,14 @@ namespace BTCPayServer.Data
 #pragma warning disable CS0612 // Type or member is obsolete
             WalletTransactionData.OnModelCreating(builder);
 #pragma warning restore CS0612 // Type or member is obsolete
-            WebhookDeliveryData.OnModelCreating(builder);
-            LightningAddressData.OnModelCreating(builder);
-            PayoutProcessorData.OnModelCreating(builder);
-            //WebhookData.OnModelCreating(builder);
-            FormData.OnModelCreating(builder, Database);
+			WebhookDeliveryData.OnModelCreating(builder, Database);
+			LightningAddressData.OnModelCreating(builder, Database);
+			PayoutProcessorData.OnModelCreating(builder, Database);
+			WebhookData.OnModelCreating(builder, Database);
+			FormData.OnModelCreating(builder, Database);
 
 
-            if (Database.IsSqlite() && !_designTime)
+			if (Database.IsSqlite() && !_designTime)
             {
                 // SQLite does not have proper support for DateTimeOffset via Entity Framework Core, see the limitations
                 // here: https://docs.microsoft.com/en-us/ef/core/providers/sqlite/limitations#query-limitations

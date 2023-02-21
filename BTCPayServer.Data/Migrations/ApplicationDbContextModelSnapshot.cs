@@ -45,6 +45,9 @@ namespace BTCPayServer.Migrations
                     b.Property<byte[]>("Blob")
                         .HasColumnType("BLOB");
 
+                    b.Property<string>("Blob2")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Label")
                         .HasColumnType("TEXT");
 
@@ -108,6 +111,9 @@ namespace BTCPayServer.Migrations
 
                     b.Property<byte[]>("Blob")
                         .HasColumnType("BLOB");
+
+                    b.Property<string>("Blob2")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
@@ -183,6 +189,9 @@ namespace BTCPayServer.Migrations
                     b.Property<byte[]>("Blob")
                         .HasColumnType("BLOB");
 
+                    b.Property<string>("Blob2")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("CustodianCode")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -205,7 +214,7 @@ namespace BTCPayServer.Migrations
                     b.ToTable("CustodianAccount");
                 });
 
-            modelBuilder.Entity("BTCPayServer.Data.Data.FormData", b =>
+            modelBuilder.Entity("BTCPayServer.Data.FormData", b =>
                 {
                     b.Property<string>("Id")
                         .ValueGeneratedOnAdd()
@@ -230,7 +239,7 @@ namespace BTCPayServer.Migrations
                     b.ToTable("Forms");
                 });
 
-            modelBuilder.Entity("BTCPayServer.Data.Data.PayoutProcessorData", b =>
+            modelBuilder.Entity("BTCPayServer.Data.PayoutProcessorData", b =>
                 {
                     b.Property<string>("Id")
                         .ValueGeneratedOnAdd()
@@ -267,6 +276,9 @@ namespace BTCPayServer.Migrations
                     b.Property<byte[]>("Blob")
                         .HasColumnType("BLOB");
 
+                    b.Property<string>("Blob2")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Name")
                         .HasColumnType("TEXT");
 
@@ -290,6 +302,9 @@ namespace BTCPayServer.Migrations
 
                     b.Property<byte[]>("Blob")
                         .HasColumnType("BLOB");
+
+                    b.Property<string>("Blob2")
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset>("Created")
                         .HasColumnType("TEXT");
@@ -401,6 +416,9 @@ namespace BTCPayServer.Migrations
                     b.Property<byte[]>("Blob")
                         .HasColumnType("BLOB");
 
+                    b.Property<string>("Blob2")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("StoreDataId")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -425,6 +443,9 @@ namespace BTCPayServer.Migrations
 
                     b.Property<byte[]>("Blob")
                         .HasColumnType("BLOB");
+
+                    b.Property<string>("Blob2")
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset>("Created")
                         .HasColumnType("TEXT");
@@ -537,7 +558,13 @@ namespace BTCPayServer.Migrations
                     b.Property<byte[]>("Blob")
                         .HasColumnType("BLOB");
 
+                    b.Property<string>("Blob2")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("InvoiceDataId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Type")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -557,6 +584,9 @@ namespace BTCPayServer.Migrations
 
                     b.Property<byte[]>("Blob")
                         .HasColumnType("BLOB");
+
+                    b.Property<string>("Blob2")
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset>("Created")
                         .ValueGeneratedOnAdd()
@@ -945,8 +975,10 @@ namespace BTCPayServer.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<byte[]>("Blob")
-                        .IsRequired()
                         .HasColumnType("BLOB");
+
+                    b.Property<string>("Blob2")
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -960,8 +992,10 @@ namespace BTCPayServer.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<byte[]>("Blob")
-                        .IsRequired()
                         .HasColumnType("BLOB");
+
+                    b.Property<string>("Blob2")
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset>("Timestamp")
                         .HasColumnType("TEXT");
@@ -1154,7 +1188,7 @@ namespace BTCPayServer.Migrations
                     b.Navigation("StoreData");
                 });
 
-            modelBuilder.Entity("BTCPayServer.Data.Data.FormData", b =>
+            modelBuilder.Entity("BTCPayServer.Data.FormData", b =>
                 {
                     b.HasOne("BTCPayServer.Data.StoreData", "Store")
                         .WithMany("Forms")
@@ -1164,7 +1198,7 @@ namespace BTCPayServer.Migrations
                     b.Navigation("Store");
                 });
 
-            modelBuilder.Entity("BTCPayServer.Data.Data.PayoutProcessorData", b =>
+            modelBuilder.Entity("BTCPayServer.Data.PayoutProcessorData", b =>
                 {
                     b.HasOne("BTCPayServer.Data.StoreData", "Store")
                         .WithMany("PayoutProcessors")

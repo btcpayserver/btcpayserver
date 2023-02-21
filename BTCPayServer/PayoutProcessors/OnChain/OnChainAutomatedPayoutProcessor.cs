@@ -5,11 +5,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
-using BTCPayServer.Data.Data;
 using BTCPayServer.Events;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Payments;
-using BTCPayServer.PayoutProcessors.Settings;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
@@ -19,7 +17,7 @@ using NBitcoin;
 using NBXplorer;
 using NBXplorer.DerivationStrategy;
 using PayoutData = BTCPayServer.Data.PayoutData;
-using PayoutProcessorData = BTCPayServer.Data.Data.PayoutProcessorData;
+using PayoutProcessorData = BTCPayServer.Data.PayoutProcessorData;
 
 namespace BTCPayServer.PayoutProcessors.OnChain
 {

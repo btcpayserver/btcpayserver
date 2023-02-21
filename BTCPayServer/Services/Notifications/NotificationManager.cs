@@ -154,15 +154,15 @@ namespace BTCPayServer.Services.Notifications
             var handler = GetHandler(data.NotificationType);
             if (handler is null)
                 return null;
-            var notification = JsonConvert.DeserializeObject(ZipUtils.Unzip(data.Blob), handler.NotificationBlobType);
-            var obj = new NotificationViewModel
-            {
-                Id = data.Id,
-                Type = data.NotificationType,
-                Created = data.Created,
-                Seen = data.Seen
-            };
-            handler.FillViewModel(notification, obj);
+            var notification = data.HasTypedBlob(handler.NotificationBlobType).GetBlob();
+			var obj = new NotificationViewModel
+			{
+				Id = data.Id,
+				Type = data.NotificationType,
+				Created = data.Created,
+				Seen = data.Seen
+			};
+			handler.FillViewModel(notification, obj);
             return obj;
         }
 

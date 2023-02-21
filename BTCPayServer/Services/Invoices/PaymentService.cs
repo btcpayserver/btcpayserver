@@ -65,16 +65,15 @@ namespace BTCPayServer.Services.Invoices
                 bitcoinPaymentMethod.NextNetworkFee = bitcoinPaymentMethod.NetworkFeeRate.GetFee(100); // assume price for 100 bytes
                 paymentMethod.SetPaymentMethodDetails(bitcoinPaymentMethod);
                 invoiceEntity.SetPaymentMethod(paymentMethod);
-                invoice.Blob = InvoiceRepository.ToBytes(invoiceEntity, network);
+                invoice.SetBlob(invoiceEntity);
             }
             PaymentData data = new PaymentData
             {
                 Id = paymentData.GetPaymentId(),
-                Blob = InvoiceRepository.ToBytes(entity, entity.Network),
                 InvoiceDataId = invoiceId,
                 Accounted = accounted
             };
-
+            data.SetBlob(entity);
             await context.Payments.AddAsync(data);
 
             InvoiceRepository.AddToTextSearch(context, invoice, paymentData.GetSearchTerms());
@@ -123,7 +122,7 @@ namespace BTCPayServer.Services.Invoices
                 }
 
                 dbPayment.Accounted = payment.Value.entity.Accounted;
-                dbPayment.Blob = InvoiceRepository.ToBytes(payment.Value.entity, payment.Value.entity.Network);
+                dbPayment.SetBlob(payment.Value.entity);
             }
             await context.SaveChangesAsync().ConfigureAwait(false);
             eventsToSend.ForEach(_eventAggregator.Publish);

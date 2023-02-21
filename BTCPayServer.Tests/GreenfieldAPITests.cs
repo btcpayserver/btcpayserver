@@ -1696,7 +1696,9 @@ namespace BTCPayServer.Tests
                 var db = tester.PayTester.GetService<Data.ApplicationDbContextFactory>();
                 using var ctx = db.CreateContext();
                 var dbInvoice = await ctx.Invoices.FindAsync(oldInvoice.Id);
+#pragma warning disable CS0618 // Type or member is obsolete
                 dbInvoice.Blob = ZipUtils.Zip(invoiceV1);
+#pragma warning restore CS0618 // Type or member is obsolete
                 await ctx.SaveChangesAsync();
                 var newInvoice = await AssertInvoiceMetadata();
 
@@ -1998,7 +2000,7 @@ namespace BTCPayServer.Tests
 
             //get
             var invoice = await viewOnly.GetInvoice(user.StoreId, newInvoice.Id);
-            Assert.Equal(newInvoice.Metadata, invoice.Metadata);
+            Assert.True(JObject.DeepEquals(newInvoice.Metadata, invoice.Metadata));
             var paymentMethods = await viewOnly.GetInvoicePaymentMethods(user.StoreId, newInvoice.Id);
             Assert.Single(paymentMethods);
             var paymentMethod = paymentMethods.First();

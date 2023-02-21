@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Data;
+using BTCPayServer.Events;
 using BTCPayServer.Migrations;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin;
@@ -16,6 +17,7 @@ namespace BTCPayServer.Services.Stores
     public class StoreRepository : IStoreRepository
     {
         private readonly ApplicationDbContextFactory _ContextFactory;
+        private readonly EventAggregator _eventAggregator;
 
         public JsonSerializerSettings SerializerSettings { get; }
 
@@ -23,9 +25,10 @@ namespace BTCPayServer.Services.Stores
         {
             return _ContextFactory.CreateContext();
         }
-        public StoreRepository(ApplicationDbContextFactory contextFactory, JsonSerializerSettings serializerSettings)
+        public StoreRepository(ApplicationDbContextFactory contextFactory, JsonSerializerSettings serializerSettings, EventAggregator eventAggregator)
         {
             _ContextFactory = contextFactory ?? throw new ArgumentNullException(nameof(contextFactory));
+            _eventAggregator = eventAggregator;
             SerializerSettings = serializerSettings;
         }
 
@@ -120,14 +123,17 @@ namespace BTCPayServer.Services.Stores
 
         public async Task CleanUnreachableStores()
         {
-            using var ctx = _ContextFactory.CreateContext();
+            await using var ctx = _ContextFactory.CreateContext();
             if (!ctx.Database.SupportDropForeignKey())
                 return;
-            foreach (var store in await ctx.Stores.Where(s => !s.UserStores.Where(u => u.Role == StoreRoles.Owner).Any()).ToArrayAsync())
+            var events = new List<Events.StoreRemovedEvent>();
+            foreach (var store in await ctx.Stores.Where(s => s.UserStores.All(u => u.Role != StoreRoles.Owner)).ToArrayAsync())
             {
                 ctx.Stores.Remove(store);
+                events.Add(new Events.StoreRemovedEvent(store.Id));
             }
             await ctx.SaveChangesAsync();
+            events.ForEach(e => _eventAggregator.Publish(e));
         }
 
         public async Task<bool> RemoveStoreUser(string storeId, string userId)
@@ -147,7 +153,7 @@ namespace BTCPayServer.Services.Stores
 
         private async Task DeleteStoreIfOrphan(string storeId)
         {
-            using var ctx = _ContextFactory.CreateContext();
+            await using var ctx = _ContextFactory.CreateContext();
             if (ctx.Database.SupportDropForeignKey())
             {
                 if (!await ctx.UserStore.Where(u => u.StoreDataId == storeId && u.Role == StoreRoles.Owner).AnyAsync())
@@ -157,6 +163,7 @@ namespace BTCPayServer.Services.Stores
                     {
                         ctx.Stores.Remove(store);
                         await ctx.SaveChangesAsync();
+                         _eventAggregator.Publish(new StoreRemovedEvent(store.Id));
                     }
                 }
             }

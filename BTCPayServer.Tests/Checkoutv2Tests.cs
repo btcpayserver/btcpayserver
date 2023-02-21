@@ -62,7 +62,7 @@ namespace BTCPayServer.Tests
             Assert.Contains("LNURL", s.Driver.FindElement(By.CssSelector(".payment-method:nth-child(2)")).Text);
             var qrValue = s.Driver.FindElement(By.CssSelector(".qr-container")).GetAttribute("data-qr-value");
             var address = s.Driver.FindElement(By.CssSelector(".qr-container")).GetAttribute("data-clipboard");
-            var payUrl = s.Driver.FindElement(By.CssSelector(".btn-primary")).GetAttribute("href");
+            var payUrl = s.Driver.FindElement(By.Id("PayInWallet")).GetAttribute("href");
             var copyAddress = s.Driver.FindElement(By.Id("Address_BTC")).GetAttribute("value");
             Assert.Equal($"bitcoin:{address}", payUrl);
             Assert.StartsWith("bcrt", s.Driver.FindElement(By.Id("Address_BTC")).GetAttribute("value"));
@@ -70,15 +70,17 @@ namespace BTCPayServer.Tests
             Assert.Equal(address, copyAddress);
             Assert.Equal($"bitcoin:{address.ToUpperInvariant()}", qrValue);
             s.Driver.ElementDoesNotExist(By.Id("Lightning_BTC"));
+            s.Driver.ElementDoesNotExist(By.Id("PayByLNURL"));
             
             // Switch to LNURL
             s.Driver.FindElement(By.CssSelector(".payment-method:nth-child(2)")).Click();
             TestUtils.Eventually(() =>
             {
-                payUrl = s.Driver.FindElement(By.CssSelector(".btn-primary")).GetAttribute("href");
+                payUrl = s.Driver.FindElement(By.Id("PayInWallet")).GetAttribute("href");
                 Assert.StartsWith("lightning:lnurl", payUrl);
                 Assert.StartsWith("lnurl", s.Driver.WaitForElement(By.Id("Lightning_BTC")).GetAttribute("value"));
                 s.Driver.ElementDoesNotExist(By.Id("Address_BTC"));
+                s.Driver.FindElement(By.Id("PayByLNURL"));
             });
 
             // Default payment method
@@ -91,12 +93,13 @@ namespace BTCPayServer.Tests
             Assert.Contains("Bitcoin", s.Driver.WaitForElement(By.CssSelector(".payment-method")).Text);
             qrValue = s.Driver.FindElement(By.CssSelector(".qr-container")).GetAttribute("data-qr-value");
             address = s.Driver.FindElement(By.CssSelector(".qr-container")).GetAttribute("data-clipboard");
-            payUrl = s.Driver.FindElement(By.CssSelector(".btn-primary")).GetAttribute("href");
+            payUrl = s.Driver.FindElement(By.Id("PayInWallet")).GetAttribute("href");
             copyAddress = s.Driver.FindElement(By.Id("Lightning_BTC_LightningLike")).GetAttribute("value");
             Assert.Equal($"lightning:{address}", payUrl);
             Assert.Equal(address, copyAddress);
             Assert.Equal($"lightning:{address.ToUpperInvariant()}", qrValue);
             s.Driver.ElementDoesNotExist(By.Id("Address_BTC"));
+            s.Driver.FindElement(By.Id("PayByLNURL"));
 
             // Lightning amount in Sats
             Assert.Contains("BTC", s.Driver.FindElement(By.Id("AmountDue")).Text);
@@ -198,7 +201,7 @@ namespace BTCPayServer.Tests
             Assert.Empty(s.Driver.FindElements(By.CssSelector(".payment-method")));
             qrValue = s.Driver.FindElement(By.CssSelector(".qr-container")).GetAttribute("data-qr-value");
             address = s.Driver.FindElement(By.CssSelector(".qr-container")).GetAttribute("data-clipboard");
-            payUrl = s.Driver.FindElement(By.CssSelector(".btn-primary")).GetAttribute("href");
+            payUrl = s.Driver.FindElement(By.Id("PayInWallet")).GetAttribute("href");
             var copyAddressOnchain = s.Driver.FindElement(By.Id("Address_BTC")).GetAttribute("value");
             var copyAddressLightning = s.Driver.FindElement(By.Id("Lightning_BTC")).GetAttribute("value");
             Assert.StartsWith($"bitcoin:{address}?amount=", payUrl);
@@ -209,6 +212,7 @@ namespace BTCPayServer.Tests
             Assert.StartsWith("lnbcrt", copyAddressLightning);
             Assert.StartsWith($"bitcoin:{address.ToUpperInvariant()}?amount=", qrValue);
             Assert.Contains("&lightning=LNBCRT", qrValue);
+            s.Driver.FindElement(By.Id("PayByLNURL"));
 
             // BIP21 with LN as default payment method
             s.GoToHome();
@@ -216,9 +220,10 @@ namespace BTCPayServer.Tests
             s.GoToInvoiceCheckout(invoiceId);
             s.Driver.WaitUntilAvailable(By.Id("Checkout-v2"));
             Assert.Empty(s.Driver.FindElements(By.CssSelector(".payment-method")));
-            payUrl = s.Driver.FindElement(By.CssSelector(".btn-primary")).GetAttribute("href");
+            payUrl = s.Driver.FindElement(By.Id("PayInWallet")).GetAttribute("href");
             Assert.StartsWith("bitcoin:", payUrl);
             Assert.Contains("&lightning=lnbcrt", payUrl);
+            s.Driver.FindElement(By.Id("PayByLNURL"));
 
             // Ensure LNURL is enabled
             s.GoToHome();
@@ -233,7 +238,7 @@ namespace BTCPayServer.Tests
             Assert.Empty(s.Driver.FindElements(By.CssSelector(".payment-method")));
             qrValue = s.Driver.FindElement(By.CssSelector(".qr-container")).GetAttribute("data-qr-value");
             address = s.Driver.FindElement(By.CssSelector(".qr-container")).GetAttribute("data-clipboard");
-            payUrl = s.Driver.FindElement(By.CssSelector(".btn-primary")).GetAttribute("href");
+            payUrl = s.Driver.FindElement(By.Id("PayInWallet")).GetAttribute("href");
             copyAddressOnchain = s.Driver.FindElement(By.Id("Address_BTC")).GetAttribute("value");
             copyAddressLightning = s.Driver.FindElement(By.Id("Lightning_BTC")).GetAttribute("value");
             Assert.StartsWith($"bitcoin:{address}", payUrl);
@@ -243,6 +248,7 @@ namespace BTCPayServer.Tests
             Assert.Equal(address, copyAddressOnchain);
             Assert.StartsWith("lnurl", copyAddressLightning);
             Assert.StartsWith($"bitcoin:{address.ToUpperInvariant()}?lightning=LNURL", qrValue);
+            s.Driver.FindElement(By.Id("PayByLNURL"));
 
             // Expiry message should not show amount for topup invoice
             expirySeconds = s.Driver.FindElement(By.Id("ExpirySeconds"));

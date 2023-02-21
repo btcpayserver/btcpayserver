@@ -17,7 +17,7 @@
             </div>
             <button type="button" class="btn btn-link" data-clipboard-target="#Lightning_@Model.PaymentMethodId" :data-clipboard-confirm="$t('copy_confirm')" v-t="'copy'"></button>
         </div>
-        <a v-if="model.invoiceBitcoinUrl" class="btn btn-primary rounded-pill w-100 mt-4" target="_top"
+        <a v-if="model.invoiceBitcoinUrl" class="btn btn-primary rounded-pill w-100 mt-4" target="_top" id="PayInWallet"
            :href="model.invoiceBitcoinUrl" v-t="'pay_in_wallet'"></a>
         @await Component.InvokeAsync("UiExtensionPoint", new {location = "checkout-v2-lightning-post-content", model = Model})
     </div>          

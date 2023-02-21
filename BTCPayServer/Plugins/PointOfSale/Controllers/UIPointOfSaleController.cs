@@ -240,13 +240,18 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 case not null:
                     if (formResponse is null)
                     {
-                        return View("PostRedirect", new PostRedirectViewModel
+                        var vm = new PostRedirectViewModel
                         {
                             AspAction = nameof(POSForm),
+                            AspController = "UIPointOfSale",
                             RouteParameters = new Dictionary<string, string> { { "appId", appId } },
-                            AspController = nameof(UIPointOfSaleController).TrimEnd("Controller", StringComparison.InvariantCulture),
                             FormParameters = new MultiValueDictionary<string, string>(Request.Form.Select(pair => new KeyValuePair<string, IReadOnlyCollection<string>>(pair.Key, pair.Value)))
-                        });
+                        };
+                        if (viewType.HasValue)
+                        {
+                            vm.RouteParameters.Add("viewType", viewType.Value.ToString());
+                        }
+                        return View("PostRedirect", vm);
                     }
 
                     formResponseJObject = JObject.Parse(formResponse);
@@ -312,8 +317,8 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             }
         }
 
-        [HttpPost("/apps/{appId}/pos/form")]
-        public async Task<IActionResult> POSForm(string appId)
+        [HttpPost("/apps/{appId}/pos/form/{viewType?}")]
+        public async Task<IActionResult> POSForm(string appId, PosViewType? viewType = null)
         {
             var app = await _appService.GetApp(appId, AppType.PointOfSale);
             if (app == null)
@@ -323,7 +328,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             var formData = await FormDataService.GetForm(settings.FormId);
             if (formData is null)
             {
-                return RedirectToAction(nameof(ViewPointOfSale), new { appId });
+                return RedirectToAction(nameof(ViewPointOfSale), new { appId, viewType });
             }
             
             var myDictionary = Request.Form
@@ -335,8 +340,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             var store = await _appService.GetStore(app);
             var storeBlob = store.GetStoreBlob();
             var form = Form.Parse(formData.Config);
-            
-            return View("Views/UIForms/View", new FormViewModel
+            var vm = new FormViewModel
             {
                 StoreName = store.StoreName,
                 BrandColor = storeBlob.BrandColor,
@@ -348,11 +352,17 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 AspController = controller,
                 AspAction = nameof(POSFormSubmit),
                 RouteParameters = new Dictionary<string, string> { { "appId", appId } },
-            });
+            };
+            if (viewType.HasValue)
+            {
+                vm.RouteParameters.Add("viewType", viewType.Value.ToString());
+            }
+            
+            return View("Views/UIForms/View", vm);
         }
 
-        [HttpPost("/apps/{appId}/pos/form/submit")]
-        public async Task<IActionResult> POSFormSubmit(string appId, FormViewModel viewModel)
+        [HttpPost("/apps/{appId}/pos/form/submit/{viewType?}")]
+        public async Task<IActionResult> POSFormSubmit(string appId, FormViewModel viewModel, PosViewType? viewType = null)
         {
             var app = await _appService.GetApp(appId, AppType.PointOfSale);
             if (app == null)
@@ -362,7 +372,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             var formData = await FormDataService.GetForm(settings.FormId);
             if (formData is null || viewModel.RedirectUrl is null)
             {
-                return RedirectToAction(nameof(ViewPointOfSale), new { appId });
+                return RedirectToAction(nameof(ViewPointOfSale), new { appId, viewType });
             }
 
             var form = Form.Parse(formData.Config);

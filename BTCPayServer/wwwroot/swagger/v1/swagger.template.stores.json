@@ -281,6 +281,33 @@
                     }
                 ]
             },
+            "PaymentMethodCriteriaData": {
+                "type": "object",
+                "properties": {
+                    "paymentMethod": {
+                        "type": "string",
+                        "description": "The payment method (e.g., \"BTC\" or \"BTC_LightningLike\")",
+                        "nullable": false
+                    },
+                    "currencyCode": {
+                        "type": "string",
+                        "description": "The currency",
+                        "default": "USD",
+                        "example": "USD"
+                    },
+                    "amount": {
+                        "type": "string",
+                        "format": "decimal",
+                        "minimum": 0,
+                        "description": "The amount"
+                    },
+                    "above": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "If the criterion is for above or below the amount"
+                    }
+                }
+            },
             "StoreBaseData": {
                 "type": "object",
                 "x-abstract": true,

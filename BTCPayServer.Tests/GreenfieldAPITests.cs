@@ -1217,10 +1217,30 @@ namespace BTCPayServer.Tests
             var newStore = await client.CreateStore(new CreateStoreRequest() { Name = "A" });
 
             //update store
-            var updatedStore = await client.UpdateStore(newStore.Id, new UpdateStoreRequest() { Name = "B" });
+            Assert.Empty(newStore.PaymentMethodCriteria);
+            await client.GenerateOnChainWallet(newStore.Id, "BTC", new GenerateOnChainWalletRequest());
+            var updatedStore = await client.UpdateStore(newStore.Id, new UpdateStoreRequest() { Name = "B", PaymentMethodCriteria = new List<PaymentMethodCriteriaData>()
+            {
+                new()
+                {
+                    Amount = 10,
+                    Above = true,
+                    PaymentMethod = "BTC",
+                    CurrencyCode = "USD"
+                }
+             }});
             Assert.Equal("B", updatedStore.Name);
-            Assert.Equal("B", (await client.GetStore(newStore.Id)).Name);
-
+            var s = (await client.GetStore(newStore.Id));
+            Assert.Equal("B", s.Name);
+            var pmc = Assert.Single(s.PaymentMethodCriteria);
+            //check that pmc equals the one we set
+            Assert.Equal(10, pmc.Amount);
+            Assert.True(pmc.Above);
+            Assert.Equal("BTC", pmc.PaymentMethod);
+            Assert.Equal("USD", pmc.CurrencyCode);
+            updatedStore = await client.UpdateStore(newStore.Id, new UpdateStoreRequest() { Name = "B"});
+            Assert.Empty(newStore.PaymentMethodCriteria);
+            
             //list stores
             var stores = await client.GetStores();
             var storeIds = stores.Select(data => data.Id);

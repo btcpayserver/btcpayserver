@@ -357,15 +357,16 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             var app = await _appService.GetApp(appId, AppType.PointOfSale);
             if (app == null)
                 return NotFound();
+            
             var settings = app.GetSettings<PointOfSaleSettings>();
             var formData = await FormDataService.GetForm(settings.FormId);
             if (formData is null || viewModel.RedirectUrl is null)
             {
-                return RedirectToAction(nameof(ViewPointOfSale), new {appId });
+                return RedirectToAction(nameof(ViewPointOfSale), new { appId });
             }
 
             var form = Form.Parse(formData.Config);
-            if (Request.Method == "POST" && Request.HasFormContentType)
+            if (Request is { Method: "POST", HasFormContentType: true })
             {
                 form.ApplyValuesFromForm(Request.Form);
                 if (FormDataService.Validate(form, ModelState))

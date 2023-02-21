@@ -98,9 +98,11 @@ namespace BTCPayServer.Controllers.Greenfield
 
         private NotificationData ToModel(NotificationViewModel entity)
         {
-            return new NotificationData()
+            return new NotificationData
             {
                 Id = entity.Id,
+                Identifier = entity.Identifier,
+                Type = entity.Type,
                 CreatedTime = entity.Created,
                 Body = entity.Body,
                 Seen = entity.Seen,

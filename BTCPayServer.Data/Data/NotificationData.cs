@@ -19,7 +19,6 @@ namespace BTCPayServer.Data
         public bool Seen { get; set; }
         public byte[] Blob { get; set; }
 
-
         internal static void OnModelCreating(ModelBuilder builder)
         {
             builder.Entity<NotificationData>()

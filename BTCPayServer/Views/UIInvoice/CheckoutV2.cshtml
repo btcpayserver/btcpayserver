@@ -213,7 +213,7 @@
         </div>
     </dl>
     <script>
-        const i18nUrl = @Safe.Json($"{Model.RootPath}locales/checkout/{{{{lng}}}}.json");
+        const i18nUrl = @Safe.Json($"{Model.RootPath}locales/checkout/{{{{lng}}}}.json?v={Env.Version}");
         const statusUrl = @Safe.Json(Url.Action("GetStatus", new { invoiceId = Model.InvoiceId }));
         const statusWsUrl = @Safe.Json(Url.Action("GetStatusWebSocket", new { invoiceId = Model.InvoiceId }));
         const availableLanguages = ['en']; // @Safe.Json(LangService.GetLanguages().Select(language => language.Code));

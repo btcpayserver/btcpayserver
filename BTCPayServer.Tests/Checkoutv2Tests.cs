@@ -288,6 +288,26 @@ namespace BTCPayServer.Tests
             Assert.True(paymentInfo.Displayed);
             Assert.Contains("This invoice will expire in", paymentInfo.Text);
             Assert.Contains("09:5", paymentInfo.Text);
+            
+            // Disable LNURL again
+            s.GoToHome();
+            s.GoToLightningSettings();
+            s.Driver.SetCheckbox(By.Id("LNURLEnabled"), false);
+            s.Driver.FindElement(By.Id("save")).Click();
+            Assert.Contains("BTC Lightning settings successfully updated", s.FindAlertMessage().Text);
+
+            // Test:
+            // - NFC/LNURL-W available with just Lightning
+            // - BIP21 works correctly even though Lightning is default payment method
+            s.GoToHome();
+            invoiceId = s.CreateInvoice(defaultPaymentMethod: "BTC_LightningLike");
+            s.GoToInvoiceCheckout(invoiceId);
+            s.Driver.WaitUntilAvailable(By.Id("Checkout-v2"));
+            Assert.Empty(s.Driver.FindElements(By.CssSelector(".payment-method")));
+            payUrl = s.Driver.FindElement(By.Id("PayInWallet")).GetAttribute("href");
+            Assert.StartsWith("bitcoin:", payUrl);
+            Assert.Contains("&lightning=lnbcrt", payUrl);
+            s.Driver.FindElement(By.Id("PayByLNURL"));
         }
 
         [Fact(Timeout = TestTimeout)]

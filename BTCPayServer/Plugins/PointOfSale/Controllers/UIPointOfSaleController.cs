@@ -255,7 +255,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                     if (!FormDataService.Validate(form, ModelState))
                     {
                         //someone tried to bypass validation
-                        return RedirectToAction(nameof(ViewPointOfSale), new {appId});
+                        return RedirectToAction(nameof(ViewPointOfSale), new { appId, viewType });
                     }
 
                     formResponseJObject = form.GetValues();

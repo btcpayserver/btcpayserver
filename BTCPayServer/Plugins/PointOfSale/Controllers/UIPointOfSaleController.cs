@@ -281,7 +281,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                             string.IsNullOrEmpty(notificationUrl) ? settings.NotificationUrl : notificationUrl,
                     RedirectURL = !string.IsNullOrEmpty(redirectUrl) ? redirectUrl
                         : !string.IsNullOrEmpty(settings.RedirectUrl) ? settings.RedirectUrl
-                        : Url.Action(nameof(ViewPointOfSale), "UIPointOfSale", new { appId, viewType }),
+                        : Request.GetAbsoluteUri(Url.Action(nameof(ViewPointOfSale), "UIPointOfSale", new { appId, viewType })),
                     FullNotifications = true,
                     ExtendedNotifications = true,
                     PosData = string.IsNullOrEmpty(posData) ? null : posData,
@@ -336,7 +336,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 .ToDictionary(p => p.Key, p => p.Value.ToString());
             myDictionary.Add("appId", appId);
             var controller = nameof(UIPointOfSaleController).TrimEnd("Controller", StringComparison.InvariantCulture);
-            var redirectUrl = Url.Action(nameof(ViewPointOfSale), controller, myDictionary);
+            var redirectUrl = Request.GetAbsoluteUri(Url.Action(nameof(ViewPointOfSale), controller, new { appId, viewType }));
             var store = await _appService.GetStore(app);
             var storeBlob = store.GetStoreBlob();
             var form = Form.Parse(formData.Config);

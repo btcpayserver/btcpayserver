@@ -28,6 +28,7 @@ namespace BTCPayServer.Client
         public const string CanViewNotificationsForUser = "btcpay.user.canviewnotificationsforuser";
         public const string CanViewUsers = "btcpay.server.canviewusers";
         public const string CanCreateUser = "btcpay.server.cancreateuser";
+        public const string CanManageUser = "btcpay.server.canmanageuser";
         public const string CanDeleteUser = "btcpay.user.candeleteuser";
         public const string CanManagePullPayments = "btcpay.store.canmanagepullpayments";
         public const string CanCreatePullPayments = "btcpay.store.cancreatepullpayments";
@@ -73,6 +74,7 @@ namespace BTCPayServer.Client
                 yield return CanDepositToCustodianAccounts;
                 yield return CanWithdrawFromCustodianAccounts;
                 yield return CanTradeCustodianAccount;
+                yield return CanManageUser;
             }
         }
         public static bool IsValidPolicy(string policy)
@@ -206,8 +208,15 @@ namespace BTCPayServer.Client
         private static void Init()
         {
             PolicyHasChild(Policies.CanModifyStoreSettings,
-                Policies.CanManageCustodianAccounts, Policies.CanManagePullPayments, Policies.CanModifyInvoices, Policies.CanViewStoreSettings, Policies.CanModifyStoreWebhooks, Policies.CanModifyPaymentRequests );
-            
+                Policies.CanManageCustodianAccounts,
+                Policies.CanManagePullPayments,
+                Policies.CanModifyInvoices,
+                Policies.CanViewStoreSettings,
+                Policies.CanModifyStoreWebhooks,
+                Policies.CanModifyPaymentRequests,
+                Policies.CanManageUser);
+
+            PolicyHasChild(Policies.CanManageUser, Policies.CanCreateUser);
             PolicyHasChild(Policies.CanManagePullPayments, Policies.CanCreatePullPayments );
             PolicyHasChild(Policies.CanCreatePullPayments, Policies.CanCreateNonApprovedPullPayments );
             PolicyHasChild(Policies.CanModifyPaymentRequests, Policies.CanViewPaymentRequests );

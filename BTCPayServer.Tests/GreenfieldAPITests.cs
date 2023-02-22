@@ -190,6 +190,20 @@ namespace BTCPayServer.Tests
 
             await unrestricted.RevokeAPIKey(apiKey.ApiKey);
             await AssertAPIError("apikey-not-found", () => unrestricted.RevokeAPIKey(apiKey.ApiKey));
+
+            acc = tester.NewAccount();
+            await acc.GrantAccessAsync(isAdmin: true);
+            unrestricted = await acc.CreateClient();
+            var newUser = await unrestricted.CreateUser(new CreateApplicationUserRequest() { Email = Utils.GenerateEmail(), Password = "Kitten0@" });
+            var newUserAPIKey = await unrestricted.CreateAPIKey(newUser.Id, new CreateApiKeyRequest()
+            {
+                Label = "Hello world",
+                Permissions = new Permission[] { Permission.Create(Policies.CanViewProfile) }
+            });
+            var newUserClient = acc.CreateClientFromAPIKey(newUserAPIKey.ApiKey);
+            Assert.Equal(newUser.Id, (await newUserClient.GetCurrentUser()).Id);
+            await unrestricted.RevokeAPIKey(newUser.Id, newUserAPIKey.ApiKey);
+            await Assert.ThrowsAsync<GreenfieldAPIException>(() => newUserClient.GetCurrentUser());
         }
 
         [Fact(Timeout = TestTimeout)]

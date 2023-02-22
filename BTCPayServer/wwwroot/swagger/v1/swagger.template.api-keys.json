@@ -322,11 +322,12 @@
                     },
                     "permissions": {
                         "type": "array",
-                        "description": "The permissions associated to this API Key",
+                        "description": "The permissions associated to this API Key (can be scoped to a specific store)",
                         "nullable": false,
                         "items": {
                             "type": "string"
-                        }
+                        },
+                        "example": [ "btcpay.server.canmanageuser", "btcpay.server.canmanageuser:2KxSpc9V5zDWfUbvgYiZuAfka4wUhGF96F75Ao8y4zHP" ]
                     }
                 }
             }

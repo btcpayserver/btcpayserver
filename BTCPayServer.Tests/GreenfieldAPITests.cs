@@ -191,6 +191,8 @@ namespace BTCPayServer.Tests
             await unrestricted.RevokeAPIKey(apiKey.ApiKey);
             await AssertAPIError("apikey-not-found", () => unrestricted.RevokeAPIKey(apiKey.ApiKey));
 
+
+            // Admin create API key to new user
             acc = tester.NewAccount();
             await acc.GrantAccessAsync(isAdmin: true);
             unrestricted = await acc.CreateClient();
@@ -202,8 +204,27 @@ namespace BTCPayServer.Tests
             });
             var newUserClient = acc.CreateClientFromAPIKey(newUserAPIKey.ApiKey);
             Assert.Equal(newUser.Id, (await newUserClient.GetCurrentUser()).Id);
+            // Admin delete it
             await unrestricted.RevokeAPIKey(newUser.Id, newUserAPIKey.ApiKey);
             await Assert.ThrowsAsync<GreenfieldAPIException>(() => newUserClient.GetCurrentUser());
+
+            // Admin create store
+            var store = await unrestricted.CreateStore(new CreateStoreRequest() { Name = "Pouet lol" });
+
+            // Grant right to another user
+            newUserAPIKey = await unrestricted.CreateAPIKey(newUser.Id, new CreateApiKeyRequest()
+            {
+                Label = "Hello world",
+                Permissions = new Permission[] { Permission.Create(Policies.CanViewInvoices, store.Id) },
+            });
+
+            // Despite the grant, the user shouldn't be able to get the invoices!
+            newUserClient = acc.CreateClientFromAPIKey(newUserAPIKey.ApiKey);
+            await Assert.ThrowsAsync<GreenfieldAPIException>(() => newUserClient.GetInvoices(store.Id));
+
+            // if user is a guest or owner, then it should be ok
+            await unrestricted.AddStoreUser(store.Id, new StoreUserData() { UserId = newUser.Id, Role = "Guest" });
+            await newUserClient.GetInvoices(store.Id);
         }
 
         [Fact(Timeout = TestTimeout)]

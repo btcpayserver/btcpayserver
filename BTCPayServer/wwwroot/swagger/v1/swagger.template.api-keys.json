@@ -105,7 +105,7 @@
                 },
                 "security": [
                     {
-                        "API_Key": [ "btcpay.server.canmanageuser" ],
+                        "API_Key": [ "btcpay.server.canmanageusers" ],
                         "Basic": []
                     }
                 ]
@@ -297,7 +297,7 @@
                 },
                 "security": [
                     {
-                        "API_Key": [ "btcpay.server.canmanageuser" ],
+                        "API_Key": [ "btcpay.server.canmanageusers" ],
                         "Basic": []
                     }
                 ]
@@ -327,7 +327,7 @@
                         "items": {
                             "type": "string"
                         },
-                        "example": [ "btcpay.server.canmanageuser", "btcpay.server.canmanageuser:2KxSpc9V5zDWfUbvgYiZuAfka4wUhGF96F75Ao8y4zHP" ]
+                        "example": [ "btcpay.server.canmanageusers", "btcpay.server.canmanageusers:2KxSpc9V5zDWfUbvgYiZuAfka4wUhGF96F75Ao8y4zHP" ]
                     }
                 }
             }

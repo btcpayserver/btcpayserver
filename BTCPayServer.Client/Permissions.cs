@@ -28,7 +28,7 @@ namespace BTCPayServer.Client
         public const string CanViewNotificationsForUser = "btcpay.user.canviewnotificationsforuser";
         public const string CanViewUsers = "btcpay.server.canviewusers";
         public const string CanCreateUser = "btcpay.server.cancreateuser";
-        public const string CanManageUser = "btcpay.server.canmanageuser";
+        public const string CanManageUsers = "btcpay.server.canmanageuser";
         public const string CanDeleteUser = "btcpay.user.candeleteuser";
         public const string CanManagePullPayments = "btcpay.store.canmanagepullpayments";
         public const string CanCreatePullPayments = "btcpay.store.cancreatepullpayments";
@@ -74,7 +74,7 @@ namespace BTCPayServer.Client
                 yield return CanDepositToCustodianAccounts;
                 yield return CanWithdrawFromCustodianAccounts;
                 yield return CanTradeCustodianAccount;
-                yield return CanManageUser;
+                yield return CanManageUsers;
             }
         }
         public static bool IsValidPolicy(string policy)
@@ -213,17 +213,18 @@ namespace BTCPayServer.Client
                 Policies.CanModifyInvoices,
                 Policies.CanViewStoreSettings,
                 Policies.CanModifyStoreWebhooks,
-                Policies.CanModifyPaymentRequests,
-                Policies.CanManageUser);
+                Policies.CanModifyPaymentRequests);
 
-            PolicyHasChild(Policies.CanManageUser, Policies.CanCreateUser);
+            PolicyHasChild(Policies.CanManageUsers, Policies.CanCreateUser);
             PolicyHasChild(Policies.CanManagePullPayments, Policies.CanCreatePullPayments );
             PolicyHasChild(Policies.CanCreatePullPayments, Policies.CanCreateNonApprovedPullPayments );
             PolicyHasChild(Policies.CanModifyPaymentRequests, Policies.CanViewPaymentRequests );
             PolicyHasChild(Policies.CanModifyProfile, Policies.CanViewProfile );
             PolicyHasChild(Policies.CanUseLightningNodeInStore, Policies.CanViewLightningInvoiceInStore, Policies.CanCreateLightningInvoiceInStore );
             PolicyHasChild(Policies.CanManageNotificationsForUser, Policies.CanViewNotificationsForUser );
-            PolicyHasChild(Policies.CanModifyServerSettings, Policies.CanUseInternalLightningNode );
+            PolicyHasChild(Policies.CanModifyServerSettings,
+                Policies.CanUseInternalLightningNode,
+                Policies.CanManageUsers);
             PolicyHasChild(Policies.CanUseInternalLightningNode, Policies.CanCreateLightningInvoiceInternalNode,Policies.CanViewLightningInvoiceInternalNode );
             PolicyHasChild(Policies.CanManageCustodianAccounts, Policies.CanViewCustodianAccounts );
             PolicyHasChild(Policies.CanModifyInvoices, Policies.CanViewInvoices, Policies.CanCreateInvoice );

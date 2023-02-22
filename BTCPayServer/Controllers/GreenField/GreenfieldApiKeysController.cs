@@ -50,7 +50,7 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
         [HttpPost("~/api/v1/users/{userId}/api-keys")]
-        [Authorize(Policy = Policies.CanManageUser, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [Authorize(Policy = Policies.CanManageUsers, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> CreateUserAPIKey(string userId, CreateApiKeyRequest request)
         {
             request ??= new CreateApiKeyRequest();
@@ -89,7 +89,7 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
         [HttpDelete("~/api/v1/users/{userId}/api-keys/{apikey}", Order = 1)]
-        [Authorize(Policy = Policies.CanManageUser, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [Authorize(Policy = Policies.CanManageUsers, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> RevokeAPIKey(string userId, string apikey)
         {
             if (!string.IsNullOrEmpty(apikey) &&

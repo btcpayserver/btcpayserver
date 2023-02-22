@@ -88,6 +88,19 @@ namespace BTCPayServer.Client.Models
             public CheckoutType? CheckoutType { get; set; }
         }
     }
+
+    public class Payment
+    {
+        public decimal ConversionRate { get; set; }
+        public string PaymentId { get; set; }
+        public DateTimeOffset? ReceivedDate { get; set; }
+        public string PaymentType { get; set; }
+        public string Destination { get; set; }
+        public decimal Paid { get; set; }
+        public decimal NetworkFee { get; set; }
+        public bool Accounted { get; set; }
+    }
+
     public class InvoiceData : InvoiceDataBase
     {
         public string Id { get; set; }
@@ -108,6 +121,7 @@ namespace BTCPayServer.Client.Models
         [JsonProperty(ItemConverterType = typeof(StringEnumConverter))]
         public InvoiceStatus[] AvailableStatusesForManualMarking { get; set; }
         public bool Archived { get; set; }
+        public Payment[] Payments { get; set; }
     }
     public enum InvoiceStatus
     {

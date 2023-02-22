@@ -622,7 +622,23 @@ namespace BTCPayServer.Controllers.Greenfield
                     CheckoutType = entity.CheckoutType,
                     RedirectURL = entity.RedirectURLTemplate
                 },
-                Receipt = entity.ReceiptOptions
+                Receipt = entity.ReceiptOptions,
+                Payments = entity.GetPayments(false).Select(payment => {
+                    var pdata = payment.GetCryptoPaymentData();
+                    var pmethod = entity.GetPaymentMethod(payment.GetPaymentMethodId());
+
+                    return new Payment()
+                    {
+                        ConversionRate = pmethod.Rate,
+                        PaymentId = pdata.GetPaymentId(),
+                        ReceivedDate = payment.ReceivedTime,
+                        PaymentType = payment.GetPaymentMethodId().PaymentType.ToPrettyString(),
+                        Destination = pdata.GetDestination(),
+                        Paid = pdata.GetValue(),
+                        NetworkFee = payment.NetworkFee,
+                        Accounted = payment.Accounted
+                    };
+                }).ToArray()
             };
         }
     }

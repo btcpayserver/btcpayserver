@@ -231,7 +231,7 @@ namespace BTCPayServer.Tests
             Assert.True(s.Driver.FindElement(By.Id("LNURLEnabled")).Selected);
             Assert.True(s.Driver.FindElement(By.Id("LNURLStandardInvoiceEnabled")).Selected);
             
-            // BIP21 with topup invoice
+            // BIP21 with top-up invoice
             invoiceId = s.CreateInvoice(amount: null);
             s.GoToInvoiceCheckout(invoiceId);
             s.Driver.WaitUntilAvailable(By.Id("Checkout-v2"));
@@ -250,7 +250,7 @@ namespace BTCPayServer.Tests
             Assert.StartsWith($"bitcoin:{address.ToUpperInvariant()}?lightning=LNURL", qrValue);
             s.Driver.FindElement(By.Id("PayByLNURL"));
 
-            // Expiry message should not show amount for topup invoice
+            // Expiry message should not show amount for top-up invoice
             expirySeconds = s.Driver.FindElement(By.Id("ExpirySeconds"));
             expirySeconds.Clear();
             expirySeconds.SendKeys("5");

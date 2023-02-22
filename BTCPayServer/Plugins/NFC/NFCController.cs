@@ -58,7 +58,7 @@ namespace BTCPayServer.Plugins.NFC
             if (!methods.TryGetValue(new PaymentMethodId("BTC", PaymentTypes.LNURLPay), out var lnurlPaymentMethod) &&
                 !methods.TryGetValue(new PaymentMethodId("BTC", PaymentTypes.LightningLike), out lnPaymentMethod))
             {
-                return BadRequest("destination for lnurlw was not specified");
+                return BadRequest("Destination for lnurlw was not specified");
             }
 
             Uri uri;
@@ -68,7 +68,7 @@ namespace BTCPayServer.Plugins.NFC
                 uri = LNURL.LNURL.Parse(request.Lnurl, out tag);
                 if (uri is null)
                 {
-                    return BadRequest("lnurl was malformed");
+                    return BadRequest("LNURL was malformed");
                 }
             }
             catch (Exception e)
@@ -76,10 +76,9 @@ namespace BTCPayServer.Plugins.NFC
                 return BadRequest(e.Message);
             }
 
-
             if (!string.IsNullOrEmpty(tag) && !tag.Equals("withdrawRequest"))
             {
-                return BadRequest("lnurl was not lnurl-withdraw");
+                return BadRequest("LNURL was not LNURL-Withdraw");
             }
 
             var httpClient = _httpClientFactory.CreateClient(uri.IsOnion()
@@ -98,7 +97,7 @@ namespace BTCPayServer.Plugins.NFC
             
             if (info?.Callback is null)
             {
-                return BadRequest("Could not fetch info from lnurl-withdraw ");
+                return BadRequest("Could not fetch info from LNURL-Withdraw");
             }
 
             httpClient = _httpClientFactory.CreateClient(info.Callback.IsOnion()
@@ -106,7 +105,6 @@ namespace BTCPayServer.Plugins.NFC
                 : LightningLikePayoutHandler.LightningLikePayoutHandlerClearnetNamedClient);
 
             string bolt11 = null;
-
             if (lnPaymentMethod is not null)
             {
                 if (lnPaymentMethod.GetPaymentMethodDetails() is LightningLikePaymentMethodDetails { Activated: false } lnPMD)
@@ -120,17 +118,19 @@ namespace BTCPayServer.Plugins.NFC
                 if (invoice.Type == InvoiceType.TopUp && request.Amount is not null)
                 {
                     due = new LightMoney(request.Amount.Value, LightMoneyUnit.Satoshi);
-                }else if (invoice.Type == InvoiceType.TopUp)
+                }
+                else if (invoice.Type == InvoiceType.TopUp)
                 {
-                    return BadRequest("This is a topup invoice and you need to provide the amount in sats to pay.");
+                    return BadRequest("This is a top-up invoice and you need to provide the amount in sats to pay.");
                 }
                 else
                 {
-                    due =  new LightMoney(lnPaymentMethod.Calculate().Due);
+                    due = new LightMoney(lnPaymentMethod.Calculate().Due);
                 }
+                
                 if (info.MinWithdrawable > due || due > info.MaxWithdrawable)
                 {
-                    return BadRequest("invoice amount is not payable with the lnurl allowed amounts.");
+                    return BadRequest("Invoice amount is not payable with the LNURL allowed amounts.");
                 }
 
                 if (lnPMD?.Activated is true)
@@ -145,13 +145,14 @@ namespace BTCPayServer.Plugins.NFC
                 if (invoice.Type == InvoiceType.TopUp && request.Amount is not null)
                 {
                     due = new Money(request.Amount.Value, MoneyUnit.Satoshi);
-                }else if (invoice.Type == InvoiceType.TopUp)
+                }
+                else if (invoice.Type == InvoiceType.TopUp)
                 {
-                    return BadRequest("This is a topup invoice and you need to provide the amount in sats to pay.");
+                    return BadRequest("This is a top-up invoice and you need to provide the amount in sats to pay.");
                 }
                 else
                 {
-                    due =  lnurlPaymentMethod.Calculate().Due;
+                    due = lnurlPaymentMethod.Calculate().Due;
                 }
 
                 var amount = LightMoney.Satoshis(due.Satoshi);

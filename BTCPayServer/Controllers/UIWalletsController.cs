@@ -1330,6 +1330,7 @@ namespace BTCPayServer.Controllers
         }
         
         [HttpPost("{walletId}/update-labels")]
+        [IgnoreAntiforgeryToken]
         public async Task<IActionResult> UpdateLabels( [ModelBinder(typeof(WalletIdModelBinder))] WalletId walletId, [FromBody] UpdateLabelsRequest request)
         {
             if (request.ObjectId is null || request.ObjectType is null || request.Labels is null)
@@ -1353,10 +1354,13 @@ namespace BTCPayServer.Controllers
         }
         
         [HttpGet("{walletId}/labels")]
-        public async Task<IActionResult> GetLabels( [ModelBinder(typeof(WalletIdModelBinder))] WalletId walletId)
+        [IgnoreAntiforgeryToken]
+        public async Task<IActionResult> GetLabels( [ModelBinder(typeof(WalletIdModelBinder))] WalletId walletId, bool excludeTypes)
         {
            
-           return Ok(( await WalletRepository.GetWalletLabels(walletId)).Select(tuple => new
+           return Ok(( await WalletRepository.GetWalletLabels(walletId))
+               .Where(l => !excludeTypes || !WalletObjectData.Types.AllTypes.Contains(l.Label))
+               .Select(tuple => new
            {
                label = tuple.Label,
                color = tuple.Color,

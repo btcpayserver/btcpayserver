@@ -11,12 +11,12 @@
 <link href="~/vendor/tom-select/tom-select.bootstrap5.min.css" rel="stylesheet">
 <script src="~/vendor/tom-select/tom-select.complete.min.js"></script>
 <script>
-    const requestToken = @Safe.Json(Antiforgery.GetAndStoreTokens(Context).RequestToken);
     const updateUrl = @Safe.Json(Url.Action("UpdateLabels", "UIWallets", new {
         Model.ObjectId.WalletId
     }));
     const getUrl = @Safe.Json(@Url.Action("GetLabels", "UIWallets", new {
-        Model.ObjectId.WalletId
+        walletId = Model.ObjectId.WalletId,
+		excludeTypes = true
     }));
     const commonCall = @Safe.Json(commonCall);
     const elementId = @Safe.Json(elementId);
@@ -25,8 +25,7 @@
             method: 'GET',
             credentials: 'include',
             headers: {
-                'Content-Type': 'application/json',
-                'RequestVerificationToken': requestToken
+                'Content-Type': 'application/json'
             },
         }).then(response => {
             return response.json();
@@ -72,8 +71,7 @@
                             method: "POST",
                             credentials: "include",
                             headers: {
-                                'Content-Type': 'application/json',
-                                'RequestVerificationToken': requestToken
+                                'Content-Type': 'application/json'
                             },
                             body: JSON.stringify({
                                 objectType: @Safe.Json(Model.ObjectId.Type),

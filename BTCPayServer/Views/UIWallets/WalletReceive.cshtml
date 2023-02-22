@@ -1,6 +1,7 @@
-@inject BTCPayServer.Services.BTCPayServerEnvironment env
+@inject BTCPayServerEnvironment env
 @using BTCPayServer.Controllers
 @using BTCPayServer.Components.QRCode
+@using BTCPayServer.Services
 @model BTCPayServer.Controllers.WalletReceiveViewModel
 @{
     var walletId = Context.GetRouteValue("walletId").ToString();
@@ -21,10 +22,10 @@
 }
 
 <header class="text-center">
-    <h1>@ViewData["Title"]</h1>
+    <h1 class="mb-4">@ViewData["Title"]</h1>
 </header>
 
-<form method="post" asp-action="WalletReceive" class="my-5">
+<form method="post" asp-action="WalletReceive">
     <input type="hidden" asp-for="ReturnUrl" />
     @if (string.IsNullOrEmpty(Model.Address))
     {
@@ -54,46 +55,56 @@
                 </div>
             </div>
         </noscript>
+        <div class="nav flex-wrap align-items-center justify-content-center gap-2 mb-4">
+            <a class="btcpay-pill active" data-bs-toggle="tab" href="#address-tab">Address</a>
+            <a class="btcpay-pill " data-bs-toggle="tab" href="#link-tab">Link</a>
+        </div>
         <div class="only-for-js col-sm-10 col-xxl-8 mx-auto" id="app">
             <div class="tab-content text-center">
-                <div class="tab-pane" id="link-tab" role="tabpanel">
-                    <div class="qr-container mb-3">
-                        <img src="@Model.CryptoImage" class="qr-icon" alt="@Model.CryptoCode"/>
+                <div class="tab-pane payment-box" id="link-tab" role="tabpanel">
+                    <div class="qr-container" data-clipboard="@Model.PaymentLink" data-clipboard-confirm-element="QR_Text_PaymentLink">
                         <vc:qr-code data="@Model.PaymentLink"/>
-                    </div>
-                    <div class="form-group">
-                        <div class="input-group" data-clipboard="@Model.PaymentLink">
-                            <input type="text" class="form-control" style="cursor:copy" readonly="readonly" value="@Model.PaymentLink" id="payment-link"/>
-                            <button type="button" class="btn btn-outline-secondary p-2" style="width:7em;" data-clipboard-confirm>
-                                <vc:icon symbol="copy"/>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                <div class="tab-pane show active" id="address-tab" role="tabpanel">
-                    <div class="qr-container mb-3">
                         <img src="@Model.CryptoImage" class="qr-icon" alt="@Model.CryptoCode"/>
-                        <vc:qr-code data="@Model.Address"/>
+                        <small class="qr-text" id="QR_Text_PaymentLink">Scan the QR code, or tap to copy the address.</small>
                     </div>
-                    <div class="form-group">
-                        <div class="input-group" data-clipboard="@Model.Address">
-                            <input type="text" class="form-control" style="cursor:copy" readonly="readonly" value="@Model.Address" id="address"/>
-                            <button type="button" class="input-group-text btn btn-outline-secondary p-2" style="width:7em;" data-clipboard-confirm>
-                                <vc:icon symbol="copy"/>
-                            </button>
+                    <div class="input-group mt-3">
+                        <div class="form-floating">
+                            <input id="PaymentLink" class="form-control-plaintext" readonly="readonly" value="@Model.PaymentLink">
+                            <label for="PaymentLink">Payment Link</label>
                         </div>
+                        <button type="button" class="btn btn-link" data-clipboard-target="#PaymentLink">Copy</button>
                     </div>
                 </div>
-            </div>
-            <div class="nav justify-content-center">
-                <a class="btcpay-pill active" data-bs-toggle="tab" href="#address-tab">Address</a>
-                <a class="btcpay-pill " data-bs-toggle="tab" href="#link-tab">Link</a>
+                <div class="tab-pane payment-box show active" id="address-tab" role="tabpanel">
+                    <div class="qr-container" data-clipboard="@Model.Address" data-clipboard-confirm-element="QR_Text_Address">
+                        <vc:qr-code data="@Model.Address"/>
+                        <img src="@Model.CryptoImage" class="qr-icon" alt="@Model.CryptoCode"/>
+                        <small class="qr-text" id="QR_Text_Address">Scan the QR code, or tap to copy the address.</small>
+                    </div>
+                    <div class="input-group mt-3">
+                        <div class="form-floating">
+                            <input id="Address" class="form-control-plaintext" readonly="readonly" value="@Model.Address">
+                            <label for="Address">Address</label>
+                        </div>
+                        <button type="button" class="btn btn-link" data-clipboard-target="#Address">Copy</button>
+                    </div>
+                </div>
             </div>
         </div>
-
-        <div class="d-grid gap-3 col-sm-8 col-sm-6 col-lg-5 mx-auto mt-5">
-            <button type="submit" name="command" value="generate-new-address" class="btn btn-primary w-100">Generate another address</button>
-            <button type="submit" name="command" value="unreserve-current-address" class="btn btn-secondary w-100">Unreserve this address</button>
+        <div class="payment-box">
+            <div class="my-3">
+                <div class="input-group">
+                    <div class="form-floating">
+                        <vc:label-manager selected-labels="Model.SelectedLabels" wallet-object-id="new WalletObjectId(WalletId.Parse(walletId), WalletObjectData.Types.Address, Model.Address)" />
+                        <label>Labels</label>
+                    </div>
+                </div>
+            </div>
+    
+            <div class="d-grid gap-3 mt-5">
+                <button type="submit" name="command" value="generate-new-address" class="btn btn-primary w-100">Generate another address</button>
+                <button type="submit" name="command" value="unreserve-current-address" class="btn btn-secondary w-100">Unreserve this address</button>
+            </div>
         </div>
     }
 </form>

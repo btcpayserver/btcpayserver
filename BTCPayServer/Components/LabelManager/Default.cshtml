@@ -1,0 +1,104 @@
+@using NBitcoin.DataEncoders
+@using NBitcoin
+@using BTCPayServer.Abstractions.TagHelpers
+@model BTCPayServer.Components.LabelManager.LabelViewModel
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+@{
+    var commonCall = Model.ObjectId.Type + Model.ObjectId.Id;
+    var elementId = "a" + Encoders.Base58.EncodeData(RandomUtils.GetBytes(16));
+}
+
+<link href="~/vendor/tom-select/tom-select.bootstrap5.min.css" rel="stylesheet">
+<script src="~/vendor/tom-select/tom-select.complete.min.js"></script>
+<script>
+    const updateUrl = @Safe.Json(Url.Action("UpdateLabels", "UIWallets", new {
+        Model.ObjectId.WalletId
+    }));
+    const getUrl = @Safe.Json(@Url.Action("GetLabels", "UIWallets", new {
+        walletId = Model.ObjectId.WalletId,
+		excludeTypes = true
+    }));
+    const commonCall = @Safe.Json(commonCall);
+    const elementId = @Safe.Json(elementId);
+    if (!window[commonCall]) {
+        window[commonCall] = fetch(getUrl, {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+        }).then(response => {
+            return response.json();
+        });
+    }
+
+    document.addEventListener("DOMContentLoaded", async () => {
+        const element = document.querySelector(`#${elementId}`);
+
+        if (element) {
+            const labelsFetchTask = await window[commonCall];
+            const config = {
+                create: true,
+                items: @Safe.Json(Model.SelectedLabels),
+                options: labelsFetchTask,
+                valueField: "label",
+                labelField: "label",
+                searchField: "label",
+                allowEmptyOption: false,
+                closeAfterSelect: false,
+                persist: true,
+                render: {
+                    option: function(data, escape) {
+                        return `<div ${data.color? `style='background-color:${data.color}; color:${data.textColor}'`: ""}>${escape(data.label)}</div>`;
+                    },
+                    item: function(data, escape) {
+                        return `<div ${data.color? `style='background-color:${data.color}; color:${data.textColor}'`: ""}>${escape(data.label)}</div>`;
+                    }
+                },
+                onItemAdd: (val) => {
+                    window[commonCall] = window[commonCall].then(labels => {
+                        return [...labels, { label: val }]
+                    });
+
+                    document.dispatchEvent(new CustomEvent(`${commonCall}-option-added`, {
+                        detail: val
+                    }));
+                },
+                onChange: async (values) => {
+                    select.lock();
+                    try {
+                        const response = await fetch(updateUrl, {
+                            method: "POST",
+                            credentials: "include",
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                address: @Safe.Json(Model.ObjectId.Id),
+                                labels: select.items
+                            })
+                        });
+                        if (!response.ok) {
+                            throw new Error('Network response was not OK');
+                        }
+                    } catch (error) {
+                        console.error('There has been a problem with your fetch operation:', error);
+                    } finally {
+                        select.unlock();
+                    }
+                }
+            };
+            const select = new TomSelect(element, config);
+
+            document.addEventListener(`${commonCall}-option-added`, evt => {
+                if (!(evt.detail in select.options)) {
+                    select.addOption({
+                        label: evt.detail
+                    })
+                }
+            })
+        }
+    })
+</script>
+
+<input id="@elementId" placeholder="Select labels to associate with this object" autocomplete="off" class="form-control label-manager"/>

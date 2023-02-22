@@ -12,6 +12,13 @@ namespace BTCPayServer.Data
     {
         public class Types
         {
+            public static readonly HashSet<string> AllTypes;
+            static Types()
+            {
+                AllTypes = typeof(Types).GetFields()
+                    .Where(f => f.FieldType == typeof(string))
+                    .Select(f => (string)f.GetValue(null)).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            }
             public const string Label = "label";
             public const string Tx = "tx";
             public const string Payjoin = "payjoin";

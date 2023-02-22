@@ -25,7 +25,7 @@
             </div>
             <button type="button" class="btn btn-link" data-clipboard-target="#Lightning_@Model.PaymentMethodId" :data-clipboard-confirm="$t('copy_confirm')" v-t="'copy'"></button>
         </div>
-        <a v-if="model.invoiceBitcoinUrl" class="btn btn-primary rounded-pill w-100 mt-4" target="_top"
+        <a v-if="model.invoiceBitcoinUrl" class="btn btn-primary rounded-pill w-100 mt-4" target="_top" id="PayInWallet"
            :href="model.invoiceBitcoinUrl" :title="$t(hasPayjoin ? 'BIP21 payment link with PayJoin support' : 'BIP21 payment link')" v-t="'pay_in_wallet'"></a>
         @await Component.InvokeAsync("UiExtensionPoint", new {location = "checkout-v2-bitcoin-post-content", model = Model})
     </div>

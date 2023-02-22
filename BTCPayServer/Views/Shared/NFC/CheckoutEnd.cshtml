@@ -3,12 +3,12 @@
 <template id="lnurl-withdraw-template">
     <template v-if="display">
         <button v-if="isV2" class="btn btn-secondary rounded-pill w-100 mt-4" type="button"
-            v-on:click="startScan"
-            v-bind:disabled="scanning || submitting"
-            v-bind:class="{ 'loading': scanning || submitting, 'text-secondary': !supported }">{{btnText}}</button>
+            :disabled="scanning || submitting" v-on:click="startScan" :id="btnId"
+            :class="{ 'loading': scanning || submitting, 'text-secondary': !supported }">{{btnText}}</button>
         <bp-loading-button v-else>
-            <button v-on:click="startScan" class="action-button" style="margin: 0 45px;width:calc(100% - 90px) !important" v-bind:disabled="scanning || submitting"
-                    v-bind:class="{ 'loading': scanning || submitting, 'action-button': supported, 'btn btn-text w-100': !supported  }">
+            <button  class="action-button" style="margin: 0 45px;width:calc(100% - 90px) !important"
+                    :disabled="scanning || submitting" v-on:click="startScan" :id="btnId"
+                    :class="{ 'loading': scanning || submitting, 'action-button': supported, 'btn btn-text w-100': !supported  }">
                 <span class="button-text">{{btnText}}</span>
                 <div class="loader-wrapper">
                     @await Html.PartialAsync("~/Views/UIInvoice/Checkout-Spinner.cshtml")
@@ -26,9 +26,25 @@ Vue.component("lnurl-withdraw-checkout", {
     },
     computed: {
         display: function () {
-            return (
-                this.model.paymentMethodId === 'BTC_LNURLPAY' || (
-                    this.model.paymentMethodId === 'BTC' && this.model.invoiceBitcoinUrl.match(/lightning=lnurl/i)));
+            const {
+                onChainWithLnInvoiceFallback: isUnified,
+                paymentMethodId: activePaymentMethodId,
+                availableCryptos: availablePaymentMethods,
+                invoiceBitcoinUrl: paymentUrl
+            } = this.model
+            const lnurlwAvailable = 
+                // Either we have LN or LNURL available directly
+                !!availablePaymentMethods.find(pm => ['BTC_LNURLPAY', 'BTC_LightningLike'].includes(pm.paymentMethodId)) ||
+                // Or the BIP21 payment URL flags Lightning support
+                !!paymentUrl.match(/lightning=ln/i)
+            return activePaymentMethodId === 'BTC_LNURLPAY' || (
+                // Unified QR/BIP21 case
+                (activePaymentMethodId === 'BTC' && isUnified && lnurlwAvailable) ||
+                // Lightning with LNURL available
+                (activePaymentMethodId === 'BTC_LightningLike' && lnurlwAvailable))
+        },
+        btnId: function () {
+            return this.supported ? 'PayByNFC' : 'PayByLNURL'
         },
         btnText: function () {
             if (this.supported) {

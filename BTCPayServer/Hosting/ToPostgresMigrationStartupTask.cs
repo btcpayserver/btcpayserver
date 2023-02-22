@@ -214,7 +214,6 @@ namespace BTCPayServer.Hosting
                     var typeMapping = t.EntityTypeMappings.Single();
                     var query = (IQueryable<object>)otherContext.GetType().GetMethod("Set", new Type[0])!.MakeGenericMethod(typeMapping.EntityType.ClrType).Invoke(otherContext, null)!;
                     Logger.LogInformation($"Migrating table: " + t.Name);
-
                     List<PropertyInfo> datetimeProperties = new List<PropertyInfo>();
                     foreach (var col in t.Columns)
                         if (col.PropertyMappings.Single().Property.ClrType == typeof(DateTime))
@@ -234,6 +233,10 @@ namespace BTCPayServer.Hosting
                             {
                                 v = new DateTime(v.Ticks, DateTimeKind.Utc);
                                 prop.SetValue(row, v);
+                            }
+                            else if (v.Kind == DateTimeKind.Local)
+                            {
+                                prop.SetValue(row, v.ToUniversalTime());
                             }
                         }
                         postgresContext.Entry(row).State = EntityState.Added;

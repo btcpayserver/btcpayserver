@@ -2,19 +2,23 @@
 @using BTCPayServer.Abstractions.TagHelpers
 <template id="lnurl-withdraw-template">
     <template v-if="display">
-        <button v-if="isV2" class="btn btn-secondary rounded-pill w-100 mt-4" type="button"
-            :disabled="scanning || submitting" v-on:click="startScan" :id="btnId"
-            :class="{ 'loading': scanning || submitting, 'text-secondary': !supported }">{{btnText}}</button>
-        <bp-loading-button v-else>
-            <button  class="action-button" style="margin: 0 45px;width:calc(100% - 90px) !important"
-                    :disabled="scanning || submitting" v-on:click="startScan" :id="btnId"
-                    :class="{ 'loading': scanning || submitting, 'action-button': supported, 'btn btn-text w-100': !supported  }">
-                <span class="button-text">{{btnText}}</span>
-                <div class="loader-wrapper">
-                    @await Html.PartialAsync("~/Views/UIInvoice/Checkout-Spinner.cshtml")
-                </div>
-            </button>
-        </bp-loading-button>
+        <div class="mt-4">
+            <p id="CheatSuccessMessage" class="alert alert-success text-break" v-if="successMessage" v-text="successMessage"></p>
+            <p id="CheatErrorMessage" class="alert alert-danger text-break" v-if="errorMessage" v-text="errorMessage"></p>
+            <button v-if="isV2" class="btn btn-secondary rounded-pill w-100" type="button"
+                :disabled="scanning || submitting" v-on:click="startScan" :id="btnId"
+                :class="{ 'loading': scanning || submitting, 'text-secondary': !supported }">{{btnText}}</button>
+            <bp-loading-button v-else>
+                <button class="action-button" style="margin: 0 45px;width:calc(100% - 90px) !important"
+                        :disabled="scanning || submitting" v-on:click="startScan" :id="btnId"
+                        :class="{ 'loading': scanning || submitting, 'action-button': supported, 'btn btn-text w-100': !supported  }">
+                    <span class="button-text">{{btnText}}</span>
+                    <div class="loader-wrapper">
+                        @await Html.PartialAsync("~/Views/UIInvoice/Checkout-Spinner.cshtml")
+                    </div>
+                </button>
+            </bp-loading-button>
+        </div>
     </template>
 </template>
 <script type="text/javascript">
@@ -61,7 +65,9 @@ Vue.component("lnurl-withdraw-checkout", {
             scanning: false,
             submitting: false,
             readerAbortController: null,
-            amount: 0
+            amount: 0,
+            successMessage: null,
+            errorMessage: null
         }
     },
     methods: {
@@ -72,13 +78,13 @@ Vue.component("lnurl-withdraw-checkout", {
                 }
                 if (this.model.isUnsetTopUp) {
                     const amountStr = prompt("How many sats do you want to pay?")
-                    if (amountStr){
+                    if (amountStr) {
                         try {
                             this.amount = parseInt(amountStr)
                         } catch {
                             alert("Please provide a valid number amount in sats");
                         }
-                    }else{
+                    } else {
                         return;    
                     }
                 }
@@ -87,9 +93,9 @@ Vue.component("lnurl-withdraw-checkout", {
                 self.submitting = false;
                 self.scanning = true;
                 if (!this.supported) {
-                    const result = prompt("Enter LNURL withdraw");
+                    const result = prompt("Enter LNURL-Withdraw");
                     if (result) {
-                        self.sendData.bind(self)(result);
+                        await self.sendData.bind(self)(result);
                         return;
                     }
                     self.scanning = false;
@@ -103,7 +109,7 @@ Vue.component("lnurl-withdraw-checkout", {
                     self.readerAbortController.abort()
                 })
 
-                ndef.addEventListener('reading', ({message, serialNumber}) => {
+                ndef.addEventListener('reading', async ({message, serialNumber}) => {
                     //Decode NDEF data from tag
                     const record = message.records[0]
                     const textDecoder = new TextDecoder('utf-8')
@@ -111,38 +117,38 @@ Vue.component("lnurl-withdraw-checkout", {
 
                     //User feedback, show loader icon
                     self.scanning = false;
-                    self.sendData.bind(self)(lnurl);
-
+                    await self.sendData.bind(self)(lnurl);
                 })
-            } catch(e) {
+            } catch (e) {
                 self.scanning = false;
                 self.submitting = false;
             }
         },
-        sendData: function (lnurl) {
+        sendData: async function (lnurl) {
             this.submitting = true;
-            //Post LNURLW data to server
-            var xhr = new XMLHttpRequest()
-            xhr.open('POST', this.url, true)
-            xhr.setRequestHeader('Content-Type', 'application/json')
-            xhr.send(JSON.stringify({lnurl, invoiceId: this.model.invoiceId, amount: this.amount}))
-            const self = this;
-            //User feedback, reset on failure
-            xhr.onload = function () {
-                if (xhr.readyState === xhr.DONE) {
-                    console.log(xhr.response);
-                    console.log(xhr.responseText);
-                    self.scanning = false;
-                    self.submitting = false;
-
-                    if(self.readerAbortController) {
-                        self.readerAbortController.abort()
-                    }
-
-                    if(xhr.response){
-                        alert(xhr.response)
-                    }
+            this.successMessage = null;
+            this.errorMessage = null;
+            
+            // Post LNURL-Withdraw data to server
+            const body = JSON.stringify({ lnurl, invoiceId: this.model.invoiceId, amount: this.amount })
+            const opts = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body }
+            const response = await fetch(this.url, opts)
+            
+            // Handle response
+            try {
+                const result = await response.text()
+                if (response.ok) {
+                    this.successMessage = result;
+                } else {
+                    this.errorMessage = result;
                 }
+            } catch (error) {
+                this.errorMessage = error;
+            }
+            this.scanning = false;
+            this.submitting = false;
+            if (this.readerAbortController) {
+                this.readerAbortController.abort()
             }
         }
     }

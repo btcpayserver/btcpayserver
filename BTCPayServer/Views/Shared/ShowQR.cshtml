@@ -14,7 +14,7 @@
                             <qrcode :value="currentFragment" :options="qrOptions"></qrcode>
                         </component>
                     </div>
-                    <ul class="nav justify-content-center mt-4 mb-3" v-if="modes && Object.keys(modes).length > 1">
+                    <ul class="nav btcpay-pills justify-content-center mt-4 mb-3" v-if="modes && Object.keys(modes).length > 1">
                         <li class="nav-item" v-for="(item, key) in modes">
                             <a class="btcpay-pill" :class="{ 'active': key === mode }" href="#" v-on:click="mode = key">{{item.title}}</a>
                         </li>

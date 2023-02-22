@@ -305,7 +305,7 @@
                     },
                     "enableForStandardInvoices": {
                         "type": "boolean",
-                        "description": "Whether to allow this payment method to also be used for standard invoices and not just topup invoices."
+                        "description": "Whether to allow this payment method to also be used for standard invoices and not just top-up invoices."
                     },
                     "lud12Enabled": {
                         "type": "boolean",

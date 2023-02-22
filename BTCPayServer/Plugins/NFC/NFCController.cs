@@ -1,6 +1,7 @@
 using System;
 using System.Net.Http;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data.Payouts.LightningLike;
 using BTCPayServer.Lightning;
@@ -13,6 +14,7 @@ using LNURL;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Plugins.NFC
 {
@@ -21,19 +23,16 @@ namespace BTCPayServer.Plugins.NFC
     {
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly InvoiceRepository _invoiceRepository;
-        private readonly UILNURLController _uilnurlController;
         private readonly InvoiceActivator _invoiceActivator;
         private readonly StoreRepository _storeRepository;
 
         public NFCController(IHttpClientFactory httpClientFactory,
             InvoiceRepository invoiceRepository,
-            UILNURLController uilnurlController,
             InvoiceActivator invoiceActivator,
             StoreRepository storeRepository)
         {
             _httpClientFactory = httpClientFactory;
             _invoiceRepository = invoiceRepository;
-            _uilnurlController = uilnurlController;
             _invoiceActivator = invoiceActivator;
             _storeRepository = storeRepository;
         }
@@ -59,7 +58,7 @@ namespace BTCPayServer.Plugins.NFC
             if (!methods.TryGetValue(new PaymentMethodId("BTC", PaymentTypes.LNURLPay), out var lnurlPaymentMethod) &&
                 !methods.TryGetValue(new PaymentMethodId("BTC", PaymentTypes.LightningLike), out lnPaymentMethod))
             {
-                return BadRequest("destination for lnurlw was not specified");
+                return BadRequest("Destination for lnurlw was not specified");
             }
 
             Uri uri;
@@ -69,7 +68,7 @@ namespace BTCPayServer.Plugins.NFC
                 uri = LNURL.LNURL.Parse(request.Lnurl, out tag);
                 if (uri is null)
                 {
-                    return BadRequest("lnurl was malformed");
+                    return BadRequest("LNURL was malformed");
                 }
             }
             catch (Exception e)
@@ -77,20 +76,28 @@ namespace BTCPayServer.Plugins.NFC
                 return BadRequest(e.Message);
             }
 
-
             if (!string.IsNullOrEmpty(tag) && !tag.Equals("withdrawRequest"))
             {
-                return BadRequest("lnurl was not lnurl-withdraw");
+                return BadRequest("LNURL was not LNURL-Withdraw");
             }
 
             var httpClient = _httpClientFactory.CreateClient(uri.IsOnion()
                 ? LightningLikePayoutHandler.LightningLikePayoutHandlerOnionNamedClient
                 : LightningLikePayoutHandler.LightningLikePayoutHandlerClearnetNamedClient);
-            var info = (await
-                LNURL.LNURL.FetchInformation(uri, "withdrawRequest", httpClient)) as LNURLWithdrawRequest;
+            LNURLWithdrawRequest info;
+            try
+            {
+                info = await LNURL.LNURL.FetchInformation(uri, tag, httpClient) as LNURLWithdrawRequest;
+            }
+            catch (Exception ex)
+            {
+                var details = ex.InnerException?.Message ?? ex.Message;
+                return BadRequest($"Could not fetch info from LNURL-Withdraw: {details}");
+            }
+            
             if (info?.Callback is null)
             {
-                return BadRequest("Could not fetch info from lnurl-withdraw ");
+                return BadRequest("Could not fetch info from LNURL-Withdraw");
             }
 
             httpClient = _httpClientFactory.CreateClient(info.Callback.IsOnion()
@@ -98,13 +105,9 @@ namespace BTCPayServer.Plugins.NFC
                 : LightningLikePayoutHandler.LightningLikePayoutHandlerClearnetNamedClient);
 
             string bolt11 = null;
-
             if (lnPaymentMethod is not null)
             {
-                if (lnPaymentMethod.GetPaymentMethodDetails() is LightningLikePaymentMethodDetails
-                    {
-                        Activated: false
-                    } lnPMD)
+                if (lnPaymentMethod.GetPaymentMethodDetails() is LightningLikePaymentMethodDetails { Activated: false } lnPMD)
                 {
                     var store = await _storeRepository.FindStore(invoice.StoreId);
                     await _invoiceActivator.ActivateInvoicePaymentMethod(lnPaymentMethod.GetId(), invoice, store);
@@ -115,17 +118,19 @@ namespace BTCPayServer.Plugins.NFC
                 if (invoice.Type == InvoiceType.TopUp && request.Amount is not null)
                 {
                     due = new LightMoney(request.Amount.Value, LightMoneyUnit.Satoshi);
-                }else if (invoice.Type == InvoiceType.TopUp)
+                }
+                else if (invoice.Type == InvoiceType.TopUp)
                 {
-                    return BadRequest("This is a topup invoice and you need to provide the amount in sats to pay.");
+                    return BadRequest("This is a top-up invoice and you need to provide the amount in sats to pay.");
                 }
                 else
                 {
-                    due =  new LightMoney(lnPaymentMethod.Calculate().Due);
+                    due = new LightMoney(lnPaymentMethod.Calculate().Due);
                 }
+                
                 if (info.MinWithdrawable > due || due > info.MaxWithdrawable)
                 {
-                    return BadRequest("invoice amount is not payable with the lnurl allowed amounts.");
+                    return BadRequest("Invoice amount is not payable with the LNURL allowed amounts.");
                 }
 
                 if (lnPMD?.Activated is true)
@@ -140,36 +145,39 @@ namespace BTCPayServer.Plugins.NFC
                 if (invoice.Type == InvoiceType.TopUp && request.Amount is not null)
                 {
                     due = new Money(request.Amount.Value, MoneyUnit.Satoshi);
-                }else if (invoice.Type == InvoiceType.TopUp)
+                }
+                else if (invoice.Type == InvoiceType.TopUp)
                 {
-                    return BadRequest("This is a topup invoice and you need to provide the amount in sats to pay.");
+                    return BadRequest("This is a top-up invoice and you need to provide the amount in sats to pay.");
                 }
                 else
                 {
-                    due =  lnurlPaymentMethod.Calculate().Due;
+                    due = lnurlPaymentMethod.Calculate().Due;
                 }
 
-                var response = await _uilnurlController.GetLNURLForInvoice(request.InvoiceId, "BTC",
-                    due.Satoshi);
+                var amount = LightMoney.Satoshis(due.Satoshi);
+                var actionPath = Url.Action(nameof(UILNURLController.GetLNURLForInvoice), "UILNURL",
+                    new { invoiceId = request.InvoiceId, cryptoCode = "BTC", amount = amount.MilliSatoshi });
+                var url = Request.GetAbsoluteUri(actionPath);
+                var resp = await httpClient.GetAsync(url);
+                var response = await resp.Content.ReadAsStringAsync();
 
-                if (response is ObjectResult objectResult)
+                if (resp.IsSuccessStatusCode)
                 {
-                    switch (objectResult.Value)
-                    {
-                        case LNURLPayRequest.LNURLPayRequestCallbackResponse lnurlPayRequestCallbackResponse:
-                            bolt11 = lnurlPayRequestCallbackResponse.Pr;
-                            break;
-                        case LNUrlStatusResponse lnUrlStatusResponse:
-
-                            return BadRequest(
-                                $"Could not fetch bolt11 invoice to pay to: {lnUrlStatusResponse.Reason}");
-                    }
+                    var res = JObject.Parse(response).ToObject<LNURLPayRequest.LNURLPayRequestCallbackResponse>();
+                    bolt11 = res.Pr;
+                }
+                else
+                {
+                    var res = JObject.Parse(response).ToObject<LNUrlStatusResponse>();
+                    return BadRequest(
+                        $"Could not fetch BOLT11 invoice to pay to: {res.Reason}");
                 }
             }
 
             if (bolt11 is null)
             {
-                return BadRequest("Could not fetch bolt11 invoice to pay to.");
+                return BadRequest("Could not fetch BOLT11 invoice to pay to.");
             }
 
             var result = await info.SendRequest(bolt11, httpClient);

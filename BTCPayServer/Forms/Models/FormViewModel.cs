@@ -10,10 +10,10 @@ public class FormViewModel
     public string BrandColor { get; set; }
     public string StoreName { get; set; }
     public string FormName { get; set; }
-    public string RedirectUrl { get; set; }
     public Form Form { get; set; }
     public string AspController { get; set; }
     public string AspAction { get; set; }
     public Dictionary<string, string> RouteParameters { get; set; } = new();
     public MultiValueDictionary<string, string> FormParameters { get; set; } = new();
+    public string FormParameterPrefix { get; set; }
 }

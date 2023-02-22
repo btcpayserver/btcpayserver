@@ -220,6 +220,12 @@ namespace BTCPayServer.Hosting
                         {
                             datetimeProperties.Add(col.PropertyMappings.Single().Property.PropertyInfo!);
                         }
+                    List<PropertyInfo> datetimeoffsetProperties = new List<PropertyInfo>();
+                    foreach (var col in t.Columns)
+                        if (col.PropertyMappings.Single().Property.ClrType == typeof(DateTimeOffset))
+                        {
+                            datetimeoffsetProperties.Add(col.PropertyMappings.Single().Property.PropertyInfo!);
+                        }
                     var rows = await query.ToListAsync();
                     foreach (var row in rows)
                     {
@@ -237,6 +243,14 @@ namespace BTCPayServer.Hosting
                             else if (v.Kind == DateTimeKind.Local)
                             {
                                 prop.SetValue(row, v.ToUniversalTime());
+                            }
+                        }
+                        foreach (var prop in datetimeoffsetProperties)
+                        {
+                            var v = (DateTimeOffset)prop.GetValue(row)!;
+                            if (v.Offset != TimeSpan.Zero)
+                            {
+                                prop.SetValue(row, v.ToOffset(TimeSpan.Zero));
                             }
                         }
                         postgresContext.Entry(row).State = EntityState.Added;

@@ -69,7 +69,7 @@
                 <div class="col-12 col-sm-auto">
                     <div class="form-group">
                         <label asp-for="Add.CurrencyCode" class="form-label"></label>
-                        <input asp-for="Add.CurrencyCode" class="form-control" style="max-width:16ch;"/>
+                        <input asp-for="Add.CurrencyCode" class="form-control w-auto" currency-selection style="max-width:16ch;"/>
                         <span asp-validation-for="Add.CurrencyCode" class="text-danger"></span>
                     </div>
                 </div>
@@ -126,15 +126,15 @@
                             <td class="settings-holder align-middle">
                                 @if (Model.Items[index].Min.HasValue)
                                 {
-                                    <span>@Safe.Raw($"{Model.Items[index].Min} min sats")</span>
+                                    <span>@Model.Items[index].Min min sats</span>
                                 }
                                 @if (Model.Items[index].Max.HasValue)
                                 {
-                                    <span> @Safe.Raw($"{Model.Items[index].Max} max sats")</span>
+                                    <span>@Model.Items[index].Max max sats</span>
                                 }
                                 @if (!string.IsNullOrEmpty(Model.Items[index].CurrencyCode))
                                 {
-                                    <span> @Safe.Raw($"tracked in {Model.Items[index].CurrencyCode}")</span>
+                                    <span>tracked in @Model.Items[index].CurrencyCode</span>
                                 }
                             </td>
                             <td class="text-end">

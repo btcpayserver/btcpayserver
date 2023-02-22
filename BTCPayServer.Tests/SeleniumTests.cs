@@ -1271,11 +1271,14 @@ namespace BTCPayServer.Tests
             Assert.True(s.Driver.ElementDoesNotExist(By.Id("GoBack")));
             var receiveAddr = s.Driver.FindElement(By.Id("Address")).GetAttribute("value");
 
+            // Can add a label?
             await TestUtils.EventuallyAsync(async () =>
             {
                 s.Driver.WaitForElement(By.CssSelector("div.label-manager input ")).Click();
                 await Task.Delay(500);
                 s.Driver.WaitForElement(By.CssSelector("div.label-manager input ")).SendKeys("test-label" + Keys.Enter);
+                await Task.Delay(500);
+                s.Driver.WaitForElement(By.CssSelector("div.label-manager input ")).SendKeys("label2" + Keys.Enter);
             });
            
             TestUtils.Eventually(() =>
@@ -1283,6 +1286,7 @@ namespace BTCPayServer.Tests
                 s.Driver.Navigate().Refresh();
                 Assert.NotNull(s.Driver.FindElement(By.CssSelector("[data-value='test-label']")));
             });
+
             //unreserve
             s.Driver.FindElement(By.CssSelector("button[value=unreserve-current-address]")).Click();
             //generate it again, should be the same one as before as nothing got used in the meantime
@@ -1293,6 +1297,8 @@ namespace BTCPayServer.Tests
             {
                 Assert.Contains("test-label", s.Driver.PageSource);
             });
+
+            // Let's try to remove a label
             await TestUtils.EventuallyAsync(async () =>
             {
                 s.Driver.WaitForElement(By.CssSelector("[data-value='test-label']")).Click();
@@ -1320,6 +1326,10 @@ namespace BTCPayServer.Tests
             Assert.NotEqual(receiveAddr, s.Driver.FindElement(By.Id("Address")).GetAttribute("value"));
             receiveAddr = s.Driver.FindElement(By.Id("Address")).GetAttribute("value");
             s.Driver.FindElement(By.Id("CancelWizard")).Click();
+
+            // Check the label is applied to the tx
+
+            Assert.Equal("label2", s.Driver.FindElement(By.XPath("//*[@id=\"WalletTransactionsList\"]//*[contains(@class, 'transactionLabel')]")).Text);
 
             //change the wallet and ensure old address is not there and generating a new one does not result in the prev one
             s.GenerateWallet(cryptoCode, "", true);

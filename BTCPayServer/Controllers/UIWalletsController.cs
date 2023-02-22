@@ -1324,8 +1324,7 @@ namespace BTCPayServer.Controllers
 
         public class UpdateLabelsRequest
         {
-            public string? ObjectId { get; set; }
-            public string? ObjectType { get; set; }
+            public string Address { get; set; }
             public string[]? Labels { get; set; }
         }
         
@@ -1333,10 +1332,10 @@ namespace BTCPayServer.Controllers
         [IgnoreAntiforgeryToken]
         public async Task<IActionResult> UpdateLabels( [ModelBinder(typeof(WalletIdModelBinder))] WalletId walletId, [FromBody] UpdateLabelsRequest request)
         {
-            if (request.ObjectId is null || request.ObjectType is null || request.Labels is null)
+            if (request.Address is null || request.Labels is null)
                 return BadRequest();
                     
-            var objid = new WalletObjectId(walletId, request.ObjectType, request.ObjectId);
+            var objid = new WalletObjectId(walletId, WalletObjectData.Types.Address, request.Address);
            var obj = await WalletRepository.GetWalletObject(objid);
            if (obj is null)
            {

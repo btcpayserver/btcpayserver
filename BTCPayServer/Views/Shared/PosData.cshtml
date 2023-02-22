@@ -16,16 +16,16 @@
             {
                 if (!string.IsNullOrEmpty(key))
                 {
-                    <th class="w-150px">@Safe.Raw(key)</th>
+                    <th class="w-150px">@key</th>
                 }
                 <td>
                     @if (IsValidURL(str))
                     {
-                        <a href="@Safe.Raw(str)" target="_blank" rel="noreferrer noopener">@Safe.Raw(str)</a>
+                        <a href="@str" target="_blank" rel="noreferrer noopener">@str</a>
                     }
                     else
                     {
-                        @Safe.Raw(value?.ToString())
+                        @value?.ToString()
                     }
                 </td>
             }
@@ -34,22 +34,26 @@
                 @* This is the array case *@
                 if (subItems.Count == 1 && subItems.First().Value is string str2)
                 {
-                    <th class="w-150px">@Safe.Raw(key)</th>
+                    <th class="w-150px">@key</th>
                     <td>
                         @if (IsValidURL(str2))
                         {
-                            <a href="@Safe.Raw(str2)" target="_blank" rel="noreferrer noopener">@Safe.Raw(str2)</a>
+                            <a href="@str2" target="_blank" rel="noreferrer noopener">@str2</a>
                         }
                         else
                         {
-                            @Safe.Raw(subItems.First().Value?.ToString())
+                            @subItems.First().Value?.ToString()
                         }
-                    </td>
-                }
-                else
-                {
-                    <td colspan="2" >
-                        @Safe.Raw($"<h{Model.Level + 3} class=\"mt-4 mb-3\">{key}</h{Model.Level + 3}>")
+					</td>
+				}
+				else
+				{
+					<td colspan="2" >
+						@{
+							Write(Html.Raw($"<h{Model.Level + 3} class=\"mt-4 mb-3\">"));
+							Write(key);
+							Write(Html.Raw($"</h{Model.Level + 3}>"));
+						}
                         <partial name="PosData" model="(subItems, Model.Level + 1)"/>
                     </td>
                 }

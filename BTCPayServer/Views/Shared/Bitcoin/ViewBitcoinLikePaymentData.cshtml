@@ -77,7 +77,13 @@
                     <td>@payment.Crypto</td>
                     <td>@(payment.CryptoPaymentData.KeyPath?.ToString()?? "Unknown")</td>
                     <td style="max-width:300px;" data-bs-toggle="tooltip" class="text-truncate" title="@payment.DepositAddress">@payment.DepositAddress</td>
-                    <td class="payment-value">@payment.CryptoPaymentData.GetValue() @Safe.Raw(payment.AdditionalInformation is string i ? $"<br/>({i})" : string.Empty)</td>
+                    <td class="payment-value">
+                        @payment.CryptoPaymentData.GetValue()
+                        @if (!string.IsNullOrEmpty(payment.AdditionalInformation))
+                        {
+                            <div>(@payment.AdditionalInformation)</div>
+                        }
+                    </td>
                     @if (hasNetworkFee)
                     {
                         <td>@payment.NetworkFee</td>

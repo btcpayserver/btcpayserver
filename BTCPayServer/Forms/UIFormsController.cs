@@ -25,14 +25,16 @@ public class UIFormsController : Controller
 {
     private readonly FormDataService _formDataService;
     private readonly IAuthorizationService _authorizationService;
+    private readonly StoreRepository _storeRepository;
     private FormComponentProviders FormProviders { get; }
 
     public UIFormsController(FormComponentProviders formProviders, FormDataService formDataService,
-        IAuthorizationService authorizationService)
+        StoreRepository storeRepository, IAuthorizationService authorizationService)
     {
         FormProviders = formProviders;
         _formDataService = formDataService;
         _authorizationService = authorizationService;
+        _storeRepository = storeRepository;
     }
 
     [HttpGet("~/stores/{storeId}/forms")]
@@ -141,14 +143,14 @@ public class UIFormsController : Controller
             return NotFound();
         }
 
-        return GetFormView(formData);
+        return await GetFormView(formData);
     }
 
-    ViewResult GetFormView(FormData formData, Form? form = null)
+    async Task<ViewResult> GetFormView(FormData formData, Form? form = null)
     {
         form ??= Form.Parse(formData.Config);
         form.ApplyValuesFromForm(Request.Query);
-        var store = formData.Store;
+        var store = formData.Store ?? await _storeRepository.FindStore(formData.StoreId);
         var storeBlob = store?.GetStoreBlob();
         
         return View("View", new FormViewModel
@@ -181,13 +183,13 @@ public class UIFormsController : Controller
         }
 
         if (!Request.HasFormContentType)
-            return GetFormView(formData);
+            return await GetFormView(formData);
         
         var form = Form.Parse(formData.Config);
         form.ApplyValuesFromForm(Request.Form);
 
         if (!_formDataService.Validate(form, ModelState))
-            return GetFormView(formData, form);
+            return await GetFormView(formData, form);
 
         // Create invoice after public form has been filled
         var store = await storeRepository.FindStore(formData.StoreId);

@@ -35,9 +35,9 @@ namespace BTCPayServer.Filters
                 var matchedDomainMapping = mapping.FirstOrDefault(item => item.AppId == appId);
                 
                 // App is accessed via path, redirect to canonical domain
-                if (matchedDomainMapping != null)
+                var req = context.RouteContext.HttpContext.Request;
+                if (matchedDomainMapping != null && req.Method != "POST" && !req.HasFormContentType)
                 {
-                    var req = context.RouteContext.HttpContext.Request;
                     var uri = new UriBuilder(req.Scheme, matchedDomainMapping.Domain);
                     if (req.Host.Port.HasValue) uri.Port = req.Host.Port.Value;
                     context.RouteContext.HttpContext.Response.Redirect(uri.ToString());

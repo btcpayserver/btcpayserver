@@ -71,6 +71,16 @@ document.addEventListener("DOMContentLoaded",function () {
             },
             totalNumeric () {
                 return parseFloat(this.total);
+            },
+            posdata () {
+                const data = {
+                    subTotal: this.formatCurrency(this.amountNumeric),
+                    total: this.formatCurrency(this.totalNumeric)
+                }
+                if (this.tipNumeric > 0) data.tip = this.formatCurrency(this.tipNumeric)
+                if (this.discountNumeric > 0) data.discountAmount = this.formatCurrency(this.discountNumeric)
+                if (this.discountPercentNumeric > 0) data.discountPercentage = this.discountPercentNumeric
+                return JSON.stringify(data)
             }
         },
         watch: {

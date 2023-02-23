@@ -26,8 +26,11 @@ using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc;
+using NBitcoin;
+using NBitcoin.DataEncoders;
 using NBitpayClient;
 using Newtonsoft.Json.Linq;
 using NicolasDorier.RateLimits;
@@ -240,13 +243,18 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 case not null:
                     if (formResponse is null)
                     {
-                        return View("PostRedirect", new PostRedirectViewModel
+                        var vm = new PostRedirectViewModel
                         {
                             AspAction = nameof(POSForm),
+                            AspController = "UIPointOfSale",
                             RouteParameters = new Dictionary<string, string> { { "appId", appId } },
-                            AspController = nameof(UIPointOfSaleController).TrimEnd("Controller", StringComparison.InvariantCulture),
                             FormParameters = new MultiValueDictionary<string, string>(Request.Form.Select(pair => new KeyValuePair<string, IReadOnlyCollection<string>>(pair.Key, pair.Value)))
-                        });
+                        };
+                        if (viewType.HasValue)
+                        {
+                            vm.RouteParameters.Add("viewType", viewType.Value.ToString());
+                        }
+                        return View("PostRedirect", vm);
                     }
 
                     formResponseJObject = JObject.Parse(formResponse);
@@ -255,7 +263,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                     if (!FormDataService.Validate(form, ModelState))
                     {
                         //someone tried to bypass validation
-                        return RedirectToAction(nameof(ViewPointOfSale), new {appId});
+                        return RedirectToAction(nameof(ViewPointOfSale), new { appId, viewType });
                     }
 
                     formResponseJObject = form.GetValues();
@@ -276,7 +284,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                             string.IsNullOrEmpty(notificationUrl) ? settings.NotificationUrl : notificationUrl,
                     RedirectURL = !string.IsNullOrEmpty(redirectUrl) ? redirectUrl
                         : !string.IsNullOrEmpty(settings.RedirectUrl) ? settings.RedirectUrl
-                        : Request.GetDisplayUrl(),
+                        : Request.GetAbsoluteUri(Url.Action(nameof(ViewPointOfSale), "UIPointOfSale", new { appId, viewType })),
                     FullNotifications = true,
                     ExtendedNotifications = true,
                     PosData = string.IsNullOrEmpty(posData) ? null : posData,
@@ -294,8 +302,8 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                         if (formResponseJObject is not null)
                         {
                             var meta = entity.Metadata.ToJObject();
-                            meta.Merge(formResponseJObject);
-                            entity.Metadata = InvoiceMetadata.FromJObject(meta);
+                            formResponseJObject.Merge(meta);
+                            entity.Metadata = InvoiceMetadata.FromJObject(formResponseJObject);
                         }
                     });
                 return RedirectToAction(nameof(UIInvoiceController.Checkout), "UIInvoice", new { invoiceId = invoice.Data.Id });
@@ -312,8 +320,8 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             }
         }
 
-        [HttpPost("/apps/{appId}/pos/form")]
-        public async Task<IActionResult> POSForm(string appId)
+        [HttpPost("/apps/{appId}/pos/form/{viewType?}")]
+        public async Task<IActionResult> POSForm(string appId, PosViewType? viewType = null)
         {
             var app = await _appService.GetApp(appId, AppType.PointOfSale);
             if (app == null)
@@ -323,20 +331,18 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             var formData = await FormDataService.GetForm(settings.FormId);
             if (formData is null)
             {
-                return RedirectToAction(nameof(ViewPointOfSale), new { appId });
+                return RedirectToAction(nameof(ViewPointOfSale), new { appId, viewType });
             }
             
-            var myDictionary = Request.Form
+            var prefix = Encoders.Base58.EncodeData(RandomUtils.GetBytes(16)) + "_";
+            var formParameters = Request.Form
                 .Where(pair => pair.Key != "__RequestVerificationToken")
-                .ToDictionary(p => p.Key, p => p.Value.ToString());
-            myDictionary.Add("appId", appId);
-            var controller = nameof(UIPointOfSaleController).TrimEnd("Controller", StringComparison.InvariantCulture);
-            var redirectUrl = Url.Action(nameof(ViewPointOfSale), controller, myDictionary);
+                .ToMultiValueDictionary(p => p.Key, p => p.Value.ToString());
+            var controller = nameof(UIPointOfSaleController).TrimEnd("Controller", StringComparison.InvariantCulture);;
             var store = await _appService.GetStore(app);
             var storeBlob = store.GetStoreBlob();
             var form = Form.Parse(formData.Config);
-            
-            return View("Views/UIForms/View", new FormViewModel
+            var vm = new FormViewModel
             {
                 StoreName = store.StoreName,
                 BrandColor = storeBlob.BrandColor,
@@ -344,46 +350,63 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 LogoFileId = storeBlob.LogoFileId,
                 FormName = formData.Name,
                 Form = form,
-                RedirectUrl = redirectUrl,
                 AspController = controller,
                 AspAction = nameof(POSFormSubmit),
                 RouteParameters = new Dictionary<string, string> { { "appId", appId } },
-            });
+                FormParameters = formParameters,
+                FormParameterPrefix = prefix
+            };
+            if (viewType.HasValue)
+            {
+                vm.RouteParameters.Add("viewType", viewType.Value.ToString());
+            }
+            
+            return View("Views/UIForms/View", vm);
         }
 
-        [HttpPost("/apps/{appId}/pos/form/submit")]
-        public async Task<IActionResult> POSFormSubmit(string appId, FormViewModel viewModel)
+        [HttpPost("/apps/{appId}/pos/form/submit/{viewType?}")]
+        public async Task<IActionResult> POSFormSubmit(string appId, FormViewModel viewModel, PosViewType? viewType = null)
         {
             var app = await _appService.GetApp(appId, AppType.PointOfSale);
             if (app == null)
                 return NotFound();
+            
             var settings = app.GetSettings<PointOfSaleSettings>();
             var formData = await FormDataService.GetForm(settings.FormId);
-            if (formData is null || viewModel.RedirectUrl is null)
+            if (formData is null)
             {
-                return RedirectToAction(nameof(ViewPointOfSale), new {appId });
+                return RedirectToAction(nameof(ViewPointOfSale), new { appId, viewType });
             }
-
             var form = Form.Parse(formData.Config);
-            if (Request.Method == "POST" && Request.HasFormContentType)
+            var formFieldNames = form.GetAllFields().Select(tuple => tuple.FullName).Distinct().ToArray();
+            var formParameters = Request.Form
+                .Where(pair => pair.Key.StartsWith(viewModel.FormParameterPrefix))
+                .ToDictionary(pair => pair.Key.Replace(viewModel.FormParameterPrefix, string.Empty), pair => pair.Value)
+                .ToMultiValueDictionary(p => p.Key, p => p.Value.ToString());
+            
+            if (Request is { Method: "POST", HasFormContentType: true })
             {
-                form.ApplyValuesFromForm(Request.Form);
+                form.ApplyValuesFromForm(Request.Form.Where(pair => formFieldNames.Contains(pair.Key)));
+                
                 if (FormDataService.Validate(form, ModelState))
                 {
+                    
+                    var controller = nameof(UIPointOfSaleController).TrimEnd("Controller", StringComparison.InvariantCulture);;
+                    var redirectUrl =
+                        Request.GetAbsoluteUri(Url.Action(nameof(ViewPointOfSale), controller, new {appId, viewType}));
+                    formParameters.Add("formResponse", form.GetValues().ToString());
                     return View("PostRedirect", new PostRedirectViewModel
                     {
-                        FormUrl = viewModel.RedirectUrl,
-                        FormParameters =
-                        {
-                            { "formResponse", form.GetValues().ToString() }
-                        }
+                        FormUrl = redirectUrl,
+                        FormParameters = formParameters
                     });
                 }
             }
 
             viewModel.FormName = formData.Name;
             viewModel.Form = form;
-            
+
+            viewModel.FormParameters = formParameters;
             return View("Views/UIForms/View", viewModel);
         }
 

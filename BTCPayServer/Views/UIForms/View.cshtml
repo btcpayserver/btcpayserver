@@ -34,23 +34,13 @@
                     @if (string.IsNullOrEmpty(Model.AspAction))
                     {
                         <form method="post" novalidate="novalidate">
-                            @if (!string.IsNullOrEmpty(Model.RedirectUrl))
-                            {
-                                <input type="hidden" asp-for="RedirectUrl" value="@Model.RedirectUrl" />
-                            }
-                            <partial name="_Form" model="@Model.Form" />
-                            <input type="submit" class="btn btn-primary" name="command" value="Submit" />
+                            <partial name="_FormWrap" model="@Model" />
                         </form>
                     }
                     else
                     {
                         <form method="post" asp-action="@Model.AspAction" asp-controller="@Model.AspController" asp-all-route-data="Model.RouteParameters">
-                            @if (!string.IsNullOrEmpty(Model.RedirectUrl))
-                            {
-                                <input type="hidden" asp-for="RedirectUrl" value="@Model.RedirectUrl" />
-                            }
-                            <partial name="_Form" model="@Model.Form" />
-                            <input type="submit" class="btn btn-primary" name="command" value="Submit" />
+                            <partial name="_FormWrap" model="@Model" />
                         </form>
                     }
                 </div>

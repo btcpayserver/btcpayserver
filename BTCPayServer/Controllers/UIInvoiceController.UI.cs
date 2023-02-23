@@ -132,6 +132,7 @@ namespace BTCPayServer.Controllers
                 StatusException = invoice.ExceptionStatus,
                 Events = invoice.Events,
                 PosData = PosDataParser.ParsePosData(invoice.Metadata.PosData),
+                Metadata = PosDataParser.ParsePosData(invoice.Metadata.ToJObject().ToString()),
                 Archived = invoice.Archived,
                 CanRefund = invoiceState.CanRefund(),
                 Refunds = invoice.Refunds,

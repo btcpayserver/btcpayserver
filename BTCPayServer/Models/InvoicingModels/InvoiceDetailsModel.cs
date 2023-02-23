@@ -125,6 +125,7 @@ namespace BTCPayServer.Models.InvoicingModels
         public List<Data.InvoiceEventData> Events { get; internal set; }
         public string NotificationEmail { get; internal set; }
         public Dictionary<string, object> PosData { get; set; }
+        public Dictionary<string, object> Metadata { get; set; }
         public List<PaymentEntity> Payments { get; set; }
         public bool Archived { get; set; }
         public bool CanRefund { get; set; }

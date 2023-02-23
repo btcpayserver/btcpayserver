@@ -125,8 +125,20 @@
 </div>
 
 <partial name="_StatusMessage"/>
+<ul class="nav nav-pills mb-2 " id="invoice-tabs" role="tablist">
+  <li class="nav-item" role="presentation">
+    <button class="nav-link active" id="main-tab" data-bs-toggle="tab" data-bs-target="#main-tab-pane" type="button" role="tab" aria-controls="main-tab-pane" aria-selected="true">Invoice</button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="additional-tab" data-bs-toggle="tab" data-bs-target="#additional-tab-pane" type="button" role="tab" aria-controls="additional-tab-pane" aria-selected="false">Additional details</button>
+    </li>
+</ul>
 
+<div class="tab-content">
+    <div class="tab-pane fade show active" id="main-tab-pane" role="tabpanel" aria-labelledby="main-tab" tabindex="0">
+        
 <div class="row justify-content-between">
+    
 <div class="col-md-6">
     <h3 class="mb-3">Invoice Information</h3>
     <table class="table mb-5">
@@ -406,7 +418,16 @@
         <partial name="PosData" model="(Model.PosData, 1)"/>
     </div>
 }
+
+
 </div>
+
+    </div>
+  <div class="tab-pane fade" id="additional-tab-pane" role="tabpanel" aria-labelledby="additional-tab" tabindex="0">    <div class="col-md-12 mb-4">
+                                                                                                                            <partial name="PosData" model="(Model.Metadata, 1)"/>
+                                                                                                                        </div></div>
+</div>
+
 
 <h3 class="mb-0">Invoice Summary</h3>
 <partial name="ListInvoicesPaymentsPartial" model="(Model, true)"/>
@@ -485,7 +506,6 @@
         </table>
     </div>
 }
-
 @if ((Model.Refunds?.Count ?? 0) > 0)
 {
     <h3 class="mb-3 mt-4">Refunds</h3>

@@ -47,10 +47,10 @@ public class Form
 
     public IEnumerable<(string FullName, List<string> Path, Field Field)> GetAllFields()
     {
-        HashSet<string> nameReturned = new HashSet<string>();
+        HashSet<string> nameReturned = new();
         foreach (var f in GetAllFieldsCore(new List<string>(), Fields))
         {
-            var fullName = String.Join('_', f.Path);
+            var fullName = string.Join('_', f.Path);
             if (!nameReturned.Add(fullName))
                 continue;
             yield return (fullName, f.Path, f.Field);
@@ -60,10 +60,10 @@ public class Form
     public bool ValidateFieldNames(out List<string> errors)
     {
         errors = new List<string>();
-        HashSet<string> nameReturned = new HashSet<string>();
+        HashSet<string> nameReturned = new();
         foreach (var f in GetAllFieldsCore(new List<string>(), Fields))
         {
-            var fullName = String.Join('_', f.Path);
+            var fullName = string.Join('_', f.Path);
             if (!nameReturned.Add(fullName))
             {
                 errors.Add($"Form contains duplicate field names '{fullName}'");
@@ -77,7 +77,7 @@ public class Form
     {
         foreach (var field in fields)
         {
-            List<string> thisPath = new List<string>(path.Count + 1);
+            List<string> thisPath = new(path.Count + 1);
             thisPath.AddRange(path);
             if (!string.IsNullOrEmpty(field.Name))
             {

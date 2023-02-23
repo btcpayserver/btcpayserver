@@ -1,0 +1,11 @@
+@model BTCPayServer.Forms.Models.FormViewModel
+<input type="hidden" asp-for="FormParameterPrefix"/>
+@foreach (var o in Model.FormParameters)
+{
+	foreach (var v in o.Value)
+	{
+		<input type="hidden" name="@(Model.FormParameterPrefix??string.Empty)@o.Key" value="@v" />
+	}
+}
+<partial name="_Form" model="@Model.Form" />
+<input type="submit" class="btn btn-primary" name="command" value="Submit" />

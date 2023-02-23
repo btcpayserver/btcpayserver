@@ -106,6 +106,14 @@ namespace BTCPayServer.Controllers
 
             var receipt = InvoiceDataBase.ReceiptOptions.Merge(store.GetStoreBlob().ReceiptOptions, invoice.ReceiptOptions);
             var invoiceState = invoice.GetInvoiceState();
+            var posData = PosDataParser.ParsePosData(invoice.Metadata.PosData);
+            var metaData = PosDataParser.ParsePosData(invoice.Metadata.ToJObject().ToString());
+            var excludes = typeof(InvoiceMetadata).GetProperties()
+                .Select(p => char.ToLowerInvariant(p.Name[0]) + p.Name[1..])
+                .ToList();
+            var additionalData = metaData
+                .Where(dict => !excludes.Contains(dict.Key))
+                .ToDictionary(dict=> dict.Key, dict=> dict.Value);
             var model = new InvoiceDetailsModel
             {
                 StoreId = store.Id,
@@ -131,8 +139,9 @@ namespace BTCPayServer.Controllers
                 TypedMetadata = invoice.Metadata,
                 StatusException = invoice.ExceptionStatus,
                 Events = invoice.Events,
-                PosData = PosDataParser.ParsePosData(invoice.Metadata.PosData),
-                Metadata = PosDataParser.ParsePosData(invoice.Metadata.ToJObject().ToString()),
+                PosData = posData,
+                Metadata = metaData,
+                AdditionalData = additionalData,
                 Archived = invoice.Archived,
                 CanRefund = invoiceState.CanRefund(),
                 Refunds = invoice.Refunds,

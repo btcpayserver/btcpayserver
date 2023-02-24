@@ -35,35 +35,6 @@
         .unconf > * {
             opacity: 0.5;
         }
-
-        .badge-container {
-            display: flex;
-            flex-wrap: nowrap;
-        }
-
-        .removeTransactionLabelForm {
-            display: inline;
-            position: absolute;
-            right: 4px;
-        }
-
-        .removeTransactionLabelForm button {
-            cursor: pointer;
-            display: inline;
-            padding: 0;
-            background-color: transparent;
-            border: 0;
-        }
-
-        .label-tooltip .tooltip-inner {
-            max-width: 15rem;
-            text-align: left;
-        }
-
-        .label-tooltip ul {
-            margin: 0;
-            padding-left: var(--btcpay-space-m);
-        }
         
         #LoadingIndicator {
             margin-bottom: 1.5rem;
@@ -155,26 +126,27 @@
     </script>
 }
 
-@if (Model.Transactions.Any())
+@if (Model.Labels.Any())
 {
-    @if (Model.Labels.Any())
-    {
-        <div class="col-xl-7 col-xxl-8 mb-4" id="Filter">
-            <div class="input-group">
-                <span class="input-group-text">Filter</span>
-                <div class="form-control d-flex flex-wrap gap-2 align-items-center">
-                    @foreach (var label in Model.Labels)
-                    {
-                        <a asp-route-labelFilter="@label.Text" class="badge position-relative text-white flex-grow-0" style="background-color:@label.Color;color:@label.TextColor !important;">@label.Text</a>
-                    }
-                </div>
-                @if (labelFilter != null)
+    <div class="col-xl-7 col-xxl-8 mb-4" id="Filter">
+        <div class="input-group">
+            <span class="input-group-text">Filter</span>
+            <div class="form-control d-flex flex-wrap gap-2 align-items-center">
+                @foreach (var label in Model.Labels)
                 {
-                    <a asp-route-labelFilter="" class="btn btn-secondary d-flex align-items-center">Clear filter</a>
+                    <a asp-route-labelFilter="@label.Text" class="transaction-label transaction-label-text@(labelFilter == label.Text ? " active" : string.Empty)" style="--label-bg:@label.Color;--label-fg:@label.TextColor;">@label.Text</a>
                 }
             </div>
+            @if (labelFilter != null)
+            {
+                <a asp-route-labelFilter="" class="btn btn-secondary d-flex align-items-center">Clear filter</a>
+            }
         </div>
-    }
+    </div>
+}
+
+@if (Model.Transactions.Any())
+{
     <div class="d-inline-flex align-items-center gap-3" id="Dropdowns">
         <div class="dropdown ms-auto" id="Actions">
             <button class="btn btn-secondary dropdown-toggle" type="button" id="ActionsDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -243,7 +215,7 @@
 else
 {
     <p class="text-secondary mt-3">
-        There are no transactions yet.
+        There are no transactions @(string.IsNullOrEmpty(labelFilter) ? string.Empty : $"labeled with \"{labelFilter}\"") yet.
     </p>
 }
 

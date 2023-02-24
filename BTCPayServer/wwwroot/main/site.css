@@ -128,7 +128,6 @@ svg.icon.icon-info {
     position: relative;
     top: -.05em;
     color: var(--btcpay-neutral-500);
-    transition: 200ms;
 }
 
 svg.icon.icon-info:hover {
@@ -769,4 +768,85 @@ input:checked + .btcpay-list-select-item {
 .payment-box .input-group button {
     padding: var(--btcpay-space-xs) 0;
     font-weight: var(--btcpay-font-weight-semibold);
+}
+
+/* Transaction Labels */
+.transaction-label {
+    display: inline-flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: var(--btcpay-space-xs);
+    color: var(--btcpay-body-text);
+    background: transparent;
+    border: 1px solid var(--label-bg);
+    border-radius: var(--btcpay-border-radius-l);
+    font-size:  var(--btcpay-font-size-s);
+    padding: var(--btcpay-space-xs) var(--btcpay-space-s);
+    text-align: left;
+}
+
+.transaction-label a {
+    display: inline-flex;
+    align-items: center;
+    color: var(--btcpay-body-text);
+}
+
+.transaction-label:focus,
+.transaction-label:hover,
+.transaction-label.active {
+    color: var(--label-fg);
+    background: var(--label-bg);
+}
+
+.transaction-label:focus a,
+.transaction-label:focus .transaction-label-info svg.icon,
+.transaction-label:focus .transaction-label-action svg.icon,
+.transaction-label:hover a,
+.transaction-label:hover .transaction-label-info svg.icon,
+.transaction-label:hover .transaction-label-action svg.icon,
+.transaction-label.active a,
+.transaction-label.active .transaction-label-info svg.icon,
+.transaction-label.active .transaction-label-action svg.icon {
+    color: var(--label-fg);
+}
+
+.transaction-label-info,
+.transaction-label-action,
+.transaction-label form {
+    --button-size: .9rem;
+    display: inline-flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    width: var(--button-size);
+    height: var(--button-size);
+    flex: 0 0 var(--button-size);
+}
+
+.transaction-label svg.icon {
+    display: block;
+    position: static;
+    width: 100%;
+    height: 100%;
+    color: var(--label-bg);
+}
+
+.transaction-label-action {
+    cursor: pointer;
+    border: 0;
+    background: transparent;
+    padding: 0;
+}
+
+.transaction-label-action svg.icon {
+    transform: scale(1.725);
+}
+
+.transaction-label-tooltip .tooltip-inner {
+    max-width: 15rem;
+    text-align: left;
+}
+
+.transaction-label-tooltip ul {
+    margin: 0;
+    padding-left: var(--btcpay-space-m);
 }

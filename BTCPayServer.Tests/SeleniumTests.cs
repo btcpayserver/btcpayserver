@@ -1329,7 +1329,7 @@ namespace BTCPayServer.Tests
 
             // Check the label is applied to the tx
 
-            Assert.Equal("label2", s.Driver.FindElement(By.XPath("//*[@id=\"WalletTransactionsList\"]//*[contains(@class, 'transactionLabel')]")).Text);
+            Assert.Equal("label2", s.Driver.FindElement(By.XPath("//*[@id=\"WalletTransactionsList\"]//*[contains(@class, 'transaction-label')]")).Text);
 
             //change the wallet and ensure old address is not there and generating a new one does not result in the prev one
             s.GenerateWallet(cryptoCode, "", true);
@@ -1617,9 +1617,9 @@ namespace BTCPayServer.Tests
             TestUtils.Eventually(() =>
             {
                 s.Driver.Navigate().Refresh();
-                Assert.Contains("badge transactionLabel", s.Driver.PageSource);
+                Assert.Contains("transaction-label", s.Driver.PageSource);
             });
-            Assert.Equal("payout", s.Driver.FindElement(By.ClassName("transactionLabel")).Text);
+            Assert.Equal("payout", s.Driver.FindElement(By.ClassName("transaction-label")).Text);
 
             s.GoToStore(s.StoreId, StoreNavPages.Payouts);
             s.Driver.FindElement(By.Id($"{PayoutState.InProgress}-view")).Click();

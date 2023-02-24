@@ -215,7 +215,7 @@
 else
 {
     <p class="text-secondary mt-3">
-        There are no transactions @(string.IsNullOrEmpty(labelFilter) ? string.Empty : $"labeled with \"{labelFilter}\"") yet.
+        There are no transactions @(string.IsNullOrEmpty(labelFilter) ? "yet" : $"labeled with \"{labelFilter}\"").
     </p>
 }
 

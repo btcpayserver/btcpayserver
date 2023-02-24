@@ -47,14 +47,17 @@
                 </button>
             </nav>
             <section id="payment" v-if="isActive">
-                <h5 class="text-center mt-1 mb-3 fw-semibold" v-if="srvModel.itemDesc" v-text="srvModel.itemDesc">@Model.ItemDesc</h5>
+                @if (!string.IsNullOrEmpty(Model.ItemDesc) && Model.ItemDesc != Model.StoreName)
+                {
+                    <h5 class="text-center mt-1 mb-3 fw-semibold" v-if="srvModel.itemDesc" v-text="srvModel.itemDesc">@Model.ItemDesc</h5>
+                }
                 @if (Model.IsUnsetTopUp)
                 {
-                    <h2 id="AmountDue" class="text-center" v-t="'any_amount'"></h2>
+                    <h2 id="AmountDue" class="mt-1 text-center" v-t="'any_amount'"></h2>
                 }
                 else
                 {
-                    <h2 id="AmountDue" class="text-center" v-text="`${srvModel.btcDue} ${srvModel.cryptoCode}`" :data-clipboard="srvModel.btcDue" :data-clipboard-confirm="$t('copy_confirm')" :data-amount-due="srvModel.btcDue">@Model.BtcDue @Model.CryptoCode</h2>
+                    <h2 id="AmountDue" class="mt-1 text-center" v-text="`${srvModel.btcDue} ${srvModel.cryptoCode}`" :data-clipboard="srvModel.btcDue" :data-clipboard-confirm="$t('copy_confirm')" :data-amount-due="srvModel.btcDue">@Model.BtcDue @Model.CryptoCode</h2>
                 }
                 <div id="PaymentInfo" class="info mt-3 mb-2" v-collapsible="showInfo">
                     <div>

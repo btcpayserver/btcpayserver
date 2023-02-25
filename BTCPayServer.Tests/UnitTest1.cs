@@ -1695,37 +1695,17 @@ namespace BTCPayServer.Tests
             var testCases =
                 new List<(string input, Dictionary<string, object> expectedOutput)>()
                 {
-                        {(null, new Dictionary<string, object>())},
-                        {("", new Dictionary<string, object>())},
-                        {("{}", new Dictionary<string, object>())},
-                        {
-                            ("non-json-content",
-                                new Dictionary<string, object>() {{string.Empty, "non-json-content"}})
-                        },
-                        {("[1,2,3]", new Dictionary<string, object>() {{string.Empty, "[1,2,3]"}})},
                         {("{ \"key\": \"value\"}", new Dictionary<string, object>() {{"key", "value"}})},
-                        {("{ \"key\": true}", new Dictionary<string, object>() {{"key", "True"}})},
-                        {
-                            ("{ invalidjson file here}",
-                                new Dictionary<string, object>() {{String.Empty, "{ invalidjson file here}"}})
-                        }
+                        {("{ \"key\": true}", new Dictionary<string, object>() {{"key", "True"}})}
                 };
 
-            var tasks = new List<Task>();
             foreach (var valueTuple in testCases)
             {
-                tasks.Add(user.BitPay.CreateInvoiceAsync(new Invoice(1, "BTC") { PosData = valueTuple.input })
-                    .ContinueWith(async task =>
-                    {
-                        var result = await controller.Invoice(task.Result.Id);
-                        var viewModel =
-                            Assert.IsType<InvoiceDetailsModel>(
-                                Assert.IsType<ViewResult>(result).Model);
-                        Assert.Equal(valueTuple.expectedOutput, viewModel.PosData);
-                    }));
+                var invoice = await user.BitPay.CreateInvoiceAsync(new Invoice(1, "BTC") { PosData = valueTuple.input });
+                var result = await controller.Invoice(invoice.Id);
+                var viewModel = result.AssertViewModel<InvoiceDetailsModel>();
+                Assert.Equal(valueTuple.expectedOutput, viewModel.AdditionalData["posData"]);
             }
-
-            await Task.WhenAll(tasks);
         }
 
         [Fact(Timeout = LongRunningTestTimeout)]

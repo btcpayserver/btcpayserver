@@ -40,6 +40,17 @@ namespace BTCPayServer.Controllers
 {
     public partial class UIInvoiceController
     {
+        static UIInvoiceController()
+        {
+            InvoiceAdditionalDataExclude =
+                typeof(InvoiceMetadata)
+                .GetProperties()
+                .Select(p => p.Name)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+            InvoiceAdditionalDataExclude.Remove(nameof(InvoiceMetadata.PosData));
+        }
+        static readonly HashSet<string> InvoiceAdditionalDataExclude;
+
         [HttpGet("invoices/{invoiceId}/deliveries/{deliveryId}/request")]
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> WebhookDelivery(string invoiceId, string deliveryId)
@@ -106,13 +117,9 @@ namespace BTCPayServer.Controllers
 
             var receipt = InvoiceDataBase.ReceiptOptions.Merge(store.GetStoreBlob().ReceiptOptions, invoice.ReceiptOptions);
             var invoiceState = invoice.GetInvoiceState();
-            var posData = PosDataParser.ParsePosData(invoice.Metadata.PosData);
-            var metaData = PosDataParser.ParsePosData(invoice.Metadata.ToJObject().ToString());
-            var excludes = typeof(InvoiceMetadata).GetProperties()
-                .Select(p => char.ToLowerInvariant(p.Name[0]) + p.Name[1..])
-                .ToList();
+            var metaData = PosDataParser.ParsePosData(invoice.Metadata.ToJObject());
             var additionalData = metaData
-                .Where(dict => !excludes.Contains(dict.Key))
+                .Where(dict => !InvoiceAdditionalDataExclude.Contains(dict.Key))
                 .ToDictionary(dict=> dict.Key, dict=> dict.Value);
             var model = new InvoiceDetailsModel
             {
@@ -139,7 +146,6 @@ namespace BTCPayServer.Controllers
                 TypedMetadata = invoice.Metadata,
                 StatusException = invoice.ExceptionStatus,
                 Events = invoice.Events,
-                PosData = posData,
                 Metadata = metaData,
                 AdditionalData = additionalData,
                 Archived = invoice.Archived,
@@ -236,9 +242,7 @@ namespace BTCPayServer.Controllers
 
             vm.Amount = payments.Sum(p => p!.Paid);
             vm.Payments = receipt.ShowPayments is false ? null : payments;
-            vm.AdditionalData = receiptData is null
-                ? new Dictionary<string, object>()
-                : PosDataParser.ParsePosData(receiptData.ToString());
+            vm.AdditionalData = PosDataParser.ParsePosData(receiptData);
 
             return View(vm);
         }
@@ -1239,30 +1243,20 @@ namespace BTCPayServer.Controllers
 
         public class PosDataParser
         {
-            public static Dictionary<string, object> ParsePosData(string posData)
+            public static Dictionary<string, object> ParsePosData(JToken? posData)
             {
                 var result = new Dictionary<string, object>();
-                if (string.IsNullOrEmpty(posData))
+                if (posData is JObject jobj)
                 {
-                    return result;
-                }
-
-                try
-                {
-                    var jObject = JObject.Parse(posData);
-                    foreach (var item in jObject)
+                    foreach (var item in jobj)
                     {
                         ParsePosDataItem(item, ref result);
                     }
                 }
-                catch
-                {
-                    result.TryAdd(string.Empty, posData);
-                }
                 return result;
             }
 
-            public static void ParsePosDataItem(KeyValuePair<string, JToken?> item, ref Dictionary<string, object> result)
+            static void ParsePosDataItem(KeyValuePair<string, JToken?> item, ref Dictionary<string, object> result)
             {
                 switch (item.Value?.Type)
                 {
@@ -1270,12 +1264,12 @@ namespace BTCPayServer.Controllers
                         var items = item.Value.AsEnumerable().ToList();
                         for (var i = 0; i < items.Count; i++)
                         {
-                            result.TryAdd($"{item.Key}[{i}]", ParsePosData(items[i].ToString()));
+                            result.TryAdd($"{item.Key}[{i}]", ParsePosData(items[i]));
                         }
 
                         break;
                     case JTokenType.Object:
-                        result.TryAdd(item.Key, ParsePosData(item.Value.ToString()));
+                        result.TryAdd(item.Key, ParsePosData(item.Value));
                         break;
                     case null:
                         break;

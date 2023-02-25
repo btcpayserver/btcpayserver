@@ -30,6 +30,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using NBitcoin;
 using NBitpayClient;
+using Newtonsoft.Json.Linq;
 using BitpayCreateInvoiceRequest = BTCPayServer.Models.BitpayCreateInvoiceRequest;
 using StoreData = BTCPayServer.Data.StoreData;
 
@@ -117,7 +118,7 @@ namespace BTCPayServer.Controllers
                 throw new BitpayHttpException(400, "The expirationTime is set too soon");
             }
             entity.Metadata.OrderId = invoice.OrderId;
-            entity.Metadata.PosData = invoice.PosData;
+            entity.Metadata.PosDataLegacy = invoice.PosData;
             entity.ServerUrl = serverUrl;
             entity.FullNotifications = invoice.FullNotifications || invoice.ExtendedNotifications;
             entity.ExtendedNotifications = invoice.ExtendedNotifications;

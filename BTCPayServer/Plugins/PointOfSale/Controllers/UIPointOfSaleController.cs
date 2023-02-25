@@ -151,6 +151,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             {
                 return RedirectToAction(nameof(ViewPointOfSale), new { appId, viewType });
             }
+            var jposData = TryParseJObject(posData);
             string title;
             decimal? price;
             Dictionary<string, InvoiceSupportedTransactionCurrency> paymentMethods = null;
@@ -191,10 +192,9 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
 
                 price = amount;
                 title = settings.Title;
-
                 //if cart IS enabled and we detect posdata that matches the cart system's, check inventory for the items
-                if (!string.IsNullOrEmpty(posData) && currentView == PosViewType.Cart &&
-                    AppService.TryParsePosCartItems(posData, out var cartItems))
+                if (currentView == PosViewType.Cart &&
+                    AppService.TryParsePosCartItems(jposData, out var cartItems))
                 {
                     var choices = _appService.GetPOSItems(settings.Template, settings.Currency);
                     var expectedMinimumAmount = 0m;
@@ -257,7 +257,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                         return View("PostRedirect", vm);
                     }
 
-                    formResponseJObject = JObject.Parse(formResponse);
+                    formResponseJObject = TryParseJObject(formResponse) ?? new JObject();
                     var form = Form.Parse(formData.Config);
                     form.SetValues(formResponseJObject);
                     if (!FormDataService.Validate(form, ModelState))
@@ -269,7 +269,6 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                     formResponseJObject = form.GetValues();
                     break;
             }
-        
             try
             {
                 var invoice = await _invoiceController.CreateInvoiceCore(new BitpayCreateInvoiceRequest
@@ -287,7 +286,6 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                         : Request.GetAbsoluteUri(Url.Action(nameof(ViewPointOfSale), "UIPointOfSale", new { appId, viewType })),
                     FullNotifications = true,
                     ExtendedNotifications = true,
-                    PosData = string.IsNullOrEmpty(posData) ? null : posData,
                     RedirectAutomatically = settings.RedirectAutomatically,
                     SupportedTransactionCurrencies = paymentMethods,
                     RequiresRefundEmail = requiresRefundEmail == RequiresRefundEmail.InheritFromStore
@@ -298,23 +296,11 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                     cancellationToken, entity =>
                     {
                         entity.Metadata.OrderUrl = Request.GetDisplayUrl();
-
+                        entity.Metadata.PosData = jposData;
                         if (formResponseJObject is null) return;
                         var meta = entity.Metadata.ToJObject();
-                        if (formResponseJObject.ContainsKey("posData") && meta.TryGetValue("posData", out var posDataValue) && posDataValue.Type == JTokenType.String)
-                        {
-                            try
-                            {
-                                meta["posData"] = JObject.Parse(posDataValue.Value<string>());
-
-                            }
-                            catch (Exception e)
-                            {
-                                // ignored as we don't want to break the invoice creation
-                            }
-                        }
-                        formResponseJObject.Merge(meta);
-                        entity.Metadata = InvoiceMetadata.FromJObject(formResponseJObject);
+                        meta.Merge(formResponseJObject);
+                        entity.Metadata = InvoiceMetadata.FromJObject(meta);
                     });
                 return RedirectToAction(nameof(UIInvoiceController.Checkout), "UIInvoice", new { invoiceId = invoice.Data.Id });
             }
@@ -328,6 +314,18 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 });
                 return RedirectToAction(nameof(ViewPointOfSale), new { appId });
             }
+        }
+
+        private JObject TryParseJObject(string posData)
+        {
+            try
+            {
+                return JObject.Parse(posData);
+            }
+            catch
+            {
+            }
+            return null;
         }
 
         [HttpPost("/apps/{appId}/pos/form/{viewType?}")]

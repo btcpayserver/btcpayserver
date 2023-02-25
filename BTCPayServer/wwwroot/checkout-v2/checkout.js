@@ -55,8 +55,8 @@ Vue.use(VueI18next);
 const i18n = new VueI18next(i18next);
 const eventBus = new Vue();
 
-const PaymentDetails = Vue.component('payment-details', {
-    el: '#payment-details',
+const PaymentDetails = {
+    template: '#payment-details',
     props: {
         srvModel: Object,
         isActive: Boolean
@@ -75,14 +75,14 @@ const PaymentDetails = Vue.component('payment-details', {
             return this.isActive && this.srvModel.showRecommendedFee && this.srvModel.feeRate;
         },
     }
-});
+}
 
 function initApp() {
     return new Vue({
         i18n,
         el: '#Checkout-v2',
         components: {
-            PaymentDetails
+            'payment-details': PaymentDetails,
         },
         data () {
             const srvModel = initialSrvModel;

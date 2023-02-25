@@ -179,42 +179,44 @@
             </p>
         </div>
     </noscript>
-    <dl id="payment-details" v-cloak>
-        <div v-if="orderAmount > 0">
-            <dt v-t="'total_price'"></dt>
-            <dd :data-clipboard="srvModel.orderAmount" :data-clipboard-confirm="$t('copy_confirm')">{{srvModel.orderAmount}} {{ srvModel.cryptoCode }}</dd>
-        </div>
-        <div v-if="orderAmount > 0 && srvModel.orderAmountFiat">
-            <dt v-t="'total_fiat'"></dt>
-            <dd :data-clipboard="srvModel.orderAmountFiat" :data-clipboard-confirm="$t('copy_confirm')">{{srvModel.orderAmountFiat}}</dd>
-        </div>
-        <div v-if="srvModel.rate && srvModel.cryptoCode">
-            <dt v-t="'exchange_rate'"></dt>
-            <dd :data-clipboard="srvModel.rate" :data-clipboard-confirm="$t('copy_confirm')">
-                <template v-if="srvModel.cryptoCodeSrv === 'Sats'">1 Sat = {{ srvModel.rate }}</template>
-                <template v-else>1 {{ srvModel.cryptoCodeSrv }} = {{ srvModel.rate }}</template>
-            </dd>
-        </div>
-        <div v-if="srvModel.networkFee">
-            <dt v-t="'network_cost'"></dt>
-            <dd :data-clipboard="srvModel.networkFee" :data-clipboard-confirm="$t('copy_confirm')">
-                <div v-if="srvModel.txCountForFee > 0" v-t="{ path: 'tx_count', args: { count: srvModel.txCount } }"></div>
-                <div v-text="`${srvModel.networkFee} ${srvModel.cryptoCode}`"></div>
-            </dd>
-        </div>
-        <div v-if="btcPaid > 0">
-            <dt v-t="'amount_paid'"></dt>
-            <dd :data-clipboard="srvModel.btcPaid" :data-clipboard-confirm="$t('copy_confirm')" v-text="`${srvModel.btcPaid} ${srvModel.cryptoCode}`"></dd>
-        </div>
-        <div v-if="btcDue > 0">
-            <dt v-t="'amount_due'"></dt>
-            <dd :data-clipboard="srvModel.btcDue" :data-clipboard-confirm="$t('copy_confirm')" v-text="`${srvModel.btcDue} ${srvModel.cryptoCode}`"></dd>
-        </div>
-        <div v-if="showRecommendedFee">
-            <dt v-t="'recommended_fee'"></dt>
-            <dd :data-clipboard="srvModel.feeRate" :data-clipboard-confirm="$t('copy_confirm')" v-t="{ path: 'fee_rate', args: { feeRate: srvModel.feeRate } }"></dd>
-        </div>
-    </dl>
+    <script type="text/x-template" id="payment-details">
+        <dl>
+            <div v-if="orderAmount > 0">
+                <dt v-t="'total_price'"></dt>
+                <dd :data-clipboard="srvModel.orderAmount" :data-clipboard-confirm="$t('copy_confirm')">{{srvModel.orderAmount}} {{ srvModel.cryptoCode }}</dd>
+            </div>
+            <div v-if="orderAmount > 0 && srvModel.orderAmountFiat">
+                <dt v-t="'total_fiat'"></dt>
+                <dd :data-clipboard="srvModel.orderAmountFiat" :data-clipboard-confirm="$t('copy_confirm')">{{srvModel.orderAmountFiat}}</dd>
+            </div>
+            <div v-if="srvModel.rate && srvModel.cryptoCode">
+                <dt v-t="'exchange_rate'"></dt>
+                <dd :data-clipboard="srvModel.rate" :data-clipboard-confirm="$t('copy_confirm')">
+                    <template v-if="srvModel.cryptoCodeSrv === 'Sats'">1 Sat = {{ srvModel.rate }}</template>
+                    <template v-else>1 {{ srvModel.cryptoCodeSrv }} = {{ srvModel.rate }}</template>
+                </dd>
+            </div>
+            <div v-if="srvModel.networkFee">
+                <dt v-t="'network_cost'"></dt>
+                <dd :data-clipboard="srvModel.networkFee" :data-clipboard-confirm="$t('copy_confirm')">
+                    <div v-if="srvModel.txCountForFee > 0" v-t="{ path: 'tx_count', args: { count: srvModel.txCount } }"></div>
+                    <div v-text="`${srvModel.networkFee} ${srvModel.cryptoCode}`"></div>
+                </dd>
+            </div>
+            <div v-if="btcPaid > 0">
+                <dt v-t="'amount_paid'"></dt>
+                <dd :data-clipboard="srvModel.btcPaid" :data-clipboard-confirm="$t('copy_confirm')" v-text="`${srvModel.btcPaid} ${srvModel.cryptoCode}`"></dd>
+            </div>
+            <div v-if="btcDue > 0">
+                <dt v-t="'amount_due'"></dt>
+                <dd :data-clipboard="srvModel.btcDue" :data-clipboard-confirm="$t('copy_confirm')" v-text="`${srvModel.btcDue} ${srvModel.cryptoCode}`"></dd>
+            </div>
+            <div v-if="showRecommendedFee">
+                <dt v-t="'recommended_fee'"></dt>
+                <dd :data-clipboard="srvModel.feeRate" :data-clipboard-confirm="$t('copy_confirm')" v-t="{ path: 'fee_rate', args: { feeRate: srvModel.feeRate } }"></dd>
+            </div>
+        </dl>
+    </script>
     <script>
         const i18nUrl = @Safe.Json($"{Model.RootPath}locales/checkout/{{{{lng}}}}.json?v={Env.Version}");
         const statusUrl = @Safe.Json(Url.Action("GetStatus", new { invoiceId = Model.InvoiceId }));

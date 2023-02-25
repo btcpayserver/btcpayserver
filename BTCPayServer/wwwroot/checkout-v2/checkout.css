@@ -78,6 +78,7 @@ section dl > div dd {
     text-align: right;
     word-wrap: break-word;
     word-break: break-word;
+    max-width: 62.5%;
 }
 .info {
     color: var(--btcpay-neutral-700);

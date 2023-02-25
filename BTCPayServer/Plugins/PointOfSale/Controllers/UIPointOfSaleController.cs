@@ -299,12 +299,22 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                     {
                         entity.Metadata.OrderUrl = Request.GetDisplayUrl();
 
-                        if (formResponseJObject is not null)
+                        if (formResponseJObject is null) return;
+                        var meta = entity.Metadata.ToJObject();
+                        if (formResponseJObject.ContainsKey("posData") && meta.TryGetValue("posData", out var posDataValue) && posDataValue.Type == JTokenType.String)
                         {
-                            var meta = entity.Metadata.ToJObject();
-                            formResponseJObject.Merge(meta);
-                            entity.Metadata = InvoiceMetadata.FromJObject(formResponseJObject);
+                            try
+                            {
+                                meta["posData"] = JObject.Parse(posDataValue.Value<string>());
+
+                            }
+                            catch (Exception e)
+                            {
+                                // ignored as we don't want to break the invoice creation
+                            }
                         }
+                        formResponseJObject.Merge(meta);
+                        entity.Metadata = InvoiceMetadata.FromJObject(formResponseJObject);
                     });
                 return RedirectToAction(nameof(UIInvoiceController.Checkout), "UIInvoice", new { invoiceId = invoice.Data.Id });
             }

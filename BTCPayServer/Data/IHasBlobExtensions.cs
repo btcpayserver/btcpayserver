@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Linq;
 using System.Reflection.Metadata;
+using System.Text;
 using NBXplorer;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -62,7 +63,14 @@ namespace BTCPayServer.Data
                 return JObject.Parse(data.Blob2).ToObject<B>(JsonSerializer.CreateDefault(settings ?? DefaultSerializer));
 #pragma warning disable CS0618 // Type or member is obsolete
             if (data.Blob is not null && data.Blob.Length != 0)
-                return JObject.Parse(ZipUtils.Unzip(data.Blob)).ToObject<B>(JsonSerializer.CreateDefault(settings ?? DefaultSerializer));
+            {
+                string str;
+                if (data.Blob[0] == 0x7b)
+                    str = Encoding.UTF8.GetString(data.Blob);
+                else
+                    str = ZipUtils.Unzip(data.Blob);
+                return JObject.Parse(str).ToObject<B>(JsonSerializer.CreateDefault(settings ?? DefaultSerializer));
+            }
 #pragma warning restore CS0618 // Type or member is obsolete
             return default;
         }

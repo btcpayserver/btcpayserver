@@ -49,5 +49,5 @@
   "Close": "Sulje",
   "NotPaid_ExtraTransaction": "Laskua ei ole maksettu kokonaan. Lähetä uusi maksu erääntyvän summan kattamiseksi.",
   "Recommended_Fee": "Suositeltu siirtomaksu: {{feeRate}} sat/tavu",
-  "View receipt": "View receipt"
+  "View receipt": "Näytä kuitti"
 }

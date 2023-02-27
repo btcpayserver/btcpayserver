@@ -129,6 +129,26 @@ namespace BTCPayServer.Controllers.Greenfield
             return Ok(ToModel(invoice));
         }
 
+        [Authorize(Policy = Policies.CanViewInvoices,
+            AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [HttpGet("~/api/v1/stores/{storeId}/invoices/{invoiceId}/payments")]
+        public async Task<IActionResult> GetInvoicePayments(string storeId, string invoiceId)
+        {
+            var store = HttpContext.GetStoreData();
+            if (store == null)
+            {
+                return InvoiceNotFound();
+            }
+
+            var invoice = await _invoiceRepository.GetInvoice(invoiceId, true);
+            if (invoice?.StoreId != store.Id)
+            {
+                return InvoiceNotFound();
+            }
+
+            return Ok(ToPayments(invoice));
+        }
+
         [Authorize(Policy = Policies.CanModifyInvoices,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpDelete("~/api/v1/stores/{storeId}/invoices/{invoiceId}")]
@@ -623,23 +643,28 @@ namespace BTCPayServer.Controllers.Greenfield
                     RedirectURL = entity.RedirectURLTemplate
                 },
                 Receipt = entity.ReceiptOptions,
-                Payments = entity.GetPayments(false).Select(payment => {
-                    var pdata = payment.GetCryptoPaymentData();
-                    var pmethod = entity.GetPaymentMethod(payment.GetPaymentMethodId());
-
-                    return new Payment()
-                    {
-                        ConversionRate = pmethod.Rate,
-                        PaymentId = pdata.GetPaymentId(),
-                        ReceivedDate = payment.ReceivedTime,
-                        PaymentType = payment.GetPaymentMethodId().PaymentType.ToPrettyString(),
-                        Destination = pdata.GetDestination(),
-                        Paid = pdata.GetValue(),
-                        NetworkFee = payment.NetworkFee,
-                        Accounted = payment.Accounted
-                    };
-                }).ToArray()
+                Payments = ToPayments(entity)
             };
+        }
+
+        private static Payment[] ToPayments(InvoiceEntity invoiceEntity)
+        {
+            return invoiceEntity.GetPayments(false).Select((paymentEntity) => {
+                var pdata = paymentEntity.GetCryptoPaymentData();
+                var pmethod = invoiceEntity.GetPaymentMethod(paymentEntity.GetPaymentMethodId());
+
+                return new Payment()
+                {
+                    ConversionRate = pmethod.Rate,
+                    PaymentId = pdata.GetPaymentId(),
+                    ReceivedDate = paymentEntity.ReceivedTime,
+                    PaymentType = paymentEntity.GetPaymentMethodId().PaymentType.ToPrettyString(),
+                    Destination = pdata.GetDestination(),
+                    Paid = pdata.GetValue(),
+                    NetworkFee = paymentEntity.NetworkFee,
+                    Accounted = paymentEntity.Accounted
+                };
+            }).ToArray();
         }
     }
 }

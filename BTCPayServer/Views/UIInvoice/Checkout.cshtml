@@ -152,7 +152,7 @@
         .use(window.i18nextHttpBackend)
         .init({
             backend: {
-                loadPath: @Safe.Json($"{Model.RootPath}locales/{{{{lng}}}}.json")
+                loadPath: @Safe.Json($"{Model.RootPath}misc/translations/checkout-v1/{{{{lng}}}}?v={env.Version}")
             },
             lng: startingLanguage,
             fallbackLng: fallbackLanguage,

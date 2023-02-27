@@ -6,6 +6,7 @@ using BTCPayServer.Tests.Logging;
 using BTCPayServer.Views.Stores;
 using NBitcoin;
 using OpenQA.Selenium;
+using OpenQA.Selenium.Support.UI;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -308,6 +309,23 @@ namespace BTCPayServer.Tests
             Assert.StartsWith("bitcoin:", payUrl);
             Assert.Contains("&lightning=lnbcrt", payUrl);
             s.Driver.FindElement(By.Id("PayByLNURL"));
+            
+            // Language Switch
+            var languageSelect = new SelectElement(s.Driver.FindElement(By.Id("DefaultLang")));
+            Assert.Equal("English", languageSelect.SelectedOption.Text);
+            Assert.Equal("View Details", s.Driver.FindElement(By.Id("DetailsToggle")).Text);
+            Assert.DoesNotContain("lang=", s.Driver.Url);
+            languageSelect.SelectByText("Deutsch");
+            Assert.Equal("Details anzeigen", s.Driver.FindElement(By.Id("DetailsToggle")).Text);
+            Assert.Contains("lang=de", s.Driver.Url);
+            
+            s.Driver.Navigate().Refresh();
+            languageSelect = new SelectElement(s.Driver.FindElement(By.Id("DefaultLang")));
+            Assert.Equal("Deutsch", languageSelect.SelectedOption.Text);
+            Assert.Equal("Details anzeigen", s.Driver.FindElement(By.Id("DetailsToggle")).Text);
+            languageSelect.SelectByText("English");
+            Assert.Equal("View Details", s.Driver.FindElement(By.Id("DetailsToggle")).Text);
+            Assert.Contains("lang=en", s.Driver.Url);
         }
 
         [Fact(Timeout = TestTimeout)]

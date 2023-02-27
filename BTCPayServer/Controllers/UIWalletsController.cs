@@ -1324,7 +1324,7 @@ namespace BTCPayServer.Controllers
 
         public class UpdateLabelsRequest
         {
-            public string Address { get; set; }
+            public string? Address { get; set; }
             public string[]? Labels { get; set; }
         }
         

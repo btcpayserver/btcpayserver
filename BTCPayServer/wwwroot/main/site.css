@@ -675,23 +675,26 @@ input:checked + .btcpay-list-select-item {
 .store-footer a {
     color: var(--btcpay-body-text-muted);
 }
-.store-footer a {
+a.store-powered-by {
+    display: flex;
+    align-items: center;
+    gap: var(--btcpay-space-s);
     transition-duration: unset;
 }
-.store-footer a svg {
+a.store-powered-by svg {
     height: 2rem;
     width: 4rem;
 }
-.store-footer a:hover {
+a.store-powered-by:hover {
     color: var(--btcpay-body-text-hover);
 }
-.store-footer a:hover .logo-brand-light {
+a.store-powered-by:hover .logo-brand-light {
     color: var(--btcpay-brand-secondary);
 }
-.store-footer a:hover .logo-brand-medium {
+a.store-powered-by:hover .logo-brand-medium {
     color: var(--btcpay-brand-primary);
 }
-.store-footer a:hover .logo-brand-dark {
+a.store-powered-by:hover .logo-brand-dark {
     color: var(--btcpay-brand-tertiary);
 }
 

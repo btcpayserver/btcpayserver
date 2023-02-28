@@ -50,7 +50,7 @@ namespace BTCPayServer.Plugins
 
         public async Task<AvailablePlugin[]> GetRemotePlugins()
         {
-            var versions = await _pluginBuilderClient.GetPublishedVersions(Env.Version, _policiesSettings.PluginPreReleases);
+            var versions = await _pluginBuilderClient.GetPublishedVersions(null, _policiesSettings.PluginPreReleases);
             return versions.Select(v =>
             {
                 var p = v.ManifestInfo.ToObject<AvailablePlugin>();

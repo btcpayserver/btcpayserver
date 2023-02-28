@@ -1324,32 +1324,31 @@ namespace BTCPayServer.Controllers
 
         public class UpdateLabelsRequest
         {
-            public string Address { get; set; }
+            public string? Address { get; set; }
             public string[]? Labels { get; set; }
         }
         
         [HttpPost("{walletId}/update-labels")]
         [IgnoreAntiforgeryToken]
-        public async Task<IActionResult> UpdateLabels( [ModelBinder(typeof(WalletIdModelBinder))] WalletId walletId, [FromBody] UpdateLabelsRequest request)
+        public async Task<IActionResult> UpdateLabels([ModelBinder(typeof(WalletIdModelBinder))] WalletId walletId, [FromBody] UpdateLabelsRequest request)
         {
-            if (request.Address is null || request.Labels is null)
+            if (string.IsNullOrEmpty(request.Address) || request.Labels is null)
                 return BadRequest();
-                    
+            
             var objid = new WalletObjectId(walletId, WalletObjectData.Types.Address, request.Address);
-           var obj = await WalletRepository.GetWalletObject(objid);
-           if (obj is null)
-           {
-               await WalletRepository.EnsureWalletObject(objid);
-           }
-           else
-           {
-               var currentLabels = obj.GetNeighbours().Where(data => data.Type == WalletObjectData.Types.Label).ToArray();
-               var toRemove = currentLabels.Where(data => !request.Labels.Contains(data.Id)).Select(data => data.Id).ToArray();
-               await WalletRepository.RemoveWalletObjectLabels(objid, toRemove);
-           }
-           await
-               WalletRepository.AddWalletObjectLabels(objid, request.Labels);
-           return Ok();
+            var obj = await WalletRepository.GetWalletObject(objid); 
+            if (obj is null) 
+            {
+                await WalletRepository.EnsureWalletObject(objid); 
+            }
+            else
+            {
+                var currentLabels = obj.GetNeighbours().Where(data => data.Type == WalletObjectData.Types.Label).ToArray(); 
+                var toRemove = currentLabels.Where(data => !request.Labels.Contains(data.Id)).Select(data => data.Id).ToArray(); 
+                await WalletRepository.RemoveWalletObjectLabels(objid, toRemove); 
+            }
+            await WalletRepository.AddWalletObjectLabels(objid, request.Labels);
+            return Ok();
         }
         
         [HttpGet("{walletId}/labels")]

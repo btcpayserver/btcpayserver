@@ -14,6 +14,7 @@
 * Fix missing style tag around embedded CSS (#4659) @dennisreimann
 * Fix crash during migration on some SQLite instances (#4623) @NicolasDorier
 * Fix HTML injection in payment request/posData/receiptData (#4679) @NicolasDorier
+* Show available plugins even when btcpay version conditions are not met (#4717) @Kukks
 
 ### Improvements
 

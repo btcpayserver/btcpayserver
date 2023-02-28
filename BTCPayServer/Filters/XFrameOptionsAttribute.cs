@@ -10,28 +10,18 @@ namespace BTCPayServer.Filters
             Value = value;
         }
 
-        public XFrameOptionsAttribute(XFrameOptions type, string allowFrom = null)
+        public XFrameOptionsAttribute(XFrameOptions type)
         {
-            switch (type)
+            Value = type switch
             {
-                case XFrameOptions.Deny:
-                    Value = "deny";
-                    break;
-                case XFrameOptions.SameOrigin:
-                    Value = "deny";
-                    break;
-                case XFrameOptions.AllowFrom:
-                    Value = $"allow-from {allowFrom}";
-                    break;
-                case XFrameOptions.AllowAll:
-                    Value = "allow-all";
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(type), type, null);
-            }
+                XFrameOptions.Deny => "DENY",
+                XFrameOptions.SameOrigin => "SAMEORIGIN",
+                XFrameOptions.Unset => null,
+                _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
+            };
         }
 
-        public string Value { get; set; }
+        private string Value { get; set; }
 
         public void OnActionExecuted(ActionExecutedContext context)
         {
@@ -39,7 +29,7 @@ namespace BTCPayServer.Filters
 
         public void OnActionExecuting(ActionExecutingContext context)
         {
-            if (context.IsEffectivePolicy<XFrameOptionsAttribute>(this))
+            if (context.IsEffectivePolicy(this))
             {
                 context.HttpContext.Response.SetHeaderOnStarting("X-Frame-Options", Value);
             }
@@ -49,8 +39,7 @@ namespace BTCPayServer.Filters
         {
             Deny,
             SameOrigin,
-            AllowFrom,
-            AllowAll
+            Unset
         }
     }
 }

@@ -1860,7 +1860,7 @@ namespace BTCPayServer.Tests
             })
             .ToHashSet();
 #pragma warning restore CS0618 // Type or member is obsolete
-            Assert.Equal(1, formats.Count);
+            Assert.Single(formats);
         }
 
         [Fact]

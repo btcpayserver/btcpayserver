@@ -15,6 +15,7 @@
 * Fix crash during migration on some SQLite instances (#4623) @NicolasDorier
 * Fix HTML injection in payment request/posData/receiptData (#4679) @NicolasDorier
 * Show available plugins even when btcpay version conditions are not met (#4717) @Kukks
+* Fix: It wasn't possible to use Point of Sale in an iframe if forms was asked to buyer. (#4666 #4721) @dennisreimann @NicolasDorier
 
 ### Improvements
 

@@ -2,6 +2,10 @@
 
 ## 1.8.0
 
+Bear markets are for building: This version brings custom checkout forms, store branding options, a redesigned Point of Sale keypad view, new notification icons and address labeling.
+
+Read more information in [v1.8.0 blog's post](https://blog.btcpayserver.org/btcpay-server-1-8-0/).
+
 ### New feature
 
 * Generic Forms (#4561 #4668 #4697) @Kukks @dennisreimann

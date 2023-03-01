@@ -253,32 +253,37 @@
             </table>
         </div>
         <div class="d-flex flex-column gap-5">
-            <div>
-                <h3 class="mb-3">Product Information</h3>
-                <table class="table mb-0">
-                    @if (!string.IsNullOrEmpty(Model.TypedMetadata.ItemCode))
-                    {
-                        <tr>
-                            <th class="fw-semibold">Item code</th>
-                            <td>@Model.TypedMetadata.ItemCode</td>
-                        </tr>
-                    }
-                    @if (!string.IsNullOrEmpty(Model.TypedMetadata.ItemDesc))
-                    {
-                        <tr>
-                            <th class="fw-semibold">Item Description</th>
-                            <td>@Model.TypedMetadata.ItemDesc</td>
-                        </tr>
-                    }
-                    @if (Model.TaxIncluded is not null)
-                    {
-                        <tr>
-                            <th class="fw-semibold">Tax Included</th>
-                            <td>@Model.TaxIncluded</td>
-                        </tr>
-                    }
-                </table>
-            </div>
+			@if (!string.IsNullOrEmpty(Model.TypedMetadata.ItemCode) ||
+				 !string.IsNullOrEmpty(Model.TypedMetadata.ItemDesc) ||
+				 Model.TypedMetadata.TaxIncluded is not null)
+			{
+                <div>
+					<h3 class="mb-3">Product Information</h3>
+					<table class="table mb-0">
+						@if (!string.IsNullOrEmpty(Model.TypedMetadata.ItemCode))
+						{
+							<tr>
+								<th class="fw-semibold">Item code</th>
+								<td>@Model.TypedMetadata.ItemCode</td>
+							</tr>
+						}
+						@if (!string.IsNullOrEmpty(Model.TypedMetadata.ItemDesc))
+						{
+							<tr>
+								<th class="fw-semibold">Item Description</th>
+								<td>@Model.TypedMetadata.ItemDesc</td>
+							</tr>
+						}
+						@if (Model.TaxIncluded is not null)
+						{
+							<tr>
+								<th class="fw-semibold">Tax Included</th>
+								<td>@Model.TaxIncluded</td>
+							</tr>
+						}
+					</table>
+		       </div>
+			}
             @if (Model.TypedMetadata.BuyerName is not null ||
                  Model.TypedMetadata.BuyerEmail is not null ||
                  Model.TypedMetadata.BuyerPhone is not null ||

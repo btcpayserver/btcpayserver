@@ -62,9 +62,10 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
         public FormDataService FormDataService { get; }
 
         [HttpGet("/")]
+        [HttpGet("/apps/{appId}/pos")]
         [HttpGet("/apps/{appId}/pos/{viewType?}")]
-        [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.AllowAll)]
         [DomainMappingConstraint(AppType.PointOfSale)]
+        [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.Unset)]
         public async Task<IActionResult> ViewPointOfSale(string appId, PosViewType? viewType = null)
         {
             var app = await _appService.GetApp(appId, AppType.PointOfSale);
@@ -118,11 +119,11 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
 
         [HttpPost("/")]
         [HttpPost("/apps/{appId}/pos/{viewType?}")]
-        [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.AllowAll)]
         [IgnoreAntiforgeryToken]
         [EnableCors(CorsPolicies.All)]
         [DomainMappingConstraint(AppType.PointOfSale)]
         [RateLimitsFilter(ZoneLimits.PublicInvoices, Scope = RateLimitsScope.RemoteAddress)]
+        [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.Unset)]
         public async Task<IActionResult> ViewPointOfSale(string appId,
                                                         PosViewType? viewType = null,
                                                         [ModelBinder(typeof(InvariantDecimalModelBinder))] decimal? amount = null,
@@ -329,6 +330,8 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
         }
 
         [HttpPost("/apps/{appId}/pos/form/{viewType?}")]
+        [IgnoreAntiforgeryToken]
+        [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.Unset)]
         public async Task<IActionResult> POSForm(string appId, PosViewType? viewType = null)
         {
             var app = await _appService.GetApp(appId, AppType.PointOfSale);
@@ -373,6 +376,8 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
         }
 
         [HttpPost("/apps/{appId}/pos/form/submit/{viewType?}")]
+        [IgnoreAntiforgeryToken]
+        [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.Unset)]
         public async Task<IActionResult> POSFormSubmit(string appId, FormViewModel viewModel, PosViewType? viewType = null)
         {
             var app = await _appService.GetApp(appId, AppType.PointOfSale);

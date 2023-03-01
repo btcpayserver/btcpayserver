@@ -208,6 +208,7 @@ namespace BTCPayServer.Controllers
         [HttpGet("{payReqId}/form")]
         [HttpPost("{payReqId}/form")]
         [AllowAnonymous]
+        [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.Unset)]
         public async Task<IActionResult> ViewPaymentRequestForm(string payReqId, FormViewModel viewModel)
         {
             var result = await _PaymentRequestRepository.FindPaymentRequest(payReqId, GetUserId());

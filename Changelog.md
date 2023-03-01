@@ -15,7 +15,7 @@
 * Fix crash during migration on some SQLite instances (#4623) @NicolasDorier
 * Fix HTML injection in payment request/posData/receiptData (#4679) @NicolasDorier
 * Show available plugins even when btcpay version conditions are not met (#4717) @Kukks
-* Fix: It wasn't possible to use Point of Sale in an iframe if forms was asked to buyer. (#4666 #4721) @dennisreimann @NicolasDorier
+* Fix: It wasn't possible to use Point of Sale in an iframe if forms was asked to buyer (#4666 #4721) @dennisreimann @NicolasDorier
 
 ### Improvements
 
@@ -26,6 +26,9 @@
 * Remove JSON in strings from JObjects (#4703) @NicolasDorier
 * Do not require docker for plugin restart @Kukks
 * POS: Align Keypad centered vertically (#4690) @dennisreimann
+* Greenfield: Show detailed Lightning routing error (#4722) @dennisreimann
+* Add currency code to payment request list (#4709) @bolatovumar
+* Translate Checkout v2 (#4710) @NicolasDorier
 
 ## 1.7.12
 

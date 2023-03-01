@@ -161,12 +161,10 @@
             <checkout-cheating invoice-id="@Model.InvoiceId" :btc-due="srvModel.btcDue" :is-paid="isPaid" :payment-method-id="pmId"></checkout-cheating>
         }
         <footer class="store-footer">
-            <a href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">
+            <a class="store-powered-by" href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">
                 {{$t("powered_by")}} <partial name="_StoreFooterLogo" />
             </a>
-            @* TODO: Re-add this once checkout v2 has been translated
             <select asp-for="DefaultLang" asp-items="@LangService.GetLanguageSelectListItems()" class="form-select w-auto" v-on:change="changeLanguage"></select>
-            *@
         </footer>
     </div>
     <noscript>
@@ -218,10 +216,10 @@
         </dl>
     </script>
     <script>
-        const i18nUrl = @Safe.Json($"{Model.RootPath}locales/checkout/{{{{lng}}}}.json?v={Env.Version}");
+	const i18nUrl = @Safe.Json($"{Model.RootPath}misc/translations/checkout-v2/{{{{lng}}}}?v={Env.Version}");
         const statusUrl = @Safe.Json(Url.Action("GetStatus", new { invoiceId = Model.InvoiceId }));
         const statusWsUrl = @Safe.Json(Url.Action("GetStatusWebSocket", new { invoiceId = Model.InvoiceId }));
-        const availableLanguages = ['en']; // @Safe.Json(LangService.GetLanguages().Select(language => language.Code));
+        const availableLanguages = @Safe.Json(LangService.GetLanguages().Select(language => language.Code));
         const initialSrvModel = @Safe.Json(Model);
         const qrOptions = { margin: 0, type: 'svg', color: { dark: '#000', light: '#fff' } };
     </script>

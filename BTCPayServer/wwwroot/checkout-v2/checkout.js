@@ -36,22 +36,33 @@ Vue.directive('collapsible', {
     }
 });
 
-const fallbackLanguage = 'en';
-const startingLanguage = computeStartingLanguage();
 const STATUS_PAID = ['complete', 'confirmed', 'paid'];
 const STATUS_UNPAYABLE =  ['expired', 'invalid'];
+const urlParams = new URLSearchParams(window.location.search);
 
 function computeStartingLanguage() {
+    const lang = urlParams.get('lang')
+    if (lang && isLanguageAvailable(lang)) return lang;
     const { defaultLang } = initialSrvModel;
     return isLanguageAvailable(defaultLang) ? defaultLang : fallbackLanguage;
 }
 
 function isLanguageAvailable(languageCode) {
-    return availableLanguages.indexOf(languageCode) >= 0;
+    return availableLanguages.includes(languageCode);
+}
+
+function updateLanguage(lang) {
+    if (isLanguageAvailable(lang)) {
+        i18next.changeLanguage(lang);
+        urlParams.set('lang', lang);
+        window.history.replaceState({}, '', `${location.pathname}?${urlParams}`);
+    }
 }
 
 Vue.use(VueI18next);
 
+const fallbackLanguage = 'en';
+const startingLanguage = computeStartingLanguage();
 const i18n = new VueI18next(i18next);
 const eventBus = new Vue();
 
@@ -176,10 +187,7 @@ function initApp() {
                 }
             },
             changeLanguage (e) {
-                const lang = e.target.value;
-                if (isLanguageAvailable(lang)) {
-                    i18next.changeLanguage(lang);
-                }
+                updateLanguage(e.target.value);
             },
             padTime (val) {
                 return val.toString().padStart(2, '0');

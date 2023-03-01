@@ -29,6 +29,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBitcoin.Payment;
 using NBitpayClient;
@@ -44,6 +45,9 @@ namespace BTCPayServer.Controllers
         private readonly BTCPayNetworkProvider _networkProvider;
         private IHttpClientFactory HttpClientFactory { get; }
         private SignInManager<ApplicationUser> SignInManager { get; }
+
+        private IFileProvider _WebRootFileProvider;
+
         public LanguageService LanguageService { get; }
 
         public UIHomeController(IHttpClientFactory httpClientFactory,
@@ -51,6 +55,7 @@ namespace BTCPayServer.Controllers
                               LanguageService languageService,
                               StoreRepository storeRepository,
                               BTCPayNetworkProvider networkProvider,
+                              IWebHostEnvironment environment,
                               SignInManager<ApplicationUser> signInManager)
         {
             _theme = theme;
@@ -59,6 +64,7 @@ namespace BTCPayServer.Controllers
             _networkProvider = networkProvider;
             _storeRepository = storeRepository;
             SignInManager = signInManager;
+            _WebRootFileProvider = environment.WebRootFileProvider;
         }
 
         [HttpGet("home")]
@@ -120,6 +126,45 @@ namespace BTCPayServer.Controllers
         public IActionResult Permissions()
         {
             return Json(Client.Models.PermissionMetadata.PermissionNodes, new JsonSerializerSettings { Formatting = Formatting.Indented });
+        }
+        [Route("misc/translations/{resource}/{lang}")]
+        [AllowAnonymous]
+        public IActionResult GetTranslations(string resource, string lang)
+        {
+            string path;
+            if (resource == "checkout-v1")
+                path = "locales";
+            else if (resource == "checkout-v2")
+                path = "locales/checkout";
+            else
+                return NotFound();
+            var enLang = Lang(path + "/en.json");
+            var en = (enLang as JsonResult)?.Value as JObject;
+            if (en is null || lang == "en" || lang == "en-US")
+                return enLang;
+            lang = LanguageService.FindLanguage(lang)?.Code;
+            if (lang is null)
+                return enLang;
+            var oLang = Lang(path + $"/{lang}.json");
+            var o = (oLang as JsonResult)?.Value as JObject;
+            if (o is null)
+                return enLang;
+            en.Merge(o);
+            return Json(en);
+        }
+
+        private IActionResult Lang(string path)
+        {
+            var fi = _WebRootFileProvider.GetFileInfo(path);
+            try
+            {
+                using var fs = fi.CreateReadStream();
+                return Json(JObject.Load(new JsonTextReader(new StreamReader(fs, leaveOpen: true))));
+            }
+            catch
+            {
+                return NotFound();
+            }
         }
 
         [Route("swagger/v1/swagger.json")]

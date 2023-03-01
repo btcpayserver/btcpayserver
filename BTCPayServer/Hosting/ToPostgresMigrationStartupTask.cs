@@ -183,7 +183,7 @@ namespace BTCPayServer.Hosting
                     if (state == null)
                         throw new ConfigException("This postgres database isn't created during a migration. Please use an empty database for postgres when migrating. If it's not a migration, remove --sqlitefile or --mysql settings.");
                 }
-                catch (NpgsqlException ex) when (ex.SqlState == PostgresErrorCodes.InvalidCatalogName) // DB doesn't exists
+                catch (NpgsqlException ex) when (ex.SqlState == PostgresErrorCodes.InvalidCatalogName || ex.SqlState == PostgresErrorCodes.UndefinedTable) // DB doesn't exists
                 {
                     await postgresContext.Database.MigrateAsync();
                     state = "pending";

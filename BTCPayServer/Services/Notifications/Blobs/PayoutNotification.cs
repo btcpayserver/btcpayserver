@@ -3,8 +3,7 @@ using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
 using BTCPayServer.Controllers;
-using BTCPayServer.Data;
-using BTCPayServer.Models.NotificationViewModels;
+using ExchangeSharp;
 using Microsoft.AspNetCore.Routing;
 
 namespace BTCPayServer.Services.Notifications.Blobs
@@ -35,10 +34,12 @@ namespace BTCPayServer.Services.Notifications.Blobs
 
             protected override void FillViewModel(PayoutNotification notification, NotificationViewModel vm)
             {
+                vm.Identifier = notification.Identifier;
+                vm.Type = notification.NotificationType;
                 vm.Body = (notification.Status ?? PayoutState.AwaitingApproval) switch
                 {
-                    PayoutState.AwaitingApproval => $"A new payout is awaiting for approval",
-                    PayoutState.AwaitingPayment => $"A new payout is approved and awaiting payment",
+                    PayoutState.AwaitingApproval => "A new payout is awaiting for approval",
+                    PayoutState.AwaitingPayment => "A new payout is approved and awaiting payment",
                     _ => throw new ArgumentOutOfRangeException()
                 };
                 vm.ActionLink = _linkGenerator.GetPathByAction(nameof(UIStorePullPaymentsController.Payouts),
@@ -51,8 +52,8 @@ namespace BTCPayServer.Services.Notifications.Blobs
         public string StoreId { get; set; }
         public string PaymentMethod { get; set; }
         public string Currency { get; set; }
-        public PayoutState? State { get; set; }
-        public override string Identifier => TYPE;
+        public override string Identifier => Status is null ? TYPE : $"{TYPE}_{Status.ToStringLowerInvariant()}";
+
         public override string NotificationType => TYPE;
         public PayoutState? Status { get; set; }
     }

@@ -15,34 +15,22 @@
                 <div class="d-flex flex-wrap gap-2 align-items-center">
                     @foreach (var label in transaction.Tags)
                     {
-                        <div class="badge-container rounded-2" style="background-color:@label.Color;">
-                            <div class="badge transactionLabel position-relative d-block"
-                                 style="background-color:@label.Color;padding-right: 16px; z-index: 1;"
-                                 data-bs-html="true"
-                                 data-bs-toggle="tooltip"
-                                 data-bs-custom-class="label-tooltip"
-                                 title="@label.Tooltip">
-                                <a asp-route-labelFilter="@label.Text" style="color:@label.TextColor !important;">@label.Text</a>
-
-                                <form asp-route-walletId="@Context.GetRouteValue("walletId")"
-                                      asp-action="ModifyTransaction"
-                                      method="post"
-                                      class="removeTransactionLabelForm">
-                                    <input type="hidden" name="transactionId" value="@transaction.Id" />
-                                    <button name="removelabel"
-                                            style="color: @label.Color; filter: brightness(0.5);"
-                                            type="submit"
-                                            value="@label.Text">
-                                        <span class="fa fa-close"></span>
-                                    </button>
-                                </form>
-                            </div>
+                        <div class="transaction-label" style="--label-bg:@label.Color;--label-fg:@label.TextColor;">
+                            <a asp-route-labelFilter="@label.Text">@label.Text</a>
+                            <form method="post" asp-action="ModifyTransaction" asp-route-walletId="@Context.GetRouteValue("walletId")">
+                                <input type="hidden" name="transactionId" value="@transaction.Id" />
+                                <button name="removelabel" type="submit" value="@label.Text" class="transaction-label-action">
+                                    <vc:icon symbol="remove"/>
+                                </button>
+                            </form>
                             @if (!string.IsNullOrEmpty(label.Link))
                             {
-                                <a href="@label.Link" target="_blank" class="badge transaction-details-icon" style="background-color: @label.Color; filter: brightness(1.1);" rel="noreferrer noopener">
-                                    <span class="fa fa-info-circle" title="Transaction details" style="color: @label.Color; filter: brightness(0.5);">
-                                        <span class="visually-hidden">Transaction details</span>
-                                    </span>
+                                <a href="@label.Link" target="_blank" rel="noreferrer noopener" class="transaction-label-info transaction-details-icon"
+                                   title="@label.Tooltip"
+                                   data-bs-html="true"
+                                   data-bs-toggle="tooltip"
+                                   data-bs-custom-class="transaction-label-tooltip">
+                                    <vc:icon symbol="info"/>
                                 </a>
                             }
                         </div>
@@ -50,7 +38,7 @@
                 </div>
             }
         </td>
-        <td class="smMaxWidth text-truncate @(transaction.IsConfirmed ? "" : "unconf")">
+        <td class="smMaxWidth text-truncate@(transaction.IsConfirmed ? "" : " unconf")">
             <a href="@transaction.Link" target="_blank" rel="noreferrer noopener">
                 @transaction.Id
             </a>
@@ -79,14 +67,14 @@
                             <div class="py-2 px-3 d-flex flex-wrap gap-2">
                                 @foreach (var label in Model.Labels)
                                 {
-                                    @if (transaction.Tags.Any(l => l.Text == label.Text))
-                                    {
-                                        <button name="removelabel" class="bg-transparent border-0 p-0" type="submit" value="@label.Text"><span class="badge" style="background-color:@label.Color;color:@label.TextColor"><span class="fa fa-check"></span> @label.Text</span></button>
-                                    }
-                                    else
-                                    {
-                                        <button name="addlabelclick" class="bg-transparent border-0 p-0" type="submit" value="@label.Text"><span class="badge" style="background-color:@label.Color;color:@label.TextColor">@label.Text</span></button>
-                                    }
+                                    var isActive = transaction.Tags.Any(l => l.Text == label.Text);
+                                    <button name="@(isActive ? "removelabel" : "addlabelclick")" type="submit" value="@label.Text"
+                                            class="transaction-label@(isActive ? " active" : string.Empty)" style="--label-bg:@label.Color;--label-fg:@label.TextColor">
+                                        <span>@label.Text</span>
+                                        <span class="transaction-label-action">
+                                            <vc:icon symbol="@(isActive ? "remove" : "new")"/>
+                                        </span>
+                                    </button>
                                 }
                             </div>
                         }

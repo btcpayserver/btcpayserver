@@ -1,13 +1,14 @@
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @model BTCPayServer.Plugins.PointOfSale.Models.ViewPointOfSaleViewModel
 
-<form id="app" method="post" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" data-buy v-on:submit="handleFormSubmit" class="d-flex flex-column gap-4 flex-fill" v-cloak>
+<form id="app" method="post" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" data-buy v-on:submit="handleFormSubmit" class="d-flex flex-column gap-4 my-auto" v-cloak>
+    <input id="posdata" type="hidden" name="posdata" v-model="posdata">
     <div ref="display" class="d-flex flex-column align-items-center px-4 mb-auto">
         <div class="fw-semibold text-muted">{{srvModel.currencyCode}}</div>
         <div class="fw-bold lh-sm" ref="amount" v-bind:style="{ fontSize: `${fontSize}px` }">{{ formatCurrency(total, false) }}</div>
-        <div class="text-muted text-center mt-2" v-if="calculation">{{ calculation }}</div>
+        <div class="text-muted text-center mt-2" id="Calculation" v-if="srvModel.showDiscount || srvModel.enableTips">{{ calculation }}</div>
     </div>
-    <div id="ModeTabs" class="tab-content mb-n2">
+    <div id="ModeTabs" class="tab-content mb-n2" v-if="srvModel.showDiscount || srvModel.enableTips">
         <div id="Mode-Discount" class="tab-pane fade px-2" :class="{ show: mode === 'discount', active: mode === 'discount' }" role="tabpanel" aria-labelledby="ModeTablist-Discount" v-if="srvModel.showDiscount">
             <div class="h4 fw-semibold text-muted text-center">
                 <span class="h3 text-body me-1">{{discountPercent || 0}}%</span> discount

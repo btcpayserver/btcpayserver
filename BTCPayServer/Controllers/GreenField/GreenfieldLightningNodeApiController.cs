@@ -256,7 +256,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
             return result.Result switch
             {
-                PayResult.CouldNotFindRoute => this.CreateAPIError("could-not-find-route", "Impossible to find a route to the peer"),
+                PayResult.CouldNotFindRoute => this.CreateAPIError("could-not-find-route", result.ErrorDetail ?? "Impossible to find a route to the peer"),
                 PayResult.Error => this.CreateAPIError("generic-error", result.ErrorDetail),
                 PayResult.Unknown => Accepted(new LightningPaymentData
                 {

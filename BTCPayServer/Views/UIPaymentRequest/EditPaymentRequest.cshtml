@@ -1,11 +1,14 @@
 @using BTCPayServer.Services.PaymentRequests
 @using System.Globalization
+@using BTCPayServer.Forms
 @using BTCPayServer.Services.Stores
 @using BTCPayServer.TagHelpers
 @using Microsoft.AspNetCore.Mvc.TagHelpers
+@inject FormDataService FormDataService
 @model BTCPayServer.Models.PaymentRequestViewModels.UpdatePaymentRequestViewModel
 @{
-    var checkoutFormOptions = CheckoutFormSelectList.WithSelected(Model.FormId);
+    
+    var checkoutFormOptions = await FormDataService.GetSelect(Model.StoreId, Model.FormId);
 
     ViewData.SetActivePage(PaymentRequestsNavPages.Create, $"{(string.IsNullOrEmpty(Model.Id) ? "Create" : "Edit")} Payment Request", Model.Id);
 }

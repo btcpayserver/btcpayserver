@@ -190,6 +190,41 @@ namespace BTCPayServer.Tests
 
             await unrestricted.RevokeAPIKey(apiKey.ApiKey);
             await AssertAPIError("apikey-not-found", () => unrestricted.RevokeAPIKey(apiKey.ApiKey));
+
+
+            // Admin create API key to new user
+            acc = tester.NewAccount();
+            await acc.GrantAccessAsync(isAdmin: true);
+            unrestricted = await acc.CreateClient();
+            var newUser = await unrestricted.CreateUser(new CreateApplicationUserRequest() { Email = Utils.GenerateEmail(), Password = "Kitten0@" });
+            var newUserAPIKey = await unrestricted.CreateAPIKey(newUser.Id, new CreateApiKeyRequest()
+            {
+                Label = "Hello world",
+                Permissions = new Permission[] { Permission.Create(Policies.CanViewProfile) }
+            });
+            var newUserClient = acc.CreateClientFromAPIKey(newUserAPIKey.ApiKey);
+            Assert.Equal(newUser.Id, (await newUserClient.GetCurrentUser()).Id);
+            // Admin delete it
+            await unrestricted.RevokeAPIKey(newUser.Id, newUserAPIKey.ApiKey);
+            await Assert.ThrowsAsync<GreenfieldAPIException>(() => newUserClient.GetCurrentUser());
+
+            // Admin create store
+            var store = await unrestricted.CreateStore(new CreateStoreRequest() { Name = "Pouet lol" });
+
+            // Grant right to another user
+            newUserAPIKey = await unrestricted.CreateAPIKey(newUser.Id, new CreateApiKeyRequest()
+            {
+                Label = "Hello world",
+                Permissions = new Permission[] { Permission.Create(Policies.CanViewInvoices, store.Id) },
+            });
+
+            // Despite the grant, the user shouldn't be able to get the invoices!
+            newUserClient = acc.CreateClientFromAPIKey(newUserAPIKey.ApiKey);
+            await Assert.ThrowsAsync<GreenfieldAPIException>(() => newUserClient.GetInvoices(store.Id));
+
+            // if user is a guest or owner, then it should be ok
+            await unrestricted.AddStoreUser(store.Id, new StoreUserData() { UserId = newUser.Id, Role = "Guest" });
+            await newUserClient.GetInvoices(store.Id);
         }
 
         [Fact(Timeout = TestTimeout)]
@@ -655,15 +690,8 @@ namespace BTCPayServer.Tests
             tester.PayTester.DisableRegistration = true;
             await tester.StartAsync();
             var unauthClient = new BTCPayServerClient(tester.PayTester.ServerUri);
-            await AssertValidationError(new[] { "Email", "Password" },
+            await AssertValidationError(new[] { "Email" },
                 async () => await unauthClient.CreateUser(new CreateApplicationUserRequest()));
-            await AssertValidationError(new[] { "Password" },
-                async () => await unauthClient.CreateUser(
-                    new CreateApplicationUserRequest() { Email = "test@gmail.com" }));
-            // Pass too simple
-            await AssertValidationError(new[] { "Password" },
-                async () => await unauthClient.CreateUser(
-                    new CreateApplicationUserRequest() { Email = "test3@gmail.com", Password = "a" }));
 
             // We have no admin, so it should work
             var user1 = await unauthClient.CreateUser(
@@ -1224,10 +1252,30 @@ namespace BTCPayServer.Tests
             var newStore = await client.CreateStore(new CreateStoreRequest() { Name = "A" });
 
             //update store
-            var updatedStore = await client.UpdateStore(newStore.Id, new UpdateStoreRequest() { Name = "B" });
+            Assert.Empty(newStore.PaymentMethodCriteria);
+            await client.GenerateOnChainWallet(newStore.Id, "BTC", new GenerateOnChainWalletRequest());
+            var updatedStore = await client.UpdateStore(newStore.Id, new UpdateStoreRequest() { Name = "B", PaymentMethodCriteria = new List<PaymentMethodCriteriaData>()
+            {
+                new()
+                {
+                    Amount = 10,
+                    Above = true,
+                    PaymentMethod = "BTC",
+                    CurrencyCode = "USD"
+                }
+             }});
             Assert.Equal("B", updatedStore.Name);
-            Assert.Equal("B", (await client.GetStore(newStore.Id)).Name);
-
+            var s = (await client.GetStore(newStore.Id));
+            Assert.Equal("B", s.Name);
+            var pmc = Assert.Single(s.PaymentMethodCriteria);
+            //check that pmc equals the one we set
+            Assert.Equal(10, pmc.Amount);
+            Assert.True(pmc.Above);
+            Assert.Equal("BTC", pmc.PaymentMethod);
+            Assert.Equal("USD", pmc.CurrencyCode);
+            updatedStore = await client.UpdateStore(newStore.Id, new UpdateStoreRequest() { Name = "B"});
+            Assert.Empty(newStore.PaymentMethodCriteria);
+            
             //list stores
             var stores = await client.GetStores();
             var storeIds = stores.Select(data => data.Id);
@@ -1346,10 +1394,6 @@ namespace BTCPayServer.Tests
                     Email = $"{Guid.NewGuid()}",
                     Password = Guid.NewGuid().ToString()
                 }));
-
-            await AssertValidationError(new[] { "Password" }, async () =>
-                await clientServer.CreateUser(
-                    new CreateApplicationUserRequest() { Email = $"{Guid.NewGuid()}@g.com", }));
 
             await AssertValidationError(new[] { "Email" }, async () =>
                 await clientServer.CreateUser(
@@ -1707,7 +1751,9 @@ namespace BTCPayServer.Tests
                 var db = tester.PayTester.GetService<Data.ApplicationDbContextFactory>();
                 using var ctx = db.CreateContext();
                 var dbInvoice = await ctx.Invoices.FindAsync(oldInvoice.Id);
+#pragma warning disable CS0618 // Type or member is obsolete
                 dbInvoice.Blob = ZipUtils.Zip(invoiceV1);
+#pragma warning restore CS0618 // Type or member is obsolete
                 await ctx.SaveChangesAsync();
                 var newInvoice = await AssertInvoiceMetadata();
 
@@ -2009,7 +2055,7 @@ namespace BTCPayServer.Tests
 
             //get
             var invoice = await viewOnly.GetInvoice(user.StoreId, newInvoice.Id);
-            Assert.Equal(newInvoice.Metadata, invoice.Metadata);
+            Assert.True(JObject.DeepEquals(newInvoice.Metadata, invoice.Metadata));
             var paymentMethods = await viewOnly.GetInvoicePaymentMethods(user.StoreId, newInvoice.Id);
             Assert.Single(paymentMethods);
             var paymentMethod = paymentMethods.First();

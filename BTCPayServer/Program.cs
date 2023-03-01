@@ -36,6 +36,8 @@ namespace BTCPayServer
             try
             {
                 var confBuilder = new DefaultConfiguration() { Logger = logger }.CreateConfigurationBuilder(args);
+                if (confBuilder is null)
+                    return;
 #if DEBUG
                 confBuilder.AddJsonFile("appsettings.dev.json", true, false);
 #endif

@@ -77,6 +77,17 @@ namespace BTCPayServer.HostedServices
                             foreach (var walletObjectData in walletObjectDatas)
                             {
                                 await _walletRepository.EnsureWalletObjectLink(txWalletObject, walletObjectData.Key);
+                                //if the object is an address, we also link the labels to the tx
+                                if(walletObjectData.Value.Type == WalletObjectData.Types.Address)
+                                {
+                                    var labels = walletObjectData.Value.GetNeighbours()
+                                        .Where(data => data.Type == WalletObjectData.Types.Label).Select(data =>
+                                            new WalletObjectId(walletObjectDatas.Key, data.Type, data.Id));
+                                   foreach (var label in labels)
+                                   {
+                                       await _walletRepository.EnsureWalletObjectLink(label, txWalletObject);
+                                   }
+                                }
                             }
                         }
 

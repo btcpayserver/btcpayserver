@@ -124,8 +124,6 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 ModelState.AddModelError(nameof(request.Email), "Invalid email");
             }
-            if (request.Password is null)
-                ModelState.AddModelError(nameof(request.Password), "Password is missing");
             if (!ModelState.IsValid)
             {
                 return this.CreateValidationError(ModelState);

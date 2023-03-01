@@ -1,5 +1,5 @@
 {
-  "NOTICE_WARN": "THIS CODE HAS BEEN AUTOMATICALLY GENERATED FROM TRANSIFEX, IF YOU WISH TO HELP TRANSLATION COME ON THE SLACK http://slack.btcpayserver.org TO REQUEST PERMISSION TO https://www.transifex.com/btcpayserver/btcpayserver/",
+  "NOTICE_WARN": "THIS CODE HAS BEEN AUTOMATICALLY GENERATED FROM TRANSIFEX, IF YOU WISH TO HELP TRANSLATION COME ON THE SLACK https://chat.btcpayserver.org/ TO REQUEST PERMISSION TO https://www.transifex.com/btcpayserver/btcpayserver/",
   "code": "he",
   "currentLanguage": "עברית",
   "lang": "שפה",
@@ -49,5 +49,5 @@
   "Close": "סגירה",
   "NotPaid_ExtraTransaction": "החשבונית לא שולמה במלואה. נא לשלוח תשלום נוסף לכיסוי סכום החוב.",
   "Recommended_Fee": "עמלה מומלצת: {{feeRate}} סאט/בית",
-  "View receipt": "View receipt"
+  "View receipt": "הצג קבלה"
 }

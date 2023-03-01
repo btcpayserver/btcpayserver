@@ -318,7 +318,7 @@ namespace BTCPayServer.HostedServices
             var sig = Encoders.Hex.EncodeData(hmac.ComputeHash(bytes));
             content.Headers.Add("BTCPay-Sig", $"sha256={sig}");
             request.Content = content;
-            var deliveryBlob = ctx.Delivery.Blob is null ? new WebhookDeliveryBlob() : ctx.Delivery.GetBlob();
+            var deliveryBlob = ctx.Delivery.GetBlob() ?? new WebhookDeliveryBlob();
             deliveryBlob.Request = bytes;
             try
             {

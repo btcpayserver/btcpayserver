@@ -1218,21 +1218,14 @@ namespace BTCPayServer.Tests
                     {(null, new Dictionary<string, object>())},
                     {("", new Dictionary<string, object>())},
                     {("{}", new Dictionary<string, object>())},
-                    {("non-json-content", new Dictionary<string, object>() {{string.Empty, "non-json-content"}})},
-                    {("[1,2,3]", new Dictionary<string, object>() {{string.Empty, "[1,2,3]"}})},
                     {("{ \"key\": \"value\"}", new Dictionary<string, object>() {{"key", "value"}})},
-                    {("{ \"key\": true}", new Dictionary<string, object>() {{"key", "True"}})},
-                    {
-                        ("{ invalidjson file here}",
-                            new Dictionary<string, object>() {{String.Empty, "{ invalidjson file here}"}})
-                    },
                     // Duplicate keys should not crash things
                     {("{ \"key\": true, \"key\": true}", new Dictionary<string, object>() {{"key", "True"}})}
                 };
 
             testCases.ForEach(tuple =>
             {
-                Assert.Equal(tuple.expectedOutput, UIInvoiceController.PosDataParser.ParsePosData(tuple.input));
+                Assert.Equal(tuple.expectedOutput, UIInvoiceController.PosDataParser.ParsePosData(string.IsNullOrEmpty(tuple.input) ? null : JToken.Parse(tuple.input)));
             });
         }
         [Fact]
@@ -1806,6 +1799,70 @@ namespace BTCPayServer.Tests
                 }
             }
         }
+
+        [Fact]
+        public void CanParseMetadata()
+        {
+            var metadata = InvoiceMetadata.FromJObject(JObject.Parse("{\"posData\": {\"test\":\"a\"}}"));
+            Assert.Equal(JObject.Parse("{\"test\":\"a\"}").ToString(), metadata.PosDataLegacy);
+            Assert.Equal(JObject.Parse("{\"test\":\"a\"}").ToString(), metadata.PosData.ToString());
+
+            // Legacy, as string
+            metadata = InvoiceMetadata.FromJObject(JObject.Parse("{\"posData\": \"{\\\"test\\\":\\\"a\\\"}\"}"));
+            Assert.Equal("{\"test\":\"a\"}", metadata.PosDataLegacy);
+            Assert.Equal(JObject.Parse("{\"test\":\"a\"}").ToString(), metadata.PosData.ToString());
+
+            metadata = InvoiceMetadata.FromJObject(JObject.Parse("{\"posData\": \"nobject\"}"));
+            Assert.Equal("nobject", metadata.PosDataLegacy);
+            Assert.Null(metadata.PosData);
+
+            metadata = InvoiceMetadata.FromJObject(JObject.Parse("{\"posData\": null}"));
+            Assert.Null(metadata.PosDataLegacy);
+            Assert.Null(metadata.PosData);
+
+            metadata = InvoiceMetadata.FromJObject(JObject.Parse("{}"));
+            Assert.Null(metadata.PosDataLegacy);
+            Assert.Null(metadata.PosData);
+        }
+
+        [Fact]
+        public void CanParseInvoiceEntityDerivationStrategies()
+        {
+            // We have 3 ways of serializing the derivation strategies:
+            // through "derivationStrategy", through "derivationStrategies" as a string, through "derivationStrategies" as JObject
+            // Let's check that InvoiceEntity is similar in all cases.
+            var legacy = new JObject()
+            {
+                ["derivationStrategy"] = "tpubDDLQZ1WMdy5YJAJWmRNoTJ3uQkavEPXCXnmD4eAuo9BKbzFUBbJmVHys5M3ku4Qw1C165wGpVWH55gZpHjdsCyntwNzhmCAzGejSL6rzbyf"
+            };
+            var scheme = DerivationSchemeSettings.Parse("tpubDDLQZ1WMdy5YJAJWmRNoTJ3uQkavEPXCXnmD4eAuo9BKbzFUBbJmVHys5M3ku4Qw1C165wGpVWH55gZpHjdsCyntwNzhmCAzGejSL6rzbyf", new BTCPayNetworkProvider(ChainName.Regtest).BTC);
+
+            scheme.Source = "ManualDerivationScheme";
+            scheme.AccountOriginal = "tpubDDLQZ1WMdy5YJAJWmRNoTJ3uQkavEPXCXnmD4eAuo9BKbzFUBbJmVHys5M3ku4Qw1C165wGpVWH55gZpHjdsCyntwNzhmCAzGejSL6rzbyf";
+            var legacy2 = new JObject()
+            {
+                ["derivationStrategies"] = scheme.ToJson()
+            };
+
+            var newformat = new JObject()
+            {
+                ["derivationStrategies"] = JObject.Parse(scheme.ToJson())
+            };
+
+            //new BTCPayNetworkProvider(ChainName.Regtest)
+#pragma warning disable CS0618 // Type or member is obsolete
+            var formats = new[] { legacy, legacy2, newformat }
+            .Select(o =>
+            {
+                var entity = JsonConvert.DeserializeObject<InvoiceEntity>(o.ToString());
+                entity.Networks = new BTCPayNetworkProvider(ChainName.Regtest);
+                return entity.DerivationStrategies.ToString();
+            })
+            .ToHashSet();
+#pragma warning restore CS0618 // Type or member is obsolete
+            Assert.Single(formats);
+        }
+
         [Fact]
         public void PaymentMethodIdConverterIsGraceful()
         {

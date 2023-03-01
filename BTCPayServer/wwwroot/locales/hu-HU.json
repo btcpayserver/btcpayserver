@@ -1,5 +1,5 @@
 {
-  "NOTICE_WARN": "THIS CODE HAS BEEN AUTOMATICALLY GENERATED FROM TRANSIFEX, IF YOU WISH TO HELP TRANSLATION COME ON THE SLACK http://slack.btcpayserver.org TO REQUEST PERMISSION TO https://www.transifex.com/btcpayserver/btcpayserver/",
+  "NOTICE_WARN": "THIS CODE HAS BEEN AUTOMATICALLY GENERATED FROM TRANSIFEX, IF YOU WISH TO HELP TRANSLATION COME ON THE SLACK https://chat.btcpayserver.org/ TO REQUEST PERMISSION TO https://www.transifex.com/btcpayserver/btcpayserver/",
   "code": "hu-HU",
   "currentLanguage": "Magyar",
   "lang": "Nyelv",
@@ -47,7 +47,7 @@
   "Pay with CoinSwitch": "Fizess CoinSwitch-csel",
   "Pay with Changelly": "Fizess Changelly-vel",
   "Close": "Bezár",
-  "NotPaid_ExtraTransaction": "The invoice hasn't been paid in full. Please send another transaction to cover amount Due.",
-  "Recommended_Fee": "Recommended fee: {{feeRate}} sat/byte",
-  "View receipt": "View receipt"
+  "NotPaid_ExtraTransaction": "Az számla nincs teljesen kifizetve. Kérjük, küldjön egy újabb tranzakciót az esedékes összeg kifizetésére.",
+  "Recommended_Fee": "Javasolt díj: {{feeRate}} sat/bájt",
+  "View receipt": "Nyugtát megtekintése"
 }

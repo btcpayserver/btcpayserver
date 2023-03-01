@@ -34,6 +34,7 @@ using PullPaymentData = BTCPayServer.Client.Models.PullPaymentData;
 using StoreData = BTCPayServer.Client.Models.StoreData;
 using StoreWebhookData = BTCPayServer.Client.Models.StoreWebhookData;
 using WebhookDeliveryData = BTCPayServer.Client.Models.WebhookDeliveryData;
+using PayoutProcessorData = BTCPayServer.Client.Models.PayoutProcessorData;
 
 namespace BTCPayServer.Controllers.Greenfield
 {
@@ -669,7 +670,7 @@ namespace BTCPayServer.Controllers.Greenfield
         public override async Task<ApiKeyData> CreateAPIKey(CreateApiKeyRequest request,
             CancellationToken token = default)
         {
-            return GetFromActionResult<ApiKeyData>(await GetController<GreenfieldApiKeysController>().CreateKey(request));
+            return GetFromActionResult<ApiKeyData>(await GetController<GreenfieldApiKeysController>().CreateAPIKey(request));
         }
 
         public override async Task RevokeCurrentAPIKeyInfo(CancellationToken token = default)
@@ -679,7 +680,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
         public override async Task RevokeAPIKey(string apikey, CancellationToken token = default)
         {
-            HandleActionResult(await GetController<GreenfieldApiKeysController>().RevokeKey(apikey));
+            HandleActionResult(await GetController<GreenfieldApiKeysController>().RevokeAPIKey(apikey));
         }
 
         public override async Task<IEnumerable<NotificationData>> GetNotifications(bool? seen = null,

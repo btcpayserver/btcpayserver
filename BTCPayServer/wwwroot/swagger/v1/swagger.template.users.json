@@ -108,7 +108,8 @@
                                     },
                                     "password": {
                                         "type": "string",
-                                        "description": "The password of the new user"
+                                        "description": "The password of the new user (if no password is set, an email will be sent to the user requiring him to set the password)",
+                                        "nullable": true
                                     },
                                     "isAdministrator": {
                                         "type": "boolean",

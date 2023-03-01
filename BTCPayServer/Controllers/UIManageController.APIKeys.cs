@@ -509,6 +509,7 @@ namespace BTCPayServer.Controllers
                     {Policies.Unrestricted, ("Unrestricted access", "The app will have unrestricted access to your account.")},
                     {Policies.CanViewUsers, ("View users", "The app will be able to see all users on this server.")},
                     {Policies.CanCreateUser, ("Create new users", "The app will be able to create new users on this server.")},
+                    {Policies.CanManageUsers, ("Manage users", "The app will be able to create/delete API keys for users.")},
                     {Policies.CanDeleteUser, ("Delete user", "The app will be able to delete the user to whom it is assigned. Admin users can delete any user without this permission.")},
                     {Policies.CanModifyStoreSettings, ("Modify your stores", "The app will be able to manage invoices on all your stores and modify their settings.")},
                     {$"{Policies.CanModifyStoreSettings}:", ("Manage selected stores", "The app will be able to manage invoices on the selected stores and modify their settings.")},

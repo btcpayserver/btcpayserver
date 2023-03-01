@@ -1,13 +1,19 @@
+using System.Collections.Generic;
 using BTCPayServer.Abstractions.Form;
-using BTCPayServer.Data.Data;
-using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Forms.Models;
 
 public class FormViewModel
 {
-    public string RedirectUrl { get; set; }
-    public FormData FormData { get; set; }
-    Form _Form;
-    public Form Form { get => _Form ??= Form.Parse(FormData.Config); }
+    public string LogoFileId { get; set; }
+    public string CssFileId { get; set; }
+    public string BrandColor { get; set; }
+    public string StoreName { get; set; }
+    public string FormName { get; set; }
+    public Form Form { get; set; }
+    public string AspController { get; set; }
+    public string AspAction { get; set; }
+    public Dictionary<string, string> RouteParameters { get; set; } = new();
+    public MultiValueDictionary<string, string> FormParameters { get; set; } = new();
+    public string FormParameterPrefix { get; set; }
 }

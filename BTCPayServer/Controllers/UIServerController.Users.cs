@@ -86,7 +86,7 @@ namespace BTCPayServer.Controllers
                 Id = user.Id,
                 Email = user.Email,
                 Verified = user.EmailConfirmed || !user.RequiresEmailConfirmation,
-                IsAdmin = _userService.IsRoleAdmin(roles)
+                IsAdmin = Roles.HasServerAdmin(roles)
             };
             return View(userVM);
         }
@@ -101,7 +101,7 @@ namespace BTCPayServer.Controllers
 
             var admins = await _UserManager.GetUsersInRoleAsync(Roles.ServerAdmin);
             var roles = await _UserManager.GetRolesAsync(user);
-            var wasAdmin = _userService.IsRoleAdmin(roles);
+            var wasAdmin = Roles.HasServerAdmin(roles);
             if (!viewModel.IsAdmin && admins.Count == 1 && wasAdmin)
             {
                 TempData[WellKnownTempData.ErrorMessage] = "This is the only Admin, so their role can't be removed until another Admin is added.";
@@ -219,7 +219,7 @@ namespace BTCPayServer.Controllers
                 return NotFound();
 
             var roles = await _UserManager.GetRolesAsync(user);
-            if (_userService.IsRoleAdmin(roles))
+            if (Roles.HasServerAdmin(roles))
             {
                 if (await _userService.IsUserTheOnlyOneAdmin(user))
                 {

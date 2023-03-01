@@ -1,39 +1,48 @@
 @using Microsoft.AspNetCore.Mvc.TagHelpers
-@inject BTCPayServer.Services.BTCPayServerEnvironment env
+@inject BTCPayServer.Services.BTCPayServerEnvironment Env
 @model BTCPayServer.Forms.Models.FormViewModel
 @{
     Layout = null;
-    ViewData["Title"] = Model.FormData.Name;
+    ViewData["Title"] = Model.FormName;
 }
-
 <!DOCTYPE html>
-<html lang="en" @(env.IsDeveloping ? " data-devenv" : "")>
+<html lang="en" @(Env.IsDeveloping ? " data-devenv" : "")>
 <head>
-    <partial name="LayoutHead"/>
+    <partial name="LayoutHead" />
+    <partial name="LayoutHeadStoreBranding" model="@(Model.BrandColor, Model.CssFileId, "", "")" />
     <meta name="robots" content="noindex,nofollow">
 </head>
 <body class="min-vh-100">
     <div class="public-page-wrap flex-column">
-        <main class="flex-grow-1">
-            <div class="container" style="max-width:720px;">
-                <partial name="_StatusMessage" model="@(new ViewDataDictionary(ViewData) {{"Margin", "mb-4"}})"/>
-                @if (!ViewContext.ModelState.IsValid)
-                {
-                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-                }
-                <partial name="_FormTopMessages" model="@Model.Form"/>
-                <div class="d-flex flex-column justify-content-center gap-4">
-                    <h1 class="h3 text-center">@ViewData["Title"]</h1>
-                    <div  class="bg-tile p-3 p-sm-4 rounded">
-                        <form asp-action="SubmitForm" asp-route-formId="@Model.FormData.Id">
-                            @if (!string.IsNullOrEmpty(Model.RedirectUrl))
-                            {
-                                <input type="hidden" asp-for="RedirectUrl" value="@Model.RedirectUrl"/>
-                            }
-                            <partial name="_Form" model="@Model.Form"/>
-                            <input type="submit" class="btn btn-primary" name="command" value="Submit"/>
+        <partial name="_StatusMessage" model="@(new ViewDataDictionary(ViewData) { { "Margin", "mb-4" } })" />
+        @if (!string.IsNullOrEmpty(Model.StoreName) || !string.IsNullOrEmpty(Model.LogoFileId))
+        {
+            <partial name="_StoreHeader" model="(Model.StoreName, Model.LogoFileId)" />
+        }
+        else
+        {
+            <h1 class="h3 text-center mt-3">@ViewData["Title"]</h1>
+        }
+        <main class="flex-grow-1 container" style="max-width:576px">
+            @if (!ViewContext.ModelState.IsValid)
+            {
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            }
+            <partial name="_FormTopMessages" model="@Model.Form" />
+            <div class="d-flex flex-column justify-content-center gap-4">
+                <div class="bg-tile p-3 p-sm-4 rounded">
+                    @if (string.IsNullOrEmpty(Model.AspAction))
+                    {
+                        <form method="post" novalidate="novalidate">
+                            <partial name="_FormWrap" model="@Model" />
                         </form>
-                    </div>
+                    }
+                    else
+                    {
+                        <form method="post" asp-action="@Model.AspAction" asp-controller="@Model.AspController" asp-all-route-data="Model.RouteParameters">
+                            <partial name="_FormWrap" model="@Model" />
+                        </form>
+                    }
                 </div>
             </div>
         </main>
@@ -43,6 +52,7 @@
             </a>
         </footer>
     </div>
-    <partial name="LayoutFoot"/>
+    <partial name="LayoutFoot" />
+    <partial name="_ValidationScriptsPartial"/>
 </body>
 </html>

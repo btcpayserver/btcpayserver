@@ -43,7 +43,7 @@ namespace BTCPayServer.Controllers
                 Available = availablePlugins,
                 Commands = pluginService.GetPendingCommands(),
                 Disabled = pluginService.GetDisabledPlugins(),
-                CanShowRestart = btcPayServerOptions.DockerDeployment,
+                CanShowRestart = true,
                 DownloadedPluginsByIdentifier = availablePluginsByIdentifier
             };
             return View(res);

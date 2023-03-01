@@ -1,5 +1,5 @@
 {
-  "NOTICE_WARN": "THIS CODE HAS BEEN AUTOMATICALLY GENERATED FROM TRANSIFEX, IF YOU WISH TO HELP TRANSLATION COME ON THE SLACK http://slack.btcpayserver.org TO REQUEST PERMISSION TO https://www.transifex.com/btcpayserver/btcpayserver/",
+  "NOTICE_WARN": "THIS CODE HAS BEEN AUTOMATICALLY GENERATED FROM TRANSIFEX, IF YOU WISH TO HELP TRANSLATION COME ON THE SLACK https://chat.btcpayserver.org/ TO REQUEST PERMISSION TO https://www.transifex.com/btcpayserver/btcpayserver/",
   "code": "pl",
   "currentLanguage": "Polski",
   "lang": "Język",
@@ -49,5 +49,5 @@
   "Close": "Zamknij",
   "NotPaid_ExtraTransaction": "Faktura nie została w pełni opłacona. Proszę wyślij dodatkową transakcje z resztą brakujących środków.",
   "Recommended_Fee": "Zalecana opłata transakcyjna: {{feeRate}} sat/byte",
-  "View receipt": "View receipt"
+  "View receipt": "Pokaż rachunek"
 }

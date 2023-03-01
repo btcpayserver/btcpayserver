@@ -2,6 +2,7 @@ using System;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -117,6 +118,68 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.CssSelector("input[type='submit']")).Click();
             s.Driver.Navigate().GoToUrl(editUrl);
             Assert.Contains("aa@aa.com", s.Driver.PageSource);
+
+            //Custom Forms
+            s.GoToStore(StoreNavPages.Forms);
+            Assert.Contains("There are no forms yet.", s.Driver.PageSource);
+            s.Driver.FindElement(By.Id("CreateForm")).Click();
+            s.Driver.FindElement(By.Name("Name")).SendKeys("Custom Form 1");
+            s.Driver.FindElement((By.CssSelector("[data-form-template='email']"))).Click();
+            var emailtemplate = s.Driver.FindElement(By.Name("FormConfig")).GetAttribute("value");
+            Assert.Contains("buyerEmail", emailtemplate);
+            s.Driver.FindElement(By.Name("FormConfig")).Clear();
+            s.Driver.FindElement(By.Name("FormConfig"))
+                .SendKeys(emailtemplate.Replace("Enter your email", "CustomFormInputTest"));
+            s.Driver.FindElement(By.Id("SaveButton")).Click();
+            s.Driver.FindElement(By.Id("ViewForm")).Click();
+
+
+            var formurl = s.Driver.Url;
+            Assert.Contains("CustomFormInputTest", s.Driver.PageSource);
+            s.Driver.FindElement(By.Name("buyerEmail")).SendKeys("aa@aa.com");
+            s.Driver.FindElement(By.CssSelector("input[type='submit']")).Click();
+            s.PayInvoice(true);
+            var result = await s.Server.PayTester.HttpClient.GetAsync(formurl);
+            Assert.Equal(HttpStatusCode.NotFound, result.StatusCode);
+
+            s.GoToHome();
+            s.GoToStore(StoreNavPages.Forms);
+            Assert.Contains("Custom Form 1", s.Driver.PageSource);
+            s.Driver.FindElement(By.LinkText("Remove")).Click();
+            s.Driver.WaitForElement(By.Id("ConfirmInput")).SendKeys("DELETE");
+            s.Driver.FindElement(By.Id("ConfirmContinue")).Click();
+            
+            Assert.DoesNotContain("Custom Form 1", s.Driver.PageSource);
+            s.Driver.FindElement(By.Id("CreateForm")).Click();
+            s.Driver.FindElement(By.Name("Name")).SendKeys("Custom Form 2");
+            s.Driver.FindElement((By.CssSelector("[data-form-template='email']"))).Click();
+            s.Driver.SetCheckbox(By.Name("Public"), true);
+
+            s.Driver.FindElement(By.Name("FormConfig")).Clear();
+            s.Driver.FindElement(By.Name("FormConfig"))
+                .SendKeys(emailtemplate.Replace("Enter your email", "CustomFormInputTest2"));
+            s.Driver.FindElement(By.Id("SaveButton")).Click();
+            s.Driver.FindElement(By.Id("ViewForm")).Click();
+            formurl = s.Driver.Url;
+            result = await s.Server.PayTester.HttpClient.GetAsync(formurl);
+            Assert.NotEqual(HttpStatusCode.NotFound, result.StatusCode);
+            
+            s.GoToHome();
+            s.GoToStore(StoreNavPages.Forms);
+            Assert.Contains("Custom Form 2", s.Driver.PageSource);
+            
+            s.Driver.FindElement(By.LinkText("Custom Form 2")).Click();
+            
+            s.Driver.FindElement(By.Name("Name")).Clear();
+            s.Driver.FindElement(By.Name("Name")).SendKeys("Custom Form 3");
+            s.Driver.FindElement(By.Id("SaveButton")).Click();
+            s.GoToStore(StoreNavPages.Forms);
+            Assert.Contains("Custom Form 3", s.Driver.PageSource);
+            
+            s.Driver.FindElement(By.Id("StoreNav-PaymentRequests")).Click();
+            s.Driver.FindElement(By.Id("CreatePaymentRequest")).Click();
+           Assert.Equal(4,  new SelectElement(s.Driver.FindElement(By.Id("FormId"))).Options.Count);
+            
         }
 
         [Fact(Timeout = TestTimeout)]
@@ -990,7 +1053,7 @@ namespace BTCPayServer.Tests
             var walletId = new WalletId(storeId, "BTC");
             s.GoToWallet(walletId, WalletsNavPages.Receive);
             s.Driver.FindElement(By.Id("generateButton")).Click();
-            var addressStr = s.Driver.FindElement(By.Id("address")).GetAttribute("value");
+            var addressStr = s.Driver.FindElement(By.Id("Address")).GetAttribute("value");
             var address = BitcoinAddress.Create(addressStr,
                 ((BTCPayNetwork)s.Server.NetworkProvider.GetNetwork("BTC")).NBitcoinNetwork);
             await s.Server.ExplorerNode.GenerateAsync(1);
@@ -1206,14 +1269,48 @@ namespace BTCPayServer.Tests
             Assert.True(s.Driver.FindElement(By.CssSelector("#address-tab .qr-container")).Displayed);
             // no previous page in the wizard, hence no back button
             Assert.True(s.Driver.ElementDoesNotExist(By.Id("GoBack")));
-            var receiveAddr = s.Driver.FindElement(By.Id("address")).GetAttribute("value");
+            var receiveAddr = s.Driver.FindElement(By.Id("Address")).GetAttribute("value");
+
+            // Can add a label?
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                s.Driver.WaitForElement(By.CssSelector("div.label-manager input ")).Click();
+                await Task.Delay(500);
+                s.Driver.WaitForElement(By.CssSelector("div.label-manager input ")).SendKeys("test-label" + Keys.Enter);
+                await Task.Delay(500);
+                s.Driver.WaitForElement(By.CssSelector("div.label-manager input ")).SendKeys("label2" + Keys.Enter);
+            });
+           
+            TestUtils.Eventually(() =>
+            { 
+                s.Driver.Navigate().Refresh();
+                Assert.NotNull(s.Driver.FindElement(By.CssSelector("[data-value='test-label']")));
+            });
 
             //unreserve
             s.Driver.FindElement(By.CssSelector("button[value=unreserve-current-address]")).Click();
             //generate it again, should be the same one as before as nothing got used in the meantime
             s.Driver.FindElement(By.CssSelector("button[value=generate-new-address]")).Click();
             Assert.True(s.Driver.FindElement(By.CssSelector("#address-tab .qr-container")).Displayed);
-            Assert.Equal(receiveAddr, s.Driver.FindElement(By.Id("address")).GetAttribute("value"));
+            Assert.Equal(receiveAddr, s.Driver.FindElement(By.Id("Address")).GetAttribute("value"));
+            TestUtils.Eventually(() =>
+            {
+                Assert.Contains("test-label", s.Driver.PageSource);
+            });
+
+            // Let's try to remove a label
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                s.Driver.WaitForElement(By.CssSelector("[data-value='test-label']")).Click();
+                await Task.Delay(500);
+                s.Driver.ExecuteJavaScript("document.querySelector('[data-value=\"test-label\"]').nextSibling.dispatchEvent(new KeyboardEvent('keydown', {'key': 'Delete', keyCode: 46}));");
+                
+            });
+            TestUtils.Eventually(() =>
+            { 
+                s.Driver.Navigate().Refresh();
+                Assert.DoesNotContain("test-label", s.Driver.PageSource);
+            });
             Assert.True(s.Driver.ElementDoesNotExist(By.Id("GoBack")));
 
             //send money to addr and ensure it changed
@@ -1226,15 +1323,19 @@ namespace BTCPayServer.Tests
             await Task.Delay(200);
             s.Driver.Navigate().Refresh();
             s.Driver.FindElement(By.CssSelector("button[value=generate-new-address]")).Click();
-            Assert.NotEqual(receiveAddr, s.Driver.FindElement(By.Id("address")).GetAttribute("value"));
-            receiveAddr = s.Driver.FindElement(By.Id("address")).GetAttribute("value");
+            Assert.NotEqual(receiveAddr, s.Driver.FindElement(By.Id("Address")).GetAttribute("value"));
+            receiveAddr = s.Driver.FindElement(By.Id("Address")).GetAttribute("value");
             s.Driver.FindElement(By.Id("CancelWizard")).Click();
+
+            // Check the label is applied to the tx
+
+            Assert.Equal("label2", s.Driver.FindElement(By.XPath("//*[@id=\"WalletTransactionsList\"]//*[contains(@class, 'transaction-label')]")).Text);
 
             //change the wallet and ensure old address is not there and generating a new one does not result in the prev one
             s.GenerateWallet(cryptoCode, "", true);
             s.GoToWallet(null, WalletsNavPages.Receive);
             s.Driver.FindElement(By.CssSelector("button[value=generate-new-address]")).Click();
-            Assert.NotEqual(receiveAddr, s.Driver.FindElement(By.Id("address")).GetAttribute("value"));
+            Assert.NotEqual(receiveAddr, s.Driver.FindElement(By.Id("Address")).GetAttribute("value"));
 
             var invoiceId = s.CreateInvoice(storeId);
             var invoice = await s.Server.PayTester.InvoiceRepository.GetInvoice(invoiceId);
@@ -1516,9 +1617,9 @@ namespace BTCPayServer.Tests
             TestUtils.Eventually(() =>
             {
                 s.Driver.Navigate().Refresh();
-                Assert.Contains("badge transactionLabel", s.Driver.PageSource);
+                Assert.Contains("transaction-label", s.Driver.PageSource);
             });
-            Assert.Equal("payout", s.Driver.FindElement(By.ClassName("transactionLabel")).Text);
+            Assert.Equal("payout", s.Driver.FindElement(By.ClassName("transaction-label")).Text);
 
             s.GoToStore(s.StoreId, StoreNavPages.Payouts);
             s.Driver.FindElement(By.Id($"{PayoutState.InProgress}-view")).Click();

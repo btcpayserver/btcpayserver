@@ -219,7 +219,7 @@ namespace BTCPayServer.Tests
             var account = parent.PayTester.GetController<UIAccountController>();
             RegisterDetails = new RegisterViewModel()
             {
-                Email = Guid.NewGuid() + "@toto.com",
+                Email = Utils.GenerateEmail(),
                 ConfirmPassword = "Kitten0@",
                 Password = "Kitten0@",
                 IsAdmin = isAdmin

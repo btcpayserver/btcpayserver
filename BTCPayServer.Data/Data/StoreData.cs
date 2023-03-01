@@ -3,11 +3,10 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text;
 using BTCPayServer.Client.Models;
-using BTCPayServer.Data.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using PayoutProcessorData = BTCPayServer.Data.Data.PayoutProcessorData;
+using PayoutProcessorData = BTCPayServer.Data.PayoutProcessorData;
 
 namespace BTCPayServer.Data
 {
@@ -51,6 +50,7 @@ namespace BTCPayServer.Data
         public IEnumerable<PayoutData> Payouts { get; set; }
         public IEnumerable<CustodianAccountData> CustodianAccounts { get; set; }
         public IEnumerable<StoreSettingData> Settings { get; set; }
+        public IEnumerable<FormData> Forms { get; set; }
 
         internal static void OnModelCreating(ModelBuilder builder, DatabaseFacade databaseFacade)
         {

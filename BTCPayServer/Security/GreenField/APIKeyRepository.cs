@@ -47,7 +47,6 @@ namespace BTCPayServer.Security.Greenfield
             {
                 throw new InvalidOperationException("cannot save a bitpay legacy api key with this repository");
             }
-
             using var context = _applicationDbContextFactory.CreateContext();
             await context.ApiKeys.AddAsync(key);
             await context.SaveChangesAsync();

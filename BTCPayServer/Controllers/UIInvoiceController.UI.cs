@@ -40,6 +40,17 @@ namespace BTCPayServer.Controllers
 {
     public partial class UIInvoiceController
     {
+        static UIInvoiceController()
+        {
+            InvoiceAdditionalDataExclude =
+                typeof(InvoiceMetadata)
+                .GetProperties()
+                .Select(p => p.Name)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+            InvoiceAdditionalDataExclude.Remove(nameof(InvoiceMetadata.PosData));
+        }
+        static readonly HashSet<string> InvoiceAdditionalDataExclude;
+
         [HttpGet("invoices/{invoiceId}/deliveries/{deliveryId}/request")]
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> WebhookDelivery(string invoiceId, string deliveryId)
@@ -106,6 +117,10 @@ namespace BTCPayServer.Controllers
 
             var receipt = InvoiceDataBase.ReceiptOptions.Merge(store.GetStoreBlob().ReceiptOptions, invoice.ReceiptOptions);
             var invoiceState = invoice.GetInvoiceState();
+            var metaData = PosDataParser.ParsePosData(invoice.Metadata.ToJObject());
+            var additionalData = metaData
+                .Where(dict => !InvoiceAdditionalDataExclude.Contains(dict.Key))
+                .ToDictionary(dict=> dict.Key, dict=> dict.Value);
             var model = new InvoiceDetailsModel
             {
                 StoreId = store.Id,
@@ -131,7 +146,8 @@ namespace BTCPayServer.Controllers
                 TypedMetadata = invoice.Metadata,
                 StatusException = invoice.ExceptionStatus,
                 Events = invoice.Events,
-                PosData = PosDataParser.ParsePosData(invoice.Metadata.PosData),
+                Metadata = metaData,
+                AdditionalData = additionalData,
                 Archived = invoice.Archived,
                 CanRefund = invoiceState.CanRefund(),
                 Refunds = invoice.Refunds,
@@ -226,9 +242,7 @@ namespace BTCPayServer.Controllers
 
             vm.Amount = payments.Sum(p => p!.Paid);
             vm.Payments = receipt.ShowPayments is false ? null : payments;
-            vm.AdditionalData = receiptData is null
-                ? new Dictionary<string, object>()
-                : PosDataParser.ParsePosData(receiptData.ToString());
+            vm.AdditionalData = PosDataParser.ParsePosData(receiptData);
 
             return View(vm);
         }
@@ -652,17 +666,19 @@ namespace BTCPayServer.Controllers
             var lnurlId = PaymentMethodId.Parse("BTC_LNURLPAY");
             if (paymentMethodId is null)
             {
-                var enabledPaymentIds = store.GetEnabledPaymentIds(_NetworkProvider)
-                    .Where(pmId => storeBlob.CheckoutType == CheckoutType.V1 ||
-                        // Exclude LNURL for Checkout v2 + non-top up invoices
-                        pmId != lnurlId || invoice.IsUnsetTopUp())
-                    .ToArray();
+                var enabledPaymentIds = store.GetEnabledPaymentIds(_NetworkProvider).ToArray();
 
                 // Exclude Lightning if OnChainWithLnInvoiceFallback is active and we have both payment methods
-                if (storeBlob is { CheckoutType: CheckoutType.V2, OnChainWithLnInvoiceFallback: true } &&
-                    enabledPaymentIds.Contains(btcId) && enabledPaymentIds.Contains(lnId))
+                if (storeBlob is { CheckoutType: CheckoutType.V2, OnChainWithLnInvoiceFallback: true })
                 {
-                    enabledPaymentIds = enabledPaymentIds.Where(pmId => pmId != lnId).ToArray();
+                    if (enabledPaymentIds.Contains(btcId) && enabledPaymentIds.Contains(lnId))
+                    {
+                        enabledPaymentIds = enabledPaymentIds.Where(pmId => pmId != lnId).ToArray();
+                    }
+                    if (enabledPaymentIds.Contains(btcId) && enabledPaymentIds.Contains(lnurlId))
+                    {
+                        enabledPaymentIds = enabledPaymentIds.Where(pmId => pmId != lnurlId).ToArray();
+                    }
                 }
 
                 PaymentMethodId? invoicePaymentId = invoice.GetDefaultPaymentMethod();
@@ -688,7 +704,7 @@ namespace BTCPayServer.Controllers
                 if (paymentMethodId is null)
                 {
                     paymentMethodId = enabledPaymentIds.FirstOrDefault(e => e.CryptoCode == _NetworkProvider.DefaultNetwork.CryptoCode && e.PaymentType == PaymentTypes.BTCLike) ??
-                                      enabledPaymentIds.FirstOrDefault(e => e.CryptoCode == _NetworkProvider.DefaultNetwork.CryptoCode && e.PaymentType == PaymentTypes.LightningLike) ??
+                                      enabledPaymentIds.FirstOrDefault(e => e.CryptoCode == _NetworkProvider.DefaultNetwork.CryptoCode && e.PaymentType != PaymentTypes.LNURLPay) ??
                                       enabledPaymentIds.FirstOrDefault();
                 }
                 isDefaultPaymentId = true;
@@ -703,7 +719,12 @@ namespace BTCPayServer.Controllers
                     return null;
                 var paymentMethodTemp = invoice
                     .GetPaymentMethods()
-                    .FirstOrDefault(c => paymentMethodId.CryptoCode == c.GetId().CryptoCode);
+                    .FirstOrDefault(pm =>
+                    {
+                        var pmId = pm.GetId();
+                        return paymentMethodId.CryptoCode == pmId.CryptoCode &&
+                               ((invoice.IsUnsetTopUp() && !storeBlob.OnChainWithLnInvoiceFallback) || pmId != lnurlId);
+                    });
                 if (paymentMethodTemp == null)
                     paymentMethodTemp = invoice.GetPaymentMethods().FirstOrDefault();
                 if (paymentMethodTemp is null)
@@ -768,6 +789,7 @@ namespace BTCPayServer.Controllers
                 BrandColor = storeBlob.BrandColor,
                 CheckoutType = invoice.CheckoutType ?? storeBlob.CheckoutType,
                 HtmlTitle = storeBlob.HtmlTitle ?? "BTCPay Invoice",
+                OnChainWithLnInvoiceFallback = storeBlob.OnChainWithLnInvoiceFallback,
                 CryptoImage = Request.GetRelativePathOrAbsolute(paymentMethodHandler.GetCryptoImage(paymentMethodId)),
                 BtcAddress = paymentMethodDetails.GetPaymentDestination(),
                 BtcDue = accounting.Due.ShowMoney(divisibility),
@@ -803,9 +825,6 @@ namespace BTCPayServer.Controllers
                 IsMultiCurrency = invoice.GetPayments(false).Select(p => p.GetPaymentMethodId()).Concat(new[] { paymentMethod.GetId() }).Distinct().Count() > 1,
                 StoreId = store.Id,
                 AvailableCryptos = invoice.GetPaymentMethods()
-                                          .Where(i => i.Network != null && storeBlob.CheckoutType == CheckoutType.V1 ||
-                                              // Exclude LNURL for Checkout v2 + non-top up invoices
-                                              i.GetId() != lnurlId || invoice.IsUnsetTopUp())
                                           .Select(kv =>
                                           {
                                               var availableCryptoPaymentMethodId = kv.GetId();
@@ -835,20 +854,16 @@ namespace BTCPayServer.Controllers
             {
                 var onchainPM = model.AvailableCryptos.Find(c => c.PaymentMethodId == btcId.ToString());
                 var lightningPM = model.AvailableCryptos.Find(c => c.PaymentMethodId == lnId.ToString());
-                var lnurlPM = model.AvailableCryptos.Find(c => c.PaymentMethodId == lnurlId.ToString());
                 if (onchainPM != null && lightningPM != null)
                 {
                     model.AvailableCryptos.Remove(lightningPM);
-                }
-                if (onchainPM != null && lnurlPM != null)
-                {
-                    model.AvailableCryptos.Remove(lnurlPM);
                 }
             }
 
             paymentMethodHandler.PreparePaymentModel(model, dto, storeBlob, paymentMethod);
             model.UISettings = paymentMethodHandler.GetCheckoutUISettings();
             model.PaymentMethodId = paymentMethodId.ToString();
+            model.PaymentType = paymentMethodId.PaymentType.ToString();
             var expiration = TimeSpan.FromSeconds(model.ExpirationSeconds);
             model.TimeLeft = expiration.PrettyPrint();
             return model;
@@ -1228,30 +1243,20 @@ namespace BTCPayServer.Controllers
 
         public class PosDataParser
         {
-            public static Dictionary<string, object> ParsePosData(string posData)
+            public static Dictionary<string, object> ParsePosData(JToken? posData)
             {
                 var result = new Dictionary<string, object>();
-                if (string.IsNullOrEmpty(posData))
+                if (posData is JObject jobj)
                 {
-                    return result;
-                }
-
-                try
-                {
-                    var jObject = JObject.Parse(posData);
-                    foreach (var item in jObject)
+                    foreach (var item in jobj)
                     {
                         ParsePosDataItem(item, ref result);
                     }
                 }
-                catch
-                {
-                    result.TryAdd(string.Empty, posData);
-                }
                 return result;
             }
 
-            public static void ParsePosDataItem(KeyValuePair<string, JToken?> item, ref Dictionary<string, object> result)
+            static void ParsePosDataItem(KeyValuePair<string, JToken?> item, ref Dictionary<string, object> result)
             {
                 switch (item.Value?.Type)
                 {
@@ -1259,12 +1264,12 @@ namespace BTCPayServer.Controllers
                         var items = item.Value.AsEnumerable().ToList();
                         for (var i = 0; i < items.Count; i++)
                         {
-                            result.TryAdd($"{item.Key}[{i}]", ParsePosData(items[i].ToString()));
+                            result.TryAdd($"{item.Key}[{i}]", ParsePosData(items[i]));
                         }
 
                         break;
                     case JTokenType.Object:
-                        result.TryAdd(item.Key, ParsePosData(item.Value.ToString()));
+                        result.TryAdd(item.Key, ParsePosData(item.Value));
                         break;
                     case null:
                         break;

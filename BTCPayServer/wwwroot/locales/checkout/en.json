@@ -1,4 +1,7 @@
 {
+  "NOTICE_WARN": "THIS CODE HAS BEEN AUTOMATICALLY GENERATED FROM TRANSIFEX, IF YOU WISH TO HELP TRANSLATION COME ON THE SLACK https://chat.btcpayserver.org/ TO REQUEST PERMISSION TO https://www.transifex.com/btcpayserver/btcpayserver/",
+  "code": "en",
+  "currentLanguage": "English",
   "any_amount": "Any amount",
   "expiry_info": "This invoice will expire in",
   "partial_payment_info": "The invoice hasn't been paid in full.",
@@ -6,6 +9,8 @@
   "view_details": "View Details",
   "pay_with": "Pay with",
   "pay_in_wallet": "Pay in wallet",
+  "pay_by_nfc": "Pay by NFC (LNURL-Withdraw)",
+  "pay_by_lnurl": "Pay by LNURL-Withdraw",
   "invoice_id": "Invoice ID",
   "order_id": "Order ID",
   "total_price": "Total Price",
@@ -16,19 +21,18 @@
   "recommended_fee": "Recommended Fee",
   "fee_rate": "{{feeRate}} sat/byte",
   "network_cost": "Network Cost",
-  "tx_count": "{{count}} transactions",
+  "tx_count": "{{count}} transaction",
   "qr_text": "Scan the QR code, or tap to copy the address.",
-  "address": "{{paymentMethod}} Address",
+  "address": "Address",
   "lightning": "Lightning",
   "payment_link": "Payment Link",
   "invoice_paid": "Invoice Paid",
   "invoice_expired": "Invoice Expired",
   "invoice_expired_body": "An invoice is only valid for {{minutes}} minutes.\n\nReturn to {{storeName}} if you like to resubmit a payment.",
-  "view_receipt": "View Receipt",
+  "view_receipt": "View receipt",
   "return_to_store": "Return to {{storeName}}",
   "copy": "Copy",
   "copy_confirm": "Copied",
   "powered_by": "Powered by",
-  "conversion_body": "You can pay {{btcDue}} {{cryptoCode}} using altcoins other than the ones merchant directly supports.\n\nThis service is provided by 3rd party. Please keep in mind that we have no control over how providers will forward your funds. Invoice will only be marked paid once funds are received on {{cryptoCode}} Blockchain."
-
+  "conversion_body": "This service is provided by 3rd party. Please keep in mind that we have no control over how providers will forward your funds. Invoice will only be marked paid once funds are received on {{cryptoCode}} Blockchain."
 }

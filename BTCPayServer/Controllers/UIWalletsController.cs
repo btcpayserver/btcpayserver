@@ -307,7 +307,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("{walletId}/receive")]
-        public IActionResult WalletReceive([ModelBinder(typeof(WalletIdModelBinder))] WalletId walletId,
+        public async Task<IActionResult> WalletReceive([ModelBinder(typeof(WalletIdModelBinder))] WalletId walletId,
             [FromQuery] string? returnUrl = null)
         {
             if (walletId?.StoreId == null)
@@ -328,13 +328,23 @@ namespace BTCPayServer.Controllers
                     Request.GetAbsoluteUri(Url.Action(nameof(PayJoinEndpointController.Submit), "PayJoinEndpoint",
                         new { walletId.CryptoCode })));
             }
+
+            string[]? labels = null;
+            if (address is not null)
+            {
+                var info = await WalletRepository.GetWalletObject(new WalletObjectId(walletId, WalletObjectData.Types.Address,
+                    address.ToString()));
+                labels = info?.GetNeighbours().Where(data => data.Type == WalletObjectData.Types.Label)
+                    .Select(data => data.Id).ToArray();
+            }
             return View(new WalletReceiveViewModel
             {
                 CryptoCode = walletId.CryptoCode,
                 Address = address?.ToString(),
                 CryptoImage = GetImage(paymentMethod.PaymentId, network),
                 PaymentLink = bip21.ToString(),
-                ReturnUrl = returnUrl ?? HttpContext.Request.GetTypedHeaders().Referer?.AbsolutePath
+                ReturnUrl = returnUrl ?? HttpContext.Request.GetTypedHeaders().Referer?.AbsolutePath,
+                SelectedLabels = labels?? Array.Empty<string>()
             });
         }
 
@@ -1311,6 +1321,51 @@ namespace BTCPayServer.Controllers
             return Content(res, "application/" + format);
         }
 
+
+        public class UpdateLabelsRequest
+        {
+            public string? Address { get; set; }
+            public string[]? Labels { get; set; }
+        }
+        
+        [HttpPost("{walletId}/update-labels")]
+        [IgnoreAntiforgeryToken]
+        public async Task<IActionResult> UpdateLabels([ModelBinder(typeof(WalletIdModelBinder))] WalletId walletId, [FromBody] UpdateLabelsRequest request)
+        {
+            if (string.IsNullOrEmpty(request.Address) || request.Labels is null)
+                return BadRequest();
+            
+            var objid = new WalletObjectId(walletId, WalletObjectData.Types.Address, request.Address);
+            var obj = await WalletRepository.GetWalletObject(objid); 
+            if (obj is null) 
+            {
+                await WalletRepository.EnsureWalletObject(objid); 
+            }
+            else
+            {
+                var currentLabels = obj.GetNeighbours().Where(data => data.Type == WalletObjectData.Types.Label).ToArray(); 
+                var toRemove = currentLabels.Where(data => !request.Labels.Contains(data.Id)).Select(data => data.Id).ToArray(); 
+                await WalletRepository.RemoveWalletObjectLabels(objid, toRemove); 
+            }
+            await WalletRepository.AddWalletObjectLabels(objid, request.Labels);
+            return Ok();
+        }
+        
+        [HttpGet("{walletId}/labels")]
+        [IgnoreAntiforgeryToken]
+        public async Task<IActionResult> GetLabels( [ModelBinder(typeof(WalletIdModelBinder))] WalletId walletId, bool excludeTypes)
+        {
+           
+           return Ok(( await WalletRepository.GetWalletLabels(walletId))
+               .Where(l => !excludeTypes || !WalletObjectData.Types.AllTypes.Contains(l.Label))
+               .Select(tuple => new
+           {
+               label = tuple.Label,
+               color = tuple.Color,
+               textColor = ColorPalette.Default.TextColor(tuple.Color)
+           }));
+        }
+
         private string GetImage(PaymentMethodId paymentMethodId, BTCPayNetwork network)
         {
             var res = paymentMethodId.PaymentType == PaymentTypes.BTCLike
@@ -1450,6 +1505,7 @@ namespace BTCPayServer.Controllers
         public string? Address { get; set; }
         public string? PaymentLink { get; set; }
         public string? ReturnUrl { get; set; }
+        public string[]? SelectedLabels { get; set; }
     }
 
     public class SendToAddressResult

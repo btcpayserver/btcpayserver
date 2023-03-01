@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -17,6 +18,7 @@ using Ganss.XSS;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin;
 using NBitcoin.DataEncoders;
+using NBitpayClient;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using YamlDotNet.Core;
@@ -153,10 +155,10 @@ namespace BTCPayServer.Services.Apps
         {
             return (res, e) =>
             {
-                if (!string.IsNullOrEmpty(e.Metadata.PosData))
+                if (e.Metadata.PosData != null)
                 {
                     // flatten single items from POS data
-                    var data = JsonConvert.DeserializeObject<PosAppData>(e.Metadata.PosData);
+                    var data = e.Metadata.PosData.ToObject<PosAppData>();
                     if (data is not { Cart.Length: > 0 })
                         return res;
                     foreach (var lineItem in data.Cart)
@@ -545,16 +547,30 @@ namespace BTCPayServer.Services.Apps
                 return false;
             }
         }
-
-        public static bool TryParsePosCartItems(string posData, out Dictionary<string, int> cartItems)
+#nullable enable
+        public static bool TryParsePosCartItems(JObject? posData, [MaybeNullWhen(false)] out Dictionary<string, int> cartItems)
         {
             cartItems = null;
-            if (!TryParseJson(posData, out var posDataObj) ||
-                !posDataObj.TryGetValue("cart", out var cartObject))
+            if (posData is null)
                 return false;
-            cartItems = cartObject.Select(token => (JObject)token)
-                .ToDictionary(o => o.GetValue("id", StringComparison.InvariantCulture)?.ToString(),
-                    o => int.Parse(o.GetValue("count", StringComparison.InvariantCulture)?.ToString() ?? string.Empty, CultureInfo.InvariantCulture));
+            if (!posData.TryGetValue("cart", out var cartObject))
+                return false;
+            if (cartObject is null)
+                return false;
+
+            cartItems = new();
+            foreach (var o in cartObject.OfType<JObject>())
+            {
+                var id = o.GetValue("id", StringComparison.InvariantCulture)?.ToString();
+                if (id != null)
+                {
+                    var countStr = o.GetValue("count", StringComparison.InvariantCulture)?.ToString() ?? string.Empty;
+                    if (int.TryParse(countStr, out var count))
+                    {
+                        cartItems.TryAdd(id, count);
+                    }
+                }
+            }
             return true;
         }
 
@@ -575,6 +591,7 @@ namespace BTCPayServer.Services.Apps
         {
             return GetAppForType(app.AppType)?.ViewLink(app);
         }
+#nullable restore
     }
 
     public class ItemStats

@@ -100,7 +100,7 @@
     <input type="hidden" asp-for="PaymentMethodId" />
     <input type="hidden" asp-for="PayoutState" />
     <div class="d-flex justify-content-between mb-4">
-        <ul class="nav mb-1">
+        <ul class="nav mb-1 gap-2">
             @foreach (var state in Model.PaymentMethods)
             {
                 <li class="nav-item py-0">

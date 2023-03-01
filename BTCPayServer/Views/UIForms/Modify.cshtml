@@ -1,0 +1,87 @@
+@using BTCPayServer.Forms
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using BTCPayServer.Abstractions.TagHelpers
+@using Newtonsoft.Json
+@model BTCPayServer.Forms.ModifyForm
+
+@{
+    var formId = Context.GetRouteValue("id");
+    var isNew = formId is null;
+    Layout = "../Shared/_NavLayout.cshtml";
+    ViewData["NavPartialName"] = "../UIStores/_Nav";
+    ViewData.SetActivePage(StoreNavPages.Forms, $"{(isNew ? "Create" : "Edit")} Form", Model.Name);
+
+    var storeId = Context.GetCurrentStoreId();
+}
+
+@section PageFootContent {
+    <partial name="_ValidationScriptsPartial"/>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const $config = document.getElementById("FormConfig");
+            delegate("click", "[data-form-template]", e => {
+                const { formTemplate: id } = e.target.dataset
+                const $template = document.getElementById(`form-template-${id}`)
+                $config.value = $template.innerHTML.trim()
+            })
+        })
+    </script>
+}
+
+<template id="form-template-email">
+    @Json.Serialize(FormDataService.StaticFormEmail, new JsonSerializerSettings()
+    {
+        Formatting = Formatting.Indented
+    })
+</template>
+<template id="form-template-address">
+    @Json.Serialize(FormDataService.StaticFormAddress, new JsonSerializerSettings()
+    {
+        Formatting = Formatting.Indented
+    })
+</template>
+
+<form method="post" asp-action="Modify" asp-route-id="@formId" asp-route-storeId="@storeId">
+    <div class="row">
+        <div class="col-xl-10 col-xxl-constrain">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <h3 class="mb-0">@ViewData["Title"]</h3>
+                <div class="d-flex gap-3 mt-3 mt-sm-0">
+                    <button type="submit" class="btn btn-primary order-sm-1" id="SaveButton">Save</button>
+                    @if (!isNew)
+                    {
+                        <a class="btn btn-secondary" asp-action="ViewPublicForm" asp-route-formId="@formId" id="ViewForm">View</a>
+                    }
+                </div>
+            </div>
+            <div asp-validation-summary="All" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="Name" class="form-label" data-required></label>
+                <input asp-for="Name" class="form-control" required/>
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            <div class="d-flex align-items-center mb-4 gap-3">
+                <input asp-for="Public" type="checkbox" class="btcpay-toggle" />
+                <div>
+                    <label asp-for="Public"></label>
+                    <div class="form-text" style="max-width:27rem">
+                        Standalone mode, which can be used to generate invoices
+                        independent of payment requests or apps.
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="d-flex align-items-center justify-content-between gap-3">
+                    <label asp-for="FormConfig" class="form-label" data-required></label>
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <span>Templates:</span>
+                        <button type="button" class="btn btn-link p-0" data-form-template="email">Email</button>
+                        <button type="button" class="btn btn-link p-0" data-form-template="address">Address</button>
+                    </div>
+                </div>
+                <textarea asp-for="FormConfig" class="form-control" rows="10" cols="21"></textarea>
+                <span asp-validation-for="FormConfig" class="text-danger"></span>
+            </div>
+        </div>
+    </div>
+</form>

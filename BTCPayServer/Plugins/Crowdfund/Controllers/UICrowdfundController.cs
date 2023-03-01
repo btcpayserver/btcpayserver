@@ -57,9 +57,9 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
 
         [HttpGet("/")]
         [HttpGet("/apps/{appId}/crowdfund")]
-        [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.AllowAll)]
+        [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.Unset)]
         [DomainMappingConstraint(CrowdfundApp.AppType)]
-        public async Task<IActionResult> ViewCrowdfund(string appId)
+        public async Task<IActionResult> ViewCrowdfund(string appId, string statusMessage)
         {
             var app = await _appService.GetApp(appId, CrowdfundApp.AppType, true);
 
@@ -89,7 +89,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
 
         [HttpPost("/")]
         [HttpPost("/apps/{appId}/crowdfund")]
-        [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.AllowAll)]
+        [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.Unset)]
         [IgnoreAntiforgeryToken]
         [EnableCors(CorsPolicies.All)]
         [DomainMappingConstraint(CrowdfundApp.AppType)]

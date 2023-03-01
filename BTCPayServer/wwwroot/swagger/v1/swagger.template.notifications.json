@@ -224,7 +224,15 @@
                 "properties": {
                     "id": {
                         "type": "string",
+                        "description": "The id of the notification"
+                    },
+                    "identifier": {
+                        "type": "string",
                         "description": "The identifier of the notification"
+                    },
+                    "type": {
+                        "type": "string",
+                        "description": "The type of the notification"
                     },
                     "body": {
                         "type": "string",

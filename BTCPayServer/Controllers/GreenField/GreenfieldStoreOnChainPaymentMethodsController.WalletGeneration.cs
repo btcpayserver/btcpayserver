@@ -5,6 +5,7 @@ using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
+using BTCPayServer.Events;
 using BTCPayServer.Payments;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -90,6 +91,10 @@ namespace BTCPayServer.Controllers.Greenfield
             var rawResult = GetExistingBtcLikePaymentMethod(cryptoCode, store);
             var result = new OnChainPaymentMethodDataWithSensitiveData(rawResult.CryptoCode, rawResult.DerivationScheme,
                 rawResult.Enabled, rawResult.Label, rawResult.AccountKeyPath, response.GetMnemonic(), derivationSchemeSettings.PaymentId.ToStringNormalized());
+            _eventAggregator.Publish(new WalletChangedEvent()
+            {
+                WalletId = new WalletId(storeId, cryptoCode)
+            });
             return Ok(result);
         }
 

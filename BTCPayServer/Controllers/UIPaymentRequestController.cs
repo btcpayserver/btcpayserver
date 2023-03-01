@@ -89,7 +89,7 @@ namespace BTCPayServer.Controllers
                 var blob = data.GetBlob();
                 return new ViewPaymentRequestViewModel(data)
                 {
-                    AmountFormatted = _Currencies.FormatCurrency(blob.Amount, blob.Currency)
+                    AmountFormatted = _Currencies.DisplayFormatCurrency(blob.Amount, blob.Currency)
                 };
             }).ToList();
 

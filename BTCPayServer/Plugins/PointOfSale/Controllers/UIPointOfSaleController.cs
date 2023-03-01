@@ -330,6 +330,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
         }
 
         [HttpPost("/apps/{appId}/pos/form/{viewType?}")]
+        [IgnoreAntiforgeryToken]
         [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.Unset)]
         public async Task<IActionResult> POSForm(string appId, PosViewType? viewType = null)
         {
@@ -375,6 +376,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
         }
 
         [HttpPost("/apps/{appId}/pos/form/submit/{viewType?}")]
+        [IgnoreAntiforgeryToken]
         [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.Unset)]
         public async Task<IActionResult> POSFormSubmit(string appId, FormViewModel viewModel, PosViewType? viewType = null)
         {

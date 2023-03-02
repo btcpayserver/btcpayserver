@@ -14,6 +14,7 @@ public static class FormDataExtensions
         serviceCollection.AddSingleton<FormComponentProviders>();
         serviceCollection.AddSingleton<IFormComponentProvider, HtmlInputFormProvider>();
         serviceCollection.AddSingleton<IFormComponentProvider, HtmlFieldsetFormProvider>();
+        serviceCollection.AddSingleton<IFormComponentProvider, HtmlSelectFormProvider>();
     }
     
     public static JObject Deserialize(this FormData form) 

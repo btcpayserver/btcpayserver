@@ -218,6 +218,7 @@ namespace BTCPayServer.Data
         public string BrandColor { get; set; }
         public string LogoFileId { get; set; }
         public string CssFileId { get; set; }
+        public bool CelebratePayment { get; set; }
 
         public IPaymentFilter GetExcludedPaymentMethods()
         {

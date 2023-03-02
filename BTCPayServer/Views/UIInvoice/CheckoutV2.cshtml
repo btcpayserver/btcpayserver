@@ -104,6 +104,7 @@
                 <div id="paid" v-if="isPaid">
                     <div class="top">
                         <span class="icn">
+                            <div id="confetti" v-if="srvModel.celebratePayment" v-on:click="celebratePayment(5000)"></div>
                             <vc:icon symbol="payment-complete"/>
                         </span>
                         <h4 v-t="'invoice_paid'"></h4>
@@ -130,7 +131,7 @@
                 <div id="expired" v-if="isUnpayable">
                     <div class="top">
                         <span class="icn">
-                            <vc:icon symbol="invoice-expired"/>
+                            <vc:icon symbol="invoice-expired" />
                         </span>
                         <h4 v-t="'invoice_expired'"></h4>
                         <div id="PaymentDetails" class="payment-details">
@@ -148,7 +149,7 @@
                         </div>
                         <button class="d-flex align-items-center gap-1 btn btn-link payment-details-button" type="button" :aria-expanded="displayPaymentDetails ? 'true' : 'false'" v-on:click="displayPaymentDetails = !displayPaymentDetails">
                             <span class="fw-semibold" v-t="'view_details'"></span>
-                            <vc:icon symbol="caret-down"/>
+                            <vc:icon symbol="caret-down" />
                         </button>
                         <p class="text-center mt-3" v-html="replaceNewlines($t('invoice_expired_body', { storeName: srvModel.storeName, minutes: @Model.MaxTimeMinutes }))"></p>
                     </div>
@@ -225,12 +226,14 @@
         const availableLanguages = @Safe.Json(LangService.GetLanguages().Select(language => language.Code));
         const initialSrvModel = @Safe.Json(Model);
         const qrOptions = { margin: 0, type: 'svg', color: { dark: '#000', light: '#fff' } };
+        window.exports = {};
     </script>
     <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
     <script src="~/vendor/vue-qrcode/vue-qrcode.min.js" asp-append-version="true"></script>
     <script src="~/vendor/i18next/i18next.min.js" asp-append-version="true"></script>
     <script src="~/vendor/i18next/i18nextHttpBackend.min.js" asp-append-version="true"></script>
     <script src="~/vendor/i18next/vue-i18next.js" asp-append-version="true"></script>
+    <script src="~/vendor/dom-confetti/dom-confetti.min.js" asp-append-version="true"></script>
     <script src="~/js/copy-to-clipboard.js" asp-append-version="true"></script>
     <script src="~/main/utils.js" asp-append-version="true"></script>
     <script src="~/checkout-v2/checkout.js" asp-append-version="true"></script>

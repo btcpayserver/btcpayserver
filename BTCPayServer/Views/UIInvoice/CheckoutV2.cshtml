@@ -164,9 +164,7 @@
             <a class="store-powered-by" href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">
                 {{$t("powered_by")}} <partial name="_StoreFooterLogo" />
             </a>
-			@* TODO: Re-add this once checkout v2 has been translated
-            <select asp-for="DefaultLang" asp-items="@LangService.GetLanguageSelectListItems()" class="form-select w-auto" v-on:change="changeLanguage"></select>
-			*@
+            <select asp-for="DefaultLang" asp-items="@LangService.GetLanguageSelectListItems()" class="form-select" v-on:change="changeLanguage"></select>
         </footer>
     </div>
     <noscript>

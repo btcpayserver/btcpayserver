@@ -212,7 +212,7 @@ namespace BTCPayServer.Tests
             var store = await unrestricted.CreateStore(new CreateStoreRequest() { Name = "Pouet lol" });
 
             // Grant right to another user
-            newUserAPIKey = await unrestricted.CreateAPIKey(newUser.Id, new CreateApiKeyRequest()
+            newUserAPIKey = await unrestricted.CreateAPIKey(newUser.Email, new CreateApiKeyRequest()
             {
                 Label = "Hello world",
                 Permissions = new Permission[] { Permission.Create(Policies.CanViewInvoices, store.Id) },

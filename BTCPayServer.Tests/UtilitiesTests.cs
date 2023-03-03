@@ -223,7 +223,6 @@ retry:
             Thread.Sleep(200);
         }
 
-
         /// <summary>
         /// This utility will make sure that permission documentation is properly written in swagger.template.json
         /// </summary>
@@ -273,8 +272,6 @@ retry:
                     var langCode = GetLangCodeTransifexToJson(l);
                     var langTranslations = await client.GetTranslations(resourceStrings, l);
                     var translation = JsonTranslation.GetTranslation(folder, langCode);
-                    translation.Words.Clear();
-                    translation.Translate(langTranslations);
                     if (translation.ShouldSkip())
                     {
                         Logs.WriteLine("Skipping " + langCode);

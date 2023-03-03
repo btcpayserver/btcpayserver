@@ -30,7 +30,7 @@
   "invoice_expired": "发票已过期",
   "invoice_expired_body": "发票仅在{{minutes}}分钟内有效。如需重新提交付款，请返回{{storeName}}。",
   "view_receipt": "查看收据",
-  "return_to_store": "返回{{storeName}}。",
+  "return_to_store": "返回{{storeName}}",
   "copy": "复制",
   "copy_confirm": "已复制",
   "powered_by": "由...提供技术支持",

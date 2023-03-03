@@ -27,7 +27,7 @@
   "lightning": "Blixt",
   "payment_link": "Betalningslänk",
   "invoice_paid": "Fakturan betald",
-  "invoice_expired": "Fakturan har löpt ut.",
+  "invoice_expired": "Fakturan har löpt ut",
   "invoice_expired_body": "En faktura är endast giltig i {{minutes}} minuter. Återvänd till {{storeName}} om du vill skicka en ny betalning.",
   "view_receipt": "Visa kvitto",
   "return_to_store": "Återgå till {{storeName}}",

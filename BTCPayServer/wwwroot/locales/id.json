@@ -49,5 +49,5 @@
   "Close": "Tutup",
   "NotPaid_ExtraTransaction": "Tagihan ini belum dibayarkan sepenuhnya. Dimohon untuk membayarkan sisa pembayaran anda.",
   "Recommended_Fee": "Biaya yang disarankan: {{feeRate}} sat/byte",
-  "View receipt": "Lihat tanda terima."
+  "View receipt": "Lihat tanda terima"
 }

@@ -39,7 +39,7 @@
   "Return to StoreName": "Retourner sur {{storeName}}",
   "This invoice has been paid": "Cette facture a été payée",
   "This invoice has been archived": "Cette facture a été archivée",
-  "Archived_Body": "Merci de contacter le marchand pour obtenir de l'aide ou des informations sur cette commande.",
+  "Archived_Body": "Merci de contacter le marchand pour obtenir de l'aide ou des informations sur cette commande",
   "BOLT 11 Invoice": "Facture BOLT 11",
   "Node Info": "Informations sur le nœud",
   "txCount": "{{count}} transaction",

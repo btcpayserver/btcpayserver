@@ -39,7 +39,7 @@
   "Return to StoreName": "{{storeName}} xidmətinə qayıt",
   "This invoice has been paid": "Faktura ödənilmişdir",
   "This invoice has been archived": "Faktura arxivlənmişdir",
-  "Archived_Body": "Lütfən sifariş haqqında məlumat və ya yardım almaq üçün mağaza ilə əlaqə saxlayın.",
+  "Archived_Body": "Lütfən sifariş haqqında məlumat və ya yardım almaq üçün mağaza ilə əlaqə saxlayın",
   "BOLT 11 Invoice": "BOLT 11 Faktura",
   "Node Info": "Nod məlumatı",
   "txCount": "{{count}} tranzaksiya",

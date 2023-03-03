@@ -27,7 +27,7 @@
   "lightning": "閃電網路 (Lightning Network)",
   "payment_link": "付款連結",
   "invoice_paid": "發票已支付",
-  "invoice_expired": "發票已過期。",
+  "invoice_expired": "發票已過期",
   "invoice_expired_body": "發票只有{{minutes}}分鐘的有效期限。如果您想重新提交付款，請返回{{storeName}}。",
   "view_receipt": "View Receipt",
   "return_to_store": "返回{{storeName}}",

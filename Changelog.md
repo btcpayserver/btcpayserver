@@ -9,6 +9,7 @@
 ### Bug fix
 
 * Avoid crash when some plugins are installed (#4725)
+* Greenfield: Do not create if create API key is called on a non-existant user (Fix #4731)
 
 ### Improvements
 

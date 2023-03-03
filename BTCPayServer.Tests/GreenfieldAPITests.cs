@@ -218,6 +218,8 @@ namespace BTCPayServer.Tests
                 Permissions = new Permission[] { Permission.Create(Policies.CanViewInvoices, store.Id) },
             });
 
+            await AssertAPIError("user-not-found", () => unrestricted.CreateAPIKey("fewiofwuefo", new CreateApiKeyRequest()));
+
             // Despite the grant, the user shouldn't be able to get the invoices!
             newUserClient = acc.CreateClientFromAPIKey(newUserAPIKey.ApiKey);
             await Assert.ThrowsAsync<GreenfieldAPIException>(() => newUserClient.GetInvoices(store.Id));

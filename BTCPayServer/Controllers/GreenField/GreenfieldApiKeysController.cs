@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 
@@ -66,7 +67,14 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 Permissions = request.Permissions.Select(p => p.ToString()).Distinct().ToArray()
             });
-            await _apiKeyRepository.CreateKey(key);
+            try
+            {
+                await _apiKeyRepository.CreateKey(key);
+            }
+            catch (DbUpdateException)
+            {
+                return this.CreateAPIError("user-not-found", "This user does not exists");
+            }
             return Ok(FromModel(key));
         }
 

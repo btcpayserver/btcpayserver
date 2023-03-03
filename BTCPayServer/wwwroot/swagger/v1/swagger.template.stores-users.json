@@ -114,7 +114,7 @@
                 ]
             }
         },
-        "/api/v1/stores/{storeId}/users/{userId}": {
+        "/api/v1/stores/{storeId}/users/{idOrEmail}": {
             "delete": {
                 "tags": [
                     "Stores (Users)"
@@ -136,7 +136,7 @@
                         "name": "userId",
                         "in": "path",
                         "required": true,
-                        "description": "The user",
+                        "description": "The user's id or email",
                         "schema": {
                             "type": "string"
                         }

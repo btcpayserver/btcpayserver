@@ -10,6 +10,12 @@ namespace BTCPayServer.Filters
             Value = value;
         }
 
+        [Obsolete("Do not use second parameter ignored")]
+        public XFrameOptionsAttribute(XFrameOptions type, string _ = null) : this(type)
+        {
+
+        }
+
         public XFrameOptionsAttribute(XFrameOptions type)
         {
             Value = type switch

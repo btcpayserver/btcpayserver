@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.8.1
+
+### New feature
+
+* Add dropdown language selector in checkout v2 @dennisreimann
+
+### Bug fix
+
+* Avoid crash when some plugins are installed (#4725)
+
+### Improvements
+
+* Remove superflous punctuation in some translations
+* Update Polski translation
+
 ## 1.8.0
 
 Bear markets are for building: This version brings custom checkout forms, store branding options, a redesigned Point of Sale keypad view, new notification icons and address labeling.

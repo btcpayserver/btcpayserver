@@ -110,11 +110,11 @@
                         <dl class="mb-0">
                             <div>
                                 <dt v-t="'invoice_id'"></dt>
-                                <dd v-text="srvModel.invoiceId"></dd>
+                                <dd v-text="srvModel.invoiceId" :data-clipboard="srvModel.invoiceId" :data-clipboard-confirm="$t('copy_confirm')"></dd>
                             </div>
                             <div v-if="srvModel.orderId">
                                 <dt v-t="'order_id'"></dt>
-                                <dd v-text="srvModel.orderId"></dd>
+                                <dd v-text="srvModel.orderId" :data-clipboard="srvModel.orderId" :data-clipboard-confirm="$t('copy_confirm')"></dd>
                             </div>
                         </dl>
                         <payment-details :srv-model="srvModel" :is-active="isActive" class="mb-5"></payment-details>
@@ -134,11 +134,11 @@
                         <dl class="mb-0">
                             <div>
                                 <dt v-t="'invoice_id'"></dt>
-                                <dd v-text="srvModel.invoiceId"></dd>
+                                <dd v-text="srvModel.invoiceId" :data-clipboard="srvModel.invoiceId" :data-clipboard-confirm="$t('copy_confirm')"></dd>
                             </div>
                             <div v-if="srvModel.orderId">
                                 <dt v-t="'order_id'"></dt>
-                                <dd v-text="srvModel.orderId"></dd>
+                                <dd v-text="srvModel.orderId" :data-clipboard="srvModel.orderId" :data-clipboard-confirm="$t('copy_confirm')"></dd>
                             </div>
                         </dl>
                         <div id="PaymentDetails" class="payment-details" v-collapsible="displayPaymentDetails">

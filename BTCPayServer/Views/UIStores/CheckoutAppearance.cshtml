@@ -94,6 +94,10 @@
                     <vc:icon symbol="info" />
                 </a>
             </div>
+            <div class="form-check">
+                <input asp-for="LightningAmountInSatoshi" type="checkbox" class="form-check-input" />
+                <label asp-for="LightningAmountInSatoshi" class="form-check-label"></label>
+            </div>
             <div class="checkout-settings collapse @(Model.UseNewCheckout ? "" : "show")" id="OldCheckoutSettings">
                 <div class="form-check">
                     <input asp-for="RequiresRefundEmail" type="checkbox" class="form-check-input" />

@@ -1,23 +1,17 @@
 #nullable enable
-using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
-using BTCPayServer.HostedServices;
 using BTCPayServer.Lightning;
 using BTCPayServer.Logging;
 using BTCPayServer.Models;
 using BTCPayServer.Models.InvoicingModels;
-using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using Microsoft.Extensions.Options;
-using NBitcoin;
 
 namespace BTCPayServer.Payments.Lightning
 {
@@ -112,23 +106,16 @@ namespace BTCPayServer.Payments.Lightning
             var network = _networkProvider.GetNetwork<BTCPayNetwork>(model.CryptoCode);
             var cryptoInfo = invoiceResponse.CryptoInfo.First(o => o.GetpaymentMethodId() == paymentMethodId);
             var lnurl = cryptoInfo.PaymentUrls?.AdditionalData["LNURLP"].ToObject<string>();
+            
             model.PaymentMethodName = GetPaymentMethodName(network);
             model.BtcAddress = lnurl?.Replace(UriScheme, "");
             model.InvoiceBitcoinUrl = lnurl;
             model.InvoiceBitcoinUrlQR = lnurl?.ToUpperInvariant().Replace(UriScheme.ToUpperInvariant(), UriScheme);
             model.PeerInfo = ((LNURLPayPaymentMethodDetails)paymentMethod.GetPaymentMethodDetails()).NodeInfo;
+            
             if (storeBlob.LightningAmountInSatoshi && model.CryptoCode == "BTC")
             {
-                var satoshiCulture = new CultureInfo(CultureInfo.InvariantCulture.Name);
-                satoshiCulture.NumberFormat.NumberGroupSeparator = " ";
-                model.CryptoCode = "Sats";
-                model.BtcDue = Money.Parse(model.BtcDue).ToUnit(MoneyUnit.Satoshi).ToString("N0", satoshiCulture);
-                model.BtcPaid = Money.Parse(model.BtcPaid).ToUnit(MoneyUnit.Satoshi).ToString("N0", satoshiCulture);
-                model.OrderAmount = Money.Parse(model.OrderAmount).ToUnit(MoneyUnit.Satoshi)
-                    .ToString("N0", satoshiCulture);
-                model.NetworkFee = new Money(model.NetworkFee, MoneyUnit.BTC).ToUnit(MoneyUnit.Satoshi);
-                model.Rate =
-                    _currencyNameTable.DisplayFormatCurrency(paymentMethod.Rate / 100_000_000, model.InvoiceCurrency);
+                base.PreparePaymentModelForAmountInSats(model, paymentMethod, _currencyNameTable);
             }
         }
 

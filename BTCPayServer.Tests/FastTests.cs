@@ -602,10 +602,10 @@ namespace BTCPayServer.Tests
         {
             foreach (var test in new[]
             {
-                (0.0005m, "$0.0005 (USD)", "USD"), (0.001m, "$0.001 (USD)", "USD"), (0.01m, "$0.01 (USD)", "USD"),
-                (0.1m, "$0.10 (USD)", "USD"), (0.1m, "0,10 € (EUR)", "EUR"), (1000m, "¥1,000 (JPY)", "JPY"),
-                (1000.0001m, "₹ 1,000.00 (INR)", "INR"),
-                (0.0m, "$0.00 (USD)", "USD")
+                (0.0005m, "0.0005 USD", "USD"), (0.001m, "0.001 USD", "USD"), (0.01m, "0.01 USD", "USD"),
+                (0.1m, "0.10 USD", "USD"), (0.1m, "0,10 EUR", "EUR"), (1000m, "1,000 JPY", "JPY"),
+                (1000.0001m, "1,000.00 INR", "INR"),
+                (0.0m, "0.00 USD", "USD")
             })
             {
                 var actual = CurrencyNameTable.Instance.DisplayFormatCurrency(test.Item1, test.Item3);

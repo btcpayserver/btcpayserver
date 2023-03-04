@@ -105,7 +105,7 @@ namespace BTCPayServer.Services.Rates
         }
 
         /// <summary>
-        /// Format a currency like "0.004 $ (USD)", round to significant divisibility
+        /// Format a currency like "2,106.15 USD", round to significant divisibility
         /// </summary>
         /// <param name="value">The value</param>
         /// <param name="currency">Currency code</param>
@@ -122,10 +122,10 @@ namespace BTCPayServer.Services.Rates
                 provider.CurrencyDecimalDigits = divisibility;
             }
 
-            if (currencyData.Crypto)
-                return value.ToString("C", provider);
-            else
-                return value.ToString("C", provider) + $" ({currency})";
+            var formatted = value.ToString("C", provider)
+                .Replace(provider.CurrencySymbol, "").Trim();
+
+            return currencyData.Crypto ? formatted : $"{formatted} {currency}";
         }
 
         readonly Dictionary<string, CurrencyData> _Currencies;

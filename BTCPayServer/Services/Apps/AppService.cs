@@ -599,7 +599,7 @@ namespace BTCPayServer.Services.Apps
                             if (pValue != null)
                             {
                                 price.Value = decimal.Parse(pValue.Value.Value, CultureInfo.InvariantCulture);
-                                price.Formatted = Currencies.FormatCurrency(pValue.Value.Value, currency);
+                                price.Formatted = Currencies.DisplayFormatCurrency(price.Value.Value, currency);
                             }
                             break;
                         case "fixed":
@@ -607,7 +607,7 @@ namespace BTCPayServer.Services.Apps
                         case null:
                             price.Type = ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Fixed;
                             price.Value = decimal.Parse(pValue.Value.Value, CultureInfo.InvariantCulture);
-                            price.Formatted = Currencies.FormatCurrency(pValue.Value.Value, currency);
+                            price.Formatted = Currencies.DisplayFormatCurrency(price.Value.Value, currency);
                             break;
                     }
 

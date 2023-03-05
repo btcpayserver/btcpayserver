@@ -191,8 +191,8 @@
             <div v-if="srvModel.rate && srvModel.cryptoCode">
                 <dt v-t="'exchange_rate'"></dt>
                 <dd :data-clipboard="srvModel.rate" :data-clipboard-confirm="$t('copy_confirm')">
-                    <template v-if="srvModel.cryptoCodeSrv === 'Sats'">1 Sat = {{ srvModel.rate }}</template>
-                    <template v-else>1 {{ srvModel.cryptoCodeSrv }} = {{ srvModel.rate }}</template>
+                    <template v-if="srvModel.cryptoCode === 'sats'">1 sat = {{ srvModel.rate }}</template>
+                    <template v-else>1 {{ srvModel.cryptoCode }} = {{ srvModel.rate }}</template>
                 </dd>
             </div>
             <div v-if="srvModel.networkFee">

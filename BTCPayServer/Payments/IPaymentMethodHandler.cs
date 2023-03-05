@@ -106,7 +106,7 @@ namespace BTCPayServer.Payments
             { 
                 NumberFormat = { NumberGroupSeparator = " " }
             };
-            model.CryptoCode = "Sats";
+            model.CryptoCode = "sats";
             model.BtcDue = Money.Parse(model.BtcDue).ToUnit(MoneyUnit.Satoshi).ToString("N0", satoshiCulture);
             model.BtcPaid = Money.Parse(model.BtcPaid).ToUnit(MoneyUnit.Satoshi).ToString("N0", satoshiCulture);
             model.OrderAmount = Money.Parse(model.OrderAmount).ToUnit(MoneyUnit.Satoshi).ToString("N0", satoshiCulture);

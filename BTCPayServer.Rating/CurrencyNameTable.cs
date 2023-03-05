@@ -125,7 +125,7 @@ namespace BTCPayServer.Services.Rates
             var formatted = value.ToString("C", provider)
                 .Replace(provider.CurrencySymbol, "").Trim();
 
-            return currencyData.Crypto ? formatted : $"{formatted} {currency}";
+            return $"{formatted} {currency}";
         }
 
         readonly Dictionary<string, CurrencyData> _Currencies;

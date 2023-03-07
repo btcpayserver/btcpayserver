@@ -15,11 +15,19 @@ namespace BTCPayServer.Security.Greenfield
         public static bool GetAPIKey(this HttpContext httpContext, out StringValues apiKey)
         {
             apiKey = default;
-            if (httpContext.Request.Headers.TryGetValue("Authorization", out var value) &&
-                value.ToString().StartsWith("token ", StringComparison.InvariantCultureIgnoreCase))
+            if (httpContext.Request.Headers.TryGetValue("Authorization", out var value))
             {
-                apiKey = value.ToString().Substring("token ".Length);
-                return true;
+                var auth = value.ToString();
+                if (auth.StartsWith("token ", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    apiKey = auth.Substring("token ".Length);
+                    return true;
+                }
+                if (auth.StartsWith("Bearer ", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    apiKey = auth.Substring("Bearer ".Length);
+                    return true;
+                }
             }
             return false;
         }

@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.8.2
+
+### Bug fix
+
+* Fix: Impossible to create invoice after migration from Sqlite (Close #4743)
+
+### Improvements
+* Add missing docs of store payment method criteria @Kukks
+
 ## 1.8.1
 
 ### New feature

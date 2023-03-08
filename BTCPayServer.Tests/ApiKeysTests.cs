@@ -286,7 +286,7 @@ namespace BTCPayServer.Tests
             if (permissions.Contains(canModifyAllStores) || storePermissions.Any())
             {
                 var resultStores =
-                    await TestApiAgainstAccessToken<StoreData[]>(accessToken, $"{TestApiPath}/me/stores",
+                    await TestApiAgainstAccessToken<Client.Models.StoreData[]>(accessToken, $"{TestApiPath}/me/stores",
                         tester.PayTester.HttpClient);
 
                 foreach (var selectiveStorePermission in storePermissions)

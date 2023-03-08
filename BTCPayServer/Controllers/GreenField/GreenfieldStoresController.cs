@@ -112,7 +112,7 @@ namespace BTCPayServer.Controllers.Greenfield
             return Ok(FromModel(store));
         }
 
-        private Client.Models.StoreData FromModel(Data.StoreData data)
+        internal static Client.Models.StoreData FromModel(Data.StoreData data)
         {
             var storeBlob = data.GetStoreBlob();
             return new Client.Models.StoreData()

@@ -4,9 +4,11 @@
 @using BTCPayServer.TagHelpers
 @using BTCPayServer.Views.Apps
 @using Microsoft.AspNetCore.Mvc.TagHelpers
+@inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model BTCPayServer.Plugins.Crowdfund.Models.UpdateCrowdfundViewModel
 @{
     ViewData.SetActivePage(AppsNavPages.Update, "Update Crowdfund", Model.AppId);
+	Csp.UnsafeEval();
 }
 
 @section PageHeadContent {

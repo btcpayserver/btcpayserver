@@ -3,13 +3,14 @@
 @inject BTCPayServer.Services.BTCPayServerEnvironment Env
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @{
-    ViewData["Title"] = Model.Title;
-    Layout = null;
-    if (!string.IsNullOrEmpty(Model.DisqusShortname))
-    {
-        Csp.Add("script-src", $"https://{Model.DisqusShortname}.disqus.com");
-        Csp.Add("script-src", "https://c.disquscdn.com");
-    }
+	ViewData["Title"] = Model.Title;
+	Layout = null;
+	Csp.UnsafeEval();
+	if (!string.IsNullOrEmpty(Model.DisqusShortname))
+	{
+		Csp.Add("script-src", $"https://{Model.DisqusShortname}.disqus.com");
+		Csp.Add("script-src", "https://c.disquscdn.com");
+	}
 }
 <!DOCTYPE html>
 <html class="h-100" @(Env.IsDeveloping ? " data-devenv" : "")>
@@ -58,7 +59,7 @@
         <img v-if="srvModel.mainImageUrl" src="@Model.MainImageUrl" :src="srvModel.mainImageUrl" alt="@Model.Title" :alt="srvModel.title" id="crowdfund-main-image" asp-append-version="true"/>
     }
     <div class="d-flex flex-column justify-content-between p-3 text-center" id="crowdfund-header-container">
-        <h1 class="mb-3">@Model.Title</h1>
+	  <h1 class="mb-3">@Model.Title</h1>
         @if (!string.IsNullOrEmpty(Model.Tagline))
         {
             <h2 class="h3 mb-3 fw-semibold" v-if="srvModel.tagline" v-text="srvModel.tagline">@Model.Tagline</h2>

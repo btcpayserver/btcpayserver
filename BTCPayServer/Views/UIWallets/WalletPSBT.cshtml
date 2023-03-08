@@ -1,11 +1,13 @@
 @using BTCPayServer.Controllers
+@inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model WalletPSBTViewModel
 @{
-    var walletId = Context.GetRouteValue("walletId").ToString();
-    var cancelUrl = Model.ReturnUrl ?? Url.Action(nameof(UIWalletsController.WalletTransactions), new { walletId });
-    var backUrl = Model.BackUrl != null ? $"{Model.BackUrl}?returnUrl={Model.ReturnUrl}" : null;
-    Layout = "_LayoutWizard";
-    ViewData.SetActivePage(WalletsNavPages.PSBT, "Decode PSBT", walletId);
+	var walletId = Context.GetRouteValue("walletId").ToString();
+	var cancelUrl = Model.ReturnUrl ?? Url.Action(nameof(UIWalletsController.WalletTransactions), new { walletId });
+	var backUrl = Model.BackUrl != null ? $"{Model.BackUrl}?returnUrl={Model.ReturnUrl}" : null;
+	Layout = "_LayoutWizard";
+	ViewData.SetActivePage(WalletsNavPages.PSBT, "Decode PSBT", walletId);
+	Csp.UnsafeEval();
 }
 
 @section Navbar {

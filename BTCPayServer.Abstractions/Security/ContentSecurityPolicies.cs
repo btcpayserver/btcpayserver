@@ -114,6 +114,11 @@ namespace BTCPayServer.Security
             _Policies.Add(policy);
         }
 
+        public void UnsafeEval()
+        {
+            Add("script-src", "'unsafe-eval'");
+        }
+
         public IEnumerable<ConsentSecurityPolicy> Rules => _Policies;
         public bool HasRules => _Policies.Count != 0;
 

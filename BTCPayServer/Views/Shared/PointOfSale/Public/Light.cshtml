@@ -1,6 +1,8 @@
+@inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model BTCPayServer.Plugins.PointOfSale.Models.ViewPointOfSaleViewModel
 @{
     Layout = "PointOfSale/Public/_Layout";
+	Csp.UnsafeEval();
 }
 @section PageHeadContent {
     <style>

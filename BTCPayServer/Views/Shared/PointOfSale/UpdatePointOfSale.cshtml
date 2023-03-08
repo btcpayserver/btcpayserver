@@ -5,10 +5,11 @@
 @using BTCPayServer.Forms
 @using BTCPayServer.Services.Stores
 @inject FormDataService FormDataService
+@inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model BTCPayServer.Plugins.PointOfSale.Models.UpdatePointOfSaleViewModel
 @{
     ViewData.SetActivePage(AppsNavPages.Update, "Update Point of Sale", Model.Id);
-
+	Csp.UnsafeEval();
     var checkoutFormOptions = await FormDataService.GetSelect(Model.StoreId, Model.FormId);
 }
 

@@ -5,12 +5,13 @@
 @inject BTCPayServerEnvironment Env
 @inject IEnumerable<IUIExtension> UiExtensions 
 @inject PaymentMethodHandlerDictionary PaymentMethodHandlerDictionary
+@inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model PaymentModel
 @{
-    Layout = null;
-    ViewData["Title"] = Model.HtmlTitle;
-
-    var hasPaymentPlugins = UiExtensions.Any(extension => extension.Location == "checkout-payment-method");
+	Layout = null;
+	ViewData["Title"] = Model.HtmlTitle;
+	Csp.UnsafeEval();
+	var hasPaymentPlugins = UiExtensions.Any(extension => extension.Location == "checkout-payment-method");
     // Show LNURL as selectable payment method only for top up invoices + non-BIP21 case
     var displayedPaymentMethods = Model.IsUnsetTopUp && !Model.OnChainWithLnInvoiceFallback
         ? Model.AvailableCryptos

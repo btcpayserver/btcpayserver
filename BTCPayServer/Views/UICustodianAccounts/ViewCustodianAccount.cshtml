@@ -1,9 +1,11 @@
 @using BTCPayServer.Views.Apps
 @using BTCPayServer.Abstractions.Extensions
 @using BTCPayServer.Abstractions.Custodians
+@inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model BTCPayServer.Models.CustodianAccountViewModels.ViewCustodianAccountViewModel
 @{
-    ViewData.SetActivePage(AppsNavPages.Create, "Custodian account: " + @Model?.CustodianAccount.Name);
+	ViewData.SetActivePage(AppsNavPages.Create, "Custodian account: " + @Model?.CustodianAccount.Name);
+	Csp.UnsafeEval();
 }
 
 @section PageHeadContent

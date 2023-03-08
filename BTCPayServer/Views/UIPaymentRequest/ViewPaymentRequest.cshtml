@@ -3,9 +3,11 @@
 @using BTCPayServer.Client
 @model BTCPayServer.Models.PaymentRequestViewModels.ViewPaymentRequestViewModel
 @inject BTCPayServer.Services.BTCPayServerEnvironment Env
+@inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @{
-    ViewData["Title"] = Model.Title;
-    Layout = null;
+	ViewData["Title"] = Model.Title;
+	Csp.UnsafeEval();
+	Layout = null;
     string StatusClass(InvoiceState state)
     {
         switch (state.Status.ToModernStatus())

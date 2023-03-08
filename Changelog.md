@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.8.3
+
+### Bug fix
+
+* Prevent XSS injection via VueJS (#4747) credit to @cupc4k3. @NicolasDorier
+* Do not through missing-permission error when no store on /api/v1/stores (Close #4735) (#4748) @NicolasDorier
+
+### Improvements
+
+ * UI: Decrease content padding top on small screens (#4749) @dennisreimann
+ * Checkout v2: Minor UI updates (#4734) @dennisreimann
+
 ## 1.8.2
 
 ### Bug fix

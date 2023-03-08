@@ -766,6 +766,9 @@ namespace BTCPayServer.Controllers
                 Request.Host,
                 Request.PathBase) : null;
 
+            var btcDue = accounting.Due.ShowMoney(divisibility);
+            var btcPaid = accounting.Paid.ShowMoney(divisibility);
+            var orderAmount = (accounting.TotalDue - accounting.NetworkFee).ShowMoney(divisibility);
             var model = new PaymentModel
             {
 #if ALTCOINS
@@ -787,9 +790,13 @@ namespace BTCPayServer.Controllers
                 OnChainWithLnInvoiceFallback = storeBlob.OnChainWithLnInvoiceFallback,
                 CryptoImage = Request.GetRelativePathOrAbsolute(paymentMethodHandler.GetCryptoImage(paymentMethodId)),
                 BtcAddress = paymentMethodDetails.GetPaymentDestination(),
-                BtcDue = accounting.Due.ShowMoney(divisibility),
+                BtcDue = btcDue,
+                BtcDueFormatted = _displayFormatter.Currency(btcDue, network.CryptoCode, DisplayFormatter.CurrencyFormat.Symbol),
+                BtcPaid = btcPaid,
+                BtcPaidFormatted = _displayFormatter.Currency(btcPaid, network.CryptoCode, DisplayFormatter.CurrencyFormat.Symbol),
                 InvoiceCurrency = invoice.Currency,
-                OrderAmount = (accounting.TotalDue - accounting.NetworkFee).ShowMoney(divisibility),
+                OrderAmount = orderAmount,
+                OrderAmountFormatted = _displayFormatter.Currency(orderAmount, network.CryptoCode, DisplayFormatter.CurrencyFormat.Symbol),
                 IsUnsetTopUp = invoice.IsUnsetTopUp(),
                 OrderAmountFiat = OrderAmountFromInvoice(network.CryptoCode, invoice),
                 CustomerEmail = invoice.RefundMail,
@@ -812,7 +819,6 @@ namespace BTCPayServer.Controllers
                     NetworkFeeMode.Never => 0,
                     _ => throw new NotImplementedException()
                 },
-                BtcPaid = accounting.Paid.ShowMoney(divisibility),
 #pragma warning disable CS0618 // Type or member is obsolete
                 Status = invoice.StatusString,
 #pragma warning restore CS0618 // Type or member is obsolete
@@ -870,12 +876,12 @@ namespace BTCPayServer.Controllers
             if (cryptoCode == invoiceEntity.Currency)
                 return null;
 
-            return _displayFormatter.Currency(invoiceEntity.Price, invoiceEntity.Currency);
+            return _displayFormatter.Currency(invoiceEntity.Price, invoiceEntity.Currency, DisplayFormatter.CurrencyFormat.Symbol);
         }
         private string ExchangeRate(PaymentMethod paymentMethod)
         {
             string currency = paymentMethod.ParentEntity.Currency;
-            return _displayFormatter.Currency(paymentMethod.Rate, currency);
+            return _displayFormatter.Currency(paymentMethod.Rate, currency, DisplayFormatter.CurrencyFormat.Symbol);
         }
 
         [HttpGet("i/{invoiceId}/status")]

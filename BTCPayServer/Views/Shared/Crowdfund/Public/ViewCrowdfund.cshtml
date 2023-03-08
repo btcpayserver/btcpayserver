@@ -3,13 +3,14 @@
 @inject BTCPayServer.Services.BTCPayServerEnvironment Env
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @{
-    ViewData["Title"] = Model.Title;
-    Layout = null;
-    if (!string.IsNullOrEmpty(Model.DisqusShortname))
-    {
-        Csp.Add("script-src", $"https://{Model.DisqusShortname}.disqus.com");
-        Csp.Add("script-src", "https://c.disquscdn.com");
-    }
+	ViewData["Title"] = Model.Title;
+	Layout = null;
+	Csp.UnsafeEval();
+	if (!string.IsNullOrEmpty(Model.DisqusShortname))
+	{
+		Csp.Add("script-src", $"https://{Model.DisqusShortname}.disqus.com");
+		Csp.Add("script-src", "https://c.disquscdn.com");
+	}
 }
 <!DOCTYPE html>
 <html class="h-100" @(Env.IsDeveloping ? " data-devenv" : "")>
@@ -55,13 +56,13 @@
 <div class="public-page-wrap flex-column container" id="app" @(Model.SimpleDisplay ? "" : "v-cloak")>
     @if (!string.IsNullOrEmpty(Model.MainImageUrl))
     {
-        <img v-if="srvModel.mainImageUrl" src="@Model.MainImageUrl" :src="srvModel.mainImageUrl" alt="@Model.Title" :alt="srvModel.title" id="crowdfund-main-image" asp-append-version="true"/>
+        <img v-if="srvModel.mainImageUrl" :src="srvModel.mainImageUrl" :alt="srvModel.title" id="crowdfund-main-image" asp-append-version="true"/>
     }
     <div class="d-flex flex-column justify-content-between p-3 text-center" id="crowdfund-header-container">
-        <h1 class="mb-3">@Model.Title</h1>
+	  <h1 class="mb-3">{{ srvModel.title }}</h1>
         @if (!string.IsNullOrEmpty(Model.Tagline))
         {
-            <h2 class="h3 mb-3 fw-semibold" v-if="srvModel.tagline" v-text="srvModel.tagline">@Model.Tagline</h2>
+            <h2 class="h3 mb-3 fw-semibold" v-if="srvModel.tagline" v-text="srvModel.tagline"></h2>
         }
         @if (Model.TargetAmount.HasValue)
         {
@@ -221,7 +222,6 @@
                 <b-tabs>
                     <b-tab title="Details" active>
                         <div class="overflow-hidden pt-3" v-html="srvModel.description" id="crowdfund-body-description">
-                            @Safe.Raw(Model.Description)
                         </div>
                     </b-tab>
                     <b-tab title="Discussion">
@@ -231,7 +231,6 @@
             </template>
             <template v-else>
                 <div class="overflow-hidden" v-html="srvModel.description" id="crowdfund-body-description">
-                    @Safe.Raw(Model.Description)
                 </div>
             </template>
         </div>
@@ -246,7 +245,7 @@
             </contribute>
         </div>
     </div>
-    <noscript>
+	<noscript v-pre>
         <div class="row justify-content-between">
             <div class="col-md-7  col-sm-12">
                 <div class="overflow-hidden">@Safe.Raw(Model.Description)</div>

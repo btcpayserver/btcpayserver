@@ -4,9 +4,11 @@
 @using BTCPayServer.Components.ThemeSwitch
 @using BTCPayServer.Payments
 @model BTCPayServer.Models.ViewPullPaymentModel
+@inject BTCPayServer.Security.ContentSecurityPolicies Csp
 
 @{
     ViewData["Title"] = Model.Title;
+	Csp.UnsafeEval();
     Layout = null;
     string StatusTextClass(string status)
     {

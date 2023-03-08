@@ -1,8 +1,10 @@
 @namespace BTCPayServer.Client
 @using BTCPayServer.Abstractions.Models
+@inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model BTCPayServer.Controllers.UIManageController.ApiKeysViewModel
 @{
-    ViewData.SetActivePage(ManageNavPages.APIKeys, "API Keys");
+	ViewData.SetActivePage(ManageNavPages.APIKeys, "API Keys");
+	Csp.UnsafeEval();
 }
 
 <div class="row">

@@ -3,9 +3,11 @@
 @using BTCPayServer.Client
 @model BTCPayServer.Models.PaymentRequestViewModels.ViewPaymentRequestViewModel
 @inject BTCPayServer.Services.BTCPayServerEnvironment Env
+@inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @{
-    ViewData["Title"] = Model.Title;
-    Layout = null;
+	ViewData["Title"] = Model.Title;
+	Csp.UnsafeEval();
+	Layout = null;
     string StatusClass(InvoiceState state)
     {
         switch (state.Status.ToModernStatus())
@@ -68,7 +70,7 @@
                     <div class="col-12 col-md-8 col-lg-9">
                         <div class="row">
                             <div class="col col-12 col-lg-8">
-                                <h1 class="h3" v-text="srvModel.title">@Model.Title</h1>
+                                <h1 class="h3" v-text="srvModel.title"></h1>
                             </div>
                             <div class="col col-12 col-sm-6 col-lg-8 d-flex align-items-center">
                                 <span class="text-muted text-nowrap">Last Updated</span>
@@ -204,9 +206,7 @@
                             <h2 class="h4 mb-3">Invoice Summary</h2>
                             @if (!string.IsNullOrEmpty(Model.Description) && Model.Description != "<br>")
                             {
-                                <div v-html="srvModel.description">
-                                    @Safe.Raw(Model.Description)
-                                </div>
+                                <div v-html="srvModel.description"></div>
                             }
                             else
                             {

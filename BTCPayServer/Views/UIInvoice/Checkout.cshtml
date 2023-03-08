@@ -1,9 +1,11 @@
 @inject BTCPayServer.Services.LanguageService langService
 @inject BTCPayServer.Services.BTCPayServerEnvironment env
 @inject PaymentMethodHandlerDictionary PaymentMethodHandlerDictionary
+@inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model PaymentModel
 @{
-    Layout = null;
+	Layout = null;
+	Csp.UnsafeEval();
 }
 
 <!DOCTYPE html>

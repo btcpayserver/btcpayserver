@@ -5,12 +5,13 @@
 @inject BTCPayServerEnvironment Env
 @inject IEnumerable<IUIExtension> UiExtensions 
 @inject PaymentMethodHandlerDictionary PaymentMethodHandlerDictionary
+@inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model PaymentModel
 @{
-    Layout = null;
-    ViewData["Title"] = Model.HtmlTitle;
-
-    var hasPaymentPlugins = UiExtensions.Any(extension => extension.Location == "checkout-payment-method");
+	Layout = null;
+	ViewData["Title"] = Model.HtmlTitle;
+	Csp.UnsafeEval();
+	var hasPaymentPlugins = UiExtensions.Any(extension => extension.Location == "checkout-payment-method");
     // Show LNURL as selectable payment method only for top up invoices + non-BIP21 case
     var displayedPaymentMethods = Model.IsUnsetTopUp && !Model.OnChainWithLnInvoiceFallback
         ? Model.AvailableCryptos
@@ -49,7 +50,7 @@
             <section id="payment" v-if="isActive">
                 @if (!string.IsNullOrEmpty(Model.ItemDesc) && Model.ItemDesc != Model.StoreName)
                 {
-                    <h5 class="text-center mt-1 mb-3 fw-semibold" v-if="srvModel.itemDesc" v-text="srvModel.itemDesc">@Model.ItemDesc</h5>
+                    <h5 class="text-center mt-1 mb-3 fw-semibold" v-if="srvModel.itemDesc" v-text="srvModel.itemDesc"></h5>
                 }
                 @if (Model.IsUnsetTopUp)
                 {

@@ -676,6 +676,12 @@
     }
 }
 
+@media (min-width: 992px) and (max-height: 799px) {
+    :root {
+        --content-padding-top: 1.25rem;
+    }
+}
+
 @media (max-width: 449px) {
     #StoreSelector {
         max-width: 40vw;

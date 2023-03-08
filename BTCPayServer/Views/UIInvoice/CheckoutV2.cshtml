@@ -107,17 +107,19 @@
                             <vc:icon symbol="payment-complete"/>
                         </span>
                         <h4 v-t="'invoice_paid'"></h4>
-                        <dl class="mb-0">
-                            <div>
-                                <dt v-t="'invoice_id'"></dt>
-                                <dd v-text="srvModel.invoiceId"></dd>
-                            </div>
-                            <div v-if="srvModel.orderId">
-                                <dt v-t="'order_id'"></dt>
-                                <dd v-text="srvModel.orderId"></dd>
-                            </div>
-                        </dl>
-                        <payment-details :srv-model="srvModel" :is-active="isActive" class="mb-5"></payment-details>
+                        <div id="PaymentDetails" class="payment-details">
+                            <dl class="mb-0">
+                                <div>
+                                    <dt v-t="'invoice_id'"></dt>
+                                    <dd v-text="srvModel.invoiceId" :data-clipboard="srvModel.invoiceId" :data-clipboard-confirm="$t('copy_confirm')"></dd>
+                                </div>
+                                <div v-if="srvModel.orderId">
+                                    <dt v-t="'order_id'"></dt>
+                                    <dd v-text="srvModel.orderId" :data-clipboard="srvModel.orderId" :data-clipboard-confirm="$t('copy_confirm')"></dd>
+                                </div>
+                            </dl>
+                            <payment-details :srv-model="srvModel" :is-active="isActive" class="mb-5"></payment-details>
+                        </div>
                     </div>
                     <div class="buttons">
                         <a v-if="srvModel.receiptLink" class="btn btn-primary rounded-pill w-100" :href="srvModel.receiptLink" :target="isModal ? '_top' : null" v-t="'view_receipt'" id="ReceiptLink"></a>
@@ -131,18 +133,18 @@
                             <vc:icon symbol="invoice-expired"/>
                         </span>
                         <h4 v-t="'invoice_expired'"></h4>
-                        <dl class="mb-0">
-                            <div>
-                                <dt v-t="'invoice_id'"></dt>
-                                <dd v-text="srvModel.invoiceId"></dd>
-                            </div>
-                            <div v-if="srvModel.orderId">
-                                <dt v-t="'order_id'"></dt>
-                                <dd v-text="srvModel.orderId"></dd>
-                            </div>
-                        </dl>
-                        <div id="PaymentDetails" class="payment-details" v-collapsible="displayPaymentDetails">
-                            <payment-details :srv-model="srvModel" :is-active="isActive"></payment-details>
+                        <div id="PaymentDetails" class="payment-details">
+                            <dl class="mb-0">
+                                <div>
+                                    <dt v-t="'invoice_id'"></dt>
+                                    <dd v-text="srvModel.invoiceId" :data-clipboard="srvModel.invoiceId" :data-clipboard-confirm="$t('copy_confirm')"></dd>
+                                </div>
+                                <div v-if="srvModel.orderId">
+                                    <dt v-t="'order_id'"></dt>
+                                    <dd v-text="srvModel.orderId" :data-clipboard="srvModel.orderId" :data-clipboard-confirm="$t('copy_confirm')"></dd>
+                                </div>
+                            </dl>
+                            <payment-details :srv-model="srvModel" :is-active="isActive" v-collapsible="displayPaymentDetails"></payment-details>
                         </div>
                         <button class="d-flex align-items-center gap-1 btn btn-link payment-details-button" type="button" :aria-expanded="displayPaymentDetails ? 'true' : 'false'" v-on:click="displayPaymentDetails = !displayPaymentDetails">
                             <span class="fw-semibold" v-t="'view_details'"></span>

@@ -28,7 +28,7 @@
   "payment_link": "Payment Link",
   "invoice_paid": "Invoice Paid",
   "invoice_expired": "Invoice Expired",
-  "invoice_expired_body": "An invoice is only valid for {{minutes}} minutes.\n\nReturn to {{storeName}} if you like to resubmit a payment.",
+  "invoice_expired_body": "An invoice is only valid for {{minutes}} minutes.\n\nReturn to {{storeName}} if you would like to resubmit a payment.",
   "view_receipt": "View receipt",
   "return_to_store": "Return to {{storeName}}",
   "copy": "Copy",

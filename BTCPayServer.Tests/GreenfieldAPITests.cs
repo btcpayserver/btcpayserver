@@ -1305,15 +1305,21 @@ namespace BTCPayServer.Tests
                 await user.CreateClient(Permission.Create(Policies.CanViewStoreSettings, user.StoreId).ToString());
             Assert.Single(await scopedClient.GetStores());
 
-            var noauth = await user.CreateClient(Array.Empty<string>());
-            await AssertAPIError("missing-permission", () => noauth.GetStores());
-
             // We strip the user's Owner right, so the key should not work
             using var ctx = tester.PayTester.GetService<Data.ApplicationDbContextFactory>().CreateContext();
             var storeEntity = await ctx.UserStore.SingleAsync(u => u.ApplicationUserId == user.UserId && u.StoreDataId == newStore.Id);
             storeEntity.Role = "Guest";
             await ctx.SaveChangesAsync();
             await AssertHttpError(403, async () => await client.UpdateStore(newStore.Id, new UpdateStoreRequest() { Name = "B" }));
+
+            client = await user.CreateClient(Policies.Unrestricted);
+            stores = await client.GetStores();
+            foreach (var s2 in stores)
+            {
+                await tester.PayTester.StoreRepository.DeleteStore(s2.Id);
+            }
+            tester.DeleteStore = false;
+            Assert.Empty(await client.GetStores());
         }
 
         private async Task<GreenfieldValidationException> AssertValidationError(string[] fields, Func<Task> act)

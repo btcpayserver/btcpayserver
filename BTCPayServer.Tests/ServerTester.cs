@@ -246,15 +246,18 @@ namespace BTCPayServer.Tests
         }
 
         public List<string> Stores { get; internal set; } = new List<string>();
-
+        public bool DeleteStore { get; set; } = true;
         public void Dispose()
         {
             foreach (var r in this.Resources)
                 r.Dispose();
             TestLogs.LogInformation("Disposing the BTCPayTester...");
-            foreach (var store in Stores)
+            if (DeleteStore)
             {
-                Xunit.Assert.True(PayTester.StoreRepository.DeleteStore(store).GetAwaiter().GetResult());
+                foreach (var store in Stores)
+                {
+                    Xunit.Assert.True(PayTester.StoreRepository.DeleteStore(store).GetAwaiter().GetResult());
+                }
             }
             if (PayTester != null)
                 PayTester.Dispose();

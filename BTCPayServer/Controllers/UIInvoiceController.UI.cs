@@ -798,7 +798,7 @@ namespace BTCPayServer.Controllers
                 OrderAmount = orderAmount,
                 OrderAmountFormatted = _displayFormatter.Currency(orderAmount, network.CryptoCode, DisplayFormatter.CurrencyFormat.Symbol),
                 IsUnsetTopUp = invoice.IsUnsetTopUp(),
-                OrderAmountFiat = OrderAmountFromInvoice(network.CryptoCode, invoice),
+                OrderAmountFiat = OrderAmountFromInvoice(network.CryptoCode, invoice, DisplayFormatter.CurrencyFormat.Symbol),
                 CustomerEmail = invoice.RefundMail,
                 RequiresRefundEmail = invoice.RequiresRefundEmail ?? storeBlob.RequiresRefundEmail,
                 ExpirationSeconds = Math.Max(0, (int)(invoice.ExpirationTime - DateTimeOffset.UtcNow).TotalSeconds),
@@ -806,7 +806,7 @@ namespace BTCPayServer.Controllers
                 MaxTimeSeconds = (int)(invoice.ExpirationTime - invoice.InvoiceTime).TotalSeconds,
                 MaxTimeMinutes = (int)(invoice.ExpirationTime - invoice.InvoiceTime).TotalMinutes,
                 ItemDesc = invoice.Metadata.ItemDesc,
-                Rate = ExchangeRate(paymentMethod),
+                Rate = ExchangeRate(paymentMethod, DisplayFormatter.CurrencyFormat.Symbol),
                 MerchantRefLink = invoice.RedirectURL?.AbsoluteUri ?? receiptUrl ?? "/",
                 ReceiptLink = receiptUrl,
                 RedirectAutomatically = invoice.RedirectAutomatically,
@@ -870,18 +870,18 @@ namespace BTCPayServer.Controllers
             return model;
         }
 
-        private string? OrderAmountFromInvoice(string cryptoCode, InvoiceEntity invoiceEntity)
+        private string? OrderAmountFromInvoice(string cryptoCode, InvoiceEntity invoiceEntity, DisplayFormatter.CurrencyFormat format = DisplayFormatter.CurrencyFormat.Code)
         {
             // if invoice source currency is the same as currently display currency, no need for "order amount from invoice"
             if (cryptoCode == invoiceEntity.Currency)
                 return null;
 
-            return _displayFormatter.Currency(invoiceEntity.Price, invoiceEntity.Currency, DisplayFormatter.CurrencyFormat.Symbol);
+            return _displayFormatter.Currency(invoiceEntity.Price, invoiceEntity.Currency, format);
         }
-        private string ExchangeRate(PaymentMethod paymentMethod)
+        private string ExchangeRate(PaymentMethod paymentMethod, DisplayFormatter.CurrencyFormat format = DisplayFormatter.CurrencyFormat.Code)
         {
             string currency = paymentMethod.ParentEntity.Currency;
-            return _displayFormatter.Currency(paymentMethod.Rate, currency, DisplayFormatter.CurrencyFormat.Symbol);
+            return _displayFormatter.Currency(paymentMethod.Rate, currency, format);
         }
 
         [HttpGet("i/{invoiceId}/status")]

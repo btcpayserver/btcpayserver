@@ -1,6 +1,8 @@
 @using System.Globalization
 @using BTCPayServer.Payments
 @using BTCPayServer.Payments.Bitcoin
+@using BTCPayServer.Services
+@inject DisplayFormatter DisplayFormatter
 @model IEnumerable<BTCPayServer.Services.Invoices.PaymentEntity>
 
 @{
@@ -78,7 +80,7 @@
                     <td>@(payment.CryptoPaymentData.KeyPath?.ToString()?? "Unknown")</td>
                     <td style="max-width:300px;" data-bs-toggle="tooltip" class="text-truncate" title="@payment.DepositAddress">@payment.DepositAddress</td>
                     <td class="payment-value">
-                        @payment.CryptoPaymentData.GetValue()
+                        @DisplayFormatter.Currency(payment.CryptoPaymentData.GetValue(), payment.Crypto)
                         @if (!string.IsNullOrEmpty(payment.AdditionalInformation))
                         {
                             <div>(@payment.AdditionalInformation)</div>

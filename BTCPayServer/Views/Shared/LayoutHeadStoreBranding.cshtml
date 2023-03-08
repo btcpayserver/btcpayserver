@@ -11,7 +11,7 @@
 @if (!string.IsNullOrEmpty(Model.BrandColor))
 {
     var brandColor = Model.BrandColor;
-    var accentColor = ColorPalette.AdjustBrightness(brandColor, (float)-0.15);
+    var accentColor = ColorPalette.Default.AdjustBrightness(brandColor, (float)-0.15);
     var complement = ColorPalette.Default.TextColor(brandColor).ToLowerInvariant();
     var complementColor = $"var(--btcpay-{(complement == "black" ? "black" : "white")})";
     <style>

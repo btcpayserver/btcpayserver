@@ -70,7 +70,7 @@ namespace BTCPayServer
         /// <returns>
         /// Corrected <see cref="Color"/> structure.
         /// </returns>
-        public static Color AdjustBrightness(Color color, float correctionFactor)
+        public Color AdjustBrightness(Color color, float correctionFactor)
         {
             float red = color.R;
             float green = color.G;
@@ -93,7 +93,7 @@ namespace BTCPayServer
             return Color.FromArgb(color.A, (int)red, (int)green, (int)blue);
         }
         
-        public static string AdjustBrightness(string html, float correctionFactor)
+        public string AdjustBrightness(string html, float correctionFactor)
         {
             var color = AdjustBrightness(ColorTranslator.FromHtml(html), correctionFactor);
             return ColorTranslator.ToHtml(color);

@@ -10,7 +10,6 @@ using BTCPayServer.Models;
 using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
-using BTCPayServer.Services.Rates;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using NBXplorer.Models;
@@ -24,14 +23,14 @@ namespace BTCPayServer.Payments.Bitcoin
         private readonly BTCPayNetworkProvider _networkProvider;
         private readonly IFeeProviderFactory _FeeRateProviderFactory;
         private readonly NBXplorerDashboard _dashboard;
-        private readonly CurrencyNameTable _currencyNameTable;
+        private readonly DisplayFormatter _displayFormatter;
         private readonly Services.Wallets.BTCPayWalletProvider _WalletProvider;
         private readonly Dictionary<string, string> _bech32Prefix;
 
         public BitcoinLikePaymentHandler(ExplorerClientProvider provider,
             BTCPayNetworkProvider networkProvider,
             IFeeProviderFactory feeRateProviderFactory,
-            CurrencyNameTable currencyNameTable,
+            DisplayFormatter displayFormatter,
             NBXplorerDashboard dashboard,
             Services.Wallets.BTCPayWalletProvider walletProvider)
         {
@@ -40,7 +39,7 @@ namespace BTCPayServer.Payments.Bitcoin
             _FeeRateProviderFactory = feeRateProviderFactory;
             _dashboard = dashboard;
             _WalletProvider = walletProvider;
-            _currencyNameTable = currencyNameTable;
+            _displayFormatter = displayFormatter;
 
             _bech32Prefix = networkProvider.GetAll().OfType<BTCPayNetwork>()
                 .Where(network => network.NBitcoinNetwork?.Consensus?.SupportSegwit is true).ToDictionary(network => network.CryptoCode,
@@ -144,7 +143,7 @@ namespace BTCPayServer.Payments.Bitcoin
             
             if (model.Activated && amountInSats)
             {
-                base.PreparePaymentModelForAmountInSats(model, paymentMethod, _currencyNameTable);
+                base.PreparePaymentModelForAmountInSats(model, paymentMethod, _displayFormatter);
             }
         }
 

@@ -13,6 +13,7 @@ using BTCPayServer.Data;
 using BTCPayServer.Filters;
 using BTCPayServer.Models.CustodianAccountViewModels;
 using BTCPayServer.Payments;
+using BTCPayServer.Services;
 using BTCPayServer.Services.Custodian.Client;
 using BTCPayServer.Services.Rates;
 using Microsoft.AspNetCore.Authorization;
@@ -32,13 +33,13 @@ namespace BTCPayServer.Controllers
     {
         private readonly IEnumerable<ICustodian> _custodianRegistry;
         private readonly CustodianAccountRepository _custodianAccountRepository;
-        private readonly CurrencyNameTable _currencyNameTable;
+        private readonly DisplayFormatter _displayFormatter;
         private readonly BTCPayServerClient _btcPayServerClient;
         private readonly BTCPayNetworkProvider _networkProvider;
         private readonly LinkGenerator _linkGenerator;
 
         public UICustodianAccountsController(
-            CurrencyNameTable currencyNameTable,
+            DisplayFormatter displayFormatter,
             UserManager<ApplicationUser> userManager,
             CustodianAccountRepository custodianAccountRepository,
             IEnumerable<ICustodian> custodianRegistry,
@@ -47,7 +48,7 @@ namespace BTCPayServer.Controllers
             LinkGenerator linkGenerator
         )
         {
-            _currencyNameTable = currencyNameTable ?? throw new ArgumentNullException(nameof(currencyNameTable));
+            _displayFormatter = displayFormatter;
             _custodianAccountRepository = custodianAccountRepository;
             _custodianRegistry = custodianRegistry;
             _btcPayServerClient = btcPayServerClient;
@@ -144,7 +145,7 @@ namespace BTCPayServer.Controllers
                         if (asset.Equals(defaultCurrency))
                         {
                             assetBalance.FormattedFiatValue =
-                                _currencyNameTable.DisplayFormatCurrency(pair.Value.Qty, defaultCurrency);
+                                _displayFormatter.Currency(pair.Value.Qty, defaultCurrency);
                             assetBalance.FiatValue = pair.Value.Qty;
                         }
                         else
@@ -156,11 +157,11 @@ namespace BTCPayServer.Controllers
                                 assetBalance.Bid = quote.Bid;
                                 assetBalance.Ask = quote.Ask;
                                 assetBalance.FormattedBid =
-                                    _currencyNameTable.DisplayFormatCurrency(quote.Bid, quote.FromAsset);
+                                    _displayFormatter.Currency(quote.Bid, quote.FromAsset);
                                 assetBalance.FormattedAsk =
-                                    _currencyNameTable.DisplayFormatCurrency(quote.Ask, quote.FromAsset);
+                                    _displayFormatter.Currency(quote.Ask, quote.FromAsset);
                                 assetBalance.FormattedFiatValue =
-                                    _currencyNameTable.DisplayFormatCurrency(pair.Value.Qty * quote.Bid,
+                                    _displayFormatter.Currency(pair.Value.Qty * quote.Bid,
                                         defaultCurrency);
                                 assetBalance.FiatValue = pair.Value.Qty * quote.Bid;
                             }

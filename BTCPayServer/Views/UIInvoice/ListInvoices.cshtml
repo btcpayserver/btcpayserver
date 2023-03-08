@@ -1,5 +1,7 @@
 @using BTCPayServer.Client
 @using BTCPayServer.Client.Models
+@using BTCPayServer.Services
+@inject DisplayFormatter DisplayFormatter
 @model InvoicesModel
 @{
     ViewData.SetActivePage(InvoiceNavPages.Index, "Invoices");
@@ -371,7 +373,7 @@
                                     <span class="badge bg-warning">Refund</span>
                                 }
                             </td>
-                            <td class="text-end text-nowrap">@invoice.AmountCurrency</td>
+                            <td class="text-end text-nowrap">@DisplayFormatter.Currency(invoice.Amount, invoice.Currency)</td>
                             <td class="text-end text-nowrap">
                                 @if (invoice.ShowCheckout)
                                 {

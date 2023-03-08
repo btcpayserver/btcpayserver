@@ -14,7 +14,6 @@ using BTCPayServer.Models;
 using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
-using BTCPayServer.Services.Rates;
 using Microsoft.Extensions.Options;
 using NBitcoin;
 
@@ -27,21 +26,21 @@ namespace BTCPayServer.Payments.Lightning
         private readonly LightningClientFactoryService _lightningClientFactory;
         private readonly BTCPayNetworkProvider _networkProvider;
         private readonly SocketFactory _socketFactory;
-        private readonly CurrencyNameTable _currencyNameTable;
+        private readonly DisplayFormatter _displayFormatter;
 
         public LightningLikePaymentHandler(
             NBXplorerDashboard dashboard,
             LightningClientFactoryService lightningClientFactory,
             BTCPayNetworkProvider networkProvider,
             SocketFactory socketFactory,
-            CurrencyNameTable currencyNameTable,
+            DisplayFormatter displayFormatter,
             IOptions<LightningNetworkOptions> options)
         {
             _Dashboard = dashboard;
             _lightningClientFactory = lightningClientFactory;
             _networkProvider = networkProvider;
             _socketFactory = socketFactory;
-            _currencyNameTable = currencyNameTable;
+            _displayFormatter = displayFormatter;
             Options = options;
         }
 
@@ -221,7 +220,7 @@ namespace BTCPayServer.Payments.Lightning
             
             if (storeBlob.LightningAmountInSatoshi && model.CryptoCode == "BTC")
             {
-                base.PreparePaymentModelForAmountInSats(model, paymentMethod, _currencyNameTable);
+                base.PreparePaymentModelForAmountInSats(model, paymentMethod, _displayFormatter);
             }
         }
         public override string GetCryptoImage(PaymentMethodId paymentMethodId)

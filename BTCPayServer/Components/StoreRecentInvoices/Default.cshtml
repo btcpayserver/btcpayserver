@@ -1,6 +1,8 @@
 @using BTCPayServer.Abstractions.Extensions
 @using BTCPayServer.Client.Models
+@using BTCPayServer.Services
 @using BTCPayServer.Services.Invoices
+@inject DisplayFormatter DisplayFormatter
 @model BTCPayServer.Components.StoreRecentInvoices.StoreRecentInvoicesViewModel
 
 <div class="widget store-recent-invoices" id="StoreRecentInvoices-@Model.Store.Id">
@@ -63,7 +65,7 @@
                             </span>
                         }
                     </td>
-                    <td class="text-end">@invoice.AmountCurrency</td>
+                    <td class="text-end">@DisplayFormatter.Currency(invoice.Amount, invoice.Currency)</td>
                 </tr>
             }
             </tbody>

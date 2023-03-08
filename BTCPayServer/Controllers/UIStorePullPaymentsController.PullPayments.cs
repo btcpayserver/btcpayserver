@@ -34,6 +34,7 @@ namespace BTCPayServer.Controllers
         private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
         private readonly IEnumerable<IPayoutHandler> _payoutHandlers;
         private readonly CurrencyNameTable _currencyNameTable;
+        private readonly DisplayFormatter _displayFormatter;
         private readonly PullPaymentHostedService _pullPaymentService;
         private readonly ApplicationDbContextFactory _dbContextFactory;
         private readonly BTCPayNetworkJsonSerializerSettings _jsonSerializerSettings;
@@ -49,6 +50,7 @@ namespace BTCPayServer.Controllers
         public UIStorePullPaymentsController(BTCPayNetworkProvider btcPayNetworkProvider,
             IEnumerable<IPayoutHandler> payoutHandlers,
             CurrencyNameTable currencyNameTable,
+            DisplayFormatter displayFormatter,
             PullPaymentHostedService pullPaymentHostedService,
             ApplicationDbContextFactory dbContextFactory,
             BTCPayNetworkJsonSerializerSettings jsonSerializerSettings)
@@ -56,6 +58,7 @@ namespace BTCPayServer.Controllers
             _btcPayNetworkProvider = btcPayNetworkProvider;
             _payoutHandlers = payoutHandlers;
             _currencyNameTable = currencyNameTable;
+            _displayFormatter = displayFormatter;
             _pullPaymentService = pullPaymentHostedService;
             _dbContextFactory = dbContextFactory;
             _jsonSerializerSettings = jsonSerializerSettings;
@@ -532,7 +535,7 @@ namespace BTCPayServer.Controllers
                     PullPaymentName = ppBlob?.Name ?? item.PullPayment?.Id,
                     Date = item.Payout.Date,
                     PayoutId = item.Payout.Id,
-                    Amount = _currencyNameTable.DisplayFormatCurrency(payoutBlob.Amount, ppBlob?.Currency ?? PaymentMethodId.Parse(item.Payout.PaymentMethodId).CryptoCode),
+                    Amount = _displayFormatter.Currency(payoutBlob.Amount, ppBlob?.Currency ?? PaymentMethodId.Parse(item.Payout.PaymentMethodId).CryptoCode),
                     Destination = payoutBlob.Destination
                 };
                 var handler = _payoutHandlers

@@ -20,6 +20,7 @@ using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Models.PaymentRequestViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Rating;
+using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Invoices.Export;
@@ -137,10 +138,10 @@ namespace BTCPayServer.Controllers
                 CreatedDate = invoice.InvoiceTime,
                 ExpirationDate = invoice.ExpirationTime,
                 MonitoringDate = invoice.MonitoringExpiration,
-                Fiat = _CurrencyNameTable.DisplayFormatCurrency(invoice.Price, invoice.Currency),
+                Fiat = _displayFormatter.Currency(invoice.Price, invoice.Currency),
                 TaxIncluded = invoice.Metadata.TaxIncluded is null
                     ? null
-                    : _CurrencyNameTable.DisplayFormatCurrency(invoice.Metadata.TaxIncluded ?? 0.0m, invoice.Currency),
+                    : _displayFormatter.Currency(invoice.Metadata.TaxIncluded ?? 0.0m, invoice.Currency),
                 NotificationUrl = invoice.NotificationURL?.AbsoluteUri,
                 RedirectUrl = invoice.RedirectURL?.AbsoluteUri,
                 TypedMetadata = invoice.Metadata,
@@ -229,8 +230,8 @@ namespace BTCPayServer.Controllers
                         Amount = amount,
                         Paid = paid,
                         ReceivedDate = paymentEntity.ReceivedTime.DateTime,
-                        PaidFormatted = _CurrencyNameTable.DisplayFormatCurrency(paid, i.Currency),
-                        RateFormatted = _CurrencyNameTable.DisplayFormatCurrency(rate, i.Currency),
+                        PaidFormatted = _displayFormatter.Currency(paid, i.Currency, DisplayFormatter.CurrencyFormat.Symbol),
+                        RateFormatted = _displayFormatter.Currency(rate, i.Currency, DisplayFormatter.CurrencyFormat.Symbol),
                         PaymentMethod = paymentMethodId.ToPrettyString(),
                         Link = link,
                         Id = txId,
@@ -354,8 +355,7 @@ namespace BTCPayServer.Controllers
                         var cryptoPaid = paymentMethod.Calculate().Paid.ToDecimal(MoneyUnit.BTC);
                         var paidCurrency = Math.Round(cryptoPaid * paymentMethod.Rate, cdCurrency.Divisibility);
                         model.CryptoAmountThen = cryptoPaid.RoundToSignificant(paymentMethodDivisibility);
-                        model.RateThenText =
-                            _CurrencyNameTable.DisplayFormatCurrency(model.CryptoAmountThen, paymentMethodId.CryptoCode);
+                        model.RateThenText = _displayFormatter.Currency(model.CryptoAmountThen, paymentMethodId.CryptoCode);
                         rules = store.GetStoreBlob().GetRateRules(_NetworkProvider);
                         rateResult = await _RateProvider.FetchRate(
                             new CurrencyPair(paymentMethodId.CryptoCode, invoice.Currency), rules,
@@ -369,13 +369,12 @@ namespace BTCPayServer.Controllers
                         }
 
                         model.CryptoAmountNow = Math.Round(paidCurrency / rateResult.BidAsk.Bid, paymentMethodDivisibility);
-                        model.CurrentRateText =
-                            _CurrencyNameTable.DisplayFormatCurrency(model.CryptoAmountNow, paymentMethodId.CryptoCode);
+                        model.CurrentRateText = _displayFormatter.Currency(model.CryptoAmountNow, paymentMethodId.CryptoCode);
                         model.FiatAmount = paidCurrency;
                     }
                     model.CustomAmount = model.FiatAmount;
                     model.CustomCurrency = invoice.Currency;
-                    model.FiatText = _CurrencyNameTable.DisplayFormatCurrency(model.FiatAmount, invoice.Currency);
+                    model.FiatText = _displayFormatter.Currency(model.FiatAmount, invoice.Currency);
                     return View("_RefundModal", model);
 
                 case RefundSteps.SelectRate:
@@ -500,13 +499,9 @@ namespace BTCPayServer.Controllers
                         {
                             PaymentMethodId = paymentMethodId,
                             PaymentMethod = paymentMethodId.ToPrettyString(),
-                            Due = _CurrencyNameTable.DisplayFormatCurrency(accounting.Due.ToDecimal(MoneyUnit.BTC),
-                                paymentMethodId.CryptoCode),
-                            Paid = _CurrencyNameTable.DisplayFormatCurrency(
-                                accounting.CryptoPaid.ToDecimal(MoneyUnit.BTC),
-                                paymentMethodId.CryptoCode),
-                            Overpaid = _CurrencyNameTable.DisplayFormatCurrency(
-                                overpaidAmount, paymentMethodId.CryptoCode),
+                            Due = _displayFormatter.Currency(accounting.Due.ToDecimal(MoneyUnit.BTC), paymentMethodId.CryptoCode),
+                            Paid = _displayFormatter.Currency(accounting.CryptoPaid.ToDecimal(MoneyUnit.BTC), paymentMethodId.CryptoCode),
+                            Overpaid = _displayFormatter.Currency(overpaidAmount, paymentMethodId.CryptoCode),
                             Address = data.GetPaymentMethodDetails().GetPaymentDestination(),
                             Rate = ExchangeRate(data),
                             PaymentMethodRaw = data
@@ -875,12 +870,12 @@ namespace BTCPayServer.Controllers
             if (cryptoCode == invoiceEntity.Currency)
                 return null;
 
-            return _CurrencyNameTable.DisplayFormatCurrency(invoiceEntity.Price, invoiceEntity.Currency);
+            return _displayFormatter.Currency(invoiceEntity.Price, invoiceEntity.Currency);
         }
         private string ExchangeRate(PaymentMethod paymentMethod)
         {
             string currency = paymentMethod.ParentEntity.Currency;
-            return _CurrencyNameTable.DisplayFormatCurrency(paymentMethod.Rate, currency);
+            return _displayFormatter.Currency(paymentMethod.Rate, currency);
         }
 
         [HttpGet("i/{invoiceId}/status")]
@@ -1003,7 +998,8 @@ namespace BTCPayServer.Controllers
                     InvoiceId = invoice.Id,
                     OrderId = invoice.Metadata.OrderId ?? string.Empty,
                     RedirectUrl = invoice.RedirectURL?.AbsoluteUri ?? string.Empty,
-                    AmountCurrency = _CurrencyNameTable.DisplayFormatCurrency(invoice.Price, invoice.Currency),
+                    Amount = invoice.Price,
+                    Currency = invoice.Currency,
                     CanMarkInvalid = state.CanMarkInvalid(),
                     CanMarkSettled = state.CanMarkComplete(),
                     Details = InvoicePopulatePayments(invoice),

@@ -92,9 +92,9 @@ namespace BTCPayServer.Client.Models
     public class Payment
     {
         public decimal ConversionRate { get; set; }
-        public string PaymentId { get; set; }
+        public string Id { get; set; }
         public DateTimeOffset? ReceivedDate { get; set; }
-        public string PaymentType { get; set; }
+        public string Type { get; set; }
         public string Destination { get; set; }
         public decimal Paid { get; set; }
         public decimal NetworkFee { get; set; }

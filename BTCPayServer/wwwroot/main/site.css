@@ -591,6 +591,7 @@ svg.icon-note {
 }
 .btcpay-list-select-item {
     display: flex;
+    flex-wrap: wrap;
     flex: 1 1 45%; 
     align-items: center;
     border: 1px solid var(--btcpay-form-border);
@@ -616,6 +617,11 @@ svg.icon-note {
 }
 input:checked + .btcpay-list-select-item {
     border-color: var(--btcpay-form-border-focus);
+}
+.btcpay-list-select-item .note {
+    color: var(--btcpay-body-text-muted);
+    flex-basis: 100%;
+    margin-left: 2.5rem;
 }
 
 /* Public pages */

@@ -47,25 +47,15 @@
                 <div class="btcpay-list-select">
                     <input asp-for="Preset" id="Preset_ECommerce" value="ECommerce" type="radio">
                     <label for="Preset_ECommerce" class="btcpay-list-select-item">
-                        <div style="display:flex; align-items:center; flex-direction:column;">
-                            <span class="fa fa-globe" style="font-size:100px;"></span>
-                            <div style="display:flex; align-items:center; flex-direction:column;">
-                                <h5>E-commerce</h5>
-                                <p style="text-align:center">Optimize the checkout experience for selling goods online.</p>
-                            </div>
-                        </div>
+                        <vc:icon symbol="pos-cart" />
+                        <span>E-commerce</span>
+                        <span class="note">Optimize the checkout experience for selling goods online</span>
                     </label>
                     <input asp-for="Preset" id="Preset_Physical" value="Physical" type="radio">
                     <label for="Preset_Physical" class="btcpay-list-select-item">
-                        <div style="display:flex; align-items:center; flex-direction:column;">
-                            <svg role="img" class="icon icon-store" style="height:100px;width:100px;">
-                                <use href="~/img/icon-sprite.svg#store"></use>
-                            </svg>
-                            <div style="display:flex; align-items:center; flex-direction:column;">
-                                <h5>Physical retail</h5>
-                                <p style="text-align:center">Optimize the checkout experience for selling goods in physically.</p>
-                            </div>
-                        </div>
+                        <vc:icon symbol="store" />
+                        <span>Physical retail</span>
+                        <span class="note">Optimize the checkout experience for selling goods physically</span>
                     </label>
                 </div>
             </div>

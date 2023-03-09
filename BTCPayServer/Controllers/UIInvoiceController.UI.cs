@@ -766,9 +766,6 @@ namespace BTCPayServer.Controllers
                 Request.Host,
                 Request.PathBase) : null;
 
-            var btcDue = accounting.Due.ShowMoney(divisibility);
-            var btcPaid = accounting.Paid.ShowMoney(divisibility);
-            var orderAmount = (accounting.TotalDue - accounting.NetworkFee).ShowMoney(divisibility);
             var model = new PaymentModel
             {
 #if ALTCOINS
@@ -790,13 +787,10 @@ namespace BTCPayServer.Controllers
                 OnChainWithLnInvoiceFallback = storeBlob.OnChainWithLnInvoiceFallback,
                 CryptoImage = Request.GetRelativePathOrAbsolute(paymentMethodHandler.GetCryptoImage(paymentMethodId)),
                 BtcAddress = paymentMethodDetails.GetPaymentDestination(),
-                BtcDue = btcDue,
-                BtcDueFormatted = _displayFormatter.Currency(btcDue, network.CryptoCode, DisplayFormatter.CurrencyFormat.Symbol),
-                BtcPaid = btcPaid,
-                BtcPaidFormatted = _displayFormatter.Currency(btcPaid, network.CryptoCode, DisplayFormatter.CurrencyFormat.Symbol),
+                BtcDue = accounting.Due.ShowMoney(divisibility),
+                BtcPaid = accounting.Paid.ShowMoney(divisibility),
                 InvoiceCurrency = invoice.Currency,
-                OrderAmount = orderAmount,
-                OrderAmountFormatted = _displayFormatter.Currency(orderAmount, network.CryptoCode, DisplayFormatter.CurrencyFormat.Symbol),
+                OrderAmount = (accounting.TotalDue - accounting.NetworkFee).ShowMoney(divisibility),
                 IsUnsetTopUp = invoice.IsUnsetTopUp(),
                 OrderAmountFiat = OrderAmountFromInvoice(network.CryptoCode, invoice, DisplayFormatter.CurrencyFormat.Symbol),
                 CustomerEmail = invoice.RefundMail,

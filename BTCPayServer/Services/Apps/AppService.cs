@@ -320,7 +320,7 @@ namespace BTCPayServer.Services.Apps
             return await query.ToListAsync();
         }
 
-        public async Task<AppData> GetApp(string appId, string? appType, bool includeStore = false)
+        public async Task<AppData> GetApp(string appId, string appType, bool includeStore = false)
         {
             await using var ctx = _ContextFactory.CreateContext();
             var query = ctx.Apps
@@ -587,7 +587,7 @@ namespace BTCPayServer.Services.Apps
             }
         }
 
-        public string ViewLink(AppData app)
+        public string? ViewLink(AppData app)
         {
             return GetAppForType(app.AppType)?.ViewLink(app);
         }

@@ -353,7 +353,7 @@ namespace BTCPayServer
         [HttpGet("pay")]
         public async Task<IActionResult> GetLNURL(string cryptoCode, string storeId, string currencyCode = null,
             decimal? min = null, decimal? max = null,
-            Func<(string username, AppData app, ViewPointOfSaleViewModel.Item? item, List<string> additionalTags, decimal? invoiceAmount, bool? anyoneCanInvoice)>
+            Func<(string username, AppData app, ViewPointOfSaleViewModel.Item item, List<string> additionalTags, decimal? invoiceAmount, bool? anyoneCanInvoice)>
                 internalDetails = null)
         {
             var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);

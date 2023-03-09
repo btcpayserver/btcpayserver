@@ -20,7 +20,7 @@ namespace BTCPayServer.Filters
         }
         
         public int Order => 100;
-        private string? AppType { get; }
+        private string AppType { get; }
 
         public bool Accept(ActionConstraintContext context)
         {

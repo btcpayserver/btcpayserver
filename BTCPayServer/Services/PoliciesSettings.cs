@@ -44,8 +44,7 @@ namespace BTCPayServer.Services
 
         [Display(Name = "Display app on website root")]
         public string RootAppId { get; set; }
-        public string? RootAppType { get; set; }
-
+        public string RootAppType { get; set; }
 
         [Display(Name = "Override the block explorers used")]
         public List<BlockExplorerOverrideItem> BlockExplorerLinks { get; set; } = new List<BlockExplorerOverrideItem>();

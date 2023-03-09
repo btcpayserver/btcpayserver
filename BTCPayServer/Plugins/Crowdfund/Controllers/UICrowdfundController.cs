@@ -59,7 +59,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
         [HttpGet("/apps/{appId}/crowdfund")]
         [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.Unset)]
         [DomainMappingConstraint(CrowdfundApp.AppType)]
-        public async Task<IActionResult> ViewCrowdfund(string appId, string statusMessage)
+        public async Task<IActionResult> ViewCrowdfund(string appId)
         {
             var app = await _appService.GetApp(appId, CrowdfundApp.AppType, true);
 

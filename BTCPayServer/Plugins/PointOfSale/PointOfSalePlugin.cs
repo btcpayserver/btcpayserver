@@ -84,7 +84,7 @@ namespace BTCPayServer.Plugins.PointOfSale
             var itemCount = paidInvoices
                 .Where(entity => entity.Currency.Equals(settings.Currency, StringComparison.OrdinalIgnoreCase) && (
                     // The POS data is present for the cart view, where multiple items can be bought
-                    !string.IsNullOrEmpty(entity.Metadata.PosData) ||
+                    entity.Metadata.PosData is not null ||
                     // The item code should be present for all types other than the cart and keypad
                     !string.IsNullOrEmpty(entity.Metadata.ItemCode)
                 ))

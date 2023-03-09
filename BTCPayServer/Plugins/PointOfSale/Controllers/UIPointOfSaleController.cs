@@ -334,7 +334,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
         [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.Unset)]
         public async Task<IActionResult> POSForm(string appId, PosViewType? viewType = null)
         {
-            var app = await _appService.GetApp(appId, AppType.PointOfSale);
+            var app = await _appService.GetApp(appId, PointOfSaleApp.AppType);
             if (app == null)
                 return NotFound();
             
@@ -380,7 +380,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
         [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.Unset)]
         public async Task<IActionResult> POSFormSubmit(string appId, FormViewModel viewModel, PosViewType? viewType = null)
         {
-            var app = await _appService.GetApp(appId, AppType.PointOfSale);
+            var app = await _appService.GetApp(appId, PointOfSaleApp.AppType);
             if (app == null)
                 return NotFound();
             

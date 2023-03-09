@@ -476,7 +476,6 @@ namespace BTCPayServer.Controllers
 
         private InvoiceDetailsModel InvoicePopulatePayments(InvoiceEntity invoice)
         {
-
             var overpaid = false;
             var model = new InvoiceDetailsModel
             {
@@ -503,7 +502,7 @@ namespace BTCPayServer.Controllers
                             Paid = _displayFormatter.Currency(accounting.CryptoPaid.ToDecimal(MoneyUnit.BTC), paymentMethodId.CryptoCode),
                             Overpaid = _displayFormatter.Currency(overpaidAmount, paymentMethodId.CryptoCode),
                             Address = data.GetPaymentMethodDetails().GetPaymentDestination(),
-                            Rate = ExchangeRate(data),
+                            Rate = ExchangeRate(data.GetId().CryptoCode, data),
                             PaymentMethodRaw = data
                         };
                     }).ToList()
@@ -792,7 +791,6 @@ namespace BTCPayServer.Controllers
                 InvoiceCurrency = invoice.Currency,
                 OrderAmount = (accounting.TotalDue - accounting.NetworkFee).ShowMoney(divisibility),
                 IsUnsetTopUp = invoice.IsUnsetTopUp(),
-                OrderAmountFiat = OrderAmountFromInvoice(network.CryptoCode, invoice, DisplayFormatter.CurrencyFormat.Symbol),
                 CustomerEmail = invoice.RefundMail,
                 RequiresRefundEmail = invoice.RequiresRefundEmail ?? storeBlob.RequiresRefundEmail,
                 ExpirationSeconds = Math.Max(0, (int)(invoice.ExpirationTime - DateTimeOffset.UtcNow).TotalSeconds),
@@ -800,7 +798,7 @@ namespace BTCPayServer.Controllers
                 MaxTimeSeconds = (int)(invoice.ExpirationTime - invoice.InvoiceTime).TotalSeconds,
                 MaxTimeMinutes = (int)(invoice.ExpirationTime - invoice.InvoiceTime).TotalMinutes,
                 ItemDesc = invoice.Metadata.ItemDesc,
-                Rate = ExchangeRate(paymentMethod, DisplayFormatter.CurrencyFormat.Symbol),
+                Rate = ExchangeRate(network.CryptoCode, paymentMethod, DisplayFormatter.CurrencyFormat.Symbol),
                 MerchantRefLink = invoice.RedirectURL?.AbsoluteUri ?? receiptUrl ?? "/",
                 ReceiptLink = receiptUrl,
                 RedirectAutomatically = invoice.RedirectAutomatically,
@@ -859,6 +857,7 @@ namespace BTCPayServer.Controllers
             model.UISettings = paymentMethodHandler.GetCheckoutUISettings();
             model.PaymentMethodId = paymentMethodId.ToString();
             model.PaymentType = paymentMethodId.PaymentType.ToString();
+            model.OrderAmountFiat = OrderAmountFromInvoice(model.CryptoCode, invoice, DisplayFormatter.CurrencyFormat.Symbol);
             var expiration = TimeSpan.FromSeconds(model.ExpirationSeconds);
             model.TimeLeft = expiration.PrettyPrint();
             return model;
@@ -866,15 +865,24 @@ namespace BTCPayServer.Controllers
 
         private string? OrderAmountFromInvoice(string cryptoCode, InvoiceEntity invoiceEntity, DisplayFormatter.CurrencyFormat format = DisplayFormatter.CurrencyFormat.Code)
         {
+            var currency = invoiceEntity.Currency;
+            var crypto = cryptoCode.ToUpperInvariant(); // uppercase to make comparison easier, might be "sats"
+            
             // if invoice source currency is the same as currently display currency, no need for "order amount from invoice"
-            if (cryptoCode == invoiceEntity.Currency)
+            if (crypto == currency || (crypto == "SATS" && currency == "BTC") || (crypto == "BTC" && currency == "SATS"))
                 return null;
 
-            return _displayFormatter.Currency(invoiceEntity.Price, invoiceEntity.Currency, format);
+            return _displayFormatter.Currency(invoiceEntity.Price, currency, format);
         }
-        private string ExchangeRate(PaymentMethod paymentMethod, DisplayFormatter.CurrencyFormat format = DisplayFormatter.CurrencyFormat.Code)
+        
+        private string? ExchangeRate(string cryptoCode, PaymentMethod paymentMethod, DisplayFormatter.CurrencyFormat format = DisplayFormatter.CurrencyFormat.Code)
         {
-            string currency = paymentMethod.ParentEntity.Currency;
+            var currency = paymentMethod.ParentEntity.Currency;
+            var crypto = cryptoCode.ToUpperInvariant(); // uppercase to make comparison easier, might be "sats"
+            
+            if (crypto == currency || (crypto == "SATS" && currency == "BTC") || (crypto == "BTC" && currency == "SATS"))
+                return null;
+            
             return _displayFormatter.Currency(paymentMethod.Rate, currency, format);
         }
 

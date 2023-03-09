@@ -112,7 +112,9 @@ namespace BTCPayServer.Payments
             model.BtcPaid = Money.Parse(model.BtcPaid).ToUnit(MoneyUnit.Satoshi).ToString("N0", satoshiCulture);
             model.OrderAmount = Money.Parse(model.OrderAmount).ToUnit(MoneyUnit.Satoshi).ToString("N0", satoshiCulture);
             model.NetworkFee = new Money(model.NetworkFee, MoneyUnit.BTC).ToUnit(MoneyUnit.Satoshi);
-            model.Rate = displayFormatter.Currency(paymentMethod.Rate / 100_000_000, model.InvoiceCurrency);
+            model.Rate = model.InvoiceCurrency is "BTC" or "SATS"
+                ? null
+                : displayFormatter.Currency(paymentMethod.Rate / 100_000_000, model.InvoiceCurrency);
         }
 
         public Task<IPaymentMethodDetails> CreatePaymentMethodDetails(InvoiceLogs logs,

@@ -260,10 +260,7 @@ function initApp() {
                     const { status } = data;
                     window.parent.postMessage({ invoiceId, status }, '*');
                 }
-    
-                // displaying satoshis for lightning payments
-                data.cryptoCodeSrv = data.cryptoCode;
-    
+                
                 const newEnd = new Date();
                 newEnd.setSeconds(newEnd.getSeconds() + data.expirationSeconds);
                 this.endDate = newEnd;

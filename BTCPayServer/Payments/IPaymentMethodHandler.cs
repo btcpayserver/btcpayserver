@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Logging;
@@ -97,6 +98,20 @@ namespace BTCPayServer.Payments
             BTCPayNetworkBase network)
         {
             return null;
+        }
+        
+        public virtual void PreparePaymentModelForAmountInSats(PaymentModel model, IPaymentMethod paymentMethod, CurrencyNameTable currencyNameTable)
+        {
+            var satoshiCulture = new CultureInfo(CultureInfo.InvariantCulture.Name)
+            { 
+                NumberFormat = { NumberGroupSeparator = " " }
+            };
+            model.CryptoCode = "sats";
+            model.BtcDue = Money.Parse(model.BtcDue).ToUnit(MoneyUnit.Satoshi).ToString("N0", satoshiCulture);
+            model.BtcPaid = Money.Parse(model.BtcPaid).ToUnit(MoneyUnit.Satoshi).ToString("N0", satoshiCulture);
+            model.OrderAmount = Money.Parse(model.OrderAmount).ToUnit(MoneyUnit.Satoshi).ToString("N0", satoshiCulture);
+            model.NetworkFee = new Money(model.NetworkFee, MoneyUnit.BTC).ToUnit(MoneyUnit.Satoshi);
+            model.Rate = currencyNameTable.DisplayFormatCurrency(paymentMethod.Rate / 100_000_000, model.InvoiceCurrency);
         }
 
         public Task<IPaymentMethodDetails> CreatePaymentMethodDetails(InvoiceLogs logs,

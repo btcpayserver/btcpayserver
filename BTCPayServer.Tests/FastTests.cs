@@ -326,7 +326,7 @@ namespace BTCPayServer.Tests
             var networkProvider = new BTCPayNetworkProvider(ChainName.Regtest);
             var paymentMethodHandlerDictionary = new PaymentMethodHandlerDictionary(new IPaymentMethodHandler[]
             {
-                new BitcoinLikePaymentHandler(null, networkProvider, null, null, null),
+                new BitcoinLikePaymentHandler(null, networkProvider, null, null, null, null),
                 new LightningLikePaymentHandler(null, null, networkProvider, null, null, null),
             });
             var entity = new InvoiceEntity();
@@ -512,7 +512,7 @@ namespace BTCPayServer.Tests
             var networkProvider = new BTCPayNetworkProvider(ChainName.Regtest);
             var paymentMethodHandlerDictionary = new PaymentMethodHandlerDictionary(new IPaymentMethodHandler[]
             {
-                new BitcoinLikePaymentHandler(null, networkProvider, null, null, null),
+                new BitcoinLikePaymentHandler(null, networkProvider, null, null, null, null),
                 new LightningLikePaymentHandler(null, null, networkProvider, null, null, null),
             });
             var entity = new InvoiceEntity();
@@ -1466,14 +1466,14 @@ namespace BTCPayServer.Tests
             Assert.Equal(1m / 0.000061m, rule2.BidAsk.Bid);
 
             // testing rounding 
-            rule2 = rules.GetRuleFor(CurrencyPair.Parse("Sats_EUR"));
+            rule2 = rules.GetRuleFor(CurrencyPair.Parse("SATS_EUR"));
             rule2.ExchangeRates.SetRate("coinbase", CurrencyPair.Parse("BTC_EUR"), new BidAsk(1.23m, 2.34m));
             Assert.True(rule2.Reevaluate());
             Assert.Equal("0.00000001 * (1.23, 2.34)", rule2.ToString(true));
             Assert.Equal(0.0000000234m, rule2.BidAsk.Ask);
             Assert.Equal(0.0000000123m, rule2.BidAsk.Bid);
 
-            rule2 = rules.GetRuleFor(CurrencyPair.Parse("EUR_Sats"));
+            rule2 = rules.GetRuleFor(CurrencyPair.Parse("EUR_SATS"));
             rule2.ExchangeRates.SetRate("coinbase", CurrencyPair.Parse("BTC_EUR"), new BidAsk(1.23m, 2.34m));
             Assert.True(rule2.Reevaluate());
             Assert.Equal("1 / (0.00000001 * (1.23, 2.34))", rule2.ToString(true));
@@ -1715,7 +1715,7 @@ namespace BTCPayServer.Tests
             var networkProvider = new BTCPayNetworkProvider(ChainName.Regtest);
             var paymentMethodHandlerDictionary = new PaymentMethodHandlerDictionary(new IPaymentMethodHandler[]
             {
-                new BitcoinLikePaymentHandler(null, networkProvider, null, null, null),
+                new BitcoinLikePaymentHandler(null, networkProvider, null, null, null, null),
                 new LightningLikePaymentHandler(null, null, networkProvider, null, null, null),
             });
             var networkBTC = networkProvider.GetNetwork("BTC");

@@ -102,7 +102,7 @@ namespace BTCPayServer.Tests
             s.Driver.ElementDoesNotExist(By.Id("Address_BTC"));
             s.Driver.FindElement(By.Id("PayByLNURL"));
 
-            // Lightning amount in Sats
+            // Lightning amount in sats
             Assert.Contains("BTC", s.Driver.FindElement(By.Id("AmountDue")).Text);
             s.GoToHome();
             s.GoToLightningSettings();
@@ -111,7 +111,7 @@ namespace BTCPayServer.Tests
             Assert.Contains("BTC Lightning settings successfully updated", s.FindAlertMessage().Text);
             s.GoToInvoiceCheckout(invoiceId);
             s.Driver.WaitUntilAvailable(By.Id("Checkout-v2"));
-            Assert.Contains("Sats", s.Driver.FindElement(By.Id("AmountDue")).Text);
+            Assert.Contains("sats", s.Driver.FindElement(By.Id("AmountDue")).Text);
 
             // Expire
             var expirySeconds = s.Driver.FindElement(By.Id("ExpirySeconds"));
@@ -193,6 +193,7 @@ namespace BTCPayServer.Tests
             s.GoToHome();
             s.GoToStore(StoreNavPages.CheckoutAppearance);
             s.Driver.SetCheckbox(By.Id("OnChainWithLnInvoiceFallback"), true);
+            s.Driver.SetCheckbox(By.Id("LightningAmountInSatoshi"), false);
             s.Driver.FindElement(By.Id("Save")).Click();
             Assert.Contains("Store successfully updated", s.FindAlertMessage().Text);
 
@@ -200,6 +201,7 @@ namespace BTCPayServer.Tests
             s.GoToInvoiceCheckout(invoiceId);
             s.Driver.WaitUntilAvailable(By.Id("Checkout-v2"));
             Assert.Empty(s.Driver.FindElements(By.CssSelector(".payment-method")));
+            Assert.Contains("BTC", s.Driver.FindElement(By.Id("AmountDue")).Text);
             qrValue = s.Driver.FindElement(By.CssSelector(".qr-container")).GetAttribute("data-qr-value");
             address = s.Driver.FindElement(By.CssSelector(".qr-container")).GetAttribute("data-clipboard");
             payUrl = s.Driver.FindElement(By.Id("PayInWallet")).GetAttribute("href");
@@ -214,6 +216,16 @@ namespace BTCPayServer.Tests
             Assert.StartsWith($"bitcoin:{address.ToUpperInvariant()}?amount=", qrValue);
             Assert.Contains("&lightning=LNBCRT", qrValue);
             s.Driver.FindElement(By.Id("PayByLNURL"));
+            
+            // Switch to amount displayed in sats
+            s.GoToHome();
+            s.GoToStore(StoreNavPages.CheckoutAppearance);
+            s.Driver.SetCheckbox(By.Id("LightningAmountInSatoshi"), true);
+            s.Driver.FindElement(By.Id("Save")).Click();
+            Assert.Contains("Store successfully updated", s.FindAlertMessage().Text);
+            s.GoToInvoiceCheckout(invoiceId);
+            s.Driver.WaitUntilAvailable(By.Id("Checkout-v2"));
+            Assert.Contains("sats", s.Driver.FindElement(By.Id("AmountDue")).Text);
 
             // BIP21 with LN as default payment method
             s.GoToHome();

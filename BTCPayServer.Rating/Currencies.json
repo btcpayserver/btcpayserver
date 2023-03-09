@@ -1305,7 +1305,7 @@
       "name":"Satoshis",
       "code":"SATS",
       "divisibility":0,
-      "symbol":"Sats",
+      "symbol":"sats",
       "crypto":true
    },
    {

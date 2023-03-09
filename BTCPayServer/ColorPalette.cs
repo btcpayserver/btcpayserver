@@ -59,5 +59,44 @@ namespace BTCPayServer
                     return Labels[num % Labels.Length];
             }
         }
+        
+        /// https://gist.github.com/zihotki/09fc41d52981fb6f93a81ebf20b35cd5
+        /// <summary>
+        /// Creates color with corrected brightness.
+        /// </summary>
+        /// <param name="color">Color to correct.</param>
+        /// <param name="correctionFactor">The brightness correction factor. Must be between -1 and 1. 
+        /// Negative values produce darker colors.</param>
+        /// <returns>
+        /// Corrected <see cref="Color"/> structure.
+        /// </returns>
+        public Color AdjustBrightness(Color color, float correctionFactor)
+        {
+            float red = color.R;
+            float green = color.G;
+            float blue = color.B;
+
+            if (correctionFactor < 0)
+            {
+                correctionFactor = 1 + correctionFactor;
+                red *= correctionFactor;
+                green *= correctionFactor;
+                blue *= correctionFactor;
+            }
+            else
+            {
+                red = (255 - red) * correctionFactor + red;
+                green = (255 - green) * correctionFactor + green;
+                blue = (255 - blue) * correctionFactor + blue;
+            }
+
+            return Color.FromArgb(color.A, (int)red, (int)green, (int)blue);
+        }
+        
+        public string AdjustBrightness(string html, float correctionFactor)
+        {
+            var color = AdjustBrightness(ColorTranslator.FromHtml(html), correctionFactor);
+            return ColorTranslator.ToHtml(color);
+        }
     }
 }

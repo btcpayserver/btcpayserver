@@ -38,7 +38,7 @@
                 <label asp-for="BrandColor" class="form-label"></label>
                 <div class="input-group">
                     <input id="BrandColorInput" class="form-control form-control-color flex-grow-0" type="color" style="width:3rem" aria-describedby="BrandColorValue" value="@Model.BrandColor" />
-                    <input asp-for="BrandColor" class="form-control form-control-color flex-grow-0 font-monospace" pattern="@ColorPalette.Pattern" style="width:5.5rem" />
+                    <input asp-for="BrandColor" class="form-control form-control-color flex-grow-0 font-monospace" pattern="@ColorPalette.Pattern" style="width:5.5rem;font-size:0.9rem" />
                 </div>
                 <span asp-validation-for="BrandColor" class="text-danger"></span>
             </div>

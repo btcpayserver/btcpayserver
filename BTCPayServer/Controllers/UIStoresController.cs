@@ -387,6 +387,9 @@ namespace BTCPayServer.Controllers
 
             vm.UseNewCheckout = storeBlob.CheckoutType == Client.Models.CheckoutType.V2;
             vm.OnChainWithLnInvoiceFallback = storeBlob.OnChainWithLnInvoiceFallback;
+            vm.HidePayInWalletButton = storeBlob.HidePayInWalletButton;
+            vm.HideStoreHeader = storeBlob.HideStoreHeader;
+            vm.HideLNWithdrawButton = storeBlob.HideLNWithdrawButton;
             vm.LightningAmountInSatoshi = storeBlob.LightningAmountInSatoshi;
             vm.RequiresRefundEmail = storeBlob.RequiresRefundEmail;
             vm.LazyPaymentMethods = storeBlob.LazyPaymentMethods;
@@ -507,6 +510,9 @@ namespace BTCPayServer.Controllers
             blob.CheckoutType = model.UseNewCheckout ? Client.Models.CheckoutType.V2 : Client.Models.CheckoutType.V1;
 
             blob.OnChainWithLnInvoiceFallback = model.OnChainWithLnInvoiceFallback;
+            blob.HidePayInWalletButton = model.HidePayInWalletButton;
+            blob.HideStoreHeader = model.HideStoreHeader;
+            blob.HideLNWithdrawButton = model.HideLNWithdrawButton;
             blob.LightningAmountInSatoshi = model.LightningAmountInSatoshi;
             blob.RequiresRefundEmail = model.RequiresRefundEmail;
             blob.LazyPaymentMethods = model.LazyPaymentMethods;

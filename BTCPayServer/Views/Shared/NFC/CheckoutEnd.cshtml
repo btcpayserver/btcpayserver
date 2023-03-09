@@ -41,7 +41,9 @@ Vue.component("lnurl-withdraw-checkout", {
                 !!availablePaymentMethods.find(pm => ['BTC_LNURLPAY', 'BTC_LightningLike'].includes(pm.paymentMethodId)) ||
                 // Or the BIP21 payment URL flags Lightning support
                 !!paymentUrl.match(/lightning=ln/i)
-            return activePaymentMethodId === 'BTC_LNURLPAY' || (
+			  if (this.model.hideLNWithdrawButton)
+				return false
+			  return activePaymentMethodId === 'BTC_LNURLPAY' || (
                 // Unified QR/BIP21 case
                 (activePaymentMethodId === 'BTC' && isUnified && lnurlwAvailable) ||
                 // Lightning with LNURL available

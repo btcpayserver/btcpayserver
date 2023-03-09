@@ -44,7 +44,8 @@ namespace BTCPayServer.Controllers
             var vm = new CreateStoreViewModel
             {
                 DefaultCurrency = StoreBlob.StandardDefaultCurrency,
-                Exchanges = GetExchangesSelectList(null)
+                Exchanges = GetExchangesSelectList(null),
+                Preset = "ECommerce"
             };
 
             return View(vm);
@@ -60,9 +61,20 @@ namespace BTCPayServer.Controllers
                 return View(vm);
             }
 
-            var store = await _repo.CreateStore(GetUserId(), vm.Name, vm.DefaultCurrency, vm.PreferredExchange);
+            var store = new StoreData { StoreName = vm.Name };
+            var blob = store.GetStoreBlob();
+            blob.DefaultCurrency = vm.DefaultCurrency;
+            blob.PreferredExchange = vm.PreferredExchange;
+            if (vm.Preset == "Physical")
+            {
+                blob.HideLNWithdrawButton = true;
+                blob.HidePayInWalletButton = true;
+                blob.HideStoreHeader = true;
+                blob.CheckoutType = Client.Models.CheckoutType.V2;
+            }
+            store.SetStoreBlob(blob);
+            await _repo.CreateStore(GetUserId(), store);
             CreatedStoreId = store.Id;
-
             TempData[WellKnownTempData.SuccessMessage] = "Store successfully created";
             return RedirectToAction(nameof(UIStoresController.Dashboard), "UIStores", new
             {

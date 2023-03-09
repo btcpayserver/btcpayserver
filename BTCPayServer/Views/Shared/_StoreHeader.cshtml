@@ -7,10 +7,10 @@
         ? await FileService.GetFileUrl(Context.Request.GetAbsoluteRootUri(), Model.LogoFileId)
         : null;
 }
-<header class="store-header" v-pre>
+<header v-if="!srvModel.hideStoreHeader" class="store-header">
     @if (!string.IsNullOrEmpty(logoUrl))
     {
-        <img src="@logoUrl" alt="@Model.Title" class="store-logo"/>
+        <img v-pre src="@logoUrl" alt="@Model.Title" class="store-logo"/>
     }
-    <h1 class="store-name">@Model.Title</h1>
+    <h1 v-pre class="store-name">@Model.Title</h1>
 </header>

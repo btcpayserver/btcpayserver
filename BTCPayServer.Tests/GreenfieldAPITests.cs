@@ -2150,14 +2150,21 @@ namespace BTCPayServer.Tests
 
             foreach (var marked in new[] { InvoiceStatus.Settled, InvoiceStatus.Invalid })
             {
+                var amount = 100;
                 var inv = await client.CreateInvoice(user.StoreId,
-                new CreateInvoiceRequest() { Currency = "USD", Amount = 100 });
+                new CreateInvoiceRequest() { Currency = "USD", Amount = amount });
                 await user.PayInvoice(inv.Id);
                 await client.MarkInvoiceStatus(user.StoreId, inv.Id, new MarkInvoiceStatusRequest()
                 {
                     Status = marked
                 });
                 var result = await client.GetInvoice(user.StoreId, inv.Id);
+                Assert.Single(result.Payments);
+                // 1 BTC == 5000 USD in tests
+                Assert.Equal(5000, result.Payments.First().ConversionRate);
+                Assert.Equal(Decimal.Divide(amount, 5000), result.Payments.First().Paid);
+                Assert.Equal("On-Chain", result.Payments.First().PaymentType);
+                
                 if (marked == InvoiceStatus.Settled)
                 {
                     Assert.Equal(InvoiceStatus.Settled, result.Status);
@@ -2308,6 +2315,37 @@ namespace BTCPayServer.Tests
                 invoiceObject = await client.GetOnChainWalletObject(user.StoreId, "BTC", new OnChainWalletObjectId("invoice", invoice.Id), false);
                 Assert.Contains(invoiceObject.Links.Select(l => l.Type), t => t == "tx");
             });
+        }
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task InvoicePaymentsTests()
+        {
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+            var user = tester.NewAccount();
+            await user.GrantAccessAsync(true);
+            await user.MakeAdmin();
+            await user.SetupWebhook();
+            var client = await user.CreateClient(Policies.Unrestricted);
+            await user.RegisterDerivationSchemeAsync("BTC");
+
+            var amount = 100;
+            var inv = await client.CreateInvoice(user.StoreId,
+            new CreateInvoiceRequest() { Currency = "USD", Amount = amount });
+            await user.PayInvoice(inv.Id);
+
+            await client.MarkInvoiceStatus(user.StoreId, inv.Id, new MarkInvoiceStatusRequest()
+            {
+                Status = InvoiceStatus.Settled
+            });
+            var result = await client.GetInvoicePayments(user.StoreId, inv.Id);
+            Assert.Single(result);
+            var payment = result.First();
+            // 1 BTC == 5000 USD in tests
+            Assert.Equal(5000, payment.ConversionRate);
+            Assert.Equal(Decimal.Divide(amount, 5000), payment.Paid);
+            Assert.Equal("On-Chain", payment.PaymentType);
         }
 
         [Fact(Timeout = 60 * 20 * 1000)]

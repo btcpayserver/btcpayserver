@@ -2,11 +2,13 @@
 @using Newtonsoft.Json
 @using System.Text
 @using BTCPayServer.Abstractions.Models
+@inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model WalletSettingsViewModel
 @{
-    Layout = "../Shared/_NavLayout.cshtml";
-    ViewData["NavPartialName"] = "../UIWallets/_Nav";
-    ViewData.SetActivePage(StoreNavPages.OnchainSettings, $"{Model.CryptoCode} Wallet Settings", Context.GetStoreData().Id);
+	Layout = "../Shared/_NavLayout.cshtml";
+	ViewData["NavPartialName"] = "../UIWallets/_Nav";
+	ViewData.SetActivePage(StoreNavPages.OnchainSettings, $"{Model.CryptoCode} Wallet Settings", Context.GetStoreData().Id);
+	Csp.UnsafeEval();
 }
 
 @section PageHeadContent {

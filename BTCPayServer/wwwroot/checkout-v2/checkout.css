@@ -168,13 +168,12 @@ section dl > div dd {
     color: var(--btcpay-body-text-muted);
 }
 #DefaultLang {
+    width: calc(var(--text-width, 110px) + 3rem);
     color: var(--btcpay-body-text-muted);
     background-color: transparent;
     box-shadow: none;
     border: none;
-    text-align: right;
     cursor: pointer;
-    margin-left: -4.5rem; /* Adjust for visual center */
 }
 #DefaultLang:hover {
     color: var(--btcpay-body-text-hover);

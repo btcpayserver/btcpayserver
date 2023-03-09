@@ -1,14 +1,16 @@
 @using BTCPayServer.Controllers
+@inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model WalletPSBTViewModel
 @{
 	var walletId = Context.GetRouteValue("walletId").ToString();
-    var cancelUrl = Model.ReturnUrl ?? Url.Action(nameof(UIWalletsController.WalletTransactions), new { walletId });
-    var backUrl = Model.BackUrl != null ? $"{Model.BackUrl}?returnUrl={Model.ReturnUrl}" : null;
+	var cancelUrl = Model.ReturnUrl ?? Url.Action(nameof(UIWalletsController.WalletTransactions), new { walletId });
+	var backUrl = Model.BackUrl != null ? $"{Model.BackUrl}?returnUrl={Model.ReturnUrl}" : null;
 	var isReady = !Model.HasErrors;
 	var isSignable = !isReady;
 	var needsExport = !isSignable && !isReady;
 	Layout = "_LayoutWizard";
 	ViewData.SetActivePage(WalletsNavPages.PSBT, isReady ? "Confirm broadcasting this transaction" : "Transaction Details", walletId);
+	Csp.UnsafeEval();
 }
 
 @section PageHeadContent {

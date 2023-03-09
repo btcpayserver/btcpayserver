@@ -51,11 +51,23 @@ function isLanguageAvailable(languageCode) {
     return availableLanguages.includes(languageCode);
 }
 
+function updateLanguageSelect() {
+    // calculate and set width, as we want it center aligned
+    const $languageSelect = document.getElementById('DefaultLang');
+    const element = document.createElement('div');
+    element.innerText = $languageSelect.querySelector('option:checked').text;
+    $languageSelect.parentElement.appendChild(element);
+    const width = element.offsetWidth;
+    $languageSelect.parentElement.removeChild(element);
+    $languageSelect.style.setProperty('--text-width', `${width}px`);
+}
+
 function updateLanguage(lang) {
     if (isLanguageAvailable(lang)) {
         i18next.changeLanguage(lang);
         urlParams.set('lang', lang);
         window.history.replaceState({}, '', `${location.pathname}?${urlParams}`);
+        updateLanguageSelect();
     }
 }
 
@@ -177,6 +189,7 @@ function initApp() {
             if (this.isActive) {
                 this.listenIn();
             }
+            updateLanguageSelect();
             window.parent.postMessage('loaded', '*');
         },
         methods: {

@@ -39,7 +39,7 @@
   "Return to StoreName": "Atgriezties {{storeName}}",
   "This invoice has been paid": "Maksājums izpildīts",
   "This invoice has been archived": "Šis maksājums saglabāts arhīvā",
-  "Archived_Body": "Lūdzam sazināties ar pakalpojuma sniedzēju lai saņemtu informāciju par pasūtījumu vai atbalsta saņemšanai.",
+  "Archived_Body": "Lūdzam sazināties ar pakalpojuma sniedzēju lai saņemtu informāciju par pasūtījumu vai atbalsta saņemšanai",
   "BOLT 11 Invoice": "BOLT 11 uzdevums",
   "Node Info": "Nodes informācija",
   "txCount": "{{count}} transakcija",
@@ -48,6 +48,6 @@
   "Pay with Changelly": "Maksāt ar Changelly",
   "Close": "Aizvērt",
   "NotPaid_ExtraTransaction": "Pēkšņi nav samaksāts pilnībā. Lūdzu, nosūtiet citu darījumu, lai segtu jāsamaksa summu.",
-  "Recommended_Fee": "Rekomendējamā maksa: {{feeRate}} sat/baitā.",
-  "View receipt": "Skatīt kvīti."
+  "Recommended_Fee": "Rekomendējamā maksa: {{feeRate}} sat/baitā",
+  "View receipt": "Skatīt kvīti"
 }

@@ -33,7 +33,7 @@
                 ]
             }
         },
-        "/api/v1/users/{userId}/api-keys/{apikey}": {
+        "/api/v1/users/{idOrEmail}/api-keys/{apikey}": {
             "delete": {
                 "operationId": "ApiKeys_DeleteUserApiKey",
                 "tags": [
@@ -43,10 +43,10 @@
                 "description": "Revoke the API key of a target user so that it cannot be used anymore",
                 "parameters": [
                     {
-                        "name": "userId",
+                        "name": "idOrEmail",
                         "in": "path",
                         "required": true,
-                        "description": "The target user",
+                        "description": "The target user's id or email",
                         "schema": { "type": "string" }
                     },
                     {
@@ -220,7 +220,7 @@
                 ]
             }
         },
-        "/api/v1/users/{userId}/api-keys": {
+        "/api/v1/users/{idOrEmail}/api-keys": {
             "post": {
                 "operationId": "ApiKeys_CreateUserApiKey",
                 "tags": [
@@ -230,10 +230,10 @@
                 "description": "Create a new API Key for a user",
                 "parameters": [
                     {
-                        "name": "userId",
+                        "name": "idOrEmail",
                         "in": "path",
                         "required": true,
-                        "description": "The target user",
+                        "description": "The target user's id or email",
                         "schema": { "type": "string" }
                     }
                 ],

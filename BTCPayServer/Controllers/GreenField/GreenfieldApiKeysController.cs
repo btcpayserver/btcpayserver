@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 
@@ -49,12 +50,16 @@ namespace BTCPayServer.Controllers.Greenfield
             return CreateUserAPIKey(_userManager.GetUserId(User), request);
         }
 
-        [HttpPost("~/api/v1/users/{userId}/api-keys")]
+        [HttpPost("~/api/v1/users/{idOrEmail}/api-keys")]
         [Authorize(Policy = Policies.CanManageUsers, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        public async Task<IActionResult> CreateUserAPIKey(string userId, CreateApiKeyRequest request)
+        public async Task<IActionResult> CreateUserAPIKey(string idOrEmail, CreateApiKeyRequest request)
         {
             request ??= new CreateApiKeyRequest();
             request.Permissions ??= System.Array.Empty<Permission>();
+
+            var userId = (await _userManager.FindByIdOrEmail(idOrEmail))?.Id;
+            if (userId is null)
+                return this.UserNotFound();
             var key = new APIKeyData()
             {
                 Id = Encoders.Hex.EncodeData(RandomUtils.GetBytes(20)),
@@ -88,10 +93,13 @@ namespace BTCPayServer.Controllers.Greenfield
             return RevokeAPIKey(_userManager.GetUserId(User), apikey);
         }
 
-        [HttpDelete("~/api/v1/users/{userId}/api-keys/{apikey}", Order = 1)]
+        [HttpDelete("~/api/v1/users/{idOrEmail}/api-keys/{apikey}", Order = 1)]
         [Authorize(Policy = Policies.CanManageUsers, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        public async Task<IActionResult> RevokeAPIKey(string userId, string apikey)
+        public async Task<IActionResult> RevokeAPIKey(string idOrEmail, string apikey)
         {
+            var userId = (await _userManager.FindByIdOrEmail(idOrEmail))?.Id;
+            if (userId is null)
+                return this.UserNotFound();
             if (!string.IsNullOrEmpty(apikey) &&
                 await _apiKeyRepository.Remove(apikey, userId))
                 return Ok();

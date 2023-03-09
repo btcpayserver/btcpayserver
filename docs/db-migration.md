@@ -34,6 +34,8 @@ As a reminder there are three settings controlling the choice of backend of BTCP
 
 If you are currently using `mysql` or `sqlitefile`, and you wish to migrate to postgres, you simply need to add the command line argument `--postgres` or the environment variable `BTCPAY_POSTGRES` pointing to a fresh postgres database.
 
+It is strongly advised not to create a database in Postgres before performing the migration with BTCPay Server. This is because BTCPay Server will automatically create the necessary database for you. However, if you must create the database manually, please ensure that the `C_TYPE` and `COLLATE` settings are both set to `C`.
+
 **Careful: Do not remove the former mysql or sqlitefile setting, you should have both: the postgres setting and the former sqlite/mysql setting**
 
 From `1.7.8`, BTCPay Server will interprete this and attempt to copy the data from mysql and sqlite into the new postgres database.

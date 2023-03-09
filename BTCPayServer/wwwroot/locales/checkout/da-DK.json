@@ -26,7 +26,7 @@
   "address": "Adresse",
   "lightning": "Lightning (navn på en specifik type blockchain-teknologi)",
   "payment_link": "Betalingslink",
-  "invoice_paid": "Faktura betalt.",
+  "invoice_paid": "Faktura betalt",
   "invoice_expired": "Faktura udløbet",
   "invoice_expired_body": "En faktura er kun gyldig i {{minutes}} minutter. Vend tilbage til {{storeName}}, hvis du ønsker at foretage en ny betaling.",
   "view_receipt": "Se kvittering",

@@ -1,5 +1,43 @@
 # Changelog
 
+## 1.8.3
+
+### Bug fix
+
+* Prevent XSS injection via VueJS (#4747) credit to @cupc4k3. @NicolasDorier
+* Do not through missing-permission error when no store on /api/v1/stores (Close #4735) (#4748) @NicolasDorier
+
+### Improvements
+
+ * UI: Decrease content padding top on small screens (#4749) @dennisreimann
+ * Checkout v2: Minor UI updates (#4734) @dennisreimann
+
+## 1.8.2
+
+### Bug fix
+
+* Fix: Impossible to create invoice after migration from Sqlite (Close #4743)
+
+### Improvements
+* Add missing docs of store payment method criteria @Kukks
+
+## 1.8.1
+
+### New feature
+
+* Add dropdown language selector in checkout v2 @dennisreimann
+
+### Bug fix
+
+* Avoid crash when some plugins are installed (#4725)
+* Greenfield: Do not create if create API key is called on a non-existant user (Fix #4731)
+
+### Improvements
+
+* Remove superflous punctuation in some translations
+* Update Polski translation
+* Greenfield: Routes accepting a userId can now also accept userEmail (#4732)
+
 ## 1.8.0
 
 Bear markets are for building: This version brings custom checkout forms, store branding options, a redesigned Point of Sale keypad view, new notification icons and address labeling.

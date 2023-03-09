@@ -24,7 +24,7 @@ namespace BTCPayServer.Filters
                 AutoSelf = false;
                 FixWebsocket = false;
                 UnsafeInline = false;
-                ScriptSrc = "'self' 'unsafe-eval'"; // unsafe-eval needed for vue
+                ScriptSrc = "'self'";
             }
         }
 

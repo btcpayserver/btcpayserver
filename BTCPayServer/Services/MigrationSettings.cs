@@ -35,5 +35,6 @@ namespace BTCPayServer.Services
         public bool MigrateEmailServerDisableTLSCerts { get; set; }
         public bool MigrateWalletColors { get; set; }
         public bool FileSystemStorageAsDefault { get; set; }
+        public bool FixSeqAfterSqliteMigration { get; set; }
     }
 }

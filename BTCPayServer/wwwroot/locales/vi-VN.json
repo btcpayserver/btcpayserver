@@ -27,7 +27,7 @@
   "ConversionTab_CalculateAmount_Error": "Thử lại",
   "ConversionTab_LoadCurrencies_Error": "Thử lại",
   "ConversionTab_Lightning": "Không có nhà cung cấp nào có dịch vụ chuyển đổi cho các phương thức thanh toán Lightning Network.",
-  "ConversionTab_CurrencyList_Select_Option": "Vui lòng chọn đơn vị tiền tệ để chuyển đổi từ.",
+  "ConversionTab_CurrencyList_Select_Option": "Vui lòng chọn đơn vị tiền tệ để chuyển đổi từ",
   "Invoice expiring soon...": "Hóa đơn sắp quá hạn...",
   "Invoice expired": "Hóa đơn đã quá hạn",
   "What happened?": "Đã xảy ra chuyện gì?",
@@ -44,10 +44,10 @@
   "Node Info": "Nút Thông tin",
   "txCount": "{{count}} giao dịch",
   "txCount_plural": "{{count}} các giao dịch",
-  "Pay with CoinSwitch": "Thanh toán bằng CoinSwitch.",
-  "Pay with Changelly": "Thanh toán bằng Changelly.",
-  "Close": "Đóng.",
+  "Pay with CoinSwitch": "Thanh toán bằng CoinSwitch",
+  "Pay with Changelly": "Thanh toán bằng Changelly",
+  "Close": "Đóng",
   "NotPaid_ExtraTransaction": "Hóa đơn chưa được thanh toán đầy đủ. Vui lòng gửi giao dịch khác để thanh toán số tiền còn lại.",
-  "Recommended_Fee": "Phí khuyến nghị: {{feeRate}} sat/byte.",
-  "View receipt": "Xem biên nhận."
+  "Recommended_Fee": "Phí khuyến nghị: {{feeRate}} sat/byte",
+  "View receipt": "Xem biên nhận"
 }

@@ -26,12 +26,12 @@ namespace BTCPayServer.Models.StoreViewModels
         [Display(Name = "Unify on-chain and lightning payment URL/QR code")]
         public bool OnChainWithLnInvoiceFallback { get; set; }
 
-        [Display(Name = "Hide \"Pay in wallet\" button")]
-        public bool HidePayInWalletButton { get; set; }
-        [Display(Name = "Hide the store header")]
-        public bool HideStoreHeader { get; set; }
-        [Display(Name = "Hide \"LN Withdraw\" button")]
-        public bool HideLNWithdrawButton { get; set; }
+        [Display(Name = "Show \"Pay in wallet\" button")]
+        public bool ShowPayInWalletButton { get; set; }
+        [Display(Name = "Show the store header")]
+        public bool ShowStoreHeader { get; set; }
+        [Display(Name = "Show \"LN Withdraw\" button")]
+        public bool ShowLNWithdrawButton { get; set; }
 
         [Display(Name = "Display Lightning payment amounts in Satoshis")]
         public bool LightningAmountInSatoshi { get; set; }

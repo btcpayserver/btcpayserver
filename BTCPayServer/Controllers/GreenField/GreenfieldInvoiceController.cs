@@ -655,8 +655,9 @@ namespace BTCPayServer.Controllers.Greenfield
 
                 return new Payment()
                 {
-                    ConversionRate = pmethod.Rate,
                     Id = pdata.GetPaymentId(),
+                    Confirmed = pdata.PaymentConfirmed(paymentEntity, invoiceEntity.SpeedPolicy),
+                    CryptoCode = paymentEntity.GetPaymentMethodId().CryptoCode,
                     ReceivedTime = paymentEntity.ReceivedTime,
                     Type = paymentEntity.GetPaymentMethodId().PaymentType.ToPrettyString(),
                     Destination = pdata.GetDestination(),

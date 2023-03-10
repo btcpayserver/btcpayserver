@@ -91,7 +91,8 @@ namespace BTCPayServer.Client.Models
 
     public class Payment
     {
-        public decimal ConversionRate { get; set; }
+        public bool Confirmed { get; set; }
+        public string CryptoCode { get; set; }
         public string Id { get; set; }
         [JsonConverter(typeof(NBitcoin.JsonConverters.DateTimeToUnixTimeConverter))]
         public DateTimeOffset? ReceivedTime { get; set; }

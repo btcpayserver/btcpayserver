@@ -183,6 +183,7 @@ section dl > div dd {
     box-shadow: none;
     border: none;
     cursor: pointer;
+    font-size: var(--btcpay-body-font-size);
 }
 #DefaultLang:hover {
     color: var(--btcpay-body-text-hover);

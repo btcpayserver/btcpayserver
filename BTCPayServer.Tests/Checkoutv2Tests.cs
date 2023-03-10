@@ -186,6 +186,7 @@ namespace BTCPayServer.Tests
                 Assert.True(paidSection.Displayed);
                 Assert.Contains("Invoice Paid", paidSection.Text);
             });
+            s.Driver.FindElement(By.Id("confetti"));
             s.Driver.FindElement(By.Id("ReceiptLink"));
             Assert.Equal(storeUrl, s.Driver.FindElement(By.Id("StoreLink")).GetAttribute("href"));
 

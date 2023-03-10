@@ -30,9 +30,8 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        [HttpGet("~/api/v1/stores/{storeId}/payout-processors/" + nameof(LightningAutomatedPayoutSenderFactory))]
-        [HttpGet("~/api/v1/stores/{storeId}/payout-processors/" + nameof(LightningAutomatedPayoutSenderFactory) +
-                 "/{paymentMethod}")]
+        [HttpGet("~/api/v1/stores/{storeId}/payout-processors/LightningAutomatedPayoutSenderFactory")]
+        [HttpGet("~/api/v1/stores/{storeId}/payout-processors/LightningAutomatedPayoutSenderFactory/{paymentMethod}")]
         public async Task<IActionResult> GetStoreLightningAutomatedPayoutProcessors(
             string storeId, string? paymentMethod)
         {
@@ -64,8 +63,7 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        [HttpPut("~/api/v1/stores/{storeId}/payout-processors/" + nameof(LightningAutomatedPayoutSenderFactory) +
-                 "/{paymentMethod}")]
+        [HttpPut("~/api/v1/stores/{storeId}/payout-processors/LightningAutomatedPayoutSenderFactory/{paymentMethod}")]
         public async Task<IActionResult> UpdateStoreLightningAutomatedPayoutProcessor(
             string storeId, string paymentMethod, LightningAutomatedPayoutSettings request)
         {

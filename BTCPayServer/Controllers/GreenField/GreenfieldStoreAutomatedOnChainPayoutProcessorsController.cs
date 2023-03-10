@@ -30,9 +30,8 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        [HttpGet("~/api/v1/stores/{storeId}/payout-processors/" + nameof(OnChainAutomatedPayoutSenderFactory))]
-        [HttpGet("~/api/v1/stores/{storeId}/payout-processors/" + nameof(OnChainAutomatedPayoutSenderFactory) +
-                 "/{paymentMethod}")]
+        [HttpGet("~/api/v1/stores/{storeId}/payout-processors/OnChainAutomatedPayoutSenderFactory")]
+        [HttpGet("~/api/v1/stores/{storeId}/payout-processors/OnChainAutomatedPayoutSenderFactory/{paymentMethod}")]
         public async Task<IActionResult> GetStoreOnChainAutomatedPayoutProcessors(
             string storeId, string? paymentMethod)
         {
@@ -70,8 +69,7 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        [HttpPut("~/api/v1/stores/{storeId}/payout-processors/" + nameof(OnChainAutomatedPayoutSenderFactory) +
-                 "/{paymentMethod}")]
+        [HttpPut("~/api/v1/stores/{storeId}/payout-processors/OnChainAutomatedPayoutSenderFactory/{paymentMethod}")]
         public async Task<IActionResult> UpdateStoreOnchainAutomatedPayoutProcessor(
             string storeId, string paymentMethod, OnChainAutomatedPayoutSettings request)
         {

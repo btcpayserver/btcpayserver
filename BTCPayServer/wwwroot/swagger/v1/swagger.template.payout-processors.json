@@ -139,7 +139,7 @@
                 ]
             }
         },
-        "/api/v1/stores/{storeId}/payout-processors/OnChainAutomatedTransferSenderFactory/{paymentMethod}": {
+        "/api/v1/stores/{storeId}/payout-processors/OnChainAutomatedPayoutSenderFactory/{paymentMethod}": {
             "get": {
                 "tags": [
                     "Stores (Payout Processors)"
@@ -264,7 +264,7 @@
                 ]
             }
         },
-        "/api/v1/stores/{storeId}/payout-processors/LightningAutomatedTransferSenderFactory/{paymentMethod}": {
+        "/api/v1/stores/{storeId}/payout-processors/LightningAutomatedPayoutSenderFactory/{paymentMethod}": {
             "get": {
                 "tags": [
                     "Stores (Payout Processors)"
@@ -496,7 +496,7 @@
                 ]
             }
         },
-        "/api/v1/stores/{storeId}/payout-processors/LightningAutomatedTransferSenderFactory": {
+        "/api/v1/stores/{storeId}/payout-processors/LightningAutomatedPayoutSenderFactory": {
             "get": {
                 "tags": [
                     "Stores (Payout Processors)"
@@ -514,7 +514,7 @@
                     }
                 ],
                 "description": "Get configured store Lightning automated payout processors",
-                "operationId": "GreenfieldStoreAutomatedLightningPayoutProcessorsController_GetStoreLightningAutomatedTransferSenderFactory",
+                "operationId": "GreenfieldStoreAutomatedLightningPayoutProcessorsController_GetStoreLightningAutomatedPayoutSenderFactory",
                 "responses": {
                     "200": {
                         "description": "configured processors",

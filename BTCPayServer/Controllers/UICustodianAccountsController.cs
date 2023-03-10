@@ -366,28 +366,6 @@ namespace BTCPayServer.Controllers
         {
             if (string.IsNullOrEmpty(request.FromAsset) || string.IsNullOrEmpty(request.ToAsset))
             {
-                storedKeys.Add(item.Key);
-            }
-
-            var formKeys = form.GetAllFields().Select(f => f.FullName).ToHashSet();
-
-            foreach (var item in newData)
-            {
-                if (storedKeys.Contains(item.Key) || formKeys.Contains(item.Key))
-                {
-                    filteredData[item.Key] = item.Value;
-                }
-            }
-
-            return filteredData;
-        }
-
-        [HttpGet("/stores/{storeId}/custodian-accounts/{accountId}/trade/prepare")]
-        public async Task<IActionResult> GetTradePrepareJson(string storeId, string accountId,
-            [FromQuery] string assetToTrade, [FromQuery] string assetToTradeInto)
-        {
-            if (string.IsNullOrEmpty(assetToTrade) || string.IsNullOrEmpty(assetToTradeInto))
-            {
                 return BadRequest();
             }
 
@@ -621,13 +599,13 @@ namespace BTCPayServer.Controllers
                         Form configForm = await custodian.GetConfigForm(config, locale);
                         string[] badConfigFields = new string[e.BadConfigKeys.Length];
                         int i = 0;
-                        foreach (var fieldName in configForm.GetAllNames())
+                        foreach (var oneField in configForm.GetAllFields())
                         {
                             foreach (var badConfigKey in e.BadConfigKeys)
                             {
-                                if (fieldName.Equals(badConfigKey))
+                                if (oneField.FullName.Equals(badConfigKey))
                                 {
-                                    var field = configForm.GetFieldByName(fieldName);
+                                    var field = configForm.GetFieldByFullName(oneField.FullName);
                                     badConfigFields[i] = field.Label;
                                     i++;
                                 }

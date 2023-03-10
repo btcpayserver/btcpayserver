@@ -1,5 +1,5 @@
 {
-  "NOTICE_WARN": "THIS CODE HAS BEEN AUTOMATICALLY GENERATED FROM TRANSIFEX, IF YOU WISH TO HELP TRANSLATION COME ON THE SLACK http://slack.btcpayserver.org TO REQUEST PERMISSION TO https://www.transifex.com/btcpayserver/btcpayserver/",
+  "NOTICE_WARN": "THIS CODE HAS BEEN AUTOMATICALLY GENERATED FROM TRANSIFEX, IF YOU WISH TO HELP TRANSLATION COME ON THE SLACK https://chat.btcpayserver.org/ TO REQUEST PERMISSION TO https://www.transifex.com/btcpayserver/btcpayserver/",
   "code": "el-GR",
   "currentLanguage": "Ελληνικά",
   "lang": "Γλώσσα",
@@ -39,7 +39,7 @@
   "Return to StoreName": "Επιστροφή στο {{storeName}}",
   "This invoice has been paid": "Αυτό το παραστατικό έχει πληρωθεί",
   "This invoice has been archived": "Αυτό το παραστατικό έχει αρχειοθετηθεί",
-  "Archived_Body": "Παρακαλούμε επικοινωνήστε με το κατάστημα για πληροφορίες σχετικά με την παραγγελία ή εάν χρειάζεστε βοήθεια.",
+  "Archived_Body": "Παρακαλούμε επικοινωνήστε με το κατάστημα για πληροφορίες σχετικά με την παραγγελία ή εάν χρειάζεστε βοήθεια",
   "BOLT 11 Invoice": "Παραστατικό BOLT 11",
   "Node Info": "Πληροφορίες Κόμβου",
   "txCount": "{{count}} συναλλαγή",
@@ -49,5 +49,5 @@
   "Close": "Κλείσιμο",
   "NotPaid_ExtraTransaction": "Το τιμολόγιο δεν έχει πληρωθεί πλήρως. Στείλτε άλλη συναλλαγή για να καλύψετε το οφειλόμενο ποσό.",
   "Recommended_Fee": "Προτεινόμενη χρέωση: {{feeRate}} sat/byte",
-  "View receipt": "View receipt"
+  "View receipt": "Προβολή απόδειξης"
 }

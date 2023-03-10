@@ -262,7 +262,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 {
                     cryptoCode = _networkProvider.DefaultNetwork.CryptoCode,
                     pullPaymentId = pullPaymentId
-                }, Request.Scheme, Request.Host.ToString()));
+                }, Request.Scheme, Request.Host.ToString())!);
 
                 return base.Ok(new PullPaymentLNURL() {
                     LNURLBech32 = LNURL.LNURL.EncodeUri(lnurlEndpoint, "withdrawRequest", true).ToString(),

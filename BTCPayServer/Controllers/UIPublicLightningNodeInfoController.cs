@@ -30,7 +30,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet]
-        [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.AllowAll)]
+        [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.Unset)]
         public async Task<IActionResult> ShowLightningNodeInfo(string storeId, string cryptoCode)
         {
             var store = await _StoreRepository.FindStore(storeId);

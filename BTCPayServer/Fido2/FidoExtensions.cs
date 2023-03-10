@@ -9,23 +9,17 @@ namespace BTCPayServer.Fido2
     {
         public static Fido2CredentialBlob GetFido2Blob(this Fido2Credential credential)
         {
-            var result = credential.Blob == null
-                ? new Fido2CredentialBlob()
-                : JObject.Parse(ZipUtils.Unzip(credential.Blob)).ToObject<Fido2CredentialBlob>();
-            return result;
+            return credential.HasTypedBlob<Fido2CredentialBlob>().GetBlob() ?? new Fido2CredentialBlob();
         }
-        public static bool SetBlob(this Fido2Credential credential, Fido2CredentialBlob descriptor)
+        public static void SetBlob(this Fido2Credential credential, Fido2CredentialBlob descriptor)
         {
-            var original = new Serializer(null).ToString(credential.GetFido2Blob());
-            var newBlob = new Serializer(null).ToString(descriptor);
-            if (original == newBlob)
-                return false;
+            var current = credential.GetFido2Blob();
+            var a = JObject.FromObject(current);
+            var b = JObject.FromObject(descriptor);
+            if (JObject.DeepEquals(a, b))
+                return;
             credential.Type = Fido2Credential.CredentialType.FIDO2;
-            credential.Blob = ZipUtils.Zip(newBlob);
-            return true;
+            credential.HasTypedBlob<Fido2CredentialBlob>().SetBlob(descriptor);
         }
-
-
-
     }
 }

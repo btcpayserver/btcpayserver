@@ -1,5 +1,192 @@
 # Changelog
 
+## 1.8.3
+
+### Bug fix
+
+* Prevent XSS injection via VueJS (#4747) credit to @cupc4k3. @NicolasDorier
+* Do not through missing-permission error when no store on /api/v1/stores (Close #4735) (#4748) @NicolasDorier
+
+### Improvements
+
+ * UI: Decrease content padding top on small screens (#4749) @dennisreimann
+ * Checkout v2: Minor UI updates (#4734) @dennisreimann
+
+## 1.8.2
+
+### Bug fix
+
+* Fix: Impossible to create invoice after migration from Sqlite (Close #4743)
+
+### Improvements
+* Add missing docs of store payment method criteria @Kukks
+
+## 1.8.1
+
+### New feature
+
+* Add dropdown language selector in checkout v2 @dennisreimann
+
+### Bug fix
+
+* Avoid crash when some plugins are installed (#4725)
+* Greenfield: Do not create if create API key is called on a non-existant user (Fix #4731)
+
+### Improvements
+
+* Remove superflous punctuation in some translations
+* Update Polski translation
+* Greenfield: Routes accepting a userId can now also accept userEmail (#4732)
+
+## 1.8.0
+
+Bear markets are for building: This version brings custom checkout forms, store branding options, a redesigned Point of Sale keypad view, new notification icons and address labeling.
+
+Read more information in [v1.8.0 blog's post](https://blog.btcpayserver.org/btcpay-server-1-8-0/).
+
+### New feature
+
+* Generic Forms (#4561 #4668 #4697) @Kukks @dennisreimann
+* Add labels to addresses (#4594) @Kukks
+* Greenfield: Admins can create/delete API keys of any user (#4680) @NicolasDorier
+
+### Bug fix
+
+* Fix build and run scripts (#4655) @NicolasDorier
+* Fix missing style tag around embedded CSS (#4659) @dennisreimann
+* Fix crash during migration on some SQLite instances (#4623) @NicolasDorier
+* Fix HTML injection in payment request/posData/receiptData (#4679) @NicolasDorier
+* Show available plugins even when btcpay version conditions are not met (#4717) @Kukks
+* Fix: It wasn't possible to use Point of Sale in an iframe if forms was asked to buyer (#4666 #4721) @dennisreimann @NicolasDorier
+
+### Improvements
+
+* Different icons for notifications (#2510) @dstrukt @dennisreimann
+* POS: Track values (subtotal, discount, tip, total) individually (#4668) @dennisreimann
+* Start using JSONB column instead of app side compressed data (#4574) @NicolasDorier
+* Update transaction label display (#4700) @dennisreimann
+* Remove JSON in strings from JObjects (#4703) @NicolasDorier
+* Do not require docker for plugin restart @Kukks
+* POS: Align Keypad centered vertically (#4690) @dennisreimann
+* Greenfield: Show detailed Lightning routing error (#4722) @dennisreimann
+* Add currency code to payment request list (#4709) @bolatovumar
+* Translate Checkout v2 (#4710) @NicolasDorier
+
+## 1.7.12
+
+Update recommended for shared instances.
+
+### Bug fixes
+
+* Fix second order XSS: Harden file type input (#4635) @NicolasDorier
+* UI: The standalone confirmation modal design was broken @dennisreimann
+* Fix: Setting the password of a new created user via API shouldn't be required (#4534, #4647) @NicolasDorier
+* Fix: If user get locked out, unlocking or deleting user fails (#4641, #4644) @NicolasDorier
+* Fix: Migrating from SQLite was crashing in some conditions (#4623) @NicolasDorier
+* Fix: Unable to Edit amount when cloning paid Payment Request (#4639) @NicolasDorier
+* Webhook: Add missing model validation (#4636) @dennisreimann
+* Checkout v2: Fix automatic redirect after paid (#4633) @dennisreimann
+
+### Improvement
+
+* Preferred paging count is saved into user preferences cookie (#4637) @dennisreimann
+* Fix typo in error message when vault is opening a wallet from the wrong chain (#4640) @eltociear
+
+## 1.7.11
+
+### Improvement
+
+* Better descriptions of some feature in the UI (#3831) @dstrukt @dennisreimann
+
+### Bug fix
+
+* Fix XSS on public instances #4629 (Credit to @d47sec) @NicolasDorier
+* Fix an exception happening on some app with mapped dommain (#4622) @dennisreimann
+* Fix error thrown in the pairing flow to woocommerce or other external apps (#4627 #4630) @Kukks
+* Fix HTML appearing in pull payment's LN Url descriptions (#4624 #4630) @Kukks
+
+## 1.7.10
+
+### Bug fix
+
+* After successful migration from SQLite or MySql, there is an error after a restart @NicolasDorier
+
+## 1.7.9
+
+### Bug fixes
+
+* Fix: Top-Up Invoices display fiat amounts to 9 decimal places in emails (#4570) @Kukks
+* LNURL NFC support did not work for lower amount invoices (#4618) @Kukks
+
+## 1.7.8
+
+With this release, we are providing a migration path for legacy MySql and SQLite installations.
+
+If you are a BTCPay Server integrators such as developer of Raspiblitz, Umbrel, Embassy OS or anybody running BTCPay Server on SQLite or MySql, please refer to [the documentation](docs/db-migration.md).
+
+While SQLite and MySQL should still be working for one year or two, we will not fix bugs related to those backend. (unless it impacts migration)
+
+### New feature
+
+* Add ability to migrate from MySQL/SQLite to Postgres backend. (#4614) Please read [the documentation](docs/db-migration.md). @NicolasDorier
+
+### Bug fixes
+
+* Fix: MySQL install were crashing during db update @NicolasDorier
+* In case of the unified invoice, the LNURL wasn't correct (#4616, #4609) @dennisreimann
+* Fixes missing uppercasing for the QR code in case of non-unified QR. @dennisreimann
+* Fix: snort.social still didn't play with our lnaddress implementation (#4615, #4617) @dennisreimann
+
+## 1.7.7
+
+Some users experienced Error 500 after login on to BTCPay Server from the 1.7.6.
+If it is your case, to update on docker deployments via the UI, you need to:
+
+1. Start a browser session in incognito/private mode.
+2. Browse to `https://{yourserver}/server/maintenance`
+3. Hit update button
+
+### Bug fixes
+
+* Fix crash for installations supporting zcash or monero (#4610) @NicolasDorier
+
+## 1.7.6
+
+There are two vulnerabilities fixed in this release.
+Those are not severe, as it requires the victim to actively click on a malicious link, but we recommend to update.
+
+We also introduce a breaking change in the Greenfield API route `/api/v1/stores/{storeId}/rates/configuration/preview`. (#4607)
+This breaking change shouldn't impact the majority of people.
+
+### New features
+
+* Make Lightning NFC built in (#4541) @Kukks
+* Greenfield get app details (#4102) @bolatovumar
+* Greenfield: Add store rates api (#4550) @Kukks
+* Server Theme: Allow to unset CustomThemeCssUri @dennisreimann
+* Store Branding: Add custom CSS option (#4459, #4527) @dennisreimann
+* Store branding on invoice and receipts, payment requests and pull payments, point of sale and crowdfunding (#3842, #4568) @dennisreimann
+* Add Greenfield API endpoint for pull payment LNURL items (#4472) @bolatovumar
+* Greenfield: Add lightning payments list endpoint (#4407) @dennisreimann
+* Add additional permission for pull payments (#4539) @Kukks
+
+### Bug fixes
+
+* Fix: Mark selected payouts as already paid had an unexpected result (#4579) @Kukks
+* Fix: Payjoin wasn't always properly choosing utxo for optimal change (#4600) @NicolasDorier
+* Fix: If PoS item code contains a /, LNUrl would not work (#4601, #4602) @NicolasDorier
+* Fix: a bunch of open redirect (#4575). Credit to @gonzxph. @NicolasDorier
+* Fix: Disqus integration in Crowdfunding store (#4580, #4572) @dennisreimann
+* Fix: XSS on uploaded files to the file storage (#4567) Credit to @ctflearner. @NicolasDorier
+* Fix: Greenfield currency rate should be strings (#4607) @NicolasDorier
+
+### Improvements
+
+* If a domain name is mapped to an app, always redirect the ugly /apps/{appId} to it (#4391) @dennisreimann
+* Add missing CORS to LN Address/LNUrl route (Compatibility with Beach Wallet) (#4587) @NicolasDorier
+* Make plugin able to register rate providers (#4551) @NicolasDorier
+* Point of Sale: Improve merchant view (#4560) @dennisreimann
+
 ## 1.7.5
 
 ### New features

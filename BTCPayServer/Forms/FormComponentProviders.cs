@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using BTCPayServer.Abstractions.Form;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 
@@ -9,7 +8,7 @@ public class FormComponentProviders
 {
     private readonly IEnumerable<IFormComponentProvider> _formComponentProviders;
 
-    public Dictionary<string, IFormComponentProvider> TypeToComponentProvider = new Dictionary<string, IFormComponentProvider>();
+    public Dictionary<string, IFormComponentProvider> TypeToComponentProvider = new();
 
     public FormComponentProviders(IEnumerable<IFormComponentProvider> formComponentProviders)
     {

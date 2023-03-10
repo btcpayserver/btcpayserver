@@ -77,7 +77,6 @@ namespace BTCPayServer.Data
             this IEnumerable<IPayoutHandler> payoutHandlers, StoreData storeData)
         {
             return (await Task.WhenAll(payoutHandlers.Select(handler => handler.GetSupportedPaymentMethods(storeData)))).SelectMany(ids => ids).ToList();
-
         }
     }
 }

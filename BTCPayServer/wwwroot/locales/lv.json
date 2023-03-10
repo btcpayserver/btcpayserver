@@ -1,5 +1,5 @@
 {
-  "NOTICE_WARN": "THIS CODE HAS BEEN AUTOMATICALLY GENERATED FROM TRANSIFEX, IF YOU WISH TO HELP TRANSLATION COME ON THE SLACK http://slack.btcpayserver.org TO REQUEST PERMISSION TO https://www.transifex.com/btcpayserver/btcpayserver/",
+  "NOTICE_WARN": "THIS CODE HAS BEEN AUTOMATICALLY GENERATED FROM TRANSIFEX, IF YOU WISH TO HELP TRANSLATION COME ON THE SLACK https://chat.btcpayserver.org/ TO REQUEST PERMISSION TO https://www.transifex.com/btcpayserver/btcpayserver/",
   "code": "lv",
   "currentLanguage": "Latviešu",
   "lang": "Valoda",
@@ -39,7 +39,7 @@
   "Return to StoreName": "Atgriezties {{storeName}}",
   "This invoice has been paid": "Maksājums izpildīts",
   "This invoice has been archived": "Šis maksājums saglabāts arhīvā",
-  "Archived_Body": "Lūdzam sazināties ar pakalpojuma sniedzēju lai saņemtu informāciju par pasūtījumu vai atbalsta saņemšanai.",
+  "Archived_Body": "Lūdzam sazināties ar pakalpojuma sniedzēju lai saņemtu informāciju par pasūtījumu vai atbalsta saņemšanai",
   "BOLT 11 Invoice": "BOLT 11 uzdevums",
   "Node Info": "Nodes informācija",
   "txCount": "{{count}} transakcija",
@@ -47,7 +47,7 @@
   "Pay with CoinSwitch": "Maksāt ar CoinSwitch",
   "Pay with Changelly": "Maksāt ar Changelly",
   "Close": "Aizvērt",
-  "NotPaid_ExtraTransaction": "The invoice hasn't been paid in full. Please send another transaction to cover amount Due.",
-  "Recommended_Fee": "Recommended fee: {{feeRate}} sat/byte",
-  "View receipt": "View receipt"
+  "NotPaid_ExtraTransaction": "Pēkšņi nav samaksāts pilnībā. Lūdzu, nosūtiet citu darījumu, lai segtu jāsamaksa summu.",
+  "Recommended_Fee": "Rekomendējamā maksa: {{feeRate}} sat/baitā",
+  "View receipt": "Skatīt kvīti"
 }

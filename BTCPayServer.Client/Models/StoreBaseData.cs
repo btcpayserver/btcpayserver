@@ -63,6 +63,9 @@ namespace BTCPayServer.Client.Models
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public NetworkFeeMode NetworkFeeMode { get; set; } = NetworkFeeMode.Never;
 
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public List<PaymentMethodCriteriaData> PaymentMethodCriteria { get; set; }
+
         public bool PayJoinEnabled { get; set; }
 
         public InvoiceData.ReceiptOptions Receipt { get; set; }

@@ -1,7 +1,6 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -212,24 +211,17 @@ namespace BTCPayServer.Payments.Lightning
             StoreBlob storeBlob, IPaymentMethod paymentMethod)
         {
             var paymentMethodId = paymentMethod.GetId();
-
             var cryptoInfo = invoiceResponse.CryptoInfo.First(o => o.GetpaymentMethodId() == paymentMethodId);
             var network = _networkProvider.GetNetwork<BTCPayNetwork>(model.CryptoCode);
+            
             model.PaymentMethodName = GetPaymentMethodName(network);
             model.InvoiceBitcoinUrl = cryptoInfo.PaymentUrls?.BOLT11;
             model.InvoiceBitcoinUrlQR = $"lightning:{cryptoInfo.PaymentUrls?.BOLT11?.ToUpperInvariant()?.Substring("LIGHTNING:".Length)}";
-
             model.PeerInfo = ((LightningLikePaymentMethodDetails)paymentMethod.GetPaymentMethodDetails()).NodeInfo;
+            
             if (storeBlob.LightningAmountInSatoshi && model.CryptoCode == "BTC")
             {
-                var satoshiCulture = new CultureInfo(CultureInfo.InvariantCulture.Name);
-                satoshiCulture.NumberFormat.NumberGroupSeparator = " ";
-                model.CryptoCode = "Sats";
-                model.BtcDue = Money.Parse(model.BtcDue).ToUnit(MoneyUnit.Satoshi).ToString("N0", satoshiCulture);
-                model.BtcPaid = Money.Parse(model.BtcPaid).ToUnit(MoneyUnit.Satoshi).ToString("N0", satoshiCulture);
-                model.OrderAmount = Money.Parse(model.OrderAmount).ToUnit(MoneyUnit.Satoshi).ToString("N0", satoshiCulture);
-                model.NetworkFee = new Money(model.NetworkFee, MoneyUnit.BTC).ToUnit(MoneyUnit.Satoshi);
-                model.Rate = _currencyNameTable.DisplayFormatCurrency(paymentMethod.Rate / 100_000_000, model.InvoiceCurrency);
+                base.PreparePaymentModelForAmountInSats(model, paymentMethod, _currencyNameTable);
             }
         }
         public override string GetCryptoImage(PaymentMethodId paymentMethodId)

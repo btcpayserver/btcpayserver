@@ -4,9 +4,11 @@
 @using BTCPayServer.TagHelpers
 @using BTCPayServer.Views.Apps
 @using Microsoft.AspNetCore.Mvc.TagHelpers
+@inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model BTCPayServer.Plugins.Crowdfund.Models.UpdateCrowdfundViewModel
 @{
     ViewData.SetActivePage(AppsNavPages.Update, "Update Crowdfund", Model.AppId);
+	Csp.UnsafeEval();
 }
 
 @section PageHeadContent {
@@ -63,6 +65,11 @@
                 <label asp-for="Tagline" class="form-label"></label>
                 <input asp-for="Tagline" class="form-control" />
                 <span asp-validation-for="Tagline" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="MainImageUrl" class="form-label"></label>
+                <input asp-for="MainImageUrl" class="form-control" />
+                <span asp-validation-for="MainImageUrl" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <div class="d-flex align-items-center">
@@ -294,14 +301,9 @@
                         <div id="additional-custom-css" class="accordion-collapse collapse" aria-labelledby="additional-custom-css-header">
                             <div class="accordion-body">
                                 <div class="form-group">
-                                    <label asp-for="MainImageUrl" class="form-label"></label>
-                                    <input asp-for="MainImageUrl" class="form-control" />
-                                    <span asp-validation-for="MainImageUrl" class="text-danger"></span>
-                                </div>
-                                <div class="form-group">
                                     <label asp-for="CustomCSSLink" class="form-label"></label>
-                                    <a href="https://docs.btcpayserver.org/Development/Theme/#2-bootstrap-themes" target="_blank" rel="noreferrer noopener">
-                                        <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+                                    <a href="https://docs.btcpayserver.org/Development/Theme/#2-bootstrap-themes" target="_blank" rel="noreferrer noopener" title="More information...">
+                                        <vc:icon symbol="info" />
                                     </a>
                                     <input asp-for="CustomCSSLink" class="form-control" />
                                     <span asp-validation-for="CustomCSSLink" class="text-danger"></span>

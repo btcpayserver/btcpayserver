@@ -82,8 +82,6 @@ namespace BTCPayServer.Data
             }
         }
 
-        public string Type { get; set; }
-
         public WalletTransactionInfo Merge(WalletTransactionInfo? value)
         {
             var result = new WalletTransactionInfo(WalletId);

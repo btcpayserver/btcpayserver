@@ -281,6 +281,33 @@
                     }
                 ]
             },
+            "PaymentMethodCriteriaData": {
+                "type": "object",
+                "properties": {
+                    "paymentMethod": {
+                        "type": "string",
+                        "description": "The payment method (e.g., \"BTC\" or \"BTC_LightningLike\")",
+                        "nullable": false
+                    },
+                    "currencyCode": {
+                        "type": "string",
+                        "description": "The currency",
+                        "default": "USD",
+                        "example": "USD"
+                    },
+                    "amount": {
+                        "type": "string",
+                        "format": "decimal",
+                        "minimum": 0,
+                        "description": "The amount"
+                    },
+                    "above": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "If the criterion is for above or below the amount"
+                    }
+                }
+            },
             "StoreBaseData": {
                 "type": "object",
                 "x-abstract": true,
@@ -424,6 +451,14 @@
                         "type": "string",
                         "example": "BTC",
                         "description": "The default payment method to load when displaying an invoice. It can be in the format of `BTC_LightningNetwork` to specify Lightning to be the default or `BTC_OnChain`/ `BTC` for on-chain to be the default. "
+                    },
+                    "paymentMethodCriteria": {
+                        "type": "array",
+                        "nullable": true,
+                        "items": {
+                            "$ref": "#/components/schemas/PaymentMethodCriteriaData"
+                        },                        
+                        "description": "The criteria required to activate specific payment methods."
                     }
                 }
             },

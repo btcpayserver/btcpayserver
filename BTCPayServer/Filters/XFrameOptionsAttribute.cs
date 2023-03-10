@@ -10,28 +10,24 @@ namespace BTCPayServer.Filters
             Value = value;
         }
 
-        public XFrameOptionsAttribute(XFrameOptions type, string allowFrom = null)
+        [Obsolete("Do not use second parameter ignored")]
+        public XFrameOptionsAttribute(XFrameOptions type, string _ = null) : this(type)
         {
-            switch (type)
-            {
-                case XFrameOptions.Deny:
-                    Value = "deny";
-                    break;
-                case XFrameOptions.SameOrigin:
-                    Value = "deny";
-                    break;
-                case XFrameOptions.AllowFrom:
-                    Value = $"allow-from {allowFrom}";
-                    break;
-                case XFrameOptions.AllowAll:
-                    Value = "allow-all";
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(type), type, null);
-            }
+
         }
 
-        public string Value { get; set; }
+        public XFrameOptionsAttribute(XFrameOptions type)
+        {
+            Value = type switch
+            {
+                XFrameOptions.Deny => "DENY",
+                XFrameOptions.SameOrigin => "SAMEORIGIN",
+                XFrameOptions.Unset => null,
+                _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
+            };
+        }
+
+        private string Value { get; set; }
 
         public void OnActionExecuted(ActionExecutedContext context)
         {
@@ -39,7 +35,7 @@ namespace BTCPayServer.Filters
 
         public void OnActionExecuting(ActionExecutingContext context)
         {
-            if (context.IsEffectivePolicy<XFrameOptionsAttribute>(this))
+            if (context.IsEffectivePolicy(this))
             {
                 context.HttpContext.Response.SetHeaderOnStarting("X-Frame-Options", Value);
             }
@@ -49,8 +45,7 @@ namespace BTCPayServer.Filters
         {
             Deny,
             SameOrigin,
-            AllowFrom,
-            AllowAll
+            Unset
         }
     }
 }

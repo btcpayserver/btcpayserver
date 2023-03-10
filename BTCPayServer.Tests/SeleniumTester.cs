@@ -86,8 +86,14 @@ namespace BTCPayServer.Tests
             Driver.AssertNoError();
         }
 
-        public void PayInvoice(bool mine = false)
+        public void PayInvoice(bool mine = false, decimal? amount= null)
         {
+
+            if (amount is not null)
+            {
+                Driver.FindElement(By.Id("test-payment-amount")).Clear();
+                Driver.FindElement(By.Id("test-payment-amount")).SendKeys(amount.ToString());
+            }
             Driver.FindElement(By.Id("FakePayment")).Click();
             if (mine)
             {
@@ -549,7 +555,7 @@ namespace BTCPayServer.Tests
             walletId ??= WalletId;
             GoToWallet(walletId, WalletsNavPages.Receive);
             Driver.FindElement(By.Id("generateButton")).Click();
-            var addressStr = Driver.FindElement(By.Id("address")).GetAttribute("value");
+            var addressStr = Driver.FindElement(By.Id("Address")).GetAttribute("value");
             var address = BitcoinAddress.Create(addressStr, ((BTCPayNetwork)Server.NetworkProvider.GetNetwork(walletId.CryptoCode)).NBitcoinNetwork);
             for (var i = 0; i < coins; i++)
             {

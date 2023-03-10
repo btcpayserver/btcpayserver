@@ -1,9 +1,5 @@
 :root {
     --navbutton-size: .8rem;
-    --qr-size: 256px;
-    --icon-size: 64px;
-    --icon-border-size: var(--btcpay-space-xs);
-    --icon-border-color: var(--btcpay-white);
     --section-padding: 1.5rem;
     --border-radius: var(--btcpay-border-radius-l);
     --wrap-max-width: 400px;
@@ -82,6 +78,7 @@ section dl > div dd {
     text-align: right;
     word-wrap: break-word;
     word-break: break-word;
+    max-width: 62.5%;
 }
 .info {
     color: var(--btcpay-neutral-700);
@@ -115,54 +112,6 @@ section dl > div dd {
     width: 1.25rem;
     height: 1.25rem;
     color: var(--btcpay-info);
-}
-.payment-box {
-    max-width: 300px;
-    min-width: var(--qr-size);
-    margin: 0 auto;
-    text-align: center;
-}
-.payment-box .qr-container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    min-height: var(--qr-size);
-}
-.payment-box .qr-container svg {
-    border-radius: var(--btcpay-border-radius);
-    padding: var(--btcpay-space-s);
-    background: var(--btcpay-white);
-    width: 100%;
-}
-.payment-box .qr-container img {
-    box-sizing: content-box;
-    position: absolute;
-    width: var(--icon-size);
-    border-radius: 50%;
-    padding: var(--icon-border-size);
-    background: var(--icon-border-color);
-}
-.payment-box .qr-container small {
-    display: none;
-}
-.payment-box .input-group {
-    align-items: flex-end;
-}
-.payment-box .input-group .form-control-plaintext {
-    padding-left: 3px;
-    padding-bottom: 0;
-    font-weight: var(--btcpay-font-weight-semibold);
-}
-.payment-box .input-group label {
-    padding-left: 0;
-    text-transform: uppercase;
-    letter-spacing: .1rem;
-    font-weight: var(--btcpay-font-weight-semibold);
-}
-.payment-box .input-group button {
-    padding: var(--btcpay-space-xs) 0;
-    font-weight: var(--btcpay-font-weight-semibold);
 }
 .payment-details dl {
     margin: 0;
@@ -219,13 +168,12 @@ section dl > div dd {
     color: var(--btcpay-body-text-muted);
 }
 #DefaultLang {
+    width: calc(var(--text-width, 110px) + 3rem);
     color: var(--btcpay-body-text-muted);
     background-color: transparent;
     box-shadow: none;
     border: none;
-    text-align: right;
     cursor: pointer;
-    margin-left: -4.5rem; /* Adjust for visual center */
 }
 #DefaultLang:hover {
     color: var(--btcpay-body-text-hover);

@@ -387,6 +387,7 @@ namespace BTCPayServer.Controllers
 
             vm.UseNewCheckout = storeBlob.CheckoutType == Client.Models.CheckoutType.V2;
             vm.OnChainWithLnInvoiceFallback = storeBlob.OnChainWithLnInvoiceFallback;
+            vm.LightningAmountInSatoshi = storeBlob.LightningAmountInSatoshi;
             vm.RequiresRefundEmail = storeBlob.RequiresRefundEmail;
             vm.LazyPaymentMethods = storeBlob.LazyPaymentMethods;
             vm.RedirectAutomatically = storeBlob.RedirectAutomatically;
@@ -504,11 +505,9 @@ namespace BTCPayServer.Controllers
             }
 
             blob.CheckoutType = model.UseNewCheckout ? Client.Models.CheckoutType.V2 : Client.Models.CheckoutType.V1;
-            if (blob.CheckoutType == Client.Models.CheckoutType.V2)
-            {
-                blob.OnChainWithLnInvoiceFallback = model.OnChainWithLnInvoiceFallback;
-            }
 
+            blob.OnChainWithLnInvoiceFallback = model.OnChainWithLnInvoiceFallback;
+            blob.LightningAmountInSatoshi = model.LightningAmountInSatoshi;
             blob.RequiresRefundEmail = model.RequiresRefundEmail;
             blob.LazyPaymentMethods = model.LazyPaymentMethods;
             blob.RedirectAutomatically = model.RedirectAutomatically;
@@ -661,28 +660,41 @@ namespace BTCPayServer.Controllers
 
             if (model.LogoFile != null)
             {
-                if (model.LogoFile.ContentType.StartsWith("image/", StringComparison.InvariantCulture))
+                if (model.LogoFile.Length > 1_000_000)
                 {
-                    // delete existing image
-                    if (!string.IsNullOrEmpty(blob.LogoFileId))
-                    {
-                        await _fileService.RemoveFile(blob.LogoFileId, userId);
-                    }
-
-                    // add new image
-                    try
-                    {
-                        var storedFile = await _fileService.AddFile(model.LogoFile, userId);
-                        blob.LogoFileId = storedFile.Id;
-                    }
-                    catch (Exception e)
-                    {
-                        TempData[WellKnownTempData.ErrorMessage] = $"Could not save logo: {e.Message}";
-                    }
+                    TempData[WellKnownTempData.ErrorMessage] = "The uploaded logo file should be less than 1MB";
+                }
+                else if (!model.LogoFile.ContentType.StartsWith("image/", StringComparison.InvariantCulture))
+                {
+                    TempData[WellKnownTempData.ErrorMessage] = "The uploaded logo file needs to be an image";
                 }
                 else
                 {
-                    TempData[WellKnownTempData.ErrorMessage] = "The uploaded logo file needs to be an image";
+                    var formFile = await model.LogoFile.Bufferize();
+                    if (!FileTypeDetector.IsPicture(formFile.Buffer, formFile.FileName))
+                    {
+                        TempData[WellKnownTempData.ErrorMessage] = "The uploaded logo file needs to be an image";
+                    }
+                    else
+                    {
+                        model.LogoFile = formFile;
+                        // delete existing image
+                        if (!string.IsNullOrEmpty(blob.LogoFileId))
+                        {
+                            await _fileService.RemoveFile(blob.LogoFileId, userId);
+                        }
+
+                        // add new image
+                        try
+                        {
+                            var storedFile = await _fileService.AddFile(model.LogoFile, userId);
+                            blob.LogoFileId = storedFile.Id;
+                        }
+                        catch (Exception e)
+                        {
+                            TempData[WellKnownTempData.ErrorMessage] = $"Could not save logo: {e.Message}";
+                        }
+                    }
                 }
             }
             else if (RemoveLogoFile && !string.IsNullOrEmpty(blob.LogoFileId))
@@ -694,7 +706,19 @@ namespace BTCPayServer.Controllers
 
             if (model.CssFile != null)
             {
-                if (model.CssFile.ContentType.Equals("text/css", StringComparison.InvariantCulture))
+                if (model.CssFile.Length > 1_000_000)
+                {
+                    TempData[WellKnownTempData.ErrorMessage] = "The uploaded file should be less than 1MB";
+                }
+                else if (!model.CssFile.ContentType.Equals("text/css", StringComparison.InvariantCulture))
+                {
+                    TempData[WellKnownTempData.ErrorMessage] = "The uploaded file needs to be a CSS file";
+                }
+                else if (!model.CssFile.FileName.EndsWith(".css", StringComparison.OrdinalIgnoreCase))
+                {
+                    TempData[WellKnownTempData.ErrorMessage] = "The uploaded file needs to be a CSS file";
+                }
+                else
                 {
                     // delete existing CSS file
                     if (!string.IsNullOrEmpty(blob.CssFileId))
@@ -712,10 +736,6 @@ namespace BTCPayServer.Controllers
                     {
                         TempData[WellKnownTempData.ErrorMessage] = $"Could not save CSS file: {e.Message}";
                     }
-                }
-                else
-                {
-                    TempData[WellKnownTempData.ErrorMessage] = "The uploaded file needs to be a CSS file";
                 }
             }
             else if (RemoveCssFile && !string.IsNullOrEmpty(blob.CssFileId))

@@ -9,13 +9,20 @@ namespace BTCPayServer.Data
     {
         public static PaymentRequestBaseData GetBlob(this PaymentRequestData paymentRequestData)
         {
-            var result = paymentRequestData.Blob == null
-                ? new PaymentRequestBaseData()
-                : ParseBlob(paymentRequestData.Blob);
-            return result;
+            if (paymentRequestData.Blob2 is not null)
+            {
+                return paymentRequestData.HasTypedBlob<PaymentRequestBaseData>().GetBlob();
+            }
+#pragma warning disable CS0618 // Type or member is obsolete
+            else if (paymentRequestData.Blob is not null)
+            {
+                return ParseBlob(paymentRequestData.Blob);
+            }
+#pragma warning restore CS0618 // Type or member is obsolete
+            return new PaymentRequestBaseData();
         }
 
-        private static PaymentRequestBaseData ParseBlob(byte[] blob)
+        static PaymentRequestBaseData ParseBlob(byte[] blob)
         {
             var jobj = JObject.Parse(ZipUtils.Unzip(blob));
             // Fixup some legacy payment requests
@@ -24,14 +31,9 @@ namespace BTCPayServer.Data
             return jobj.ToObject<PaymentRequestBaseData>();
         }
 
-        public static bool SetBlob(this PaymentRequestData paymentRequestData, PaymentRequestBaseData blob)
+        public static void SetBlob(this PaymentRequestData paymentRequestData, PaymentRequestBaseData blob)
         {
-            var original = new Serializer(null).ToString(paymentRequestData.GetBlob());
-            var newBlob = new Serializer(null).ToString(blob);
-            if (original == newBlob)
-                return false;
-            paymentRequestData.Blob = ZipUtils.Zip(newBlob);
-            return true;
+            paymentRequestData.HasTypedBlob<PaymentRequestBaseData>().SetBlob(blob);
         }
     }
 }

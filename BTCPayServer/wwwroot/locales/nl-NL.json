@@ -1,5 +1,5 @@
 {
-  "NOTICE_WARN": "THIS CODE HAS BEEN AUTOMATICALLY GENERATED FROM TRANSIFEX, IF YOU WISH TO HELP TRANSLATION COME ON THE SLACK http://slack.btcpayserver.org TO REQUEST PERMISSION TO https://www.transifex.com/btcpayserver/btcpayserver/",
+  "NOTICE_WARN": "THIS CODE HAS BEEN AUTOMATICALLY GENERATED FROM TRANSIFEX, IF YOU WISH TO HELP TRANSLATION COME ON THE SLACK https://chat.btcpayserver.org/ TO REQUEST PERMISSION TO https://www.transifex.com/btcpayserver/btcpayserver/",
   "code": "nl-NL",
   "currentLanguage": "Nederlands",
   "lang": "Taal",
@@ -41,7 +41,7 @@
   "This invoice has been archived": "Deze factuur is gearchiveerd",
   "Archived_Body": "Bedankt om de winkel te contacteren voor bijstand met of informatie over deze bestelling",
   "BOLT 11 Invoice": "BOLT 11 Factuur",
-  "Node Info": "Node Info",
+  "Node Info": "Knoop informatie",
   "txCount": "{{count}} transactie",
   "txCount_plural": "{{count}} transacties",
   "Pay with CoinSwitch": "Betalen met CoinSwitch",
@@ -49,5 +49,5 @@
   "Close": "Sluiten",
   "NotPaid_ExtraTransaction": "Het factuur is niet volledig betaald. Stuur nog een transactie om het resterende bedrag te betalen.",
   "Recommended_Fee": "Aanbevolen vergoeding: {{feeRate}} sat/byte",
-  "View receipt": "View receipt"
+  "View receipt": "Bekijk bon"
 }

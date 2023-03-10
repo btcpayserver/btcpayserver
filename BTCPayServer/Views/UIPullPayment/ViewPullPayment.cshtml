@@ -4,9 +4,11 @@
 @using BTCPayServer.Components.ThemeSwitch
 @using BTCPayServer.Payments
 @model BTCPayServer.Models.ViewPullPaymentModel
+@inject BTCPayServer.Security.ContentSecurityPolicies Csp
 
 @{
     ViewData["Title"] = Model.Title;
+	Csp.UnsafeEval();
     Layout = null;
     string StatusTextClass(string status)
     {
@@ -213,7 +215,7 @@
                     Edit pull payment
                 </a>
             </p>
-            <a href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">
+            <a class="store-powered-by" href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">
                 Powered by <partial name="_StoreFooterLogo" />
             </a>
         </footer>

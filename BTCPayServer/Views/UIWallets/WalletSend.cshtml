@@ -1,14 +1,16 @@
 @inject BTCPayServer.Security.ContentSecurityPolicies csp
 @using Microsoft.AspNetCore.Mvc.ModelBinding
 @using BTCPayServer.Controllers
+@inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model WalletSendModel
 @{
-    var walletId = Context.GetRouteValue("walletId").ToString();
-    var cancelUrl = Model.ReturnUrl ?? Url.Action(nameof(UIWalletsController.WalletTransactions), new { walletId });
-    var backUrl = Model.BackUrl != null ? $"{Model.BackUrl}?returnUrl={Model.ReturnUrl}" : null;
-    Layout = "_LayoutWizard";
-    ViewData.SetActivePage(WalletsNavPages.Send, $"Send {Model.CryptoCode}", walletId);
-    csp.Add("worker-src", "blob:");
+	var walletId = Context.GetRouteValue("walletId").ToString();
+	var cancelUrl = Model.ReturnUrl ?? Url.Action(nameof(UIWalletsController.WalletTransactions), new { walletId });
+	var backUrl = Model.BackUrl != null ? $"{Model.BackUrl}?returnUrl={Model.ReturnUrl}" : null;
+	Layout = "_LayoutWizard";
+	ViewData.SetActivePage(WalletsNavPages.Send, $"Send {Model.CryptoCode}", walletId);
+	csp.Add("worker-src", "blob:");
+	Csp.UnsafeEval();
 }
 
 @section Navbar {
@@ -218,7 +220,7 @@
                         <input asp-for="NoChange" class="form-check-input" />
                         <label asp-for="NoChange" class="form-check-label"></label>
                         <a href="https://docs.btcpayserver.org/Wallet/#dont-create-utxo-change" target="_blank" rel="noreferrer noopener">
-                            <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+                            <vc:icon symbol="info" />
                         </a>
                     </div>
                 </div>                        
@@ -233,7 +235,7 @@
                     <div class="form-group">
                         <label asp-for="AllowFeeBump" class="form-label"></label>
                         <a href="https://docs.btcpayserver.org/Wallet/#rbf-replace-by-fee" target="_blank" rel="noreferrer noopener">
-                            <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+                            <vc:icon symbol="info" />
                         </a>
                         <select asp-for="AllowFeeBump" class="form-select w-auto">
                             <option value="Maybe">Randomize for higher privacy</option>

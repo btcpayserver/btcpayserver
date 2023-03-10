@@ -349,6 +349,10 @@ retry:
             version = Regex.Match(actual, "vue-qrcode v([0-9]+.[0-9]+.[0-9]+)").Groups[1].Value;
             expected = (await (await client.GetAsync($"https://unpkg.com/@chenfengyuan/vue-qrcode@{version}/dist/vue-qrcode.min.js")).Content.ReadAsStringAsync()).Trim();
             Assert.Equal(expected, actual);
+
+            actual = GetFileContent("BTCPayServer", "wwwroot", "vendor", "tom-select", "tom-select.complete.min.js").Trim();
+            expected = (await (await client.GetAsync($"https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js")).Content.ReadAsStringAsync()).Trim();
+            Assert.Equal(expected, actual);
         }
 
         string GetFileContent(params string[] path)

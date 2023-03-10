@@ -1,11 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text;
 using BTCPayServer.Client.Models;
-using BTCPayServer.Data.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using PayoutProcessorData = BTCPayServer.Data.Data.PayoutProcessorData;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using PayoutProcessorData = BTCPayServer.Data.PayoutProcessorData;
 
 namespace BTCPayServer.Data
 {
@@ -25,7 +26,6 @@ namespace BTCPayServer.Data
         [Obsolete("Use GetDerivationStrategies instead")]
         public string DerivationStrategy { get; set; }
 
-        [Obsolete("Use GetDerivationStrategies instead")]
         public string DerivationStrategies { get; set; }
 
         public string StoreName { get; set; }
@@ -50,6 +50,7 @@ namespace BTCPayServer.Data
         public IEnumerable<PayoutData> Payouts { get; set; }
         public IEnumerable<CustodianAccountData> CustodianAccounts { get; set; }
         public IEnumerable<StoreSettingData> Settings { get; set; }
+        public IEnumerable<FormData> Forms { get; set; }
 
         internal static void OnModelCreating(ModelBuilder builder, DatabaseFacade databaseFacade)
         {
@@ -62,6 +63,16 @@ namespace BTCPayServer.Data
                 builder.Entity<StoreData>()
                     .Property(o => o.DerivationStrategies)
                     .HasColumnType("JSONB");
+            }
+            else if (databaseFacade.IsMySql())
+            {
+                builder.Entity<StoreData>()
+                    .Property(o => o.StoreBlob)
+                    .HasConversion(new ValueConverter<string, byte[]>
+                    (
+                        convertToProviderExpression: (str) => Encoding.UTF8.GetBytes(str),
+                        convertFromProviderExpression: (bytes) => Encoding.UTF8.GetString(bytes)
+                    ));
             }
         }
     }

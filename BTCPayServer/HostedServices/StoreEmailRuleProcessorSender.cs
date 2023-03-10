@@ -10,6 +10,7 @@ using BTCPayServer.Events;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Mails;
+using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Logging;
@@ -22,18 +23,19 @@ public class StoreEmailRuleProcessorSender : EventHostedServiceBase
     private readonly StoreRepository _storeRepository;
     private readonly EmailSenderFactory _emailSenderFactory;
     private readonly LinkGenerator _linkGenerator;
-    private readonly BTCPayServerEnvironment _environment;
+    private readonly CurrencyNameTable _currencyNameTable;
 
     public StoreEmailRuleProcessorSender(StoreRepository storeRepository, EventAggregator eventAggregator,
         ILogger<InvoiceEventSaverService> logger,
         EmailSenderFactory emailSenderFactory,
-        LinkGenerator linkGenerator, BTCPayServerEnvironment environment) : base(
+        LinkGenerator linkGenerator, 
+        CurrencyNameTable currencyNameTable) : base(
         eventAggregator, logger)
     {
         _storeRepository = storeRepository;
         _emailSenderFactory = emailSenderFactory;
         _linkGenerator = linkGenerator;
-        _environment = environment;
+        _currencyNameTable = currencyNameTable;
     }
 
     protected override void SubscribeToEvents()
@@ -90,7 +92,9 @@ public class StoreEmailRuleProcessorSender : EventHostedServiceBase
         //TODO: we should switch to https://dotnetfiddle.net/MoqJFk later
         return str.Replace("{Invoice.Id}", i.Id)
             .Replace("{Invoice.StoreId}", i.StoreId)
-            .Replace("{Invoice.Price}", i.Amount.ToString(CultureInfo.InvariantCulture))
+            .Replace("{Invoice.Price}",
+                decimal.Round(i.Amount, _currencyNameTable.GetCurrencyData(i.Currency, true).Divisibility,
+                    MidpointRounding.ToEven).ToString(CultureInfo.InvariantCulture))
             .Replace("{Invoice.Currency}", i.Currency)
             .Replace("{Invoice.Status}", i.Status.ToString())
             .Replace("{Invoice.AdditionalStatus}", i.AdditionalStatus.ToString())

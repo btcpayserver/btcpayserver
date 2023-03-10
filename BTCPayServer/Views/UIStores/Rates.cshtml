@@ -138,8 +138,8 @@
                 </div>
                 <div class="form-group">
                     <label asp-for="Script" class="form-label"></label>
-                    <a href="#help" data-bs-toggle="collapse">
-                        <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+                    <a href="#help" data-bs-toggle="collapse" title="More information...">
+                        <vc:icon symbol="info"/>
                     </a>
                     <textarea asp-for="Script" rows="20" cols="80" class="form-control"></textarea>
                     <span asp-validation-for="Script" class="text-danger"></span>

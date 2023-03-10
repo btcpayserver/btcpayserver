@@ -2,7 +2,6 @@ using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
 using BTCPayServer.Controllers;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 
 namespace BTCPayServer.Services.Notifications.Blobs
@@ -35,6 +34,8 @@ namespace BTCPayServer.Services.Notifications.Blobs
             protected override void FillViewModel(ExternalPayoutTransactionNotification notification,
                 NotificationViewModel vm)
             {
+                vm.Identifier = notification.Identifier;
+                vm.Type = notification.NotificationType;
                 vm.Body =
                     "A payment that was made to an approved payout by an external wallet is waiting for your confirmation.";
                 vm.ActionLink = _linkGenerator.GetPathByAction(nameof(UIStorePullPaymentsController.Payouts),

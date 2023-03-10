@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.Extensions.Primitives;
 using Newtonsoft.Json.Linq;
+using Npgsql.Internal.TypeHandlers.GeometricHandlers;
 
 namespace BTCPayServer.Abstractions.Form;
 
@@ -20,6 +22,7 @@ public class Form
         return JObject.FromObject(this, CamelCaseSerializerSettings.Serializer).ToString(Newtonsoft.Json.Formatting.Indented);
     }
 #nullable restore
+
     // Messages to be shown at the top of the form indicating user feedback like "Saved successfully" or "Please change X because of Y." or a warning, etc...
     public List<AlertMessage> TopMessages { get; set; } = new();
 
@@ -32,126 +35,125 @@ public class Form
         return Fields.Select(f => f.IsValid()).All(o => o);
     }
 
-    public Field GetFieldByName(string name)
+    public Field GetFieldByFullName(string fullName)
     {
-        return GetFieldByName(name, Fields, null);
-    }
-
-    private static Field GetFieldByName(string name, List<Field> fields, string prefix)
-    {
-        prefix ??= string.Empty;
-        foreach (var field in fields)
+        foreach (var f in GetAllFields())
         {
-            var currentPrefix = prefix;
-            if (!string.IsNullOrEmpty(field.Name))
-            {
-
-                currentPrefix = $"{prefix}{field.Name}";
-                if (currentPrefix.Equals(name, StringComparison.InvariantCultureIgnoreCase))
-                {
-                    return field;
-                }
-
-                currentPrefix += "_";
-            }
-
-            var subFieldResult = GetFieldByName(name, field.Fields, currentPrefix);
-            if (subFieldResult is not null)
-            {
-                return subFieldResult;
-            }
-
+            if (f.FullName == fullName)
+                return f.Field;
         }
         return null;
     }
 
-    public List<string> GetAllNames()
+    public IEnumerable<(string FullName, List<string> Path, Field Field)> GetAllFields()
     {
-        return GetAllNames(Fields);
-    }
-
-    private static List<string> GetAllNames(List<Field> fields)
-    {
-        var names = new List<string>();
-
-        foreach (var field in fields)
+        HashSet<string> nameReturned = new();
+        foreach (var f in GetAllFieldsCore(new List<string>(), Fields))
         {
-            string prefix = string.Empty;
-            if (!string.IsNullOrEmpty(field.Name))
-            {
-                names.Add(field.Name);
-                prefix = $"{field.Name}_";
-            }
-
-            if (field.Fields.Any())
-            {
-                names.AddRange(GetAllNames(field.Fields).Select(s => $"{prefix}{s}"));
-            }
-        }
-
-        return names;
-    }
-
-    public void ApplyValuesFromOtherForm(Form form)
-    {
-        foreach (var fieldset in Fields)
-        {
-            foreach (var field in fieldset.Fields)
-            {
-                field.Value = form
-                    .GetFieldByName(
-                        $"{(string.IsNullOrEmpty(fieldset.Name) ? string.Empty : fieldset.Name + "_")}{field.Name}")
-                    ?.Value;
-            }
+            var fullName = string.Join('_', f.Path);
+            if (!nameReturned.Add(fullName))
+                continue;
+            yield return (fullName, f.Path, f.Field);
         }
     }
 
-    public void ApplyValuesFromForm(IFormCollection form)
+    public bool ValidateFieldNames(out List<string> errors)
     {
-        var names = GetAllNames();
-        foreach (var name in names)
+        errors = new List<string>();
+        HashSet<string> nameReturned = new();
+        foreach (var f in GetAllFieldsCore(new List<string>(), Fields))
         {
-            var field = GetFieldByName(name);
-            if (field is null || !form.TryGetValue(name, out var val))
+            var fullName = string.Join('_', f.Path);
+            if (!nameReturned.Add(fullName))
             {
+                errors.Add($"Form contains duplicate field names '{fullName}'");
                 continue;
             }
-
-            field.Value = val;
         }
+        return errors.Count == 0;
     }
 
-    public Dictionary<string, object> GetValues()
+    IEnumerable<(List<string> Path, Field Field)> GetAllFieldsCore(List<string> path, List<Field> fields)
     {
-        return GetValues(Fields);
-    }
-
-    private static Dictionary<string, object> GetValues(List<Field> fields)
-    {
-        var result = new Dictionary<string, object>();
-        foreach (Field field in fields)
+        foreach (var field in fields)
         {
-            var name = field.Name ?? string.Empty;
-            if (field.Fields.Any())
+            List<string> thisPath = new(path.Count + 1);
+            thisPath.AddRange(path);
+            if (!string.IsNullOrEmpty(field.Name))
             {
-                var values = GetValues(fields);
-                values.Remove(string.Empty, out var keylessValue);
+                thisPath.Add(field.Name);
+                yield return (thisPath, field);
+            }
 
-                result.TryAdd(name, values);
-
-                if (keylessValue is not Dictionary<string, object> dict)
-                    continue;
-                foreach (KeyValuePair<string, object> keyValuePair in dict)
+            foreach (var child in field.Fields)
+            {
+                if (field.Constant)
+                    child.Constant = true;
+                foreach (var descendant in GetAllFieldsCore(thisPath, field.Fields))
                 {
-                    result.TryAdd(keyValuePair.Key, keyValuePair.Value);
+                    yield return descendant;
                 }
             }
-            else
+        }
+    }
+
+    public void ApplyValuesFromForm(IEnumerable<KeyValuePair<string, StringValues>> form)
+    {
+        var values = form.GroupBy(f => f.Key, f => f.Value).ToDictionary(g => g.Key, g => g.First());
+        foreach (var f in GetAllFields())
+        {
+            if (f.Field.Constant || !values.TryGetValue(f.FullName, out var val))
+                continue;
+
+            f.Field.Value = val;
+        }
+    }
+
+    public void SetValues(JObject values)
+    {
+        var fields = GetAllFields().ToDictionary(k => k.FullName, k => k.Field);
+        SetValues(fields, new List<string>(), values);
+    }
+
+    private void SetValues(Dictionary<string, Field> fields, List<string> path, JObject values)
+    {
+        foreach (var prop in values.Properties())
+        {
+            List<string> propPath = new List<string>(path.Count + 1);
+            propPath.AddRange(path);
+            propPath.Add(prop.Name);
+            if (prop.Value.Type == JTokenType.Object)
             {
-                result.TryAdd(name, field.Value);
+                SetValues(fields, propPath, (JObject)prop.Value);
+            }
+            else if (prop.Value.Type == JTokenType.String)
+            {
+                var fullname = String.Join('_', propPath);
+                if (fields.TryGetValue(fullname, out var f) && !f.Constant)
+                    f.Value = prop.Value.Value<string>();
             }
         }
+    }
 
-        return result;
+    public JObject GetValues()
+    {
+        var r = new JObject();
+        foreach (var f in GetAllFields())
+        {
+            var node = r;
+            for (int i = 0; i < f.Path.Count - 1; i++)
+            {
+                var p = f.Path[i];
+                var child = node[p] as JObject;
+                if (child is null)
+                {
+                    child = new JObject();
+                    node[p] = child;
+                }
+                node = child;
+            }
+            node[f.Field.Name] = f.Field.Value;
+        }
+        return r;
     }
 }

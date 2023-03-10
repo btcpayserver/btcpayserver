@@ -36,27 +36,50 @@ Vue.directive('collapsible', {
     }
 });
 
-const fallbackLanguage = 'en';
-const startingLanguage = computeStartingLanguage();
 const STATUS_PAID = ['complete', 'confirmed', 'paid'];
 const STATUS_UNPAYABLE =  ['expired', 'invalid'];
+const urlParams = new URLSearchParams(window.location.search);
 
 function computeStartingLanguage() {
+    const lang = urlParams.get('lang')
+    if (lang && isLanguageAvailable(lang)) return lang;
     const { defaultLang } = initialSrvModel;
     return isLanguageAvailable(defaultLang) ? defaultLang : fallbackLanguage;
 }
 
 function isLanguageAvailable(languageCode) {
-    return availableLanguages.indexOf(languageCode) >= 0;
+    return availableLanguages.includes(languageCode);
+}
+
+function updateLanguageSelect() {
+    // calculate and set width, as we want it center aligned
+    const $languageSelect = document.getElementById('DefaultLang');
+    const element = document.createElement('div');
+    element.innerText = $languageSelect.querySelector('option:checked').text;
+    $languageSelect.parentElement.appendChild(element);
+    const width = element.offsetWidth;
+    $languageSelect.parentElement.removeChild(element);
+    $languageSelect.style.setProperty('--text-width', `${width}px`);
+}
+
+function updateLanguage(lang) {
+    if (isLanguageAvailable(lang)) {
+        i18next.changeLanguage(lang);
+        urlParams.set('lang', lang);
+        window.history.replaceState({}, '', `${location.pathname}?${urlParams}`);
+        updateLanguageSelect();
+    }
 }
 
 Vue.use(VueI18next);
 
+const fallbackLanguage = 'en';
+const startingLanguage = computeStartingLanguage();
 const i18n = new VueI18next(i18next);
 const eventBus = new Vue();
 
-const PaymentDetails = Vue.component('payment-details', {
-    el: '#payment-details',
+const PaymentDetails = {
+    template: '#payment-details',
     props: {
         srvModel: Object,
         isActive: Boolean
@@ -75,14 +98,14 @@ const PaymentDetails = Vue.component('payment-details', {
             return this.isActive && this.srvModel.showRecommendedFee && this.srvModel.feeRate;
         },
     }
-});
+}
 
 function initApp() {
     return new Vue({
         i18n,
         el: '#Checkout-v2',
         components: {
-            PaymentDetails
+            'payment-details': PaymentDetails,
         },
         data () {
             const srvModel = initialSrvModel;
@@ -166,6 +189,7 @@ function initApp() {
             if (this.isActive) {
                 this.listenIn();
             }
+            updateLanguageSelect();
             window.parent.postMessage('loaded', '*');
         },
         methods: {
@@ -176,10 +200,7 @@ function initApp() {
                 }
             },
             changeLanguage (e) {
-                const lang = e.target.value;
-                if (isLanguageAvailable(lang)) {
-                    i18next.changeLanguage(lang);
-                }
+                updateLanguage(e.target.value);
             },
             padTime (val) {
                 return val.toString().padStart(2, '0');
@@ -239,10 +260,7 @@ function initApp() {
                     const { status } = data;
                     window.parent.postMessage({ invoiceId, status }, '*');
                 }
-    
-                // displaying satoshis for lightning payments
-                data.cryptoCodeSrv = data.cryptoCode;
-    
+                
                 const newEnd = new Date();
                 newEnd.setSeconds(newEnd.getSeconds() + data.expirationSeconds);
                 this.endDate = newEnd;
@@ -252,12 +270,12 @@ function initApp() {
                 eventBus.$emit('data-fetched', this.srvModel);
     
                 const self = this;
-                if (this.isPaid && data.redirectAutomatically && data.merchantRefLink) {
+                if (self.isPaid && data.redirectAutomatically && self.storeLink) {
                     setTimeout(function () {
-                        if (self.isModal && window.top.location === data.merchantRefLink){
+                        if (self.isModal && window.top.location === self.storeLink){
                             self.close();
                         } else {
-                            window.top.location = data.merchantRefLink;
+                            window.top.location = self.storeLink;
                         }
                     }, 2000);
                 }

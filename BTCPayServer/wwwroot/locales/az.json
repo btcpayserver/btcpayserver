@@ -1,5 +1,5 @@
 {
-  "NOTICE_WARN": "THIS CODE HAS BEEN AUTOMATICALLY GENERATED FROM TRANSIFEX, IF YOU WISH TO HELP TRANSLATION COME ON THE SLACK http://slack.btcpayserver.org TO REQUEST PERMISSION TO https://www.transifex.com/btcpayserver/btcpayserver/",
+  "NOTICE_WARN": "THIS CODE HAS BEEN AUTOMATICALLY GENERATED FROM TRANSIFEX, IF YOU WISH TO HELP TRANSLATION COME ON THE SLACK https://chat.btcpayserver.org/ TO REQUEST PERMISSION TO https://www.transifex.com/btcpayserver/btcpayserver/",
   "code": "az",
   "currentLanguage": "Azərbaycanca",
   "lang": "Dil",
@@ -39,7 +39,7 @@
   "Return to StoreName": "{{storeName}} xidmətinə qayıt",
   "This invoice has been paid": "Faktura ödənilmişdir",
   "This invoice has been archived": "Faktura arxivlənmişdir",
-  "Archived_Body": "Lütfən sifariş haqqında məlumat və ya yardım almaq üçün mağaza ilə əlaqə saxlayın.",
+  "Archived_Body": "Lütfən sifariş haqqında məlumat və ya yardım almaq üçün mağaza ilə əlaqə saxlayın",
   "BOLT 11 Invoice": "BOLT 11 Faktura",
   "Node Info": "Nod məlumatı",
   "txCount": "{{count}} tranzaksiya",

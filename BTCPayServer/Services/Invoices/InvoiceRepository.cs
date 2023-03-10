@@ -22,7 +22,7 @@ namespace BTCPayServer.Services.Invoices
 {
     public class InvoiceRepository
     {
-        static JsonSerializerSettings DefaultSerializerSettings;
+        internal static JsonSerializerSettings DefaultSerializerSettings;
         static InvoiceRepository()
         {
             DefaultSerializerSettings = new JsonSerializerSettings();
@@ -147,7 +147,7 @@ namespace BTCPayServer.Services.Invoices
             var expiry = DateTimeOffset.Now + seconds;
             invoice.ExpirationTime = expiry;
             invoice.MonitoringExpiration = expiry.AddHours(1);
-            invoiceData.Blob = ToBytes(invoice, _btcPayNetworkProvider.DefaultNetwork);
+            invoiceData.SetBlob(invoice);
 
             await ctx.SaveChangesAsync();
 
@@ -168,8 +168,7 @@ namespace BTCPayServer.Services.Invoices
 
             var invoice = invoiceData.GetBlob(_btcPayNetworkProvider);
             invoice.MonitoringExpiration = invoice.MonitoringExpiration.AddHours(1);
-            invoiceData.Blob = ToBytes(invoice, null);
-
+            invoiceData.SetBlob(invoice);
             await ctx.SaveChangesAsync();
         }
 
@@ -190,7 +189,6 @@ namespace BTCPayServer.Services.Invoices
                     StoreDataId = storeId,
                     Id = invoice.Id,
                     Created = invoice.InvoiceTime,
-                    Blob = ToBytes(invoice, null),
                     OrderId = invoice.Metadata.OrderId,
 #pragma warning disable CS0618 // Type or member is obsolete
                     Status = invoice.StatusString,
@@ -199,6 +197,7 @@ namespace BTCPayServer.Services.Invoices
                     CustomerEmail = invoice.RefundMail,
                     Archived = false
                 };
+                invoiceData.SetBlob(invoice);
                 await context.Invoices.AddAsync(invoiceData);
 
 
@@ -247,7 +246,7 @@ namespace BTCPayServer.Services.Invoices
         private InvoiceEntity Clone(InvoiceEntity invoice)
         {
             var temp = new InvoiceData();
-            temp.Blob = ToBytes(invoice);
+            temp.SetBlob(invoice);
             return temp.GetBlob(_btcPayNetworkProvider);
         }
 
@@ -307,7 +306,7 @@ namespace BTCPayServer.Services.Invoices
             }
 #pragma warning restore CS0618
             invoiceEntity.SetPaymentMethod(paymentMethod);
-            invoice.Blob = ToBytes(invoiceEntity, network);
+            invoice.SetBlob(invoiceEntity);
 
             await context.AddressInvoices.AddAsync(new AddressInvoiceData()
             {
@@ -341,7 +340,7 @@ namespace BTCPayServer.Services.Invoices
                     .Set(GetDestination(paymentMethod), paymentMethod.GetId()));
             }
             invoiceEntity.SetPaymentMethod(paymentMethod);
-            invoice.Blob = ToBytes(invoiceEntity, network);
+            invoice.SetBlob(invoiceEntity);
             AddToTextSearch(context, invoice, paymentMethod.GetPaymentMethodDetails().GetPaymentDestination());
             await context.SaveChangesAsync();
         }
@@ -416,7 +415,7 @@ namespace BTCPayServer.Services.Invoices
             var blob = invoiceData.GetBlob(_btcPayNetworkProvider);
             blob.Price = invoice.Price;
             AddToTextSearch(context, invoiceData, new[] { invoice.Price.ToString(CultureInfo.InvariantCulture) });
-            invoiceData.Blob = ToBytes(blob, null);
+            invoiceData.SetBlob(blob);
             await context.SaveChangesAsync().ConfigureAwait(false);
         }
 
@@ -478,7 +477,7 @@ namespace BTCPayServer.Services.Invoices
             }
 
             blob.Metadata = newMetadata;
-            invoiceData.Blob = ToBytes(blob);
+            invoiceData.SetBlob(blob);
             await context.SaveChangesAsync().ConfigureAwait(false);
             return ToEntity(invoiceData);
         }
@@ -770,21 +769,11 @@ namespace BTCPayServer.Services.Invoices
             return status;
         }
 
-        public static byte[] ToBytes<T>(T obj, BTCPayNetworkBase network = null)
-        {
-            return ZipUtils.Zip(ToJsonString(obj, network));
-        }
-
         public static T FromBytes<T>(byte[] blob, BTCPayNetworkBase network = null)
         {
             return network == null
                 ? JsonConvert.DeserializeObject<T>(ZipUtils.Unzip(blob), DefaultSerializerSettings)
                 : network.ToObject<T>(ZipUtils.Unzip(blob));
-        }
-
-        public static string ToJsonString<T>(T data, BTCPayNetworkBase network)
-        {
-            return network == null ? JsonConvert.SerializeObject(data, DefaultSerializerSettings) : network.ToString(data);
         }
     }
 

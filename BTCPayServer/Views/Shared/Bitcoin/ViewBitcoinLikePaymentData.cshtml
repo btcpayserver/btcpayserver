@@ -61,8 +61,8 @@
                 {
                     <th>
                         Network Fee
-                        <a href="https://docs.btcpayserver.org/FAQ/Stores/#allow-anyone-to-create-invoice" target="_blank" rel="noreferrer noopener">
-                            <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+                        <a href="https://docs.btcpayserver.org/FAQ/Stores/#allow-anyone-to-create-invoice" target="_blank" rel="noreferrer noopener" title="More information...">
+                            <vc:icon symbol="info" />
                         </a>
                     </th>
                 }
@@ -77,7 +77,13 @@
                     <td>@payment.Crypto</td>
                     <td>@(payment.CryptoPaymentData.KeyPath?.ToString()?? "Unknown")</td>
                     <td style="max-width:300px;" data-bs-toggle="tooltip" class="text-truncate" title="@payment.DepositAddress">@payment.DepositAddress</td>
-                    <td class="payment-value">@payment.CryptoPaymentData.GetValue() @Safe.Raw(payment.AdditionalInformation is string i ? $"<br/>({i})" : string.Empty)</td>
+                    <td class="payment-value">
+                        @payment.CryptoPaymentData.GetValue()
+                        @if (!string.IsNullOrEmpty(payment.AdditionalInformation))
+                        {
+                            <div>(@payment.AdditionalInformation)</div>
+                        }
+                    </td>
                     @if (hasNetworkFee)
                     {
                         <td>@payment.NetworkFee</td>

@@ -30,7 +30,7 @@ namespace BTCPayServer.Services.Invoices
             [JsonExtensionData] public Dictionary<string, JToken> AdditionalData { get; set; }
         }
     }
-    public class InvoiceMetadata
+    public class InvoiceMetadata : IHasAdditionalData
     {
         public static readonly JsonSerializer MetadataSerializer;
         static InvoiceMetadata()
@@ -45,164 +45,166 @@ namespace BTCPayServer.Services.Invoices
         [JsonIgnore]
         public string OrderId
         {
-            get => GetMetadata<string>("orderId");
-            set => SetMetadata("orderId", value);
+            get => this.GetAdditionalData<string>("orderId");
+            set => this.SetAdditionalData("orderId", value);
         }
         [JsonIgnore]
         public string OrderUrl
         {
-            get => GetMetadata<string>("orderUrl");
-            set => SetMetadata("orderUrl", value);
+            get => this.GetAdditionalData<string>("orderUrl");
+            set => this.SetAdditionalData("orderUrl", value);
         }
         [JsonIgnore]
         public string PaymentRequestId
         {
-            get => GetMetadata<string>("paymentRequestId");
-            set => SetMetadata("paymentRequestId", value);
+            get => this.GetAdditionalData<string>("paymentRequestId");
+            set => this.SetAdditionalData("paymentRequestId", value);
         }
         [JsonIgnore]
         public string BuyerName
         {
-            get => GetMetadata<string>("buyerName");
-            set => SetMetadata("buyerName", value);
+            get => this.GetAdditionalData<string>("buyerName");
+            set => this.SetAdditionalData("buyerName", value);
         }
         [JsonIgnore]
         public string BuyerEmail
         {
-            get => GetMetadata<string>("buyerEmail");
-            set => SetMetadata("buyerEmail", value);
+            get => this.GetAdditionalData<string>("buyerEmail");
+            set => this.SetAdditionalData("buyerEmail", value);
         }
         [JsonIgnore]
         public string BuyerCountry
         {
-            get => GetMetadata<string>("buyerCountry");
-            set => SetMetadata("buyerCountry", value);
+            get => this.GetAdditionalData<string>("buyerCountry");
+            set => this.SetAdditionalData("buyerCountry", value);
         }
         [JsonIgnore]
         public string BuyerZip
         {
-            get => GetMetadata<string>("buyerZip");
-            set => SetMetadata("buyerZip", value);
+            get => this.GetAdditionalData<string>("buyerZip");
+            set => this.SetAdditionalData("buyerZip", value);
         }
         [JsonIgnore]
         public string BuyerState
         {
-            get => GetMetadata<string>("buyerState");
-            set => SetMetadata("buyerState", value);
+            get => this.GetAdditionalData<string>("buyerState");
+            set => this.SetAdditionalData("buyerState", value);
         }
         [JsonIgnore]
         public string BuyerCity
         {
-            get => GetMetadata<string>("buyerCity");
-            set => SetMetadata("buyerCity", value);
+            get => this.GetAdditionalData<string>("buyerCity");
+            set => this.SetAdditionalData("buyerCity", value);
         }
         [JsonIgnore]
         public string BuyerAddress2
         {
-            get => GetMetadata<string>("buyerAddress2");
-            set => SetMetadata("buyerAddress2", value);
+            get => this.GetAdditionalData<string>("buyerAddress2");
+            set => this.SetAdditionalData("buyerAddress2", value);
         }
         [JsonIgnore]
         public string BuyerAddress1
         {
-            get => GetMetadata<string>("buyerAddress1");
-            set => SetMetadata("buyerAddress1", value);
+            get => this.GetAdditionalData<string>("buyerAddress1");
+            set => this.SetAdditionalData("buyerAddress1", value);
         }
         [JsonIgnore]
         public string BuyerPhone
         {
-            get => GetMetadata<string>("buyerPhone");
-            set => SetMetadata("buyerPhone", value);
+            get => this.GetAdditionalData<string>("buyerPhone");
+            set => this.SetAdditionalData("buyerPhone", value);
         }
         [JsonIgnore]
         public string ItemDesc
         {
-            get => GetMetadata<string>("itemDesc");
-            set => SetMetadata("itemDesc", value);
+            get => this.GetAdditionalData<string>("itemDesc");
+            set => this.SetAdditionalData("itemDesc", value);
         }
         [JsonIgnore]
         public string ItemCode
         {
-            get => GetMetadata<string>("itemCode");
-            set => SetMetadata("itemCode", value);
+            get => this.GetAdditionalData<string>("itemCode");
+            set => this.SetAdditionalData("itemCode", value);
         }
         [JsonIgnore]
         public bool? Physical
         {
-            get => GetMetadata<bool?>("physical");
-            set => SetMetadata("physical", value);
+            get => this.GetAdditionalData<bool?>("physical");
+            set => this.SetAdditionalData("physical", value);
         }
         [JsonIgnore]
         public decimal? TaxIncluded
         {
-            get => GetMetadata<decimal?>("taxIncluded");
-            set => SetMetadata("taxIncluded", value);
+            get => this.GetAdditionalData<decimal?>("taxIncluded");
+            set => this.SetAdditionalData("taxIncluded", value);
         }
+
+        /// <summary>
+        /// posData is a field that may be treated differently for presentation and in some legacy API
+        /// Before, it was a string field which could contain some JSON data inside.
+        /// For making it easier to query on the DB, and for logic using PosData in the code, we decided to
+        /// parse it as a JObject.
+        ///
+        /// This property will return the posData as a JObject, even if it's a Json string inside.
+        /// </summary>
         [JsonIgnore]
-        public string PosData
+        public JObject PosData
         {
-            get => GetMetadata<string>("posData");
-            set => SetMetadata("posData", value);
+            get
+            {
+                if (AdditionalData == null || !(AdditionalData.TryGetValue("posData", out var jt) is true))
+                    return default;
+                if (jt.Type == JTokenType.Null)
+                    return default;
+                if (jt.Type == JTokenType.String)
+                    try
+                    {
+                        return JObject.Parse(jt.Value<string>());
+                    }
+                    catch
+                    {
+                        return null;
+                    }
+                if (jt.Type == JTokenType.Object)
+                    return (JObject)jt;
+                return null;
+            }
+
+            set
+            {
+                this.SetAdditionalData<JObject>("posData", value);
+            }
+        }
+
+        /// <summary>
+        /// See comments on <see cref="PosData"/>
+        /// </summary>
+        [JsonIgnore]
+        public string PosDataLegacy
+        {
+            get
+            {
+                return this.GetAdditionalData<string>("posData");
+            }
+
+            set
+            {
+                if (value != null)
+                {
+                    try
+                    {
+                        PosData = JObject.Parse(value);
+                        return;
+                    }
+                    catch
+                    {
+                    }
+                }
+                this.SetAdditionalData<string>("posData", value);
+            }
         }
         [JsonExtensionData]
         public IDictionary<string, JToken> AdditionalData { get; set; }
-
-        public T GetMetadata<T>(string propName)
-        {
-            if (AdditionalData == null || !(AdditionalData.TryGetValue(propName, out var jt) is true))
-                return default;
-            if (jt.Type == JTokenType.Null)
-                return default;
-            if (typeof(T) == typeof(string))
-            {
-                return (T)(object)jt.ToString();
-            }
-
-            try
-            {
-                return jt.Value<T>();
-            }
-            catch (Exception)
-            {
-                return default;
-            }
-        }
-        public void SetMetadata<T>(string propName, T value)
-        {
-            JToken data;
-            if (typeof(T) == typeof(string) && value is string v)
-            {
-                data = new JValue(v);
-                AdditionalData ??= new Dictionary<string, JToken>();
-                AdditionalData.AddOrReplace(propName, data);
-                return;
-            }
-            if (value is null)
-            {
-                AdditionalData?.Remove(propName);
-            }
-            else
-            {
-                try
-                {
-                    if (value is string s)
-                    {
-                        data = JToken.Parse(s);
-                    }
-                    else
-                    {
-                        data = JToken.FromObject(value);
-                    }
-                }
-                catch (Exception)
-                {
-                    data = JToken.FromObject(value);
-                }
-
-                AdditionalData ??= new Dictionary<string, JToken>();
-                AdditionalData.AddOrReplace(propName, data);
-            }
-        }
 
         public static InvoiceMetadata FromJObject(JObject jObject)
         {
@@ -214,7 +216,7 @@ namespace BTCPayServer.Services.Invoices
         }
     }
 
-    public class InvoiceEntity
+    public class InvoiceEntity : IHasAdditionalData
     {
         class BuyerInformation
         {
@@ -302,11 +304,35 @@ namespace BTCPayServer.Services.Invoices
                                                   .Select(t => t.Substring(prefix.Length)).ToArray();
         }
 
-        [Obsolete("Use GetDerivationStrategies instead")]
-        public string DerivationStrategy { get; set; }
-
         [Obsolete("Use GetPaymentMethodFactories() instead")]
-        public string DerivationStrategies { get; set; }
+        [JsonIgnore]
+        public JObject DerivationStrategies
+        {
+            get
+            {
+                if (AdditionalData is null || AdditionalData.TryGetValue("derivationStrategies", out var v) is not true)
+                {
+                    if (AdditionalData is null || AdditionalData.TryGetValue("derivationStrategy", out v) is not true || Networks.BTC is null)
+                        return null;
+                    // This code is very unlikely called. "derivationStrategy" is an old property that was present in 2018.
+                    // And this property is only read for unexpired invoices with lazy payments (Feature unavailable then)
+                    var settings = DerivationSchemeSettings.Parse(v.ToString(), Networks.BTC);
+                    settings.AccountOriginal = v.ToString();
+                    settings.Source = "ManualDerivationScheme";
+                    return JObject.Parse(settings.ToJson());
+                }
+                if (v.Type == JTokenType.String)
+                    return JObject.Parse(v.Value<string>());
+                if (v.Type == JTokenType.Object)
+                    return (JObject)v;
+                return null;
+            }
+            set
+            {
+                this.SetAdditionalData("derivationStrategies", value);
+                this.SetAdditionalData<string>("derivationStrategy", null);
+            }
+        }
         public IEnumerable<T> GetSupportedPaymentMethod<T>(PaymentMethodId paymentMethodId) where T : ISupportedPaymentMethod
         {
             return
@@ -321,11 +347,9 @@ namespace BTCPayServer.Services.Invoices
         public IEnumerable<ISupportedPaymentMethod> GetSupportedPaymentMethod()
         {
 #pragma warning disable CS0618
-            bool btcReturned = false;
-            if (!string.IsNullOrEmpty(DerivationStrategies))
+            if (DerivationStrategies != null)
             {
-                JObject strategies = JObject.Parse(DerivationStrategies);
-                foreach (var strat in strategies.Properties())
+                foreach (var strat in DerivationStrategies.Properties())
                 {
                     if (!PaymentMethodId.TryParse(strat.Name, out var paymentMethodId))
                     {
@@ -334,18 +358,8 @@ namespace BTCPayServer.Services.Invoices
                     var network = Networks.GetNetwork<BTCPayNetworkBase>(paymentMethodId.CryptoCode);
                     if (network != null)
                     {
-                        if (network == Networks.BTC && paymentMethodId.PaymentType == PaymentTypes.BTCLike)
-                            btcReturned = true;
                         yield return paymentMethodId.PaymentType.DeserializeSupportedPaymentMethod(network, strat.Value);
                     }
-                }
-            }
-
-            if (!btcReturned && !string.IsNullOrEmpty(DerivationStrategy))
-            {
-                if (Networks.BTC != null)
-                {
-                    yield return BTCPayServer.DerivationSchemeSettings.Parse(DerivationStrategy, Networks.BTC);
                 }
             }
 #pragma warning restore CS0618
@@ -358,10 +372,8 @@ namespace BTCPayServer.Services.Invoices
             {
                 obj.Add(strat.PaymentId.ToString(), PaymentMethodExtensions.Serialize(strat));
 #pragma warning disable CS0618
-                // This field should eventually disappear
-                DerivationStrategy = null;
             }
-            DerivationStrategies = JsonConvert.SerializeObject(obj);
+            DerivationStrategies = obj;
 #pragma warning restore CS0618
         }
 
@@ -463,7 +475,7 @@ namespace BTCPayServer.Services.Invoices
                 Id = Id,
                 StoreId = StoreId,
                 OrderId = Metadata.OrderId,
-                PosData = Metadata.PosData,
+                PosData = Metadata.PosDataLegacy,
                 CurrentTime = DateTimeOffset.UtcNow,
                 InvoiceTime = InvoiceTime,
                 ExpirationTime = ExpirationTime,
@@ -710,7 +722,7 @@ namespace BTCPayServer.Services.Invoices
                     token is JValue val &&
                     val.Type == JTokenType.String)
                 {
-                    wellknown.PosData = val.Value<string>();
+                    wellknown.PosDataLegacy = val.Value<string>();
                 }
                 if (AdditionalData.TryGetValue("orderId", out var token2) &&
                     token2 is JValue val2 &&
@@ -997,7 +1009,7 @@ namespace BTCPayServer.Services.Invoices
                     NextNetworkFee = NextNetworkFee
                 };
             }
-            
+
             IPaymentMethodDetails details = GetId().PaymentType.DeserializePaymentMethodDetails(Network, PaymentMethodDetails.ToString());
             switch (details)
             {
@@ -1274,7 +1286,6 @@ namespace BTCPayServer.Services.Invoices
             if (string.IsNullOrEmpty(CryptoPaymentDataType))
             {
                 paymentType = BitcoinPaymentType.Instance;
-                ;
             }
             else if (!PaymentTypes.TryParse(CryptoPaymentDataType, out paymentType))
             {

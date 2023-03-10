@@ -12,11 +12,9 @@
 <div class="sticky-header d-sm-flex align-items-center justify-content-between">
     <h2 class="mb-0">
         @ViewData["Title"]
-        <small>
-            <a href="https://docs.btcpayserver.org/PaymentRequests/" class="ms-1" target="_blank" rel="noreferrer noopener">
-                <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
-            </a>
-        </small>
+        <a href="#descriptor" data-bs-toggle="collapse">
+            <vc:icon symbol="info" />
+        </a>
     </h2>
     <a asp-action="EditPaymentRequest" asp-route-storeId="@Context.GetStoreData().Id" class="btn btn-primary mt-3 mt-sm-0" role="button" id="CreatePaymentRequest">
         <span class="fa fa-plus"></span>
@@ -24,12 +22,25 @@
     </a>
 </div>
 
+<div id="descriptor" class="collapse">
+    <div class="d-flex px-4 py-4 mb-4 bg-tile rounded">
+        <div class="flex-fill">
+            <p class="mb-2">Payment requests are persistent shareable pages that enable the receiver to pay at their convenience. Funds are paid to a payment request at the current exchange rate.</p>
+            <p class="mb-3">Requests may be paid in partial. They will remain valid until time expires or when paid what is due.</p>
+            <a href="https://docs.btcpayserver.org/PaymentRequests/" target="_blank" rel="noreferrer noopener">Learn More</a>
+        </div>
+        <button type="button" class="btn-close ms-auto" data-bs-toggle="collapse" data-bs-target="#descriptor" aria-expanded="false" aria-label="Close">
+            <vc:icon symbol="close" />
+        </button>
+    </div>
+</div>
+
 <partial name="_StatusMessage" />
 
 <div class="row mb-2">
     <div class="col col-lg-8 col-xl-6 mr-auto">
         <form asp-action="GetPaymentRequests" method="get">
-            <input type="hidden" asp-for="Count"/>
+            <input type="hidden" asp-for="Count" />
             <input type="hidden" asp-for="TimezoneOffset" />
             <div class="input-group">
                 <input asp-for="SearchTerm" class="form-control" />

@@ -30,25 +30,23 @@
             :key="item.outpoint"
             :class="{ 'active': item.selected }"
             v-on:click="toggleItem($event, item, !item.selected)">
-            <div class="d-flex align-items-center flex-grow-1 gap-2" style="min-width:0">
-                <input class="form-check-input mt-0 flex-shrink-0"
+            <div class="d-flex align-items-start flex-grow-1 gap-2" style="min-width:0">
+                <input class="form-check-input flex-shrink-0"
                        type="checkbox"
                        :id="item.outpoint"
                        :value="item.outpoint"
                        :checked="item.selected">
                 <a :href="item.link" target="_blank" class="text-truncate flex-grow-1" v-tooltip="item.outpoint">{{item.outpoint}}</a>
-                <template v-if="item.labels">
-                    <a v-for="label of item.labels"
+                <div v-if="item.labels" class="d-flex flex-wrap gap-2 flex-fill" style="min-width:20%;max-width:40%;">
+                    <span v-for="label of item.labels"
                        key="label.text"
-                       :href="label.link || '#'"
-                       target="_blank"
-                       class="badge rounded-pill px-2"
+                       class="transaction-label"
                        data-bs-toggle="tooltip"
                        v-tooltip="label.tooltip"
                        :style="styles(label.color)">
                         {{label.text}}
-                    </a>
-                </template>
+                    </span>
+                </div>
                 <span v-if="item.comment" data-bs-toggle="tooltip" v-tooltip="item.comment" class="badge bg-info rounded-pill" style="min-width:2em">
                     <span class="fa fa-info"></span>
                 </span>
@@ -242,7 +240,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     // Check contrast
                     color = (yiq >= 128) ? 'black' : 'white';
                 }
-                return { 'background-color': bgColor, color }
+                return { '--label-bg': bgColor, '--label-fg': color }
             }
         }
     });

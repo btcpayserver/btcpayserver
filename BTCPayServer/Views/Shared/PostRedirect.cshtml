@@ -38,7 +38,8 @@
 	}
 	else
 	{
-		<form method="post" id="postform" action="@Url.EnsureLocal(Model.FormUrl, this.Context.Request)" rel="noreferrer noopener">
+	    var url = Model.AllowExternal ? Model.FormUrl : Url.EnsureLocal(Model.FormUrl, this.Context.Request);
+		<form method="post" id="postform" action="@url" rel="noreferrer noopener">
 			@Html.AntiForgeryToken()
 			@foreach (var o in Model.FormParameters)
 			{

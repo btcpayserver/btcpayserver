@@ -1,11 +1,14 @@
 @using BTCPayServer.Services.PaymentRequests
 @using System.Globalization
+@using BTCPayServer.Forms
 @using BTCPayServer.Services.Stores
 @using BTCPayServer.TagHelpers
 @using Microsoft.AspNetCore.Mvc.TagHelpers
+@inject FormDataService FormDataService
 @model BTCPayServer.Models.PaymentRequestViewModels.UpdatePaymentRequestViewModel
 @{
-    var checkoutFormOptions = CheckoutFormSelectList.WithSelected(Model.FormId);
+    
+    var checkoutFormOptions = await FormDataService.GetSelect(Model.StoreId, Model.FormId);
 
     ViewData.SetActivePage(PaymentRequestsNavPages.Create, $"{(string.IsNullOrEmpty(Model.Id) ? "Create" : "Edit")} Payment Request", Model.Id);
 }
@@ -126,8 +129,8 @@
                             <div class="accordion-body">
                                 <div class="form-group">
                                     <label asp-for="CustomCSSLink" class="form-label"></label>
-                                    <a href="https://docs.btcpayserver.org/Development/Theme/#2-bootstrap-themes" target="_blank" rel="noreferrer noopener">
-                                        <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+                                    <a href="https://docs.btcpayserver.org/Development/Theme/#2-bootstrap-themes" target="_blank" rel="noreferrer noopener" title="More information...">
+                                        <vc:icon symbol="info" />
                                     </a>
                                     <input asp-for="CustomCSSLink" class="form-control" />
                                     <span asp-validation-for="CustomCSSLink" class="text-danger"></span>

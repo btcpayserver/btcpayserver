@@ -26,7 +26,9 @@ namespace BTCPayServer.Controllers.Greenfield
 
         private LightningAddressData ToModel(BTCPayServer.Data.LightningAddressData data)
         {
-            var blob = data.Blob.GetBlob<LightningAddressDataBlob>();
+            var blob = data.GetBlob();
+            if (blob is null)
+                return new LightningAddressData();
             return new LightningAddressData()
             {
                 Username = data.Username, Max = blob.Max, Min = blob.Min, CurrencyCode = blob.CurrencyCode
@@ -79,12 +81,13 @@ namespace BTCPayServer.Controllers.Greenfield
             if (await _lightningAddressService.Set(new Data.LightningAddressData()
                 {
                     StoreDataId = storeId,
-                    Username = username,
-                    Blob = new LightningAddressDataBlob()
-                    {
-                        Max = data.Max, Min = data.Min, CurrencyCode = data.CurrencyCode
-                    }.SerializeBlob()
-                }))
+                    Username = username
+                }.SetBlob(new LightningAddressDataBlob()
+                {
+                    Max = data.Max,
+                    Min = data.Min,
+                    CurrencyCode = data.CurrencyCode
+                })))
             {
                 return await GetStoreLightningAddress(storeId, username);
             }

@@ -1,7 +1,9 @@
 @using BTCPayServer.Views.Stores
+@inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model BTCPayServer.Plugins.PayButton.Models.PayButtonViewModel
 @{
     ViewData.SetActivePage(StoreNavPages.PayButton, "Pay Button", Context.GetStoreData().Id);
+	Csp.UnsafeEval();
 }
 
 @section PageHeadContent {

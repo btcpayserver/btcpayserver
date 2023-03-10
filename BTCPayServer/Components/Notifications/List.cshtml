@@ -1,12 +1,29 @@
 @using BTCPayServer.Abstractions.Extensions
 @model BTCPayServer.Components.Notifications.NotificationsViewModel
-
+@functions {
+    private static string NotificationIcon(string type)
+    {
+        return type switch
+        {
+            "invoice_expired" => "notifications-invoice-failure",
+            "invoice_expiredpaidpartial" => "notifications-invoice-failure",
+            "invoice_failedtoconfirm" => "notifications-invoice-failure",
+            "invoice_confirmed" => "notifications-invoice-settled",
+            "invoice_paidafterexpiration" => "notifications-settled",
+            "external-payout-transaction" => "notifications-payout",
+            "payout_awaitingapproval" => "notifications-payout",
+            "payout_awaitingpayment" => "notifications-payout-approved",
+            "newversion" => "notifications-new-version",
+            _ => "note"
+        };
+    }
+}
 <div id="NotificationsList">
     @foreach (var n in Model.Last5)
     {
         <a asp-action="NotificationPassThrough" asp-controller="UINotifications" asp-route-id="@n.Id" class="notification d-flex align-items-center dropdown-item border-bottom border-light py-3 px-4">
             <div class="me-3">
-                <vc:icon symbol="note" />
+                <vc:icon symbol="@NotificationIcon(n.Identifier)" />
             </div>
             <div class="notification-item__content">
                 <div class="text-start text-wrap">

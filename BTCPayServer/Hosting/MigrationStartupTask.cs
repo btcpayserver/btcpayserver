@@ -242,12 +242,29 @@ namespace BTCPayServer.Hosting
                     settings.FileSystemStorageAsDefault = true;
                     await _Settings.UpdateSetting(settings);
                 }
+                if (!settings.FixSeqAfterSqliteMigration)
+                {
+                    await FixSeqAfterSqliteMigration();
+                    settings.FixSeqAfterSqliteMigration = true;
+                    await _Settings.UpdateSetting(settings);
+                }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error on the MigrationStartupTask");
                 throw;
             }
+        }
+
+        private async Task FixSeqAfterSqliteMigration()
+        {
+            await using var ctx = _DBContextFactory.CreateContext();
+            if (!ctx.Database.IsNpgsql())
+                return;
+            var state = await ToPostgresMigrationStartupTask.GetMigrationState(ctx);
+            if (state != "complete")
+                return;
+            await ToPostgresMigrationStartupTask.UpdateSequenceInvoiceSearch(ctx);
         }
 
 #pragma warning disable CS0612 // Type or member is obsolete
@@ -358,14 +375,14 @@ namespace BTCPayServer.Hosting
                             new LightningAddressData()
                             {
                                 StoreDataId = storeMap.Key,
-                                Username = storeitem,
-                                Blob = new LightningAddressDataBlob()
-                                {
-                                    Max = val.Max,
-                                    Min = val.Min,
-                                    CurrencyCode = val.CurrencyCode
-                                }.SerializeBlob()
-                            }, ctx);
+                                Username = storeitem
+                            }
+                            .SetBlob(new LightningAddressDataBlob()
+                            {
+                                Max = val.Max,
+                                Min = val.Min,
+                                CurrencyCode = val.CurrencyCode
+                            }), ctx);
                     }
                 }
             }
@@ -686,9 +703,16 @@ WHERE cte.""Id""=p.""Id""
 retry:
                 try
                 {
-                    await _DBContextFactory.CreateContext().Database.MigrateAsync();
+                    var db = _DBContextFactory.CreateContext();
+                    await db.Database.MigrateAsync();
+                    if (db.Database.IsNpgsql())
+                    {
+                        if (await db.GetMigrationState() == "pending")
+                            throw new ConfigException("This database hasn't been completely migrated, please retry migration by setting the BTCPAY_SQLITEFILE or BTCPAY_MYSQL setting on top of BTCPAY_POSTGRES");
+                    }
                 }
                 // Starting up
+                catch (ConfigException) { throw; }
                 catch when (!cts.Token.IsCancellationRequested)
                 {
                     try

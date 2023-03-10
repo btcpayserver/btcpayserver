@@ -77,5 +77,10 @@ namespace BTCPayServer.Tests
             }
             // depending on your use case, consider throwing an exception here
         }
+
+        public static string GenerateEmail()
+        {
+            return Guid.NewGuid() + "@toto.com";
+        }
     }
 }

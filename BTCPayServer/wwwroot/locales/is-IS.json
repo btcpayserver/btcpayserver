@@ -1,5 +1,5 @@
 {
-  "NOTICE_WARN": "THIS CODE HAS BEEN AUTOMATICALLY GENERATED FROM TRANSIFEX, IF YOU WISH TO HELP TRANSLATION COME ON THE SLACK http://slack.btcpayserver.org TO REQUEST PERMISSION TO https://www.transifex.com/btcpayserver/btcpayserver/",
+  "NOTICE_WARN": "THIS CODE HAS BEEN AUTOMATICALLY GENERATED FROM TRANSIFEX, IF YOU WISH TO HELP TRANSLATION COME ON THE SLACK https://chat.btcpayserver.org/ TO REQUEST PERMISSION TO https://www.transifex.com/btcpayserver/btcpayserver/",
   "code": "is-IS",
   "currentLanguage": "Íslenska",
   "lang": "Tungumál",
@@ -39,7 +39,7 @@
   "Return to StoreName": "Fara aftur á {{storeName}}",
   "This invoice has been paid": "Þetta hefur verið greitt",
   "This invoice has been archived": "Þessi reikningur hefur verið gerður ógildur",
-  "Archived_Body": "Vinsamlegast hafðu samband fyrir upplýsingar eða aðstoð.",
+  "Archived_Body": "Vinsamlegast hafðu samband fyrir upplýsingar eða aðstoð",
   "BOLT 11 Invoice": "BOLT 11 Reikningur",
   "Node Info": "Nótu upplýsingar",
   "txCount": "{{count}} reikningur",
@@ -49,5 +49,5 @@
   "Close": "Loka",
   "NotPaid_ExtraTransaction": "Reikningurinn hefur ekki verið greiddur að fullu. Vinsamlegast greiddu restina.",
   "Recommended_Fee": "Ráðlögð þóknun: {{feeRate}} sat/bæti",
-  "View receipt": "View receipt"
+  "View receipt": "Skoða kvittun"
 }

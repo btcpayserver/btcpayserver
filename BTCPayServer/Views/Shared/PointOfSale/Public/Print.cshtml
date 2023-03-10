@@ -6,15 +6,6 @@
 @inject StoreRepository StoreRepository
 @model BTCPayServer.Plugins.PointOfSale.Models.ViewPointOfSaleViewModel
 
-<style>
-    /* This hides unwanted metadata such as url, date, etc from appearing on a printed page. */
-    @@media print {
-        @@page {
-            margin-top: 0;
-            margin-bottom: 0;
-        }
-    }
-</style>
 @{
     var store = await StoreRepository.FindStore(Model.StoreId);
     Layout = "PointOfSale/Public/_Layout";
@@ -25,6 +16,17 @@
     {
         supported = null;
     }
+}
+@section PageHeadContent {
+    <style>
+        /* This hides unwanted metadata such as url, date, etc from appearing on a printed page. */
+        @@media print {
+            @@page {
+                margin-top: 0;
+                margin-bottom: 0;
+            }
+        }
+    </style>
 }
 
 @if (supported is null)
@@ -126,7 +128,7 @@ else
         </div>
     </main>
     <footer class="store-footer">
-        <a href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">
+        <a class="store-powered-by" href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">
             Powered by <partial name="_StoreFooterLogo" />
         </a>
     </footer>

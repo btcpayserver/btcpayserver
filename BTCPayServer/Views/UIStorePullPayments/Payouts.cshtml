@@ -59,12 +59,34 @@
     </script>
 }
 
-<partial name="_StatusMessage"/>
+<div class="sticky-header-setup"></div>
+<div class="sticky-header d-flex align-items-center justify-content-between">
+    <h2 class="mb-0">
+        @ViewData["Title"]
+        <a href="#descriptor" data-bs-toggle="collapse">
+            <vc:icon symbol="info" />
+        </a>
+    </h2>
+</div>
+
+<div id="descriptor" class="collapse">
+    <div class="d-flex px-4 py-4 mb-4 bg-tile rounded">
+        <div class="flex-fill">
+            <p class="mb-3">Payouts allow you to process pull payments, in the form of refunds, salary payouts, or withdrawals.</p>
+            <a href="https://docs.btcpayserver.org/Payouts/" target="_blank" rel="noreferrer noopener">Learn More</a>
+        </div>
+        <button type="button" class="btn-close ms-auto" data-bs-toggle="collapse" data-bs-target="#descriptor" aria-expanded="false" aria-label="Close">
+            <vc:icon symbol="close" />
+        </button>
+    </div>
+</div>
+
+<partial name="_StatusMessage" />
 
 @if (_payoutProcessorFactories.Any(factory => factory.GetSupportedPaymentMethods().Contains(paymentMethodId)) && !(await _payoutProcessorService.GetProcessors(new PayoutProcessorService.PayoutProcessorQuery()
 {
-    Stores = new[] {storeId},
-    PaymentMethods = new[] {Model.PaymentMethodId}
+    Stores = new[] { storeId },
+    PaymentMethods = new[] { Model.PaymentMethodId }
 })).Any())
 {
     <div class="alert alert-info mb-5" role="alert">
@@ -73,20 +95,12 @@
         <a class="alert-link p-0" asp-action="ConfigureStorePayoutProcessors" asp-controller="UIPayoutProcessors" asp-route-storeId="@storeId">Configure now</a>
     </div>
 }
-<h2 class="mt-1 mb-4">
-    @ViewData["Title"]
-    <small>
-        <a href="https://docs.btcpayserver.org/Payouts/" target="_blank" rel="noreferrer noopener">
-            <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
-        </a>
-    </small>
-</h2>
 
 <form method="post" id="Payouts">
-    <input type="hidden" asp-for="PaymentMethodId"/>
-    <input type="hidden" asp-for="PayoutState"/>
+    <input type="hidden" asp-for="PaymentMethodId" />
+    <input type="hidden" asp-for="PayoutState" />
     <div class="d-flex justify-content-between mb-4">
-        <ul class="nav mb-1">
+        <ul class="nav mb-1 gap-2">
             @foreach (var state in Model.PaymentMethods)
             {
                 <li class="nav-item py-0">
@@ -131,7 +145,7 @@
                    asp-route-pullPaymentId="@Model.PullPaymentId"
                    asp-route-paymentMethodId="@Model.PaymentMethodId"
                    class="nav-link @(state.Key == Model.PayoutState ? "active" : "")" role="tab">
-                    @state.Key.GetStateString() 
+                    @state.Key.GetStateString()
                     @if (state.Value > 0)
                     {
                         <span class="badge rounded-pill fw-semibold ms-1 bg-medium">@state.Value</span>
@@ -146,60 +160,60 @@
         <div class="table-responsive">
             <table class="table table-hover">
                 <thead class="thead-inverse">
-                <tr>
-                    <th permission="@Policies.CanModifyStoreSettings">
-                        <input id="@Model.PayoutState-selectAllCheckbox" type="checkbox" class="form-check-input selectAll" data-payout-state="@Model.PayoutState.ToString()"/>
-                    </th>
-                    <th style="min-width: 90px;" class="col-md-auto">
-                        Date
-                    </th>
-                    <th class="text-start">Source</th>
-                    <th class="text-start">Destination</th>
-                    <th class="text-end">Amount</th>
-                    @if (Model.PayoutState != PayoutState.AwaitingApproval)
-                    {
-                        <th class="text-end">Transaction</th>
-                    }
-                </tr>
-                </thead>
-                <tbody>
-                @for (int i = 0; i < Model.Payouts.Count; i++)
-                {
-                    var pp = Model.Payouts[i];
-                    <tr class="payout">
-                        <td permission="@Policies.CanModifyStoreSettings">
-                            <span>
-                                <input type="checkbox" class="selection-item-@Model.PayoutState.ToString() form-check-input" asp-for="Payouts[i].Selected"/>
-                                <input type="hidden" asp-for="Payouts[i].PayoutId"/>
-                            </span>
-                        </td>
-                        <td>
-                            <span>@pp.Date.ToBrowserDate()</span>
-                        </td>
-                        <td class="mw-100">
-                            <span>@pp.PullPaymentName</span>
-                        </td>
-                        <td title="@pp.Destination">
-                            <span class="text-break">@pp.Destination</span>
-                        </td>
-                        <td class="text-end text-nowrap">
-                            <span>@pp.Amount</span>
-                        </td>
+                    <tr>
+                        <th permission="@Policies.CanModifyStoreSettings">
+                            <input id="@Model.PayoutState-selectAllCheckbox" type="checkbox" class="form-check-input selectAll" data-payout-state="@Model.PayoutState.ToString()" />
+                        </th>
+                        <th style="min-width: 90px;" class="col-md-auto">
+                            Date
+                        </th>
+                        <th class="text-start">Source</th>
+                        <th class="text-start">Destination</th>
+                        <th class="text-end">Amount</th>
                         @if (Model.PayoutState != PayoutState.AwaitingApproval)
                         {
-                            <td class="text-end">
-                                @if (!(pp.ProofLink is null))
-                                {
-                                    <a class="transaction-link" href="@pp.ProofLink" rel="noreferrer noopener">Link</a>
-                                }
-                            </td>
+                            <th class="text-end">Transaction</th>
                         }
                     </tr>
-                }
+                </thead>
+                <tbody>
+                    @for (int i = 0; i < Model.Payouts.Count; i++)
+                    {
+                        var pp = Model.Payouts[i];
+                        <tr class="payout">
+                            <td permission="@Policies.CanModifyStoreSettings">
+                                <span>
+                                    <input type="checkbox" class="selection-item-@Model.PayoutState.ToString() form-check-input" asp-for="Payouts[i].Selected" />
+                                    <input type="hidden" asp-for="Payouts[i].PayoutId" />
+                                </span>
+                            </td>
+                            <td>
+                                <span>@pp.Date.ToBrowserDate()</span>
+                            </td>
+                            <td class="mw-100">
+                                <span>@pp.PullPaymentName</span>
+                            </td>
+                            <td title="@pp.Destination">
+                                <span class="text-break">@pp.Destination</span>
+                            </td>
+                            <td class="text-end text-nowrap">
+                                <span>@pp.Amount</span>
+                            </td>
+                            @if (Model.PayoutState != PayoutState.AwaitingApproval)
+                            {
+                                <td class="text-end">
+                                    @if (!(pp.ProofLink is null))
+                                    {
+                                        <a class="transaction-link" href="@pp.ProofLink" rel="noreferrer noopener">Link</a>
+                                    }
+                                </td>
+                            }
+                        </tr>
+                    }
                 </tbody>
             </table>
         </div>
-        <vc:pager view-model="Model"/>
+        <vc:pager view-model="Model" />
     }
     else
     {

@@ -36,6 +36,10 @@ namespace BTCPayServer
 {
     public static class Extensions
     {
+        public static Task<BufferizedFormFile> Bufferize(this IFormFile formFile)
+        {
+            return BufferizedFormFile.Bufferize(formFile);
+        }
         /// <summary>
         /// Unescape Uri string for %2F
         /// See details at: https://github.com/dotnet/aspnetcore/issues/14170#issuecomment-533342396

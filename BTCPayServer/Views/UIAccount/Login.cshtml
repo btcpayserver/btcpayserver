@@ -1,8 +1,10 @@
 @model LoginViewModel
+@inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @inject BTCPayServer.Services.PoliciesSettings PoliciesSettings
 @{
-    ViewData["Title"] = "Sign in";
-    Layout = "_LayoutSignedOut";
+	ViewData["Title"] = "Sign in";
+	Layout = "_LayoutSignedOut";
+	Csp.UnsafeEval();
 }
 
 <form asp-route-returnurl="@ViewData["ReturnUrl"]" method="post" id="login-form" asp-action="Login">

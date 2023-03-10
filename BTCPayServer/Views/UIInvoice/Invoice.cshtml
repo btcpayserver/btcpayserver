@@ -1,4 +1,3 @@
-@using BTCPayServer.Client.Models
 @model InvoiceDetailsModel
 @{
     ViewData["Title"] = $"Invoice {Model.Id}";
@@ -9,6 +8,7 @@
     <style>
         #posData td > table:last-child { margin-bottom: 0 !important; }
         #posData table > tbody > tr:first-child > td > h4 { margin-top: 0 !important; }
+        .invoice-information { display: flex; flex-wrap: wrap; gap: var(--btcpay-space-xl) var(--btcpay-space-xxl); }
     </style>
 }
 
@@ -88,7 +88,6 @@
     </div>
 }
 
-<div class="invoice-details">
 <div class="sticky-header-setup"></div>
 <div class="sticky-header d-flex flex-wrap gap-3 align-items-center justify-content-between">
     <h2 class="mb-0 text-break">@ViewData["Title"]</h2>
@@ -126,422 +125,389 @@
 
 <partial name="_StatusMessage"/>
 
-<div class="row justify-content-between">
-<div class="col-md-6">
-    <h3 class="mb-3">Invoice Information</h3>
-    <table class="table mb-5">
-        <tr>
-            <th class="fw-semibold">Store</th>
-            <td>
-                <a href="@Model.StoreLink" rel="noreferrer noopener">@Model.StoreName</a>
-            </td>
-        </tr>
-        <tr>
-            <th class="fw-semibold">Invoice Id</th>
-            <td>@Model.Id</td>
-        </tr>
-        @if (!string.IsNullOrEmpty(Model.TypedMetadata.OrderId))
-        {
-            <tr>
-                <th class="fw-semibold">Order Id</th>
-                <td>
-                    @if (!string.IsNullOrEmpty(Model.TypedMetadata.OrderUrl))
-                    {
-                        <a href="@Model.TypedMetadata.OrderUrl" rel="noreferrer noopener" target="_blank">
-                            @if (string.IsNullOrEmpty(Model.TypedMetadata.OrderId))
+<div class="invoice-details">
+    <div class="invoice-information mb-5">
+        <div>
+            <h3 class="mb-3">General Information</h3>
+            <table class="table mb-0">
+                <tr>
+                    <th class="fw-semibold">Store</th>
+                    <td>
+                        <a href="@Model.StoreLink" rel="noreferrer noopener">@Model.StoreName</a>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="fw-semibold">Invoice Id</th>
+                    <td>@Model.Id</td>
+                </tr>
+                @if (!string.IsNullOrEmpty(Model.TypedMetadata.OrderId))
+                {
+                    <tr>
+                        <th class="fw-semibold">Order Id</th>
+                        <td>
+                            @if (!string.IsNullOrEmpty(Model.TypedMetadata.OrderUrl))
                             {
-                                <span>View Order</span>
+                                <a href="@Model.TypedMetadata.OrderUrl" rel="noreferrer noopener" target="_blank">
+                                    @if (string.IsNullOrEmpty(Model.TypedMetadata.OrderId))
+                                    {
+                                        <span>View Order</span>
+                                    }
+                                    else
+                                    {
+                                        @Model.TypedMetadata.OrderId
+                                    }
+                                </a>
                             }
                             else
                             {
-                                @Model.TypedMetadata.OrderId
+                                <span>@Model.TypedMetadata.OrderId</span>
                             }
-                        </a>
-                    }
-                    else
-                    {
-                        <span>@Model.TypedMetadata.OrderId</span>
-                    }
-                </td>
-            </tr>
-        }
-        @if (Model.TypedMetadata.PaymentRequestId is not null)
-        {
-            <tr>
-                <th class="fw-semibold">Payment Request Id</th>
-                <td>
-                    <a href="@Model.PaymentRequestLink" rel="noreferrer noopener">@Model.TypedMetadata.PaymentRequestId</a>
-                </td>
-            </tr>
-        }
-        <tr>
-            <th class="fw-semibold">State</th>
-            <td>
-                @if (Model.CanMarkStatus)
-                {
-                    <div class="dropdown changeInvoiceStateToggle">
-                        <button class="btn btn-secondary btn-sm dropdown-toggle py-1 px-2" type="button" id="markStatusDropdownMenuButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            @Model.State
-                        </button>
-                        <div class="dropdown-menu" aria-labelledby="markStatusDropdownMenuButton">
-                            @if (Model.CanMarkInvalid)
-                            {
-                                <button type="button" class="dropdown-item lh-base changeInvoiceState" data-id="@Model.Id" data-status="invalid" data-change-invoice-status-button>
-                                    Mark as invalid
-                                </button>
-                            }
-                            @if (Model.CanMarkSettled)
-                            {
-                                <button type="button" class="dropdown-item lh-base changeInvoiceState" href="#" data-id="@Model.Id" data-status="settled" data-change-invoice-status-button>
-                                    Mark as settled
-                                </button>
-                            }
-                        </div>
-                    </div>
-                }
-                else
-                {
-                    @Model.State
-                }
-            </td>
-        </tr>
-        <tr>
-            <th class="fw-semibold">Created Date</th>
-            <td>@Model.CreatedDate.ToBrowserDate()</td>
-        </tr>
-        <tr>
-            <th class="fw-semibold">Expiration Date</th>
-            <td>@Model.ExpirationDate.ToBrowserDate()</td>
-        </tr>
-        <tr>
-            <th class="fw-semibold">Monitoring Date</th>
-            <td>@Model.MonitoringDate.ToBrowserDate()</td>
-        </tr>
-        <tr>
-            <th class="fw-semibold">Transaction Speed</th>
-            <td>@Model.TransactionSpeed</td>
-        </tr>
-        <tr>
-            <th class="fw-semibold">Total Fiat Due</th>
-            <td>@Model.Fiat</td>
-        </tr>
-        @if (!string.IsNullOrEmpty(Model.RefundEmail))
-        {
-            <tr>
-                <th class="fw-semibold">Refund Email</th>
-                <td>
-                    <a href="mailto:@Model.RefundEmail">@Model.RefundEmail</a>
-                </td>
-            </tr>
-        }
-        @if (!string.IsNullOrEmpty(Model.NotificationUrl))
-        {
-            <tr>
-                <th class="fw-semibold">Notification Url</th>
-                <td>@Model.NotificationUrl</td>
-            </tr>
-        }
-        @if (!string.IsNullOrEmpty(Model.RedirectUrl))
-        {
-            <tr>
-                <th class="fw-semibold">Redirect Url</th>
-                <td>
-                    <a href="@Model.RedirectUrl" rel="noreferrer noopener">@Model.RedirectUrl</a>
-                </td>
-            </tr>
-        }
-    </table>
-
-</div>
-@if (Model.PosData.Count == 0)
-{
-    <div class="col-md-6">
-        <h3 class="mb-3">Product Information</h3>
-        <table class="table mb-5">
-            @if (!string.IsNullOrEmpty(Model.TypedMetadata.ItemCode))
-            {
-                <tr>
-                    <th class="fw-semibold">Item code</th>
-                    <td>@Model.TypedMetadata.ItemCode</td>
-                </tr>
-            }
-            @if (!string.IsNullOrEmpty(Model.TypedMetadata.ItemDesc))
-            {
-                <tr>
-                    <th class="fw-semibold">Item Description</th>
-                    <td>@Model.TypedMetadata.ItemDesc</td>
-                </tr>
-            }
-            <tr>
-                <th class="fw-semibold">Price</th>
-                <td>@Model.Fiat</td>
-            </tr>
-            @if (Model.TaxIncluded is not null)
-            {
-                <tr>
-                    <th class="fw-semibold">Tax Included</th>
-                    <td>@Model.TaxIncluded</td>
-                </tr>
-            }
-        </table>
-    </div>
-}
-@if (Model.TypedMetadata.BuyerName is not null ||
-     Model.TypedMetadata.BuyerEmail is not null ||
-     Model.TypedMetadata.BuyerPhone is not null ||
-     Model.TypedMetadata.BuyerAddress1 is not null ||
-     Model.TypedMetadata.BuyerAddress2 is not null ||
-     Model.TypedMetadata.BuyerCity is not null ||
-     Model.TypedMetadata.BuyerState is not null ||
-     Model.TypedMetadata.BuyerCountry is not null ||
-     Model.TypedMetadata.BuyerZip is not null
-    )
-{
-    <div class="col-md-6">
-        <h3 class="mb-3">Buyer Information</h3>
-        <div class="table-responsive-xl">
-            <table class="table mb-5">
-                @if (Model.TypedMetadata.BuyerName is not null)
-                {
-                    <tr>
-                        <th class="fw-semibold">Name</th>
-                        <td>@Model.TypedMetadata.BuyerName</td>
-                    </tr>
-                }
-                @if (Model.TypedMetadata.BuyerEmail is not null)
-                {
-                    <tr>
-                        <th class="fw-semibold">Email</th>
-                        <td>
-                            <a href="mailto:@Model.TypedMetadata.BuyerEmail">@Model.TypedMetadata.BuyerEmail</a>
                         </td>
                     </tr>
                 }
-                @if (Model.TypedMetadata.BuyerPhone is not null)
+                @if (Model.TypedMetadata.PaymentRequestId is not null)
                 {
                     <tr>
-                        <th class="fw-semibold">Phone</th>
-                        <td>@Model.TypedMetadata.BuyerPhone</td>
+                        <th class="fw-semibold">Payment Request Id</th>
+                        <td>
+                            <a href="@Model.PaymentRequestLink" rel="noreferrer noopener">@Model.TypedMetadata.PaymentRequestId</a>
+                        </td>
                     </tr>
                 }
-                @if (Model.TypedMetadata.BuyerAddress1 is not null)
+                <tr>
+                    <th class="fw-semibold">State</th>
+                    <td>
+                        @if (Model.CanMarkStatus)
+                        {
+                            <div class="dropdown changeInvoiceStateToggle">
+                                <button class="btn btn-secondary btn-sm dropdown-toggle py-1 px-2" type="button" id="markStatusDropdownMenuButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    @Model.State
+                                </button>
+                                <div class="dropdown-menu" aria-labelledby="markStatusDropdownMenuButton">
+                                    @if (Model.CanMarkInvalid)
+                                    {
+                                        <button type="button" class="dropdown-item lh-base changeInvoiceState" data-id="@Model.Id" data-status="invalid" data-change-invoice-status-button>
+                                            Mark as invalid
+                                        </button>
+                                    }
+                                    @if (Model.CanMarkSettled)
+                                    {
+                                        <button type="button" class="dropdown-item lh-base changeInvoiceState" href="#" data-id="@Model.Id" data-status="settled" data-change-invoice-status-button>
+                                            Mark as settled
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            @Model.State
+                        }
+                    </td>
+                </tr>
+                <tr>
+                    <th class="fw-semibold">Created Date</th>
+                    <td>@Model.CreatedDate.ToBrowserDate()</td>
+                </tr>
+                <tr>
+                    <th class="fw-semibold">Expiration Date</th>
+                    <td>@Model.ExpirationDate.ToBrowserDate()</td>
+                </tr>
+                <tr>
+                    <th class="fw-semibold">Monitoring Date</th>
+                    <td>@Model.MonitoringDate.ToBrowserDate()</td>
+                </tr>
+                <tr>
+                    <th class="fw-semibold">Transaction Speed</th>
+                    <td>@Model.TransactionSpeed</td>
+                </tr>
+                <tr>
+                    <th class="fw-semibold">Total Fiat Due</th>
+                    <td>@Model.Fiat</td>
+                </tr>
+                @if (!string.IsNullOrEmpty(Model.RefundEmail))
                 {
                     <tr>
-                        <th class="fw-semibold">Address 1</th>
-                        <td>@Model.TypedMetadata.BuyerAddress1</td>
+                        <th class="fw-semibold">Refund Email</th>
+                        <td>
+                            <a href="mailto:@Model.RefundEmail">@Model.RefundEmail</a>
+                        </td>
                     </tr>
                 }
-                @if (Model.TypedMetadata.BuyerAddress2 is not null)
+                @if (!string.IsNullOrEmpty(Model.NotificationUrl))
                 {
                     <tr>
-                        <th class="fw-semibold">Address 2</th>
-                        <td>@Model.TypedMetadata.BuyerAddress2</td>
+                        <th class="fw-semibold">Notification Url</th>
+                        <td>@Model.NotificationUrl</td>
                     </tr>
                 }
-                @if (Model.TypedMetadata.BuyerCity is not null)
+                @if (!string.IsNullOrEmpty(Model.RedirectUrl))
                 {
                     <tr>
-                        <th class="fw-semibold">City</th>
-                        <td>@Model.TypedMetadata.BuyerCity</td>
-                    </tr>
-                }
-                @if (Model.TypedMetadata.BuyerState is not null)
-                {
-                    <tr>
-                        <th class="fw-semibold">State</th>
-                        <td>@Model.TypedMetadata.BuyerState</td>
-                    </tr>
-                }
-                @if (Model.TypedMetadata.BuyerCountry is not null)
-                {
-                    <tr>
-                        <th class="fw-semibold">Country</th>
-                        <td>@Model.TypedMetadata.BuyerCountry</td>
-                    </tr>
-                }
-                @if (Model.TypedMetadata.BuyerZip is not null)
-                {
-                    <tr>
-                        <th class="fw-semibold">Zip</th>
-                        <td>@Model.TypedMetadata.BuyerZip</td>
+                        <th class="fw-semibold">Redirect Url</th>
+                        <td>
+                            <a href="@Model.RedirectUrl" rel="noreferrer noopener">@Model.RedirectUrl</a>
+                        </td>
                     </tr>
                 }
             </table>
         </div>
-    </div>
-}
-
-@if (Model.PosData.Count != 0)
-{
-    <div class="col-md-6">
-        <h3 class="mb-3">Product information</h3>
-        <table class="table mb-5">
-            @if (!string.IsNullOrEmpty(Model.TypedMetadata.ItemCode))
+        <div class="d-flex flex-column gap-5">
+			@if (!string.IsNullOrEmpty(Model.TypedMetadata.ItemCode) ||
+				 !string.IsNullOrEmpty(Model.TypedMetadata.ItemDesc) ||
+				 Model.TypedMetadata.TaxIncluded is not null)
+			{
+                <div>
+					<h3 class="mb-3">Product Information</h3>
+					<table class="table mb-0">
+						@if (!string.IsNullOrEmpty(Model.TypedMetadata.ItemCode))
+						{
+							<tr>
+								<th class="fw-semibold">Item code</th>
+								<td>@Model.TypedMetadata.ItemCode</td>
+							</tr>
+						}
+						@if (!string.IsNullOrEmpty(Model.TypedMetadata.ItemDesc))
+						{
+							<tr>
+								<th class="fw-semibold">Item Description</th>
+								<td>@Model.TypedMetadata.ItemDesc</td>
+							</tr>
+						}
+						@if (Model.TaxIncluded is not null)
+						{
+							<tr>
+								<th class="fw-semibold">Tax Included</th>
+								<td>@Model.TaxIncluded</td>
+							</tr>
+						}
+					</table>
+		       </div>
+			}
+            @if (Model.TypedMetadata.BuyerName is not null ||
+                 Model.TypedMetadata.BuyerEmail is not null ||
+                 Model.TypedMetadata.BuyerPhone is not null ||
+                 Model.TypedMetadata.BuyerAddress1 is not null ||
+                 Model.TypedMetadata.BuyerAddress2 is not null ||
+                 Model.TypedMetadata.BuyerCity is not null ||
+                 Model.TypedMetadata.BuyerState is not null ||
+                 Model.TypedMetadata.BuyerCountry is not null ||
+                 Model.TypedMetadata.BuyerZip is not null)
             {
-                <tr>
-                    <th>Item code</th>
-                    <td>@Model.TypedMetadata.ItemCode</td>
-                </tr>
+                <div>
+                    <h3 class="mb-3">Buyer Information</h3>
+                    <table class="table mb-0">
+                        @if (Model.TypedMetadata.BuyerName is not null)
+                        {
+                            <tr>
+                                <th class="fw-semibold">Name</th>
+                                <td>@Model.TypedMetadata.BuyerName</td>
+                            </tr>
+                        }
+                        @if (Model.TypedMetadata.BuyerEmail is not null)
+                        {
+                            <tr>
+                                <th class="fw-semibold">Email</th>
+                                <td>
+                                    <a href="mailto:@Model.TypedMetadata.BuyerEmail">@Model.TypedMetadata.BuyerEmail</a>
+                                </td>
+                            </tr>
+                        }
+                        @if (Model.TypedMetadata.BuyerPhone is not null)
+                        {
+                            <tr>
+                                <th class="fw-semibold">Phone</th>
+                                <td>@Model.TypedMetadata.BuyerPhone</td>
+                            </tr>
+                        }
+                        @if (Model.TypedMetadata.BuyerAddress1 is not null)
+                        {
+                            <tr>
+                                <th class="fw-semibold">Address 1</th>
+                                <td>@Model.TypedMetadata.BuyerAddress1</td>
+                            </tr>
+                        }
+                        @if (Model.TypedMetadata.BuyerAddress2 is not null)
+                        {
+                            <tr>
+                                <th class="fw-semibold">Address 2</th>
+                                <td>@Model.TypedMetadata.BuyerAddress2</td>
+                            </tr>
+                        }
+                        @if (Model.TypedMetadata.BuyerCity is not null)
+                        {
+                            <tr>
+                                <th class="fw-semibold">City</th>
+                                <td>@Model.TypedMetadata.BuyerCity</td>
+                            </tr>
+                        }
+                        @if (Model.TypedMetadata.BuyerState is not null)
+                        {
+                            <tr>
+                                <th class="fw-semibold">State</th>
+                                <td>@Model.TypedMetadata.BuyerState</td>
+                            </tr>
+                        }
+                        @if (Model.TypedMetadata.BuyerCountry is not null)
+                        {
+                            <tr>
+                                <th class="fw-semibold">Country</th>
+                                <td>@Model.TypedMetadata.BuyerCountry</td>
+                            </tr>
+                        }
+                        @if (Model.TypedMetadata.BuyerZip is not null)
+                        {
+                            <tr>
+                                <th class="fw-semibold">Zip</th>
+                                <td>@Model.TypedMetadata.BuyerZip</td>
+                            </tr>
+                        }
+                    </table>
+                </div>
             }
-            @if (!string.IsNullOrEmpty(Model.TypedMetadata.ItemDesc))
+            @if (Model.AdditionalData.Any())
             {
-                <tr>
-                    <th>Item Description</th>
-                    <td>@Model.TypedMetadata.ItemDesc</td>
-                </tr>
+                <div>
+                    <h3 class="mb-3">Additional Information</h3>
+                    <partial name="PosData" model="(Model.AdditionalData, 1)" />
+                </div>
             }
-            <tr>
-                <th>Price</th>
-                <td>@Model.Fiat</td>
-            </tr>
-            <tr>
-                <th>Tax included</th>
-                <td>@Model.TaxIncluded</td>
-            </tr>
-        </table>
+        </div>
     </div>
-    <div class="col-md-6 mb-4" id="posData">
-        <h3 class="mb-3">Point of Sale Data</h3>
 
-        <partial name="PosData" model="(Model.PosData, 1)"/>
-    </div>
-}
-</div>
+    <h3 class="mb-0">Invoice Summary</h3>
+    <partial name="ListInvoicesPaymentsPartial" model="(Model, true)"/>
 
-<h3 class="mb-0">Invoice Summary</h3>
-<partial name="ListInvoicesPaymentsPartial" model="(Model, true)"/>
-
-@if (Model.Deliveries.Count != 0)
-{
-    <h3 class="mb-3 mt-4">Webhooks</h3>
-    <div class="table-responsive-xl">
-        <table class="table table-hover table-responsive-md mb-5">
-            <thead>
-            <tr>
-                <th>Status</th>
-                <th>ID</th>
-                <th>Type</th>
-                <th>Url</th>
-                <th>Date</th>
-                <th class="text-end">Action</th>
-            </tr>
-            </thead>
-            <tbody>
-            @foreach (var delivery in Model.Deliveries)
-            {
+    @if (Model.Deliveries.Count != 0)
+    {
+        <h3 class="mb-3 mt-4">Webhooks</h3>
+        <div class="table-responsive-xl">
+            <table class="table table-hover table-responsive-md mb-5">
+                <thead>
                 <tr>
-                    <form asp-action="RedeliverWebhook"
-                          asp-route-storeId="@Model.StoreId"
-                          asp-route-invoiceId="@Model.Id"
-                          asp-route-deliveryId="@delivery.Id"
-                          method="post">
+                    <th>Status</th>
+                    <th>ID</th>
+                    <th>Type</th>
+                    <th>Url</th>
+                    <th>Date</th>
+                    <th class="text-end">Action</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var delivery in Model.Deliveries)
+                {
+                    <tr>
+                        <form asp-action="RedeliverWebhook"
+                              asp-route-storeId="@Model.StoreId"
+                              asp-route-invoiceId="@Model.Id"
+                              asp-route-deliveryId="@delivery.Id"
+                              method="post">
+                            <td>
+                                <span>
+                                    @if (delivery.Success)
+                                    {
+                                        <span class="fa fa-check text-success" title="Success"></span>
+                                    }
+                                    else
+                                    {
+                                        <span class="fa fa-times text-danger" title="@delivery.ErrorMessage"></span>
+                                    }
+                                </span>
+                            </td>
+                            <td>
+                                <span>
+                                    <a asp-action="WebhookDelivery"
+                                       asp-route-invoiceId="@Model.Id"
+                                       asp-route-deliveryId="@delivery.Id"
+                                       class="delivery-content"
+                                       target="_blank">
+                                        @delivery.Id
+                                    </a>
+                                </span>
+                            </td>
+                            <td>
+                                <span>@delivery.Type</span>
+                            </td>
+                            <td>
+                                <span class="text-nowrap" data-bs-toggle="tooltip" title="@delivery.PayloadUrl" style="cursor: pointer;">
+                                    <span style="max-width: 250px;">@delivery.PayloadUrl</span>
+                                </span>
+                            </td>
+                            <td>
+                                <span>
+                                    @delivery.Time.ToBrowserDate()
+                                </span>
+                            </td>
+                            <td class="text-end">
+                                <button id="#redeliver-@delivery.Id"
+                                        type="submit"
+                                        class="btn btn-link p-0 redeliver">
+                                    Redeliver
+                                </button>
+                            </td>
+                        </form>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+    @if ((Model.Refunds?.Count ?? 0) > 0)
+    {
+        <h3 class="mb-3 mt-4">Refunds</h3>
+        <div class="table-responsive-xl">
+            <table class="table table-hover table-responsive-md mb-5">
+                <thead>
+                <tr>
+                    <th>Pull Payment</th>
+                    <th>Amount</th>
+                    <th>Date</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var refund in Model.Refunds)
+                {
+                    var blob = refund.PullPaymentData.GetBlob();
+                    <tr>
+
                         <td>
                             <span>
-                                @if (delivery.Success)
-                                {
-                                    <span class="fa fa-check text-success" title="Success"></span>
-                                }
-                                else
-                                {
-                                    <span class="fa fa-times text-danger" title="@delivery.ErrorMessage"></span>
-                                }
-                            </span>
-                        </td>
-                        <td>
-                            <span>
-                                <a asp-action="WebhookDelivery"
-                                   asp-route-invoiceId="@Model.Id"
-                                   asp-route-deliveryId="@delivery.Id"
+                                <a asp-action="ViewPullPayment" asp-controller="UIPullPayment"
+                                   asp-route-pullPaymentId="@refund.PullPaymentDataId"
                                    class="delivery-content"
                                    target="_blank">
-                                    @delivery.Id
+                                    @refund.PullPaymentData.Id
                                 </a>
                             </span>
                         </td>
                         <td>
-                            <span>@delivery.Type</span>
+                            <span>@blob.Limit @blob.Currency</span>
                         </td>
                         <td>
-                            <span class="text-nowrap" data-bs-toggle="tooltip" title="@delivery.PayloadUrl" style="cursor: pointer;">
-                                <span style="max-width: 250px;">@delivery.PayloadUrl</span>
-                            </span>
+                            <span> @refund.PullPaymentData.StartDate.ToBrowserDate() </span>
                         </td>
-                        <td>
-                            <span>
-                                @delivery.Time.ToBrowserDate()
-                            </span>
-                        </td>
-                        <td class="text-end">
-                            <button id="#redeliver-@delivery.Id"
-                                    type="submit"
-                                    class="btn btn-link p-0 redeliver">
-                                Redeliver
-                            </button>
-                        </td>
-                    </form>
-                </tr>
-            }
-            </tbody>
-        </table>
-    </div>
-}
-
-@if ((Model.Refunds?.Count ?? 0) > 0)
-{
-    <h3 class="mb-3 mt-4">Refunds</h3>
-    <div class="table-responsive-xl">
-        <table class="table table-hover table-responsive-md mb-5">
-            <thead>
-            <tr>
-                <th>Pull Payment</th>
-                <th>Amount</th>
-                <th>Date</th>
-            </tr>
-            </thead>
-            <tbody>
-            @foreach (var refund in Model.Refunds)
-            {
-                var blob = refund.PullPaymentData.GetBlob();
-                <tr>
-
-                    <td>
-                        <span>
-                            <a asp-action="ViewPullPayment" asp-controller="UIPullPayment"
-                               asp-route-pullPaymentId="@refund.PullPaymentDataId"
-                               class="delivery-content"
-                               target="_blank">
-                                @refund.PullPaymentData.Id
-                            </a>
-                        </span>
-                    </td>
-                    <td>
-                        <span>@blob.Limit @blob.Currency</span>
-                    </td>
-                    <td>
-                        <span> @refund.PullPaymentData.StartDate.ToBrowserDate() </span>
-                    </td>
-                </tr>
-            }
-            </tbody>
-        </table>
-    </div>
-}
-<h3 class="mb-0 mt-5">Events</h3>
-<table class="table table-hover mt-3 mb-4">
-    <thead>
-    <tr>
-        <th>Date</th>
-        <th>Message</th>
-    </tr>
-    </thead>
-    <tbody>
-    @foreach (var evt in Model.Events)
-    {
-        <tr class="text-@evt.GetCssClass()">
-            <td>@evt.Timestamp.ToBrowserDate()</td>
-            <td>@evt.Message</td>
-        </tr>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
     }
-    </tbody>
-</table>
+    <h3 class="mb-0 mt-5">Events</h3>
+    <table class="table table-hover mt-3 mb-4">
+        <thead>
+        <tr>
+            <th>Date</th>
+            <th>Message</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var evt in Model.Events)
+        {
+            <tr class="text-@evt.GetCssClass()">
+                <td>@evt.Timestamp.ToBrowserDate()</td>
+                <td>@evt.Message</td>
+            </tr>
+        }
+        </tbody>
+    </table>
 </div>

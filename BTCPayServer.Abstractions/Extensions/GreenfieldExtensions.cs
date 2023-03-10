@@ -7,6 +7,10 @@ namespace BTCPayServer.Abstractions.Extensions;
 
 public static class GreenfieldExtensions
 {
+    public static IActionResult UserNotFound(this ControllerBase ctrl)
+    {
+        return ctrl.CreateAPIError(404, "user-not-found", "The user was not found");
+    }
     public static IActionResult CreateValidationError(this ControllerBase controller, ModelStateDictionary modelState)
     {
         return controller.UnprocessableEntity(modelState.ToGreenfieldValidationError());

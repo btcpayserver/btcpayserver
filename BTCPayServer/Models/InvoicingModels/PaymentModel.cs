@@ -32,6 +32,7 @@ namespace BTCPayServer.Models.InvoicingModels
         public List<AvailableCrypto> AvailableCryptos { get; set; } = new();
         public bool IsModal { get; set; }
         public bool IsUnsetTopUp { get; set; }
+        public bool OnChainWithLnInvoiceFallback { get; set; }
         public string CryptoCode { get; set; }
         public string InvoiceId { get; set; }
         public string BtcAddress { get; set; }

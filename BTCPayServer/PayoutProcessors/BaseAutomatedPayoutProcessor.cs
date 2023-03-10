@@ -4,16 +4,14 @@ using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
-using BTCPayServer.Data.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Payments;
-using BTCPayServer.PayoutProcessors.Settings;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PayoutData = BTCPayServer.Data.PayoutData;
-using PayoutProcessorData = BTCPayServer.Data.Data.PayoutProcessorData;
+using PayoutProcessorData = BTCPayServer.Data.PayoutProcessorData;
 
 namespace BTCPayServer.PayoutProcessors;
 
@@ -79,9 +77,8 @@ public abstract class BaseAutomatedPayoutProcessor<T> : BaseAsyncService where T
         await Task.Delay(blob.Interval, CancellationToken);
     }
 
-
-    public static T GetBlob(PayoutProcessorData data)
+    public static T GetBlob(PayoutProcessorData payoutProcesserSettings)
     {
-        return InvoiceRepository.FromBytes<T>(data.Blob);
+        return payoutProcesserSettings.HasTypedBlob<T>().GetBlob();
     }
 }

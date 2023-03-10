@@ -366,6 +366,28 @@ namespace BTCPayServer.Controllers
         {
             if (string.IsNullOrEmpty(request.FromAsset) || string.IsNullOrEmpty(request.ToAsset))
             {
+                storedKeys.Add(item.Key);
+            }
+
+            var formKeys = form.GetAllFields().Select(f => f.FullName).ToHashSet();
+
+            foreach (var item in newData)
+            {
+                if (storedKeys.Contains(item.Key) || formKeys.Contains(item.Key))
+                {
+                    filteredData[item.Key] = item.Value;
+                }
+            }
+
+            return filteredData;
+        }
+
+        [HttpGet("/stores/{storeId}/custodian-accounts/{accountId}/trade/prepare")]
+        public async Task<IActionResult> GetTradePrepareJson(string storeId, string accountId,
+            [FromQuery] string assetToTrade, [FromQuery] string assetToTradeInto)
+        {
+            if (string.IsNullOrEmpty(assetToTrade) || string.IsNullOrEmpty(assetToTradeInto))
+            {
                 return BadRequest();
             }
 

@@ -4,15 +4,14 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
-using BTCPayServer.Data.Data;
+using BTCPayServer.Data;
 using BTCPayServer.Payments;
 using BTCPayServer.PayoutProcessors;
 using BTCPayServer.PayoutProcessors.Lightning;
-using BTCPayServer.PayoutProcessors.Settings;
 using BTCPayServer.Services.Invoices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using PayoutProcessorData = BTCPayServer.Data.Data.PayoutProcessorData;
+using PayoutProcessorData = BTCPayServer.Data.PayoutProcessorData;
 
 namespace BTCPayServer.Controllers.Greenfield
 {
@@ -31,9 +30,8 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        [HttpGet("~/api/v1/stores/{storeId}/payout-processors/" + nameof(LightningAutomatedPayoutSenderFactory))]
-        [HttpGet("~/api/v1/stores/{storeId}/payout-processors/" + nameof(LightningAutomatedPayoutSenderFactory) +
-                 "/{paymentMethod}")]
+        [HttpGet("~/api/v1/stores/{storeId}/payout-processors/LightningAutomatedPayoutSenderFactory")]
+        [HttpGet("~/api/v1/stores/{storeId}/payout-processors/LightningAutomatedPayoutSenderFactory/{paymentMethod}")]
         public async Task<IActionResult> GetStoreLightningAutomatedPayoutProcessors(
             string storeId, string? paymentMethod)
         {
@@ -55,7 +53,7 @@ namespace BTCPayServer.Controllers.Greenfield
             return new LightningAutomatedPayoutSettings()
             {
                 PaymentMethod = data.PaymentMethod,
-                IntervalSeconds = InvoiceRepository.FromBytes<AutomatedPayoutBlob>(data.Blob).Interval
+                IntervalSeconds = data.HasTypedBlob<AutomatedPayoutBlob>().GetBlob()!.Interval
             };
         }
 
@@ -65,8 +63,7 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        [HttpPut("~/api/v1/stores/{storeId}/payout-processors/" + nameof(LightningAutomatedPayoutSenderFactory) +
-                 "/{paymentMethod}")]
+        [HttpPut("~/api/v1/stores/{storeId}/payout-processors/LightningAutomatedPayoutSenderFactory/{paymentMethod}")]
         public async Task<IActionResult> UpdateStoreLightningAutomatedPayoutProcessor(
             string storeId, string paymentMethod, LightningAutomatedPayoutSettings request)
         {
@@ -81,7 +78,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     }))
                 .FirstOrDefault();
             activeProcessor ??= new PayoutProcessorData();
-            activeProcessor.Blob = InvoiceRepository.ToBytes(FromModel(request));
+            activeProcessor.HasTypedBlob<AutomatedPayoutBlob>().SetBlob(FromModel(request));
             activeProcessor.StoreId = storeId;
             activeProcessor.PaymentMethod = paymentMethod;
             activeProcessor.Processor = LightningAutomatedPayoutSenderFactory.ProcessorName;

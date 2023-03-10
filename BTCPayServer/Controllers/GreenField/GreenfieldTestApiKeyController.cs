@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
@@ -52,9 +53,9 @@ namespace BTCPayServer.Controllers.Greenfield
 
         [HttpGet("me/stores")]
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        public StoreData[] GetCurrentUserStores()
+        public BTCPayServer.Client.Models.StoreData[] GetCurrentUserStores()
         {
-            return this.HttpContext.GetStoresData();
+            return this.HttpContext.GetStoresData().Select(Greenfield.GreenfieldStoresController.FromModel).ToArray();
         }
 
         [HttpGet("me/stores/{storeId}/can-view")]

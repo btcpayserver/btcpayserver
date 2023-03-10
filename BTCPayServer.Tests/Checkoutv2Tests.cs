@@ -6,6 +6,7 @@ using BTCPayServer.Tests.Logging;
 using BTCPayServer.Views.Stores;
 using NBitcoin;
 using OpenQA.Selenium;
+using OpenQA.Selenium.Support.UI;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -33,7 +34,8 @@ namespace BTCPayServer.Tests
             s.CreateNewStore();
             s.EnableCheckoutV2();
             s.AddLightningNode();
-            s.AddDerivationScheme();
+            // Use non-legacy derivation scheme
+            s.AddDerivationScheme("BTC", "tpubDD79XF4pzhmPSJ9AyUay9YbXAeD1c6nkUqC32pnKARJH6Ja5hGUfGc76V82ahXpsKqN6UcSGXMkzR34aZq4W23C6DAdZFaVrzWqzj24F8BC");
 
             // Configure store url
             var storeUrl = "https://satoshisteaks.com/";
@@ -59,30 +61,48 @@ namespace BTCPayServer.Tests
             Assert.Equal(2, s.Driver.FindElements(By.CssSelector(".payment-method")).Count);
             Assert.Contains("Bitcoin", s.Driver.FindElement(By.CssSelector(".payment-method.active")).Text);
             Assert.Contains("LNURL", s.Driver.FindElement(By.CssSelector(".payment-method:nth-child(2)")).Text);
-            var payUrl = s.Driver.FindElement(By.CssSelector(".btn-primary")).GetAttribute("href");
-            Assert.StartsWith("bitcoin:", payUrl);
-            Assert.DoesNotContain("&lightning=", payUrl);
+            var qrValue = s.Driver.FindElement(By.CssSelector(".qr-container")).GetAttribute("data-qr-value");
+            var address = s.Driver.FindElement(By.CssSelector(".qr-container")).GetAttribute("data-clipboard");
+            var payUrl = s.Driver.FindElement(By.Id("PayInWallet")).GetAttribute("href");
+            var copyAddress = s.Driver.FindElement(By.Id("Address_BTC")).GetAttribute("value");
+            Assert.Equal($"bitcoin:{address}", payUrl);
+            Assert.StartsWith("bcrt", s.Driver.FindElement(By.Id("Address_BTC")).GetAttribute("value"));
+            Assert.DoesNotContain("lightning=", payUrl);
+            Assert.Equal(address, copyAddress);
+            Assert.Equal($"bitcoin:{address.ToUpperInvariant()}", qrValue);
+            s.Driver.ElementDoesNotExist(By.Id("Lightning_BTC"));
+            s.Driver.ElementDoesNotExist(By.Id("PayByLNURL"));
             
             // Switch to LNURL
             s.Driver.FindElement(By.CssSelector(".payment-method:nth-child(2)")).Click();
             TestUtils.Eventually(() =>
             {
-                payUrl = s.Driver.FindElement(By.CssSelector(".btn-primary")).GetAttribute("href");
-                Assert.StartsWith("lightning:", payUrl);
+                payUrl = s.Driver.FindElement(By.Id("PayInWallet")).GetAttribute("href");
+                Assert.StartsWith("lightning:lnurl", payUrl);
+                Assert.StartsWith("lnurl", s.Driver.WaitForElement(By.Id("Lightning_BTC")).GetAttribute("value"));
+                s.Driver.ElementDoesNotExist(By.Id("Address_BTC"));
+                s.Driver.FindElement(By.Id("PayByLNURL"));
             });
 
             // Default payment method
             s.GoToHome();
             invoiceId = s.CreateInvoice(defaultPaymentMethod: "BTC_LightningLike");
             s.GoToInvoiceCheckout(invoiceId);
-
+            s.Driver.WaitUntilAvailable(By.Id("Checkout-v2"));
             Assert.Equal(2, s.Driver.FindElements(By.CssSelector(".payment-method")).Count);
             Assert.Contains("Lightning", s.Driver.WaitForElement(By.CssSelector(".payment-method.active")).Text);
-            Assert.DoesNotContain("LNURL", s.Driver.PageSource);
-            payUrl = s.Driver.FindElement(By.CssSelector(".btn-primary")).GetAttribute("href");
-            Assert.StartsWith("lightning:", payUrl);
+            Assert.Contains("Bitcoin", s.Driver.WaitForElement(By.CssSelector(".payment-method")).Text);
+            qrValue = s.Driver.FindElement(By.CssSelector(".qr-container")).GetAttribute("data-qr-value");
+            address = s.Driver.FindElement(By.CssSelector(".qr-container")).GetAttribute("data-clipboard");
+            payUrl = s.Driver.FindElement(By.Id("PayInWallet")).GetAttribute("href");
+            copyAddress = s.Driver.FindElement(By.Id("Lightning_BTC_LightningLike")).GetAttribute("value");
+            Assert.Equal($"lightning:{address}", payUrl);
+            Assert.Equal(address, copyAddress);
+            Assert.Equal($"lightning:{address.ToUpperInvariant()}", qrValue);
+            s.Driver.ElementDoesNotExist(By.Id("Address_BTC"));
+            s.Driver.FindElement(By.Id("PayByLNURL"));
 
-            // Lightning amount in Sats
+            // Lightning amount in sats
             Assert.Contains("BTC", s.Driver.FindElement(By.Id("AmountDue")).Text);
             s.GoToHome();
             s.GoToLightningSettings();
@@ -90,7 +110,8 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("save")).Click();
             Assert.Contains("BTC Lightning settings successfully updated", s.FindAlertMessage().Text);
             s.GoToInvoiceCheckout(invoiceId);
-            Assert.Contains("Sats", s.Driver.FindElement(By.Id("AmountDue")).Text);
+            s.Driver.WaitUntilAvailable(By.Id("Checkout-v2"));
+            Assert.Contains("sats", s.Driver.FindElement(By.Id("AmountDue")).Text);
 
             // Expire
             var expirySeconds = s.Driver.FindElement(By.Id("ExpirySeconds"));
@@ -114,6 +135,7 @@ namespace BTCPayServer.Tests
             s.GoToHome();
             invoiceId = s.CreateInvoice();
             s.GoToInvoiceCheckout(invoiceId);
+            s.Driver.WaitUntilAvailable(By.Id("Checkout-v2"));
 
             // Details
             s.Driver.ToggleCollapse("PaymentDetails");
@@ -126,7 +148,7 @@ namespace BTCPayServer.Tests
 
             // Pay partial amount
             await Task.Delay(200);
-            var address = s.Driver.FindElement(By.CssSelector(".qr-container")).GetAttribute("data-clipboard");
+            address = s.Driver.FindElement(By.CssSelector(".qr-container")).GetAttribute("data-clipboard");
             var amountFraction = "0.00001";
             await s.Server.ExplorerNode.SendToAddressAsync(BitcoinAddress.Create(address, Network.RegTest),
                 Money.Parse(amountFraction));
@@ -171,36 +193,77 @@ namespace BTCPayServer.Tests
             s.GoToHome();
             s.GoToStore(StoreNavPages.CheckoutAppearance);
             s.Driver.SetCheckbox(By.Id("OnChainWithLnInvoiceFallback"), true);
+            s.Driver.SetCheckbox(By.Id("LightningAmountInSatoshi"), false);
             s.Driver.FindElement(By.Id("Save")).Click();
             Assert.Contains("Store successfully updated", s.FindAlertMessage().Text);
 
             invoiceId = s.CreateInvoice();
             s.GoToInvoiceCheckout(invoiceId);
+            s.Driver.WaitUntilAvailable(By.Id("Checkout-v2"));
             Assert.Empty(s.Driver.FindElements(By.CssSelector(".payment-method")));
-            payUrl = s.Driver.FindElement(By.CssSelector(".btn-primary")).GetAttribute("href");
-            Assert.StartsWith("bitcoin:", payUrl);
+            Assert.Contains("BTC", s.Driver.FindElement(By.Id("AmountDue")).Text);
+            qrValue = s.Driver.FindElement(By.CssSelector(".qr-container")).GetAttribute("data-qr-value");
+            address = s.Driver.FindElement(By.CssSelector(".qr-container")).GetAttribute("data-clipboard");
+            payUrl = s.Driver.FindElement(By.Id("PayInWallet")).GetAttribute("href");
+            var copyAddressOnchain = s.Driver.FindElement(By.Id("Address_BTC")).GetAttribute("value");
+            var copyAddressLightning = s.Driver.FindElement(By.Id("Lightning_BTC")).GetAttribute("value");
+            Assert.StartsWith($"bitcoin:{address}?amount=", payUrl);
+            Assert.Contains("?amount=", payUrl);
             Assert.Contains("&lightning=", payUrl);
+            Assert.StartsWith("bcrt", copyAddressOnchain);
+            Assert.Equal(address, copyAddressOnchain);
+            Assert.StartsWith("lnbcrt", copyAddressLightning);
+            Assert.StartsWith($"bitcoin:{address.ToUpperInvariant()}?amount=", qrValue);
+            Assert.Contains("&lightning=LNBCRT", qrValue);
+            s.Driver.FindElement(By.Id("PayByLNURL"));
+            
+            // Switch to amount displayed in sats
+            s.GoToHome();
+            s.GoToStore(StoreNavPages.CheckoutAppearance);
+            s.Driver.SetCheckbox(By.Id("LightningAmountInSatoshi"), true);
+            s.Driver.FindElement(By.Id("Save")).Click();
+            Assert.Contains("Store successfully updated", s.FindAlertMessage().Text);
+            s.GoToInvoiceCheckout(invoiceId);
+            s.Driver.WaitUntilAvailable(By.Id("Checkout-v2"));
+            Assert.Contains("sats", s.Driver.FindElement(By.Id("AmountDue")).Text);
 
             // BIP21 with LN as default payment method
             s.GoToHome();
             invoiceId = s.CreateInvoice(defaultPaymentMethod: "BTC_LightningLike");
             s.GoToInvoiceCheckout(invoiceId);
+            s.Driver.WaitUntilAvailable(By.Id("Checkout-v2"));
             Assert.Empty(s.Driver.FindElements(By.CssSelector(".payment-method")));
-            payUrl = s.Driver.FindElement(By.CssSelector(".btn-primary")).GetAttribute("href");
+            payUrl = s.Driver.FindElement(By.Id("PayInWallet")).GetAttribute("href");
             Assert.StartsWith("bitcoin:", payUrl);
-            Assert.Contains("&lightning=", payUrl);
+            Assert.Contains("&lightning=lnbcrt", payUrl);
+            s.Driver.FindElement(By.Id("PayByLNURL"));
 
-            // BIP21 with topup invoice
+            // Ensure LNURL is enabled
             s.GoToHome();
+            s.GoToLightningSettings();
+            Assert.True(s.Driver.FindElement(By.Id("LNURLEnabled")).Selected);
+            Assert.True(s.Driver.FindElement(By.Id("LNURLStandardInvoiceEnabled")).Selected);
+            
+            // BIP21 with top-up invoice
             invoiceId = s.CreateInvoice(amount: null);
             s.GoToInvoiceCheckout(invoiceId);
-            Assert.Equal(2, s.Driver.FindElements(By.CssSelector(".payment-method")).Count);
-            Assert.Contains("Bitcoin", s.Driver.FindElement(By.CssSelector(".payment-method.active")).Text);
-            Assert.Contains("LNURL", s.Driver.FindElement(By.CssSelector(".payment-method:nth-child(2)")).Text);
-            payUrl = s.Driver.FindElement(By.CssSelector(".btn-primary")).GetAttribute("href");
-            Assert.DoesNotContain("&lightning=", payUrl);
+            s.Driver.WaitUntilAvailable(By.Id("Checkout-v2"));
+            Assert.Empty(s.Driver.FindElements(By.CssSelector(".payment-method")));
+            qrValue = s.Driver.FindElement(By.CssSelector(".qr-container")).GetAttribute("data-qr-value");
+            address = s.Driver.FindElement(By.CssSelector(".qr-container")).GetAttribute("data-clipboard");
+            payUrl = s.Driver.FindElement(By.Id("PayInWallet")).GetAttribute("href");
+            copyAddressOnchain = s.Driver.FindElement(By.Id("Address_BTC")).GetAttribute("value");
+            copyAddressLightning = s.Driver.FindElement(By.Id("Lightning_BTC")).GetAttribute("value");
+            Assert.StartsWith($"bitcoin:{address}", payUrl);
+            Assert.Contains("?lightning=lnurl", payUrl);
+            Assert.DoesNotContain("amount=", payUrl);
+            Assert.StartsWith("bcrt", copyAddressOnchain);
+            Assert.Equal(address, copyAddressOnchain);
+            Assert.StartsWith("lnurl", copyAddressLightning);
+            Assert.StartsWith($"bitcoin:{address.ToUpperInvariant()}?lightning=LNURL", qrValue);
+            s.Driver.FindElement(By.Id("PayByLNURL"));
 
-            // Expiry message should not show amount for topup invoice
+            // Expiry message should not show amount for top-up invoice
             expirySeconds = s.Driver.FindElement(By.Id("ExpirySeconds"));
             expirySeconds.Clear();
             expirySeconds.SendKeys("5");
@@ -224,6 +287,7 @@ namespace BTCPayServer.Tests
             Assert.Contains("Store successfully updated", s.FindAlertMessage().Text);
             
             s.GoToInvoiceCheckout(invoiceId);
+            s.Driver.WaitUntilAvailable(By.Id("Checkout-v2"));
             paymentInfo = s.Driver.FindElement(By.Id("PaymentInfo"));
             Assert.False(paymentInfo.Displayed);
             Assert.DoesNotContain("This invoice will expire in", paymentInfo.Text);
@@ -237,6 +301,43 @@ namespace BTCPayServer.Tests
             Assert.True(paymentInfo.Displayed);
             Assert.Contains("This invoice will expire in", paymentInfo.Text);
             Assert.Contains("09:5", paymentInfo.Text);
+            
+            // Disable LNURL again
+            s.GoToHome();
+            s.GoToLightningSettings();
+            s.Driver.SetCheckbox(By.Id("LNURLEnabled"), false);
+            s.Driver.FindElement(By.Id("save")).Click();
+            Assert.Contains("BTC Lightning settings successfully updated", s.FindAlertMessage().Text);
+
+            // Test:
+            // - NFC/LNURL-W available with just Lightning
+            // - BIP21 works correctly even though Lightning is default payment method
+            s.GoToHome();
+            invoiceId = s.CreateInvoice(defaultPaymentMethod: "BTC_LightningLike");
+            s.GoToInvoiceCheckout(invoiceId);
+            s.Driver.WaitUntilAvailable(By.Id("Checkout-v2"));
+            Assert.Empty(s.Driver.FindElements(By.CssSelector(".payment-method")));
+            payUrl = s.Driver.FindElement(By.Id("PayInWallet")).GetAttribute("href");
+            Assert.StartsWith("bitcoin:", payUrl);
+            Assert.Contains("&lightning=lnbcrt", payUrl);
+            s.Driver.FindElement(By.Id("PayByLNURL"));
+            
+            // Language Switch
+            var languageSelect = new SelectElement(s.Driver.FindElement(By.Id("DefaultLang")));
+            Assert.Equal("English", languageSelect.SelectedOption.Text);
+            Assert.Equal("View Details", s.Driver.FindElement(By.Id("DetailsToggle")).Text);
+            Assert.DoesNotContain("lang=", s.Driver.Url);
+            languageSelect.SelectByText("Deutsch");
+            Assert.Equal("Details anzeigen", s.Driver.FindElement(By.Id("DetailsToggle")).Text);
+            Assert.Contains("lang=de", s.Driver.Url);
+            
+            s.Driver.Navigate().Refresh();
+            languageSelect = new SelectElement(s.Driver.FindElement(By.Id("DefaultLang")));
+            Assert.Equal("Deutsch", languageSelect.SelectedOption.Text);
+            Assert.Equal("Details anzeigen", s.Driver.FindElement(By.Id("DetailsToggle")).Text);
+            languageSelect.SelectByText("English");
+            Assert.Equal("View Details", s.Driver.FindElement(By.Id("DetailsToggle")).Text);
+            Assert.Contains("lang=en", s.Driver.Url);
         }
 
         [Fact(Timeout = TestTimeout)]

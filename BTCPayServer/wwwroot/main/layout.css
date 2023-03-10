@@ -354,6 +354,11 @@
     border: 1px solid var(--btcpay-body-border-medium);
 }
 
+#NotificationsList svg {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
 /* Section Navigation / Subnav */
 #SectionNav {
     --border-size: 2px;
@@ -668,6 +673,12 @@
         margin-top: var(--btcpay-space-s);
         margin-right: var(--btcpay-space-l);
         margin-bottom: calc(var(--border-size) * -1);
+    }
+}
+
+@media (min-width: 992px) and (max-height: 799px) {
+    :root {
+        --content-padding-top: 1.25rem;
     }
 }
 

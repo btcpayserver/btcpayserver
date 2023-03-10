@@ -11,6 +11,7 @@ using BTCPayServer.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using StoreData = BTCPayServer.Data.StoreData;
+using PayoutProcessorData = BTCPayServer.Client.Models.PayoutProcessorData;
 
 namespace BTCPayServer.Controllers.Greenfield
 {

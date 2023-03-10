@@ -1,5 +1,5 @@
 {
-  "NOTICE_WARN": "THIS CODE HAS BEEN AUTOMATICALLY GENERATED FROM TRANSIFEX, IF YOU WISH TO HELP TRANSLATION COME ON THE SLACK http://slack.btcpayserver.org TO REQUEST PERMISSION TO https://www.transifex.com/btcpayserver/btcpayserver/",
+  "NOTICE_WARN": "THIS CODE HAS BEEN AUTOMATICALLY GENERATED FROM TRANSIFEX, IF YOU WISH TO HELP TRANSLATION COME ON THE SLACK https://chat.btcpayserver.org/ TO REQUEST PERMISSION TO https://www.transifex.com/btcpayserver/btcpayserver/",
   "code": "sr",
   "currentLanguage": "Srpski",
   "lang": "Jezik",
@@ -37,9 +37,9 @@
   "Invoice ID": "Broj računa",
   "Order ID": "Broj narudžbine",
   "Return to StoreName": "Vrati se na {{storeName}}",
-  "This invoice has been paid": "Račun je plaćen.",
-  "This invoice has been archived": "Račun je arhiviran.",
-  "Archived_Body": "Molimo kontaktirajte prodavca za bili kakvu informaciju ili pomoć u vezi narudžbine.",
+  "This invoice has been paid": "Račun je plaćen",
+  "This invoice has been archived": "Račun je arhiviran",
+  "Archived_Body": "Molimo kontaktirajte prodavca za bili kakvu informaciju ili pomoć u vezi narudžbine",
   "BOLT 11 Invoice": "BOLT 11 Račun",
   "Node Info": "Informacije Node-a",
   "txCount": "{{count}} transakcija",
@@ -49,5 +49,5 @@
   "Close": "Zatvori",
   "NotPaid_ExtraTransaction": "Račun nije plaćen u potpunosti. Pošalji još jednu transakciju da izmiriš Dug.",
   "Recommended_Fee": "Preporučena provizija: {{feeRate}} sat/byte",
-  "View receipt": "View receipt"
+  "View receipt": "Pogledaj račun"
 }

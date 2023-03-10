@@ -1,7 +1,7 @@
-﻿@inject UserManager<ApplicationUser> _userManager
+@inject UserManager<ApplicationUser> _userManager
 
 @* This is a temporary infobox to inform users about the state changes in 1.4.0. It should be removed eventually. *@
-@if ((await _userManager.GetUserAsync(User)).GetBlob().ShowInvoiceStatusChangeHint)
+@if ((await _userManager.GetUserAsync(User)).GetBlob()?.ShowInvoiceStatusChangeHint is true)
 {
     <div class="alert alert-light alert-dismissible fade show mb-5" role="alert">
         <form method="post" asp-controller="UIManage" asp-action="DisableShowInvoiceStatusChangeHint" id="invoicestatuschangeform">

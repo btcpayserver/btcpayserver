@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
-using BTCPayServer.Common;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Logging;
@@ -11,6 +10,7 @@ using BTCPayServer.Models;
 using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.Rates;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using NBXplorer.Models;
@@ -24,12 +24,14 @@ namespace BTCPayServer.Payments.Bitcoin
         private readonly BTCPayNetworkProvider _networkProvider;
         private readonly IFeeProviderFactory _FeeRateProviderFactory;
         private readonly NBXplorerDashboard _dashboard;
+        private readonly CurrencyNameTable _currencyNameTable;
         private readonly Services.Wallets.BTCPayWalletProvider _WalletProvider;
         private readonly Dictionary<string, string> _bech32Prefix;
 
         public BitcoinLikePaymentHandler(ExplorerClientProvider provider,
             BTCPayNetworkProvider networkProvider,
             IFeeProviderFactory feeRateProviderFactory,
+            CurrencyNameTable currencyNameTable,
             NBXplorerDashboard dashboard,
             Services.Wallets.BTCPayWalletProvider walletProvider)
         {
@@ -38,13 +40,13 @@ namespace BTCPayServer.Payments.Bitcoin
             _FeeRateProviderFactory = feeRateProviderFactory;
             _dashboard = dashboard;
             _WalletProvider = walletProvider;
+            _currencyNameTable = currencyNameTable;
 
             _bech32Prefix = networkProvider.GetAll().OfType<BTCPayNetwork>()
                 .Where(network => network.NBitcoinNetwork?.Consensus?.SupportSegwit is true).ToDictionary(network => network.CryptoCode,
                     network => Encoders.ASCII.EncodeData(
                         network.NBitcoinNetwork.GetBech32Encoder(Bech32Type.WITNESS_PUBKEY_ADDRESS, false)
                             .HumanReadablePart));
-
         }
 
         class Prepare
@@ -58,24 +60,47 @@ namespace BTCPayServer.Payments.Bitcoin
             StoreBlob storeBlob, IPaymentMethod paymentMethod)
         {
             var paymentMethodId = paymentMethod.GetId();
+            var paymentMethodDetails = (BitcoinLikeOnChainPaymentMethod)paymentMethod.GetPaymentMethodDetails();
             var cryptoInfo = invoiceResponse.CryptoInfo.First(o => o.GetpaymentMethodId() == paymentMethodId);
             var network = _networkProvider.GetNetwork<BTCPayNetwork>(model.CryptoCode);
             model.ShowRecommendedFee = storeBlob.ShowRecommendedFee;
-            model.FeeRate = ((BitcoinLikeOnChainPaymentMethod)paymentMethod.GetPaymentMethodDetails()).GetFeeRate();
+            model.FeeRate = paymentMethodDetails.GetFeeRate();
             model.PaymentMethodName = GetPaymentMethodName(network);
 
+            var bip21Case = network.SupportLightning && storeBlob.OnChainWithLnInvoiceFallback;
+            var amountInSats = bip21Case && storeBlob.LightningAmountInSatoshi && model.CryptoCode == "BTC";
             string lightningFallback = null;
-            if (model.Activated && network.SupportLightning && storeBlob.OnChainWithLnInvoiceFallback)
+            if (model.Activated && bip21Case)
             {
                 var lightningInfo = invoiceResponse.CryptoInfo.FirstOrDefault(a =>
                     a.GetpaymentMethodId() == new PaymentMethodId(model.CryptoCode, PaymentTypes.LightningLike));
-
-
-                // Turn the colon into an equal sign to trun the whole into the lightning part of the query string
-
-                // lightningInfo?.PaymentUrls?.BOLT11:  lightning:lnbcrt440070n1p3ua9np...
-                lightningFallback = lightningInfo?.PaymentUrls?.BOLT11.Replace("lightning:", "lightning=", StringComparison.OrdinalIgnoreCase);
-                // lightningFallback: lightning=lnbcrt440070n1p3ua9np...
+                if (lightningInfo is not null && !string.IsNullOrEmpty(lightningInfo.PaymentUrls?.BOLT11))
+                {
+                    lightningFallback = lightningInfo.PaymentUrls.BOLT11;
+                }   
+                else
+                {
+                    var lnurlInfo = invoiceResponse.CryptoInfo.FirstOrDefault(a =>
+                        a.GetpaymentMethodId() == new PaymentMethodId(model.CryptoCode, PaymentTypes.LNURLPay));
+                    if (lnurlInfo is not null)
+                    {
+                        lightningFallback = lnurlInfo.PaymentUrls?.AdditionalData["LNURLP"].ToObject<string>();
+                        
+                        // This seems to be an edge case in the Selenium tests, in which the LNURLP isn't populated.
+                        // I have come across it only in the tests and this is supposed to make them happy.
+                        if (string.IsNullOrEmpty(lightningFallback))
+                        {
+                            var serverUrl = new Uri(lnurlInfo.Url[..lnurlInfo.Url.IndexOf("/i/", StringComparison.InvariantCultureIgnoreCase)]);
+                            var uri = new Uri($"{serverUrl}{network.CryptoCode}/lnurl/pay/i/{invoiceResponse.Id}");
+                            lightningFallback = LNURL.LNURL.EncodeUri(uri, "payRequest", true).ToString();
+                        }
+                    }
+                }
+                if (!string.IsNullOrEmpty(lightningFallback))
+                {
+                    lightningFallback = lightningFallback
+                        .Replace("lightning:", "lightning=", StringComparison.OrdinalIgnoreCase);
+                }
             }
 
             if (model.Activated)
@@ -115,6 +140,11 @@ namespace BTCPayServer.Payments.Bitcoin
             else
             {
                 model.InvoiceBitcoinUrl = model.InvoiceBitcoinUrlQR = string.Empty;
+            }
+            
+            if (model.Activated && amountInSats)
+            {
+                base.PreparePaymentModelForAmountInSats(model, paymentMethod, _currencyNameTable);
             }
         }
 

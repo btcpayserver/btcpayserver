@@ -2,8 +2,9 @@
 @model BTCPayServer.Models.InvoicingModels.PaymentModel
 
 <template id="bitcoin-method-checkout-template">
+    @await Component.InvokeAsync("UiExtensionPoint", new {location = "checkout-v2-bitcoin-pre-content", model = Model})
     <div class="payment-box">
-        <div v-if="model.invoiceBitcoinUrlQR" class="qr-container" :data-clipboard="model.btcAddress" data-clipboard-confirm-element="QR_Text_@Model.PaymentMethodId">
+        <div v-if="model.invoiceBitcoinUrlQR" class="qr-container" :data-qr-value="model.invoiceBitcoinUrlQR" :data-clipboard="model.btcAddress" data-clipboard-confirm-element="QR_Text_@Model.PaymentMethodId">
             <div>
                 <qrcode :value="model.invoiceBitcoinUrlQR" tag="div" :options="qrOptions" />
             </div>
@@ -17,15 +18,16 @@
             </div>
             <button type="button" class="btn btn-link" data-clipboard-target="#Address_@Model.PaymentMethodId" :data-clipboard-confirm="$t('copy_confirm')" v-t="'copy'"></button>
         </div>
-        <div v-if="BOLT11" class="input-group mt-3">
+        <div v-if="lightning" class="input-group mt-3">
             <div class="form-floating">
-                <input id="BOLT11_@Model.PaymentMethodId" class="form-control-plaintext" readonly="readonly" :value="BOLT11" />
-                <label for="BOLT11_@Model.PaymentMethodId" v-t="'lightning'"></label>
+                <input id="Lightning_@Model.PaymentMethodId" class="form-control-plaintext" readonly="readonly" :value="lightning" />
+                <label for="Lightning_@Model.PaymentMethodId" v-t="'lightning'"></label>
             </div>
-            <button type="button" class="btn btn-link" data-clipboard-target="#BOLT11_@Model.PaymentMethodId" :data-clipboard-confirm="$t('copy_confirm')" v-t="'copy'"></button>
+            <button type="button" class="btn btn-link" data-clipboard-target="#Lightning_@Model.PaymentMethodId" :data-clipboard-confirm="$t('copy_confirm')" v-t="'copy'"></button>
         </div>
-        <a v-if="model.invoiceBitcoinUrl" class="btn btn-primary rounded-pill w-100 mt-4" target="_top"
+        <a v-if="model.invoiceBitcoinUrl" class="btn btn-primary rounded-pill w-100 mt-4" target="_top" id="PayInWallet"
            :href="model.invoiceBitcoinUrl" :title="$t(hasPayjoin ? 'BIP21 payment link with PayJoin support' : 'BIP21 payment link')" v-t="'pay_in_wallet'"></a>
+        @await Component.InvokeAsync("UiExtensionPoint", new {location = "checkout-v2-bitcoin-post-content", model = Model})
     </div>
 </template>
 
@@ -44,8 +46,8 @@
             hasPayjoin () {
                 return this.model.invoiceBitcoinUrl.indexOf('@PayjoinClient.BIP21EndpointKey=') !== -1;
             },
-            BOLT11 () {
-                const match = this.model.invoiceBitcoinUrl.match(/&lightning=(.*)&?/i);
+            lightning () {
+                const match = this.model.invoiceBitcoinUrl.match(/[&?]lightning=(.*)&?/i);
                 return match ? match[1].toLowerCase() : null;
             }
         }

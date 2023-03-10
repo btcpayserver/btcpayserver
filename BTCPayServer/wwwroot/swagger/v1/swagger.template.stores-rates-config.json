@@ -238,8 +238,9 @@
                         "description": "Errors relating to this currency pair fetching based on your config"
                     },
                     "rate": {
-                        "type": "number",
-                        "example": 24520.23,
+                        "type": "string",
+                        "format": "decimal",
+                        "example": "64392.23",
                         "description": "the rate fetched based on the currency pair"
                     }
                 }

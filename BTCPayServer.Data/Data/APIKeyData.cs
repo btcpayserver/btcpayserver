@@ -1,9 +1,11 @@
+using System;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace BTCPayServer.Data
 {
-    public class APIKeyData
+    public class APIKeyData : IHasBlob<APIKeyBlob>
     {
         [MaxLength(50)]
         public string Id { get; set; }
@@ -16,13 +18,15 @@ namespace BTCPayServer.Data
 
         public APIKeyType Type { get; set; } = APIKeyType.Legacy;
 
+        [Obsolete("Use Blob2 instead")]
         public byte[] Blob { get; set; }
+        public string Blob2 { get; set; }
         public StoreData StoreData { get; set; }
         public ApplicationUser User { get; set; }
         public string Label { get; set; }
 
 
-        internal static void OnModelCreating(ModelBuilder builder)
+        internal static void OnModelCreating(ModelBuilder builder, DatabaseFacade databaseFacade)
         {
             builder.Entity<APIKeyData>()
                    .HasOne(o => o.StoreData)
@@ -36,6 +40,13 @@ namespace BTCPayServer.Data
 
             builder.Entity<APIKeyData>()
                 .HasIndex(o => o.StoreId);
+
+            if (databaseFacade.IsNpgsql())
+            {
+                builder.Entity<APIKeyData>()
+                    .Property(o => o.Blob2)
+                    .HasColumnType("JSONB");
+            }
         }
     }
 

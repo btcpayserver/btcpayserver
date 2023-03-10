@@ -661,8 +661,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     Type = paymentEntity.GetPaymentMethodId().PaymentType.ToPrettyString(),
                     Destination = pdata.GetDestination(),
                     Paid = pdata.GetValue(),
-                    NetworkFee = paymentEntity.NetworkFee,
-                    Accounted = paymentEntity.Accounted
+                    NetworkFee = paymentEntity.NetworkFee
                 };
             }).ToArray();
         }

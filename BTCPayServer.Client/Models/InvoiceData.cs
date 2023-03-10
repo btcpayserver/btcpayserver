@@ -99,7 +99,6 @@ namespace BTCPayServer.Client.Models
         public string Destination { get; set; }
         public decimal Paid { get; set; }
         public decimal NetworkFee { get; set; }
-        public bool Accounted { get; set; }
     }
 
     public class InvoiceData : InvoiceDataBase

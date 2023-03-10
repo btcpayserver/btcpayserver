@@ -114,9 +114,9 @@ namespace BTCPayServer.Controllers
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [HttpGet("/stores/{storeId}/apps/create")]
-        public IActionResult CreateApp(string storeId)
+        public IActionResult CreateApp(string storeId, string appType = null)
         {
-            var vm = new CreateAppViewModel (_appService){StoreId = GetCurrentStore().Id};
+            var vm = new CreateAppViewModel (_appService){StoreId = GetCurrentStore().Id, SelectedAppType = appType};
             return View(vm);
         }
 

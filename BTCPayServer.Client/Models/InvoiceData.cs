@@ -93,7 +93,8 @@ namespace BTCPayServer.Client.Models
     {
         public decimal ConversionRate { get; set; }
         public string Id { get; set; }
-        public DateTimeOffset? ReceivedDate { get; set; }
+        [JsonConverter(typeof(NBitcoin.JsonConverters.DateTimeToUnixTimeConverter))]
+        public DateTimeOffset? ReceivedTime { get; set; }
         public string Type { get; set; }
         public string Destination { get; set; }
         public decimal Paid { get; set; }

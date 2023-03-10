@@ -578,7 +578,7 @@ namespace BTCPayServer.Tests
                 Assert.DoesNotContain("invoice-processing", s.Driver.PageSource);
             });
 
-            Assert.Contains("$100.00", s.Driver.PageSource);
+            Assert.Contains("100.00 USD", s.Driver.PageSource);
             Assert.Contains(i, s.Driver.PageSource);
 
             s.GoToInvoices(s.StoreId);

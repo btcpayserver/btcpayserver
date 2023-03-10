@@ -114,7 +114,7 @@ namespace BTCPayServer.Payments
             model.NetworkFee = new Money(model.NetworkFee, MoneyUnit.BTC).ToUnit(MoneyUnit.Satoshi);
             model.Rate = model.InvoiceCurrency is "BTC" or "SATS"
                 ? null
-                : displayFormatter.Currency(paymentMethod.Rate / 100_000_000, model.InvoiceCurrency);
+                : displayFormatter.Currency(paymentMethod.Rate / 100_000_000, model.InvoiceCurrency, DisplayFormatter.CurrencyFormat.Symbol);
         }
 
         public Task<IPaymentMethodDetails> CreatePaymentMethodDetails(InvoiceLogs logs,

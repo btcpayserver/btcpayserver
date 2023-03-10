@@ -11,6 +11,7 @@ using BTCPayServer.Data;
 using BTCPayServer.Rating;
 using BTCPayServer.Services.Rates;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BTCPayServer.Controllers.GreenField
@@ -18,6 +19,7 @@ namespace BTCPayServer.Controllers.GreenField
     [ApiController]
     [Route("api/v1/stores/{storeId}/rates")]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+    [EnableCors(CorsPolicies.All)]
     public class GreenfieldStoreRatesController : ControllerBase
     {
         private readonly RateFetcher _rateProviderFactory;

@@ -6,6 +6,7 @@ using BTCPayServer.Data;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
@@ -17,6 +18,7 @@ namespace BTCPayServer.Controllers.Greenfield
     [Route("api/test/apikey")]
     [ApiController]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+    [EnableCors(CorsPolicies.All)]
     public class GreenfieldTestApiKeyController : ControllerBase
     {
         private readonly UserManager<ApplicationUser> _userManager;

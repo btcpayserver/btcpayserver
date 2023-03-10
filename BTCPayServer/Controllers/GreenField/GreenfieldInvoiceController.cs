@@ -643,7 +643,6 @@ namespace BTCPayServer.Controllers.Greenfield
                     RedirectURL = entity.RedirectURLTemplate
                 },
                 Receipt = entity.ReceiptOptions,
-                Payments = ToPayments(entity)
             };
         }
 

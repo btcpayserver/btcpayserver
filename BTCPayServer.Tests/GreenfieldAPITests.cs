@@ -2150,20 +2150,14 @@ namespace BTCPayServer.Tests
 
             foreach (var marked in new[] { InvoiceStatus.Settled, InvoiceStatus.Invalid })
             {
-                var amount = 100;
                 var inv = await client.CreateInvoice(user.StoreId,
-                new CreateInvoiceRequest() { Currency = "USD", Amount = amount });
+                new CreateInvoiceRequest() { Currency = "USD", Amount = 100 });
                 await user.PayInvoice(inv.Id);
                 await client.MarkInvoiceStatus(user.StoreId, inv.Id, new MarkInvoiceStatusRequest()
                 {
                     Status = marked
                 });
                 var result = await client.GetInvoice(user.StoreId, inv.Id);
-                Assert.Single(result.Payments);
-                // 1 BTC == 5000 USD in tests
-                Assert.Equal(Decimal.Divide(amount, 5000), result.Payments.First().Amount);
-                Assert.Equal("On-Chain", result.Payments.First().Type);
-                
                 if (marked == InvoiceStatus.Settled)
                 {
                     Assert.Equal(InvoiceStatus.Settled, result.Status);

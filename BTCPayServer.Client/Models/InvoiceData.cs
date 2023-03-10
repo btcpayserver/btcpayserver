@@ -122,7 +122,6 @@ namespace BTCPayServer.Client.Models
         [JsonProperty(ItemConverterType = typeof(StringEnumConverter))]
         public InvoiceStatus[] AvailableStatusesForManualMarking { get; set; }
         public bool Archived { get; set; }
-        public Payment[] Payments { get; set; }
     }
     public enum InvoiceStatus
     {

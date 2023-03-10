@@ -661,7 +661,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     ReceivedTime = paymentEntity.ReceivedTime,
                     Type = paymentEntity.GetPaymentMethodId().PaymentType.ToPrettyString(),
                     Destination = pdata.GetDestination(),
-                    Paid = pdata.GetValue(),
+                    Amount = pdata.GetValue(),
                     NetworkFee = paymentEntity.NetworkFee
                 };
             }).ToArray();

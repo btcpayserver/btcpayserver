@@ -98,7 +98,7 @@ namespace BTCPayServer.Client.Models
         public DateTimeOffset? ReceivedTime { get; set; }
         public string Type { get; set; }
         public string Destination { get; set; }
-        public decimal Paid { get; set; }
+        public decimal Amount { get; set; }
         public decimal NetworkFee { get; set; }
     }
 

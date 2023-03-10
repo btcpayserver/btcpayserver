@@ -2161,8 +2161,7 @@ namespace BTCPayServer.Tests
                 var result = await client.GetInvoice(user.StoreId, inv.Id);
                 Assert.Single(result.Payments);
                 // 1 BTC == 5000 USD in tests
-                Assert.Equal(5000, result.Payments.First().ConversionRate);
-                Assert.Equal(Decimal.Divide(amount, 5000), result.Payments.First().Paid);
+                Assert.Equal(Decimal.Divide(amount, 5000), result.Payments.First().Amount);
                 Assert.Equal("On-Chain", result.Payments.First().Type);
                 
                 if (marked == InvoiceStatus.Settled)
@@ -2343,8 +2342,7 @@ namespace BTCPayServer.Tests
             Assert.Single(result);
             var payment = result.First();
             // 1 BTC == 5000 USD in tests
-            Assert.Equal(5000, payment.ConversionRate);
-            Assert.Equal(Decimal.Divide(amount, 5000), payment.Paid);
+            Assert.Equal(Decimal.Divide(amount, 5000), payment.Amount);
             Assert.Equal("On-Chain", payment.Type);
         }
 

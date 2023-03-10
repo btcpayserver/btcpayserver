@@ -425,14 +425,26 @@
     background: var(--btcpay-footer-bg);
 }
 
-.btcpay-footer a {
+.btcpay-footer a,
+.btcpay-footer button {
+    display: flex;
+    align-items: center;
+    gap: var(--btcpay-space-s);
     color: var(--btcpay-footer-link);
+    font-size: var(--btcpay-font-size-s);
     text-decoration: none;
+    padding: 0;
 }
 
 .btcpay-footer a:focus,
-.btcpay-footer a:hover {
+.btcpay-footer a:hover,
+.btcpay-footer button:focus,
+.btcpay-footer button:hover {
     color: var(--btcpay-footer-link-accent);
+}
+
+.btcpay-footer [data-clipboard-hover]::before {
+    top: .125rem;
 }
 
 @media (max-width: 991px) {

@@ -90,8 +90,10 @@
                 <div class="form-group">
                     <label asp-for="DerivationScheme" class="form-label"></label>
                     <div class="input-group" data-clipboard="@Model.DerivationScheme">
-                        <input asp-for="DerivationScheme" class="form-control" style="cursor:copy" readonly />
-                        <button type="button" class="input-group-text btn btn-outline-secondary" data-clipboard-confirm style="min-width:8em;">Copy</button>
+                        <input asp-for="DerivationScheme" class="form-control" readonly />
+                        <button type="button" class="btn btn-outline-secondary px-3">
+                            <vc:icon symbol="copy" />
+                        </button>
                     </div>
                 </div>
                 @if (!string.IsNullOrEmpty(Model.DerivationSchemeInput) && Model.DerivationSchemeInput != Model.DerivationScheme)
@@ -99,8 +101,10 @@
                     <div class="form-group">
                         <label asp-for="DerivationSchemeInput" class="form-label"></label>
                         <div class="input-group" data-clipboard="@Model.DerivationSchemeInput">
-                            <input asp-for="DerivationSchemeInput" class="form-control" style="cursor:copy" readonly/>
-                            <button type="button" class="input-group-text btn btn-outline-secondary" data-clipboard-confirm style="min-width:8em;">Copy</button>
+                            <input asp-for="DerivationSchemeInput" class="form-control" readonly/>
+                            <button type="button" class="btn btn-outline-secondary px-3">
+                                <vc:icon symbol="copy" />
+                            </button>
                         </div>
                     </div>
                 }
@@ -115,8 +119,10 @@
                             </button>
                         </div>
                         <div class="input-group" data-clipboard="@Model.AccountKeys[i].AccountKey">
-                            <input asp-for="@Model.AccountKeys[i].AccountKey" class="form-control" style="cursor:copy" readonly/>
-                            <button type="button" class="input-group-text btn btn-outline-secondary" data-clipboard-confirm style="min-width:8em;">Copy</button>
+                            <input asp-for="@Model.AccountKeys[i].AccountKey" class="form-control" readonly/>
+                            <button type="button" class="btn btn-outline-secondary px-3">
+                                <vc:icon symbol="copy" />
+                            </button>
                         </div>
                     </div>
                     <div class="row">

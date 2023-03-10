@@ -3,19 +3,20 @@
 <template id="lightning-method-checkout-template">
     <div class="payment-box">
         @await Component.InvokeAsync("UiExtensionPoint" ,  new { location="checkout-v2-lightning-pre-content", model = Model})
-        <div v-if="model.invoiceBitcoinUrlQR" class="qr-container" :data-qr-value="model.invoiceBitcoinUrlQR" :data-clipboard="model.btcAddress" data-clipboard-confirm-element="QR_Text_@Model.PaymentMethodId">
+        <div v-if="model.invoiceBitcoinUrlQR" class="qr-container" :data-qr-value="model.invoiceBitcoinUrlQR" :data-clipboard="model.btcAddress">
             <div>
                 <qrcode :value="model.invoiceBitcoinUrlQR" tag="div" :options="qrOptions" />
             </div>
             <img class="qr-icon" :src="model.cryptoImage" :alt="model.paymentMethodName"/>
-            <small class="qr-text" id="QR_Text_@Model.PaymentMethodId" v-t="'qr_text'"></small>
         </div>
         <div v-if="model.btcAddress" class="input-group mt-3">
             <div class="form-floating">
                 <input id="Lightning_@Model.PaymentMethodId" class="form-control-plaintext" readonly="readonly" :value="model.btcAddress">
                 <label for="Lightning_@Model.PaymentMethodId" v-t="'lightning'"></label>
             </div>
-            <button type="button" class="btn btn-link" data-clipboard-target="#Lightning_@Model.PaymentMethodId" :data-clipboard-confirm="$t('copy_confirm')" v-t="'copy'"></button>
+            <button type="button" class="btn btn-link" data-clipboard-target="#Lightning_@Model.PaymentMethodId">
+                <vc:icon symbol="copy" />
+            </button>
         </div>
         <a v-if="model.invoiceBitcoinUrl" class="btn btn-primary rounded-pill w-100 mt-4" target="_top" id="PayInWallet"
            :href="model.invoiceBitcoinUrl" v-t="'pay_in_wallet'"></a>

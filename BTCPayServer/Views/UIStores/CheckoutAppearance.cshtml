@@ -87,24 +87,24 @@
                     <span asp-validation-for="DisplayExpirationTimer" class="text-danger"></span>
                 </div>
 				<div class="form-check">
-					<input asp-for="ShowStoreHeader" type="checkbox" class="form-check-input" />
-					<label asp-for="ShowStoreHeader" class="form-check-label"></label>
+				  <input asp-for="ShowStoreHeader" type="checkbox" class="form-check-input" />
+				  <label asp-for="ShowStoreHeader" class="form-check-label"></label>
 				</div>
 				<div class="form-check">
-					<input asp-for="ShowLNWithdrawButton" type="checkbox" class="form-check-input" />
-					<label asp-for="ShowLNWithdrawButton" class="form-check-label"></label>
+				  <input asp-for="ShowLNWithdrawButton" type="checkbox" class="form-check-input" />
+				  <label asp-for="ShowLNWithdrawButton" class="form-check-label"></label>
 				</div>
             </div>
+			<div class="form-check">
+				<input asp-for="ShowPayInWalletButton" type="checkbox" class="form-check-input" />
+				<label asp-for="ShowPayInWalletButton" class="form-check-label"></label>
+			</div>
             <div class="form-check">
                 <input asp-for="OnChainWithLnInvoiceFallback" type="checkbox" class="form-check-input" />
                 <label asp-for="OnChainWithLnInvoiceFallback" class="form-check-label"></label>
                 <a href="https://bitcoinqr.dev/" target="_blank" rel="noreferrer noopener">
                     <vc:icon symbol="info" />
                 </a>
-            </div>
-			<div class="form-check">
-                <input asp-for="ShowPayInWalletButton" type="checkbox" class="form-check-input" />
-				<label asp-for="ShowPayInWalletButton" class="form-check-label"></label>
             </div>
             <div class="form-check">
                 <input asp-for="LightningAmountInSatoshi" type="checkbox" class="form-check-input" />

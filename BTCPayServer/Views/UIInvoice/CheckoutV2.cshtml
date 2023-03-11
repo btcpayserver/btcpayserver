@@ -40,8 +40,11 @@
 </head>
 <body class="min-vh-100">
     <div id="Checkout-v2" class="public-page-wrap" v-cloak>
-        <partial name="_StoreHeader" model="(Model.StoreName, Model.LogoFileId)" />
-        <main class="shadow-lg">
+		@if (Model.ShowStoreHeader)
+		{
+			<partial name="_StoreHeader" model="(Model.StoreName, Model.LogoFileId)" />
+		}
+		<main class="shadow-lg">
             <nav v-if="isModal">
                 <button type="button" v-if="isModal" id="close" v-on:click="close">
                     <vc:icon symbol="close"/>

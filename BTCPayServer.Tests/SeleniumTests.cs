@@ -1619,7 +1619,10 @@ namespace BTCPayServer.Tests
                 s.Driver.Navigate().Refresh();
                 Assert.Contains("transaction-label", s.Driver.PageSource);
             });
-            Assert.Equal("payout", s.Driver.FindElement(By.ClassName("transaction-label")).Text);
+            var labels = s.Driver.FindElements(By.CssSelector("#WalletTransactionsList tr:first-child div.transaction-label"));
+            Assert.Equal(2, labels.Count);
+            Assert.Contains(labels, element => element.Text == "payout");
+            Assert.Contains(labels, element => element.Text == "pull-payment");
 
             s.GoToStore(s.StoreId, StoreNavPages.Payouts);
             s.Driver.FindElement(By.Id($"{PayoutState.InProgress}-view")).Click();

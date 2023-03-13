@@ -183,6 +183,28 @@ function initApp() {
                 return !this.paymentMethodIds.includes(this.pmId);
             }
         },
+        watch: {
+            isPaid: function (newValue, oldValue) {
+                if (newValue === true && oldValue === false) {
+                    const duration = 5000;
+                    const self = this;
+                    // celebration!
+                    Vue.nextTick(function () {
+                        self.celebratePayment(duration);
+                    });
+                    // automatic redirect or close
+                    if (self.srvModel.redirectAutomatically && self.storeLink) {
+                        setTimeout(function () {
+                            if (self.isModal && window.top.location === self.storeLink) {
+                                self.close();
+                            } else {
+                                window.top.location = self.storeLink;
+                            }
+                        }, duration);
+                    }
+                }
+            }
+        },
         mounted () {
             this.updateData(this.srvModel);
             this.updateTimer();
@@ -268,20 +290,23 @@ function initApp() {
                 // updating ui
                 this.srvModel = data;
                 eventBus.$emit('data-fetched', this.srvModel);
-    
-                const self = this;
-                if (self.isPaid && data.redirectAutomatically && self.storeLink) {
-                    setTimeout(function () {
-                        if (self.isModal && window.top.location === self.storeLink){
-                            self.close();
-                        } else {
-                            window.top.location = self.storeLink;
-                        }
-                    }, 2000);
-                }
             },
             replaceNewlines (value) {
                 return value ? value.replace(/\n/ig, '<br>') : '';
+            },
+            async celebratePayment (duration) {
+                const $confettiEl = document.getElementById('confetti')
+                if (window.confetti && $confettiEl && !$confettiEl.dataset.running) {
+                    $confettiEl.dataset.running = true;
+                    await window.confetti($confettiEl, {
+                        duration,
+                        spread: 90,
+                        stagger: 5,
+                        elementCount: 121,
+                        colors: ["#a864fd", "#29cdff", "#78ff44", "#ff718d", "#fdff6a"]
+                    });
+                    delete $confettiEl.dataset.running;
+                }
             }
         }
     });

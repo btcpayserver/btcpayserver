@@ -86,6 +86,10 @@
                     </div>
                     <span asp-validation-for="DisplayExpirationTimer" class="text-danger"></span>
                 </div>
+                <div class="form-check">
+                    <input asp-for="CelebratePayment" type="checkbox" class="form-check-input" />
+                    <label asp-for="CelebratePayment" class="form-check-label"></label>
+                </div>
             </div>
             <div class="form-check">
                 <input asp-for="OnChainWithLnInvoiceFallback" type="checkbox" class="form-check-input" />

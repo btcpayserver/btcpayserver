@@ -45,6 +45,7 @@ namespace BTCPayServer.Controllers
         readonly StoreRepository _StoreRepository;
         readonly UserManager<ApplicationUser> _UserManager;
         private readonly CurrencyNameTable _CurrencyNameTable;
+        private readonly DisplayFormatter _displayFormatter;
         readonly EventAggregator _EventAggregator;
         readonly BTCPayNetworkProvider _NetworkProvider;
         private readonly PaymentMethodHandlerDictionary _paymentMethodHandlerDictionary;
@@ -61,6 +62,7 @@ namespace BTCPayServer.Controllers
         public UIInvoiceController(
             InvoiceRepository invoiceRepository,
             WalletRepository walletRepository,
+            DisplayFormatter displayFormatter,
             CurrencyNameTable currencyNameTable,
             UserManager<ApplicationUser> userManager,
             RateFetcher rateProvider,
@@ -78,6 +80,7 @@ namespace BTCPayServer.Controllers
             InvoiceActivator invoiceActivator,
             LinkGenerator linkGenerator)
         {
+            _displayFormatter = displayFormatter;
             _CurrencyNameTable = currencyNameTable ?? throw new ArgumentNullException(nameof(currencyNameTable));
             _StoreRepository = storeRepository ?? throw new ArgumentNullException(nameof(storeRepository));
             _InvoiceRepository = invoiceRepository ?? throw new ArgumentNullException(nameof(invoiceRepository));

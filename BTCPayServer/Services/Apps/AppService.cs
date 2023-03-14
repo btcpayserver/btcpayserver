@@ -603,6 +603,15 @@ namespace BTCPayServer.Services.Apps
             return await appType?.ViewLink(app)!;
         }
 #nullable restore
+        public bool SupportsSalesStats(AppData app)
+        {
+            return GetAppForType(app.AppType).SupportsSalesStats;
+        }
+        
+        public bool SupportsItemStats(AppData app)
+        {
+            return GetAppForType(app.AppType).SupportsItemStats;
+        }
     }
 
     public class ItemStats

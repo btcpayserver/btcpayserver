@@ -10,6 +10,8 @@ namespace BTCPayServer.Services.Apps
     {
         public string Description { get;  }
         public string Type { get; }
+        public bool SupportsSalesStats { get; }
+        public bool SupportsItemStats { get; }
         Task<string> ConfigureLink(AppData app);
         Task<string> ViewLink(AppData app);
         Task SetDefaultSettings(AppData appData, string defaultCurrency);

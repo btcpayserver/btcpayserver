@@ -64,10 +64,10 @@ namespace BTCPayServer.Plugins.Crowdfund
             _invoiceRepository = invoiceRepository;
         }
 
-        public Task<string> ConfigureLink(string appId)
+        public Task<string> ConfigureLink(AppData app)
         {
             return Task.FromResult(_linkGenerator.GetPathByAction(nameof(UICrowdfundController.UpdateCrowdfund),
-                "UICrowdfund", new {appId}, _options.Value.RootPath));
+                "UICrowdfund", new { appId = app.Id }, _options.Value.RootPath));
         }
 
         public Task<SalesStats> GetSaleStates(AppData app, InvoiceEntity[] paidInvoices, int numberOfDays)

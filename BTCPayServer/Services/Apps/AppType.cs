@@ -10,7 +10,7 @@ namespace BTCPayServer.Services.Apps
     {
         public string Description { get;  }
         public string Type { get; }
-        Task<string> ConfigureLink(string appId);
+        Task<string> ConfigureLink(AppData app);
         Task<string> ViewLink(AppData app);
         Task SetDefaultSettings(AppData appData, string defaultCurrency);
         Task<SalesStats> GetSaleStates(AppData app, InvoiceEntity[] paidInvoices, int numberOfDays);

@@ -68,10 +68,10 @@ namespace BTCPayServer.Plugins.PointOfSale
             _htmlSanitizer = htmlSanitizer;
         }
 
-        public Task<string> ConfigureLink(string appId)
+        public Task<string> ConfigureLink(AppData app)
         {
             return Task.FromResult(_linkGenerator.GetPathByAction(nameof(UIPointOfSaleController.UpdatePointOfSale),
-                "UIPointOfSale", new {appId}, _btcPayServerOptions.Value.RootPath));;
+                "UIPointOfSale", new { appId = app.Id }, _btcPayServerOptions.Value.RootPath));
         }
 
         public Task<SalesStats> GetSaleStates(AppData app, InvoiceEntity[] paidInvoices, int numberOfDays)

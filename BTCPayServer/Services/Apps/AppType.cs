@@ -13,7 +13,7 @@ namespace BTCPayServer.Services.Apps
         Task<string> ConfigureLink(AppData app);
         Task<string> ViewLink(AppData app);
         Task SetDefaultSettings(AppData appData, string defaultCurrency);
-        Task<SalesStats> GetSaleStates(AppData app, InvoiceEntity[] paidInvoices, int numberOfDays);
+        Task<SalesStats> GetSaleStats(AppData app, InvoiceEntity[] paidInvoices, int numberOfDays);
         Task<IEnumerable<ItemStats>> GetItemStats(AppData appData, InvoiceEntity[] invoiceEntities);
         Task<object> GetInfo(AppData appData);
     }

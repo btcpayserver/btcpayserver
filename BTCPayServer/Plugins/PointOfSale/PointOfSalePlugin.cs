@@ -74,7 +74,7 @@ namespace BTCPayServer.Plugins.PointOfSale
                 "UIPointOfSale", new { appId = app.Id }, _btcPayServerOptions.Value.RootPath));
         }
 
-        public Task<SalesStats> GetSaleStates(AppData app, InvoiceEntity[] paidInvoices, int numberOfDays)
+        public Task<SalesStats> GetSaleStats(AppData app, InvoiceEntity[] paidInvoices, int numberOfDays)
         {
             var posS = app.GetSettings<PointOfSaleSettings>();
             var items = AppService.Parse(_htmlSanitizer, _displayFormatter, posS.Template, posS.Currency);

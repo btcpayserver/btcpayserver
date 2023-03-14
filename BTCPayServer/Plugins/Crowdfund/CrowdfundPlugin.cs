@@ -70,7 +70,7 @@ namespace BTCPayServer.Plugins.Crowdfund
                 "UICrowdfund", new { appId = app.Id }, _options.Value.RootPath));
         }
 
-        public Task<SalesStats> GetSaleStates(AppData app, InvoiceEntity[] paidInvoices, int numberOfDays)
+        public Task<SalesStats> GetSaleStats(AppData app, InvoiceEntity[] paidInvoices, int numberOfDays)
         {
             var cfS = app.GetSettings<CrowdfundSettings>();
             var items = AppService.Parse(_htmlSanitizer, _displayFormatter, cfS.PerksTemplate, cfS.TargetCurrency);

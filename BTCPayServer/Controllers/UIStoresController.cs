@@ -27,7 +27,6 @@ using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -387,7 +386,9 @@ namespace BTCPayServer.Controllers
             }).ToList();
 
             vm.UseNewCheckout = storeBlob.CheckoutType == Client.Models.CheckoutType.V2;
+            vm.CelebratePayment = storeBlob.CelebratePayment;
             vm.OnChainWithLnInvoiceFallback = storeBlob.OnChainWithLnInvoiceFallback;
+            vm.LightningAmountInSatoshi = storeBlob.LightningAmountInSatoshi;
             vm.RequiresRefundEmail = storeBlob.RequiresRefundEmail;
             vm.LazyPaymentMethods = storeBlob.LazyPaymentMethods;
             vm.RedirectAutomatically = storeBlob.RedirectAutomatically;
@@ -505,8 +506,9 @@ namespace BTCPayServer.Controllers
             }
 
             blob.CheckoutType = model.UseNewCheckout ? Client.Models.CheckoutType.V2 : Client.Models.CheckoutType.V1;
-
+            blob.CelebratePayment = model.CelebratePayment;
             blob.OnChainWithLnInvoiceFallback = model.OnChainWithLnInvoiceFallback;
+            blob.LightningAmountInSatoshi = model.LightningAmountInSatoshi;
             blob.RequiresRefundEmail = model.RequiresRefundEmail;
             blob.LazyPaymentMethods = model.LazyPaymentMethods;
             blob.RedirectAutomatically = model.RedirectAutomatically;

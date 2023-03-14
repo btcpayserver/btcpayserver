@@ -26,11 +26,17 @@ namespace BTCPayServer.Models.StoreViewModels
         [Display(Name = "Unify on-chain and lightning payment URL/QR code")]
         public bool OnChainWithLnInvoiceFallback { get; set; }
 
+        [Display(Name = "Display Lightning payment amounts in Satoshis")]
+        public bool LightningAmountInSatoshi { get; set; }
+
         [Display(Name = "Default payment method on checkout")]
         public string DefaultPaymentMethod { get; set; }
 
         [Display(Name = "Use the new checkout")]
         public bool UseNewCheckout { get; set; }
+
+        [Display(Name = "Celebrate payment with confetti")]
+        public bool CelebratePayment { get; set; }
 
         [Display(Name = "Requires a refund email")]
         public bool RequiresRefundEmail { get; set; }

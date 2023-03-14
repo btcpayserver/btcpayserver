@@ -35,6 +35,7 @@ namespace BTCPayServer.Services.Apps
         readonly ApplicationDbContextFactory _ContextFactory;
         private readonly InvoiceRepository _InvoiceRepository;
         readonly CurrencyNameTable _Currencies;
+        private readonly DisplayFormatter _displayFormatter;
         private readonly StoreRepository _storeRepository;
         private readonly HtmlSanitizer _HtmlSanitizer;
         public CurrencyNameTable Currencies => _Currencies;
@@ -43,6 +44,7 @@ namespace BTCPayServer.Services.Apps
             ApplicationDbContextFactory contextFactory,
             InvoiceRepository invoiceRepository,
             CurrencyNameTable currencies,
+            DisplayFormatter displayFormatter,
             StoreRepository storeRepository,
             HtmlSanitizer htmlSanitizer)
         {
@@ -52,6 +54,7 @@ namespace BTCPayServer.Services.Apps
             _Currencies = currencies;
             _storeRepository = storeRepository;
             _HtmlSanitizer = htmlSanitizer;
+            _displayFormatter = displayFormatter;
         }
 
         
@@ -421,7 +424,7 @@ namespace BTCPayServer.Services.Apps
                             if (pValue != null)
                             {
                                 price.Value = decimal.Parse(pValue.Value.Value, CultureInfo.InvariantCulture);
-                                price.Formatted = currencyNameTable.FormatCurrency(pValue.Value.Value, currency);
+                                price.Formatted = _displayFormatter.Currency(price.Value.Value, currency, DisplayFormatter.CurrencyFormat.Symbol);
                             }
                             break;
                         case "fixed":
@@ -429,7 +432,7 @@ namespace BTCPayServer.Services.Apps
                         case null:
                             price.Type = ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Fixed;
                             price.Value = decimal.Parse(pValue.Value.Value, CultureInfo.InvariantCulture);
-                            price.Formatted = currencyNameTable.FormatCurrency(pValue.Value.Value, currency);
+                            price.Formatted = _displayFormatter.Currency(price.Value.Value, currency, DisplayFormatter.CurrencyFormat.Symbol);
                             break;
                     }
 

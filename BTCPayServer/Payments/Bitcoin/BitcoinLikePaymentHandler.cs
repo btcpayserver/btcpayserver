@@ -23,12 +23,14 @@ namespace BTCPayServer.Payments.Bitcoin
         private readonly BTCPayNetworkProvider _networkProvider;
         private readonly IFeeProviderFactory _FeeRateProviderFactory;
         private readonly NBXplorerDashboard _dashboard;
+        private readonly DisplayFormatter _displayFormatter;
         private readonly Services.Wallets.BTCPayWalletProvider _WalletProvider;
         private readonly Dictionary<string, string> _bech32Prefix;
 
         public BitcoinLikePaymentHandler(ExplorerClientProvider provider,
             BTCPayNetworkProvider networkProvider,
             IFeeProviderFactory feeRateProviderFactory,
+            DisplayFormatter displayFormatter,
             NBXplorerDashboard dashboard,
             Services.Wallets.BTCPayWalletProvider walletProvider)
         {
@@ -37,6 +39,7 @@ namespace BTCPayServer.Payments.Bitcoin
             _FeeRateProviderFactory = feeRateProviderFactory;
             _dashboard = dashboard;
             _WalletProvider = walletProvider;
+            _displayFormatter = displayFormatter;
 
             _bech32Prefix = networkProvider.GetAll().OfType<BTCPayNetwork>()
                 .Where(network => network.NBitcoinNetwork?.Consensus?.SupportSegwit is true).ToDictionary(network => network.CryptoCode,
@@ -63,8 +66,10 @@ namespace BTCPayServer.Payments.Bitcoin
             model.FeeRate = paymentMethodDetails.GetFeeRate();
             model.PaymentMethodName = GetPaymentMethodName(network);
 
+            var bip21Case = network.SupportLightning && storeBlob.OnChainWithLnInvoiceFallback;
+            var amountInSats = bip21Case && storeBlob.LightningAmountInSatoshi && model.CryptoCode == "BTC";
             string lightningFallback = null;
-            if (model.Activated && network.SupportLightning && storeBlob.OnChainWithLnInvoiceFallback)
+            if (model.Activated && bip21Case)
             {
                 var lightningInfo = invoiceResponse.CryptoInfo.FirstOrDefault(a =>
                     a.GetpaymentMethodId() == new PaymentMethodId(model.CryptoCode, PaymentTypes.LightningLike));
@@ -134,6 +139,11 @@ namespace BTCPayServer.Payments.Bitcoin
             else
             {
                 model.InvoiceBitcoinUrl = model.InvoiceBitcoinUrlQR = string.Empty;
+            }
+            
+            if (model.Activated && amountInSats)
+            {
+                base.PreparePaymentModelForAmountInSats(model, paymentMethod, _displayFormatter);
             }
         }
 

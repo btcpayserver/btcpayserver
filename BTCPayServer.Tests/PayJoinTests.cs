@@ -221,7 +221,7 @@ namespace BTCPayServer.Tests
                     var receiverCoin = await receiverUser.ReceiveUTXO(Money.Satoshis(810), network);
 
                     string errorCode = receiverAddressType == senderAddressType ? null : "unavailable|any UTXO available";
-                    var invoice = receiverUser.BitPay.CreateInvoice(new Invoice() { Price = 50000, Currency = "sats", FullNotifications = true });
+                    var invoice = receiverUser.BitPay.CreateInvoice(new Invoice() { Price = 50000, Currency = "SATS", FullNotifications = true });
                     if (unsupportedFormats.Contains(receiverAddressType))
                     {
                         Assert.Null(TestAccount.GetPayjoinBitcoinUrl(invoice, cashCow.Network));

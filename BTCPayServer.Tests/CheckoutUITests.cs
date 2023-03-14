@@ -182,7 +182,7 @@ namespace BTCPayServer.Tests
 
             var invoiceId = s.CreateInvoice(10, "USD", "a@g.com");
             s.GoToInvoiceCheckout(invoiceId);
-            Assert.Contains("Sats", s.Driver.FindElement(By.ClassName("payment__currencies_noborder")).Text);
+            Assert.Contains("sats", s.Driver.FindElement(By.ClassName("payment__currencies_noborder")).Text);
         }
 
         [Fact(Timeout = TestTimeout)]

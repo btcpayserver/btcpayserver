@@ -280,6 +280,7 @@ namespace BTCPayServer.Hosting
             services.AddTransient<PluginService>();
             services.AddSingleton<IPluginHookService, PluginHookService>();
             services.TryAddTransient<Safe>();
+            services.TryAddTransient<DisplayFormatter>();
             services.TryAddSingleton<Ganss.XSS.HtmlSanitizer>(o =>
             {
 

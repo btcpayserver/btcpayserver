@@ -51,7 +51,6 @@ namespace BTCPayServer.Tests
     {
         public FastTests(ITestOutputHelper helper) : base(helper)
         {
-
         }
         class DockerImage
         {
@@ -326,7 +325,7 @@ namespace BTCPayServer.Tests
             var networkProvider = new BTCPayNetworkProvider(ChainName.Regtest);
             var paymentMethodHandlerDictionary = new PaymentMethodHandlerDictionary(new IPaymentMethodHandler[]
             {
-                new BitcoinLikePaymentHandler(null, networkProvider, null, null, null),
+                new BitcoinLikePaymentHandler(null, networkProvider, null, null, null, null),
                 new LightningLikePaymentHandler(null, null, networkProvider, null, null, null),
             });
             var entity = new InvoiceEntity();
@@ -512,7 +511,7 @@ namespace BTCPayServer.Tests
             var networkProvider = new BTCPayNetworkProvider(ChainName.Regtest);
             var paymentMethodHandlerDictionary = new PaymentMethodHandlerDictionary(new IPaymentMethodHandler[]
             {
-                new BitcoinLikePaymentHandler(null, networkProvider, null, null, null),
+                new BitcoinLikePaymentHandler(null, networkProvider, null, null, null, null),
                 new LightningLikePaymentHandler(null, null, networkProvider, null, null, null),
             });
             var entity = new InvoiceEntity();
@@ -600,15 +599,16 @@ namespace BTCPayServer.Tests
         [Fact]
         public void RoundupCurrenciesCorrectly()
         {
+            DisplayFormatter displayFormatter = new (CurrencyNameTable.Instance);
             foreach (var test in new[]
             {
-                (0.0005m, "$0.0005 (USD)", "USD"), (0.001m, "$0.001 (USD)", "USD"), (0.01m, "$0.01 (USD)", "USD"),
-                (0.1m, "$0.10 (USD)", "USD"), (0.1m, "0,10 € (EUR)", "EUR"), (1000m, "¥1,000 (JPY)", "JPY"),
-                (1000.0001m, "₹ 1,000.00 (INR)", "INR"),
-                (0.0m, "$0.00 (USD)", "USD")
+                (0.0005m, "0.0005 USD", "USD"), (0.001m, "0.001 USD", "USD"), (0.01m, "0.01 USD", "USD"),
+                (0.1m, "0.10 USD", "USD"), (0.1m, "0,10 EUR", "EUR"), (1000m, "1,000 JPY", "JPY"),
+                (1000.0001m, "1,000.00 INR", "INR"),
+                (0.0m, "0.00 USD", "USD")
             })
             {
-                var actual = CurrencyNameTable.Instance.DisplayFormatCurrency(test.Item1, test.Item3);
+                var actual = displayFormatter.Currency(test.Item1, test.Item3);
                 actual = actual.Replace("￥", "¥"); // Hack so JPY test pass on linux as well
                 Assert.Equal(test.Item2, actual);
             }
@@ -1466,14 +1466,14 @@ namespace BTCPayServer.Tests
             Assert.Equal(1m / 0.000061m, rule2.BidAsk.Bid);
 
             // testing rounding 
-            rule2 = rules.GetRuleFor(CurrencyPair.Parse("Sats_EUR"));
+            rule2 = rules.GetRuleFor(CurrencyPair.Parse("SATS_EUR"));
             rule2.ExchangeRates.SetRate("coinbase", CurrencyPair.Parse("BTC_EUR"), new BidAsk(1.23m, 2.34m));
             Assert.True(rule2.Reevaluate());
             Assert.Equal("0.00000001 * (1.23, 2.34)", rule2.ToString(true));
             Assert.Equal(0.0000000234m, rule2.BidAsk.Ask);
             Assert.Equal(0.0000000123m, rule2.BidAsk.Bid);
 
-            rule2 = rules.GetRuleFor(CurrencyPair.Parse("EUR_Sats"));
+            rule2 = rules.GetRuleFor(CurrencyPair.Parse("EUR_SATS"));
             rule2.ExchangeRates.SetRate("coinbase", CurrencyPair.Parse("BTC_EUR"), new BidAsk(1.23m, 2.34m));
             Assert.True(rule2.Reevaluate());
             Assert.Equal("1 / (0.00000001 * (1.23, 2.34))", rule2.ToString(true));
@@ -1715,7 +1715,7 @@ namespace BTCPayServer.Tests
             var networkProvider = new BTCPayNetworkProvider(ChainName.Regtest);
             var paymentMethodHandlerDictionary = new PaymentMethodHandlerDictionary(new IPaymentMethodHandler[]
             {
-                new BitcoinLikePaymentHandler(null, networkProvider, null, null, null),
+                new BitcoinLikePaymentHandler(null, networkProvider, null, null, null, null),
                 new LightningLikePaymentHandler(null, null, networkProvider, null, null, null),
             });
             var networkBTC = networkProvider.GetNetwork("BTC");

@@ -86,6 +86,10 @@
                     </div>
                     <span asp-validation-for="DisplayExpirationTimer" class="text-danger"></span>
                 </div>
+                <div class="form-check">
+                    <input asp-for="CelebratePayment" type="checkbox" class="form-check-input" />
+                    <label asp-for="CelebratePayment" class="form-check-label"></label>
+                </div>
             </div>
             <div class="form-check">
                 <input asp-for="OnChainWithLnInvoiceFallback" type="checkbox" class="form-check-input" />
@@ -93,6 +97,10 @@
                 <a href="https://bitcoinqr.dev/" target="_blank" rel="noreferrer noopener">
                     <vc:icon symbol="info" />
                 </a>
+            </div>
+            <div class="form-check">
+                <input asp-for="LightningAmountInSatoshi" type="checkbox" class="form-check-input" />
+                <label asp-for="LightningAmountInSatoshi" class="form-check-label"></label>
             </div>
             <div class="checkout-settings collapse @(Model.UseNewCheckout ? "" : "show")" id="OldCheckoutSettings">
                 <div class="form-check">

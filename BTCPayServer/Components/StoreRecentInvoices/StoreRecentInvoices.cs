@@ -61,7 +61,8 @@ public class StoreRecentInvoices : ViewComponent
                            HasRefund = invoice.Refunds.Any(),
                            InvoiceId = invoice.Id,
                            OrderId = invoice.Metadata.OrderId ?? string.Empty,
-                           AmountCurrency = _currencyNameTable.DisplayFormatCurrency(invoice.Price, invoice.Currency),
+                           Amount = invoice.Price,
+                           Currency = invoice.Currency
                        }).ToList();
 
         return View(vm);

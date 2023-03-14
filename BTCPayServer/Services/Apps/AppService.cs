@@ -314,12 +314,19 @@ namespace BTCPayServer.Services.Apps
         {
             await using var ctx = _ContextFactory.CreateContext();
             var query = ctx.Apps
-                .Where(us => appIds.Contains(us.Id));
-
+                .Where(app => appIds.Contains(app.Id));
             if (includeStore)
             {
                 query = query.Include(data => data.StoreData);
             }
+            return await query.ToListAsync();
+        }
+
+        public async Task<List<AppData>> GetApps(string appType)
+        {
+            await using var ctx = _ContextFactory.CreateContext();
+            var query = ctx.Apps
+                .Where(app => app.AppType == appType);
             return await query.ToListAsync();
         }
 

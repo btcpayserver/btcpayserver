@@ -9,6 +9,7 @@ using BTCPayServer.Configuration;
 using BTCPayServer.Data;
 using BTCPayServer.Plugins.Crowdfund.Controllers;
 using BTCPayServer.Plugins.Crowdfund.Models;
+using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
@@ -39,6 +40,7 @@ namespace BTCPayServer.Plugins.Crowdfund
     {
         private readonly LinkGenerator _linkGenerator;
         private readonly IOptions<BTCPayServerOptions> _options;
+        private readonly DisplayFormatter _displayFormatter;
         private readonly CurrencyNameTable _currencyNameTable;
         private readonly HtmlSanitizer _htmlSanitizer;
         private readonly InvoiceRepository _invoiceRepository;
@@ -46,10 +48,17 @@ namespace BTCPayServer.Plugins.Crowdfund
         public string Description => AppType;
         public string Type => AppType;
 
-        public CrowdfundApp(LinkGenerator linkGenerator, IOptions<BTCPayServerOptions> options, InvoiceRepository invoiceRepository, CurrencyNameTable currencyNameTable, HtmlSanitizer htmlSanitizer)
+        public CrowdfundApp(
+            LinkGenerator linkGenerator,
+            IOptions<BTCPayServerOptions> options,
+            InvoiceRepository invoiceRepository,
+            DisplayFormatter displayFormatter,
+            CurrencyNameTable currencyNameTable,
+            HtmlSanitizer htmlSanitizer)
         {
             _linkGenerator = linkGenerator;
             _options = options;
+            _displayFormatter = displayFormatter;
             _currencyNameTable = currencyNameTable;
             _htmlSanitizer = htmlSanitizer;
             _invoiceRepository = invoiceRepository;
@@ -64,15 +73,14 @@ namespace BTCPayServer.Plugins.Crowdfund
         public Task<SalesStats> GetSaleStates(AppData app, InvoiceEntity[] paidInvoices, int numberOfDays)
         {
             var cfS = app.GetSettings<CrowdfundSettings>();
-            var items = AppService.Parse(_htmlSanitizer, _currencyNameTable,cfS.PerksTemplate, cfS.TargetCurrency);
+            var items = AppService.Parse(_htmlSanitizer, _displayFormatter, cfS.PerksTemplate, cfS.TargetCurrency);
             return AppService.GetSalesStatswithPOSItems(items, paidInvoices, numberOfDays);
         }
 
         public Task<IEnumerable<ItemStats>> GetItemStats(AppData appData, InvoiceEntity[] paidInvoices)
         {
             var settings = appData.GetSettings<CrowdfundSettings>();
-            var currencyData = _currencyNameTable.GetCurrencyData(settings.TargetCurrency, true);
-            var perks = AppService.Parse(_htmlSanitizer, _currencyNameTable, settings.PerksTemplate, settings.TargetCurrency);
+            var perks = AppService.Parse(_htmlSanitizer, _displayFormatter, settings.PerksTemplate, settings.TargetCurrency);
             var perkCount = paidInvoices
                 .Where(entity => entity.Currency.Equals(settings.TargetCurrency, StringComparison.OrdinalIgnoreCase) &&
                                  // we need the item code to know which perk it is and group by that
@@ -97,7 +105,7 @@ namespace BTCPayServer.Plugins.Crowdfund
                         Title = perk?.Title ?? itemCode,
                         SalesCount = entities.Count(),
                         Total = total,
-                        TotalFormatted = $"{total.ShowMoney(currencyData.Divisibility)} {settings.TargetCurrency}"
+                        TotalFormatted = _displayFormatter.Currency(total, settings.TargetCurrency)
                     };
                 })
                 .OrderByDescending(stats => stats.SalesCount);
@@ -167,7 +175,7 @@ namespace BTCPayServer.Plugins.Crowdfund
                         })));
             }
 
-            var perks = AppService.GetPOSItems(_htmlSanitizer,_currencyNameTable,settings.PerksTemplate, settings.TargetCurrency);
+            var perks = AppService.GetPOSItems(_htmlSanitizer, _displayFormatter, settings.PerksTemplate, settings.TargetCurrency);
             if (settings.SortPerksByPopularity)
             {
                 var ordered = perkCount.OrderByDescending(pair => pair.Value);

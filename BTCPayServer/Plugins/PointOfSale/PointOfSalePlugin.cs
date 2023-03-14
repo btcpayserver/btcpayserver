@@ -9,6 +9,7 @@ using BTCPayServer.Abstractions.Services;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
 using BTCPayServer.Plugins.PointOfSale.Controllers;
+using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
@@ -49,17 +50,21 @@ namespace BTCPayServer.Plugins.PointOfSale
     {
         private readonly LinkGenerator _linkGenerator;
         private readonly IOptions<BTCPayServerOptions> _btcPayServerOptions;
-        private readonly CurrencyNameTable _currencyNameTable;
+        private readonly DisplayFormatter _displayFormatter;
         private readonly HtmlSanitizer _htmlSanitizer;
         public const string AppType = "PointOfSale";
         public string Description => "Point of Sale";
         public string Type => AppType;
 
-        public PointOfSaleApp(LinkGenerator linkGenerator, IOptions<BTCPayServerOptions> btcPayServerOptions, CurrencyNameTable currencyNameTable, HtmlSanitizer htmlSanitizer)
+        public PointOfSaleApp(
+            LinkGenerator linkGenerator,
+            IOptions<BTCPayServerOptions> btcPayServerOptions,
+            DisplayFormatter displayFormatter,
+            HtmlSanitizer htmlSanitizer)
         {
             _linkGenerator = linkGenerator;
             _btcPayServerOptions = btcPayServerOptions;
-            _currencyNameTable = currencyNameTable;
+            _displayFormatter = displayFormatter;
             _htmlSanitizer = htmlSanitizer;
         }
 
@@ -72,15 +77,14 @@ namespace BTCPayServer.Plugins.PointOfSale
         public Task<SalesStats> GetSaleStates(AppData app, InvoiceEntity[] paidInvoices, int numberOfDays)
         {
             var posS = app.GetSettings<PointOfSaleSettings>();
-            var items = AppService.Parse(_htmlSanitizer, _currencyNameTable,posS.Template, posS.Currency);
+            var items = AppService.Parse(_htmlSanitizer, _displayFormatter, posS.Template, posS.Currency);
             return AppService.GetSalesStatswithPOSItems(items, paidInvoices, numberOfDays);
         }
 
         public Task<IEnumerable<ItemStats>> GetItemStats(AppData appData, InvoiceEntity[] paidInvoices)
         {
             var settings = appData.GetSettings<PointOfSaleSettings>();
-            var currencyData = _currencyNameTable.GetCurrencyData(settings.Currency, true);
-            var items = AppService.Parse(_htmlSanitizer, _currencyNameTable,settings.Template, settings.Currency);
+            var items = AppService.Parse(_htmlSanitizer, _displayFormatter, settings.Template, settings.Currency);
             var itemCount = paidInvoices
                 .Where(entity => entity.Currency.Equals(settings.Currency, StringComparison.OrdinalIgnoreCase) && (
                     // The POS data is present for the cart view, where multiple items can be bought
@@ -101,7 +105,7 @@ namespace BTCPayServer.Plugins.PointOfSale
                         Title = item?.Title ?? itemCode,
                         SalesCount = entities.Count(),
                         Total = total,
-                        TotalFormatted = $"{total.ShowMoney(currencyData.Divisibility)} {settings.Currency}"
+                        TotalFormatted = _displayFormatter.Currency(total, settings.Currency)
                     };
                 })
                 .OrderByDescending(stats => stats.SalesCount);
@@ -124,7 +128,7 @@ namespace BTCPayServer.Plugins.PointOfSale
         public string ViewLink(AppData app)
         {
             return _linkGenerator.GetPathByAction(nameof(UIPointOfSaleController.ViewPointOfSale),
-                "UIPointOfSale", new {appId =app.Id}, _btcPayServerOptions.Value.RootPath);
+                "UIPointOfSale", new { appId = app.Id }, _btcPayServerOptions.Value.RootPath);
         }
     }
 }

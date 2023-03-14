@@ -387,20 +387,20 @@ namespace BTCPayServer.Services.Apps
 
         public ViewPointOfSaleViewModel.Item[] Parse( string template, string currency)
         {
-            return Parse(_HtmlSanitizer, _Currencies, template, currency);
+            return Parse(_HtmlSanitizer, _displayFormatter, template, currency);
         }
 
 
         public ViewPointOfSaleViewModel.Item[] GetPOSItems(string template, string currency)
         {
-            return GetPOSItems(_HtmlSanitizer, _Currencies, template, currency);
+            return GetPOSItems(_HtmlSanitizer, _displayFormatter, template, currency);
         }
-        public static ViewPointOfSaleViewModel.Item[] Parse(HtmlSanitizer htmlSanitizer, CurrencyNameTable currencyNameTable,string template, string currency)
+        public static ViewPointOfSaleViewModel.Item[] Parse(HtmlSanitizer htmlSanitizer, DisplayFormatter displayFormatter, string template, string currency)
         {
             if (string.IsNullOrWhiteSpace(template))
                 return Array.Empty<ViewPointOfSaleViewModel.Item>();
             using var input = new StringReader(template);
-            YamlStream stream = new YamlStream();
+            YamlStream stream = new ();
             stream.Load(input);
             var root = (YamlMappingNode)stream.Documents[0].RootNode;
             return root
@@ -409,7 +409,7 @@ namespace BTCPayServer.Services.Apps
                 .Where(kv => kv.Value != null)
                 .Select(c =>
                 {
-                    ViewPointOfSaleViewModel.Item.ItemPrice price = new ViewPointOfSaleViewModel.Item.ItemPrice();
+                    ViewPointOfSaleViewModel.Item.ItemPrice price = new ();
                     var pValue = c.GetDetail("price")?.FirstOrDefault();
 
                     switch (c.GetDetailString("custom") ?? c.GetDetailString("price_type")?.ToLowerInvariant())
@@ -421,10 +421,10 @@ namespace BTCPayServer.Services.Apps
                         case "true":
                         case "minimum":
                             price.Type = ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Minimum;
-                            if (pValue != null)
+                            if (pValue != null && !string.IsNullOrEmpty(pValue.Value?.Value))
                             {
                                 price.Value = decimal.Parse(pValue.Value.Value, CultureInfo.InvariantCulture);
-                                price.Formatted = _displayFormatter.Currency(price.Value.Value, currency, DisplayFormatter.CurrencyFormat.Symbol);
+                                price.Formatted = displayFormatter.Currency(price.Value.Value, currency, DisplayFormatter.CurrencyFormat.Symbol);
                             }
                             break;
                         case "fixed":
@@ -432,11 +432,11 @@ namespace BTCPayServer.Services.Apps
                         case null:
                             price.Type = ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Fixed;
                             price.Value = decimal.Parse(pValue.Value.Value, CultureInfo.InvariantCulture);
-                            price.Formatted = _displayFormatter.Currency(price.Value.Value, currency, DisplayFormatter.CurrencyFormat.Symbol);
+                            price.Formatted = displayFormatter.Currency(price.Value.Value, currency, DisplayFormatter.CurrencyFormat.Symbol);
                             break;
                     }
 
-                    return new ViewPointOfSaleViewModel.Item()
+                    return new ViewPointOfSaleViewModel.Item
                     {
                         Description = c.GetDetailString("description"),
                         Id = c.Key,
@@ -455,9 +455,9 @@ namespace BTCPayServer.Services.Apps
                 .ToArray();
         }
 
-        public static ViewPointOfSaleViewModel.Item[] GetPOSItems(HtmlSanitizer htmlSanitizer, CurrencyNameTable currencyNameTable, string template, string currency)
+        public static ViewPointOfSaleViewModel.Item[] GetPOSItems(HtmlSanitizer htmlSanitizer, DisplayFormatter displayFormatter, string template, string currency)
         {
-            return Parse(htmlSanitizer,currencyNameTable,template, currency).Where(c => !c.Disabled).ToArray();
+            return Parse(htmlSanitizer, displayFormatter, template, currency).Where(c => !c.Disabled).ToArray();
         }
 
 

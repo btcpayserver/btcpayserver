@@ -10,12 +10,12 @@ namespace BTCPayServer.Services.Apps
     {
         public string Description { get;  }
         public string Type { get; }
-        string ConfigureLink(string appId);
+        Task<string> ConfigureLink(string appId);
+        Task<string> ViewLink(AppData app);
+        Task SetDefaultSettings(AppData appData, string defaultCurrency);
         Task<SalesStats> GetSaleStates(AppData app, InvoiceEntity[] paidInvoices, int numberOfDays);
         Task<IEnumerable<ItemStats>> GetItemStats(AppData appData, InvoiceEntity[] invoiceEntities);
         Task<object> GetInfo(AppData appData);
-        Task SetDefaultSettings(AppData appData, string defaultCurrency);
-        string ViewLink(AppData app);
     }
 
     public enum RequiresRefundEmail

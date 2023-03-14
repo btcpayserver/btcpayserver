@@ -64,10 +64,10 @@ namespace BTCPayServer.Plugins.Crowdfund
             _invoiceRepository = invoiceRepository;
         }
 
-        public string ConfigureLink(string appId)
+        public Task<string> ConfigureLink(string appId)
         {
-            return _linkGenerator.GetPathByAction(nameof(UICrowdfundController.UpdateCrowdfund),
-                "UICrowdfund", new {appId}, _options.Value.RootPath);
+            return Task.FromResult(_linkGenerator.GetPathByAction(nameof(UICrowdfundController.UpdateCrowdfund),
+                "UICrowdfund", new {appId}, _options.Value.RootPath));
         }
 
         public Task<SalesStats> GetSaleStates(AppData app, InvoiceEntity[] paidInvoices, int numberOfDays)
@@ -252,10 +252,10 @@ namespace BTCPayServer.Plugins.Crowdfund
             return Task.CompletedTask;
         }
 
-        public string ViewLink(AppData app)
+        public Task<string> ViewLink(AppData app)
         {
-            return _linkGenerator.GetPathByAction(nameof(UICrowdfundController.ViewCrowdfund),
-                "UICrowdfund", new {appId = app.Id}, _options.Value.RootPath);
+            return Task.FromResult(_linkGenerator.GetPathByAction(nameof(UICrowdfundController.ViewCrowdfund),
+                "UICrowdfund", new {appId = app.Id}, _options.Value.RootPath));
         }
 
         private static bool IsPaid(InvoiceEntity entity)

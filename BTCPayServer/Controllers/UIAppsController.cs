@@ -57,7 +57,7 @@ namespace BTCPayServer.Controllers
             var app = await _appService.GetApp(appId, null);
             if (app is null)
                 return NotFound();
-            var res = _appService.ViewLink(app);
+            var res = await _appService.ViewLink(app);
             if (res is null)
             {
                 return NotFound();
@@ -149,7 +149,8 @@ namespace BTCPayServer.Controllers
             TempData[WellKnownTempData.SuccessMessage] = "App successfully created";
             CreatedAppId = appData.Id;
 
-            return Redirect(_appService.ConfigureLink(appData.Id, vm.SelectedAppType));
+            var url = await _appService.ConfigureLink(appData.Id, vm.SelectedAppType);
+            return Redirect(url);
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]

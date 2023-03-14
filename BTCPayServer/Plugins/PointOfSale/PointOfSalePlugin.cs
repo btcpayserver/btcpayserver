@@ -68,10 +68,10 @@ namespace BTCPayServer.Plugins.PointOfSale
             _htmlSanitizer = htmlSanitizer;
         }
 
-        public string ConfigureLink(string appId)
+        public Task<string> ConfigureLink(string appId)
         {
-            return  _linkGenerator.GetPathByAction(nameof(UIPointOfSaleController.UpdatePointOfSale),
-                "UIPointOfSale", new {appId}, _btcPayServerOptions.Value.RootPath);;
+            return Task.FromResult(_linkGenerator.GetPathByAction(nameof(UIPointOfSaleController.UpdatePointOfSale),
+                "UIPointOfSale", new {appId}, _btcPayServerOptions.Value.RootPath));;
         }
 
         public Task<SalesStats> GetSaleStates(AppData app, InvoiceEntity[] paidInvoices, int numberOfDays)
@@ -125,10 +125,10 @@ namespace BTCPayServer.Plugins.PointOfSale
             return Task.CompletedTask;
         }
 
-        public string ViewLink(AppData app)
+        public Task<string> ViewLink(AppData app)
         {
-            return _linkGenerator.GetPathByAction(nameof(UIPointOfSaleController.ViewPointOfSale),
-                "UIPointOfSale", new { appId = app.Id }, _btcPayServerOptions.Value.RootPath);
+            return Task.FromResult(_linkGenerator.GetPathByAction(nameof(UIPointOfSaleController.ViewPointOfSale),
+                "UIPointOfSale", new { appId = app.Id }, _btcPayServerOptions.Value.RootPath));
         }
     }
 }

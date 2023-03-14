@@ -63,7 +63,7 @@ namespace BTCPayServer.Services.Apps
             return _apps.ToDictionary(app => app.Type, app => app.Description);
         }
     
-        public string ConfigureLink(string appId, string vmSelectedAppType)
+        public Task<string> ConfigureLink(string appId, string vmSelectedAppType)
         {
             return GetAppForType(vmSelectedAppType).ConfigureLink(appId);
         }
@@ -590,9 +590,10 @@ namespace BTCPayServer.Services.Apps
             }
         }
 
-        public string? ViewLink(AppData app)
+        public async Task<string?> ViewLink(AppData app)
         {
-            return GetAppForType(app.AppType)?.ViewLink(app);
+            var appType = GetAppForType(app.AppType);
+            return await appType?.ViewLink(app);
         }
 #nullable restore
     }

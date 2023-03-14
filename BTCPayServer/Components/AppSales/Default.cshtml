@@ -1,18 +1,18 @@
 @using BTCPayServer.Components.AppSales
-@using Microsoft.AspNetCore.Mvc.TagHelpers
 @using BTCPayServer.Abstractions.TagHelpers
 @using BTCPayServer.Plugins.Crowdfund
+@using BTCPayServer.Services.Apps
+@inject AppService AppService
 @model BTCPayServer.Components.AppSales.AppSalesViewModel
 @{
-    var controller = $"UI{Model.App.AppType}";
-    var action = $"Update{Model.App.AppType}";
     var label = Model.App.AppType == CrowdfundApp.AppType ? "Contributions" : "Sales";
+    var configureUrl = await AppService.ConfigureLink(Model.App, Model.App.AppType);
 }
 
 <div id="AppSales-@Model.App.Id" class="widget app-sales">
     <header class="mb-3">
         <h3>@Model.App.Name @label</h3>
-        <a asp-controller="@controller" asp-action="@action" asp-route-appId="@Model.App.Id">Manage</a>
+        <a href="@configureUrl">Manage</a>
     </header>
     @if (Model.InitialRendering)
     {

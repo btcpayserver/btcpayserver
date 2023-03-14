@@ -144,7 +144,7 @@ namespace BTCPayServer.Services.Apps
                     InvoiceState.ToString(InvoiceStatusLegacy.Confirmed),
                     InvoiceState.ToString(InvoiceStatusLegacy.Complete)
                 });
-            return await GetAppForType(app.AppType).GetSaleStats(app, paidInvoices, numberOfDays);
+            return await GetAppForType(app.AppType).GetSalesStats(app, paidInvoices, numberOfDays);
         }
 
         public class InvoiceStatsItem

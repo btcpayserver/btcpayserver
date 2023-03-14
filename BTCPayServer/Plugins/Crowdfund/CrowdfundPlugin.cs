@@ -47,6 +47,8 @@ namespace BTCPayServer.Plugins.Crowdfund
         public const string AppType = "Crowdfund";
         public string Description => AppType;
         public string Type => AppType;
+        public bool SupportsSalesStats => true;
+        public bool SupportsItemStats => true;
 
         public CrowdfundApp(
             LinkGenerator linkGenerator,
@@ -70,7 +72,7 @@ namespace BTCPayServer.Plugins.Crowdfund
                 "UICrowdfund", new { appId = app.Id }, _options.Value.RootPath));
         }
 
-        public Task<SalesStats> GetSaleStats(AppData app, InvoiceEntity[] paidInvoices, int numberOfDays)
+        public Task<SalesStats> GetSalesStats(AppData app, InvoiceEntity[] paidInvoices, int numberOfDays)
         {
             var cfS = app.GetSettings<CrowdfundSettings>();
             var items = AppService.Parse(_htmlSanitizer, _displayFormatter, cfS.PerksTemplate, cfS.TargetCurrency);

@@ -12,7 +12,6 @@ using BTCPayServer.Plugins.PointOfSale.Controllers;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
-using BTCPayServer.Services.Rates;
 using Ganss.XSS;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
@@ -55,6 +54,8 @@ namespace BTCPayServer.Plugins.PointOfSale
         public const string AppType = "PointOfSale";
         public string Description => "Point of Sale";
         public string Type => AppType;
+        public bool SupportsSalesStats => true;
+        public bool SupportsItemStats => true;
 
         public PointOfSaleApp(
             LinkGenerator linkGenerator,
@@ -74,7 +75,7 @@ namespace BTCPayServer.Plugins.PointOfSale
                 "UIPointOfSale", new { appId = app.Id }, _btcPayServerOptions.Value.RootPath));
         }
 
-        public Task<SalesStats> GetSaleStats(AppData app, InvoiceEntity[] paidInvoices, int numberOfDays)
+        public Task<SalesStats> GetSalesStats(AppData app, InvoiceEntity[] paidInvoices, int numberOfDays)
         {
             var posS = app.GetSettings<PointOfSaleSettings>();
             var items = AppService.Parse(_htmlSanitizer, _displayFormatter, posS.Template, posS.Currency);

@@ -1,11 +1,12 @@
 @using BTCPayServer.Services.Apps
 @using BTCPayServer.Components.AppSales
+@inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model BTCPayServer.Components.AppSales.AppSalesViewModel
-
 @{
     var controller = $"UI{Model.App.AppType}";
     var action = $"Update{Model.App.AppType}";
     var label = Model.App.AppType == nameof(AppType.Crowdfund) ? "Contributions" : "Sales";
+    Csp.UnsafeEval();
 }
 
 <div id="AppSales-@Model.App.Id" class="widget app-sales">

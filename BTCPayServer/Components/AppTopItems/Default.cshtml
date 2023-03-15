@@ -1,10 +1,11 @@
 @using BTCPayServer.Services.Apps
+@inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model BTCPayServer.Components.AppTopItems.AppTopItemsViewModel
-
 @{
     var controller = $"UI{Model.App.AppType}";
     var action = $"Update{Model.App.AppType}";
     var label = Model.App.AppType == nameof(AppType.Crowdfund) ? "contribution" : "sale";
+    Csp.UnsafeEval();
 }
 
 <div id="AppTopItems-@Model.App.Id" class="widget app-top-items">

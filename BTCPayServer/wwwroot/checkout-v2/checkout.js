@@ -82,18 +82,12 @@ const PaymentDetails = {
     template: '#payment-details',
     props: {
         srvModel: Object,
-        isActive: Boolean
+        isActive: Boolean,
+        orderAmount: Number,
+        btcPaid: Number,
+        btcDue: Number
     },
     computed: {
-        orderAmount () {
-            return parseFloat(this.srvModel.orderAmount);
-        },
-        btcDue () {
-            return parseFloat(this.srvModel.btcDue);
-        },
-        btcPaid () {
-            return parseFloat(this.srvModel.btcPaid);
-        },
         showRecommendedFee () {
             return this.isActive && this.srvModel.showRecommendedFee && this.srvModel.feeRate;
         },
@@ -144,13 +138,13 @@ function initApp() {
                 return this.isActive() && this.srvModel.showRecommendedFee && this.srvModel.feeRate;
             },
             orderAmount () {
-                return parseFloat(this.srvModel.orderAmount);
+                return this.asNumber(this.srvModel.orderAmount);
             },
             btcDue () {
-                return parseFloat(this.srvModel.btcDue);
+                return this.asNumber(this.srvModel.btcDue);
             },
             btcPaid () {
-                return parseFloat(this.srvModel.btcPaid);
+                return this.asNumber(this.srvModel.btcPaid);
             },
             pmId () {
                 return this.paymentMethodId || this.srvModel.paymentMethodId;
@@ -223,6 +217,9 @@ function initApp() {
             },
             changeLanguage (e) {
                 updateLanguage(e.target.value);
+            },
+            asNumber (val) {
+                return parseFloat(val.replace(/\s/g, '')); // e.g. sats are formatted with spaces: 1 000 000
             },
             padTime (val) {
                 return val.toString().padStart(2, '0');

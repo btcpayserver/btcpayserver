@@ -76,7 +76,7 @@
                     <vc:icon symbol="caret-down" />
                 </button>
                 <div id="PaymentDetails" class="payment-details" v-collapsible="displayPaymentDetails">
-                    <payment-details :srv-model="srvModel" :is-active="isActive" class="pb-4"></payment-details>
+                    <payment-details :srv-model="srvModel" :is-active="isActive" :order-amount="orderAmount" :btc-paid="btcPaid" :btc-due="btcDue" class="pb-4"></payment-details>
                 </div>
                 @if (displayedPaymentMethods.Count > 1 || hasPaymentPlugins)
                 {
@@ -117,7 +117,7 @@
                                     <dd v-text="srvModel.orderId" :data-clipboard="srvModel.orderId" data-clipboard-hover="start"></dd>
                                 </div>
                             </dl>
-                            <payment-details :srv-model="srvModel" :is-active="isActive" class="mb-5"></payment-details>
+                            <payment-details :srv-model="srvModel" :is-active="isActive" :order-amount="orderAmount" :btc-paid="btcPaid" :btc-due="btcDue" class="mb-5"></payment-details>
                         </div>
                     </div>
                     <div class="buttons">
@@ -143,7 +143,7 @@
                                     <dd v-text="srvModel.orderId" :data-clipboard="srvModel.orderId" data-clipboard-hover="start"></dd>
                                 </div>
                             </dl>
-                            <payment-details :srv-model="srvModel" :is-active="isActive" v-collapsible="displayPaymentDetails"></payment-details>
+                            <payment-details :srv-model="srvModel" :is-active="isActive" :order-amount="orderAmount" :btc-paid="btcPaid" :btc-due="btcDue" v-collapsible="displayPaymentDetails"></payment-details>
                         </div>
                         <button class="d-flex align-items-center gap-1 btn btn-link payment-details-button" type="button" :aria-expanded="displayPaymentDetails ? 'true' : 'false'" v-on:click="displayPaymentDetails = !displayPaymentDetails">
                             <span class="fw-semibold" v-t="'view_details'"></span>
@@ -160,7 +160,7 @@
         </main>
         @if (Env.CheatMode)
         {
-            <checkout-cheating invoice-id="@Model.InvoiceId" :btc-due="srvModel.btcDue" :is-paid="isPaid" :payment-method-id="pmId"></checkout-cheating>
+            <checkout-cheating invoice-id="@Model.InvoiceId" :btc-due="btcDue" :is-paid="isPaid" :payment-method-id="pmId" :crypto-code="srvModel.cryptoCode"></checkout-cheating>
         }
         <footer class="store-footer">
             <a class="store-powered-by" href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">

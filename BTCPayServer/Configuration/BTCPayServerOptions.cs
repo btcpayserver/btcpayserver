@@ -148,9 +148,6 @@ namespace BTCPayServer.Configuration
             }
 
             DisableRegistration = conf.GetOrDefault<bool>("disable-registration", true);
-            var pluginRemote = conf.GetOrDefault<string>("plugin-remote", null);
-            if (pluginRemote != null)
-                Logs.Configuration.LogWarning("plugin-remote is an obsolete configuration setting, please remove it from configuration");
             RecommendedPlugins = conf.GetOrDefault("recommended-plugins", "").ToLowerInvariant().Split('\r', '\n', '\t', ' ').Where(s => !string.IsNullOrEmpty(s)).Distinct().ToArray();
             CheatMode = conf.GetOrDefault("cheatmode", false);
             if (CheatMode && this.NetworkType == ChainName.Mainnet)

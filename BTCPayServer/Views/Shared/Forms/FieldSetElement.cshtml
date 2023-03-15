@@ -10,7 +10,7 @@
         {
 			if (FormComponentProviders.TypeToComponentProvider.TryGetValue(field.Type, out var partial))
 			{
-			    field.Name = $"{Model.Name}_{field.Name}";
+			    field.Name = $"{(string.IsNullOrEmpty(Model.Name)? string.Empty: $"{Model.Name}_")}{field.Name}";
 			    <partial name="@partial.View" for="@field"></partial>
 			}
         }

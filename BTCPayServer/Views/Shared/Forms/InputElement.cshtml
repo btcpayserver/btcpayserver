@@ -21,6 +21,8 @@
     <span class="text-danger" data-valmsg-for="@Model.Name" data-valmsg-replace="true">@(isInvalid && errors.Any() ? errors.First().ErrorMessage : string.Empty)</span>
     @if (!string.IsNullOrEmpty(Model.HelpText))
     {
-        <div id="@($"HelpText-{Model.Name}")" class="form-text">@Model.HelpText</div>
+        <div id="@($"HelpText-{Model.Name}")" class="form-text">
+            @Safe.Raw(Model.HelpText)
+        </div>
     }
 </div>

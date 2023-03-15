@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.8.4
+
+### Bug fix
+
+* Fix notification's icon for payment after expiration  @dennisreimann
+* Error when indexing invoices with some field that are too long (Fix #4771) @NicolasDorier
+* Fix API breaking changefor payout processors (Fix #4752) @Kukks
+
+### Improvements
+
+* Add CORS for greenfield API (Fix #4758) @Kukks
+
 ## 1.8.3
 
 ### Bug fix

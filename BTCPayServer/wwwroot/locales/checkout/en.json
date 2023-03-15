@@ -26,6 +26,8 @@
   "address": "Address",
   "lightning": "Lightning",
   "payment_link": "Payment Link",
+  "payment_sent": "Payment Sent",
+  "payment_sent_body": "Your payment has been received and is currently processing. Once it confirms on the blockchain, the status will be updated to settled.",
   "invoice_paid": "Invoice Paid",
   "invoice_expired": "Invoice Expired",
   "invoice_expired_body": "An invoice is only valid for {{minutes}} minutes.\n\nReturn to {{storeName}} if you would like to resubmit a payment.",

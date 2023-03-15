@@ -148,10 +148,11 @@ section dl > div dd {
     width: 1.5rem;
     height: 1.5rem;
 }
-#result #paid .top .icn .icon {
+#result #settled .top .icn .icon,
+#result #processing .top .icn .icon {
     color: var(--btcpay-primary);
 }
-#result #expired .top .icn .icon {
+#result #unpaid .top .icn .icon {
     color: var(--btcpay-body-text-muted);
 }
 #DefaultLang {

@@ -60,17 +60,18 @@
             paymentMethodId: String,
             cryptoCode: String,
             btcDue: Number,
-            isPaid: Boolean
+            isProcessing: Boolean,
+            isSettled: Boolean
         },
         computed: {
             display() {
                 return this.successMessage || this.errorMessage || this.displayPayment || this.displayMine || this.displayExpire;
             },
             displayPayment () {
-                return !this.isPaid;
+                return !this.isSettled && !this.isProcessing;
             },
             displayExpire () {
-                return !this.isPaid;
+                return !this.isSettled && !this.isProcessing;
             },
             displayMine () {
                 return this.paymentMethodId === 'BTC';

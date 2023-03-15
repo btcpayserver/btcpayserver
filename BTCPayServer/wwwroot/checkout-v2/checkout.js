@@ -36,8 +36,11 @@ Vue.directive('collapsible', {
     }
 });
 
-const STATUS_PAID = ['complete', 'confirmed', 'paid'];
-const STATUS_UNPAYABLE =  ['expired', 'invalid'];
+// These are the legacy states, see InvoiceEntity
+const STATUS_PAYABLE = ['new'];
+const STATUS_PROCESSING = ['paid'];
+const STATUS_SETTLED = ['complete', 'confirmed'];
+const STATUS_INVALID =  ['expired', 'invalid'];
 const urlParams = new URLSearchParams(window.location.search);
 
 function computeStartingLanguage() {
@@ -83,14 +86,10 @@ const PaymentDetails = {
     props: {
         srvModel: Object,
         isActive: Boolean,
+        showRecommendedFee: Boolean,
         orderAmount: Number,
         btcPaid: Number,
         btcDue: Number
-    },
-    computed: {
-        showRecommendedFee () {
-            return this.isActive && this.srvModel.showRecommendedFee && this.srvModel.feeRate;
-        },
     }
 }
 
@@ -116,14 +115,17 @@ function initApp() {
             }
         },
         computed: {
-            isUnpayable () {
-                return STATUS_UNPAYABLE.includes(this.srvModel.status);
+            isInvalid () {
+                return STATUS_INVALID.includes(this.srvModel.status);
             },
-            isPaid () {
-                return STATUS_PAID.includes(this.srvModel.status);
+            isSettled () {
+                return STATUS_SETTLED.includes(this.srvModel.status);
+            },
+            isProcessing () {
+                return STATUS_PROCESSING.includes(this.srvModel.status);
             },
             isActive () {
-                return !this.isUnpayable && !this.isPaid;
+                return STATUS_PAYABLE.includes(this.srvModel.status);
             },
             showInfo () {
                 return this.showTimer || this.showPaymentDueInfo;
@@ -135,7 +137,7 @@ function initApp() {
                 return this.btcPaid > 0 && this.btcDue > 0;
             },
             showRecommendedFee () {
-                return this.isActive() && this.srvModel.showRecommendedFee && this.srvModel.feeRate;
+                return this.isActive && this.srvModel.showRecommendedFee && this.srvModel.feeRate;
             },
             orderAmount () {
                 return this.asNumber(this.srvModel.orderAmount);
@@ -178,7 +180,7 @@ function initApp() {
             }
         },
         watch: {
-            isPaid: function (newValue, oldValue) {
+            isSettled: function (newValue, oldValue) {
                 if (newValue === true && oldValue === false) {
                     const duration = 5000;
                     const self = this;
@@ -202,7 +204,7 @@ function initApp() {
         mounted () {
             this.updateData(this.srvModel);
             this.updateTimer();
-            if (this.isActive) {
+            if (this.isActive || this.isProcessing) {
                 this.listenIn();
             }
             updateLanguageSelect();

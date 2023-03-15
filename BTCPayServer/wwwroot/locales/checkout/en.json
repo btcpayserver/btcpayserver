@@ -27,7 +27,8 @@
   "lightning": "Lightning",
   "payment_link": "Payment Link",
   "payment_sent": "Payment Sent",
-  "payment_sent_body": "Your payment has been received and is currently processing. Once it confirms on the blockchain, the status will be updated to settled.",
+  "payment_sent_body": "Your payment has been received and is now processing.",
+  "payment_sent_confirmations": "Currently it has {{receivedConfirmations}} confirmations. Once it receives {{requiredConfirmations}} confirmations on the {{cryptoCode}} blockchain, the status will be updated to settled.",
   "invoice_paid": "Invoice Paid",
   "invoice_expired": "Invoice Expired",
   "invoice_expired_body": "An invoice is only valid for {{minutes}} minutes.\n\nReturn to {{storeName}} if you would like to resubmit a payment.",
@@ -36,5 +37,5 @@
   "copy": "Copy",
   "copy_confirm": "Copied",
   "powered_by": "Powered by",
-  "conversion_body": "This service is provided by 3rd party. Please keep in mind that we have no control over how providers will forward your funds. Invoice will only be marked paid once funds are received on {{cryptoCode}} Blockchain."
+  "conversion_body": "This service is provided by 3rd party. Please keep in mind that we have no control over how providers will forward your funds. Invoice will only be marked paid once funds are received on the {{cryptoCode}} blockchain."
 }

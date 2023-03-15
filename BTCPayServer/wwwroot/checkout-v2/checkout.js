@@ -111,7 +111,8 @@ function initApp() {
                 emailAddressInputInvalid: false,
                 paymentMethodId: null,
                 endData: null,
-                isModal: srvModel.isModal
+                isModal: srvModel.isModal,
+                pollTimeoutID: null
             }
         },
         computed: {
@@ -177,13 +178,26 @@ function initApp() {
             },
             isPluginPaymentMethod () {
                 return !this.paymentMethodIds.includes(this.pmId);
+            },
+            realCryptoCode () {
+                return this.srvModel.cryptoCode.toLowerCase() === 'sats' ? 'BTC' : this.srvModel.cryptoCode;
             }
         },
         watch: {
+            isProcessing: function (newValue, oldValue) {
+                if (newValue === true && oldValue === false) {
+                    // poll from here on
+                    this.listenForConfirmations();
+                }
+            },
             isSettled: function (newValue, oldValue) {
                 if (newValue === true && oldValue === false) {
                     const duration = 5000;
                     const self = this;
+                    // stop polling
+                    if (this.pollTimeoutID) {
+                        clearTimeout(this.pollTimeoutID);
+                    }
                     // celebration!
                     Vue.nextTick(function () {
                         self.celebratePayment(duration);
@@ -206,6 +220,9 @@ function initApp() {
             this.updateTimer();
             if (this.isActive || this.isProcessing) {
                 this.listenIn();
+            }
+            if (this.isProcessing) {
+                this.listenForConfirmations();
             }
             updateLanguageSelect();
             window.parent.postMessage('loaded', '*');
@@ -256,13 +273,26 @@ function initApp() {
                     }
                 }
                 // fallback in case there is no websocket support
-                (function watcher() {
-                    setTimeout(async function () {
-                        if (socket === null || socket.readyState !== 1) {
+                if (!socket || socket.readyState !== 1) {
+                    this.pollUpdates(2000, socket)
+                }
+            },
+            listenForConfirmations () {
+                this.pollUpdates(30000);
+            },
+            pollUpdates (interval, socket) {
+                const self = this;
+                const updateFn = this.fetchData;
+                if (self.pollTimeoutID) {
+                    clearTimeout(self.pollTimeoutID);
+                }
+                (function pollFn() {
+                    self.pollTimeoutID = setTimeout(async function () {
+                        if (!socket || socket.readyState !== 1) {
                             await updateFn();
+                            pollFn();
                         }
-                        watcher();
-                    }, 2000);
+                    }, interval);
                 })();
             },
             async fetchData () {

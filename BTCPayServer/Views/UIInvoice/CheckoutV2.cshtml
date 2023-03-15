@@ -137,6 +137,7 @@
                             <vc:icon symbol="caret-down" />
                         </button>
                         <p class="text-center mt-3" v-t="'payment_sent_body'"></p>
+                        <p class="text-center" v-if="srvModel.receivedConfirmations !== null && srvModel.requiredConfirmations != null" v-t="{ path: 'payment_sent_confirmations', args: { cryptoCode: realCryptoCode, receivedConfirmations: srvModel.receivedConfirmations, requiredConfirmations: srvModel.requiredConfirmations } }"></p>
                     </div>
                 </div>
                 <div v-else-if="isSettled" id="settled">
@@ -169,7 +170,7 @@
                     </div>
                     <div class="buttons">
                         <a v-if="srvModel.receiptLink" class="btn btn-primary rounded-pill w-100" :href="srvModel.receiptLink" :target="isModal ? '_top' : null" v-t="'view_receipt'" id="ReceiptLink"></a>
-                        <a v-if="storeLink" class="btn btn-secondary rounded-pill w-100" :href="storeLink" :target="isModal ? '_top' : null"  v-html="$t('return_to_store', { storeName: srvModel.storeName })" id="StoreLink"></a>
+                        <a v-if="storeLink" class="btn btn-secondary rounded-pill w-100" :href="storeLink" :target="isModal ? '_top' : null" v-html="$t('return_to_store', { storeName: srvModel.storeName })" id="StoreLink"></a>
                         <button v-else-if="isModal" class="btn btn-secondary rounded-pill w-100" v-on:click="close" v-t="'Close'"></button>
                     </div>
                 </div>

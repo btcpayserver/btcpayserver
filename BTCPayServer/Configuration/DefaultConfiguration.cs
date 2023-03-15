@@ -45,7 +45,6 @@ namespace BTCPayServer.Configuration
             app.Option("--debuglog", "A rolling log file for debug messages.", CommandOptionType.SingleValue);
             app.Option("--debugloglevel", "The severity you log (default:information)", CommandOptionType.SingleValue);
             app.Option("--disable-registration", "Disables new user registrations (default:true)", CommandOptionType.SingleValue);
-            app.Option("--plugin-remote", "Obsolete, do not use", CommandOptionType.SingleValue);
             app.Option("--recommended-plugins", "Plugins which would be marked as recommended to be installed. Separated by newline or space", CommandOptionType.MultipleValue);
             app.Option("--xforwardedproto", "If specified, set X-Forwarded-Proto to the specified value, this may be useful if your reverse proxy handle https but is not configured to add X-Forwarded-Proto (example: --xforwardedproto https)", CommandOptionType.SingleValue);
             app.Option("--cheatmode", "Add some helper UI to facilitate dev-time testing (Default false)", CommandOptionType.BoolValue);

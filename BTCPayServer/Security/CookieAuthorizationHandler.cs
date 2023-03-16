@@ -116,9 +116,11 @@ namespace BTCPayServer.Security
             storeId ??= _httpContext.GetUserPrefsCookie()?.CurrentStoreId;
 
             var policy = requirement.Policy;
+            bool requiredUnscoped = false;
             if (policy.EndsWith(':'))
             {
                 policy = policy.Substring(0, policy.Length - 1);
+                requiredUnscoped = true;
                 storeId = null;
             }
 
@@ -155,7 +157,7 @@ namespace BTCPayServer.Security
                         success = true;
                     }
                 }
-                else if (userId is not null)
+                else if (requiredUnscoped)
                 {
                     success = true;
                 }

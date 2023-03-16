@@ -7,10 +7,12 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
+using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Fido2;
 using BTCPayServer.Fido2.Models;
+using BTCPayServer.Filters;
 using BTCPayServer.Logging;
 using BTCPayServer.Models.AccountViewModels;
 using BTCPayServer.Services;
@@ -81,6 +83,24 @@ namespace BTCPayServer.Controllers
         public string ErrorMessage
         {
             get; set;
+        }
+
+        [HttpGet("/cheat/permissions")]
+        [HttpGet("/cheat/permissions/stores/{storeId}")]
+        [CheatModeRoute]
+        public async Task<IActionResult> CheatPermissions([FromServices]IAuthorizationService authorizationService, string storeId = null)
+        {
+            var vm = new CheatPermissionsViewModel();
+            vm.StoreId = storeId;
+            var results = new System.Collections.Generic.List<(string, Task<AuthorizationResult>)>();
+            foreach (var p in Policies.AllPolicies.Concat(new[] { Policies.CanModifyStoreSettingsUnscoped }))
+            {
+                results.Add((p, authorizationService.AuthorizeAsync(User, storeId, p)));
+            }
+            await Task.WhenAll(results.Select(r => r.Item2));
+            results = results.OrderBy(r => r.Item1).ToList();
+            vm.Permissions = results.Select(r => (r.Item1, r.Item2.Result)).ToArray();
+            return View(vm);
         }
 
         [HttpGet("/login")]

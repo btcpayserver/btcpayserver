@@ -139,6 +139,7 @@
 
 	<ItemGroup>
     <Watch Include="Views\**\*.*"></Watch>
+    <Watch Remove="Views\UIAccount\CheatPermissions.cshtml" />
     <Content Update="Views\UIApps\_ViewImports.cshtml">
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <Pack>$(IncludeRazorContentInPack)</Pack>

@@ -38,7 +38,7 @@ Vue.directive('collapsible', {
 
 // These are the legacy states, see InvoiceEntity
 const STATUS_PAYABLE = ['new'];
-const STATUS_PROCESSING = ['paid'];
+const STATUS_PAID = ['paid'];
 const STATUS_SETTLED = ['complete', 'confirmed'];
 const STATUS_INVALID =  ['expired', 'invalid'];
 const urlParams = new URLSearchParams(window.location.search);
@@ -123,7 +123,7 @@ function initApp() {
                 return STATUS_SETTLED.includes(this.srvModel.status);
             },
             isProcessing () {
-                return STATUS_PROCESSING.includes(this.srvModel.status);
+                return STATUS_PAID.includes(this.srvModel.status);
             },
             isActive () {
                 return STATUS_PAYABLE.includes(this.srvModel.status);

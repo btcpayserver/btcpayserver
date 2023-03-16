@@ -1,4 +1,6 @@
 @using BTCPayServer.Abstractions.Extensions
+@using BTCPayServer.Services
+@inject DisplayFormatter DisplayFormatter
 @model BTCPayServer.Components.StoreRecentTransactions.StoreRecentTransactionsViewModel
 
 <div class="widget store-recent-transactions" id="StoreRecentTransactions-@Model.Store.Id">
@@ -49,11 +51,11 @@
                     </td>
                     @if (tx.Positive)
                     {
-                        <td class="text-end text-success">@tx.Balance</td>
+                        <td class="text-end text-success">@DisplayFormatter.Currency(tx.Balance, tx.Currency)</td>
                     }
                     else
                     {
-                        <td class="text-end text-danger">@tx.Balance</td>
+                        <td class="text-end text-danger">@DisplayFormatter.Currency(tx.Balance, tx.Currency)</td>
                     }
                 </tr>
             }

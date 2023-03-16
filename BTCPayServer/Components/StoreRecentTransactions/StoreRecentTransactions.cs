@@ -58,6 +58,7 @@ public class StoreRecentTransactions : ViewComponent
                     Id = tx.TransactionId.ToString(),
                     Positive = tx.BalanceChange.GetValue(network) >= 0,
                     Balance = tx.BalanceChange.ShowMoney(network),
+                    Currency = vm.CryptoCode,
                     IsConfirmed = tx.Confirmations != 0,
                     Link = string.Format(CultureInfo.InvariantCulture, network.BlockExplorerLink, tx.TransactionId.ToString()),
                     Timestamp = tx.SeenAt

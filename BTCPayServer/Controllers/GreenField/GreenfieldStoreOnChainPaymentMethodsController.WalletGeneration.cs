@@ -8,6 +8,7 @@ using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Payments;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using NBXplorer.Models;
 
@@ -17,6 +18,7 @@ namespace BTCPayServer.Controllers.Greenfield
     {
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpPost("~/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/generate")]
+        [EnableCors(CorsPolicies.All)]
         public async Task<IActionResult> GenerateOnChainWallet(string storeId, string cryptoCode,
             GenerateWalletRequest request)
         {

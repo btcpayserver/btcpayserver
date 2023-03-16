@@ -251,6 +251,7 @@ namespace BTCPayServer.HostedServices
             IEnumerable<IPayoutHandler> payoutHandlers,
             ILogger<PullPaymentHostedService> logger,
             Logs logs,
+            DisplayFormatter displayFormatter,
             CurrencyNameTable currencyNameTable) : base(logs)
         {
             _dbContextFactory = dbContextFactory;
@@ -262,6 +263,7 @@ namespace BTCPayServer.HostedServices
             _payoutHandlers = payoutHandlers;
             _logger = logger;
             _currencyNameTable = currencyNameTable;
+            _displayFormatter = displayFormatter;
         }
 
         Channel<object> _Channel;
@@ -274,6 +276,7 @@ namespace BTCPayServer.HostedServices
         private readonly IEnumerable<IPayoutHandler> _payoutHandlers;
         private readonly ILogger<PullPaymentHostedService> _logger;
         private readonly CurrencyNameTable _currencyNameTable;
+        private readonly DisplayFormatter _displayFormatter;
         private readonly CompositeDisposable _subscriptions = new CompositeDisposable();
 
         internal override Task[] InitializeTasks()
@@ -754,7 +757,7 @@ namespace BTCPayServer.HostedServices
                 Completed = totalCompleted,
                 CompletedFormatted = totalCompleted.ToString("C", nfi),
                 Limit = ppBlob.Limit.RoundToSignificant(currencyData.Divisibility),
-                LimitFormatted = _currencyNameTable.DisplayFormatCurrency(ppBlob.Limit, ppBlob.Currency),
+                LimitFormatted = _displayFormatter.Currency(ppBlob.Limit, ppBlob.Currency),
                 ResetIn = period?.End is { } nr ? ZeroIfNegative(nr - now).TimeString() : null,
                 EndIn = pp.EndDate is { } end ? ZeroIfNegative(end - now).TimeString() : null,
             };

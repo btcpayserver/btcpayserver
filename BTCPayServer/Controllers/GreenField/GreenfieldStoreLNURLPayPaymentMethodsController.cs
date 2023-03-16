@@ -17,6 +17,7 @@ using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using StoreData = BTCPayServer.Data.StoreData;
@@ -25,24 +26,19 @@ namespace BTCPayServer.Controllers.Greenfield
 {
     [ApiController]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+    [EnableCors(CorsPolicies.All)]
     public class GreenfieldStoreLNURLPayPaymentMethodsController : ControllerBase
     {
         private StoreData Store => HttpContext.GetStoreData();
         private readonly StoreRepository _storeRepository;
         private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
-        private readonly IAuthorizationService _authorizationService;
-        private readonly ISettingsRepository _settingsRepository;
 
         public GreenfieldStoreLNURLPayPaymentMethodsController(
             StoreRepository storeRepository,
-            BTCPayNetworkProvider btcPayNetworkProvider,
-            IAuthorizationService authorizationService,
-            ISettingsRepository settingsRepository)
+            BTCPayNetworkProvider btcPayNetworkProvider)
         {
             _storeRepository = storeRepository;
             _btcPayNetworkProvider = btcPayNetworkProvider;
-            _authorizationService = authorizationService;
-            _settingsRepository = settingsRepository;
         }
 
         public static IEnumerable<LNURLPayPaymentMethodData> GetLNURLPayPaymentMethods(StoreData store,

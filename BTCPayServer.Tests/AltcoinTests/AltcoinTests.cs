@@ -396,21 +396,21 @@ namespace BTCPayServer.Tests
             }
 
             s.Driver.WaitUntilAvailable(By.Id("RefundForm"), TimeSpan.FromSeconds(1));
-            Assert.Contains("$5,500.00", s.Driver.PageSource); // Should propose reimburse in fiat
-            Assert.Contains("1.10000000 ₿", s.Driver.PageSource); // Should propose reimburse in BTC at the rate of before
-            Assert.Contains("2.20000000 ₿", s.Driver.PageSource); // Should propose reimburse in BTC at the current rate
+            Assert.Contains("5,500.00 USD", s.Driver.PageSource); // Should propose reimburse in fiat
+            Assert.Contains("1.10000000 BTC", s.Driver.PageSource); // Should propose reimburse in BTC at the rate of before
+            Assert.Contains("2.20000000 BTC", s.Driver.PageSource); // Should propose reimburse in BTC at the current rate
             s.Driver.WaitForAndClick(By.Id(rateSelection));
             s.Driver.FindElement(By.Id("ok")).Click();
-            
+
             s.Driver.WaitUntilAvailable(By.Id("Destination"), TimeSpan.FromSeconds(1));
             Assert.Contains("pull-payments", s.Driver.Url);
             if (rateSelection == "FiatOption")
-                Assert.Contains("$5,500.00", s.Driver.PageSource);
+                Assert.Contains("5,500.00 USD", s.Driver.PageSource);
             if (rateSelection == "CurrentOption")
-                Assert.Contains("2.20000000 ₿", s.Driver.PageSource);
+                Assert.Contains("2.20000000 BTC", s.Driver.PageSource);
             if (rateSelection == "RateThenOption")
-                Assert.Contains("1.10000000 ₿", s.Driver.PageSource);
-            
+                Assert.Contains("1.10000000 BTC", s.Driver.PageSource);
+
             s.GoToInvoice(invoice.Id);
             s.Driver.FindElement(By.Id("IssueRefund")).Click();
             s.Driver.WaitUntilAvailable(By.Id("Destination"), TimeSpan.FromSeconds(1));

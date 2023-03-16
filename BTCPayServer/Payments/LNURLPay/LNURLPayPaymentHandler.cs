@@ -9,8 +9,8 @@ using BTCPayServer.Lightning;
 using BTCPayServer.Logging;
 using BTCPayServer.Models;
 using BTCPayServer.Models.InvoicingModels;
+using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
-using BTCPayServer.Services.Rates;
 using Microsoft.Extensions.Options;
 
 namespace BTCPayServer.Payments.Lightning
@@ -18,17 +18,17 @@ namespace BTCPayServer.Payments.Lightning
     public class LNURLPayPaymentHandler : PaymentMethodHandlerBase<LNURLPaySupportedPaymentMethod, BTCPayNetwork>
     {
         private readonly BTCPayNetworkProvider _networkProvider;
-        private readonly CurrencyNameTable _currencyNameTable;
+        private readonly DisplayFormatter _displayFormatter;
         private readonly LightningLikePaymentHandler _lightningLikePaymentHandler;
 
         public LNURLPayPaymentHandler(
             BTCPayNetworkProvider networkProvider,
-            CurrencyNameTable currencyNameTable,
+            DisplayFormatter displayFormatter,
             IOptions<LightningNetworkOptions> options,
             LightningLikePaymentHandler lightningLikePaymentHandler)
         {
             _networkProvider = networkProvider;
-            _currencyNameTable = currencyNameTable;
+            _displayFormatter = displayFormatter;
             _lightningLikePaymentHandler = lightningLikePaymentHandler;
             Options = options;
         }
@@ -115,7 +115,7 @@ namespace BTCPayServer.Payments.Lightning
             
             if (storeBlob.LightningAmountInSatoshi && model.CryptoCode == "BTC")
             {
-                base.PreparePaymentModelForAmountInSats(model, paymentMethod, _currencyNameTable);
+                base.PreparePaymentModelForAmountInSats(model, paymentMethod, _displayFormatter);
             }
         }
 

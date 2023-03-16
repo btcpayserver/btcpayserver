@@ -28,7 +28,8 @@ namespace BTCPayServer.Models.InvoicingModels
         public bool CanMarkStatus => CanMarkSettled || CanMarkInvalid;
         public bool ShowCheckout { get; set; }
         public string ExceptionStatus { get; set; }
-        public string AmountCurrency { get; set; }
+        public decimal Amount { get; set; }
+        public string Currency { get; set; }
 
         public InvoiceDetailsModel Details { get; set; }
         public bool HasRefund { get; set; }

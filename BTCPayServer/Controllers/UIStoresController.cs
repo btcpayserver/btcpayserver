@@ -386,6 +386,7 @@ namespace BTCPayServer.Controllers
             }).ToList();
 
             vm.UseNewCheckout = storeBlob.CheckoutType == Client.Models.CheckoutType.V2;
+            vm.CelebratePayment = storeBlob.CelebratePayment;
             vm.OnChainWithLnInvoiceFallback = storeBlob.OnChainWithLnInvoiceFallback;
             vm.ShowPayInWalletButton = storeBlob.ShowPayInWalletButton;
             vm.ShowStoreHeader = storeBlob.ShowStoreHeader;
@@ -508,7 +509,7 @@ namespace BTCPayServer.Controllers
             }
 
             blob.CheckoutType = model.UseNewCheckout ? Client.Models.CheckoutType.V2 : Client.Models.CheckoutType.V1;
-
+            blob.CelebratePayment = model.CelebratePayment;
             blob.OnChainWithLnInvoiceFallback = model.OnChainWithLnInvoiceFallback;
             blob.ShowPayInWalletButton = model.ShowPayInWalletButton;
             blob.ShowStoreHeader = model.ShowStoreHeader;

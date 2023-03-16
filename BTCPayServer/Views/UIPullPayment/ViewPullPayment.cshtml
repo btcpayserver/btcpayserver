@@ -1,11 +1,13 @@
-@inject BTCPayServer.Services.BTCPayServerEnvironment Env
-@inject BTCPayNetworkProvider BtcPayNetworkProvider
 @using BTCPayServer.Client
-@using BTCPayServer.Components.ThemeSwitch
 @using BTCPayServer.Payments
-@model BTCPayServer.Models.ViewPullPaymentModel
+@using BTCPayServer.Services
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using BTCPayServer.Abstractions.TagHelpers
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
-
+@inject BTCPayServerEnvironment Env
+@inject BTCPayNetworkProvider BtcPayNetworkProvider
+@inject DisplayFormatter DisplayFormatter
+@model BTCPayServer.Models.ViewPullPaymentModel
 @{
     ViewData["Title"] = Model.Title;
 	Csp.UnsafeEval();
@@ -141,18 +143,18 @@
                             <h2 class="h4 mb-3">Payment Details</h2>
                             <dl class="mb-0 mt-md-4">
                                 <div class="d-flex d-print-inline-block flex-column mb-4 me-5">
-                                    <dt class="h4 fw-semibold text-nowrap text-primary text-print-default order-2 order-sm-1 mb-1">@Model.AmountDueFormatted</dt>
+                                    <dt class="h4 fw-semibold text-nowrap text-primary text-print-default order-2 order-sm-1 mb-1">@DisplayFormatter.Currency(Model.AmountDue, Model.Currency)</dt>
                                     <dd class="order-1 order-sm-2 mb-1">Available claim</dd>
                                 </div>
                                 <div class="progress bg-light d-none d-sm-flex mb-sm-4 d-print-none" style="height:5px">
                                     <div class="progress-bar bg-primary" role="progressbar" style="width:@((Model.AmountCollected / Model.Amount) * 100)%"></div>
                                 </div>
                                 <div class="d-flex d-print-inline-block flex-column mb-4 me-5 d-sm-inline-flex mb-sm-0">
-                                    <dt class="h4 fw-semibold text-nowrap order-2 order-sm-1 mb-1">@Model.AmountCollectedFormatted</dt>
+                                    <dt class="h4 fw-semibold text-nowrap order-2 order-sm-1 mb-1">@DisplayFormatter.Currency(Model.AmountCollected, Model.Currency)</dt>
                                     <dd class="order-1 order-sm-2 mb-1">Already claimed</dd>
                                 </div>
                                 <div class="d-flex d-print-inline-block flex-column mb-0 d-sm-inline-flex float-sm-end">
-                                    <dt class="h4 text-sm-end fw-semibold text-nowrap order-2 order-sm-1 mb-1">@Model.AmountFormatted</dt>
+                                    <dt class="h4 text-sm-end fw-semibold text-nowrap order-2 order-sm-1 mb-1">@DisplayFormatter.Currency(Model.Amount, Model.Currency)</dt>
                                     <dd class="text-sm-end order-1 order-sm-2 mb-1">Claim limit</dd>
                                 </div>
                             </dl>

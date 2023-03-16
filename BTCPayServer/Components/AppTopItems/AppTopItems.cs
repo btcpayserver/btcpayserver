@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Components.AppSales;
 using BTCPayServer.Data;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Stores;
@@ -18,17 +19,25 @@ public class AppTopItems : ViewComponent
         _appService = appService;
     }
 
-    public async Task<IViewComponentResult> InvokeAsync(AppTopItemsViewModel vm)
+    public async Task<IViewComponentResult> InvokeAsync(string appId, string appType = null)
     {
-        if (vm.App == null)
-            throw new ArgumentNullException(nameof(vm.App));
+        var vm = new AppTopItemsViewModel()
+        {
+            Id = appId,
+            AppType = appType,
+            Url = Url.Action("AppTopItems", "UIApps", new { appId = appId }),
+            InitialRendering = HttpContext.GetAppData()?.Id != appId
+        };
         if (vm.InitialRendering)
             return View(vm);
 
-        var entries = Enum.Parse<AppType>(vm.App.AppType) == AppType.Crowdfund
-            ? await _appService.GetPerkStats(vm.App)
-            : await _appService.GetItemStats(vm.App);
+        var app = HttpContext.GetAppData();
+        vm.AppType = app.AppType;
+        var entries = Enum.Parse<AppType>(vm.AppType) == AppType.Crowdfund
+            ? await _appService.GetPerkStats(app)
+            : await _appService.GetItemStats(app);
 
+        vm.SalesCount = entries.Select(e => e.SalesCount).ToList();
         vm.Entries = entries.ToList();
 
         return View(vm);

@@ -87,22 +87,19 @@ namespace BTCPayServer.Security.Greenfield
             switch (policy)
             {
                 case { } when Policies.IsStorePolicy(policy):
-                    var storeId = _httpContext.GetImplicitStoreId();
+                    var storeId = requiredUnscoped ? null : _httpContext.GetImplicitStoreId();
                     // Specific store action
                     if (storeId != null)
                     {
-                        if (context.HasPermission(Permission.Create(policy, storeId), requiredUnscoped))
+                        if (context.HasPermission(Permission.Create(policy, storeId)))
                         {
                             if (string.IsNullOrEmpty(userid))
                                 break;
                             var store = await _storeRepository.FindStore(storeId, userid);
                             if (store == null)
                                 break;
-                            if (Policies.IsStoreModifyPolicy(policy) || policy == Policies.CanUseLightningNodeInStore)
-                            {
-                                if (store.Role != StoreRoles.Owner)
-                                    break;
-                            }
+                            if (!store.HasPermission(policy))
+                                break;
                             success = true;
                             _httpContext.SetStoreData(store);
                         }
@@ -115,7 +112,7 @@ namespace BTCPayServer.Security.Greenfield
                         List<StoreData> permissionedStores = new List<StoreData>();
                         foreach (var store in stores)
                         {
-                            if (context.HasPermission(Permission.Create(policy, store.Id), requiredUnscoped))
+                            if (context.HasPermission(Permission.Create(policy, store.Id)))
                                 permissionedStores.Add(store);
                         }
                         _httpContext.SetStoresData(permissionedStores.ToArray());
@@ -144,7 +141,7 @@ namespace BTCPayServer.Security.Greenfield
                 case Policies.CanViewProfile:
                 case Policies.CanDeleteUser:
                 case Policies.Unrestricted:
-                    success = context.HasPermission(Permission.Create(policy), requiredUnscoped);
+                    success = context.HasPermission(Permission.Create(policy));
                     break;
             }
 

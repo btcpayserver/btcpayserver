@@ -49,17 +49,11 @@ namespace BTCPayServer.Security.Greenfield
         }
         public static bool HasPermission(this AuthorizationHandlerContext context, Permission permission)
         {
-            return HasPermission(context, permission, false);
-        }
-        public static bool HasPermission(this AuthorizationHandlerContext context, Permission permission, bool requireUnscoped)
-        {
             foreach (var claim in context.User.Claims.Where(c =>
                 c.Type.Equals(GreenfieldConstants.ClaimTypes.Permission, StringComparison.InvariantCultureIgnoreCase)))
             {
                 if (Permission.TryParse(claim.Value, out var claimPermission))
                 {
-                    if (requireUnscoped && claimPermission.Scope is not null)
-                        continue;
                     if (claimPermission.Contains(permission))
                     {
                         return true;

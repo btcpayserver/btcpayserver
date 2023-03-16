@@ -103,13 +103,40 @@ namespace BTCPayServer.Client
             return policy.StartsWith("btcpay.user", StringComparison.OrdinalIgnoreCase);
         }
     }
+
+    public class PermissionSet
+    {
+        public PermissionSet() : this(Array.Empty<Permission>())
+        {
+
+        }
+        public PermissionSet(Permission[] permissions)
+        {
+            Permissions = permissions;
+        }
+
+        public Permission[] Permissions { get; }
+
+        public bool Contains(Permission requestedPermission)
+        {
+            return Permissions.Any(p => p.Contains(requestedPermission));
+        }
+        public bool Contains(string permission, string store)
+        {
+            if (permission is null)
+                throw new ArgumentNullException(nameof(permission));
+            if (store is null)
+                throw new ArgumentNullException(nameof(store));
+            return Contains(Permission.Create(permission, store));
+        }
+    }
     public class Permission
     {
         static Permission()
         {
             Init();
         }
-        
+
         public static Permission Create(string policy, string scope = null)
         {
             if (TryCreatePermission(policy, scope, out var r))
@@ -203,7 +230,8 @@ namespace BTCPayServer.Client
                 return true;
             if (policy == subpolicy)
                 return true;
-            if (!PolicyMap.TryGetValue(policy, out var subPolicies)) return false;
+            if (!PolicyMap.TryGetValue(policy, out var subPolicies))
+                return false;
             return subPolicies.Contains(subpolicy) || subPolicies.Any(s => ContainsPolicy(s, subpolicy));
         }
 
@@ -217,23 +245,23 @@ namespace BTCPayServer.Client
                 Policies.CanModifyInvoices,
                 Policies.CanViewStoreSettings,
                 Policies.CanModifyStoreWebhooks,
-                Policies.CanModifyPaymentRequests, 
+                Policies.CanModifyPaymentRequests,
                 Policies.CanUseLightningNodeInStore);
 
             PolicyHasChild(Policies.CanManageUsers, Policies.CanCreateUser);
-            PolicyHasChild(Policies.CanManagePullPayments, Policies.CanCreatePullPayments );
-            PolicyHasChild(Policies.CanCreatePullPayments, Policies.CanCreateNonApprovedPullPayments );
-            PolicyHasChild(Policies.CanModifyPaymentRequests, Policies.CanViewPaymentRequests );
-            PolicyHasChild(Policies.CanModifyProfile, Policies.CanViewProfile );
-            PolicyHasChild(Policies.CanUseLightningNodeInStore, Policies.CanViewLightningInvoiceInStore, Policies.CanCreateLightningInvoiceInStore );
-            PolicyHasChild(Policies.CanManageNotificationsForUser, Policies.CanViewNotificationsForUser );
+            PolicyHasChild(Policies.CanManagePullPayments, Policies.CanCreatePullPayments);
+            PolicyHasChild(Policies.CanCreatePullPayments, Policies.CanCreateNonApprovedPullPayments);
+            PolicyHasChild(Policies.CanModifyPaymentRequests, Policies.CanViewPaymentRequests);
+            PolicyHasChild(Policies.CanModifyProfile, Policies.CanViewProfile);
+            PolicyHasChild(Policies.CanUseLightningNodeInStore, Policies.CanViewLightningInvoiceInStore, Policies.CanCreateLightningInvoiceInStore);
+            PolicyHasChild(Policies.CanManageNotificationsForUser, Policies.CanViewNotificationsForUser);
             PolicyHasChild(Policies.CanModifyServerSettings,
                 Policies.CanUseInternalLightningNode,
                 Policies.CanManageUsers);
-            PolicyHasChild(Policies.CanUseInternalLightningNode, Policies.CanCreateLightningInvoiceInternalNode,Policies.CanViewLightningInvoiceInternalNode );
-            PolicyHasChild(Policies.CanManageCustodianAccounts, Policies.CanViewCustodianAccounts );
-            PolicyHasChild(Policies.CanModifyInvoices, Policies.CanViewInvoices, Policies.CanCreateInvoice );
-            PolicyHasChild(Policies.CanViewStoreSettings, Policies.CanViewInvoices, Policies.CanViewPaymentRequests  );
+            PolicyHasChild(Policies.CanUseInternalLightningNode, Policies.CanCreateLightningInvoiceInternalNode, Policies.CanViewLightningInvoiceInternalNode);
+            PolicyHasChild(Policies.CanManageCustodianAccounts, Policies.CanViewCustodianAccounts);
+            PolicyHasChild(Policies.CanModifyInvoices, Policies.CanViewInvoices, Policies.CanCreateInvoice, Policies.CanCreateLightningInvoiceInStore);
+            PolicyHasChild(Policies.CanViewStoreSettings, Policies.CanViewInvoices, Policies.CanViewPaymentRequests);
         }
 
         private static void PolicyHasChild(string policy, params string[] subPolicies)
@@ -247,7 +275,7 @@ namespace BTCPayServer.Client
             }
             else
             {
-                PolicyMap.Add(policy,subPolicies.ToHashSet());
+                PolicyMap.Add(policy, subPolicies.ToHashSet());
             }
         }
 

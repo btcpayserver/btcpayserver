@@ -141,18 +141,7 @@ namespace BTCPayServer.Security
             {
                 if (store is not null)
                 {
-                    var requestedPermission = Permission.Create(policy, store.Id);
-                    var givenPermissions = store.Role == StoreRoles.Owner
-                        ? new[]
-                        {
-                        Permission.Create(Policies.CanModifyStoreSettings, store.Id)
-                        }
-                        : new[]
-                        {
-                        Permission.Create(Policies.CanViewStoreSettings, store.Id),
-                        Permission.Create(Policies.CanModifyInvoices, store.Id)
-                        };
-                    if (givenPermissions.Any(p => p.Contains(requestedPermission)))
+                    if (store.HasPermission(policy))
                     {
                         success = true;
                     }

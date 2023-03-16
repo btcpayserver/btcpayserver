@@ -121,11 +121,11 @@
         {
             @if (AppService.SupportsSalesStats(app))
             {
-                <vc:app-sales vm="@(new AppSalesViewModel { App = app, InitialRendering = true })"/>
+                <vc:app-sales app-id="@app.Id" app-type="@app.AppType" />
             }
             @if (AppService.SupportsItemStats(app))
             {
-                <vc:app-top-items vm="@(new AppTopItemsViewModel { App = app, InitialRendering = true })" />
+                <vc:app-top-items app-id="@app.Id"  app-type="@app.AppType" />
             }
         }
     </div>

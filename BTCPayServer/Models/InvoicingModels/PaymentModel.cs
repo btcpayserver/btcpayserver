@@ -33,6 +33,7 @@ namespace BTCPayServer.Models.InvoicingModels
         public bool IsModal { get; set; }
         public bool IsUnsetTopUp { get; set; }
         public bool OnChainWithLnInvoiceFallback { get; set; }
+        public bool CelebratePayment { get; set; }
         public string CryptoCode { get; set; }
         public string InvoiceId { get; set; }
         public string BtcAddress { get; set; }

@@ -50,7 +50,7 @@ public class Form
         HashSet<string> nameReturned = new();
         foreach (var f in GetAllFieldsCore(new List<string>(), Fields))
         {
-            var fullName = string.Join('_', f.Path);
+            var fullName = string.Join('_', f.Path.Where(s => !string.IsNullOrEmpty(s)));
             if (!nameReturned.Add(fullName))
                 continue;
             yield return (fullName, f.Path, f.Field);
@@ -63,7 +63,7 @@ public class Form
         HashSet<string> nameReturned = new();
         foreach (var f in GetAllFieldsCore(new List<string>(), Fields))
         {
-            var fullName = string.Join('_', f.Path);
+            var fullName = string.Join('_', f.Path.Where(s => !string.IsNullOrEmpty(s)));
             if (!nameReturned.Add(fullName))
             {
                 errors.Add($"Form contains duplicate field names '{fullName}'");
@@ -128,8 +128,8 @@ public class Form
             }
             else if (prop.Value.Type == JTokenType.String)
             {
-                var fullname = String.Join('_', propPath);
-                if (fields.TryGetValue(fullname, out var f) && !f.Constant)
+                var fullName = string.Join('_', propPath.Where(s => !string.IsNullOrEmpty(s)));
+                if (fields.TryGetValue(fullName, out var f) && !f.Constant)
                     f.Value = prop.Value.Value<string>();
             }
         }

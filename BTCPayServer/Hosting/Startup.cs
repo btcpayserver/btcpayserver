@@ -29,6 +29,7 @@ using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -274,6 +275,19 @@ namespace BTCPayServer.Hosting
                 }
             });
 
+            // The framework during publish automatically publish the js files into
+            // wwwroot, so this shouldn't be needed.
+            // But somehow during debug the collocated js files, are error 404!
+            var componentsFolder = Path.Combine(env.ContentRootPath, "Components");
+            if (Directory.Exists(componentsFolder))
+            {
+                app.UseStaticFiles(new StaticFileOptions()
+                {
+                    FileProvider = new PhysicalFileProvider(componentsFolder),
+                    RequestPath = "/Components"
+                });
+            }
+
             app.UseProviderStorage(dataDirectories);
             app.UseAuthentication();
             app.UseAuthorization();
@@ -295,6 +309,17 @@ namespace BTCPayServer.Hosting
                 endpoints.MapControllerRoute("default", "{controller:validate=UIHome}/{action:lowercase=Index}/{id?}");
             });
             app.UsePlugins();
+        }
+
+        private static Action<Microsoft.AspNetCore.StaticFiles.StaticFileResponseContext> NewMethod()
+        {
+            return ctx =>
+            {
+                // Cache static assets for one year, set asp-append-version="true" on references to update on change.
+                // https://andrewlock.net/adding-cache-control-headers-to-static-files-in-asp-net-core/
+                const int durationInSeconds = 60 * 60 * 24 * 365;
+                ctx.Context.Response.Headers[HeaderNames.CacheControl] = "public,max-age=" + durationInSeconds;
+            };
         }
     }
 }

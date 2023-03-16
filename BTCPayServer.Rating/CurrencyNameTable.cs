@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using BTCPayServer.Rating;
 using NBitcoin;
 using Newtonsoft.Json;
 
@@ -28,14 +27,6 @@ namespace BTCPayServer.Services.Rates
         }
 
         static readonly Dictionary<string, IFormatProvider> _CurrencyProviders = new Dictionary<string, IFormatProvider>();
-        public string FormatCurrency(string price, string currency)
-        {
-            return FormatCurrency(decimal.Parse(price, CultureInfo.InvariantCulture), currency);
-        }
-        public string FormatCurrency(decimal price, string currency)
-        {
-            return price.ToString("C", GetCurrencyProvider(currency));
-        }
 
         public NumberFormatInfo GetNumberFormatInfo(string currency, bool useFallback)
         {
@@ -56,6 +47,7 @@ namespace BTCPayServer.Services.Rates
             currencyInfo.CurrencySymbol = currency;
             return currencyInfo;
         }
+
         public NumberFormatInfo GetNumberFormatInfo(string currency)
         {
             var curr = GetCurrencyProvider(currency);
@@ -65,6 +57,7 @@ namespace BTCPayServer.Services.Rates
                 return ni;
             return null;
         }
+
         public IFormatProvider GetCurrencyProvider(string currency)
         {
             lock (_CurrencyProviders)
@@ -102,30 +95,6 @@ namespace BTCPayServer.Services.Rates
             number.CurrencyPositivePattern = 3;
             number.NegativeSign = culture.NumberFormat.NegativeSign;
             currencyProviders.TryAdd(code, number);
-        }
-
-        /// <summary>
-        /// Format a currency like "0.004 $ (USD)", round to significant divisibility
-        /// </summary>
-        /// <param name="value">The value</param>
-        /// <param name="currency">Currency code</param>
-        /// <returns></returns>
-        public string DisplayFormatCurrency(decimal value, string currency)
-        {
-            var provider = GetNumberFormatInfo(currency, true);
-            var currencyData = GetCurrencyData(currency, true);
-            var divisibility = currencyData.Divisibility;
-            value = value.RoundToSignificant(ref divisibility);
-            if (divisibility != provider.CurrencyDecimalDigits)
-            {
-                provider = (NumberFormatInfo)provider.Clone();
-                provider.CurrencyDecimalDigits = divisibility;
-            }
-
-            if (currencyData.Crypto)
-                return value.ToString("C", provider);
-            else
-                return value.ToString("C", provider) + $" ({currency})";
         }
 
         readonly Dictionary<string, CurrencyData> _Currencies;

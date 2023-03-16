@@ -14,6 +14,7 @@ using BTCPayServer.Forms.Models;
 using BTCPayServer.Models;
 using BTCPayServer.Models.PaymentRequestViewModels;
 using BTCPayServer.PaymentRequest;
+using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.PaymentRequests;
 using BTCPayServer.Services.Rates;
@@ -37,6 +38,7 @@ namespace BTCPayServer.Controllers
         private readonly PaymentRequestService _PaymentRequestService;
         private readonly EventAggregator _EventAggregator;
         private readonly CurrencyNameTable _Currencies;
+        private readonly DisplayFormatter _displayFormatter;
         private readonly InvoiceRepository _InvoiceRepository;
         private readonly StoreRepository _storeRepository;
 
@@ -50,6 +52,7 @@ namespace BTCPayServer.Controllers
             PaymentRequestService paymentRequestService,
             EventAggregator eventAggregator,
             CurrencyNameTable currencies,
+            DisplayFormatter displayFormatter,
             StoreRepository storeRepository,
             InvoiceRepository invoiceRepository,
             FormComponentProviders formProviders,
@@ -61,6 +64,7 @@ namespace BTCPayServer.Controllers
             _PaymentRequestService = paymentRequestService;
             _EventAggregator = eventAggregator;
             _Currencies = currencies;
+            _displayFormatter = displayFormatter;
             _storeRepository = storeRepository;
             _InvoiceRepository = invoiceRepository;
             FormProviders = formProviders;
@@ -89,7 +93,7 @@ namespace BTCPayServer.Controllers
                 var blob = data.GetBlob();
                 return new ViewPaymentRequestViewModel(data)
                 {
-                    AmountFormatted = _Currencies.DisplayFormatCurrency(blob.Amount, blob.Currency)
+                    AmountFormatted = _displayFormatter.Currency(blob.Amount, blob.Currency)
                 };
             }).ToList();
 

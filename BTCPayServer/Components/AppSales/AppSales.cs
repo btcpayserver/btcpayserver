@@ -1,4 +1,5 @@
 using System;
+using System.Security.AccessControl;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Models.AppViewModels;
@@ -24,15 +25,20 @@ public class AppSales : ViewComponent
         _appService = appService;
     }
 
-    public async Task<IViewComponentResult> InvokeAsync(AppSalesViewModel vm)
+    public async Task<IViewComponentResult> InvokeAsync(string appId, string appType)
     {
-        if (vm.App == null)
-            throw new ArgumentNullException(nameof(vm.App));
+        var vm = new AppSalesViewModel()
+        {
+            Id = appId,
+            AppType = appType,
+            Url = Url.Action("AppSales", "UIApps", new { appId = appId }),
+            InitialRendering = HttpContext.GetAppData()?.Id != appId
+        };
         if (vm.InitialRendering)
             return View(vm);
-
-        var stats = await _appService.GetSalesStats(vm.App);
-
+        var app = HttpContext.GetAppData();
+        vm.AppType = app.AppType;
+        var stats = await _appService.GetSalesStats(HttpContext.GetAppData());
         vm.SalesCount = stats.SalesCount;
         vm.Series = stats.Series;
 

@@ -5,6 +5,7 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Models.PaymentRequestViewModels;
 using BTCPayServer.Payments;
+using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.PaymentRequests;
@@ -20,17 +21,20 @@ namespace BTCPayServer.PaymentRequest
         private readonly BTCPayNetworkProvider _BtcPayNetworkProvider;
         private readonly AppService _AppService;
         private readonly CurrencyNameTable _currencies;
+        private readonly DisplayFormatter _displayFormatter;
 
         public PaymentRequestService(
             PaymentRequestRepository paymentRequestRepository,
             BTCPayNetworkProvider btcPayNetworkProvider,
             AppService appService,
+            DisplayFormatter displayFormatter,
             CurrencyNameTable currencies)
         {
             _PaymentRequestRepository = paymentRequestRepository;
             _BtcPayNetworkProvider = btcPayNetworkProvider;
             _AppService = appService;
             _currencies = currencies;
+            _displayFormatter = displayFormatter;
         }
 
         public async Task UpdatePaymentRequestStateIfNeeded(string id)
@@ -90,11 +94,11 @@ namespace BTCPayServer.PaymentRequest
             return new ViewPaymentRequestViewModel(pr)
             {
                 Archived = pr.Archived,
-                AmountFormatted = _currencies.FormatCurrency(blob.Amount, blob.Currency),
+                AmountFormatted = _displayFormatter.Currency(blob.Amount, blob.Currency, DisplayFormatter.CurrencyFormat.Symbol),
                 AmountCollected = paymentStats.TotalCurrency,
-                AmountCollectedFormatted = _currencies.FormatCurrency(paymentStats.TotalCurrency, blob.Currency),
+                AmountCollectedFormatted = _displayFormatter.Currency(paymentStats.TotalCurrency, blob.Currency, DisplayFormatter.CurrencyFormat.Symbol),
                 AmountDue = amountDue,
-                AmountDueFormatted = _currencies.FormatCurrency(amountDue, blob.Currency),
+                AmountDueFormatted = _displayFormatter.Currency(amountDue, blob.Currency, DisplayFormatter.CurrencyFormat.Symbol),
                 CurrencyData = _currencies.GetCurrencyData(blob.Currency, true),
                 LastUpdated = DateTime.UtcNow,
                 FormId = blob.FormId,
@@ -128,8 +132,8 @@ namespace BTCPayServer.PaymentRequest
                                 Amount = amount,
                                 Paid = paid,
                                 ReceivedDate = paymentEntity.ReceivedTime.DateTime,
-                                PaidFormatted = _currencies.FormatCurrency(paid, blob.Currency),
-                                RateFormatted = _currencies.FormatCurrency(rate, blob.Currency),
+                                PaidFormatted = _displayFormatter.Currency(paid, blob.Currency, DisplayFormatter.CurrencyFormat.Symbol),
+                                RateFormatted = _displayFormatter.Currency(rate, blob.Currency, DisplayFormatter.CurrencyFormat.Symbol),
                                 PaymentMethod = paymentMethodId.ToPrettyString(),
                                 Link = link,
                                 Id = txId,
@@ -147,7 +151,7 @@ namespace BTCPayServer.PaymentRequest
                     {
                         Id = entity.Id,
                         Amount = entity.Price,
-                        AmountFormatted = _currencies.FormatCurrency(entity.Price, blob.Currency),
+                        AmountFormatted = _displayFormatter.Currency(entity.Price, blob.Currency, DisplayFormatter.CurrencyFormat.Symbol),
                         Currency = entity.Currency,
                         ExpiryDate = entity.ExpirationTime.DateTime,
                         State = state,

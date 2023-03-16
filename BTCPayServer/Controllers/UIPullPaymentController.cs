@@ -27,6 +27,7 @@ namespace BTCPayServer.Controllers
     {
         private readonly ApplicationDbContextFactory _dbContextFactory;
         private readonly CurrencyNameTable _currencyNameTable;
+        private readonly DisplayFormatter _displayFormatter;
         private readonly PullPaymentHostedService _pullPaymentHostedService;
         private readonly BTCPayNetworkJsonSerializerSettings _serializerSettings;
         private readonly IEnumerable<IPayoutHandler> _payoutHandlers;
@@ -34,6 +35,7 @@ namespace BTCPayServer.Controllers
 
         public UIPullPaymentController(ApplicationDbContextFactory dbContextFactory,
             CurrencyNameTable currencyNameTable,
+            DisplayFormatter displayFormatter,
             PullPaymentHostedService pullPaymentHostedService,
             BTCPayNetworkJsonSerializerSettings serializerSettings,
             IEnumerable<IPayoutHandler> payoutHandlers,
@@ -41,6 +43,7 @@ namespace BTCPayServer.Controllers
         {
             _dbContextFactory = dbContextFactory;
             _currencyNameTable = currencyNameTable;
+            _displayFormatter = displayFormatter;
             _pullPaymentHostedService = pullPaymentHostedService;
             _serializerSettings = serializerSettings;
             _payoutHandlers = payoutHandlers;
@@ -79,12 +82,9 @@ namespace BTCPayServer.Controllers
             {
                 BrandColor = storeBlob.BrandColor,
                 CssFileId = storeBlob.CssFileId,
-                AmountFormatted = _currencyNameTable.FormatCurrency(blob.Limit, blob.Currency),
                 AmountCollected = totalPaid,
-                AmountCollectedFormatted = _currencyNameTable.FormatCurrency(totalPaid, blob.Currency),
                 AmountDue = amountDue,
                 ClaimedAmount = amountDue,
-                AmountDueFormatted = _currencyNameTable.FormatCurrency(amountDue, blob.Currency),
                 CurrencyData = cd,
                 StartDate = pp.StartDate,
                 LastRefreshed = DateTime.UtcNow,
@@ -93,7 +93,6 @@ namespace BTCPayServer.Controllers
                           {
                               Id = entity.Entity.Id,
                               Amount = entity.Blob.Amount,
-                              AmountFormatted = _currencyNameTable.FormatCurrency(entity.Blob.Amount, blob.Currency),
                               Currency = blob.Currency,
                               Status = entity.Entity.State,
                               Destination = entity.Blob.Destination,
@@ -200,8 +199,8 @@ namespace BTCPayServer.Controllers
                 var amount = ppBlob.Currency == "SATS" ? new Money(vm.ClaimedAmount, MoneyUnit.Satoshi).ToUnit(MoneyUnit.BTC) : vm.ClaimedAmount;
                 if (destination.destination.Amount != null && amount != destination.destination.Amount)
                 {
-                    var implied = _currencyNameTable.DisplayFormatCurrency(destination.destination.Amount.Value, paymentMethodId.CryptoCode);
-                    var provided = _currencyNameTable.DisplayFormatCurrency(vm.ClaimedAmount, ppBlob.Currency);
+                    var implied = _displayFormatter.Currency(destination.destination.Amount.Value, paymentMethodId.CryptoCode, DisplayFormatter.CurrencyFormat.Symbol);
+                    var provided = _displayFormatter.Currency(vm.ClaimedAmount, ppBlob.Currency, DisplayFormatter.CurrencyFormat.Symbol);
                     ModelState.AddModelError(nameof(vm.ClaimedAmount),
                         $"Amount implied in destination ({implied}) does not match the payout amount provided ({provided}).");
                 }
@@ -235,7 +234,7 @@ namespace BTCPayServer.Controllers
 
             TempData.SetStatusMessageModel(new StatusMessageModel
             {
-                Message = $"Your claim request of {_currencyNameTable.DisplayFormatCurrency(vm.ClaimedAmount, ppBlob.Currency)} to {vm.Destination} has been submitted and is awaiting {(result.PayoutData.State == PayoutState.AwaitingApproval ? "approval" : "payment")}.",
+                Message = $"Your claim request of {_displayFormatter.Currency(vm.ClaimedAmount, ppBlob.Currency, DisplayFormatter.CurrencyFormat.Symbol)} to {vm.Destination} has been submitted and is awaiting {(result.PayoutData.State == PayoutState.AwaitingApproval ? "approval" : "payment")}.",
                 Severity = StatusMessageModel.StatusSeverity.Success
             });
 

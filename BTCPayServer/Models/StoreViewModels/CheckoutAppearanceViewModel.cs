@@ -35,6 +35,9 @@ namespace BTCPayServer.Models.StoreViewModels
         [Display(Name = "Use the new checkout")]
         public bool UseNewCheckout { get; set; }
 
+        [Display(Name = "Celebrate payment with confetti")]
+        public bool CelebratePayment { get; set; }
+
         [Display(Name = "Requires a refund email")]
         public bool RequiresRefundEmail { get; set; }
 

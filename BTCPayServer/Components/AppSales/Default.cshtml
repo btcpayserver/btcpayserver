@@ -1,19 +1,18 @@
 @using BTCPayServer.Components.AppSales
 @using BTCPayServer.Abstractions.TagHelpers
 @using BTCPayServer.Plugins.Crowdfund
-@using BTCPayServer.Services.Apps
-@inject AppService AppService
-@inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model BTCPayServer.Components.AppSales.AppSalesViewModel
 @{
-    var label = Model.App.AppType == CrowdfundApp.AppType ? "Contributions" : "Sales";
-    var configureUrl = await AppService.ConfigureLink(Model.App, Model.App.AppType);
+    var label = Model.AppType == CrowdfundApp.AppType ? "Contributions" : "Sales";
 }
 
 <div id="AppSales-@Model.Id" class="widget app-sales">
     <header class="mb-3">
-        <h3>@Model.App.Name @label</h3>
-        <a href="@configureUrl">Manage</a>
+        <h3>@Model.Name @label</h3>
+        @if (!string.IsNullOrEmpty(Model.AppUrl))
+        {
+            <a href="@Model.AppUrl">Manage</a>
+        }
     </header>
     @if (Model.InitialRendering)
     {
@@ -25,7 +24,7 @@
         <script src="~/Components/AppSales/Default.cshtml.js" asp-append-version="true"></script>
         <script>
             (async () => {
-                const url = @Safe.Json(Model.Url);
+                const url = @Safe.Json(Model.DataUrl);
                 const appId = @Safe.Json(Model.Id);
                 const response = await fetch(url);
                 if (response.ok) {

@@ -57,7 +57,6 @@ namespace BTCPayServer.Services.Apps
             _displayFormatter = displayFormatter;
         }
 
-        
         public Dictionary<string, string> GetAvailableAppTypes()
         {
             return _apps.ToDictionary(app => app.Type, app => app.Description);
@@ -200,7 +199,6 @@ namespace BTCPayServer.Services.Apps
                 return res;
             };
         }
-
       
         public static string GetAppOrderId(AppData app) => GetAppOrderId(app.AppType, app.Id);
         public static string GetAppOrderId(string appType, string appId) =>

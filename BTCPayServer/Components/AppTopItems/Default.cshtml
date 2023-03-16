@@ -1,33 +1,28 @@
 @using BTCPayServer.Plugins.Crowdfund
-@using BTCPayServer.Services.Apps
-@inject AppService AppService
-@inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model BTCPayServer.Components.AppTopItems.AppTopItemsViewModel
 @{
-	var controller = $"UI{Model.AppType}";
-	var action = $"Update{Model.AppType}";
-	var label = Model.AppType == nameof(AppType.Crowdfund) ? "contribution" : "sale";
-  
-  var label = Model.App.AppType == CrowdfundApp.AppType ? "contribution" : "sale";
-  var configureUrl = await AppService.ConfigureLink(Model.App, Model.App.AppType);
+    var label = Model.AppType == CrowdfundApp.AppType ? "contribution" : "sale";
 }
 
 <div id="AppTopItems-@Model.Id" class="widget app-top-items">
-  <header class="mb-3">
-	  <h3>Top @(Model.App.AppType == CrowdfundApp.AppType ? "Perks" : "Items")</h3>
-    <a href="@configureUrl">View All</a>
-  </header>
-	@if (Model.InitialRendering)
-	{
-	  <div class="loading d-flex justify-content-center p-3">
-		<div class="spinner-border text-light" role="status">
-		  <span class="visually-hidden">Loading...</span>
-		</div>
-	  </div>
-	  <script src="~/Components/AppTopItems/Default.cshtml.js" asp-append-version="true"></script>
-	  <script>
+    <header class="mb-3">
+        <h3>Top @(Model.AppType == CrowdfundApp.AppType ? "Perks" : "Items")</h3>
+        @if (!string.IsNullOrEmpty(Model.AppUrl))
+        {
+            <a href="@Model.AppUrl">View All</a>
+        }
+    </header>
+    @if (Model.InitialRendering)
+    {
+        <div class="loading d-flex justify-content-center p-3">
+            <div class="spinner-border text-light" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+        <script src="~/Components/AppTopItems/Default.cshtml.js" asp-append-version="true"></script>
+        <script>
 		(async () => {
-			const url = @Safe.Json(Model.Url);
+			const url = @Safe.Json(Model.DataUrl);
 			const appId = @Safe.Json(Model.Id);
 			const response = await fetch(url);
 			if (response.ok) {
@@ -36,35 +31,35 @@
 				if (data) window.appSales.dataLoaded(JSON.parse(data.innerHTML));
 			}
 		})();
-	  </script>
-	}
-	else if (Model.Entries.Any())
-	{
-	  <div class="ct-chart mb-3"></div>
-	  <template>
-			@Safe.Json(Model)
-	  </template>
-	  <div class="app-items">
-			@for (var i = 0; i < Model.Entries.Count; i++)
-			{
-				var entry = Model.Entries[i];
-			<div class="app-item ct-series-@i">
-			  <span class="app-item-name">
-				<span class="app-item-point ct-point"></span>
-						@entry.Title
-			  </span>
-			  <span class="app-item-value">
-				<span class="text-muted">@entry.SalesCount @($"{label}{(entry.SalesCount == 1 ? "" : "s")}"),</span>
-						@entry.TotalFormatted
-			  </span>
-			</div>
-			}
-	  </div>
-	}
-	else
-	{
-	  <p class="text-secondary mt-3">
-		No @($"{label}s") have been made yet.
-	  </p>
-	}
+	    </script>
+    }
+    else if (Model.Entries.Any())
+    {
+        <div class="ct-chart mb-3"></div>
+        <template>
+            @Safe.Json(Model)
+        </template>
+        <div class="app-items">
+            @for (var i = 0; i < Model.Entries.Count; i++)
+            {
+                var entry = Model.Entries[i];
+                <div class="app-item ct-series-@i">
+                    <span class="app-item-name">
+                        <span class="app-item-point ct-point"></span>
+                        @entry.Title
+                    </span>
+                    <span class="app-item-value">
+                        <span class="text-muted">@entry.SalesCount @($"{label}{(entry.SalesCount == 1 ? "" : "s")}"),</span>
+                        @entry.TotalFormatted
+                    </span>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <p class="text-secondary mt-3">
+            No @($"{label}s") have been made yet.
+        </p>
+    }
 </div>

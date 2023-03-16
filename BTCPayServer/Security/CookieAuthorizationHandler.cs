@@ -114,45 +114,51 @@ namespace BTCPayServer.Security
 
             // Fall back to user prefs cookie
             storeId ??= _httpContext.GetUserPrefsCookie()?.CurrentStoreId;
+
+            var policy = requirement.Policy;
+            if (policy.EndsWith(':'))
+            {
+                policy = policy.Substring(0, policy.Length - 1);
+                storeId = null;
+            }
+
             if (!string.IsNullOrEmpty(storeId))
             {
                 store = await _storeRepository.FindStore(storeId, userId);
             }
 
-            if (Policies.IsServerPolicy(requirement.Policy) && isAdmin)
+            if (Policies.IsServerPolicy(policy) && isAdmin)
             {
                 success = true;
             }
-            else if (Policies.IsUserPolicy(requirement.Policy) && userId is not null)
+            else if (Policies.IsUserPolicy(policy) && userId is not null)
             {
                 success = true;
             }
-            else if (Policies.IsStorePolicy(requirement.Policy) && store is not null)
+            else if (Policies.IsStorePolicy(policy))
             {
-                var requestedPermission = Permission.Create(requirement.Policy, store.Id);
-                var givenPermissions = store.Role == StoreRoles.Owner
-                    ? new[]
-                    {
-                        Permission.Create(Policies.CanModifyStoreSettingsUnscoped),
+                if (store is not null)
+                {
+                    var requestedPermission = Permission.Create(policy, store.Id);
+                    var givenPermissions = store.Role == StoreRoles.Owner
+                        ? new[]
+                        {
                         Permission.Create(Policies.CanModifyStoreSettings, store.Id)
-                    }
-                    : new[]
-                    {
-                        Permission.Create(Policies.CanModifyStoreSettingsUnscoped),
+                        }
+                        : new[]
+                        {
                         Permission.Create(Policies.CanViewStoreSettings, store.Id),
-                        Permission.Create(Policies.CanViewInvoices, store.Id),
-                        Permission.Create(Policies.CanCreateInvoice, store.Id),
-                    };
-                if (givenPermissions.Any(p => p.Contains(requestedPermission)))
+                        Permission.Create(Policies.CanModifyInvoices, store.Id)
+                        };
+                    if (givenPermissions.Any(p => p.Contains(requestedPermission)))
+                    {
+                        success = true;
+                    }
+                }
+                else if (userId is not null)
                 {
                     success = true;
                 }
-            }
-            else if (Policies.IsStorePolicy(requirement.Policy))
-            {
-                var requestedPermission = Permission.Create(requirement.Policy);
-                var givenPermission = Permission.Create(Policies.CanModifyStoreSettingsUnscoped);
-                success = requestedPermission.Equals(givenPermission);
             }
             else if (Policies.IsPluginPolicy(requirement.Policy))
             {

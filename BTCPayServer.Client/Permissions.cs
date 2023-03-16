@@ -79,9 +79,7 @@ namespace BTCPayServer.Client
         }
         public static bool IsValidPolicy(string policy)
         {
-            return AllPolicies.Any(p => 
-                p.Equals(policy, StringComparison.OrdinalIgnoreCase)) ||
-                policy.Equals(CanModifyStoreSettingsUnscoped);
+            return AllPolicies.Any(p => p.Equals(policy, StringComparison.OrdinalIgnoreCase));
         }
 
         public static bool IsStorePolicy(string policy)

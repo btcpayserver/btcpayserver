@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
@@ -37,9 +38,10 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Au
         UserService userService,
         ILoggerFactory logger, IOptions<LightningNetworkOptions> options,
         StoreRepository storeRepository, PayoutProcessorData payoutProcesserSettings,
-        ApplicationDbContextFactory applicationDbContextFactory, PullPaymentHostedService pullPaymentHostedService, BTCPayNetworkProvider btcPayNetworkProvider) :
+        ApplicationDbContextFactory applicationDbContextFactory, PullPaymentHostedService pullPaymentHostedService, BTCPayNetworkProvider btcPayNetworkProvider,
+        IPluginHookService pluginHookService) :
         base(logger, storeRepository, payoutProcesserSettings, applicationDbContextFactory, pullPaymentHostedService,
-            btcPayNetworkProvider)
+            btcPayNetworkProvider, pluginHookService)
     {
         _btcPayNetworkJsonSerializerSettings = btcPayNetworkJsonSerializerSettings;
         _lightningClientFactoryService = lightningClientFactoryService;

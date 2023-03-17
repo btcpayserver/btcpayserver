@@ -74,7 +74,7 @@ namespace BTCPayServer.Components.MainNav
                     Id = a.Id,
                     IsOwner = a.IsOwner,
                     AppName = a.AppName,
-                    AppType = Enum.Parse<AppType>(a.AppType)
+                    AppType = a.AppType
                 }).ToList();
 
                 if (PoliciesSettings.Experimental)

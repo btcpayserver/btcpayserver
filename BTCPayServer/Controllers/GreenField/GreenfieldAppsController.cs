@@ -7,6 +7,8 @@ using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
+using BTCPayServer.Plugins.Crowdfund;
+using BTCPayServer.Plugins.PointOfSale;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
@@ -15,6 +17,7 @@ using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using PosViewType = BTCPayServer.Plugins.PointOfSale.PosViewType;
 
 namespace BTCPayServer.Controllers.Greenfield
 {
@@ -63,7 +66,7 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 StoreDataId = storeId,
                 Name = request.AppName,
-                AppType = AppType.Crowdfund.ToString()
+                AppType = CrowdfundApp.AppType
             };
 
             appData.SetSettings(ToCrowdfundSettings(request));
@@ -94,7 +97,7 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 StoreDataId = storeId,
                 Name = request.AppName,
-                AppType = AppType.PointOfSale.ToString()
+                AppType = PointOfSaleApp.AppType
             };
 
             appData.SetSettings(ToPointOfSaleSettings(request));
@@ -108,7 +111,7 @@ namespace BTCPayServer.Controllers.Greenfield
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> UpdatePointOfSaleApp(string appId, CreatePointOfSaleAppRequest request)
         {
-            var app = await _appService.GetApp(appId, AppType.PointOfSale);
+            var app = await _appService.GetApp(appId, PointOfSaleApp.AppType);
             if (app == null)
             {
                 return AppNotFound();
@@ -181,7 +184,7 @@ namespace BTCPayServer.Controllers.Greenfield
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> GetPosApp(string appId)
         {
-            var app = await _appService.GetApp(appId, AppType.PointOfSale);
+            var app = await _appService.GetApp(appId, PointOfSaleApp.AppType);
             if (app == null)
             {
                 return AppNotFound();
@@ -194,7 +197,7 @@ namespace BTCPayServer.Controllers.Greenfield
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> GetCrowdfundApp(string appId)
         {
-            var app = await _appService.GetApp(appId, AppType.Crowdfund);
+            var app = await _appService.GetApp(appId, CrowdfundApp.AppType);
             if (app == null)
             {
                 return AppNotFound();
@@ -264,7 +267,7 @@ namespace BTCPayServer.Controllers.Greenfield
             return new PointOfSaleSettings()
             {
                 Title = request.Title,
-                DefaultView = (Services.Apps.PosViewType)request.DefaultView,
+                DefaultView = (PosViewType) request.DefaultView,
                 ShowCustomAmount = request.ShowCustomAmount,
                 ShowDiscount = request.ShowDiscount,
                 EnableTips = request.EnableTips,

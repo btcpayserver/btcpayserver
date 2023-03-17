@@ -1,24 +1,23 @@
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Threading.Tasks;
+using BTCPayServer.Data;
+using BTCPayServer.Services.Invoices;
 
 namespace BTCPayServer.Services.Apps
 {
-    public enum AppType
+    public interface IApp
     {
-        [Display(Name = "Point of Sale")]
-        PointOfSale,
-        Crowdfund
-    }
-
-    public enum PosViewType
-    {
-        [Display(Name = "Product list")]
-        Static,
-        [Display(Name = "Product list with cart")]
-        Cart,
-        [Display(Name = "Keypad only")]
-        Light,
-        [Display(Name = "Print display")]
-        Print
+        public string Description { get;  }
+        public string Type { get; }
+        public bool SupportsSalesStats { get; }
+        public bool SupportsItemStats { get; }
+        Task<string> ConfigureLink(AppData app);
+        Task<string> ViewLink(AppData app);
+        Task SetDefaultSettings(AppData appData, string defaultCurrency);
+        Task<SalesStats> GetSalesStats(AppData app, InvoiceEntity[] paidInvoices, int numberOfDays);
+        Task<IEnumerable<ItemStats>> GetItemStats(AppData appData, InvoiceEntity[] invoiceEntities);
+        Task<object> GetInfo(AppData appData);
     }
 
     public enum RequiresRefundEmail

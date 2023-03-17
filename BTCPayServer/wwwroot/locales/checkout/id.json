@@ -9,7 +9,7 @@
   "view_details": "Lihat Rincian",
   "pay_with": "Metode pembayaran",
   "pay_in_wallet": "Bayar dengan dompet",
-  "pay_by_nfc": "Bayar dengan NFC (LNURL-Withdraw)",
+  "pay_by_nfc": "Bayar dengan NFC",
   "pay_by_lnurl": "Bayar dengan LNURL-Withdraw",
   "invoice_id": "Nomor tagihan",
   "order_id": "Nomor pesanan",

@@ -9,7 +9,7 @@
   "view_details": "Näytä tiedot",
   "pay_with": "Maksa käyttämällä",
   "pay_in_wallet": "Maksa lompakosta",
-  "pay_by_nfc": "Maksa NFC:llä (LNURL-Withdraw)",
+  "pay_by_nfc": "Maksa NFC:llä",
   "pay_by_lnurl": "Maksa LNURL-Withdraw:n avulla",
   "invoice_id": "Laskun tunniste",
   "order_id": "Tilauksen tunniste",

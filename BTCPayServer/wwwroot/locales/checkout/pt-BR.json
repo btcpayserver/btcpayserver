@@ -9,7 +9,7 @@
   "view_details": "Ver detalhes",
   "pay_with": "Pagar com",
   "pay_in_wallet": "Pagar na carteira",
-  "pay_by_nfc": "Pagar por NFC (LNURL-Withdraw)",
+  "pay_by_nfc": "Pagar por NFC",
   "pay_by_lnurl": "Pagar por LNURL-Withdraw",
   "invoice_id": "Nº da Fatura",
   "order_id": "Nº do Pedido",

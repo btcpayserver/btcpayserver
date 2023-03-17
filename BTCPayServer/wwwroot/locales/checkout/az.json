@@ -9,7 +9,7 @@
   "view_details": "Ətraflı məlumat",
   "pay_with": "Ödənilir:",
   "pay_in_wallet": "Kartvəshtdən ödəniş etmək",
-  "pay_by_nfc": "NFC vasitəsi ilə ödəmək (LNURL-Withdraw)",
+  "pay_by_nfc": "NFC vasitəsi ilə ödəmək",
   "pay_by_lnurl": "LNURL-Withdraw ilə ödəmək",
   "invoice_id": "Faktura №",
   "order_id": "Sifariş №",

@@ -9,7 +9,7 @@
   "view_details": "Детальніше",
   "pay_with": "Оплатити",
   "pay_in_wallet": "Сплатити з гаманця",
-  "pay_by_nfc": "Сплатити за допомогою NFC (LNURL-Withdraw)",
+  "pay_by_nfc": "Сплатити за допомогою NFC",
   "pay_by_lnurl": "Сплатити за допомогою LNURL-Withdraw",
   "invoice_id": "ID рахунку",
   "order_id": "ID замовлення",

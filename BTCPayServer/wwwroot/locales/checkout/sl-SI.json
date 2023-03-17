@@ -9,7 +9,7 @@
   "view_details": "Prikaži podrobnosti",
   "pay_with": "Plačaj z",
   "pay_in_wallet": "Plačaj v denarnici",
-  "pay_by_nfc": "Plačajte z NFC (LNURL-Withdraw)",
+  "pay_by_nfc": "Plačajte z NFC",
   "pay_by_lnurl": "Plačajte z LNURL-Withdraw",
   "invoice_id": "Račun št",
   "order_id": "Naročilo št",

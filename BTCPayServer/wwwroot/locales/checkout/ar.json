@@ -9,7 +9,7 @@
   "view_details": "عرض التفاصيل",
   "pay_with": "ادفع عن طريق",
   "pay_in_wallet": "الدفع في المحفظة",
-  "pay_by_nfc": "الدفع عبر NFC (LNURL-Withdraw)",
+  "pay_by_nfc": "الدفع عبر NFC",
   "pay_by_lnurl": "الدفع عبر LNURL-Withdraw",
   "invoice_id": "معرف المعاملة",
   "order_id": "معرف الطلب",

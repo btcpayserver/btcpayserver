@@ -9,7 +9,7 @@
   "view_details": "Просмотреть детали",
   "pay_with": "Способ оплаты",
   "pay_in_wallet": "Оплатить через кошелек",
-  "pay_by_nfc": "Оплатить через NFC (LNURL-Withdraw)",
+  "pay_by_nfc": "Оплатить через NFC",
   "pay_by_lnurl": "Оплатить через LNURL-Withdraw",
   "invoice_id": "Порядковый номер  выставленного счета",
   "order_id": "Порядковый номер заказа",

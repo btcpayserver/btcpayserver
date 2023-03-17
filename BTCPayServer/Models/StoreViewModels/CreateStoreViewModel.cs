@@ -18,7 +18,7 @@ namespace BTCPayServer.Models.StoreViewModels
         [Display(Name = "Preferred Price Source")]
         public string PreferredExchange { get; set; }
 
-        [Display(Name = "Which type of store are you creating?")]
+        [Display(Name = "How will your customers complete their purchases?")]
         public string Preset { get; set; }
 
         public SelectList Exchanges { get; set; }

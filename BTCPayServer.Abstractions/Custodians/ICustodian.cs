@@ -20,9 +20,6 @@ public interface ICustodian
      */
     Task<Dictionary<string, decimal>> GetAssetBalancesAsync(JObject config, CancellationToken cancellationToken);
 
-    public Task<Form.Form> GetConfigForm(JObject config, string locale,
-        CancellationToken cancellationToken = default);
-
-    public JObject cleanupConfigBeforeSave(JObject config);
+    public Task<Form.Form> GetConfigForm(CancellationToken cancellationToken = default);
 
 }

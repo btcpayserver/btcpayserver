@@ -60,20 +60,8 @@ namespace BTCPayServer.Plugins.Crowdfund.Models
             public DateTime? LastResetDate { get; set; }
             public DateTime? NextResetDate { get; set; }
         }
-        public class Contribution
-        {
-            public PaymentMethodId PaymentMethodId { get; set; }
-            public decimal Value { get; set; }
-            public decimal CurrencyValue { get; set; }
-        }
-        public class Contributions : Dictionary<PaymentMethodId, Contribution>
-        {
-            public Contributions(IEnumerable<KeyValuePair<PaymentMethodId, Contribution>> collection) : base(collection)
-            {
-                TotalCurrency = Values.Select(v => v.CurrencyValue).Sum();
-            }
-            public decimal TotalCurrency { get; }
-        }
+        
+       
 
         public bool Started => !StartDate.HasValue || DateTime.UtcNow > StartDate;
 

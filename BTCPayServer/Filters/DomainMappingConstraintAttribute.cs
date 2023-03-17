@@ -14,13 +14,13 @@ namespace BTCPayServer.Filters
         {
         }
         
-        public DomainMappingConstraintAttribute(AppType appType)
+        public DomainMappingConstraintAttribute(string appType)
         {
             AppType = appType;
         }
         
         public int Order => 100;
-        private AppType? AppType { get; }
+        private string AppType { get; }
 
         public bool Accept(ActionConstraintContext context)
         {

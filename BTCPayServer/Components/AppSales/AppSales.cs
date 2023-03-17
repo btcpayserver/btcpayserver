@@ -27,20 +27,22 @@ public class AppSales : ViewComponent
 
     public async Task<IViewComponentResult> InvokeAsync(string appId, string appType)
     {
-        var vm = new AppSalesViewModel()
+        var vm = new AppSalesViewModel
         {
             Id = appId,
             AppType = appType,
-            Url = Url.Action("AppSales", "UIApps", new { appId = appId }),
+            DataUrl = Url.Action("AppSales", "UIApps", new { appId }),
             InitialRendering = HttpContext.GetAppData()?.Id != appId
         };
         if (vm.InitialRendering)
             return View(vm);
+        
         var app = HttpContext.GetAppData();
-        vm.AppType = app.AppType;
-        var stats = await _appService.GetSalesStats(HttpContext.GetAppData());
+        var stats = await _appService.GetSalesStats(app);
         vm.SalesCount = stats.SalesCount;
         vm.Series = stats.Series;
+        vm.AppType = app.AppType;
+        vm.AppUrl = await _appService.ConfigureLink(app, app.AppType);
 
         return View(vm);
     }

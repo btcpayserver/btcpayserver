@@ -347,7 +347,7 @@ namespace BTCPayServer.Controllers
             if (appIdsToFetch.Any())
             {
                 var apps = (await _AppService.GetApps(appIdsToFetch.ToArray()))
-                    .ToDictionary(data => data.Id, data => Enum.Parse<AppType>(data.AppType));
+                    .ToDictionary(data => data.Id, data => data.AppType);
                 ;
                 if (!string.IsNullOrEmpty(settings.RootAppId))
                 {
@@ -422,8 +422,10 @@ namespace BTCPayServer.Controllers
 
         private async Task<List<SelectListItem>> GetAppSelectList()
         {
+            var types = _AppService.GetAvailableAppTypes();
             var apps = (await _AppService.GetAllApps(null, true))
-                .Select(a => new SelectListItem($"{typeof(AppType).DisplayName(a.AppType)} - {a.AppName} - {a.StoreName}", a.Id)).ToList();
+                .Select(a => 
+                    new SelectListItem($"{types[a.AppType]} - {a.AppName} - {a.StoreName}", a.Id)).ToList();
             apps.Insert(0, new SelectListItem("(None)", null));
             return apps;
         }

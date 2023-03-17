@@ -1,17 +1,18 @@
-@using BTCPayServer.Services.Apps
 @using BTCPayServer.Components.AppSales
-@inject BTCPayServer.Security.ContentSecurityPolicies Csp
+@using BTCPayServer.Abstractions.TagHelpers
+@using BTCPayServer.Plugins.Crowdfund
 @model BTCPayServer.Components.AppSales.AppSalesViewModel
 @{
-    var controller = $"UI{Model.AppType}";
-    var action = $"Update{Model.AppType}";
-    var label = Model.AppType == "Crowdfund" ? "Contributions" : "Sales";
+    var label = Model.AppType == CrowdfundApp.AppType ? "Contributions" : "Sales";
 }
 
 <div id="AppSales-@Model.Id" class="widget app-sales">
     <header class="mb-3">
         <h3>@Model.Name @label</h3>
-        <a asp-controller="@controller" asp-action="@action" asp-route-appId="@Model.Id">Manage</a>
+        @if (!string.IsNullOrEmpty(Model.AppUrl))
+        {
+            <a href="@Model.AppUrl">Manage</a>
+        }
     </header>
     @if (Model.InitialRendering)
     {
@@ -20,16 +21,16 @@
                 <span class="visually-hidden">Loading...</span>
             </div>
         </div>
-		<script src="~/Components/AppSales/Default.cshtml.js" asp-append-version="true"></script>
+        <script src="~/Components/AppSales/Default.cshtml.js" asp-append-version="true"></script>
         <script>
             (async () => {
-                const url = @Safe.Json(Model.Url);
+                const url = @Safe.Json(Model.DataUrl);
                 const appId = @Safe.Json(Model.Id);
                 const response = await fetch(url);
                 if (response.ok) {
                     document.getElementById(`AppSales-${appId}`).outerHTML = await response.text();
                     const data = document.querySelector(`#AppSales-${appId} template`);
-					if (data) window.appSales.dataLoaded(JSON.parse(data.innerHTML));
+                    if (data) window.appSales.dataLoaded(JSON.parse(data.innerHTML));
                 }
             })();
         </script>

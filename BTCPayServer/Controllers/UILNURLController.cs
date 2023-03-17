@@ -18,6 +18,8 @@ using BTCPayServer.HostedServices;
 using BTCPayServer.Lightning;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
+using BTCPayServer.Plugins.Crowdfund;
+using BTCPayServer.Plugins.PointOfSale;
 using BTCPayServer.Plugins.PointOfSale.Models;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
@@ -47,7 +49,6 @@ namespace BTCPayServer
         private readonly LightningLikePaymentHandler _lightningLikePaymentHandler;
         private readonly StoreRepository _storeRepository;
         private readonly AppService _appService;
-
         private readonly UIInvoiceController _invoiceController;
         private readonly LinkGenerator _linkGenerator;
         private readonly LightningAddressService _lightningAddressService;
@@ -155,6 +156,7 @@ namespace BTCPayServer
 
             if (claimResponse.Result != ClaimRequest.ClaimResult.Ok)
                 return BadRequest(new LNUrlStatusResponse { Status = "ERROR", Reason = "Payment request could not be paid" });
+
             switch (claimResponse.PayoutData.State)
             {
                 case PayoutState.AwaitingPayment:
@@ -249,37 +251,49 @@ namespace BTCPayServer
                 return NotFound();
             }
 
-            ViewPointOfSaleViewModel.Item[] items = null;
-            string currencyCode = null;
+            ViewPointOfSaleViewModel.Item[] items;
+            string currencyCode;
+            PointOfSaleSettings posS = null;
             switch (app.AppType)
             {
-                case nameof(AppType.Crowdfund):
+                case CrowdfundApp.AppType:
                     var cfS = app.GetSettings<CrowdfundSettings>();
                     currencyCode = cfS.TargetCurrency;
                     items = _appService.Parse(cfS.PerksTemplate, cfS.TargetCurrency);
                     break;
-                case nameof(AppType.PointOfSale):
-                    var posS = app.GetSettings<PointOfSaleSettings>();
+                case PointOfSaleApp.AppType:
+                    posS = app.GetSettings<PointOfSaleSettings>();
                     currencyCode = posS.Currency;
                     items = _appService.Parse(posS.Template, posS.Currency);
                     break;
+                default:
+                    //TODO: Allow other apps to define lnurl support
+                    return NotFound();
             }
 
-            var escapedItemId = Extensions.UnescapeBackSlashUriString(itemCode);
-            var item = items.FirstOrDefault(item1 =>
-                item1.Id.Equals(itemCode, StringComparison.InvariantCultureIgnoreCase) ||
-                item1.Id.Equals(escapedItemId, StringComparison.InvariantCultureIgnoreCase));
+            ViewPointOfSaleViewModel.Item item = null;
+            if (!string.IsNullOrEmpty(itemCode))
+            {
+                var escapedItemId = Extensions.UnescapeBackSlashUriString(itemCode);
+                item = items.FirstOrDefault(item1 =>
+                    item1.Id.Equals(itemCode, StringComparison.InvariantCultureIgnoreCase) ||
+                    item1.Id.Equals(escapedItemId, StringComparison.InvariantCultureIgnoreCase));
 
-            if (item is null ||
-                item.Inventory <= 0 ||
-                (item.PaymentMethods?.Any() is true &&
-                 item.PaymentMethods?.Any(s => PaymentMethodId.Parse(s) == pmi) is false))
+                if (item is null ||
+                    item.Inventory <= 0 ||
+                    (item.PaymentMethods?.Any() is true &&
+                     item.PaymentMethods?.Any(s => PaymentMethodId.Parse(s) == pmi) is false))
+                {
+                    return NotFound();
+                }
+            }
+            else if (app.AppType == PointOfSaleApp.AppType && posS?.ShowCustomAmount is not true)
             {
                 return NotFound();
             }
-
+           
             return await GetLNURL(cryptoCode, app.StoreDataId, currencyCode, null, null,
-                () => (null, app, item, new List<string> { AppService.GetAppInternalTag(appId) }, item.Price.Value, true));
+                () => (null, app, item, new List<string> { AppService.GetAppInternalTag(appId) }, item?.Price.Value, true));
         }
 
         public class EditLightningAddressVM
@@ -311,11 +325,8 @@ namespace BTCPayServer
                 public decimal? Max { get; set; }
             }
 
-            public ConcurrentDictionary<string, LightningAddressItem> Items { get; set; } =
-                new ConcurrentDictionary<string, LightningAddressItem>();
-
-            public ConcurrentDictionary<string, string[]> StoreToItemMap { get; set; } =
-                new ConcurrentDictionary<string, string[]>();
+            public ConcurrentDictionary<string, LightningAddressItem> Items { get; } = new ();
+            public ConcurrentDictionary<string, string[]> StoreToItemMap { get; } = new ();
 
             public override string ToString()
             {
@@ -389,7 +400,7 @@ namespace BTCPayServer
 
             var redirectUrl = app?.AppType switch
             {
-                nameof(AppType.PointOfSale) => app.GetSettings<PointOfSaleSettings>().RedirectUrl ??
+                PointOfSaleApp.AppType => app.GetSettings<PointOfSaleSettings>().RedirectUrl ??
                                                HttpContext.Request.GetAbsoluteUri($"/apps/{app.Id}/pos"),
                 _ => null
             };

@@ -43,6 +43,7 @@ public class AppTopItems : ViewComponent
         vm.Entries = entries.ToList();
         vm.AppType = app.AppType;
         vm.AppUrl = await salesAppType.ConfigureLink(app);
+        vm.Name = app.Name;
 
         return View(vm);
     }

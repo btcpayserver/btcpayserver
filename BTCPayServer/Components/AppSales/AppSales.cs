@@ -48,6 +48,7 @@ public class AppSales : ViewComponent
         vm.Series = stats.Series;
         vm.AppType = app.AppType;
         vm.AppUrl = await salesAppType.ConfigureLink(app);
+        vm.Name = app.Name;
 
         return View(vm);
     }

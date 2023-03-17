@@ -106,6 +106,11 @@ namespace BTCPayServer.Payments.Bitcoin
         {
             return GetDestination().ToString();
         }
+
+        public string GetPaymentProof()
+        {
+            return GetPaymentId();
+        }
     }
 
 

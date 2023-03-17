@@ -208,6 +208,7 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
             public string Link { get; set; }
             public string Id { get; set; }
             public string Destination { get; set; }
+            public string PaymentProof { get; set; }
         }
     }
 }

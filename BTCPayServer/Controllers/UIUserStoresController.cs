@@ -67,7 +67,6 @@ namespace BTCPayServer.Controllers
             blob.PreferredExchange = vm.PreferredExchange;
             if (vm.Preset == "Physical")
             {
-                blob.ShowLNWithdrawButton = false;
                 blob.ShowPayInWalletButton = false;
                 blob.ShowStoreHeader = false;
                 blob.CheckoutType = Client.Models.CheckoutType.V2;

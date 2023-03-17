@@ -51,7 +51,12 @@ namespace BTCPayServer.Tests
             s.Driver.SetCheckbox(By.Id("LNURLStandardInvoiceEnabled"), true);
             s.Driver.FindElement(By.Id("save")).Click();
             Assert.Contains("BTC Lightning settings successfully updated", s.FindAlertMessage().Text);
-            
+
+            s.GoToStore(StoreNavPages.CheckoutAppearance);
+            Assert.True(s.Driver.SetCheckbox(By.Id("ShowLNWithdrawButton"), true));
+            s.Driver.FindElement(By.Id("Save")).SendKeys(Keys.Enter);
+
+
             // Top up/zero amount invoices
             var invoiceId = s.CreateInvoice(amount: null);
             s.GoToInvoiceCheckout(invoiceId);

@@ -29,20 +29,21 @@ public class FakeCustodian : ICustodian
         return Task.FromResult(r);
     }
 
-    public Task<Form> GetConfigForm(CancellationToken cancellationToken = default)
+    public Task<Form> GetConfigForm(JObject config, string locale, CancellationToken cancellationToken = default)
     {
-        
+        var fakeConfig = ParseConfig(config);
+
         var form = new Form();
         var fieldset = Field.CreateFieldset();
 
         // Maybe a decimal type field would be better?
-        var fakeBTCBalance = Field.Create("BTC Balance", "BTCBalance", null, true,
+        var fakeBTCBalance = Field.Create("BTC Balance", "BTCBalance", fakeConfig?.BTCBalance.ToString(), true,
             "Enter the amount of BTC you want to have.");
-        var fakeLTCBalance = Field.Create("LTC Balance", "LTCBalance", null, true,
+        var fakeLTCBalance = Field.Create("LTC Balance", "LTCBalance", fakeConfig?.LTCBalance.ToString(), true,
             "Enter the amount of LTC you want to have.");
-        var fakeEURBalance = Field.Create("EUR Balance", "EURBalance", null, true,
+        var fakeEURBalance = Field.Create("EUR Balance", "EURBalance", fakeConfig?.EURBalance.ToString(), true,
             "Enter the amount of EUR you want to have.");
-        var fakeUSDBalance = Field.Create("USD Balance", "USDBalance", null, true,
+        var fakeUSDBalance = Field.Create("USD Balance", "USDBalance", fakeConfig?.USDBalance.ToString(), true,
             "Enter the amount of USD you want to have.");
 
         fieldset.Label = "Your fake balances";
@@ -53,6 +54,11 @@ public class FakeCustodian : ICustodian
         form.Fields.Add(fieldset);
 
         return Task.FromResult(form);
+    }
+
+    public JObject cleanupConfigBeforeSave(JObject config)
+    {
+        return config;
     }
 
     private FakeCustodianConfig ParseConfig(JObject config)

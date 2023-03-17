@@ -21,7 +21,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Newtonsoft.Json.Linq;
-using NLog.Config;
 using CustodianAccountData = BTCPayServer.Data.CustodianAccountData;
 using StoreData = BTCPayServer.Data.StoreData;
 
@@ -217,8 +216,7 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             }
 
-            var configForm = await custodian.GetConfigForm();
-            configForm.SetValues(custodianAccount.GetBlob());
+            var configForm = await custodian.GetConfigForm(custodianAccount.GetBlob(), "en-US");
 
             var vm = new EditCustodianAccountViewModel();
             vm.CustodianAccount = custodianAccount;
@@ -230,6 +228,9 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> EditCustodianAccount(string storeId, string accountId,
             EditCustodianAccountViewModel vm)
         {
+            // The locale is not important yet, but keeping it here so we can find it easily when localization becomes a thing.
+            var locale = "en-US";
+
             var custodianAccount = await _custodianAccountRepository.FindById(storeId, accountId);
             if (custodianAccount == null)
                 return NotFound();
@@ -241,22 +242,40 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             }
 
-            var configForm = await custodian.GetConfigForm();
-            configForm.ApplyValuesFromForm(Request.Form);
-            
+            var configForm = await custodian.GetConfigForm(custodianAccount.GetBlob(), locale);
 
-            if (configForm.IsValid())
+            var newData = new JObject();
+            foreach (var pair in Request.Form)
             {
-                var newData = configForm.GetValues();
+                if ("__RequestVerificationToken".Equals(pair.Key))
+                {
+                    // Skip this one
+                }
+                else if ("CustodianAccount.Name".Equals(pair.Key))
+                {
+                    custodianAccount.Name = pair.Value;
+                }
+                else
+                {
+                    newData.SetValueByPath(pair.Key, pair.Value.ToString());
+                }
+            }
+
+            newData = custodian.cleanupConfigBeforeSave(newData);
+            var newConfigForm = await custodian.GetConfigForm(newData, locale);
+
+            if (newConfigForm.IsValid())
+            {
                 custodianAccount.SetBlob(newData);
                 custodianAccount = await _custodianAccountRepository.CreateOrUpdate(custodianAccount);
+
                 return RedirectToAction(nameof(ViewCustodianAccount),
                     new { storeId = custodianAccount.StoreId, accountId = custodianAccount.Id });
             }
 
             // Form not valid: The user must fix the errors before we can save
             vm.CustodianAccount = custodianAccount;
-            vm.ConfigForm = configForm;
+            vm.ConfigForm = newConfigForm;
             return View(vm);
         }
 
@@ -297,11 +316,16 @@ namespace BTCPayServer.Controllers
             };
 
 
-            var configForm = await custodian.GetConfigForm();
-            configForm.ApplyValuesFromForm(Request.Form);
+            var configData = new JObject();
+            foreach (var pair in Request.Form)
+            {
+                configData.Add(pair.Key, pair.Value.ToString());
+            }
+
+            var configForm = await custodian.GetConfigForm(configData, "en-US");
             if (configForm.IsValid())
             {
-                var configData = configForm.GetValues();
+                // configForm.removeUnusedKeys();
                 custodianAccountData.SetBlob(configData);
                 custodianAccountData = await _custodianAccountRepository.CreateOrUpdate(custodianAccountData);
                 TempData[WellKnownTempData.SuccessMessage] = "Custodian account successfully created";
@@ -570,8 +594,10 @@ namespace BTCPayServer.Controllers
                     }
                     catch (BadConfigException e)
                     {
-                        Form configForm = await custodian.GetConfigForm();
-                        configForm.SetValues(config);
+                        // TODO localize string at some point in the future
+                        string locale = "en-us";
+
+                        Form configForm = await custodian.GetConfigForm(config, locale);
                         string[] badConfigFields = new string[e.BadConfigKeys.Length];
                         int i = 0;
                         foreach (var oneField in configForm.GetAllFields())

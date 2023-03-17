@@ -9,7 +9,7 @@
   "view_details": "Details bekijken",
   "pay_with": "Betaal met",
   "pay_in_wallet": "Betalen in portemonnee",
-  "pay_by_nfc": "Betalen via NFC (LNURL-Withdraw)",
+  "pay_by_nfc": "Betalen via NFC",
   "pay_by_lnurl": "Betalen via LNURL-Withdraw",
   "invoice_id": "Factuurnummer",
   "order_id": "Ordernummer",

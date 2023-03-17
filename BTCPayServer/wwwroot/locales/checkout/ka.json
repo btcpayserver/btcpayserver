@@ -9,7 +9,7 @@
   "view_details": "დეტალების ნახვა",
   "pay_with": "გადახდა",
   "pay_in_wallet": "გადახდა საფულებით",
-  "pay_by_nfc": "გადახდა NFC-ით (LNURL-Withdraw)",
+  "pay_by_nfc": "გადახდა NFC-ით",
   "pay_by_lnurl": "გადახდა LNURL-Withdraw-ით",
   "invoice_id": "ინვოისის ID",
   "order_id": "შეკვეთის ID",

@@ -9,7 +9,7 @@
   "view_details": "Részletek megtekintése",
   "pay_with": "Fizetési mód kiválasztása",
   "pay_in_wallet": "Fizetés tárca segítségével",
-  "pay_by_nfc": "Fizetés NFC-n keresztül (LNURL-Withdraw)",
+  "pay_by_nfc": "Fizetés NFC-n keresztül",
   "pay_by_lnurl": "Fizetés LNURL-Withdraw segítségével",
   "invoice_id": "Számla azonosító",
   "order_id": "Megbízás azonosítója",

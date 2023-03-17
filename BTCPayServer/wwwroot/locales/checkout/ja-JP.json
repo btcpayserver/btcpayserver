@@ -9,7 +9,7 @@
   "view_details": "詳細を表示する",
   "pay_with": "お支払い方法",
   "pay_in_wallet": "ウォレットで支払う",
-  "pay_by_nfc": "NFCで支払う（LNURL-Withdraw）",
+  "pay_by_nfc": "NFCで支払う",
   "pay_by_lnurl": "LNURL-Withdrawで支払う",
   "invoice_id": "お支払い ID",
   "order_id": "ご注文 ID",

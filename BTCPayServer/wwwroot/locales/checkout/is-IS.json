@@ -9,7 +9,7 @@
   "view_details": "Skoða upplýsingar",
   "pay_with": "Borga með",
   "pay_in_wallet": "Borga með veski",
-  "pay_by_nfc": "Borga með NFC (LNURL-Withdraw)",
+  "pay_by_nfc": "Borga með NFC",
   "pay_by_lnurl": "Borga með LNURL-Withdraw",
   "invoice_id": "Innheimtu ID",
   "order_id": "Pöntun ID",

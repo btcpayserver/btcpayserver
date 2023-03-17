@@ -9,7 +9,7 @@
   "view_details": "자세한 내용 보기",
   "pay_with": "결제하기",
   "pay_in_wallet": "지갑으로 지불하기",
-  "pay_by_nfc": "NFC로 지불하기 (LNURL-Withdraw)",
+  "pay_by_nfc": "NFC로 지불하기",
   "pay_by_lnurl": "LNURL-Withdraw로 지불하기",
   "invoice_id": "인보이스 ID",
   "order_id": "주문 ID",

@@ -9,7 +9,7 @@
   "view_details": "Προβολή λεπτομερειών",
   "pay_with": "Πληρώστε με",
   "pay_in_wallet": "Πληρωμή στο πορτοφόλι",
-  "pay_by_nfc": "Πληρωμή μέσω NFC (LNURL-Withdraw)",
+  "pay_by_nfc": "Πληρωμή μέσω NFC",
   "pay_by_lnurl": "Πληρωμή με LNURL-Withdraw",
   "invoice_id": "ID Παραστατικού Πληρωμής",
   "order_id": "ID Παραγγελίας",

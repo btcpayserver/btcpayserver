@@ -9,7 +9,7 @@
   "view_details": "Pregled detalja",
   "pay_with": "Plati sa",
   "pay_in_wallet": "Plati u novčaniku",
-  "pay_by_nfc": "Plati putem NFC-a (LNURL-Withdraw)",
+  "pay_by_nfc": "Plati putem NFC-a",
   "pay_by_lnurl": "Plati putem LNURL-Withdraw",
   "invoice_id": "Broj predračuna",
   "order_id": "Broj računa",

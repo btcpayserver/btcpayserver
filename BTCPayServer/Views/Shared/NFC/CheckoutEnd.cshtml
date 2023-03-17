@@ -52,7 +52,7 @@ Vue.component("lnurl-withdraw-checkout", {
         },
         btnText: function () {
             if (this.supported) {
-                return this.isV2 ? this.$t('pay_by_nfc') : 'Pay by NFC (LNURL-Withdraw)'
+                return this.isV2 ? this.$t('pay_by_nfc') : 'Pay by NFC'
             } else {
                 return this.isV2 ? this.$t('pay_by_lnurl') : 'Pay by LNURL-Withdraw'
             }

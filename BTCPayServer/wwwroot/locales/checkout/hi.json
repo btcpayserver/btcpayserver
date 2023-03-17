@@ -9,7 +9,7 @@
   "view_details": "विवरण देखें",
   "pay_with": "आप कैसे भुगतान करना चाहते है",
   "pay_in_wallet": "वॉलेट में भुगतान करें",
-  "pay_by_nfc": "NFC (LNURL-Withdraw) से भुगतान करें",
+  "pay_by_nfc": "NFC से भुगतान करें",
   "pay_by_lnurl": "LNURL-Withdraw से भुगतान करें",
   "invoice_id": "चालान नंबर",
   "order_id": "आर्डर नंबर",

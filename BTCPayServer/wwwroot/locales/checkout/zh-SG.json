@@ -9,7 +9,7 @@
   "view_details": "查看详情",
   "pay_with": "支付方式",
   "pay_in_wallet": "使用钱包支付",
-  "pay_by_nfc": "使用NFC支付（LNURL-Withdraw）",
+  "pay_by_nfc": "使用NFC支付",
   "pay_by_lnurl": "使用LNURL-Withdraw支付",
   "invoice_id": "账单编号",
   "order_id": "订单编号",

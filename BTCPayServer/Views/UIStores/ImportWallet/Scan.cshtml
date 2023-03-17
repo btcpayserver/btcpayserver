@@ -96,8 +96,6 @@
                 } else if (typeof(data) === 'string') {
                     xpub = data;
                 }
-                // remove potentially leading derivation path
-                xpub = xpub.replace(/^\[.*?\]/, '');
                 // submit
                 document.getElementById("WalletFileContent").value = xpub;
                 document.getElementById("qr-import-form").submit();

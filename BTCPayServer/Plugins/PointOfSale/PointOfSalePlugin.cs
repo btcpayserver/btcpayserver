@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -28,7 +29,7 @@ namespace BTCPayServer.Plugins.PointOfSale
         public override void Execute(IServiceCollection services)
         {
             services.AddSingleton<IUIExtension>(new UIExtension("PointOfSale/NavExtension", "apps-nav"));
-            services.AddSingleton<IApp,PointOfSaleApp>();
+            services.AddSingleton<AppBaseType, PointOfSaleAppType>();
             base.Execute(services);
         }
     }
@@ -45,44 +46,47 @@ namespace BTCPayServer.Plugins.PointOfSale
         Print
     }
 
-    public class PointOfSaleApp: IApp
+    public class PointOfSaleAppType: SalesAppBaseType
     {
         private readonly LinkGenerator _linkGenerator;
         private readonly IOptions<BTCPayServerOptions> _btcPayServerOptions;
         private readonly DisplayFormatter _displayFormatter;
         private readonly HtmlSanitizer _htmlSanitizer;
         public const string AppType = "PointOfSale";
-        public string Description => "Point of Sale";
-        public string Type => AppType;
-        public bool SupportsSalesStats => true;
-        public bool SupportsItemStats => true;
 
-        public PointOfSaleApp(
+        public PointOfSaleAppType(
             LinkGenerator linkGenerator,
             IOptions<BTCPayServerOptions> btcPayServerOptions,
             DisplayFormatter displayFormatter,
             HtmlSanitizer htmlSanitizer)
         {
+            Type = AppType;
+            Description = "Point of Sale";
             _linkGenerator = linkGenerator;
             _btcPayServerOptions = btcPayServerOptions;
             _displayFormatter = displayFormatter;
             _htmlSanitizer = htmlSanitizer;
         }
 
-        public Task<string> ConfigureLink(AppData app)
+        public override Task<string> ConfigureLink(AppData app)
         {
             return Task.FromResult(_linkGenerator.GetPathByAction(nameof(UIPointOfSaleController.UpdatePointOfSale),
-                "UIPointOfSale", new { appId = app.Id }, _btcPayServerOptions.Value.RootPath));
+                "UIPointOfSale", new { appId = app.Id }, _btcPayServerOptions.Value.RootPath)!);
         }
 
-        public Task<SalesStats> GetSalesStats(AppData app, InvoiceEntity[] paidInvoices, int numberOfDays)
+        public override Task<object?> GetInfo(AppData appData)
+        {
+            return Task.FromResult<object?>(null);
+        }
+
+        public override Task<SalesStats> GetSalesStats(AppData app, InvoiceEntity[] paidInvoices, int numberOfDays)
         {
             var posS = app.GetSettings<PointOfSaleSettings>();
             var items = AppService.Parse(_htmlSanitizer, _displayFormatter, posS.Template, posS.Currency);
             return AppService.GetSalesStatswithPOSItems(items, paidInvoices, numberOfDays);
         }
 
-        public Task<IEnumerable<ItemStats>> GetItemStats(AppData appData, InvoiceEntity[] paidInvoices)
+        public override Task<IEnumerable<ItemStats>> GetItemStats(AppData appData, InvoiceEntity[] paidInvoices)
         {
             var settings = appData.GetSettings<PointOfSaleSettings>();
             var items = AppService.Parse(_htmlSanitizer, _displayFormatter, settings.Template, settings.Currency);
@@ -114,22 +118,17 @@ namespace BTCPayServer.Plugins.PointOfSale
             return Task.FromResult<IEnumerable<ItemStats>>(itemCount);
         }
 
-        public Task<object> GetInfo(AppData appData)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task SetDefaultSettings(AppData appData, string defaultCurrency)
+        public override Task SetDefaultSettings(AppData appData, string defaultCurrency)
         {
             var empty = new PointOfSaleSettings { Currency = defaultCurrency };
             appData.SetSettings(empty);
             return Task.CompletedTask;
         }
 
-        public Task<string> ViewLink(AppData app)
+        public override Task<string> ViewLink(AppData app)
         {
             return Task.FromResult(_linkGenerator.GetPathByAction(nameof(UIPointOfSaleController.ViewPointOfSale),
-                "UIPointOfSale", new { appId = app.Id }, _btcPayServerOptions.Value.RootPath));
+                "UIPointOfSale", new { appId = app.Id }, _btcPayServerOptions.Value.RootPath)!);
         }
     }
 }

@@ -7,6 +7,8 @@ using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ViewComponents;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 
 namespace BTCPayServer.Components.AppSales;
 
@@ -27,6 +29,9 @@ public class AppSales : ViewComponent
 
     public async Task<IViewComponentResult> InvokeAsync(string appId, string appType)
     {
+        var type = _appService.GetAppType(appType);
+        if (type is not SalesAppBaseType salesAppType)
+            return new HtmlContentViewComponentResult(new StringHtmlContent(string.Empty));
         var vm = new AppSalesViewModel
         {
             Id = appId,
@@ -42,7 +47,7 @@ public class AppSales : ViewComponent
         vm.SalesCount = stats.SalesCount;
         vm.Series = stats.Series;
         vm.AppType = app.AppType;
-        vm.AppUrl = await _appService.ConfigureLink(app, app.AppType);
+        vm.AppUrl = await salesAppType.ConfigureLink(app);
 
         return View(vm);
     }

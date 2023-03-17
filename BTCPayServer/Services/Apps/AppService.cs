@@ -31,7 +31,7 @@ namespace BTCPayServer.Services.Apps
 {
     public class AppService
     {
-        private readonly IEnumerable<IApp> _apps;
+        private readonly Dictionary<string, AppBaseType> _appTypes;
         readonly ApplicationDbContextFactory _ContextFactory;
         private readonly InvoiceRepository _InvoiceRepository;
         readonly CurrencyNameTable _Currencies;
@@ -40,7 +40,7 @@ namespace BTCPayServer.Services.Apps
         private readonly HtmlSanitizer _HtmlSanitizer;
         public CurrencyNameTable Currencies => _Currencies;
         public AppService(
-            IEnumerable<IApp> apps,
+            IEnumerable<AppBaseType> apps,
             ApplicationDbContextFactory contextFactory,
             InvoiceRepository invoiceRepository,
             CurrencyNameTable currencies,
@@ -48,7 +48,7 @@ namespace BTCPayServer.Services.Apps
             StoreRepository storeRepository,
             HtmlSanitizer htmlSanitizer)
         {
-            _apps = apps;
+            _appTypes = apps.ToDictionary(a => a.Type, a=> a);
             _ContextFactory = contextFactory;
             _InvoiceRepository = invoiceRepository;
             _Currencies = currencies;
@@ -56,40 +56,33 @@ namespace BTCPayServer.Services.Apps
             _HtmlSanitizer = htmlSanitizer;
             _displayFormatter = displayFormatter;
         }
-
+#nullable enable
         public Dictionary<string, string> GetAvailableAppTypes()
         {
-            return _apps.ToDictionary(app => app.Type, app => app.Description);
-        }
-    
-        public Task<string> ConfigureLink(AppData app, string vmSelectedAppType)
-        {
-            return GetAppForType(vmSelectedAppType).ConfigureLink(app);
+            return _appTypes.ToDictionary(app => app.Key, app => app.Value.Description);
         }
 
-        private IApp GetAppForType(string appType)
+        public AppBaseType? GetAppType(string appType)
         {
-            return _apps.First(app => app.Type == appType);
+            _appTypes.TryGetValue(appType, out var a);
+            return a;
         }
-        
-        public async Task<object> GetInfo(string appId)
+
+        public async Task<object?> GetInfo(string appId)
         {
             var appData = await GetApp(appId, null);
             if (appData is null)
-            {
                 return null;
-            }
-            var app = GetAppForType(appData.AppType);
-            if (app is null)
-            {
+            var appType = GetAppType(appData.AppType);
+            if (appType is null)
                 return null;
-            }
-
-            return app.GetInfo(appData);
+            return appType.GetInfo(appData);
         }
-        
+
         public async Task<IEnumerable<ItemStats>> GetItemStats(AppData appData)
         {
+            if (GetAppType(appData.AppType) is not SalesAppBaseType salesType)
+                throw new InvalidOperationException("This app isn't a SalesAppBaseType");
             var paidInvoices = await GetInvoicesForApp(_InvoiceRepository,appData,
                 null, new []
                 {
@@ -97,7 +90,7 @@ namespace BTCPayServer.Services.Apps
                     InvoiceState.ToString(InvoiceStatusLegacy.Confirmed),
                     InvoiceState.ToString(InvoiceStatusLegacy.Complete)
                 });
-            return await GetAppForType(appData.AppType).GetItemStats(appData, paidInvoices);
+            return await salesType.GetItemStats(appData, paidInvoices);
         }
 
         public static Task<SalesStats> GetSalesStatswithPOSItems(ViewPointOfSaleViewModel.Item[] items,
@@ -136,6 +129,8 @@ namespace BTCPayServer.Services.Apps
         
         public async Task<SalesStats> GetSalesStats(AppData app, int numberOfDays = 7)
         {
+            if (GetAppType(app.AppType) is not SalesAppBaseType salesType)
+                throw new InvalidOperationException("This app isn't a SalesAppBaseType");
             var paidInvoices = await GetInvoicesForApp(_InvoiceRepository, app, DateTimeOffset.UtcNow - TimeSpan.FromDays(numberOfDays),
                 new []
                 {
@@ -143,12 +138,13 @@ namespace BTCPayServer.Services.Apps
                     InvoiceState.ToString(InvoiceStatusLegacy.Confirmed),
                     InvoiceState.ToString(InvoiceStatusLegacy.Complete)
                 });
-            return await GetAppForType(app.AppType).GetSalesStats(app, paidInvoices, numberOfDays);
+            
+            return await salesType.GetSalesStats(app, paidInvoices, numberOfDays);
         }
 
         public class InvoiceStatsItem
         {
-            public string ItemCode { get; set; }
+            public string ItemCode { get; set; } = string.Empty;
             public decimal FiatPrice { get; set; }
             public DateTime Date { get; set; }
         }
@@ -204,8 +200,8 @@ namespace BTCPayServer.Services.Apps
         public static string GetAppOrderId(string appType, string appId) =>
             appType switch
             {
-                CrowdfundApp.AppType => $"crowdfund-app_{appId}",
-                PointOfSaleApp.AppType => $"pos-app_{appId}",
+                CrowdfundAppType.AppType => $"crowdfund-app_{appId}",
+                PointOfSaleAppType.AppType => $"pos-app_{appId}",
                 _ => $"{appType}_{appId}"
             };
 
@@ -215,7 +211,7 @@ namespace BTCPayServer.Services.Apps
             return invoice.GetInternalTags("APP#");
         }
 
-        public static async Task<InvoiceEntity[]> GetInvoicesForApp(InvoiceRepository invoiceRepository, AppData appData, DateTimeOffset? startDate = null,  string[] status = null)
+        public static async Task<InvoiceEntity[]> GetInvoicesForApp(InvoiceRepository invoiceRepository, AppData appData, DateTimeOffset? startDate = null,  string[]? status = null)
         {
             var invoices = await invoiceRepository.GetInvoices(new InvoiceQuery
             {
@@ -252,7 +248,7 @@ namespace BTCPayServer.Services.Apps
             return await ctx.SaveChangesAsync() == 1;
         }
 
-        public async Task<ListAppsViewModel.ListAppViewModel[]> GetAllApps(string userId, bool allowNoUser = false, string storeId = null)
+        public async Task<ListAppsViewModel.ListAppViewModel[]> GetAllApps(string? userId, bool allowNoUser = false, string? storeId = null)
         {
             await using var ctx = _ContextFactory.CreateContext();
             var listApps = await ctx.UserStore
@@ -294,7 +290,7 @@ namespace BTCPayServer.Services.Apps
             string style;
             switch (appType)
             {
-                case PointOfSaleApp.AppType:
+                case PointOfSaleAppType.AppType:
                     var settings = app.GetSettings<PointOfSaleSettings>();
                     string posViewStyle = (settings.EnableShoppingCart ? PosViewType.Cart : settings.DefaultView).ToString();
                     style = typeof(PosViewType).DisplayName(posViewStyle);
@@ -328,7 +324,7 @@ namespace BTCPayServer.Services.Apps
             return await query.ToListAsync();
         }
 
-        public async Task<AppData> GetApp(string appId, string appType, bool includeStore = false)
+        public async Task<AppData?> GetApp(string appId, string? appType, bool includeStore = false)
         {
             await using var ctx = _ContextFactory.CreateContext();
             var query = ctx.Apps
@@ -342,7 +338,7 @@ namespace BTCPayServer.Services.Apps
             return await query.FirstOrDefaultAsync();
         }
 
-        public Task<StoreData> GetStore(AppData app)
+        public Task<StoreData?> GetStore(AppData app)
         {
             return _storeRepository.FindStore(app.StoreDataId);
         }
@@ -354,7 +350,7 @@ namespace BTCPayServer.Services.Apps
             {
                 var itemNode = new YamlMappingNode();
                 itemNode.Add("title", new YamlScalarNode(item.Title));
-                if (item.Price.Type != ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Topup)
+                if (item.Price.Type != ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Topup && item.Price.Value is not null)
                     itemNode.Add("price", new YamlScalarNode(item.Price.Value.ToStringInvariant()));
                 if (!string.IsNullOrEmpty(item.Description))
                 {
@@ -436,8 +432,11 @@ namespace BTCPayServer.Services.Apps
                         case "false":
                         case null:
                             price.Type = ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Fixed;
-                            price.Value = decimal.Parse(pValue.Value.Value, CultureInfo.InvariantCulture);
-                            price.Formatted = displayFormatter.Currency(price.Value.Value, currency, DisplayFormatter.CurrencyFormat.Symbol);
+                            if (pValue?.Value.Value is not null)
+                            {
+                                price.Value = decimal.Parse(pValue.Value.Value, CultureInfo.InvariantCulture);
+                                price.Formatted = displayFormatter.Currency(price.Value.Value, currency, DisplayFormatter.CurrencyFormat.Symbol);
+                            }
                             break;
                     }
 
@@ -464,13 +463,13 @@ namespace BTCPayServer.Services.Apps
         {
             return Parse(htmlSanitizer, displayFormatter, template, currency).Where(c => !c.Disabled).ToArray();
         }
-
-
+#nullable restore
         private class PosHolder
         {
             private readonly HtmlSanitizer _htmlSanitizer;
 
-            public PosHolder(HtmlSanitizer htmlSanitizer)
+            public PosHolder(
+                HtmlSanitizer htmlSanitizer)
             {
                 _htmlSanitizer = htmlSanitizer;
             }
@@ -506,8 +505,8 @@ namespace BTCPayServer.Services.Apps
             public string Key { get; set; }
             public YamlScalarNode Value { get; set; }
         }
-
-        public async Task<AppData> GetAppDataIfOwner(string userId, string appId, string type = null)
+#nullable enable
+        public async Task<AppData?> GetAppDataIfOwner(string userId, string appId, string? type = null)
         {
             if (userId == null || appId == null)
                 return null;
@@ -542,7 +541,7 @@ namespace BTCPayServer.Services.Apps
             await ctx.SaveChangesAsync();
         }
 
-        private static bool TryParseJson(string json, out JObject result)
+        private static bool TryParseJson(string json, [MaybeNullWhen(false)] out JObject result)
         {
             result = null;
             try
@@ -584,7 +583,7 @@ namespace BTCPayServer.Services.Apps
 
         public async Task SetDefaultSettings(AppData appData, string defaultCurrency)
         {
-            var app = GetAppForType(appData.AppType);
+            var app = GetAppType(appData.AppType);
             if (app is null)
             {
                 appData.SetSettings(null);
@@ -597,19 +596,10 @@ namespace BTCPayServer.Services.Apps
 
         public async Task<string?> ViewLink(AppData app)
         {
-            var appType = GetAppForType(app.AppType);
+            var appType = GetAppType(app.AppType);
             return await appType?.ViewLink(app)!;
         }
 #nullable restore
-        public bool SupportsSalesStats(AppData app)
-        {
-            return GetAppForType(app.AppType).SupportsSalesStats;
-        }
-        
-        public bool SupportsItemStats(AppData app)
-        {
-            return GetAppForType(app.AppType).SupportsItemStats;
-        }
     }
 
     public class ItemStats

@@ -33,7 +33,7 @@ namespace BTCPayServer.Models.AppViewModels
 
         private void SetApps(AppService appService)
         {
-            var defaultAppType = PointOfSaleApp.AppType;
+            var defaultAppType = PointOfSaleAppType.AppType;
             var choices = appService.GetAvailableAppTypes().Select(pair =>
                 new SelectListItem(pair.Value, pair.Key, pair.Key == defaultAppType));
                 

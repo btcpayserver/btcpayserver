@@ -3,7 +3,7 @@
 @using BTCPayServer.Plugins.Crowdfund
 @model BTCPayServer.Components.AppSales.AppSalesViewModel
 @{
-    var label = Model.AppType == CrowdfundApp.AppType ? "Contributions" : "Sales";
+    var label = Model.AppType == CrowdfundAppType.AppType ? "Contributions" : "Sales";
 }
 
 <div id="AppSales-@Model.Id" class="widget app-sales">

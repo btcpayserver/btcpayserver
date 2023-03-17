@@ -21,6 +21,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json.Linq;
 using CustodianAccountData = BTCPayServer.Data.CustodianAccountData;
 using CustodianAccountDataClient = BTCPayServer.Client.Models.CustodianAccountData;
@@ -366,12 +367,11 @@ namespace BTCPayServer.Controllers.Greenfield
                 decimal qty;
                 try
                 {
-                    qty = ParseQty(request.Qty, asset, custodianAccount, custodian, cancellationToken);
+                    qty = await ParseQty(request.Qty, asset, custodianAccount, custodian, cancellationToken);
                 }
-                catch
+                catch (Exception ex)
                 {
-                    return this.CreateAPIError(400, "bad-qty-format",
-                        $"Quantity should be a number or a number ending with '%' for percentages.");
+                    return UnsupportedAsset(asset, ex.Message);
                 }
                 
                 var simulateWithdrawResult =
@@ -406,12 +406,11 @@ namespace BTCPayServer.Controllers.Greenfield
                 decimal qty;
                 try
                 {
-                    qty = ParseQty(request.Qty, asset, custodianAccount, custodian, cancellationToken);
+                    qty = await ParseQty(request.Qty, asset, custodianAccount, custodian, cancellationToken);
                 }
-                catch
+                catch (Exception ex)
                 {
-                    return this.CreateAPIError(400, "bad-qty-format",
-                        $"Quantity should be a number or a number ending with '%' for percentages.");
+                    return UnsupportedAsset(asset, ex.Message);
                 }
 
                 var withdrawResult =
@@ -425,26 +424,21 @@ namespace BTCPayServer.Controllers.Greenfield
                 $"Withdrawals are not supported for \"{custodian.Name}\".");
         }
 
-        private decimal ParseQty(string qty, string asset, CustodianAccountData custodianAccount, ICustodian custodian, CancellationToken cancellationToken = default)
+        private IActionResult UnsupportedAsset(string asset, string err)
         {
-            bool isPercentage = qty.EndsWith("%", StringComparison.InvariantCultureIgnoreCase);
-            qty = isPercentage ? qty.Substring(0, qty.Length - 1) : qty;
-            bool canParseQty = Decimal.TryParse(qty, out decimal qtyDecimal);
-            if (!canParseQty)
-            {
-                throw new Exception($"Quantity should be a number or a number ending with '%' for percentages.");
-            }
+            return this.CreateAPIError(400, "invalid-qty", $"It is impossible to use % quantity with this asset ({err})");
+        }
 
-            if (isPercentage)
-            {
-                // Percentage of current holdings => calculate the amount
-                var config = custodianAccount.GetBlob();
-                var balances = custodian.GetAssetBalancesAsync(config, cancellationToken).Result;
-                var assetBalance = balances[asset];
-                qtyDecimal = assetBalance * qtyDecimal / 100;
-            }
-
-            return qtyDecimal;
+        private async Task<decimal> ParseQty(TradeQuantity qty, string asset, CustodianAccountData custodianAccount, ICustodian custodian, CancellationToken cancellationToken = default)
+        {
+            if (qty.Type == TradeQuantity.ValueType.Exact)
+                return qty.Value;
+            // Percentage of current holdings => calculate the amount
+            var config = custodianAccount.GetBlob();
+            var balances = await custodian.GetAssetBalancesAsync(config, cancellationToken);
+            if (!balances.TryGetValue(asset, out var assetBalance))
+                return 0.0m;
+            return (assetBalance * qty.Value) / 100m;
         }
 
         async Task<CustodianAccountData> GetCustodianAccount(string storeId, string accountId)

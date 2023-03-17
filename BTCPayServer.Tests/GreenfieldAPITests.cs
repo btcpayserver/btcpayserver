@@ -4118,7 +4118,7 @@ clientBasic.PreviewUpdateStoreRateConfiguration(user.StoreId, new StoreRateConfi
             // Test: wrong store ID
             await AssertHttpError(403, async () => await tradeClient.GetCustodianAccountTradeInfo("WRONG-STORE-ID", accountId, MockCustodian.TradeId));
 
-            var qty = MockCustodian.WithdrawalAmount.ToString(CultureInfo.InvariantCulture);
+            var qty = new TradeQuantity(MockCustodian.WithdrawalAmount, TradeQuantity.ValueType.Exact);
              // Test: SimulateWithdrawal, unauth
             var simulateWithdrawalRequest = new WithdrawRequestData(MockCustodian.WithdrawalPaymentMethod, qty);
             await AssertHttpError(401, async () => await unauthClient.SimulateCustodianAccountWithdrawal(storeId, accountId, simulateWithdrawalRequest));
@@ -4142,7 +4142,7 @@ clientBasic.PreviewUpdateStoreRateConfiguration(user.StoreId, new StoreRateConfi
             await AssertHttpError(403, async () => await withdrawalClient.SimulateCustodianAccountWithdrawal( "WRONG-STORE-ID",accountId, simulateWithdrawalRequest));
             
             // Test: SimulateWithdrawal, correct payment method, wrong amount
-            var wrongAmountSimulateWithdrawalRequest = new WithdrawRequestData(MockCustodian.WithdrawalPaymentMethod, "0.666");
+            var wrongAmountSimulateWithdrawalRequest = new WithdrawRequestData(MockCustodian.WithdrawalPaymentMethod, TradeQuantity.Parse("0.666"));
             await AssertHttpError(400, async () => await withdrawalClient.SimulateCustodianAccountWithdrawal(storeId, accountId, wrongAmountSimulateWithdrawalRequest));
 
             // Test: CreateWithdrawal, unauth
@@ -4173,7 +4173,7 @@ clientBasic.PreviewUpdateStoreRateConfiguration(user.StoreId, new StoreRateConfi
             await AssertHttpError(403, async () => await withdrawalClient.CreateCustodianAccountWithdrawal( "WRONG-STORE-ID",accountId, createWithdrawalRequest));
             
             // Test: CreateWithdrawal, correct payment method, wrong amount
-            var wrongAmountCreateWithdrawalRequest = new WithdrawRequestData(MockCustodian.WithdrawalPaymentMethod, "0.666");
+            var wrongAmountCreateWithdrawalRequest = new WithdrawRequestData(MockCustodian.WithdrawalPaymentMethod, TradeQuantity.Parse("0.666"));
             await AssertHttpError(400, async () => await withdrawalClient.CreateCustodianAccountWithdrawal(storeId, accountId, wrongAmountCreateWithdrawalRequest));
 
             // Test: GetWithdrawalInfo, unauth

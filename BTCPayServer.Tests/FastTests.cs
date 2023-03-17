@@ -707,6 +707,31 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        public void ParseTradeQuantity()
+        {
+            Assert.Throws<FormatException>(() => TradeQuantity.Parse("1.2345o"));
+            Assert.Throws<FormatException>(() => TradeQuantity.Parse("o"));
+            Assert.Throws<FormatException>(() => TradeQuantity.Parse(""));
+            Assert.Throws<FormatException>(() => TradeQuantity.Parse("1.353%%"));
+            Assert.Throws<FormatException>(() => TradeQuantity.Parse("1.353 %%"));
+            Assert.Throws<FormatException>(() => TradeQuantity.Parse("-1.353%"));
+            Assert.Throws<FormatException>(() => TradeQuantity.Parse("-1.353"));
+
+            var qty = TradeQuantity.Parse("1.3%");
+            Assert.Equal(1.3m, qty.Value);
+            Assert.Equal(TradeQuantity.ValueType.Percent, qty.Type);
+            var qty2 = TradeQuantity.Parse("1.3");
+            Assert.Equal(1.3m, qty2.Value);
+            Assert.Equal(TradeQuantity.ValueType.Exact, qty2.Type);
+            Assert.NotEqual(qty, qty2);
+            Assert.Equal(qty, TradeQuantity.Parse("1.3%"));
+            Assert.Equal(qty2, TradeQuantity.Parse("1.3"));
+            Assert.Equal(TradeQuantity.Parse(qty.ToString()), TradeQuantity.Parse("1.3%"));
+            Assert.Equal(TradeQuantity.Parse(qty2.ToString()), TradeQuantity.Parse("1.3"));
+            Assert.Equal(TradeQuantity.Parse(qty2.ToString()), TradeQuantity.Parse(" 1.3 "));
+        }
+
+        [Fact]
         public void ParseDerivationSchemeSettings()
         {
             var mainnet = new BTCPayNetworkProvider(ChainName.Mainnet).GetNetwork<BTCPayNetwork>("BTC");

@@ -179,7 +179,7 @@ section dl > div dd {
 #DefaultLang {
     width: calc(var(--text-width, 110px) + 3rem);
     color: var(--btcpay-body-text-muted);
-    background-color: transparent;
+    background-color: var(--btcpay-body-bg);
     box-shadow: none;
     border: none;
     cursor: pointer;

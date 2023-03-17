@@ -882,11 +882,11 @@
                     "assetBalances": [
                         {
                             "asset": "BTC",
-                            "qty": 1.23456
+                            "qty": "1.23456"
                         },
                         {
                             "asset": "USD",
-                            "qty": 123456.78
+                            "qty": "123456.78"
                         }
                     ],
                     "config": {
@@ -952,12 +952,14 @@
                         "nullable": false
                     },
                     "bid": {
-                        "type": "number",
+                        "type": "string",
+                        "format": "decimal",
                         "description": "The bid price.",
                         "nullable": false
                     },
                     "ask": {
-                        "type": "number",
+                        "type": "string",
+                        "format": "decimal",
                         "description": "The ask price",
                         "nullable": false
                     }
@@ -965,8 +967,8 @@
                 "example": {
                     "fromAsset": "USD",
                     "toAsset": "BTC",
-                    "bid": 30000.12,
-                    "ask": 30002.24
+                    "bid": "30000.12",
+                    "ask": "30002.24"
                 }
             },
             "TradeRequestData": {
@@ -985,12 +987,15 @@
                     "qty": {
                         "oneOf": [
                             {
-                                "type": "number",
-                                "description": "The qty of fromAsset to convert into toAsset."
+                                "type": "string",
+                                "format": "decimal",
+                                "description": "The qty of fromAsset to convert into toAsset.",
+                                "example": "1.50"
                             },
                             {
                                 "type": "string",
-                                "description": "The percent of fromAsset to convert into toAsset. The value must end with \"%\" to be considered a percentage."
+                                "description": "The percent of fromAsset to convert into toAsset. The value must end with \"%\" to be considered a percentage.",
+                                "example": "50%"
                             }
                         ],
                         "nullable": false
@@ -1042,22 +1047,22 @@
                     "ledgerEntries": [
                         {
                             "asset": "BTC",
-                            "qty": 1.23456,
+                            "qty": "1.23456",
                             "type": "Trade"
                         },
                         {
                             "asset": "USD",
-                            "qty": -61728,
+                            "qty": "-61728",
                             "type": "Trade"
                         },
                         {
                             "asset": "BTC",
-                            "qty": -0.00123456,
+                            "qty": "-0.00123456",
                             "type": "Fee"
                         },
                         {
                             "asset": "KFEE",
-                            "qty": -123.456,
+                            "qty": "-123.456",
                             "type": "Fee"
                         }
                     ],
@@ -1077,7 +1082,8 @@
                     "qty": {
                         "oneOf": [
                             {
-                                "type": "number",
+                                "type": "string",
+                                "format": "decimal",
                                 "description": "The quantity to withdraw."
                             },
                             {
@@ -1089,7 +1095,7 @@
                 },
                 "example": {
                     "paymentMethod": "BTC-OnChain",
-                    "qty": 0.123456
+                    "qty": "0.123456"
                 }
             },
             "WithdrawalResultData": {
@@ -1147,12 +1153,12 @@
                     "ledgerEntries": [
                         {
                             "asset": "BTC",
-                            "qty": -0.123456,
+                            "qty": "-0.123456",
                             "type": "Withdrawal"
                         },
                         {
                             "asset": "BTC",
-                            "qty": -0.005,
+                            "qty": "-0.005",
                             "type": "Fee"
                         }
                     ],
@@ -1193,8 +1199,15 @@
                         "nullable": false
                     },
                     "minQty": {
-                        "type": "number",
+                        "type": "string",
+                        "format": "decimal",
                         "description": "The minimum amount to withdraw",
+                        "nullable": true
+                    },
+                    "maxQty": {
+                        "type": "string",
+                        "format": "decimal",
+                        "description": "The maximum amount to withdraw",
                         "nullable": true
                     }
                 },
@@ -1204,12 +1217,12 @@
                     "ledgerEntries": [
                         {
                             "asset": "BTC",
-                            "qty": -0.123456,
+                            "qty": "-0.123456",
                             "type": "Withdrawal"
                         },
                         {
                             "asset": "BTC",
-                            "qty": -0.005,
+                            "qty": "-0.005",
                             "type": "Fee"
                         }
                     ],
@@ -1231,7 +1244,8 @@
                         "nullable": false
                     },
                     "qty": {
-                        "type": "number",
+                        "type": "string",
+                        "format": "decimal",
                         "description": "The quantity changed of the asset. Can be positive or negative.",
                         "nullable": false
                     },
@@ -1243,7 +1257,7 @@
                 },
                 "example": {
                     "asset": "BTC",
-                    "qty": 1.23456,
+                    "qty": "1.23456",
                     "type": "Trade"
                 }
             },
@@ -1257,14 +1271,15 @@
                         "nullable": false
                     },
                     "qty": {
-                        "type": "number",
+                        "type": "string",
+                        "format": "decimal",
                         "description": "The quantity changed of the asset. Can be positive or negative.",
                         "nullable": false
                     }
                 },
                 "example": {
                     "asset": "BTC",
-                    "qty": 1.23456
+                    "qty": "1.23456"
                 }
             },
             "AssetPairData": {

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using BTCPayServer.Client.Models;
+using BTCPayServer.JsonConverters;
 
 namespace BTCPayServer.Abstractions.Custodians.Client;
 

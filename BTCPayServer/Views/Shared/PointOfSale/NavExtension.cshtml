@@ -4,17 +4,28 @@
 @using BTCPayServer.Abstractions.Extensions
 @using BTCPayServer.Abstractions.TagHelpers
 @using BTCPayServer.Plugins.PointOfSale
-@model BTCPayServer.Components.MainNav.StoreApp
-
-@{ var store = Context.GetStoreData(); }
-
-@if (store != null && Model.AppType == PointOfSaleAppType.AppType)
-{
-    <li class="nav-item" permission="@Policies.CanModifyStoreSettings">
-        <a asp-area="" asp-controller="UIPointOfSale" asp-action="UpdatePointOfSale" asp-route-appId="@Model.Id" class="nav-link @ViewData.IsActivePage(AppsNavPages.Update, Model.Id)" id="@($"StoreNav-App-{Model.Id}")">
-            <vc:icon symbol="@Model.AppType.ToLower()"/>
-            <span>@Model.AppName</span>
-        </a>
-    </li>
+@using BTCPayServer.Services.Apps
+@inject AppService AppService;
+@model BTCPayServer.Components.MainNav.MainNavViewModel
+@{
+    var store = Context.GetStoreData();
 }
 
+@if (store != null)
+{
+    var appType = AppService.GetAppType(PointOfSaleAppType.AppType)!;
+    <li class="nav-item" permission="@Policies.CanModifyStoreSettings">
+        <a asp-area="" asp-controller="UIApps" asp-action="CreateApp" asp-route-storeId="@store.Id" asp-route-appType="@appType.Type" class="nav-link @ViewData.IsActivePage(AppsNavPages.Create, appType.Type)" id="@($"StoreNav-Create{appType.Type}")">
+            <vc:icon symbol="pointofsale" />
+            <span>@appType.Description</span>
+        </a>
+    </li>
+    @foreach (var app in Model.Apps.Where(app => app.AppType == appType.Type))
+    {
+        <li class="nav-item nav-item-sub" permission="@Policies.CanModifyStoreSettings">
+            <a asp-area="" asp-controller="UIPointOfSale" asp-action="UpdatePointOfSale" asp-route-appId="@app.Id" class="nav-link @ViewData.IsActivePage(AppsNavPages.Update, app.Id)" id="@($"StoreNav-App-{app.Id}")">
+                <span>@app.AppName</span>
+            </a>
+        </li>
+    }
+}

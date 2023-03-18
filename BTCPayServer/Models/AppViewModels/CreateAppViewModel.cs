@@ -30,6 +30,7 @@ namespace BTCPayServer.Models.AppViewModels
         public string SelectedAppType { get; set; }
 
         public SelectList AppTypes { get; set; }
+        public string AppType { get; set; }
 
         private void SetApps(AppService appService)
         {

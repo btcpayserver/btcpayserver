@@ -80,6 +80,10 @@
     flex-shrink: 0;
 }
 
+#mainNav .navbar-nav > li.nav-item-sub {
+    padding-left:calc(1.5rem + var(--btcpay-space-xs))
+}
+
 #mainNav .navbar-nav > li.nav-item .nav-link span {
     max-width: 200px;
     overflow: hidden;

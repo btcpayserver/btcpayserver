@@ -126,28 +126,6 @@ section dl > div dd {
 .payment-details-button .icon {
     margin-left: -1rem; /* Adjust for visual center */
 }
-[data-clipboard] {
-    cursor: copy;
-}
-.payment-details [data-clipboard] {
-    position: relative;
-}
-
-.payment-details [data-clipboard]::before {
-    content: '';
-    position: absolute;
-    top: .5rem;
-    left: -1.5rem;
-    width: 1rem;
-    height: 1rem;
-    background-image: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPGcgY2xpcC1wYXRoPSJ1cmwoI2EpIiBzdHJva2U9IiM4Rjk3OUUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+CiAgICA8cGF0aCBkPSJNMTMuMzMgNmgtNkM2LjYgNiA2IDYuNiA2IDcuMzN2NmMwIC43NC42IDEuMzQgMS4zMyAxLjM0aDZjLjc0IDAgMS4zNC0uNiAxLjM0LTEuMzR2LTZjMC0uNzMtLjYtMS4zMy0xLjM0LTEuMzNaIi8+CiAgICA8cGF0aCBkPSJNMy4zMyAxMGgtLjY2YTEuMzMgMS4zMyAwIDAgMS0xLjM0LTEuMzN2LTZhMS4zMyAxLjMzIDAgMCAxIDEuMzQtMS4zNGg2QTEuMzMgMS4zMyAwIDAgMSAxMCAyLjY3di42NiIvPgogIDwvZz4KICA8ZGVmcz4KICAgIDxjbGlwUGF0aCBpZD0iYSI+CiAgICAgIDxwYXRoIGZpbGw9IiNmZmYiIGQ9Ik0wIDBoMTZ2MTZIMHoiLz4KICAgIDwvY2xpcFBhdGg+CiAgPC9kZWZzPgo8L3N2Zz4K");
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity var(--btcpay-transition-duration-fast);
-}
-.payment-details [data-clipboard]:hover::before {
-    opacity: 1;
-}
 #payment .btcpay-pills .btcpay-pill {
     padding: var(--btcpay-space-xs) var(--btcpay-space-m);
 }

@@ -193,8 +193,8 @@
                             </div>
                             <div class="form-group">
                                 <div class="input-group" :data-clipboard="deposit.link">
-                                    <input type="text" class="form-control" style="cursor:copy" readonly="readonly" :value="deposit.link" id="payment-link"/>
-                                    <button type="button" class="btn btn-outline-secondary p-2" style="width:7em;" data-clipboard-confirm>
+                                    <input type="text" class="form-control" readonly="readonly" :value="deposit.link" id="payment-link"/>
+                                    <button type="button" class="btn btn-outline-secondary px-3">
                                         <vc:icon symbol="copy"/>
                                     </button>
                                 </div>
@@ -207,8 +207,8 @@
                             </div>
                             <div class="form-group">
                                 <div class="input-group" :data-clipboard="deposit.address">
-                                    <input type="text" class="form-control" style="cursor:copy" readonly="readonly" :value="deposit.address" id="address"/>
-                                    <button type="button" class="input-group-text btn btn-outline-secondary p-2" style="width:7em;" data-clipboard-confirm>
+                                    <input type="text" class="form-control" readonly="readonly" :value="deposit.address" id="address"/>
+                                    <button type="button" class="btn btn-outline-secondary px-3">
                                         <vc:icon symbol="copy"/>
                                     </button>
                                 </div>

@@ -31,7 +31,9 @@
             <p class="mb-2">Scan the QR Code or enter the following key into your two-factor authenticator app:</p>
             <div class="input-group input-group-sm mb-4">
                 <input readonly class="form-control font-monospace" value="@Model.SharedKey" id="SharedKey" style="max-width:20rem">
-                <button type="button" class="btn btn-outline-secondary" data-clipboard-target="#SharedKey">Copy</button>
+                <button type="button" class="btn btn-outline-secondary" data-clipboard-target="#SharedKey">
+                    <vc:icon symbol="copy" />
+                </button>
             </div>
             <div id="qrCode"></div>
             <div id="qrCodeData" data-url="@Model.AuthenticatorUri"></div>

@@ -62,31 +62,33 @@
         <div class="only-for-js col-sm-10 col-xxl-8 mx-auto" id="app">
             <div class="tab-content text-center">
                 <div class="tab-pane payment-box" id="link-tab" role="tabpanel">
-                    <div class="qr-container" data-clipboard="@Model.PaymentLink" data-clipboard-confirm-element="QR_Text_PaymentLink">
+                    <div class="qr-container" data-clipboard="@Model.PaymentLink">
                         <vc:qr-code data="@Model.PaymentLink"/>
                         <img src="@Model.CryptoImage" class="qr-icon" alt="@Model.CryptoCode"/>
-                        <small class="qr-text" id="QR_Text_PaymentLink">Scan the QR code, or tap to copy the address.</small>
                     </div>
                     <div class="input-group mt-3">
                         <div class="form-floating">
                             <input id="PaymentLink" class="form-control-plaintext" readonly="readonly" value="@Model.PaymentLink">
                             <label for="PaymentLink">Payment Link</label>
                         </div>
-                        <button type="button" class="btn btn-link" data-clipboard-target="#PaymentLink">Copy</button>
+                        <button type="button" class="btn btn-link" data-clipboard-target="#PaymentLink">
+                            <vc:icon symbol="copy" />
+                        </button>
                     </div>
                 </div>
                 <div class="tab-pane payment-box show active" id="address-tab" role="tabpanel">
-                    <div class="qr-container" data-clipboard="@Model.Address" data-clipboard-confirm-element="QR_Text_Address">
+                    <div class="qr-container" data-clipboard="@Model.Address">
                         <vc:qr-code data="@Model.Address"/>
                         <img src="@Model.CryptoImage" class="qr-icon" alt="@Model.CryptoCode"/>
-                        <small class="qr-text" id="QR_Text_Address">Scan the QR code, or tap to copy the address.</small>
                     </div>
                     <div class="input-group mt-3">
                         <div class="form-floating">
                             <input id="Address" class="form-control-plaintext" readonly="readonly" value="@Model.Address">
                             <label for="Address">Address</label>
                         </div>
-                        <button type="button" class="btn btn-link" data-clipboard-target="#Address">Copy</button>
+                        <button type="button" class="btn btn-link" data-clipboard-target="#Address">
+                            <vc:icon symbol="copy" />
+                        </button>
                     </div>
                 </div>
             </div>

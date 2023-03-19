@@ -253,7 +253,7 @@ namespace BTCPayServer.Tests
                 FindAlertMessage();
                 if (string.IsNullOrEmpty(seed))
                 {
-                    seed = Driver.FindElements(By.Id("RecoveryPhrase")).First().GetAttribute("data-mnemonic");
+                    seed = Driver.FindElements(By.Id("RecoveryPhrase")).FirstOrDefault().GetAttribute("data-mnemonic");
                 }
 
                 // Confirm seed backup

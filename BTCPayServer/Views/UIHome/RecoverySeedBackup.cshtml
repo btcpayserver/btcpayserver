@@ -13,6 +13,44 @@
         form#RecoveryConfirmation button:not([disabled]) { display: none; }
         form#RecoveryConfirmation input:checked ~ button[disabled] { display: none; }
         form#RecoveryConfirmation input:checked + button:not([disabled]) { display: inline-block; }
+
+        /* Desktops */
+        @@media (min-width:768px) {
+            .container-block {
+                padding: 4% 8%
+            }
+        }
+
+        /* Mobiles */
+        @@media (max-width:767px) {
+            .container-block {
+                padding: 11% 8%
+            }
+        }
+
+        /* Flexbox parent container */
+        .container-flexbox {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            row-gap: 20px;
+        }
+
+        /* Desktops: flexbox child columns */
+        @@media (min-width: 768px) {
+            .item-col-4 {
+                width: 22%;
+                align-items: flex-start;
+            }
+        }
+
+        /* Mobiles: flexbox child columns */
+        @@media (max-width: 767px) {
+            .item-col-4 {
+                width: 100%;
+                align-items: flex-start;
+            }
+        }
     </style>
 }
 
@@ -24,21 +62,22 @@
     <div class="col-lg-10 text-center">
         <partial name="_StatusMessage" />
 
-        <div class="d-flex flex-column align-items-center justify-content-center">
-            <span class="fa fa-info-circle align-self-center p-3" style="font-size:4em;"></span>
+        <div class="d-inline-flex flex-column align-items-center justify-content-center">
+                <span class="fa fa-warning align-self-center p-3" style="font-size: 4em; color: #f0ad4e;"></span>
 
-            <h1 class="text-center text-primary mb-5">Secure your recovery&nbsp;phrase</h1>
+            <h1 class="text-center text-warning mb-5">Secure your recovery&nbsp;phrase</h1>
         </div>
         <div class="lead text-center">
             <p>
-                <span class="d-sm-block">The words below are called your recovery phrase.</span>
-                <span class="d-sm-block"><strong>Write them down on a piece of paper in the exact order.</strong></span>
+                <span class="d-sm-block">The combination of words below are called your recovery phrase. The recovery</span>
+                <span class="d-sm-block">phrase allows you to access and restore your wallet. Write them down on a piece of</span>
+                <span class="d-sm-block">paper in the exact order:</span>
             </p>
         </div>
-        <ol id="RecoveryPhrase" data-mnemonic="@Model.Mnemonic" class="my-5 d-flex flex-column flex-wrap justify-content-center align-items-center text-start p-0">
+        <ol data-mnemonic="@Model.Mnemonic" class="container-block container-flexbox">
             @foreach (var word in Model.Words)
             {
-                <li class="ms-4 px-3 py-2 text-secondary" style="flex: 0 1;min-width:10em;">
+                <li class="item-col-4">
                     <span class="text-dark h5">@word</span>
                 </li>
             }
@@ -46,24 +85,24 @@
         <div class="lead text-center" style="max-width:36em;margin-left:auto;margin-right:auto;">
             @if (Model.IsStored)
             {
-                <p>
-                    The recovery phrase is a backup that allows you to restore your wallet in case of a server crash.
-                    If you lose it or write it down incorrectly, you may permanently lose access to your funds.
-                    Do not photograph it. Do not store it digitally.
+                <p style="font-size:15px; ">
+                    <span>The recovery phrase is a backup that allows you to restore your wallet in case of a server crash.</span>
+                    <span>If you lose it or write it down incorrectly, you may permanently lose access to your funds.</span>
+                    <span>Do not photograph it. Do not store it digitally.</span>
                 </p>
-                <p>
+                <p style="color: #f0ad4e;">
                     <strong>The recovery phrase will also be stored on the server as a hot wallet.</strong>
                 </p>
             }
             else
             {
-                <p>
-                    The recovery phrase allows you to access and restore your wallet.
-                    If you lose it or write it down incorrectly, you will permanently lose access to your funds.
-                    Do not photograph the recovery phrase and do not store it digitally.
+                <p style="font-size:15px; ">
+                    <span>If you lose it or write it down incorrectly, you will permanently lose access to your funds.</span>
+                    <span>Do not photograph the recovery phrase, and do not store it digitally.</span>
                 </p>
-                <p>
-                    <strong>The recovery phrase will permanently be erased from the server.</strong>
+                <br />
+                <p style="color: #f0ad4e;">
+                    <strong>The recovery phrase will be permanently erased from the server.</strong>
                 </p>
             }
             @if (!string.IsNullOrEmpty(Model.Passphrase))

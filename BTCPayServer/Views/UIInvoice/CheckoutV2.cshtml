@@ -48,18 +48,16 @@
                 </button>
             </nav>
             <section id="payment" v-if="isActive">
-                @if (!string.IsNullOrEmpty(Model.ItemDesc) && Model.ItemDesc != Model.StoreName)
-                {
-                    <h5 class="text-center mt-1 mb-3 fw-semibold" v-if="srvModel.itemDesc" v-text="srvModel.itemDesc"></h5>
-                }
-                @if (Model.IsUnsetTopUp)
-                {
-                    <h2 id="AmountDue" class="mt-1 text-center" v-t="'any_amount'"></h2>
-                }
-                else
-                {
-                    <h2 id="AmountDue" class="mt-1 text-center" v-text="`${srvModel.btcDue} ${srvModel.cryptoCode}`" :data-clipboard="srvModel.btcDue" :data-clipboard-confirm="$t('copy_confirm')" :data-amount-due="srvModel.btcDue">@Model.BtcDue @Model.CryptoCode</h2>
-                }
+                <div class="d-flex justify-content-center mt-1 text-center">
+                    @if (Model.IsUnsetTopUp)
+                    {
+                        <h2 id="AmountDue" v-t="'any_amount'"></h2>
+                    }
+                    else
+                    {
+                        <h2 id="AmountDue" v-text="`${srvModel.btcDue} ${srvModel.cryptoCode}`" :data-clipboard="srvModel.btcDue" data-clipboard-hover :data-amount-due="srvModel.btcDue">@Model.BtcDue @Model.CryptoCode</h2>
+                    }
+                </div>
                 <div id="PaymentInfo" class="info mt-3 mb-2" v-collapsible="showInfo">
                     <div>
                         <div class="timer" v-if="showTimer">
@@ -67,7 +65,7 @@
                             <span v-t="'expiry_info'"></span> <span class="expiryTime">{{timeText}}</span>
                         </div>
                         <div class="payment-due" v-if="showPaymentDueInfo">
-                            <vc:icon symbol="info"/>
+                            <vc:icon symbol="info" />
                             <span v-t="'partial_payment_info'"></span>
                         </div>
                         <div v-if="showPaymentDueInfo" v-html="replaceNewlines($t('still_due', { amount: `${srvModel.btcDue} ${srvModel.cryptoCode}` }))"></div>
@@ -75,7 +73,7 @@
                 </div>
                 <button id="DetailsToggle" class="d-flex align-items-center gap-1 btn btn-link payment-details-button mb-2" type="button" :aria-expanded="displayPaymentDetails ? 'true' : 'false'" v-on:click="displayPaymentDetails = !displayPaymentDetails">
                     <span class="fw-semibold" v-t="'view_details'"></span>
-                    <vc:icon symbol="caret-down"/>
+                    <vc:icon symbol="caret-down" />
                 </button>
                 <div id="PaymentDetails" class="payment-details" v-collapsible="displayPaymentDetails">
                     <payment-details :srv-model="srvModel" :is-active="isActive" class="pb-4"></payment-details>
@@ -112,11 +110,11 @@
                             <dl class="mb-0">
                                 <div>
                                     <dt v-t="'invoice_id'"></dt>
-                                    <dd v-text="srvModel.invoiceId" :data-clipboard="srvModel.invoiceId" :data-clipboard-confirm="$t('copy_confirm')"></dd>
+                                    <dd v-text="srvModel.invoiceId" :data-clipboard="srvModel.invoiceId" data-clipboard-hover="start"></dd>
                                 </div>
                                 <div v-if="srvModel.orderId">
                                     <dt v-t="'order_id'"></dt>
-                                    <dd v-text="srvModel.orderId" :data-clipboard="srvModel.orderId" :data-clipboard-confirm="$t('copy_confirm')"></dd>
+                                    <dd v-text="srvModel.orderId" :data-clipboard="srvModel.orderId" data-clipboard-hover="start"></dd>
                                 </div>
                             </dl>
                             <payment-details :srv-model="srvModel" :is-active="isActive" class="mb-5"></payment-details>
@@ -138,11 +136,11 @@
                             <dl class="mb-0">
                                 <div>
                                     <dt v-t="'invoice_id'"></dt>
-                                    <dd v-text="srvModel.invoiceId" :data-clipboard="srvModel.invoiceId" :data-clipboard-confirm="$t('copy_confirm')"></dd>
+                                    <dd v-text="srvModel.invoiceId" :data-clipboard="srvModel.invoiceId" data-clipboard-hover="start"></dd>
                                 </div>
                                 <div v-if="srvModel.orderId">
                                     <dt v-t="'order_id'"></dt>
-                                    <dd v-text="srvModel.orderId" :data-clipboard="srvModel.orderId" :data-clipboard-confirm="$t('copy_confirm')"></dd>
+                                    <dd v-text="srvModel.orderId" :data-clipboard="srvModel.orderId" data-clipboard-hover="start"></dd>
                                 </div>
                             </dl>
                             <payment-details :srv-model="srvModel" :is-active="isActive" v-collapsible="displayPaymentDetails"></payment-details>
@@ -185,37 +183,37 @@
         <dl>
             <div v-if="orderAmount > 0" id="PaymentDetails-TotalPrice">
                 <dt v-t="'total_price'"></dt>
-                <dd :data-clipboard="srvModel.orderAmount" :data-clipboard-confirm="$t('copy_confirm')">{{srvModel.orderAmount}} {{ srvModel.cryptoCode }}</dd>
+                <dd :data-clipboard="srvModel.orderAmount" data-clipboard-hover="start">{{srvModel.orderAmount}} {{ srvModel.cryptoCode }}</dd>
             </div>
             <div v-if="orderAmount > 0 && srvModel.orderAmountFiat" id="PaymentDetails-TotalFiat">
                 <dt v-t="'total_fiat'"></dt>
-                <dd :data-clipboard="srvModel.orderAmountFiat" :data-clipboard-confirm="$t('copy_confirm')">{{srvModel.orderAmountFiat}}</dd>
+                <dd :data-clipboard="srvModel.orderAmountFiat" data-clipboard-hover="start">{{srvModel.orderAmountFiat}}</dd>
             </div>
             <div v-if="srvModel.rate && srvModel.cryptoCode" id="PaymentDetails-ExchangeRate">
                 <dt v-t="'exchange_rate'"></dt>
-                <dd :data-clipboard="srvModel.rate" :data-clipboard-confirm="$t('copy_confirm')">
+                <dd :data-clipboard="srvModel.rate" data-clipboard-hover="start">
                     <template v-if="srvModel.cryptoCode === 'sats'">1 sat = {{ srvModel.rate }}</template>
                     <template v-else>1 {{ srvModel.cryptoCode }} = {{ srvModel.rate }}</template>
                 </dd>
             </div>
             <div v-if="srvModel.networkFee" id="PaymentDetails-NetworkCost">
                 <dt v-t="'network_cost'"></dt>
-                <dd :data-clipboard="srvModel.networkFee" :data-clipboard-confirm="$t('copy_confirm')">
+                <dd :data-clipboard="srvModel.networkFee" data-clipboard-hover="start">
                     <div v-if="srvModel.txCountForFee > 0" v-t="{ path: 'tx_count', args: { count: srvModel.txCount } }"></div>
                     <div v-text="`${srvModel.networkFee} ${srvModel.cryptoCode}`"></div>
                 </dd>
             </div>
             <div v-if="btcPaid > 0" id="PaymentDetails-AmountPaid">
                 <dt v-t="'amount_paid'"></dt>
-                <dd :data-clipboard="srvModel.btcPaid" :data-clipboard-confirm="$t('copy_confirm')" v-text="`${srvModel.btcPaid} ${srvModel.cryptoCode}`"></dd>
+                <dd :data-clipboard="srvModel.btcPaid" data-clipboard-hover="start" v-text="`${srvModel.btcPaid} ${srvModel.cryptoCode}`"></dd>
             </div>
             <div v-if="btcDue > 0" id="PaymentDetails-AmountDue">
                 <dt v-t="'amount_due'"></dt>
-                <dd :data-clipboard="srvModel.btcDue" :data-clipboard-confirm="$t('copy_confirm')" v-text="`${srvModel.btcDue} ${srvModel.cryptoCode}`"></dd>
+                <dd :data-clipboard="srvModel.btcDue" data-clipboard-hover="start" v-text="`${srvModel.btcDue} ${srvModel.cryptoCode}`"></dd>
             </div>
             <div v-if="showRecommendedFee" id="PaymentDetails-RecommendedFee">
                 <dt v-t="'recommended_fee'"></dt>
-                <dd :data-clipboard="srvModel.feeRate" :data-clipboard-confirm="$t('copy_confirm')" v-t="{ path: 'fee_rate', args: { feeRate: srvModel.feeRate } }"></dd>
+                <dd :data-clipboard="srvModel.feeRate" data-clipboard-hover="start" v-t="{ path: 'fee_rate', args: { feeRate: srvModel.feeRate } }"></dd>
             </div>
         </dl>
     </script>

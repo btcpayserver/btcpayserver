@@ -769,7 +769,7 @@ a.store-powered-by:hover .logo-brand-dark {
     font-weight: var(--btcpay-font-weight-semibold);
 }
 .payment-box .input-group button {
-    padding: var(--btcpay-space-xs) 0;
+    padding: 0 0 var(--btcpay-space-xs) 0;
     font-weight: var(--btcpay-font-weight-semibold);
 }
 
@@ -852,4 +852,49 @@ a.store-powered-by:hover .logo-brand-dark {
 .transaction-label-tooltip ul {
     margin: 0;
     padding-left: var(--btcpay-space-m);
+}
+
+/* Copy */
+[data-clipboard],
+[data-clipboard] input[readonly] {
+    cursor: copy;
+}
+[data-clipboard-hover] {
+    position: relative;
+}
+[data-clipboard-hover]::before {
+    content: '';
+    position: absolute;
+    top: .45rem;
+    left: calc(100% + var(--btcpay-space-s));
+    width: .75em;
+    height: .75em;
+    min-width: 1rem;
+    min-height: 1rem;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity var(--btcpay-transition-duration-fast);
+    background-repeat: no-repeat;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M13.3333 6H7.33333C6.59695 6 6 6.59695 6 7.33333V13.3333C6 14.0697 6.59695 14.6667 7.33333 14.6667H13.3333C14.0697 14.6667 14.6667 14.0697 14.6667 13.3333V7.33333C14.6667 6.59695 14.0697 6 13.3333 6Z' stroke='%236E7681' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M3.33203 10.0007H2.66536C2.31174 10.0007 1.9726 9.86018 1.72256 9.61013C1.47251 9.36008 1.33203 9.02094 1.33203 8.66732V2.66732C1.33203 2.3137 1.47251 1.97456 1.72256 1.72451C1.9726 1.47446 2.31174 1.33398 2.66536 1.33398H8.66536C9.01899 1.33398 9.35813 1.47446 9.60817 1.72451C9.85822 1.97456 9.9987 2.3137 9.9987 2.66732V3.33398' stroke='%236E7681' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+[data-clipboard-hover="start"]::before {
+    left: auto;
+    right: calc(100% + var(--btcpay-space-s));
+}
+[data-clipboard-hover][data-clipboard-confirming]::before {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M13.7808 4.21934C13.9213 4.35997 14.0002 4.55059 14.0002 4.74934C14.0002 4.94809 13.9213 5.13871 13.7808 5.27934L6.53082 12.5293C6.3902 12.6698 6.19957 12.7487 6.00082 12.7487C5.80207 12.7487 5.61145 12.6698 5.47082 12.5293L2.22082 9.27934C2.08834 9.13717 2.01622 8.94912 2.01965 8.75482C2.02308 8.56052 2.10179 8.37513 2.2392 8.23772C2.37661 8.10031 2.562 8.02159 2.7563 8.01816C2.9506 8.01474 3.13865 8.08686 3.28082 8.21934L6.00082 10.9393L12.7208 4.21934C12.8614 4.07889 13.0521 4 13.2508 4C13.4496 4 13.6402 4.07889 13.7808 4.21934Z' fill='%2351B13E'/%3E%3C/svg%3E ");
+}
+[data-clipboard-hover]:hover::before {
+    opacity: 1;
+}
+.btn[data-clipboard],
+.btn[data-clipboard-target] {
+    color: var(--btcpay-body-text-muted);
+}
+.btn[data-clipboard]:hover,
+.btn[data-clipboard-target]:hover {
+    color: var(--btcpay-body-link-accent);
+}
+.btn[data-clipboard-confirming] {
+    color: var(--btcpay-success) !important;
 }

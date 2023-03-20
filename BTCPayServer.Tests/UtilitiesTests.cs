@@ -282,6 +282,7 @@ retry:
                     {
                         translation.Words["InvoiceExpired_Body_3"] = string.Empty;
                     }
+                    translation.Translate(langTranslations);
                     translation.Save();
                 }
                 catch

@@ -235,8 +235,7 @@ namespace BTCPayServer.Controllers
             var model = new ListTransactionsViewModel { Skip = skip, Count = count };
             model.Labels.AddRange(
                 (await WalletRepository.GetWalletLabels(walletId))
-                .Select(c => (c.Label, c.Color, ColorPalette.Default.TextColor(c.Color)))
-                );
+                .Select(c => (c.Label, c.Color, ColorPalette.Default.TextColor(c.Color))));
 
             if (labelFilter != null)
             {
@@ -1324,18 +1323,21 @@ namespace BTCPayServer.Controllers
 
         public class UpdateLabelsRequest
         {
-            public string? Address { get; set; }
+            public string? Id { get; set; }
+            public string? Type { get; set; }
             public string[]? Labels { get; set; }
         }
         
         [HttpPost("{walletId}/update-labels")]
         [IgnoreAntiforgeryToken]
-        public async Task<IActionResult> UpdateLabels([ModelBinder(typeof(WalletIdModelBinder))] WalletId walletId, [FromBody] UpdateLabelsRequest request)
+        public async Task<IActionResult> UpdateLabels(
+            [ModelBinder(typeof(WalletIdModelBinder))] WalletId walletId,
+            [FromBody] UpdateLabelsRequest request)
         {
-            if (string.IsNullOrEmpty(request.Address) || request.Labels is null)
+            if (string.IsNullOrEmpty(request.Type) || string.IsNullOrEmpty(request.Id) || request.Labels is null)
                 return BadRequest();
             
-            var objid = new WalletObjectId(walletId, WalletObjectData.Types.Address, request.Address);
+            var objid = new WalletObjectId(walletId, request.Type, request.Id);
             var obj = await WalletRepository.GetWalletObject(objid); 
             if (obj is null) 
             {
@@ -1353,17 +1355,26 @@ namespace BTCPayServer.Controllers
         
         [HttpGet("{walletId}/labels")]
         [IgnoreAntiforgeryToken]
-        public async Task<IActionResult> GetLabels( [ModelBinder(typeof(WalletIdModelBinder))] WalletId walletId, bool excludeTypes)
+        public async Task<IActionResult> GetLabels(
+            [ModelBinder(typeof(WalletIdModelBinder))] WalletId walletId,
+            bool excludeTypes,
+            string? type = null,
+            string? id = null)
         {
-           
-           return Ok(( await WalletRepository.GetWalletLabels(walletId))
-               .Where(l => !excludeTypes || !WalletObjectData.Types.AllTypes.Contains(l.Label))
-               .Select(tuple => new
-           {
-               label = tuple.Label,
-               color = tuple.Color,
-               textColor = ColorPalette.Default.TextColor(tuple.Color)
-           }));
+            var walletObjectId = !string.IsNullOrEmpty(type) && !string.IsNullOrEmpty(id)
+                ? new WalletObjectId(walletId, type, id)
+                : null;
+            var labels = walletObjectId == null
+                ? await WalletRepository.GetWalletLabels(walletId)
+                : await WalletRepository.GetWalletLabels(walletObjectId);
+            return Ok(labels
+                .Where(l => !excludeTypes || !WalletObjectData.Types.AllTypes.Contains(l.Label))
+                .Select(tuple => new 
+                {
+                    label = tuple.Label,
+                    color = tuple.Color,
+                    textColor = ColorPalette.Default.TextColor(tuple.Color) 
+                }));
         }
 
         private string GetImage(PaymentMethodId paymentMethodId, BTCPayNetwork network)

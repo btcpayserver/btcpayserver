@@ -24,6 +24,105 @@ const switchTimeFormat = event => {
     event.target.dataset.mode = mode;
 };
 
+async function initLabelManager (elementId) {
+    const element = document.getElementById(elementId);
+
+    const labelStyle = data =>
+        data && data.color && data.textColor
+            ? `--label-bg:${data.color};--label-fg:${data.textColor}`
+            : '--label-bg:var(--btcpay-neutral-300);--label-fg:var(--btcpay-neutral-800)'
+
+    if (element) {
+        const { fetchUrl, updateUrl, walletId, walletObjectType, walletObjectId } = element.dataset;
+        const commonCallId = `walletLabels-${walletId}`;
+        if (!window[commonCallId]) {
+            window[commonCallId] = fetch(fetchUrl, {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+            }).then(res => res.json());
+        }
+        const options = await window[commonCallId];
+        const items = element.value.split(',')
+        const config = {
+            options,
+            items,
+            valueField: "label",
+            labelField: "label",
+            searchField: "label",
+            create: true,
+            persist: true,
+            allowEmptyOption: false,
+            closeAfterSelect: false,
+            render: {
+                dropdown (){
+                    return '<div class="dropdown-menu"></div>';
+                },
+                option_create: function(data, escape) {
+                    return `<div class="transaction-label create" style="${labelStyle(null)}">Add <strong>${escape(data.input)}</strong>&hellip;</div>`;
+                },
+                option (data, escape) {
+                    return `<div class="transaction-label" style="${labelStyle(data)}">${escape(data.label)}</div>`;
+                },
+                item (data, escape) {
+                    return `<div class="transaction-label" style="${labelStyle(data)}">${escape(data.label)}</div>`;
+                }
+            },
+            onItemAdd (val) {
+                window[commonCallId] = window[commonCallId].then(labels => {
+                    return [...labels, { label: val }]
+                });
+
+                document.dispatchEvent(new CustomEvent(`${commonCallId}-option-added`, {
+                    detail: val
+                }));
+            },
+            async onChange (values) {
+                select.lock();
+                try {
+                    const response = await fetch(updateUrl, {
+                        method: "POST",
+                        credentials: "include",
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            id: walletObjectId,
+                            type: walletObjectType,
+                            labels: select.items
+                        })
+                    });
+                    if (!response.ok) {
+                        throw new Error('Network response was not OK');
+                    }
+                } catch (error) {
+                    console.error('There has been a problem with your fetch operation:', error);
+                } finally {
+                    select.unlock();
+                }
+            }
+        };
+        const select = new TomSelect(element, config);
+
+        document.addEventListener(`${commonCallId}-option-added`, evt => {
+            if (!(evt.detail in select.options)) {
+                select.addOption({
+                    label: evt.detail
+                })
+            }
+        })
+    }
+}
+
+const initLabelManagers = () => {
+    // select only elements which haven't been initialized before, those without data-localized
+    document.querySelectorAll("input.label-manager:not(.tomselected)").forEach($el => {
+        initLabelManager($el.id)
+    });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
     // sticky header
     const stickyHeader = document.querySelector('.sticky-header-setup + .sticky-header');
@@ -37,6 +136,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // localize all elements that have localizeDate class
     formatDateTimes();
+
+    initLabelManagers();
     
     function updateTimeAgo(){
         var timeagoElements = $("[data-timeago-unixms]");

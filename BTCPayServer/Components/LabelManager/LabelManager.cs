@@ -5,12 +5,14 @@ namespace BTCPayServer.Components.LabelManager
 {
     public class LabelManager : ViewComponent
     {
-        public IViewComponentResult Invoke(WalletObjectId walletObjectId, string[] selectedLabels)
+        public IViewComponentResult Invoke(WalletObjectId walletObjectId, string[] selectedLabels, bool excludeTypes = true, bool displayInline = false)
         {
             var vm = new LabelViewModel
             {
-                ObjectId = walletObjectId,
-                SelectedLabels = selectedLabels
+                ExcludeTypes = excludeTypes,
+                WalletObjectId = walletObjectId,
+                SelectedLabels = selectedLabels,
+                DisplayInline = displayInline
             };
             return View(vm);
         }

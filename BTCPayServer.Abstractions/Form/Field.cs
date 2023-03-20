@@ -28,7 +28,7 @@ public class Field
 
     public bool Constant;
 
-    // HTML5 compatible type string like "text", "textarea", "email", "password", etc. Each type is a class and may contain more fields (i.e. "select" would have options).
+    // HTML5 compatible type string like "text", "textarea", "email", "password", etc.
     public string Type;
 
     public static Field CreateFieldset()

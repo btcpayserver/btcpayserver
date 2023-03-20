@@ -27,22 +27,36 @@ new Vue({
             errorMsg: null,
             isExecuting: false,
             isUpdating: false,
-            updateTradePriceAbortController: new AbortController(),
+            simulationAbortController: null,
             priceRefresherInterval: null,
-            assetToTrade: null,
-            assetToTradeInto: null,
+            fromAsset: null,
+            toAsset: null,
             qty: null,
-            maxQtyToTrade: null,
+            maxQty: null,
             price: null,
             priceForPair: {}
-        }
+        },
+        withdraw: {
+            asset: null,
+            paymentMethod: null,
+            errorMsg: null,
+            qty: null,
+            minQty: null,
+            maxQty: null,
+            badConfigFields: null,
+            results: null,
+            isUpdating: null,
+            isExecuting: false,
+            simulationAbortController: null,
+            ledgerEntries: null
+        },
     },
     computed: {
         tradeQtyToReceive: function () {
             return this.trade.qty / this.trade.price;
         },
         canExecuteTrade: function () {
-            return this.trade.qty >= this.getMinQtyToTrade() && this.trade.price !== null && this.trade.assetToTrade !== null && this.trade.assetToTradeInto !== null && !this.trade.isExecuting && this.trade.results === null;
+            return this.trade.qty >= this.getMinQtyToTrade() && this.trade.price !== null && this.trade.fromAsset !== null && this.trade.toAsset !== null && !this.trade.isExecuting && this.trade.results === null;
         },
         availableAssetsToTrade: function () {
             let r = [];
@@ -62,13 +76,13 @@ new Vue({
         },
         availableAssetsToTradeInto: function () {
             let r = [];
-            let pairs = this.account?.assetBalances?.[this.trade.assetToTrade]?.tradableAssetPairs;
+            let pairs = this.account?.assetBalances?.[this.trade.fromAsset]?.tradableAssetPairs;
             if (pairs) {
                 for (let i in pairs) {
                     let pair = pairs[i];
-                    if (pair.assetBought === this.trade.assetToTrade) {
+                    if (pair.assetBought === this.trade.fromAsset) {
                         r.push(pair.assetSold);
-                    } else if (pair.assetSold === this.trade.assetToTrade) {
+                    } else if (pair.assetSold === this.trade.fromAsset) {
                         r.push(pair.assetBought);
                     }
                 }
@@ -119,23 +133,67 @@ new Vue({
 
                 return rows;
             }
+        },
+        canExecuteWithdrawal: function () {
+            return (this.withdraw.minQty != null && this.withdraw.qty >= this.withdraw.minQty)
+                && (this.withdraw.maxQty != null && this.withdraw.qty <= this.withdraw.maxQty)
+                && this.withdraw.badConfigFields?.length === 0
+                && this.withdraw.paymentMethod
+                && !this.withdraw.isExecuting
+                && !this.withdraw.isUpdating
+                && this.withdraw.results === null;
+        },
+        availableAssetsToWithdraw: function () {
+            let r = [];
+            const balances = this?.account?.assetBalances;
+            if (balances) {
+                for (let asset in balances) {
+                    const balance = balances[asset];
+                    if (balance?.withdrawablePaymentMethods?.length) {
+                        r.push(asset);
+                    }
+                }
+            }
+            ;
+            return r.sort();
+        },
+        availablePaymentMethodsToWithdraw: function () {
+            if (this.withdraw.asset) {
+                let paymentMethods = this?.account?.assetBalances?.[this.withdraw.asset]?.withdrawablePaymentMethods;
+                if (paymentMethods) {
+                    return paymentMethods.sort();
+                }
+            }
+            return [];
+        },
+        withdrawFees: function(){
+            let r = [];
+            if(this.withdraw.ledgerEntries){
+                for (let i = 0; i< this.withdraw.ledgerEntries.length; i++){
+                    let entry = this.withdraw.ledgerEntries[i];
+                    if(entry.type === 'Fee'){
+                        r.push(entry);
+                    }
+                }
+            }
+            return r;
         }
     },
     methods: {
-        getMaxQtyToTrade: function (assetToTrade) {
-            let row = this.account?.assetBalances?.[assetToTrade];
+        getMaxQty: function (fromAsset) {
+            let row = this.account?.assetBalances?.[fromAsset];
             if (row) {
                 return row.qty;
             }
             return null;
         },
-        getMinQtyToTrade: function (assetToTrade = this.trade.assetToTrade, assetToTradeInto = this.trade.assetToTradeInto) {
-            if (assetToTrade && assetToTradeInto && this.account?.assetBalances) {
+        getMinQtyToTrade: function (fromAsset = this.trade.fromAsset, toAsset = this.trade.toAsset) {
+            if (fromAsset && toAsset && this.account?.assetBalances) {
                 for (let asset in this.account.assetBalances) {
                     let row = this.account.assetBalances[asset];
 
-                    let pairCode = assetToTrade + "/" + assetToTradeInto;
-                    let pairCodeReverse = assetToTradeInto + "/" + assetToTrade;
+                    let pairCode = fromAsset + "/" + toAsset;
+                    let pairCodeReverse = toAsset + "/" + fromAsset;
 
                     let pair = row.tradableAssetPairs?.[pairCode];
                     let pairReverse = row.tradableAssetPairs?.[pairCodeReverse];
@@ -144,7 +202,6 @@ new Vue({
                         if (pair && !pairReverse) {
                             return pair.minimumTradeQty;
                         } else if (!pair && pairReverse) {
-                            // TODO price here could not be what we expect it to be...
                             let price = this.trade.priceForPair?.[pairCode];
                             if (!price) {
                                 return null;
@@ -161,22 +218,25 @@ new Vue({
             return 0;
         },
         setTradeQtyPercent: function (percent) {
-            this.trade.qty = percent / 100 * this.trade.maxQtyToTrade;
+            this.trade.qty = percent / 100 * this.trade.maxQty;
+        },
+        setWithdrawQtyPercent: function (percent) {
+            this.withdraw.qty = percent / 100 * this.withdraw.maxQty;
         },
         openTradeModal: function (row) {
             let _this = this;
             this.trade.row = row;
             this.trade.results = null;
             this.trade.errorMsg = null;
-            this.trade.assetToTrade = row.asset;
+            this.trade.fromAsset = row.asset;
             if (row.asset === this.account.storeDefaultFiat) {
-                this.trade.assetToTradeInto = "BTC";
+                this.trade.toAsset = "BTC";
             } else {
-                this.trade.assetToTradeInto = this.account.storeDefaultFiat;
+                this.trade.toAsset = this.account.storeDefaultFiat;
             }
 
             this.trade.qty = row.qty;
-            this.trade.maxQtyToTrade = row.qty;
+            this.trade.maxQty = row.qty;
             this.trade.price = row.bid;
 
             if (this.modals.trade === null) {
@@ -193,9 +253,20 @@ new Vue({
             this.modals.trade.show();
         },
         openWithdrawModal: function (row) {
+            this.withdraw.asset = row.asset;
+            this.withdraw.qty = row.qty;
+            this.withdraw.paymentMethod = null;
+            this.withdraw.minQty = 0;
+            this.withdraw.maxQty = row.qty;
+            this.withdraw.results = null;
+            this.withdraw.errorMsg = null;
+            this.withdraw.isUpdating = null;
+            this.withdraw.isExecuting = false;
+
             if (this.modals.withdraw === null) {
                 this.modals.withdraw = new window.bootstrap.Modal('#withdrawModal');
             }
+
             this.modals.withdraw.show();
         },
         openDepositModal: function (row) {
@@ -204,10 +275,10 @@ new Vue({
             }
             if (row) {
                 this.deposit.asset = row.asset;
-            }else if(!this.deposit.asset && this.availableAssetsToDeposit.length > 0){
+            } else if (!this.deposit.asset && this.availableAssetsToDeposit.length > 0) {
                 this.deposit.asset = this.availableAssetsToDeposit[0];
             }
-            
+
             this.modals.deposit.show();
         },
         onTradeSubmit: async function (e) {
@@ -220,21 +291,18 @@ new Vue({
             this.trade.isExecuting = true;
 
             // Prevent the modal from closing by clicking outside or via the keyboard
-            this.modals.trade._config.backdrop = 'static';
-            this.modals.trade._config.keyboard = false;
+            this.setModalCanBeClosed(this.modals.trade, false);
 
             const _this = this;
-            const token = this.getRequestVerificationToken();
-
             const response = await fetch(url, {
-                method,
+                method: method,
                 headers: {
                     'Content-Type': 'application/json',
-                    'RequestVerificationToken': token
+                    'RequestVerificationToken': this.getRequestVerificationToken()
                 },
                 body: JSON.stringify({
-                    fromAsset: _this.trade.assetToTrade,
-                    toAsset: _this.trade.assetToTradeInto,
+                    fromAsset: _this.trade.fromAsset,
+                    toAsset: _this.trade.toAsset,
                     qty: _this.trade.qty
                 })
             });
@@ -254,9 +322,51 @@ new Vue({
             } else {
                 _this.trade.errorMsg = data && data.message || "Error";
             }
-            _this.modals.trade._config.backdrop = true;
-            _this.modals.trade._config.keyboard = true;
+            _this.setModalCanBeClosed(_this.modals.trade, true);
             _this.trade.isExecuting = false;
+        },
+
+        onWithdrawSubmit: async function (e) {
+            e.preventDefault();
+
+            const form = e.currentTarget;
+            const url = form.getAttribute('action');
+            const method = form.getAttribute('method');
+
+            this.withdraw.isExecuting = true;
+            this.setModalCanBeClosed(this.modals.withdraw, false);
+            
+            let dataToSubmit = {
+                paymentMethod: this.withdraw.paymentMethod,
+                qty: this.withdraw.qty
+            };
+
+            const _this = this;
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': this.getRequestVerificationToken()
+                },
+                body: JSON.stringify(dataToSubmit)
+            });
+
+            let data = null;
+            try {
+                data = await response.json();
+            } catch (e) {
+            }
+
+            if (response.ok) {
+                _this.withdraw.results = data;
+                _this.withdraw.errorMsg = null;
+
+                _this.refreshAccountBalances();
+            } else {
+                _this.withdraw.errorMsg = data && data.message || "Error";
+            }
+            _this.setModalCanBeClosed(_this.modals.withdraw, true);
+            _this.withdraw.isExecuting = false;
         },
 
         setTradePriceRefresher: function (enabled) {
@@ -276,12 +386,12 @@ new Vue({
         },
 
         updateTradePrice: function () {
-            if (!this.trade.assetToTrade || !this.trade.assetToTradeInto) {
+            if (!this.trade.fromAsset || !this.trade.toAsset) {
                 // We need to know the 2 assets or we cannot do anything...
                 return;
             }
 
-            if (this.trade.assetToTrade === this.trade.assetToTradeInto) {
+            if (this.trade.fromAsset === this.trade.toAsset) {
                 // The 2 assets must be different
                 this.trade.price = null;
                 return;
@@ -294,22 +404,23 @@ new Vue({
 
             this.trade.isUpdating = true;
 
+            let dataToSubmit = {
+                fromAsset: this.trade.fromAsset,
+                toAsset: this.trade.toAsset,
+                qty: this.trade.qty
+            };
+            let url = window.ajaxTradeSimulateUrl;
+
+            this.trade.simulationAbortController = new AbortController();
+
             let _this = this;
-            var searchParams = new URLSearchParams(window.location.search);
-            if (this.trade.assetToTrade) {
-                searchParams.set("assetToTrade", this.trade.assetToTrade);
-            }
-            if (this.trade.assetToTradeInto) {
-                searchParams.set("assetToTradeInto", this.trade.assetToTradeInto);
-            }
-            let url = window.ajaxTradePrepareUrl + "?" + searchParams.toString();
-
-            this.trade.updateTradePriceAbortController = new AbortController();
-
             fetch(url, {
-                    signal: this.trade.updateTradePriceAbortController.signal,
+                    method: "POST",
+                    body: JSON.stringify(dataToSubmit),
+                    signal: this.trade.simulationAbortController.signal,
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': this.getRequestVerificationToken()
                     }
                 }
             ).then(function (response) {
@@ -323,19 +434,19 @@ new Vue({
                     // Do nothing on error
                 }
             ).then(function (data) {
-                _this.trade.maxQtyToTrade = data.maxQtyToTrade;
+                _this.trade.maxQty = data.maxQty;
 
                 // By default trade everything
                 if (_this.trade.qty === null) {
-                    _this.trade.qty = _this.trade.maxQtyToTrade;
+                    _this.trade.qty = _this.trade.maxQty;
                 }
 
                 // Cannot trade more than what we have
-                if (data.maxQtyToTrade < _this.trade.qty) {
-                    _this.trade.qty = _this.trade.maxQtyToTrade;
+                if (data.maxQty < _this.trade.qty) {
+                    _this.trade.qty = _this.trade.maxQty;
                 }
-                let pair = data.fromAsset + "/" + data.toAsset;
-                let pairReverse = data.toAsset + "/" + data.fromAsset;
+                let pair = data.toAsset + "/" + data.fromAsset;
+                let pairReverse = data.fromAsset + "/" + data.toAsset;
 
                 // TODO Should we use "bid" in some cases? The spread can be huge with some shitcoins.
                 _this.trade.price = data.ask;
@@ -364,27 +475,29 @@ new Vue({
             return false;
         },
         canSwapTradeAssets: function () {
-            let minQtyToTrade = this.getMinQtyToTrade(this.trade.assetToTradeInto, this.trade.assetToTrade);
-            let assetToTradeIntoHoldings = this.account?.assetBalances?.[this.trade.assetToTradeInto];
+            let minQtyToTrade = this.getMinQtyToTrade(this.trade.toAsset, this.trade.fromAsset);
+            let assetToTradeIntoHoldings = this.account?.assetBalances?.[this.trade.toAsset];
             if (assetToTradeIntoHoldings) {
                 return assetToTradeIntoHoldings.qty >= minQtyToTrade;
             }
         },
         swapTradeAssets: function () {
             // Swap the 2 assets
-            let tmp = this.trade.assetToTrade;
-            this.trade.assetToTrade = this.trade.assetToTradeInto;
-            this.trade.assetToTradeInto = tmp;
+            let tmp = this.trade.fromAsset;
+            this.trade.fromAsset = this.trade.toAsset;
+            this.trade.toAsset = tmp;
             this.trade.price = 1 / this.trade.price;
 
-            this._refreshTradeDataAfterAssetChange();
+            this.refreshTradeSimulation();
         },
-        _refreshTradeDataAfterAssetChange: function () {
-            let maxQtyToTrade = this.getMaxQtyToTrade(this.trade.assetToTrade);
-            this.trade.qty = maxQtyToTrade
-            this.trade.maxQtyToTrade = maxQtyToTrade;
+        refreshTradeSimulation: function () {
+            let maxQty = this.getMaxQty(this.trade.fromAsset);
+            this.trade.qty = maxQty
+            this.trade.maxQty = maxQty;
 
-            this.trade.updateTradePriceAbortController.abort();
+            if(this.trade.simulationAbortController) {
+                this.trade.simulationAbortController.abort();
+            }
 
             // Update the price asap, so we can continue
             let _this = this;
@@ -398,24 +511,98 @@ new Vue({
                 return response.json();
             }).then(function (result) {
                 _this.account = result;
+                
+                for(let asset in _this.account.assetBalances){
+                    let assetInfo = _this.account.assetBalances[asset];
+                    
+                    if(asset !== _this.account.storeDefaultFiat) {
+                        let pair1 = asset + '/' + _this.account.storeDefaultFiat;
+                        _this.trade.priceForPair[pair1] = assetInfo.bid;
+
+                        let pair2 = _this.account.storeDefaultFiat + '/' + asset;
+                        _this.trade.priceForPair[pair2] = 1 / assetInfo.bid;
+                    }
+                }
+                
             });
         },
         getRequestVerificationToken: function () {
             return document.querySelector("input[name='__RequestVerificationToken']").value;
+        },
+        setModalCanBeClosed: function (modal, flag) {
+            modal._config.keyboard = flag;
+            if (flag) {
+                modal._config.backdrop = true;
+            } else {
+                modal._config.backdrop = 'static';
+            }
+        },
+        refreshWithdrawalSimulation: function () {
+            if(!this.withdraw.paymentMethod || !this.withdraw.qty){
+                // We are missing required data, stop now.
+                return;
+            }
+            
+            if(this.withdraw.simulationAbortController) {
+                this.withdraw.simulationAbortController.abort();
+            }
+
+            let data = {
+                paymentMethod: this.withdraw.paymentMethod,
+                qty: this.withdraw.qty
+            };
+            const _this = this;
+            const token = this.getRequestVerificationToken();
+
+            this.withdraw.isUpdating = true;
+            this.withdraw.simulationAbortController = new AbortController();
+            fetch(window.ajaxWithdrawSimulateUrl, {
+                method: "POST",
+                body: JSON.stringify(data),
+                signal: this.withdraw.simulationAbortController.signal,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': token
+                }
+            }).then(function (response) {
+                _this.withdraw.isUpdating = false;
+                return response.json();
+            }).then(function (data) {
+                if (data.minQty === null) {
+                    _this.withdraw.minQty = 0;
+                } else {
+                    _this.withdraw.minQty = data.minQty;
+                }
+                if (data.maxQty === null) {
+                    _this.withdraw.maxQty = _this.account.assetBalances?.[_this.withdraw.asset]?.qty;
+                } else {
+                    _this.withdraw.maxQty = data.maxQty;
+                }
+
+                if (_this.withdraw.qty === null || _this.withdraw.qty > _this.withdraw.maxQty) {
+                    _this.withdraw.qty = _this.withdraw.maxQty;
+                }
+                _this.withdraw.badConfigFields = data.badConfigFields;
+                _this.withdraw.errorMsg = data.errorMessage;
+                _this.withdraw.ledgerEntries = data.ledgerEntries;
+            });
+        },
+        getStoreDefaultFiatValueForAsset: function(asset){
+            // TODO 
         }
     },
     watch: {
-        'trade.assetToTrade': function (newValue, oldValue) {
-            if (newValue === this.trade.assetToTradeInto) {
+        'trade.fromAsset': function (newValue, oldValue) {
+            if (newValue === this.trade.toAsset) {
                 // This is the same as swapping the 2 assets
-                this.trade.assetToTradeInto = oldValue;
+                this.trade.toAsset = oldValue;
                 this.trade.price = 1 / this.trade.price;
 
-                this._refreshTradeDataAfterAssetChange();
+                this.refreshTradeSimulation();
             }
             if (newValue !== oldValue) {
                 // The qty is going to be wrong, so set to 100%
-                this.trade.qty = this.getMaxQtyToTrade(this.trade.assetToTrade);
+                this.trade.qty = this.getMaxQty(this.trade.fromAsset);
             }
         },
         'deposit.asset': function (newValue, oldValue) {
@@ -444,18 +631,39 @@ new Vue({
                 _this.deposit.createTransactionUrl = data.createTransactionUrl;
                 _this.deposit.cryptoImageUrl = data.cryptoImageUrl;
 
-                if(!_this.deposit.tab){
+                if (!_this.deposit.tab) {
                     _this.deposit.tab = 'address';
                 }
-                if(_this.deposit.tab === 'address' && !_this.deposit.address && _this.deposit.link){
+                if (_this.deposit.tab === 'address' && !_this.deposit.address && _this.deposit.link) {
                     // Tab "address" is not available, but tab "link" is.
                     _this.deposit.tab = 'link';
                 }
-                
+
                 _this.deposit.errorMsg = data.errorMessage;
             });
+        },
+        'withdraw.asset': function (newValue, oldValue) {
+            if (this.availablePaymentMethodsToWithdraw.length > 0) {
+                this.withdraw.paymentMethod = this.availablePaymentMethodsToWithdraw[0];
+            } else {
+                this.withdraw.paymentMethod = null;
+            }
+        },
+        'withdraw.paymentMethod': function (newValue, oldValue) {
+            if (this.withdraw.paymentMethod && this.withdraw.qty) {
+                this.withdraw.minQty = 0;
+                this.withdraw.maxQty = null;
+                this.withdraw.errorMsg = null;
+                this.withdraw.badConfigFields = null;
 
-
+                this.refreshWithdrawalSimulation();
+            }
+        },
+        'withdraw.qty': function (newValue, oldValue) {
+            if (newValue > this.withdraw.maxQty) {
+                this.withdraw.qty = this.withdraw.maxQty;
+            }
+            this.refreshWithdrawalSimulation();
         }
     },
     created: function () {

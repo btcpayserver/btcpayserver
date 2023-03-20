@@ -119,14 +119,8 @@
         <vc:store-recent-invoices vm="@(new StoreRecentInvoicesViewModel { Store = store, CryptoCode = Model.CryptoCode, InitialRendering = true })"/>
         @foreach (var app in Model.Apps)
         {
-            @if (AppService.SupportsSalesStats(app))
-            {
-                <vc:app-sales app-id="@app.Id" app-type="@app.AppType" />
-            }
-            @if (AppService.SupportsItemStats(app))
-            {
-                <vc:app-top-items app-id="@app.Id"  app-type="@app.AppType" />
-            }
+		  <vc:app-sales app-id="@app.Id" app-type="@app.AppType" />
+		  <vc:app-top-items app-id="@app.Id" app-type="@app.AppType" />
         }
     </div>
 }

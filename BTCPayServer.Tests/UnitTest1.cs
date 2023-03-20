@@ -1955,7 +1955,7 @@ namespace BTCPayServer.Tests
             var apps = user.GetController<UIAppsController>();
             var apps2 = user2.GetController<UIAppsController>();
             var pos = user.GetController<UIPointOfSaleController>();
-            var appType = PointOfSaleApp.AppType;
+            var appType = PointOfSaleAppType.AppType;
             var vm = Assert.IsType<CreateAppViewModel>(Assert.IsType<ViewResult>(apps.CreateApp(user.StoreId, appType)).Model);
             Assert.Equal(appType, vm.SelectedAppType);
             Assert.Null(vm.AppName);

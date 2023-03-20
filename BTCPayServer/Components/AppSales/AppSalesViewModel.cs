@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using BTCPayServer.Data;
 using BTCPayServer.Services.Apps;
 
 namespace BTCPayServer.Components.AppSales;

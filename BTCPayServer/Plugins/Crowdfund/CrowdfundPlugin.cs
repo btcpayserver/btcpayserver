@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +10,7 @@ using BTCPayServer.Configuration;
 using BTCPayServer.Data;
 using BTCPayServer.Plugins.Crowdfund.Controllers;
 using BTCPayServer.Plugins.Crowdfund.Models;
+using BTCPayServer.Plugins.PointOfSale;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
@@ -29,14 +31,14 @@ namespace BTCPayServer.Plugins.Crowdfund
         public override void Execute(IServiceCollection services)
         {
             services.AddSingleton<IUIExtension>(new UIExtension("Crowdfund/NavExtension", "apps-nav"));
-            services.AddSingleton<CrowdfundApp>();
-            services.AddSingleton<IApp>(provider => provider.GetRequiredService<CrowdfundApp>());
+            services.AddSingleton<CrowdfundAppType>();
+            services.AddSingleton<AppBaseType, CrowdfundAppType>();
             
             base.Execute(services);
         }
     }
     
-    public class CrowdfundApp: IApp
+    public class CrowdfundAppType: AppBaseType, IHasSaleStatsAppType, IHasItemStatsAppType
     {
         private readonly LinkGenerator _linkGenerator;
         private readonly IOptions<BTCPayServerOptions> _options;
@@ -45,12 +47,8 @@ namespace BTCPayServer.Plugins.Crowdfund
         private readonly HtmlSanitizer _htmlSanitizer;
         private readonly InvoiceRepository _invoiceRepository;
         public const string AppType = "Crowdfund";
-        public string Description => AppType;
-        public string Type => AppType;
-        public bool SupportsSalesStats => true;
-        public bool SupportsItemStats => true;
 
-        public CrowdfundApp(
+        public CrowdfundAppType(
             LinkGenerator linkGenerator,
             IOptions<BTCPayServerOptions> options,
             InvoiceRepository invoiceRepository,
@@ -58,6 +56,7 @@ namespace BTCPayServer.Plugins.Crowdfund
             CurrencyNameTable currencyNameTable,
             HtmlSanitizer htmlSanitizer)
         {
+            Description = Type = AppType;
             _linkGenerator = linkGenerator;
             _options = options;
             _displayFormatter = displayFormatter;
@@ -66,10 +65,10 @@ namespace BTCPayServer.Plugins.Crowdfund
             _invoiceRepository = invoiceRepository;
         }
 
-        public Task<string> ConfigureLink(AppData app)
+        public override Task<string> ConfigureLink(AppData app)
         {
             return Task.FromResult(_linkGenerator.GetPathByAction(nameof(UICrowdfundController.UpdateCrowdfund),
-                "UICrowdfund", new { appId = app.Id }, _options.Value.RootPath));
+                "UICrowdfund", new { appId = app.Id }, _options.Value.RootPath)!);
         }
 
         public Task<SalesStats> GetSalesStats(AppData app, InvoiceEntity[] paidInvoices, int numberOfDays)
@@ -114,14 +113,14 @@ namespace BTCPayServer.Plugins.Crowdfund
 
             return Task.FromResult<IEnumerable<ItemStats>>(perkCount);
         }
-        
-        public async Task<object> GetInfo(AppData appData)
+
+        public override async Task<object?> GetInfo(AppData appData)
         {
             var settings = appData.GetSettings<CrowdfundSettings>();
             var resetEvery = settings.StartDate.HasValue ? settings.ResetEvery : CrowdfundResetEvery.Never;
             DateTime? lastResetDate = null;
             DateTime? nextResetDate = null;
-            if (resetEvery != CrowdfundResetEvery.Never)
+            if (resetEvery != CrowdfundResetEvery.Never && settings.StartDate is not null)
             {
                 lastResetDate = settings.StartDate.Value;
 
@@ -187,7 +186,7 @@ namespace BTCPayServer.Plugins.Crowdfund
                     .ToList();
                 var remainingPerks = perks.Where(item => !newPerksOrder.Contains(item));
                 newPerksOrder.AddRange(remainingPerks);
-                perks = newPerksOrder.ToArray();
+                perks = newPerksOrder.ToArray()!;
             }
 
             var store = appData.StoreData;
@@ -247,17 +246,17 @@ namespace BTCPayServer.Plugins.Crowdfund
             };
         }
 
-        public Task SetDefaultSettings(AppData appData, string defaultCurrency)
+        public override Task SetDefaultSettings(AppData appData, string defaultCurrency)
         {
             var emptyCrowdfund = new CrowdfundSettings { TargetCurrency = defaultCurrency };
             appData.SetSettings(emptyCrowdfund);
             return Task.CompletedTask;
         }
 
-        public Task<string> ViewLink(AppData app)
+        public override Task<string> ViewLink(AppData app)
         {
             return Task.FromResult(_linkGenerator.GetPathByAction(nameof(UICrowdfundController.ViewCrowdfund),
-                "UICrowdfund", new {appId = app.Id}, _options.Value.RootPath));
+                "UICrowdfund", new {appId = app.Id}, _options.Value.RootPath)!);
         }
 
         private static bool IsPaid(InvoiceEntity entity)

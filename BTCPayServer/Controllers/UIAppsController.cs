@@ -124,8 +124,8 @@ namespace BTCPayServer.Controllers
         {
             var store = GetCurrentStore();
             vm.StoreId = store.Id;
-            var types = _appService.GetAvailableAppTypes();
-            if (!types.ContainsKey(vm.SelectedAppType))
+            var type = _appService.GetAppType(vm.SelectedAppType);
+            if (type is null)
                 ModelState.AddModelError(nameof(vm.SelectedAppType), "Invalid App Type");
 
             if (!ModelState.IsValid)
@@ -147,7 +147,8 @@ namespace BTCPayServer.Controllers
             TempData[WellKnownTempData.SuccessMessage] = "App successfully created";
             CreatedAppId = appData.Id;
 
-            var url = await _appService.ConfigureLink(appData, vm.SelectedAppType);
+            
+            var url = await type.ConfigureLink(appData);
             return Redirect(url);
         }
 

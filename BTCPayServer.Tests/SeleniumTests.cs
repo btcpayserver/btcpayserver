@@ -4,11 +4,13 @@ using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Reflection.Metadata;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Models;
+using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Lightning;
@@ -829,6 +831,105 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("RequestPairing")).Click();
             s.Driver.FindElement(By.Id("ApprovePairing")).Click();
             AssertUrlHasPairingCode(s);
+        }
+
+        [Fact(Timeout = TestTimeout)]
+        public async Task CookieReflectProperPermissions()
+        {
+            using var s = CreateSeleniumTester();
+            await s.StartAsync();
+            var alice = s.Server.NewAccount();
+            alice.Register(false);
+            await alice.CreateStoreAsync();
+            var bob = s.Server.NewAccount();
+            await bob.CreateStoreAsync();
+            await bob.AddGuest(alice.UserId);
+
+            s.GoToLogin();
+            s.LogIn(alice.Email, alice.Password);
+            s.GoToUrl($"/cheat/permissions/stores/{bob.StoreId}");
+            var pageSource = s.Driver.PageSource;
+            AssertPermissions(pageSource, true,
+                new[]
+                {
+                    Policies.CanViewInvoices,
+                    Policies.CanModifyInvoices,
+                    Policies.CanViewPaymentRequests,
+                    Policies.CanViewStoreSettings,
+                    Policies.CanModifyStoreSettingsUnscoped,
+                    Policies.CanDeleteUser
+                });
+            AssertPermissions(pageSource, false,
+             new[]
+             {
+                    Policies.CanModifyStoreSettings,
+                    Policies.CanCreateNonApprovedPullPayments,
+                    Policies.CanCreatePullPayments,
+                    Policies.CanManagePullPayments,
+                    Policies.CanModifyServerSettings
+             });
+
+            s.GoToUrl($"/cheat/permissions/stores/{alice.StoreId}");
+            pageSource = s.Driver.PageSource;
+
+            AssertPermissions(pageSource, true,
+                new[]
+                {
+                    Policies.CanViewInvoices,
+                    Policies.CanModifyInvoices,
+                    Policies.CanViewPaymentRequests,
+                    Policies.CanViewStoreSettings,
+                    Policies.CanModifyStoreSettingsUnscoped,
+                    Policies.CanDeleteUser,
+                    Policies.CanModifyStoreSettings,
+                    Policies.CanCreateNonApprovedPullPayments,
+                    Policies.CanCreatePullPayments,
+                    Policies.CanManagePullPayments
+                });
+            AssertPermissions(pageSource, false,
+             new[]
+             {
+                    Policies.CanModifyServerSettings
+             });
+
+            await alice.MakeAdmin();
+            s.Logout();
+            s.GoToLogin();
+            s.LogIn(alice.Email, alice.Password);
+            s.GoToUrl($"/cheat/permissions/stores/{alice.StoreId}");
+            pageSource = s.Driver.PageSource;
+
+            AssertPermissions(pageSource, true,
+            new[]
+            {
+                    Policies.CanViewInvoices,
+                    Policies.CanModifyInvoices,
+                    Policies.CanViewPaymentRequests,
+                    Policies.CanViewStoreSettings,
+                    Policies.CanModifyStoreSettingsUnscoped,
+                    Policies.CanDeleteUser,
+                    Policies.CanModifyStoreSettings,
+                    Policies.CanCreateNonApprovedPullPayments,
+                    Policies.CanCreatePullPayments,
+                    Policies.CanManagePullPayments,
+                    Policies.CanModifyServerSettings,
+                    Policies.CanCreateUser,
+                    Policies.CanManageUsers
+            });
+        }
+
+        void AssertPermissions(string source, bool expected, string[] permissions)
+        {
+            if (expected)
+            {
+                foreach (var p in permissions)
+                    Assert.Contains(p + "<", source);
+            }
+            else
+            {
+                foreach (var p in permissions)
+                    Assert.DoesNotContain(p + "<", source);
+            }
         }
 
         [Fact(Timeout = TestTimeout)]

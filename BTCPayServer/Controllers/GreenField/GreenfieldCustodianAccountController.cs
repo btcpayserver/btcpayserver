@@ -13,6 +13,7 @@ using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
+using BTCPayServer.Payments;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Custodian;
 using BTCPayServer.Services.Custodian.Client;
@@ -20,6 +21,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json.Linq;
 using CustodianAccountData = BTCPayServer.Data.CustodianAccountData;
 using CustodianAccountDataClient = BTCPayServer.Client.Models.CustodianAccountData;
@@ -221,6 +223,12 @@ namespace BTCPayServer.Controllers.Greenfield
 
             if (custodian is ICanDeposit depositableCustodian)
             {
+                var pm = PaymentMethodId.TryParse(paymentMethod);
+                if (pm == null)
+                {
+                    return this.CreateAPIError(400, "unsupported-payment-method",
+                        $"Unsupported payment method.");
+                }
                 var result = await depositableCustodian.GetDepositAddressAsync(paymentMethod, config, cancellationToken);
                 return Ok(result);
             }
@@ -338,6 +346,44 @@ namespace BTCPayServer.Controllers.Greenfield
                 $"Fetching past trade info on \"{custodian.Name}\" is not supported.");
         }
 
+        [HttpPost("~/api/v1/stores/{storeId}/custodian-accounts/{accountId}/withdrawals/simulation")]
+        [Authorize(Policy = Policies.CanWithdrawFromCustodianAccounts,
+            AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        public async Task<IActionResult> SimulateWithdrawal(string storeId, string accountId,
+            WithdrawRequestData request, CancellationToken cancellationToken = default)
+        {
+            var custodianAccount = await GetCustodianAccount(storeId, accountId);
+            var custodian = GetCustodianByCode(custodianAccount.CustodianCode);
+
+            if (custodian is ICanWithdraw withdrawableCustodian)
+            {
+                var pm = PaymentMethodId.TryParse(request.PaymentMethod);
+                if (pm == null)
+                {
+                    return this.CreateAPIError(400, "unsupported-payment-method",
+                        $"Unsupported payment method.");
+                }
+                var asset = pm.CryptoCode;
+                decimal qty;
+                try
+                {
+                    qty = await ParseQty(request.Qty, asset, custodianAccount, custodian, cancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    return UnsupportedAsset(asset, ex.Message);
+                }
+                
+                var simulateWithdrawResult =
+                    await withdrawableCustodian.SimulateWithdrawalAsync(request.PaymentMethod, qty, custodianAccount.GetBlob(), cancellationToken);
+                var result = new WithdrawalSimulationResponseData(simulateWithdrawResult.PaymentMethod, simulateWithdrawResult.Asset, 
+                     accountId, custodian.Code, simulateWithdrawResult.LedgerEntries, simulateWithdrawResult.MinQty, simulateWithdrawResult.MaxQty);
+                return Ok(result);
+            }
+
+            return this.CreateAPIError(400, "withdrawals-not-supported",
+                $"Withdrawals are not supported for \"{custodian.Name}\".");
+        }
 
         [HttpPost("~/api/v1/stores/{storeId}/custodian-accounts/{accountId}/withdrawals")]
         [Authorize(Policy = Policies.CanWithdrawFromCustodianAccounts,
@@ -350,8 +396,25 @@ namespace BTCPayServer.Controllers.Greenfield
 
             if (custodian is ICanWithdraw withdrawableCustodian)
             {
+                var pm = PaymentMethodId.TryParse(request.PaymentMethod);
+                if (pm == null)
+                {
+                    return this.CreateAPIError(400, "unsupported-payment-method",
+                        $"Unsupported payment method.");
+                }
+                var asset = pm.CryptoCode;
+                decimal qty;
+                try
+                {
+                    qty = await ParseQty(request.Qty, asset, custodianAccount, custodian, cancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    return UnsupportedAsset(asset, ex.Message);
+                }
+
                 var withdrawResult =
-                        await withdrawableCustodian.WithdrawAsync(request.PaymentMethod, request.Qty, custodianAccount.GetBlob(), cancellationToken);
+                        await withdrawableCustodian.WithdrawToStoreWalletAsync(request.PaymentMethod, qty, custodianAccount.GetBlob(), cancellationToken);
                 var result = new WithdrawalResponseData(withdrawResult.PaymentMethod, withdrawResult.Asset, withdrawResult.LedgerEntries,
                     withdrawResult.WithdrawalId, accountId, custodian.Code, withdrawResult.Status, withdrawResult.CreatedTime, withdrawResult.TargetAddress, withdrawResult.TransactionId);
                 return Ok(result);
@@ -361,6 +424,22 @@ namespace BTCPayServer.Controllers.Greenfield
                 $"Withdrawals are not supported for \"{custodian.Name}\".");
         }
 
+        private IActionResult UnsupportedAsset(string asset, string err)
+        {
+            return this.CreateAPIError(400, "invalid-qty", $"It is impossible to use % quantity with this asset ({err})");
+        }
+
+        private async Task<decimal> ParseQty(TradeQuantity qty, string asset, CustodianAccountData custodianAccount, ICustodian custodian, CancellationToken cancellationToken = default)
+        {
+            if (qty.Type == TradeQuantity.ValueType.Exact)
+                return qty.Value;
+            // Percentage of current holdings => calculate the amount
+            var config = custodianAccount.GetBlob();
+            var balances = await custodian.GetAssetBalancesAsync(config, cancellationToken);
+            if (!balances.TryGetValue(asset, out var assetBalance))
+                return 0.0m;
+            return (assetBalance * qty.Value) / 100m;
+        }
 
         async Task<CustodianAccountData> GetCustodianAccount(string storeId, string accountId)
         {

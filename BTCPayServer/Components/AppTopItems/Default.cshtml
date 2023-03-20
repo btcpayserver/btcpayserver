@@ -1,12 +1,12 @@
 @using BTCPayServer.Plugins.Crowdfund
 @model BTCPayServer.Components.AppTopItems.AppTopItemsViewModel
 @{
-    var label = Model.AppType == CrowdfundApp.AppType ? "contribution" : "sale";
+    var label = Model.AppType == CrowdfundAppType.AppType ? "contribution" : "sale";
 }
 
 <div id="AppTopItems-@Model.Id" class="widget app-top-items">
     <header class="mb-3">
-        <h3>Top @(Model.AppType == CrowdfundApp.AppType ? "Perks" : "Items")</h3>
+        <h3>Top @(Model.AppType == CrowdfundAppType.AppType ? "Perks" : "Items")</h3>
         @if (!string.IsNullOrEmpty(Model.AppUrl))
         {
             <a href="@Model.AppUrl">View All</a>

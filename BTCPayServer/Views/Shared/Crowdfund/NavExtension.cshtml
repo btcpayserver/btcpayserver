@@ -8,7 +8,7 @@
 
 @{ var store = Context.GetStoreData(); }
 
-@if (store != null && Model.AppType == CrowdfundApp.AppType)
+@if (store != null && Model.AppType == CrowdfundAppType.AppType)
 {
     <li class="nav-item" permission="@Policies.CanModifyStoreSettings">
         <a asp-area="" asp-controller="UICrowdfund" asp-action="UpdateCrowdfund" asp-route-appId="@Model.Id" class="nav-link @ViewData.IsActivePage(AppsNavPages.Update, Model.Id)" id="@($"StoreNav-App-{Model.Id}")">

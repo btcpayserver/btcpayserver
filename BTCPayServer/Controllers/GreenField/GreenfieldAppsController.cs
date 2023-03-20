@@ -66,7 +66,7 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 StoreDataId = storeId,
                 Name = request.AppName,
-                AppType = CrowdfundApp.AppType
+                AppType = CrowdfundAppType.AppType
             };
 
             appData.SetSettings(ToCrowdfundSettings(request));
@@ -97,7 +97,7 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 StoreDataId = storeId,
                 Name = request.AppName,
-                AppType = PointOfSaleApp.AppType
+                AppType = PointOfSaleAppType.AppType
             };
 
             appData.SetSettings(ToPointOfSaleSettings(request));
@@ -111,7 +111,7 @@ namespace BTCPayServer.Controllers.Greenfield
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> UpdatePointOfSaleApp(string appId, CreatePointOfSaleAppRequest request)
         {
-            var app = await _appService.GetApp(appId, PointOfSaleApp.AppType);
+            var app = await _appService.GetApp(appId, PointOfSaleAppType.AppType);
             if (app == null)
             {
                 return AppNotFound();
@@ -184,7 +184,7 @@ namespace BTCPayServer.Controllers.Greenfield
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> GetPosApp(string appId)
         {
-            var app = await _appService.GetApp(appId, PointOfSaleApp.AppType);
+            var app = await _appService.GetApp(appId, PointOfSaleAppType.AppType);
             if (app == null)
             {
                 return AppNotFound();
@@ -197,7 +197,7 @@ namespace BTCPayServer.Controllers.Greenfield
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> GetCrowdfundApp(string appId)
         {
-            var app = await _appService.GetApp(appId, CrowdfundApp.AppType);
+            var app = await _appService.GetApp(appId, CrowdfundAppType.AppType);
             if (app == null)
             {
                 return AppNotFound();
@@ -245,7 +245,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 EmbeddedCSS = request.EmbeddedCSS?.Trim(),
                 NotificationUrl = request.NotificationUrl?.Trim(),
                 Tagline = request.Tagline?.Trim(),
-                PerksTemplate = request.PerksTemplate != null ? _appService.SerializeTemplate(_appService.Parse(request.PerksTemplate?.Trim(), request.TargetCurrency)) : null,
+                PerksTemplate = request.PerksTemplate is not null ? _appService.SerializeTemplate(_appService.Parse(request.PerksTemplate.Trim(), request.TargetCurrency!)) : null,
                 // If Disqus shortname is not null or empty we assume that Disqus should be enabled
                 DisqusEnabled = !string.IsNullOrEmpty(request.DisqusShortname?.Trim()),
                 DisqusShortname = request.DisqusShortname?.Trim(),
@@ -363,7 +363,8 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 try
                 {
-                    _appService.SerializeTemplate(_appService.Parse(request.Template, request.Currency));
+                    // Just checking if we can serialize, we don't care about the currency
+                    _appService.SerializeTemplate(_appService.Parse(request.Template, "USD"));
                 }
                 catch
                 {
@@ -452,7 +453,8 @@ namespace BTCPayServer.Controllers.Greenfield
 
             try
             {
-                _appService.SerializeTemplate(_appService.Parse(request.PerksTemplate, request.TargetCurrency));
+                // Just checking if we can serialize, we don't care about the currency
+                _appService.SerializeTemplate(_appService.Parse(request.PerksTemplate, "USD"));
             }
             catch
             {

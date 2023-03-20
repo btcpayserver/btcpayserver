@@ -21,6 +21,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Newtonsoft.Json.Linq;
+using NLog.Config;
 using CustodianAccountData = BTCPayServer.Data.CustodianAccountData;
 using StoreData = BTCPayServer.Data.StoreData;
 
@@ -175,14 +176,14 @@ namespace BTCPayServer.Controllers
 
                 if (custodian is ICanWithdraw withdrawableCustodian)
                 {
-                    var withdrawableePaymentMethods = withdrawableCustodian.GetWithdrawablePaymentMethods();
-                    foreach (var withdrawableePaymentMethod in withdrawableePaymentMethods)
+                    var withdrawablePaymentMethods = withdrawableCustodian.GetWithdrawablePaymentMethods();
+                    foreach (var withdrawablePaymentMethod in withdrawablePaymentMethods)
                     {
-                        var withdrawableAsset = withdrawableePaymentMethod.Split("-")[0];
+                        var withdrawableAsset = withdrawablePaymentMethod.Split("-")[0];
                         if (assetBalances.ContainsKey(withdrawableAsset))
                         {
                             var assetBalance = assetBalances[withdrawableAsset];
-                            assetBalance.CanWithdraw = true;
+                            assetBalance.WithdrawablePaymentMethods.Add(withdrawablePaymentMethod);
                         }
                     }
                 }
@@ -216,7 +217,8 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             }
 
-            var configForm = await custodian.GetConfigForm(custodianAccount.GetBlob(), "en-US");
+            var configForm = await custodian.GetConfigForm();
+            configForm.SetValues(custodianAccount.GetBlob());
 
             var vm = new EditCustodianAccountViewModel();
             vm.CustodianAccount = custodianAccount;
@@ -228,9 +230,6 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> EditCustodianAccount(string storeId, string accountId,
             EditCustodianAccountViewModel vm)
         {
-            // The locale is not important yet, but keeping it here so we can find it easily when localization becomes a thing.
-            var locale = "en-US";
-
             var custodianAccount = await _custodianAccountRepository.FindById(storeId, accountId);
             if (custodianAccount == null)
                 return NotFound();
@@ -242,37 +241,22 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             }
 
-            var configForm = await custodian.GetConfigForm(custodianAccount.GetBlob(), locale);
+            var configForm = await custodian.GetConfigForm();
+            configForm.ApplyValuesFromForm(Request.Form);
+            
 
-            var newData = new JObject();
-            foreach (var pair in Request.Form)
+            if (configForm.IsValid())
             {
-                if ("CustodianAccount.Name".Equals(pair.Key))
-                {
-                    custodianAccount.Name = pair.Value;
-                }
-                else
-                {
-                    // TODO support posted array notation, like a field called "WithdrawToAddressNamePerPaymentMethod[BTC-OnChain]". The data should be nested in the JSON.
-                    newData.Add(pair.Key, pair.Value.ToString());
-                }
-            }
-
-            var newConfigData = RemoveUnusedFieldsFromConfig(custodianAccount.GetBlob(), newData, configForm);
-            var newConfigForm = await custodian.GetConfigForm(newConfigData, locale);
-
-            if (newConfigForm.IsValid())
-            {
-                custodianAccount.SetBlob(newConfigData);
+                var newData = configForm.GetValues();
+                custodianAccount.SetBlob(newData);
                 custodianAccount = await _custodianAccountRepository.CreateOrUpdate(custodianAccount);
-
                 return RedirectToAction(nameof(ViewCustodianAccount),
                     new { storeId = custodianAccount.StoreId, accountId = custodianAccount.Id });
             }
 
             // Form not valid: The user must fix the errors before we can save
             vm.CustodianAccount = custodianAccount;
-            vm.ConfigForm = newConfigForm;
+            vm.ConfigForm = configForm;
             return View(vm);
         }
 
@@ -313,16 +297,11 @@ namespace BTCPayServer.Controllers
             };
 
 
-            var configData = new JObject();
-            foreach (var pair in Request.Form)
-            {
-                configData.Add(pair.Key, pair.Value.ToString());
-            }
-
-            var configForm = await custodian.GetConfigForm(configData, "en-US");
+            var configForm = await custodian.GetConfigForm();
+            configForm.ApplyValuesFromForm(Request.Form);
             if (configForm.IsValid())
             {
-                // configForm.removeUnusedKeys();
+                var configData = configForm.GetValues();
                 custodianAccountData.SetBlob(configData);
                 custodianAccountData = await _custodianAccountRepository.CreateOrUpdate(custodianAccountData);
                 TempData[WellKnownTempData.SuccessMessage] = "Custodian account successfully created";
@@ -358,37 +337,11 @@ namespace BTCPayServer.Controllers
                 new { storeId = custodianAccount.StoreId, accountId = custodianAccount.Id });
         }
 
-        // The JObject may contain too much data because we used ALL post values and this may be more than we needed.
-        // Because we don't know the form fields beforehand, we will filter out the superfluous data afterwards.
-        // We will keep all the old keys + merge the new keys as per the current form.
-        // Since the form can differ by circumstances, we will never remove any keys that were previously stored. We just limit what we add.
-        private JObject RemoveUnusedFieldsFromConfig(JObject storedData, JObject newData, Form form)
+        [HttpPost("/stores/{storeId}/custodian-accounts/{accountId}/trade/simulate")]
+        public async Task<IActionResult> SimulateTradeJson(string storeId, string accountId,
+            [FromBody] TradeRequestData request)
         {
-            JObject filteredData = new JObject();
-            var storedKeys = new List<string>();
-            foreach (var item in storedData)
-            {
-                storedKeys.Add(item.Key);
-            }
-
-            var formKeys = form.GetAllFields().Select(f => f.FullName).ToHashSet();
-
-            foreach (var item in newData)
-            {
-                if (storedKeys.Contains(item.Key) || formKeys.Contains(item.Key))
-                {
-                    filteredData[item.Key] = item.Value;
-                }
-            }
-
-            return filteredData;
-        }
-
-        [HttpGet("/stores/{storeId}/custodian-accounts/{accountId}/trade/prepare")]
-        public async Task<IActionResult> GetTradePrepareJson(string storeId, string accountId,
-            [FromQuery] string assetToTrade, [FromQuery] string assetToTradeInto)
-        {
-            if (string.IsNullOrEmpty(assetToTrade) || string.IsNullOrEmpty(assetToTradeInto))
+            if (string.IsNullOrEmpty(request.FromAsset) || string.IsNullOrEmpty(request.ToAsset))
             {
                 return BadRequest();
             }
@@ -422,12 +375,12 @@ namespace BTCPayServer.Controllers
                     foreach (var pair in assetBalancesData)
                     {
                         var oneAsset = pair.Key;
-                        if (assetToTrade.Equals(oneAsset))
+                        if (request.FromAsset.Equals(oneAsset))
                         {
-                            vm.MaxQtyToTrade = pair.Value;
+                            vm.MaxQty = pair.Value;
                             //vm.FormattedMaxQtyToTrade = pair.Value;
 
-                            if (assetToTrade.Equals(assetToTradeInto))
+                            if (request.FromAsset.Equals(request.ToAsset))
                             {
                                 // We cannot trade the asset for itself
                                 return BadRequest();
@@ -435,7 +388,8 @@ namespace BTCPayServer.Controllers
 
                             try
                             {
-                                var quote = await tradingCustodian.GetQuoteForAssetAsync(assetToTrade, assetToTradeInto,
+                                var quote = await tradingCustodian.GetQuoteForAssetAsync(request.FromAsset,
+                                    request.ToAsset,
                                     config, default);
 
                                 // TODO Ask is normally a higher number than Bid!! Let's check this!! Maybe a Unit Test?
@@ -573,6 +527,93 @@ namespace BTCPayServer.Controllers
                 ? Url.Content(network.CryptoImagePath)
                 : Url.Content(network.LightningImagePath);
             return Request.GetRelativePathOrAbsolute(res);
+        }
+
+        [HttpPost("/stores/{storeId}/custodian-accounts/{accountId}/withdraw/simulate")]
+        public async Task<IActionResult> SimulateWithdrawJson(string storeId, string accountId,
+            [FromBody] WithdrawRequestData withdrawRequestData)
+        {
+            if (string.IsNullOrEmpty(withdrawRequestData.PaymentMethod))
+            {
+                return BadRequest();
+            }
+
+            var custodianAccount = await _custodianAccountRepository.FindById(storeId, accountId);
+
+            if (custodianAccount == null)
+                return NotFound();
+
+            var custodian = _custodianRegistry.GetCustodianByCode(custodianAccount.CustodianCode);
+            if (custodian == null)
+            {
+                // TODO The custodian account is broken. The custodian is no longer available. Maybe delete the custodian account?
+                return NotFound();
+            }
+
+            var vm = new WithdrawalPrepareViewModel();
+
+            try
+            {
+                if (custodian is ICanWithdraw withdrawableCustodian)
+                {
+                    var config = custodianAccount.GetBlob();
+
+                    try
+                    {
+                        var simulateWithdrawal =
+                            await _btcPayServerClient.SimulateCustodianAccountWithdrawal(storeId, accountId, withdrawRequestData,
+                                default);
+                        vm = new WithdrawalPrepareViewModel(simulateWithdrawal);
+
+                        // There are no bad config fields, so we need an empty array
+                        vm.BadConfigFields = Array.Empty<string>();
+                    }
+                    catch (BadConfigException e)
+                    {
+                        Form configForm = await custodian.GetConfigForm();
+                        configForm.SetValues(config);
+                        string[] badConfigFields = new string[e.BadConfigKeys.Length];
+                        int i = 0;
+                        foreach (var oneField in configForm.GetAllFields())
+                        {
+                            foreach (var badConfigKey in e.BadConfigKeys)
+                            {
+                                if (oneField.FullName.Equals(badConfigKey))
+                                {
+                                    var field = configForm.GetFieldByFullName(oneField.FullName);
+                                    badConfigFields[i] = field.Label;
+                                    i++;
+                                }
+                            }
+                        }
+
+                        vm.BadConfigFields = badConfigFields;
+                        return Ok(vm);
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                vm.ErrorMessage = e.Message;
+            }
+
+            return Ok(vm);
+        }
+
+        [HttpPost("/stores/{storeId}/custodian-accounts/{accountId}/withdraw")]
+        public async Task<IActionResult> Withdraw(string storeId, string accountId,
+            [FromBody] WithdrawRequestData request)
+        {
+            try
+            {
+                var result = await _btcPayServerClient.CreateCustodianAccountWithdrawal(storeId, accountId, request);
+                return Ok(result);
+            }
+            catch (GreenfieldAPIException e)
+            {
+                var result = new ObjectResult(e.APIError) { StatusCode = e.HttpCode };
+                return result;
+            }
         }
 
         private StoreData GetCurrentStore() => HttpContext.GetStoreData();

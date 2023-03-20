@@ -256,12 +256,12 @@ namespace BTCPayServer
             PointOfSaleSettings posS = null;
             switch (app.AppType)
             {
-                case CrowdfundApp.AppType:
+                case CrowdfundAppType.AppType:
                     var cfS = app.GetSettings<CrowdfundSettings>();
                     currencyCode = cfS.TargetCurrency;
                     items = _appService.Parse(cfS.PerksTemplate, cfS.TargetCurrency);
                     break;
-                case PointOfSaleApp.AppType:
+                case PointOfSaleAppType.AppType:
                     posS = app.GetSettings<PointOfSaleSettings>();
                     currencyCode = posS.Currency;
                     items = _appService.Parse(posS.Template, posS.Currency);
@@ -287,7 +287,7 @@ namespace BTCPayServer
                     return NotFound();
                 }
             }
-            else if (app.AppType == PointOfSaleApp.AppType && posS?.ShowCustomAmount is not true)
+            else if (app.AppType == PointOfSaleAppType.AppType && posS?.ShowCustomAmount is not true)
             {
                 return NotFound();
             }
@@ -400,7 +400,7 @@ namespace BTCPayServer
 
             var redirectUrl = app?.AppType switch
             {
-                PointOfSaleApp.AppType => app.GetSettings<PointOfSaleSettings>().RedirectUrl ??
+                PointOfSaleAppType.AppType => app.GetSettings<PointOfSaleSettings>().RedirectUrl ??
                                                HttpContext.Request.GetAbsoluteUri($"/apps/{app.Id}/pos"),
                 _ => null
             };

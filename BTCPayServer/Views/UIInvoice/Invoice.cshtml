@@ -1,3 +1,7 @@
+@using BTCPayServer.Client.Models
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using BTCPayServer.Client
+@using BTCPayServer.Abstractions.TagHelpers
 @model InvoiceDetailsModel
 @{
     ViewData["Title"] = $"Invoice {Model.Id}";
@@ -102,7 +106,7 @@
         }
         @if (Model.CanRefund)
         {
-            <a asp-action="Refund" asp-route-invoiceId="@Model.Id" id="IssueRefund" class="btn btn-primary text-nowrap" data-bs-toggle="modal" data-bs-target="#RefundModal">Issue Refund</a>
+            <a asp-action="Refund" asp-route-invoiceId="@Model.Id" id="IssueRefund" class="btn btn-primary text-nowrap" data-bs-toggle="modal" data-bs-target="#RefundModal" permission="@Policies.CanCreateNonApprovedPullPayments">Issue Refund</a>
         }
         else
         {

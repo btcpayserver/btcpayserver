@@ -222,7 +222,7 @@ namespace BTCPayServer.Controllers
 
         public RedirectToActionResult RedirectToStore(StoreData store)
         {
-            return store.Role == StoreRoles.Owner
+            return store.HasPermission(Policies.CanModifyStoreSettings)
                 ? RedirectToAction("Dashboard", "UIStores", new { storeId = store.Id })
                 : RedirectToAction("ListInvoices", "UIInvoice", new { storeId = store.Id });
         }

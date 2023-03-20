@@ -82,14 +82,14 @@ namespace BTCPayServer.Plugins.PointOfSale
         public Task<SalesStats> GetSalesStats(AppData app, InvoiceEntity[] paidInvoices, int numberOfDays)
         {
             var posS = app.GetSettings<PointOfSaleSettings>();
-            var items = AppService.Parse(_htmlSanitizer, _displayFormatter, posS.Template, posS.Currency);
+            var items = AppService.Parse(posS.Template);
             return AppService.GetSalesStatswithPOSItems(items, paidInvoices, numberOfDays);
         }
 
         public Task<IEnumerable<ItemStats>> GetItemStats(AppData appData, InvoiceEntity[] paidInvoices)
         {
             var settings = appData.GetSettings<PointOfSaleSettings>();
-            var items = AppService.Parse(_htmlSanitizer, _displayFormatter, settings.Template, settings.Currency);
+            var items = AppService.Parse( settings.Template);
             var itemCount = paidInvoices
                 .Where(entity => entity.Currency.Equals(settings.Currency, StringComparison.OrdinalIgnoreCase) && (
                     // The POS data is present for the cart view, where multiple items can be bought

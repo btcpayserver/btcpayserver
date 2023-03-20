@@ -40,11 +40,11 @@ namespace BTCPayServer.HostedServices
                             case PointOfSaleAppType.AppType:
                                 var possettings = data.GetSettings<PointOfSaleSettings>();
                                 return (Data: data, Settings: (object)possettings,
-                                    Items: _appService.Parse(possettings.Template, possettings.Currency));
+                                    Items: AppService.Parse(possettings.Template));
                             case CrowdfundAppType.AppType:
                                 var cfsettings = data.GetSettings<CrowdfundSettings>();
                                 return (Data: data, Settings: (object)cfsettings,
-                                    Items: _appService.Parse(cfsettings.PerksTemplate, cfsettings.TargetCurrency));
+                                    Items: AppService.Parse(cfsettings.PerksTemplate));
                             default:
                                 return (null, null, null);
                         }
@@ -70,11 +70,11 @@ namespace BTCPayServer.HostedServices
                     {
                         case PointOfSaleAppType.AppType:
                             ((PointOfSaleSettings)valueTuple.Settings).Template =
-                                _appService.SerializeTemplate(valueTuple.Items);
+                                AppService.SerializeTemplate(valueTuple.Items);
                             break;
                         case CrowdfundAppType.AppType:
                             ((CrowdfundSettings)valueTuple.Settings).PerksTemplate =
-                                _appService.SerializeTemplate(valueTuple.Items);
+                                AppService.SerializeTemplate(valueTuple.Items);
                             break;
                         default:
                             throw new InvalidOperationException();

@@ -257,12 +257,12 @@ namespace BTCPayServer
                 case CrowdfundAppType.AppType:
                     var cfS = app.GetSettings<CrowdfundSettings>();
                     currencyCode = cfS.TargetCurrency;
-                    items = _appService.Parse(cfS.PerksTemplate, cfS.TargetCurrency);
+                    items = AppService.Parse(cfS.PerksTemplate);
                     break;
                 case PointOfSaleAppType.AppType:
                     posS = app.GetSettings<PointOfSaleSettings>();
                     currencyCode = posS.Currency;
-                    items = _appService.Parse(posS.Template, posS.Currency);
+                    items = AppService.Parse(posS.Template);
                     break;
                 default:
                     //TODO: Allow other apps to define lnurl support

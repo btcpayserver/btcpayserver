@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -26,6 +27,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using NBitcoin;
 using NBXplorer;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -246,6 +248,11 @@ namespace BTCPayServer.Hosting
                 {
                     await FixMappedDomainAppType();
                     settings.FixMappedDomainAppType = true;
+                }
+                if (!settings.MigrateAppYmlToJson)
+                {
+                    await MigrateAppYmlToJson();
+                    settings.MigrateAppYmlToJson = true;
                     await _Settings.UpdateSetting(settings);
                 }
             }
@@ -303,6 +310,126 @@ namespace BTCPayServer.Hosting
             if (state != "complete")
                 return;
             await ToPostgresMigrationStartupTask.UpdateSequenceInvoiceSearch(ctx);
+        }
+        private async Task MigrateAppYmlToJson()
+        {
+            await using var ctx = _DBContextFactory.CreateContext();
+            var apps = await ctx.Apps.Where(data => CrowdfundAppType.AppType == data.AppType || PointOfSaleAppType.AppType  == data.AppType)
+                .ToListAsync();
+            foreach (var app  in apps)
+            {
+                switch (app.AppType)
+                {
+                   case CrowdfundAppType.AppType :
+                       var cfSettings = app.GetSettings<CrowdfundSettings>();
+                       if (!string.IsNullOrEmpty(cfSettings?.PerksTemplate))
+                       {
+                           cfSettings.PerksTemplate = AppService.SerializeTemplate(Parse(cfSettings?.PerksTemplate));
+                           app.SetSettings(cfSettings);
+                       }
+                       break;
+                   case PointOfSaleAppType.AppType:
+                       var pSettings = app.GetSettings<PointOfSaleSettings>();
+                       if (!string.IsNullOrEmpty(pSettings?.Template))
+                       {
+                           pSettings.Template = AppService.SerializeTemplate(Parse(pSettings?.Template));
+                           app.SetSettings(pSettings);
+                       }
+                       break;
+                }
+            }
+
+            await ctx.SaveChangesAsync();
+            
+            ViewPointOfSaleViewModel.Item[] Parse(string yaml)
+            {
+                var items = new List<ViewPointOfSaleViewModel.Item>();
+                using var reader = new StringReader(yaml);
+                ViewPointOfSaleViewModel.Item currentItem = null;
+                while (reader.ReadLine() is { } line)
+                {
+                    if (string.IsNullOrWhiteSpace(line))
+                    {
+                        continue;
+                    }
+
+                    if (line.EndsWith(":"))
+                    {
+                        currentItem = new ViewPointOfSaleViewModel.Item();
+                        items.Add(currentItem);
+                        continue;
+                    }
+
+                    if (currentItem != null)
+                    {
+                        var parts = line.Split(':');
+                        if (parts.Length != 2)
+                        {
+                            throw new Exception($"Invalid line format: {line}");
+                        }
+
+                        var key = parts[0].Trim().ToLower();
+                        var value = parts[1].Trim();
+                        switch (key)
+                        {
+                            case "custom":
+                                if (value.Equals("true", StringComparison.InvariantCultureIgnoreCase))
+                                {
+                                    currentItem.PriceType = ViewPointOfSaleViewModel.ItemPriceType.Topup;
+                                   
+                                } break;
+                            case "description":
+                                currentItem.Description = value;
+                                break;
+                            case "id":
+                                currentItem.Id = value;
+                                break;
+                            case "image":
+                                currentItem.Image = value;
+                                break;
+                            case "price_type":
+                                //there are true/false cases to cater for too (legacy)
+                                currentItem.PriceType = Enum.Parse<ViewPointOfSaleViewModel.ItemPriceType>(value, true);
+                                break;
+                            case "price":
+                                if (decimal.TryParse(value, out var price))
+                                {
+                                    currentItem.Price = price;
+                                }
+
+                                break;
+                            case "title":
+                                currentItem.Title = value;
+                                break;
+                            case "buybuttontext":
+                                currentItem.BuyButtonText = value;
+                                break;
+                            case "inventory":
+                                if (int.TryParse(value, out var inventory))
+                                {
+                                    currentItem.Inventory = inventory;
+                                }
+
+                                break;
+                            case "payment_methods":
+                                currentItem.PaymentMethods = value.Split(',');
+                                break;
+                            case "disabled":
+                                if (bool.TryParse(value, out var disabled))
+                                {
+                                    currentItem.Disabled = disabled;
+                                }
+
+                                break;
+                            default:
+                                currentItem.AdditionalData.AddOrReplace(key, value);
+                                break;
+                        }
+                    }
+                }
+
+                return items.ToArray();
+            }
         }
 
 #pragma warning disable CS0612 // Type or member is obsolete
@@ -521,8 +648,8 @@ WHERE cte.""Id""=p.""Id""
                             settings1.TargetCurrency = app.StoreData.GetStoreBlob().DefaultCurrency;
                             app.SetSettings(settings1);
                         }
-                        items = _appService.Parse(settings1.PerksTemplate, settings1.TargetCurrency);
-                        newTemplate = _appService.SerializeTemplate(items);
+                        items = AppService.Parse(settings1.PerksTemplate);
+                        newTemplate = AppService.SerializeTemplate(items);
                         if (settings1.PerksTemplate != newTemplate)
                         {
                             settings1.PerksTemplate = newTemplate;
@@ -538,8 +665,8 @@ WHERE cte.""Id""=p.""Id""
                             settings2.Currency = app.StoreData.GetStoreBlob().DefaultCurrency;
                             app.SetSettings(settings2);
                         }
-                        items = _appService.Parse(settings2.Template, settings2.Currency);
-                        newTemplate = _appService.SerializeTemplate(items);
+                        items = AppService.Parse(settings2.Template);
+                        newTemplate = AppService.SerializeTemplate(items);
                         if (settings2.Template != newTemplate)
                         {
                             settings2.Template = newTemplate;

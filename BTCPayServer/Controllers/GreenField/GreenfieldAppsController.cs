@@ -245,7 +245,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 EmbeddedCSS = request.EmbeddedCSS?.Trim(),
                 NotificationUrl = request.NotificationUrl?.Trim(),
                 Tagline = request.Tagline?.Trim(),
-                PerksTemplate = request.PerksTemplate is not null ? _appService.SerializeTemplate(_appService.Parse(request.PerksTemplate.Trim(), request.TargetCurrency!)) : null,
+                PerksTemplate = request.PerksTemplate is not null ? AppService.SerializeTemplate(AppService.Parse(request.PerksTemplate.Trim())) : null,
                 // If Disqus shortname is not null or empty we assume that Disqus should be enabled
                 DisqusEnabled = !string.IsNullOrEmpty(request.DisqusShortname?.Trim()),
                 DisqusShortname = request.DisqusShortname?.Trim(),
@@ -272,7 +272,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 ShowDiscount = request.ShowDiscount,
                 EnableTips = request.EnableTips,
                 Currency = request.Currency,
-                Template = request.Template != null ? _appService.SerializeTemplate(_appService.Parse(request.Template, request.Currency)) : null,
+                Template = request.Template != null ? AppService.SerializeTemplate(AppService.Parse(request.Template)) : null,
                 ButtonText = request.FixedAmountPayButtonText ?? PointOfSaleSettings.BUTTON_TEXT_DEF,
                 CustomButtonText = request.CustomAmountPayButtonText ?? PointOfSaleSettings.CUSTOM_BUTTON_TEXT_DEF,
                 CustomTipText = request.TipText ?? PointOfSaleSettings.CUSTOM_TIP_TEXT_DEF,
@@ -331,7 +331,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 Currency = settings.Currency,
                 Items = JsonConvert.DeserializeObject(
                     JsonConvert.SerializeObject(
-                        _appService.Parse(settings.Template, settings.Currency),
+                        AppService.Parse(settings.Template), 
                         new JsonSerializerSettings
                         {
                             ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
@@ -363,8 +363,8 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 try
                 {
-                    // Just checking if we can serialize, we don't care about the currency
-                    _appService.SerializeTemplate(_appService.Parse(request.Template, "USD"));
+                    // Just checking if we can serialize
+                    AppService.SerializeTemplate(AppService.Parse(request.Template));
                 }
                 catch
                 {
@@ -406,7 +406,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 Tagline = settings.Tagline,
                 Perks = JsonConvert.DeserializeObject(
                     JsonConvert.SerializeObject(
-                        _appService.Parse(settings.PerksTemplate, settings.TargetCurrency),
+                        AppService.Parse(settings.PerksTemplate), 
                         new JsonSerializerSettings
                         {
                             ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
@@ -453,8 +453,8 @@ namespace BTCPayServer.Controllers.Greenfield
 
             try
             {
-                // Just checking if we can serialize, we don't care about the currency
-                _appService.SerializeTemplate(_appService.Parse(request.PerksTemplate, "USD"));
+                // Just checking if we can serialize
+                AppService.SerializeTemplate(AppService.Parse(request.PerksTemplate));
             }
             catch
             {

@@ -58,5 +58,5 @@ public class PosAppCartItemPrice
     public decimal Value { get; set; }
 
     [JsonProperty(PropertyName = "type")]
-    public ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType Type { get; set; }
+    public ViewPointOfSaleViewModel.ItemPriceType Type { get; set; }
 }

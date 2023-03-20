@@ -74,14 +74,14 @@ namespace BTCPayServer.Plugins.Crowdfund
         public Task<SalesStats> GetSalesStats(AppData app, InvoiceEntity[] paidInvoices, int numberOfDays)
         {
             var cfS = app.GetSettings<CrowdfundSettings>();
-            var items = AppService.Parse(_htmlSanitizer, _displayFormatter, cfS.PerksTemplate, cfS.TargetCurrency);
+            var items = AppService.Parse( cfS.PerksTemplate);
             return AppService.GetSalesStatswithPOSItems(items, paidInvoices, numberOfDays);
         }
 
         public Task<IEnumerable<ItemStats>> GetItemStats(AppData appData, InvoiceEntity[] paidInvoices)
         {
             var settings = appData.GetSettings<CrowdfundSettings>();
-            var perks = AppService.Parse(_htmlSanitizer, _displayFormatter, settings.PerksTemplate, settings.TargetCurrency);
+            var perks = AppService.Parse( settings.PerksTemplate);
             var perkCount = paidInvoices
                 .Where(entity => entity.Currency.Equals(settings.TargetCurrency, StringComparison.OrdinalIgnoreCase) &&
                                  // we need the item code to know which perk it is and group by that
@@ -176,7 +176,7 @@ namespace BTCPayServer.Plugins.Crowdfund
                         })));
             }
 
-            var perks = AppService.GetPOSItems(_htmlSanitizer, _displayFormatter, settings.PerksTemplate, settings.TargetCurrency);
+            var perks = AppService.Parse( settings.PerksTemplate, false);
             if (settings.SortPerksByPopularity)
             {
                 var ordered = perkCount.OrderByDescending(pair => pair.Value);

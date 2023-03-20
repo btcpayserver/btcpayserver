@@ -106,7 +106,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                     Prefixed = new[] { 0, 2 }.Contains(numberFormatInfo.CurrencyPositivePattern),
                     SymbolSpace = new[] { 2, 3 }.Contains(numberFormatInfo.CurrencyPositivePattern)
                 },
-                Items = _appService.GetPOSItems(settings.Template, settings.Currency),
+                Items = AppService.Parse(settings.Template, false),
                 ButtonText = settings.ButtonText,
                 CustomButtonText = settings.CustomButtonText,
                 CustomTipText = settings.CustomTipText,
@@ -165,12 +165,12 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             ViewPointOfSaleViewModel.Item[] choices = null;
             if (!string.IsNullOrEmpty(choiceKey))
             {
-                choices = _appService.GetPOSItems(settings.Template, settings.Currency);
+                choices = AppService.Parse(settings.Template, false);
                 choice = choices.FirstOrDefault(c => c.Id == choiceKey);
                 if (choice == null)
                     return NotFound();
                 title = choice.Title;
-                if (choice.Price.Type == ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Topup)
+                if (choice.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Topup)
                 {
                     price = null;
                 }
@@ -204,7 +204,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 if (currentView == PosViewType.Cart &&
                     AppService.TryParsePosCartItems(jposData, out cartItems))
                 {
-                    choices = _appService.GetPOSItems(settings.Template, settings.Currency);
+                    choices = AppService.Parse(settings.Template, false);
                     var expectedMinimumAmount = 0m;
                     foreach (var cartItem in cartItems)
                     {
@@ -224,9 +224,9 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                         }
 
                         decimal expectedCartItemPrice = 0;
-                        if (itemChoice.Price.Type != ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Topup)
+                        if (itemChoice.PriceType != ViewPointOfSaleViewModel.ItemPriceType.Topup)
                         {
-                            expectedCartItemPrice = itemChoice.Price.Value ?? 0;
+                            expectedCartItemPrice = itemChoice.Price ?? 0;
                         }
 
                         expectedMinimumAmount += expectedCartItemPrice * cartItem.Value;
@@ -327,7 +327,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                                     if (selectedChoices.TryGetValue(cartItem.Key, out var selectedChoice))
                                     {
                                         cartData.Add(selectedChoice.Title ?? selectedChoice.Id,
-                                            $"{(selectedChoice.Price.Value is null ? "Any price" : $"{_displayFormatter.Currency((decimal)selectedChoice.Price.Value, settings.Currency, DisplayFormatter.CurrencyFormat.Symbol)}")} x {cartItem.Value} = {(selectedChoice.Price.Value is null ? "Any price" : $"{_displayFormatter.Currency(((decimal)selectedChoice.Price.Value) * cartItem.Value, settings.Currency, DisplayFormatter.CurrencyFormat.Symbol)}")}");
+                                            $"{(selectedChoice.Price is null ? "Any price" : $"{_displayFormatter.Currency((decimal)selectedChoice.Price.Value, settings.Currency, DisplayFormatter.CurrencyFormat.Symbol)}")} x {cartItem.Value} = {(selectedChoice.Price is null ? "Any price" : $"{_displayFormatter.Currency(((decimal)selectedChoice.Price.Value) * cartItem.Value, settings.Currency, DisplayFormatter.CurrencyFormat.Symbol)}")}");
 
                                     }
                                 }
@@ -533,7 +533,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 }
                 try
                 {
-                    var items = _appService.Parse(settings.Template, settings.Currency);
+                    var items = AppService.Parse(settings.Template);
                     var builder = new StringBuilder();
                     builder.AppendLine(CultureInfo.InvariantCulture, $"<form method=\"POST\" action=\"{encoder.Encode(appUrl)}\">");
                     builder.AppendLine($"  <input type=\"hidden\" name=\"email\" value=\"customer@example.com\" />");
@@ -568,7 +568,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 ModelState.AddModelError(nameof(vm.Currency), "Invalid currency");
             try
             {
-                vm.Template = _appService.SerializeTemplate(_appService.Parse(vm.Template, vm.Currency));
+                vm.Template = AppService.SerializeTemplate(AppService.Parse(vm.Template));
             }
             catch
             {

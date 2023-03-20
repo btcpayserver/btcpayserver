@@ -98,6 +98,37 @@ namespace BTCPayServer.Client
         {
             return policy.StartsWith("btcpay.plugin", StringComparison.OrdinalIgnoreCase);
         }
+        public static bool IsUserPolicy(string policy)
+        {
+            return policy.StartsWith("btcpay.user", StringComparison.OrdinalIgnoreCase);
+        }
+    }
+
+    public class PermissionSet
+    {
+        public PermissionSet() : this(Array.Empty<Permission>())
+        {
+
+        }
+        public PermissionSet(Permission[] permissions)
+        {
+            Permissions = permissions;
+        }
+
+        public Permission[] Permissions { get; }
+
+        public bool Contains(Permission requestedPermission)
+        {
+            return Permissions.Any(p => p.Contains(requestedPermission));
+        }
+        public bool Contains(string permission, string store)
+        {
+            if (permission is null)
+                throw new ArgumentNullException(nameof(permission));
+            if (store is null)
+                throw new ArgumentNullException(nameof(store));
+            return Contains(Permission.Create(permission, store));
+        }
     }
     public class Permission
     {
@@ -105,7 +136,7 @@ namespace BTCPayServer.Client
         {
             Init();
         }
-        
+
         public static Permission Create(string policy, string scope = null)
         {
             if (TryCreatePermission(policy, scope, out var r))
@@ -121,7 +152,7 @@ namespace BTCPayServer.Client
             policy = policy.Trim().ToLowerInvariant();
             if (!Policies.IsValidPolicy(policy))
                 return false;
-            if (scope != null && !Policies.IsStorePolicy(policy))
+            if (!string.IsNullOrEmpty(scope) && !Policies.IsStorePolicy(policy))
                 return false;
             permission = new Permission(policy, scope);
             return true;
@@ -174,7 +205,7 @@ namespace BTCPayServer.Client
             }
             if (!Policies.IsStorePolicy(subpermission.Policy))
                 return true;
-            return Scope == null || subpermission.Scope == this.Scope;
+            return Scope == null || subpermission.Scope == Scope;
         }
 
         public static IEnumerable<Permission> ToPermissions(string[] permissions)
@@ -199,7 +230,8 @@ namespace BTCPayServer.Client
                 return true;
             if (policy == subpolicy)
                 return true;
-            if (!PolicyMap.TryGetValue(policy, out var subPolicies)) return false;
+            if (!PolicyMap.TryGetValue(policy, out var subPolicies))
+                return false;
             return subPolicies.Contains(subpolicy) || subPolicies.Any(s => ContainsPolicy(s, subpolicy));
         }
 
@@ -213,23 +245,23 @@ namespace BTCPayServer.Client
                 Policies.CanModifyInvoices,
                 Policies.CanViewStoreSettings,
                 Policies.CanModifyStoreWebhooks,
-                Policies.CanModifyPaymentRequests);
+                Policies.CanModifyPaymentRequests,
+                Policies.CanUseLightningNodeInStore);
 
             PolicyHasChild(Policies.CanManageUsers, Policies.CanCreateUser);
-            PolicyHasChild(Policies.CanManagePullPayments, Policies.CanCreatePullPayments );
-            PolicyHasChild(Policies.CanCreatePullPayments, Policies.CanCreateNonApprovedPullPayments );
-            PolicyHasChild(Policies.CanModifyPaymentRequests, Policies.CanViewPaymentRequests );
-            PolicyHasChild(Policies.CanModifyProfile, Policies.CanViewProfile );
-            PolicyHasChild(Policies.CanUseLightningNodeInStore, Policies.CanViewLightningInvoiceInStore, Policies.CanCreateLightningInvoiceInStore );
-            PolicyHasChild(Policies.CanManageNotificationsForUser, Policies.CanViewNotificationsForUser );
+            PolicyHasChild(Policies.CanManagePullPayments, Policies.CanCreatePullPayments);
+            PolicyHasChild(Policies.CanCreatePullPayments, Policies.CanCreateNonApprovedPullPayments);
+            PolicyHasChild(Policies.CanModifyPaymentRequests, Policies.CanViewPaymentRequests);
+            PolicyHasChild(Policies.CanModifyProfile, Policies.CanViewProfile);
+            PolicyHasChild(Policies.CanUseLightningNodeInStore, Policies.CanViewLightningInvoiceInStore, Policies.CanCreateLightningInvoiceInStore);
+            PolicyHasChild(Policies.CanManageNotificationsForUser, Policies.CanViewNotificationsForUser);
             PolicyHasChild(Policies.CanModifyServerSettings,
                 Policies.CanUseInternalLightningNode,
                 Policies.CanManageUsers);
-            PolicyHasChild(Policies.CanUseInternalLightningNode, Policies.CanCreateLightningInvoiceInternalNode,Policies.CanViewLightningInvoiceInternalNode );
-            PolicyHasChild(Policies.CanManageCustodianAccounts, Policies.CanViewCustodianAccounts );
-            PolicyHasChild(Policies.CanModifyInvoices, Policies.CanViewInvoices, Policies.CanCreateInvoice );
-            PolicyHasChild(Policies.CanViewStoreSettings, Policies.CanViewInvoices, Policies.CanViewPaymentRequests  );
-            
+            PolicyHasChild(Policies.CanUseInternalLightningNode, Policies.CanCreateLightningInvoiceInternalNode, Policies.CanViewLightningInvoiceInternalNode);
+            PolicyHasChild(Policies.CanManageCustodianAccounts, Policies.CanViewCustodianAccounts);
+            PolicyHasChild(Policies.CanModifyInvoices, Policies.CanViewInvoices, Policies.CanCreateInvoice, Policies.CanCreateLightningInvoiceInStore);
+            PolicyHasChild(Policies.CanViewStoreSettings, Policies.CanViewInvoices, Policies.CanViewPaymentRequests);
         }
 
         private static void PolicyHasChild(string policy, params string[] subPolicies)
@@ -243,33 +275,26 @@ namespace BTCPayServer.Client
             }
             else
             {
-                PolicyMap.Add(policy,subPolicies.ToHashSet());
+                PolicyMap.Add(policy, subPolicies.ToHashSet());
             }
         }
-        
 
         public string Scope { get; }
         public string Policy { get; }
 
         public override string ToString()
         {
-            if (Scope != null)
-            {
-                return $"{Policy}:{Scope}";
-            }
-            return Policy;
+            return Scope != null ? $"{Policy}:{Scope}" : Policy;
         }
 
         public override bool Equals(object obj)
         {
             Permission item = obj as Permission;
-            if (item == null)
-                return false;
-            return ToString().Equals(item.ToString());
+            return item != null && ToString().Equals(item.ToString());
         }
         public static bool operator ==(Permission a, Permission b)
         {
-            if (System.Object.ReferenceEquals(a, b))
+            if (ReferenceEquals(a, b))
                 return true;
             if (((object)a == null) || ((object)b == null))
                 return false;

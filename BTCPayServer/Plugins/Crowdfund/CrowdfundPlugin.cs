@@ -38,7 +38,7 @@ namespace BTCPayServer.Plugins.Crowdfund
         }
     }
     
-    public class CrowdfundAppType: SalesAppBaseType
+    public class CrowdfundAppType: AppBaseType, IHasSaleStatsAppType, IHasItemStatsAppType
     {
         private readonly LinkGenerator _linkGenerator;
         private readonly IOptions<BTCPayServerOptions> _options;
@@ -71,14 +71,14 @@ namespace BTCPayServer.Plugins.Crowdfund
                 "UICrowdfund", new { appId = app.Id }, _options.Value.RootPath)!);
         }
 
-        public override Task<SalesStats> GetSalesStats(AppData app, InvoiceEntity[] paidInvoices, int numberOfDays)
+        public Task<SalesStats> GetSalesStats(AppData app, InvoiceEntity[] paidInvoices, int numberOfDays)
         {
             var cfS = app.GetSettings<CrowdfundSettings>();
             var items = AppService.Parse(_htmlSanitizer, _displayFormatter, cfS.PerksTemplate, cfS.TargetCurrency);
             return AppService.GetSalesStatswithPOSItems(items, paidInvoices, numberOfDays);
         }
 
-        public override Task<IEnumerable<ItemStats>> GetItemStats(AppData appData, InvoiceEntity[] paidInvoices)
+        public Task<IEnumerable<ItemStats>> GetItemStats(AppData appData, InvoiceEntity[] paidInvoices)
         {
             var settings = appData.GetSettings<CrowdfundSettings>();
             var perks = AppService.Parse(_htmlSanitizer, _displayFormatter, settings.PerksTemplate, settings.TargetCurrency);

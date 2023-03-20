@@ -81,7 +81,7 @@ namespace BTCPayServer.Services.Apps
 
         public async Task<IEnumerable<ItemStats>> GetItemStats(AppData appData)
         {
-            if (GetAppType(appData.AppType) is not SalesAppBaseType salesType)
+            if (GetAppType(appData.AppType) is not IHasItemStatsAppType salesType)
                 throw new InvalidOperationException("This app isn't a SalesAppBaseType");
             var paidInvoices = await GetInvoicesForApp(_InvoiceRepository,appData,
                 null, new []
@@ -129,7 +129,7 @@ namespace BTCPayServer.Services.Apps
         
         public async Task<SalesStats> GetSalesStats(AppData app, int numberOfDays = 7)
         {
-            if (GetAppType(app.AppType) is not SalesAppBaseType salesType)
+            if (GetAppType(app.AppType) is not IHasSaleStatsAppType salesType)
                 throw new InvalidOperationException("This app isn't a SalesAppBaseType");
             var paidInvoices = await GetInvoicesForApp(_InvoiceRepository, app, DateTimeOffset.UtcNow - TimeSpan.FromDays(numberOfDays),
                 new []

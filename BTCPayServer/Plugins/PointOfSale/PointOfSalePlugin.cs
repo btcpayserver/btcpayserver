@@ -46,7 +46,7 @@ namespace BTCPayServer.Plugins.PointOfSale
         Print
     }
 
-    public class PointOfSaleAppType: SalesAppBaseType
+    public class PointOfSaleAppType: AppBaseType, IHasSaleStatsAppType, IHasItemStatsAppType
     {
         private readonly LinkGenerator _linkGenerator;
         private readonly IOptions<BTCPayServerOptions> _btcPayServerOptions;
@@ -79,14 +79,14 @@ namespace BTCPayServer.Plugins.PointOfSale
             return Task.FromResult<object?>(null);
         }
 
-        public override Task<SalesStats> GetSalesStats(AppData app, InvoiceEntity[] paidInvoices, int numberOfDays)
+        public Task<SalesStats> GetSalesStats(AppData app, InvoiceEntity[] paidInvoices, int numberOfDays)
         {
             var posS = app.GetSettings<PointOfSaleSettings>();
             var items = AppService.Parse(_htmlSanitizer, _displayFormatter, posS.Template, posS.Currency);
             return AppService.GetSalesStatswithPOSItems(items, paidInvoices, numberOfDays);
         }
 
-        public override Task<IEnumerable<ItemStats>> GetItemStats(AppData appData, InvoiceEntity[] paidInvoices)
+        public Task<IEnumerable<ItemStats>> GetItemStats(AppData appData, InvoiceEntity[] paidInvoices)
         {
             var settings = appData.GetSettings<PointOfSaleSettings>();
             var items = AppService.Parse(_htmlSanitizer, _displayFormatter, settings.Template, settings.Currency);

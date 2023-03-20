@@ -16,11 +16,13 @@ namespace BTCPayServer.Services.Apps
         public abstract Task<string> ViewLink(AppData app);
         public abstract Task SetDefaultSettings(AppData appData, string defaultCurrency);
     }
-
-    public abstract class SalesAppBaseType : AppBaseType
+    public interface IHasSaleStatsAppType
     {
-        public abstract Task<SalesStats> GetSalesStats(AppData app, InvoiceEntity[] paidInvoices, int numberOfDays);
-        public abstract Task<IEnumerable<ItemStats>> GetItemStats(AppData appData, InvoiceEntity[] invoiceEntities);
+        Task<SalesStats> GetSalesStats(AppData app, InvoiceEntity[] paidInvoices, int numberOfDays);
+    }
+    public interface IHasItemStatsAppType
+    {
+        Task<IEnumerable<ItemStats>> GetItemStats(AppData appData, InvoiceEntity[] invoiceEntities);
     }
 
     public enum RequiresRefundEmail

@@ -28,7 +28,7 @@
   "payment_link": "Link płatności",
   "invoice_paid": "Faktura opłacona",
   "invoice_expired": "Faktura wygasła",
-  "invoice_expired_body": "Faktura jest ważna tylko przez {{minutes}} minut.\n\nPowróć do {{storeName}}, jeśli chcesz ponownie przesłać płatność.",
+  "invoice_expired_body": "Faktura jest ważny tylko przez {{minutes}} minut.\n\nWróć do {{storeName}} jeśli chcesz wysłać płatność ponownie.",
   "view_receipt": "Pokaż rachunek",
   "return_to_store": "Wróć do {{storeName}}",
   "copy": "Kopiuj",

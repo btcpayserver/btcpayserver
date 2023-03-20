@@ -72,19 +72,24 @@ namespace BTCPayServer.Tests
 //            // DO NOT RUN IT, THIS WILL ERASE THE CURRENT TRANSIFEX TRANSLATIONS
 
 //            var client = GetTransifexClient();
-//            var translations = JsonTranslation.GetTranslations(TranslationFolder.CheckoutV1);
+//            var translations = JsonTranslation.GetTranslations(TranslationFolder.CheckoutV2);
 //            var enTranslations = translations["en"];
 //            translations.Remove("en");
 
 //            foreach (var t in translations)
+//            {
 //                foreach (var w in t.Value.Words.ToArray())
 //                {
-//                    if (w.Value == enTranslations.Words[w.Key])
-//                        t.Value.Words[w.Key] = null;
+//                    if (t.Value.Words[w.Key] == null)
+//                        t.Value.Words[w.Key] = enTranslations.Words[w.Key];
 //                }
+//                t.Value.Words.Remove("code");
+//                t.Value.Words.Remove("NOTICE_WARN");
+//            }
 //            await client.UpdateTranslations(translations);
 //        }
-//#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
+
+        //#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
 
         ///// <summary>
         ///// This utility will copy translations made on checkout v1 to checkout v2
@@ -282,6 +287,7 @@ retry:
                     {
                         translation.Words["InvoiceExpired_Body_3"] = string.Empty;
                     }
+                    translation.Translate(langTranslations);
                     translation.Save();
                 }
                 catch

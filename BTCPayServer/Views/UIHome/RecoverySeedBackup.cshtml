@@ -6,38 +6,11 @@
 
 @section PageHeadContent {
     <style>
-        main {
-            max-width: 800px;
-            margin: 0 auto;
-            text-align: center;
-        }
+        main { max-width: 800px; margin: 0 auto; text-align:  center;}
+        @@media (min-width: 476px) { ol#RecoveryPhrase { gap:2em; grid-template-columns: repeat(2, minmax(150px, 1fr)); max-width: 20rem; margin-left: 25% !important; } }
+        @@media (min-width: 768px) { ol#RecoveryPhrase { gap:2em; grid-template-columns: repeat(4, minmax(150px, 1fr)); max-width: 40rem; margin-left: 10% !important; } }
+        @@media (min-width: 992px) { ol#RecoveryPhrase { gap:2em; grid-template-columns: repeat(4, minmax(150px, 1fr)); max-width: 55rem; margin-left: 10% !important; } }
 
-        @@media (min-width: 476px) {
-            ol#RecoveryPhrase {
-                gap:2em;
-                grid-template-columns: repeat(2, minmax(100px, 1fr));
-                max-width: 20rem;
-                margin-left: 25% !important;
-            }
-        }
-
-        @@media (min-width: 768px) {
-            ol#RecoveryPhrase {
-                gap:2em;
-                grid-template-columns: repeat(4, minmax(150px, 1fr));
-                max-width: 40rem;
-                margin-left: 10% !important;
-            }
-        }
-
-        @@media (min-width: 992px) {
-            ol#RecoveryPhrase {
-                gap:2em;
-                grid-template-columns: repeat(4, minmax(150px, 1fr));
-                max-width: 55rem;
-                margin-left: 10% !important;
-            }
-        }
         form#RecoveryConfirmation button { position: absolute; bottom:0; left:50%; width:200px; margin-left:-100px; }
         form#RecoveryConfirmation button:not([disabled]) { display: none; }
         form#RecoveryConfirmation input:checked ~ button[disabled] { display: none; }

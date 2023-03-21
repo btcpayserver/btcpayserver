@@ -165,6 +165,7 @@
             <div class="dropdown-menu" aria-labelledby="ExportDropdownToggle">
                 <a asp-action="Export" asp-route-walletId="@walletId" asp-route-format="csv" asp-route-labelFilter="@labelFilter" class="dropdown-item export-link" target="_blank" id="ExportCSV">CSV</a>
                 <a asp-action="Export" asp-route-walletId="@walletId" asp-route-format="json" asp-route-labelFilter="@labelFilter" class="dropdown-item export-link" target="_blank" id="ExportJSON">JSON</a>
+                <a asp-action="Export" asp-route-walletId="@walletId" asp-route-format="bip329" asp-route-labelFilter="@labelFilter" class="dropdown-item export-link" target="_blank" id="ExportBIP329">JSON (BIP-329)</a>
             </div>
         </div>
     </div>

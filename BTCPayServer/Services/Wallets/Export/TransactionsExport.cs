@@ -3,14 +3,9 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
-using BTCPayServer.Models.WalletViewModels;
-using BTCPayServer.Services.Invoices;
-using BTCPayServer.Services.Rates;
 using CsvHelper.Configuration;
 using CsvHelper.Configuration.Attributes;
-using NBXplorer.Models;
 using Newtonsoft.Json;
 
 namespace BTCPayServer.Services.Wallets.Export
@@ -47,12 +42,33 @@ namespace BTCPayServer.Services.Wallets.Export
 
                 return model;
             }).ToList();
+            
+            return fileFormat switch
+            {
+                "bip329" => ProcessBip329(list),
+                "json" => ProcessJson(list),
+                "csv" => ProcessCsv(list),
+                _ => throw new Exception("Export format not supported")
+            };
+        }
 
-            if (string.Equals(fileFormat, "json", StringComparison.OrdinalIgnoreCase))
-                return ProcessJson(list);
-            if (string.Equals(fileFormat, "csv", StringComparison.OrdinalIgnoreCase))
-                return ProcessCsv(list);
-            throw new Exception("Export format not supported");
+        // https://github.com/bitcoin/bips/blob/master/bip-0329.mediawiki
+        private static string ProcessBip329(List<ExportTransaction> txs)
+        {
+            var serializerSett = new JsonSerializerSettings
+            {
+                ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+                ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
+            };
+            var lines = txs.Select(tx => 
+                JsonConvert.SerializeObject(new
+                {
+                    Type = "tx",
+                    Ref = tx.TransactionId,
+                    Label = tx.Labels is { Count: > 0 } ? string.Join(", ", tx.Labels): string.Empty
+                }, Formatting.None, serializerSett));
+            var jsonl = string.Join("\n", lines);
+            return jsonl;
         }
 
         private static string ProcessJson(List<ExportTransaction> invoices)

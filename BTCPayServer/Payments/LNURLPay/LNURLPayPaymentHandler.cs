@@ -67,7 +67,7 @@ namespace BTCPayServer.Payments.Lightning
                 {
                     throw new PaymentMethodUnavailableException("LNURL requires a lightning node to be configured for the store.");
                 }
-                using var cts = new CancellationTokenSource(5000);
+                using var cts = new CancellationTokenSource(LightningLikePaymentHandler.LightningTimeout);
                 try
                 {
                     var client = lnSupported.CreateLightningClient(network, Options.Value, _lightningClientFactoryService);

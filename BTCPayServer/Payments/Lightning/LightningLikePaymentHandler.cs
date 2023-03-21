@@ -21,7 +21,7 @@ namespace BTCPayServer.Payments.Lightning
 {
     public class LightningLikePaymentHandler : PaymentMethodHandlerBase<LightningSupportedPaymentMethod, BTCPayNetwork>
     {
-        public static int LIGHTNING_TIMEOUT = 5000;
+        public static readonly int LightningTimeout = 5000;
         readonly NBXplorerDashboard _Dashboard;
         private readonly LightningClientFactoryService _lightningClientFactory;
         private readonly BTCPayNetworkProvider _networkProvider;
@@ -93,7 +93,7 @@ namespace BTCPayServer.Payments.Lightning
             description = description.Replace("{StoreName}", store.StoreName ?? "", StringComparison.OrdinalIgnoreCase)
                                      .Replace("{ItemDescription}", invoice.Metadata.ItemDesc ?? "", StringComparison.OrdinalIgnoreCase)
                                      .Replace("{OrderId}", invoice.Metadata.OrderId ?? "", StringComparison.OrdinalIgnoreCase);
-            using (var cts = new CancellationTokenSource(LIGHTNING_TIMEOUT))
+            using (var cts = new CancellationTokenSource(LightningTimeout))
             {
                 try
                 {
@@ -129,7 +129,7 @@ namespace BTCPayServer.Payments.Lightning
 
             try
             {
-                using var cts = new CancellationTokenSource(LIGHTNING_TIMEOUT);
+                using var cts = new CancellationTokenSource(LightningTimeout);
                 var client = CreateLightningClient(supportedPaymentMethod, network);
                 LightningNodeInformation info;
                 try

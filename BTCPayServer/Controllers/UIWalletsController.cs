@@ -1433,8 +1433,7 @@ namespace BTCPayServer.Controllers
                     {
                         0 => PayoutTooltip(),
                         1 => PayoutTooltip(payoutsByPullPaymentId.First()),
-                        _ =>
-                            $"<ul>{string.Join(string.Empty, payoutsByPullPaymentId.Select(pair => $"<li>{PayoutTooltip(pair)}</li>"))}</ul>"
+                        _ => string.Join(", ", payoutsByPullPaymentId.Select(PayoutTooltip))
                     };
 
                     model.Link = _linkGenerator.PayoutLink(transactionInfo.WalletId.ToString(), null, PayoutState.Completed, Request.Scheme, Request.Host,
@@ -1442,7 +1441,7 @@ namespace BTCPayServer.Controllers
                 }
                 else if (tag.Type == WalletObjectData.Types.Payjoin)
                 {
-                    model.Tooltip = $"This UTXO was part of a PayJoin transaction.";
+                    model.Tooltip = "This UTXO was part of a PayJoin transaction.";
                 }
                 else if (tag.Type == WalletObjectData.Types.Invoice)
                 {

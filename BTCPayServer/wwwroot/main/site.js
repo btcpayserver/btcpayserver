@@ -68,7 +68,7 @@ async function initLabelManager (elementId) {
                     return `<div class="transaction-label" style="${labelStyle(data)}"><span>${escape(data.label)}</span></div>`;
                 },
                 item (data, escape) {
-                    const info = richInfo[data.label];
+                    const info = richInfo && richInfo[data.label];
                     const additionalInfo = info
                         ? `<a href="${info.link}" target="_blank" rel="noreferrer noopener" class="transaction-label-info transaction-details-icon" title="${info.tooltip}" data-bs-html="true"
                               data-bs-toggle="tooltip" data-bs-custom-class="transaction-label-tooltip"><svg role="img" class="icon icon-info"><use href="/img/icon-sprite.svg#info"></use></svg></a>`

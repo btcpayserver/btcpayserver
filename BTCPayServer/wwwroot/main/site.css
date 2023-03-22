@@ -826,6 +826,7 @@ input.ts-wrapper.form-control:not(.ts-hidden-accessible,.ts-inline) {
 /* Transaction Labels */
 .transaction-label,
 .ts-dropdown.dropdown-menu .transaction-label,
+.ts-dropdown.dropdown-menu .create.transaction-label,
 .ts-wrapper.form-control .ts-control > .item.transaction-label {
     display: inline-flex;
     flex-wrap: nowrap;
@@ -855,7 +856,7 @@ input.ts-wrapper.form-control:not(.ts-hidden-accessible,.ts-inline) {
 .ts-wrapper.multi .ts-control > .item.transaction-label:focus,
 .ts-wrapper.multi .ts-control > .item.transaction-label:hover,
 .ts-wrapper.multi .ts-control > .item.transaction-label.active {
-    color: var(--label-fg, var(--btcpay-neutral-800));
+    color: var(--label-fg, var(--btcpay-body-text));
     background: var(--label-bg, var(--btcpay-neutral-300));
 }
 

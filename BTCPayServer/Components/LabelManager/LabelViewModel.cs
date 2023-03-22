@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using BTCPayServer.Services;
 
 namespace BTCPayServer.Components.LabelManager
@@ -8,5 +9,6 @@ namespace BTCPayServer.Components.LabelManager
         public WalletObjectId WalletObjectId { get; set; }
         public bool ExcludeTypes { get; set; }
         public bool DisplayInline { get; set; }
+        public Dictionary<string, RichLabelInfo> RichLabelInfo { get; set; }
     }
 }

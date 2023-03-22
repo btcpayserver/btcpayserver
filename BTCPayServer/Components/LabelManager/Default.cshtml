@@ -17,4 +17,5 @@
        data-update-url="@updateUrl"
        data-wallet-id="@Model.WalletObjectId.WalletId"
        data-wallet-object-id="@Model.WalletObjectId.Id"
-       data-wallet-object-type="@Model.WalletObjectId.Type" />
+       data-wallet-object-type="@Model.WalletObjectId.Type"
+       data-labels='@Safe.Json(Model.RichLabelInfo)' />

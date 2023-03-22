@@ -47,8 +47,9 @@
             <vc:label-manager
                 wallet-object-id="new WalletObjectId(WalletId.Parse(walletId), WalletObjectData.Types.Tx, transaction.Id)"
                 selected-labels="transaction.Tags.Select(t => t.Text).ToArray()"
+                rich-label-info="transaction.Tags.Where(t=> !string.IsNullOrEmpty(t.Link)).ToDictionary(t => t.Text, t => new RichLabelInfo { Link = t.Link, Tooltip = t.Tooltip })"
                 exclude-types="false"
-                display-inline="true "/>
+                display-inline="true"/>
         </td>
         <td class="smMaxWidth text-truncate@(transaction.IsConfirmed ? "" : " unconf")">
             <a href="@transaction.Link" target="_blank" rel="noreferrer noopener">

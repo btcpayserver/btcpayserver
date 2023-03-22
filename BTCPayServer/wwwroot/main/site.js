@@ -33,7 +33,7 @@ async function initLabelManager (elementId) {
             : '--label-bg:var(--btcpay-neutral-300);--label-fg:var(--btcpay-neutral-800)'
 
     if (element) {
-        const { fetchUrl, updateUrl, walletId, walletObjectType, walletObjectId } = element.dataset;
+        const { fetchUrl, updateUrl, walletId, walletObjectType, walletObjectId, labels } = element.dataset;
         const commonCallId = `walletLabels-${walletId}`;
         if (!window[commonCallId]) {
             window[commonCallId] = fetch(fetchUrl, {
@@ -46,6 +46,7 @@ async function initLabelManager (elementId) {
         }
         const options = await window[commonCallId];
         const items = element.value.split(',')
+        const richInfo = labels ? JSON.parse(labels) : {};
         const config = {
             options,
             items,
@@ -64,10 +65,16 @@ async function initLabelManager (elementId) {
                     return `<div class="transaction-label create" style="${labelStyle(null)}">Add <strong>${escape(data.input)}</strong>&hellip;</div>`;
                 },
                 option (data, escape) {
-                    return `<div class="transaction-label" style="${labelStyle(data)}">${escape(data.label)}</div>`;
+                    return `<div class="transaction-label" style="${labelStyle(data)}"><span>${escape(data.label)}</span></div>`;
                 },
                 item (data, escape) {
-                    return `<div class="transaction-label" style="${labelStyle(data)}">${escape(data.label)}</div>`;
+                    const info = richInfo[data.label];
+                    const additionalInfo = info
+                        ? `<a href="${info.link}" target="_blank" rel="noreferrer noopener" class="transaction-label-info transaction-details-icon" title="${info.tooltip}" data-bs-html="true"
+                              data-bs-toggle="tooltip" data-bs-custom-class="transaction-label-tooltip"><svg role="img" class="icon icon-info"><use href="/img/icon-sprite.svg#info"></use></svg></a>`
+                        : '';
+                    const inner = `<span>${escape(data.label)}</span>${additionalInfo}`;
+                    return `<div class="transaction-label" style="${labelStyle(data)}">${inner}</div>`;
                 }
             },
             onItemAdd (val) {

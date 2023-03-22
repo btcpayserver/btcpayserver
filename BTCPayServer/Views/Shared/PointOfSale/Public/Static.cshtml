@@ -23,7 +23,7 @@
                 <div class="card px-0" data-id="@x">
                     @if (!string.IsNullOrWhiteSpace(item.Image))
                     {
-                        <img class="card-img-top" src="@item.Image" alt="Card image cap" asp-append-version="true">
+                        <img class="card-img-top" src="@item.Image" alt="@Safe.Raw(item.Title)" asp-append-version="true">
                     }
                     @{CardBody(item.Title, item.Description);}
                     <div class="card-footer bg-transparent border-0 pb-3">
@@ -114,7 +114,7 @@
     private void CardBody(string title, string description)
     {
         <div class="card-body my-auto pb-0">
-            <h5 class="card-title">@title</h5>
+            <h5 class="card-title">@Safe.Raw(title)</h5>
             @if (!string.IsNullOrWhiteSpace(description))
             {
                 <p class="card-text">@Safe.Raw(description)</p>

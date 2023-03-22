@@ -84,11 +84,10 @@ else
                 var item = Model.Items[x];
                 <div class="card" data-id="@x">
                     <div class="card-body my-auto">
-                        <h4 class="card-title text-center">@item.Title</h4>
+                        <h4 class="card-title text-center">@Safe.Raw(item.Title)</h4>
                         @if (!string.IsNullOrEmpty(item.Description))
                         {
-                            <p class="card-title text-center">@item.Description</p>
-                            
+                            <p class="card-title text-center">@Safe.Raw(item.Description)</p>
                         }
                         <div class="w-100 mb-3 fs-5 text-center">
                             @switch (item.Price.Type)

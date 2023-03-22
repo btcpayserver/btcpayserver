@@ -64,10 +64,10 @@ namespace BTCPayServer.Services.Wallets.Export
             {
                 if (tx.Labels is { Count: > 0 })
                 {
-                    tx.Labels.ForEach(label =>
-                        res.Add(JsonConvert.SerializeObject(
-                            new { Type = "label", Ref = tx.TransactionId, Label = label }, Formatting.None,
-                            serializerSett)));
+                    var label = string.Join(", ", tx.Labels);
+                    var obj = new { Type = "tx", Ref = tx.TransactionId, Label = label };
+                    var json = JsonConvert.SerializeObject(obj, Formatting.None, serializerSett);
+                    res.Add(json);
                 }
                 return res;
             });

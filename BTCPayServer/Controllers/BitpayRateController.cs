@@ -18,6 +18,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using NicolasDorier.RateLimits;
 
 namespace BTCPayServer.Controllers
 {
@@ -84,6 +85,7 @@ namespace BTCPayServer.Controllers
 
         [AllowAnonymous]
         [HttpGet("api/rates")]
+        [RateLimitsFilter(ZoneLimits.Rates, Scope = RateLimitsScope.RemoteAddress)]
         public async Task<IActionResult> GetRates2(string currencyPairs, string storeId, CancellationToken cancellationToken)
         {
             var store = CurrentStore ?? await _storeRepo.FindStore(storeId);

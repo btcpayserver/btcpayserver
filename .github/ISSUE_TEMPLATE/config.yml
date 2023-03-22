@@ -4,7 +4,7 @@ contact_links:
     url: https://github.com/btcpayserver/btcpayserver/discussions/categories/ideas-feature-requests
     about: Submit a feature request or vote on ideas posted by others. Features with most upvotes become roadmap candidates
   - name: 🧑‍💻 Ask a technical question
-    url: https://github.com/btcpayserver/btcpayserver/discussions/categories/technical-support
+    url: https://github.com/btcpayserver/btcpayserver/discussions/new?category=technical-support
     about: If you're experiencing a technical problem post it to our community support forum
   - name: 🔌 Report a problem with a plugin
     url: https://github.com/btcpayserver/btcpayserver/discussions/new?category=plugins-integrations

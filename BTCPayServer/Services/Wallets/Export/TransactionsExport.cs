@@ -36,7 +36,7 @@ namespace BTCPayServer.Services.Wallets.Export
 
                 if (_walletTransactionsInfo.TryGetValue(tx.TransactionId.ToString(), out var transactionInfo))
                 {
-                    model.Labels = transactionInfo.LabelColors?.Select(l => l.Key).ToList();
+                    model.Labels = transactionInfo.LabelColors.Select(l => l.Key).ToList();
                     model.Comment = transactionInfo.Comment;
                 }
 
@@ -60,13 +60,18 @@ namespace BTCPayServer.Services.Wallets.Export
                 ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
                 ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
             };
-            var lines = txs.Select(tx => 
-                JsonConvert.SerializeObject(new
+            var lines = txs.Aggregate(new List<object>(), (res, tx) =>
+            {
+                if (tx.Labels is { Count: > 0 })
                 {
-                    Type = "tx",
-                    Ref = tx.TransactionId,
-                    Label = tx.Labels is { Count: > 0 } ? string.Join(", ", tx.Labels): string.Empty
-                }, Formatting.None, serializerSett));
+                    tx.Labels.ForEach(label =>
+                        res.Add(JsonConvert.SerializeObject(
+                            new { Type = "label", Ref = tx.TransactionId, Label = label }, Formatting.None,
+                            serializerSett)));
+                }
+                return res;
+            });
+                
             var jsonl = string.Join("\n", lines);
             return jsonl;
         }

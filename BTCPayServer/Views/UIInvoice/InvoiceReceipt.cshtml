@@ -5,6 +5,7 @@
 @using BTCPayServer.Services
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @using BTCPayServer.Abstractions.TagHelpers
+@using BTCPayServer.Payments
 @inject BTCPayServerEnvironment Env
 @inject DisplayFormatter DisplayFormatter
 @{
@@ -120,9 +121,9 @@
                                         <thead>
                                             <tr>
                                                 <th class="fw-normal text-secondary">Date</th>
+                                                <th class="fw-normal text-secondary">Payment</th>
                                                 <th class="fw-normal text-secondary text-end">Paid</th>
                                                 <th class="fw-normal text-secondary text-end">Rate</th>
-                                                <th class="fw-normal text-secondary text-end">Payment</th>
                                             </tr>
                                         </thead>
                                         @foreach (var payment in Model.Payments)
@@ -130,45 +131,40 @@
                                             <tbody>
                                                 <tr>
                                                     <td class="text-nowrap">@payment.ReceivedDate.ToBrowserDate()</td>
+                                                    <td class="text-nowrap">@payment.Amount @payment.PaymentMethod</td>
                                                     <td class="text-end text-nowrap">@payment.PaidFormatted</td>
                                                     <td class="text-end text-nowrap">@payment.RateFormatted</td>
-                                                    <td class="text-end text-nowrap">@payment.Amount @payment.PaymentMethod</td>
                                                 </tr>
-                                                <tr>
-                                                    <th class="fw-normal text-nowrap">
-                                                        Transaction Id
-                                                    </th>
-                                                    <td class="fw-normal" colspan="3">
-                                                        @if (!string.IsNullOrEmpty(payment.Link))
-                                                        {
-                                                            <a href="@payment.Link" class="text-print-default text-break" rel="noreferrer noopener" target="_blank">@payment.Id</a>
-                                                        }
-                                                        else
-                                                        {
-                                                            <span class="text-break">@payment.Id</span>
-                                                        }
-                                                    </td>
-                                                </tr>
-
-                                                @if (!string.IsNullOrEmpty(payment.Destination))
+                                                @if (payment.PaymentType == BitcoinPaymentType.Instance)
                                                 {
                                                     <tr>
-                                                        <th class="fw-normal text-nowrap">
-                                                            Destination
+                                                        <th class="fw-normal text-nowrap text-secondary">
+                                                            Transaction Id
                                                         </th>
                                                         <td class="fw-normal" colspan="3">
-                                                            <div class="text-truncate" style="max-width:360px">@payment.Destination</div>
+                                                            <vc:truncate-center text="@payment.Id" link="@payment.Link" classes="truncate-center-id" />
                                                         </td>
                                                     </tr>
                                                 }
-                                                @if (!string.IsNullOrEmpty(payment.PaymentProof))
+                                                @if (!string.IsNullOrEmpty(payment.Destination))
                                                 {
                                                     <tr>
-                                                        <th class="fw-normal text-nowrap">
+                                                        <th class="fw-normal text-nowrap text-secondary">
+                                                            Destination
+                                                        </th>
+                                                        <td class="fw-normal" colspan="3">
+                                                            <vc:truncate-center text="@payment.Destination" classes="truncate-center-id" />
+                                                        </td>
+                                                    </tr>
+                                                }
+                                                @if (!string.IsNullOrEmpty(payment.PaymentProof) && payment.PaymentProof != payment.Id)
+                                                {
+                                                    <tr>
+                                                        <th class="fw-normal text-nowrap text-secondary">
                                                             Payment Proof
                                                         </th>
                                                         <td class="fw-normal" colspan="3">
-                                                            <div class="text-break">@payment.PaymentProof</div>
+                                                                <vc:truncate-center text="@payment.PaymentProof" classes="truncate-center-id" />
                                                         </td>
                                                     </tr>
                                                 }

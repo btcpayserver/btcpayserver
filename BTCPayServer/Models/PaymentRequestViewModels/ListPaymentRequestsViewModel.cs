@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
+using BTCPayServer.Payments;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Validation;
@@ -209,6 +210,7 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
             public string Id { get; set; }
             public string Destination { get; set; }
             public string PaymentProof { get; set; }
+            public PaymentType PaymentType { get; set; }
         }
     }
 }

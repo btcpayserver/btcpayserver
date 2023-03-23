@@ -236,7 +236,8 @@ namespace BTCPayServer.Controllers
                         Link = link,
                         Id = txId,
                         Destination = paymentData.GetDestination(),
-                        PaymentProof = paymentData.GetPaymentProof()
+                        PaymentProof = paymentData.GetPaymentProof(),
+                        PaymentType = paymentData.GetPaymentType()
                     };
                 })
                 .Where(payment => payment != null)

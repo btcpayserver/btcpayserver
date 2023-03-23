@@ -6,10 +6,8 @@
 
 @section PageHeadContent {
     <style>
-        main { max-width: 800px; margin: 0 auto; text-align:  center;}
-        @@media (min-width: 476px) { ol#RecoveryPhrase { gap:2em; grid-template-columns: repeat(2, minmax(150px, 1fr)); max-width: 20rem; margin-left: 25% !important; } }
-        @@media (min-width: 768px) { ol#RecoveryPhrase { gap:2em; grid-template-columns: repeat(4, minmax(150px, 1fr)); max-width: 40rem; margin-left: 10% !important; } }
-        @@media (min-width: 992px) { ol#RecoveryPhrase { gap:2em; grid-template-columns: repeat(4, minmax(150px, 1fr)); max-width: 55rem; margin-left: 10% !important; } }
+        main { max-width: 800px; margin: 0 auto; text-align: center;}
+        @@media (min-width: 476px) { ol#RecoveryPhrase { flex-wrap: wrap; gap: .75rem 9rem; width: 21rem; height: 19rem; } }
 
         form#RecoveryConfirmation button { position: absolute; bottom:0; left:50%; width:200px; margin-left:-100px; }
         form#RecoveryConfirmation button:not([disabled]) { display: none; }
@@ -39,13 +37,13 @@
         </h1>
     </div>
     <div class="lead text-center">
-        <p>
+        <p class="mb-0">
             The combination of words below are called your recovery phrase.
             The recovery phrase allows you to access and restore your wallet.
             Write them down on a piece of paper in the exact order:
         </p>
     </div>
-    <ol id="RecoveryPhrase" data-mnemonic="@Model.Mnemonic" class="d-grid my-5 mx-auto justify-content-center">
+    <ol id="RecoveryPhrase" data-mnemonic="@Model.Mnemonic" class="d-flex flex-column flex-wrap my-5 mx-auto justify-content-center">
         @foreach (var word in Model.Words)
         {
             <li class="text-start text-muted py-2">
@@ -53,7 +51,7 @@
             </li>
         }
     </ol>
-    <div class="lead text-center" style="max-width:36em;margin-left:auto;margin-right:auto;">
+    <div class="lead text-center">
         @if (Model.IsStored)
         {
             <p>

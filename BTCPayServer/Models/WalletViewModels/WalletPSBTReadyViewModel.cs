@@ -16,6 +16,7 @@ namespace BTCPayServer.Models.WalletViewModels
             public bool Positive { get; set; }
             public string Destination { get; set; }
             public string Balance { get; set; }
+            public string[] Labels { get; set; }
         }
 
         public class InputViewModel
@@ -24,6 +25,7 @@ namespace BTCPayServer.Models.WalletViewModels
             public string Error { get; set; }
             public bool Positive { get; set; }
             public string BalanceChange { get; set; }
+            public string[] Labels { get; set; }
         }
         public bool HasErrors => Inputs.Count == 0 || Inputs.Any(i => !string.IsNullOrEmpty(i.Error));
         public string BalanceChange { get; set; }

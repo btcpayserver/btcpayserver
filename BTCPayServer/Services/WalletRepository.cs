@@ -328,9 +328,15 @@ namespace BTCPayServer.Services
         {
             await using var ctx = _ContextFactory.CreateContext();
             return (await ctx.WalletObjects.AsNoTracking().Where(predicate).ToArrayAsync())
-                .Select(o => o.Data is null
-                    ? (o.Id, ColorPalette.Default.DeterministicColor(o.Id))
-                    : (o.Id, JObject.Parse(o.Data)["color"]?.Value<string>() ?? ColorPalette.Default.DeterministicColor(o.Id))).ToArray();
+                .Select(FormatToLabel).ToArray();
+        }
+
+        private (string Label, string Color) FormatToLabel(WalletObjectData o)
+        {
+            return o.Data is null
+                ? (o.Id, ColorPalette.Default.DeterministicColor(o.Id))
+                : (o.Id,
+                    JObject.Parse(o.Data)["color"]?.Value<string>() ?? ColorPalette.Default.DeterministicColor(o.Id));
         }
 
         public async Task<bool> RemoveWalletObjects(WalletObjectId walletObjectId)

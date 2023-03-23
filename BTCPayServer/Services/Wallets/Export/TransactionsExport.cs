@@ -108,18 +108,18 @@ namespace BTCPayServer.Services.Wallets.Export
             Map(m => m.Labels).ConvertUsing(row => row.Labels == null ? string.Empty : string.Join(", ", row.Labels));
         }
     }
-#nullable restore
+
     public class ExportTransaction
     {
         [Name("Transaction Id")]
-        public string TransactionId { get; set; }
+        public string TransactionId { get; set; } = string.Empty;
         public DateTimeOffset Timestamp { get; set; }
-        public string Amount { get; set; }
-        public string Currency { get; set; }
+        public string Amount { get; set; } = string.Empty;
+        public string Currency { get; set; } = string.Empty;
 
         [Name("Is Confirmed")]
         public bool IsConfirmed { get; set; }
-        public string Comment { get; set; }
-        public List<string> Labels { get; set; }
+        public string? Comment { get; set; }
+        public List<string>? Labels { get; set; }
     }
 }

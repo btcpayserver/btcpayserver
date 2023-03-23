@@ -128,6 +128,12 @@ async function initLabelManager (elementId) {
         };
         const select = new TomSelect(element, config);
 
+        element.parentElement.querySelectorAll('.ts-control .transaction-label a').forEach(lbl => {
+            lbl.addEventListener('click', e => {
+                e.stopPropagation()
+            })
+        })
+
         document.addEventListener(`${commonCallId}-option-added`, evt => {
             if (!(evt.detail in select.options)) {
                 select.addOption({

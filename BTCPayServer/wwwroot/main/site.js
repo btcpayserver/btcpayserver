@@ -33,7 +33,7 @@ async function initLabelManager (elementId) {
             : '--label-bg:var(--btcpay-neutral-300);--label-fg:var(--btcpay-neutral-800)'
 
     if (element) {
-        const { fetchUrl, updateUrl, walletId, walletObjectType, walletObjectId, labels } = element.dataset;
+        const { fetchUrl, updateUrl, walletId, walletObjectType, walletObjectId, labels,selectElement } = element.dataset;
         const commonCallId = `walletLabels-${walletId}`;
         if (!window[commonCallId]) {
             window[commonCallId] = fetch(fetchUrl, {
@@ -44,8 +44,13 @@ async function initLabelManager (elementId) {
                 },
             }).then(res => res.json());
         }
-        const options = await window[commonCallId];
-        const items = element.value.split(',')
+        const selectElementI = document.getElementById(selectElement);
+        const items = element.value.split(',').filter(x => !!x);
+        const options = await window[commonCallId].then(labels => {
+            const newItems = items.filter(item => !labels.find(label => label.label === item));
+            labels = [...labels, ...newItems.map(item => ({ label: item }))];
+            return labels;
+        });
         const richInfo = labels ? JSON.parse(labels) : {};
         const config = {
             options,
@@ -87,6 +92,16 @@ async function initLabelManager (elementId) {
                 }));
             },
             async onChange (values) {
+                if(selectElementI){
+                    while (selectElementI.options.length > 0) {
+                        selectElementI.remove(0);
+                    }
+                    select.items.forEach((item) => {
+                        selectElementI.add(new Option(item, item, true, true));
+                    })
+                }
+                if(!updateUrl)
+                    return;
                 select.lock();
                 try {
                     const response = await fetch(updateUrl, {

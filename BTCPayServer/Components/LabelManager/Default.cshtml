@@ -7,9 +7,9 @@
         walletId = Model.WalletObjectId.WalletId,
         excludeTypes = Safe.Json(Model.ExcludeTypes)
     });
-    var updateUrl = Url.Action("UpdateLabels", "UIWallets", new {
+    var updateUrl = Model.AutoUpdate? Url.Action("UpdateLabels", "UIWallets", new {
         walletId = Model.WalletObjectId.WalletId
-    });
+    }): string.Empty;
 }
 <input id="@elementId" placeholder="Select labels" autocomplete="off" value="@string.Join(",", Model.SelectedLabels)"
        class="only-for-js form-control label-manager ts-wrapper @(Model.DisplayInline ? "ts-inline" : "")"
@@ -18,4 +18,5 @@
        data-wallet-id="@Model.WalletObjectId.WalletId"
        data-wallet-object-id="@Model.WalletObjectId.Id"
        data-wallet-object-type="@Model.WalletObjectId.Type"
+       data-select-element="@Model.SelectElement"
        data-labels='@Safe.Json(Model.RichLabelInfo)' />

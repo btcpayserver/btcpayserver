@@ -732,6 +732,18 @@ namespace BTCPayServer.Controllers
             if (!ModelState.IsValid)
                 return View(vm);
 
+            foreach (var transactionOutput in vm.Outputs.Where(output => output.Labels?.Any() is true))
+            {
+                var labels = transactionOutput.Labels.Where(s => !string.IsNullOrWhiteSpace(s)).ToArray();
+                var walletObjectAddress = new WalletObjectId(walletId, WalletObjectData.Types.Address, transactionOutput.DestinationAddress.ToLowerInvariant());
+                var obj = await WalletRepository.GetWalletObject(walletObjectAddress); 
+                if (obj is null) 
+                {
+                    await WalletRepository.EnsureWalletObject(walletObjectAddress); 
+                }
+                await WalletRepository.AddWalletObjectLabels(walletObjectAddress, labels);
+            }
+            
             var derivationScheme = GetDerivationSchemeSettings(walletId);
             if (derivationScheme is null)
                 return NotFound();

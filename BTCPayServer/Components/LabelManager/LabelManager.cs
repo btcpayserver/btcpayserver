@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -6,15 +7,17 @@ namespace BTCPayServer.Components.LabelManager
 {
     public class LabelManager : ViewComponent
     {
-        public IViewComponentResult Invoke(WalletObjectId walletObjectId, string[] selectedLabels, bool excludeTypes = true, bool displayInline = false, Dictionary<string, RichLabelInfo> richLabelInfo = null)
+        public IViewComponentResult Invoke(WalletObjectId walletObjectId, string[] selectedLabels, bool excludeTypes = true, bool displayInline = false, Dictionary<string, RichLabelInfo> richLabelInfo = null, bool autoUpdate = true, string selectElement = null)
         {
             var vm = new LabelViewModel
             {
                 ExcludeTypes = excludeTypes,
                 WalletObjectId = walletObjectId,
-                SelectedLabels = selectedLabels,
+                SelectedLabels = selectedLabels?? Array.Empty<string>(),
                 DisplayInline = displayInline,
-                RichLabelInfo = richLabelInfo
+                RichLabelInfo = richLabelInfo,
+                AutoUpdate = autoUpdate,
+                SelectElement = selectElement
             };
             return View(vm);
         }

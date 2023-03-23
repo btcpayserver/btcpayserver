@@ -1,8 +1,10 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using BTCPayServer.Data;
 using CsvHelper.Configuration;
 using CsvHelper.Configuration.Attributes;
@@ -55,25 +57,27 @@ namespace BTCPayServer.Services.Wallets.Export
         // https://github.com/bitcoin/bips/blob/master/bip-0329.mediawiki
         private static string ProcessBip329(List<ExportTransaction> txs)
         {
-            var serializerSett = new JsonSerializerSettings
+            var sw = new StringWriter();
+            var jsonw = new JsonTextWriter(sw);
+            foreach (var tx in txs)
             {
-                ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
-                ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
-            };
-            var lines = txs.Aggregate(new List<object>(), (res, tx) =>
-            {
-                if (tx.Labels is { Count: > 0 })
+                if (tx.Labels is null)
+                    continue;
+                foreach (var label in tx.Labels)
                 {
-                    var label = string.Join(", ", tx.Labels);
-                    var obj = new { Type = "tx", Ref = tx.TransactionId, Label = label };
-                    var json = JsonConvert.SerializeObject(obj, Formatting.None, serializerSett);
-                    res.Add(json);
+                    jsonw.WriteStartObject();
+                    jsonw.WritePropertyName("type");
+                    jsonw.WriteValue("tx");
+                    jsonw.WritePropertyName("ref");
+                    jsonw.WriteValue(tx.TransactionId);
+                    jsonw.WritePropertyName("label");
+                    jsonw.WriteValue(label);
+                    jsonw.WriteEndObject();
+                    jsonw.WriteWhitespace("\n");
                 }
-                return res;
-            });
-                
-            var jsonl = string.Join("\n", lines);
-            return jsonl;
+            }
+            jsonw.Flush();
+            return sw.ToString();
         }
 
         private static string ProcessJson(List<ExportTransaction> invoices)
@@ -104,7 +108,7 @@ namespace BTCPayServer.Services.Wallets.Export
             Map(m => m.Labels).ConvertUsing(row => row.Labels == null ? string.Empty : string.Join(", ", row.Labels));
         }
     }
-
+#nullable restore
     public class ExportTransaction
     {
         [Name("Transaction Id")]

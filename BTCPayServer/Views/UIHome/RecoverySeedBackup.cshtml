@@ -7,7 +7,6 @@
 @section PageHeadContent {
     <style>
         main { max-width: 800px; margin: 0 auto; text-align: center;}
-        @@media (min-width: 476px) { ol#RecoveryPhrase { flex-wrap: wrap; gap: .75rem 9rem; width: 21rem; height: 19rem; } }
 
         form#RecoveryConfirmation button { position: absolute; bottom:0; left:50%; width:200px; margin-left:-100px; }
         form#RecoveryConfirmation button:not([disabled]) { display: none; }
@@ -43,7 +42,7 @@
             Write them down on a piece of paper in the exact order:
         </p>
     </div>
-    <ol id="RecoveryPhrase" data-mnemonic="@Model.Mnemonic" class="d-flex flex-column flex-wrap my-5 mx-auto justify-content-center">
+    <ol id="RecoveryPhrase" data-mnemonic="@Model.Mnemonic" class="my-5 mx-auto">
         @foreach (var word in Model.Words)
         {
             <li class="text-start text-muted py-2">

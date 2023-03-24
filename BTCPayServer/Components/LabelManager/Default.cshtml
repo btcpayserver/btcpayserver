@@ -12,7 +12,7 @@
     }): string.Empty;
 }
 <input id="@elementId" placeholder="Select labels" autocomplete="off" value="@string.Join(",", Model.SelectedLabels)"
-       class="d-none form-control label-manager ts-wrapper @(Model.DisplayInline ? "ts-inline" : "")"
+       class="only-for-js form-control label-manager ts-wrapper @(Model.DisplayInline ? "ts-inline" : "")"
        data-fetch-url="@fetchUrl"
        data-update-url="@updateUrl"
        data-wallet-id="@Model.WalletObjectId.WalletId"

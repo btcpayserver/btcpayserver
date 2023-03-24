@@ -460,13 +460,13 @@ namespace BTCPayServer.Controllers
                 }
                 if (ix is null) continue;
                 var input = vm.Inputs.First(model => model.Index == inputToObject.Key);
-                input.Labels = ix.LabelColors.Keys.ToArray();
+                input.Labels = ix.LabelColors;
             }
             foreach (var outputToObject in outputToObjects)
             {
                 if (!labelInfo.TryGetValue(outputToObject.Value.Id, out var ix)) continue;
                 var destination = vm.Destinations.First(model => model.Destination == outputToObject.Key);
-                destination.Labels = ix.LabelColors.Keys.ToArray();
+                destination.Labels = ix.LabelColors;
             }
             
         }

@@ -39,23 +39,9 @@ hr.primary {
     background-color: var(--btcpay-form-bg);
 }
 
-.wraptextAuto {
-    max-width: 300px;
-    text-overflow: ellipsis;
-    overflow: hidden;
-    display: block;
-    white-space: nowrap;
-}
-
 @media (min-width: 768px) {
     .text-md-nowrap {
         white-space: nowrap;
-    }
-}
-
-@media (min-width: 768px) {
-    .wraptextAuto {
-        max-width: 600px;
     }
 }
 
@@ -221,6 +207,19 @@ h2 svg.icon.icon-info {
 
 /* Print */
 @media print {
+    section {
+        page-break-inside: avoid;
+    }
+    .table-responsive {
+        overflow: visible !important;
+    }
+    .table .text-truncate {
+        overflow: visible !important;
+        max-width: none !important;
+        white-space: unset !important;
+        word-wrap: break-word !important;
+        word-break: break-word !important;
+    }
     .table td,
     .table th {
         background: transparent;

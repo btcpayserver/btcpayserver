@@ -5,7 +5,7 @@
     <table class="table table-hover mt-3 mb-4">
         <thead class="thead-inverse">
             <tr>
-                <th>Payment method</th>
+                <th class="text-nowrap">Payment method</th>
                 @if (Model.ShowAddress)
                 {
                     <th>Address</th>
@@ -23,19 +23,19 @@
             @foreach (var payment in invoice.CryptoPayments)
             {
                 <tr>
-                    <td>@payment.PaymentMethod</td>
+                    <td class="text-nowrap">@payment.PaymentMethod</td>
                     @if (Model.ShowAddress)
                     {
                         <td title="@payment.Address">
-                            <span class="text-truncate d-block" style="max-width: 400px">@payment.Address</span>
+                            <div class="text-truncate" style="max-width:400px" data-bs-toggle="tooltip" title="@payment.Address">@payment.Address</div>
                         </td>
                     }
-                    <td class="text-end">@payment.Rate</td>
-                    <td class="text-end">@payment.Paid</td>
-                    <td class="text-end">@payment.Due</td>
+                    <td class="text-nowrap text-end">@payment.Rate</td>
+                    <td class="text-nowrap text-end">@payment.Paid</td>
+                    <td class="text-nowrap text-end">@payment.Due</td>
                     @if (invoice.Overpaid)
                     {
-                        <td class="text-end">@payment.Overpaid</td>
+                        <td class="text-nowrap text-end">@payment.Overpaid</td>
                     }
                 </tr>
                 var details = payment.PaymentMethodRaw.GetPaymentMethodDetails();

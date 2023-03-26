@@ -95,7 +95,7 @@
 <div class="sticky-header-setup"></div>
 <div class="sticky-header d-flex flex-wrap gap-3 align-items-center justify-content-between">
     <h2 class="mb-0 text-break">@ViewData["Title"]</h2>
-    <div class="d-flex flex-wrap gap-3">
+    <div class="d-flex flex-wrap gap-3 d-print-none">
         @if (Model.ShowCheckout)
         {
             <a asp-action="Checkout" class="invoice-checkout-link btn btn-primary text-nowrap" asp-route-invoiceId="@Model.Id">Checkout</a>
@@ -382,136 +382,143 @@
     <h3 class="mb-0">Invoice Summary</h3>
     <partial name="ListInvoicesPaymentsPartial" model="(Model, true)"/>
 
-    @if (Model.Deliveries.Count != 0)
+    @if (Model.Deliveries.Any())
     {
-        <h3 class="mb-3 mt-4">Webhooks</h3>
-        <div class="table-responsive-xl">
-            <table class="table table-hover table-responsive-md mb-5">
-                <thead>
-                <tr>
-                    <th>Status</th>
-                    <th>ID</th>
-                    <th>Type</th>
-                    <th>Url</th>
-                    <th>Date</th>
-                    <th class="text-end">Action</th>
-                </tr>
-                </thead>
-                <tbody>
-                @foreach (var delivery in Model.Deliveries)
-                {
+        <section class="mt-4 d-print-none">
+            <h3 class="mb-3">Webhooks</h3>
+            <div class="table-responsive-xl">
+                <table class="table table-hover table-responsive-md mb-5">
+                    <thead>
                     <tr>
-                        <form asp-action="RedeliverWebhook"
-                              asp-route-storeId="@Model.StoreId"
-                              asp-route-invoiceId="@Model.Id"
-                              asp-route-deliveryId="@delivery.Id"
-                              method="post">
+                        <th>Status</th>
+                        <th>ID</th>
+                        <th>Type</th>
+                        <th>Url</th>
+                        <th>Date</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var delivery in Model.Deliveries)
+                    {
+                        <tr>
+                            <form asp-action="RedeliverWebhook"
+                                  asp-route-storeId="@Model.StoreId"
+                                  asp-route-invoiceId="@Model.Id"
+                                  asp-route-deliveryId="@delivery.Id"
+                                  method="post">
+                                <td>
+                                    <span>
+                                        @if (delivery.Success)
+                                        {
+                                            <span class="fa fa-check text-success" title="Success"></span>
+                                        }
+                                        else
+                                        {
+                                            <span class="fa fa-times text-danger" title="@delivery.ErrorMessage"></span>
+                                        }
+                                    </span>
+                                </td>
+                                <td>
+                                    <span>
+                                        <a asp-action="WebhookDelivery"
+                                           asp-route-invoiceId="@Model.Id"
+                                           asp-route-deliveryId="@delivery.Id"
+                                           class="delivery-content"
+                                           target="_blank">
+                                            @delivery.Id
+                                        </a>
+                                    </span>
+                                </td>
+                                <td>
+                                    <span>@delivery.Type</span>
+                                </td>
+                                <td>
+                                    <span class="text-nowrap" data-bs-toggle="tooltip" title="@delivery.PayloadUrl" style="cursor: pointer;">
+                                        <span style="max-width: 250px;">@delivery.PayloadUrl</span>
+                                    </span>
+                                </td>
+                                <td>
+                                    <span>
+                                        @delivery.Time.ToBrowserDate()
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <button id="#redeliver-@delivery.Id"
+                                            type="submit"
+                                            class="btn btn-link p-0 redeliver">
+                                        Redeliver
+                                    </button>
+                                </td>
+                            </form>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        
+    }
+    @if ((Model.Refunds?.Count ?? 0) > 0)
+    {
+        <section class="mt-4">
+            <h3 class="mb-3">Refunds</h3>
+            <div class="table-responsive-xl">
+                <table class="table table-hover table-responsive-md mb-5">
+                    <thead>
+                    <tr>
+                        <th>Pull Payment</th>
+                        <th>Amount</th>
+                        <th>Date</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var refund in Model.Refunds)
+                    {
+                        var blob = refund.PullPaymentData.GetBlob();
+                        <tr>
+
                             <td>
                                 <span>
-                                    @if (delivery.Success)
-                                    {
-                                        <span class="fa fa-check text-success" title="Success"></span>
-                                    }
-                                    else
-                                    {
-                                        <span class="fa fa-times text-danger" title="@delivery.ErrorMessage"></span>
-                                    }
-                                </span>
-                            </td>
-                            <td>
-                                <span>
-                                    <a asp-action="WebhookDelivery"
-                                       asp-route-invoiceId="@Model.Id"
-                                       asp-route-deliveryId="@delivery.Id"
+                                    <a asp-action="ViewPullPayment" asp-controller="UIPullPayment"
+                                       asp-route-pullPaymentId="@refund.PullPaymentDataId"
                                        class="delivery-content"
                                        target="_blank">
-                                        @delivery.Id
+                                        @refund.PullPaymentData.Id
                                     </a>
                                 </span>
                             </td>
                             <td>
-                                <span>@delivery.Type</span>
+                                <span>@blob.Limit @blob.Currency</span>
                             </td>
                             <td>
-                                <span class="text-nowrap" data-bs-toggle="tooltip" title="@delivery.PayloadUrl" style="cursor: pointer;">
-                                    <span style="max-width: 250px;">@delivery.PayloadUrl</span>
-                                </span>
+                                <span> @refund.PullPaymentData.StartDate.ToBrowserDate() </span>
                             </td>
-                            <td>
-                                <span>
-                                    @delivery.Time.ToBrowserDate()
-                                </span>
-                            </td>
-                            <td class="text-end">
-                                <button id="#redeliver-@delivery.Id"
-                                        type="submit"
-                                        class="btn btn-link p-0 redeliver">
-                                    Redeliver
-                                </button>
-                            </td>
-                        </form>
-                    </tr>
-                }
-                </tbody>
-            </table>
-        </div>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </section>
     }
-    @if ((Model.Refunds?.Count ?? 0) > 0)
-    {
-        <h3 class="mb-3 mt-4">Refunds</h3>
-        <div class="table-responsive-xl">
-            <table class="table table-hover table-responsive-md mb-5">
-                <thead>
-                <tr>
-                    <th>Pull Payment</th>
-                    <th>Amount</th>
-                    <th>Date</th>
-                </tr>
-                </thead>
-                <tbody>
-                @foreach (var refund in Model.Refunds)
-                {
-                    var blob = refund.PullPaymentData.GetBlob();
-                    <tr>
-
-                        <td>
-                            <span>
-                                <a asp-action="ViewPullPayment" asp-controller="UIPullPayment"
-                                   asp-route-pullPaymentId="@refund.PullPaymentDataId"
-                                   class="delivery-content"
-                                   target="_blank">
-                                    @refund.PullPaymentData.Id
-                                </a>
-                            </span>
-                        </td>
-                        <td>
-                            <span>@blob.Limit @blob.Currency</span>
-                        </td>
-                        <td>
-                            <span> @refund.PullPaymentData.StartDate.ToBrowserDate() </span>
-                        </td>
-                    </tr>
-                }
-                </tbody>
-            </table>
-        </div>
-    }
-    <h3 class="mb-0 mt-5">Events</h3>
-    <table class="table table-hover mt-3 mb-4">
-        <thead>
-        <tr>
-            <th>Date</th>
-            <th>Message</th>
-        </tr>
-        </thead>
-        <tbody>
-        @foreach (var evt in Model.Events)
-        {
-            <tr class="text-@evt.GetCssClass()">
-                <td>@evt.Timestamp.ToBrowserDate()</td>
-                <td>@evt.Message</td>
+    <section class="mt-5 d-print-none">
+        <h3 class="mb-0">Events</h3>
+        <table class="table table-hover mt-3 mb-4">
+            <thead>
+            <tr>
+                <th>Date</th>
+                <th>Message</th>
             </tr>
-        }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+            @foreach (var evt in Model.Events)
+            {
+                <tr class="text-@evt.GetCssClass()">
+                    <td>@evt.Timestamp.ToBrowserDate()</td>
+                    <td>@evt.Message</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </section>
 </div>

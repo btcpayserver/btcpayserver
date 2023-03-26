@@ -1,6 +1,10 @@
 @inject BTCPayServer.Security.ContentSecurityPolicies csp
 @using Microsoft.AspNetCore.Mvc.ModelBinding
 @using BTCPayServer.Controllers
+@using BTCPayServer.Services
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using BTCPayServer.Components.LabelManager
+@using BTCPayServer.Components.UIExtensionPoint
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model WalletSendModel
 @{
@@ -35,6 +39,8 @@
             border-bottom-right-radius: .2rem !important;
         }
     </style>
+    <link href="~/vendor/tom-select/tom-select.bootstrap5.min.css" asp-append-version="true" rel="stylesheet">
+    <script src="~/vendor/tom-select/tom-select.complete.min.js" asp-append-version="true"></script>
 }
 
 @section PageFootContent
@@ -115,6 +121,21 @@
                 }
             </div>
         </div>
+        <div class="form-group">
+            <label class="form-label">Labels</label>
+            <select asp-for="Outputs[0].Labels" class="d-none">
+                @foreach (var t in Model.Outputs[0].Labels)
+                {
+                    <option value="@t" selected></option>
+                }
+            </select>
+            <vc:label-manager
+                selected-labels="Model.Outputs[0].Labels"
+                exclude-types="true"
+                select-element="Outputs_0__Labels"
+                wallet-object-id="new WalletObjectId(WalletId.Parse(walletId), WalletObjectData.Types.Address, Model.Outputs[0].DestinationAddress)"
+                auto-update="false" />
+        </div>
     }
     else
     {
@@ -157,6 +178,21 @@
                         <input type="checkbox" asp-for="Outputs[index].SubtractFeesFromOutput" class="form-check-input subtract-fees" />
                         <label asp-for="Outputs[index].SubtractFeesFromOutput" class="form-check-label"></label>
                         <span asp-validation-for="Outputs[index].SubtractFeesFromOutput" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Labels</label>
+                        <select asp-for="Outputs[index].Labels" class="d-none">
+                            @foreach (var t in Model.Outputs[index].Labels)
+                            {
+                                <option value="@t" selected></option>
+                            }
+                        </select>
+                        <vc:label-manager
+                            selected-labels="Model.Outputs[index].Labels"
+                            exclude-types="true"
+                            select-element="Outputs_@(index)__Labels"
+                            wallet-object-id="new WalletObjectId(WalletId.Parse(walletId), WalletObjectData.Types.Address, Model.Outputs[index].DestinationAddress)"
+                            auto-update="false" />
                     </div>
                 </div>
             }

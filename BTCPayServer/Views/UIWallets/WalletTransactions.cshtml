@@ -9,6 +9,8 @@
 }
 
 @section PageHeadContent {
+    <script src="~/vendor/tom-select/tom-select.complete.min.js" asp-append-version="true"></script>
+    <link href="~/vendor/tom-select/tom-select.bootstrap5.min.css" asp-append-version="true" rel="stylesheet">
     <style>
         .smMaxWidth {
             max-width: 125px;
@@ -45,7 +47,6 @@
 @section PageFootContent {
     @*Without async, somehow selenium do not manage to click on links in this page*@
     <script src="~/modal/btcpay.js" asp-append-version="true" async></script>
-
     @* Custom Range Modal *@
     <script>
         let observer = null;
@@ -92,7 +93,7 @@
             
             if (response.ok) {
                 const html = await response.text();
-                $list.innerHTML += html;
+                $list.insertAdjacentHTML('beforeend', html);
                 skip = skipNext;
                 
                 if ($loadMore) {
@@ -122,6 +123,7 @@
             
             $indicator.classList.add('d-none');
             formatDateTimes(document.getElementById('switchTimeFormat').dataset.mode);
+            initLabelManagers();
         }
     </script>
 }

@@ -1374,11 +1374,11 @@ namespace BTCPayServer.Tests
             // Can add a label?
             await TestUtils.EventuallyAsync(async () =>
             {
-                s.Driver.WaitForElement(By.CssSelector("div.label-manager input ")).Click();
+                s.Driver.WaitForElement(By.CssSelector("div.label-manager input")).Click();
                 await Task.Delay(500);
-                s.Driver.WaitForElement(By.CssSelector("div.label-manager input ")).SendKeys("test-label" + Keys.Enter);
+                s.Driver.WaitForElement(By.CssSelector("div.label-manager input")).SendKeys("test-label" + Keys.Enter);
                 await Task.Delay(500);
-                s.Driver.WaitForElement(By.CssSelector("div.label-manager input ")).SendKeys("label2" + Keys.Enter);
+                s.Driver.WaitForElement(By.CssSelector("div.label-manager input")).SendKeys("label2" + Keys.Enter);
             });
            
             TestUtils.Eventually(() =>

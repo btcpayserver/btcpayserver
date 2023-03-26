@@ -135,17 +135,6 @@
                                                     <td class="text-end text-nowrap">@payment.PaidFormatted</td>
                                                     <td class="text-end text-nowrap">@payment.RateFormatted</td>
                                                 </tr>
-                                                @if (payment.PaymentType == BitcoinPaymentType.Instance)
-                                                {
-                                                    <tr>
-                                                        <th class="fw-normal text-nowrap text-secondary">
-                                                            Transaction Id
-                                                        </th>
-                                                        <td class="fw-normal" colspan="3">
-                                                            <vc:truncate-center text="@payment.Id" link="@payment.Link" classes="truncate-center-id" />
-                                                        </td>
-                                                    </tr>
-                                                }
                                                 @if (!string.IsNullOrEmpty(payment.Destination))
                                                 {
                                                     <tr>
@@ -157,14 +146,14 @@
                                                         </td>
                                                     </tr>
                                                 }
-                                                @if (!string.IsNullOrEmpty(payment.PaymentProof) && payment.PaymentProof != payment.Id)
+                                                @if (!string.IsNullOrEmpty(payment.PaymentProof))
                                                 {
                                                     <tr>
                                                         <th class="fw-normal text-nowrap text-secondary">
                                                             Payment Proof
                                                         </th>
                                                         <td class="fw-normal" colspan="3">
-                                                                <vc:truncate-center text="@payment.PaymentProof" classes="truncate-center-id" />
+                                                            <vc:truncate-center text="@payment.PaymentProof" link="@payment.Link" classes="truncate-center-id" />
                                                         </td>
                                                     </tr>
                                                 }

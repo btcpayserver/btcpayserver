@@ -14,6 +14,7 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers;
 using ExchangeSharp;
 using NBitcoin;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
@@ -250,7 +251,6 @@ retry:
         {
             // 1. Generate an API Token on https://www.transifex.com/user/settings/api/
             // 2. Run "dotnet user-secrets set TransifexAPIToken <youapitoken>"
-
             await PullTransifexTranslationsCore(TranslationFolder.CheckoutV1);
             await PullTransifexTranslationsCore(TranslationFolder.CheckoutV2);
 

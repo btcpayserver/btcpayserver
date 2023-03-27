@@ -1317,22 +1317,34 @@ namespace BTCPayServer.Controllers
 
             var wallet = _walletProvider.GetWallet(paymentMethod.Network);
             var walletTransactionsInfoAsync = WalletRepository.GetWalletTransactionsInfo(walletId, (string[]?)null);
-            var input = await wallet.FetchTransactionHistory(paymentMethod.AccountDerivation, null, null);
+            var input = await wallet.FetchTransactionHistory(paymentMethod.AccountDerivation);
             var walletTransactionsInfo = await walletTransactionsInfoAsync;
             var export = new TransactionsExport(wallet, walletTransactionsInfo);
             var res = export.Process(input, format);
-
+            var fileType = format switch
+            {
+                "csv" => "csv",
+                "json" => "json",
+                "bip329" => "jsonl",
+                _ => throw new ArgumentOutOfRangeException(nameof(format), format, null)
+            };
+            var mimeType = format switch
+            {
+                "csv" => "text/csv",
+                "json" => "application/json",
+                "bip329" => "text/jsonl", // https://stackoverflow.com/questions/59938644/what-is-the-mime-type-of-jsonl-files
+                _ => throw new ArgumentOutOfRangeException(nameof(format), format, null)
+            };
             var cd = new ContentDisposition
             {
-                FileName = $"btcpay-{walletId}-{DateTime.UtcNow.ToString("yyyyMMdd-HHmmss", CultureInfo.InvariantCulture)}.{format}",
+                FileName = $"btcpay-{walletId}-{DateTime.UtcNow.ToString("yyyyMMdd-HHmmss", CultureInfo.InvariantCulture)}.{fileType}",
                 Inline = true
             };
             Response.Headers.Add("Content-Disposition", cd.ToString());
             Response.Headers.Add("X-Content-Type-Options", "nosniff");
-            return Content(res, "application/" + format);
+            return Content(res, mimeType);
         }
-
-
+        
         public class UpdateLabelsRequest
         {
             public string? Id { get; set; }

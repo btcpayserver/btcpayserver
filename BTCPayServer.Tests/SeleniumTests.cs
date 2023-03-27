@@ -1570,9 +1570,20 @@ namespace BTCPayServer.Tests
             Assert.Contains("\"Amount\": \"3.00000000\"", s.Driver.PageSource);
             s.Driver.SwitchTo().Window(s.Driver.WindowHandles.First());
 
+            // BIP-329 export
+            s.Driver.FindElement(By.Id("ExportDropdownToggle")).Click();
+            s.Driver.FindElement(By.Id("ExportBIP329")).Click();
+            Thread.Sleep(1000);
+            s.Driver.SwitchTo().Window(s.Driver.WindowHandles.Last());
+            Assert.Contains(s.WalletId.ToString(), s.Driver.Url);
+            Assert.EndsWith("export?format=bip329", s.Driver.Url);
+            Assert.Contains("{\"type\":\"tx\",\"ref\":\"", s.Driver.PageSource);
+            s.Driver.SwitchTo().Window(s.Driver.WindowHandles.First());
+
             // CSV export
             s.Driver.FindElement(By.Id("ExportDropdownToggle")).Click();
             s.Driver.FindElement(By.Id("ExportCSV")).Click();
+            s.Driver.SwitchTo().Window(s.Driver.WindowHandles.First());
         }
 
         [Fact(Timeout = TestTimeout)]

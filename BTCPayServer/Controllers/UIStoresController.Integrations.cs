@@ -16,12 +16,6 @@ namespace BTCPayServer.Controllers
 {
     public partial class UIStoresController
     {
-        [HttpGet("{storeId}/plugins")]
-        public IActionResult Plugins()
-        {
-            return View("Plugins", new PluginsViewModel());
-        }
-
         private async Task<Data.WebhookDeliveryData?> LastDeliveryForWebhook(string webhookId)
         {
             return (await _Repo.GetWebhookDeliveries(CurrentStore.Id, webhookId, 1)).ToList().FirstOrDefault();

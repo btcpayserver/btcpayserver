@@ -11244,12 +11244,12 @@ textarea.w-auto {
 }
 
 /* Pull tables out of the grid by their horizontal column padding */
-main *:not([class^="table-responsive"]) > .table {
+main *:not([class*="table-responsive"]) > .table {
   width: calc(100% + 1rem);
   margin: 1.5rem -0.5rem;
 }
 
-main [class^="table-responsive"] {
+main [class*="table-responsive"] {
   width: calc(100% + 1rem);
   margin: 1.5rem -0.5rem;
 }
@@ -11280,38 +11280,43 @@ main [class^="table-responsive"] {
   cursor: pointer;
 }
 
-.w-100px {
-  width: 100px;
-}
-.w-125px {
-  width: 125px;
-}
-.w-150px {
-  width: 150px;
-}
-.w-175px {
-  width: 175px;
-}
-.w-200px {
-  width: 200px;
-}
-.w-225px {
-  width: 225px;
-}
-.w-250px {
-  width: 250px;
-}
-.w-275px {
-  width: 275px;
-}
-.w-300px {
-  width: 300px;
-}
-.w-325px {
-  width: 325px;
-}
-.w-350px {
-  width: 350px;
+@media screen {
+  .w-75px {
+    width: 75px;
+  }
+  .w-100px {
+    width: 100px;
+  }
+  .w-125px {
+    width: 125px;
+  }
+  .w-150px {
+    width: 150px;
+  }
+  .w-175px {
+    width: 175px;
+  }
+  .w-200px {
+    width: 200px;
+  }
+  .w-225px {
+    width: 225px;
+  }
+  .w-250px {
+    width: 250px;
+  }
+  .w-275px {
+    width: 275px;
+  }
+  .w-300px {
+    width: 300px;
+  }
+  .w-325px {
+    width: 325px;
+  }
+  .w-350px {
+    width: 350px;
+  }
 }
 
 /* Chrome, Safari, Edge, Opera */

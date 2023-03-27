@@ -20,6 +20,7 @@ using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Models.PaymentRequestViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
+using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Rating;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
@@ -256,7 +257,7 @@ namespace BTCPayServer.Controllers
             return paymentData switch
             {
                 BitcoinLikePaymentData b => b.Outpoint.ToString(),
-                LightningPaymentData l => l.Preimage,
+                LightningLikePaymentData l => l.Preimage?.ToString(),
                 _ => null
             };
         }

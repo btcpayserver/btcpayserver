@@ -1,0 +1,17 @@
+@model BTCPayServer.Components.TruncateCenter.TruncateCenterViewModel
+<span class="truncate-center @Model.Classes">
+    <span class="truncate-center-truncated" @(Model.Truncated != Model.Text ? $"data-bs-toggle=tooltip title={Model.Text}" : "")>@Model.Truncated</span>
+    <span class="truncate-center-text">@Model.Text</span>
+    @if (Model.Copy)
+    {
+        <button type="button" class="btn btn-link p-0" data-clipboard="@Model.Text">
+            <vc:icon symbol="copy" />
+        </button>
+    }
+    @if (!string.IsNullOrEmpty(Model.Link))
+    {
+        <a href="@Model.Link" rel="noreferrer noopener" target="_blank">
+            <vc:icon symbol="info" />
+        </a>
+    }
+</span>

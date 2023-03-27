@@ -912,6 +912,54 @@ input.ts-wrapper.form-control:not(.ts-hidden-accessible,.ts-inline) {
     padding-left: var(--btcpay-space-m);
 }
 
+/* Truncated text */
+.truncate-center {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--btcpay-space-s);
+}
+
+.truncate-center-id {
+    font-family: var(--btcpay-font-monospace);
+    font-size: .875em;
+}
+
+.truncate-center-text {
+    word-wrap: break-word;
+    word-break: break-word;
+}
+
+.truncate-center a,
+.truncate-center button,
+.truncate-center-truncated {
+    line-height: 1;
+}
+
+.truncate-center button.btn .icon {
+    --btn-icon-size: 1em;
+}
+
+@media screen {
+    .truncate-center-id {
+        background: var(--btcpay-neutral-100);
+        border: 1px solid var(--btcpay-neutral-200);
+        border-radius: var(--btcpay-border-radius-l);
+        padding: var(--btcpay-space-xs) var(--btcpay-space-s);
+    }
+    
+    .truncate-center-text {
+        display: none;
+    }
+}
+
+@media print {
+    .truncate-center a,
+    .truncate-center button,
+    .truncate-center-truncated {
+        display: none;
+    }
+}
+
 /* Copy */
 [data-clipboard],
 [data-clipboard] input[readonly] {

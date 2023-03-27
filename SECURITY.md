@@ -5,7 +5,7 @@ We take the security of our project seriously, and we encourage responsible disc
 We appreciate your efforts to disclose your findings responsibly.
 
 ##### 1. Reporting Channel
-If you believe you have discovered a vulnerability in our products or services, please email us at security@btcpayserver.org . Alternatively, you may report the vulnerability to us through [huntr.dev](https://huntr.dev/repos/btcpayserver/btcpayserver/).
+If you believe you have discovered a vulnerability in our project, please email us at security@btcpayserver.org . Alternatively, you may report the vulnerability to us through [huntr.dev](https://huntr.dev/repos/btcpayserver/btcpayserver/).
 
 Please allow for up to 2 business days for an acknowledgement of receipt. If you receive no response within 2 business days, please follow up via email to ensure the original message was received.
 
@@ -37,6 +37,11 @@ We will provide regular updates to the reporter until the vulnerability is resol
 ##### 6. Timeline to Public Disclosure
 <!-- No tentaive timeline, given it can differ based on multiple criterias, but we have to take into account the fact that a public disclosure of a full year is too much. Security by obscurity is rarely beneficial, especially for the uninformed end-users. -->
 We will work with the reporter to define a suitable timeline to public disclosure once the vulnerability is remediated.
+
+<!-- 
+##### 7. More information
+For more information on our complete vulnerability response process, please see our [documentation]()
+-->
 
 ##### 7. Reporting Template Example
 <!-- Simple template for users to take as example for vulnerability reporting. Contains the basic minimum information that we need to assess promptly a report. -->

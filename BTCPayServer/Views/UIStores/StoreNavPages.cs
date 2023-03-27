@@ -15,7 +15,7 @@ namespace BTCPayServer.Views.Stores
         Tokens,
         Users,
         PayButton,
-        [Obsolete("Use custom categories for your plugin/integration specificallyinstead")]
+        [Obsolete("Use custom categories for your plugin/integration instead")]
         Plugins,
         Webhooks,
         PullPayments,

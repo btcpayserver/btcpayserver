@@ -40,9 +40,10 @@ public class FormTests : UnitTestBase
                 }
             }
         };
-        var service = new FormDataService(null, null);
+        var providers = new FormComponentProviders(new List<IFormComponentProvider>());
+        var service = new FormDataService(null, providers);
         Assert.False(service.IsFormSchemaValid(form.ToString(), out _, out _));
-        form = new Form()
+        form = new Form
         {
             Fields = new List<Field>
             {

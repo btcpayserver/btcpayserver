@@ -158,24 +158,22 @@ public class FormDataService
             Amount = string.IsNullOrEmpty(amt) ? null : decimal.Parse(amt, CultureInfo.InvariantCulture),
             Metadata = GetValues(form),
         };
-
     }
-    
 
     public string? GetValue(Form form, string field)
     {
         return GetValue(form, form.GetFieldByFullName(field));
     }
+
     public string? GetValue(Form form, Field field)
     {
-
         if (field is null)
         {
             return null;
         }
         return _formProviders.TypeToComponentProvider.TryGetValue(field.Type, out var formComponentProvider) ? formComponentProvider.GetValue(form, field) : field.Value;
     }
-    
+
     public JObject GetValues(Form form)
     {
         var r = new JObject();

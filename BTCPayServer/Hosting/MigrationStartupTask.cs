@@ -324,7 +324,7 @@ namespace BTCPayServer.Hosting
                        var cfSettings = app.GetSettings<CrowdfundSettings>();
                        if (!string.IsNullOrEmpty(cfSettings?.PerksTemplate))
                        {
-                           cfSettings.PerksTemplate = AppService.SerializeTemplate(Parse(cfSettings?.PerksTemplate));
+                           cfSettings.PerksTemplate = AppService.SerializeTemplate(ParsePOSYML(cfSettings?.PerksTemplate));
                            app.SetSettings(cfSettings);
                        }
                        break;
@@ -332,7 +332,7 @@ namespace BTCPayServer.Hosting
                        var pSettings = app.GetSettings<PointOfSaleSettings>();
                        if (!string.IsNullOrEmpty(pSettings?.Template))
                        {
-                           pSettings.Template = AppService.SerializeTemplate(Parse(pSettings?.Template));
+                           pSettings.Template = AppService.SerializeTemplate(ParsePOSYML(pSettings?.Template));
                            app.SetSettings(pSettings);
                        }
                        break;
@@ -341,11 +341,15 @@ namespace BTCPayServer.Hosting
 
             await ctx.SaveChangesAsync();
             
-            ViewPointOfSaleViewModel.Item[] Parse(string yaml)
+        }
+        
+        
+            public static ViewPointOfSaleViewModel.Item[] ParsePOSYML(string yaml)
             {
                 var items = new List<ViewPointOfSaleViewModel.Item>();
                 using var reader = new StringReader(yaml);
                 ViewPointOfSaleViewModel.Item currentItem = null;
+                var handlingPaymentMethodsForCurrentItem = false;
                 while (reader.ReadLine() is { } line)
                 {
                     if (string.IsNullOrWhiteSpace(line))
@@ -353,43 +357,78 @@ namespace BTCPayServer.Hosting
                         continue;
                     }
 
-                    if (line.EndsWith(":"))
+                    var parts = line.Split(':', StringSplitOptions.RemoveEmptyEntries);
+                    if (!line.StartsWith("  "))
                     {
-                        currentItem = new ViewPointOfSaleViewModel.Item();
+                        if(parts.Length <1)
+                            continue;
+                        currentItem = new ViewPointOfSaleViewModel.Item
+                        {
+                            Id = parts[0].Trim(), Title = parts[0].Trim(),
+                            PriceType = ViewPointOfSaleViewModel.ItemPriceType.Fixed
+                        };
                         items.Add(currentItem);
                         continue;
                     }
 
-                    if (currentItem != null)
+                    if (currentItem is null)
                     {
-                        var parts = line.Split(':');
+                        continue;
+                    }
+
+                    var key = parts[0].Trim().ToLower();
+                        if (handlingPaymentMethodsForCurrentItem)
+                        {
+                            if(parts.Length >1)
+                                handlingPaymentMethodsForCurrentItem = false;
+                            else
+                            {
+                                parts = line.Split('-', StringSplitOptions.RemoveEmptyEntries);
+                                if (parts.Length !=2 )
+                                {
+                                    continue;
+                                }
+                                currentItem.PaymentMethods = currentItem.PaymentMethods.Append(parts[1].Trim()).ToArray();
+                                continue;
+                            }
+                        }
+                        if (key == "payment_methods")
+                        {
+                            handlingPaymentMethodsForCurrentItem = true;
+                            currentItem.PaymentMethods = Array.Empty<string>();
+                            continue;
+                        }
                         if (parts.Length != 2)
                         {
                             throw new Exception($"Invalid line format: {line}");
                         }
-
-                        var key = parts[0].Trim().ToLower();
                         var value = parts[1].Trim();
                         switch (key)
                         {
+                            case "price_type":
                             case "custom":
                                 if (value.Equals("true", StringComparison.InvariantCultureIgnoreCase))
                                 {
-                                    currentItem.PriceType = ViewPointOfSaleViewModel.ItemPriceType.Topup;
-                                   
-                                } break;
+                                    currentItem.PriceType = currentItem.Price is null or 0
+                                        ? ViewPointOfSaleViewModel.ItemPriceType.Topup
+                                        : ViewPointOfSaleViewModel.ItemPriceType.Minimum;
+                                }
+                                else if (value.Equals("false", StringComparison.InvariantCultureIgnoreCase))
+                                {
+                                    currentItem.PriceType = ViewPointOfSaleViewModel.ItemPriceType.Fixed;
+                                }
+                                else if (Enum.TryParse<ViewPointOfSaleViewModel.ItemPriceType>(value, true,
+                                             out var customPriceType))
+                                {
+                                    currentItem.PriceType = customPriceType;
+                                }
+
+                                break;
                             case "description":
                                 currentItem.Description = value;
                                 break;
-                            case "id":
-                                currentItem.Id = value;
-                                break;
                             case "image":
                                 currentItem.Image = value;
-                                break;
-                            case "price_type":
-                                //there are true/false cases to cater for too (legacy)
-                                currentItem.PriceType = Enum.Parse<ViewPointOfSaleViewModel.ItemPriceType>(value, true);
                                 break;
                             case "price":
                                 if (decimal.TryParse(value, out var price))
@@ -411,26 +450,22 @@ namespace BTCPayServer.Hosting
                                 }
 
                                 break;
-                            case "payment_methods":
-                                currentItem.PaymentMethods = value.Split(',');
-                                break;
                             case "disabled":
                                 if (bool.TryParse(value, out var disabled))
                                 {
                                     currentItem.Disabled = disabled;
                                 }
-
                                 break;
                             default:
+                                currentItem.AdditionalData ??= new Dictionary<string, JToken>();
                                 currentItem.AdditionalData.AddOrReplace(key, value);
                                 break;
                         }
-                    }
+                    
                 }
 
                 return items.ToArray();
             }
-        }
 
 #pragma warning disable CS0612 // Type or member is obsolete
 

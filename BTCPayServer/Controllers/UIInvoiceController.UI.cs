@@ -829,6 +829,15 @@ namespace BTCPayServer.Controllers
                     NetworkFeeMode.Never => 0,
                     _ => throw new NotImplementedException()
                 },
+                RequiredConfirmations = invoice.SpeedPolicy switch
+                {
+                    SpeedPolicy.HighSpeed => 0,
+                    SpeedPolicy.MediumSpeed => 1,
+                    SpeedPolicy.LowMediumSpeed => 2,
+                    SpeedPolicy.LowSpeed => 6,
+                    _ => null
+                },
+                ReceivedConfirmations = invoice.GetAllBitcoinPaymentData(false).FirstOrDefault()?.ConfirmationCount,
 #pragma warning disable CS0618 // Type or member is obsolete
                 Status = invoice.StatusString,
 #pragma warning restore CS0618 // Type or member is obsolete

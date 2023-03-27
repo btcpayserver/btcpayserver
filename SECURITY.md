@@ -19,7 +19,7 @@ We welcome reports of vulnerabilities in repositories owned by the [BTCPay Serve
 
 ##### 3. Out of Scope
 <!-- What's out of scope? Thinking here about custom deployments, plugins that are not created by BTCPay (this includes kukks plugins that should be reported to him directly). -->
-1. Any BTCPay Server deployment that has been cutomized in any way. To facilitate reproducibility, please verify that the BTCPay Server instance is based on the un-altered source-code or [Docker Container](https://hub.docker.com/r/btcpayserver/btcpayserver).
+1. Any BTCPay Server deployment that has been customized in any way. To facilitate reproducibility, please verify that the BTCPay Server instance is based on the un-altered source-code or [Docker Container](https://hub.docker.com/r/btcpayserver/btcpayserver).
 2. Any BTCPay Server plugin that is not authored by `btcpayserver` as stated by the author tag in-app.
 
 ##### 4. Preferred Reporting Template

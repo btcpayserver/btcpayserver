@@ -31,11 +31,6 @@ namespace BTCPayServer.Payments.Lightning
             return BOLT11;
         }
 
-        public string GetPaymentProof()
-        {
-            return Preimage?.ToString();
-        }
-
         public decimal NetworkFee { get; set; }
 
         public string GetPaymentId()

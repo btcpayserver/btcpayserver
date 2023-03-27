@@ -71,11 +71,6 @@ namespace BTCPayServer.Services.Altcoins.Monero.Payments
         {
             return Address;
         }
-
-        public string GetPaymentProof()
-        {
-            return GetPaymentId();
-        }
     }
 }
 #endif

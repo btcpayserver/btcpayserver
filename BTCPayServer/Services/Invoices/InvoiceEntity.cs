@@ -1330,6 +1330,5 @@ namespace BTCPayServer.Services.Invoices
 
         PaymentType GetPaymentType();
         string GetDestination();
-        string GetPaymentProof();
     }
 }

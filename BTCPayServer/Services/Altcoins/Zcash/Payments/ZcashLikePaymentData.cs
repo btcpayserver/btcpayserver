@@ -64,11 +64,6 @@ namespace BTCPayServer.Services.Altcoins.Zcash.Payments
         {
             return Address;
         }
-
-        public string GetPaymentProof()
-        {
-            return GetPaymentId();
-        }
     }
 }
 #endif

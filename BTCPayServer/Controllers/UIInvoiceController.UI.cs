@@ -19,6 +19,7 @@ using BTCPayServer.Models;
 using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Models.PaymentRequestViewModels;
 using BTCPayServer.Payments;
+using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Rating;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
@@ -236,7 +237,7 @@ namespace BTCPayServer.Controllers
                         Link = link,
                         Id = txId,
                         Destination = paymentData.GetDestination(),
-                        PaymentProof = paymentData.GetPaymentProof(),
+                        PaymentProof = GetPaymentProof(paymentData),
                         PaymentType = paymentData.GetPaymentType()
                     };
                 })
@@ -249,6 +250,17 @@ namespace BTCPayServer.Controllers
 
             return View(vm);
         }
+
+        private string? GetPaymentProof(CryptoPaymentData paymentData)
+        {
+            return paymentData switch
+            {
+                BitcoinLikePaymentData b => b.Outpoint.ToString(),
+                LightningPaymentData l => l.Preimage,
+                _ => null
+            };
+        }
+
         private string? GetTransactionLink(PaymentMethodId paymentMethodId, string txId)
         {
             var network = _NetworkProvider.GetNetwork(paymentMethodId.CryptoCode);

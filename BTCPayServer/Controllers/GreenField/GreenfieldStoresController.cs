@@ -115,11 +115,12 @@ namespace BTCPayServer.Controllers.Greenfield
         internal static Client.Models.StoreData FromModel(Data.StoreData data)
         {
             var storeBlob = data.GetStoreBlob();
-            return new Client.Models.StoreData()
+            return new Client.Models.StoreData
             {
                 Id = data.Id,
                 Name = data.StoreName,
                 Website = data.StoreWebsite,
+                Email = storeBlob.StoreEmail,
                 SpeedPolicy = data.SpeedPolicy,
                 DefaultPaymentMethod = data.GetDefaultPaymentId()?.ToStringNormalized(),
                 //blob
@@ -186,6 +187,7 @@ namespace BTCPayServer.Controllers.Greenfield
             blob.ShowRecommendedFee = restModel.ShowRecommendedFee;
             blob.RecommendedFeeBlockTarget = restModel.RecommendedFeeBlockTarget;
             blob.DefaultLang = restModel.DefaultLang;
+            blob.StoreEmail = restModel.Email;
             blob.MonitoringExpiration = restModel.MonitoringExpiration;
             blob.InvoiceExpiration = restModel.InvoiceExpiration;
             blob.DisplayExpirationTimer = restModel.DisplayExpirationTimer;

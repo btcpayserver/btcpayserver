@@ -40,8 +40,10 @@ namespace BTCPayServer.Tests
 
             // Configure store url
             var storeUrl = "https://satoshisteaks.com/";
+            var storeEmail = "info@satoshisteaks.com";
             s.GoToStore();
             s.Driver.FindElement(By.Id("StoreWebsite")).SendKeys(storeUrl);
+            s.Driver.FindElement(By.Id("StoreEmail")).SendKeys(storeEmail);
             s.Driver.FindElement(By.Id("Save")).Click();
             Assert.Contains("Store successfully updated", s.FindAlertMessage().Text);
 

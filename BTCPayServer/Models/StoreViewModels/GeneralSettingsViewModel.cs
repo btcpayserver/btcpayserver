@@ -22,6 +22,11 @@ namespace BTCPayServer.Models.StoreViewModels
         [MaxLength(500)]
         public string StoreWebsite { get; set; }
 
+        [EmailAddress]
+        [Display(Name = "Store Email Address")]
+        [MaxLength(500)]
+        public string StoreEmail { get; set; }
+
         [Display(Name = "Brand Color")]
         public string BrandColor { get; set; }
 

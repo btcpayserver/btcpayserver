@@ -323,6 +323,12 @@
                         "description": "The absolute url of the store",
                         "format": "url"
                     },
+                    "email": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "The email address of the store, e.g. for support requests",
+                        "format": "email"
+                    },
                     "defaultCurrency": {
                         "type": "string",
                         "description": "The default currency of the store",

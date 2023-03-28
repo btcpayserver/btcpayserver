@@ -836,6 +836,7 @@ namespace BTCPayServer.Controllers
                 ReceiptLink = receiptUrl,
                 RedirectAutomatically = invoice.RedirectAutomatically,
                 StoreName = store.StoreName,
+                StoreEmail = storeBlob.StoreEmail,
                 TxCount = accounting.TxRequired,
                 TxCountForFee = storeBlob.NetworkFeeMode switch
                 {

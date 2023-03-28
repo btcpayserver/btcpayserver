@@ -137,7 +137,7 @@
                             <vc:icon symbol="caret-down" />
                         </button>
                         <p class="text-center mt-3" v-t="'payment_sent_body'"></p>
-                        <p class="text-center" v-if="srvModel.receivedConfirmations !== null && srvModel.requiredConfirmations != null" v-t="{ path: 'payment_sent_confirmations', args: { cryptoCode: realCryptoCode, receivedConfirmations: srvModel.receivedConfirmations, requiredConfirmations: srvModel.requiredConfirmations } }"></p>
+                        <p class="text-center" v-if="srvModel.receivedConfirmations !== null && srvModel.requiredConfirmations" v-t="{ path: 'payment_sent_confirmations', args: { cryptoCode: realCryptoCode, receivedConfirmations: srvModel.receivedConfirmations, requiredConfirmations: srvModel.requiredConfirmations } }"></p>
                     </div>
                 </div>
                 <div v-if="isSettled" id="settled" key="settled">

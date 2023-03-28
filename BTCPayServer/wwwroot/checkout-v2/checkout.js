@@ -62,7 +62,11 @@ function updateLanguageSelect() {
     $languageSelect.parentElement.appendChild(element);
     const width = element.offsetWidth;
     $languageSelect.parentElement.removeChild(element);
-    $languageSelect.style.setProperty('--text-width', `${width}px`);
+    if (width && width > 0) {
+        $languageSelect.style.setProperty('--text-width', `${width}px`);
+    } else { // in case of modal this might not be rendered properly yet
+        window.requestAnimationFrame(updateLanguageSelect);
+    }
 }
 
 function updateLanguage(lang) {
@@ -224,7 +228,7 @@ function initApp() {
             if (this.isProcessing) {
                 this.listenForConfirmations();
             }
-            window.requestAnimationFrame(updateLanguageSelect);
+            updateLanguageSelect();
             window.parent.postMessage('loaded', '*');
         },
         methods: {

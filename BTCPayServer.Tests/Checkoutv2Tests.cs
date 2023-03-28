@@ -71,7 +71,6 @@ namespace BTCPayServer.Tests
             Assert.Equal(address, copyAddress);
             Assert.Equal($"bitcoin:{address.ToUpperInvariant()}", qrValue);
             s.Driver.ElementDoesNotExist(By.Id("Lightning_BTC"));
-            s.Driver.ElementDoesNotExist(By.Id("PayByLNURL"));
             
             // Details should show exchange rate
             s.Driver.ToggleCollapse("PaymentDetails");
@@ -89,7 +88,6 @@ namespace BTCPayServer.Tests
                 Assert.StartsWith("lightning:lnurl", payUrl);
                 Assert.StartsWith("lnurl", s.Driver.WaitForElement(By.Id("Lightning_BTC")).GetAttribute("value"));
                 s.Driver.ElementDoesNotExist(By.Id("Address_BTC"));
-                s.Driver.FindElement(By.Id("PayByLNURL"));
             });
 
             // Default payment method
@@ -108,7 +106,6 @@ namespace BTCPayServer.Tests
             Assert.Equal(address, copyAddress);
             Assert.Equal($"lightning:{address.ToUpperInvariant()}", qrValue);
             s.Driver.ElementDoesNotExist(By.Id("Address_BTC"));
-            s.Driver.FindElement(By.Id("PayByLNURL"));
 
             // Lightning amount in sats
             Assert.Contains("BTC", s.Driver.FindElement(By.Id("AmountDue")).Text);
@@ -247,7 +244,6 @@ namespace BTCPayServer.Tests
             Assert.StartsWith("lnbcrt", copyAddressLightning);
             Assert.StartsWith($"bitcoin:{address.ToUpperInvariant()}?amount=", qrValue);
             Assert.Contains("&lightning=LNBCRT", qrValue);
-            s.Driver.FindElement(By.Id("PayByLNURL"));
             
             // Check details
             s.Driver.ToggleCollapse("PaymentDetails");
@@ -284,7 +280,6 @@ namespace BTCPayServer.Tests
             payUrl = s.Driver.FindElement(By.Id("PayInWallet")).GetAttribute("href");
             Assert.StartsWith("bitcoin:", payUrl);
             Assert.Contains("&lightning=lnbcrt", payUrl);
-            s.Driver.FindElement(By.Id("PayByLNURL"));
             
             // Check details
             s.Driver.ToggleCollapse("PaymentDetails");
@@ -317,7 +312,6 @@ namespace BTCPayServer.Tests
             Assert.Equal(address, copyAddressOnchain);
             Assert.StartsWith("lnurl", copyAddressLightning);
             Assert.StartsWith($"bitcoin:{address.ToUpperInvariant()}?lightning=LNURL", qrValue);
-            s.Driver.FindElement(By.Id("PayByLNURL"));
             
             // Check details
             s.Driver.ToggleCollapse("PaymentDetails");
@@ -384,7 +378,6 @@ namespace BTCPayServer.Tests
             payUrl = s.Driver.FindElement(By.Id("PayInWallet")).GetAttribute("href");
             Assert.StartsWith("bitcoin:", payUrl);
             Assert.Contains("&lightning=lnbcrt", payUrl);
-            s.Driver.FindElement(By.Id("PayByLNURL"));
             
             // Language Switch
             var languageSelect = new SelectElement(s.Driver.FindElement(By.Id("DefaultLang")));

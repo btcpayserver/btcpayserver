@@ -224,7 +224,7 @@ function initApp() {
             if (this.isProcessing) {
                 this.listenForConfirmations();
             }
-            updateLanguageSelect();
+            window.requestAnimationFrame(updateLanguageSelect);
             window.parent.postMessage('loaded', '*');
         },
         methods: {

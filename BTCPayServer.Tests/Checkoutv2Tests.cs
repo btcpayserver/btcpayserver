@@ -169,7 +169,7 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("Expire")).Click();
 
             paymentInfo = s.Driver.WaitForElement(By.Id("PaymentInfo"));
-            Assert.Contains("This invoice will expire in", paymentInfo.Text);
+            Assert.Contains("The invoice hasn't been paid in full.", paymentInfo.Text);
             Assert.Contains("Please send", paymentInfo.Text);
             TestUtils.Eventually(() =>
             {

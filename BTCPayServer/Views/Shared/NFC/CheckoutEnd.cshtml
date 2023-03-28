@@ -88,6 +88,11 @@ Vue.component("lnurl-withdraw-checkout", {
             this.startScan()
         }
     },
+    beforeDestroy () {
+        if (this.readerAbortController) {
+            this.readerAbortController.abort()
+        }
+    },
     methods: {
         async handleClick () {
             if (this.supported) {
@@ -139,7 +144,6 @@ Vue.component("lnurl-withdraw-checkout", {
 
                 ndef.onreadingerror = () => {
                     this.errorMessage = "Could not read NFC tag";
-                    this.readerAbortController.abort()
                 }
 
                 ndef.onreading = async ({ message, serialNumber }) => {

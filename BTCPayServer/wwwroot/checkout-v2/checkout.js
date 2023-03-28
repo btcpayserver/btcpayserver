@@ -132,6 +132,9 @@ function initApp() {
             isActive () {
                 return STATUS_PAYABLE.includes(this.srvModel.status);
             },
+            isPaidPartial () {
+                return this.btcPaid > 0 && this.btcDue > 0;
+            },
             showInfo () {
                 return this.showTimer || this.showPaymentDueInfo;
             },
@@ -139,7 +142,7 @@ function initApp() {
                 return this.isActive && this.remainingSeconds < this.srvModel.displayExpirationTimer;
             },
             showPaymentDueInfo () {
-                return this.btcPaid > 0 && this.btcDue > 0;
+                return this.isPaidPartial;
             },
             showRecommendedFee () {
                 return this.isActive && this.srvModel.showRecommendedFee && this.srvModel.feeRate;
@@ -171,6 +174,16 @@ function initApp() {
                 return this.srvModel.merchantRefLink && this.srvModel.merchantRefLink !== this.srvModel.receiptLink
                     ? this.srvModel.merchantRefLink
                     : null;
+            },
+            contactLink () {
+                if (!this.srvModel.storeEmail) return null;
+                
+                const email = this.srvModel.storeEmail;
+                const subject = `Invoice ${this.srvModel.invoiceId}`;
+                const details = this.srvModel.invoiceId + (this.srvModel.orderId ? ` (Order ID: ${this.srvModel.orderId})` : '');
+                const body = `Hi ${this.srvModel.storeName},\n\nthe invoice ${details} was paid partial.\nPlease let me know how to proceed.\n\nBest regards!`;
+                
+                return `mailto:${email}?subject=${encodeURI(subject)}&body=${encodeURI(body)}`;
             },
             paymentMethodIds () {
                 return this.srvModel.availableCryptos.map(function (c) { return c.paymentMethodId });

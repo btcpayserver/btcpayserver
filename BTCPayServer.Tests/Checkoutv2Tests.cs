@@ -142,8 +142,47 @@ namespace BTCPayServer.Tests
                 var expiredSection = s.Driver.FindElement(By.Id("unpaid"));
                 Assert.True(expiredSection.Displayed);
                 Assert.Contains("Invoice Expired", expiredSection.Text);
+                Assert.Contains("resubmit a payment", expiredSection.Text);
+                Assert.DoesNotContain("This invoice expired with partial payment", expiredSection.Text);
+                
             });
-            Assert.True(s.Driver.ElementDoesNotExist(By.Id("receipt-btn")));
+            Assert.True(s.Driver.ElementDoesNotExist(By.Id("ContactLink")));
+            Assert.True(s.Driver.ElementDoesNotExist(By.Id("ReceiptLink")));
+            Assert.Equal(storeUrl, s.Driver.FindElement(By.Id("StoreLink")).GetAttribute("href"));
+
+            // Expire paid partial
+            s.GoToHome();
+            invoiceId = s.CreateInvoice(2100, "EUR");
+            s.GoToInvoiceCheckout(invoiceId);
+            s.Driver.WaitUntilAvailable(By.Id("Checkout-v2"));
+            
+            await Task.Delay(200);
+            address = s.Driver.FindElement(By.CssSelector(".qr-container")).GetAttribute("data-clipboard");
+            var amountFraction = "0.00001";
+            await s.Server.ExplorerNode.SendToAddressAsync(BitcoinAddress.Create(address, Network.RegTest),
+                Money.Parse(amountFraction));
+            await s.Server.ExplorerNode.GenerateAsync(1);
+            
+            expirySeconds = s.Driver.FindElement(By.Id("ExpirySeconds"));
+            expirySeconds.Clear();
+            expirySeconds.SendKeys("3");
+            s.Driver.FindElement(By.Id("Expire")).Click();
+
+            paymentInfo = s.Driver.WaitForElement(By.Id("PaymentInfo"));
+            Assert.Contains("This invoice will expire in", paymentInfo.Text);
+            Assert.Contains("Please send", paymentInfo.Text);
+            TestUtils.Eventually(() =>
+            {
+                var expiredSection = s.Driver.FindElement(By.Id("unpaid"));
+                Assert.True(expiredSection.Displayed);
+                Assert.Contains("Invoice Expired", expiredSection.Text);
+                Assert.Contains("This invoice expired with partial payment", expiredSection.Text);
+                Assert.DoesNotContain("resubmit a payment", expiredSection.Text);
+            });
+            var contactLink = s.Driver.FindElement(By.Id("ContactLink"));
+            Assert.Equal("Contact us", contactLink.Text);
+            Assert.Matches($"mailto:{storeEmail}", contactLink.GetAttribute("href"));
+            Assert.True(s.Driver.ElementDoesNotExist(By.Id("ReceiptLink")));
             Assert.Equal(storeUrl, s.Driver.FindElement(By.Id("StoreLink")).GetAttribute("href"));
 
             // Test payment
@@ -168,7 +207,7 @@ namespace BTCPayServer.Tests
             // Pay partial amount
             await Task.Delay(200);
             address = s.Driver.FindElement(By.CssSelector(".qr-container")).GetAttribute("data-clipboard");
-            var amountFraction = "0.00001";
+            amountFraction = "0.00001";
             await s.Server.ExplorerNode.SendToAddressAsync(BitcoinAddress.Create(address, Network.RegTest),
                 Money.Parse(amountFraction));
             await s.Server.ExplorerNode.GenerateAsync(1);
@@ -212,7 +251,8 @@ namespace BTCPayServer.Tests
                 Assert.Contains("Invoice Paid", settledSection.Text);
             });
             s.Driver.FindElement(By.Id("confetti"));
-            s.Driver.FindElement(By.Id("receipt-btn"));
+            s.Driver.FindElement(By.Id("ReceiptLink"));
+            Assert.True(s.Driver.ElementDoesNotExist(By.Id("ContactLink")));
             Assert.Equal(storeUrl, s.Driver.FindElement(By.Id("StoreLink")).GetAttribute("href"));
 
             // BIP21
@@ -360,6 +400,7 @@ namespace BTCPayServer.Tests
             s.GoToHome();
             s.GoToLightningSettings();
             s.Driver.SetCheckbox(By.Id("LNURLEnabled"), false);
+            s.Driver.ScrollTo(By.Id("save"));
             s.Driver.FindElement(By.Id("save")).Click();
             Assert.Contains("BTC Lightning settings successfully updated", s.FindAlertMessage().Text);
 

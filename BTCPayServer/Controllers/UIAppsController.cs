@@ -111,22 +111,29 @@ namespace BTCPayServer.Controllers
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-        [HttpGet("/stores/{storeId}/apps/create")]
+        [HttpGet("/stores/{storeId}/apps/create/{appType?}")]
         public IActionResult CreateApp(string storeId, string appType = null)
         {
-            var vm = new CreateAppViewModel (_appService){StoreId = GetCurrentStore().Id, SelectedAppType = appType};
+            var vm = new CreateAppViewModel(_appService)
+            {
+                StoreId = storeId,
+                AppType = appType,
+                SelectedAppType = appType
+            };
             return View(vm);
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-        [HttpPost("/stores/{storeId}/apps/create")]
+        [HttpPost("/stores/{storeId}/apps/create/{appType?}")]
         public async Task<IActionResult> CreateApp(string storeId, CreateAppViewModel vm)
         {
             var store = GetCurrentStore();
             vm.StoreId = store.Id;
-            var type = _appService.GetAppType(vm.SelectedAppType);
+            var type = _appService.GetAppType(vm.AppType ?? vm.SelectedAppType);
             if (type is null)
+            {
                 ModelState.AddModelError(nameof(vm.SelectedAppType), "Invalid App Type");
+            }
 
             if (!ModelState.IsValid)
             {
@@ -137,7 +144,7 @@ namespace BTCPayServer.Controllers
             {
                 StoreDataId = store.Id,
                 Name = vm.AppName,
-                AppType = vm.SelectedAppType
+                AppType = type!.Type
             };
 
             var defaultCurrency = await GetStoreDefaultCurrentIfEmpty(appData.StoreDataId, null);

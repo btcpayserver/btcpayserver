@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
+using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
@@ -55,6 +56,7 @@ namespace BTCPayServer
         private readonly LightningLikePayoutHandler _lightningLikePayoutHandler;
         private readonly PullPaymentHostedService _pullPaymentHostedService;
         private readonly BTCPayNetworkJsonSerializerSettings _btcPayNetworkJsonSerializerSettings;
+        private readonly IPluginHookService _pluginHookService;
 
         public UILNURLController(InvoiceRepository invoiceRepository,
             EventAggregator eventAggregator,
@@ -67,7 +69,8 @@ namespace BTCPayServer
             LightningAddressService lightningAddressService,
             LightningLikePayoutHandler lightningLikePayoutHandler,
             PullPaymentHostedService pullPaymentHostedService,
-            BTCPayNetworkJsonSerializerSettings btcPayNetworkJsonSerializerSettings)
+            BTCPayNetworkJsonSerializerSettings btcPayNetworkJsonSerializerSettings,
+            IPluginHookService pluginHookService)
         {
             _invoiceRepository = invoiceRepository;
             _eventAggregator = eventAggregator;
@@ -81,6 +84,7 @@ namespace BTCPayServer
             _lightningLikePayoutHandler = lightningLikePayoutHandler;
             _pullPaymentHostedService = pullPaymentHostedService;
             _btcPayNetworkJsonSerializerSettings = btcPayNetworkJsonSerializerSettings;
+            _pluginHookService = pluginHookService;
         }
 
         [HttpGet("withdraw/pp/{pullPaymentId}")]
@@ -453,31 +457,36 @@ namespace BTCPayServer
                 await _invoiceRepository.UpdateInvoicePaymentMethod(i.Id, pm);
             }
 
-            var description = blob.LightningDescriptionTemplate
+            var invoiceDescription = blob.LightningDescriptionTemplate
                 .Replace("{StoreName}", store.StoreName ?? "", StringComparison.OrdinalIgnoreCase)
                 .Replace("{ItemDescription}", i.Metadata.ItemDesc ?? "", StringComparison.OrdinalIgnoreCase)
                 .Replace("{OrderId}", i.Metadata.OrderId ?? "", StringComparison.OrdinalIgnoreCase);
 
-            lnurlMetadata.Add(new[] { "text/plain", description });
+            lnurlMetadata.Add(new[] { "text/plain", invoiceDescription });
             if (!string.IsNullOrEmpty(username))
             {
                 lnurlMetadata.Add(new[] { "text/identifier", lnAddress });
             }
-            return Ok(new LNURLPayRequest
+
+            if (await _pluginHookService.ApplyFilter("modify-lnurlp-request", new LNURLPayRequest
+                {
+                    Tag = "payRequest",
+                    MinSendable = new LightMoney(min ?? 1m, LightMoneyUnit.Satoshi),
+                    MaxSendable =
+                        max is null
+                            ? LightMoney.FromUnit(6.12m, LightMoneyUnit.BTC)
+                            : new LightMoney(max.Value, LightMoneyUnit.Satoshi),
+                    CommentAllowed = lnUrlMethod.LUD12Enabled ? 2000 : 0,
+                    Metadata = JsonConvert.SerializeObject(lnurlMetadata),
+                    Callback = new Uri(_linkGenerator.GetUriByAction(
+                        action: nameof(GetLNURLForInvoice),
+                        controller: "UILNURL",
+                        values: new {cryptoCode, invoiceId = i.Id}, Request.Scheme, Request.Host, Request.PathBase))
+                }) is not LNURLPayRequest lnurlp)
             {
-                Tag = "payRequest",
-                MinSendable = new LightMoney(min ?? 1m, LightMoneyUnit.Satoshi),
-                MaxSendable =
-                    max is null
-                        ? LightMoney.FromUnit(6.12m, LightMoneyUnit.BTC)
-                        : new LightMoney(max.Value, LightMoneyUnit.Satoshi),
-                CommentAllowed = lnUrlMethod.LUD12Enabled ? 2000 : 0,
-                Metadata = JsonConvert.SerializeObject(lnurlMetadata),
-                Callback = new Uri(_linkGenerator.GetUriByAction(
-                    action: nameof(GetLNURLForInvoice),
-                    controller: "UILNURL",
-                    values: new { cryptoCode, invoiceId = i.Id }, Request.Scheme, Request.Host, Request.PathBase))
-            });
+                return NotFound();
+            }
+            return Ok(lnurlp);
         }
 
         [HttpGet("pay/i/{invoiceId}")]
@@ -530,12 +539,12 @@ namespace BTCPayServer
                 List<string[]> lnurlMetadata = new();
 
                 var blob = store.GetStoreBlob();
-                var description = blob.LightningDescriptionTemplate
+                var invoiceDescription = blob.LightningDescriptionTemplate
                     .Replace("{StoreName}", store.StoreName ?? "", StringComparison.OrdinalIgnoreCase)
                     .Replace("{ItemDescription}", i.Metadata.ItemDesc ?? "", StringComparison.OrdinalIgnoreCase)
                     .Replace("{OrderId}", i.Metadata.OrderId ?? "", StringComparison.OrdinalIgnoreCase);
 
-                lnurlMetadata.Add(new[] { "text/plain", description });
+                lnurlMetadata.Add(new[] { "text/plain", invoiceDescription });
                 if (!string.IsNullOrEmpty(paymentMethodDetails.ConsumedLightningAddress))
                 {
                     lnurlMetadata.Add(new[] { "text/identifier", paymentMethodDetails.ConsumedLightningAddress });
@@ -567,15 +576,20 @@ namespace BTCPayServer
 
                 if (amt is null)
                 {
-                    return Ok(new LNURLPayRequest
+                    if (await _pluginHookService.ApplyFilter("modify-lnurlp-request", new LNURLPayRequest
+                        {
+                            Tag = "payRequest",
+                            MinSendable = min,
+                            MaxSendable = max,
+                            CommentAllowed = lnurlSupportedPaymentMethod.LUD12Enabled ? 2000 : 0,
+                            Metadata = metadata,
+                            Callback = new Uri(Request.GetCurrentUrl())
+                        }) is not LNURLPayRequest lnurlp)
                     {
-                        Tag = "payRequest",
-                        MinSendable = min,
-                        MaxSendable = max,
-                        CommentAllowed = lnurlSupportedPaymentMethod.LUD12Enabled ? 2000 : 0,
-                        Metadata = metadata,
-                        Callback = new Uri(Request.GetCurrentUrl())
-                    });
+                        return NotFound();
+                    }
+                    
+                    return Ok(lnurlp);
                 }
 
                 if (string.IsNullOrEmpty(paymentMethodDetails.BOLT11) || paymentMethodDetails.GeneratedBoltAmount != amt)
@@ -599,14 +613,19 @@ namespace BTCPayServer
                     try
                     {
                         var expiry = i.ExpirationTime.ToUniversalTime() - DateTimeOffset.UtcNow;
-                        var param = new CreateInvoiceParams(amt, metadata, expiry)
+                        var description = (await  _pluginHookService.ApplyFilter("modify-lnurlp-description", metadata)) as string;
+                        if (description is null)
+                        {
+                            return NotFound();
+                        }
+                        var param = new CreateInvoiceParams(amt, description, expiry)
                         {
                             PrivateRouteHints = blob.LightningPrivateRouteHints,
                             DescriptionHashOnly = true
                         };
                         invoice = await client.CreateInvoice(param);
                         if (!BOLT11PaymentRequest.Parse(invoice.BOLT11, network.NBitcoinNetwork)
-                                .VerifyDescriptionHash(metadata))
+                                .VerifyDescriptionHash(description))
                         {
                             return BadRequest(new LNUrlStatusResponse
                             {

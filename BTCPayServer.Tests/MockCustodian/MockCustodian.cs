@@ -56,10 +56,16 @@ public class MockCustodian : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
         return Task.FromResult(r);
     }
 
-    public Task<Form> GetConfigForm(CancellationToken cancellationToken = default)
+    public Task<Form> GetConfigForm(JObject config, string locale, CancellationToken cancellationToken = default)
     {
         return null;
     }
+
+    public JObject cleanupConfigBeforeSave(JObject config)
+    {
+        return config;
+    }
+
 
     public Task<DepositAddressData> GetDepositAddressAsync(string paymentMethod, JObject config, CancellationToken cancellationToken)
     {

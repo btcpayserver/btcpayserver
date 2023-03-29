@@ -165,7 +165,7 @@ public class FormDataService
         return GetValue(form, form.GetFieldByFullName(field));
     }
 
-    public string? GetValue(Form form, Field field)
+    public string? GetValue(Form form, Field? field)
     {
         if (field is null)
         {

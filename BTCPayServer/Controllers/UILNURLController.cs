@@ -468,7 +468,7 @@ namespace BTCPayServer
                 lnurlMetadata.Add(new[] { "text/identifier", lnAddress });
             }
 
-            if (await _pluginHookService.ApplyFilter("lnurlp", new LNURLPayRequest
+            if (await _pluginHookService.ApplyFilter("modify-lnurlp-request", new LNURLPayRequest
                 {
                     Tag = "payRequest",
                     MinSendable = new LightMoney(min ?? 1m, LightMoneyUnit.Satoshi),
@@ -576,7 +576,7 @@ namespace BTCPayServer
 
                 if (amt is null)
                 {
-                    if (await _pluginHookService.ApplyFilter("lnurlp", new LNURLPayRequest
+                    if (await _pluginHookService.ApplyFilter("modify-lnurlp-request", new LNURLPayRequest
                         {
                             Tag = "payRequest",
                             MinSendable = min,
@@ -613,7 +613,7 @@ namespace BTCPayServer
                     try
                     {
                         var expiry = i.ExpirationTime.ToUniversalTime() - DateTimeOffset.UtcNow;
-                        var description = (await  _pluginHookService.ApplyFilter("lnurlp-description", metadata)) as string;
+                        var description = (await  _pluginHookService.ApplyFilter("modify-lnurlp-description", metadata)) as string;
                         if (description is null)
                         {
                             return NotFound();

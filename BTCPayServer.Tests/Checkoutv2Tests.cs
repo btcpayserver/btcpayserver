@@ -194,7 +194,7 @@ namespace BTCPayServer.Tests
             {
                 var processingSection = s.Driver.WaitForElement(By.Id("processing"));
                 Assert.True(processingSection.Displayed);
-                Assert.Contains("Payment Sent", processingSection.Text);
+                Assert.Contains("Payment Received", processingSection.Text);
                 Assert.Contains("Your payment has been received and is now processing", processingSection.Text);
                 Assert.True(s.Driver.ElementDoesNotExist(By.Id("confetti")));
             });

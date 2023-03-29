@@ -111,7 +111,7 @@
                         <span class="icn">
                             <vc:icon symbol="payment-sent" />
                         </span>
-                        <h4 v-t="'payment_sent'"></h4>
+                        <h4 v-t="'payment_received'"></h4>
                         <div id="PaymentDetails" class="payment-details">
                             <dl class="mb-0">
                                 <div>
@@ -136,8 +136,8 @@
                             <span class="fw-semibold" v-t="'view_details'"></span>
                             <vc:icon symbol="caret-down" />
                         </button>
-                        <p class="text-center mt-3" v-t="'payment_sent_body'"></p>
-                        <p class="text-center" v-if="srvModel.receivedConfirmations !== null && srvModel.requiredConfirmations" v-t="{ path: 'payment_sent_confirmations', args: { cryptoCode: realCryptoCode, receivedConfirmations: srvModel.receivedConfirmations, requiredConfirmations: srvModel.requiredConfirmations } }"></p>
+                        <p class="text-center mt-3" v-t="'payment_received_body'"></p>
+                        <p class="text-center" v-if="srvModel.receivedConfirmations !== null && srvModel.requiredConfirmations" v-t="{ path: 'payment_received_confirmations', args: { cryptoCode: realCryptoCode, receivedConfirmations: srvModel.receivedConfirmations, requiredConfirmations: srvModel.requiredConfirmations } }"></p>
                     </div>
                 </div>
                 <div v-if="isSettled" id="settled" key="settled">

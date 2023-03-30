@@ -176,14 +176,14 @@ function initApp() {
                     : null;
             },
             contactLink () {
-                if (!this.srvModel.storeEmail) return null;
+                const { storeEmail, storeName, invoiceId, orderId } = this.srvModel;
+                if (!storeEmail) return null;
                 
-                const email = this.srvModel.storeEmail;
-                const subject = `Invoice ${this.srvModel.invoiceId}`;
-                const details = this.srvModel.invoiceId + (this.srvModel.orderId ? ` (Order ID: ${this.srvModel.orderId})` : '');
-                const body = `Hi ${this.srvModel.storeName},\n\nthe invoice ${details} was paid partial.\nPlease let me know how to proceed.\n\nBest regards!`;
+                const subject = this.$t('invoice_paidpartial_mail_subject', { invoiceId });
+                const details = invoiceId + (orderId ? ` (Order ID: ${orderId})` : '');
+                const body =  this.$t('invoice_paidpartial_mail_body', { details, storeName });
                 
-                return `mailto:${email}?subject=${encodeURI(subject)}&body=${encodeURI(body)}`;
+                return `mailto:${storeEmail}?subject=${encodeURI(subject)}&body=${encodeURI(body)}`;
             },
             paymentMethodIds () {
                 return this.srvModel.availableCryptos.map(function (c) { return c.paymentMethodId });

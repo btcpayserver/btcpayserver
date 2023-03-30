@@ -46,9 +46,7 @@
                 <tr>
                     <td>@tx.Timestamp.ToTimeAgo()</td>
                     <td>
-                        <a href="@tx.Link" target="_blank" rel="noreferrer noopener" class="text-break">
-                            @tx.Id
-                        </a>
+                        <vc:truncate-center text="@tx.Id" link="tx.Link" classes="truncate-center-id" />
                     </td>
                     <td>
                         @if (tx.Labels.Any())

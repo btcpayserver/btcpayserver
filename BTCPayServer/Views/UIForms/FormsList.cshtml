@@ -11,7 +11,12 @@
 <div class="row">
     <div class="col-xxl-constrain col-xl-10">
         <div class="d-flex align-items-center justify-content-between mb-3">
-            <h3 class="mb-0">@ViewData["Title"]</h3>
+			<h3 class="mb-0">
+				<span>@ViewData["Title"]</span>
+				<a href="https://docs.btcpayserver.org/Forms" target="_blank" rel="noreferrer noopener" title="More information...">
+					<vc:icon symbol="info" />
+				</a>
+			</h3>
             <a asp-action="Create" asp-route-storeId="@storeId" class="btn btn-primary mt-3 mt-sm-0" role="button" id="CreateForm">
                 <span class="fa fa-plus"></span>
                 Create Form

@@ -9,7 +9,7 @@
   "view_details": "مشاهده جزئیات",
   "pay_with": "پرداخت با",
   "pay_in_wallet": "پرداخت از کیف پول",
-  "pay_by_nfc": "پرداخت با NFC (LNURL-Withdraw)",
+  "pay_by_nfc": "پرداخت با NFC",
   "pay_by_lnurl": "پرداخت با LNURL-Withdraw",
   "invoice_id": "کد درخواست",
   "order_id": "کد سفارش",

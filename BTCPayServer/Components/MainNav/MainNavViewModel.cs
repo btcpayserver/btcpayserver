@@ -19,7 +19,7 @@ namespace BTCPayServer.Components.MainNav
     {
         public string Id { get; set; }
         public string AppName { get; set; }
-        public AppType AppType { get; set; }
+        public string AppType { get; set; }
         public bool IsOwner { get; set; }
     }
 }

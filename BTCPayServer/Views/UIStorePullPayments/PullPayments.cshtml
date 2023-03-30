@@ -122,6 +122,7 @@
         @foreach (var pp in Model.PullPayments)
         {
             <tr>
+                <td>@pp.StartDate.ToBrowserDate()</td>
                 <td>
                     <a asp-action="EditPullPayment"
                        asp-controller="UIPullPayment"
@@ -130,7 +131,6 @@
                         @pp.Name
                     </a>
                 </td>
-                <td>@pp.StartDate.ToBrowserDate()</td>
                 <td>@pp.AutoApproveClaims</td>
                 <td class="align-middle">
                     <div class="progress ppProgress" data-pp="@pp.Id" data-bs-toggle="tooltip" data-bs-html="true">

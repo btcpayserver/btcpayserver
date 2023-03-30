@@ -9,7 +9,7 @@
   "view_details": "ดูรายละเอียด",
   "pay_with": "ชำระด้วย",
   "pay_in_wallet": "ชำระด้วยกระเป๋าเงินดิจิทัล",
-  "pay_by_nfc": "ชำระด้วย NFC (LNURL-Withdraw)",
+  "pay_by_nfc": "ชำระด้วย NFC",
   "pay_by_lnurl": "ชำระด้วย LNURL-Withdraw",
   "invoice_id": "รหัสใบแจ้งหนี้",
   "order_id": "รหัสคำสั่งซื้อ",

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
@@ -41,9 +42,10 @@ namespace BTCPayServer.PayoutProcessors.OnChain
             StoreRepository storeRepository,
             PayoutProcessorData payoutProcesserSettings,
             PullPaymentHostedService pullPaymentHostedService,
-            BTCPayNetworkProvider btcPayNetworkProvider) :
+            BTCPayNetworkProvider btcPayNetworkProvider,
+            IPluginHookService pluginHookService) :
             base(logger, storeRepository, payoutProcesserSettings, applicationDbContextFactory, pullPaymentHostedService,
-                btcPayNetworkProvider)
+                btcPayNetworkProvider, pluginHookService)
         {
             _explorerClientProvider = explorerClientProvider;
             _btcPayWalletProvider = btcPayWalletProvider;

@@ -6,8 +6,9 @@
 @using BTCPayServer.Components.StoreWalletBalance
 @using BTCPayServer.Components.AppSales
 @using BTCPayServer.Components.AppTopItems
-@model StoreDashboardViewModel;
-
+@using BTCPayServer.Services.Apps
+@inject AppService AppService
+@model StoreDashboardViewModel
 @{
     ViewData.SetActivePage(StoreNavPages.Dashboard, Model.StoreName, Model.StoreId);
     var store = ViewContext.HttpContext.GetStoreData();
@@ -118,8 +119,8 @@
         <vc:store-recent-invoices vm="@(new StoreRecentInvoicesViewModel { Store = store, CryptoCode = Model.CryptoCode, InitialRendering = true })"/>
         @foreach (var app in Model.Apps)
         {
-            <vc:app-sales app-id="@app.Id" app-type="@app.AppType" />
-            <vc:app-top-items app-id="@app.Id"  app-type="@app.AppType" />
+		  <vc:app-sales app-id="@app.Id" app-type="@app.AppType" />
+		  <vc:app-top-items app-id="@app.Id" app-type="@app.AppType" />
         }
     </div>
 }

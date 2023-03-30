@@ -9,7 +9,7 @@
   "view_details": "Мәліметтерді қарау",
   "pay_with": "Төлеу",
   "pay_in_wallet": "Кошелектен төлеу",
-  "pay_by_nfc": "NFC (LNURL-Withdraw) арқылы төлеу",
+  "pay_by_nfc": "NFC арқылы төлеу",
   "pay_by_lnurl": "LNURL-Withdraw арқылы төлеу",
   "invoice_id": "Шот анықтамасы",
   "order_id": "Тапсырыс нөмірі",

@@ -35,11 +35,13 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
             EventAggregator eventAggregator,
             StoreRepository storeRepository,
             UIInvoiceController invoiceController,
-            UserManager<ApplicationUser> userManager)
+            UserManager<ApplicationUser> userManager,
+            CrowdfundAppType app)
         {
             _currencies = currencies;
             _appService = appService;
             _userManager = userManager;
+            _app = app;
             _storeRepository = storeRepository;
             _eventAggregator = eventAggregator;
             _invoiceController = invoiceController;
@@ -51,20 +53,21 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
         private readonly AppService _appService;
         private readonly UIInvoiceController _invoiceController;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly CrowdfundAppType _app;
 
         [HttpGet("/")]
         [HttpGet("/apps/{appId}/crowdfund")]
         [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.Unset)]
-        [DomainMappingConstraint(AppType.Crowdfund)]
-        public async Task<IActionResult> ViewCrowdfund(string appId, string statusMessage)
+        [DomainMappingConstraint(CrowdfundAppType.AppType)]
+        public async Task<IActionResult> ViewCrowdfund(string appId)
         {
-            var app = await _appService.GetApp(appId, AppType.Crowdfund, true);
+            var app = await _appService.GetApp(appId, CrowdfundAppType.AppType, true);
 
             if (app == null)
                 return NotFound();
             var settings = app.GetSettings<CrowdfundSettings>();
 
-            var isAdmin = await _appService.GetAppDataIfOwner(GetUserId(), appId, AppType.Crowdfund) != null;
+            var isAdmin = await _appService.GetAppDataIfOwner(GetUserId(), appId, CrowdfundAppType.AppType) != null;
 
             var hasEnoughSettingsToLoad = !string.IsNullOrEmpty(settings.TargetCurrency);
             if (!hasEnoughSettingsToLoad)
@@ -89,17 +92,17 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
         [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.Unset)]
         [IgnoreAntiforgeryToken]
         [EnableCors(CorsPolicies.All)]
-        [DomainMappingConstraint(AppType.Crowdfund)]
+        [DomainMappingConstraint(CrowdfundAppType.AppType)]
         [RateLimitsFilter(ZoneLimits.PublicInvoices, Scope = RateLimitsScope.RemoteAddress)]
         public async Task<IActionResult> ContributeToCrowdfund(string appId, ContributeToCrowdfund request, CancellationToken cancellationToken)
         {
-            var app = await _appService.GetApp(appId, AppType.Crowdfund, true);
+            var app = await _appService.GetApp(appId, CrowdfundAppType.AppType, true);
 
             if (app == null)
                 return NotFound();
             var settings = app.GetSettings<CrowdfundSettings>();
 
-            var isAdmin = await _appService.GetAppDataIfOwner(GetUserId(), appId, AppType.Crowdfund) != null;
+            var isAdmin = await _appService.GetAppDataIfOwner(GetUserId(), appId, CrowdfundAppType.AppType) != null;
 
             if (!settings.Enabled && !isAdmin)
             {
@@ -395,7 +398,12 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
 
         private async Task<ViewCrowdfundViewModel> GetAppInfo(string appId)
         {
-            var info = (ViewCrowdfundViewModel)await _appService.GetAppInfo(appId);
+            var app = await _appService.GetApp(appId, CrowdfundAppType.AppType, true);
+            if (app is null)
+            {
+                return null;
+            }
+            var info = (ViewCrowdfundViewModel) await _app.GetInfo(app);
             info.HubPath = AppHub.GetHubPath(Request);
             info.SimpleDisplay = Request.Query.ContainsKey("simple");
             return info;

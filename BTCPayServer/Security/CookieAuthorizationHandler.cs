@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Contracts;
@@ -112,49 +113,49 @@ namespace BTCPayServer.Security
             }
 
             // Fall back to user prefs cookie
-            if (storeId == null)
+            storeId ??= _httpContext.GetUserPrefsCookie()?.CurrentStoreId;
+
+            var policy = requirement.Policy;
+            bool requiredUnscoped = false;
+            if (policy.EndsWith(':'))
             {
-                storeId = _httpContext.GetUserPrefsCookie()?.CurrentStoreId;
+                policy = policy.Substring(0, policy.Length - 1);
+                requiredUnscoped = true;
+                storeId = null;
             }
 
-            if (string.IsNullOrEmpty(storeId))
-                storeId = null;
-            if (storeId != null)
+            if (!string.IsNullOrEmpty(storeId))
             {
                 store = await _storeRepository.FindStore(storeId, userId);
             }
 
-            switch (requirement.Policy)
+            if (Policies.IsServerPolicy(policy) && isAdmin)
             {
-                case Policies.CanModifyServerSettings:
-                    if (isAdmin)
-                        success = true;
-                    break;
-                case Policies.CanModifyStoreSettings:
-                    if (store != null && (store.Role == StoreRoles.Owner))
-                        success = true;
-                    break;
-                case Policies.CanViewInvoices:
-                case Policies.CanViewStoreSettings:
-                case Policies.CanCreateInvoice:
-                    if (store != null)
-                        success = true;
-                    break;
-                case Policies.CanViewProfile:
-                case Policies.CanViewNotificationsForUser:
-                case Policies.CanManageNotificationsForUser:
-                case Policies.CanModifyStoreSettingsUnscoped:
-                    if (context.User != null)
-                        success = true;
-                    break;
-                default:
-                    if (Policies.IsPluginPolicy(requirement.Policy))
+                success = true;
+            }
+            else if (Policies.IsUserPolicy(policy) && userId is not null)
+            {
+                success = true;
+            }
+            else if (Policies.IsStorePolicy(policy))
+            {
+                if (store is not null)
+                {
+                    if (store.HasPermission(policy))
                     {
-                        var handle = (AuthorizationFilterHandle)await _pluginHookService.ApplyFilter("handle-authorization-requirement",
-                            new AuthorizationFilterHandle(context, requirement, _httpContext));
-                        success = handle.Success;
+                        success = true;
                     }
-                    break;
+                }
+                else if (requiredUnscoped)
+                {
+                    success = true;
+                }
+            }
+            else if (Policies.IsPluginPolicy(requirement.Policy))
+            {
+                var handle = (AuthorizationFilterHandle)await _pluginHookService.ApplyFilter("handle-authorization-requirement",
+                    new AuthorizationFilterHandle(context, requirement, _httpContext));
+                success = handle.Success;
             }
 
             if (success)

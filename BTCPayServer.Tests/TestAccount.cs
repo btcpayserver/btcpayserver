@@ -220,8 +220,8 @@ namespace BTCPayServer.Tests
             RegisterDetails = new RegisterViewModel()
             {
                 Email = Utils.GenerateEmail(),
-                ConfirmPassword = "Kitten0@",
-                Password = "Kitten0@",
+                ConfirmPassword = Password,
+                Password = Password,
                 IsAdmin = isAdmin
             };
             await account.Register(RegisterDetails);
@@ -240,6 +240,7 @@ namespace BTCPayServer.Tests
             Email = RegisterDetails.Email;
             IsAdmin = account.RegisteredAdmin;
         }
+        public string Password { get; set; } = "Kitten0@";
 
         public RegisterViewModel RegisterDetails { get; set; }
 

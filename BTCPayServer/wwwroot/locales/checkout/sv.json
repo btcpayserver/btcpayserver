@@ -9,7 +9,7 @@
   "view_details": "Visa detaljer",
   "pay_with": "Betala med",
   "pay_in_wallet": "Betala i plånbok",
-  "pay_by_nfc": "Betala med NFC (LNURL-Withdraw)",
+  "pay_by_nfc": "Betala med NFC",
   "pay_by_lnurl": "Betala med LNURL-Withdraw",
   "invoice_id": "Fakturanummer",
   "order_id": "Ordernummer",

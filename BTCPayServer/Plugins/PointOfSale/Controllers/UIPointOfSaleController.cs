@@ -64,11 +64,11 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
         [HttpGet("/")]
         [HttpGet("/apps/{appId}/pos")]
         [HttpGet("/apps/{appId}/pos/{viewType?}")]
-        [DomainMappingConstraint(AppType.PointOfSale)]
+        [DomainMappingConstraint(PointOfSaleAppType.AppType)]
         [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.Unset)]
         public async Task<IActionResult> ViewPointOfSale(string appId, PosViewType? viewType = null)
         {
-            var app = await _appService.GetApp(appId, AppType.PointOfSale);
+            var app = await _appService.GetApp(appId, PointOfSaleAppType.AppType);
             if (app == null)
                 return NotFound();
             var settings = app.GetSettings<PointOfSaleSettings>();
@@ -121,7 +121,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
         [HttpPost("/apps/{appId}/pos/{viewType?}")]
         [IgnoreAntiforgeryToken]
         [EnableCors(CorsPolicies.All)]
-        [DomainMappingConstraint(AppType.PointOfSale)]
+        [DomainMappingConstraint(PointOfSaleAppType.AppType)]
         [RateLimitsFilter(ZoneLimits.PublicInvoices, Scope = RateLimitsScope.RemoteAddress)]
         [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.Unset)]
         public async Task<IActionResult> ViewPointOfSale(string appId,
@@ -137,7 +137,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                                                         RequiresRefundEmail requiresRefundEmail = RequiresRefundEmail.InheritFromStore,
                                                         CancellationToken cancellationToken = default)
         {
-            var app = await _appService.GetApp(appId, AppType.PointOfSale);
+            var app = await _appService.GetApp(appId, PointOfSaleAppType.AppType);
             if (string.IsNullOrEmpty(choiceKey) && amount <= 0)
             {
                 return RedirectToAction(nameof(ViewPointOfSale), new { appId });
@@ -334,7 +334,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
         [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.Unset)]
         public async Task<IActionResult> POSForm(string appId, PosViewType? viewType = null)
         {
-            var app = await _appService.GetApp(appId, AppType.PointOfSale);
+            var app = await _appService.GetApp(appId, PointOfSaleAppType.AppType);
             if (app == null)
                 return NotFound();
             
@@ -349,7 +349,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             var formParameters = Request.Form
                 .Where(pair => pair.Key != "__RequestVerificationToken")
                 .ToMultiValueDictionary(p => p.Key, p => p.Value.ToString());
-            var controller = nameof(UIPointOfSaleController).TrimEnd("Controller", StringComparison.InvariantCulture);;
+            var controller = nameof(UIPointOfSaleController).TrimEnd("Controller", StringComparison.InvariantCulture);
             var store = await _appService.GetStore(app);
             var storeBlob = store.GetStoreBlob();
             var form = Form.Parse(formData.Config);
@@ -380,7 +380,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
         [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.Unset)]
         public async Task<IActionResult> POSFormSubmit(string appId, FormViewModel viewModel, PosViewType? viewType = null)
         {
-            var app = await _appService.GetApp(appId, AppType.PointOfSale);
+            var app = await _appService.GetApp(appId, PointOfSaleAppType.AppType);
             if (app == null)
                 return NotFound();
             
@@ -403,8 +403,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 
                 if (FormDataService.Validate(form, ModelState))
                 {
-                    
-                    var controller = nameof(UIPointOfSaleController).TrimEnd("Controller", StringComparison.InvariantCulture);;
+                    var controller = nameof(UIPointOfSaleController).TrimEnd("Controller", StringComparison.InvariantCulture);
                     var redirectUrl =
                         Request.GetAbsoluteUri(Url.Action(nameof(ViewPointOfSale), controller, new {appId, viewType}));
                     formParameters.Add("formResponse", form.GetValues().ToString());

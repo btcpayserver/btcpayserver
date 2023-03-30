@@ -80,15 +80,13 @@ namespace BTCPayServer.Controllers
                         }
                         return UnprocessableEntity(new
                         {
-                            ErrorMessage = response.ErrorDetail,
-                            AmountRemaining = invoice.Price
+                            ErrorMessage = response.ErrorDetail
                         });
 
                     default:
                         return UnprocessableEntity(new
                         {
-                            ErrorMessage = $"Payment method {paymentMethodId} is not supported",
-                            AmountRemaining = invoice.Price
+                            ErrorMessage = $"Payment method {paymentMethodId} is not supported"
                         });
                 }
 
@@ -97,8 +95,7 @@ namespace BTCPayServer.Controllers
             {
                 return BadRequest(new
                 {
-                    ErrorMessage = e.Message,
-                    AmountRemaining = invoice.Price
+                    ErrorMessage = e.Message
                 });
             }
         }

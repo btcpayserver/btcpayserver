@@ -235,8 +235,7 @@ namespace BTCPayServer.Controllers
             var model = new ListTransactionsViewModel { Skip = skip, Count = count };
             model.Labels.AddRange(
                 (await WalletRepository.GetWalletLabels(walletId))
-                .Select(c => (c.Label, c.Color, ColorPalette.Default.TextColor(c.Color)))
-                );
+                .Select(c => (c.Label, c.Color, ColorPalette.Default.TextColor(c.Color))));
 
             if (labelFilter != null)
             {
@@ -733,6 +732,18 @@ namespace BTCPayServer.Controllers
             if (!ModelState.IsValid)
                 return View(vm);
 
+            foreach (var transactionOutput in vm.Outputs.Where(output => output.Labels?.Any() is true))
+            {
+                var labels = transactionOutput.Labels.Where(s => !string.IsNullOrWhiteSpace(s)).ToArray();
+                var walletObjectAddress = new WalletObjectId(walletId, WalletObjectData.Types.Address, transactionOutput.DestinationAddress.ToLowerInvariant());
+                var obj = await WalletRepository.GetWalletObject(walletObjectAddress); 
+                if (obj is null) 
+                {
+                    await WalletRepository.EnsureWalletObject(walletObjectAddress); 
+                }
+                await WalletRepository.AddWalletObjectLabels(walletObjectAddress, labels);
+            }
+            
             var derivationScheme = GetDerivationSchemeSettings(walletId);
             if (derivationScheme is null)
                 return NotFound();
@@ -1306,36 +1317,51 @@ namespace BTCPayServer.Controllers
 
             var wallet = _walletProvider.GetWallet(paymentMethod.Network);
             var walletTransactionsInfoAsync = WalletRepository.GetWalletTransactionsInfo(walletId, (string[]?)null);
-            var input = await wallet.FetchTransactionHistory(paymentMethod.AccountDerivation, null, null);
+            var input = await wallet.FetchTransactionHistory(paymentMethod.AccountDerivation);
             var walletTransactionsInfo = await walletTransactionsInfoAsync;
             var export = new TransactionsExport(wallet, walletTransactionsInfo);
             var res = export.Process(input, format);
-
+            var fileType = format switch
+            {
+                "csv" => "csv",
+                "json" => "json",
+                "bip329" => "jsonl",
+                _ => throw new ArgumentOutOfRangeException(nameof(format), format, null)
+            };
+            var mimeType = format switch
+            {
+                "csv" => "text/csv",
+                "json" => "application/json",
+                "bip329" => "text/jsonl", // https://stackoverflow.com/questions/59938644/what-is-the-mime-type-of-jsonl-files
+                _ => throw new ArgumentOutOfRangeException(nameof(format), format, null)
+            };
             var cd = new ContentDisposition
             {
-                FileName = $"btcpay-{walletId}-{DateTime.UtcNow.ToString("yyyyMMdd-HHmmss", CultureInfo.InvariantCulture)}.{format}",
+                FileName = $"btcpay-{walletId}-{DateTime.UtcNow.ToString("yyyyMMdd-HHmmss", CultureInfo.InvariantCulture)}.{fileType}",
                 Inline = true
             };
             Response.Headers.Add("Content-Disposition", cd.ToString());
             Response.Headers.Add("X-Content-Type-Options", "nosniff");
-            return Content(res, "application/" + format);
+            return Content(res, mimeType);
         }
-
-
+        
         public class UpdateLabelsRequest
         {
-            public string? Address { get; set; }
+            public string? Id { get; set; }
+            public string? Type { get; set; }
             public string[]? Labels { get; set; }
         }
         
         [HttpPost("{walletId}/update-labels")]
         [IgnoreAntiforgeryToken]
-        public async Task<IActionResult> UpdateLabels([ModelBinder(typeof(WalletIdModelBinder))] WalletId walletId, [FromBody] UpdateLabelsRequest request)
+        public async Task<IActionResult> UpdateLabels(
+            [ModelBinder(typeof(WalletIdModelBinder))] WalletId walletId,
+            [FromBody] UpdateLabelsRequest request)
         {
-            if (string.IsNullOrEmpty(request.Address) || request.Labels is null)
+            if (string.IsNullOrEmpty(request.Type) || string.IsNullOrEmpty(request.Id) || request.Labels is null)
                 return BadRequest();
             
-            var objid = new WalletObjectId(walletId, WalletObjectData.Types.Address, request.Address);
+            var objid = new WalletObjectId(walletId, request.Type, request.Id);
             var obj = await WalletRepository.GetWalletObject(objid); 
             if (obj is null) 
             {
@@ -1353,17 +1379,26 @@ namespace BTCPayServer.Controllers
         
         [HttpGet("{walletId}/labels")]
         [IgnoreAntiforgeryToken]
-        public async Task<IActionResult> GetLabels( [ModelBinder(typeof(WalletIdModelBinder))] WalletId walletId, bool excludeTypes)
+        public async Task<IActionResult> GetLabels(
+            [ModelBinder(typeof(WalletIdModelBinder))] WalletId walletId,
+            bool excludeTypes,
+            string? type = null,
+            string? id = null)
         {
-           
-           return Ok(( await WalletRepository.GetWalletLabels(walletId))
-               .Where(l => !excludeTypes || !WalletObjectData.Types.AllTypes.Contains(l.Label))
-               .Select(tuple => new
-           {
-               label = tuple.Label,
-               color = tuple.Color,
-               textColor = ColorPalette.Default.TextColor(tuple.Color)
-           }));
+            var walletObjectId = !string.IsNullOrEmpty(type) && !string.IsNullOrEmpty(id)
+                ? new WalletObjectId(walletId, type, id)
+                : null;
+            var labels = walletObjectId == null
+                ? await WalletRepository.GetWalletLabels(walletId)
+                : await WalletRepository.GetWalletLabels(walletObjectId);
+            return Ok(labels
+                .Where(l => !excludeTypes || !WalletObjectData.Types.AllTypes.Contains(l.Label))
+                .Select(tuple => new 
+                {
+                    label = tuple.Label,
+                    color = tuple.Color,
+                    textColor = ColorPalette.Default.TextColor(tuple.Color) 
+                }));
         }
 
         private string GetImage(PaymentMethodId paymentMethodId, BTCPayNetwork network)
@@ -1433,8 +1468,7 @@ namespace BTCPayServer.Controllers
                     {
                         0 => PayoutTooltip(),
                         1 => PayoutTooltip(payoutsByPullPaymentId.First()),
-                        _ =>
-                            $"<ul>{string.Join(string.Empty, payoutsByPullPaymentId.Select(pair => $"<li>{PayoutTooltip(pair)}</li>"))}</ul>"
+                        _ => string.Join(", ", payoutsByPullPaymentId.Select(PayoutTooltip))
                     };
 
                     model.Link = _linkGenerator.PayoutLink(transactionInfo.WalletId.ToString(), null, PayoutState.Completed, Request.Scheme, Request.Host,
@@ -1442,7 +1476,7 @@ namespace BTCPayServer.Controllers
                 }
                 else if (tag.Type == WalletObjectData.Types.Payjoin)
                 {
-                    model.Tooltip = $"This UTXO was part of a PayJoin transaction.";
+                    model.Tooltip = "This UTXO was part of a PayJoin transaction.";
                 }
                 else if (tag.Type == WalletObjectData.Types.Invoice)
                 {

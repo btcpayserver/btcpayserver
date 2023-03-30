@@ -59,12 +59,11 @@
             <h2>Balances</h2>
 
             <div class="form-check">
-                <input class="form-check-input" type="checkbox" v-model="hideDustAmounts" id="flexCheckDefault">
-                <label class="form-check-label" for="flexCheckDefault">
+                <input class="form-check-input" type="checkbox" v-model="hideDustAmounts" id="hideDustAmounts">
+                <label class="form-check-label" for="hideDustAmounts">
                     Hide holdings worth less than {{ account.dustThresholdInFiat }} {{ account.storeDefaultFiat }}.
                 </label>
             </div>
-
 
             <div class="table-responsive">
                 <table class="table table-hover table-responsive-md">
@@ -95,11 +94,14 @@
                         <th class="text-end">
                             <a v-if="row.tradableAssetPairs" v-on:click="openTradeModal(row)" href="#">Trade</a>
                             <a v-if="canDepositAsset(row.asset)" v-on:click="openDepositModal(row)" href="#">Deposit</a>
-                            <a v-if="row.canWithdraw" v-on:click="openWithdrawModal(row)" href="#">Withdraw</a>
+                            <a v-if="row.withdrawablePaymentMethods.length" v-on:click="openWithdrawModal(row)" href="#">Withdraw</a>
                         </th>
                     </tr>
                     <tr v-if="account.assetBalances.length === 0">
                         <td colspan="999" class="text-center">No assets are stored with this custodian (yet).</td>
+                    </tr>
+                    <tr v-if="account.assetBalances.length > 0 && sortedAssetRows.length === 0">
+                        <td colspan="999" class="text-center">No holdings are worth more than {{ account.dustThresholdInFiat }} {{ account.storeDefaultFiat }}.</td>
                     </tr>
                     <tr v-if="account.assetBalanceExceptionMessage !== null">
                         <td colspan="999" class="text-center">An error occured while loading assets and balances.</td>
@@ -108,14 +110,13 @@
                 </table>
             </div>
 
-
             <h2>Features</h2>
             <p>The @Model?.Custodian.Name custodian supports:</p>
             <ul>
-                <li>Viewing asset account</li>
+                <li>Viewing asset balances</li>
                 @if (Model?.Custodian is ICanTrade)
                 {
-                    <li>Trading</li>
+                    <li>Converting assets using market orders</li>
                 }
                 @if (Model?.Custodian is ICanDeposit)
                 {
@@ -123,32 +124,162 @@
                 }
                 @if (Model?.Custodian is ICanWithdraw)
                 {
-                    <li>Withdrawing (Greenfield API only, for now)</li>
+                    <li>Withdrawing</li>
                 }
             </ul>
         </div>
     </div>
 </div>
 
-
 <div class="modal" tabindex="-1" role="dialog" id="withdrawModal">
     <div class="modal-dialog" role="document">
-        <div class="modal-content">
+        <form class="modal-content" id="withdrawForm" v-on:submit="onWithdrawSubmit" method="post" asp-action="Withdraw" asp-route-accountId="@Model?.CustodianAccount?.Id" asp-route-storeId="@Model?.CustodianAccount?.StoreId">
             <div class="modal-header">
-                <h5 class="modal-title">Withdraw</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                <h5 class="modal-title">Withdraw {{ withdraw.qty}} {{ withdraw.asset }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" v-if="!withdraw.isExecuting">
                     <vc:icon symbol="close"/>
                 </button>
             </div>
             <div class="modal-body">
-                <p>Withdrawals are coming soon, but if you need this today, you can use our <a rel="noopener noreferrer" href="https://docs.btcpayserver.org/API/Greenfield/v1/" target="_blank">Greenfield API "Withdraw to store wallet" endpoint</a> to execute a withdrawal.</p>
+                <div class="loading d-flex justify-content-center p-3" v-if="withdraw.isExecuting">
+                    <div class="spinner-border text-light" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+                <div v-if="!withdraw.isExecuting && withdraw.results === null">
+
+                    <p v-if="withdraw.errorMsg" class="alert alert-danger">{{ withdraw.errorMsg }}</p>
+                    <div v-if="withdraw.badConfigFields?.length > 0" class="alert alert-danger">
+                        Please go to <a class="alert-link" asp-action="EditCustodianAccount" asp-route-storeId="@Model.CustodianAccount.StoreId" asp-route-accountId="@Model.CustodianAccount.Id">Configure</a> and fill out these fields to enable withdrawals for {{ withdraw.paymentMethod }}.
+                        <ul>
+                            <li v-for="badConfigField in withdraw.badConfigFields">
+                                {{ badConfigField }}
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="WithdrawAsset">Asset to Withdraw</label>
+                        <select class="form-control" v-model="withdraw.asset" id="WithdrawAsset">
+                            <option v-for="option in availableAssetsToWithdraw" v-bind:value="option">
+                                {{ option }}
+                            </option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="WithdrawPaymentMethod">Payment Method</label>
+                        <select class="form-control" v-model="withdraw.paymentMethod" id="WithdrawPaymentMethod">
+                            <option v-for="option in availablePaymentMethodsToWithdraw" v-bind:value="option">
+                                {{ option }}
+                            </option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="WithdrawDestination">Destination</label>
+                        <select class="form-control" id="WithdrawDestination">
+                            <option selected="selected">
+                                Store wallet
+                            </option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="WithdrawQty">Quantity</label>
+                        <input type="number" :min="withdraw.minQty" :max="withdraw.maxQty" step="any" class="form-control" v-model="withdraw.qty" id="WithdrawQty"/>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="btn-group" role="group" aria-label="Set qty to a percentage of holdings">
+                            <button v-on:click="setWithdrawQtyPercent(10)" class="btn btn-secondary" type="button">10%</button>
+                            <button v-on:click="setWithdrawQtyPercent(25)" class="btn btn-secondary" type="button">25%</button>
+                            <button v-on:click="setWithdrawQtyPercent(50)" class="btn btn-secondary" type="button">50%</button>
+                            <button v-on:click="setWithdrawQtyPercent(75)" class="btn btn-secondary" type="button">75%</button>
+                            <button v-on:click="setWithdrawQtyPercent(90)" class="btn btn-secondary" type="button">90%</button>
+                            <button v-on:click="setWithdrawQtyPercent(100)" class="btn btn-secondary" type="button">100%</button>
+                        </div>
+                    </div>
+
+                    <div v-if="withdraw.badConfigFields?.length === 0 && !withdraw.isUpdating">
+                        <div class="form-group">
+                            <span v-if="withdrawFees.length === 0">
+                                No fee for this withdrawal
+                            </span>
+                            <span v-if="withdrawFees.length === 1">
+                                Fee: {{ -1 * withdrawFees[0].qty}} {{ withdrawFees[0].asset}}
+                                <span v-if="trade.priceForPair[withdrawFees[0].asset + '/' + account.storeDefaultFiat ]">
+                                    or {{ -1 * withdrawFees[0].qty * trade.priceForPair[withdrawFees[0].asset + '/' + account.storeDefaultFiat ] }} {{ account.storeDefaultFiat }}
+                                </span>
+                            </span>
+                            <ul v-if="withdrawFees.length > 1">
+                                <li v-for="entry in withdrawFees" v-if="entry.type === 'Fee'">
+                                    {{ entry.qty}} {{ entry.asset}}
+                                </li>
+                            </ul>
+                        </div>
+
+                        <p v-if="canExecuteWithdrawal">
+                            After withdrawing {{ account.assetBalances[withdraw.asset].qty - withdraw.qty }} {{ withdraw.asset }} will remain in your account.
+                        </p>
+                    </div>
+
+
+                </div>
+                <div v-if="withdraw.results !== null">
+
+                    <p class="alert alert-success" v-if="withdraw.results.status === 'Queued' || withdraw.results.status === 'Unknown'">
+                        Successfully requested withdrawal.
+                    </p>
+                    <p class="alert alert-success" v-if="withdraw.results.status === 'Complete'">
+                        Successfully completed withdrawal.
+                    </p>
+                    <p class="alert alert-danger" v-if="withdraw.results.status === 'Failed'">
+                        Withdrawal failed.
+                    </p>
+
+                    <table class="table table-striped">
+                        <thead>
+                        <tr>
+                            <th colspan="2">Asset</th>
+                            <th>Comment</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr v-for="entry in withdraw.results.ledgerEntries">
+                            <td class="text-end" v-bind:class="{ 'text-success': entry.qty > 0, 'text-danger': entry.qty < 0 }"><span v-if="entry.qty > 0">+</span>{{ entry.qty }}</td>
+                            <td v-bind:class="{ 'text-success': entry.qty > 0, 'text-danger': entry.qty < 0 }">{{ entry.asset }}</td>
+                            <td v-bind:class="{ 'text-success': entry.qty > 0, 'text-danger': entry.qty < 0 }">
+                                <span v-if="entry.type !== 'Trade'">{{ entry.type}}</span>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    <!-- TODO Add "Copy to Clipboard" buttons -->
+                    <div class="form-group">
+                        <label class="form-label" for="WithdrawalId">Withdrawal ID</label>
+                        <input type="text" class="form-control" v-model="withdraw.results.withdrawalId" id="WithdrawalId" readonly/>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="WithdrawalTransactionId">Transaction ID</label>
+                        <input type="text" class="form-control" v-model="withdraw.results.transactionId" id="WithdrawalTransactionId" readonly/>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="WithdrawalTargetAddress">Target Address</label>
+                        <input type="text" class="form-control" v-model="withdraw.results.targetAddress" id="WithdrawalTargetAddress" readonly/>
+                    </div>
+                </div>
             </div>
-            <div class="modal-footer">
+            <div class="modal-footer" v-if="!withdraw.isExecuting">
+                <div class="modal-footer-left">
+                    <span v-if="withdraw.isUpdating">
+                        Updating...
+                    </span>
+                </div>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="submit" class="btn btn-primary" v-if="canExecuteWithdrawal">Withdraw</button>
             </div>
-        </div>
+        </form>
     </div>
 </div>
+
 
 <div class="modal" tabindex="-1" role="dialog" id="depositModal">
     <div class="modal-dialog" role="document">
@@ -171,19 +302,19 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label" for="DepositPaymentNetwork">Payment Method</label>
-                    <select class="form-select" v-model="deposit.paymentMethod" name="DepositPaymentNetwork">
+                    <select class="form-select" v-model="deposit.paymentMethod" id="DepositPaymentNetwork">
                         <option v-for="option in availablePaymentMethodsToDeposit" v-bind:value="option">
                             {{ option }}
                         </option>
                     </select>
                 </div>
-                
+
                 <div class="loading d-flex justify-content-center p-3" v-if="deposit.isLoading">
                     <div class="spinner-border text-light" role="status">
                         <span class="visually-hidden">Loading...</span>
                     </div>
                 </div>
-                
+
                 <div v-if="!deposit.isLoading && (deposit.link || deposit.address)">
                     <div class="tab-content text-center">
                         <div v-if="deposit.link" class="tab-pane" id="link-tab" role="tabpanel">
@@ -193,8 +324,8 @@
                             </div>
                             <div class="form-group">
                                 <div class="input-group" :data-clipboard="deposit.link">
-                                    <input type="text" class="form-control" style="cursor:copy" readonly="readonly" :value="deposit.link" id="payment-link"/>
-                                    <button type="button" class="btn btn-outline-secondary p-2" style="width:7em;" data-clipboard-confirm>
+                                    <input type="text" class="form-control" readonly="readonly" :value="deposit.link" id="payment-link"/>
+                                    <button type="button" class="btn btn-outline-secondary px-3">
                                         <vc:icon symbol="copy"/>
                                     </button>
                                 </div>
@@ -207,8 +338,8 @@
                             </div>
                             <div class="form-group">
                                 <div class="input-group" :data-clipboard="deposit.address">
-                                    <input type="text" class="form-control" style="cursor:copy" readonly="readonly" :value="deposit.address" id="address"/>
-                                    <button type="button" class="input-group-text btn btn-outline-secondary p-2" style="width:7em;" data-clipboard-confirm>
+                                    <input type="text" class="form-control" readonly="readonly" :value="deposit.address" id="address"/>
+                                    <button type="button" class="btn btn-outline-secondary px-3">
                                         <vc:icon symbol="copy"/>
                                     </button>
                                 </div>
@@ -232,11 +363,11 @@
     </div>
 </div>
 
-<div class="modal" tabindex="-1" role="dialog" id="tradeModal" :data-bs-keyboard="!trade.isExecuting">
+<div class="modal" tabindex="-1" role="dialog" id="tradeModal">
     <div class="modal-dialog" role="document">
-        <form class="modal-content" v-on:submit="onTradeSubmit" method="post" asp-action="Trade" asp-route-accountId="@Model?.CustodianAccount?.Id" asp-route-storeId="@Model?.CustodianAccount?.StoreId">
+        <form class="modal-content" id="tradeForm" v-on:submit="onTradeSubmit" method="post" asp-action="Trade" asp-route-accountId="@Model?.CustodianAccount?.Id" asp-route-storeId="@Model?.CustodianAccount?.StoreId">
             <div class="modal-header">
-                <h5 class="modal-title">Trade {{ trade.qty }} {{ trade.assetToTrade }} into {{ trade.assetToTradeInto }}</h5>
+                <h5 class="modal-title">Trade {{ trade.qty }} {{ trade.fromAsset }} into {{ trade.toAsset }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" v-if="!trade.isExecuting">
                     <vc:icon symbol="close"/>
                 </button>
@@ -257,12 +388,12 @@
                                 Convert
                                 <div class="input-group has-validation">
                                     <!--
-                                    getMinQtyToTrade() = {{ getMinQtyToTrade(this.trade.assetToTradeInto, this.trade.assetToTrade) }}
+                                    getMinQtyToTrade() = {{ getMinQtyToTrade(this.trade.toAsset, this.trade.fromAsset) }}
                                     <br/>
-                                    Max Qty to Trade = {{ trade.maxQtyToTrade }}
+                                    Max Qty to Trade = {{ trade.maxQty }}
                                     -->
-                                    <input name="Qty" type="number" min="0" step="any" :max="trade.maxQtyToTrade" :min="getMinQtyToTrade()" class="form-control qty" v-bind:class="{ 'is-invalid': trade.qty < getMinQtyToTrade() || trade.qty > trade.maxQtyToTrade }" v-model="trade.qty"/>
-                                    <select name="FromAsset" v-model="trade.assetToTrade" class="form-select">
+                                    <input name="Qty" type="number" min="0" step="any" :max="trade.maxQty" :min="getMinQtyToTrade()" class="form-control qty" v-bind:class="{ 'is-invalid': trade.qty < getMinQtyToTrade() || trade.qty > trade.maxQty }" v-model="trade.qty"/>
+                                    <select name="FromAsset" v-model="trade.fromAsset" class="form-select">
                                         <option v-for="option in availableAssetsToTrade" v-bind:value="option">
                                             {{ option }}
                                         </option>
@@ -282,7 +413,7 @@
                                 Into
                                 <div class="input-group">
                                     <input disabled="disabled" type="number" class="form-control qty" v-model="tradeQtyToReceive"/>
-                                    <select name="ToAsset" v-model="trade.assetToTradeInto" class="form-select">
+                                    <select name="ToAsset" v-model="trade.toAsset" class="form-select">
                                         <option v-for="option in availableAssetsToTradeInto" v-bind:value="option">
                                             {{ option }}
                                         </option>
@@ -304,13 +435,13 @@
 
                     <p v-if="trade.price">
                         <br/>
-                        1 {{ trade.assetToTradeInto }} = {{ trade.price }} {{ trade.assetToTrade }}
+                        1 {{ trade.toAsset }} = {{ trade.price }} {{ trade.fromAsset }}
                         <br/>
-                        1 {{ trade.assetToTrade }} = {{ 1 / trade.price }} {{ trade.assetToTradeInto }}
+                        1 {{ trade.fromAsset }} = {{ 1 / trade.price }} {{ trade.toAsset }}
                     </p>
                     <p v-if="canExecuteTrade">
                         After the trade
-                        {{ trade.maxQtyToTrade - trade.qty }} {{ trade.assetToTrade }} will remain in your account.
+                        {{ trade.maxQty - trade.qty }} {{ trade.fromAsset }} will remain in your account.
                     </p>
 
                     <!--
@@ -391,13 +522,11 @@
                 </div>
             </div>
             <div class="modal-footer" v-if="!trade.isExecuting">
-
                 <div class="modal-footer-left">
                     <span v-if="trade.isUpdating">
                         Updating quote...
                     </span>
                 </div>
-
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                     <span v-if="trade.results">Close</span>
                     <span v-if="!trade.results">Cancel</span>
@@ -413,7 +542,9 @@
 <script src="~/vendor/vue-qrcode/vue-qrcode.min.js" asp-append-version="true"></script>
 <script type="text/javascript">
 var ajaxBalanceUrl = "@Url.Action("ViewCustodianAccountJson", "UICustodianAccounts", new { storeId = Model?.CustodianAccount.StoreId, accountId = Model?.CustodianAccount.Id })";
-var ajaxTradePrepareUrl = "@Url.Action("GetTradePrepareJson", "UICustodianAccounts", new { storeId = Model?.CustodianAccount.StoreId, accountId = Model?.CustodianAccount.Id })";
+var ajaxTradeSimulateUrl = "@Url.Action("SimulateTradeJson", "UICustodianAccounts", new { storeId = Model?.CustodianAccount.StoreId, accountId = Model?.CustodianAccount.Id })";
 var ajaxDepositUrl = "@Url.Action("GetDepositPrepareJson", "UICustodianAccounts", new { storeId = Model?.CustodianAccount.StoreId, accountId = Model?.CustodianAccount.Id })";
+var ajaxWithdrawSimulateUrl = "@Url.Action("SimulateWithdrawJson", "UICustodianAccounts", new { storeId = Model?.CustodianAccount.StoreId, accountId = Model?.CustodianAccount.Id })";
+var ajaxWithdrawUrl = "@Url.Action("Withdraw", "UICustodianAccounts", new { storeId = Model?.CustodianAccount.StoreId, accountId = Model?.CustodianAccount.Id })";
 </script>
 <script src="~/js/custodian-account.js" asp-append-version="true"></script>

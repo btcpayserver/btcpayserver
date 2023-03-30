@@ -707,21 +707,68 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        public void ParseTradeQuantity()
+        {
+            Assert.Throws<FormatException>(() => TradeQuantity.Parse("1.2345o"));
+            Assert.Throws<FormatException>(() => TradeQuantity.Parse("o"));
+            Assert.Throws<FormatException>(() => TradeQuantity.Parse(""));
+            Assert.Throws<FormatException>(() => TradeQuantity.Parse("1.353%%"));
+            Assert.Throws<FormatException>(() => TradeQuantity.Parse("1.353 %%"));
+            Assert.Throws<FormatException>(() => TradeQuantity.Parse("-1.353%"));
+            Assert.Throws<FormatException>(() => TradeQuantity.Parse("-1.353"));
+
+            var qty = TradeQuantity.Parse("1.3%");
+            Assert.Equal(1.3m, qty.Value);
+            Assert.Equal(TradeQuantity.ValueType.Percent, qty.Type);
+            var qty2 = TradeQuantity.Parse("1.3");
+            Assert.Equal(1.3m, qty2.Value);
+            Assert.Equal(TradeQuantity.ValueType.Exact, qty2.Type);
+            Assert.NotEqual(qty, qty2);
+            Assert.Equal(qty, TradeQuantity.Parse("1.3%"));
+            Assert.Equal(qty2, TradeQuantity.Parse("1.3"));
+            Assert.Equal(TradeQuantity.Parse(qty.ToString()), TradeQuantity.Parse("1.3%"));
+            Assert.Equal(TradeQuantity.Parse(qty2.ToString()), TradeQuantity.Parse("1.3"));
+            Assert.Equal(TradeQuantity.Parse(qty2.ToString()), TradeQuantity.Parse(" 1.3 "));
+        }
+
+        [Fact]
         public void ParseDerivationSchemeSettings()
         {
+            var testnet = new BTCPayNetworkProvider(ChainName.Testnet).GetNetwork<BTCPayNetwork>("BTC");
             var mainnet = new BTCPayNetworkProvider(ChainName.Mainnet).GetNetwork<BTCPayNetwork>("BTC");
             var root = new Mnemonic(
                     "usage fever hen zero slide mammal silent heavy donate budget pulse say brain thank sausage brand craft about save attract muffin advance illegal cabbage")
                 .DeriveExtKey();
+            
+            // xpub
+            var tpub = "tpubD6NzVbkrYhZ4YHNiuTdTmHRmbcPRLfqgyneZFCL1mkzkUBjXriQShxTh9HL34FK2mhieasJVk9EzJrUfkFqRNQBjiXgx3n5BhPkxKBoFmaS";
+            Assert.True(DerivationSchemeSettings.TryParseFromWalletFile(tpub, testnet, out var settings, out var error));
+            Assert.Null(error);
+            Assert.True(settings.AccountDerivation is DirectDerivationStrategy { Segwit: false });
+            Assert.Equal($"{tpub}-[legacy]", ((DirectDerivationStrategy)settings.AccountDerivation).ToString());
+
+            // xpub with fingerprint and account
+            tpub = "tpubDCXK98mNrPWuoWweaoUkqwxQF5NMWpQLy7n7XJgDCpwYfoZRXGafPaVM7mYqD7UKhsbMxkN864JY2PniMkt1Uk4dNuAMnWFVqdquyvZNyca";
+            var vpub = "vpub5YVA1ZbrqkUVq8NZTtvRDrS2a1yoeBvHbG9NbxqJ6uRtpKGFwjQT11WEqKYsgoDF6gpqrDf8ddmPZe4yXWCjzqF8ad2Cw9xHiE8DSi3X3ik";
+            var fingerprint = "e5746fd9";
+            var account = "84'/1'/0'";
+            var str = $"[{fingerprint}/{account}]{vpub}";
+            Assert.True(DerivationSchemeSettings.TryParseFromWalletFile(str, testnet, out settings, out error));
+            Assert.Null(error);
+            Assert.True(settings.AccountDerivation is DirectDerivationStrategy { Segwit: true });
+            Assert.Equal(vpub, settings.AccountOriginal);
+            Assert.Equal(tpub, ((DirectDerivationStrategy)settings.AccountDerivation).ToString());
+            Assert.Equal(HDFingerprint.TryParse(fingerprint, out var hd) ? hd : default, settings.AccountKeySettings[0].RootFingerprint);
+            Assert.Equal(account, settings.AccountKeySettings[0].AccountKeyPath.ToString());
 
             // ColdCard
             Assert.True(DerivationSchemeSettings.TryParseFromWalletFile(
                 "{\"keystore\": {\"ckcc_xpub\": \"xpub661MyMwAqRbcGVBsTGeNZN6QGVHmMHLdSA4FteGsRrEriu4pnVZMZWnruFFFXkMnyoBjyHndD3Qwcfz4MPzBUxjSevweNFQx7SAYZATtcDw\", \"xpub\": \"ypub6WWc2gWwHbdnAAyJDnR4SPL1phRh7REqrPBfZeizaQ1EmTshieRXJC3Z5YoU4wkcdKHEjQGkh6AYEzCQC1Kz3DNaWSwdc1pc8416hAjzqyD\", \"label\": \"Coldcard Import 0x60d1af8b\", \"ckcc_xfp\": 1624354699, \"type\": \"hardware\", \"hw_type\": \"coldcard\", \"derivation\": \"m/49'/0'/0'\"}, \"wallet_type\": \"standard\", \"use_encryption\": false, \"seed_version\": 17}",
-                mainnet, out var settings, out var error));
+                mainnet, out settings, out error));
             Assert.Null(error);
             Assert.Equal(root.GetPublicKey().GetHDFingerPrint(), settings.AccountKeySettings[0].RootFingerprint);
             Assert.Equal(settings.AccountKeySettings[0].RootFingerprint,
-                HDFingerprint.TryParse("8bafd160", out var hd) ? hd : default);
+                HDFingerprint.TryParse("8bafd160", out hd) ? hd : default);
             Assert.Equal("Coldcard Import 0x60d1af8b", settings.Label);
             Assert.Equal("49'/0'/0'", settings.AccountKeySettings[0].AccountKeyPath.ToString());
             Assert.Equal(
@@ -729,28 +776,26 @@ namespace BTCPayServer.Tests
                 settings.AccountOriginal);
             Assert.Equal(root.Derive(new KeyPath("m/49'/0'/0'")).Neuter().PubKey.WitHash.ScriptPubKey.Hash.ScriptPubKey,
                 settings.AccountDerivation.GetDerivation().ScriptPubKey);
-            var testnet = new BTCPayNetworkProvider(ChainName.Testnet).GetNetwork<BTCPayNetwork>("BTC");
 
             // Should be legacy
             Assert.True(DerivationSchemeSettings.TryParseFromWalletFile(
                 "{\"keystore\": {\"ckcc_xpub\": \"tpubD6NzVbkrYhZ4YHNiuTdTmHRmbcPRLfqgyneZFCL1mkzkUBjXriQShxTh9HL34FK2mhieasJVk9EzJrUfkFqRNQBjiXgx3n5BhPkxKBoFmaS\", \"xpub\": \"tpubDDWYqT3P24znfsaGX7kZcQhNc5LAjnQiKQvUCHF2jS6dsgJBRtymopEU5uGpMaR5YChjuiExZG1X2aTbqXkp82KqH5qnqwWHp6EWis9ZvKr\", \"label\": \"Coldcard Import 0x60d1af8b\", \"ckcc_xfp\": 1624354699, \"type\": \"hardware\", \"hw_type\": \"coldcard\", \"derivation\": \"m/44'/1'/0'\"}, \"wallet_type\": \"standard\", \"use_encryption\": false, \"seed_version\": 17}",
                 testnet, out settings, out error));
-            Assert.True(settings.AccountDerivation is DirectDerivationStrategy s && !s.Segwit);
+            Assert.True(settings.AccountDerivation is DirectDerivationStrategy { Segwit: false });
             Assert.Null(error);
 
             // Should be segwit p2sh
             Assert.True(DerivationSchemeSettings.TryParseFromWalletFile(
                 "{\"keystore\": {\"ckcc_xpub\": \"tpubD6NzVbkrYhZ4YHNiuTdTmHRmbcPRLfqgyneZFCL1mkzkUBjXriQShxTh9HL34FK2mhieasJVk9EzJrUfkFqRNQBjiXgx3n5BhPkxKBoFmaS\", \"xpub\": \"upub5DSddA9NoRUyJrQ4p86nsCiTSY7kLHrSxx3joEJXjHd4HPARhdXUATuk585FdWPVC2GdjsMePHb6BMDmf7c6KG4K4RPX6LVqBLtDcWpQJmh\", \"label\": \"Coldcard Import 0x60d1af8b\", \"ckcc_xfp\": 1624354699, \"type\": \"hardware\", \"hw_type\": \"coldcard\", \"derivation\": \"m/49'/1'/0'\"}, \"wallet_type\": \"standard\", \"use_encryption\": false, \"seed_version\": 17}",
                 testnet, out settings, out error));
-            Assert.True(settings.AccountDerivation is P2SHDerivationStrategy p &&
-                        p.Inner is DirectDerivationStrategy s2 && s2.Segwit);
+            Assert.True(settings.AccountDerivation is P2SHDerivationStrategy { Inner: DirectDerivationStrategy { Segwit: true } });
             Assert.Null(error);
 
             // Should be segwit
             Assert.True(DerivationSchemeSettings.TryParseFromWalletFile(
                 "{\"keystore\": {\"ckcc_xpub\": \"tpubD6NzVbkrYhZ4YHNiuTdTmHRmbcPRLfqgyneZFCL1mkzkUBjXriQShxTh9HL34FK2mhieasJVk9EzJrUfkFqRNQBjiXgx3n5BhPkxKBoFmaS\", \"xpub\": \"vpub5YjYxTemJ39tFRnuAhwduyxG2tKGjoEpmvqVQRPqdYrqa6YGoeSzBtHXaJUYB19zDbXs3JjbEcVWERjQBPf9bEfUUMZNMv1QnMyHV8JPqyf\", \"label\": \"Coldcard Import 0x60d1af8b\", \"ckcc_xfp\": 1624354699, \"type\": \"hardware\", \"hw_type\": \"coldcard\", \"derivation\": \"m/84'/1'/0'\"}, \"wallet_type\": \"standard\", \"use_encryption\": false, \"seed_version\": 17}",
                 testnet, out settings, out error));
-            Assert.True(settings.AccountDerivation is DirectDerivationStrategy s3 && s3.Segwit);
+            Assert.True(settings.AccountDerivation is DirectDerivationStrategy { Segwit: true });
             Assert.Null(error);
 
             // Specter

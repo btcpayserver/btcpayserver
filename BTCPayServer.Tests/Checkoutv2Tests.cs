@@ -76,7 +76,6 @@ namespace BTCPayServer.Tests
             Assert.Equal(address, copyAddress);
             Assert.Equal($"bitcoin:{address.ToUpperInvariant()}", qrValue);
             s.Driver.ElementDoesNotExist(By.Id("Lightning_BTC"));
-            s.Driver.ElementDoesNotExist(By.Id("PayByLNURL"));
             
             // Details should show exchange rate
             s.Driver.ToggleCollapse("PaymentDetails");
@@ -143,7 +142,7 @@ namespace BTCPayServer.Tests
             Assert.DoesNotContain("Please send", paymentInfo.Text);
             TestUtils.Eventually(() =>
             {
-                var expiredSection = s.Driver.FindElement(By.Id("expired"));
+                var expiredSection = s.Driver.FindElement(By.Id("unpaid"));
                 Assert.True(expiredSection.Displayed);
                 Assert.Contains("Invoice Expired", expiredSection.Text);
             });
@@ -184,10 +183,25 @@ namespace BTCPayServer.Tests
             {
                 Assert.Contains("Created transaction",
                     s.Driver.WaitForElement(By.Id("CheatSuccessMessage")).Text);
-                s.Server.ExplorerNode.Generate(1);
+                s.Server.ExplorerNode.Generate(2);
                 paymentInfo = s.Driver.WaitForElement(By.Id("PaymentInfo"));
                 Assert.Contains("The invoice hasn't been paid in full", paymentInfo.Text);
                 Assert.Contains("Please send", paymentInfo.Text);
+            });
+
+            // Pay full amount
+            var amountDue = s.Driver.FindElement(By.Id("AmountDue")).GetAttribute("data-amount-due");
+            s.Driver.FindElement(By.Id("FakePayAmount")).FillIn(amountDue);
+            s.Driver.FindElement(By.Id("FakePay")).Click();
+            
+            // Processing
+            TestUtils.Eventually(() =>
+            {
+                var processingSection = s.Driver.WaitForElement(By.Id("processing"));
+                Assert.True(processingSection.Displayed);
+                Assert.Contains("Payment Received", processingSection.Text);
+                Assert.Contains("Your payment has been received and is now processing", processingSection.Text);
+                Assert.True(s.Driver.ElementDoesNotExist(By.Id("confetti")));
             });
 
             // Mine
@@ -197,17 +211,13 @@ namespace BTCPayServer.Tests
                 Assert.Contains("Mined 1 block",
                     s.Driver.WaitForElement(By.Id("CheatSuccessMessage")).Text);
             });
-
-            // Pay full amount
-            var amountDue = s.Driver.FindElement(By.Id("AmountDue")).GetAttribute("data-amount-due");
-            s.Driver.FindElement(By.Id("FakePayAmount")).FillIn(amountDue);
-            s.Driver.FindElement(By.Id("FakePay")).Click();
+            
+            // Settled
             TestUtils.Eventually(() =>
             {
-                s.Server.ExplorerNode.Generate(1);
-                var paidSection = s.Driver.WaitForElement(By.Id("paid"));
-                Assert.True(paidSection.Displayed);
-                Assert.Contains("Invoice Paid", paidSection.Text);
+                var settledSection = s.Driver.WaitForElement(By.Id("settled"));
+                Assert.True(settledSection.Displayed);
+                Assert.Contains("Invoice Paid", settledSection.Text);
             });
             s.Driver.FindElement(By.Id("confetti"));
             s.Driver.FindElement(By.Id("ReceiptLink"));

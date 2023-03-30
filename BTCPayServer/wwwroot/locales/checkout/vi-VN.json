@@ -9,7 +9,7 @@
   "view_details": "Xem chi tiết",
   "pay_with": "Thanh toán bằng",
   "pay_in_wallet": "Thanh toán trong ví",
-  "pay_by_nfc": "Thanh toán qua NFC (LNURL-Withdraw)",
+  "pay_by_nfc": "Thanh toán qua NFC",
   "pay_by_lnurl": "Thanh toán bằng LNURL-Withdraw",
   "invoice_id": "Số Hóa đơn",
   "order_id": "Số Đơn hàng",

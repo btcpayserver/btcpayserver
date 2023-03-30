@@ -1,6 +1,8 @@
 #nullable enable
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
@@ -20,16 +22,19 @@ namespace BTCPayServer.Payments.Lightning
         private readonly BTCPayNetworkProvider _networkProvider;
         private readonly DisplayFormatter _displayFormatter;
         private readonly LightningLikePaymentHandler _lightningLikePaymentHandler;
+        private readonly LightningClientFactoryService _lightningClientFactoryService;
 
         public LNURLPayPaymentHandler(
             BTCPayNetworkProvider networkProvider,
             DisplayFormatter displayFormatter,
             IOptions<LightningNetworkOptions> options,
-            LightningLikePaymentHandler lightningLikePaymentHandler)
+            LightningLikePaymentHandler lightningLikePaymentHandler,
+            LightningClientFactoryService lightningClientFactoryService)
         {
             _networkProvider = networkProvider;
             _displayFormatter = displayFormatter;
             _lightningLikePaymentHandler = lightningLikePaymentHandler;
+            _lightningClientFactoryService = lightningClientFactoryService;
             Options = options;
         }
 
@@ -61,6 +66,16 @@ namespace BTCPayServer.Payments.Lightning
                 if (lnSupported is null)
                 {
                     throw new PaymentMethodUnavailableException("LNURL requires a lightning node to be configured for the store.");
+                }
+                using var cts = new CancellationTokenSource(LightningLikePaymentHandler.LightningTimeout);
+                try
+                {
+                    var client = lnSupported.CreateLightningClient(network, Options.Value, _lightningClientFactoryService);
+                    await client.GetInfo(cts.Token);
+                }
+                catch (OperationCanceledException) when (cts.IsCancellationRequested)
+                {
+                    throw new PaymentMethodUnavailableException("The lightning node did not reply in a timely manner");
                 }
 
                 return new LNURLPayPaymentMethodDetails()

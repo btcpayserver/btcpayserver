@@ -24,6 +24,7 @@ using BTCPayServer.Services.PaymentRequests;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Validation;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -56,6 +57,7 @@ namespace BTCPayServer.Controllers
         private readonly UIWalletsController _walletsController;
         private readonly InvoiceActivator _invoiceActivator;
         private readonly LinkGenerator _linkGenerator;
+        private readonly IAuthorizationService _authorizationService;
 
         public WebhookSender WebhookNotificationManager { get; }
 
@@ -78,7 +80,8 @@ namespace BTCPayServer.Controllers
             ExplorerClientProvider explorerClients,
             UIWalletsController walletsController,
             InvoiceActivator invoiceActivator,
-            LinkGenerator linkGenerator)
+            LinkGenerator linkGenerator,
+            IAuthorizationService authorizationService)
         {
             _displayFormatter = displayFormatter;
             _CurrencyNameTable = currencyNameTable ?? throw new ArgumentNullException(nameof(currencyNameTable));
@@ -98,6 +101,7 @@ namespace BTCPayServer.Controllers
             _walletsController = walletsController;
             _invoiceActivator = invoiceActivator;
             _linkGenerator = linkGenerator;
+            _authorizationService = authorizationService;
         }
 
 
@@ -213,7 +217,8 @@ namespace BTCPayServer.Controllers
             return await CreateInvoiceCoreRaw(invoiceRequest, storeData, request.GetAbsoluteRoot(), additionalTags, cancellationToken);
         }
 
-        internal async Task<InvoiceEntity> CreateInvoiceCoreRaw(CreateInvoiceRequest invoice, StoreData store, string serverUrl, List<string>? additionalTags = null, CancellationToken cancellationToken = default, Action<InvoiceEntity>? entityManipulator = null)
+        [NonAction]
+        public async Task<InvoiceEntity> CreateInvoiceCoreRaw(CreateInvoiceRequest invoice, StoreData store, string serverUrl, List<string>? additionalTags = null, CancellationToken cancellationToken = default, Action<InvoiceEntity>? entityManipulator = null)
         {
             var storeBlob = store.GetStoreBlob();
             var entity = _InvoiceRepository.CreateNewInvoice();

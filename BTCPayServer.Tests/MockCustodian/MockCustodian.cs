@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Custodians;
@@ -24,6 +25,9 @@ public class MockCustodian : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
     public const string WithdrawalAsset = "BTC";
     public const string WithdrawalId = "WITHDRAWAL-ID-001";
     public static readonly decimal WithdrawalAmount = new decimal(0.5);
+    public static readonly string WithdrawalAmountPercentage = "12.5%";
+    public static readonly decimal WithdrawalMinAmount = new decimal(0.001);
+    public static readonly decimal WithdrawalMaxAmount = new decimal(0.6);
     public static readonly decimal WithdrawalFee = new decimal(0.0005);
     public const string WithdrawalTransactionId = "yyy";
     public const string WithdrawalTargetAddress = "bc1qyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy";
@@ -52,7 +56,7 @@ public class MockCustodian : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
         return Task.FromResult(r);
     }
 
-    public Task<Form> GetConfigForm(JObject config, string locale, CancellationToken cancellationToken = default)
+    public Task<Form> GetConfigForm(CancellationToken cancellationToken = default)
     {
         return null;
     }
@@ -135,14 +139,38 @@ public class MockCustodian : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
         var r = new WithdrawResult(WithdrawalPaymentMethod, WithdrawalAsset, ledgerEntries, WithdrawalId, WithdrawalStatus, createdTime, WithdrawalTargetAddress, WithdrawalTransactionId);
         return r;
     }
+    
+    private SimulateWithdrawalResult CreateWithdrawSimulationResult()
+    {
+        var ledgerEntries = new List<LedgerEntryData>();
+        ledgerEntries.Add(new LedgerEntryData(WithdrawalAsset, WithdrawalAmount - WithdrawalFee, LedgerEntryData.LedgerEntryType.Withdrawal));
+        ledgerEntries.Add(new LedgerEntryData(WithdrawalAsset, WithdrawalFee, LedgerEntryData.LedgerEntryType.Fee));
+        var r = new SimulateWithdrawalResult(WithdrawalPaymentMethod, WithdrawalAsset, ledgerEntries, WithdrawalMinAmount, WithdrawalMaxAmount);
+        return r;
+    }
 
-    public Task<WithdrawResult> WithdrawAsync(string paymentMethod, decimal amount, JObject config, CancellationToken cancellationToken)
+    public Task<WithdrawResult> WithdrawToStoreWalletAsync(string paymentMethod, decimal amount, JObject config, CancellationToken cancellationToken)
+    {
+        if (paymentMethod == WithdrawalPaymentMethod)
+        {
+            if (amount.ToString(CultureInfo.InvariantCulture).Equals(""+WithdrawalAmount, StringComparison.InvariantCulture) || WithdrawalAmountPercentage.Equals(amount))
+            {
+                return Task.FromResult(CreateWithdrawResult());
+            }
+
+            throw new InsufficientFundsException($"{Name} only supports withdrawals of {WithdrawalAmount} or {WithdrawalAmountPercentage}");
+        }
+
+        throw new CannotWithdrawException(this, paymentMethod, $"Only {WithdrawalPaymentMethod} can be withdrawn from {Name}");
+    }
+
+    public Task<SimulateWithdrawalResult> SimulateWithdrawalAsync(string paymentMethod, decimal amount, JObject config, CancellationToken cancellationToken)
     {
         if (paymentMethod == WithdrawalPaymentMethod)
         {
             if (amount == WithdrawalAmount)
             {
-                return Task.FromResult(CreateWithdrawResult());
+                return Task.FromResult(CreateWithdrawSimulationResult());
             }
 
             throw new InsufficientFundsException($"{Name} only supports withdrawals of {WithdrawalAmount}");

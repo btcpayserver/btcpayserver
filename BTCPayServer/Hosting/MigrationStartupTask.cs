@@ -7,36 +7,30 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
-using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.Fido2;
 using BTCPayServer.Fido2.Models;
 using BTCPayServer.Logging;
-using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
+using BTCPayServer.Plugins.Crowdfund;
+using BTCPayServer.Plugins.PointOfSale;
 using BTCPayServer.Plugins.PointOfSale.Models;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Storage.Models;
 using BTCPayServer.Storage.Services.Providers.FileSystemStorage.Configuration;
-using ExchangeSharp;
 using Fido2NetLib.Objects;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using NBitcoin;
-using NBitcoin.DataEncoders;
 using NBXplorer;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using PeterO.Cbor;
 using LightningAddressData = BTCPayServer.Data.LightningAddressData;
-using PayoutData = BTCPayServer.Data.PayoutData;
-using PullPaymentData = BTCPayServer.Data.PullPaymentData;
-using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Hosting
 {
@@ -476,7 +470,7 @@ WHERE cte.""Id""=p.""Id""
                 string newTemplate;
                 switch (app.AppType)
                 {
-                    case nameof(AppType.Crowdfund):
+                    case CrowdfundAppType.AppType:
                         var settings1 = app.GetSettings<CrowdfundSettings>();
                         if (string.IsNullOrEmpty(settings1.TargetCurrency))
                         {
@@ -492,7 +486,7 @@ WHERE cte.""Id""=p.""Id""
                         };
                         break;
 
-                    case nameof(AppType.PointOfSale):
+                    case PointOfSaleAppType.AppType:
 
                         var settings2 = app.GetSettings<PointOfSaleSettings>();
                         if (string.IsNullOrEmpty(settings2.Currency))

@@ -287,7 +287,7 @@ namespace BTCPayServer.Controllers.Greenfield
             var lightningClient = await GetLightningClient(cryptoCode, false);
             var param = new ListInvoicesParams { PendingOnly = pendingOnly, OffsetIndex = offsetIndex };
             var invoices = await lightningClient.ListInvoices(param, cancellationToken);
-            return Ok(invoices.Select(ToModel));
+            return Ok(invoices.Select(ToModel).ToArray());
         }
 
         public virtual async Task<IActionResult> GetPayments(string cryptoCode, [FromQuery] bool? includePending, [FromQuery] long? offsetIndex, CancellationToken cancellationToken = default)
@@ -295,7 +295,7 @@ namespace BTCPayServer.Controllers.Greenfield
             var lightningClient = await GetLightningClient(cryptoCode, false);
             var param = new ListPaymentsParams { IncludePending = includePending, OffsetIndex = offsetIndex };
             var payments = await lightningClient.ListPayments(param, cancellationToken);
-            return Ok(payments.Select(ToModel));
+            return Ok(payments.Select(ToModel).ToArray());
         }
 
         public virtual async Task<IActionResult> CreateInvoice(string cryptoCode, CreateLightningInvoiceRequest request, CancellationToken cancellationToken = default)

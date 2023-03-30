@@ -4,6 +4,6 @@ namespace BTCPayServer.Models.CustodianAccountViewModels;
 
 public class TradePrepareViewModel : AssetQuoteResult
 {
-    public decimal MaxQtyToTrade { get; set; }
-
+    public decimal MaxQty { get; set; }
+    
 }

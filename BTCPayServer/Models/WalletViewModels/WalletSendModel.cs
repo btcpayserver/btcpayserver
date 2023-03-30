@@ -34,6 +34,8 @@ namespace BTCPayServer.Models.WalletViewModels
             public bool SubtractFeesFromOutput { get; set; }
 
             public string PayoutId { get; set; }
+
+            public string[] Labels { get; set; } = Array.Empty<string>();
         }
         public decimal CurrentBalance { get; set; }
         public decimal ImmatureBalance { get; set; }

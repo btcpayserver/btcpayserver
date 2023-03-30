@@ -4,11 +4,13 @@ using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Reflection.Metadata;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Models;
+using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Lightning;
@@ -75,8 +77,7 @@ namespace BTCPayServer.Tests
             s.GenerateWallet(isHotWallet: true);
 
             // Point Of Sale
-            s.Driver.FindElement(By.Id("StoreNav-CreateApp")).Click();
-            new SelectElement(s.Driver.FindElement(By.Id("SelectedAppType"))).SelectByValue("PointOfSale");
+            s.Driver.FindElement(By.Id("StoreNav-CreatePointOfSale")).Click();
             s.Driver.FindElement(By.Id("AppName")).SendKeys(Guid.NewGuid().ToString());
             s.Driver.FindElement(By.Id("Create")).Click();
             Assert.Contains("App successfully created", s.FindAlertMessage().Text);
@@ -832,15 +833,113 @@ namespace BTCPayServer.Tests
         }
 
         [Fact(Timeout = TestTimeout)]
+        public async Task CookieReflectProperPermissions()
+        {
+            using var s = CreateSeleniumTester();
+            await s.StartAsync();
+            var alice = s.Server.NewAccount();
+            alice.Register(false);
+            await alice.CreateStoreAsync();
+            var bob = s.Server.NewAccount();
+            await bob.CreateStoreAsync();
+            await bob.AddGuest(alice.UserId);
+
+            s.GoToLogin();
+            s.LogIn(alice.Email, alice.Password);
+            s.GoToUrl($"/cheat/permissions/stores/{bob.StoreId}");
+            var pageSource = s.Driver.PageSource;
+            AssertPermissions(pageSource, true,
+                new[]
+                {
+                    Policies.CanViewInvoices,
+                    Policies.CanModifyInvoices,
+                    Policies.CanViewPaymentRequests,
+                    Policies.CanViewStoreSettings,
+                    Policies.CanModifyStoreSettingsUnscoped,
+                    Policies.CanDeleteUser
+                });
+            AssertPermissions(pageSource, false,
+             new[]
+             {
+                    Policies.CanModifyStoreSettings,
+                    Policies.CanCreateNonApprovedPullPayments,
+                    Policies.CanCreatePullPayments,
+                    Policies.CanManagePullPayments,
+                    Policies.CanModifyServerSettings
+             });
+
+            s.GoToUrl($"/cheat/permissions/stores/{alice.StoreId}");
+            pageSource = s.Driver.PageSource;
+
+            AssertPermissions(pageSource, true,
+                new[]
+                {
+                    Policies.CanViewInvoices,
+                    Policies.CanModifyInvoices,
+                    Policies.CanViewPaymentRequests,
+                    Policies.CanViewStoreSettings,
+                    Policies.CanModifyStoreSettingsUnscoped,
+                    Policies.CanDeleteUser,
+                    Policies.CanModifyStoreSettings,
+                    Policies.CanCreateNonApprovedPullPayments,
+                    Policies.CanCreatePullPayments,
+                    Policies.CanManagePullPayments
+                });
+            AssertPermissions(pageSource, false,
+             new[]
+             {
+                    Policies.CanModifyServerSettings
+             });
+
+            await alice.MakeAdmin();
+            s.Logout();
+            s.GoToLogin();
+            s.LogIn(alice.Email, alice.Password);
+            s.GoToUrl($"/cheat/permissions/stores/{alice.StoreId}");
+            pageSource = s.Driver.PageSource;
+
+            AssertPermissions(pageSource, true,
+            new[]
+            {
+                    Policies.CanViewInvoices,
+                    Policies.CanModifyInvoices,
+                    Policies.CanViewPaymentRequests,
+                    Policies.CanViewStoreSettings,
+                    Policies.CanModifyStoreSettingsUnscoped,
+                    Policies.CanDeleteUser,
+                    Policies.CanModifyStoreSettings,
+                    Policies.CanCreateNonApprovedPullPayments,
+                    Policies.CanCreatePullPayments,
+                    Policies.CanManagePullPayments,
+                    Policies.CanModifyServerSettings,
+                    Policies.CanCreateUser,
+                    Policies.CanManageUsers
+            });
+        }
+
+        void AssertPermissions(string source, bool expected, string[] permissions)
+        {
+            if (expected)
+            {
+                foreach (var p in permissions)
+                    Assert.Contains(p + "<", source);
+            }
+            else
+            {
+                foreach (var p in permissions)
+                    Assert.DoesNotContain(p + "<", source);
+            }
+        }
+
+        [Fact(Timeout = TestTimeout)]
         public async Task CanCreateAppPoS()
         {
             using var s = CreateSeleniumTester(newDb: true);
             await s.StartAsync();
             var userId = s.RegisterNewUser(true);
             s.CreateNewStore();
-            s.Driver.FindElement(By.Id("StoreNav-CreateApp")).Click();
+            s.Driver.FindElement(By.Id("StoreNav-CreatePointOfSale")).Click();
             s.Driver.FindElement(By.Name("AppName")).SendKeys("PoS" + Guid.NewGuid());
-            s.Driver.FindElement(By.Id("SelectedAppType")).SendKeys("Point of Sale");
             s.Driver.FindElement(By.Id("Create")).Click();
             Assert.Contains("App successfully created", s.FindAlertMessage().Text);
 
@@ -926,9 +1025,8 @@ namespace BTCPayServer.Tests
             s.CreateNewStore();
             s.AddDerivationScheme();
 
-            s.Driver.FindElement(By.Id("StoreNav-CreateApp")).Click();
+            s.Driver.FindElement(By.Id("StoreNav-CreateCrowdfund")).Click();
             s.Driver.FindElement(By.Name("AppName")).SendKeys("CF" + Guid.NewGuid());
-            s.Driver.FindElement(By.Id("SelectedAppType")).SendKeys("Crowdfund");
             s.Driver.FindElement(By.Id("Create")).Click();
             Assert.Contains("App successfully created", s.FindAlertMessage().Text);
 
@@ -1273,11 +1371,11 @@ namespace BTCPayServer.Tests
             // Can add a label?
             await TestUtils.EventuallyAsync(async () =>
             {
-                s.Driver.WaitForElement(By.CssSelector("div.label-manager input ")).Click();
+                s.Driver.WaitForElement(By.CssSelector("div.label-manager input")).Click();
                 await Task.Delay(500);
-                s.Driver.WaitForElement(By.CssSelector("div.label-manager input ")).SendKeys("test-label" + Keys.Enter);
+                s.Driver.WaitForElement(By.CssSelector("div.label-manager input")).SendKeys("test-label" + Keys.Enter);
                 await Task.Delay(500);
-                s.Driver.WaitForElement(By.CssSelector("div.label-manager input ")).SendKeys("label2" + Keys.Enter);
+                s.Driver.WaitForElement(By.CssSelector("div.label-manager input")).SendKeys("label2" + Keys.Enter);
             });
            
             TestUtils.Eventually(() =>
@@ -1469,9 +1567,20 @@ namespace BTCPayServer.Tests
             Assert.Contains("\"Amount\": \"3.00000000\"", s.Driver.PageSource);
             s.Driver.SwitchTo().Window(s.Driver.WindowHandles.First());
 
+            // BIP-329 export
+            s.Driver.FindElement(By.Id("ExportDropdownToggle")).Click();
+            s.Driver.FindElement(By.Id("ExportBIP329")).Click();
+            Thread.Sleep(1000);
+            s.Driver.SwitchTo().Window(s.Driver.WindowHandles.Last());
+            Assert.Contains(s.WalletId.ToString(), s.Driver.Url);
+            Assert.EndsWith("export?format=bip329", s.Driver.Url);
+            Assert.Contains("{\"type\":\"tx\",\"ref\":\"", s.Driver.PageSource);
+            s.Driver.SwitchTo().Window(s.Driver.WindowHandles.First());
+
             // CSV export
             s.Driver.FindElement(By.Id("ExportDropdownToggle")).Click();
             s.Driver.FindElement(By.Id("ExportCSV")).Click();
+            s.Driver.SwitchTo().Window(s.Driver.WindowHandles.First());
         }
 
         [Fact(Timeout = TestTimeout)]
@@ -1894,9 +2003,7 @@ namespace BTCPayServer.Tests
             s.AddLightningNode(LightningConnectionType.CLightning, false);
             s.GoToLightningSettings();
             s.Driver.SetCheckbox(By.Id("LNURLEnabled"), true);
-            s.Driver.FindElement(By.Id("StoreNav-CreateApp")).Click();
-            s.Driver.FindElement(By.Id("SelectedAppType")).Click();
-            s.Driver.FindElement(By.CssSelector("option[value='PointOfSale']")).Click();
+            s.Driver.FindElement(By.Id("StoreNav-CreatePointOfSale")).Click();
             s.Driver.FindElement(By.Id("AppName")).SendKeys(Guid.NewGuid().ToString());
             s.Driver.FindElement(By.Id("Create")).Click();
             TestUtils.Eventually(() => Assert.Contains("App successfully created", s.FindAlertMessage().Text));

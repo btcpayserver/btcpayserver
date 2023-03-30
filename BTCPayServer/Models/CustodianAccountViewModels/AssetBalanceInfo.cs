@@ -14,7 +14,8 @@ public class AssetBalanceInfo
     public string FormattedFiatValue { get; set; }
     public decimal FiatValue { get; set; }
     public Dictionary<string, AssetPairData> TradableAssetPairs { get; set; }
-    public bool CanWithdraw { get; set; }
+    
+    public List<string> WithdrawablePaymentMethods { get; set; } = new();
     public string FormattedBid { get; set; }
     public string FormattedAsk { get; set; }
 }

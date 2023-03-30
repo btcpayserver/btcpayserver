@@ -9,7 +9,7 @@
   "view_details": "Zobraziť podrobnosti",
   "pay_with": "Zaplatiť s",
   "pay_in_wallet": "Zaplatiť z peňaženky",
-  "pay_by_nfc": "Zaplatiť pomocou NFC (LNURL-Withdraw)",
+  "pay_by_nfc": "Zaplatiť pomocou NFC",
   "pay_by_lnurl": "Zaplatiť pomocou LNURL-Withdraw",
   "invoice_id": "ID faktúry",
   "order_id": "ID objednávky",

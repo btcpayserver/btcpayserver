@@ -9,7 +9,7 @@
                     </button>
                 </div>
                 <div class="modal-body text-center">
-                    <div class="text-center mt-3" :style="{height: `${qrOptions.height}px`}">
+                    <div class="text-center my-2" :style="{height: `${qrOptions.height}px`}">
                         <component v-if="currentFragment" :is="currentMode.href ? 'a': 'div'" class="qr-container d-inline-block" :href="currentMode.href">
                             <qrcode :value="currentFragment" :options="qrOptions"></qrcode>
                         </component>
@@ -19,11 +19,11 @@
                             <a class="btcpay-pill" :class="{ 'active': key === mode }" href="#" v-on:click="mode = key">{{item.title}}</a>
                         </li>
                     </ul>
-                    <div v-if="currentFragment && currentMode.showData">
-                        <div class="input-group input-group-sm" :data-clipboard="currentFragment">
-                            <input type="text" class="form-control" style="cursor:copy" readonly="readonly" :value="currentFragment" id="qr-code-data-input">
-                            <button type="button" class="btn btn-outline-secondary" data-clipboard-confirm="">Copy</button>
-                        </div>
+                    <div class="input-group input-group-sm mt-3" :data-clipboard="currentFragment" v-if="currentFragment && currentMode.showData">
+                        <input type="text" class="form-control" readonly="readonly" :value="currentFragment" id="qr-code-data-input">
+                        <button type="button" class="btn btn-outline-secondary px-3">
+                            <vc:icon symbol="copy" />
+                        </button>
                     </div>
                     <p v-if="note" v-html="note" class="text-muted mt-3"></p>
                 </div>

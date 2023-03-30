@@ -240,11 +240,11 @@
                     <div class="js-add-cart card px-0 card-wrapper" data-index="@index">
                         @if (!string.IsNullOrWhiteSpace(image))
                         {
-                            <img class="card-img-top" src="@image" alt="@item.Title" asp-append-version="true">
+                            <img class="card-img-top" src="@image" alt="@Safe.Raw(item.Title)" asp-append-version="true">
                         }
                         <div class="card-body p-3">
-                            <h6 class="card-title mb-0">@item.Title</h6>
-                            @if (!String.IsNullOrWhiteSpace(description))
+                            <h6 class="card-title mb-0">@Safe.Raw(item.Title)</h6>
+                            @if (!string.IsNullOrWhiteSpace(description))
                             {
                                 <p class="card-text">@Safe.Raw(description)</p>
                             }

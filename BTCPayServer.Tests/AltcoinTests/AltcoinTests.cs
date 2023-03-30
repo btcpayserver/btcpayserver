@@ -11,6 +11,7 @@ using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Models.WalletViewModels;
 using BTCPayServer.Payments;
+using BTCPayServer.Plugins.PointOfSale;
 using BTCPayServer.Plugins.PointOfSale.Controllers;
 using BTCPayServer.Plugins.PointOfSale.Models;
 using BTCPayServer.Services.Apps;
@@ -386,7 +387,7 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("BOLT11Expiration")).SendKeys("5" + Keys.Enter);
             s.GoToInvoice(invoice.Id);
             s.Driver.FindElement(By.Id("IssueRefund")).Click();
-            
+
             if (multiCurrency)
             {
                 s.Driver.WaitUntilAvailable(By.Id("RefundForm"), TimeSpan.FromSeconds(1));
@@ -584,7 +585,7 @@ namespace BTCPayServer.Tests
                 Assert.True(invoice.SupportedTransactionCurrencies["LTC"].Enabled);
                 Assert.True(invoice.PaymentSubtotals.ContainsKey("LTC"));
                 Assert.True(invoice.PaymentTotals.ContainsKey("LTC"));
-                
+
                 // Check if we can disable LTC
                 invoice = await user.BitPay.CreateInvoiceAsync(
                     new Invoice
@@ -622,10 +623,11 @@ namespace BTCPayServer.Tests
                 var apps = user.GetController<UIAppsController>();
                 var pos = user.GetController<UIPointOfSaleController>();
                 var vm = Assert.IsType<CreateAppViewModel>(Assert.IsType<ViewResult>(apps.CreateApp(user.StoreId)).Model);
-                var appType = AppType.PointOfSale.ToString();
+                var appType = PointOfSaleAppType.AppType;
                 vm.AppName = "test";
                 vm.SelectedAppType = appType;
-                Assert.IsType<RedirectToActionResult>(apps.CreateApp(user.StoreId, vm).Result);
+                var redirect = Assert.IsType<RedirectResult>(apps.CreateApp(user.StoreId, vm).Result);
+                Assert.EndsWith("/settings/pos", redirect.Url);
                 var appList = Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps.ListApps(user.StoreId).Result).Model);
                 var app = appList.Apps[0];
                 var appData = new AppData { Id = app.Id, StoreDataId = app.StoreId, Name = app.AppName, AppType = appType };
@@ -680,7 +682,7 @@ donation:
                 var appleInvoice = invoices.SingleOrDefault(invoice => invoice.ItemCode.Equals("apple"));
                 Assert.NotNull(appleInvoice);
                 Assert.Equal("good apple", appleInvoice.ItemDesc);
-                
+
                 // testing custom amount
                 var action = Assert.IsType<RedirectToActionResult>(publicApps
                     .ViewPointOfSale(app.Id, PosViewType.Cart, 6.6m, null, null, null, null, "donation").Result);
@@ -735,7 +737,7 @@ donation:
                     Assert.Equal(test.ExpectedDivisibility, vmview.CurrencyInfo.Divisibility);
                     Assert.Equal(test.ExpectedSymbolSpace, vmview.CurrencyInfo.SymbolSpace);
                 }
-                
+
                 //test inventory related features
                 vmpos = await pos.UpdatePointOfSale(app.Id).AssertViewModelAsync<UpdatePointOfSaleViewModel>();
                 vmpos.Title = "hello";
@@ -756,7 +758,7 @@ noninventoryitem:
                         .ViewPointOfSale(app.Id, PosViewType.Cart, 1, null, null, null, null, "inventoryitem").Result);
                     return Task.CompletedTask;
                 });
-                
+
                 //we already bought all available stock so this should fail
                 await Task.Delay(100);
                 Assert.IsType<RedirectToActionResult>(publicApps
@@ -819,13 +821,13 @@ normal:
                     normalInvoice.CryptoInfo,
                     s => PaymentTypes.BTCLike.ToString() == s.PaymentType && new[] { "BTC", "LTC" }.Contains(
                              s.CryptoCode));
-                
+
                 //test topup option
                 vmpos.Template = @"
 a:
   price: 1000.0
   title: good apple
-  
+
 b:
   price: 10.0
   custom: false
@@ -843,7 +845,7 @@ f:
 g:
   custom: topup
 ";
-                
+
                 Assert.IsType<RedirectToActionResult>(pos.UpdatePointOfSale(app.Id, vmpos).Result);
                 vmpos = await pos.UpdatePointOfSale(app.Id).AssertViewModelAsync<UpdatePointOfSaleViewModel>();
                 Assert.DoesNotContain("custom", vmpos.Template);
@@ -855,7 +857,7 @@ g:
                 Assert.Contains(items, item => item.Id == "e" && item.Price.Type == ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Minimum);
                 Assert.Contains(items, item => item.Id == "f" && item.Price.Type == ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Topup);
                 Assert.Contains(items, item => item.Id == "g" && item.Price.Type == ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Topup);
-                
+
                 Assert.IsType<RedirectToActionResult>(publicApps
                     .ViewPointOfSale(app.Id, PosViewType.Static, null, null, null, null, null, "g").Result);
                 invoices = user.BitPay.GetInvoices();

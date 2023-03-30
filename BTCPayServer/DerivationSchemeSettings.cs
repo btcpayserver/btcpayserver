@@ -49,6 +49,7 @@ namespace BTCPayServer
         {
             return AccountDerivation is null ? null : DBUtils.nbxv1_get_wallet_id(Network.CryptoCode, AccountDerivation.ToString());
         }
+        
         private static bool TryParseXpub(string xpub, DerivationSchemeParser derivationSchemeParser, ref DerivationSchemeSettings derivationSchemeSettings, ref string error, bool electrum = true)
         {
             if (!electrum)
@@ -78,15 +79,36 @@ namespace BTCPayServer
             }
             try
             {
+                // Extract fingerprint and account key path from export formats that contain them.
+                // Possible formats: [fingerprint/account_key_path]xpub, [fingerprint]xpub, xpub
+                HDFingerprint? rootFingerprint = null;
+                KeyPath accountKeyPath = null;
+                var derivationRegex = new Regex(@"^(?:\[(\w+)(?:\/(.*?))?\])?(\w+)$", RegexOptions.IgnoreCase);
+                var match = derivationRegex.Match(xpub.Trim());
+                if (match.Success)
+                {
+                    if (!string.IsNullOrEmpty(match.Groups[1].Value)) rootFingerprint = HDFingerprint.Parse(match.Groups[1].Value);
+                    if (!string.IsNullOrEmpty(match.Groups[2].Value)) accountKeyPath = KeyPath.Parse(match.Groups[2].Value);
+                    if (!string.IsNullOrEmpty(match.Groups[3].Value)) xpub = match.Groups[3].Value;
+                }
                 derivationSchemeSettings.AccountOriginal = xpub.Trim();
                 derivationSchemeSettings.AccountDerivation = electrum ? derivationSchemeParser.ParseElectrum(derivationSchemeSettings.AccountOriginal) : derivationSchemeParser.Parse(derivationSchemeSettings.AccountOriginal);
                 derivationSchemeSettings.AccountKeySettings = derivationSchemeSettings.AccountDerivation.GetExtPubKeys()
-                    .Select(key => new AccountKeySettings()
+                    .Select(key => new AccountKeySettings
                     {
                         AccountKey = key.GetWif(derivationSchemeParser.Network)
                     }).ToArray();
                 if (derivationSchemeSettings.AccountDerivation is DirectDerivationStrategy direct && !direct.Segwit)
                     derivationSchemeSettings.AccountOriginal = null; // Saving this would be confusing for user, as xpub of electrum is legacy derivation, but for btcpay, it is segwit derivation
+                // apply initial matches if there were no results from parsing
+                if (rootFingerprint != null && derivationSchemeSettings.AccountKeySettings[0].RootFingerprint == null)
+                {
+                    derivationSchemeSettings.AccountKeySettings[0].RootFingerprint = rootFingerprint;
+                }
+                if (accountKeyPath != null && derivationSchemeSettings.AccountKeySettings[0].AccountKeyPath == null)
+                {
+                    derivationSchemeSettings.AccountKeySettings[0].AccountKeyPath = accountKeyPath;
+                }
                 return true;
             }
             catch (Exception exception)

@@ -13,16 +13,16 @@
 <body>
     <div id="app" class="container">
         <div class="row" style="height:100vh">
-            <div class="col-md-8 col-sm-12 col-lg-6 mx-auto my-auto">
+            <div class="mx-auto my-auto" style="max-width:360px;">
                 <div class="card border-0">
                     <div class="card-body p-4">
-                        <h1 class="card-title text-center mt-3">@Model.StoreName</h1>
-                        <h2 class="h3 card-subtitle text-center text-secondary my-3">
+                        <h1 class="h2 card-title text-center mt-3">@Model.StoreName</h1>
+                        <h2 class="h4 card-subtitle text-center text-secondary my-3">
                             <span>@Model.CryptoCode</span>
                             Lightning Node
                         </h2>
-                        <h4 class="text-center">
-                            <span class="me-1 btcpay-status btcpay-status--@(Model.Available ? "enabled" : "disabled")"></span>
+                        <h4 class="d-flex align-items-center justify-content-center gap-2">
+                            <span class="btcpay-status btcpay-status--@(Model.Available ? "enabled" : "disabled")" style="margin-top:.1rem;"></span>
                             <span>
                                 @(Model.Available ? "Online" : "Unavailable")
                             </span>
@@ -53,8 +53,10 @@
                                                 <vc:qr-code data="@nodeInfo"/>
                                             </div>
                                             <div class="input-group" data-clipboard="@nodeInfo">
-                                                <input type="text" class="form-control" style="cursor:copy" readonly="readonly" value="@nodeInfo" id="nodeInfo-addr-@i"/>
-                                                <button type="button" class="btn btn-outline-secondary" data-clipboard-confirm>Copy</button>
+                                                <input type="text" class="form-control" readonly="readonly" value="@nodeInfo" id="nodeInfo-addr-@i"/>
+                                                <button type="button" class="btn btn-outline-secondary px-3">
+                                                    <vc:icon symbol="copy" />
+                                                </button>
                                             </div>
                                         </div>
                                     }

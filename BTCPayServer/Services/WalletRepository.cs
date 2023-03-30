@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client.Models;
@@ -310,20 +311,32 @@ namespace BTCPayServer.Services
 
         public async Task<(string Label, string Color)[]> GetWalletLabels(WalletId walletId)
         {
+            return await GetWalletLabels(w => 
+                w.WalletId == walletId.ToString() &&
+                w.Type == WalletObjectData.Types.Label);
+        }
+        
+        public async Task<(string Label, string Color)[]> GetWalletLabels(WalletObjectId objectId)
+        {
+            return await GetWalletLabels(w => 
+                w.WalletId == objectId.WalletId.ToString() &&
+                w.Type == objectId.Type &&
+                w.Id == objectId.Id);
+        }
+        
+        private async Task<(string Label, string Color)[]> GetWalletLabels(Expression<Func<WalletObjectData, bool>> predicate)
+        {
             await using var ctx = _ContextFactory.CreateContext();
-            return (await
-                    ctx.WalletObjects.AsNoTracking().Where(w => w.WalletId == walletId.ToString() && w.Type == WalletObjectData.Types.Label)
-                    .ToArrayAsync())
-                    .Select(o =>
-                    {
-                        if (o.Data is null)
-                        {
-                            return (o.Id, ColorPalette.Default.DeterministicColor(o.Id));
-                        }
-                        return (o.Id,
-                            JObject.Parse(o.Data)["color"]?.Value<string>() ??
-                            ColorPalette.Default.DeterministicColor(o.Id));
-                    }).ToArray();
+            return (await ctx.WalletObjects.AsNoTracking().Where(predicate).ToArrayAsync())
+                .Select(FormatToLabel).ToArray();
+        }
+
+        private (string Label, string Color) FormatToLabel(WalletObjectData o)
+        {
+            return o.Data is null
+                ? (o.Id, ColorPalette.Default.DeterministicColor(o.Id))
+                : (o.Id,
+                    JObject.Parse(o.Data)["color"]?.Value<string>() ?? ColorPalette.Default.DeterministicColor(o.Id));
         }
 
         public async Task<bool> RemoveWalletObjects(WalletObjectId walletObjectId)

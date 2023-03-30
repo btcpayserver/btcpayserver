@@ -51,10 +51,15 @@
                         </a>
                     </td>
                     <td>
-                         @foreach (var label in tx.Labels)
-                         {
-                             <div class="transaction-label" style="--label-bg:@label.Value;--label-fg:@ColorPalette.Default.TextColor(label.Value)">@label.Key</div>
-                         }
+                        <div class="d-flex flex-wrap gap-2 align-items-center">
+                            @foreach (var label in tx.Labels)
+                            {
+                                <a asp-controller="UIWallets" asp-action="WalletTransactions" asp-route-labelFilter="@label.Key" asp-route-walletId="@Model.WalletId"
+                                   class="transaction-label" style="--label-bg:@label.Value;--label-fg:@ColorPalette.Default.TextColor(label.Value)">
+                                    @label.Key
+                                </a>
+                            }
+                        </div>
                     </td>
                     @if (tx.Positive)
                     {

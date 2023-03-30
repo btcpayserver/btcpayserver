@@ -227,10 +227,6 @@ namespace BTCPayServer.Data
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
         public bool ShowStoreHeader { get; set; } = true;
         
-        [DefaultValue(false)]
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
-        public bool ShowLNWithdrawButton { get; set; } = false;
-        
         [DefaultValue(true)]
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
         public bool CelebratePayment { get; set; } = true;

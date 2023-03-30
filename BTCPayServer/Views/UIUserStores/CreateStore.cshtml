@@ -1,4 +1,4 @@
-@model BTCPayServer.Models.StoreViewModels.CreateStoreViewModel
+﻿@model BTCPayServer.Models.StoreViewModels.CreateStoreViewModel
 @{
     ViewData.SetActivePage(StoreNavPages.Create, "Create a new store");
 }
@@ -40,24 +40,6 @@
                 <select asp-for="PreferredExchange" asp-items="Model.Exchanges" class="form-select w-300px"></select>
                 <div class="form-text mt-2 only-for-js">The recommended price source gets chosen based on the default currency.</div>
                 <span asp-validation-for="PreferredExchange" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="Preset" class="form-label"></label>
-                <div class="btcpay-list-select">
-                    <input asp-for="Preset" id="Preset_ECommerce" value="ECommerce" type="radio">
-                    <label for="Preset_ECommerce" class="btcpay-list-select-item">
-                        <vc:icon symbol="pos-cart" />
-                        <span>Online</span>
-                        <span class="note">Enhance the checkout process for online purchases. This assume the payment page will be displayed on the customer's device.</span>
-                    </label>
-                    <input asp-for="Preset" id="Preset_Physical" value="Physical" type="radio">
-                    <label for="Preset_Physical" class="btcpay-list-select-item">
-                        <vc:icon symbol="store" />
-                        <span>In-store</span>
-                        <span class="note">Enhance the checkout process for in-store purchases. This assume the payment page will be displayed on the merchant's device.</span>
-                    </label>
-                </div>
             </div>
 
             <div class="form-group mt-4">

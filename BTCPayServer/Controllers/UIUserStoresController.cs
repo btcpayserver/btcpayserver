@@ -44,8 +44,7 @@ namespace BTCPayServer.Controllers
             var vm = new CreateStoreViewModel
             {
                 DefaultCurrency = StoreBlob.StandardDefaultCurrency,
-                Exchanges = GetExchangesSelectList(null),
-                Preset = "ECommerce"
+                Exchanges = GetExchangesSelectList(null)
             };
 
             return View(vm);
@@ -65,12 +64,6 @@ namespace BTCPayServer.Controllers
             var blob = store.GetStoreBlob();
             blob.DefaultCurrency = vm.DefaultCurrency;
             blob.PreferredExchange = vm.PreferredExchange;
-            if (vm.Preset == "Physical")
-            {
-                blob.ShowPayInWalletButton = false;
-                blob.ShowStoreHeader = false;
-                blob.CheckoutType = Client.Models.CheckoutType.V2;
-            }
             store.SetStoreBlob(blob);
             await _repo.CreateStore(GetUserId(), store);
             CreatedStoreId = store.Id;

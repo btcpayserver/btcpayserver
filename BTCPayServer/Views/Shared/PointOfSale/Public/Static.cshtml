@@ -19,7 +19,7 @@
             @for (var x = 0; x < Model.Items.Length; x++)
             {
                 var item = Model.Items[x];
-                var formatted = DisplayFormatter.Currency(item.Price??0, Model.CurrencyCode);
+                var formatted = DisplayFormatter.Currency(item.Price ?? 0, Model.CurrencyCode, DisplayFormatter.CurrencyFormat.Symbol);
                 var buttonText = string.IsNullOrEmpty(item.BuyButtonText) ? item.PriceType != ViewPointOfSaleViewModel.ItemPriceType.Fixed ? Model.CustomButtonText : Model.ButtonText : item.BuyButtonText;
                 buttonText = buttonText.Replace("{0}", formatted).Replace("{Price}", formatted);
 

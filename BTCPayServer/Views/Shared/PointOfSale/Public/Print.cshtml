@@ -88,8 +88,7 @@ else
                         }
                         <div class="w-100 mb-3 fs-5 text-center">
                             @{
-                                
-                                var formatted = DisplayFormatter.Currency(item.Price??0, Model.CurrencyCode);
+                                var formatted = DisplayFormatter.Currency(item.Price ?? 0, Model.CurrencyCode, DisplayFormatter.CurrencyFormat.Symbol);
                             }
                             @switch (item.PriceType)
                             {

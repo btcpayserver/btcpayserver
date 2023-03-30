@@ -5,7 +5,7 @@ We take the security of our project seriously, and we encourage responsible disc
 We appreciate your efforts to disclose your findings responsibly.
 
 ##### 1. Reporting Channel
-If you believe you have discovered a vulnerability in our project, please email us at security@btcpayserver.org . Alternatively, you may report the vulnerability to us through [huntr.dev](https://huntr.dev/repos/btcpayserver/btcpayserver/).
+If you believe you have discovered a vulnerability in our project, please email us at `security@btcpayserver.org`. Alternatively, you may report the vulnerability to us through [huntr.dev](https://huntr.dev/repos/btcpayserver/btcpayserver/).
 
 Please allow for up to 2 business days for an acknowledgement of receipt. If you receive no response within 2 business days, please follow up via email to ensure the original message was received.
 

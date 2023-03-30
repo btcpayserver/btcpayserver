@@ -58,9 +58,8 @@ namespace BTCPayServer.Services.Apps
                     Description =
                         "Chamomile tea is made from the flower heads of the chamomile plant. The medicinal use of chamomile dates back to the ancient Egyptians, Romans and Greeks. Pay us what you want!",
                     Image = "~/img/pos-sample/herbal-tea.jpg",
-                    PriceType = ViewPointOfSaleViewModel.ItemPriceType.Fixed,
+                    PriceType = ViewPointOfSaleViewModel.ItemPriceType.Minimum,
                     Price = 1.8m,
-                    PaymentMethods = new[] {"PayPal", "Credit Card"},
                     Disabled = true
                 },
                 new()
@@ -71,7 +70,6 @@ namespace BTCPayServer.Services.Apps
                         "The Tibetan Himalayas, the land is majestic and beautiful—a spiritual place where, despite the perilous environment, many journey seeking enlightenment. Pay us what you want!",
                     Image = "~/img/pos-sample/fruit-tea.jpg",
                     PriceType = ViewPointOfSaleViewModel.ItemPriceType.Topup,
-                    PaymentMethods = new[] {"PayPal", "Credit Card"},
                     Inventory = 5,
                     Disabled = true
                 }

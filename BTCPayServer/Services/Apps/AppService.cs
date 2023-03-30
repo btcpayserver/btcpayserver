@@ -358,7 +358,7 @@ namespace BTCPayServer.Services.Apps
             if (string.IsNullOrWhiteSpace(template))
                 return Array.Empty<ViewPointOfSaleViewModel.Item>();
 
-            return  JsonConvert.DeserializeObject<ViewPointOfSaleViewModel.Item[]>(template, _defaultSerializer)?.Where(item => includeDisabled || !item.Disabled)?.ToArray()?? Array.Empty<ViewPointOfSaleViewModel.Item>();
+            return  JsonConvert.DeserializeObject<ViewPointOfSaleViewModel.Item[]>(template, _defaultSerializer)!.Where(item => includeDisabled || !item.Disabled).ToArray();
         }
 #nullable restore
 #nullable enable

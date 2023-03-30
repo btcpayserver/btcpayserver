@@ -61,11 +61,11 @@
                             <div class="form-group row">
                                 <div class="col-sm-6">
                                     <label class="form-label">Price</label>
-                                    <select class="form-select" v-model="editingItem.price_type">
+                                    <select class="form-select" v-model="editingItem.priceType">
                                         <option v-for="option in customPriceOptions" :value="option.value">{{option.text}}</option>
                                     </select>
                                 </div>
-                                <div class="col-sm-6" v-show="editingItem.price_type !== 'topup'">
+                                <div class="col-sm-6" v-show="editingItem.priceType !== 'Topup'">
                                     <label class="form-label">&nbsp;</label>
                                     <div class="input-group mb-2">
                                         <input class="form-control"
@@ -129,9 +129,9 @@ document.addEventListener("DOMContentLoaded", function () {
             items: [],
             editingItem: null,
             customPriceOptions: [
-                { text: 'Fixed', value: "fixed" },
-                { text: 'Minimum', value: "minimum" },
-                { text: 'Custom', value: 'topup' },
+                { text: 'Fixed', value: "Fixed" },
+                { text: 'Minimum', value: "Minimum" },
+                { text: 'Custom', value: 'Topup' },
             ],
             elementId: "@Model.templateId"
         },
@@ -171,7 +171,7 @@ document.addEventListener("DOMContentLoaded", function () {
             editItem: function(index){
                 this.errors = [];
                 if(index < 0){
-                    this.editingItem = {index:-1, id:"", title: "", price: 0, image: "", description: "", price_type: "fixed", inventory: null, paymentMethods: [], disabled: false};
+                    this.editingItem = {index:-1, id:"", title: "", price: 0, image: "", description: "", priceType: "Fixed", inventory: null, disabled: false};
                 }else{
                     this.editingItem = {...this.items[index], index};
                 }
@@ -217,7 +217,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     this.errors.push("Image cannot start with \"- \"");
                 }
                 
-                if (this.editingItem["price_type"] !== "topup" && !this.$refs.txtPrice.checkValidity()) {
+                if (this.editingItem["priceType"] !== "Topup" && !this.$refs.txtPrice.checkValidity()) {
                     this.errors.push("Price must be a valid number");
                 }
                 if (!this.$refs.txtTitle.checkValidity()) {

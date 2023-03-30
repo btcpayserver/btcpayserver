@@ -388,7 +388,7 @@ namespace BTCPayServer.Hosting
                                 {
                                     continue;
                                 }
-                                currentItem.PaymentMethods = currentItem.PaymentMethods.Append(parts[1].Trim()).ToArray();
+                                currentItem.PaymentMethods = currentItem.PaymentMethods.Append(parts[1].Trim().Trim('"')).ToArray();
                                 continue;
                             }
                         }
@@ -402,7 +402,7 @@ namespace BTCPayServer.Hosting
                         {
                             throw new Exception($"Invalid line format: {line}");
                         }
-                        var value = parts[1].Trim();
+                        var value = parts[1].Trim().Trim('"');
                         switch (key)
                         {
                             case "price_type":

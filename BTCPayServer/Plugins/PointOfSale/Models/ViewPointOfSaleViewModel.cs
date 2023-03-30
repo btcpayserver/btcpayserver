@@ -1,7 +1,9 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using BTCPayServer.JsonConverters;
 using BTCPayServer.Services.Apps;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Plugins.PointOfSale.Models
@@ -23,16 +25,17 @@ namespace BTCPayServer.Plugins.PointOfSale.Models
             public string Id { get; set; }
             [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
             public string Image { get; set; }
-            [JsonProperty("price_type")]
+            [JsonConverter(typeof(StringEnumConverter))]
             public ItemPriceType PriceType { get; set; }
             [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+            [JsonConverter(typeof(NumericStringJsonConverter))]
             public decimal? Price { get; set; }
             public string Title { get; set; }
             [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
             public string BuyButtonText { get; set; }
             [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
             public int? Inventory { get; set; } = null;
-            [JsonProperty("payment_methods",NullValueHandling = NullValueHandling.Ignore)]
+            [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
             public string[] PaymentMethods { get; set; }
             public bool Disabled { get; set; } = false;
             

@@ -43,6 +43,6 @@ namespace BTCPayServer.Models.CustodianAccountViewModels
         public SelectList Custodians { get; set; }
 
         public Form ConfigForm { get; set; }
-
+        public string Config { get; set; }
     }
 }

@@ -34,7 +34,7 @@ public class FakeCustodian : ICustodian
         return Task.FromResult(r);
     }
 
-    public Task<Form> GetConfigForm(CancellationToken cancellationToken = default)
+    public Task<Form> GetConfigForm(JObject config, CancellationToken cancellationToken = default)
     {
         
         var form = new Form();

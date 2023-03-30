@@ -11,6 +11,7 @@ using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
+using BTCPayServer.Forms;
 using BTCPayServer.Models.CustodianAccountViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Services;
@@ -46,7 +47,8 @@ namespace BTCPayServer.Controllers
             IEnumerable<ICustodian> custodianRegistry,
             BTCPayServerClient btcPayServerClient,
             BTCPayNetworkProvider networkProvider,
-            LinkGenerator linkGenerator
+            LinkGenerator linkGenerator,
+            FormDataService formDataService
         )
         {
             _displayFormatter = displayFormatter;
@@ -55,9 +57,11 @@ namespace BTCPayServer.Controllers
             _btcPayServerClient = btcPayServerClient;
             _networkProvider = networkProvider;
             _linkGenerator = linkGenerator;
+            FormDataService = formDataService;
         }
 
         public string CreatedCustodianAccountId { get; set; }
+        public FormDataService FormDataService { get; }
 
         [HttpGet("/stores/{storeId}/custodian-accounts/{accountId}")]
         public async Task<IActionResult> ViewCustodianAccount(string storeId, string accountId)
@@ -217,12 +221,14 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             }
 
-            var configForm = await custodian.GetConfigForm();
-            configForm.SetValues(custodianAccount.GetBlob());
+            var blob = custodianAccount.GetBlob();
+            var configForm = await custodian.GetConfigForm(blob, HttpContext.RequestAborted);
+            configForm.SetValues(blob);
 
             var vm = new EditCustodianAccountViewModel();
             vm.CustodianAccount = custodianAccount;
             vm.ConfigForm = configForm;
+            vm.Config = configForm.GetValues().ToString();
             return View(vm);
         }
 
@@ -241,9 +247,7 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             }
 
-            var configForm = await custodian.GetConfigForm();
-            configForm.ApplyValuesFromForm(Request.Form);
-            
+            var configForm = await GetNextForm(custodian, vm.Config);
 
             if (configForm.IsValid())
             {
@@ -257,9 +261,36 @@ namespace BTCPayServer.Controllers
             // Form not valid: The user must fix the errors before we can save
             vm.CustodianAccount = custodianAccount;
             vm.ConfigForm = configForm;
+            vm.Config = configForm.GetValues().ToString();
             return View(vm);
         }
 
+        private async Task<Form> GetNextForm(ICustodian custodian, string config)
+        {
+            JObject b = null;
+            try
+            {
+                if (config != null)
+                    b = JObject.Parse(config);
+            }
+            catch
+            {
+            }
+            b ??= new JObject();
+            // First, we restore the previous form based on the previous blob that was
+            // stored in config
+            var form = await custodian.GetConfigForm(b, HttpContext.RequestAborted);
+            form.SetValues(b);
+            // Then we apply new values overriding the previous blob from the Form params
+            form.ApplyValuesFromForm(Request.Form);
+            // We extract the new resulting blob, and request what is the next form based on it
+            b = form.GetValues();
+            form = await custodian.GetConfigForm(form.GetValues(), HttpContext.RequestAborted);
+            // We set all the values to this blob, and validate the form
+            form.SetValues(b);
+            FormDataService.Validate(form, ModelState);
+            return form;
+        }
 
         [HttpGet("/stores/{storeId}/custodian-accounts/create")]
         public IActionResult CreateCustodianAccount(string storeId)
@@ -297,8 +328,7 @@ namespace BTCPayServer.Controllers
             };
 
 
-            var configForm = await custodian.GetConfigForm();
-            configForm.ApplyValuesFromForm(Request.Form);
+            var configForm = await GetNextForm(custodian, vm.Config);
             if (configForm.IsValid())
             {
                 var configData = configForm.GetValues();
@@ -313,6 +343,7 @@ namespace BTCPayServer.Controllers
 
             // Ask for more data
             vm.ConfigForm = configForm;
+            vm.Config = configForm.GetValues().ToString();
             return View(vm);
         }
 
@@ -570,7 +601,7 @@ namespace BTCPayServer.Controllers
                     }
                     catch (BadConfigException e)
                     {
-                        Form configForm = await custodian.GetConfigForm();
+                        Form configForm = await custodian.GetConfigForm(config);
                         configForm.SetValues(config);
                         string[] badConfigFields = new string[e.BadConfigKeys.Length];
                         int i = 0;

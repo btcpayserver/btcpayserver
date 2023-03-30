@@ -32,6 +32,8 @@ public class Form
     // Are all the fields valid in the form?
     public bool IsValid()
     {
+        if (TopMessages?.Any(t => t.Type == AlertMessage.AlertMessageType.Danger) is true)
+            return false;
         return Fields.Select(f => f.IsValid()).All(o => o);
     }
 

@@ -8,6 +8,7 @@ using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Data;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Services;
+using BTCPayServer.Services.Labels;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
 using Dapper;
@@ -24,16 +25,19 @@ public class StoreRecentTransactions : ViewComponent
 {
     private readonly BTCPayWalletProvider _walletProvider;
     private readonly WalletRepository _walletRepository;
+    private readonly LabelService _labelService;
     public BTCPayNetworkProvider NetworkProvider { get; }
 
     public StoreRecentTransactions(
         BTCPayNetworkProvider networkProvider,
         BTCPayWalletProvider walletProvider,
-        WalletRepository walletRepository)
+        WalletRepository walletRepository,
+        LabelService labelService)
     {
         NetworkProvider = networkProvider;
         _walletProvider = walletProvider;
         _walletRepository = walletRepository;
+        _labelService = labelService;
     }
 
     public async Task<IViewComponentResult> InvokeAsync(StoreRecentTransactionsViewModel vm)
@@ -61,7 +65,7 @@ public class StoreRecentTransactions : ViewComponent
                 .Select(tx =>
                 {
                     walletTransactionsInfo.TryGetValue(tx.TransactionId.ToString(), out var transactionInfo);
-                    
+                    var labels = _labelService.CreateTransactionTagModels(transactionInfo, Request);
                     return new StoreRecentTransactionViewModel
                     {
                         Id = tx.TransactionId.ToString(),
@@ -72,7 +76,7 @@ public class StoreRecentTransactions : ViewComponent
                         Link = string.Format(CultureInfo.InvariantCulture, network.BlockExplorerLink,
                             tx.TransactionId.ToString()),
                         Timestamp = tx.SeenAt,
-                        Labels = transactionInfo?.LabelColors ?? new Dictionary<string, string>()
+                        Labels = labels
                     };
                 })
                 .ToList();

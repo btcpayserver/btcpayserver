@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using BTCPayServer.Models.WalletViewModels;
 
 namespace BTCPayServer.Components.StoreRecentTransactions;
 
@@ -12,5 +13,5 @@ public class StoreRecentTransactionViewModel
     public bool IsConfirmed { get; set; }
     public string Link { get; set; }
     public DateTimeOffset Timestamp { get; set; }
-    public Dictionary<string,string> Labels { get; set; }
+    public IEnumerable<TransactionTagModel> Labels { get; set; }
 }

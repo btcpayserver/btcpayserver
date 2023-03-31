@@ -10,7 +10,7 @@
         {
             return null;
         }
-        return new OffChainPaymentViewModel()
+        return new OffChainPaymentViewModel
         {
             Crypto = payment.Network.CryptoCode,
             BOLT11 = offChainPaymentData.BOLT11,
@@ -21,24 +21,27 @@
 
 @if (offchainPayments.Any())
 {
-    <h5>Off-Chain Payments</h5>
-    <table class="table table-hover">
-        <thead class="thead-inverse">
-            <tr>
-                <th class="w-150px">Crypto</th>
-                <th class="w-150px">Type</th>
-                <th>BOLT11</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var payment in offchainPayments)
-            {
+    <section>
+        <h5>Off-Chain Payments</h5>
+        <table class="table table-hover">
+            <thead class="thead-inverse">
                 <tr>
-                    <td>@payment.Crypto</td>
-                    <td>@payment.Type.ToPrettyString()</td>
-                    <td class="text-break">@payment.BOLT11</td>
+                    <th class="w-150px">Crypto</th>
+                    <th class="w-150px">Type</th>
+                    <th>BOLT11</th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @foreach (var payment in offchainPayments)
+                {
+                    <tr>
+                        <td>@payment.Crypto</td>
+                        <td>@payment.Type.ToPrettyString()</td>
+                        <td class="text-break">@payment.BOLT11</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </section>
+    
 }

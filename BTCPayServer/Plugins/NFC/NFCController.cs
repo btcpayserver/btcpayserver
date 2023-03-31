@@ -175,18 +175,18 @@ namespace BTCPayServer.Plugins.NFC
                 }
             }
 
-            if (bolt11 is null)
+            if (string.IsNullOrEmpty(bolt11))
             {
                 return BadRequest("Could not fetch BOLT11 invoice to pay to.");
             }
 
             var result = await info.SendRequest(bolt11, httpClient);
-            if (result.Status.Equals("ok", StringComparison.InvariantCultureIgnoreCase))
+            if (!string.IsNullOrEmpty(result.Status) && result.Status.Equals("ok", StringComparison.InvariantCultureIgnoreCase))
             {
                 return Ok(result.Reason);
             }
 
-            return BadRequest(result.Reason);
+            return BadRequest(result.Reason ?? "Unknown error");
         }
     }
 }

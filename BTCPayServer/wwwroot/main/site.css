@@ -39,23 +39,9 @@ hr.primary {
     background-color: var(--btcpay-form-bg);
 }
 
-.wraptextAuto {
-    max-width: 300px;
-    text-overflow: ellipsis;
-    overflow: hidden;
-    display: block;
-    white-space: nowrap;
-}
-
 @media (min-width: 768px) {
     .text-md-nowrap {
         white-space: nowrap;
-    }
-}
-
-@media (min-width: 768px) {
-    .wraptextAuto {
-        max-width: 600px;
     }
 }
 
@@ -221,6 +207,19 @@ h2 svg.icon.icon-info {
 
 /* Print */
 @media print {
+    section {
+        page-break-inside: avoid;
+    }
+    .table-responsive {
+        overflow: visible !important;
+    }
+    .table .text-truncate {
+        overflow: visible !important;
+        max-width: none !important;
+        white-space: unset !important;
+        word-wrap: break-word !important;
+        word-break: break-word !important;
+    }
     .table td,
     .table th {
         background: transparent;
@@ -698,23 +697,6 @@ a.store-powered-by:hover .logo-brand-dark {
     color: var(--btcpay-brand-tertiary);
 }
 
-/* Tom Select */
-.ts-wrapper.form-control .ts-control {
-    padding: .5rem .75rem .2rem .5rem !important;
-}
-
-.ts-wrapper.form-control .ts-control > .item {
-    margin: 0 .3rem .3rem 0 !important;
-}
-
-.ts-wrapper.form-control .ts-control > input {
-    margin: 0 0 .3rem .5rem !important;
-}
-
-.form-floating .ts-wrapper {
-    margin-top: 1.85rem;
-}
-
 /* Payment Box */
 .payment-box {
     --qr-size: 256px;
@@ -773,18 +755,89 @@ a.store-powered-by:hover .logo-brand-dark {
     font-weight: var(--btcpay-font-weight-semibold);
 }
 
+/* Tom Select */
+.ts-control, .ts-control input, .ts-dropdown {
+    color: var(--btcpay-body-text-muted) !important;
+}
+
+.ts-wrapper.form-control .ts-control {
+    gap: .5rem;
+    outline: 0 !important;
+}
+
+.ts-wrapper.form-control:not(.ts-inline) .ts-control {
+    padding: .5rem !important;
+    border-radius: var(--btcpay-border-radius) !important;
+}
+
+.ts-wrapper.form-control.focus:not(.ts-inline) .ts-control {
+    border-color: var(--btcpay-form-border-focus);
+    box-shadow: 0 0 0 1px var(--btcpay-form-border-focus) inset;
+}
+
+.ts-wrapper.form-control.ts-inline,
+.ts-wrapper.form-control.ts-inline .ts-control {
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    min-height: auto !important;
+    background: transparent !important;
+}
+
+.form-floating .ts-wrapper {
+    margin-top: 1.85rem;
+}
+
+.form-floating input.ts-wrapper.form-control:not(.ts-hidden-accessible) {
+    padding: .5rem .75rem !important;
+    height: 39px;
+}
+
+.form-floating input.label-manager.form-control ~ label {
+    opacity: 0.65;
+    transform: scale(0.85) translateY(-0.5rem) translateX(0.15rem);
+}
+
+input.ts-wrapper.form-control:not(.ts-hidden-accessible,.ts-inline) {
+    padding: .5rem .75rem !important;
+    height: 46px;
+}
+
+.ts-dropdown.dropdown-menu,
+.ts-dropdown.dropdown-menu.form-control,
+.ts-dropdown.dropdown-menu.form-select {
+    color: var(--btcpay-dropdown-color);
+    background: var(--btcpay-dropdown-bg);
+    border: var(--btcpay-dropdown-border-width) solid var(--btcpay-dropdown-border-color);
+    border-radius: var(--btcpay-dropdown-border-radius);
+    padding: var(--btcpay-dropdown-padding-y) var(--btcpay-dropdown-padding-x);
+    min-width: var(--btcpay-dropdown-min-width);
+}
+
+.ts-dropdown.dropdown-menu .ts-dropdown-content {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--btcpay-space-s);
+    padding: 0 var(--btcpay-space-s);
+}
+
 /* Transaction Labels */
-.transaction-label {
+.transaction-label,
+.ts-dropdown.dropdown-menu .transaction-label,
+.ts-dropdown.dropdown-menu .create.transaction-label,
+.ts-wrapper.form-control .ts-control > .item.transaction-label {
     display: inline-flex;
     flex-wrap: nowrap;
     align-items: center;
     gap: var(--btcpay-space-xs);
     color: var(--btcpay-body-text);
     background: transparent;
-    border: 1px solid var(--label-bg);
+    border: 1px solid var(--label-bg, var(--btcpay-neutral-300));
     border-radius: var(--btcpay-border-radius-l);
     font-size:  var(--btcpay-font-size-s);
-    padding: var(--btcpay-space-xs) var(--btcpay-space-s);
+    margin: 0;
+    padding: 1px var(--btcpay-space-s);
     text-align: left;
 }
 
@@ -796,9 +849,14 @@ a.store-powered-by:hover .logo-brand-dark {
 
 .transaction-label:focus,
 .transaction-label:hover,
-.transaction-label.active {
-    color: var(--label-fg);
-    background: var(--label-bg);
+.transaction-label.active,
+.ts-dropdown.dropdown-menu .transaction-label:focus,
+.ts-dropdown.dropdown-menu .transaction-label:hover,
+.ts-wrapper.multi .ts-control > .item.transaction-label:focus,
+.ts-wrapper.multi .ts-control > .item.transaction-label:hover,
+.ts-wrapper.multi .ts-control > .item.transaction-label.active {
+    color: var(--label-fg, var(--btcpay-body-text));
+    background: var(--label-bg, var(--btcpay-neutral-300));
 }
 
 .transaction-label:focus a,
@@ -852,6 +910,54 @@ a.store-powered-by:hover .logo-brand-dark {
 .transaction-label-tooltip ul {
     margin: 0;
     padding-left: var(--btcpay-space-m);
+}
+
+/* Truncated text */
+.truncate-center {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--btcpay-space-s);
+}
+
+.truncate-center-id {
+    font-family: var(--btcpay-font-monospace);
+    font-size: .875em;
+}
+
+.truncate-center-text {
+    word-wrap: break-word;
+    word-break: break-word;
+}
+
+.truncate-center a,
+.truncate-center button,
+.truncate-center-truncated {
+    line-height: 1;
+}
+
+.truncate-center button.btn .icon {
+    --btn-icon-size: 1em;
+}
+
+@media screen {
+    .truncate-center-id {
+        background: var(--btcpay-neutral-100);
+        border: 1px solid var(--btcpay-neutral-200);
+        border-radius: var(--btcpay-border-radius-l);
+        padding: var(--btcpay-space-xs) var(--btcpay-space-s);
+    }
+    
+    .truncate-center-text {
+        display: none;
+    }
+}
+
+@media print {
+    .truncate-center a,
+    .truncate-center button,
+    .truncate-center-truncated {
+        display: none;
+    }
 }
 
 /* Copy */

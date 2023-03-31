@@ -36,6 +36,7 @@
             <tr>
                 <th class="w-125px">Date</th>
                 <th>Transaction</th>
+                <th>Labels</th>
                 <th class="text-end">Amount</th>
             </tr>
             </thead>
@@ -45,9 +46,29 @@
                 <tr>
                     <td>@tx.Timestamp.ToTimeAgo()</td>
                     <td>
-                        <a href="@tx.Link" target="_blank" rel="noreferrer noopener" class="text-break">
-                            @tx.Id
-                        </a>
+                        <vc:truncate-center text="@tx.Id" link="tx.Link" classes="truncate-center-id" />
+                    </td>
+                    <td>
+                        @if (tx.Labels.Any())
+                        {
+                            <div class="d-flex flex-wrap gap-2 align-items-center">
+                                @foreach (var label in tx.Labels)
+                                {
+                                    <div class="transaction-label" style="--label-bg:@label.Color;--label-fg:@label.TextColor">
+                                        <span>@label.Text</span>
+                                        @if (!string.IsNullOrEmpty(label.Link))
+                                        {
+                                            <a class="transaction-label-info transaction-details-icon" href="@label.Link"
+                                               target="_blank" rel="noreferrer noopener" title="@label.Tooltip" data-bs-html="true"
+                                               data-bs-toggle="tooltip" data-bs-custom-class="transaction-label-tooltip">
+                                                <vc:icon symbol="info" />
+                                            </a>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        }
+                        
                     </td>
                     @if (tx.Positive)
                     {

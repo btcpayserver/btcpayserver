@@ -19,7 +19,7 @@ namespace BTCPayServer
             var bg = ColorTranslator.FromHtml(bgColor);
             int bgDelta = Convert.ToInt32((bg.R * 0.299) + (bg.G * 0.587) + (bg.B * 0.114));
             Color color = (255 - bgDelta < nThreshold) ? Color.Black : Color.White;
-            return ColorTranslator.ToHtml(color);
+            return ColorTranslator.ToHtml(color).ToLowerInvariant();
         }
         // Borrowed from https://github.com/ManageIQ/guides/blob/master/labels.md
         public static readonly ColorPalette Default = new ColorPalette(new string[] {

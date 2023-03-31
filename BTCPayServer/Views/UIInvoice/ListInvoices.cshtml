@@ -316,15 +316,17 @@
                                 <input name="selectedItems" type="checkbox" class="selector form-check-input" value="@invoice.InvoiceId" />
                             </td>
                             <td>@invoice.Date.ToBrowserDate()</td>
-                            <td style="max-width:120px;">
-                                @if (invoice.RedirectUrl != string.Empty)
-                                {
-                                    <a href="@invoice.RedirectUrl" class="wraptextAuto" rel="noreferrer noopener">@invoice.OrderId</a>
-                                }
-                                else
-                                {
-                                    <span class="wraptextAuto">@invoice.OrderId</span>
-                                }
+                            <td>
+                                <div class="text-truncate" style="max-width:120px;" data-bs-toggle="tooltip" title="@invoice.OrderId">
+                                    @if (invoice.RedirectUrl != string.Empty)
+                                    {
+                                        <a href="@invoice.RedirectUrl" rel="noreferrer noopener">@invoice.OrderId</a>
+                                    }
+                                    else
+                                    {
+                                        @invoice.OrderId
+                                    }
+                                </div>
                             </td>
                             <td class="text-break">@invoice.InvoiceId</td>
                             <td>

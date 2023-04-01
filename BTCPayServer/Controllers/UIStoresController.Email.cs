@@ -86,7 +86,7 @@ namespace BTCPayServer.Controllers
                         var message = emailSettings.CreateMailMessage(MailboxAddress.Parse(rule.To), "(test) " + rule.Subject, rule.Body, true);
                         await client.SendAsync(message);
                         await client.DisconnectAsync(true);
-                        TempData[WellKnownTempData.SuccessMessage] = $"Rule email ssaved and sent to {rule.To}. Please verify you received it.";
+                        TempData[WellKnownTempData.SuccessMessage] = $"Rule email saved and sent to {rule.To}. Please verify you received it.";
 
                         blob.EmailRules = vm.Rules;
                         store.SetStoreBlob(blob);

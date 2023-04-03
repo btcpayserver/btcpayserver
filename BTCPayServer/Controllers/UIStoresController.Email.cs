@@ -44,9 +44,10 @@ namespace BTCPayServer.Controllers
         {
             vm.Rules ??= new List<StoreEmailRule>();
             int index = 0;
-            if (command != "add")
+            var indSep = command.IndexOf(":", StringComparison.InvariantCultureIgnoreCase);
+            if (indSep > 0)
             {
-                var item = command[(command.IndexOf(":", StringComparison.InvariantCultureIgnoreCase) + 1)..];
+                var item = command[(indSep + 1)..];
                 index = int.Parse(item, CultureInfo.InvariantCulture);
             }
 

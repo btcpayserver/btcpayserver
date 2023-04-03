@@ -246,13 +246,13 @@ namespace BTCPayServer.Controllers
                 // TODO The custodian account is broken. The custodian is no longer available. Maybe delete the custodian account?
                 return NotFound();
             }
-
             var configForm = await GetNextForm(custodian, vm.Config);
 
             if (configForm.IsValid())
             {
                 var newData = configForm.GetValues();
                 custodianAccount.SetBlob(newData);
+                custodianAccount.Name = vm.CustodianAccount.Name;
                 custodianAccount = await _custodianAccountRepository.CreateOrUpdate(custodianAccount);
                 return RedirectToAction(nameof(ViewCustodianAccount),
                     new { storeId = custodianAccount.StoreId, accountId = custodianAccount.Id });
@@ -333,6 +333,7 @@ namespace BTCPayServer.Controllers
             {
                 var configData = configForm.GetValues();
                 custodianAccountData.SetBlob(configData);
+                custodianAccountData.Name = vm.Name;
                 custodianAccountData = await _custodianAccountRepository.CreateOrUpdate(custodianAccountData);
                 TempData[WellKnownTempData.SuccessMessage] = "Custodian account successfully created";
                 CreatedCustodianAccountId = custodianAccountData.Id;

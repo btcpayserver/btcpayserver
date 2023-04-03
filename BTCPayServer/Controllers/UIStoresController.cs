@@ -385,7 +385,6 @@ namespace BTCPayServer.Controllers
                     };
             }).ToList();
 
-            vm.Preset = storeBlob is { ShowPayInWalletButton: true, ShowStoreHeader: true } ? "ECommerce" : "Physical";
             vm.UseNewCheckout = storeBlob.CheckoutType == Client.Models.CheckoutType.V2;
             vm.CelebratePayment = storeBlob.CelebratePayment;
             vm.OnChainWithLnInvoiceFallback = storeBlob.OnChainWithLnInvoiceFallback;
@@ -508,8 +507,8 @@ namespace BTCPayServer.Controllers
                 });
             }
 
-            var isEcommercePreset = model.Preset == "ECommerce";
-            blob.ShowPayInWalletButton = blob.ShowStoreHeader = isEcommercePreset;
+            blob.ShowPayInWalletButton = model.ShowPayInWalletButton;
+            blob.ShowStoreHeader = model.ShowStoreHeader;
             blob.CheckoutType = model.UseNewCheckout ? Client.Models.CheckoutType.V2 : Client.Models.CheckoutType.V1;
             blob.CelebratePayment = model.CelebratePayment;
             blob.OnChainWithLnInvoiceFallback = model.OnChainWithLnInvoiceFallback;

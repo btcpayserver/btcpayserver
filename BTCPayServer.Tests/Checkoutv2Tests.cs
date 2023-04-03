@@ -53,7 +53,9 @@ namespace BTCPayServer.Tests
             Assert.Contains("BTC Lightning settings successfully updated", s.FindAlertMessage().Text);
 
             s.GoToStore(StoreNavPages.CheckoutAppearance);
-            s.Driver.SetCheckbox(By.Id("Preset_ECommerce"), true);
+            s.Driver.WaitForAndClick(By.Id("Presets"));
+            s.Driver.WaitForAndClick(By.Id("Presets_InStore"));
+            Assert.True(s.Driver.SetCheckbox(By.Id("ShowPayInWalletButton"), true));
             s.Driver.FindElement(By.Id("Save")).SendKeys(Keys.Enter);
             Assert.Contains("Store successfully updated", s.FindAlertMessage().Text);
 

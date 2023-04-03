@@ -35,10 +35,25 @@
                 {
                     <td>@input.Index</td>
                 }<td>
-                    @foreach (var label in input.Labels)
-                    {
-                        <div class="transaction-label" style="--label-bg:@label.Value;--label-fg:@ColorPalette.Default.TextColor(label.Value)">@label.Key</div>
-                    }
+                    @if (input.Labels.Any())
+                                           {
+                                               <div class="d-flex flex-wrap gap-2 align-items-center">
+                                                   @foreach (var label in input.Labels)
+                                                   {
+                                                       <div class="transaction-label" style="--label-bg:@label.Color;--label-fg:@label.TextColor">
+                                                           <span>@label.Text</span>
+                                                           @if (!string.IsNullOrEmpty(label.Link))
+                                                           {
+                                                               <a class="transaction-label-info transaction-details-icon" href="@label.Link"
+                                                                  target="_blank" rel="noreferrer noopener" title="@label.Tooltip" data-bs-html="true"
+                                                                  data-bs-toggle="tooltip" data-bs-custom-class="transaction-label-tooltip">
+                                                                   <vc:icon symbol="info" />
+                                                               </a>
+                                                           }
+                                                       </div>
+                                                   }
+                                               </div>
+                                           }
                 </td>
                 <td class="text-end text-@(input.Positive ? "success" : "danger")">@input.BalanceChange</td>
                 
@@ -64,11 +79,25 @@
             <tr>
                 <td class="text-break">@destination.Destination</td>
                 <td>
-                
-                    @foreach (var label in destination.Labels)
-                    {
-                        <div class="transaction-label" style="--label-bg:@label.Value;--label-fg:@ColorPalette.Default.TextColor(label.Value)">@label.Key</div>
-                    }
+                  @if (destination.Labels.Any())
+                                        {
+                                            <div class="d-flex flex-wrap gap-2 align-items-center">
+                                                @foreach (var label in destination.Labels)
+                                                {
+                                                    <div class="transaction-label" style="--label-bg:@label.Color;--label-fg:@label.TextColor">
+                                                        <span>@label.Text</span>
+                                                        @if (!string.IsNullOrEmpty(label.Link))
+                                                        {
+                                                            <a class="transaction-label-info transaction-details-icon" href="@label.Link"
+                                                               target="_blank" rel="noreferrer noopener" title="@label.Tooltip" data-bs-html="true"
+                                                               data-bs-toggle="tooltip" data-bs-custom-class="transaction-label-tooltip">
+                                                                <vc:icon symbol="info" />
+                                                            </a>
+                                                        }
+                                                    </div>
+                                                }
+                                            </div>
+                                        }
                 </td>
                 <td class="text-end text-@(destination.Positive ? "success" : "danger")">@destination.Balance</td>
 

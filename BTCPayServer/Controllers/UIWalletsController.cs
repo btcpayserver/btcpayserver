@@ -453,7 +453,7 @@ namespace BTCPayServer.Controllers
                 {
                     if (!string.IsNullOrEmpty(link))
                     {
-                        LoadFromBIP21(model, link, network);
+                        await LoadFromBIP21(walletId, model, link, network);
                     }
                 }
             }
@@ -568,7 +568,7 @@ namespace BTCPayServer.Controllers
             if (!string.IsNullOrEmpty(bip21))
             {
                 vm.Outputs?.Clear();
-                LoadFromBIP21(vm, bip21, network);
+                await LoadFromBIP21(walletId, vm, bip21, network);
             }
 
             decimal transactionAmountSum = 0;
@@ -586,7 +586,7 @@ namespace BTCPayServer.Controllers
                     .GetUnspentCoins(schemeSettings.AccountDerivation, false, cancellation);
 
                 var walletTransactionsInfoAsync = await this.WalletRepository.GetWalletTransactionsInfo(walletId,
-                    utxos.SelectMany(u => GetWalletObjectsQuery.Get(u)).Distinct().ToArray());
+                    utxos.SelectMany(GetWalletObjectsQuery.Get).Distinct().ToArray());
                 vm.InputsAvailable = utxos.Select(coin =>
                 {
                     walletTransactionsInfoAsync.TryGetValue(coin.OutPoint.Hash.ToString(), out var info1);
@@ -863,8 +863,10 @@ namespace BTCPayServer.Controllers
         }
 
 
-        private void LoadFromBIP21(WalletSendModel vm, string bip21, BTCPayNetwork network)
+        private async Task LoadFromBIP21(WalletId walletId, WalletSendModel vm, string bip21,
+            BTCPayNetwork network)
         {
+            BitcoinAddress? address = null;
             vm.Outputs ??= new();
             try
             {
@@ -879,6 +881,7 @@ namespace BTCPayServer.Controllers
                         ? uriBuilder.UnknownParameters["payout"]
                         : null
                 });
+                address = uriBuilder.Address;
                 if (!string.IsNullOrEmpty(uriBuilder.Label) || !string.IsNullOrEmpty(uriBuilder.Message))
                 {
                     TempData.SetStatusMessageModel(new StatusMessageModel()
@@ -896,9 +899,10 @@ namespace BTCPayServer.Controllers
             {
                 try
                 {
+                    address = BitcoinAddress.Create(bip21, network.NBitcoinNetwork);
                     vm.Outputs.Add(new WalletSendModel.TransactionOutput()
                     {
-                        DestinationAddress = BitcoinAddress.Create(bip21, network.NBitcoinNetwork).ToString()
+                        DestinationAddress = address.ToString()
                     }
                     );
                 }
@@ -913,6 +917,11 @@ namespace BTCPayServer.Controllers
             }
 
             ModelState.Clear();
+            if (address is not null)
+            {
+               var addressLabels =  await WalletRepository.GetWalletLabels(new WalletObjectId(walletId, WalletObjectData.Types.Address, address.ToString()));
+               vm.Outputs.Last().Labels = addressLabels.Select(tuple => tuple.Label).ToArray();
+            }
         }
 
         private IActionResult ViewVault(WalletId walletId, WalletPSBTViewModel vm)

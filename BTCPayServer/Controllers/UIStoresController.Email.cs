@@ -43,8 +43,13 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> StoreEmails(string storeId, StoreEmailRuleViewModel vm, string command)
         {
             vm.Rules ??= new List<StoreEmailRule>();
-            var item = command[(command.IndexOf(":", StringComparison.InvariantCultureIgnoreCase) + 1)..];
-            var index = int.Parse(item, CultureInfo.InvariantCulture);
+            int index = 0;
+            if (command != "add")
+            {
+                var item = command[(command.IndexOf(":", StringComparison.InvariantCultureIgnoreCase) + 1)..];
+                index = int.Parse(item, CultureInfo.InvariantCulture);
+            }
+
             if (command.StartsWith("remove", StringComparison.InvariantCultureIgnoreCase))
             {
                 vm.Rules.RemoveAt(index);
@@ -86,7 +91,7 @@ namespace BTCPayServer.Controllers
                         var message = emailSettings.CreateMailMessage(MailboxAddress.Parse(rule.To), "(test) " + rule.Subject, rule.Body, true);
                         await client.SendAsync(message);
                         await client.DisconnectAsync(true);
-                        TempData[WellKnownTempData.SuccessMessage] = $"Rule email ssaved and sent to {rule.To}. Please verify you received it.";
+                        TempData[WellKnownTempData.SuccessMessage] = $"Rule email saved and sent to {rule.To}. Please verify you received it.";
 
                         blob.EmailRules = vm.Rules;
                         store.SetStoreBlob(blob);

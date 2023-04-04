@@ -11,6 +11,7 @@ using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
+using BTCPayServer.Forms;
 using BTCPayServer.Models.CustodianAccountViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Services;
@@ -38,6 +39,7 @@ namespace BTCPayServer.Controllers
         private readonly BTCPayServerClient _btcPayServerClient;
         private readonly BTCPayNetworkProvider _networkProvider;
         private readonly LinkGenerator _linkGenerator;
+        private readonly FormDataService _formDataService;
 
         public UICustodianAccountsController(
             DisplayFormatter displayFormatter,
@@ -46,7 +48,8 @@ namespace BTCPayServer.Controllers
             IEnumerable<ICustodian> custodianRegistry,
             BTCPayServerClient btcPayServerClient,
             BTCPayNetworkProvider networkProvider,
-            LinkGenerator linkGenerator
+            LinkGenerator linkGenerator,
+            FormDataService formDataService
         )
         {
             _displayFormatter = displayFormatter;
@@ -55,6 +58,7 @@ namespace BTCPayServer.Controllers
             _btcPayServerClient = btcPayServerClient;
             _networkProvider = networkProvider;
             _linkGenerator = linkGenerator;
+            _formDataService = formDataService;
         }
 
         public string CreatedCustodianAccountId { get; set; }
@@ -247,7 +251,7 @@ namespace BTCPayServer.Controllers
 
             if (configForm.IsValid())
             {
-                var newData = configForm.GetValues();
+                var newData = _formDataService.GetValues(configForm);
                 custodianAccount.SetBlob(newData);
                 custodianAccount = await _custodianAccountRepository.CreateOrUpdate(custodianAccount);
                 return RedirectToAction(nameof(ViewCustodianAccount),
@@ -301,7 +305,7 @@ namespace BTCPayServer.Controllers
             configForm.ApplyValuesFromForm(Request.Form);
             if (configForm.IsValid())
             {
-                var configData = configForm.GetValues();
+                var configData = _formDataService.GetValues(configForm);
                 custodianAccountData.SetBlob(configData);
                 custodianAccountData = await _custodianAccountRepository.CreateOrUpdate(custodianAccountData);
                 TempData[WellKnownTempData.SuccessMessage] = "Custodian account successfully created";

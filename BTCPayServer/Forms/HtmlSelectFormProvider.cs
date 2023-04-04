@@ -1,8 +1,6 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
 using BTCPayServer.Abstractions.Form;
-using BTCPayServer.Validation;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace BTCPayServer.Forms;

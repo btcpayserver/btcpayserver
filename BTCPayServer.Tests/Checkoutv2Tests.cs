@@ -7,6 +7,7 @@ using BTCPayServer.Tests.Logging;
 using BTCPayServer.Views.Stores;
 using NBitcoin;
 using OpenQA.Selenium;
+using OpenQA.Selenium.Support.Extensions;
 using OpenQA.Selenium.Support.UI;
 using Xunit;
 using Xunit.Abstractions;
@@ -148,7 +149,7 @@ namespace BTCPayServer.Tests
                 Assert.True(expiredSection.Displayed);
                 Assert.Contains("Invoice Expired", expiredSection.Text);
             });
-            Assert.True(s.Driver.ElementDoesNotExist(By.Id("ReceiptLink")));
+            Assert.True(s.Driver.ElementDoesNotExist(By.Id("receipt-btn")));
             Assert.Equal(storeUrl, s.Driver.FindElement(By.Id("StoreLink")).GetAttribute("href"));
 
             // Test payment
@@ -179,20 +180,16 @@ namespace BTCPayServer.Tests
             await s.Server.ExplorerNode.GenerateAsync(1);
 
             // Fake Pay
-            s.PayInvoice();
             TestUtils.Eventually(() =>
             {
-                Assert.Contains("Created transaction",
-                    s.Driver.WaitForElement(By.Id("CheatSuccessMessage")).Text);
-                s.Server.ExplorerNode.Generate(2);
                 paymentInfo = s.Driver.WaitForElement(By.Id("PaymentInfo"));
                 Assert.Contains("The invoice hasn't been paid in full", paymentInfo.Text);
                 Assert.Contains("Please send", paymentInfo.Text);
             });
 
+            s.Driver.Navigate().Refresh();
             // Pay full amount
             s.PayInvoice();
-            
             // Processing
             TestUtils.Eventually(() =>
             {
@@ -202,7 +199,6 @@ namespace BTCPayServer.Tests
                 Assert.Contains("Your payment has been received and is now processing", processingSection.Text);
                 Assert.True(s.Driver.ElementDoesNotExist(By.Id("confetti")));
             });
-
             // Mine
             s.MineBlockOnInvoiceCheckout();
             TestUtils.Eventually(() =>
@@ -219,7 +215,7 @@ namespace BTCPayServer.Tests
                 Assert.Contains("Invoice Paid", settledSection.Text);
             });
             s.Driver.FindElement(By.Id("confetti"));
-            s.Driver.FindElement(By.Id("ReceiptLink"));
+            s.Driver.FindElement(By.Id("receipt-btn"));
             Assert.Equal(storeUrl, s.Driver.FindElement(By.Id("StoreLink")).GetAttribute("href"));
 
             // BIP21

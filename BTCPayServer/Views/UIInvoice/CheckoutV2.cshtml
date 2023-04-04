@@ -172,7 +172,7 @@
                         </div>
                     </div>
                     <div class="buttons">
-                        <a v-if="srvModel.receiptLink" class="btn btn-primary rounded-pill w-100" :href="srvModel.receiptLink" :target="isModal ? '_top' : null" v-t="'view_receipt'" id="ReceiptLink"></a>
+                        <a v-if="srvModel.receiptLink" class="btn btn-primary rounded-pill w-100" :href="srvModel.receiptLink" :target="isModal ? '_top' : null" v-t="'view_receipt'" id="receipt-btn"></a>
                         <a v-if="storeLink" class="btn btn-secondary rounded-pill w-100" :href="storeLink" :target="isModal ? '_top' : null" v-html="$t('return_to_store', { storeName: srvModel.storeName })" id="StoreLink"></a>
                         <button v-else-if="isModal" class="btn btn-secondary rounded-pill w-100" v-on:click="close" v-t="'Close'"></button>
                     </div>

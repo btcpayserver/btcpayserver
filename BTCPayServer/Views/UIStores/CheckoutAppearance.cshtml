@@ -8,7 +8,6 @@
 
     var store = ViewContext.HttpContext.GetStoreData();
 }
-
 @section PageFootContent {
     <partial name="_ValidationScriptsPartial" />
     <script>
@@ -19,6 +18,18 @@
                 ? `/checkout/css/themes/${theme}.css`
                 : ''
         });
+		delegate('click', '#Presets_InStore', e => {
+			$("#UseNewCheckout").prop('checked', true);
+			$("#NewCheckoutSettings").addClass('show');
+			$("#ShowPayInWalletButton").prop('checked', false);
+			$("#ShowStoreHeader").prop('checked', false);
+		});
+		delegate('click', '#Presets_Online', e => {
+			$("#UseNewCheckout").prop('checked', false);
+			$("#NewCheckoutSettings").removeClass('show');
+			$("#ShowPayInWalletButton").prop('checked', true);
+			$("#ShowStoreHeader").prop('checked', true);
+		});
     </script>
 }
 
@@ -61,7 +72,27 @@
                 </div>
             }
 
-            <h3 class="mt-5 mb-3">Checkout</h3>
+			<h3 class="mt-5 mb-3 d-flex gap-3 align-items-center">
+				<span>Checkout</span>
+				<div id="Presets" name="Presets" class="dropdown">
+					<button class="btn btn-secondary dropdown-toggle btn-sm px-3" type="button" id="ActionsDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+						Select a preset
+					</button>
+					<div class="dropdown-menu" aria-labelledby="ActionsDropdownToggle">
+						<div id="Presets_Online" class="btcpay-list-select-item dropdown-item">
+							<vc:icon symbol="pos-cart" />
+							<span>Online</span>
+							<span class="note">Enhance the checkout process for online purchases.<br />This assume the payment page will be displayed on the customer's device.</span>
+						</div>
+						<div id="Presets_InStore" class="btcpay-list-select-item dropdown-item">
+							<vc:icon symbol="store" />
+							<span>In-store</span>
+							<span class="note">Enhance the checkout process for in-store purchases.<br />This assume the payment page will be displayed on the merchant's device.</span>
+						</div>
+					</div>
+				</div>
+			</h3>
+            
             <div class="d-flex align-items-center mb-3">
                 <input asp-for="UseNewCheckout" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target=".checkout-settings" aria-expanded="@(Model.UseNewCheckout)" aria-controls="NewCheckoutSettings" />
                 <div>
@@ -90,7 +121,15 @@
                     <input asp-for="CelebratePayment" type="checkbox" class="form-check-input" />
                     <label asp-for="CelebratePayment" class="form-check-label"></label>
                 </div>
+				<div class="form-check">
+					<input asp-for="ShowStoreHeader" type="checkbox" class="form-check-input" />
+					<label asp-for="ShowStoreHeader" class="form-check-label"></label>
+				</div>
             </div>
+			<div class="form-check">
+				<input asp-for="ShowPayInWalletButton" type="checkbox" class="form-check-input" />
+				<label asp-for="ShowPayInWalletButton" class="form-check-label"></label>
+			</div>
             <div class="form-check">
                 <input asp-for="OnChainWithLnInvoiceFallback" type="checkbox" class="form-check-input" />
                 <label asp-for="OnChainWithLnInvoiceFallback" class="form-check-label"></label>

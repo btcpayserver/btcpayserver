@@ -199,11 +199,15 @@ retry:
             return true;
         }
 
-        public static void SetCheckbox(this IWebDriver driver, By selector, bool value)
+        public static bool SetCheckbox(this IWebDriver driver, By selector, bool value)
         {
             var element = driver.FindElement(selector);
             if (value != element.Selected)
+            {
                 driver.WaitForAndClick(selector);
+                return true;
+            }
+            return false;
         }
     }
 }

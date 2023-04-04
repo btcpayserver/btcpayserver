@@ -4,18 +4,18 @@
 }
 
 @section PageFootContent {
-    <partial name="_ValidationScriptsPartial"/>
+    <partial name="_ValidationScriptsPartial" />
     <script>
-        const exchanges = @Safe.Json(StoreBlob.RecommendedExchanges);
-        const recommended = document.querySelector("#PreferredExchange option[value='']")
-        const updateRecommended = currency => {
-            const source = exchanges[currency] || 'coingecko'
-            const name = source.charAt(0).toUpperCase() + source.slice(1)
-            recommended.innerText = `${name} (Recommended)`
-        }
-        updateRecommended(@Safe.Json(Model.DefaultCurrency))
-        delegate('change', '#DefaultCurrency', e => updateRecommended(e.target.value))
-    </script>
+	  const exchanges = @Safe.Json(StoreBlob.RecommendedExchanges);
+	  const recommended = document.querySelector("#PreferredExchange option[value='']")
+	  const updateRecommended = currency => {
+		  const source = exchanges[currency] || 'coingecko'
+		  const name = source.charAt(0).toUpperCase() + source.slice(1)
+		  recommended.innerText = `${name} (Recommended)`
+	  }
+	  updateRecommended(@Safe.Json(Model.DefaultCurrency))
+	  delegate('change', '#DefaultCurrency', e => updateRecommended(e.target.value))
+	</script>
 }
 
 <partial name="_StatusMessage" />
@@ -41,6 +41,7 @@
                 <div class="form-text mt-2 only-for-js">The recommended price source gets chosen based on the default currency.</div>
                 <span asp-validation-for="PreferredExchange" class="text-danger"></span>
             </div>
+
             <div class="form-group mt-4">
                 <input type="submit" value="Create" class="btn btn-primary" id="Create" />
             </div>

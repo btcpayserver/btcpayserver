@@ -467,7 +467,7 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("Rules_0__To")).SendKeys("test@gmail.com");
             s.Driver.FindElement(By.Id("Rules_0__CustomerEmail")).Click();
             s.Driver.FindElement(By.Id("Rules_0__Subject")).SendKeys("Thanks!");
-            s.Driver.FindElement(By.Id("Rules_0__Body")).SendKeys("Your invoice is settled");
+            s.Driver.FindElement(By.ClassName("note-editable")).SendKeys("Your invoice is settled");
             s.Driver.FindElement(By.Id("SaveEmailRules")).Click();
             Assert.Contains("Store email rules saved", s.FindAlertMessage().Text);
         }

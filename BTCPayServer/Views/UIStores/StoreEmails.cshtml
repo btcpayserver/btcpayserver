@@ -5,6 +5,11 @@
     Layout = "../Shared/_NavLayout.cshtml";
     ViewData.SetActivePage(StoreNavPages.Emails, "Email Rules", Context.GetStoreData().Id);
 }
+
+@section PageHeadContent {
+    <link href="~/vendor/summernote/summernote-bs5.css" rel="stylesheet" asp-append-version="true" />
+}
+
 <form class="row" asp-action="StoreEmails" method="post" asp-route-storeId="@Context.GetStoreData().Id">
     <div class="col-xxl-constrain">
         <div class="d-flex align-items-center justify-content-between mt-n1 mb-3">
@@ -33,9 +38,15 @@
                         <div class="form-group">
                             <div class="d-flex align-items-center justify-content-between gap-3">
                                 <label asp-for="Rules[index].Trigger" class="form-label" data-required></label>
-                                <button name="command" type="submit" value="remove:@index" class="d-inline-block btn text-danger btn-link p-0">
-                                    <span class="fa fa-times"></span> Remove this email rule
-                                </button>
+                                <div class="align-items-right">
+                                    <button name="command" type="submit" value="test:@index" class="d-inline-block btn text-info btn-link p-0">
+                                        <span class="fa fa-send"></span> Test this email rule
+                                    </button>
+                                    &nbsp;
+                                    <button name="command" type="submit" value="remove:@index" class="d-inline-block btn text-danger btn-link p-0">
+                                        <span class="fa fa-times"></span> Remove this email rule
+                                    </button>
+                                </div>
                             </div>
                             <select asp-for="Rules[index].Trigger" asp-items="@Html.GetEnumSelectList<WebhookEventType>()" class="form-select" required></select>
                             <span asp-validation-for="Rules[index].Trigger" class="text-danger"></span>
@@ -59,7 +70,7 @@
                         </div>
                         <div class="form-group">
                             <label asp-for="Rules[index].Body" class="form-label" ></label>
-                            <textarea asp-for="Rules[index].Body" class="form-control" rows="4"></textarea>
+                            <textarea asp-for="Rules[index].Body" class="form-control richtext" rows="4"></textarea>
                             <span asp-validation-for="Rules[index].Body" class="text-danger"></span>
                         </div>
                     </li>
@@ -74,6 +85,8 @@
         }
     </div>
 </form>
+
 @section PageFootContent {
-    <partial name="_ValidationScriptsPartial"/>
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/vendor/summernote/summernote-bs5.js" asp-append-version="true"></script>
 }

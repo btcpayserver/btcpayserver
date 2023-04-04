@@ -60,9 +60,13 @@ namespace BTCPayServer.Controllers
                 return View(vm);
             }
 
-            var store = await _repo.CreateStore(GetUserId(), vm.Name, vm.DefaultCurrency, vm.PreferredExchange);
+            var store = new StoreData { StoreName = vm.Name };
+            var blob = store.GetStoreBlob();
+            blob.DefaultCurrency = vm.DefaultCurrency;
+            blob.PreferredExchange = vm.PreferredExchange;
+            store.SetStoreBlob(blob);
+            await _repo.CreateStore(GetUserId(), store);
             CreatedStoreId = store.Id;
-
             TempData[WellKnownTempData.SuccessMessage] = "Store successfully created";
             return RedirectToAction(nameof(UIStoresController.Dashboard), "UIStores", new
             {

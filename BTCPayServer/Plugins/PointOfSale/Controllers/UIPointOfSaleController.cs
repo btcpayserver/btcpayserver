@@ -267,7 +267,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                         return RedirectToAction(nameof(ViewPointOfSale), new { appId, viewType });
                     }
 
-                    formResponseJObject = form.GetValues();
+                    formResponseJObject = FormDataService.GetValues(form);
                     break;
             }
             try
@@ -406,7 +406,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                     var controller = nameof(UIPointOfSaleController).TrimEnd("Controller", StringComparison.InvariantCulture);
                     var redirectUrl =
                         Request.GetAbsoluteUri(Url.Action(nameof(ViewPointOfSale), controller, new {appId, viewType}));
-                    formParameters.Add("formResponse", form.GetValues().ToString());
+                    formParameters.Add("formResponse", FormDataService.GetValues(form).ToString());
                     return View("PostRedirect", new PostRedirectViewModel
                     {
                         FormUrl = redirectUrl,

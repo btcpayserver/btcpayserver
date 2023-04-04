@@ -218,6 +218,14 @@ namespace BTCPayServer.Data
         public string BrandColor { get; set; }
         public string LogoFileId { get; set; }
         public string CssFileId { get; set; }
+
+        [DefaultValue(true)]
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
+        public bool ShowPayInWalletButton { get; set; } = true;
+        
+        [DefaultValue(true)]
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
+        public bool ShowStoreHeader { get; set; } = true;
         
         [DefaultValue(true)]
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]

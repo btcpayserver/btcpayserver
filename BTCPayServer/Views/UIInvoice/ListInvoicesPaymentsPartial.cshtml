@@ -1,21 +1,26 @@
 @model (InvoiceDetailsModel Invoice, bool ShowAddress)
-@{ var invoice = Model.Invoice; }
+@{
+    var invoice = Model.Invoice;
+    var grouped = invoice.Payments
+        .GroupBy(payment => payment.GetPaymentMethodId()?.PaymentType)
+        .Where(entities => entities.Key != null);
+}
 
-<div class="invoice-payments table-responsive">
-    <table class="table table-hover mt-3 mb-4">
+<div class="invoice-payments table-responsive mt-0">
+    <table class="table table-hover mb-0">
         <thead class="thead-inverse">
             <tr>
-                <th class="text-nowrap">Payment method</th>
+                <th class="text-nowrap w-175px">Payment method</th>
                 @if (Model.ShowAddress)
                 {
-                    <th>Address</th>
+                    <th>Destination</th>
                 }
-                <th class="text-end">Rate</th>
-                <th class="text-end">Paid</th>
-                <th class="text-end">Due</th>
+                <th class="w-150px text-end">Rate</th>
+                <th class="w-150px text-end">Paid</th>
+                <th class="w-150px text-end">Due</th>
                 @if (invoice.Overpaid)
                 {
-                    <th class="text-end">Overpaid</th>
+                    <th class="w-150px text-end">Overpaid</th>
                 }
             </tr>
         </thead>
@@ -27,7 +32,7 @@
                     @if (Model.ShowAddress)
                     {
                         <td title="@payment.Address">
-                            <div class="text-truncate" style="max-width:400px" data-bs-toggle="tooltip" title="@payment.Address">@payment.Address</div>
+                            <vc:truncate-center text="@payment.Address" classes="truncate-center-id" />
                         </td>
                     }
                     <td class="text-nowrap text-end">@payment.Rate</td>
@@ -47,11 +52,8 @@
             }
         </tbody>
     </table>
-    @{
-        var grouped = invoice.Payments.GroupBy(payment => payment.GetPaymentMethodId()?.PaymentType).Where(entities => entities.Key != null);
-    }
-    @foreach (var paymentGroup in grouped)
-    {
-        <partial name="@paymentGroup.Key.InvoiceViewPaymentPartialName" model="@paymentGroup.ToList()" />
-    }
 </div>
+@foreach (var paymentGroup in grouped)
+{
+    <partial name="@paymentGroup.Key.InvoiceViewPaymentPartialName" model="@paymentGroup.ToList()" />
+}

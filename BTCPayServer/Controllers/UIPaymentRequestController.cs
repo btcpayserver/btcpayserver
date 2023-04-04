@@ -240,7 +240,7 @@ namespace BTCPayServer.Controllers
                 form.ApplyValuesFromForm(Request.Form);
                 if (FormDataService.Validate(form, ModelState))
                 {  
-                    prBlob.FormResponse = form.GetValues();
+                    prBlob.FormResponse = FormDataService.GetValues(form);
                     result.SetBlob(prBlob);
                     await _PaymentRequestRepository.CreateOrUpdatePaymentRequest(result);
                     return RedirectToAction("PayPaymentRequest", new {payReqId});

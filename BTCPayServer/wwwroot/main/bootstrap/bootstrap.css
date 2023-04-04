@@ -4649,26 +4649,26 @@ fieldset:disabled .btn {
 }
 
 .pagination {
-  --btcpay-pagination-padding-x: 0.75rem;
-  --btcpay-pagination-padding-y: 0.375rem;
+  --btcpay-pagination-padding-x: var(--btcpay-space-s);
+  --btcpay-pagination-padding-y: var(--btcpay-space-s);
   --btcpay-pagination-font-size: 0.875rem;
-  --btcpay-pagination-color: var(--btcpay-body-link);
-  --btcpay-pagination-bg: var(--btcpay-body-bg-light);
+  --btcpay-pagination-color: var(--btcpay-body-text-muted);
+  --btcpay-pagination-bg: var(--btcpay-body-bg);
   --btcpay-pagination-border-width: 1px;
-  --btcpay-pagination-border-color: var(--btcpay-body-border-light);
+  --btcpay-pagination-border-color: transparent;
   --btcpay-pagination-border-radius: var(--btcpay-border-radius);
-  --btcpay-pagination-hover-color: var(--btcpay-body-link);
-  --btcpay-pagination-hover-bg: var(--btcpay-body-bg-hover);
-  --btcpay-pagination-hover-border-color: var(--btcpay-body-border-light);
-  --btcpay-pagination-focus-color: var(--btcpay-body-link);
-  --btcpay-pagination-focus-bg: var(--btcpay-body-bg-hover);
-  --btcpay-pagination-focus-box-shadow: 0 0 0 2px var(--btcpay-body-shadow);
+  --btcpay-pagination-hover-color: var(--btcpay-body-text);
+  --btcpay-pagination-hover-bg: var(--btcpay-body-bg);
+  --btcpay-pagination-hover-border-color: transparent;
+  --btcpay-pagination-focus-color: var(--btcpay-body-text);
+  --btcpay-pagination-focus-bg: var(--btcpay-body-bg);
+  --btcpay-pagination-focus-box-shadow: none;
   --btcpay-pagination-active-color: var(--btcpay-body-text-active);
   --btcpay-pagination-active-bg: var(--btcpay-body-bg-active);
-  --btcpay-pagination-active-border-color: var(--btcpay-body-border-medium);
+  --btcpay-pagination-active-border-color: transparent;
   --btcpay-pagination-disabled-color: var(--btcpay-body-text-muted);
-  --btcpay-pagination-disabled-bg: var(--btcpay-body-bg-light);
-  --btcpay-pagination-disabled-border-color: var(--btcpay-body-border-light);
+  --btcpay-pagination-disabled-bg: var(--btcpay-body-bg);
+  --btcpay-pagination-disabled-border-color: transparent;
   display: flex;
   padding-left: 0;
   list-style: none;
@@ -11076,6 +11076,23 @@ a.nav-link:hover {
   background: var(--btcpay-nav-bg-hover);
 }
 
+.pagination {
+  gap: var(--btcpay-space-s);
+  margin-bottom: 0;
+  font-weight: var(--btcpay-font-weight-semibold);
+}
+
+a.page-link {
+  border-radius: var(--btcpay-border-radius-l) !important;
+  min-width: 2.9em;
+  text-align: center;
+}
+
+.active > a.page-link:hover,
+.active > a.page-link:focus {
+  background: var(--btcpay-primary-bg-active);
+}
+
 main p > a {
   font-weight: var(--btcpay-font-weight-semibold);
 }
@@ -11117,7 +11134,7 @@ ul:not([class]) li {
 
 /* Modals */
 .modal-content {
-  box-shadow: 0 20px 20px rgba(0, 0, 0, .15);
+  box-shadow: 0 20px 20px rgba(0, 0, 0, 0.15);
 }
 
 /* Accordion */
@@ -11244,12 +11261,12 @@ textarea.w-auto {
 }
 
 /* Pull tables out of the grid by their horizontal column padding */
-main *:not([class^="table-responsive"]) > .table {
+main *:not([class*='table-responsive']) > .table {
   width: calc(100% + 1rem);
   margin: 1.5rem -0.5rem;
 }
 
-main [class^="table-responsive"] {
+main [class*='table-responsive'] {
   width: calc(100% + 1rem);
   margin: 1.5rem -0.5rem;
 }
@@ -11280,49 +11297,54 @@ main [class^="table-responsive"] {
   cursor: pointer;
 }
 
-.w-100px {
-  width: 100px;
-}
-.w-125px {
-  width: 125px;
-}
-.w-150px {
-  width: 150px;
-}
-.w-175px {
-  width: 175px;
-}
-.w-200px {
-  width: 200px;
-}
-.w-225px {
-  width: 225px;
-}
-.w-250px {
-  width: 250px;
-}
-.w-275px {
-  width: 275px;
-}
-.w-300px {
-  width: 300px;
-}
-.w-325px {
-  width: 325px;
-}
-.w-350px {
-  width: 350px;
+@media screen {
+  .w-75px {
+    width: 75px;
+  }
+  .w-100px {
+    width: 100px;
+  }
+  .w-125px {
+    width: 125px;
+  }
+  .w-150px {
+    width: 150px;
+  }
+  .w-175px {
+    width: 175px;
+  }
+  .w-200px {
+    width: 200px;
+  }
+  .w-225px {
+    width: 225px;
+  }
+  .w-250px {
+    width: 250px;
+  }
+  .w-275px {
+    width: 275px;
+  }
+  .w-300px {
+    width: 300px;
+  }
+  .w-325px {
+    width: 325px;
+  }
+  .w-350px {
+    width: 350px;
+  }
 }
 
 /* Chrome, Safari, Edge, Opera */
-input[type="number"].hide-number-spin::-webkit-outer-spin-button,
-input[type="number"].hide-number-spin::-webkit-inner-spin-button {
+input[type='number'].hide-number-spin::-webkit-outer-spin-button,
+input[type='number'].hide-number-spin::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
 
 /* Firefox */
-input[type="number"].hide-number-spin {
+input[type='number'].hide-number-spin {
   -moz-appearance: textfield;
 }
 
@@ -11375,14 +11397,14 @@ input[type="number"].hide-number-spin {
   margin-bottom: 1.5rem;
 }
 
-.form-select:not(:disabled,.disabled,.is-valid,.is-invalid):hover,
-.form-control:not(:disabled,.disabled,.is-valid,.is-invalid):hover,
-.form-check-input:not(:disabled,.disabled,.is-valid,.is-invalid):hover {
+.form-select:not(:disabled, .disabled, .is-valid, .is-invalid):hover,
+.form-control:not(:disabled, .disabled, .is-valid, .is-invalid):hover,
+.form-check-input:not(:disabled, .disabled, .is-valid, .is-invalid):hover {
   border-color: var(--btcpay-form-border-hover);
 }
 
 [data-required]::after {
-  content: " *";
+  content: ' *';
   color: var(--btcpay-danger);
 }
 

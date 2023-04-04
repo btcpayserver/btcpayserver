@@ -433,6 +433,7 @@ namespace BTCPayServer.Hosting
             services.AddTransient<BitpayAccessTokenController>();
             services.AddTransient<UIInvoiceController>();
             services.AddTransient<UIPaymentRequestController>();
+            services.AddSingleton<LabelService>();
             // Add application services.
             services.AddSingleton<EmailSenderFactory>();
             services.AddSingleton<InvoiceActivator>();

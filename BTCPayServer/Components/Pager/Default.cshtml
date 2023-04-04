@@ -6,51 +6,53 @@
 
 @if (Model.Total is null || Model.Total.Value > pageSizeOptions.Min())
 {
-    <nav aria-label="..." class="w-100 clearfix">
+    <nav aria-label="..." class="d-flex flex-wrap gap-3 justify-content-between">
         @if (Model.Total is null || Model.Total.Value > Model.Count)
         {
-            <ul class="pagination float-start">
-                <li class="page-item @(Model.Skip == 0 ? "disabled" : null)">
-                    <a class="page-link" tabindex="-1" href="@NavigatePages(-1, Model.Count)">&laquo;</a>
-                </li>
+            <ul class="pagination me-auto">
+                @if (Model.Skip > 0)
+                {
+                    <li class="page-item">
+                        <a class="page-link" tabindex="-1" href="@NavigatePages(-1, Model.Count)">Prev</a>
+                    </li>
+                }
                 <li class="page-item disabled">
+                    <span class="page-link @(Model.Total is null ? "px-0" : (Model.Skip == 0 ? "ps-0" : null))">
                     @if (Model.Total is null)
-					{
-						<span class="page-link">
-                            @(Model.Skip + 1)–@(Model.Skip + Model.Count)
-                        </span>
-					}
-					else if (Model.Total.Value <= Model.Count)
                     {
-                        <span class="page-link">
-                            1–@Model.Total.Value
-                        </span>
+                        @($"{Model.Skip + 1} – {Model.Skip + Model.Count}")
+                    }
+                    else if (Model.Total.Value <= Model.Count)
+                    {
+                        @($"1 – {Model.Total.Value}")
                     }
                     else
                     {
-                        <span class="page-link">
-                            @(Model.Skip + 1)–@(Model.Skip + Model.Count), Total: @Model.Total.Value
-                        </span>
+                        @($"{Model.Skip + 1} – {Model.Skip + Model.Count}, Total: {Model.Total.Value}")
                     }
+                    </span>
                 </li>
-                <li class="page-item @(((Model.Total is null && Model.CurrentPageCount >= Model.Count) || (Model.Total is not null && Model.Total.Value > (Model.Skip + Model.Count))) ? null : "disabled")">
-                    <a class="page-link" href="@NavigatePages(1, Model.Count)">&raquo;</a>
-                </li>
+                @if ((Model.Total is null && Model.CurrentPageCount >= Model.Count) || (Model.Total is not null && Model.Total.Value > Model.Skip + Model.Count))
+                {
+                    <li class="page-item">
+                        <a class="page-link" href="@NavigatePages(1, Model.Count)">Next</a>
+                    </li>
+                }
             </ul>
         }
 
         @if (Model.Total is null || Model.Total.Value >= pageSizeOptions.Min())
         {
-            <ul class="pagination float-end">
+            <ul class="pagination ms-auto">
                 <li class="page-item disabled">
-                    <span class="page-link">Page Size:</span>
+                    <span class="page-link">Page Size</span>
                 </li>
-                @foreach (int pageSize in pageSizeOptions)
+                @foreach (var pageSize in pageSizeOptions)
                 {
                     if (Model.Total is null || Model.Total.Value >= pageSize)
                     {
                         <li class="page-item @(Model.Count == pageSize ? "active" : null)">
-                            <a class="page-link" href="@NavigatePages(0, pageSize)">@pageSize</a>
+                            <a class="page-link @(Model.Count != pageSize && pageSize == pageSizeOptions.Max() ? "pe-0" : null)" href="@NavigatePages(0, pageSize)">@pageSize</a>
                         </li>
                     }
                 }

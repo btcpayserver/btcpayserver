@@ -39,6 +39,7 @@ namespace BTCPayServer.Controllers
         private readonly BTCPayServerClient _btcPayServerClient;
         private readonly BTCPayNetworkProvider _networkProvider;
         private readonly LinkGenerator _linkGenerator;
+        private readonly FormDataService _formDataService;
 
         public UICustodianAccountsController(
             DisplayFormatter displayFormatter,
@@ -57,11 +58,10 @@ namespace BTCPayServer.Controllers
             _btcPayServerClient = btcPayServerClient;
             _networkProvider = networkProvider;
             _linkGenerator = linkGenerator;
-            FormDataService = formDataService;
+            _formDataService = formDataService;
         }
 
         public string CreatedCustodianAccountId { get; set; }
-        public FormDataService FormDataService { get; }
 
         [HttpGet("/stores/{storeId}/custodian-accounts/{accountId}")]
         public async Task<IActionResult> ViewCustodianAccount(string storeId, string accountId)
@@ -250,7 +250,7 @@ namespace BTCPayServer.Controllers
 
             if (configForm.IsValid())
             {
-                var newData = configForm.GetValues();
+                var newData = _formDataService.GetValues(configForm);
                 custodianAccount.SetBlob(newData);
                 custodianAccount.Name = vm.CustodianAccount.Name;
                 custodianAccount = await _custodianAccountRepository.CreateOrUpdate(custodianAccount);
@@ -288,7 +288,7 @@ namespace BTCPayServer.Controllers
             form = await custodian.GetConfigForm(form.GetValues(), HttpContext.RequestAborted);
             // We set all the values to this blob, and validate the form
             form.SetValues(b);
-            FormDataService.Validate(form, ModelState);
+            _formDataService.Validate(form, ModelState);
             return form;
         }
 
@@ -331,7 +331,7 @@ namespace BTCPayServer.Controllers
             var configForm = await GetNextForm(custodian, vm.Config);
             if (configForm.IsValid())
             {
-                var configData = configForm.GetValues();
+                var configData = _formDataService.GetValues(configForm);
                 custodianAccountData.SetBlob(configData);
                 custodianAccountData.Name = vm.Name;
                 custodianAccountData = await _custodianAccountRepository.CreateOrUpdate(custodianAccountData);

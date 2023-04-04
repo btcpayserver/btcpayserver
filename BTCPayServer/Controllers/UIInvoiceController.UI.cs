@@ -1157,7 +1157,7 @@ namespace BTCPayServer.Controllers
             {
                 StoreId = model.StoreId,
                 Currency = storeBlob?.DefaultCurrency,
-                UseNewCheckout = storeBlob?.CheckoutType is CheckoutType.V2,
+                CheckoutType = storeBlob?.CheckoutType ?? CheckoutType.V2,
                 AvailablePaymentMethods = GetPaymentMethodsSelectList()
             };
 
@@ -1172,7 +1172,7 @@ namespace BTCPayServer.Controllers
         {
             var store = HttpContext.GetStoreData();
             var storeBlob = store.GetStoreBlob();
-            model.UseNewCheckout = storeBlob.CheckoutType == CheckoutType.V2;
+            model.CheckoutType = storeBlob.CheckoutType;
             model.AvailablePaymentMethods = GetPaymentMethodsSelectList();
 
             if (!ModelState.IsValid)

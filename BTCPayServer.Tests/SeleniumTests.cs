@@ -592,7 +592,7 @@ namespace BTCPayServer.Tests
             s.GoToInvoices(s.StoreId);
             s.GoToInvoiceCheckout(i);
             var checkouturi = s.Driver.Url;
-            s.PayInvoice();
+            s.PayInvoice(mine: true);
             TestUtils.Eventually(() =>
             {
                 s.Driver.Navigate().Refresh();
@@ -602,7 +602,7 @@ namespace BTCPayServer.Tests
             {
                 s.Driver.Navigate().Refresh();
                 Assert.DoesNotContain("invoice-unsettled", s.Driver.PageSource);
-                Assert.Contains("invoice-processing", s.Driver.PageSource);
+                Assert.Contains("\"PaymentDetails\"", s.Driver.PageSource);
             });
             s.GoToUrl(checkouturi);
 
@@ -1067,6 +1067,7 @@ namespace BTCPayServer.Tests
             await s.StartAsync();
             s.RegisterNewUser();
             s.CreateNewStore();
+            s.EnableCheckout(CheckoutType.V1);
             s.AddDerivationScheme();
 
             s.Driver.FindElement(By.Id("StoreNav-PaymentRequests")).Click();
@@ -2038,6 +2039,7 @@ namespace BTCPayServer.Tests
                 new[] { s.Server.MerchantLnd.Client });
             s.RegisterNewUser(true);
             (_, string storeId) = s.CreateNewStore();
+            s.EnableCheckout(CheckoutType.V1);
             var network = s.Server.NetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode).NBitcoinNetwork;
             s.AddLightningNode(LightningConnectionType.CLightning, false);
             s.GoToLightningSettings();
@@ -2168,6 +2170,7 @@ namespace BTCPayServer.Tests
 
             s.GoToHome();
             s.CreateNewStore(false);
+            s.EnableCheckout(CheckoutType.V1);
             s.AddLightningNode(LightningConnectionType.LndREST, false);
             s.GoToLightningSettings();
             s.Driver.SetCheckbox(By.Id("LNURLEnabled"), true);

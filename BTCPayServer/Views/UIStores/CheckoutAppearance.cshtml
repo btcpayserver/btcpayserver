@@ -19,14 +19,16 @@
                 : ''
         });
 		delegate('click', '#Presets_InStore', e => {
-			$("#UseNewCheckout").prop('checked', true);
-			$("#NewCheckoutSettings").addClass('show');
+			$("#UseClassicCheckout").prop('checked', false);
+			$("#CheckoutV2Settings").addClass('show');
+			$("#ClassicCheckoutSettings").removeClass('show');
 			$("#ShowPayInWalletButton").prop('checked', false);
 			$("#ShowStoreHeader").prop('checked', false);
 		});
 		delegate('click', '#Presets_Online', e => {
-			$("#UseNewCheckout").prop('checked', false);
-			$("#NewCheckoutSettings").removeClass('show');
+			$("#UseClassicCheckout").prop('checked', false);
+			$("#CheckoutV2Settings").addClass('show');
+			$("#ClassicCheckoutSettings").removeClass('show');
 			$("#ShowPayInWalletButton").prop('checked', true);
 			$("#ShowStoreHeader").prop('checked', true);
 		});
@@ -93,22 +95,13 @@
 				</div>
 			</h3>
             
-            <div class="d-flex align-items-center mb-3">
-                <input asp-for="UseNewCheckout" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target=".checkout-settings" aria-expanded="@(Model.UseNewCheckout)" aria-controls="NewCheckoutSettings" />
-                <div>
-                    <label asp-for="UseNewCheckout" class="d-flex align-items-center form-label">
-                        Use the new checkout
-                        <span class="badge bg-warning ms-2">Experimental</span>
-                    </label>
-                    <span asp-validation-for="UseNewCheckout" class="text-danger"></span>
-                    <div class="form-text">
-                        Since v1.7.0 a new version of the checkout is available. Note: For now, the new version is English-only.<br />
-                        We are still collecting <a href="https://github.com/btcpayserver/btcpayserver/discussions/4308" target="_blank" rel="noreferrer noopener">feedback</a> and offer this as an opt-in feature.
-                    </div>
-                </div>
+            <div class="d-flex align-items-center mb-4">
+				<input asp-for="UseClassicCheckout" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target=".checkout-settings" aria-expanded="@(Model.UseClassicCheckout)" aria-controls="CheckoutV2Settings" />
+				<label asp-for="UseClassicCheckout" class="form-label mb-0"></label>
+                <span asp-validation-for="UseClassicCheckout" class="text-danger"></span>
             </div>
 
-            <div class="checkout-settings collapse @(Model.UseNewCheckout ? "show" : "")" id="NewCheckoutSettings">
+			<div class="checkout-settings collapse @(Model.UseClassicCheckout ? "" : "show")" id="CheckoutV2Settings">
                 <div class="form-group">
                     <label asp-for="DisplayExpirationTimer" class="form-label"></label>
                     <div class="input-group">
@@ -141,7 +134,7 @@
                 <input asp-for="LightningAmountInSatoshi" type="checkbox" class="form-check-input" />
                 <label asp-for="LightningAmountInSatoshi" class="form-check-label"></label>
             </div>
-            <div class="checkout-settings collapse @(Model.UseNewCheckout ? "" : "show")" id="OldCheckoutSettings">
+            <div class="checkout-settings collapse @(Model.UseClassicCheckout ? "show" : "")" id="ClassicCheckoutSettings">
                 <div class="form-check">
                     <input asp-for="RequiresRefundEmail" type="checkbox" class="form-check-input" />
                     <label asp-for="RequiresRefundEmail" class="form-check-label"></label>

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Lightning;
 using BTCPayServer.Lightning.CLightning;
 using BTCPayServer.Views.Manage;
@@ -94,6 +95,7 @@ namespace BTCPayServer.Tests
                 Driver.FindElement(By.Id("test-payment-amount")).Clear();
                 Driver.FindElement(By.Id("test-payment-amount")).SendKeys(amount.ToString());
             }
+            Driver.WaitUntilAvailable(By.Id("FakePayment"));
             Driver.FindElement(By.Id("FakePayment")).Click();
             if (mine)
             {
@@ -193,16 +195,22 @@ namespace BTCPayServer.Tests
                 StoreId = storeId;
             return (name, storeId);
         }
-
-        public void EnableCheckoutV2(bool bip21 = false)
+        public void EnableCheckout(CheckoutType checkoutType, bool bip21 = false)
         {
             GoToStore(StoreNavPages.CheckoutAppearance);
-            Driver.SetCheckbox(By.Id("UseNewCheckout"), true);
-            Driver.WaitForElement(By.Id("OnChainWithLnInvoiceFallback"));
-            Driver.SetCheckbox(By.Id("OnChainWithLnInvoiceFallback"), bip21);
+            if (checkoutType == CheckoutType.V2)
+            {
+                Driver.SetCheckbox(By.Id("UseClassicCheckout"), false);
+                Driver.WaitForElement(By.Id("OnChainWithLnInvoiceFallback"));
+                Driver.SetCheckbox(By.Id("OnChainWithLnInvoiceFallback"), bip21);
+            }
+            else
+            {
+                Driver.SetCheckbox(By.Id("UseClassicCheckout"), true);
+            }
             Driver.FindElement(By.Id("Save")).SendKeys(Keys.Enter);
             Assert.Contains("Store successfully updated", FindAlertMessage().Text);
-            Assert.True(Driver.FindElement(By.Id("UseNewCheckout")).Selected);
+            Assert.True(Driver.FindElement(By.Id("UseClassicCheckout")).Selected);
         }
 
         public Mnemonic GenerateWallet(string cryptoCode = "BTC", string seed = "", bool? importkeys = null, bool isHotWallet = false, ScriptPubKeyType format = ScriptPubKeyType.Segwit)

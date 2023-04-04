@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Payments;
 using BTCPayServer.Tests.Logging;
 using BTCPayServer.Views.Stores;
@@ -27,6 +28,7 @@ namespace BTCPayServer.Tests
             s.GoToRegister();
             s.RegisterNewUser();
             s.CreateNewStore();
+            s.EnableCheckout(CheckoutType.V1);
             s.AddDerivationScheme();
             s.GoToStore(StoreNavPages.CheckoutAppearance);
             s.Driver.FindElement(By.Id("RequiresRefundEmail")).Click();
@@ -72,6 +74,7 @@ namespace BTCPayServer.Tests
             s.GoToRegister();
             s.RegisterNewUser();
             s.CreateNewStore();
+            s.EnableCheckout(CheckoutType.V1);
             s.AddDerivationScheme();
 
             // Now create an invoice that requires a refund email
@@ -124,6 +127,7 @@ namespace BTCPayServer.Tests
             s.GoToRegister();
             s.RegisterNewUser();
             s.CreateNewStore();
+            s.EnableCheckout(CheckoutType.V1);
             s.AddDerivationScheme();
 
             var invoiceId = s.CreateInvoice();
@@ -154,12 +158,12 @@ namespace BTCPayServer.Tests
             s.GoToRegister();
             s.RegisterNewUser(true);
             s.CreateNewStore();
+            s.EnableCheckout(CheckoutType.V1);
             s.AddLightningNode();
             s.AddDerivationScheme();
 
             var invoiceId = s.CreateInvoice(defaultPaymentMethod: "BTC_LightningLike");
             s.GoToInvoiceCheckout(invoiceId);
-
             Assert.Equal("Bitcoin (Lightning) (BTC)", s.Driver.FindElement(By.ClassName("payment__currencies")).Text);
             s.Driver.Quit();
         }
@@ -174,6 +178,7 @@ namespace BTCPayServer.Tests
             s.GoToRegister();
             s.RegisterNewUser(true);
             s.CreateNewStore();
+            s.EnableCheckout(CheckoutType.V1);
             s.AddLightningNode();
             s.GoToLightningSettings();
             s.Driver.SetCheckbox(By.Id("LightningAmountInSatoshi"), true);
@@ -193,6 +198,7 @@ namespace BTCPayServer.Tests
             s.GoToRegister();
             s.RegisterNewUser();
             s.CreateNewStore();
+            s.EnableCheckout(CheckoutType.V1);
             s.GoToStore();
             s.AddDerivationScheme();
             var invoiceId = s.CreateInvoice(0.001m, "BTC", "a@x.com");

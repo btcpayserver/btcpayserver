@@ -4001,7 +4001,7 @@ clientBasic.PreviewUpdateStoreRateConfiguration(user.StoreId, new StoreRateConfi
 
 
             // Test: Trade, unauth
-            var tradeRequest = new TradeRequestData { FromAsset = MockCustodian.TradeFromAsset, ToAsset = MockCustodian.TradeToAsset, Qty = MockCustodian.TradeQtyBought.ToString(CultureInfo.InvariantCulture) };
+            var tradeRequest = new TradeRequestData { FromAsset = MockCustodian.TradeFromAsset, ToAsset = MockCustodian.TradeToAsset, Qty = new TradeQuantity(MockCustodian.TradeQtyBought, TradeQuantity.ValueType.Exact)};
             await AssertHttpError(401, async () => await unauthClient.MarketTradeCustodianAccountAsset(storeId, accountId, tradeRequest));
 
             // Test: Trade, auth, but wrong permission
@@ -4028,17 +4028,13 @@ clientBasic.PreviewUpdateStoreRateConfiguration(user.StoreId, new StoreRateConfi
             Assert.Equal(LedgerEntryData.LedgerEntryType.Fee, newTradeResult.LedgerEntries[2].Type);
 
             // Test: GetTradeQuote, SATS
-            var satsTradeRequest = new TradeRequestData { FromAsset = MockCustodian.TradeFromAsset, ToAsset = "SATS", Qty = MockCustodian.TradeQtyBought.ToString(CultureInfo.InvariantCulture) };
+            var satsTradeRequest = new TradeRequestData { FromAsset = MockCustodian.TradeFromAsset, ToAsset = "SATS", Qty = new TradeQuantity(MockCustodian.TradeQtyBought, TradeQuantity.ValueType.Exact) };
             await AssertApiError(400, "use-asset-synonym", async () => await tradeClient.MarketTradeCustodianAccountAsset(storeId, accountId, satsTradeRequest));
 
             // TODO Test: Trade with percentage qty
 
-            // Test: Trade with wrong decimal format (example: JavaScript scientific format)
-            var wrongQtyTradeRequest = new TradeRequestData { FromAsset = MockCustodian.TradeFromAsset, ToAsset = MockCustodian.TradeToAsset, Qty = "6.1e-7" };
-            await AssertApiError(400, "bad-qty-format", async () => await tradeClient.MarketTradeCustodianAccountAsset(storeId, accountId, wrongQtyTradeRequest));
-
             // Test: Trade, wrong assets method
-            var wrongAssetsTradeRequest = new TradeRequestData { FromAsset = "WRONG", ToAsset = MockCustodian.TradeToAsset, Qty = MockCustodian.TradeQtyBought.ToString(CultureInfo.InvariantCulture) };
+            var wrongAssetsTradeRequest = new TradeRequestData { FromAsset = "WRONG", ToAsset = MockCustodian.TradeToAsset, Qty = new TradeQuantity(MockCustodian.TradeQtyBought, TradeQuantity.ValueType.Exact) };
             await AssertHttpError(WrongTradingPairException.HttpCode, async () => await tradeClient.MarketTradeCustodianAccountAsset(storeId, accountId, wrongAssetsTradeRequest));
 
             // Test: wrong account ID
@@ -4048,7 +4044,7 @@ clientBasic.PreviewUpdateStoreRateConfiguration(user.StoreId, new StoreRateConfi
             await AssertHttpError(403, async () => await tradeClient.MarketTradeCustodianAccountAsset("WRONG-STORE-ID", accountId, tradeRequest));
 
             // Test: Trade, correct assets, wrong amount
-            var insufficientFundsTradeRequest = new TradeRequestData { FromAsset = MockCustodian.TradeFromAsset, ToAsset = MockCustodian.TradeToAsset, Qty = "0.01" };
+            var insufficientFundsTradeRequest = new TradeRequestData { FromAsset = MockCustodian.TradeFromAsset, ToAsset = MockCustodian.TradeToAsset, Qty = new TradeQuantity(0.01m, TradeQuantity.ValueType.Exact) };
             await AssertApiError(400, "insufficient-funds", async () => await tradeClient.MarketTradeCustodianAccountAsset(storeId, accountId, insufficientFundsTradeRequest));
 
 

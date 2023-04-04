@@ -11,6 +11,7 @@ using BTCPayServer.Data;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Forms;
 
@@ -150,14 +151,50 @@ public class FormDataService
 
     public CreateInvoiceRequest GenerateInvoiceParametersFromForm(Form form)
     {
-        var amt = form.GetFieldByFullName($"{InvoiceParameterPrefix}amount")?.Value;
+        var amt = GetValue(form, $"{InvoiceParameterPrefix}amount");
         return new CreateInvoiceRequest
         {
-            Currency = form.GetFieldByFullName($"{InvoiceParameterPrefix}currency")?.Value,
+            Currency = GetValue(form, $"{InvoiceParameterPrefix}currency"),
             Amount = string.IsNullOrEmpty(amt) ? null : decimal.Parse(amt, CultureInfo.InvariantCulture),
-            
-            Metadata = form.GetValues(),
-            
+            Metadata = GetValues(form),
         };
+    }
+
+    public string? GetValue(Form form, string field)
+    {
+        return GetValue(form, form.GetFieldByFullName(field));
+    }
+
+    public string? GetValue(Form form, Field? field)
+    {
+        if (field is null)
+        {
+            return null;
+        }
+        return _formProviders.TypeToComponentProvider.TryGetValue(field.Type, out var formComponentProvider) ? formComponentProvider.GetValue(form, field) : field.Value;
+    }
+
+    public JObject GetValues(Form form)
+    {
+        var r = new JObject();
+        
+        foreach (var f in form.GetAllFields())
+        {
+            var node = r;
+            for (int i = 0; i < f.Path.Count - 1; i++)
+            {
+                var p = f.Path[i];
+                var child = node[p] as JObject;
+                if (child is null)
+                {
+                    child = new JObject();
+                    node[p] = child;
+                }
+                node = child;
+            }
+
+            node[f.Field.Name] = GetValue(form, f.FullName);
+        }
+        return r;
     }
 }

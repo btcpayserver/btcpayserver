@@ -17,6 +17,7 @@
 <div class="row">
     <div class="col-xl-8 col-xxl-constrain">
         <form asp-action="EditCustodianAccount" class="mb-5">
+			<input asp-for="Config" type="hidden" />
             @if (!ViewContext.ModelState.IsValid)
             {
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>

@@ -43,10 +43,16 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> StoreEmails(string storeId, StoreEmailRuleViewModel vm, string command)
         {
             vm.Rules ??= new List<StoreEmailRule>();
+            int index = 0;
+            var indSep = command.IndexOf(":", StringComparison.InvariantCultureIgnoreCase);
+            if (indSep > 0)
+            {
+                var item = command[(indSep + 1)..];
+                index = int.Parse(item, CultureInfo.InvariantCulture);
+            }
+
             if (command.StartsWith("remove", StringComparison.InvariantCultureIgnoreCase))
             {
-                var item = command[(command.IndexOf(":", StringComparison.InvariantCultureIgnoreCase) + 1)..];
-                var index = int.Parse(item, CultureInfo.InvariantCulture);
                 vm.Rules.RemoveAt(index);
             }
             else if (command == "add")
@@ -61,17 +67,55 @@ namespace BTCPayServer.Controllers
             }
 
             var store = HttpContext.GetStoreData();
+
             if (store == null)
                 return NotFound();
             var blob = store.GetStoreBlob();
-            blob.EmailRules = vm.Rules;
-            store.SetStoreBlob(blob);
-            await _Repo.UpdateStore(store);
-            TempData.SetStatusMessageModel(new StatusMessageModel
+
+            if (command.StartsWith("test", StringComparison.InvariantCultureIgnoreCase))
             {
-                Severity = StatusMessageModel.StatusSeverity.Success,
-                Message = "Store email rules saved"
-            });
+                var rule = vm.Rules[index];
+                if (string.IsNullOrEmpty(rule.Subject) || string.IsNullOrEmpty(rule.Body) || string.IsNullOrEmpty(rule.To))
+                {
+                    TempData.SetStatusMessageModel(new StatusMessageModel
+                    {
+                        Severity = StatusMessageModel.StatusSeverity.Warning,
+                        Message = "Please fill all required fields before testing"
+                    });
+                }
+                else
+                {
+                    try
+                    {
+                        var emailSettings = blob.EmailSettings;
+                        using var client = await emailSettings.CreateSmtpClient();
+                        var message = emailSettings.CreateMailMessage(MailboxAddress.Parse(rule.To), "(test) " + rule.Subject, rule.Body, true);
+                        await client.SendAsync(message);
+                        await client.DisconnectAsync(true);
+                        TempData[WellKnownTempData.SuccessMessage] = $"Rule email saved and sent to {rule.To}. Please verify you received it.";
+
+                        blob.EmailRules = vm.Rules;
+                        store.SetStoreBlob(blob);
+                        await _Repo.UpdateStore(store);
+                    }
+                    catch (Exception ex)
+                    {
+                        TempData[WellKnownTempData.ErrorMessage] = "Error: " + ex.Message;
+                    }
+                }
+            }
+            else
+            {
+                // UPDATE
+                blob.EmailRules = vm.Rules;
+                store.SetStoreBlob(blob);
+                await _Repo.UpdateStore(store);
+                TempData.SetStatusMessageModel(new StatusMessageModel
+                {
+                    Severity = StatusMessageModel.StatusSeverity.Success,
+                    Message = "Store email rules saved"
+                });
+            }
             return RedirectToAction("StoreEmails", new { storeId });
         }
 

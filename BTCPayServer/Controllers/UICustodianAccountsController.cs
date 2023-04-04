@@ -228,7 +228,7 @@ namespace BTCPayServer.Controllers
             var vm = new EditCustodianAccountViewModel();
             vm.CustodianAccount = custodianAccount;
             vm.ConfigForm = configForm;
-            vm.Config = configForm.GetValues().ToString();
+            vm.Config = _formDataService.GetValues(configForm).ToString();
             return View(vm);
         }
 
@@ -261,7 +261,7 @@ namespace BTCPayServer.Controllers
             // Form not valid: The user must fix the errors before we can save
             vm.CustodianAccount = custodianAccount;
             vm.ConfigForm = configForm;
-            vm.Config = configForm.GetValues().ToString();
+            vm.Config = _formDataService.GetValues(configForm).ToString();
             return View(vm);
         }
 
@@ -284,8 +284,8 @@ namespace BTCPayServer.Controllers
             // Then we apply new values overriding the previous blob from the Form params
             form.ApplyValuesFromForm(Request.Form);
             // We extract the new resulting blob, and request what is the next form based on it
-            b = form.GetValues();
-            form = await custodian.GetConfigForm(form.GetValues(), HttpContext.RequestAborted);
+            b = _formDataService.GetValues(form);
+            form = await custodian.GetConfigForm(_formDataService.GetValues(form), HttpContext.RequestAborted);
             // We set all the values to this blob, and validate the form
             form.SetValues(b);
             _formDataService.Validate(form, ModelState);
@@ -344,7 +344,7 @@ namespace BTCPayServer.Controllers
 
             // Ask for more data
             vm.ConfigForm = configForm;
-            vm.Config = configForm.GetValues().ToString();
+            vm.Config = _formDataService.GetValues(configForm).ToString();
             return View(vm);
         }
 

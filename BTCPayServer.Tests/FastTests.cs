@@ -134,6 +134,33 @@ namespace BTCPayServer.Tests
             }
         }
 
+
+        [Fact]
+        public void CanParseDecimals()
+        {
+            CanParseDecimalsCore("{\"qty\": 1}", 1.0m);
+            CanParseDecimalsCore("{\"qty\": \"1\"}", 1.0m);
+            CanParseDecimalsCore("{\"qty\": 1.0}", 1.0m);
+            CanParseDecimalsCore("{\"qty\": \"1.0\"}", 1.0m);
+            CanParseDecimalsCore("{\"qty\": 6.1e-7}", 6.1e-7m);
+            CanParseDecimalsCore("{\"qty\": \"6.1e-7\"}", 6.1e-7m);
+
+            var data = JsonConvert.DeserializeObject<TradeRequestData>("{\"qty\": \"6.1e-7\", \"fromAsset\":\"Test\"}");
+            Assert.Equal(6.1e-7m, data.Qty.Value);
+            Assert.Equal("Test", data.FromAsset);
+            data = JsonConvert.DeserializeObject<TradeRequestData>("{\"fromAsset\":\"Test\", \"qty\": \"6.1e-7\"}");
+            Assert.Equal(6.1e-7m, data.Qty.Value);
+            Assert.Equal("Test", data.FromAsset);
+        }
+
+        private void CanParseDecimalsCore(string str, decimal expected)
+        {
+            var d = JsonConvert.DeserializeObject<LedgerEntryData>(str);
+            Assert.Equal(expected, d.Qty);
+            var d2 = JsonConvert.DeserializeObject<TradeRequestData>(str);
+            Assert.Equal(new TradeQuantity(expected, TradeQuantity.ValueType.Exact), d2.Qty);
+        }
+
         [Fact]
         public void CanMergeReceiptOptions()
         {

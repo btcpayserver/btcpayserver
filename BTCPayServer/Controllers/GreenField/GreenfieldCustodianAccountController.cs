@@ -255,26 +255,15 @@ namespace BTCPayServer.Controllers.Greenfield
 
             if (custodian is ICanTrade tradableCustodian)
             {
-                bool isPercentage = request.Qty.EndsWith("%", StringComparison.InvariantCultureIgnoreCase);
-                string qtyString = isPercentage ? request.Qty.Substring(0, request.Qty.Length - 1) : request.Qty;
-                bool canParseQty = Decimal.TryParse(qtyString, out decimal qty);
-                if (!canParseQty)
+                decimal qty;
+                try
                 {
-                    return this.CreateAPIError(400, "bad-qty-format",
-                        $"Quantity should be a number or a number ending with '%' for percentages.");
+                    qty = await ParseQty(request.Qty, request.FromAsset, custodianAccount, custodian, cancellationToken);
                 }
-
-                if (isPercentage)
+                catch (Exception ex)
                 {
-                    // Percentage of current holdings => calculate the amount
-                    var config = custodianAccount.GetBlob();
-                    var balances = custodian.GetAssetBalancesAsync(config, cancellationToken).Result;
-                    var fromAssetBalance = balances[request.FromAsset];
-                    var priceQuote =
-                        await tradableCustodian.GetQuoteForAssetAsync(request.FromAsset, request.ToAsset, config, cancellationToken);
-                    qty = fromAssetBalance / priceQuote.Ask * qty / 100;
+                    return UnsupportedAsset(request.FromAsset, ex.Message);
                 }
-
                 try
                 {
                     var result = await tradableCustodian.TradeMarketAsync(request.FromAsset, request.ToAsset, qty,

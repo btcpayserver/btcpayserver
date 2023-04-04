@@ -4,63 +4,67 @@
 @using BTCPayServer.Services
 @inject DisplayFormatter DisplayFormatter
 @model IEnumerable<BTCPayServer.Services.Invoices.PaymentEntity>
-
 @{
-    PayjoinInformation payjoinIformation = null;
-    var onchainPayments = Model.Where(entity => entity.GetPaymentMethodId()?.PaymentType == BitcoinPaymentType.Instance).Select(payment =>
-    {
-        var m = new OnchainPaymentViewModel();
-        var onChainPaymentData = payment.GetCryptoPaymentData() as BitcoinLikePaymentData;
-        if (onChainPaymentData is null)
+    PayjoinInformation payjoinInformation = null;
+    var payments = Model
+        .Where(entity => entity.GetPaymentMethodId()?.PaymentType == BitcoinPaymentType.Instance)
+        .Select(payment =>
         {
-            return null;
-        }
-        m.Crypto = payment.GetPaymentMethodId().CryptoCode;
-        m.DepositAddress = onChainPaymentData.GetDestination();
+            var m = new OnchainPaymentViewModel();
+            var onChainPaymentData = payment.GetCryptoPaymentData() as BitcoinLikePaymentData;
+            if (onChainPaymentData is null)
+            {
+                return null;
+            }
+            m.Crypto = payment.GetPaymentMethodId().CryptoCode;
+            m.DepositAddress = onChainPaymentData.GetDestination();
 
-        long confirmationCount = onChainPaymentData.ConfirmationCount;
-        var network = payment.Network as BTCPayNetwork;
-        if (confirmationCount >= network.MaxTrackedConfirmation)
-        {
-            m.Confirmations = "At least " + (network.MaxTrackedConfirmation);
-        }
-        else
-        {
-            m.Confirmations = confirmationCount.ToString(CultureInfo.InvariantCulture);
-        }
-        if (onChainPaymentData?.PayjoinInformation is PayjoinInformation pj)
-        {
-            payjoinIformation = pj;
-            m.AdditionalInformation = "Original transaction";
-        }
-        if (payjoinIformation is PayjoinInformation &&
-            payjoinIformation.CoinjoinTransactionHash == onChainPaymentData?.Outpoint.Hash)
-        {
-            m.AdditionalInformation = "Payjoin transaction";
-        }
-        m.TransactionId = onChainPaymentData.Outpoint.Hash.ToString();
-        m.ReceivedTime = payment.ReceivedTime;
-        m.TransactionLink = string.Format(CultureInfo.InvariantCulture, payment.Network.BlockExplorerLink, m.TransactionId);
-        m.Replaced = !payment.Accounted;
-        m.CryptoPaymentData = onChainPaymentData;
-        m.NetworkFee = payment.NetworkFee;
-        return m;
-    }).Where(model => model != null);
+            var confirmationCount = onChainPaymentData.ConfirmationCount;
+            var network = payment.Network as BTCPayNetwork;
+            if (confirmationCount >= network.MaxTrackedConfirmation)
+            {
+                m.Confirmations = "At least " + (network.MaxTrackedConfirmation);
+            }
+            else
+            {
+                m.Confirmations = confirmationCount.ToString(CultureInfo.InvariantCulture);
+            }
+            if (onChainPaymentData.PayjoinInformation is PayjoinInformation pj)
+            {
+                payjoinInformation = pj;
+                m.AdditionalInformation = "Original transaction";
+            }
+            if (payjoinInformation is PayjoinInformation &&
+                payjoinInformation.CoinjoinTransactionHash == onChainPaymentData?.Outpoint.Hash)
+            {
+                m.AdditionalInformation = "Payjoin transaction";
+            }
+            m.TransactionId = onChainPaymentData.Outpoint.Hash.ToString();
+            m.ReceivedTime = payment.ReceivedTime;
+            m.TransactionLink = string.Format(CultureInfo.InvariantCulture, payment.Network.BlockExplorerLink, m.TransactionId);
+            m.Replaced = !payment.Accounted;
+            m.CryptoPaymentData = onChainPaymentData;
+            m.NetworkFee = payment.NetworkFee;
+            m.PaymentProof = onChainPaymentData.Outpoint.ToString();
+            return m;
+        })
+        .Where(model => model != null)
+        .ToList();
 }
 
-@if (onchainPayments.Any())
+@if (payments.Any())
 {
-    var hasNetworkFee = onchainPayments.Sum(a => a.NetworkFee) > 0;
+    var hasNetworkFee = payments.Sum(a => a.NetworkFee) > 0;
     <section>
         <h5>On-Chain Payments</h5>
-        <table class="table table-hover mt-3 mb-0">
-            <thead class="thead-inverse">
+        <div class="invoice-payments table-responsive mt-0">
+            <table class="table table-hover mb-0">
+                <thead class="thead-inverse">
                 <tr>
-                    <th>Crypto</th>
-                    <th>Index</th>
-                    <th class="text-nowrap">Deposit address</th>
-                    <th>Transaction Id</th>
-                    <th class="text-end">Amount</th>
+                    <th class="w-75px">Crypto</th>
+                    <th class="w-100px">Index</th>
+                    <th class="w-175px">Destination</th>
+                    <th class="text-nowrap">Payment Proof</th>
                     @if (hasNetworkFee)
                     {
                         <th class="text-end">
@@ -71,24 +75,26 @@
                         </th>
                     }
                     <th class="text-end">Confirmations</th>
+                    <th class="w-150px text-end">Amount</th>
                 </tr>
-            </thead>
-            <tbody>
-                @foreach (var payment in onchainPayments)
+                </thead>
+                <tbody>
+                @foreach (var payment in payments)
                 {
                     <tr style="@(payment.Replaced ? "text-decoration: line-through" : "")">
                         <td>@payment.Crypto</td>
                         <td>@(payment.CryptoPaymentData.KeyPath?.ToString()?? "Unknown")</td>
                         <td>
-                            <div class="text-truncate" style="max-width:300px;" data-bs-toggle="tooltip" title="@payment.DepositAddress">@payment.DepositAddress</div>
+                            <vc:truncate-center text="@payment.DepositAddress" classes="truncate-center-id" />
                         </td>
                         <td>
-                            <div class="text-truncate" style="max-width:200px;" data-bs-toggle="tooltip" title="@payment.TransactionId">
-                                <a href="@payment.TransactionLink" target="_blank" rel="noreferrer noopener">
-                                    @payment.TransactionId
-                                </a>
-                            </div>
+                            <vc:truncate-center text="@payment.PaymentProof" link="@payment.TransactionLink" classes="truncate-center-id" />
                         </td>
+                        @if (hasNetworkFee)
+                        {
+                            <td class="text-end text-nowrap">@payment.NetworkFee</td>
+                        }
+                        <td class="text-end">@payment.Confirmations</td>
                         <td class="payment-value text-end text-nowrap">
                             @DisplayFormatter.Currency(payment.CryptoPaymentData.GetValue(), payment.Crypto)
                             @if (!string.IsNullOrEmpty(payment.AdditionalInformation))
@@ -96,14 +102,10 @@
                                 <div>(@payment.AdditionalInformation)</div>
                             }
                         </td>
-                        @if (hasNetworkFee)
-                        {
-                            <td class="text-end text-nowrap">@payment.NetworkFee</td>
-                        }
-                        <td class="text-end">@payment.Confirmations</td>
                     </tr>
                 }
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+        </div>
     </section>
 }

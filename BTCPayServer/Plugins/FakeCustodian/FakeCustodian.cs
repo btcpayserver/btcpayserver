@@ -1,8 +1,13 @@
+#if DEBUG
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Custodians;
 using BTCPayServer.Abstractions.Form;
 using Newtonsoft.Json.Linq;
 
-namespace BTCPayServer.Plugins.Custodians.FakeCustodian;
+namespace BTCPayServer.Plugins.FakeCustodian;
 
 public class FakeCustodian : ICustodian
 {
@@ -29,7 +34,7 @@ public class FakeCustodian : ICustodian
         return Task.FromResult(r);
     }
 
-    public Task<Form> GetConfigForm(CancellationToken cancellationToken = default)
+    public Task<Form> GetConfigForm(JObject config, CancellationToken cancellationToken = default)
     {
         
         var form = new Form();
@@ -72,3 +77,4 @@ public class FakeCustodianConfig
     {
     }
 }
+#endif

@@ -18,7 +18,7 @@
                 <vc:icon symbol="copy" />
             </button>
         </div>
-        <a v-if="model.invoiceBitcoinUrl" class="btn btn-primary rounded-pill w-100 mt-4" target="_top" id="PayInWallet"
+        <a v-if="model.invoiceBitcoinUrl && model.showPayInWalletButton" class="btn btn-primary rounded-pill w-100 mt-4" target="_top" id="PayInWallet"
            :href="model.invoiceBitcoinUrl" v-t="'pay_in_wallet'"></a>
         @await Component.InvokeAsync("UiExtensionPoint", new {location = "checkout-v2-lightning-post-content", model = Model})
     </div>          

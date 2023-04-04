@@ -1,6 +1,6 @@
 ﻿@model CreateAppViewModel
 @{
-    ViewData.SetActivePage(AppsNavPages.Create, "Create a new app");
+    ViewData.SetActivePage(AppsNavPages.Create, $"Create a new {Model.AppType ?? "app"}", Model.AppType);
 }
 
 @section PageFootContent {
@@ -13,12 +13,15 @@
 
 <div class="row">
     <div class="col-xl-8 col-xxl-constrain">
-        <form asp-action="CreateApp">
+        <form asp-action="CreateApp" asp-route-appType="@Model.AppType">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="SelectedAppType" class="form-label" data-required></label>
-                <select asp-for="SelectedAppType" asp-items="Model.AppTypes" class="form-select"></select>
-            </div>
+            @if (string.IsNullOrEmpty(Model.AppType))
+            {
+                <div class="form-group">
+                    <label asp-for="SelectedAppType" class="form-label" data-required></label>
+                    <select asp-for="SelectedAppType" asp-items="Model.AppTypes" class="form-select"></select>
+                </div>
+            }
             <div class="form-group">
                 <label asp-for="AppName" class="form-label" data-required></label>
                 <input asp-for="AppName" class="form-control" required />

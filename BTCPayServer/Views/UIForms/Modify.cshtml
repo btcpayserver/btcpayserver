@@ -29,16 +29,10 @@
 }
 
 <template id="form-template-email">
-    @Json.Serialize(FormDataService.StaticFormEmail, new JsonSerializerSettings()
-    {
-        Formatting = Formatting.Indented
-    })
+	@FormDataService.StaticFormEmail
 </template>
 <template id="form-template-address">
-    @Json.Serialize(FormDataService.StaticFormAddress, new JsonSerializerSettings()
-    {
-        Formatting = Formatting.Indented
-    })
+	@FormDataService.StaticFormAddress
 </template>
 
 <form method="post" asp-action="Modify" asp-route-id="@formId" asp-route-storeId="@storeId">

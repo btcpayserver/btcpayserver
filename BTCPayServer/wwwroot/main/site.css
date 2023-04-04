@@ -590,14 +590,21 @@ svg.icon-note {
 }
 .btcpay-list-select-item {
     display: flex;
+    flex-wrap: wrap;
     flex: 1 1 45%; 
     align-items: center;
-    border: 1px solid var(--btcpay-form-border);
     padding: .75rem var(--btcpay-space-s);
+    cursor: pointer;
+}
+label.btcpay-list-select-item {
+    border: 1px solid var(--btcpay-form-border);
     background-color: var(--btcpay-form-bg);
     border-radius: var(--btcpay-border-radius);
     transition: border-color 0.15s ease-in-out;
-    cursor: pointer;
+}
+label.btcpay-list-select-item:hover {
+    border-color: var(--btcpay-form-border-hover);
+    background-color: var(--btcpay-form-bg-hover);
 }
 @media (max-width: 575px) {
     .btcpay-list-select-item {
@@ -609,12 +616,16 @@ svg.icon-note {
     height: 1.5rem;
     margin: 0 var(--btcpay-space-s);
 }
-.btcpay-list-select-item:hover {
-    border-color: var(--btcpay-form-border-hover);
-    background-color: var(--btcpay-form-bg-hover);
-}
-input:checked + .btcpay-list-select-item {
+input:checked + label.btcpay-list-select-item {
     border-color: var(--btcpay-form-border-focus);
+}
+.btcpay-list-select-item .note {
+    color: var(--btcpay-body-text-muted);
+    flex-basis: 100%;
+    margin-left: 2.5rem;
+}
+.btcpay-list-select-item:active {
+    background-color: var(--btcpay-form-bg-hover);
 }
 
 /* Public pages */
@@ -910,6 +921,54 @@ input.ts-wrapper.form-control:not(.ts-hidden-accessible,.ts-inline) {
 .transaction-label-tooltip ul {
     margin: 0;
     padding-left: var(--btcpay-space-m);
+}
+
+/* Truncated text */
+.truncate-center {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--btcpay-space-s);
+}
+
+.truncate-center-id {
+    font-family: var(--btcpay-font-monospace);
+    font-size: .875em;
+}
+
+.truncate-center-text {
+    word-wrap: break-word;
+    word-break: break-word;
+}
+
+.truncate-center a,
+.truncate-center button,
+.truncate-center-truncated {
+    line-height: 1;
+}
+
+.truncate-center button.btn .icon {
+    --btn-icon-size: 1em;
+}
+
+@media screen {
+    .truncate-center-id {
+        background: var(--btcpay-neutral-100);
+        border: 1px solid var(--btcpay-neutral-200);
+        border-radius: var(--btcpay-border-radius-l);
+        padding: var(--btcpay-space-xs) var(--btcpay-space-s);
+    }
+    
+    .truncate-center-text {
+        display: none;
+    }
+}
+
+@media print {
+    .truncate-center a,
+    .truncate-center button,
+    .truncate-center-truncated {
+        display: none;
+    }
 }
 
 /* Copy */

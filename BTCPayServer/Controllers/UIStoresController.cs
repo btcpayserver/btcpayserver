@@ -388,6 +388,8 @@ namespace BTCPayServer.Controllers
             vm.UseNewCheckout = storeBlob.CheckoutType == Client.Models.CheckoutType.V2;
             vm.CelebratePayment = storeBlob.CelebratePayment;
             vm.OnChainWithLnInvoiceFallback = storeBlob.OnChainWithLnInvoiceFallback;
+            vm.ShowPayInWalletButton = storeBlob.ShowPayInWalletButton;
+            vm.ShowStoreHeader = storeBlob.ShowStoreHeader;
             vm.LightningAmountInSatoshi = storeBlob.LightningAmountInSatoshi;
             vm.RequiresRefundEmail = storeBlob.RequiresRefundEmail;
             vm.LazyPaymentMethods = storeBlob.LazyPaymentMethods;
@@ -505,6 +507,8 @@ namespace BTCPayServer.Controllers
                 });
             }
 
+            blob.ShowPayInWalletButton = model.ShowPayInWalletButton;
+            blob.ShowStoreHeader = model.ShowStoreHeader;
             blob.CheckoutType = model.UseNewCheckout ? Client.Models.CheckoutType.V2 : Client.Models.CheckoutType.V1;
             blob.CelebratePayment = model.CelebratePayment;
             blob.OnChainWithLnInvoiceFallback = model.OnChainWithLnInvoiceFallback;

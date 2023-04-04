@@ -19,6 +19,8 @@ using BTCPayServer.Models;
 using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Models.PaymentRequestViewModels;
 using BTCPayServer.Payments;
+using BTCPayServer.Payments.Bitcoin;
+using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Rating;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
@@ -235,7 +237,9 @@ namespace BTCPayServer.Controllers
                         PaymentMethod = paymentMethodId.ToPrettyString(),
                         Link = link,
                         Id = txId,
-                        Destination = paymentData.GetDestination()
+                        Destination = paymentData.GetDestination(),
+                        PaymentProof = GetPaymentProof(paymentData),
+                        PaymentType = paymentData.GetPaymentType()
                     };
                 })
                 .Where(payment => payment != null)
@@ -247,6 +251,17 @@ namespace BTCPayServer.Controllers
 
             return View(vm);
         }
+
+        private string? GetPaymentProof(CryptoPaymentData paymentData)
+        {
+            return paymentData switch
+            {
+                BitcoinLikePaymentData b => b.Outpoint.ToString(),
+                LightningLikePaymentData l => l.Preimage?.ToString(),
+                _ => null
+            };
+        }
+
         private string? GetTransactionLink(PaymentMethodId paymentMethodId, string txId)
         {
             var network = _NetworkProvider.GetNetwork(paymentMethodId.CryptoCode);
@@ -779,6 +794,8 @@ namespace BTCPayServer.Controllers
                 OrderId = invoice.Metadata.OrderId,
                 InvoiceId = invoice.Id,
                 DefaultLang = lang ?? invoice.DefaultLanguage ?? storeBlob.DefaultLang ?? "en",
+                ShowPayInWalletButton = storeBlob.ShowPayInWalletButton,
+                ShowStoreHeader = storeBlob.ShowStoreHeader,
                 CustomCSSLink = storeBlob.CustomCSS,
                 CustomLogoLink = storeBlob.CustomLogo,
                 LogoFileId = storeBlob.LogoFileId,
@@ -815,6 +832,15 @@ namespace BTCPayServer.Controllers
                     NetworkFeeMode.Never => 0,
                     _ => throw new NotImplementedException()
                 },
+                RequiredConfirmations = invoice.SpeedPolicy switch
+                {
+                    SpeedPolicy.HighSpeed => 0,
+                    SpeedPolicy.MediumSpeed => 1,
+                    SpeedPolicy.LowMediumSpeed => 2,
+                    SpeedPolicy.LowSpeed => 6,
+                    _ => null
+                },
+                ReceivedConfirmations = invoice.GetAllBitcoinPaymentData(false).FirstOrDefault()?.ConfirmationCount,
 #pragma warning disable CS0618 // Type or member is obsolete
                 Status = invoice.StatusString,
 #pragma warning restore CS0618 // Type or member is obsolete

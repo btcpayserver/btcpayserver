@@ -28,7 +28,7 @@ namespace BTCPayServer.Plugins.PointOfSale
 
         public override void Execute(IServiceCollection services)
         {
-            services.AddSingleton<IUIExtension>(new UIExtension("PointOfSale/NavExtension", "apps-nav"));
+            services.AddSingleton<IUIExtension>(new UIExtension("PointOfSale/NavExtension", "header-nav"));
             services.AddSingleton<AppBaseType, PointOfSaleAppType>();
             base.Execute(services);
         }

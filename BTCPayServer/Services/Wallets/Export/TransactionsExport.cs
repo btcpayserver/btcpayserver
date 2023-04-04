@@ -1,16 +1,13 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using BTCPayServer.Client.Models;
+using System.Text;
 using BTCPayServer.Data;
-using BTCPayServer.Models.WalletViewModels;
-using BTCPayServer.Services.Invoices;
-using BTCPayServer.Services.Rates;
 using CsvHelper.Configuration;
 using CsvHelper.Configuration.Attributes;
-using NBXplorer.Models;
 using Newtonsoft.Json;
 
 namespace BTCPayServer.Services.Wallets.Export
@@ -41,18 +38,46 @@ namespace BTCPayServer.Services.Wallets.Export
 
                 if (_walletTransactionsInfo.TryGetValue(tx.TransactionId.ToString(), out var transactionInfo))
                 {
-                    model.Labels = transactionInfo.LabelColors?.Select(l => l.Key).ToList();
+                    model.Labels = transactionInfo.LabelColors.Select(l => l.Key).ToList();
                     model.Comment = transactionInfo.Comment;
                 }
 
                 return model;
             }).ToList();
+            
+            return fileFormat switch
+            {
+                "bip329" => ProcessBip329(list),
+                "json" => ProcessJson(list),
+                "csv" => ProcessCsv(list),
+                _ => throw new Exception("Export format not supported")
+            };
+        }
 
-            if (string.Equals(fileFormat, "json", StringComparison.OrdinalIgnoreCase))
-                return ProcessJson(list);
-            if (string.Equals(fileFormat, "csv", StringComparison.OrdinalIgnoreCase))
-                return ProcessCsv(list);
-            throw new Exception("Export format not supported");
+        // https://github.com/bitcoin/bips/blob/master/bip-0329.mediawiki
+        private static string ProcessBip329(List<ExportTransaction> txs)
+        {
+            var sw = new StringWriter();
+            var jsonw = new JsonTextWriter(sw);
+            foreach (var tx in txs)
+            {
+                if (tx.Labels is null)
+                    continue;
+                foreach (var label in tx.Labels)
+                {
+                    jsonw.WriteStartObject();
+                    jsonw.WritePropertyName("type");
+                    jsonw.WriteValue("tx");
+                    jsonw.WritePropertyName("ref");
+                    jsonw.WriteValue(tx.TransactionId);
+                    jsonw.WritePropertyName("label");
+                    jsonw.WriteValue(label);
+                    jsonw.WriteEndObject();
+                    jsonw.WriteWhitespace("\n");
+                }
+            }
+            jsonw.Flush();
+            return sw.ToString();
         }
 
         private static string ProcessJson(List<ExportTransaction> invoices)
@@ -87,14 +112,14 @@ namespace BTCPayServer.Services.Wallets.Export
     public class ExportTransaction
     {
         [Name("Transaction Id")]
-        public string TransactionId { get; set; }
+        public string TransactionId { get; set; } = string.Empty;
         public DateTimeOffset Timestamp { get; set; }
-        public string Amount { get; set; }
-        public string Currency { get; set; }
+        public string Amount { get; set; } = string.Empty;
+        public string Currency { get; set; } = string.Empty;
 
         [Name("Is Confirmed")]
         public bool IsConfirmed { get; set; }
-        public string Comment { get; set; }
-        public List<string> Labels { get; set; }
+        public string? Comment { get; set; }
+        public List<string>? Labels { get; set; }
     }
 }

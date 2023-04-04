@@ -77,8 +77,7 @@ namespace BTCPayServer.Tests
             s.GenerateWallet(isHotWallet: true);
 
             // Point Of Sale
-            s.Driver.FindElement(By.Id("StoreNav-CreateApp")).Click();
-            new SelectElement(s.Driver.FindElement(By.Id("SelectedAppType"))).SelectByValue("PointOfSale");
+            s.Driver.FindElement(By.Id("StoreNav-CreatePointOfSale")).Click();
             s.Driver.FindElement(By.Id("AppName")).SendKeys(Guid.NewGuid().ToString());
             s.Driver.FindElement(By.Id("Create")).Click();
             Assert.Contains("App successfully created", s.FindAlertMessage().Text);
@@ -468,7 +467,7 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("Rules_0__To")).SendKeys("test@gmail.com");
             s.Driver.FindElement(By.Id("Rules_0__CustomerEmail")).Click();
             s.Driver.FindElement(By.Id("Rules_0__Subject")).SendKeys("Thanks!");
-            s.Driver.FindElement(By.Id("Rules_0__Body")).SendKeys("Your invoice is settled");
+            s.Driver.FindElement(By.ClassName("note-editable")).SendKeys("Your invoice is settled");
             s.Driver.FindElement(By.Id("SaveEmailRules")).Click();
             Assert.Contains("Store email rules saved", s.FindAlertMessage().Text);
         }
@@ -939,9 +938,8 @@ namespace BTCPayServer.Tests
             await s.StartAsync();
             var userId = s.RegisterNewUser(true);
             s.CreateNewStore();
-            s.Driver.FindElement(By.Id("StoreNav-CreateApp")).Click();
+            s.Driver.FindElement(By.Id("StoreNav-CreatePointOfSale")).Click();
             s.Driver.FindElement(By.Name("AppName")).SendKeys("PoS" + Guid.NewGuid());
-            s.Driver.FindElement(By.Id("SelectedAppType")).SendKeys("Point of Sale");
             s.Driver.FindElement(By.Id("Create")).Click();
             Assert.Contains("App successfully created", s.FindAlertMessage().Text);
 
@@ -1027,9 +1025,8 @@ namespace BTCPayServer.Tests
             s.CreateNewStore();
             s.AddDerivationScheme();
 
-            s.Driver.FindElement(By.Id("StoreNav-CreateApp")).Click();
+            s.Driver.FindElement(By.Id("StoreNav-CreateCrowdfund")).Click();
             s.Driver.FindElement(By.Name("AppName")).SendKeys("CF" + Guid.NewGuid());
-            s.Driver.FindElement(By.Id("SelectedAppType")).SendKeys("Crowdfund");
             s.Driver.FindElement(By.Id("Create")).Click();
             Assert.Contains("App successfully created", s.FindAlertMessage().Text);
 
@@ -1570,9 +1567,20 @@ namespace BTCPayServer.Tests
             Assert.Contains("\"Amount\": \"3.00000000\"", s.Driver.PageSource);
             s.Driver.SwitchTo().Window(s.Driver.WindowHandles.First());
 
+            // BIP-329 export
+            s.Driver.FindElement(By.Id("ExportDropdownToggle")).Click();
+            s.Driver.FindElement(By.Id("ExportBIP329")).Click();
+            Thread.Sleep(1000);
+            s.Driver.SwitchTo().Window(s.Driver.WindowHandles.Last());
+            Assert.Contains(s.WalletId.ToString(), s.Driver.Url);
+            Assert.EndsWith("export?format=bip329", s.Driver.Url);
+            Assert.Contains("{\"type\":\"tx\",\"ref\":\"", s.Driver.PageSource);
+            s.Driver.SwitchTo().Window(s.Driver.WindowHandles.First());
+
             // CSV export
             s.Driver.FindElement(By.Id("ExportDropdownToggle")).Click();
             s.Driver.FindElement(By.Id("ExportCSV")).Click();
+            s.Driver.SwitchTo().Window(s.Driver.WindowHandles.First());
         }
 
         [Fact(Timeout = TestTimeout)]
@@ -1995,9 +2003,7 @@ namespace BTCPayServer.Tests
             s.AddLightningNode(LightningConnectionType.CLightning, false);
             s.GoToLightningSettings();
             s.Driver.SetCheckbox(By.Id("LNURLEnabled"), true);
-            s.Driver.FindElement(By.Id("StoreNav-CreateApp")).Click();
-            s.Driver.FindElement(By.Id("SelectedAppType")).Click();
-            s.Driver.FindElement(By.CssSelector("option[value='PointOfSale']")).Click();
+            s.Driver.FindElement(By.Id("StoreNav-CreatePointOfSale")).Click();
             s.Driver.FindElement(By.Id("AppName")).SendKeys(Guid.NewGuid().ToString());
             s.Driver.FindElement(By.Id("Create")).Click();
             TestUtils.Eventually(() => Assert.Contains("App successfully created", s.FindAlertMessage().Text));

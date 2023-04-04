@@ -65,9 +65,8 @@ namespace BTCPayServer.Controllers
         private readonly SettingsRepository _settingsRepository;
         private readonly DelayedTransactionBroadcaster _broadcaster;
         private readonly PayjoinClient _payjoinClient;
-        private readonly LinkGenerator _linkGenerator;
+        private readonly LabelService _labelService;
         private readonly PullPaymentHostedService _pullPaymentHostedService;
-        private readonly UTXOLocker _utxoLocker;
         private readonly WalletHistogramService _walletHistogramService;
 
         readonly CurrencyNameTable _currencyTable;
@@ -90,11 +89,10 @@ namespace BTCPayServer.Controllers
                                  PayjoinClient payjoinClient,
                                  IServiceProvider serviceProvider,
                                  PullPaymentHostedService pullPaymentHostedService,
-                                 UTXOLocker utxoLocker,
-                                 LinkGenerator linkGenerator)
+                                 LabelService labelService)
         {
             _currencyTable = currencyTable;
-            _linkGenerator = linkGenerator;
+            _labelService = labelService;
             Repository = repo;
             WalletRepository = walletRepository;
             RateFetcher = rateProvider;
@@ -110,7 +108,6 @@ namespace BTCPayServer.Controllers
             _broadcaster = broadcaster;
             _payjoinClient = payjoinClient;
             _pullPaymentHostedService = pullPaymentHostedService;
-            _utxoLocker = utxoLocker;
             ServiceProvider = serviceProvider;
             _walletHistogramService = walletHistogramService;
         }
@@ -266,7 +263,7 @@ namespace BTCPayServer.Controllers
 
                     if (walletTransactionsInfo.TryGetValue(tx.TransactionId.ToString(), out var transactionInfo))
                     {
-                        var labels = CreateTransactionTagModels(transactionInfo);
+                        var labels = _labelService.CreateTransactionTagModels(transactionInfo, Request);
                         vm.Tags.AddRange(labels);
                         vm.Comment = transactionInfo.Comment;
                     }
@@ -601,7 +598,7 @@ namespace BTCPayServer.Controllers
                         Outpoint = coin.OutPoint.ToString(),
                         Amount = coin.Value.GetValue(network),
                         Comment = info?.Comment,
-                        Labels = CreateTransactionTagModels(info),
+                        Labels = _labelService.CreateTransactionTagModels(info, Request),
                         Link = string.Format(CultureInfo.InvariantCulture, network.BlockExplorerLink,
                             coin.OutPoint.Hash.ToString()),
                         Confirmations = coin.Confirmations
@@ -1317,22 +1314,34 @@ namespace BTCPayServer.Controllers
 
             var wallet = _walletProvider.GetWallet(paymentMethod.Network);
             var walletTransactionsInfoAsync = WalletRepository.GetWalletTransactionsInfo(walletId, (string[]?)null);
-            var input = await wallet.FetchTransactionHistory(paymentMethod.AccountDerivation, null, null);
+            var input = await wallet.FetchTransactionHistory(paymentMethod.AccountDerivation);
             var walletTransactionsInfo = await walletTransactionsInfoAsync;
             var export = new TransactionsExport(wallet, walletTransactionsInfo);
             var res = export.Process(input, format);
-
+            var fileType = format switch
+            {
+                "csv" => "csv",
+                "json" => "json",
+                "bip329" => "jsonl",
+                _ => throw new ArgumentOutOfRangeException(nameof(format), format, null)
+            };
+            var mimeType = format switch
+            {
+                "csv" => "text/csv",
+                "json" => "application/json",
+                "bip329" => "text/jsonl", // https://stackoverflow.com/questions/59938644/what-is-the-mime-type-of-jsonl-files
+                _ => throw new ArgumentOutOfRangeException(nameof(format), format, null)
+            };
             var cd = new ContentDisposition
             {
-                FileName = $"btcpay-{walletId}-{DateTime.UtcNow.ToString("yyyyMMdd-HHmmss", CultureInfo.InvariantCulture)}.{format}",
+                FileName = $"btcpay-{walletId}-{DateTime.UtcNow.ToString("yyyyMMdd-HHmmss", CultureInfo.InvariantCulture)}.{fileType}",
                 Inline = true
             };
             Response.Headers.Add("Content-Disposition", cd.ToString());
             Response.Headers.Add("X-Content-Type-Options", "nosniff");
-            return Content(res, "application/" + format);
+            return Content(res, mimeType);
         }
-
-
+        
         public class UpdateLabelsRequest
         {
             public string? Id { get; set; }
@@ -1400,124 +1409,6 @@ namespace BTCPayServer.Controllers
         private string GetUserId() => _userManager.GetUserId(User);
 
         private StoreData GetCurrentStore() => HttpContext.GetStoreData();
-
-        public IEnumerable<TransactionTagModel> CreateTransactionTagModels(WalletTransactionInfo? transactionInfo)
-        {
-            if (transactionInfo is null)
-                return Array.Empty<TransactionTagModel>();
-
-            string PayoutTooltip(IGrouping<string, string>? payoutsByPullPaymentId = null)
-            {
-                if (payoutsByPullPaymentId is null)
-                {
-                    return "Paid a payout";
-                }
-                else if (payoutsByPullPaymentId.Count() == 1)
-                {
-                    var pp = payoutsByPullPaymentId.Key;
-                    var payout = payoutsByPullPaymentId.First();
-                    if (!string.IsNullOrEmpty(pp))
-                        return $"Paid a payout ({payout}) of a pull payment ({pp})";
-                    else
-                        return $"Paid a payout {payout}";
-                }
-                else
-                {
-                    var pp = payoutsByPullPaymentId.Key;
-                    if (!string.IsNullOrEmpty(pp))
-                        return $"Paid {payoutsByPullPaymentId.Count()} payouts of a pull payment ({pp})";
-                    else
-                        return $"Paid {payoutsByPullPaymentId.Count()} payouts";
-                }
-            }
-
-            var models = new Dictionary<string, TransactionTagModel>();
-            foreach (var tag in transactionInfo.Attachments)
-            {
-                if (models.ContainsKey(tag.Type))
-                    continue;
-                if (!transactionInfo.LabelColors.TryGetValue(tag.Type, out var color))
-                    continue;
-                var model = new TransactionTagModel
-                {
-                    Text = tag.Type,
-                    Color = color,
-                    TextColor = ColorPalette.Default.TextColor(color)
-                };
-                models.Add(tag.Type, model);
-                if (tag.Type == WalletObjectData.Types.Payout)
-                {
-                    var payoutsByPullPaymentId =
-                        transactionInfo.Attachments.Where(t => t.Type == "payout")
-                        .GroupBy(t => t.Data?["pullPaymentId"]?.Value<string>() ?? "",
-                                 k => k.Id).ToList();
-
-                    model.Tooltip = payoutsByPullPaymentId.Count switch
-                    {
-                        0 => PayoutTooltip(),
-                        1 => PayoutTooltip(payoutsByPullPaymentId.First()),
-                        _ => string.Join(", ", payoutsByPullPaymentId.Select(PayoutTooltip))
-                    };
-
-                    model.Link = _linkGenerator.PayoutLink(transactionInfo.WalletId.ToString(), null, PayoutState.Completed, Request.Scheme, Request.Host,
-                            Request.PathBase);
-                }
-                else if (tag.Type == WalletObjectData.Types.Payjoin)
-                {
-                    model.Tooltip = "This UTXO was part of a PayJoin transaction.";
-                }
-                else if (tag.Type == WalletObjectData.Types.Invoice)
-                {
-                    model.Tooltip = $"Received through an invoice {tag.Id}";
-                    model.Link = string.IsNullOrEmpty(tag.Id)
-                            ? null
-                            : _linkGenerator.InvoiceLink(tag.Id, Request.Scheme, Request.Host, Request.PathBase);
-                }
-                else if (tag.Type == WalletObjectData.Types.PaymentRequest)
-                {
-                    model.Tooltip = $"Received through a payment request {tag.Id}";
-                    model.Link = _linkGenerator.PaymentRequestLink(tag.Id, Request.Scheme, Request.Host, Request.PathBase);
-                }
-                else if (tag.Type == WalletObjectData.Types.App)
-                {
-                    model.Tooltip = $"Received through an app {tag.Id}";
-                    model.Link = _linkGenerator.AppLink(tag.Id, Request.Scheme, Request.Host, Request.PathBase);
-                }
-                else if (tag.Type == WalletObjectData.Types.PayjoinExposed)
-                {
-
-                    if (tag.Id.Length != 0)
-                    {
-                        model.Tooltip = $"This UTXO was exposed through a PayJoin proposal for an invoice ({tag.Id})";
-                        model.Link = _linkGenerator.InvoiceLink(tag.Id, Request.Scheme, Request.Host, Request.PathBase);
-                    }
-                    else
-                    {
-                        model.Tooltip = $"This UTXO was exposed through a PayJoin proposal";
-                    }
-                }
-                else if (tag.Type == WalletObjectData.Types.Payjoin)
-                {
-                    model.Tooltip = $"This UTXO was part of a PayJoin transaction.";
-                }
-                else
-                {
-                    model.Tooltip = tag.Data?.TryGetValue("tooltip", StringComparison.InvariantCultureIgnoreCase, out var tooltip) is true ? tooltip.ToString() : tag.Id;
-                    if (tag.Data?.TryGetValue("link", StringComparison.InvariantCultureIgnoreCase, out var link) is true)
-                    {
-                        model.Link = link.ToString();
-                    }
-                }
-            }
-            foreach (var label in transactionInfo.LabelColors)
-                models.TryAdd(label.Key, new TransactionTagModel
-                {
-                    Text = label.Key,
-                    Color = label.Value,
-                    TextColor = ColorPalette.Default.TextColor(label.Value)
-                });
-            return models.Values.OrderBy(v => v.Text);
-        }
     }
 
     public class WalletReceiveViewModel

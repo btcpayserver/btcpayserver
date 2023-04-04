@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using BTCPayServer.Abstractions.Form;
 
 namespace BTCPayServer.Forms;
@@ -13,8 +12,9 @@ public class HtmlFieldsetFormProvider : IFormComponentProvider
         typeToComponentProvider.Add("fieldset", this);
     }
 
-    public void Validate(Field field)
+    public string GetValue(Form form, Field field)
     {
+        return null;
     }
 
     public void Validate(Form form, Field field)

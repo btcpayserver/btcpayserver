@@ -11,6 +11,8 @@
   "pay_in_wallet": "Pay in wallet",
   "pay_by_nfc": "Pay by NFC",
   "pay_by_lnurl": "Pay by LNURL-Withdraw",
+  "scanning_nfc": "Scanning NFC …",
+  "submitting_nfc": "Submitting NFC …",
   "invoice_id": "Invoice ID",
   "order_id": "Order ID",
   "total_price": "Total Price",
@@ -26,6 +28,9 @@
   "address": "Address",
   "lightning": "Lightning",
   "payment_link": "Payment Link",
+  "payment_received": "Payment Received",
+  "payment_received_body": "Your payment has been received and is now processing.",
+  "payment_received_confirmations": "Currently it has {{receivedConfirmations}} confirmations. Once it receives {{requiredConfirmations}} confirmations on the {{cryptoCode}} blockchain, the status will be updated to settled.",
   "invoice_paid": "Invoice Paid",
   "invoice_expired": "Invoice Expired",
   "invoice_expired_body": "An invoice is only valid for {{minutes}} minutes.\n\nReturn to {{storeName}} if you would like to resubmit a payment.",
@@ -34,5 +39,5 @@
   "copy": "Copy",
   "copy_confirm": "Copied",
   "powered_by": "Powered by",
-  "conversion_body": "This service is provided by 3rd party. Please keep in mind that we have no control over how providers will forward your funds. Invoice will only be marked paid once funds are received on {{cryptoCode}} Blockchain."
+  "conversion_body": "This service is provided by 3rd party. Please keep in mind that we have no control over how providers will forward your funds. Invoice will only be marked paid once funds are received on the {{cryptoCode}} blockchain."
 }

@@ -19,13 +19,13 @@ public class FormComponentProviders
 
     public bool Validate(Form form, ModelStateDictionary modelState)
     {
-        foreach (var field in form.Fields)
+        foreach (var field in form.GetAllFields())
         {
-            if (TypeToComponentProvider.TryGetValue(field.Type, out var provider))
+            if (TypeToComponentProvider.TryGetValue(field.Field.Type, out var provider))
             {
-                provider.Validate(form, field);
-                foreach (var err in field.ValidationErrors)
-                    modelState.TryAddModelError(field.Name, err);
+                provider.Validate(form, field.Field);
+                foreach (var err in field.Field.ValidationErrors)
+                    modelState.TryAddModelError(field.Field.Name, err);
             }
         }
         return modelState.IsValid;

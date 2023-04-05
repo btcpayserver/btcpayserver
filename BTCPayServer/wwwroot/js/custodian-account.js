@@ -135,7 +135,7 @@ new Vue({
                     }else if(b.fiatValue === null && a.fiatValue !== null) {
                         return -1;
                     }else{
-                        b.asset.localeCompare(a.asset);
+                        return b.asset.localeCompare(a.asset);
                     }
                 });
 

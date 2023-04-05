@@ -1,10 +1,12 @@
-@using BTCPayServer.Views.Apps
 @using BTCPayServer.Abstractions.Extensions
 @using BTCPayServer.Abstractions.Custodians
+@using BTCPayServer.Abstractions.TagHelpers
+@using BTCPayServer.Views.CustodianAccounts
+@using Microsoft.AspNetCore.Mvc.TagHelpers
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model BTCPayServer.Models.CustodianAccountViewModels.ViewCustodianAccountViewModel
 @{
-	ViewData.SetActivePage(AppsNavPages.Create, "Custodian account: " + @Model?.CustodianAccount.Name);
+	ViewData.SetActivePage(CustodianAccountsNavPages.View, "Custodian account: " + @Model?.CustodianAccount.Name, Model.CustodianAccount.Id);
 	Csp.UnsafeEval();
 }
 

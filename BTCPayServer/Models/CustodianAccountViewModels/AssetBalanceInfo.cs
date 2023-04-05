@@ -12,7 +12,7 @@ public class AssetBalanceInfo
     public decimal Qty { get; set; }
     public string FormattedQty { get; set; }
     public string FormattedFiatValue { get; set; }
-    public decimal FiatValue { get; set; }
+    public decimal? FiatValue { get; set; }
     public Dictionary<string, AssetPairData> TradableAssetPairs { get; set; }
     
     public List<string> WithdrawablePaymentMethods { get; set; } = new();

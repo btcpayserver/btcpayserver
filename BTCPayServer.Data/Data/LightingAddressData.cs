@@ -1,6 +1,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Data;
 
@@ -38,4 +39,6 @@ public class LightningAddressDataBlob
     public string CurrencyCode { get; set; }
     public decimal? Min { get; set; }
     public decimal? Max { get; set; }
+    
+    public JObject InvoiceMetadata { get; set; }
 }

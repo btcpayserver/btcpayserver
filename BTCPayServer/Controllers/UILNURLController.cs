@@ -35,6 +35,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using NBitcoin;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using LightningAddressData = BTCPayServer.Data.LightningAddressData;
 using MarkPayoutRequest = BTCPayServer.HostedServices.MarkPayoutRequest;
 
@@ -296,7 +297,7 @@ namespace BTCPayServer
                 return NotFound();
             }
            
-            return await GetLNURL(cryptoCode, app.StoreDataId, currencyCode, null, null,
+            return await GetLNURL(cryptoCode, app.StoreDataId, currencyCode, 
                 () => (null, app, item, new List<string> { AppService.GetAppInternalTag(appId) }, item?.Price.Value, true));
         }
 
@@ -327,6 +328,9 @@ namespace BTCPayServer
                 [Display(Name = "Max sats")]
                 [Range(1, double.PositiveInfinity)]
                 public decimal? Max { get; set; }
+                
+                [Display(Name = "Invoice metadata")]
+                public string InvoiceMetadata { get; set; }
             }
 
             public ConcurrentDictionary<string, LightningAddressItem> Items { get; } = new ();
@@ -350,13 +354,12 @@ namespace BTCPayServer
             }
 
             var blob = lightningAddressSettings.GetBlob();
-            return await GetLNURL("BTC", lightningAddressSettings.StoreDataId, blob.CurrencyCode, blob.Min, blob.Max,
+            return await GetLNURL("BTC", lightningAddressSettings.StoreDataId, blob.CurrencyCode,
                 () => (username, null, null, null, null, true));
         }
 
         [HttpGet("pay")]
         public async Task<IActionResult> GetLNURL(string cryptoCode, string storeId, string currencyCode = null,
-            decimal? min = null, decimal? max = null,
             Func<(string username, AppData app, ViewPointOfSaleViewModel.Item item, List<string> additionalTags, decimal? invoiceAmount, bool? anyoneCanInvoice)>
                 internalDetails = null)
         {
@@ -399,9 +402,14 @@ namespace BTCPayServer
                 return NotFound();
             }
 
+            var lightningAddressSettings = username is not null
+                ? await _lightningAddressService.ResolveByAddress(username)
+                : null;
+            var lightningAddressSettingsBlob = lightningAddressSettings?.GetBlob();
             var lnAddress = username is null ? null : $"{username}@{Request.Host}";
             List<string[]> lnurlMetadata = new();
-
+            var min = lightningAddressSettingsBlob?.Min;
+            var max = lightningAddressSettingsBlob?.Min;
             var redirectUrl = app?.AppType switch
             {
                 PointOfSaleAppType.AppType => app.GetSettings<PointOfSaleSettings>().RedirectUrl ??
@@ -421,17 +429,20 @@ namespace BTCPayServer
                 },
                 Currency = currencyCode,
                 Type = invoiceAmount is null ? InvoiceType.TopUp : InvoiceType.Standard,
+                Metadata = new JObject()
             };
 
+            if (lightningAddressSettingsBlob?.InvoiceMetadata is not null)
+            {
+                invoiceRequest.Metadata.Merge(lightningAddressSettingsBlob?.InvoiceMetadata );
+            }
             if (item != null)
             {
-                invoiceRequest.Metadata =
-                    new InvoiceMetadata
-                    {
-                        ItemCode = item.Id,
-                        ItemDesc = item.Description,
-                        OrderId = AppService.GetAppOrderId(app)
-                    }.ToJObject();
+                invoiceRequest.Metadata.Merge(new InvoiceMetadata
+                {
+                    ItemCode = item.Id, ItemDesc = item.Description, OrderId = AppService.GetAppOrderId(app)
+                }.ToJObject());
+
             }
             InvoiceEntity i;
             try
@@ -725,6 +736,7 @@ namespace BTCPayServer
                             CurrencyCode = blob.CurrencyCode,
                             StoreId = storeId,
                             Username = s.Username,
+                            InvoiceMetadata = blob.InvoiceMetadata?.ToString(Formatting.Indented)
                         };
                     }
                 ).ToList()
@@ -746,6 +758,18 @@ namespace BTCPayServer
                     vm.AddModelError(addressVm => addressVm.Add.CurrencyCode, "Currency is invalid", this);
                 }
 
+                JObject metadata = null;
+                if (!string.IsNullOrEmpty(vm.Add.InvoiceMetadata) )
+                {
+                    try
+                    {
+                        metadata =  JObject.Parse(vm.Add.InvoiceMetadata);
+                    }
+                    catch (Exception e)
+                    {
+                        vm.AddModelError(addressVm => addressVm.Add.InvoiceMetadata, "Metadata must be a valid json object", this);
+                    }
+                }
                 if (!ModelState.IsValid)
                 {
                     return View(vm);
@@ -760,7 +784,8 @@ namespace BTCPayServer
                 {
                     Max = vm.Add.Max,
                     Min = vm.Add.Min,
-                    CurrencyCode = vm.Add.CurrencyCode
+                    CurrencyCode = vm.Add.CurrencyCode,
+                    InvoiceMetadata = metadata
                 })))
                 {
                     TempData.SetStatusMessageModel(new StatusMessageModel

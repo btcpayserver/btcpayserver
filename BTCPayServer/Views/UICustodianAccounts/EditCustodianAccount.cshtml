@@ -1,9 +1,10 @@
-@using BTCPayServer.Views.Apps
 @using BTCPayServer.Abstractions.Extensions
 @using BTCPayServer.Abstractions.Models
+@using BTCPayServer.Views.CustodianAccounts
+@using Microsoft.AspNetCore.Mvc.TagHelpers
 @model BTCPayServer.Models.CustodianAccountViewModels.EditCustodianAccountViewModel
 @{
-    ViewData.SetActivePage(AppsNavPages.Update, "Edit custodian account");
+    ViewData.SetActivePage(CustodianAccountsNavPages.Update, "Edit Custodian account: " + @Model?.CustodianAccount.Name, Model?.CustodianAccount.Id);
 }
 
 @section PageFootContent {

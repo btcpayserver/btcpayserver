@@ -18,7 +18,7 @@ namespace Microsoft.AspNetCore.Mvc
                 return url;
             if (httpRequest is null)
                 return null;
-            if (Uri.TryCreate(url, UriKind.Absolute, out var r) && r.Host.Equals(httpRequest.Host.Host))
+            if (Uri.TryCreate(url, UriKind.Absolute, out var r) && r.Host.Equals(httpRequest.Host.Host) && (!httpRequest.IsHttps || r.Scheme == "https"))
                 return url;
             return null;
         }

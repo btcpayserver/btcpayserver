@@ -34,5 +34,10 @@
   "copy": "복사",
   "copy_confirm": "복사 완료",
   "powered_by": "제공:",
-  "conversion_body": "이 서비스는 제 3자에서 제공됩니다. 공급자가 귀하의 자금을 어떻게 전달할지에 대해 우리가 제어할 수 없음을 염두에 두십시오. 자금이 {{cryptoCode}} 블록체인에 수신되면 청구서가 지불 완료로 표시됩니다."
+  "conversion_body": "이 서비스는 제 3자에서 제공됩니다. 공급자가 귀하의 자금을 어떻게 전달할지에 대해 우리가 제어할 수 없음을 염두에 두십시오. 자금이 {{cryptoCode}} 블록체인에 수신되면 청구서가 지불 완료로 표시됩니다.",
+  "scanning_nfc": "NFC를 스캔 중...",
+  "submitting_nfc": "NFC를 제출 중...",
+  "payment_received": "결제가 완료되었습니다",
+  "payment_received_body": "결제가 완료되어 처리 중입니다",
+  "payment_received_confirmations": "{{requiredConfirmations}} 개의 확인이 {{cryptoCode}} 블록체인 상에서 수신되면, 고객님의 청구서가 처리됩니다."
 }

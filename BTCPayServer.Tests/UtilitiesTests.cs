@@ -131,7 +131,6 @@ namespace BTCPayServer.Tests
         //    return name.Replace("_", "").ToLowerInvariant();
         //}
 
-
         /// <summary>
         /// This utility will use selenium to pilot your browser to
         /// automatically translate a language.
@@ -147,7 +146,7 @@ namespace BTCPayServer.Tests
         [FactWithSecret("TransifexAPIToken")]
         public async Task AutoTranslateChatGPT()
         {
-            var file = TranslationFolder.CheckoutV1;
+            var file = TranslationFolder.CheckoutV2;
             
             using var driver = new ChromeDriver(new ChromeOptions()
             {

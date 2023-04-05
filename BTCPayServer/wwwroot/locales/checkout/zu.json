@@ -34,5 +34,10 @@
   "copy": "Kopisha",
   "copy_confirm": "Kukopishwe",
   "powered_by": "Igcwele nge-",
-  "conversion_body": "Le nsizakalo ihlinzekwa yiqembu lesithathu. Uyacelwa ukuthi wazi ukuthi asikwazi ukulawula ukuthi abahlinzeki bazoyithumela kanjani imali yakho. Ama-invoice azoqoshwa kuphela uma imali isitholile ku - {{cryptoCode}} Blockchain."
+  "conversion_body": "Le nsizakalo ihlinzekwa yiqembu lesithathu. Uyacelwa ukuthi wazi ukuthi asikwazi ukulawula ukuthi abahlinzeki bazoyithumela kanjani imali yakho. Ama-invoice azoqoshwa kuphela uma imali isitholile ku - {{cryptoCode}} Blockchain.",
+  "scanning_nfc": "Ibanga le-NFC likhawulelwa ...",
+  "submitting_nfc": "Ukubhaliswa kwe-NFC ...",
+  "payment_received": "Isitshalo esilandelayo",
+  "payment_received_body": "Isitshalo sakho sibhalwe futhi kuyatholakala manje",
+  "payment_received_confirmations": "Ekubeni iliphi eliphezulu kwama-confirmations {{requiredConfirmations}} ku-blockchain ye-{{cryptoCode}}, isitifiketi sakho siza kuphela."
 }

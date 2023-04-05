@@ -34,5 +34,10 @@
   "copy": "Kopier",
   "copy_confirm": "Kopiert",
   "powered_by": "Drevet av",
-  "conversion_body": "Denne tjenesten håndteres av tredjepartstilbydere.\nHusk at vi har ingen kontroll over hvordan tilbyderene vil sende deg dine penger. Fakturaen blir ikke markert betalt før pengene har blitt mottatt på blokkkjeden til  {{cryptoCode}}."
+  "conversion_body": "Denne tjenesten håndteres av tredjepartstilbydere.\nHusk at vi har ingen kontroll over hvordan tilbyderene vil sende deg dine penger. Fakturaen blir ikke markert betalt før pengene har blitt mottatt på blokkkjeden til  {{cryptoCode}}.",
+  "scanning_nfc": "Skanner NFC ...",
+  "submitting_nfc": "Sender NFC ...",
+  "payment_received": "Betaling mottatt",
+  "payment_received_body": "Din betaling har blitt mottatt og blir nå behandlet",
+  "payment_received_confirmations": "Når betalingen din har mottatt {{requiredConfirmations}} bekreftelser på {{cryptoCode}} blockchain, vil fakturaen din bli oppgjort."
 }

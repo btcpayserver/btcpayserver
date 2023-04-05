@@ -34,5 +34,10 @@
   "copy": "Kopēt",
   "copy_confirm": "Nokopēts",
   "powered_by": "Darbojas ar",
-  "conversion_body": "Šo pakalpojumu nodrošina starpnieks. Ņemiet vērā, kā mēs nekādā veidā nekontrolējam maksājuma norisi. Rēķins tiks atzīmēts kā samaksāts tikai tad, kad līdzekļi būs saņemti {{cryptoCode}} blokķēdē."
+  "conversion_body": "Šo pakalpojumu nodrošina starpnieks. Ņemiet vērā, kā mēs nekādā veidā nekontrolējam maksājuma norisi. Rēķins tiks atzīmēts kā samaksāts tikai tad, kad līdzekļi būs saņemti {{cryptoCode}} blokķēdē.",
+  "scanning_nfc": "Skenēju NFC ...",
+  "submitting_nfc": "Iesniegšana NFC ...",
+  "payment_received": "Saņemta maksājuma informācija",
+  "payment_received_body": "Jūsu maksājums ir saņemts un tagad tiek apstrādāts",
+  "payment_received_confirmations": "Kad jūsu maksājums ir saņēmis {{requiredConfirmations}} apstiprinājumus {{cryptoCode}} blokķēdē, jūsu rēķins tiks apmaksāts."
 }

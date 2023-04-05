@@ -34,5 +34,10 @@
   "copy": "Skopírovať",
   "copy_confirm": "Skopírované",
   "powered_by": "Používa technológiu",
-  "conversion_body": "Táto služba je poskytovaná treťou stranou. Majte na pamäti, že nemáme žiadnu kontrolu nad tým, ako budú poskytovatelia nakladať s Vašimi prostriedkami. Faktúra bude označená ako zaplatená až po prijatí prostriedkov v {{cryptoCode}} blockchaine."
+  "conversion_body": "Táto služba je poskytovaná treťou stranou. Majte na pamäti, že nemáme žiadnu kontrolu nad tým, ako budú poskytovatelia nakladať s Vašimi prostriedkami. Faktúra bude označená ako zaplatená až po prijatí prostriedkov v {{cryptoCode}} blockchaine.",
+  "scanning_nfc": "Skenovanie NFC...",
+  "submitting_nfc": "Odosielanie NFC...",
+  "payment_received": "Platba prijatá",
+  "payment_received_body": "Vaša platba bola prijatá a spracováva sa.",
+  "payment_received_confirmations": "Akonáhle tvoja platba na blockchain-e {{cryptoCode}} získa {{requiredConfirmations}} potvrdení, tvoja faktúra bude vyrovnána."
 }

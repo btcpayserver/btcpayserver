@@ -34,5 +34,10 @@
   "copy": "Kopiera",
   "copy_confirm": "Kopierat",
   "powered_by": "Drivs av",
-  "conversion_body": "Denna tjänst tillhandahålls av 3e part. Vänligen kom ihåg att vi saknar kontroll över hur tjänstleverantörer behandlar din betalning. Fakturan markeras som betald först när betalningen har mottagits på {{cryptoCode}} Blockchain."
+  "conversion_body": "Denna tjänst tillhandahålls av 3e part. Vänligen kom ihåg att vi saknar kontroll över hur tjänstleverantörer behandlar din betalning. Fakturan markeras som betald först när betalningen har mottagits på {{cryptoCode}} Blockchain.",
+  "scanning_nfc": "Skanna NFC …",
+  "submitting_nfc": "Skickar NFC …",
+  "payment_received": "Betalningen mottagen",
+  "payment_received_body": "Din betalning har mottagits och bearbetas nu",
+  "payment_received_confirmations": "När din betalning har mottagit {{requiredConfirmations}} bekräftelser på {{cryptoCode}} blockkedjan kommer din faktura att betalas."
 }

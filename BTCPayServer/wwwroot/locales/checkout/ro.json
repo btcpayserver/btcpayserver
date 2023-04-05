@@ -34,5 +34,10 @@
   "copy": "Copiere",
   "copy_confirm": "Copiat",
   "powered_by": "Powered by",
-  "conversion_body": "Acest serviciu este furnizat de o terță parte. Vă rugăm să rețineți că nu avem niciun control asupra modului în care furnizorii vor trimite fondurile mai departe. Factura va fi plătită numai după ce fondurile vor fi primite în {{cryptoCode}} Blockchain."
+  "conversion_body": "Acest serviciu este furnizat de o terță parte. Vă rugăm să rețineți că nu avem niciun control asupra modului în care furnizorii vor trimite fondurile mai departe. Factura va fi plătită numai după ce fondurile vor fi primite în {{cryptoCode}} Blockchain.",
+  "scanning_nfc": "Scanare NFC...",
+  "submitting_nfc": "Trimitere NFC...",
+  "payment_received": "Plată primită",
+  "payment_received_body": "Plata dvs. a fost primită și este acum în curs de procesare",
+  "payment_received_confirmations": "Odată ce plata dumneavoastră primește {{requiredConfirmations}} confirmări pe blockchain-ul {{cryptoCode}}, factura dumneavoastră va fi achitată."
 }

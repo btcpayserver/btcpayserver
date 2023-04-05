@@ -34,5 +34,10 @@
   "copy": "Copia",
   "copy_confirm": "Copiato",
   "powered_by": "Fornito da",
-  "conversion_body": "Questo servizio è fornito da 3° parti. Ricorda che non abbiamo alcun controllo su come tali parti inoltreranno i tuoi fondi. La fattura verrà contrassegnata come pagata solo dopo aver ricevuto i fondi sulla {{cryptoCode}} Blockchain."
+  "conversion_body": "Questo servizio è fornito da 3° parti. Ricorda che non abbiamo alcun controllo su come tali parti inoltreranno i tuoi fondi. La fattura verrà contrassegnata come pagata solo dopo aver ricevuto i fondi sulla {{cryptoCode}} Blockchain.",
+  "scanning_nfc": "Scansione NFC in corso...",
+  "submitting_nfc": "Invio NFC in corso...",
+  "payment_received": "Pagamento ricevuto",
+  "payment_received_body": "Il tuo pagamento è stato ricevuto ed è in fase di elaborazione",
+  "payment_received_confirmations": "Una volta che il tuo pagamento avrà ricevuto {{requiredConfirmations}} conferme sulla blockchain {{cryptoCode}}, la tua fattura verrà saldata."
 }

@@ -34,5 +34,10 @@
   "copy": "Kopiraj",
   "copy_confirm": "Kopirano",
   "powered_by": "Pokreće",
-  "conversion_body": "Koristite servis 3. strane. Molimo vas da imate na umu da mi nemamo kontrolu kako drugi provajderi proslijeđuju vaša sredstva. Predračun će biti markiran kao plaćen nakon što su sredstva primljena na {{cryptoCode}} Blockchain."
+  "conversion_body": "Koristite servis 3. strane. Molimo vas da imate na umu da mi nemamo kontrolu kako drugi provajderi proslijeđuju vaša sredstva. Predračun će biti markiran kao plaćen nakon što su sredstva primljena na {{cryptoCode}} Blockchain.",
+  "scanning_nfc": "Skeniranje NFC-a...",
+  "submitting_nfc": "Slanje NFC-a...",
+  "payment_received": "Plaćanje primljeno",
+  "payment_received_body": "Vaša uplata je primljena i sada se obrađuje",
+  "payment_received_confirmations": "Nakon što Vaša uplata dobije {{requiredConfirmations}} potvrde na {{cryptoCode}} blockchain-u, Vaš račun će biti namiren."
 }

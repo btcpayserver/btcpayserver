@@ -34,5 +34,10 @@
   "copy": "Copier",
   "copy_confirm": "Copié",
   "powered_by": "Propulsé par",
-  "conversion_body": "Ce service est fourni par un tiers. Nous n’avons aucun contrôle sur la façon dont seront traités vos fonds. La facture sera considérée payée seulement quand les fonds seront reçus sur la blockchain {{ cryptoCode }}."
+  "conversion_body": "Ce service est fourni par un tiers. Nous n’avons aucun contrôle sur la façon dont seront traités vos fonds. La facture sera considérée payée seulement quand les fonds seront reçus sur la blockchain {{ cryptoCode }}.",
+  "payment_received": "Paiement reçu",
+  "payment_received_body": "Votre paiement a été reçu et est en cours de traitement",
+  "scanning_nfc": "Numérisation NFC en cours...",
+  "submitting_nfc": "Soumission NFC en cours...",
+  "payment_received_confirmations": "Une fois que votre paiement aura reçu {{requiredConfirmations}} confirmations sur la blockchain {{cryptoCode}}, votre facture sera réglée."
 }

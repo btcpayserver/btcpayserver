@@ -514,21 +514,17 @@ namespace BTCPayServer.Controllers
                             if (paymentMethodId != null)
                             {
                                 var walletId = new WalletId(storeId, paymentMethodId.CryptoCode);
-                                var returnUrl = _linkGenerator.GetUriByAction(
+                                var returnUrl = _linkGenerator.GetPathByAction(
                                     nameof(ViewCustodianAccount),
                                     "UICustodianAccounts",
                                     new { storeId = custodianAccount.StoreId, accountId = custodianAccount.Id },
-                                    Request.Scheme,
-                                    Request.Host,
                                     Request.PathBase);
 
                                 vm.CryptoImageUrl = GetImage(paymentMethodId, network);
-                                vm.CreateTransactionUrl = _linkGenerator.GetUriByAction(
+                                vm.CreateTransactionUrl = _linkGenerator.GetPathByAction(
                                     nameof(UIWalletsController.WalletSend),
                                     "UIWallets",
                                     new { walletId, defaultDestination = vm.Address, returnUrl },
-                                    Request.Scheme,
-                                    Request.Host,
                                     Request.PathBase);
                             }
                         }

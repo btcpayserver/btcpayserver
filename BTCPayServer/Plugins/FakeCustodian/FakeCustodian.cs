@@ -5,11 +5,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Custodians;
 using BTCPayServer.Abstractions.Form;
+using BTCPayServer.Client.Models;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Plugins.FakeCustodian;
 
-public class FakeCustodian : ICustodian
+public class FakeCustodian : ICustodian, ICanDeposit
 {
     public string Code
     {
@@ -24,19 +25,12 @@ public class FakeCustodian : ICustodian
     public Task<Dictionary<string, decimal>> GetAssetBalancesAsync(JObject config, CancellationToken cancellationToken)
     {
         var fakeConfig = ParseConfig(config);
-        var r = new Dictionary<string, decimal>()
-        {
-            { "BTC", fakeConfig.BTCBalance },
-            { "LTC", fakeConfig.LTCBalance },
-            { "USD", fakeConfig.USDBalance },
-            { "EUR", fakeConfig.EURBalance }
-        };
+        var r = new Dictionary<string, decimal>() { { "BTC", fakeConfig.BTCBalance }, { "LTC", fakeConfig.LTCBalance }, { "USD", fakeConfig.USDBalance }, { "EUR", fakeConfig.EURBalance } };
         return Task.FromResult(r);
     }
 
     public Task<Form> GetConfigForm(JObject config, CancellationToken cancellationToken = default)
     {
-        
         var form = new Form();
         var fieldset = Field.CreateFieldset();
 
@@ -63,6 +57,21 @@ public class FakeCustodian : ICustodian
     private FakeCustodianConfig ParseConfig(JObject config)
     {
         return config?.ToObject<FakeCustodianConfig>() ?? throw new InvalidOperationException("Invalid config");
+    }
+
+    public Task<DepositAddressData> GetDepositAddressAsync(string paymentMethod, JObject config, CancellationToken cancellationToken)
+    {
+        if (paymentMethod.Equals("BTC-OnChain"))
+        {
+            DepositAddressData r = new() { Address = "3XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" };
+            return Task.FromResult(r);
+        }
+        return null;
+    }
+
+    public string[] GetDepositablePaymentMethods()
+    {
+        return new[] { "BTC-OnChain" };
     }
 }
 

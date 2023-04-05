@@ -34,5 +34,10 @@
   "copy": "Kopiuj",
   "copy_confirm": "Skopiowano",
   "powered_by": "Napędzane przez",
-  "conversion_body": "Ten serwis prowadzony jest przez trzecią stronę. Proszę pamiętać, że nie mamy kontroli nad tym jak dostawcy przekażą Twoje fundusze. Płatność będzie uznana za opłaconą, tylko gdy otrzymane zostaną na blockchainie {{cryptoCode}}."
+  "conversion_body": "Ten serwis prowadzony jest przez trzecią stronę. Proszę pamiętać, że nie mamy kontroli nad tym jak dostawcy przekażą Twoje fundusze. Płatność będzie uznana za opłaconą, tylko gdy otrzymane zostaną na blockchainie {{cryptoCode}}.",
+  "scanning_nfc": "Skanowanie NFC...",
+  "submitting_nfc": "Przesyłanie NFC...",
+  "payment_received": "Płatność otrzymana",
+  "payment_received_body": "Twoja płatność została odebrana i jest teraz przetwarzana",
+  "payment_received_confirmations": "Kiedy Twoja płatność otrzyma {{requiredConfirmations}} potwierdzeń na łańcuchu bloków {{cryptoCode}}, Twoja faktura zostanie uregulowana."
 }

@@ -34,5 +34,10 @@
   "copy": "Kopiëren",
   "copy_confirm": "Gekopieerd",
   "powered_by": "Mogelijk gemaakt door",
-  "conversion_body": "Deze dienst wordt door een 3e partij geleverd. Wij hebben daardoor geen zicht op uw fondsen. De factuur wordt pas als betaald beschouwd, wanneer de fondsen door de {{ cryptoCode }} blockchain aanvaard zijn."
+  "conversion_body": "Deze dienst wordt door een 3e partij geleverd. Wij hebben daardoor geen zicht op uw fondsen. De factuur wordt pas als betaald beschouwd, wanneer de fondsen door de {{ cryptoCode }} blockchain aanvaard zijn.",
+  "scanning_nfc": "Scannen van NFC ...",
+  "submitting_nfc": "Indienen van NFC ...",
+  "payment_received": "Betaling ontvangen",
+  "payment_received_body": "Uw betaling is ontvangen en wordt nu verwerkt",
+  "payment_received_confirmations": "Zodra uw betaling {{requiredConfirmations}} bevestigingen heeft ontvangen op de {{cryptoCode}} blockchain, zal uw factuur worden voldaan."
 }

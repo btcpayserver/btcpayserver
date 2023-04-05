@@ -34,5 +34,10 @@
   "copy": "Kopioi",
   "copy_confirm": "Kopioitu",
   "powered_by": "Toimittaa",
-  "conversion_body": "Tämän palvelun tarjoaa 3:s osapuoli. Huomioithan, että emme pysty kontrolloimaan miten nämä palveluntarjoajat käsittelevät varojasi. Lasku merkitään maksetuksi, vasta kun varat on vastaanotettu {{cryptoCode}} lohkoketjussa."
+  "conversion_body": "Tämän palvelun tarjoaa 3:s osapuoli. Huomioithan, että emme pysty kontrolloimaan miten nämä palveluntarjoajat käsittelevät varojasi. Lasku merkitään maksetuksi, vasta kun varat on vastaanotettu {{cryptoCode}} lohkoketjussa.",
+  "scanning_nfc": "Skannataan NFC...",
+  "submitting_nfc": "Lähetetään NFC...",
+  "payment_received": "Maksu vastaanotettu",
+  "payment_received_body": "Maksusi on vastaanotettu ja sitä käsitellään parhaillaan",
+  "payment_received_confirmations": "Kun maksusi on vastaanotettu {{requiredConfirmations}} vahvistuksella {{cryptoCode}} lohkoketjussa, laskusi suoritetaan."
 }

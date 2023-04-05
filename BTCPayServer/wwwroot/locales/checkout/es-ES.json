@@ -34,5 +34,10 @@
   "copy": "Copiar",
   "copy_confirm": "Copiado",
   "powered_by": "Proporcionado por",
-  "conversion_body": "Este servicio es prestado por terceros. Ten en cuenta que no tenemos control sobre el reenvío de tus fondos. La factura solo se marcará como pagada una vez se reciban los fondos en la cadena de bloques de {{cryptoCode}}."
+  "conversion_body": "Este servicio es prestado por terceros. Ten en cuenta que no tenemos control sobre el reenvío de tus fondos. La factura solo se marcará como pagada una vez se reciban los fondos en la cadena de bloques de {{cryptoCode}}.",
+  "scanning_nfc": "Escaneando NFC...",
+  "submitting_nfc": "Enviando NFC...",
+  "payment_received": "Pago recibido",
+  "payment_received_body": "Su pago ha sido recibido y se está procesando en este momento",
+  "payment_received_confirmations": "Una vez que tu pago haya recibido {{requiredConfirmations}} confirmaciones en la cadena de bloques {{cryptoCode}}, se liquidará tu factura."
 }

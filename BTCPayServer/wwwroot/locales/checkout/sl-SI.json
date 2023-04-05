@@ -34,5 +34,10 @@
   "copy": "Kopiraj",
   "copy_confirm": "Kopirano",
   "powered_by": "Omogoča",
-  "conversion_body": "To storitev ponuja tretja oseba. Ne pozabite, da nimamo nadzora nad tem, kako bodo ponudniki posredovali vaša sredstva. Račun bo označen kot plačan šele po prejemu sredstev na {{cryptoCode}} Blockchain."
+  "conversion_body": "To storitev ponuja tretja oseba. Ne pozabite, da nimamo nadzora nad tem, kako bodo ponudniki posredovali vaša sredstva. Račun bo označen kot plačan šele po prejemu sredstev na {{cryptoCode}} Blockchain.",
+  "scanning_nfc": "Skeniranje NFC ...",
+  "submitting_nfc": "Oddaja NFC ...",
+  "payment_received": "Plačilo prejeto",
+  "payment_received_body": "Vaše plačilo je bilo sprejeto in se sedaj obdeluje.",
+  "payment_received_confirmations": "Ko bo vaše plačilo prejelo {{requiredConfirmations}} potrditev na verigi blokov {{cryptoCode}}, bo vaša faktura poravnana."
 }

@@ -34,5 +34,10 @@
   "copy": "复制",
   "copy_confirm": "已复制",
   "powered_by": "由...提供技术支持",
-  "conversion_body": "请您注意，这项服务由第三方应用提供，所以我们无法直接获悉和操控第三方应用的具体兑换过程。订单只有在支付款被{{cryptocode}}的区块链接收之后，才会显示已支付。"
+  "conversion_body": "请您注意，这项服务由第三方应用提供，所以我们无法直接获悉和操控第三方应用的具体兑换过程。订单只有在支付款被{{cryptocode}}的区块链接收之后，才会显示已支付。",
+  "scanning_nfc": "扫描 NFC...",
+  "submitting_nfc": "提交 NFC...",
+  "payment_received": "已收到付款",
+  "payment_received_body": "您的付款已收到，正在处理中",
+  "payment_received_confirmations": "一旦{{cryptoCode}} 区块链上收到{{requiredConfirmations}}个确认，您的账单将会被结算。"
 }

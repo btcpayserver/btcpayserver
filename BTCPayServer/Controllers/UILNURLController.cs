@@ -351,7 +351,7 @@ namespace BTCPayServer
                 [Display(Name = "Max sats")]
                 [Range(1, double.PositiveInfinity)]
                 public decimal? Max { get; set; }
-                
+
                 [Display(Name = "Invoice metadata")]
                 public string InvoiceMetadata { get; set; }
             }
@@ -391,7 +391,8 @@ namespace BTCPayServer
                },
                new LNURLPayRequest()
                {
-                   MinSendable = blob?.Min is decimal min ? new LightMoney(min, LightMoneyUnit.Satoshi) : null
+                   MinSendable = blob?.Min is decimal min ? new LightMoney(min, LightMoneyUnit.Satoshi) : null,
+                   MaxSendable = blob?.Max is decimal max ? new LightMoney(max, LightMoneyUnit.Satoshi) : null,
                },
                new Dictionary<string, string>()
                {

@@ -23,12 +23,14 @@ using BTCPayServer.Views.Manage;
 using BTCPayServer.Views.Server;
 using BTCPayServer.Views.Stores;
 using BTCPayServer.Views.Wallets;
+using ExchangeSharp;
 using LNURL;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using NBitcoin.Payment;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Support.Extensions;
@@ -2256,13 +2258,16 @@ namespace BTCPayServer.Tests
             s.FindAlertMessage(StatusMessageModel.StatusSeverity.Success);
 
             s.Driver.ToggleCollapse("AddAddress");
+
             var lnaddress2 = "EUR" + Guid.NewGuid().ToString();
             s.Driver.FindElement(By.Id("Add_Username")).SendKeys(lnaddress2);
+            lnaddress2 = lnaddress2.ToLowerInvariant();
 
             s.Driver.ToggleCollapse("AdvancedSettings");
             s.Driver.FindElement(By.Id("Add_CurrencyCode")).SendKeys("EUR");
             s.Driver.FindElement(By.Id("Add_Min")).SendKeys("2");
             s.Driver.FindElement(By.Id("Add_Max")).SendKeys("10");
+            s.Driver.FindElement(By.Id("Add_InvoiceMetadata")).SendKeys("{\"test\":\"lol\"}");
             s.Driver.FindElement(By.CssSelector("button[value='add']")).Click();
             s.FindAlertMessage(StatusMessageModel.StatusSeverity.Success);
 
@@ -2278,19 +2283,65 @@ namespace BTCPayServer.Tests
                 var lnurl = new Uri(LNURL.LNURL.ExtractUriFromInternetIdentifier(value).ToString()
                     .Replace("https", "http"));
                 var request = (LNURL.LNURLPayRequest)await LNURL.LNURL.FetchInformation(lnurl, new HttpClient());
-
+                var m = request.ParsedMetadata.ToDictionary(o => o.Key, o => o.Value);
                 switch (value)
                 {
                     case { } v when v.StartsWith(lnaddress2):
+                        Assert.StartsWith(lnaddress2 + "@", m["text/identifier"]);
+                        lnaddress2 = m["text/identifier"];
                         Assert.Equal(2, request.MinSendable.ToDecimal(LightMoneyUnit.Satoshi));
                         Assert.Equal(10, request.MaxSendable.ToDecimal(LightMoneyUnit.Satoshi));
                         break;
 
                     case { } v when v.StartsWith(lnaddress1):
+                        Assert.StartsWith(lnaddress1 + "@", m["text/identifier"]);
+                        lnaddress1 = m["text/identifier"];
                         Assert.Equal(1, request.MinSendable.ToDecimal(LightMoneyUnit.Satoshi));
                         Assert.Equal(6.12m, request.MaxSendable.ToDecimal(LightMoneyUnit.BTC));
                         break;
+                    default:
+                        Assert.False(true, "Should have matched");
+                        break;
                 }
+            }
+            var repo = s.Server.PayTester.GetService<InvoiceRepository>();
+            var invoices = await repo.GetInvoices(new InvoiceQuery() { StoreId = new[] { s.StoreId } });
+            Assert.Equal(2, invoices.Length);
+            var emailSuffix = $"@{s.Server.PayTester.HostName}:{s.Server.PayTester.Port}";
+
+            foreach (var i in invoices)
+            {
+                var lightningPaymentMethod = i.GetPaymentMethod(new PaymentMethodId("BTC", PaymentTypes.LNURLPay));
+                var paymentMethodDetails =
+                    lightningPaymentMethod.GetPaymentMethodDetails() as LNURLPayPaymentMethodDetails;
+                Assert.Contains(
+                    paymentMethodDetails.ConsumedLightningAddress,
+                    new[] { lnaddress1, lnaddress2 });
+
+                if (paymentMethodDetails.ConsumedLightningAddress == lnaddress2)
+                {
+                    Assert.Equal("lol", i.Metadata.AdditionalData["test"].Value<string>());
+                }
+            }
+
+            var lnUsername = lnaddress1.Split('@')[0];
+            using (var resp = await s.Server.PayTester.HttpClient.GetAsync($"/.well-known/lnurlp/{lnUsername}"))
+            {
+                var str = await resp.Content.ReadAsStringAsync();
+                var req = JsonConvert.DeserializeObject<LNURLPayRequest>(str);
+                Assert.Contains(req.ParsedMetadata, m => m.Key == "text/identifier" && m.Value == lnaddress1);
+                Assert.Contains(req.ParsedMetadata, m => m.Key == "text/plain" && m.Value.StartsWith("Paid to"));
+                Assert.NotNull(req.Callback);
+                Assert.Equal(new LightMoney(1000), req.MinSendable);
+                Assert.Equal(LightMoney.FromUnit(6.12m, LightMoneyUnit.BTC), req.MaxSendable);
+            }
+            lnUsername = lnaddress2.Split('@')[0];
+            using (var resp = await s.Server.PayTester.HttpClient.GetAsync($"/.well-known/lnurlp/{lnUsername}"))
+            {
+                var str = await resp.Content.ReadAsStringAsync();
+                var req = JsonConvert.DeserializeObject<LNURLPayRequest>(str);
+                Assert.Equal(new LightMoney(2000), req.MinSendable);
+                Assert.Equal(new LightMoney(10_000), req.MaxSendable);
             }
         }
 

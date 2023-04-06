@@ -115,7 +115,7 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 ModelState.AddModelError(nameof(request.Period), $"The period should be positive");
             }
-            if (request.BOLT11Expiration <= TimeSpan.Zero)
+            if (request.BOLT11Expiration < TimeSpan.Zero)
             {
                 ModelState.AddModelError(nameof(request.BOLT11Expiration), $"The BOLT11 expiration should be positive");
             }
@@ -142,7 +142,7 @@ namespace BTCPayServer.Controllers.Greenfield
             }
             if (!ModelState.IsValid)
                 return this.CreateValidationError(ModelState);
-            var ppId = await _pullPaymentService.CreatePullPayment(new HostedServices.CreatePullPayment()
+            var ppId = await _pullPaymentService.CreatePullPayment(new CreatePullPayment()
             {
                 StartsAt = request.StartsAt,
                 ExpiresAt = request.ExpiresAt,

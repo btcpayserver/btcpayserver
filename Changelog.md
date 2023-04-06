@@ -1,5 +1,53 @@
 # Changelog
 
+## 1.9.0
+
+### Breaking change
+
+As part of our effort to withdraw support for MySQL and SQLite, if you start BTCPay Server with `--sqlitefile` or `--mysql` without being in the context of a migration, your server will fail to start.
+
+We introduce another flag, `--deprecated`, which allows you to start with SQLite or MySQL even if it is deprecated. We will remove this flag in version 1.10.
+
+### New features
+
+* NFC: If browser permission is already granted, do not require the merchant to click on the "Pay by NFC" button. (#4807 #4819) @dennisreimann
+* Point of Sales bought items will now appear on the receipt (#4851) @Kukks
+* Add payment proof to the receipt, such as transaction ID or Lightning preimage (#4782) @dennisreimann
+* Checkout v2: Show when the payment still needs confirmation (#4778) @dennisreimann
+* Wallet Transactions Export: Add BIP-329 support (#4799) @dennisreimann
+* Invoice Details: Improve payments list and print view (#4817 #4783 #4729) @dennisreimann
+* Can add labels to destination addresses in the Send Wallet (#4796 #4755) @dennisreimann
+* Properly parse an imported wallet's xpub when it contains a fingerprint and keypath (#4781) @dennisreimann
+* Forms can include HTML select components (#4726) @Kukks
+* Checkout v2: Celebrate payment with confetti (#4727) @dennisreimann
+* Checkout v2: Option to display amount in Sats in BIP21 case (#4730) @dennisreimann
+* Store Email rules: Can send test emails (#4843) @Nisaba
+* Store Email rules: Support HTML/Rich Text emails (#4843) @Nisaba
+* Add presets to optimize checkout experience for retail use (#4756) @NicolasDorier
+* Dashboard: Add labels for recent txs dashboard widget (#4831) @dennisreimann
+
+### Bug fixes
+
+* Do not propose Lightning payment if the LN Node is dead (#4795 #3541) @Kukks
+* Point of Sale: Fix escaped HTML entities in item title (#4798) @dennisreimann
+* Fix: Labels added by payouts to transactions shouldn't show HTML markups (#4790) @dennisreimann
+* If store user is Guest, "issue refund" shouldn't be an option (#4595 #3512) @Kukks
+
+### Improvements
+
+* Checkout V2 will be the default for new stores (#4850) @NicolasDorier
+* Improve UX for adding/removing labels on transaction view (#4796 #4706) @dennisreimann
+* UI: Redesign Recovery Seed view (#4793) @TChukwuleta
+* Polishing experimental custodian feature; see blog post soon (#4085) @woutersamaey
+* Prevent people from starting with `--sqlitefile` or `--mysql` (#4772) @NicolasDorier
+* Replace text in copy buttons with icons (#4699 #4764) @dennisreimann
+* Plugins will be able to introduce new types of apps in addition to Point of Sale and Crowdfund (#4608) @Kukks
+* Dashboard: App stats (#4775) @dennisreimann
+* Update price display (#4736) @dennisreimann @dstrukt
+* Store branding: Improve complementing text and accent colors (#4746) @dennisreimann
+* UI: Improve pagination (#4828) @benalleng @dennisreimann
+* Checkout V2: Remove `Pay by LNURL Withdraw` button if NFC isn't supported by the browser (#4822) @dennisreimann
+
 ## 1.8.4
 
 ### Bug fix
@@ -17,7 +65,7 @@
 ### Bug fix
 
 * Prevent XSS injection via VueJS (#4747) credit to @cupc4k3. @NicolasDorier
-* Do not through missing-permission error when no store on /api/v1/stores (Close #4735) (#4748) @NicolasDorier
+* Greenfield: Do not throw `missing-permission` error when no store on `/api/v1/stores` (#4735 #4748) @NicolasDorier
 
 ### Improvements
 

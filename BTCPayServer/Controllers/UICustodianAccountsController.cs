@@ -432,7 +432,8 @@ namespace BTCPayServer.Controllers
                             }
                             catch (WrongTradingPairException)
                             {
-                                // Cannot trade this asset, just ignore
+                                // Cannot trade this asset
+                                return BadRequest(vm);
                             }
                         }
                     }

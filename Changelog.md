@@ -28,6 +28,7 @@ We introduce another flag, `--deprecated`, which allows you to start with SQLite
 
 ### Bug fixes
 
+* With core lightning, getting payment by paymenthash wouldn't return the successful payment if the first one failed.
 * Do not propose Lightning payment if the LN Node is dead (#4795 #3541) @Kukks
 * Point of Sale: Fix escaped HTML entities in item title (#4798) @dennisreimann
 * Fix: Labels added by payouts to transactions shouldn't show HTML markups (#4790) @dennisreimann

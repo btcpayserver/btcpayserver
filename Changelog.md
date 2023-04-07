@@ -27,6 +27,7 @@ We introduce another flag, `--deprecated`, which allows you to start with SQLite
 * Store Email rules: Support HTML/Rich Text emails (#4843) @Nisaba
 * Add presets to optimize checkout experience for retail use (#4756) @NicolasDorier
 * Dashboard: Add labels for recent txs dashboard widget (#4831) @dennisreimann
+* Allow any bolt11 invoice for pullpayments/payouts, regardless of expiry @Kukks
 
 ### Bug fixes
 

@@ -459,14 +459,17 @@ namespace BTCPayServer.Controllers
                     }
                 }
                 if (ix is null) continue;
+                
+                var labels = _labelService.CreateTransactionTagModels(ix, Request);
                 var input = vm.Inputs.First(model => model.Index == inputToObject.Key);
-                input.Labels = ix.LabelColors;
+                input.Labels = labels;
             }
             foreach (var outputToObject in outputToObjects)
             {
                 if (!labelInfo.TryGetValue(outputToObject.Value.Id, out var ix)) continue;
+                var labels = _labelService.CreateTransactionTagModels(ix, Request);
                 var destination = vm.Destinations.First(model => model.Destination == outputToObject.Key);
-                destination.Labels = ix.LabelColors;
+                destination.Labels = labels;
             }
             
         }

@@ -64,12 +64,19 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
                _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(paymentMethod.CryptoCode)?.ReadonlyWallet is false;
     }
 
-    public async Task TrackClaim(PaymentMethodId paymentMethodId, IClaimDestination claimDestination)
+    public async Task TrackClaim(ClaimRequest claimRequest, PayoutData payoutData)
     {
-        var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(paymentMethodId.CryptoCode);
+        var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(claimRequest.PaymentMethodId.CryptoCode);
         var explorerClient = _explorerClientProvider.GetExplorerClient(network);
-        if (claimDestination is IBitcoinLikeClaimDestination bitcoinLikeClaimDestination)
+        if (claimRequest.Destination is IBitcoinLikeClaimDestination bitcoinLikeClaimDestination)
+        {
+            
             await explorerClient.TrackAsync(TrackedSource.Create(bitcoinLikeClaimDestination.Address));
+            await WalletRepository.AddWalletTransactionAttachment(
+                new WalletId(claimRequest.StoreId, claimRequest.PaymentMethodId.CryptoCode),
+                bitcoinLikeClaimDestination.Address.ToString(),
+                Attachment.Payout(payoutData.PullPaymentDataId, payoutData.Id), WalletObjectData.Types.Address);
+        }
     }
 
     public Task<(IClaimDestination destination, string error)> ParseClaimDestination(PaymentMethodId paymentMethodId, string destination, CancellationToken cancellationToken)

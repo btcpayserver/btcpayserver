@@ -592,7 +592,7 @@ namespace BTCPayServer.HostedServices
                 await ctx.Payouts.AddAsync(payout);
                 try
                 {
-                    await payoutHandler.TrackClaim(req.ClaimRequest.PaymentMethodId, req.ClaimRequest.Destination);
+                    await payoutHandler.TrackClaim(req.ClaimRequest, payout);
                     await ctx.SaveChangesAsync();
                     if (req.ClaimRequest.PreApprove.GetValueOrDefault(ppBlob?.AutoApproveClaims is true))
                     {

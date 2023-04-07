@@ -67,24 +67,31 @@
         <div id="AdvancedSettings" class="collapse @(showAdvancedOptions ? "show" : "")">
             <div class="row">
                 <div class="col-12 col-sm-auto">
-                    <div class="form-group">
+                    <div class="form-group" title="The currency to generate the invoice in when generated through this lightning address ">
                         <label asp-for="Add.CurrencyCode" class="form-label"></label>
                         <input asp-for="Add.CurrencyCode" class="form-control w-auto" currency-selection style="max-width:16ch;"/>
                         <span asp-validation-for="Add.CurrencyCode" class="text-danger"></span>
                     </div>
                 </div>
                 <div class="col-12 col-sm-auto">
-                    <div class="form-group">
+                    <div class="form-group" title="Minimum amount of sats to allow to be sent to this ln address">
                         <label asp-for="Add.Min" class="form-label"></label>
                         <input asp-for="Add.Min" class="form-control" type="number" inputmode="numeric" min="1" style="max-width:16ch;"/>
                         <span asp-validation-for="Add.Min" class="text-danger"></span>
                     </div>
                 </div>
                 <div class="col-12 col-sm-auto">
-                    <div class="form-group">
+                    <div class="form-group" title="Maximum amount of sats to allow to be sent to this ln address">
                         <label asp-for="Add.Max" class="form-label"></label>
                         <input asp-for="Add.Max" class="form-control" type="number" inputmode="numeric" min="1" max="@int.MaxValue" style="max-width:16ch;"/>
                         <span asp-validation-for="Add.Max" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-auto">
+                    <div class="form-group" title="Metadata (in JSON) to add to the invoice when created through this lightning address.">
+                        <label asp-for="Add.InvoiceMetadata" class="form-label"></label>
+                        <textarea asp-for="Add.InvoiceMetadata" class="form-control"  ></textarea>
+                        <span asp-validation-for="Add.InvoiceMetadata" class="text-danger"></span>
                     </div>
                 </div>
             </div>
@@ -114,6 +121,7 @@
                         <input asp-for="Items[index].Min" type="hidden"/>
                         <input asp-for="Items[index].Max" type="hidden"/>
                         <input asp-for="Items[index].Username" type="hidden"/>
+                        <input asp-for="Items[index].InvoiceMetadata" type="hidden"/>
                         var address = $"{Model.Items[index].Username}@{Context.Request.Host.ToUriComponent()}";
                         <tr>
                             <td>
@@ -137,6 +145,10 @@
                                 @if (!string.IsNullOrEmpty(Model.Items[index].CurrencyCode))
                                 {
                                     <span>tracked in @Model.Items[index].CurrencyCode</span>
+                                }
+                                @if (!string.IsNullOrEmpty(Model.Items[index].InvoiceMetadata))
+                                {
+                                    <span>with invoice metadata @Model.Items[index].InvoiceMetadata</span>
                                 }
                             </td>
                             <td class="text-end">

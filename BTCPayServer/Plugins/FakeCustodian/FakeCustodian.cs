@@ -61,13 +61,13 @@ public class FakeCustodian : ICustodian, ICanDeposit, ICanWithdraw, ICanTrade
         var generalFieldset = Field.CreateFieldset();
         generalFieldset.Label = "General";
         // TODO we cannot validate the custodian account ID because we have no access to the correct value. This is fine given this is a development tool and won't be needed by actual custodians.
-        var accountIdField = Field.Create("Custodian Account ID", "CustodianAccountId", null, true,
-            "Enter the ID of this custodian account. This is needed as a workaround which only applies to the Fake Custodian.");
+        var accountIdField = Field.Create("Custodian Account ID", "CustodianAccountId", null, false,
+            "Enter the ID of this custodian account. This is needed as a workaround which only applies to the Fake Custodian. Fill out correctly to make trading and withdrawing work.");
         generalFieldset.Fields.Add(accountIdField);
 
         // TODO we cannot validate the store ID because we have no access to the correct value. This is fine given this is a development tool and won't be needed by actual custodians.
         var storeIdField = Field.Create("Store ID", "StoreId", null, true,
-            "Enter the ID of this store. This is needed as a workaround which only applies to the Fake Custodian.");
+            "Enter the ID of this store. This is needed as a workaround which only applies to the Fake Custodian. Fill out correctly to make trading and withdrawing work.");
         generalFieldset.Fields.Add(storeIdField);
         form.Fields.Add(generalFieldset);
 

@@ -28,7 +28,7 @@ namespace BTCPayServer.Models.StoreViewModels
 
         [Display(Name = "Show \"Pay in wallet\" button")]
         public bool ShowPayInWalletButton { get; set; }
-        
+
         [Display(Name = "Show the store header")]
         public bool ShowStoreHeader { get; set; }
 

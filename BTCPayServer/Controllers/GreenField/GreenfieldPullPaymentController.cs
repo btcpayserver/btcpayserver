@@ -264,7 +264,8 @@ namespace BTCPayServer.Controllers.Greenfield
                     pullPaymentId = pullPaymentId
                 }, Request.Scheme, Request.Host.ToString())!);
 
-                return base.Ok(new PullPaymentLNURL() {
+                return base.Ok(new PullPaymentLNURL()
+                {
                     LNURLBech32 = LNURL.LNURL.EncodeUri(lnurlEndpoint, "withdrawRequest", true).ToString(),
                     LNURLUri = LNURL.LNURL.EncodeUri(lnurlEndpoint, "withdrawRequest", false).ToString()
                 });
@@ -359,7 +360,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     return this.CreateAPIPermissionError(Policies.CanCreatePullPayments);
                 }
             }
-            
+
             if (request is null || !PaymentMethodId.TryParse(request?.PaymentMethod, out var paymentMethodId))
             {
                 ModelState.AddModelError(nameof(request.PaymentMethod), "Invalid payment method");

@@ -311,19 +311,19 @@ namespace BTCPayServer.Services
 
         public async Task<(string Label, string Color)[]> GetWalletLabels(WalletId walletId)
         {
-            return await GetWalletLabels(w => 
+            return await GetWalletLabels(w =>
                 w.WalletId == walletId.ToString() &&
                 w.Type == WalletObjectData.Types.Label);
         }
-        
+
         public async Task<(string Label, string Color)[]> GetWalletLabels(WalletObjectId objectId)
         {
-            
+
             await using var ctx = _ContextFactory.CreateContext();
             var obj = await GetWalletObject(objectId, true);
             return obj is null ? Array.Empty<(string Label, string Color)>() : obj.GetNeighbours().Where(data => data.Type == WalletObjectData.Types.Label).Select(FormatToLabel).ToArray();
         }
-        
+
         private async Task<(string Label, string Color)[]> GetWalletLabels(Expression<Func<WalletObjectData, bool>> predicate)
         {
             await using var ctx = _ContextFactory.CreateContext();

@@ -13,7 +13,7 @@ namespace BTCPayServer.Components.LabelManager
             {
                 ExcludeTypes = excludeTypes,
                 WalletObjectId = walletObjectId,
-                SelectedLabels = selectedLabels?? Array.Empty<string>(),
+                SelectedLabels = selectedLabels ?? Array.Empty<string>(),
                 DisplayInline = displayInline,
                 RichLabelInfo = richLabelInfo,
                 AutoUpdate = autoUpdate,
@@ -25,7 +25,7 @@ namespace BTCPayServer.Components.LabelManager
 
     public class RichLabelInfo
     {
-        public string Link  { get; set; }
-        public string Tooltip  { get; set; }
+        public string Link { get; set; }
+        public string Tooltip { get; set; }
     }
 }

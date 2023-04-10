@@ -78,21 +78,21 @@ namespace BTCPayServer.HostedServices
                             {
                                 await _walletRepository.EnsureWalletObjectLink(txWalletObject, walletObjectData.Key);
                                 //if the object is an address, we also link the labels to the tx
-                                if(walletObjectData.Value.Type == WalletObjectData.Types.Address)
+                                if (walletObjectData.Value.Type == WalletObjectData.Types.Address)
                                 {
                                     var neighbours = walletObjectData.Value.GetNeighbours().ToArray();
                                     var labels = neighbours
                                         .Where(data => data.Type == WalletObjectData.Types.Label).Select(data =>
                                             new WalletObjectId(walletObjectDatas.Key, data.Type, data.Id));
-                                   foreach (var label in labels)
-                                   {
-                                       await _walletRepository.EnsureWalletObjectLink(label, txWalletObject);
-                                       var attachments = neighbours.Where(data => data.Type == label.Id);
-                                       foreach (var attachment in attachments)    
-                                       {
-                                           await _walletRepository.EnsureWalletObjectLink(new WalletObjectId(walletObjectDatas.Key, attachment.Type, attachment.Id), txWalletObject);
-                                       }
-                                   }
+                                    foreach (var label in labels)
+                                    {
+                                        await _walletRepository.EnsureWalletObjectLink(label, txWalletObject);
+                                        var attachments = neighbours.Where(data => data.Type == label.Id);
+                                        foreach (var attachment in attachments)
+                                        {
+                                            await _walletRepository.EnsureWalletObjectLink(new WalletObjectId(walletObjectDatas.Key, attachment.Type, attachment.Id), txWalletObject);
+                                        }
+                                    }
                                 }
                             }
                         }

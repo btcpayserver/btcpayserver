@@ -59,7 +59,7 @@ namespace BTCPayServer.Plugins
         public async Task<PublishedVersion[]> GetPublishedVersions(string btcpayVersion, bool includePreRelease)
         {
             var queryString = $"?includePreRelease={includePreRelease}";
-            if(btcpayVersion is not null)
+            if (btcpayVersion is not null)
                 queryString += $"&btcpayVersion={btcpayVersion}&";
             var result = await httpClient.GetStringAsync($"api/v1/plugins{queryString}");
             return JsonConvert.DeserializeObject<PublishedVersion[]>(result, serializerSettings) ?? throw new InvalidOperationException();

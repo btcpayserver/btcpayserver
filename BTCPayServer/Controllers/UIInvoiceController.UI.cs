@@ -123,7 +123,7 @@ namespace BTCPayServer.Controllers
             var metaData = PosDataParser.ParsePosData(invoice.Metadata.ToJObject());
             var additionalData = metaData
                 .Where(dict => !InvoiceAdditionalDataExclude.Contains(dict.Key))
-                .ToDictionary(dict=> dict.Key, dict=> dict.Value);
+                .ToDictionary(dict => dict.Key, dict => dict.Value);
             var model = new InvoiceDetailsModel
             {
                 StoreId = store.Id,
@@ -201,12 +201,12 @@ namespace BTCPayServer.Controllers
                 CssFileId = storeBlob.CssFileId,
                 ReceiptOptions = receipt
             };
-            
+
             if (i.Status.ToModernStatus() != InvoiceStatus.Settled)
             {
                 return View(vm);
             }
-            
+
             JToken? receiptData = null;
             i.Metadata?.AdditionalData?.TryGetValue("receiptData", out receiptData);
 
@@ -897,22 +897,22 @@ namespace BTCPayServer.Controllers
         {
             var currency = invoiceEntity.Currency;
             var crypto = cryptoCode.ToUpperInvariant(); // uppercase to make comparison easier, might be "sats"
-            
+
             // if invoice source currency is the same as currently display currency, no need for "order amount from invoice"
             if (crypto == currency || (crypto == "SATS" && currency == "BTC") || (crypto == "BTC" && currency == "SATS"))
                 return null;
 
             return _displayFormatter.Currency(invoiceEntity.Price, currency, format);
         }
-        
+
         private string? ExchangeRate(string cryptoCode, PaymentMethod paymentMethod, DisplayFormatter.CurrencyFormat format = DisplayFormatter.CurrencyFormat.Code)
         {
             var currency = paymentMethod.ParentEntity.Currency;
             var crypto = cryptoCode.ToUpperInvariant(); // uppercase to make comparison easier, might be "sats"
-            
+
             if (crypto == currency || (crypto == "SATS" && currency == "BTC") || (crypto == "BTC" && currency == "SATS"))
                 return null;
-            
+
             return _displayFormatter.Currency(paymentMethod.Rate, currency, format);
         }
 

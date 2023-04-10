@@ -12,7 +12,7 @@ public class FieldValueMirror : IFormComponentProvider
     {
         if (form.GetFieldByFullName(field.Value) is null)
         {
-            field.ValidationErrors = new List<string>() {$"{field.Name} requires {field.Value} to be present"};
+            field.ValidationErrors = new List<string>() { $"{field.Name} requires {field.Value} to be present" };
         }
     }
 

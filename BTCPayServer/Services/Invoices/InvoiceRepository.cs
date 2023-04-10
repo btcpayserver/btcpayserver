@@ -780,8 +780,8 @@ namespace BTCPayServer.Services.Invoices
         {
             return network == null ? JsonConvert.SerializeObject(data, DefaultSerializerSettings) : network.ToString(data);
         }
-        
-        
+
+
         public InvoiceStatistics GetContributionsByPaymentMethodId(string currency, InvoiceEntity[] invoices, bool softcap)
         {
             var contributions = invoices
@@ -905,7 +905,7 @@ namespace BTCPayServer.Services.Invoices
         public bool IncludeArchived { get; set; } = true;
         public bool IncludeRefunds { get; set; }
     }
-    
+
     public class InvoiceStatistics : Dictionary<PaymentMethodId, InvoiceStatistics.Contribution>
     {
         public InvoiceStatistics(IEnumerable<KeyValuePair<PaymentMethodId, Contribution>> collection) : base(collection)
@@ -913,7 +913,7 @@ namespace BTCPayServer.Services.Invoices
             TotalCurrency = Values.Select(v => v.CurrencyValue).Sum();
         }
         public decimal TotalCurrency { get; }
-            
+
         public class Contribution
         {
             public PaymentMethodId PaymentMethodId { get; set; }

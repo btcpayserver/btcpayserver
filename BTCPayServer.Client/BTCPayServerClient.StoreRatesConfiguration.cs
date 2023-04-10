@@ -54,7 +54,7 @@ namespace BTCPayServer.Client
             CancellationToken token = default)
         {
             using var response = await _httpClient.SendAsync(
-                CreateHttpRequest($"api/v1/stores/{storeId}/rates", 
+                CreateHttpRequest($"api/v1/stores/{storeId}/rates",
                     queryPayload: new Dictionary<string, object>() { { "currencyPair", currencyPair } },
                     method: HttpMethod.Get),
                 token);

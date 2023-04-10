@@ -362,10 +362,10 @@ namespace BTCPayServer.Controllers.Greenfield
                 {
                     return UnsupportedAsset(asset, ex.Message);
                 }
-                
+
                 var simulateWithdrawResult =
                     await withdrawableCustodian.SimulateWithdrawalAsync(request.PaymentMethod, qty, custodianAccount.GetBlob(), cancellationToken);
-                var result = new WithdrawalSimulationResponseData(simulateWithdrawResult.PaymentMethod, simulateWithdrawResult.Asset, 
+                var result = new WithdrawalSimulationResponseData(simulateWithdrawResult.PaymentMethod, simulateWithdrawResult.Asset,
                      accountId, custodian.Code, simulateWithdrawResult.LedgerEntries, simulateWithdrawResult.MinQty, simulateWithdrawResult.MaxQty);
                 return Ok(result);
             }

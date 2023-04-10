@@ -1609,7 +1609,7 @@ namespace BTCPayServer.Tests
             // Check correct casing: Addresses in payment URI need to be …
             // - lowercase in link version
             // - uppercase in QR version
-            
+
             // Standard for all uppercase characters in QR codes is still not implemented in all wallets
             // But we're proceeding with BECH32 being uppercase
             Assert.Equal($"bitcoin:{paymentMethodUnified.BtcAddress}", paymentMethodUnified.InvoiceBitcoinUrl.Split('?')[0]);

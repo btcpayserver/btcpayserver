@@ -41,7 +41,7 @@ public class AppSales : ViewComponent
         };
         if (vm.InitialRendering)
             return View(vm);
-        
+
         var app = HttpContext.GetAppData();
         var stats = await _appService.GetSalesStats(app);
         vm.SalesCount = stats.SalesCount;

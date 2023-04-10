@@ -116,7 +116,7 @@ public class FormTests : UnitTestBase
                     break;
             }
         }
-        
+
         form = new Form()
         {
             Fields = new List<Field>
@@ -143,7 +143,7 @@ public class FormTests : UnitTestBase
             {"invoice_item3", new StringValues("updated")},
             {"invoice_test", new StringValues("updated")}
         }));
-        
+
         foreach (var f in form.GetAllFields())
         {
             var field = f.Field;
@@ -185,7 +185,7 @@ public class FormTests : UnitTestBase
         form.SetValues(obj);
         obj = service.GetValues(form);
         Assert.Null(obj["test"].Value<string>());
-        form.SetValues(new JObject{ ["test"] = "hello" });
+        form.SetValues(new JObject { ["test"] = "hello" });
         obj = service.GetValues(form);
         Assert.Equal("hello", obj["test"].Value<string>());
     }

@@ -149,13 +149,13 @@ namespace BTCPayServer.Controllers.Greenfield
                 LightningDescriptionTemplate = storeBlob.LightningDescriptionTemplate,
                 PaymentTolerance = storeBlob.PaymentTolerance,
                 PayJoinEnabled = storeBlob.PayJoinEnabled,
-                PaymentMethodCriteria = storeBlob.PaymentMethodCriteria?.Where(criteria => criteria.Value is not null)?.Select(criteria =>  new PaymentMethodCriteriaData()
+                PaymentMethodCriteria = storeBlob.PaymentMethodCriteria?.Where(criteria => criteria.Value is not null)?.Select(criteria => new PaymentMethodCriteriaData()
                 {
                     Above = criteria.Above,
                     Amount = criteria.Value.Value,
                     CurrencyCode = criteria.Value.Currency,
                     PaymentMethod = criteria.PaymentMethod.ToStringNormalized()
-                })?.ToList()?? new List<PaymentMethodCriteriaData>()
+                })?.ToList() ?? new List<PaymentMethodCriteriaData>()
             };
         }
 
@@ -249,7 +249,8 @@ namespace BTCPayServer.Controllers.Greenfield
                     if (string.IsNullOrEmpty(pmc.CurrencyCode))
                     {
                         request.AddModelError(data => data.PaymentMethodCriteria[index].CurrencyCode, "CurrencyCode is required", this);
-                    }else if (CurrencyNameTable.Instance.GetCurrencyData(pmc.CurrencyCode, false) is null)
+                    }
+                    else if (CurrencyNameTable.Instance.GetCurrencyData(pmc.CurrencyCode, false) is null)
                     {
                         request.AddModelError(data => data.PaymentMethodCriteria[index].CurrencyCode, "CurrencyCode is invalid", this);
                     }

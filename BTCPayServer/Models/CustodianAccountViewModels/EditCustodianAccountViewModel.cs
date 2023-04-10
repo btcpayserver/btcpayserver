@@ -8,6 +8,6 @@ namespace BTCPayServer.Models.CustodianAccountViewModels
 
         public CustodianAccountData CustodianAccount { get; set; }
         public Form ConfigForm { get; set; }
-        public string Config  { get; set; }
+        public string Config { get; set; }
     }
 }

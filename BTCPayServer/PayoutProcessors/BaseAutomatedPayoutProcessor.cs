@@ -62,9 +62,9 @@ public abstract class BaseAutomatedPayoutProcessor<T> : BaseAsyncService where T
         var blob = GetBlob(_PayoutProcesserSettings);
         if (paymentMethod is not null)
         {
-            
+
             // Allow plugins to do something before the automatic payouts are executed
-            await _pluginHookService.ApplyFilter("before-automated-payout-processing", 
+            await _pluginHookService.ApplyFilter("before-automated-payout-processing",
                 new BeforePayoutFilterData(store, paymentMethod));
 
             await using var context = _applicationDbContextFactory.CreateContext();
@@ -80,9 +80,9 @@ public abstract class BaseAutomatedPayoutProcessor<T> : BaseAsyncService where T
                 Logs.PayServer.LogInformation($"{payouts.Count} found to process. Starting (and after will sleep for {blob.Interval})");
                 await Process(paymentMethod, payouts);
                 await context.SaveChangesAsync();
-                
+
                 // Allow plugins do to something after automatic payout processing
-                await _pluginHookService.ApplyFilter("after-automated-payout-processing", 
+                await _pluginHookService.ApplyFilter("after-automated-payout-processing",
                     new AfterPayoutFilterData(store, paymentMethod, payouts));
             }
         }

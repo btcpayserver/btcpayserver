@@ -94,7 +94,7 @@ namespace BTCPayServer.Plugins.NFC
                 var details = ex.InnerException?.Message ?? ex.Message;
                 return BadRequest($"Could not fetch info from LNURL-Withdraw: {details}");
             }
-            
+
             if (info?.Callback is null)
             {
                 return BadRequest("Could not fetch info from LNURL-Withdraw");
@@ -127,7 +127,7 @@ namespace BTCPayServer.Plugins.NFC
                 {
                     due = new LightMoney(lnPaymentMethod.Calculate().Due);
                 }
-                
+
                 if (info.MinWithdrawable > due || due > info.MaxWithdrawable)
                 {
                     return BadRequest("Invoice amount is not payable with the LNURL allowed amounts.");

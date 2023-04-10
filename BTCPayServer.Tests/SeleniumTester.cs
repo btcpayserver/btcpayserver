@@ -87,7 +87,7 @@ namespace BTCPayServer.Tests
             Driver.AssertNoError();
         }
 
-        public void PayInvoice(bool mine = false, decimal? amount= null)
+        public void PayInvoice(bool mine = false, decimal? amount = null)
         {
 
             if (amount is not null)

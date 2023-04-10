@@ -62,7 +62,7 @@ public class LightningAddressService
     {
         data.Username = NormalizeUsername(data.Username);
         await using var context = _applicationDbContextFactory.CreateContext();
-        var result = (await GetCore(context, new LightningAddressQuery() { Usernames = new[] { data.Username} }))
+        var result = (await GetCore(context, new LightningAddressQuery() { Usernames = new[] { data.Username } }))
             .FirstOrDefault();
         if (result is not null)
         {

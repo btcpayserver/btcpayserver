@@ -63,7 +63,7 @@ namespace BTCPayServer.Controllers
             var store = await _storeRepository.FindStore(pp.StoreId);
             if (store is null)
                 return NotFound();
-            
+
             var storeBlob = store.GetStoreBlob();
             var payouts = (await ctx.Payouts.GetPayoutInPeriod(pp)
                                            .OrderByDescending(o => o.Date)

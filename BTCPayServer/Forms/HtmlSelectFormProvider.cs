@@ -24,7 +24,7 @@ public class HtmlSelectFormProvider : FormComponentProviderBase
     }
 }
 
-public class SelectField: Field
+public class SelectField : Field
 {
     public List<SelectListItem> Options { get; set; }
 }

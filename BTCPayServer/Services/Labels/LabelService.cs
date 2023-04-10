@@ -15,12 +15,12 @@ namespace BTCPayServer.Services.Labels;
 public class LabelService
 {
     private readonly LinkGenerator _linkGenerator;
-    
+
     public LabelService(LinkGenerator linkGenerator)
     {
         _linkGenerator = linkGenerator;
     }
-    
+
     public IEnumerable<TransactionTagModel> CreateTransactionTagModels(WalletTransactionInfo? transactionInfo, HttpRequest req)
     {
         if (transactionInfo is null)
@@ -32,7 +32,7 @@ public class LabelService
             {
                 return "Paid a payout";
             }
-            
+
             if (payoutsByPullPaymentId.Count() == 1)
             {
                 var pp = payoutsByPullPaymentId.Key;

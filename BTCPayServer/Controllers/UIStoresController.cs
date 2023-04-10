@@ -730,7 +730,7 @@ namespace BTCPayServer.Controllers
                     {
                         await _fileService.RemoveFile(blob.CssFileId, userId);
                     }
-                    
+
                     // add new CSS file
                     try
                     {

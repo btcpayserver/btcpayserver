@@ -49,7 +49,7 @@ namespace BTCPayServer
         {
             return AccountDerivation is null ? null : DBUtils.nbxv1_get_wallet_id(Network.CryptoCode, AccountDerivation.ToString());
         }
-        
+
         private static bool TryParseXpub(string xpub, DerivationSchemeParser derivationSchemeParser, ref DerivationSchemeSettings derivationSchemeSettings, ref string error, bool electrum = true)
         {
             if (!electrum)
@@ -87,9 +87,12 @@ namespace BTCPayServer
                 var match = derivationRegex.Match(xpub.Trim());
                 if (match.Success)
                 {
-                    if (!string.IsNullOrEmpty(match.Groups[1].Value)) rootFingerprint = HDFingerprint.Parse(match.Groups[1].Value);
-                    if (!string.IsNullOrEmpty(match.Groups[2].Value)) accountKeyPath = KeyPath.Parse(match.Groups[2].Value);
-                    if (!string.IsNullOrEmpty(match.Groups[3].Value)) xpub = match.Groups[3].Value;
+                    if (!string.IsNullOrEmpty(match.Groups[1].Value))
+                        rootFingerprint = HDFingerprint.Parse(match.Groups[1].Value);
+                    if (!string.IsNullOrEmpty(match.Groups[2].Value))
+                        accountKeyPath = KeyPath.Parse(match.Groups[2].Value);
+                    if (!string.IsNullOrEmpty(match.Groups[3].Value))
+                        xpub = match.Groups[3].Value;
                 }
                 derivationSchemeSettings.AccountOriginal = xpub.Trim();
                 derivationSchemeSettings.AccountDerivation = electrum ? derivationSchemeParser.ParseElectrum(derivationSchemeSettings.AccountOriginal) : derivationSchemeParser.Parse(derivationSchemeSettings.AccountOriginal);

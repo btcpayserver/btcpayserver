@@ -198,14 +198,14 @@ namespace BTCPayServer.Controllers
             {
                 return NotFound();
             }
-            
+
             var storeBlob = store.GetStoreBlob();
             vm.StoreName = store.StoreName;
             vm.BrandColor = storeBlob.BrandColor;
             vm.LogoFileId = storeBlob.LogoFileId;
             vm.CssFileId = storeBlob.CssFileId;
             vm.HubPath = PaymentRequestHub.GetHubPath(Request);
-            
+
             return View(vm);
         }
 
@@ -224,14 +224,14 @@ namespace BTCPayServer.Controllers
             var prBlob = result.GetBlob();
             if (prBlob.FormResponse is not null)
             {
-                return RedirectToAction("PayPaymentRequest", new {payReqId});
+                return RedirectToAction("PayPaymentRequest", new { payReqId });
             }
             var prFormId = prBlob.FormId;
             var formData = await FormDataService.GetForm(prFormId);
             if (formData is null)
             {
-                
-                return RedirectToAction("PayPaymentRequest", new {payReqId});
+
+                return RedirectToAction("PayPaymentRequest", new { payReqId });
             }
 
             var form = Form.Parse(formData.Config);
@@ -239,11 +239,11 @@ namespace BTCPayServer.Controllers
             {
                 form.ApplyValuesFromForm(Request.Form);
                 if (FormDataService.Validate(form, ModelState))
-                {  
+                {
                     prBlob.FormResponse = FormDataService.GetValues(form);
                     result.SetBlob(prBlob);
                     await _PaymentRequestRepository.CreateOrUpdatePaymentRequest(result);
-                    return RedirectToAction("PayPaymentRequest", new {payReqId});
+                    return RedirectToAction("PayPaymentRequest", new { payReqId });
                 }
             }
             viewModel.FormName = formData.Name;
@@ -283,7 +283,7 @@ namespace BTCPayServer.Controllers
                 var formData = await FormDataService.GetForm(result.FormId);
                 if (formData is not null)
                 {
-                    return RedirectToAction("ViewPaymentRequestForm", new {payReqId});
+                    return RedirectToAction("ViewPaymentRequestForm", new { payReqId });
                 }
             }
 

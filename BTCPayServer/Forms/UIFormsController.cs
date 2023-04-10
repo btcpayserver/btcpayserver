@@ -49,7 +49,7 @@ public class UIFormsController : Controller
     [HttpGet("~/stores/{storeId}/forms/new")]
     public IActionResult Create(string storeId)
     {
-        var vm = new ModifyForm {FormConfig = new Form().ToString()};
+        var vm = new ModifyForm { FormConfig = new Form().ToString() };
         return View("Modify", vm);
     }
 
@@ -57,10 +57,11 @@ public class UIFormsController : Controller
     public async Task<IActionResult> Modify(string storeId, string id)
     {
         var form = await _formDataService.GetForm(storeId, id);
-        if (form is null) return NotFound();
+        if (form is null)
+            return NotFound();
 
         var config = Form.Parse(form.Config);
-        return View(new ModifyForm {Name = form.Name, FormConfig = config.ToString(), Public = form.Public});
+        return View(new ModifyForm { Name = form.Name, FormConfig = config.ToString(), Public = form.Public });
     }
 
     [HttpPost("~/stores/{storeId}/forms/modify/{id?}")]
@@ -76,7 +77,7 @@ public class UIFormsController : Controller
 
         if (!_formDataService.IsFormSchemaValid(modifyForm.FormConfig, out var form, out var error))
         {
-            
+
             ModelState.AddModelError(nameof(modifyForm.FormConfig),
                 $"Form config was invalid: {error})");
         }
@@ -84,7 +85,7 @@ public class UIFormsController : Controller
         {
             modifyForm.FormConfig = form.ToString();
         }
-        
+
 
         if (!ModelState.IsValid)
         {
@@ -95,7 +96,11 @@ public class UIFormsController : Controller
         {
             var formData = new FormData
             {
-                Id = id, StoreId = storeId, Name = modifyForm.Name, Config = modifyForm.FormConfig,Public = modifyForm.Public
+                Id = id,
+                StoreId = storeId,
+                Name = modifyForm.Name,
+                Config = modifyForm.FormConfig,
+                Public = modifyForm.Public
             };
             var isNew = id is null;
             await _formDataService.AddOrUpdateForm(formData);
@@ -106,7 +111,7 @@ public class UIFormsController : Controller
             });
             if (isNew)
             {
-                return RedirectToAction("Modify", new {storeId, id = formData.Id});
+                return RedirectToAction("Modify", new { storeId, id = formData.Id });
             }
         }
         catch (Exception e)
@@ -123,9 +128,10 @@ public class UIFormsController : Controller
         await _formDataService.RemoveForm(id, storeId);
         TempData.SetStatusMessageModel(new StatusMessageModel
         {
-            Severity = StatusMessageModel.StatusSeverity.Success, Message = "Form removed"
+            Severity = StatusMessageModel.StatusSeverity.Success,
+            Message = "Form removed"
         });
-        return RedirectToAction("FormsList", new {storeId});
+        return RedirectToAction("FormsList", new { storeId });
     }
 
     [AllowAnonymous]
@@ -154,7 +160,7 @@ public class UIFormsController : Controller
         form.ApplyValuesFromForm(Request.Query);
         var store = formData.Store ?? await _storeRepository.FindStore(formData.StoreId);
         var storeBlob = store?.GetStoreBlob();
-        
+
         return View("View", new FormViewModel
         {
             FormName = formData.Name,
@@ -187,7 +193,7 @@ public class UIFormsController : Controller
 
         if (!Request.HasFormContentType)
             return await GetFormView(formData);
-        
+
         var form = Form.Parse(formData.Config);
         form.ApplyValuesFromForm(Request.Form);
 
@@ -202,6 +208,6 @@ public class UIFormsController : Controller
         var request = _formDataService.GenerateInvoiceParametersFromForm(form);
         var inv = await invoiceController.CreateInvoiceCoreRaw(request, store, Request.GetAbsoluteRoot());
 
-        return RedirectToAction("Checkout", "UIInvoice", new {invoiceId = inv.Id});
+        return RedirectToAction("Checkout", "UIInvoice", new { invoiceId = inv.Id });
     }
 }

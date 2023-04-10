@@ -100,11 +100,11 @@ namespace BTCPayServer.Payments
         {
             return null;
         }
-        
+
         public virtual void PreparePaymentModelForAmountInSats(PaymentModel model, IPaymentMethod paymentMethod, DisplayFormatter displayFormatter)
         {
             var satoshiCulture = new CultureInfo(CultureInfo.InvariantCulture.Name)
-            { 
+            {
                 NumberFormat = { NumberGroupSeparator = " " }
             };
             model.CryptoCode = "sats";

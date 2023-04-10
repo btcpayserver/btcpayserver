@@ -626,7 +626,7 @@ namespace BTCPayServer.Tests
         [Fact]
         public void RoundupCurrenciesCorrectly()
         {
-            DisplayFormatter displayFormatter = new (CurrencyNameTable.Instance);
+            DisplayFormatter displayFormatter = new(CurrencyNameTable.Instance);
             foreach (var test in new[]
             {
                 (0.0005m, "0.0005 USD", "USD"), (0.001m, "0.001 USD", "USD"), (0.01m, "0.01 USD", "USD"),
@@ -766,7 +766,7 @@ namespace BTCPayServer.Tests
             var root = new Mnemonic(
                     "usage fever hen zero slide mammal silent heavy donate budget pulse say brain thank sausage brand craft about save attract muffin advance illegal cabbage")
                 .DeriveExtKey();
-            
+
             // xpub
             var tpub = "tpubD6NzVbkrYhZ4YHNiuTdTmHRmbcPRLfqgyneZFCL1mkzkUBjXriQShxTh9HL34FK2mhieasJVk9EzJrUfkFqRNQBjiXgx3n5BhPkxKBoFmaS";
             Assert.True(DerivationSchemeSettings.TryParseFromWalletFile(tpub, testnet, out var settings, out var error));

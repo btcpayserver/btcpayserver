@@ -16,8 +16,8 @@ public static class FormDataExtensions
         serviceCollection.AddSingleton<IFormComponentProvider, HtmlSelectFormProvider>();
         serviceCollection.AddSingleton<IFormComponentProvider, FieldValueMirror>();
     }
-    
-    public static JObject Deserialize(this FormData form) 
+
+    public static JObject Deserialize(this FormData form)
     {
         return JsonConvert.DeserializeObject<JObject>(form.Config);
     }

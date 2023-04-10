@@ -120,7 +120,7 @@ public class FakeCustodian : ICustodian, ICanDeposit, ICanWithdraw, ICanTrade
         if (ValidWithdrawalPaymentMethod.Equals(paymentMethod))
         {
             LedgerEntryData ledgerEntryWithdrawal = new(ValidAsset, -amount, LedgerEntryData.LedgerEntryType.Withdrawal);
-            LedgerEntryData ledgerEntryFee = new(ValidAsset, - _btcWithdrawalFee, LedgerEntryData.LedgerEntryType.Fee);
+            LedgerEntryData ledgerEntryFee = new(ValidAsset, -_btcWithdrawalFee, LedgerEntryData.LedgerEntryType.Fee);
             List<LedgerEntryData> ledgerEntries = new();
             ledgerEntries.Add(ledgerEntryWithdrawal);
             ledgerEntries.Add(ledgerEntryFee);

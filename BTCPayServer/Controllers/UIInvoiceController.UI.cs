@@ -238,7 +238,7 @@ namespace BTCPayServer.Controllers
                         Link = link,
                         Id = txId,
                         Destination = paymentData.GetDestination(),
-                        PaymentProof = GetPaymentProof(paymentData),
+                        PaymentProof = paymentData.GetPaymentProof(),
                         PaymentType = paymentData.GetPaymentType()
                     };
                 })
@@ -250,16 +250,6 @@ namespace BTCPayServer.Controllers
             vm.AdditionalData = PosDataParser.ParsePosData(receiptData);
 
             return View(vm);
-        }
-
-        private string? GetPaymentProof(CryptoPaymentData paymentData)
-        {
-            return paymentData switch
-            {
-                BitcoinLikePaymentData b => b.Outpoint.ToString(),
-                LightningLikePaymentData l => l.Preimage?.ToString(),
-                _ => null
-            };
         }
 
         private string? GetTransactionLink(PaymentMethodId paymentMethodId, string txId)

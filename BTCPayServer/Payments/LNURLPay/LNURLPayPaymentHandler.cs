@@ -99,7 +99,6 @@ namespace BTCPayServer.Payments.Lightning
             {
                 Activated = true,
                 LightningSupportedPaymentMethod = lnLightningSupportedPaymentMethod,
-                BTCPayInvoiceId = paymentMethod.ParentEntity.Id,
                 Bech32Mode = supportedPaymentMethod.UseBech32Scheme,
                 NodeInfo = nodeInfo?.ToString()
             };

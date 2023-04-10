@@ -66,7 +66,7 @@ namespace BTCPayServer.Payments
             return string.Format(CultureInfo.InvariantCulture, network.BlockExplorerLink, txId);
         }
 
-        public override string GetPaymentLink(BTCPayNetworkBase network, IPaymentMethodDetails paymentMethodDetails,
+        public override string GetPaymentLink(BTCPayNetworkBase network, InvoiceEntity invoice, IPaymentMethodDetails paymentMethodDetails,
             Money cryptoInfoDue, string serverUri)
         {
             if (!paymentMethodDetails.Activated)
@@ -100,12 +100,12 @@ namespace BTCPayServer.Payments
             return string.IsNullOrEmpty(paymentType) || base.IsPaymentType(paymentType);
         }
 
-        public override void PopulateCryptoInfo(PaymentMethod details, InvoiceCryptoInfo cryptoInfo,
+        public override void PopulateCryptoInfo(InvoiceEntity invoice, PaymentMethod details, InvoiceCryptoInfo cryptoInfo,
             string serverUrl)
         {
             cryptoInfo.PaymentUrls = new InvoiceCryptoInfo.InvoicePaymentUrls()
             {
-                BIP21 = GetPaymentLink(details.Network, details.GetPaymentMethodDetails(), cryptoInfo.Due, serverUrl),
+                BIP21 = GetPaymentLink(details.Network, invoice, details.GetPaymentMethodDetails(), cryptoInfo.Due, serverUrl),
             };
         }
     }

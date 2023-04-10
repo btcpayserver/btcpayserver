@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -64,7 +65,6 @@ namespace BTCPayServer.Tests
                 var containerIp = File.ReadAllText("/etc/hosts").Split('\n', StringSplitOptions.RemoveEmptyEntries).Last()
                     .Split('\t', StringSplitOptions.RemoveEmptyEntries)[0].Trim();
                 TestLogs.LogInformation($"Selenium: Container's IP {containerIp}");
-                ServerUri = new Uri(Server.PayTester.ServerUri.AbsoluteUri.Replace($"http://{Server.PayTester.HostName}", $"http://{containerIp}", StringComparison.OrdinalIgnoreCase), UriKind.Absolute);
             }
             else
             {
@@ -76,8 +76,8 @@ namespace BTCPayServer.Tests
                 Driver = new ChromeDriver(cds, options,
                     // A bit less than test timeout
                     TimeSpan.FromSeconds(50));
-                ServerUri = Server.PayTester.ServerUri;
             }
+            ServerUri = Server.PayTester.ServerUri;
             Driver.Manage().Window.Maximize();
 
             TestLogs.LogInformation($"Selenium: Using {Driver.GetType()}");

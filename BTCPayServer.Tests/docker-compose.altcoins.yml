@@ -38,6 +38,10 @@ services:
       - selenium
     extra_hosts:
       - "tests:127.0.0.1"
+    networks:
+      default:
+      custom:
+        ipv4_address: 172.23.0.18
     volumes:
       - "sshd_datadir:/root/.ssh"
       - "customer_lightningd_datadir:/etc/customer_lightningd_datadir"
@@ -89,6 +93,8 @@ services:
     image: selenium/standalone-chrome:101.0
     expose:
       - "4444"
+    extra_hosts:
+      - "tests:172.18.0.18"
   nbxplorer:
     image: nicolasdorier/nbxplorer:2.3.58
     restart: unless-stopped
@@ -404,3 +410,12 @@ volumes:
     torrcdir:
     tor_servicesdir:
     monero_data:
+
+networks:
+  default:
+    driver: bridge
+  custom:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.23.0.0/16

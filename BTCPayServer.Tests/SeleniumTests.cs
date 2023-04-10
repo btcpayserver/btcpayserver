@@ -2070,7 +2070,8 @@ namespace BTCPayServer.Tests
             var res = await s.Server.CustomerLightningD.Pay(lnurlResponse.Pr);
             Assert.Equal(PayResult.Error, res.Result);
 
-            await s.Server.CustomerLightningD.Pay(lnurlResponse2.Pr);
+            res = await s.Server.CustomerLightningD.Pay(lnurlResponse2.Pr);
+            Assert.Equal(PayResult.Ok, res.Result);
             await TestUtils.EventuallyAsync(async () =>
             {
                 var inv = await s.Server.PayTester.InvoiceRepository.GetInvoice(i);

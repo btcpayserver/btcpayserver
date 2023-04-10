@@ -765,7 +765,7 @@ namespace BTCPayServer
                     {
                         metadata = JObject.Parse(vm.Add.InvoiceMetadata);
                     }
-                    catch (Exception e)
+                    catch (Exception)
                     {
                         vm.AddModelError(addressVm => addressVm.Add.InvoiceMetadata, "Metadata must be a valid json object", this);
                     }

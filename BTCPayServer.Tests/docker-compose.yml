@@ -36,6 +36,10 @@ services:
       - selenium
     extra_hosts:
       - "tests:127.0.0.1"
+    networks:
+      default:
+      custom:
+        ipv4_address: 172.23.0.18
     volumes:
       - "sshd_datadir:/root/.ssh"
       - "customer_lightningd_datadir:/etc/customer_lightningd_datadir"
@@ -84,6 +88,8 @@ services:
       - merchant_lnd
   selenium:
     image: selenium/standalone-chrome:101.0
+    extra_hosts:
+      - "tests:172.18.0.18"
     expose:
       - "4444"
   nbxplorer:
@@ -109,7 +115,6 @@ services:
       NBXPLORER_NOAUTH: 1
     depends_on:
       - bitcoind
-
 
   bitcoind:
     restart: unless-stopped
@@ -323,3 +328,12 @@ volumes:
     tor_datadir:
     torrcdir:
     tor_servicesdir:
+
+networks:
+  default:
+    driver: bridge
+  custom:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.23.0.0/16

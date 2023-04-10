@@ -547,7 +547,7 @@ namespace BTCPayServer.Controllers.Greenfield
                         Amount = accounting.TotalDue.ToDecimal(MoneyUnit.BTC),
                         NetworkFee = accounting.NetworkFee.ToDecimal(MoneyUnit.BTC),
                         PaymentLink =
-                            method.GetId().PaymentType.GetPaymentLink(method.Network, details, accounting.Due,
+                            method.GetId().PaymentType.GetPaymentLink(method.Network, entity, details, accounting.Due,
                                 Request.GetAbsoluteRoot()),
                         Payments = payments.Select(paymentEntity => ToPaymentModel(entity, paymentEntity)).ToList(),
                         AdditionalData = details.GetAdditionalData()

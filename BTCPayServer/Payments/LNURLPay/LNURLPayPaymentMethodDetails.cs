@@ -14,8 +14,6 @@ namespace BTCPayServer.Payments
 
         [JsonConverter(typeof(LightMoneyJsonConverter))]
         public LightMoney GeneratedBoltAmount { get; set; }
-
-        public string BTCPayInvoiceId { get; set; }
         public bool Bech32Mode { get; set; }
 
         public string ProvidedComment { get; set; }

@@ -271,8 +271,7 @@ namespace BTCPayServer.Payments.Lightning
                                 NodeInfo = lnurlPayPaymentMethodDetails.NodeInfo,
                                 GeneratedBoltAmount = null,
                                 BOLT11 = null,
-                                LightningSupportedPaymentMethod = lnurlPayPaymentMethodDetails.LightningSupportedPaymentMethod,
-                                BTCPayInvoiceId = lnurlPayPaymentMethodDetails.BTCPayInvoiceId
+                                LightningSupportedPaymentMethod = lnurlPayPaymentMethodDetails.LightningSupportedPaymentMethod
                             };
                             await _InvoiceRepository.NewPaymentDetails(invoice.Id, lnurlPayPaymentMethodDetails,
                                 paymentMethod.Network);

@@ -185,6 +185,19 @@ namespace BTCPayServer.Tests
                     var english = englishTranslations.Words[translation.Key];
                     if (translation.Value != null)
                         continue; // Already translated
+
+                    //TODO: A better way to avoid rate limits is to use this format:
+                    //I am translating a checkout crypto payment page, and I want you to translate it from English (en-US) to French (fr-FR).
+                    //##
+                    //English: This invoice will expire in
+                    //French:
+                    //##
+                    //English: Scan the QR code, or tap to copy the address.
+                    //French:
+                    //##
+                    //English: Your payment has been received and is now processing.
+                    //French:
+
                     if (!askedPrompt)
                     {
                         driver.FindElement(By.XPath("//a[contains(text(), \"New chat\")]")).Click();

@@ -17,6 +17,7 @@ using BTCPayServer.Data.Payouts.LightningLike;
 using BTCPayServer.Events;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Lightning;
+using BTCPayServer.Logging;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Plugins.Crowdfund;
@@ -677,15 +678,13 @@ namespace BTCPayServer
                     paymentMethodDetails.InvoiceId = invoice.Id;
                     paymentMethodDetails.GeneratedBoltAmount = amt;
                     updatePaymentMethod = true;
-
-                    _eventAggregator.Publish(new InvoiceNewPaymentDetailsEvent(invoiceId,
-                        paymentMethodDetails, pmi));
                 }
 
                 if (updatePaymentMethod)
                 {
                     lightningPaymentMethod.SetPaymentMethodDetails(paymentMethodDetails);
                     await _invoiceRepository.UpdateInvoicePaymentMethod(invoiceId, lightningPaymentMethod);
+                    _eventAggregator.Publish(new InvoiceNewPaymentDetailsEvent(invoiceId, paymentMethodDetails, pmi));
                 }
 
                 return Ok(new LNURLPayRequest.LNURLPayRequestCallbackResponse

@@ -64,7 +64,7 @@ namespace BTCPayServer.Tests
                 var containerIp = File.ReadAllText("/etc/hosts").Split('\n', StringSplitOptions.RemoveEmptyEntries).Last()
                     .Split('\t', StringSplitOptions.RemoveEmptyEntries)[0].Trim();
                 TestLogs.LogInformation($"Selenium: Container's IP {containerIp}");
-                ServerUri = new Uri(Server.PayTester.ServerUri.AbsoluteUri.Replace($"http://{Server.PayTester.HostName}", $"http://{containerIp}", StringComparison.OrdinalIgnoreCase), UriKind.Absolute);
+                ServerUri = Server.PayTester.ServerUri;
             }
             else
             {

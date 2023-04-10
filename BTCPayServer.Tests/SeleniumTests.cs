@@ -2306,7 +2306,6 @@ namespace BTCPayServer.Tests
             var invoices = await repo.GetInvoices(new InvoiceQuery() { StoreId = new[] { s.StoreId } });
             Assert.Equal(2, invoices.Length);
             var emailSuffix = $"@{s.Server.PayTester.HostName}:{s.Server.PayTester.Port}";
-
             foreach (var i in invoices)
             {
                 var lightningPaymentMethod = i.GetPaymentMethod(new PaymentMethodId("BTC", PaymentTypes.LNURLPay));
@@ -2323,6 +2322,8 @@ namespace BTCPayServer.Tests
             }
 
             var lnUsername = lnaddress1.Split('@')[0];
+
+
             LNURLPayRequest req;
             using (var resp = await s.Server.PayTester.HttpClient.GetAsync($"/.well-known/lnurlp/{lnUsername}"))
             {

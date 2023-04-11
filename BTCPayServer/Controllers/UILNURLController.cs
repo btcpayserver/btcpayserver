@@ -568,8 +568,8 @@ namespace BTCPayServer
 
                 var lightningPaymentMethod = i.GetPaymentMethod(pmi);
                 var paymentMethodDetails =
-                    lightningPaymentMethod.GetPaymentMethodDetails() as LNURLPayPaymentMethodDetails;
-                if (paymentMethodDetails.LightningSupportedPaymentMethod is null)
+                    lightningPaymentMethod?.GetPaymentMethodDetails() as LNURLPayPaymentMethodDetails;
+                if (paymentMethodDetails?.LightningSupportedPaymentMethod is null)
                     return NotFound();
 
                 LNURLPayRequest lnurlPayRequest;

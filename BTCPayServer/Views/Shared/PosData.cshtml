@@ -7,7 +7,8 @@
             (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
     }
 }
-
+@if (Model.Items.Count > 0)
+{
 <table class="table my-0" v-pre>
     @foreach (var (key, value) in Model.Items)
     {
@@ -46,7 +47,7 @@
                         }
 					</td>
 				}
-				else
+				else if (subItems.Count > 0)
 				{
 					<td colspan="2" >
 						@{
@@ -61,4 +62,4 @@
         </tr>
     }
 </table>
-
+}

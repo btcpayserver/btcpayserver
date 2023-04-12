@@ -467,13 +467,13 @@ namespace BTCPayServer
             lnurlRequest ??= new LNURLPayRequest();
             lnUrlMetadata ??= new Dictionary<string, string>();
 
+            var pm = i.GetPaymentMethod(pmi);
+            var paymentMethodDetails = (LNURLPayPaymentMethodDetails)pm.GetPaymentMethodDetails();
+            bool updatePaymentMethodDetails = false;
             if (lnUrlMetadata?.TryGetValue("text/identifier", out var lnAddress) is true && lnAddress is not null)
             {
-                var pm = i.GetPaymentMethod(pmi);
-                var paymentMethodDetails = (LNURLPayPaymentMethodDetails)pm.GetPaymentMethodDetails();
                 paymentMethodDetails.ConsumedLightningAddress = lnAddress;
-                pm.SetPaymentMethodDetails(paymentMethodDetails);
-                await _invoiceRepository.UpdateInvoicePaymentMethod(i.Id, pm);
+                updatePaymentMethodDetails = true;
             }
 
             if (!lnUrlMetadata.ContainsKey("text/plain"))
@@ -507,15 +507,16 @@ namespace BTCPayServer
                 lnurlRequest.MaxSendable = LightMoney.FromUnit(6.12m, LightMoneyUnit.BTC);
 
             lnurlRequest = await _pluginHookService.ApplyFilter("modify-lnurlp-request", lnurlRequest) as LNURLPayRequest;
-
-            i.Metadata ??= new InvoiceMetadata();
-            var metadata = i.Metadata.ToJObject();
-            if (metadata.Property("payRequest") is null)
+            if (paymentMethodDetails.PayRequest is null)
             {
-                metadata.Add("payRequest", JToken.FromObject(lnurlRequest));
-                await _invoiceRepository.UpdateInvoiceMetadata(i.Id, i.StoreId, metadata);
+                paymentMethodDetails.PayRequest = lnurlRequest;
+                updatePaymentMethodDetails = true;
             }
-
+            if (updatePaymentMethodDetails)
+            {
+                pm.SetPaymentMethodDetails(paymentMethodDetails);
+                await _invoiceRepository.UpdateInvoicePaymentMethod(i.Id, pm);
+            }
             return lnurlRequest;
         }
 
@@ -572,13 +573,9 @@ namespace BTCPayServer
                 if (paymentMethodDetails?.LightningSupportedPaymentMethod is null)
                     return NotFound();
 
-                LNURLPayRequest lnurlPayRequest;
+                LNURLPayRequest lnurlPayRequest = paymentMethodDetails.PayRequest;
                 var blob = store.GetStoreBlob();
-                if (i.Metadata.AdditionalData.TryGetValue("payRequest", out var t) && t is JObject jo)
-                {
-                    lnurlPayRequest = jo.ToObject<LNURLPayRequest>();
-                }
-                else
+                if (paymentMethodDetails.PayRequest is null)
                 {
                     lnurlPayRequest = await CreateLNUrlRequestFromInvoice(cryptoCode, i, store, blob, allowOverpay: false);
                     if (lnurlPayRequest is null)

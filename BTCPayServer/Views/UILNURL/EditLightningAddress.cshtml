@@ -90,6 +90,9 @@
                 <div class="col-12 col-sm-auto">
                     <div class="form-group" title="Metadata (in JSON) to add to the invoice when created through this lightning address.">
                         <label asp-for="Add.InvoiceMetadata" class="form-label"></label>
+						<a href="https://docs.btcpayserver.org/Development/InvoiceMetadata/" target="_blank" rel="noreferrer noopener">
+							<vc:icon symbol="info" />
+						</a>
                         <textarea asp-for="Add.InvoiceMetadata" class="form-control"  ></textarea>
                         <span asp-validation-for="Add.InvoiceMetadata" class="text-danger"></span>
                     </div>

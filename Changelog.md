@@ -55,6 +55,7 @@ We introduce another flag, `--deprecated`, which allows you to start with SQLite
 * Store branding: Improve complementing text and accent colors (#4746) @dennisreimann
 * UI: Improve pagination (#4828) @benalleng @dennisreimann
 * Checkout V2: Remove `Pay by LNURL Withdraw` button if NFC isn't supported by the browser (#4822) @dennisreimann
+* Greenfield: Improve documentation of invoice's metadata (#4869) @NicolasDorier
 
 ## 1.8.4
 

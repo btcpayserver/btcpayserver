@@ -262,7 +262,12 @@
 				 Model.TypedMetadata.TaxIncluded is not null)
 			{
                 <div>
-					<h3 class="mb-3">Product Information</h3>
+					<h3 class="mb-3">
+						<span>Product Information</span>
+						<a href="https://docs.btcpayserver.org/Development/InvoiceMetadata/" target="_blank" rel="noreferrer noopener">
+							<vc:icon symbol="info" />
+						</a>
+					</h3>
 					<table class="table mb-0">
 						@if (!string.IsNullOrEmpty(Model.TypedMetadata.ItemCode))
 						{
@@ -299,7 +304,11 @@
                  Model.TypedMetadata.BuyerZip is not null)
             {
                 <div>
-                    <h3 class="mb-3">Buyer Information</h3>
+                    <h3 class="mb-3"><span>Buyer Information</span>
+						<a href="https://docs.btcpayserver.org/Development/InvoiceMetadata/" target="_blank" rel="noreferrer noopener">
+							<vc:icon symbol="info" />
+						</a>
+					</h3>
                     <table class="table mb-0">
                         @if (Model.TypedMetadata.BuyerName is not null)
                         {
@@ -372,7 +381,12 @@
             @if (Model.AdditionalData.Any())
             {
                 <div>
-                    <h3 class="mb-3">Additional Information</h3>
+					<h3 class="mb-3">
+						<span>Additional Information</span>
+						<a href="https://docs.btcpayserver.org/Development/InvoiceMetadata/" target="_blank" rel="noreferrer noopener">
+							<vc:icon symbol="info" />
+						</a>
+					</h3>
                     <partial name="PosData" model="(Model.AdditionalData, 1)" />
                 </div>
             }

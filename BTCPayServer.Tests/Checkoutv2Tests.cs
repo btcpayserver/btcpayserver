@@ -188,8 +188,10 @@ namespace BTCPayServer.Tests
             });
 
             s.Driver.Navigate().Refresh();
+
             // Pay full amount
             s.PayInvoice();
+
             // Processing
             TestUtils.Eventually(() =>
             {
@@ -197,8 +199,9 @@ namespace BTCPayServer.Tests
                 Assert.True(processingSection.Displayed);
                 Assert.Contains("Payment Received", processingSection.Text);
                 Assert.Contains("Your payment has been received and is now processing", processingSection.Text);
-                Assert.True(s.Driver.ElementDoesNotExist(By.Id("confetti")));
             });
+            s.Driver.FindElement(By.Id("confetti"));
+
             // Mine
             s.MineBlockOnInvoiceCheckout();
             TestUtils.Eventually(() =>

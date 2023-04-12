@@ -112,6 +112,7 @@
                 <div v-if="isProcessing" id="processing" key="processing">
                     <div class="top">
                         <span class="icn">
+                            <div id="confetti" v-if="srvModel.celebratePayment" v-on:click="celebratePayment(5000)"></div>
                             <vc:icon symbol="payment-sent" />
                         </span>
                         <h4 v-t="'payment_received'"></h4>

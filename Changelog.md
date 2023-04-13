@@ -40,6 +40,7 @@ We introduce another flag, `--deprecated`, which allows you to start with SQLite
 * Point of Sale: Fix escaped HTML entities in item title (#4798) @dennisreimann
 * Fix: Labels added by payouts to transactions shouldn't show HTML markups (#4790) @dennisreimann
 * If store user is Guest, "issue refund" shouldn't be an option (#4595 #3512) @Kukks
+* Fix wrong data mapping to store data instead of store user data (#4874) @ndeet
 
 ### Improvements
 

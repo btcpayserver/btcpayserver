@@ -25,7 +25,6 @@ using BTCPayServer.Logging;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Payments.Lightning;
-using BTCPayServer.Plugins;
 using BTCPayServer.Plugins.Bitcoin;
 using BTCPayServer.Rating;
 using BTCPayServer.Services;

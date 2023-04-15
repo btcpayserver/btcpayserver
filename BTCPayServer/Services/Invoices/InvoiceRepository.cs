@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client.Models;
@@ -89,7 +88,7 @@ namespace BTCPayServer.Services.Invoices
                 .ToListAsync()).Select(ToEntity);
         }
 
-        public async Task<InvoiceEntity[]> GetPendingInvoices(bool includeAddressData = false, bool skipNoPaymentInvoices = false, CancellationToken cancellationToken = default)
+        public async Task<InvoiceEntity[]> GetPendingInvoices(bool includeAddressData = false, bool skipNoPaymentInvoices = false)
         {
             using var ctx = _applicationDbContextFactory.CreateContext();
             var q = ctx.PendingInvoices.AsQueryable();
@@ -100,7 +99,7 @@ namespace BTCPayServer.Services.Invoices
                     .ThenInclude(o => o.AddressInvoices);
             if (skipNoPaymentInvoices)
                 q = q.Where(i => i.InvoiceData.Payments.Any());
-            return (await q.Select(o => o.InvoiceData).ToArrayAsync(cancellationToken)).Select(ToEntity).ToArray();
+            return (await q.Select(o => o.InvoiceData).ToArrayAsync()).Select(ToEntity).ToArray();
         }
         public async Task<string[]> GetPendingInvoiceIds()
         {

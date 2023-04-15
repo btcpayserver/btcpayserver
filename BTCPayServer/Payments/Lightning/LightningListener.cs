@@ -2,11 +2,9 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using Amazon.Runtime.Internal;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
@@ -64,121 +62,107 @@ namespace BTCPayServer.Payments.Lightning
             Options = options;
         }
 
-        bool needCheckOfflinePayments = true;
         async Task CheckingInvoice(CancellationToken cancellation)
         {
-            retry:
-            try
+            while (await _CheckInvoices.Reader.WaitToReadAsync(cancellation) &&
+                        _CheckInvoices.Reader.TryRead(out var invoiceId))
             {
-                Logs.PayServer.LogInformation("Checking if any payment arrived on lightning while the server was offline...");
-                foreach (var invoice in await _InvoiceRepository.GetPendingInvoices(cancellationToken: cancellation))
+                try
                 {
-                    if (GetListenedInvoices(invoice).Count > 0)
-                    {
-                        _CheckInvoices.Writer.TryWrite(invoice.Id);
-                        _memoryCache.Set(GetCacheKey(invoice.Id), invoice, GetExpiration(invoice));
-                    }
-                }
-                needCheckOfflinePayments = false;
-                Logs.PayServer.LogInformation("Processing lightning payments...");
-                while (await _CheckInvoices.Reader.WaitToReadAsync(cancellation) &&
-                            _CheckInvoices.Reader.TryRead(out var invoiceId))
-                {
-                    var invoice = await GetInvoice(invoiceId);
-                    foreach (var listenedInvoice in GetListenedInvoices(invoice))
+                    foreach (var listenedInvoice in (await GetListenedInvoices(invoiceId)).Where(i => !i.IsExpired()))
                     {
                         var instanceListenerKey = (listenedInvoice.Network.CryptoCode, GetLightningUrl(listenedInvoice.SupportedPaymentMethod).ToString());
-                        lock (_InstanceListeners)
+                        if (!_InstanceListeners.TryGetValue(instanceListenerKey, out var instanceListener) ||
+                            !instanceListener.IsListening)
                         {
-                            if (!_InstanceListeners.TryGetValue(instanceListenerKey, out var instanceListener))
+                            instanceListener ??= new LightningInstanceListener(_InvoiceRepository, _Aggregator, lightningClientFactory, listenedInvoice.Network, GetLightningUrl(listenedInvoice.SupportedPaymentMethod), _paymentService, Logs);
+                            var status = await instanceListener.PollPayment(listenedInvoice, cancellation);
+                            if (status is null ||
+                                status is LightningInvoiceStatus.Paid ||
+                                status is LightningInvoiceStatus.Expired)
                             {
-                                instanceListener ??= new LightningInstanceListener(_InvoiceRepository, _Aggregator, lightningClientFactory, listenedInvoice.Network, GetLightningUrl(listenedInvoice.SupportedPaymentMethod), _paymentService, Logs);
-                                _InstanceListeners.TryAdd(instanceListenerKey, instanceListener);
+                                continue;
                             }
                             instanceListener.AddListenedInvoice(listenedInvoice);
-                            _ = instanceListener.PollPayment(listenedInvoice, cancellation);
+                            instanceListener.EnsureListening(cancellation);
+                            _InstanceListeners.TryAdd(instanceListenerKey, instanceListener);
+                        }
+                        else
+                        {
+                            instanceListener.AddListenedInvoice(listenedInvoice);
                         }
                     }
+                    foreach (var kv in _InstanceListeners)
+                    {
+                        kv.Value.RemoveExpiredInvoices();
+                    }
+                    foreach (var k in _InstanceListeners
+                                                    .Where(kv => !kv.Value.IsListening)
+                                                    .Select(kv => kv.Key).ToArray())
+                    {
+                        _InstanceListeners.Remove(k);
+                    }
+                }
+                catch when (!_Cts.Token.IsCancellationRequested)
+                {
 
-                    if (_CheckInvoices.Reader.Count is 0)
-                        this.CheckConnections();
                 }
             }
-            catch when (cancellation.IsCancellationRequested)
-            {
-            }
-            catch (Exception ex)
-            {
-                await Task.Delay(1000, cancellation);
-                Logs.PayServer.LogWarning(ex, "Unhandled error in the LightningListener");
-                goto retry;
-            }
         }
-
 
         private string GetCacheKey(string invoiceId)
         {
             return $"{nameof(GetListenedInvoices)}-{invoiceId}";
         }
-        private Task<InvoiceEntity> GetInvoice(string invoiceId)
+        private Task<List<ListenedInvoice>> GetListenedInvoices(string invoiceId)
         {
             return _memoryCache.GetOrCreateAsync(GetCacheKey(invoiceId), async (cacheEntry) =>
-            {
-                var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
-                cacheEntry.AbsoluteExpiration = GetExpiration(invoice);
-                return invoice;
-            });
-        }
+           {
+               var listenedInvoices = new List<ListenedInvoice>();
+               var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
+               foreach (var paymentMethod in invoice.GetPaymentMethods()
+                                                             .Where(c => new[] { PaymentTypes.LightningLike, LNURLPayPaymentType.Instance }.Contains(c.GetId().PaymentType)))
+               {
+                   LightningLikePaymentMethodDetails lightningMethod;
+                   LightningSupportedPaymentMethod lightningSupportedMethod;
+                   switch (paymentMethod.GetPaymentMethodDetails())
+                   {
+                       case LNURLPayPaymentMethodDetails lnurlPayPaymentMethodDetails:
 
-        private static DateTimeOffset GetExpiration(InvoiceEntity invoice)
-        {
-            var expiredIn = DateTimeOffset.UtcNow - invoice.ExpirationTime;
-            return DateTimeOffset.UtcNow + (expiredIn >= TimeSpan.FromMinutes(5.0) ? expiredIn : TimeSpan.FromMinutes(5.0));
-        }
+                           lightningMethod = lnurlPayPaymentMethodDetails;
 
-        private List<ListenedInvoice> GetListenedInvoices(InvoiceEntity invoice)
-        {
-            var listenedInvoices = new List<ListenedInvoice>();
-            foreach (var paymentMethod in invoice.GetPaymentMethods()
-                                                          .Where(c => new[] { PaymentTypes.LightningLike, LNURLPayPaymentType.Instance }.Contains(c.GetId().PaymentType)))
-            {
-                LightningLikePaymentMethodDetails lightningMethod;
-                LightningSupportedPaymentMethod lightningSupportedMethod;
-                switch (paymentMethod.GetPaymentMethodDetails())
-                {
-                    case LNURLPayPaymentMethodDetails lnurlPayPaymentMethodDetails:
+                           lightningSupportedMethod = lnurlPayPaymentMethodDetails.LightningSupportedPaymentMethod;
 
-                        lightningMethod = lnurlPayPaymentMethodDetails;
+                           break;
+                       case LightningLikePaymentMethodDetails { Activated: true } lightningLikePaymentMethodDetails:
+                           lightningMethod = lightningLikePaymentMethodDetails;
+                           lightningSupportedMethod = invoice.GetSupportedPaymentMethod<LightningSupportedPaymentMethod>()
+                               .FirstOrDefault(c => c.CryptoCode == paymentMethod.GetId().CryptoCode);
 
-                        lightningSupportedMethod = lnurlPayPaymentMethodDetails.LightningSupportedPaymentMethod;
+                           break;
+                       default:
+                           continue;
+                   }
 
-                        break;
-                    case LightningLikePaymentMethodDetails { Activated: true } lightningLikePaymentMethodDetails:
-                        lightningMethod = lightningLikePaymentMethodDetails;
-                        lightningSupportedMethod = invoice.GetSupportedPaymentMethod<LightningSupportedPaymentMethod>()
-                            .FirstOrDefault(c => c.CryptoCode == paymentMethod.GetId().CryptoCode);
+                   if (lightningSupportedMethod == null || string.IsNullOrEmpty(lightningMethod.InvoiceId))
+                       continue;
+                   var network = _NetworkProvider.GetNetwork<BTCPayNetwork>(paymentMethod.GetId().CryptoCode);
 
-                        break;
-                    default:
-                        continue;
-                }
-
-                if (lightningSupportedMethod == null || string.IsNullOrEmpty(lightningMethod.InvoiceId))
-                    continue;
-                var network = _NetworkProvider.GetNetwork<BTCPayNetwork>(paymentMethod.GetId().CryptoCode);
-
-                listenedInvoices.Add(new ListenedInvoice()
-                {
-                    Expiration = invoice.ExpirationTime,
-                    Uri = GetLightningUrl(lightningSupportedMethod).BaseUri.AbsoluteUri,
-                    PaymentMethodDetails = lightningMethod,
-                    SupportedPaymentMethod = lightningSupportedMethod,
-                    PaymentMethod = paymentMethod,
-                    Network = network,
-                    InvoiceId = invoice.Id
-                });
-            }
-            return listenedInvoices;
+                   listenedInvoices.Add(new ListenedInvoice()
+                   {
+                       Expiration = invoice.ExpirationTime,
+                       Uri = GetLightningUrl(lightningSupportedMethod).BaseUri.AbsoluteUri,
+                       PaymentMethodDetails = lightningMethod,
+                       SupportedPaymentMethod = lightningSupportedMethod,
+                       PaymentMethod = paymentMethod,
+                       Network = network,
+                       InvoiceId = invoice.Id
+                   });
+               }
+               var expiredIn = DateTimeOffset.UtcNow - invoice.ExpirationTime;
+               cacheEntry.AbsoluteExpiration = DateTimeOffset.UtcNow + (expiredIn >= TimeSpan.FromMinutes(5.0) ? expiredIn : TimeSpan.FromMinutes(5.0));
+               return listenedInvoices;
+           });
         }
 
         readonly ConcurrentDictionary<string, LightningInstanceListener> _ListeningInstances = new ConcurrentDictionary<string, LightningInstanceListener>();
@@ -228,32 +212,19 @@ namespace BTCPayServer.Payments.Lightning
                 }
             }));
             _CheckingInvoice = CheckingInvoice(_Cts.Token);
-            _ListenPoller = new Timer(s =>
+            _ListenPoller = new Timer(async s =>
             {
-                if (needCheckOfflinePayments)
-                    return;
                 try
                 {
-                    CheckConnections();
+                    var invoiceIds = await _InvoiceRepository.GetPendingInvoiceIds();
+                    foreach (var invoiceId in invoiceIds)
+                        _CheckInvoices.Writer.TryWrite(invoiceId);
                 }
-                catch { }
+                catch { } // Never throw an unhandled exception on async void
 
             }, null, 0, (int)PollInterval.TotalMilliseconds);
             leases.Add(_ListenPoller);
             return Task.CompletedTask;
-        }
-
-        private void CheckConnections()
-        {
-            lock (_InstanceListeners)
-            {
-                foreach ((var key, var instance) in _InstanceListeners.ToArray())
-                {
-                    instance.RemoveExpiredInvoices();
-                    if (!instance.Empty)
-                        instance.EnsureListening(_Cts.Token);
-                }
-            }
         }
 
         private async Task CreateNewLNInvoiceForBTCPayInvoice(InvoiceEntity invoice)
@@ -336,12 +307,7 @@ namespace BTCPayServer.Payments.Lightning
 
                         var instanceListenerKey = (paymentMethod.Network.CryptoCode,
                             GetLightningUrl(supportedMethod).ToString());
-                        LightningInstanceListener instanceListener;
-                        lock (_InstanceListeners)
-                        {
-                            _InstanceListeners.TryGetValue(instanceListenerKey, out instanceListener);
-                        }
-                        if (instanceListener is not null)
+                        if (_InstanceListeners.TryGetValue(instanceListenerKey, out var instanceListener))
                         {
                             await _InvoiceRepository.NewPaymentDetails(invoice.Id, newPaymentMethodDetails,
                                 paymentMethod.Network);
@@ -400,11 +366,11 @@ namespace BTCPayServer.Payments.Lightning
                 }
             }
         }
-        private Timer _ListenPoller;
 
         public IOptions<LightningNetworkOptions> Options { get; }
 
         readonly CancellationTokenSource _Cts = new CancellationTokenSource();
+        private Timer _ListenPoller;
 
         public async Task StopAsync(CancellationToken cancellationToken)
         {
@@ -477,15 +443,12 @@ namespace BTCPayServer.Payments.Lightning
             return lightningInvoice?.Status;
         }
 
-        public bool Empty => _ListenedInvoices.IsEmpty;
         public bool IsListening => Listening?.Status is TaskStatus.Running || Listening?.Status is TaskStatus.WaitingForActivation;
         public Task Listening { get; set; }
         public void EnsureListening(CancellationToken cancellation)
         {
             if (!IsListening)
             {
-                if (StopListeningCancellationTokenSource != null)
-                    StopListeningCancellationTokenSource.Dispose();
                 StopListeningCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellation);
                 Listening = Listen(StopListeningCancellationTokenSource.Token);
             }

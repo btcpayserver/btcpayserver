@@ -66,7 +66,7 @@ namespace BTCPayServer.Payments.Lightning
 
         public string GetPaymentProof()
         {
-            return Preimage.ToString();
+            return Preimage?.ToString();
         }
     }
 }

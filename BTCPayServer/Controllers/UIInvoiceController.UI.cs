@@ -754,7 +754,7 @@ namespace BTCPayServer.Controllers
             {
                 case "auto":
                 case null when storeBlob.AutoDetectLanguage:
-                    lang = _languageService.AutoDetectLanguageUsingHeader(HttpContext.Request.Headers, null).Code;
+                    lang = _languageService.AutoDetectLanguageUsingHeader(HttpContext.Request.Headers, null)?.Code;
                     break;
                 case { } langs when !string.IsNullOrEmpty(langs):
                     {

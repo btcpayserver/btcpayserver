@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.9.1
+
+### Bug fixes
+
+* Fix crash if auto detect language on checkout page, and the language couldn't be detected (Fix #4881) @NicolasDorier
+* Error 500 when viewing Receipt Page (Fix #4884) @dennisreimann
+* When updating to version v1.9.0 the mapping to the APP stops working (Fix #4882) @NicolasDorier
+
 ## 1.9.0
 
 ### Breaking change

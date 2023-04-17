@@ -31,10 +31,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BTCPayServer.Client", "BTCP
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BTCPayServer.Abstractions", "BTCPayServer.Abstractions\BTCPayServer.Abstractions.csproj", "{A0D50BB6-FE2C-4671-8693-F7582B66178F}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BTCPayServer.Plugins.Test", "Plugins\BTCPayServer.Plugins.Test\BTCPayServer.Plugins.Test.csproj", "{545AFC8E-7BC2-43D9-84CA-F9468F4FF295}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Plugins", "Plugins", "{1FC7F660-ADF1-4D55-B61A-85C6AB083C33}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BTCPayServer.PluginPacker", "BTCPayServer.PluginPacker\BTCPayServer.PluginPacker.csproj", "{7DC94B25-1CFC-4170-AA41-7BA983E4C0B8}"
 EndProject
 Global
@@ -221,30 +217,6 @@ Global
 		{A0D50BB6-FE2C-4671-8693-F7582B66178F}.Release|x64.Build.0 = Release|Any CPU
 		{A0D50BB6-FE2C-4671-8693-F7582B66178F}.Release|x86.ActiveCfg = Release|Any CPU
 		{A0D50BB6-FE2C-4671-8693-F7582B66178F}.Release|x86.Build.0 = Release|Any CPU
-		{545AFC8E-7BC2-43D9-84CA-F9468F4FF295}.Altcoins-Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{545AFC8E-7BC2-43D9-84CA-F9468F4FF295}.Altcoins-Debug|Any CPU.Build.0 = Debug|Any CPU
-		{545AFC8E-7BC2-43D9-84CA-F9468F4FF295}.Altcoins-Debug|x64.ActiveCfg = Debug|Any CPU
-		{545AFC8E-7BC2-43D9-84CA-F9468F4FF295}.Altcoins-Debug|x64.Build.0 = Debug|Any CPU
-		{545AFC8E-7BC2-43D9-84CA-F9468F4FF295}.Altcoins-Debug|x86.ActiveCfg = Debug|Any CPU
-		{545AFC8E-7BC2-43D9-84CA-F9468F4FF295}.Altcoins-Debug|x86.Build.0 = Debug|Any CPU
-		{545AFC8E-7BC2-43D9-84CA-F9468F4FF295}.Altcoins-Release|Any CPU.ActiveCfg = Debug|Any CPU
-		{545AFC8E-7BC2-43D9-84CA-F9468F4FF295}.Altcoins-Release|Any CPU.Build.0 = Debug|Any CPU
-		{545AFC8E-7BC2-43D9-84CA-F9468F4FF295}.Altcoins-Release|x64.ActiveCfg = Debug|Any CPU
-		{545AFC8E-7BC2-43D9-84CA-F9468F4FF295}.Altcoins-Release|x64.Build.0 = Debug|Any CPU
-		{545AFC8E-7BC2-43D9-84CA-F9468F4FF295}.Altcoins-Release|x86.ActiveCfg = Debug|Any CPU
-		{545AFC8E-7BC2-43D9-84CA-F9468F4FF295}.Altcoins-Release|x86.Build.0 = Debug|Any CPU
-		{545AFC8E-7BC2-43D9-84CA-F9468F4FF295}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{545AFC8E-7BC2-43D9-84CA-F9468F4FF295}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{545AFC8E-7BC2-43D9-84CA-F9468F4FF295}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{545AFC8E-7BC2-43D9-84CA-F9468F4FF295}.Debug|x64.Build.0 = Debug|Any CPU
-		{545AFC8E-7BC2-43D9-84CA-F9468F4FF295}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{545AFC8E-7BC2-43D9-84CA-F9468F4FF295}.Debug|x86.Build.0 = Debug|Any CPU
-		{545AFC8E-7BC2-43D9-84CA-F9468F4FF295}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{545AFC8E-7BC2-43D9-84CA-F9468F4FF295}.Release|Any CPU.Build.0 = Release|Any CPU
-		{545AFC8E-7BC2-43D9-84CA-F9468F4FF295}.Release|x64.ActiveCfg = Release|Any CPU
-		{545AFC8E-7BC2-43D9-84CA-F9468F4FF295}.Release|x64.Build.0 = Release|Any CPU
-		{545AFC8E-7BC2-43D9-84CA-F9468F4FF295}.Release|x86.ActiveCfg = Release|Any CPU
-		{545AFC8E-7BC2-43D9-84CA-F9468F4FF295}.Release|x86.Build.0 = Release|Any CPU
 		{7DC94B25-1CFC-4170-AA41-7BA983E4C0B8}.Altcoins-Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{7DC94B25-1CFC-4170-AA41-7BA983E4C0B8}.Altcoins-Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7DC94B25-1CFC-4170-AA41-7BA983E4C0B8}.Altcoins-Debug|x64.ActiveCfg = Debug|Any CPU
@@ -274,8 +246,6 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{545AFC8E-7BC2-43D9-84CA-F9468F4FF295} = {1FC7F660-ADF1-4D55-B61A-85C6AB083C33}
-		{7DC94B25-1CFC-4170-AA41-7BA983E4C0B8} = {1FC7F660-ADF1-4D55-B61A-85C6AB083C33}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {203A3162-BE45-4721-937D-6804E0E1AFF8}

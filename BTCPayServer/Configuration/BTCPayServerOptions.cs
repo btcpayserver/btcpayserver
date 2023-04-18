@@ -67,11 +67,21 @@ namespace BTCPayServer.Configuration
 
             if (conf.GetOrDefault<string>("POSTGRES", null) == null)
             {
-
-                if (conf.GetOrDefault<string>("SQLITEFILE", null) != null)
-                    Logs.Configuration.LogWarning("SQLITE backend support is out of support. Please migrate to Postgres by following the following instructions https://github.com/btcpayserver/btcpayserver/blob/master/docs/db-migration.md");
-                if (conf.GetOrDefault<string>("MYSQL", null) != null)
-                    Logs.Configuration.LogWarning("MYSQL backend support is out of support. Please migrate to Postgres by following the following instructions (https://github.com/btcpayserver/btcpayserver/blob/master/docs/db-migration.md)");
+                var allowDeprecated = conf.GetOrDefault<bool>("DEPRECATED", false);
+                if (allowDeprecated)
+                {
+                    if (conf.GetOrDefault<string>("SQLITEFILE", null) != null)
+                        Logs.Configuration.LogWarning("SQLITE backend support is out of support. Please migrate to Postgres by following the following instructions https://github.com/btcpayserver/btcpayserver/blob/master/docs/db-migration.md");
+                    if (conf.GetOrDefault<string>("MYSQL", null) != null)
+                        Logs.Configuration.LogWarning("MYSQL backend support is out of support. Please migrate to Postgres by following the following instructions (https://github.com/btcpayserver/btcpayserver/blob/master/docs/db-migration.md)");
+                }
+                else
+                {
+                    if (conf.GetOrDefault<string>("SQLITEFILE", null) != null)
+                        throw new ConfigException("SQLITE backend support is out of support. Please migrate to Postgres by following the following instructions (https://github.com/btcpayserver/btcpayserver/blob/master/docs/db-migration.md). If you don't want to update, you can try to start this instance by using the command line argument --deprecated");
+                    if (conf.GetOrDefault<string>("MYSQL", null) != null)
+                        throw new ConfigException("MYSQL backend support is out of support. Please migrate to Postgres by following the following instructions (https://github.com/btcpayserver/btcpayserver/blob/master/docs/db-migration.md). If you don't want to update, you can try to start this instance by using the command line argument --deprecated");
+                }
             }
             DockerDeployment = conf.GetOrDefault<bool>("dockerdeployment", true);
             TorrcFile = conf.GetOrDefault<string>("torrcfile", null);
@@ -148,9 +158,6 @@ namespace BTCPayServer.Configuration
             }
 
             DisableRegistration = conf.GetOrDefault<bool>("disable-registration", true);
-            var pluginRemote = conf.GetOrDefault<string>("plugin-remote", null);
-            if (pluginRemote != null)
-                Logs.Configuration.LogWarning("plugin-remote is an obsolete configuration setting, please remove it from configuration");
             RecommendedPlugins = conf.GetOrDefault("recommended-plugins", "").ToLowerInvariant().Split('\r', '\n', '\t', ' ').Where(s => !string.IsNullOrEmpty(s)).Distinct().ToArray();
             CheatMode = conf.GetOrDefault("cheatmode", false);
             if (CheatMode && this.NetworkType == ChainName.Mainnet)

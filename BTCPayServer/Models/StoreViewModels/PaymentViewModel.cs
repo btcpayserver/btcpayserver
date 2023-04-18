@@ -26,7 +26,7 @@ namespace BTCPayServer.Models.StoreViewModels
         public string DefaultCurrency { get; set; }
 
         [Display(Name = "Minimum acceptable expiration time for BOLT11 for refunds")]
-        [Range(1, 365 * 10)]
+        [Range(0, 365 * 10)]
         public long BOLT11Expiration { get; set; }
     }
 }

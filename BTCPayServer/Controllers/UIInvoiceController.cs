@@ -24,6 +24,7 @@ using BTCPayServer.Services.PaymentRequests;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Validation;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -45,6 +46,7 @@ namespace BTCPayServer.Controllers
         readonly StoreRepository _StoreRepository;
         readonly UserManager<ApplicationUser> _UserManager;
         private readonly CurrencyNameTable _CurrencyNameTable;
+        private readonly DisplayFormatter _displayFormatter;
         readonly EventAggregator _EventAggregator;
         readonly BTCPayNetworkProvider _NetworkProvider;
         private readonly PaymentMethodHandlerDictionary _paymentMethodHandlerDictionary;
@@ -55,12 +57,14 @@ namespace BTCPayServer.Controllers
         private readonly UIWalletsController _walletsController;
         private readonly InvoiceActivator _invoiceActivator;
         private readonly LinkGenerator _linkGenerator;
+        private readonly IAuthorizationService _authorizationService;
 
         public WebhookSender WebhookNotificationManager { get; }
 
         public UIInvoiceController(
             InvoiceRepository invoiceRepository,
             WalletRepository walletRepository,
+            DisplayFormatter displayFormatter,
             CurrencyNameTable currencyNameTable,
             UserManager<ApplicationUser> userManager,
             RateFetcher rateProvider,
@@ -76,8 +80,10 @@ namespace BTCPayServer.Controllers
             ExplorerClientProvider explorerClients,
             UIWalletsController walletsController,
             InvoiceActivator invoiceActivator,
-            LinkGenerator linkGenerator)
+            LinkGenerator linkGenerator,
+            IAuthorizationService authorizationService)
         {
+            _displayFormatter = displayFormatter;
             _CurrencyNameTable = currencyNameTable ?? throw new ArgumentNullException(nameof(currencyNameTable));
             _StoreRepository = storeRepository ?? throw new ArgumentNullException(nameof(storeRepository));
             _InvoiceRepository = invoiceRepository ?? throw new ArgumentNullException(nameof(invoiceRepository));
@@ -95,6 +101,7 @@ namespace BTCPayServer.Controllers
             _walletsController = walletsController;
             _invoiceActivator = invoiceActivator;
             _linkGenerator = linkGenerator;
+            _authorizationService = authorizationService;
         }
 
 
@@ -210,7 +217,8 @@ namespace BTCPayServer.Controllers
             return await CreateInvoiceCoreRaw(invoiceRequest, storeData, request.GetAbsoluteRoot(), additionalTags, cancellationToken);
         }
 
-        internal async Task<InvoiceEntity> CreateInvoiceCoreRaw(CreateInvoiceRequest invoice, StoreData store, string serverUrl, List<string>? additionalTags = null, CancellationToken cancellationToken = default, Action<InvoiceEntity>? entityManipulator = null)
+        [NonAction]
+        public async Task<InvoiceEntity> CreateInvoiceCoreRaw(CreateInvoiceRequest invoice, StoreData store, string serverUrl, List<string>? additionalTags = null, CancellationToken cancellationToken = default, Action<InvoiceEntity>? entityManipulator = null)
         {
             var storeBlob = store.GetStoreBlob();
             var entity = _InvoiceRepository.CreateNewInvoice();

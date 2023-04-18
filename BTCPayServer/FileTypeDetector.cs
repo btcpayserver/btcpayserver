@@ -41,13 +41,13 @@ namespace BTCPayServer
         {
             pattern = pattern.Replace(" ", "");
             int[] res = new int[pattern.Length / 2];
-            for (int i = 0; i < pattern.Length; i+=2)
+            for (int i = 0; i < pattern.Length; i += 2)
             {
                 var b = pattern[i..(i + 2)];
                 if (b == "XX")
-                    res[i/2] = -1;
+                    res[i / 2] = -1;
                 else
-                    res[i/2] = byte.Parse(b, System.Globalization.NumberStyles.HexNumber);
+                    res[i / 2] = byte.Parse(b, System.Globalization.NumberStyles.HexNumber);
             }
             return res;
         }

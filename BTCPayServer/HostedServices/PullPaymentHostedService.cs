@@ -120,6 +120,7 @@ namespace BTCPayServer.HostedServices
             o.Period = create.Period is TimeSpan period ? (long?)period.TotalSeconds : null;
             o.Id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(20));
             o.StoreId = create.StoreId;
+
             o.SetBlob(new PullPaymentBlob()
             {
                 Name = create.Name ?? string.Empty,
@@ -202,7 +203,7 @@ namespace BTCPayServer.HostedServices
             {
                 query = query.Include(data => data.StoreData);
             }
-            
+
             if (payoutQuery.IncludePullPaymentData || !payoutQuery.IncludeArchived)
             {
                 query = query.Include(data => data.PullPaymentData);
@@ -251,6 +252,7 @@ namespace BTCPayServer.HostedServices
             IEnumerable<IPayoutHandler> payoutHandlers,
             ILogger<PullPaymentHostedService> logger,
             Logs logs,
+            DisplayFormatter displayFormatter,
             CurrencyNameTable currencyNameTable) : base(logs)
         {
             _dbContextFactory = dbContextFactory;
@@ -262,6 +264,7 @@ namespace BTCPayServer.HostedServices
             _payoutHandlers = payoutHandlers;
             _logger = logger;
             _currencyNameTable = currencyNameTable;
+            _displayFormatter = displayFormatter;
         }
 
         Channel<object> _Channel;
@@ -274,6 +277,7 @@ namespace BTCPayServer.HostedServices
         private readonly IEnumerable<IPayoutHandler> _payoutHandlers;
         private readonly ILogger<PullPaymentHostedService> _logger;
         private readonly CurrencyNameTable _currencyNameTable;
+        private readonly DisplayFormatter _displayFormatter;
         private readonly CompositeDisposable _subscriptions = new CompositeDisposable();
 
         internal override Task[] InitializeTasks()
@@ -588,7 +592,7 @@ namespace BTCPayServer.HostedServices
                 await ctx.Payouts.AddAsync(payout);
                 try
                 {
-                    await payoutHandler.TrackClaim(req.ClaimRequest.PaymentMethodId, req.ClaimRequest.Destination);
+                    await payoutHandler.TrackClaim(req.ClaimRequest, payout);
                     await ctx.SaveChangesAsync();
                     if (req.ClaimRequest.PreApprove.GetValueOrDefault(ppBlob?.AutoApproveClaims is true))
                     {
@@ -754,7 +758,7 @@ namespace BTCPayServer.HostedServices
                 Completed = totalCompleted,
                 CompletedFormatted = totalCompleted.ToString("C", nfi),
                 Limit = ppBlob.Limit.RoundToSignificant(currencyData.Divisibility),
-                LimitFormatted = _currencyNameTable.DisplayFormatCurrency(ppBlob.Limit, ppBlob.Currency),
+                LimitFormatted = _displayFormatter.Currency(ppBlob.Limit, ppBlob.Currency),
                 ResetIn = period?.End is { } nr ? ZeroIfNegative(nr - now).TimeString() : null,
                 EndIn = pp.EndDate is { } end ? ZeroIfNegative(end - now).TimeString() : null,
             };

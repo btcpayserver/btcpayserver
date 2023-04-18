@@ -1,4 +1,3 @@
-using System;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
@@ -6,8 +5,6 @@ using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Models.AppViewModels;
-using BTCPayServer.Plugins.Crowdfund.Controllers;
-using BTCPayServer.Plugins.PointOfSale.Controllers;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
@@ -58,12 +55,13 @@ namespace BTCPayServer.Controllers
             if (app is null)
                 return NotFound();
 
-            return app.AppType switch
+            var res = await _appService.ViewLink(app);
+            if (res is null)
             {
-                nameof(AppType.Crowdfund) => RedirectToAction(nameof(UICrowdfundController.ViewCrowdfund), "UICrowdfund", new { appId }),
-                nameof(AppType.PointOfSale) => RedirectToAction(nameof(UIPointOfSaleController.ViewPointOfSale), "UIPointOfSale", new { appId }),
-                _ => NotFound()
-            };
+                return NotFound();
+            }
+
+            return Redirect(res);
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
@@ -113,24 +111,29 @@ namespace BTCPayServer.Controllers
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-        [HttpGet("/stores/{storeId}/apps/create")]
-        public IActionResult CreateApp(string storeId)
+        [HttpGet("/stores/{storeId}/apps/create/{appType?}")]
+        public IActionResult CreateApp(string storeId, string appType = null)
         {
-            return View(new CreateAppViewModel
+            var vm = new CreateAppViewModel(_appService)
             {
-                StoreId = GetCurrentStore().Id
-            });
+                StoreId = storeId,
+                AppType = appType,
+                SelectedAppType = appType
+            };
+            return View(vm);
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-        [HttpPost("/stores/{storeId}/apps/create")]
+        [HttpPost("/stores/{storeId}/apps/create/{appType?}")]
         public async Task<IActionResult> CreateApp(string storeId, CreateAppViewModel vm)
         {
             var store = GetCurrentStore();
             vm.StoreId = store.Id;
-
-            if (!Enum.TryParse(vm.SelectedAppType, out AppType appType))
+            var type = _appService.GetAppType(vm.AppType ?? vm.SelectedAppType);
+            if (type is null)
+            {
                 ModelState.AddModelError(nameof(vm.SelectedAppType), "Invalid App Type");
+            }
 
             if (!ModelState.IsValid)
             {
@@ -141,34 +144,19 @@ namespace BTCPayServer.Controllers
             {
                 StoreDataId = store.Id,
                 Name = vm.AppName,
-                AppType = appType.ToString()
+                AppType = type!.Type
             };
 
             var defaultCurrency = await GetStoreDefaultCurrentIfEmpty(appData.StoreDataId, null);
-            switch (appType)
-            {
-                case AppType.Crowdfund:
-                    var emptyCrowdfund = new CrowdfundSettings { TargetCurrency = defaultCurrency };
-                    appData.SetSettings(emptyCrowdfund);
-                    break;
-                case AppType.PointOfSale:
-                    var empty = new PointOfSaleSettings { Currency = defaultCurrency };
-                    appData.SetSettings(empty);
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-
+            await _appService.SetDefaultSettings(appData, defaultCurrency);
             await _appService.UpdateOrCreateApp(appData);
+
             TempData[WellKnownTempData.SuccessMessage] = "App successfully created";
             CreatedAppId = appData.Id;
 
-            return appType switch
-            {
-                AppType.PointOfSale => RedirectToAction(nameof(UIPointOfSaleController.UpdatePointOfSale), "UIPointOfSale", new { appId = appData.Id }),
-                AppType.Crowdfund => RedirectToAction(nameof(UICrowdfundController.UpdateCrowdfund), "UICrowdfund", new { appId = appData.Id }),
-                _ => throw new ArgumentOutOfRangeException()
-            };
+
+            var url = await type.ConfigureLink(appData);
+            return Redirect(url);
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]

@@ -1,43 +1,43 @@
 @using BTCPayServer.Abstractions.Extensions
 @inject BTCPayServer.Services.BTCPayServerEnvironment _env
 
-<footer class="btcpay-footer">
+<footer class="btcpay-footer d-print-none">
     <div class="d-flex flex-wrap flex-column justify-content-between flex-xl-row gap-3">
         <div class="d-flex flex-wrap justify-content-center justify-content-xl-start gap-4">
-            <a href="https://github.com/btcpayserver/btcpayserver" class="d-flex align-items-center" target="_blank" rel="noreferrer noopener">
+            <a href="https://github.com/btcpayserver/btcpayserver" target="_blank" rel="noreferrer noopener">
                 <vc:icon symbol="github"/>
-                <span style="margin-left:.4rem">Github</span>
+                <span>Github</span>
             </a>
-            <a href="https://chat.btcpayserver.org/" class="d-flex align-items-center" target="_blank" rel="noreferrer noopener">
+            <a href="https://chat.btcpayserver.org/" target="_blank" rel="noreferrer noopener">
                 <vc:icon symbol="mattermost"/>
-                <span style="margin-left:.4rem">Mattermost</span>
+                <span>Mattermost</span>
             </a>
-            <a href="https://twitter.com/BtcpayServer" class="d-flex align-items-center" target="_blank" rel="noreferrer noopener">
+            <a href="https://twitter.com/BtcpayServer" target="_blank" rel="noreferrer noopener">
                 <vc:icon symbol="twitter"/>
-                <span style="margin-left:.4rem">Twitter</span>
+                <span>Twitter</span>
             </a>
-            <a href="https://t.me/btcpayserver" class="d-flex align-items-center" target="_blank" rel="noreferrer noopener">
+            <a href="https://t.me/btcpayserver" target="_blank" rel="noreferrer noopener">
                 <vc:icon symbol="telegram"/>
-                <span style="margin-left:.4rem">Telegram</span>
+                <span>Telegram</span>
             </a>
-            <a href="https://btcpayserver.org/donate/" class="d-flex align-items-center" target="_blank" rel="noreferrer noopener">
+            <a href="https://btcpayserver.org/donate/" target="_blank" rel="noreferrer noopener">
                 <vc:icon symbol="donate"/>
-                <span style="margin-left:.4rem">Donate</span>
+                <span>Donate</span>
             </a>
-            <a asp-controller="UIHome" asp-action="SwaggerDocs" class="d-flex align-items-center" target="_blank">
+            <a asp-controller="UIHome" asp-action="SwaggerDocs" target="_blank">
                 <vc:icon symbol="api"/>
-                <span style="margin-left:.4rem">API</span>
+                <span>API</span>
             </a>
-            <a href="https://docs.btcpayserver.org/" class="d-flex align-items-center" target="_blank" rel="noreferrer noopener">
+            <a href="https://docs.btcpayserver.org/" target="_blank" rel="noreferrer noopener">
                 <vc:icon symbol="docs"/>
-                <span style="margin-left:.4rem">Docs</span>
+                <span>Docs</span>
             </a>
             @if (!string.IsNullOrEmpty(_env.OnionUrl) && !Context.Request.IsOnion())
             {
-                <a href="@_env.OnionUrl" class="d-flex align-items-center" target="_onion" rel="noreferrer noopener" role="button" data-clipboard="@_env.OnionUrl" data-clipboard-confirm-element="CopyTorUrlText" style="min-width:9em;">
+                <button type="button" class="d-flex align-items-center btn btn-link" data-clipboard="@_env.OnionUrl" data-clipboard-hover>
                     <vc:icon symbol="onion"/>
-                    <span style="margin-left:.4rem" id="CopyTorUrlText">Copy Tor URL</span>
-                </a>
+                    <span>Copy Tor URL</span>
+                </button>
             }
         </div>
         @if (User.Identity.IsAuthenticated)

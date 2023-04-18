@@ -115,7 +115,7 @@ namespace BTCPayServer.Client
                 CreateHttpRequest($"api/v1/stores/{storeId}/lightning/{cryptoCode}/invoices", queryPayload), token);
             return await HandleResponse<LightningInvoiceData[]>(response);
         }
-        
+
         public virtual async Task<LightningPaymentData[]> GetLightningPayments(string storeId, string cryptoCode,
             bool? includePending = null, long? offsetIndex = null, CancellationToken token = default)
         {

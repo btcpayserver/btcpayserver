@@ -9,7 +9,7 @@
   "view_details": "Pogledaj detalje",
   "pay_with": "Plati sa",
   "pay_in_wallet": "Plati u novčaniku",
-  "pay_by_nfc": "Plati putem NFC-a (LNURL-Withdraw)",
+  "pay_by_nfc": "Plati putem NFC-a",
   "pay_by_lnurl": "Plati putem LNURL-Withdraw-a",
   "invoice_id": "Broj računa",
   "order_id": "Broj narudžbine",
@@ -34,5 +34,10 @@
   "copy": "Kopiraj",
   "copy_confirm": "Kopirano",
   "powered_by": "Pokreće",
-  "conversion_body": "Ovu uslugu pruža treća strana. Vodite računa da nemamo kontroliu nad načinom kako će Vam davatelji usluge proslijediti sredstva. Račun je plaćen tek kada su sredstva primljena na {{cryptoCode}} blokčejnu."
+  "conversion_body": "Ovu uslugu pruža treća strana. Vodite računa da nemamo kontroliu nad načinom kako će Vam davatelji usluge proslijediti sredstva. Račun je plaćen tek kada su sredstva primljena na {{cryptoCode}} blokčejnu.",
+  "scanning_nfc": "Skeniranje NFC-a...",
+  "submitting_nfc": "Slanje NFC-a...",
+  "payment_received": "Plaćanje primljeno",
+  "payment_received_body": "Vaše plaćanje je primljeno i sada se obrađuje",
+  "payment_received_confirmations": "Kada vaša uplata primi {{requiredConfirmations}} potvrda na {{cryptoCode}} blokčejnu, vaš račun će biti namiren."
 }

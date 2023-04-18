@@ -14,6 +14,7 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers;
 using ExchangeSharp;
 using NBitcoin;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
@@ -60,31 +61,36 @@ namespace BTCPayServer.Tests
             return description;
         }
 
-//        /// <summary>
-//        /// This will take the translations from v1 or v2
-//        /// and upload them to transifex if not found
-//        /// </summary>
-//        [FactWithSecret("TransifexAPIToken")]
-//        [Trait("Utilities", "Utilities")]
-//#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
-//        public async Task UpdateTransifex()
-//        {
-//            // DO NOT RUN IT, THIS WILL ERASE THE CURRENT TRANSIFEX TRANSLATIONS
+        //        /// <summary>
+        //        /// This will take the translations from v1 or v2
+        //        /// and upload them to transifex if not found
+        //        /// </summary>
+        //        [FactWithSecret("TransifexAPIToken")]
+        //        [Trait("Utilities", "Utilities")]
+        //#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
+        //        public async Task UpdateTransifex()
+        //        {
+        //            // DO NOT RUN IT, THIS WILL ERASE THE CURRENT TRANSIFEX TRANSLATIONS
 
-//            var client = GetTransifexClient();
-//            var translations = JsonTranslation.GetTranslations(TranslationFolder.CheckoutV1);
-//            var enTranslations = translations["en"];
-//            translations.Remove("en");
+        //            var client = GetTransifexClient();
+        //            var translations = JsonTranslation.GetTranslations(TranslationFolder.CheckoutV2);
+        //            var enTranslations = translations["en"];
+        //            translations.Remove("en");
 
-//            foreach (var t in translations)
-//                foreach (var w in t.Value.Words.ToArray())
-//                {
-//                    if (w.Value == enTranslations.Words[w.Key])
-//                        t.Value.Words[w.Key] = null;
-//                }
-//            await client.UpdateTranslations(translations);
-//        }
-//#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
+        //            foreach (var t in translations)
+        //            {
+        //                foreach (var w in t.Value.Words.ToArray())
+        //                {
+        //                    if (t.Value.Words[w.Key] == null)
+        //                        t.Value.Words[w.Key] = enTranslations.Words[w.Key];
+        //                }
+        //                t.Value.Words.Remove("code");
+        //                t.Value.Words.Remove("NOTICE_WARN");
+        //            }
+        //            await client.UpdateTranslations(translations);
+        //        }
+
+        //#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
 
         ///// <summary>
         ///// This utility will copy translations made on checkout v1 to checkout v2
@@ -125,7 +131,6 @@ namespace BTCPayServer.Tests
         //    return name.Replace("_", "").ToLowerInvariant();
         //}
 
-
         /// <summary>
         /// This utility will use selenium to pilot your browser to
         /// automatically translate a language.
@@ -141,8 +146,8 @@ namespace BTCPayServer.Tests
         [FactWithSecret("TransifexAPIToken")]
         public async Task AutoTranslateChatGPT()
         {
-            var file = TranslationFolder.CheckoutV1;
-            
+            var file = TranslationFolder.CheckoutV2;
+
             using var driver = new ChromeDriver(new ChromeOptions()
             {
                 DebuggerAddress = "127.0.0.1:9222"
@@ -180,6 +185,19 @@ namespace BTCPayServer.Tests
                     var english = englishTranslations.Words[translation.Key];
                     if (translation.Value != null)
                         continue; // Already translated
+
+                    //TODO: A better way to avoid rate limits is to use this format:
+                    //I am translating a checkout crypto payment page, and I want you to translate it from English (en-US) to French (fr-FR).
+                    //##
+                    //English: This invoice will expire in
+                    //French:
+                    //##
+                    //English: Scan the QR code, or tap to copy the address.
+                    //French:
+                    //##
+                    //English: Your payment has been received and is now processing.
+                    //French:
+
                     if (!askedPrompt)
                     {
                         driver.FindElement(By.XPath("//a[contains(text(), \"New chat\")]")).Click();
@@ -223,7 +241,6 @@ retry:
             Thread.Sleep(200);
         }
 
-
         /// <summary>
         /// This utility will make sure that permission documentation is properly written in swagger.template.json
         /// </summary>
@@ -246,7 +263,6 @@ retry:
         {
             // 1. Generate an API Token on https://www.transifex.com/user/settings/api/
             // 2. Run "dotnet user-secrets set TransifexAPIToken <youapitoken>"
-
             await PullTransifexTranslationsCore(TranslationFolder.CheckoutV1);
             await PullTransifexTranslationsCore(TranslationFolder.CheckoutV2);
 
@@ -273,8 +289,6 @@ retry:
                     var langCode = GetLangCodeTransifexToJson(l);
                     var langTranslations = await client.GetTranslations(resourceStrings, l);
                     var translation = JsonTranslation.GetTranslation(folder, langCode);
-                    translation.Words.Clear();
-                    translation.Translate(langTranslations);
                     if (translation.ShouldSkip())
                     {
                         Logs.WriteLine("Skipping " + langCode);
@@ -285,6 +299,7 @@ retry:
                     {
                         translation.Words["InvoiceExpired_Body_3"] = string.Empty;
                     }
+                    translation.Translate(langTranslations);
                     translation.Save();
                 }
                 catch
@@ -532,7 +547,7 @@ retry:
 
 
         public string FullPath { get; set; }
-        public string TransifexProject { get;  set; }
+        public string TransifexProject { get; set; }
         public string TransifexResource { get; private set; }
 
         public void Save()
@@ -562,7 +577,7 @@ retry:
             }
         }
 
-        public void Translate(Dictionary<string,string> sourceTranslations)
+        public void Translate(Dictionary<string, string> sourceTranslations)
         {
             foreach (var o in sourceTranslations)
                 if (o.Value != null)

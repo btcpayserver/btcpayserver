@@ -1,8 +1,9 @@
-﻿@using BTCPayServer.Views.Apps
 @using BTCPayServer.Abstractions.Extensions
+@using BTCPayServer.Views.CustodianAccounts
+@using Microsoft.AspNetCore.Mvc.TagHelpers
 @model BTCPayServer.Models.CustodianAccountViewModels.CreateCustodianAccountViewModel
 @{
-    ViewData.SetActivePage(AppsNavPages.Create, "Add a custodian account");
+    ViewData.SetActivePage( CustodianAccountsNavPages.Create, "Add a custodian account");
 }
 
 @section PageFootContent {
@@ -16,6 +17,7 @@
 <div class="row">
     <div class="col-xl-8 col-xxl-constrain">
         <form asp-action="CreateCustodianAccount">
+			<input asp-for="Config" type="hidden" />
             @if (!ViewContext.ModelState.IsValid)
             {
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
@@ -53,9 +55,12 @@
                 <partial name="_Form" model="Model.ConfigForm" />
             }
             
-            <div class="form-group mt-4">
-                <input type="submit" value="Continue" class="btn btn-primary" id="Continue" />
-            </div>
+            @if (Model.Custodians.Count() > 0)
+            {
+                <div class="form-group mt-4">
+                    <input type="submit" value="Continue" class="btn btn-primary" id="Continue"/>
+                </div>
+            }
         </form>
     </div>
 </div>

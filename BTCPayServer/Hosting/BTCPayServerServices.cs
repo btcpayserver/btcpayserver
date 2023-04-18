@@ -1,4 +1,5 @@
 using System;
+using System.Configuration.Provider;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -26,6 +27,8 @@ using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Payments.PayJoin;
 using BTCPayServer.PayoutProcessors;
 using BTCPayServer.Plugins;
+using BTCPayServer.Rating;
+using BTCPayServer.Rating.Providers;
 using BTCPayServer.Security;
 using BTCPayServer.Security.Bitpay;
 using BTCPayServer.Security.Greenfield;
@@ -42,6 +45,7 @@ using BTCPayServer.Services.PaymentRequests;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
+using ExchangeSharp;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -61,10 +65,6 @@ using NBXplorer.DerivationStrategy;
 using Newtonsoft.Json;
 using NicolasDorier.RateLimits;
 using Serilog;
-using ExchangeSharp;
-using BTCPayServer.Rating;
-using System.Configuration.Provider;
-using BTCPayServer.Rating.Providers;
 #if ALTCOINS
 using BTCPayServer.Services.Altcoins.Monero;
 using BTCPayServer.Services.Altcoins.Zcash;
@@ -280,6 +280,7 @@ namespace BTCPayServer.Hosting
             services.AddTransient<PluginService>();
             services.AddSingleton<IPluginHookService, PluginHookService>();
             services.TryAddTransient<Safe>();
+            services.TryAddTransient<DisplayFormatter>();
             services.TryAddSingleton<Ganss.XSS.HtmlSanitizer>(o =>
             {
 
@@ -379,8 +380,6 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<IPaymentMethodHandler>(provider => provider.GetService<LNURLPayPaymentHandler>());
             services.AddSingleton<IUIExtension>(new UIExtension("LNURL/LightningAddressNav",
                 "store-integrations-nav"));
-            services.AddSingleton<IUIExtension>(new UIExtension("LNURL/LightningAddressOption",
-                "store-integrations-list"));
             services.AddSingleton<IHostedService, LightningListener>();
             services.AddSingleton<IHostedService, LightningPendingPayoutListener>();
 
@@ -434,6 +433,7 @@ namespace BTCPayServer.Hosting
             services.AddTransient<BitpayAccessTokenController>();
             services.AddTransient<UIInvoiceController>();
             services.AddTransient<UIPaymentRequestController>();
+            services.AddSingleton<LabelService>();
             // Add application services.
             services.AddSingleton<EmailSenderFactory>();
             services.AddSingleton<InvoiceActivator>();

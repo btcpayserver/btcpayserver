@@ -5,7 +5,7 @@
 
 @foreach (var field in Model.Fields)
 {
-    if (FormComponentProviders.TypeToComponentProvider.TryGetValue(field.Type, out var partial))
+    if (FormComponentProviders.TypeToComponentProvider.TryGetValue(field.Type, out var partial) && !string.IsNullOrEmpty(partial.View))
     {
         <partial name="@partial.View" for="@field" />
     }

@@ -9,7 +9,7 @@
   "view_details": "查看详情",
   "pay_with": "支付方式",
   "pay_in_wallet": "使用钱包支付",
-  "pay_by_nfc": "通过NFC支付（LNURL-Withdraw）",
+  "pay_by_nfc": "通过NFC支付",
   "pay_by_lnurl": "通过LNURL-Withdraw支付",
   "invoice_id": "订单号",
   "order_id": "订货号",
@@ -30,9 +30,14 @@
   "invoice_expired": "发票已过期",
   "invoice_expired_body": "发票仅在{{minutes}}分钟内有效。如需重新提交付款，请返回{{storeName}}。",
   "view_receipt": "查看收据",
-  "return_to_store": "返回{{storeName}}。",
+  "return_to_store": "返回{{storeName}}",
   "copy": "复制",
   "copy_confirm": "已复制",
   "powered_by": "由...提供技术支持",
-  "conversion_body": "请您注意，这项服务由第三方应用提供，所以我们无法直接获悉和操控第三方应用的具体兑换过程。订单只有在支付款被{{cryptocode}}的区块链接收之后，才会显示已支付。"
+  "conversion_body": "请您注意，这项服务由第三方应用提供，所以我们无法直接获悉和操控第三方应用的具体兑换过程。订单只有在支付款被{{cryptocode}}的区块链接收之后，才会显示已支付。",
+  "scanning_nfc": "扫描 NFC...",
+  "submitting_nfc": "提交 NFC...",
+  "payment_received": "已收到付款",
+  "payment_received_body": "您的付款已收到，正在处理中",
+  "payment_received_confirmations": "一旦{{cryptoCode}} 区块链上收到{{requiredConfirmations}}个确认，您的账单将会被结算。"
 }

@@ -34,7 +34,7 @@ namespace BTCPayServer.Data
             }
             else
             {
-                var entity =  invoiceData.HasTypedBlob<InvoiceEntity>().GetBlob();
+                var entity = invoiceData.HasTypedBlob<InvoiceEntity>().GetBlob();
                 entity.Networks = networks;
                 return entity;
             }

@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using BTCPayServer.Controllers;
 using BTCPayServer.Events;
 using BTCPayServer.Logging;
+using BTCPayServer.Plugins.Crowdfund;
+using BTCPayServer.Plugins.PointOfSale;
 using BTCPayServer.Services.Apps;
 
 namespace BTCPayServer.HostedServices
@@ -34,13 +35,13 @@ namespace BTCPayServer.HostedServices
                 //get all apps that were tagged that have manageable inventory that has an item that matches the item code in the invoice
                 var apps = (await _appService.GetApps(updateAppInventory.AppId)).Select(data =>
                     {
-                        switch (Enum.Parse<AppType>(data.AppType))
+                        switch (data.AppType)
                         {
-                            case AppType.PointOfSale:
+                            case PointOfSaleAppType.AppType:
                                 var possettings = data.GetSettings<PointOfSaleSettings>();
                                 return (Data: data, Settings: (object)possettings,
                                     Items: _appService.Parse(possettings.Template, possettings.Currency));
-                            case AppType.Crowdfund:
+                            case CrowdfundAppType.AppType:
                                 var cfsettings = data.GetSettings<CrowdfundSettings>();
                                 return (Data: data, Settings: (object)cfsettings,
                                     Items: _appService.Parse(cfsettings.PerksTemplate, cfsettings.TargetCurrency));
@@ -65,14 +66,13 @@ namespace BTCPayServer.HostedServices
                         }
                     }
 
-                    switch (Enum.Parse<AppType>(valueTuple.Data.AppType))
+                    switch (valueTuple.Data.AppType)
                     {
-                        case AppType.PointOfSale:
-
+                        case PointOfSaleAppType.AppType:
                             ((PointOfSaleSettings)valueTuple.Settings).Template =
                                 _appService.SerializeTemplate(valueTuple.Items);
                             break;
-                        case AppType.Crowdfund:
+                        case CrowdfundAppType.AppType:
                             ((CrowdfundSettings)valueTuple.Settings).PerksTemplate =
                                 _appService.SerializeTemplate(valueTuple.Items);
                             break;

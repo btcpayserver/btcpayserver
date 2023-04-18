@@ -8,7 +8,6 @@
 
     var store = ViewContext.HttpContext.GetStoreData();
 }
-
 @section PageFootContent {
     <partial name="_ValidationScriptsPartial" />
     <script>
@@ -19,6 +18,20 @@
                 ? `/checkout/css/themes/${theme}.css`
                 : ''
         });
+		delegate('click', '#Presets_InStore', e => {
+			$("#UseClassicCheckout").prop('checked', false);
+			$("#CheckoutV2Settings").addClass('show');
+			$("#ClassicCheckoutSettings").removeClass('show');
+			$("#ShowPayInWalletButton").prop('checked', false);
+			$("#ShowStoreHeader").prop('checked', false);
+		});
+		delegate('click', '#Presets_Online', e => {
+			$("#UseClassicCheckout").prop('checked', false);
+			$("#CheckoutV2Settings").addClass('show');
+			$("#ClassicCheckoutSettings").removeClass('show');
+			$("#ShowPayInWalletButton").prop('checked', true);
+			$("#ShowStoreHeader").prop('checked', true);
+		});
     </script>
 }
 
@@ -61,23 +74,34 @@
                 </div>
             }
 
-            <h3 class="mt-5 mb-3">Checkout</h3>
-            <div class="d-flex align-items-center mb-3">
-                <input asp-for="UseNewCheckout" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target=".checkout-settings" aria-expanded="@(Model.UseNewCheckout)" aria-controls="NewCheckoutSettings" />
-                <div>
-                    <label asp-for="UseNewCheckout" class="d-flex align-items-center form-label">
-                        Use the new checkout
-                        <span class="badge bg-warning ms-2">Experimental</span>
-                    </label>
-                    <span asp-validation-for="UseNewCheckout" class="text-danger"></span>
-                    <div class="form-text">
-                        Since v1.7.0 a new version of the checkout is available. Note: For now, the new version is English-only.<br />
-                        We are still collecting <a href="https://github.com/btcpayserver/btcpayserver/discussions/4308" target="_blank" rel="noreferrer noopener">feedback</a> and offer this as an opt-in feature.
-                    </div>
-                </div>
+			<h3 class="mt-5 mb-3 d-flex gap-3 align-items-center">
+				<span>Checkout</span>
+				<div id="Presets" name="Presets" class="dropdown">
+					<button class="btn btn-secondary dropdown-toggle btn-sm px-3" type="button" id="ActionsDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+						Select a preset
+					</button>
+					<div class="dropdown-menu" aria-labelledby="ActionsDropdownToggle">
+						<div id="Presets_Online" class="btcpay-list-select-item dropdown-item">
+							<vc:icon symbol="pos-cart" />
+							<span>Online</span>
+							<span class="note">Enhance the checkout process for online purchases.<br />This assume the payment page will be displayed on the customer's device.</span>
+						</div>
+						<div id="Presets_InStore" class="btcpay-list-select-item dropdown-item">
+							<vc:icon symbol="store" />
+							<span>In-store</span>
+							<span class="note">Enhance the checkout process for in-store purchases.<br />This assume the payment page will be displayed on the merchant's device.</span>
+						</div>
+					</div>
+				</div>
+			</h3>
+            
+            <div class="d-flex align-items-center mb-4">
+				<input asp-for="UseClassicCheckout" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target=".checkout-settings" aria-expanded="@(Model.UseClassicCheckout)" aria-controls="CheckoutV2Settings" />
+				<label asp-for="UseClassicCheckout" class="form-label mb-0"></label>
+                <span asp-validation-for="UseClassicCheckout" class="text-danger"></span>
             </div>
 
-            <div class="checkout-settings collapse @(Model.UseNewCheckout ? "show" : "")" id="NewCheckoutSettings">
+			<div class="checkout-settings collapse @(Model.UseClassicCheckout ? "" : "show")" id="CheckoutV2Settings">
                 <div class="form-group">
                     <label asp-for="DisplayExpirationTimer" class="form-label"></label>
                     <div class="input-group">
@@ -86,7 +110,19 @@
                     </div>
                     <span asp-validation-for="DisplayExpirationTimer" class="text-danger"></span>
                 </div>
+                <div class="form-check">
+                    <input asp-for="CelebratePayment" type="checkbox" class="form-check-input" />
+                    <label asp-for="CelebratePayment" class="form-check-label"></label>
+                </div>
+				<div class="form-check">
+					<input asp-for="ShowStoreHeader" type="checkbox" class="form-check-input" />
+					<label asp-for="ShowStoreHeader" class="form-check-label"></label>
+				</div>
             </div>
+			<div class="form-check">
+				<input asp-for="ShowPayInWalletButton" type="checkbox" class="form-check-input" />
+				<label asp-for="ShowPayInWalletButton" class="form-check-label"></label>
+			</div>
             <div class="form-check">
                 <input asp-for="OnChainWithLnInvoiceFallback" type="checkbox" class="form-check-input" />
                 <label asp-for="OnChainWithLnInvoiceFallback" class="form-check-label"></label>
@@ -94,21 +130,14 @@
                     <vc:icon symbol="info" />
                 </a>
             </div>
-            <div class="checkout-settings collapse @(Model.UseNewCheckout ? "" : "show")" id="OldCheckoutSettings">
+            <div class="form-check">
+                <input asp-for="LightningAmountInSatoshi" type="checkbox" class="form-check-input" />
+                <label asp-for="LightningAmountInSatoshi" class="form-check-label"></label>
+            </div>
+            <div class="checkout-settings collapse @(Model.UseClassicCheckout ? "show" : "")" id="ClassicCheckoutSettings">
                 <div class="form-check">
                     <input asp-for="RequiresRefundEmail" type="checkbox" class="form-check-input" />
                     <label asp-for="RequiresRefundEmail" class="form-check-label"></label>
-                </div>
-                <div class="form-group">
-                    <div class="form-check">
-                        <input asp-for="AutoDetectLanguage" type="checkbox" class="form-check-input" />
-                        <label asp-for="AutoDetectLanguage" class="form-check-label"></label>
-                        <div class="form-text">Detects the language of the customer's browser with 99.9% accuracy.</div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label asp-for="DefaultLang" class="form-label"></label>
-                    <select asp-for="DefaultLang" asp-items="Model.Languages" class="form-select w-auto"></select>
                 </div>
                 <div class="form-group">
                     <label asp-for="CustomLogo" class="form-label"></label>
@@ -134,7 +163,17 @@
                     @await Component.InvokeAsync("UiExtensionPoint", new {location = "invoice-checkout-theme-options", model = Model})
                 </div>
             </div>
-
+            <div class="form-group">
+                <div class="form-check">
+                    <input asp-for="AutoDetectLanguage" type="checkbox" class="form-check-input" />
+                    <label asp-for="AutoDetectLanguage" class="form-check-label"></label>
+                    <div class="form-text">Detects the language of the customer's browser.</div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label asp-for="DefaultLang" class="form-label"></label>
+                <select asp-for="DefaultLang" asp-items="Model.Languages" class="form-select w-auto"></select>
+            </div>
             <div class="form-group">
                 <label asp-for="HtmlTitle" class="form-label"></label>
                 <input asp-for="HtmlTitle" class="form-control" />

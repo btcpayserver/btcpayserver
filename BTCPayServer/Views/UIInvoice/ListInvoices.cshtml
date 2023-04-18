@@ -1,6 +1,8 @@
 @using BTCPayServer.Client
 @using BTCPayServer.Client.Models
 @using BTCPayServer.Payments
+@using BTCPayServer.Services
+@inject DisplayFormatter DisplayFormatter
 @model InvoicesModel
 @{
     ViewData.SetActivePage(InvoiceNavPages.Index, "Invoices");
@@ -316,14 +318,16 @@
                             else
                             {
                                 <td style="max-width:120px;">
-                                    @if (invoice.RedirectUrl != string.Empty)
-                                    {
-                                        <a href="@invoice.RedirectUrl" class="wraptextAuto" rel="noreferrer noopener">@invoice.OrderId</a>
-                                    }
-                                    else
-                                    {
-                                        <span class="wraptextAuto">@invoice.OrderId</span>
-                                    }
+                                    <div class="text-truncate" style="max-width:120px;" data-bs-toggle="tooltip" title="@invoice.OrderId">
+                                        @if (invoice.RedirectUrl != string.Empty)
+                                        {
+                                            <a href="@invoice.RedirectUrl" rel="noreferrer noopener">@invoice.OrderId</a>
+                                        }
+                                        else
+                                        {
+                                            @invoice.OrderId
+                                        }
+                                    </div>
                                 </td>
                             }
                             <td>
@@ -372,7 +376,7 @@
                                     <span class="badge bg-warning">Refund</span>
                                 }
                             </td>
-                            <td class="text-end text-nowrap">@invoice.AmountCurrency</td>
+                            <td class="text-end text-nowrap">@DisplayFormatter.Currency(invoice.Amount, invoice.Currency)</td>
                             <td class="text-end text-nowrap">
                                 @if (invoice.ShowCheckout)
                                 {

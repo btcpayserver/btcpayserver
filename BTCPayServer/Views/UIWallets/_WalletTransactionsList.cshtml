@@ -1,5 +1,10 @@
+@using BTCPayServer.Services
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using BTCPayServer.Components.LabelManager
 @model ListTransactionsViewModel
-
+@{
+    var walletId = Context.GetRouteValue("walletId").ToString();
+}
 @foreach (var transaction in Model.Transactions)
 {
     <tr>
@@ -10,33 +15,12 @@
             @transaction.Timestamp.ToBrowserDate()
         </td>
         <td class="text-start">
-            @if (transaction.Tags.Any())
-            {
-                <div class="d-flex flex-wrap gap-2 align-items-center">
-                    @foreach (var label in transaction.Tags)
-                    {
-                        <div class="transaction-label" style="--label-bg:@label.Color;--label-fg:@label.TextColor;">
-                            <a asp-route-labelFilter="@label.Text">@label.Text</a>
-                            <form method="post" asp-action="ModifyTransaction" asp-route-walletId="@Context.GetRouteValue("walletId")">
-                                <input type="hidden" name="transactionId" value="@transaction.Id" />
-                                <button name="removelabel" type="submit" value="@label.Text" class="transaction-label-action">
-                                    <vc:icon symbol="remove"/>
-                                </button>
-                            </form>
-                            @if (!string.IsNullOrEmpty(label.Link))
-                            {
-                                <a href="@label.Link" target="_blank" rel="noreferrer noopener" class="transaction-label-info transaction-details-icon"
-                                   title="@label.Tooltip"
-                                   data-bs-html="true"
-                                   data-bs-toggle="tooltip"
-                                   data-bs-custom-class="transaction-label-tooltip">
-                                    <vc:icon symbol="info"/>
-                                </a>
-                            }
-                        </div>
-                    }
-                </div>
-            }
+            <vc:label-manager
+                wallet-object-id="new WalletObjectId(WalletId.Parse(walletId), WalletObjectData.Types.Tx, transaction.Id)"
+                selected-labels="transaction.Tags.Select(t => t.Text).ToArray()"
+                rich-label-info="transaction.Tags.Where(t=> !string.IsNullOrEmpty(t.Link)).ToDictionary(t => t.Text, t => new RichLabelInfo { Link = t.Link, Tooltip = t.Tooltip })"
+                exclude-types="false"
+                display-inline="true"/>
         </td>
         <td class="smMaxWidth text-truncate@(transaction.IsConfirmed ? "" : " unconf")">
             <a href="@transaction.Link" target="_blank" rel="noreferrer noopener">
@@ -52,35 +36,6 @@
             <td class="text-end text-danger">@transaction.Balance</td>
         }
         <td class="text-end">
-            <div class="dropstart d-inline-block me-2">
-                <span class="fa fa-tags cursor-pointer" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></span>
-                <div class="dropdown-menu">
-                    <form asp-action="ModifyTransaction" method="post" style="width:260px;" asp-route-walletId="@Context.GetRouteValue("walletId")">
-                        <input type="hidden" name="transactionId" value="@transaction.Id" />
-                        <div class="input-group input-group-sm p-2">
-                            <input name="addlabel" placeholder="Label name" maxlength="20" type="text" class="form-control form-control-sm" />
-                            <button type="submit" class="btn btn-primary btn-sm"><span class="fa fa-plus"></span></button>
-                        </div>
-                        @if (Model.Labels.Count > 0)
-                        {
-                            <div class="dropdown-divider"></div>
-                            <div class="py-2 px-3 d-flex flex-wrap gap-2">
-                                @foreach (var label in Model.Labels)
-                                {
-                                    var isActive = transaction.Tags.Any(l => l.Text == label.Text);
-                                    <button name="@(isActive ? "removelabel" : "addlabelclick")" type="submit" value="@label.Text"
-                                            class="transaction-label@(isActive ? " active" : string.Empty)" style="--label-bg:@label.Color;--label-fg:@label.TextColor">
-                                        <span>@label.Text</span>
-                                        <span class="transaction-label-action">
-                                            <vc:icon symbol="@(isActive ? "remove" : "new")"/>
-                                        </span>
-                                    </button>
-                                }
-                            </div>
-                        }
-                    </form>
-                </div>
-            </div>
             <div class="dropstart d-inline-block">
                 @if (string.IsNullOrEmpty(transaction.Comment))
                 {

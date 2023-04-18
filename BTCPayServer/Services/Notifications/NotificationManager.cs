@@ -155,14 +155,14 @@ namespace BTCPayServer.Services.Notifications
             if (handler is null)
                 return null;
             var notification = data.HasTypedBlob(handler.NotificationBlobType).GetBlob();
-			var obj = new NotificationViewModel
-			{
-				Id = data.Id,
-				Type = data.NotificationType,
-				Created = data.Created,
-				Seen = data.Seen
-			};
-			handler.FillViewModel(notification, obj);
+            var obj = new NotificationViewModel
+            {
+                Id = data.Id,
+                Type = data.NotificationType,
+                Created = data.Created,
+                Seen = data.Seen
+            };
+            handler.FillViewModel(notification, obj);
             return obj;
         }
 

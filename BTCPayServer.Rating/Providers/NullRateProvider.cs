@@ -20,7 +20,7 @@ namespace BTCPayServer.Services.Rates
             }
         }
 
-        public RateSourceInfo RateSourceInfo => new RateSourceInfo("NULL","NULL", "https://NULL.NULL");
+        public RateSourceInfo RateSourceInfo => new RateSourceInfo("NULL", "NULL", "https://NULL.NULL");
 
         public Task<PairRate[]> GetRatesAsync(CancellationToken cancellationToken)
         {

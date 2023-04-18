@@ -10,13 +10,20 @@
 }
 @if (!string.IsNullOrEmpty(Model.BrandColor))
 {
+    var brandColor = Model.BrandColor;
+    var accentColor = ColorPalette.Default.AdjustBrightness(brandColor, (float)-0.15);
+    var complement = ColorPalette.Default.TextColor(brandColor).ToLowerInvariant();
+    var complementColor = $"var(--btcpay-{(complement == "black" ? "black" : "white")})";
     <style>
         :root {
-            --btcpay-primary: @Model.BrandColor;
-            --btcpay-primary-bg-hover: @Model.BrandColor;
-            --btcpay-primary-bg-active: @Model.BrandColor;
-            --btcpay-primary-shadow: @Model.BrandColor;
-            --btcpay-body-link-accent: @Model.BrandColor;
+            --btcpay-primary: @brandColor;
+            --btcpay-primary-shadow: @brandColor;
+            --btcpay-primary-bg-hover: @accentColor;
+            --btcpay-primary-bg-active: @accentColor;
+            --btcpay-body-link-accent: @accentColor;
+            --btcpay-primary-text: @complementColor;
+            --btcpay-primary-text-hover: @complementColor;
+            --btcpay-primary-text-active: @complementColor;
         }
     </style>
 }

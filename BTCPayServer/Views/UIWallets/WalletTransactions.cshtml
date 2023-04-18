@@ -9,6 +9,8 @@
 }
 
 @section PageHeadContent {
+    <script src="~/vendor/tom-select/tom-select.complete.min.js" asp-append-version="true"></script>
+    <link href="~/vendor/tom-select/tom-select.bootstrap5.min.css" asp-append-version="true" rel="stylesheet">
     <style>
         .smMaxWidth {
             max-width: 125px;
@@ -45,7 +47,6 @@
 @section PageFootContent {
     @*Without async, somehow selenium do not manage to click on links in this page*@
     <script src="~/modal/btcpay.js" asp-append-version="true" async></script>
-
     @* Custom Range Modal *@
     <script>
         let observer = null;
@@ -92,7 +93,7 @@
             
             if (response.ok) {
                 const html = await response.text();
-                $list.innerHTML += html;
+                $list.insertAdjacentHTML('beforeend', html);
                 skip = skipNext;
                 
                 if ($loadMore) {
@@ -122,6 +123,7 @@
             
             $indicator.classList.add('d-none');
             formatDateTimes(document.getElementById('switchTimeFormat').dataset.mode);
+            initLabelManagers();
         }
     </script>
 }
@@ -165,6 +167,7 @@
             <div class="dropdown-menu" aria-labelledby="ExportDropdownToggle">
                 <a asp-action="Export" asp-route-walletId="@walletId" asp-route-format="csv" asp-route-labelFilter="@labelFilter" class="dropdown-item export-link" target="_blank" id="ExportCSV">CSV</a>
                 <a asp-action="Export" asp-route-walletId="@walletId" asp-route-format="json" asp-route-labelFilter="@labelFilter" class="dropdown-item export-link" target="_blank" id="ExportJSON">JSON</a>
+                <a asp-action="Export" asp-route-walletId="@walletId" asp-route-format="bip329" asp-route-labelFilter="@labelFilter" class="dropdown-item export-link" target="_blank" id="ExportBIP329">Wallet Labels (BIP-329)</a>
             </div>
         </div>
     </div>

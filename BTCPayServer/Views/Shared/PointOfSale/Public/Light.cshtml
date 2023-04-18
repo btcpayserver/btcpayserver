@@ -1,6 +1,8 @@
+@inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model BTCPayServer.Plugins.PointOfSale.Models.ViewPointOfSaleViewModel
 @{
     Layout = "PointOfSale/Public/_Layout";
+	Csp.UnsafeEval();
 }
 @section PageHeadContent {
     <style>
@@ -123,7 +125,7 @@
         <partial name="PointOfSale/Public/VueLight" model="Model" />
     }
     <footer class="store-footer">
-        <a href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">
+        <a class="store-powered-by" href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">
             Powered by <partial name="_StoreFooterLogo" />
         </a>
     </footer>

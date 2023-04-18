@@ -8,9 +8,9 @@
         <legend class="h3 mt-4 mb-3">@Model.Label</legend>
         @foreach (var field in Model.Fields)
         {
-			if (FormComponentProviders.TypeToComponentProvider.TryGetValue(field.Type, out var partial))
+			if (FormComponentProviders.TypeToComponentProvider.TryGetValue(field.Type, out var partial) && !string.IsNullOrEmpty(partial.View))
 			{
-			    field.Name = $"{Model.Name}_{field.Name}";
+			    field.Name = $"{(string.IsNullOrEmpty(Model.Name)? string.Empty: $"{Model.Name}_")}{field.Name}";
 			    <partial name="@partial.View" for="@field"></partial>
 			}
         }

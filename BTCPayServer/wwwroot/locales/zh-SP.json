@@ -36,7 +36,7 @@
   "InvoiceExpired_Body_3": "如果我们稍后收到付款，我们将处理您的订单或联系您作出退款安排。。。",
   "Invoice ID": "订单号",
   "Order ID": "订货号",
-  "Return to StoreName": "返回{{storeName}}。",
+  "Return to StoreName": "返回{{storeName}}",
   "This invoice has been paid": "此订单已支付",
   "This invoice has been archived": "此订单已归档",
   "Archived_Body": "请联系商家获得更多的订单信息或帮助",

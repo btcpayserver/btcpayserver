@@ -35,6 +35,8 @@ using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Payments.PayJoin.Sender;
+using BTCPayServer.Plugins.PayButton;
+using BTCPayServer.Plugins.PointOfSale;
 using BTCPayServer.Plugins.PointOfSale.Controllers;
 using BTCPayServer.Security.Bitpay;
 using BTCPayServer.Services;
@@ -1607,7 +1609,7 @@ namespace BTCPayServer.Tests
             // Check correct casing: Addresses in payment URI need to be …
             // - lowercase in link version
             // - uppercase in QR version
-            
+
             // Standard for all uppercase characters in QR codes is still not implemented in all wallets
             // But we're proceeding with BECH32 being uppercase
             Assert.Equal($"bitcoin:{paymentMethodUnified.BtcAddress}", paymentMethodUnified.InvoiceBitcoinUrl.Split('?')[0]);
@@ -1953,14 +1955,13 @@ namespace BTCPayServer.Tests
             var apps = user.GetController<UIAppsController>();
             var apps2 = user2.GetController<UIAppsController>();
             var pos = user.GetController<UIPointOfSaleController>();
-            var vm = Assert.IsType<CreateAppViewModel>(Assert.IsType<ViewResult>(apps.CreateApp(user.StoreId)).Model);
-            var appType = AppType.PointOfSale.ToString();
-            Assert.NotNull(vm.SelectedAppType);
+            var appType = PointOfSaleAppType.AppType;
+            var vm = Assert.IsType<CreateAppViewModel>(Assert.IsType<ViewResult>(apps.CreateApp(user.StoreId, appType)).Model);
+            Assert.Equal(appType, vm.SelectedAppType);
             Assert.Null(vm.AppName);
             vm.AppName = "test";
-            vm.SelectedAppType = appType;
-            var redirectToAction = Assert.IsType<RedirectToActionResult>(apps.CreateApp(user.StoreId, vm).Result);
-            Assert.Equal(nameof(pos.UpdatePointOfSale), redirectToAction.ActionName);
+            var redirect = Assert.IsType<RedirectResult>(apps.CreateApp(user.StoreId, vm).Result);
+            Assert.EndsWith("/settings/pos", redirect.Url);
             var appList = Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps.ListApps(user.StoreId).Result).Model);
             var appList2 =
                 Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps2.ListApps(user2.StoreId).Result).Model);
@@ -1976,7 +1977,7 @@ namespace BTCPayServer.Tests
             Assert.Equal(user.StoreId, appList.Apps[0].StoreId);
             Assert.IsType<NotFoundResult>(apps2.DeleteApp(appList.Apps[0].Id));
             Assert.IsType<ViewResult>(apps.DeleteApp(appList.Apps[0].Id));
-            redirectToAction = Assert.IsType<RedirectToActionResult>(apps.DeleteAppPost(appList.Apps[0].Id).Result);
+            var redirectToAction = Assert.IsType<RedirectToActionResult>(apps.DeleteAppPost(appList.Apps[0].Id).Result);
             Assert.Equal(nameof(stores.Dashboard), redirectToAction.ActionName);
             appList = Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps.ListApps(user.StoreId).Result).Model);
             Assert.Empty(appList.Apps);
@@ -2442,6 +2443,31 @@ namespace BTCPayServer.Tests
             Assert.Equal($"New version {newVersion} released!", fn.Body);
             Assert.Equal($"https://github.com/btcpayserver/btcpayserver/releases/tag/v{newVersion}", fn.ActionLink);
             Assert.False(fn.Seen);
+        }
+
+        [Fact(Timeout = LongRunningTestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task CanFixMappedDomainAppType()
+        {
+            using var tester = CreateServerTester(newDb: true);
+            await tester.StartAsync();
+            var f = tester.PayTester.GetService<ApplicationDbContextFactory>();
+            using (var ctx = f.CreateContext())
+            {
+                var setting = new SettingData() { Id = "BTCPayServer.Services.PoliciesSettings" };
+                setting.Value = JObject.Parse("{\"RootAppId\": null, \"RootAppType\": 1, \"Experimental\": false, \"PluginSource\": null, \"LockSubscription\": false, \"DisableSSHService\": false, \"PluginPreReleases\": false, \"BlockExplorerLinks\": [],\"DomainToAppMapping\": [{\"AppId\": \"87kj5yKay8mB4UUZcJhZH5TqDKMD3CznjwLjiu1oYZXe\", \"Domain\": \"donate.nicolas-dorier.com\", \"AppType\": 0}], \"CheckForNewVersions\": false, \"AllowHotWalletForAll\": false, \"RequiresConfirmedEmail\": false, \"DiscourageSearchEngines\": false, \"DisableInstantNotifications\": false, \"DisableNonAdminCreateUserApi\": false, \"AllowHotWalletRPCImportForAll\": false, \"AllowLightningInternalNodeForAll\": false, \"DisableStoresToUseServerEmailSettings\": false}").ToString();
+                ctx.Settings.Add(setting);
+                await ctx.SaveChangesAsync();
+            }
+            await RestartMigration(tester);
+            using (var ctx = f.CreateContext())
+            {
+                var setting = await ctx.Settings.FirstOrDefaultAsync(c => c.Id == "BTCPayServer.Services.PoliciesSettings");
+                var o = JObject.Parse(setting.Value);
+                Assert.Equal("Crowdfund", o["RootAppType"].Value<string>());
+                o = (JObject)((JArray)o["DomainToAppMapping"])[0];
+                Assert.Equal("PointOfSale", o["AppType"].Value<string>());
+            }
         }
 
         [Fact(Timeout = LongRunningTestTimeout)]

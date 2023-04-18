@@ -1,17 +1,18 @@
-@using BTCPayServer.Services.Apps
 @using BTCPayServer.Components.AppSales
+@using BTCPayServer.Abstractions.TagHelpers
+@using BTCPayServer.Plugins.Crowdfund
 @model BTCPayServer.Components.AppSales.AppSalesViewModel
-
 @{
-    var controller = $"UI{Model.App.AppType}";
-    var action = $"Update{Model.App.AppType}";
-    var label = Model.App.AppType == nameof(AppType.Crowdfund) ? "Contributions" : "Sales";
+    var label = Model.AppType == CrowdfundAppType.AppType ? "Contributions" : "Sales";
 }
 
-<div id="AppSales-@Model.App.Id" class="widget app-sales">
+<div id="AppSales-@Model.Id" class="widget app-sales">
     <header class="mb-3">
-        <h3>@Model.App.Name @label</h3>
-        <a asp-controller="@controller" asp-action="@action" asp-route-appId="@Model.App.Id">Manage</a>
+        <h3>@Model.Name @label</h3>
+        @if (!string.IsNullOrEmpty(Model.AppUrl))
+        {
+            <a href="@Model.AppUrl">Manage</a>
+        }
     </header>
     @if (Model.InitialRendering)
     {
@@ -20,15 +21,16 @@
                 <span class="visually-hidden">Loading...</span>
             </div>
         </div>
+        <script src="~/Components/AppSales/Default.cshtml.js" asp-append-version="true"></script>
         <script>
             (async () => {
-                const url = @Safe.Json(Url.Action("AppSales", "UIApps", new { appId = Model.App.Id }));
-                const appId = @Safe.Json(Model.App.Id);
+                const url = @Safe.Json(Model.DataUrl);
+                const appId = @Safe.Json(Model.Id);
                 const response = await fetch(url);
                 if (response.ok) {
                     document.getElementById(`AppSales-${appId}`).outerHTML = await response.text();
-                    const initScript = document.querySelector(`#AppSales-${appId} script`);
-                    if (initScript) eval(initScript.innerHTML);
+                    const data = document.querySelector(`#AppSales-${appId} template`);
+                    if (data) window.appSales.dataLoaded(JSON.parse(data.innerHTML));
                 }
             })();
         </script>
@@ -40,54 +42,15 @@
                 <span class="sales-count">@Model.SalesCount</span> Total @label
             </span>
             <div class="btn-group only-for-js" role="group" aria-label="Filter">
-                <input type="radio" class="btn-check" name="AppSalesPeriod-@Model.App.Id" id="AppSalesPeriodWeek-@Model.App.Id" value="@AppSalesPeriod.Week" @(Model.Period == AppSalesPeriod.Week ? "checked" : "")>
-                <label class="btn btn-link" for="AppSalesPeriodWeek-@Model.App.Id">1W</label>
-                <input type="radio" class="btn-check" name="AppSalesPeriod-@Model.App.Id" id="AppSalesPeriodMonth-@Model.App.Id" value="@AppSalesPeriod.Month" @(Model.Period == AppSalesPeriod.Month ? "checked" : "")>
-                <label class="btn btn-link" for="AppSalesPeriodMonth-@Model.App.Id">1M</label>
+                <input type="radio" class="btn-check" name="AppSalesPeriod-@Model.Id" id="AppSalesPeriodWeek-@Model.Id" value="@AppSalesPeriod.Week" @(Model.Period == AppSalesPeriod.Week ? "checked" : "")>
+                <label class="btn btn-link" for="AppSalesPeriodWeek-@Model.Id">1W</label>
+                <input type="radio" class="btn-check" name="AppSalesPeriod-@Model.Id" id="AppSalesPeriodMonth-@Model.Id" value="@AppSalesPeriod.Month" @(Model.Period == AppSalesPeriod.Month ? "checked" : "")>
+                <label class="btn btn-link" for="AppSalesPeriodMonth-@Model.Id">1M</label>
             </div>
         </header>
         <div class="ct-chart"></div>
-        <script>
-            (function () {
-                const id = @Safe.Json($"AppSales-{Model.App.Id}");
-                const appId = @Safe.Json(Model.App.Id);
-                const period = @Safe.Json(Model.Period.ToString());
-                const baseUrl = @Safe.Json(Url.Action("AppSales", "UIApps", new { appId = Model.App.Id }));
-                const data = { series: @Safe.Json(Model.Series), salesCount: @Safe.Json(Model.SalesCount) };
-                
-                const render = (data, period) => {
-                    const series = data.series.map(s => s.salesCount);
-                    const labels = data.series.map((s, i) => period === @Safe.Json(Model.Period.ToString()) ? s.label : (i % 5 === 0 ? s.label : ''));
-                    const min = Math.min(...series);
-                    const max = Math.max(...series);
-                    const low = min === max ? 0 : Math.max(min - ((max - min) / 5), 0);
-                    
-                    document.querySelectorAll(`#${id} .sales-count`).innerText = data.salesCount;
-                    
-                    new Chartist.Bar(`#${id} .ct-chart`, {
-                        labels,
-                        series: [series]
-                    }, {
-                        low,
-                    });
-                };
-                
-                render(data, period);
-            
-                const update = async period => {
-                    const url = `${baseUrl}/${period}`;
-                    const response = await fetch(url);
-                    if (response.ok) {
-                        const data = await response.json();
-                        render(data, period);
-                    }
-                };
-            
-                delegate('change', `#${id} [name="AppSalesPeriod-${appId}"]`, async e => {
-                    const type = e.target.value;
-                    await update(type);
-                });
-            })();
-        </script>
+        <template>
+            @Safe.Json(Model)
+        </template>
     }
 </div>

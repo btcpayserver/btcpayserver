@@ -27,7 +27,7 @@ namespace BTCPayServer.Payments
             return JsonConvert.DeserializeObject<LNURLPaySupportedPaymentMethod>(value.ToString());
         }
 
-        public override string GetPaymentLink(BTCPayNetworkBase network, IPaymentMethodDetails paymentMethodDetails,
+        public override string GetPaymentLink(BTCPayNetworkBase network, InvoiceEntity invoice, IPaymentMethodDetails paymentMethodDetails,
             Money cryptoInfoDue, string serverUri)
         {
             if (!paymentMethodDetails.Activated)
@@ -36,7 +36,7 @@ namespace BTCPayServer.Payments
             }
             var lnurlPaymentMethodDetails = (LNURLPayPaymentMethodDetails)paymentMethodDetails;
             var uri = new Uri(
-                $"{serverUri.WithTrailingSlash()}{network.CryptoCode}/lnurl/pay/i/{lnurlPaymentMethodDetails.BTCPayInvoiceId}");
+                $"{serverUri.WithTrailingSlash()}{network.CryptoCode}/UILNURL/pay/i/{invoice.Id}");
             return LNURL.LNURL.EncodeUri(uri, "payRequest", lnurlPaymentMethodDetails.Bech32Mode).ToString();
         }
 
@@ -58,13 +58,13 @@ namespace BTCPayServer.Payments
             return IsPaymentTypeBase(paymentType);
         }
 
-        public override void PopulateCryptoInfo(PaymentMethod details, InvoiceCryptoInfo invoiceCryptoInfo, string serverUrl)
+        public override void PopulateCryptoInfo(InvoiceEntity invoice, PaymentMethod details, InvoiceCryptoInfo invoiceCryptoInfo, string serverUrl)
         {
             invoiceCryptoInfo.PaymentUrls = new InvoiceCryptoInfo.InvoicePaymentUrls()
             {
                 AdditionalData = new Dictionary<string, JToken>()
                 {
-                    {"LNURLP", JToken.FromObject(GetPaymentLink(details.Network, details.GetPaymentMethodDetails(), invoiceCryptoInfo.Due,
+                    {"LNURLP", JToken.FromObject(GetPaymentLink(details.Network, invoice, details.GetPaymentMethodDetails(), invoiceCryptoInfo.Due,
                         serverUrl))}
                 }
             };

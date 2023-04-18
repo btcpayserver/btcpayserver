@@ -499,6 +499,109 @@
                 ]
             }
         },
+        "/api/v1/stores/{storeId}/custodian-accounts/{accountId}/withdrawals/simulation": {
+            "post": {
+                "operationId": "Custodians_SimulateWithdrawFromStoreCustodianAccount",
+                "tags": [
+                    "Custodians"
+                ],
+                "summary": "Simulate a withdrawal",
+                "description": "Get more information about a potential withdrawal including fees, minimum and maximum quantities for the given asset and quantity.",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The Store ID",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "accountId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The Custodian Account ID.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "paymentMethod",
+                        "in": "query",
+                        "required": true,
+                        "description": "The payment method to be used for the withdrawal.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "qty",
+                        "in": "query",
+                        "required": true,
+                        "description": "The quantity to simulate a withdrawal for.",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/WithdrawalRequestData"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Information about a potential withdrawal including fees, minimum and maximum quantities.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/WithdrawalSimulationResultData"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Withdrawal is not possible because you don't have this much in your account."
+                    },
+                    "404": {
+                        "description": "Withdrawal is not possible for this payment method."
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "oneOf": [
+                                        {
+                                            "type": "string",
+                                            "description": "If you are authenticated but forbidden to create withdrawals"
+                                        },
+                                        {
+                                            "type": "string",
+                                            "description": "Withdrawing to the address provided is not allowed"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canwithdrawfromcustodianaccounts"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
         "/api/v1/stores/{storeId}/custodian-accounts/{accountId}/withdrawals": {
             "post": {
                 "operationId": "Custodians_WithdrawFromStoreCustodianAccount",
@@ -564,7 +667,7 @@
                                     "oneOf": [
                                         {
                                             "type": "string",
-                                            "description": "If you are authenticated but forbidden to create trades"
+                                            "description": "If you are authenticated but forbidden to withdraw"
                                         },
                                         {
                                             "type": "string",
@@ -587,7 +690,7 @@
             }
         },
         "/api/v1/stores/{storeId}/custodian-accounts/{accountId}/withdrawals/{withdrawalId}": {
-            "post": {
+            "get": {
                 "operationId": "Custodians_GetStoreCustodianAccountWithdrawalInfo",
                 "tags": [
                     "Custodians"
@@ -779,11 +882,11 @@
                     "assetBalances": [
                         {
                             "asset": "BTC",
-                            "qty": 1.23456
+                            "qty": "1.23456"
                         },
                         {
                             "asset": "USD",
-                            "qty": 123456.78
+                            "qty": "123456.78"
                         }
                     ],
                     "config": {
@@ -849,12 +952,14 @@
                         "nullable": false
                     },
                     "bid": {
-                        "type": "number",
+                        "type": "string",
+                        "format": "decimal",
                         "description": "The bid price.",
                         "nullable": false
                     },
                     "ask": {
-                        "type": "number",
+                        "type": "string",
+                        "format": "decimal",
                         "description": "The ask price",
                         "nullable": false
                     }
@@ -862,8 +967,8 @@
                 "example": {
                     "fromAsset": "USD",
                     "toAsset": "BTC",
-                    "bid": 30000.12,
-                    "ask": 30002.24
+                    "bid": "30000.12",
+                    "ask": "30002.24"
                 }
             },
             "TradeRequestData": {
@@ -882,12 +987,15 @@
                     "qty": {
                         "oneOf": [
                             {
-                                "type": "number",
-                                "description": "The qty of fromAsset to convert into toAsset."
+                                "type": "string",
+                                "format": "decimal",
+                                "description": "The qty of fromAsset to convert into toAsset.",
+                                "example": "1.50"
                             },
                             {
                                 "type": "string",
-                                "description": "The percent of fromAsset to convert into toAsset. The value must end with \"%\" to be considered a percentage."
+                                "description": "The percent of fromAsset to convert into toAsset. The value must end with \"%\" to be considered a percentage.",
+                                "example": "50%"
                             }
                         ],
                         "nullable": false
@@ -939,22 +1047,22 @@
                     "ledgerEntries": [
                         {
                             "asset": "BTC",
-                            "qty": 1.23456,
+                            "qty": "1.23456",
                             "type": "Trade"
                         },
                         {
                             "asset": "USD",
-                            "qty": -61728,
+                            "qty": "-61728",
                             "type": "Trade"
                         },
                         {
                             "asset": "BTC",
-                            "qty": -0.00123456,
+                            "qty": "-0.00123456",
                             "type": "Fee"
                         },
                         {
                             "asset": "KFEE",
-                            "qty": -123.456,
+                            "qty": "-123.456",
                             "type": "Fee"
                         }
                     ],
@@ -972,14 +1080,22 @@
                         "nullable": false
                     },
                     "qty": {
-                        "type": "number",
-                        "description": "The qty to withdraw.",
-                        "nullable": false
+                        "oneOf": [
+                            {
+                                "type": "string",
+                                "format": "decimal",
+                                "description": "The quantity to withdraw."
+                            },
+                            {
+                                "type": "string",
+                                "description": "The percent of your holdings to withdraw. The value must end with \"%\" to be considered a percentage."
+                            }
+                        ]
                     }
                 },
                 "example": {
                     "paymentMethod": "BTC-OnChain",
-                    "qty": 0.123456
+                    "qty": "0.123456"
                 }
             },
             "WithdrawalResultData": {
@@ -1037,12 +1153,76 @@
                     "ledgerEntries": [
                         {
                             "asset": "BTC",
-                            "qty": -0.123456,
+                            "qty": "-0.123456",
                             "type": "Withdrawal"
                         },
                         {
                             "asset": "BTC",
-                            "qty": -0.005,
+                            "qty": "-0.005",
+                            "type": "Fee"
+                        }
+                    ],
+                    "withdrawalId": "XXXX-XXXX-XXXX-XXXX",
+                    "accountId": "xxxxxxxxxxxxxxx",
+                    "custodianCode": "kraken",
+                    "status": "Complete",
+                    "transactionId": "xxxxxxxxxxxxxxx",
+                    "targetAddress": "bc1qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                }
+            },
+            "WithdrawalSimulationResultData": {
+                "type": "object",
+                "properties": {
+                    "asset": {
+                        "type": "string",
+                        "description": "The asset that is being withdrawn."
+                    },
+                    "paymentMethod": {
+                        "type": "string",
+                        "description": "The payment method that is used (crypto code + network)."
+                    },
+                    "ledgerEntries": {
+                        "type": "array",
+                        "description": "The asset entries that would be changed if this were a real withdrawal. The first item is always the withdrawal itself. It could also includes ledger entries for the costs and may include credits or exchange tokens to give a discount.",
+                        "items": {
+                            "$ref": "#/components/schemas/LedgerEntryData"
+                        }
+                    },
+                    "accountId": {
+                        "type": "string",
+                        "description": "The unique ID of the custodian account used.",
+                        "nullable": false
+                    },
+                    "custodianCode": {
+                        "type": "string",
+                        "description": "The code of the custodian used.",
+                        "nullable": false
+                    },
+                    "minQty": {
+                        "type": "string",
+                        "format": "decimal",
+                        "description": "The minimum amount to withdraw",
+                        "nullable": true
+                    },
+                    "maxQty": {
+                        "type": "string",
+                        "format": "decimal",
+                        "description": "The maximum amount to withdraw",
+                        "nullable": true
+                    }
+                },
+                "example": {
+                    "asset": "BTC",
+                    "paymentMethod": "BTC-OnChain",
+                    "ledgerEntries": [
+                        {
+                            "asset": "BTC",
+                            "qty": "-0.123456",
+                            "type": "Withdrawal"
+                        },
+                        {
+                            "asset": "BTC",
+                            "qty": "-0.005",
                             "type": "Fee"
                         }
                     ],
@@ -1064,7 +1244,8 @@
                         "nullable": false
                     },
                     "qty": {
-                        "type": "number",
+                        "type": "string",
+                        "format": "decimal",
                         "description": "The quantity changed of the asset. Can be positive or negative.",
                         "nullable": false
                     },
@@ -1076,7 +1257,7 @@
                 },
                 "example": {
                     "asset": "BTC",
-                    "qty": 1.23456,
+                    "qty": "1.23456",
                     "type": "Trade"
                 }
             },
@@ -1090,14 +1271,15 @@
                         "nullable": false
                     },
                     "qty": {
-                        "type": "number",
+                        "type": "string",
+                        "format": "decimal",
                         "description": "The quantity changed of the asset. Can be positive or negative.",
                         "nullable": false
                     }
                 },
                 "example": {
                     "asset": "BTC",
-                    "qty": 1.23456
+                    "qty": "1.23456"
                 }
             },
             "AssetPairData": {

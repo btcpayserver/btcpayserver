@@ -7,12 +7,14 @@ using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.PayoutProcessors;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BTCPayServer.Controllers.Greenfield
 {
     [ApiController]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+    [EnableCors(CorsPolicies.All)]
     public class GreenfieldStorePayoutProcessorsController : ControllerBase
     {
         private readonly PayoutProcessorService _payoutProcessorService;

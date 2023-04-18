@@ -23,12 +23,14 @@ namespace BTCPayServer.Payments.Bitcoin
         private readonly BTCPayNetworkProvider _networkProvider;
         private readonly IFeeProviderFactory _FeeRateProviderFactory;
         private readonly NBXplorerDashboard _dashboard;
+        private readonly DisplayFormatter _displayFormatter;
         private readonly Services.Wallets.BTCPayWalletProvider _WalletProvider;
         private readonly Dictionary<string, string> _bech32Prefix;
 
         public BitcoinLikePaymentHandler(ExplorerClientProvider provider,
             BTCPayNetworkProvider networkProvider,
             IFeeProviderFactory feeRateProviderFactory,
+            DisplayFormatter displayFormatter,
             NBXplorerDashboard dashboard,
             Services.Wallets.BTCPayWalletProvider walletProvider)
         {
@@ -37,6 +39,7 @@ namespace BTCPayServer.Payments.Bitcoin
             _FeeRateProviderFactory = feeRateProviderFactory;
             _dashboard = dashboard;
             _WalletProvider = walletProvider;
+            _displayFormatter = displayFormatter;
 
             _bech32Prefix = networkProvider.GetAll().OfType<BTCPayNetwork>()
                 .Where(network => network.NBitcoinNetwork?.Consensus?.SupportSegwit is true).ToDictionary(network => network.CryptoCode,
@@ -63,15 +66,17 @@ namespace BTCPayServer.Payments.Bitcoin
             model.FeeRate = paymentMethodDetails.GetFeeRate();
             model.PaymentMethodName = GetPaymentMethodName(network);
 
+            var bip21Case = network.SupportLightning && storeBlob.OnChainWithLnInvoiceFallback;
+            var amountInSats = bip21Case && storeBlob.LightningAmountInSatoshi && model.CryptoCode == "BTC";
             string lightningFallback = null;
-            if (model.Activated && network.SupportLightning && storeBlob.OnChainWithLnInvoiceFallback)
+            if (model.Activated && bip21Case)
             {
                 var lightningInfo = invoiceResponse.CryptoInfo.FirstOrDefault(a =>
                     a.GetpaymentMethodId() == new PaymentMethodId(model.CryptoCode, PaymentTypes.LightningLike));
                 if (lightningInfo is not null && !string.IsNullOrEmpty(lightningInfo.PaymentUrls?.BOLT11))
                 {
                     lightningFallback = lightningInfo.PaymentUrls.BOLT11;
-                }   
+                }
                 else
                 {
                     var lnurlInfo = invoiceResponse.CryptoInfo.FirstOrDefault(a =>
@@ -79,7 +84,7 @@ namespace BTCPayServer.Payments.Bitcoin
                     if (lnurlInfo is not null)
                     {
                         lightningFallback = lnurlInfo.PaymentUrls?.AdditionalData["LNURLP"].ToObject<string>();
-                        
+
                         // This seems to be an edge case in the Selenium tests, in which the LNURLP isn't populated.
                         // I have come across it only in the tests and this is supposed to make them happy.
                         if (string.IsNullOrEmpty(lightningFallback))
@@ -117,7 +122,7 @@ namespace BTCPayServer.Payments.Bitcoin
                     var delimiterUrl = model.InvoiceBitcoinUrl.Contains("?") ? "&" : "?";
                     model.InvoiceBitcoinUrl += $"{delimiterUrl}{lightningFallback}";
                     // model.InvoiceBitcoinUrl: bitcoin:bcrt1qxp2qa5dhn7?amount=0.00044007&lightning=lnbcrt440070n1...
-                    
+
                     var delimiterUrlQR = model.InvoiceBitcoinUrlQR.Contains("?") ? "&" : "?";
                     model.InvoiceBitcoinUrlQR += $"{delimiterUrlQR}{lightningFallback.ToUpperInvariant().Replace("LIGHTNING=", "lightning=", StringComparison.OrdinalIgnoreCase)}";
                     // model.InvoiceBitcoinUrlQR: bitcoin:bcrt1qxp2qa5dhn7?amount=0.00044007&lightning=LNBCRT4400...
@@ -134,6 +139,11 @@ namespace BTCPayServer.Payments.Bitcoin
             else
             {
                 model.InvoiceBitcoinUrl = model.InvoiceBitcoinUrlQR = string.Empty;
+            }
+
+            if (model.Activated && amountInSats)
+            {
+                base.PreparePaymentModelForAmountInSats(model, paymentMethod, _displayFormatter);
             }
         }
 

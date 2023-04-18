@@ -1,9 +1,11 @@
 @inject BTCPayServer.Services.LanguageService langService
 @inject BTCPayServer.Services.BTCPayServerEnvironment env
 @inject PaymentMethodHandlerDictionary PaymentMethodHandlerDictionary
+@inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model PaymentModel
 @{
-    Layout = null;
+	Layout = null;
+	Csp.UnsafeEval();
 }
 
 <!DOCTYPE html>
@@ -356,8 +358,6 @@
                 if (jsonData.paymentMethodId === this.srvModel.paymentMethodId) {
                     this.changingCurrencies = false;
                 }
-                // displaying satoshis for lightning payments
-                jsonData.cryptoCodeSrv = jsonData.cryptoCode;
                 // expand line items to show details on amount due for multi-transaction payment
                 if (this.srvModel.txCount === 1 && jsonData.txCount > 1) {
                     this.onlyExpandLineItems();

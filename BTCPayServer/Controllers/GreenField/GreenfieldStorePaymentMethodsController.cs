@@ -8,6 +8,7 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Security;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using StoreData = BTCPayServer.Data.StoreData;
 
@@ -15,6 +16,7 @@ namespace BTCPayServer.Controllers.Greenfield
 {
     [ApiController]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+    [EnableCors(CorsPolicies.All)]
     public class GreenfieldStorePaymentMethodsController : ControllerBase
     {
         private StoreData Store => HttpContext.GetStoreData();

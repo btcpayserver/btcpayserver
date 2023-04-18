@@ -94,7 +94,7 @@ namespace BTCPayServer.Plugins.NFC
                 var details = ex.InnerException?.Message ?? ex.Message;
                 return BadRequest($"Could not fetch info from LNURL-Withdraw: {details}");
             }
-            
+
             if (info?.Callback is null)
             {
                 return BadRequest("Could not fetch info from LNURL-Withdraw");
@@ -127,7 +127,7 @@ namespace BTCPayServer.Plugins.NFC
                 {
                     due = new LightMoney(lnPaymentMethod.Calculate().Due);
                 }
-                
+
                 if (info.MinWithdrawable > due || due > info.MaxWithdrawable)
                 {
                     return BadRequest("Invoice amount is not payable with the LNURL allowed amounts.");
@@ -175,18 +175,18 @@ namespace BTCPayServer.Plugins.NFC
                 }
             }
 
-            if (bolt11 is null)
+            if (string.IsNullOrEmpty(bolt11))
             {
                 return BadRequest("Could not fetch BOLT11 invoice to pay to.");
             }
 
             var result = await info.SendRequest(bolt11, httpClient);
-            if (result.Status.Equals("ok", StringComparison.InvariantCultureIgnoreCase))
+            if (!string.IsNullOrEmpty(result.Status) && result.Status.Equals("ok", StringComparison.InvariantCultureIgnoreCase))
             {
                 return Ok(result.Reason);
             }
 
-            return BadRequest(result.Reason);
+            return BadRequest(result.Reason ?? "Unknown error");
         }
     }
 }

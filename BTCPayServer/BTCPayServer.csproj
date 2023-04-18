@@ -47,13 +47,13 @@
   <ItemGroup>
     <PackageReference Include="BIP78.Sender" Version="0.2.2" />
     <PackageReference Include="BTCPayServer.Hwi" Version="2.0.2" />
-    <PackageReference Include="BTCPayServer.Lightning.All" Version="1.4.21" />
+    <PackageReference Include="BTCPayServer.Lightning.All" Version="1.4.22" />
     <PackageReference Include="CsvHelper" Version="15.0.5" />
     <PackageReference Include="Dapper" Version="2.0.123" />
     <PackageReference Include="Fido2" Version="2.0.2" />
     <PackageReference Include="Fido2.AspNet" Version="2.0.2" />
     <PackageReference Include="HtmlSanitizer" Version="5.0.372" />
-    <PackageReference Include="LNURL" Version="0.0.28" />
+    <PackageReference Include="LNURL" Version="0.0.29" />
     <PackageReference Include="MailKit" Version="3.3.0" />
     <PackageReference Include="BTCPayServer.NETCore.Plugins.Mvc" Version="1.4.4" />
     <PackageReference Include="QRCoder" Version="1.4.3" />
@@ -134,11 +134,11 @@
 	  <ProjectReference Include="..\BTCPayServer.Data\BTCPayServer.Data.csproj" />
 	  <ProjectReference Include="..\BTCPayServer.Rating\BTCPayServer.Rating.csproj" />
 	  <ProjectReference Include="..\BTCPayServer.Common\BTCPayServer.Common.csproj" />
-	  <ProjectReference Include="..\Plugins\BTCPayServer.Plugins.Custodians.FakeCustodian\BTCPayServer.Plugins.Custodians.FakeCustodian.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
     <Watch Include="Views\**\*.*"></Watch>
+    <Watch Remove="Views\UIAccount\CheatPermissions.cshtml" />
     <Content Update="Views\UIApps\_ViewImports.cshtml">
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <Pack>$(IncludeRazorContentInPack)</Pack>

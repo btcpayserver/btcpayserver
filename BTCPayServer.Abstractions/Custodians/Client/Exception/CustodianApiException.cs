@@ -10,7 +10,7 @@ public class CustodianApiException : Exception
         HttpStatus = httpStatus;
         Code = code;
     }
-    
+
     public CustodianApiException(int httpStatus, string code, string message) : this(httpStatus, code, message, null)
     {
     }

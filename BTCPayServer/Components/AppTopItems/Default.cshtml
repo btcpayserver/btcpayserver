@@ -1,16 +1,16 @@
-@using BTCPayServer.Services.Apps
+@using BTCPayServer.Plugins.Crowdfund
 @model BTCPayServer.Components.AppTopItems.AppTopItemsViewModel
-
 @{
-    var controller = $"UI{Model.App.AppType}";
-    var action = $"Update{Model.App.AppType}";
-    var label = Model.App.AppType == nameof(AppType.Crowdfund) ? "contribution" : "sale";
+    var label = Model.AppType == CrowdfundAppType.AppType ? "contribution" : "sale";
 }
 
-<div id="AppTopItems-@Model.App.Id" class="widget app-top-items">
+<div id="AppTopItems-@Model.Id" class="widget app-top-items">
     <header class="mb-3">
-        <h3>Top @(Model.App.AppType == nameof(AppType.Crowdfund) ? "Perks" : "Items")</h3>
-        <a asp-controller="@controller" asp-action="@action" asp-route-appId="@Model.App.Id">View All</a>
+        <h3>Top @(Model.AppType == CrowdfundAppType.AppType ? "Perks" : "Items")</h3>
+        @if (!string.IsNullOrEmpty(Model.AppUrl))
+        {
+            <a href="@Model.AppUrl">View All</a>
+        }
     </header>
     @if (Model.InitialRendering)
     {
@@ -19,37 +19,26 @@
                 <span class="visually-hidden">Loading...</span>
             </div>
         </div>
+        <script src="~/Components/AppTopItems/Default.cshtml.js" asp-append-version="true"></script>
         <script>
-            (async () => {
-                const url = @Safe.Json(Url.Action("AppTopItems", "UIApps", new { appId = Model.App.Id }));
-                const appId = @Safe.Json(Model.App.Id);
-                const response = await fetch(url);
-                if (response.ok) {
-                    document.getElementById(`AppTopItems-${appId}`).outerHTML = await response.text();
-                    const initScript = document.querySelector(`#AppTopItems-${appId} script`);
-                    if (initScript) eval(initScript.innerHTML);
-                }
-            })();
-        </script>
+		(async () => {
+			const url = @Safe.Json(Model.DataUrl);
+			const appId = @Safe.Json(Model.Id);
+			const response = await fetch(url);
+			if (response.ok) {
+				document.getElementById(`AppTopItems-${appId}`).outerHTML = await response.text();
+				const data = document.querySelector(`#AppSales-${appId} template`);
+				if (data) window.appSales.dataLoaded(JSON.parse(data.innerHTML));
+			}
+		})();
+	    </script>
     }
     else if (Model.Entries.Any())
     {
         <div class="ct-chart mb-3"></div>
-        <script>
-            (function () {
-                const id = @Safe.Json($"AppTopItems-{Model.App.Id}");
-                const series = @Safe.Json(Model.Entries.Select(i => i.SalesCount));
-                new Chartist.Bar(`#${id} .ct-chart`, { series }, {
-                    distributeSeries: true,
-                    horizontalBars: true,
-                    showLabel: false,
-                    stackBars: true,
-                    axisY: {
-                        offset: 0
-                    }
-                });
-            })();
-        </script>
+        <template>
+            @Safe.Json(Model)
+        </template>
         <div class="app-items">
             @for (var i = 0; i < Model.Entries.Count; i++)
             {

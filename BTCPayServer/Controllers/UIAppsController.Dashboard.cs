@@ -21,8 +21,7 @@ namespace BTCPayServer.Controllers
 
             app.StoreData = GetCurrentStore();
 
-            var vm = new AppTopItemsViewModel { App = app };
-            return ViewComponent("AppTopItems", new { vm });
+            return ViewComponent("AppTopItems", new { appId = app.Id, appType = app.AppType });
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
@@ -34,9 +33,7 @@ namespace BTCPayServer.Controllers
                 return NotFound();
 
             app.StoreData = GetCurrentStore();
-
-            var vm = new AppSalesViewModel { App = app };
-            return ViewComponent("AppSales", new { vm });
+            return ViewComponent("AppSales", new { appId = app.Id, appType = app.AppType });
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]

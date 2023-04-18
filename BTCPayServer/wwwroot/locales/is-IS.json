@@ -39,7 +39,7 @@
   "Return to StoreName": "Fara aftur á {{storeName}}",
   "This invoice has been paid": "Þetta hefur verið greitt",
   "This invoice has been archived": "Þessi reikningur hefur verið gerður ógildur",
-  "Archived_Body": "Vinsamlegast hafðu samband fyrir upplýsingar eða aðstoð.",
+  "Archived_Body": "Vinsamlegast hafðu samband fyrir upplýsingar eða aðstoð",
   "BOLT 11 Invoice": "BOLT 11 Reikningur",
   "Node Info": "Nótu upplýsingar",
   "txCount": "{{count}} reikningur",

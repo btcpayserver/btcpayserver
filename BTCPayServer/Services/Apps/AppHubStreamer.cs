@@ -55,7 +55,7 @@ namespace BTCPayServer.Services.Apps
 
         private async Task InfoUpdated(string appId)
         {
-            var info = await _appService.GetAppInfo(appId);
+            var info = await _appService.GetInfo(appId);
             await _HubContext.Clients.Group(appId).SendCoreAsync(AppHub.InfoUpdated, new object[] { info });
         }
     }

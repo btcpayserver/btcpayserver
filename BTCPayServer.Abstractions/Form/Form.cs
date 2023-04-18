@@ -32,6 +32,8 @@ public class Form
     // Are all the fields valid in the form?
     public bool IsValid()
     {
+        if (TopMessages?.Any(t => t.Type == AlertMessage.AlertMessageType.Danger) is true)
+            return false;
         return Fields.Select(f => f.IsValid()).All(o => o);
     }
 
@@ -50,7 +52,7 @@ public class Form
         HashSet<string> nameReturned = new();
         foreach (var f in GetAllFieldsCore(new List<string>(), Fields))
         {
-            var fullName = string.Join('_', f.Path);
+            var fullName = string.Join('_', f.Path.Where(s => !string.IsNullOrEmpty(s)));
             if (!nameReturned.Add(fullName))
                 continue;
             yield return (fullName, f.Path, f.Field);
@@ -63,7 +65,7 @@ public class Form
         HashSet<string> nameReturned = new();
         foreach (var f in GetAllFieldsCore(new List<string>(), Fields))
         {
-            var fullName = string.Join('_', f.Path);
+            var fullName = string.Join('_', f.Path.Where(s => !string.IsNullOrEmpty(s)));
             if (!nameReturned.Add(fullName))
             {
                 errors.Add($"Form contains duplicate field names '{fullName}'");
@@ -128,32 +130,12 @@ public class Form
             }
             else if (prop.Value.Type == JTokenType.String)
             {
-                var fullname = String.Join('_', propPath);
-                if (fields.TryGetValue(fullname, out var f) && !f.Constant)
+                var fullName = string.Join('_', propPath.Where(s => !string.IsNullOrEmpty(s)));
+                if (fields.TryGetValue(fullName, out var f) && !f.Constant)
                     f.Value = prop.Value.Value<string>();
             }
         }
     }
 
-    public JObject GetValues()
-    {
-        var r = new JObject();
-        foreach (var f in GetAllFields())
-        {
-            var node = r;
-            for (int i = 0; i < f.Path.Count - 1; i++)
-            {
-                var p = f.Path[i];
-                var child = node[p] as JObject;
-                if (child is null)
-                {
-                    child = new JObject();
-                    node[p] = child;
-                }
-                node = child;
-            }
-            node[f.Field.Name] = f.Field.Value;
-        }
-        return r;
-    }
+
 }

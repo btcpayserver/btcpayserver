@@ -12,7 +12,7 @@ namespace BTCPayServer.Data
 {
     public static class IHasBlobExtensions
     {
-       static readonly JsonSerializerSettings DefaultSerializer;
+        static readonly JsonSerializerSettings DefaultSerializer;
         static IHasBlobExtensions()
         {
             DefaultSerializer = new JsonSerializerSettings()
@@ -30,7 +30,7 @@ namespace BTCPayServer.Data
                 this.data = data;
             }
             [Obsolete("Use Blob2 instead")]
-            public byte[] Blob { get { return data.Blob; } set { data.Blob = value;  } }
+            public byte[] Blob { get { return data.Blob; } set { data.Blob = value; } }
             public string Blob2 { get { return data.Blob2; } set { data.Blob2 = value; } }
         }
         class HasBlobWrapper : IHasBlob

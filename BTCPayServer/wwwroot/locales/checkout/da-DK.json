@@ -9,7 +9,7 @@
   "view_details": "Se detaljer",
   "pay_with": "Betal med",
   "pay_in_wallet": "Betal i tegnebog",
-  "pay_by_nfc": "Betal med NFC (LNURL-Withdraw)",
+  "pay_by_nfc": "Betal med NFC",
   "pay_by_lnurl": "Betal med LNURL-Withdraw",
   "invoice_id": "Faktura ID",
   "order_id": "Ordre ID",
@@ -26,7 +26,7 @@
   "address": "Adresse",
   "lightning": "Lightning (navn på en specifik type blockchain-teknologi)",
   "payment_link": "Betalingslink",
-  "invoice_paid": "Faktura betalt.",
+  "invoice_paid": "Faktura betalt",
   "invoice_expired": "Faktura udløbet",
   "invoice_expired_body": "En faktura er kun gyldig i {{minutes}} minutter. Vend tilbage til {{storeName}}, hvis du ønsker at foretage en ny betaling.",
   "view_receipt": "Se kvittering",
@@ -34,5 +34,10 @@
   "copy": "Kopier",
   "copy_confirm": "Kopieret",
   "powered_by": "Drevet af",
-  "conversion_body": "Denne service er stillet til rådighed af 3. Partnere. Vær venligst opmærksom på, at vi ikke har kontrol over, hvordan udbydere vil videresende dine midler. Fakturaen vil kun blive markeret betalt, når der er modtaget midler på {{cryptoCode}} Blockchain."
+  "conversion_body": "Denne service er stillet til rådighed af 3. Partnere. Vær venligst opmærksom på, at vi ikke har kontrol over, hvordan udbydere vil videresende dine midler. Fakturaen vil kun blive markeret betalt, når der er modtaget midler på {{cryptoCode}} Blockchain.",
+  "scanning_nfc": "Scanner NFC ...",
+  "submitting_nfc": "Indsend NFC ...",
+  "payment_received": "Betaling modtaget",
+  "payment_received_body": "Din betaling er modtaget og behandles nu",
+  "payment_received_confirmations": "Når din betaling har modtaget {{requiredConfirmations}} bekræftelser på {{cryptoCode}} blockchain, vil din faktura blive afregnet."
 }

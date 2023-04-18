@@ -14,6 +14,7 @@ using BTCPayServer.Forms.Models;
 using BTCPayServer.Models;
 using BTCPayServer.Models.PaymentRequestViewModels;
 using BTCPayServer.PaymentRequest;
+using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.PaymentRequests;
 using BTCPayServer.Services.Rates;
@@ -37,6 +38,7 @@ namespace BTCPayServer.Controllers
         private readonly PaymentRequestService _PaymentRequestService;
         private readonly EventAggregator _EventAggregator;
         private readonly CurrencyNameTable _Currencies;
+        private readonly DisplayFormatter _displayFormatter;
         private readonly InvoiceRepository _InvoiceRepository;
         private readonly StoreRepository _storeRepository;
 
@@ -50,6 +52,7 @@ namespace BTCPayServer.Controllers
             PaymentRequestService paymentRequestService,
             EventAggregator eventAggregator,
             CurrencyNameTable currencies,
+            DisplayFormatter displayFormatter,
             StoreRepository storeRepository,
             InvoiceRepository invoiceRepository,
             FormComponentProviders formProviders,
@@ -61,6 +64,7 @@ namespace BTCPayServer.Controllers
             _PaymentRequestService = paymentRequestService;
             _EventAggregator = eventAggregator;
             _Currencies = currencies;
+            _displayFormatter = displayFormatter;
             _storeRepository = storeRepository;
             _InvoiceRepository = invoiceRepository;
             FormProviders = formProviders;
@@ -89,7 +93,7 @@ namespace BTCPayServer.Controllers
                 var blob = data.GetBlob();
                 return new ViewPaymentRequestViewModel(data)
                 {
-                    AmountFormatted = _Currencies.DisplayFormatCurrency(blob.Amount, blob.Currency)
+                    AmountFormatted = _displayFormatter.Currency(blob.Amount, blob.Currency)
                 };
             }).ToList();
 
@@ -194,14 +198,14 @@ namespace BTCPayServer.Controllers
             {
                 return NotFound();
             }
-            
+
             var storeBlob = store.GetStoreBlob();
             vm.StoreName = store.StoreName;
             vm.BrandColor = storeBlob.BrandColor;
             vm.LogoFileId = storeBlob.LogoFileId;
             vm.CssFileId = storeBlob.CssFileId;
             vm.HubPath = PaymentRequestHub.GetHubPath(Request);
-            
+
             return View(vm);
         }
 
@@ -220,14 +224,14 @@ namespace BTCPayServer.Controllers
             var prBlob = result.GetBlob();
             if (prBlob.FormResponse is not null)
             {
-                return RedirectToAction("PayPaymentRequest", new {payReqId});
+                return RedirectToAction("PayPaymentRequest", new { payReqId });
             }
             var prFormId = prBlob.FormId;
             var formData = await FormDataService.GetForm(prFormId);
             if (formData is null)
             {
-                
-                return RedirectToAction("PayPaymentRequest", new {payReqId});
+
+                return RedirectToAction("PayPaymentRequest", new { payReqId });
             }
 
             var form = Form.Parse(formData.Config);
@@ -235,11 +239,11 @@ namespace BTCPayServer.Controllers
             {
                 form.ApplyValuesFromForm(Request.Form);
                 if (FormDataService.Validate(form, ModelState))
-                {  
-                    prBlob.FormResponse = form.GetValues();
+                {
+                    prBlob.FormResponse = FormDataService.GetValues(form);
                     result.SetBlob(prBlob);
                     await _PaymentRequestRepository.CreateOrUpdatePaymentRequest(result);
-                    return RedirectToAction("PayPaymentRequest", new {payReqId});
+                    return RedirectToAction("PayPaymentRequest", new { payReqId });
                 }
             }
             viewModel.FormName = formData.Name;
@@ -279,7 +283,7 @@ namespace BTCPayServer.Controllers
                 var formData = await FormDataService.GetForm(result.FormId);
                 if (formData is not null)
                 {
-                    return RedirectToAction("ViewPaymentRequestForm", new {payReqId});
+                    return RedirectToAction("ViewPaymentRequestForm", new { payReqId });
                 }
             }
 

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client.Models;
@@ -88,7 +89,7 @@ namespace BTCPayServer.Services.Invoices
                 .ToListAsync()).Select(ToEntity);
         }
 
-        public async Task<InvoiceEntity[]> GetPendingInvoices(bool includeAddressData = false, bool skipNoPaymentInvoices = false)
+        public async Task<InvoiceEntity[]> GetPendingInvoices(bool includeAddressData = false, bool skipNoPaymentInvoices = false, CancellationToken cancellationToken = default)
         {
             using var ctx = _applicationDbContextFactory.CreateContext();
             var q = ctx.PendingInvoices.AsQueryable();
@@ -99,7 +100,7 @@ namespace BTCPayServer.Services.Invoices
                     .ThenInclude(o => o.AddressInvoices);
             if (skipNoPaymentInvoices)
                 q = q.Where(i => i.InvoiceData.Payments.Any());
-            return (await q.Select(o => o.InvoiceData).ToArrayAsync()).Select(ToEntity).ToArray();
+            return (await q.Select(o => o.InvoiceData).ToArrayAsync(cancellationToken)).Select(ToEntity).ToArray();
         }
         public async Task<string[]> GetPendingInvoiceIds()
         {
@@ -775,6 +776,67 @@ namespace BTCPayServer.Services.Invoices
                 ? JsonConvert.DeserializeObject<T>(ZipUtils.Unzip(blob), DefaultSerializerSettings)
                 : network.ToObject<T>(ZipUtils.Unzip(blob));
         }
+
+        public static string ToJsonString<T>(T data, BTCPayNetworkBase network)
+        {
+            return network == null ? JsonConvert.SerializeObject(data, DefaultSerializerSettings) : network.ToString(data);
+        }
+
+
+        public InvoiceStatistics GetContributionsByPaymentMethodId(string currency, InvoiceEntity[] invoices, bool softcap)
+        {
+            var contributions = invoices
+                .Where(p => p.Currency.Equals(currency, StringComparison.OrdinalIgnoreCase))
+                .SelectMany(p =>
+                {
+                    var contribution = new InvoiceStatistics.Contribution();
+                    contribution.PaymentMethodId = new PaymentMethodId(p.Currency, PaymentTypes.BTCLike);
+                    contribution.CurrencyValue = p.Price;
+                    contribution.Value = contribution.CurrencyValue;
+
+                    // For hardcap, we count newly created invoices as part of the contributions
+                    if (!softcap && p.Status == InvoiceStatusLegacy.New)
+                        return new[] { contribution };
+
+                    // If the user get a donation via other mean, he can register an invoice manually for such amount
+                    // then mark the invoice as complete
+                    var payments = p.GetPayments(true);
+                    if (payments.Count == 0 &&
+                        p.ExceptionStatus == InvoiceExceptionStatus.Marked &&
+                        p.Status == InvoiceStatusLegacy.Complete)
+                        return new[] { contribution };
+
+                    contribution.CurrencyValue = 0m;
+                    contribution.Value = 0m;
+
+                    // If an invoice has been marked invalid, remove the contribution
+                    if (p.ExceptionStatus == InvoiceExceptionStatus.Marked &&
+                        p.Status == InvoiceStatusLegacy.Invalid)
+                        return new[] { contribution };
+
+
+                    // Else, we just sum the payments
+                    return payments
+                             .Select(pay =>
+                             {
+                                 var paymentMethodContribution = new InvoiceStatistics.Contribution();
+                                 paymentMethodContribution.PaymentMethodId = pay.GetPaymentMethodId();
+                                 paymentMethodContribution.Value = pay.GetCryptoPaymentData().GetValue() - pay.NetworkFee;
+                                 var rate = p.GetPaymentMethod(paymentMethodContribution.PaymentMethodId).Rate;
+                                 paymentMethodContribution.CurrencyValue = rate * paymentMethodContribution.Value;
+                                 return paymentMethodContribution;
+                             })
+                             .ToArray();
+                })
+                .GroupBy(p => p.PaymentMethodId)
+                .ToDictionary(p => p.Key, p => new InvoiceStatistics.Contribution()
+                {
+                    PaymentMethodId = p.Key,
+                    Value = p.Select(v => v.Value).Sum(),
+                    CurrencyValue = p.Select(v => v.CurrencyValue).Sum()
+                });
+            return new InvoiceStatistics(contributions);
+        }
     }
 
     public class InvoiceQuery
@@ -843,5 +905,21 @@ namespace BTCPayServer.Services.Invoices
         public bool IncludeEvents { get; set; }
         public bool IncludeArchived { get; set; } = true;
         public bool IncludeRefunds { get; set; }
+    }
+
+    public class InvoiceStatistics : Dictionary<PaymentMethodId, InvoiceStatistics.Contribution>
+    {
+        public InvoiceStatistics(IEnumerable<KeyValuePair<PaymentMethodId, Contribution>> collection) : base(collection)
+        {
+            TotalCurrency = Values.Select(v => v.CurrencyValue).Sum();
+        }
+        public decimal TotalCurrency { get; }
+
+        public class Contribution
+        {
+            public PaymentMethodId PaymentMethodId { get; set; }
+            public decimal Value { get; set; }
+            public decimal CurrencyValue { get; set; }
+        }
     }
 }

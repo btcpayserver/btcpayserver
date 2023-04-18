@@ -14,7 +14,7 @@ namespace BTCPayServer.TagHelpers
         {
             _currencies = currencies;
         }
-        
+
         public override void Process(TagHelperContext context, TagHelperOutput output)
         {
             output.Attributes.RemoveAll("currency-selection");

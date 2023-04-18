@@ -1,0 +1,22 @@
+@model CheatPermissionsViewModel
+
+@{
+	ViewData["Title"] = "Permissions";
+	Layout = "_LayoutSignedOut";
+}
+
+@if (Model.StoreId is not null)
+{
+	<h1>Store: @Model.StoreId</h1>
+}
+else
+{
+	<h1>No scope</h1>
+}
+
+<ul>
+@foreach (var p in Model.Permissions.Where(o => o.Result.Succeeded))
+{
+	<li>@p.Item1</li>
+}
+</ul>

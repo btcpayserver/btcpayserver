@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
+using BTCPayServer.HostedServices;
 using BTCPayServer.Payments;
 using Microsoft.AspNetCore.Mvc;
 using PayoutData = BTCPayServer.Data.PayoutData;
@@ -14,7 +15,7 @@ using StoreData = BTCPayServer.Data.StoreData;
 public interface IPayoutHandler
 {
     public bool CanHandle(PaymentMethodId paymentMethod);
-    public Task TrackClaim(PaymentMethodId paymentMethodId, IClaimDestination claimDestination);
+    public Task TrackClaim(ClaimRequest claimRequest, PayoutData payoutData);
     //Allows payout handler to parse payout destinations on its own
     public Task<(IClaimDestination destination, string error)> ParseClaimDestination(PaymentMethodId paymentMethodId, string destination, CancellationToken cancellationToken);
     public (bool valid, string? error) ValidateClaimDestination(IClaimDestination claimDestination, PullPaymentBlob? pullPaymentBlob);

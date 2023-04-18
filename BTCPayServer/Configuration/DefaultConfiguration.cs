@@ -30,6 +30,7 @@ namespace BTCPayServer.Configuration
             app.Option("--mysql", $"DEPRECATED: Connection string to a MySQL database", CommandOptionType.SingleValue);
             app.Option("--nocsp", $"Disable CSP (default false)", CommandOptionType.BoolValue);
             app.Option("--sqlitefile", $"DEPRECATED: File name to an SQLite database file inside the data directory", CommandOptionType.SingleValue);
+            app.Option("--deprecated", $"Allow deprecated settings (default:false)", CommandOptionType.BoolValue);
             app.Option("--externalservices", $"Links added to external services inside Server Settings / Services under the format service1:path2;service2:path2.(default: empty)", CommandOptionType.SingleValue);
             app.Option("--rootpath", "The root path in the URL to access BTCPay (default: /)", CommandOptionType.SingleValue);
             app.Option("--sshconnection", "SSH server to manage BTCPay under the form user@server:port (default: root@externalhost or empty)", CommandOptionType.SingleValue);
@@ -45,7 +46,6 @@ namespace BTCPayServer.Configuration
             app.Option("--debuglog", "A rolling log file for debug messages.", CommandOptionType.SingleValue);
             app.Option("--debugloglevel", "The severity you log (default:information)", CommandOptionType.SingleValue);
             app.Option("--disable-registration", "Disables new user registrations (default:true)", CommandOptionType.SingleValue);
-            app.Option("--plugin-remote", "Obsolete, do not use", CommandOptionType.SingleValue);
             app.Option("--recommended-plugins", "Plugins which would be marked as recommended to be installed. Separated by newline or space", CommandOptionType.MultipleValue);
             app.Option("--xforwardedproto", "If specified, set X-Forwarded-Proto to the specified value, this may be useful if your reverse proxy handle https but is not configured to add X-Forwarded-Proto (example: --xforwardedproto https)", CommandOptionType.SingleValue);
             app.Option("--cheatmode", "Add some helper UI to facilitate dev-time testing (Default false)", CommandOptionType.BoolValue);
@@ -137,7 +137,7 @@ namespace BTCPayServer.Configuration
             foreach (var n in new BTCPayNetworkProvider(networkType).GetAll().OfType<BTCPayNetwork>())
             {
                 builder.AppendLine(CultureInfo.InvariantCulture, $"#{n.CryptoCode}.explorer.url={n.NBXplorerNetwork.DefaultSettings.DefaultUrl}");
-                builder.AppendLine(CultureInfo.InvariantCulture, $"#{n.CryptoCode}.explorer.cookiefile={ n.NBXplorerNetwork.DefaultSettings.DefaultCookieFile}");
+                builder.AppendLine(CultureInfo.InvariantCulture, $"#{n.CryptoCode}.explorer.cookiefile={n.NBXplorerNetwork.DefaultSettings.DefaultCookieFile}");
                 builder.AppendLine(CultureInfo.InvariantCulture, $"#{n.CryptoCode}.blockexplorerlink=https://mempool.space/tx/{{0}}");
                 if (n.SupportLightning)
                 {

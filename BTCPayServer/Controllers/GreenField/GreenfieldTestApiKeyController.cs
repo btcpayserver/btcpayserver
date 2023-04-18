@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
@@ -5,6 +6,7 @@ using BTCPayServer.Data;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
@@ -16,6 +18,7 @@ namespace BTCPayServer.Controllers.Greenfield
     [Route("api/test/apikey")]
     [ApiController]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+    [EnableCors(CorsPolicies.All)]
     public class GreenfieldTestApiKeyController : ControllerBase
     {
         private readonly UserManager<ApplicationUser> _userManager;
@@ -52,9 +55,9 @@ namespace BTCPayServer.Controllers.Greenfield
 
         [HttpGet("me/stores")]
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        public StoreData[] GetCurrentUserStores()
+        public BTCPayServer.Client.Models.StoreData[] GetCurrentUserStores()
         {
-            return this.HttpContext.GetStoresData();
+            return this.HttpContext.GetStoresData().Select(Greenfield.GreenfieldStoresController.FromModel).ToArray();
         }
 
         [HttpGet("me/stores/{storeId}/can-view")]

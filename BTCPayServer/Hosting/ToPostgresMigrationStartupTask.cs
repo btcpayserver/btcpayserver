@@ -264,6 +264,7 @@ namespace BTCPayServer.Hosting
                 }
                 await postgresContext.SaveChangesAsync();
                 postgresContext.ChangeTracker.Clear();
+                await UpdateSequenceInvoiceSearch(postgresContext);
                 await SetMigrationState(postgresContext, migratingFrom, "complete");
             }
             otherContext.Dispose();
@@ -273,8 +274,12 @@ namespace BTCPayServer.Hosting
             Logger.LogInformation($"Migration to postgres from {migratingFrom} successful");
         }
 
+        internal static async Task UpdateSequenceInvoiceSearch(ApplicationDbContext postgresContext)
+        {
+            await postgresContext.Database.ExecuteSqlRawAsync("SELECT SETVAL('\"InvoiceSearches_Id_seq\"', (SELECT max(\"Id\") FROM \"InvoiceSearches\"));");
+        }
 
-        private static async Task<string?> GetMigrationState(ApplicationDbContext postgresContext)
+        internal static async Task<string?> GetMigrationState(ApplicationDbContext postgresContext)
         {
             var o = (await postgresContext.Settings.FromSqlRaw("SELECT \"Id\", \"Value\" FROM \"Settings\" WHERE \"Id\"='MigrationData'").AsNoTracking().FirstOrDefaultAsync())?.Value;
             if (o is null)

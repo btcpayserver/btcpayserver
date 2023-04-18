@@ -6,6 +6,7 @@ using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using AuthenticationSchemes = BTCPayServer.Abstractions.Constants.AuthenticationSchemes;
 using LightningAddressData = BTCPayServer.Client.Models.LightningAddressData;
@@ -14,6 +15,7 @@ namespace BTCPayServer.Controllers.Greenfield
 {
     [ApiController]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+    [EnableCors(CorsPolicies.All)]
     public class GreenfieldStoreLightningAddressesController : ControllerBase
     {
         private readonly LightningAddressService _lightningAddressService;
@@ -31,7 +33,10 @@ namespace BTCPayServer.Controllers.Greenfield
                 return new LightningAddressData();
             return new LightningAddressData()
             {
-                Username = data.Username, Max = blob.Max, Min = blob.Min, CurrencyCode = blob.CurrencyCode
+                Username = data.Username,
+                Max = blob.Max,
+                Min = blob.Min,
+                CurrencyCode = blob.CurrencyCode
             };
         }
 
@@ -39,7 +44,7 @@ namespace BTCPayServer.Controllers.Greenfield
         [HttpGet("~/api/v1/stores/{storeId}/lightning-addresses")]
         public async Task<IActionResult> GetStoreLightningAddresses(string storeId)
         {
-            return Ok((await _lightningAddressService.Get(new LightningAddressQuery() {StoreIds = new[] {storeId}}))
+            return Ok((await _lightningAddressService.Get(new LightningAddressQuery() { StoreIds = new[] { storeId } }))
                 .Select(ToModel).ToArray());
         }
 
@@ -62,7 +67,8 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             var res = await _lightningAddressService.Get(new LightningAddressQuery()
             {
-                Usernames = new[] {username}, StoreIds = new[] {storeId},
+                Usernames = new[] { username },
+                StoreIds = new[] { storeId },
             });
             return res?.Any() is true ? Ok(ToModel(res.First())) : this.CreateAPIError(404, "lightning-address-not-found", "The lightning address was not present.");
         }
@@ -77,17 +83,17 @@ namespace BTCPayServer.Controllers.Greenfield
                 ModelState.AddModelError(nameof(data.Min), "Minimum must be greater than 0 if provided.");
                 return this.CreateValidationError(ModelState);
             }
-            
+
             if (await _lightningAddressService.Set(new Data.LightningAddressData()
-                {
-                    StoreDataId = storeId,
-                    Username = username
-                }.SetBlob(new LightningAddressDataBlob()
-                {
-                    Max = data.Max,
-                    Min = data.Min,
-                    CurrencyCode = data.CurrencyCode
-                })))
+            {
+                StoreDataId = storeId,
+                Username = username
+            }.SetBlob(new LightningAddressDataBlob()
+            {
+                Max = data.Max,
+                Min = data.Min,
+                CurrencyCode = data.CurrencyCode
+            })))
             {
                 return await GetStoreLightningAddress(storeId, username);
             }

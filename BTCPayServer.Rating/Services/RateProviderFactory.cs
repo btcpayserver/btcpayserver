@@ -89,7 +89,7 @@ namespace BTCPayServer.Services.Rates
                     AvailableRateProviders.Add(new(rsi.Id, rsi.DisplayName, rsi.Url, RateSource.Coingecko));
                 }
             }
-            AvailableRateProviders.Sort((a,b) => StringComparer.Ordinal.Compare(a.DisplayName, b.DisplayName));
+            AvailableRateProviders.Sort((a, b) => StringComparer.Ordinal.Compare(a.DisplayName, b.DisplayName));
         }
 
         public List<AvailableRateProvider> AvailableRateProviders { get; } = new List<AvailableRateProvider>();

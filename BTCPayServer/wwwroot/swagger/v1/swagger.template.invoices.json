@@ -937,147 +937,171 @@
                     }
                 ]
             },
-            "InvoiceMetadataPosString": {
-                "type": "string",
-                "description": "shown on the invoice details page"
-            },
-            "InvoiceMetadataPosObject": {
-                "type": "object",
-                "description": "Any json object in any schema you want. Will be rendered on a best effort basis in terms of style on the invoice details UI"
-            },
             "InvoiceMetadata": {
                 "type": "object",
                 "additionalProperties": true,
-                "description": "Additional information around the invoice that can be supplied. The mentioned properties are all optional and you can introduce any json format you wish.",
+                "description": "Additional information around the invoice that can be supplied. The mentioned properties are all optional and you can introduce any json format you wish. See [our documentation](https://docs.btcpayserver.org/Development/InvoiceMetadata/) for more information.",
+                "example": {
+                    "orderId": "pos-app_346KRC5BjXXXo8cRFKwTBmdR6ZJ4",
+                    "orderUrl": "https://localhost:14142/apps/346KRC5BjXXXo8cRFKwTBmdR6ZJ4/pos",
+                    "itemDesc": "Tea shop",
+                    "posData": {
+                        "tip": 0.48,
+                        "cart": [
+                            {
+                                "id": "pu erh",
+                                "count": 1,
+                                "image": "~/img/pos-sample/pu-erh.jpg",
+                                "price": {
+                                    "type": 2,
+                                    "value": 2,
+                                    "formatted": "$2.00"
+                                },
+                                "title": "Pu Erh",
+                                "inventory": null
+                            },
+                            {
+                                "id": "rooibos",
+                                "count": 1,
+                                "image": "~/img/pos-sample/rooibos.jpg",
+                                "price": {
+                                    "type": 2,
+                                    "value": 1.2,
+                                    "formatted": "$1.20"
+                                },
+                                "title": "Rooibos",
+                                "inventory": null
+                            }
+                        ],
+                        "total": 3.68,
+                        "subTotal": 3.2,
+                        "customAmount": 0,
+                        "discountAmount": 0,
+                        "discountPercentage": 0
+                    },
+                    "receiptData": {
+                        "Tip": "$0.48",
+                        "Cart": {
+                            "Pu Erh": "$2.00 x 1 = $2.00",
+                            "Rooibos": "$1.20 x 1 = $1.20"
+                        }
+                    }
+                },
                 "anyOf": [
                     {
+                        "title": "Order information",
                         "properties": {
                             "orderId": {
                                 "type": "string",
                                 "nullable": true,
-                                "description": "You can use this property to store the ID of an external system. We allow you to search in the invoice list based on this ID."
+                                "description": "Refers to the order ID from an external system, such as an e-commerce platform like WooCommerce. This property is indexed, allowing for efficient invoice searches using the `orderId`."
                             },
                             "orderUrl": {
                                 "type": "string",
                                 "nullable": true,
-                                "description": "You can use this property to store the URL to the order of an external system. This makes navigating to the order easier."
+                                "description": "Refers to a URL linking back to the order page of the external system. This link is displayed in the invoice details view."
+                            },
+                            "taxIncluded": {
+                                "type": "number",
+                                "nullable": true,
+                                "description": "Represents the tax amount in the invoice currency. This information will appear in the invoice details view. During invoice creation, the value is automatically rounded to significant digits and ensured not to be greater than the invoice's price."
+                            },
+                            "physical": {
+                                "type": "string",
+                                "nullable": true,
+                                "description": "Indicates if this is a physical good; displayed in the invoice details view and in the BitPay API-compatible endpoints."
                             }
                         }
                     },
                     {
+                        "title": "Point of Sale (Cart view)",
                         "properties": {
                             "posData": {
-                                "oneOf": [
-                                    {
-                                        "$ref": "#/components/schemas/InvoiceMetadataPosString"
-                                    },
-                                    {
-                                        "$ref": "#/components/schemas/InvoiceMetadataPosObject"
-                                    }
-                                ]
+                                "type": "object",
+                                "description": "A custom JSON object that represents information displayed in the invoice details view."
                             }
                         }
                     },
                     {
-                        "properties": {
-                            "buyerName": {
-                                "type": "string",
-                                "nullable": true
-                            }
-                        }
-                    },
-                    {
-                        "properties": {
-                            "buyerEmail": {
-                                "type": "string",
-                                "nullable": true
-                            }
-                        }
-                    },
-                    {
-                        "properties": {
-                            "buyerCountry": {
-                                "type": "string",
-                                "nullable": true
-                            }
-                        }
-                    },
-                    {
-                        "properties": {
-                            "buyerZip": {
-                                "type": "string",
-                                "nullable": true
-                            }
-                        }
-                    },
-                    {
-                        "properties": {
-                            "buyerState": {
-                                "type": "string",
-                                "nullable": true
-                            }
-                        }
-                    },
-                    {
-                        "properties": {
-                            "buyerCity": {
-                                "type": "string",
-                                "nullable": true
-                            }
-                        }
-                    },
-                    {
-                        "properties": {
-                            "buyerAddress1": {
-                                "type": "string",
-                                "nullable": true
-                            }
-                        }
-                    },
-                    {
-                        "properties": {
-                            "buyerAddress2": {
-                                "type": "string",
-                                "nullable": true
-                            }
-                        }
-                    },
-                    {
-                        "properties": {
-                            "buyerPhone": {
-                                "type": "string",
-                                "nullable": true
-                            }
-                        }
-                    },
-                    {
+                        "title": "Product information",
                         "properties": {
                             "itemDesc": {
                                 "type": "string",
-                                "nullable": true
-                            }
-                        }
-                    },
-                    {
-                        "properties": {
+                                "nullable": true,
+                                "description": "When using the Point of Sale (except in keypad or cart view), this field is set to the item description of the purchased item. This information is included in the CSV invoice export feature and appears in the invoice details view."
+                            },
                             "itemCode": {
                                 "type": "string",
-                                "nullable": true
+                                "nullable": true,
+                                "description": "When using the Point of Sale (except in keypad or cart view), this field is set to the item code of the purchased item. This information is included in the CSV invoice export feature and appears in the invoice details view."
                             }
                         }
                     },
                     {
+                        "title": "Payment request information",
                         "properties": {
-                            "physical": {
+                            "paymentRequestId": {
                                 "type": "string",
+                                "nullable": true,
+                                "description": "In the invoice details view, a link is provided for navigating to the payment request page associated with the invoice."
+                            }
+                        }
+                    },
+                    {
+                        "title": "Buyer informations",
+                        "properties": {
+                            "buyerName": {
+                                "type": "string",
+                                "description": "Visible in the invoice details view and in the BitPay API-compatible endpoints.",
+                                "nullable": true
+                            },
+                            "buyerEmail": {
+                                "type": "string",
+                                "description": "Visible in the invoice details view and in the BitPay API-compatible endpoints.",
+                                "nullable": true
+                            },
+                            "buyerCountry": {
+                                "type": "string",
+                                "description": "Visible in the invoice details view and in the BitPay API-compatible endpoints.",
+                                "nullable": true
+                            },
+                            "buyerZip": {
+                                "type": "string",
+                                "description": "Visible in the invoice details view and in the BitPay API-compatible endpoints.",
+                                "nullable": true
+                            },
+                            "buyerState": {
+                                "type": "string",
+                                "description": "Visible in the invoice details view and in the BitPay API-compatible endpoints.",
+                                "nullable": true
+                            },
+                            "buyerCity": {
+                                "type": "string",
+                                "description": "Visible in the invoice details view and in the BitPay API-compatible endpoints.",
+                                "nullable": true
+                            },
+                            "buyerAddress1": {
+                                "type": "string",
+                                "description": "Visible in the invoice details view and in the BitPay API-compatible endpoints.",
+                                "nullable": true
+                            },
+                            "buyerAddress2": {
+                                "type": "string",
+                                "description": "Visible in the invoice details view and in the BitPay API-compatible endpoints.",
+                                "nullable": true
+                            },
+                            "buyerPhone": {
+                                "type": "string",
+                                "description": "Visible in the invoice details view and in the BitPay API-compatible endpoints.",
                                 "nullable": true
                             }
                         }
                     },
                     {
+                        "title": "Receipt information",
                         "properties": {
-                            "taxIncluded": {
-                                "type": "number",
+                            "receiptData": {
+                                "description": "A custom JSON object that represents information displayed on the receipt page of an invoice.",
                                 "nullable": true
                             }
                         }

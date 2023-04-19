@@ -59,7 +59,7 @@ namespace BTCPayServer
                     return Labels[num % Labels.Length];
             }
         }
-        
+
         /// https://gist.github.com/zihotki/09fc41d52981fb6f93a81ebf20b35cd5
         /// <summary>
         /// Creates color with corrected brightness.
@@ -92,7 +92,7 @@ namespace BTCPayServer
 
             return Color.FromArgb(color.A, (int)red, (int)green, (int)blue);
         }
-        
+
         public string AdjustBrightness(string html, float correctionFactor)
         {
             var color = AdjustBrightness(ColorTranslator.FromHtml(html), correctionFactor);

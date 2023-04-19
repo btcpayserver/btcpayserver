@@ -18,7 +18,7 @@
 }
 
 @section Navbar {
-    <a href="@Url.EnsureLocal(returnUrl)" id="CancelWizard" class="cancel">
+	<a href="@Url.EnsureLocal(returnUrl, Context.Request)" id="CancelWizard" class="cancel">
         <vc:icon symbol="close" />
     </a>
 }

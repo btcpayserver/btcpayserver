@@ -27,7 +27,7 @@
         "BTCPAY_SOCKSENDPOINT": "localhost:9050",
         "BTCPAY_UPDATEURL": "",
         "BTCPAY_DOCKERDEPLOYMENT": "true",
-        "BTCPAY_RECOMMENDED-PLUGINS": "BTCPayServer.Plugins.Test",
+        "BTCPAY_RECOMMENDED-PLUGINS": "",
         "BTCPAY_CHEATMODE": "true",
         "BTCPAY_EXPLORERPOSTGRES": "User ID=postgres;Include Error Detail=true;Host=127.0.0.1;Port=39372;Database=nbxplorer"
       },
@@ -64,7 +64,7 @@
         "BTCPAY_TORRCFILE": "../BTCPayServer.Tests/TestData/Tor/torrc",
         "BTCPAY_SOCKSENDPOINT": "localhost:9050",
         "BTCPAY_DOCKERDEPLOYMENT": "true",
-        "BTCPAY_RECOMMENDED-PLUGINS": "BTCPayServer.Plugins.Test",
+        "BTCPAY_RECOMMENDED-PLUGINS": "",
         "BTCPAY_CHEATMODE": "true",
         "BTCPAY_EXPLORERPOSTGRES": "User ID=postgres;Include Error Detail=true;Host=127.0.0.1;Port=39372;Database=nbxplorer"
       },
@@ -103,7 +103,7 @@
         "BTCPAY_TORRCFILE": "../BTCPayServer.Tests/TestData/Tor/torrc",
         "BTCPAY_SOCKSENDPOINT": "localhost:9050",
         "BTCPAY_DOCKERDEPLOYMENT": "true",
-        "BTCPAY_RECOMMENDED-PLUGINS": "BTCPayServer.Plugins.Test",
+        "BTCPAY_RECOMMENDED-PLUGINS": "",
         "BTCPAY_CHEATMODE": "true",
         "BTCPAY_EXPLORERPOSTGRES": "User ID=postgres;Include Error Detail=true;Host=127.0.0.1;Port=39372;Database=nbxplorer"
       },

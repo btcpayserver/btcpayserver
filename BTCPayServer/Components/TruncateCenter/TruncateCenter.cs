@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ViewComponents;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 
 namespace BTCPayServer.Components.TruncateCenter;
 
@@ -15,6 +17,8 @@ public class TruncateCenter : ViewComponent
 {
     public IViewComponentResult Invoke(string text, string link = null, string classes = null, int padding = 7, bool copy = true)
     {
+        if (string.IsNullOrEmpty(text))
+            return new HtmlContentViewComponentResult(new StringHtmlContent(string.Empty));
         var vm = new TruncateCenterViewModel
         {
             Classes = classes,

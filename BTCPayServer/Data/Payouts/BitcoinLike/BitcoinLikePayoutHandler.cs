@@ -64,12 +64,19 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
                _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(paymentMethod.CryptoCode)?.ReadonlyWallet is false;
     }
 
-    public async Task TrackClaim(PaymentMethodId paymentMethodId, IClaimDestination claimDestination)
+    public async Task TrackClaim(ClaimRequest claimRequest, PayoutData payoutData)
     {
-        var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(paymentMethodId.CryptoCode);
+        var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(claimRequest.PaymentMethodId.CryptoCode);
         var explorerClient = _explorerClientProvider.GetExplorerClient(network);
-        if (claimDestination is IBitcoinLikeClaimDestination bitcoinLikeClaimDestination)
+        if (claimRequest.Destination is IBitcoinLikeClaimDestination bitcoinLikeClaimDestination)
+        {
+
             await explorerClient.TrackAsync(TrackedSource.Create(bitcoinLikeClaimDestination.Address));
+            await WalletRepository.AddWalletTransactionAttachment(
+                new WalletId(claimRequest.StoreId, claimRequest.PaymentMethodId.CryptoCode),
+                bitcoinLikeClaimDestination.Address.ToString(),
+                Attachment.Payout(payoutData.PullPaymentDataId, payoutData.Id), WalletObjectData.Types.Address);
+        }
     }
 
     public Task<(IClaimDestination destination, string error)> ParseClaimDestination(PaymentMethodId paymentMethodId, string destination, CancellationToken cancellationToken)
@@ -203,11 +210,13 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
                 await using (var context = _dbContextFactory.CreateContext())
                 {
                     var payouts = (await PullPaymentHostedService.GetPayouts(new PullPaymentHostedService.PayoutQuery()
-                        {
-                            States = new[] {PayoutState.AwaitingPayment}, Stores = new[] {storeId}, PayoutIds = payoutIds
-                        }, context)).Where(data =>
-                            PaymentMethodId.TryParse(data.PaymentMethodId, out var paymentMethodId) &&
-                            CanHandle(paymentMethodId))
+                    {
+                        States = new[] { PayoutState.AwaitingPayment },
+                        Stores = new[] { storeId },
+                        PayoutIds = payoutIds
+                    }, context)).Where(data =>
+                        PaymentMethodId.TryParse(data.PaymentMethodId, out var paymentMethodId) &&
+                        CanHandle(paymentMethodId))
                         .Select(data => (data, ParseProof(data) as PayoutTransactionOnChainBlob)).Where(tuple => tuple.Item2 != null && tuple.Item2.TransactionId != null && tuple.Item2.Accounted == false);
                     foreach (var valueTuple in payouts)
                     {
@@ -223,14 +232,16 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
                     Severity = StatusMessageModel.StatusSeverity.Success
                 };
             case "reject-payment":
-               await using (var context = _dbContextFactory.CreateContext())
+                await using (var context = _dbContextFactory.CreateContext())
                 {
                     var payouts = (await PullPaymentHostedService.GetPayouts(new PullPaymentHostedService.PayoutQuery()
-                        {
-                            States = new[] {PayoutState.AwaitingPayment}, Stores = new[] {storeId}, PayoutIds = payoutIds
-                        }, context)).Where(data =>
-                            PaymentMethodId.TryParse(data.PaymentMethodId, out var paymentMethodId) &&
-                            CanHandle(paymentMethodId))
+                    {
+                        States = new[] { PayoutState.AwaitingPayment },
+                        Stores = new[] { storeId },
+                        PayoutIds = payoutIds
+                    }, context)).Where(data =>
+                        PaymentMethodId.TryParse(data.PaymentMethodId, out var paymentMethodId) &&
+                        CanHandle(paymentMethodId))
                         .Select(data => (data, ParseProof(data) as PayoutTransactionOnChainBlob)).Where(tuple => tuple.Item2 != null && tuple.Item2.TransactionId != null && tuple.Item2.Accounted == true);
                     foreach (var valueTuple in payouts)
                     {

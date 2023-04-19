@@ -52,10 +52,10 @@ public class Field
     public string HelpText;
 
     [JsonExtensionData] public IDictionary<string, JToken> AdditionalData { get; set; }
-    public List<Field> Fields { get; set; } = new ();
+    public List<Field> Fields { get; set; } = new();
 
     // The field is considered "valid" if there are no validation errors
-    public List<string> ValidationErrors = new ();
+    public List<string> ValidationErrors = new();
 
     public virtual bool IsValid()
     {

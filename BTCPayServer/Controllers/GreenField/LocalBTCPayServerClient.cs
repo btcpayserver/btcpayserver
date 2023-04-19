@@ -30,11 +30,11 @@ using LightningAddressData = BTCPayServer.Client.Models.LightningAddressData;
 using NotificationData = BTCPayServer.Client.Models.NotificationData;
 using PaymentRequestData = BTCPayServer.Client.Models.PaymentRequestData;
 using PayoutData = BTCPayServer.Client.Models.PayoutData;
+using PayoutProcessorData = BTCPayServer.Client.Models.PayoutProcessorData;
 using PullPaymentData = BTCPayServer.Client.Models.PullPaymentData;
 using StoreData = BTCPayServer.Client.Models.StoreData;
 using StoreWebhookData = BTCPayServer.Client.Models.StoreWebhookData;
 using WebhookDeliveryData = BTCPayServer.Client.Models.WebhookDeliveryData;
-using PayoutProcessorData = BTCPayServer.Client.Models.PayoutProcessorData;
 
 namespace BTCPayServer.Controllers.Greenfield
 {
@@ -223,14 +223,14 @@ namespace BTCPayServer.Controllers.Greenfield
             return GetFromActionResult<MarketTradeResponseData>(
                 await GetController<GreenfieldCustodianAccountController>().MarketTradeCustodianAccountAsset(storeId, accountId, request, cancellationToken));
         }
-        
+
         public override async Task<WithdrawalSimulationResponseData> SimulateCustodianAccountWithdrawal(string storeId, string accountId,
             WithdrawRequestData request, CancellationToken cancellationToken = default)
         {
             return GetFromActionResult<WithdrawalSimulationResponseData>(
                 await GetController<GreenfieldCustodianAccountController>().SimulateWithdrawal(storeId, accountId, request, cancellationToken));
         }
-        
+
         public override async Task<WithdrawalResponseData> CreateCustodianAccountWithdrawal(string storeId, string accountId,
             WithdrawRequestData request, CancellationToken cancellationToken = default)
         {
@@ -1238,7 +1238,7 @@ namespace BTCPayServer.Controllers.Greenfield
             return Task.FromResult(GetFromActionResult<StoreRateConfiguration>(GetController<GreenfieldStoreRateConfigurationController>().GetStoreRateConfiguration()));
         }
 
-        public override async Task<List<StoreRateResult>> GetStoreRates (string storeId, 
+        public override async Task<List<StoreRateResult>> GetStoreRates(string storeId,
             string[] currencyPair, CancellationToken token = default)
         {
             return GetFromActionResult<List<StoreRateResult>>(await GetController<GreenfieldStoreRatesController>().GetStoreRates(currencyPair));

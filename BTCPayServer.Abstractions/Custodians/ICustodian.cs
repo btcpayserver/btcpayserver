@@ -1,3 +1,4 @@
+#nullable enable
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -20,6 +21,6 @@ public interface ICustodian
      */
     Task<Dictionary<string, decimal>> GetAssetBalancesAsync(JObject config, CancellationToken cancellationToken);
 
-    public Task<Form.Form> GetConfigForm(CancellationToken cancellationToken = default);
+    public Task<Form.Form> GetConfigForm(JObject config, CancellationToken cancellationToken = default);
 
 }

@@ -163,7 +163,7 @@ namespace BTCPayServer.Services.Stores
                     {
                         ctx.Stores.Remove(store);
                         await ctx.SaveChangesAsync();
-                         _eventAggregator.Publish(new StoreRemovedEvent(store.Id));
+                        _eventAggregator.Publish(new StoreRemovedEvent(store.Id));
                     }
                 }
             }
@@ -187,18 +187,6 @@ namespace BTCPayServer.Services.Stores
             ctx.Add(storeData);
             ctx.Add(userStore);
             await ctx.SaveChangesAsync();
-        }
-
-        public async Task<StoreData> CreateStore(string ownerId, string name, string defaultCurrency, string preferredExchange)
-        {
-            var store = new StoreData { StoreName = name };
-            var blob = store.GetStoreBlob();
-            blob.DefaultCurrency = defaultCurrency;
-            blob.PreferredExchange = preferredExchange;
-            store.SetStoreBlob(blob);
-
-            await CreateStore(ownerId, store);
-            return store;
         }
 
         public async Task<WebhookData[]> GetWebhooks(string storeId)

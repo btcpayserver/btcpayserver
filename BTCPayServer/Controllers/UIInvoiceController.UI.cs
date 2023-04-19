@@ -20,6 +20,7 @@ using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Models.PaymentRequestViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
+using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Rating;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
@@ -122,7 +123,7 @@ namespace BTCPayServer.Controllers
             var metaData = PosDataParser.ParsePosData(invoice.Metadata.ToJObject());
             var additionalData = metaData
                 .Where(dict => !InvoiceAdditionalDataExclude.Contains(dict.Key))
-                .ToDictionary(dict=> dict.Key, dict=> dict.Value);
+                .ToDictionary(dict => dict.Key, dict => dict.Value);
             var model = new InvoiceDetailsModel
             {
                 StoreId = store.Id,
@@ -200,12 +201,12 @@ namespace BTCPayServer.Controllers
                 CssFileId = storeBlob.CssFileId,
                 ReceiptOptions = receipt
             };
-            
+
             if (i.Status.ToModernStatus() != InvoiceStatus.Settled)
             {
                 return View(vm);
             }
-            
+
             JToken? receiptData = null;
             i.Metadata?.AdditionalData?.TryGetValue("receiptData", out receiptData);
 
@@ -237,7 +238,7 @@ namespace BTCPayServer.Controllers
                         Link = link,
                         Id = txId,
                         Destination = paymentData.GetDestination(),
-                        PaymentProof = GetPaymentProof(paymentData),
+                        PaymentProof = paymentData.GetPaymentProof(),
                         PaymentType = paymentData.GetPaymentType()
                     };
                 })
@@ -249,16 +250,6 @@ namespace BTCPayServer.Controllers
             vm.AdditionalData = PosDataParser.ParsePosData(receiptData);
 
             return View(vm);
-        }
-
-        private string? GetPaymentProof(CryptoPaymentData paymentData)
-        {
-            return paymentData switch
-            {
-                BitcoinLikePaymentData b => b.Outpoint.ToString(),
-                LightningPaymentData l => l.Preimage,
-                _ => null
-            };
         }
 
         private string? GetTransactionLink(PaymentMethodId paymentMethodId, string txId)
@@ -763,7 +754,7 @@ namespace BTCPayServer.Controllers
             {
                 case "auto":
                 case null when storeBlob.AutoDetectLanguage:
-                    lang = _languageService.AutoDetectLanguageUsingHeader(HttpContext.Request.Headers, null).Code;
+                    lang = _languageService.AutoDetectLanguageUsingHeader(HttpContext.Request.Headers, null)?.Code;
                     break;
                 case { } langs when !string.IsNullOrEmpty(langs):
                     {
@@ -793,6 +784,8 @@ namespace BTCPayServer.Controllers
                 OrderId = invoice.Metadata.OrderId,
                 InvoiceId = invoice.Id,
                 DefaultLang = lang ?? invoice.DefaultLanguage ?? storeBlob.DefaultLang ?? "en",
+                ShowPayInWalletButton = storeBlob.ShowPayInWalletButton,
+                ShowStoreHeader = storeBlob.ShowStoreHeader,
                 CustomCSSLink = storeBlob.CustomCSS,
                 CustomLogoLink = storeBlob.CustomLogo,
                 LogoFileId = storeBlob.LogoFileId,
@@ -894,22 +887,22 @@ namespace BTCPayServer.Controllers
         {
             var currency = invoiceEntity.Currency;
             var crypto = cryptoCode.ToUpperInvariant(); // uppercase to make comparison easier, might be "sats"
-            
+
             // if invoice source currency is the same as currently display currency, no need for "order amount from invoice"
             if (crypto == currency || (crypto == "SATS" && currency == "BTC") || (crypto == "BTC" && currency == "SATS"))
                 return null;
 
             return _displayFormatter.Currency(invoiceEntity.Price, currency, format);
         }
-        
+
         private string? ExchangeRate(string cryptoCode, PaymentMethod paymentMethod, DisplayFormatter.CurrencyFormat format = DisplayFormatter.CurrencyFormat.Code)
         {
             var currency = paymentMethod.ParentEntity.Currency;
             var crypto = cryptoCode.ToUpperInvariant(); // uppercase to make comparison easier, might be "sats"
-            
+
             if (crypto == currency || (crypto == "SATS" && currency == "BTC") || (crypto == "BTC" && currency == "SATS"))
                 return null;
-            
+
             return _displayFormatter.Currency(paymentMethod.Rate, currency, format);
         }
 
@@ -1154,7 +1147,7 @@ namespace BTCPayServer.Controllers
             {
                 StoreId = model.StoreId,
                 Currency = storeBlob?.DefaultCurrency,
-                UseNewCheckout = storeBlob?.CheckoutType is CheckoutType.V2,
+                CheckoutType = storeBlob?.CheckoutType ?? CheckoutType.V2,
                 AvailablePaymentMethods = GetPaymentMethodsSelectList()
             };
 
@@ -1169,7 +1162,7 @@ namespace BTCPayServer.Controllers
         {
             var store = HttpContext.GetStoreData();
             var storeBlob = store.GetStoreBlob();
-            model.UseNewCheckout = storeBlob.CheckoutType == CheckoutType.V2;
+            model.CheckoutType = storeBlob.CheckoutType;
             model.AvailablePaymentMethods = GetPaymentMethodsSelectList();
 
             if (!ModelState.IsValid)

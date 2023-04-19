@@ -186,12 +186,12 @@ namespace BTCPayServer.Data
         {
             return IsPaymentTypeEnabled(storeData, networks, cryptoCode, LNURLPayPaymentType.Instance);
         }
-        
+
         private static bool IsPaymentTypeEnabled(this StoreData storeData, BTCPayNetworkProvider networks, string cryptoCode, PaymentType paymentType)
         {
             var paymentMethods = storeData.GetSupportedPaymentMethods(networks);
             var excludeFilters = storeData.GetStoreBlob().GetExcludedPaymentMethods();
-            return paymentMethods.Any(method => 
+            return paymentMethods.Any(method =>
                 method.PaymentId.CryptoCode == cryptoCode &&
                 method.PaymentId.PaymentType == paymentType &&
                 !excludeFilters.Match(method.PaymentId));

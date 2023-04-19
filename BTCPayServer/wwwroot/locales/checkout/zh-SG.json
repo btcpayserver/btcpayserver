@@ -34,5 +34,10 @@
   "copy": "复制",
   "copy_confirm": "已复制",
   "powered_by": "技术支持由",
-  "conversion_body": "此服务由第三方提供。请记住，我们无法控制提供者如何转移您的资金。只有在{{cryptoCode}}区块链上收到资金后，发票才会被标记为已支付。"
+  "conversion_body": "此服务由第三方提供。请记住，我们无法控制提供者如何转移您的资金。只有在{{cryptoCode}}区块链上收到资金后，发票才会被标记为已支付。",
+  "scanning_nfc": "扫描 NFC ...",
+  "submitting_nfc": "提交 NFC ...",
+  "payment_received": "支付已收到",
+  "payment_received_body": "您的付款已收到并正在处理中。",
+  "payment_received_confirmations": "一旦您的{{cryptoCode}}区块链支付获得{{requiredConfirmations}}个确认，您的发票将结清。"
 }

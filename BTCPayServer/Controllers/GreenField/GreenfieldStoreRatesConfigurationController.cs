@@ -111,7 +111,7 @@ namespace BTCPayServer.Controllers.GreenField
             {
                 parsedCurrencyPairs = blob.DefaultCurrencyPairs.ToHashSet();
             }
-            
+
             ValidateAndSanitizeConfiguration(configuration, blob);
             if (!ModelState.IsValid)
                 return this.CreateValidationError(ModelState);

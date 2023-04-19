@@ -7,7 +7,7 @@ namespace BTCPayServer.Client.Models;
 
 public class WithdrawalResponseData : WithdrawalBaseResponseData
 {
-   
+
     [JsonConverter(typeof(StringEnumConverter))]
     public WithdrawalStatus Status { get; }
 

@@ -40,8 +40,11 @@
 </head>
 <body class="min-vh-100">
     <div id="Checkout-v2" class="public-page-wrap" v-cloak>
-        <partial name="_StoreHeader" model="(Model.StoreName, Model.LogoFileId)" />
-        <main class="shadow-lg">
+		@if (Model.ShowStoreHeader)
+		{
+			<partial name="_StoreHeader" model="(Model.StoreName, Model.LogoFileId)" />
+		}
+		<main class="shadow-lg">
             <nav v-if="isModal">
                 <button type="button" v-if="isModal" id="close" v-on:click="close">
                     <vc:icon symbol="close"/>
@@ -109,6 +112,7 @@
                 <div v-if="isProcessing" id="processing" key="processing">
                     <div class="top">
                         <span class="icn">
+                            <div id="confetti" v-if="srvModel.celebratePayment" v-on:click="celebratePayment(5000)"></div>
                             <vc:icon symbol="payment-sent" />
                         </span>
                         <h4 v-t="'payment_received'"></h4>
@@ -169,7 +173,7 @@
                         </div>
                     </div>
                     <div class="buttons">
-                        <a v-if="srvModel.receiptLink" class="btn btn-primary rounded-pill w-100" :href="srvModel.receiptLink" :target="isModal ? '_top' : null" v-t="'view_receipt'" id="ReceiptLink"></a>
+                        <a v-if="srvModel.receiptLink" class="btn btn-primary rounded-pill w-100" :href="srvModel.receiptLink" :target="isModal ? '_top' : null" v-t="'view_receipt'" id="receipt-btn"></a>
                         <a v-if="storeLink" class="btn btn-secondary rounded-pill w-100" :href="storeLink" :target="isModal ? '_top' : null" v-html="$t('return_to_store', { storeName: srvModel.storeName })" id="StoreLink"></a>
                         <button v-else-if="isModal" class="btn btn-secondary rounded-pill w-100" v-on:click="close" v-t="'Close'"></button>
                     </div>

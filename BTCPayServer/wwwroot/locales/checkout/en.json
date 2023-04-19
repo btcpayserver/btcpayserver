@@ -30,7 +30,7 @@
   "payment_link": "Payment Link",
   "payment_received": "Payment Received",
   "payment_received_body": "Your payment has been received and is now processing.",
-  "payment_received_confirmations": "Currently it has {{receivedConfirmations}} confirmations. Once it receives {{requiredConfirmations}} confirmations on the {{cryptoCode}} blockchain, the status will be updated to settled.",
+  "payment_received_confirmations": "Once your payment has received {{requiredConfirmations}} confirmations on the {{cryptoCode}} blockchain, your invoice will be settled.",
   "invoice_paid": "Invoice Paid",
   "invoice_expired": "Invoice Expired",
   "invoice_expired_body": "An invoice is only valid for {{minutes}} minutes.\n\nReturn to {{storeName}} if you would like to resubmit a payment.",

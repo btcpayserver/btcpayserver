@@ -242,6 +242,12 @@ namespace BTCPayServer.Hosting
                     settings.FixSeqAfterSqliteMigration = true;
                     await _Settings.UpdateSetting(settings);
                 }
+                if (!settings.FixMappedDomainAppType)
+                {
+                    await FixMappedDomainAppType();
+                    settings.FixMappedDomainAppType = true;
+                    await _Settings.UpdateSetting(settings);
+                }
             }
             catch (Exception ex)
             {
@@ -249,6 +255,44 @@ namespace BTCPayServer.Hosting
                 throw;
             }
         }
+
+        private async Task FixMappedDomainAppType()
+        {
+            await using var ctx = _DBContextFactory.CreateContext();
+            var setting = await ctx.Settings.FirstOrDefaultAsync(s => s.Id == "BTCPayServer.Services.PoliciesSettings");
+            if (setting?.Value is null)
+                return;
+            string MapToString(int v)
+            {
+                return v switch
+                {
+                    0 => "PointOfSale",
+                    1 => "Crowdfund",
+                    _ => throw new NotSupportedException()
+                };
+            }
+            var data = JObject.Parse(setting.Value);
+            if (data["RootAppType"]?.Type is JTokenType.Integer)
+            {
+                var v = data["RootAppType"].Value<int>();
+                data["RootAppType"] = new JValue(MapToString(v));
+            }
+            var arr = data["DomainToAppMapping"] as JArray;
+            if (arr != null)
+            {
+                foreach (var map in arr)
+                {
+                    if (map["AppType"]?.Type is JTokenType.Integer)
+                    {
+                        var v = map["AppType"].Value<int>();
+                        map["AppType"] = new JValue(MapToString(v));
+                    }
+                }
+            }
+            setting.Value = data.ToString();
+            await ctx.SaveChangesAsync();
+        }
+
 
         private async Task FixSeqAfterSqliteMigration()
         {

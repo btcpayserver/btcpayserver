@@ -34,5 +34,10 @@
   "copy": "Copia",
   "copy_confirm": "Copiat",
   "powered_by": "Propulsat per",
-  "conversion_body": "Aquest servei el proveeix un tercer. Si us plau, teniu en ment que no tenim control sobre com reenviaran el proveidors els fons. Els rebuts seran marcats com a pagats una vegada els fons seran rebuts al Blockchain de {{cryptoCode}} ."
+  "conversion_body": "Aquest servei el proveeix un tercer. Si us plau, teniu en ment que no tenim control sobre com reenviaran el proveidors els fons. Els rebuts seran marcats com a pagats una vegada els fons seran rebuts al Blockchain de {{cryptoCode}} .",
+  "scanning_nfc": "Escanejant NFC...",
+  "submitting_nfc": "Enviant NFC...",
+  "payment_received": "Pagament rebut",
+  "payment_received_body": "El seu pagament ha estat rebut i ara s'està processant",
+  "payment_received_confirmations": "Un cop el vostre pagament hagi rebut {{requiredConfirmations}} confirmacions a la cadena de blocs {{cryptoCode}}, la vostra factura es liquidarà."
 }

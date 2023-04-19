@@ -189,7 +189,7 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 return AppNotFound();
             }
-                
+
             return Ok(ToPointOfSaleModel(app));
         }
 
@@ -202,7 +202,7 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 return AppNotFound();
             }
-                
+
             return Ok(ToCrowdfundModel(app));
         }
 
@@ -267,7 +267,7 @@ namespace BTCPayServer.Controllers.Greenfield
             return new PointOfSaleSettings()
             {
                 Title = request.Title,
-                DefaultView = (PosViewType) request.DefaultView,
+                DefaultView = (PosViewType)request.DefaultView,
                 ShowCustomAmount = request.ShowCustomAmount,
                 ShowDiscount = request.ShowDiscount,
                 EnableTips = request.EnableTips,
@@ -331,10 +331,10 @@ namespace BTCPayServer.Controllers.Greenfield
                 Currency = settings.Currency,
                 Items = JsonConvert.DeserializeObject(
                     JsonConvert.SerializeObject(
-                        _appService.Parse(settings.Template, settings.Currency), 
+                        _appService.Parse(settings.Template, settings.Currency),
                         new JsonSerializerSettings
-                        { 
-                            ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver() 
+                        {
+                            ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
                         }
                     )
                 ),
@@ -406,10 +406,10 @@ namespace BTCPayServer.Controllers.Greenfield
                 Tagline = settings.Tagline,
                 Perks = JsonConvert.DeserializeObject(
                     JsonConvert.SerializeObject(
-                        _appService.Parse(settings.PerksTemplate, settings.TargetCurrency), 
+                        _appService.Parse(settings.PerksTemplate, settings.TargetCurrency),
                         new JsonSerializerSettings
-                        { 
-                            ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver() 
+                        {
+                            ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
                         }
                     )
                 ),

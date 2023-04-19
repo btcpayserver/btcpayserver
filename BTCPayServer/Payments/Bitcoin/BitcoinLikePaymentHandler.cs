@@ -76,7 +76,7 @@ namespace BTCPayServer.Payments.Bitcoin
                 if (lightningInfo is not null && !string.IsNullOrEmpty(lightningInfo.PaymentUrls?.BOLT11))
                 {
                     lightningFallback = lightningInfo.PaymentUrls.BOLT11;
-                }   
+                }
                 else
                 {
                     var lnurlInfo = invoiceResponse.CryptoInfo.FirstOrDefault(a =>
@@ -84,7 +84,7 @@ namespace BTCPayServer.Payments.Bitcoin
                     if (lnurlInfo is not null)
                     {
                         lightningFallback = lnurlInfo.PaymentUrls?.AdditionalData["LNURLP"].ToObject<string>();
-                        
+
                         // This seems to be an edge case in the Selenium tests, in which the LNURLP isn't populated.
                         // I have come across it only in the tests and this is supposed to make them happy.
                         if (string.IsNullOrEmpty(lightningFallback))
@@ -122,7 +122,7 @@ namespace BTCPayServer.Payments.Bitcoin
                     var delimiterUrl = model.InvoiceBitcoinUrl.Contains("?") ? "&" : "?";
                     model.InvoiceBitcoinUrl += $"{delimiterUrl}{lightningFallback}";
                     // model.InvoiceBitcoinUrl: bitcoin:bcrt1qxp2qa5dhn7?amount=0.00044007&lightning=lnbcrt440070n1...
-                    
+
                     var delimiterUrlQR = model.InvoiceBitcoinUrlQR.Contains("?") ? "&" : "?";
                     model.InvoiceBitcoinUrlQR += $"{delimiterUrlQR}{lightningFallback.ToUpperInvariant().Replace("LIGHTNING=", "lightning=", StringComparison.OrdinalIgnoreCase)}";
                     // model.InvoiceBitcoinUrlQR: bitcoin:bcrt1qxp2qa5dhn7?amount=0.00044007&lightning=LNBCRT4400...
@@ -140,7 +140,7 @@ namespace BTCPayServer.Payments.Bitcoin
             {
                 model.InvoiceBitcoinUrl = model.InvoiceBitcoinUrlQR = string.Empty;
             }
-            
+
             if (model.Activated && amountInSats)
             {
                 base.PreparePaymentModelForAmountInSats(model, paymentMethod, _displayFormatter);

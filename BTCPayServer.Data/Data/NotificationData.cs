@@ -24,8 +24,8 @@ namespace BTCPayServer.Data
         public string Blob2 { get; set; }
 
 
-		internal static void OnModelCreating(ModelBuilder builder, DatabaseFacade databaseFacade)
-		{
+        internal static void OnModelCreating(ModelBuilder builder, DatabaseFacade databaseFacade)
+        {
             builder.Entity<NotificationData>()
                 .HasOne(o => o.ApplicationUser)
                 .WithMany(n => n.Notifications)

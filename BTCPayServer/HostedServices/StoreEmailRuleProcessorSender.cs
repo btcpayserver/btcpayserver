@@ -28,7 +28,7 @@ public class StoreEmailRuleProcessorSender : EventHostedServiceBase
     public StoreEmailRuleProcessorSender(StoreRepository storeRepository, EventAggregator eventAggregator,
         ILogger<InvoiceEventSaverService> logger,
         EmailSenderFactory emailSenderFactory,
-        LinkGenerator linkGenerator, 
+        LinkGenerator linkGenerator,
         CurrencyNameTable currencyNameTable) : base(
         eventAggregator, logger)
     {

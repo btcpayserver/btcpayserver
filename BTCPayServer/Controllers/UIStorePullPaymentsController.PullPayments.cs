@@ -455,9 +455,9 @@ namespace BTCPayServer.Controllers
             {
                 IncludeArchived = false,
                 IncludeStoreData = true,
-                Stores = new[] {storeId},
+                Stores = new[] { storeId },
                 PayoutIds = payoutIds,
-                PaymentMethods = new[] {paymentMethodId.ToString()}
+                PaymentMethods = new[] { paymentMethodId.ToString() }
             }, ctx, cancellationToken);
         }
 

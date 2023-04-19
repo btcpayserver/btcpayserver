@@ -33,7 +33,7 @@ namespace BTCPayServer.Plugins.PointOfSale
             base.Execute(services);
         }
     }
-    
+
     public enum PosViewType
     {
         [Display(Name = "Product list")]
@@ -46,7 +46,7 @@ namespace BTCPayServer.Plugins.PointOfSale
         Print
     }
 
-    public class PointOfSaleAppType: AppBaseType, IHasSaleStatsAppType, IHasItemStatsAppType
+    public class PointOfSaleAppType : AppBaseType, IHasSaleStatsAppType, IHasItemStatsAppType
     {
         private readonly LinkGenerator _linkGenerator;
         private readonly IOptions<BTCPayServerOptions> _btcPayServerOptions;

@@ -32,7 +32,7 @@
 
         @if (!string.IsNullOrEmpty(Model.Action))
         {
-            <form id="ConfirmForm" method="post" action="@Url.EnsureLocal(actionUrl)" rel="noreferrer noopener">
+			<form id="ConfirmForm" method="post" action="@Url.EnsureLocal(actionUrl, Context.Request)" rel="noreferrer noopener">
                 <div class="modal-body pt-0" id="ConfirmText" hidden>
                     <label for="ConfirmInput" class="form-label">Confirm the action by typing <strong id="ConfirmInputText"></strong>:</label>
                     <input id="ConfirmInput" class="form-control"/>

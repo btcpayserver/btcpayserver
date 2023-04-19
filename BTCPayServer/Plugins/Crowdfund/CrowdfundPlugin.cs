@@ -33,12 +33,12 @@ namespace BTCPayServer.Plugins.Crowdfund
             services.AddSingleton<IUIExtension>(new UIExtension("Crowdfund/NavExtension", "header-nav"));
             services.AddSingleton<CrowdfundAppType>();
             services.AddSingleton<AppBaseType, CrowdfundAppType>();
-            
+
             base.Execute(services);
         }
     }
-    
-    public class CrowdfundAppType: AppBaseType, IHasSaleStatsAppType, IHasItemStatsAppType
+
+    public class CrowdfundAppType : AppBaseType, IHasSaleStatsAppType, IHasItemStatsAppType
     {
         private readonly LinkGenerator _linkGenerator;
         private readonly IOptions<BTCPayServerOptions> _options;
@@ -146,7 +146,7 @@ namespace BTCPayServer.Plugins.Crowdfund
                 }
             }
 
-            var invoices = await AppService.GetInvoicesForApp(_invoiceRepository,appData, lastResetDate);
+            var invoices = await AppService.GetInvoicesForApp(_invoiceRepository, appData, lastResetDate);
             var completeInvoices = invoices.Where(IsComplete).ToArray();
             var pendingInvoices = invoices.Where(IsPending).ToArray();
             var paidInvoices = invoices.Where(IsPaid).ToArray();
@@ -256,7 +256,7 @@ namespace BTCPayServer.Plugins.Crowdfund
         public override Task<string> ViewLink(AppData app)
         {
             return Task.FromResult(_linkGenerator.GetPathByAction(nameof(UICrowdfundController.ViewCrowdfund),
-                "UICrowdfund", new {appId = app.Id}, _options.Value.RootPath)!);
+                "UICrowdfund", new { appId = app.Id }, _options.Value.RootPath)!);
         }
 
         private static bool IsPaid(InvoiceEntity entity)

@@ -49,7 +49,7 @@ namespace BTCPayServer.Services.Altcoins.Zcash.Payments
             return string.Format(CultureInfo.InvariantCulture, network.BlockExplorerLink, txId);
         }
 
-        public override string GetPaymentLink(BTCPayNetworkBase network, IPaymentMethodDetails paymentMethodDetails, Money cryptoInfoDue, string serverUri)
+        public override string GetPaymentLink(BTCPayNetworkBase network, InvoiceEntity invoice, IPaymentMethodDetails paymentMethodDetails, Money cryptoInfoDue, string serverUri)
         {
             return paymentMethodDetails.Activated
                 ? $"{(network as ZcashLikeSpecificBtcPayNetwork).UriScheme}:{paymentMethodDetails.GetPaymentDestination()}?amount={cryptoInfoDue.ToDecimal(MoneyUnit.BTC)}"
@@ -70,7 +70,7 @@ namespace BTCPayServer.Services.Altcoins.Zcash.Payments
             return null;
         }
 
-        public override void PopulateCryptoInfo(PaymentMethod details, InvoiceCryptoInfo invoiceCryptoInfo, string serverUrl)
+        public override void PopulateCryptoInfo(InvoiceEntity invoice, PaymentMethod details, InvoiceCryptoInfo invoiceCryptoInfo, string serverUrl)
         {
             
         }

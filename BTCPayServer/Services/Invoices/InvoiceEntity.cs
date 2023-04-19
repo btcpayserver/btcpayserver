@@ -546,7 +546,7 @@ namespace BTCPayServer.Services.Invoices
                 if (details?.Activated is true)
                 {
 
-                    paymentId.PaymentType.PopulateCryptoInfo(info, cryptoInfo, ServerUrl);
+                    paymentId.PaymentType.PopulateCryptoInfo(this, info, cryptoInfo, ServerUrl);
                     if (paymentId.PaymentType == PaymentTypes.BTCLike)
                     {
                         var minerInfo = new MinerFeeInfo();
@@ -1330,5 +1330,7 @@ namespace BTCPayServer.Services.Invoices
 
         PaymentType GetPaymentType();
         string GetDestination();
+
+        string GetPaymentProof();
     }
 }

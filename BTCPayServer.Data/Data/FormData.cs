@@ -13,14 +13,14 @@ public class FormData
     public StoreData Store { get; set; }
     public string Config { get; set; }
     public bool Public { get; set; }
-    
+
     internal static void OnModelCreating(ModelBuilder builder, DatabaseFacade databaseFacade)
     {
         builder.Entity<FormData>()
             .HasOne(o => o.Store)
             .WithMany(o => o.Forms).OnDelete(DeleteBehavior.Cascade);
         builder.Entity<FormData>().HasIndex(o => o.StoreId);
-        
+
         if (databaseFacade.IsNpgsql())
         {
             builder.Entity<FormData>()

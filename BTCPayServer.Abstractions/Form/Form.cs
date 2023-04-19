@@ -32,6 +32,8 @@ public class Form
     // Are all the fields valid in the form?
     public bool IsValid()
     {
+        if (TopMessages?.Any(t => t.Type == AlertMessage.AlertMessageType.Danger) is true)
+            return false;
         return Fields.Select(f => f.IsValid()).All(o => o);
     }
 
@@ -135,25 +137,5 @@ public class Form
         }
     }
 
-    public JObject GetValues()
-    {
-        var r = new JObject();
-        foreach (var f in GetAllFields())
-        {
-            var node = r;
-            for (int i = 0; i < f.Path.Count - 1; i++)
-            {
-                var p = f.Path[i];
-                var child = node[p] as JObject;
-                if (child is null)
-                {
-                    child = new JObject();
-                    node[p] = child;
-                }
-                node = child;
-            }
-            node[f.Field.Name] = f.Field.Value;
-        }
-        return r;
-    }
+
 }

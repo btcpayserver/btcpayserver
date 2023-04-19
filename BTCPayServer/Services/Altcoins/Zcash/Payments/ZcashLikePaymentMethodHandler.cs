@@ -92,7 +92,7 @@ namespace BTCPayServer.Services.Altcoins.Zcash.Payments
             if (model.Activated)
             {
                 var cryptoInfo = invoiceResponse.CryptoInfo.First(o => o.GetpaymentMethodId() == paymentMethodId);
-                model.InvoiceBitcoinUrl = ZcashPaymentType.Instance.GetPaymentLink(network,
+                model.InvoiceBitcoinUrl = ZcashPaymentType.Instance.GetPaymentLink(network, null,
                     new ZcashLikeOnChainPaymentMethodDetails() {DepositAddress = cryptoInfo.Address}, cryptoInfo.Due,
                     null);
                 model.InvoiceBitcoinUrlQR = model.InvoiceBitcoinUrl;

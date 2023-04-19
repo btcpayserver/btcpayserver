@@ -34,5 +34,10 @@
   "copy": "Afrita",
   "copy_confirm": "Afritað",
   "powered_by": "Keyrt með",
-  "conversion_body": "Þessi þjónusta er veitt af þriðja aðila. Mundu að við höfum ekki stjórn á því hvað þeir gera við peningana. Reikningurinn verður aðeins móttekinn þegar {{cryptoCode}} greiðslan hefur verið staðfest á netinu."
+  "conversion_body": "Þessi þjónusta er veitt af þriðja aðila. Mundu að við höfum ekki stjórn á því hvað þeir gera við peningana. Reikningurinn verður aðeins móttekinn þegar {{cryptoCode}} greiðslan hefur verið staðfest á netinu.",
+  "scanning_nfc": "Skanna NFC …",
+  "submitting_nfc": "Sendi NFC …",
+  "payment_received": "Greiðsla móttekin",
+  "payment_received_body": "Greiðslan þín hefur verið móttekin og er nú í vinnslu",
+  "payment_received_confirmations": "Þegar greiðslan þín hefur fengið {{requiredConfirmations}} staðfestingar á {{cryptoCode}} blokkkeðjunni, mun reikningurinn þinn verða afhentur."
 }

@@ -88,7 +88,7 @@ namespace BTCPayServer.Controllers
         [HttpGet("/cheat/permissions")]
         [HttpGet("/cheat/permissions/stores/{storeId}")]
         [CheatModeRoute]
-        public async Task<IActionResult> CheatPermissions([FromServices]IAuthorizationService authorizationService, string storeId = null)
+        public async Task<IActionResult> CheatPermissions([FromServices] IAuthorizationService authorizationService, string storeId = null)
         {
             var vm = new CheatPermissionsViewModel();
             vm.StoreId = storeId;
@@ -790,7 +790,7 @@ namespace BTCPayServer.Controllers
                 if (matchedDomainMapping is not null)
                     return RedirectToAction(nameof(UIHomeController.Home), "UIHome");
             }
-            
+
             return RedirectToAction(nameof(UIHomeController.Index), "UIHome");
         }
 

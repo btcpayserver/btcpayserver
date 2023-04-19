@@ -120,6 +120,7 @@ namespace BTCPayServer.HostedServices
             o.Period = create.Period is TimeSpan period ? (long?)period.TotalSeconds : null;
             o.Id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(20));
             o.StoreId = create.StoreId;
+
             o.SetBlob(new PullPaymentBlob()
             {
                 Name = create.Name ?? string.Empty,
@@ -202,7 +203,7 @@ namespace BTCPayServer.HostedServices
             {
                 query = query.Include(data => data.StoreData);
             }
-            
+
             if (payoutQuery.IncludePullPaymentData || !payoutQuery.IncludeArchived)
             {
                 query = query.Include(data => data.PullPaymentData);
@@ -591,7 +592,7 @@ namespace BTCPayServer.HostedServices
                 await ctx.Payouts.AddAsync(payout);
                 try
                 {
-                    await payoutHandler.TrackClaim(req.ClaimRequest.PaymentMethodId, req.ClaimRequest.Destination);
+                    await payoutHandler.TrackClaim(req.ClaimRequest, payout);
                     await ctx.SaveChangesAsync();
                     if (req.ClaimRequest.PreApprove.GetValueOrDefault(ppBlob?.AutoApproveClaims is true))
                     {

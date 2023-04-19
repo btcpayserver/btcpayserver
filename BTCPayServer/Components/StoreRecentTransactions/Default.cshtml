@@ -46,7 +46,7 @@
                 <tr>
                     <td>@tx.Timestamp.ToTimeAgo()</td>
                     <td>
-                        <vc:truncate-center text="@tx.Id" link="tx.Link" classes="truncate-center-id" />
+                        <vc:truncate-center text="@tx.Id" link="@tx.Link" classes="truncate-center-id" />
                     </td>
                     <td>
                         @if (tx.Labels.Any())

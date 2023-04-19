@@ -192,6 +192,11 @@ function initApp() {
                 if (newValue === true && oldValue === false) {
                     // poll from here on
                     this.listenForConfirmations();
+                    // celebration!
+                    const self = this;
+                    Vue.nextTick(function () {
+                        self.celebratePayment(5000);
+                    });
                 }
             },
             isSettled: function (newValue, oldValue) {

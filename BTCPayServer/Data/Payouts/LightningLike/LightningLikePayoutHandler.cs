@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client.Models;
+using BTCPayServer.HostedServices;
 using BTCPayServer.Lightning;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
@@ -45,7 +46,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                    _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(paymentMethod.CryptoCode)?.SupportLightning is true;
         }
 
-        public Task TrackClaim(PaymentMethodId paymentMethodId, IClaimDestination claimDestination)
+        public Task TrackClaim(ClaimRequest claimRequest, PayoutData payoutData)
         {
             return Task.CompletedTask;
         }

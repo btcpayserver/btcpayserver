@@ -60,8 +60,8 @@ namespace BTCPayServer.Plugins.Crowdfund.Models
             public DateTime? LastResetDate { get; set; }
             public DateTime? NextResetDate { get; set; }
         }
-        
-       
+
+
 
         public bool Started => !StartDate.HasValue || DateTime.UtcNow > StartDate;
 

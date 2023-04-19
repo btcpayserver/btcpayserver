@@ -403,7 +403,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
             {
                 return null;
             }
-            var info = (ViewCrowdfundViewModel) await _app.GetInfo(app);
+            var info = (ViewCrowdfundViewModel)await _app.GetInfo(app);
             info.HubPath = AppHub.GetHubPath(Request);
             info.SimpleDisplay = Request.Query.ContainsKey("simple");
             return info;

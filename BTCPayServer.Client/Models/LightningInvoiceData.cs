@@ -16,7 +16,7 @@ namespace BTCPayServer.Client.Models
 
         [JsonProperty("BOLT11")]
         public string BOLT11 { get; set; }
-        
+
         public string PaymentHash { get; set; }
 
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
@@ -24,7 +24,7 @@ namespace BTCPayServer.Client.Models
 
         [JsonConverter(typeof(NBitcoin.JsonConverters.DateTimeToUnixTimeConverter))]
         public DateTimeOffset? PaidAt { get; set; }
-        
+
         [JsonConverter(typeof(NBitcoin.JsonConverters.DateTimeToUnixTimeConverter))]
         public DateTimeOffset ExpiresAt { get; set; }
 

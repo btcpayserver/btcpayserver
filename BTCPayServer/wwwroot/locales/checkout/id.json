@@ -34,5 +34,10 @@
   "copy": "Salinan",
   "copy_confirm": "Disalin",
   "powered_by": "Disediakan oleh",
-  "conversion_body": "Layanan ini disediakan oleh pihak ke-3. Harap diingat bahwa kami tidak memiliki kendali atas bagaimana penyedia layanan akan meneruskan dana Anda. Tagihan anda hanya akan ditandai dibayar setelah dana diterima di {{cryptoCode}} Blockchain."
+  "conversion_body": "Layanan ini disediakan oleh pihak ke-3. Harap diingat bahwa kami tidak memiliki kendali atas bagaimana penyedia layanan akan meneruskan dana Anda. Tagihan anda hanya akan ditandai dibayar setelah dana diterima di {{cryptoCode}} Blockchain.",
+  "scanning_nfc": "Memindai NFC...",
+  "submitting_nfc": "Mengirim NFC...",
+  "payment_received": "Pembayaran Diterima",
+  "payment_received_body": "Pembayaran Anda telah diterima dan sedang diproses",
+  "payment_received_confirmations": "Setelah pembayaran Anda menerima {{requiredConfirmations}} konfirmasi pada blockchain {{cryptoCode}}, faktur Anda akan diselesaikan."
 }

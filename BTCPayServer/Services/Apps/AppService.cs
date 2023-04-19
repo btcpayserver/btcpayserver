@@ -48,7 +48,7 @@ namespace BTCPayServer.Services.Apps
             StoreRepository storeRepository,
             HtmlSanitizer htmlSanitizer)
         {
-            _appTypes = apps.ToDictionary(a => a.Type, a=> a);
+            _appTypes = apps.ToDictionary(a => a.Type, a => a);
             _ContextFactory = contextFactory;
             _InvoiceRepository = invoiceRepository;
             _Currencies = currencies;
@@ -83,8 +83,8 @@ namespace BTCPayServer.Services.Apps
         {
             if (GetAppType(appData.AppType) is not IHasItemStatsAppType salesType)
                 throw new InvalidOperationException("This app isn't a SalesAppBaseType");
-            var paidInvoices = await GetInvoicesForApp(_InvoiceRepository,appData,
-                null, new []
+            var paidInvoices = await GetInvoicesForApp(_InvoiceRepository, appData,
+                null, new[]
                 {
                     InvoiceState.ToString(InvoiceStatusLegacy.Paid),
                     InvoiceState.ToString(InvoiceStatusLegacy.Confirmed),
@@ -94,7 +94,7 @@ namespace BTCPayServer.Services.Apps
         }
 
         public static Task<SalesStats> GetSalesStatswithPOSItems(ViewPointOfSaleViewModel.Item[] items,
-            InvoiceEntity[] paidInvoices,  int numberOfDays)
+            InvoiceEntity[] paidInvoices, int numberOfDays)
         {
             var series = paidInvoices
                 .Aggregate(new List<InvoiceStatsItem>(), AggregateInvoiceEntitiesForStats(items))
@@ -126,19 +126,19 @@ namespace BTCPayServer.Services.Apps
                 Series = series.OrderBy(i => i.Label)
             });
         }
-        
+
         public async Task<SalesStats> GetSalesStats(AppData app, int numberOfDays = 7)
         {
             if (GetAppType(app.AppType) is not IHasSaleStatsAppType salesType)
                 throw new InvalidOperationException("This app isn't a SalesAppBaseType");
             var paidInvoices = await GetInvoicesForApp(_InvoiceRepository, app, DateTimeOffset.UtcNow - TimeSpan.FromDays(numberOfDays),
-                new []
+                new[]
                 {
                     InvoiceState.ToString(InvoiceStatusLegacy.Paid),
                     InvoiceState.ToString(InvoiceStatusLegacy.Confirmed),
                     InvoiceState.ToString(InvoiceStatusLegacy.Complete)
                 });
-            
+
             return await salesType.GetSalesStats(app, paidInvoices, numberOfDays);
         }
 
@@ -195,7 +195,7 @@ namespace BTCPayServer.Services.Apps
                 return res;
             };
         }
-      
+
         public static string GetAppOrderId(AppData app) => GetAppOrderId(app.AppType, app.Id);
         public static string GetAppOrderId(string appType, string appId) =>
             appType switch
@@ -211,13 +211,13 @@ namespace BTCPayServer.Services.Apps
             return invoice.GetInternalTags("APP#");
         }
 
-        public static async Task<InvoiceEntity[]> GetInvoicesForApp(InvoiceRepository invoiceRepository, AppData appData, DateTimeOffset? startDate = null,  string[]? status = null)
+        public static async Task<InvoiceEntity[]> GetInvoicesForApp(InvoiceRepository invoiceRepository, AppData appData, DateTimeOffset? startDate = null, string[]? status = null)
         {
             var invoices = await invoiceRepository.GetInvoices(new InvoiceQuery
             {
                 StoreId = new[] { appData.StoreDataId },
                 OrderId = appData.TagAllInvoices ? null : new[] { GetAppOrderId(appData) },
-                Status = status?? new[]{
+                Status = status ?? new[]{
                     InvoiceState.ToString(InvoiceStatusLegacy.New),
                     InvoiceState.ToString(InvoiceStatusLegacy.Paid),
                     InvoiceState.ToString(InvoiceStatusLegacy.Confirmed),
@@ -270,7 +270,7 @@ namespace BTCPayServer.Services.Apps
                         })
                 .OrderBy(b => b.Created)
                 .ToArrayAsync();
-            
+
             // allowNoUser can lead to apps being included twice, unify them with distinct
             if (allowNoUser)
             {
@@ -295,7 +295,7 @@ namespace BTCPayServer.Services.Apps
                     string posViewStyle = (settings.EnableShoppingCart ? PosViewType.Cart : settings.DefaultView).ToString();
                     style = typeof(PosViewType).DisplayName(posViewStyle);
                     break;
-                
+
                 default:
                     style = string.Empty;
                     break;
@@ -386,7 +386,7 @@ namespace BTCPayServer.Services.Apps
             return serializer.Serialize(mappingNode);
         }
 
-        public ViewPointOfSaleViewModel.Item[] Parse( string template, string currency)
+        public ViewPointOfSaleViewModel.Item[] Parse(string template, string currency)
         {
             return Parse(_HtmlSanitizer, _displayFormatter, template, currency);
         }
@@ -401,7 +401,7 @@ namespace BTCPayServer.Services.Apps
             if (string.IsNullOrWhiteSpace(template))
                 return Array.Empty<ViewPointOfSaleViewModel.Item>();
             using var input = new StringReader(template);
-            YamlStream stream = new ();
+            YamlStream stream = new();
             stream.Load(input);
             var root = (YamlMappingNode)stream.Documents[0].RootNode;
             return root
@@ -410,7 +410,7 @@ namespace BTCPayServer.Services.Apps
                 .Where(kv => kv.Value != null)
                 .Select(c =>
                 {
-                    ViewPointOfSaleViewModel.Item.ItemPrice price = new ();
+                    ViewPointOfSaleViewModel.Item.ItemPrice price = new();
                     var pValue = c.GetDetail("price")?.FirstOrDefault();
 
                     switch (c.GetDetailString("custom") ?? c.GetDetailString("price_type")?.ToLowerInvariant())

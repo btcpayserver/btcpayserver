@@ -1474,6 +1474,7 @@ namespace BTCPayServer.Tests
             var newDeliveryId = await clientProfile.RedeliverWebhook(user.StoreId, hook.Id, delivery.Id);
             req = await fakeServer.GetNextRequest();
             req.Response.StatusCode = 404;
+            Assert.StartsWith("BTCPayServer", Assert.Single(req.Request.Headers.UserAgent));
             await TestUtils.EventuallyAsync(async () =>
             {
                 // Releasing semaphore several times may help making this test less flaky

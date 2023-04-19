@@ -69,6 +69,8 @@ using ExchangeSharp;
 using BTCPayServer.Rating;
 using System.Configuration.Provider;
 using BTCPayServer.Rating.Providers;
+using Serilog.Sinks.Slack.Models;
+using Serilog.Sinks.Slack;
 #if ALTCOINS
 using BTCPayServer.Services.Altcoins.Monero;
 using BTCPayServer.Services.Altcoins.Zcash;

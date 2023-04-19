@@ -143,7 +143,7 @@
                     "x-position": 1
                 },
                 "responses": {
-                    "201": {
+                    "200": {
                         "description": "The email was sent (scheduled) successfully"
                     },
                     "400": {
@@ -215,6 +215,11 @@
                     "fromDisplay": {
                         "type": "string",
                         "description": "The name of the sender"
+                    },
+                    "disableCertificateCheck": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Disable TLS certificate security checks"
                     }
                 }
             }

@@ -65,6 +65,8 @@ using ExchangeSharp;
 using BTCPayServer.Rating;
 using System.Configuration.Provider;
 using BTCPayServer.Rating.Providers;
+using Serilog.Sinks.Slack.Models;
+using Serilog.Sinks.Slack;
 #if ALTCOINS
 using BTCPayServer.Services.Altcoins.Monero;
 using BTCPayServer.Services.Altcoins.Zcash;
@@ -456,15 +458,70 @@ namespace BTCPayServer.Hosting
             services.AddRateLimits();
             services.AddLogging(logBuilder =>
             {
+                LoggerConfiguration loggerConfig = null;
+
                 var debugLogFile = BTCPayServerOptions.GetDebugLog(configuration);
                 if (!string.IsNullOrEmpty(debugLogFile))
                 {
-                    Serilog.Log.Logger = new LoggerConfiguration()
-                        .Enrich.FromLogContext()
-                        .MinimumLevel.Is(BTCPayServerOptions.GetDebugLogLevel(configuration))
-                        .WriteTo.File(debugLogFile, rollingInterval: RollingInterval.Day, fileSizeLimitBytes: MAX_DEBUG_LOG_FILE_SIZE, rollOnFileSizeLimit: true, retainedFileCountLimit: 1)
-                        .CreateLogger();
+                    loggerConfig = new LoggerConfiguration();
+                    loggerConfig.Enrich.FromLogContext();
+                    loggerConfig.MinimumLevel.Is(BTCPayServerOptions.GetDebugLogLevel(configuration));
+                    loggerConfig.WriteTo.File(debugLogFile, rollingInterval: RollingInterval.Day, fileSizeLimitBytes: MAX_DEBUG_LOG_FILE_SIZE, rollOnFileSizeLimit: true, retainedFileCountLimit: 1);
+                        
+                }
+
+                SettingsRepository _SettingsRepository = services.BuildServiceProvider().GetRequiredService<SettingsRepository>();
+                var logSettings = _SettingsRepository.GetSettingAsync<LogSettings>().Result;
+                if (logSettings != null)
+                {
+                    if (loggerConfig == null)
+                    { 
+                        loggerConfig = new LoggerConfiguration();
+                        loggerConfig.Enrich.FromLogContext();
+                    }
+
+                    /*if (logSettings.logEmailEnabled)
+                    {
+                        var emailSettings = _SettingsRepository.GetSettingAsync<EmailSettings>().Result;
+                        var cfg = logSettings.emailConfig;
+                        var opt = new Serilog.Sinks.Email.EmailConnectionInfo
+                        {
+                            EmailSubject = "BTCPay Server Log",
+                            FromEmail = emailSettings.From,
+                            ToEmail = cfg.To,
+                            MailServer = emailSettings.Server,
+                            Port = emailSettings.Port ?? 25,
+                            NetworkCredentials = new System.Net.NetworkCredential(emailSettings.Login, emailSettings.Password),
+                            ServerCertificateValidationCallback = (senderX, certificate, chain, sslPolicyErrors) => true
+                        };
+                        opt.EnableSsl = (opt.Port != 25);
+
+                        loggerConfig.WriteTo.Email(connectionInfo: opt, outputTemplate: cfg.Template, restrictedToMinimumLevel: cfg.MinLevel, batchPostingLimit: cfg.NbMaxEventsInMail, period: cfg.PeriodTimeSpan);
+                    }*/
+                    if (logSettings.logSlackEnabled)
+                    {
+                        var cfg = logSettings.slackConfig;
+                        var opt = new SlackSinkOptions()
+                        {
+                            CustomChannel = cfg.Channel,
+                            CustomUserName = cfg.UserName,
+                            WebHookUrl = cfg.HookUrl
+                        };
+
+                        loggerConfig.WriteTo.Slack(slackSinkOptions: opt, restrictedToMinimumLevel: cfg.MinLevel);
+                    }
+                    if (logSettings.logTelegramEnabled)
+                    {
+                        var cfg = logSettings.telegramConfig;
+                        loggerConfig.WriteTo.Telegram(botToken:cfg.Token, chatId:cfg.ChatID, restrictedToMinimumLevel:cfg.MinLevel);
+                    }
+                }
+
+                if (loggerConfig != null)
+                {
+                    Serilog.Log.Logger = loggerConfig.CreateLogger();
                     logBuilder.AddProvider(new Serilog.Extensions.Logging.SerilogLoggerProvider(Log.Logger));
+                    logs.AddSerilog();
                 }
             });
 

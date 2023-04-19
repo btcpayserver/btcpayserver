@@ -1,4 +1,4 @@
-﻿@model BTCPayServer.Models.ServerViewModels.LogsViewModel
+@model BTCPayServer.Models.ServerViewModels.LogsViewModel
 @{
     ViewData.SetActivePage(ServerNavPages.Logs, "Logs");
 }
@@ -39,6 +39,174 @@
 </pre>
 }
 
+<br>
+<br>
+<br>
+<form method="post" autocomplete="off">
+    <!--
+<div class="row">
+    <div class="col-xl-10 col-xxl-constrain">
+        <div class="d-flex flex-wrap gap-3 align-items-center justify-content-between mt-n1 mb-4">
+            <h4 class="mb-3">Email</h4>
+            <div class="d-flex">
+                <button class="btn btn-secondary mt-2" value="TestEmail" name="Command">Test</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <table class="table table-sm mt-0 mx-0"><tr>
+    <td class="border-0 ps-0 align-middle">
+        <input asp-for="Settings.logEmailEnabled" type="checkbox" class="form-check-input" />
+        <label asp-for="Settings.logEmailEnabled" class="form-check-label"></label>
+        <span asp-validation-for="Settings.logEmailEnabled" class="text-danger"></span>
+    </td>
+    <td class="border-0 ps-0 align-middle">
+        <label asp-for="Settings.emailConfig.MinLevel" class="form-check-label"></label>
+        <select asp-for="Settings.emailConfig.MinLevel" asp-items="Html.GetEnumSelectList<Serilog.Events.LogEventLevel>()"></select>
+    </td>
+</tr></table>
+
+<div class="form-group">
+    <label asp-for="Settings.emailConfig.To" class="form-label"></label>
+    <input asp-for="Settings.emailConfig.To" placeholder="name@email.com" data-fill="port" class="form-control" />
+    <span asp-validation-for="Settings.emailConfig.To" class="text-danger"></span>
+</div>
+
+<div class="form-group">
+    <label asp-for="Settings.emailConfig.Template" class="form-label"></label>
+    <input asp-for="Settings.emailConfig.Template" data-fill="port" class="form-control" />
+    <span asp-validation-for="Settings.emailConfig.Template" class="text-danger"></span>
+</div>
+
+<table class="table table-sm mt-0 mx-0">
+    <tr>
+        <td class="border-0 ps-0 align-middle">
+            <label asp-for="Settings.emailConfig.Period" class="form-label"></label>
+            <input asp-for="Settings.emailConfig.Period" data-fill="port" class="form-control" />
+            <span asp-validation-for="Settings.emailConfig.Period" class="text-danger"></span>
+        </td>
+        <td width="20"/>
+        <td class="border-0 ps-0 align-middle">
+            <label asp-for="Settings.emailConfig.NbMaxEventsInMail" class="form-label"></label>
+            <input asp-for="Settings.emailConfig.NbMaxEventsInMail" data-fill="port" class="form-control" />
+            <span asp-validation-for="Settings.emailConfig.NbMaxEventsInMail" class="text-danger"></span>
+        </td>
+    </tr>
+</table>
+
+<br>
+-->
+
+<div class="row">
+    <div class="col-xl-10 col-xxl-constrain">
+        <div class="d-flex flex-wrap gap-3 align-items-center justify-content-between mt-n1 mb-4">
+            <h4 class="mb-3">
+                Slack
+                <a href="https://api.slack.com/messaging/webhooks" target="_blank" rel="noreferrer noopener">
+                    <vc:icon symbol="info" />
+                </a>
+            </h4>              
+            <div class="d-flex align-middle">
+                <button class="btn btn-secondary mt-2" value="TestSlack" name="Command">Test</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<table class="table table-sm mt-0 mx-0">
+    <tr>
+        <td class="border-0 ps-0 align-middle">
+            <input asp-for="Settings.logSlackEnabled" type="checkbox" class="form-check-input" />
+            <label asp-for="Settings.logSlackEnabled" class="form-check-label"></label>
+            <span asp-validation-for="Settings.logSlackEnabled" class="text-danger"></span>
+        </td>
+        <td width="20"/>
+        <td class="border-0 ps-0 align-middle">
+            <label asp-for="Settings.slackConfig.MinLevel" class="form-check-label"></label>
+            <select asp-for="Settings.slackConfig.MinLevel" asp-items="Html.GetEnumSelectList<Serilog.Events.LogEventLevel>()"></select>
+        </td>
+    </tr>
+</table>
+
+<table class="table table-sm mt-0 mx-0">
+    <tr>
+        <td class="border-0 ps-0 align-middle">
+            <label asp-for="Settings.slackConfig.Channel" class="form-label"></label>
+            <input asp-for="Settings.slackConfig.Channel" data-fill="port" class="form-control" />
+            <span asp-validation-for="Settings.slackConfig.Channel" class="text-danger"></span>
+        </td>
+        <td width="20"/>
+        <td class="border-0 ps-0 align-middle">
+            <label asp-for="Settings.slackConfig.UserName" class="form-label"></label>
+            <input asp-for="Settings.slackConfig.UserName" data-fill="port" class="form-control" />
+            <span asp-validation-for="Settings.slackConfig.UserName" class="text-danger"></span>
+        </td>
+    </tr>
+</table>
+
+<div class="form-group">
+    <label asp-for="Settings.slackConfig.HookUrl" class="form-label"></label>
+    <input asp-for="Settings.slackConfig.HookUrl" data-fill="port" class="form-control" />
+    <span asp-validation-for="Settings.slackConfig.HookUrl" class="text-danger"></span>
+</div>
+
+<br>
+<div class="row">
+    <div class="col-xl-10 col-xxl-constrain">
+        <div class="d-flex flex-wrap gap-3 align-items-center justify-content-between mt-n1 mb-4">
+            <h4 class="mb-3">
+                Telegram
+                <a href="https://core.telegram.org/bots" target="_blank" rel="noreferrer noopener">
+                    <vc:icon symbol="info" />
+                </a>
+                <a href="https://stackoverflow.com/questions/32423837/telegram-bot-how-to-get-a-group-chat-id" target="_blank" rel="noreferrer noopener">
+                    <vc:icon symbol="info" />
+                </a>
+            </h4>
+            <div class="d-flex">
+                <button class="btn btn-secondary mt-2" value="TestTelegram" name="Command">Test</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<table class="table table-sm mt-0 mx-0">
+    <tr>
+        <td class="border-0 ps-0 align-middle">
+            <input asp-for="Settings.logTelegramEnabled" type="checkbox" class="form-check-input" />
+            <label asp-for="Settings.logTelegramEnabled" class="form-check-label"></label>
+            <span asp-validation-for="Settings.logTelegramEnabled" class="text-danger"></span>
+        </td>
+        <td width="20" />
+        <td class="border-0 ps-0 align-middle">
+            <label asp-for="Settings.telegramConfig.MinLevel" class="form-check-label"></label>
+            <select asp-for="Settings.telegramConfig.MinLevel" asp-items="Html.GetEnumSelectList<Serilog.Events.LogEventLevel>()"></select>
+        </td>
+    </tr>
+</table>
+
+<table class="table table-sm mt-0 mx-0">
+    <tr>
+        <td class="border-0 ps-0 align-middle">
+            <label asp-for="Settings.telegramConfig.Token" class="form-label"></label>
+            <input asp-for="Settings.telegramConfig.Token" data-fill="port" class="form-control" />
+            <span asp-validation-for="Settings.telegramConfig.Token" class="text-danger"></span>
+        </td>
+        <td width="20"/>
+        <td class="border-0 ps-0 align-middle">   
+            <label asp-for="Settings.telegramConfig.ChatID" class="form-label"></label>
+            <input asp-for="Settings.telegramConfig.ChatID" data-fill="port" class="form-control" />
+            <span asp-validation-for="Settings.telegramConfig.ChatID" class="text-danger"></span>
+        </td>
+    </tr>
+</table>
+
+<br>
+<div class="order-1">
+    <button id="SaveButton" type="submit" class="btn btn-primary" name="command" value="Save">Save</button>
+</div>
+</form>
 
 @section PageFootContent {
     <partial name="_ValidationScriptsPartial" />

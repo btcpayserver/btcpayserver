@@ -66,7 +66,7 @@ namespace BTCPayServer.Data
             }
         }
         
-        public string StoreEmail { get; set; }
+        public string StoreSupportUrl { get; set; }
 
         CurrencyPair[] _DefaultCurrencyPairs;
         [JsonProperty("defaultCurrencyPairs", ItemConverterType = typeof(CurrencyPairJsonConverter))]

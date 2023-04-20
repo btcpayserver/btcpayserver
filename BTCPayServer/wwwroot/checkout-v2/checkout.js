@@ -175,16 +175,6 @@ function initApp() {
                     ? this.srvModel.merchantRefLink
                     : null;
             },
-            contactLink () {
-                const { storeEmail, storeName, invoiceId, orderId } = this.srvModel;
-                if (!storeEmail) return null;
-                
-                const subject = this.$t('invoice_paidpartial_mail_subject', { invoiceId });
-                const details = invoiceId + (orderId ? ` (Order ID: ${orderId})` : '');
-                const body =  this.$t('invoice_paidpartial_mail_body', { details, storeName });
-                
-                return `mailto:${storeEmail}?subject=${encodeURI(subject)}&body=${encodeURI(body)}`;
-            },
             paymentMethodIds () {
                 return this.srvModel.availableCryptos.map(function (c) { return c.paymentMethodId });
             },
@@ -333,7 +323,6 @@ function initApp() {
                     const { status } = data;
                     window.parent.postMessage({ invoiceId, status }, '*');
                 }
-                
                 const newEnd = new Date();
                 newEnd.setSeconds(newEnd.getSeconds() + data.expirationSeconds);
                 this.endDate = newEnd;

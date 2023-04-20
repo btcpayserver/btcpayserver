@@ -323,10 +323,10 @@
                         "description": "The absolute url of the store",
                         "format": "url"
                     },
-                    "email": {
+                    "supportUrl": {
                         "type": "string",
                         "nullable": true,
-                        "description": "The email address of the store, e.g. for support requests",
+                        "description": "The support URL of the store, can contain the placeholders `{OrderId}` and `{InvoiceId}`",
                         "format": "email"
                     },
                     "defaultCurrency": {

@@ -120,7 +120,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 Id = data.Id,
                 Name = data.StoreName,
                 Website = data.StoreWebsite,
-                Email = storeBlob.StoreEmail,
+                SupportUrl = storeBlob.StoreSupportUrl,
                 SpeedPolicy = data.SpeedPolicy,
                 DefaultPaymentMethod = data.GetDefaultPaymentId()?.ToStringNormalized(),
                 //blob
@@ -187,7 +187,7 @@ namespace BTCPayServer.Controllers.Greenfield
             blob.ShowRecommendedFee = restModel.ShowRecommendedFee;
             blob.RecommendedFeeBlockTarget = restModel.RecommendedFeeBlockTarget;
             blob.DefaultLang = restModel.DefaultLang;
-            blob.StoreEmail = restModel.Email;
+            blob.StoreSupportUrl = restModel.SupportUrl;
             blob.MonitoringExpiration = restModel.MonitoringExpiration;
             blob.InvoiceExpiration = restModel.InvoiceExpiration;
             blob.DisplayExpirationTimer = restModel.DisplayExpirationTimer;

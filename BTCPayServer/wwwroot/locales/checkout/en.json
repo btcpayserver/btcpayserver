@@ -35,8 +35,6 @@
   "invoice_expired": "Invoice Expired",
   "invoice_expired_body": "An invoice is only valid for {{minutes}} minutes.\n\nReturn to {{storeName}} if you would like to resubmit a payment.",
   "invoice_paidpartial_body": "An invoice is only valid for {{minutes}} minutes.\n\nThis invoice expired with partial payment. Please contact us, so that we can fulfill your order.",
-  "invoice_paidpartial_mail_subject": "Invoice {{invoiceId}}",
-  "invoice_paidpartial_mail_body": "Hi {{storeName}},\n\nthe invoice {{details}} was paid partial.\nPlease let me know how to proceed.\n\nBest regards!",
   "view_receipt": "View receipt",
   "return_to_store": "Return to {{storeName}}",
   "contact_us": "Contact us",

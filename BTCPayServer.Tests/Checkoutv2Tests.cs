@@ -1,13 +1,9 @@
 using System;
-using System.Threading;
 using System.Threading.Tasks;
-using BTCPayServer.Client.Models;
 using BTCPayServer.Payments;
-using BTCPayServer.Tests.Logging;
 using BTCPayServer.Views.Stores;
 using NBitcoin;
 using OpenQA.Selenium;
-using OpenQA.Selenium.Support.Extensions;
 using OpenQA.Selenium.Support.UI;
 using Xunit;
 using Xunit.Abstractions;
@@ -40,10 +36,10 @@ namespace BTCPayServer.Tests
 
             // Configure store url
             var storeUrl = "https://satoshisteaks.com/";
-            var storeEmail = "info@satoshisteaks.com";
+            var supportUrl = "https://support.satoshisteaks.com/{InvoiceId}/";
             s.GoToStore();
             s.Driver.FindElement(By.Id("StoreWebsite")).SendKeys(storeUrl);
-            s.Driver.FindElement(By.Id("StoreEmail")).SendKeys(storeEmail);
+            s.Driver.FindElement(By.Id("StoreSupportUrl")).SendKeys(supportUrl);
             s.Driver.FindElement(By.Id("Save")).Click();
             Assert.Contains("Store successfully updated", s.FindAlertMessage().Text);
 
@@ -181,7 +177,7 @@ namespace BTCPayServer.Tests
             });
             var contactLink = s.Driver.FindElement(By.Id("ContactLink"));
             Assert.Equal("Contact us", contactLink.Text);
-            Assert.Matches($"mailto:{storeEmail}", contactLink.GetAttribute("href"));
+            Assert.Matches(supportUrl.Replace("{InvoiceId}", invoiceId), contactLink.GetAttribute("href"));
             Assert.True(s.Driver.ElementDoesNotExist(By.Id("ReceiptLink")));
             Assert.Equal(storeUrl, s.Driver.FindElement(By.Id("StoreLink")).GetAttribute("href"));
 

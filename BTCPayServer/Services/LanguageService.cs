@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -45,7 +46,7 @@ namespace BTCPayServer.Services
 
                     using var stream = new StreamReader(file);
                     var json = stream.ReadToEnd();
-                    result.Add(JObject.Parse(json).ToObject<Language>());
+                    result.Add(JObject.Parse(json).ToObject<Language>()!);
                 }
                 catch (Exception e)
                 {
@@ -73,7 +74,7 @@ namespace BTCPayServer.Services
             return items;
         }
 
-        public Language FindLanguageInAcceptLanguageHeader(string acceptLanguageHeader)
+        public Language? FindLanguageInAcceptLanguageHeader(string? acceptLanguageHeader)
         {
             if (acceptLanguageHeader is null)
                 return null;
@@ -130,7 +131,7 @@ namespace BTCPayServer.Services
          * Look for a supported language that matches the given locale (can be in different notations like "nl" or "nl-NL").
          * Example: "nl" is not supported, but we do have "nl-NL"
          */
-        public Language FindLanguage(string locale)
+        public Language? FindLanguage(string locale)
         {
             var supportedLangs = GetLanguages();
             var split = locale.Split('-', StringSplitOptions.RemoveEmptyEntries);
@@ -150,7 +151,7 @@ namespace BTCPayServer.Services
             return countryMatches.FirstOrDefault() ?? langMatches.FirstOrDefault();
         }
 
-        public Language AutoDetectLanguageUsingHeader(IHeaderDictionary headerDictionary, string defaultLang)
+        public Language? AutoDetectLanguageUsingHeader(IHeaderDictionary headerDictionary, string? defaultLang)
         {
             if (headerDictionary?.TryGetValue("Accept-Language",
                 out var acceptLanguage) is true && !string.IsNullOrEmpty(acceptLanguage))

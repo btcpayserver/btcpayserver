@@ -1,17 +1,17 @@
 using System;
 using System.Collections.Generic;
-using BTCPayServer.Client.Models;
 using BTCPayServer.Services.Invoices;
 
 namespace BTCPayServer.Models.InvoicingModels
 {
     public class InvoicesModel : BasePagingViewModel
     {
-        public List<InvoiceModel> Invoices { get; set; } = new List<InvoiceModel>();
+        public List<InvoiceModel> Invoices { get; set; } = new ();
         public override int CurrentPageCount => Invoices.Count;
-        public string[] StoreIds { get; set; }
         public string StoreId { get; set; }
-        public bool IncludeArchived { get; set; }
+        
+        public string SearchText { get; set; }
+        public SearchString Search { get; set; }
     }
 
     public class InvoiceModel

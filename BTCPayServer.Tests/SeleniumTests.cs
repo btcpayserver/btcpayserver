@@ -720,8 +720,8 @@ namespace BTCPayServer.Tests
             Assert.DoesNotContain(invoiceId, s.Driver.PageSource);
 
             // unarchive via list
-            s.Driver.FindElement(By.Id("SearchOptionsToggle")).Click();
-            s.Driver.FindElement(By.Id("SearchOptionsIncludeArchived")).Click();
+            s.Driver.FindElement(By.Id("StatusOptionsToggle")).Click();
+            s.Driver.FindElement(By.Id("StatusOptionsIncludeArchived")).Click();
             Assert.Contains(invoiceId, s.Driver.PageSource);
             s.Driver.FindElement(By.CssSelector($".selector[value=\"{invoiceId}\"]")).Click();
             s.Driver.FindElement(By.Id("ActionsDropdownToggle")).Click();

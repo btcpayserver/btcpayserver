@@ -277,7 +277,6 @@ namespace BTCPayServer.Controllers
 
                 return BadRequest("Payment Request cannot be paid as it has been archived");
             }
-
             if (!result.FormSubmitted && !string.IsNullOrEmpty(result.FormId))
             {
                 var formData = await FormDataService.GetForm(result.FormId);
@@ -322,7 +321,8 @@ namespace BTCPayServer.Controllers
             try
             {
                 var store = await _storeRepository.FindStore(result.StoreId);
-                var newInvoice = await _InvoiceController.CreatePaymentRequestInvoice(result, amount, store, Request, cancellationToken);
+                var prData = await _PaymentRequestRepository.FindPaymentRequest(result.Id, null);
+                var newInvoice = await _InvoiceController.CreatePaymentRequestInvoice(prData, amount, result.AmountDue, store, Request, cancellationToken);
                 if (redirectToInvoice)
                 {
                     return RedirectToAction("Checkout", "UIInvoice", new { invoiceId = newInvoice.Id });

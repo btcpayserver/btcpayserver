@@ -187,33 +187,35 @@ namespace BTCPayServer.Controllers
             return await CreateInvoiceCoreRaw(entity, store, excludeFilter, null, cancellationToken, entityManipulator);
         }
 
-        internal async Task<InvoiceEntity> CreatePaymentRequestInvoice(ViewPaymentRequestViewModel pr, decimal? amount, StoreData storeData, HttpRequest request, CancellationToken cancellationToken)
+        internal async Task<InvoiceEntity> CreatePaymentRequestInvoice(Data.PaymentRequestData prData, decimal? amount, decimal amountDue, StoreData storeData, HttpRequest request, CancellationToken cancellationToken)
         {
-            if (pr.AllowCustomPaymentAmounts && amount != null)
-                amount = Math.Min(pr.AmountDue, amount.Value);
+            var id = prData.Id;
+            var prBlob = prData.GetBlob();
+            if (prBlob.AllowCustomPaymentAmounts && amount != null)
+                amount = Math.Min(amountDue, amount.Value);
             else
-                amount = pr.AmountDue;
-            var redirectUrl = _linkGenerator.PaymentRequestLink(pr.Id, request.Scheme, request.Host, request.PathBase);
+                amount = amountDue;
+            var redirectUrl = _linkGenerator.PaymentRequestLink(id, request.Scheme, request.Host, request.PathBase);
 
-            var invoiceMetadata =
-                new InvoiceMetadata
-                {
-                    OrderId = PaymentRequestRepository.GetOrderIdForPaymentRequest(pr.Id),
-                    PaymentRequestId = pr.Id,
-                    BuyerEmail = pr.Email
-                };
+            JObject invoiceMetadata = prData.GetBlob()?.FormResponse is JObject formResponse ? formResponse : new JObject();
+            invoiceMetadata.Merge(new InvoiceMetadata
+            {
+                OrderId = PaymentRequestRepository.GetOrderIdForPaymentRequest(id),
+                PaymentRequestId = id,
+                BuyerEmail = string.IsNullOrEmpty(prBlob.Email) ? null : prBlob.Email
+            }.ToJObject(), new JsonMergeSettings() { MergeNullValueHandling = MergeNullValueHandling.Ignore });
 
             var invoiceRequest =
                 new CreateInvoiceRequest
                 {
-                    Metadata = invoiceMetadata.ToJObject(),
-                    Currency = pr.Currency,
+                    Metadata = invoiceMetadata,
+                    Currency = prBlob.Currency,
                     Amount = amount,
                     Checkout = { RedirectURL = redirectUrl },
                     Receipt = new InvoiceDataBase.ReceiptOptions { Enabled = false }
                 };
 
-            var additionalTags = new List<string> { PaymentRequestRepository.GetInternalTag(pr.Id) };
+            var additionalTags = new List<string> { PaymentRequestRepository.GetInternalTag(id) };
             return await CreateInvoiceCoreRaw(invoiceRequest, storeData, request.GetAbsoluteRoot(), additionalTags, cancellationToken);
         }
 

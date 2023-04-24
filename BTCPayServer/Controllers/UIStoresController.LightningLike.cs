@@ -181,7 +181,6 @@ namespace BTCPayServer.Controllers
                     {
                         CryptoCode = vm.CryptoCode,
                         UseBech32Scheme = true,
-                        EnableForStandardInvoices = false,
                         LUD12Enabled = false
                     });
 
@@ -255,10 +254,9 @@ namespace BTCPayServer.Controllers
             {
                 vm.LNURLEnabled = !store.GetStoreBlob().GetExcludedPaymentMethods().Match(lnurl.PaymentId);
                 vm.LNURLBech32Mode = lnurl.UseBech32Scheme;
-                vm.LNURLStandardInvoiceEnabled = lnurl.EnableForStandardInvoices;
                 vm.LUD12Enabled = lnurl.LUD12Enabled;
                 vm.DisableBolt11PaymentMethod =
-                    vm.LNURLEnabled && vm.LNURLStandardInvoiceEnabled && vm.DisableBolt11PaymentMethod;
+                    vm.LNURLEnabled && vm.DisableBolt11PaymentMethod;
             }
             else
             {
@@ -291,7 +289,7 @@ namespace BTCPayServer.Controllers
             blob.LightningPrivateRouteHints = vm.LightningPrivateRouteHints;
             blob.OnChainWithLnInvoiceFallback = vm.OnChainWithLnInvoiceFallback;
             var disableBolt11PaymentMethod =
-                vm.LNURLEnabled && vm.LNURLStandardInvoiceEnabled && vm.DisableBolt11PaymentMethod;
+                vm.LNURLEnabled && vm.DisableBolt11PaymentMethod;
             var lnurlId = new PaymentMethodId(vm.CryptoCode, PaymentTypes.LNURLPay);
             blob.SetExcluded(lnurlId, !vm.LNURLEnabled);
             var lightning = GetExistingLightningSupportedPaymentMethod(vm.CryptoCode, store);
@@ -305,7 +303,6 @@ namespace BTCPayServer.Controllers
 
             var lnurl = GetExistingLNURLSupportedPaymentMethod(vm.CryptoCode, store);
             if (lnurl is null || (
-                lnurl.EnableForStandardInvoices != vm.LNURLStandardInvoiceEnabled ||
                 lnurl.UseBech32Scheme != vm.LNURLBech32Mode ||
                 lnurl.LUD12Enabled != vm.LUD12Enabled))
             {
@@ -315,7 +312,6 @@ namespace BTCPayServer.Controllers
             store.SetSupportedPaymentMethod(new LNURLPaySupportedPaymentMethod
             {
                 CryptoCode = vm.CryptoCode,
-                EnableForStandardInvoices = vm.LNURLStandardInvoiceEnabled,
                 UseBech32Scheme = vm.LNURLBech32Mode,
                 LUD12Enabled = vm.LUD12Enabled
             });

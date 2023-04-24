@@ -50,12 +50,6 @@ namespace BTCPayServer.Payments.Lightning
             BTCPayNetwork network, object preparePaymentObject, IEnumerable<PaymentMethodId> invoicePaymentMethods)
         {
             var lnPmi = new PaymentMethodId(supportedPaymentMethod.CryptoCode, PaymentTypes.LightningLike);
-            if (!supportedPaymentMethod.EnableForStandardInvoices &&
-                paymentMethod.ParentEntity.Type == InvoiceType.Standard &&
-                invoicePaymentMethods.Contains(lnPmi))
-            {
-                throw new PaymentMethodUnavailableException("LNURL is not enabled for standard invoices");
-            }
             if (string.IsNullOrEmpty(paymentMethod.ParentEntity.Id))
             {
                 var lnSupported = store.GetSupportedPaymentMethods(_networkProvider)

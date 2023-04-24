@@ -16,12 +16,11 @@ namespace BTCPayServer.Client.Models
         {
         }
 
-        public LNURLPayPaymentMethodData(string cryptoCode, bool enabled, bool useBech32Scheme, bool enableForStandardInvoices)
+        public LNURLPayPaymentMethodData(string cryptoCode, bool enabled, bool useBech32Scheme)
         {
             Enabled = enabled;
             CryptoCode = cryptoCode;
             UseBech32Scheme = useBech32Scheme;
-            EnableForStandardInvoices = enableForStandardInvoices;
         }
     }
 }

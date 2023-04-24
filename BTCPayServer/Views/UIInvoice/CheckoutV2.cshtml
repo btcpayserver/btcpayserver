@@ -12,10 +12,7 @@
 	ViewData["Title"] = Model.HtmlTitle;
 	Csp.UnsafeEval();
 	var hasPaymentPlugins = UiExtensions.Any(extension => extension.Location == "checkout-payment-method");
-    // Show LNURL as selectable payment method only for top up invoices + non-BIP21 case
-    var displayedPaymentMethods = Model.IsUnsetTopUp && !Model.OnChainWithLnInvoiceFallback
-        ? Model.AvailableCryptos
-        : Model.AvailableCryptos.Where(c => c.PaymentMethodId != "BTC_LNURLPAY").ToList();
+	var displayedPaymentMethods = Model.AvailableCryptos.Where(c => c.Displayed).ToList();
 }
 @functions {
     private string PaymentMethodName(PaymentModel.AvailableCrypto pm)

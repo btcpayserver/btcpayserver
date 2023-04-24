@@ -1657,7 +1657,6 @@ namespace BTCPayServer.Tests
             user.RegisterLightningNode(cryptoCode, LightningConnectionType.Charge);
             var lnSettingsVm = user.GetController<UIStoresController>().LightningSettings(user.StoreId, cryptoCode).AssertViewModel<LightningSettingsViewModel>();
             lnSettingsVm.LNURLEnabled = true;
-            lnSettingsVm.LNURLStandardInvoiceEnabled = true;
             Assert.IsType<RedirectToActionResult>(user.GetController<UIStoresController>().LightningSettings(lnSettingsVm).Result);
             vm = user.GetController<UIStoresController>().CheckoutAppearance().AssertViewModel<CheckoutAppearanceViewModel>();
             criteria = Assert.Single(vm.PaymentMethodCriteria);

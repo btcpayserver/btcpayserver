@@ -47,7 +47,6 @@ namespace BTCPayServer.Payments
                 return new LNURLPayPaymentMethodBaseData()
                 {
                     UseBech32Scheme = lightningSupportedPaymentMethod.UseBech32Scheme,
-                    EnableForStandardInvoices = lightningSupportedPaymentMethod.EnableForStandardInvoices,
                     LUD12Enabled = lightningSupportedPaymentMethod.LUD12Enabled
                 };
             return null;

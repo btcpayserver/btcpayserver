@@ -177,7 +177,7 @@ namespace BTCPayServer.Tests
 
         public async Task<PayResponse> SendLightningPaymentAsync(Invoice invoice)
         {
-            var bolt11 = invoice.CryptoInfo.Where(o => o.PaymentUrls.BOLT11 != null).First().PaymentUrls.BOLT11;
+            var bolt11 = invoice.CryptoInfo.Where(o => o.PaymentUrls?.BOLT11 != null).First().PaymentUrls.BOLT11;
             bolt11 = bolt11.Replace("lightning:", "", StringComparison.OrdinalIgnoreCase);
             return await CustomerLightningD.Pay(bolt11);
         }

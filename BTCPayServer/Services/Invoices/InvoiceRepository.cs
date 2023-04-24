@@ -213,12 +213,18 @@ namespace BTCPayServer.Services.Invoices
                     }
                     var paymentDestination = details.GetPaymentDestination();
                     string address = GetDestination(paymentMethod);
-                    await context.AddressInvoices.AddAsync(new AddressInvoiceData()
+                    if (address != null)
                     {
-                        InvoiceDataId = invoice.Id,
-                        CreatedTime = DateTimeOffset.UtcNow,
-                    }.Set(address, paymentMethod.GetId()));
-                    textSearch.Add(paymentDestination);
+                        await context.AddressInvoices.AddAsync(new AddressInvoiceData()
+                        {
+                            InvoiceDataId = invoice.Id,
+                            CreatedTime = DateTimeOffset.UtcNow,
+                        }.Set(address, paymentMethod.GetId()));
+                    }
+                    if (paymentDestination != null)
+                    {
+                        textSearch.Add(paymentDestination);
+                    }
                     textSearch.Add(paymentMethod.Calculate().TotalDue.ToString());
                 }
                 await context.PendingInvoices.AddAsync(new PendingInvoiceData() { Id = invoice.Id });

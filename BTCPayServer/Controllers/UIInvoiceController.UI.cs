@@ -686,7 +686,7 @@ namespace BTCPayServer.Controllers
             if (displayedPaymentMethods.Contains(lnId) && displayedPaymentMethods.Contains(lnurlId))
                 displayedPaymentMethods.Remove(lnurlId);
 
-            if (paymentMethodId is not null && displayedPaymentMethods.Contains(paymentMethodId))
+            if (paymentMethodId is not null && !displayedPaymentMethods.Contains(paymentMethodId))
                 paymentMethodId = null;
             if (paymentMethodId is null)
             {

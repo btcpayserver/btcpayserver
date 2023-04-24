@@ -51,6 +51,7 @@ namespace BTCPayServer.Tests
                 user.RegisterDerivationScheme(cryptoCode);
                 user.RegisterDerivationScheme("LTC");
                 user.RegisterLightningNode(cryptoCode, LightningConnectionType.CLightning);
+                user.SetLNUrl("BTC", false);
                 var btcNetwork = tester.PayTester.Networks.GetNetwork<BTCPayNetwork>(cryptoCode);
                 var invoice = await user.BitPay.CreateInvoiceAsync(
                     new Invoice

@@ -468,6 +468,8 @@ namespace BTCPayServer
             lnUrlMetadata ??= new Dictionary<string, string>();
 
             var pm = i.GetPaymentMethod(pmi);
+            if (pm is null)
+                return null;
             var paymentMethodDetails = (LNURLPayPaymentMethodDetails)pm.GetPaymentMethodDetails();
             bool updatePaymentMethodDetails = false;
             if (lnUrlMetadata?.TryGetValue("text/identifier", out var lnAddress) is true && lnAddress is not null)
@@ -494,7 +496,7 @@ namespace BTCPayServer
             lnurlRequest.Metadata = JsonConvert.SerializeObject(lnUrlMetadata.Select(kv => new[] { kv.Key, kv.Value }));
             if (i.Type != InvoiceType.TopUp)
             {
-                lnurlRequest.MinSendable = new LightMoney(i.GetPaymentMethod(pmi).Calculate().Due.ToDecimal(MoneyUnit.Satoshi), LightMoneyUnit.Satoshi);
+                lnurlRequest.MinSendable = new LightMoney(pm.Calculate().Due.ToDecimal(MoneyUnit.Satoshi), LightMoneyUnit.Satoshi);
                 if (!allowOverpay)
                     lnurlRequest.MaxSendable = lnurlRequest.MinSendable;
             }

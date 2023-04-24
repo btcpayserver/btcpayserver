@@ -221,7 +221,7 @@ namespace BTCPayServer.Payments.Lightning
             }));
             leases.Add(_Aggregator.Subscribe<Events.InvoiceNewPaymentDetailsEvent>(inv =>
             {
-                if (inv.PaymentMethodId.PaymentType == LNURLPayPaymentType.Instance)
+                if (inv.PaymentMethodId.PaymentType == LNURLPayPaymentType.Instance && !string.IsNullOrEmpty(inv.InvoiceId))
                 {
                     _memoryCache.Remove(GetCacheKey(inv.InvoiceId));
                     _CheckInvoices.Writer.TryWrite(inv.InvoiceId);

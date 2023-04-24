@@ -116,8 +116,11 @@ namespace BTCPayServer.Tests
 
             s.Driver.FindElement(By.Name("buyerEmail")).SendKeys("aa@aa.com");
             s.Driver.FindElement(By.CssSelector("input[type='submit']")).Click();
+            invoiceId = s.Driver.Url.Split('/').Last();
             s.Driver.Navigate().GoToUrl(editUrl);
             Assert.Contains("aa@aa.com", s.Driver.PageSource);
+            var invoice = await s.Server.PayTester.GetService<InvoiceRepository>().GetInvoice(invoiceId);
+            Assert.Equal("aa@aa.com", invoice.Metadata.BuyerEmail);
 
             //Custom Forms
             s.GoToStore(StoreNavPages.Forms);

@@ -32,7 +32,7 @@
                             @if (item.Price.Type != ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Topup)
                             {
                                 <form method="post" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" data-buy>
-                                    <input type="hidden" name="choicekey" value="@item.Id" />
+                                    <input type="hidden" name="choiceKey" value="@item.Id" />
                                     @{PayFormInputContent(item.BuyButtonText ?? Model.CustomButtonText, item.Price.Type, item.Price.Value, item.Price.Value);}
                                 </form>
                             }
@@ -95,8 +95,8 @@
     {
         if (itemPriceType == ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Fixed && priceValue == 0)
         {
-            <div class="input-group  ">
-                <input class="form-control" type="text" readonly  value="Free"/>
+            <div class="input-group">
+                <input class="form-control" type="text" readonly value="Free"/>
                 <button class="btn btn-primary text-nowrap" type="submit">@buttonText</button>
             </div>
         }

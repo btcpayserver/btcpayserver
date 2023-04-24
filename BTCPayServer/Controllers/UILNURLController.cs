@@ -468,9 +468,10 @@ namespace BTCPayServer
             lnUrlMetadata ??= new Dictionary<string, string>();
 
             var pm = i.GetPaymentMethod(pmi);
-            var paymentMethodDetails = (LNURLPayPaymentMethodDetails)pm.GetPaymentMethodDetails();
+            var paymentMethodDetails = pm?.GetPaymentMethodDetails() as LNURLPayPaymentMethodDetails;
             bool updatePaymentMethodDetails = false;
-            if (lnUrlMetadata?.TryGetValue("text/identifier", out var lnAddress) is true && lnAddress is not null)
+            if (lnUrlMetadata?.TryGetValue("text/identifier", out var lnAddress) is true &&
+                lnAddress is not null && paymentMethodDetails is not null)
             {
                 paymentMethodDetails.ConsumedLightningAddress = lnAddress;
                 updatePaymentMethodDetails = true;
@@ -507,7 +508,7 @@ namespace BTCPayServer
                 lnurlRequest.MaxSendable = LightMoney.FromUnit(6.12m, LightMoneyUnit.BTC);
 
             lnurlRequest = await _pluginHookService.ApplyFilter("modify-lnurlp-request", lnurlRequest) as LNURLPayRequest;
-            if (paymentMethodDetails.PayRequest is null)
+            if (paymentMethodDetails is not null && paymentMethodDetails.PayRequest is null)
             {
                 paymentMethodDetails.PayRequest = lnurlRequest;
                 updatePaymentMethodDetails = true;

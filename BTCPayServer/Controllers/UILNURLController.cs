@@ -447,19 +447,9 @@ namespace BTCPayServer
             try
             {
                 createInvoice.Checkout ??= new InvoiceDataBase.CheckoutOptions();
+                createInvoice.Checkout.LazyPaymentMethods = false;
                 createInvoice.Checkout.PaymentMethods = new[] { pmi.ToStringNormalized() };
                 i = await _invoiceController.CreateInvoiceCoreRaw(createInvoice, store, Request.GetAbsoluteRoot(), additionalTags);
-                var pm = i.GetPaymentMethod(pmi);
-                if (pm is null)
-                    return NotFound("LNUrl is enabled, but the invoice couldn't use it. Check the invoice's events for more information.");
-                // If LNUrl isn't activated, make sure it is
-                var pmd = pm.GetPaymentMethodDetails();
-                if (!pmd.Activated)
-                {
-                    if (!await _invoiceActivator.ActivateInvoicePaymentMethod(pmi, i, store))
-                        return NotFound("Unable to activate LNURL. Check the invoice's events for more information.");
-                    i = await _invoiceRepository.GetInvoice(i.Id);
-                }
             }
             catch (Exception e)
             {

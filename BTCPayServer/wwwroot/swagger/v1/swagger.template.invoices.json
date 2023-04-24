@@ -1173,6 +1173,11 @@
                         "nullable": true,
                         "description": "Default payment type for the invoice (e.g., BTC, BTC-LightningNetwork). Default payment method set for the store is used if this parameter is not specified."
                     },
+                    "lazyPaymentMethods": {
+                        "type": "boolean",
+                        "nullable": true,
+                        "description": "If true, payment methods are enabled individually upon user interaction in the invoice. Default to store's settings'"
+                    },
                     "expirationMinutes": {
                         "nullable": true,
                         "description": "The number of minutes after which an invoice becomes expired. Defaults to the store's settings. (The default store settings is 15)",

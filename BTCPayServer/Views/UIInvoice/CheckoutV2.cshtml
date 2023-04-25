@@ -15,13 +15,6 @@
 	var displayedPaymentMethods = Model.AvailableCryptos.Where(c => c.Displayed).ToList();
 }
 @functions {
-    private string PaymentMethodName(PaymentModel.AvailableCrypto pm)
-    {
-        return Model.AltcoinsBuild
-            ? pm.PaymentMethodName
-            : pm.PaymentMethodName.Replace("Bitcoin (", "").Replace(")", "").Replace("Lightning ", "");
-    }
-
     private string ToJsValue(object value)
     {
         return Safe.Json(value).ToString()?.Replace("\"", "'");
@@ -96,7 +89,7 @@
                                    class="btcpay-pill m-0 payment-method"
                                    :class="{ active: pmId === @ToJsValue(crypto.PaymentMethodId) }"
                                    v-on:click.prevent="changePaymentMethod(@ToJsValue(crypto.PaymentMethodId))">
-                                    @PaymentMethodName(crypto)
+                                    @crypto.PaymentMethodName
                                 </a>
                             }
                             @await Component.InvokeAsync("UiExtensionPoint", new { location = "checkout-payment-method", model = Model })

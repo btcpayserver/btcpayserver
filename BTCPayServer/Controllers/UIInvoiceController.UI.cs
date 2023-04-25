@@ -671,7 +671,7 @@ namespace BTCPayServer.Controllers
             var displayedPaymentMethods = invoice.GetPaymentMethods().Select(p => p.GetId()).ToList();
 
             // Exclude Lightning if OnChainWithLnInvoiceFallback is active and we have both payment methods
-            if (storeBlob is { CheckoutType: CheckoutType.V2, OnChainWithLnInvoiceFallback: true } &&
+            if (storeBlob is { OnChainWithLnInvoiceFallback: true } &&
                 displayedPaymentMethods.Contains(btcId))
             {
                 displayedPaymentMethods.Remove(lnId);
@@ -787,11 +787,13 @@ namespace BTCPayServer.Controllers
                 Request.Host,
                 Request.PathBase) : null;
 
+            var isAltcoinsBuild = false;
+#if ALTCOINS
+                isAltcoinsBuild = true,
+#endif
+
             var model = new PaymentModel
             {
-#if ALTCOINS
-                AltcoinsBuild = true,
-#endif
                 Activated = paymentMethodDetails.Activated,
                 CryptoCode = network.CryptoCode,
                 RootPath = Request.PathBase.Value.WithTrailingSlash(),
@@ -856,12 +858,15 @@ namespace BTCPayServer.Controllers
                                           {
                                               var availableCryptoPaymentMethodId = kv.GetId();
                                               var availableCryptoHandler = _paymentMethodHandlerDictionary[availableCryptoPaymentMethodId];
+                                              var pmName = availableCryptoHandler.GetPaymentMethodName(availableCryptoPaymentMethodId);
                                               return new PaymentModel.AvailableCrypto
                                               {
                                                   Displayed = displayedPaymentMethods.Contains(kv.GetId()),
                                                   PaymentMethodId = kv.GetId().ToString(),
                                                   CryptoCode = kv.Network?.CryptoCode ?? kv.GetId().CryptoCode,
-                                                  PaymentMethodName = availableCryptoHandler.GetPaymentMethodName(availableCryptoPaymentMethodId),
+                                                  PaymentMethodName = isAltcoinsBuild
+                                                      ? pmName
+                                                      : pmName.Replace("Bitcoin (", "").Replace(")", "").Replace("Lightning ", ""),
                                                   IsLightning =
                                                       kv.GetId().PaymentType == PaymentTypes.LightningLike,
                                                   CryptoImage = Request.GetRelativePathOrAbsolute(availableCryptoHandler.GetCryptoImage(availableCryptoPaymentMethodId)),

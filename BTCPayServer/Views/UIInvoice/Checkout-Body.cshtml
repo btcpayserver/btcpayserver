@@ -52,8 +52,7 @@
                 <div class="paywithRowRight cursorPointer" v-on:click="openPaymentMethodDialog">
                     <span class="payment__currencies " v-show="!changingCurrencies">
                         <img v-bind:src="srvModel.cryptoImage" />
-                        <span>{{srvModel.paymentMethodName}} ({{srvModel.cryptoCode}})</span>
-                        <span v-show="srvModel.isLightning">&#9889;</span>
+                        <span>{{srvModel.paymentMethodName}}</span>
                         <span class="clickable_indicator fa fa-angle-right"></span>
                     </span>
                 </div>
@@ -65,8 +64,6 @@
                                 <a href="@crypto.Link" class="payment-method" data-payment-method="@crypto.PaymentMethodId" rel="noreferrer noopener">
                                     <img alt="@crypto.PaymentMethodName" src="@crypto.CryptoImage" asp-append-version="true" />
                                     @crypto.PaymentMethodName
-                                    @(crypto.IsLightning ? Html.Raw("&#9889;") : null)
-                                    <span>@crypto.CryptoCode</span>
                                 </a>
                             </li>
                         }
@@ -77,7 +74,7 @@
             {
                 <div class="payment__currencies_noborder">
                     <img v-bind:src="srvModel.cryptoImage" />
-                    <span>{{srvModel.paymentMethodName}} ({{srvModel.cryptoCode}})</span>
+                    <span>{{srvModel.paymentMethodName}}</span>
                     <span v-show="srvModel.isLightning">&#9889;</span>
                 </div>
             }

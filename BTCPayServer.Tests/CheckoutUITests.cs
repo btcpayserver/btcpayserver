@@ -164,7 +164,7 @@ namespace BTCPayServer.Tests
 
             var invoiceId = s.CreateInvoice(defaultPaymentMethod: "BTC_LightningLike");
             s.GoToInvoiceCheckout(invoiceId);
-            Assert.Equal("Bitcoin (Lightning) (BTC)", s.Driver.FindElement(By.ClassName("payment__currencies")).Text);
+            Assert.Equal("Bitcoin (Lightning)", s.Driver.FindElement(By.ClassName("payment__currencies")).Text);
             s.Driver.Quit();
         }
 
@@ -187,7 +187,7 @@ namespace BTCPayServer.Tests
 
             var invoiceId = s.CreateInvoice(10, "USD", "a@g.com");
             s.GoToInvoiceCheckout(invoiceId);
-            Assert.Contains("sats", s.Driver.FindElement(By.ClassName("payment__currencies_noborder")).Text);
+            Assert.Contains("sats", s.Driver.FindElement(By.ClassName("buyerTotalLine")).Text);
         }
 
         [Fact(Timeout = TestTimeout)]

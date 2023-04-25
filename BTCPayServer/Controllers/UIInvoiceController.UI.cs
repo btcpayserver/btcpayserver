@@ -789,7 +789,7 @@ namespace BTCPayServer.Controllers
 
             var isAltcoinsBuild = false;
 #if ALTCOINS
-                isAltcoinsBuild = true,
+                isAltcoinsBuild = true;
 #endif
 
             var model = new PaymentModel

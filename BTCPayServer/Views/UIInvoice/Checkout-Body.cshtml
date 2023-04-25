@@ -1,6 +1,6 @@
 @model PaymentModel
 @{
-	var displayedPaymentMethods = Model.AvailableCryptos.Where(a => a.Displayed).ToList();
+    var displayedPaymentMethods = Model.AvailableCryptos.Where(a => a.Displayed).ToList();
 }
 <div class="top-header">
     <div class="header">
@@ -47,7 +47,7 @@
             </div>
         </div>
         <div class="single-item-order__right">
-			@if (displayedPaymentMethods.Count > 1)
+            @if (displayedPaymentMethods.Count > 1)
             {
                 <div class="paywithRowRight cursorPointer" v-on:click="openPaymentMethodDialog">
                     <span class="payment__currencies " v-show="!changingCurrencies">
@@ -58,7 +58,7 @@
                 </div>
                 <div id="vexPopupDialog">
                     <ul class="vexmenu">
-						@foreach (var crypto in displayedPaymentMethods)
+                        @foreach (var crypto in displayedPaymentMethods)
                         {
                             <li class="vexmenuitem">
                                 <a href="@crypto.Link" class="payment-method" data-payment-method="@crypto.PaymentMethodId" rel="noreferrer noopener">

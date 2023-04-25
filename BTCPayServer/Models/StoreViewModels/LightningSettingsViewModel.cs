@@ -26,8 +26,5 @@ namespace BTCPayServer.Models.StoreViewModels
 
         [Display(Name = "Allow payee to pass a comment")]
         public bool LUD12Enabled { get; set; }
-
-        [Display(Name = "Do not offer BOLT11 for standard invoices")]
-        public bool DisableBolt11PaymentMethod { get; set; }
     }
 }

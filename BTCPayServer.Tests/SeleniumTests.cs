@@ -2146,13 +2146,7 @@ namespace BTCPayServer.Tests
 
             // Ensure the toggles are set correctly
             s.GoToLightningSettings();
-
             Assert.False(s.Driver.FindElement(By.Id("LNURLBech32Mode")).Selected);
-
-            //even though we set DisableBolt11PaymentMethod to true, logic when saving it turns it back off as otherwise no lightning option is available at all!
-            Assert.False(s.Driver.FindElement(By.Id("DisableBolt11PaymentMethod")).Selected);
-            // Invoice creation should fail, because it is a standard invoice with amount, but DisableBolt11PaymentMethod  = true
-            s.CreateInvoice(storeId, 0.0000001m, cryptoCode, "", null, expectedSeverity: StatusMessageModel.StatusSeverity.Success);
 
             i = s.CreateInvoice(storeId, null, cryptoCode);
             s.GoToInvoiceCheckout(i);
@@ -2168,14 +2162,13 @@ namespace BTCPayServer.Tests
             s.AddLightningNode(LightningConnectionType.LndREST, false);
             s.GoToLightningSettings();
             s.Driver.SetCheckbox(By.Id("LNURLEnabled"), true);
-            s.Driver.SetCheckbox(By.Id("DisableBolt11PaymentMethod"), true);
             s.Driver.FindElement(By.Id("save")).Click();
             Assert.Contains($"{cryptoCode} Lightning settings successfully updated", s.FindAlertMessage().Text);
-            var invForPP = s.CreateInvoice(0.0000001m, cryptoCode);
+            var invForPP = s.CreateInvoice(null, cryptoCode);
             s.GoToInvoiceCheckout(invForPP);
             s.Driver.FindElement(By.Id("copy-tab")).Click();
             lnurl = s.Driver.FindElement(By.CssSelector("input.checkoutTextbox")).GetAttribute("value");
-            parsed = LNURL.LNURL.Parse(lnurl, out tag);
+            LNURL.LNURL.Parse(lnurl, out tag);
 
             // Check that pull payment has lightning option
             s.GoToStore(s.StoreId, StoreNavPages.PullPayments);

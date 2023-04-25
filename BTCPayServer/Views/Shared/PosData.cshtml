@@ -30,34 +30,16 @@
                     }
                 </td>
             }
-            else if (value is Dictionary<string, object>subItems)
+            else if (value is Dictionary<string, object> {Count: > 0 } subItems)
             {
-                @* This is the array case *@
-                if (subItems.Count == 1 && subItems.First().Value is string str2)
-                {
-                    <th class="w-150px">@key</th>
-                    <td>
-                        @if (IsValidURL(str2))
-                        {
-                            <a href="@str2" target="_blank" rel="noreferrer noopener">@str2</a>
-                        }
-                        else
-                        {
-                            @subItems.First().Value?.ToString()
-                        }
-					</td>
-				}
-				else if (subItems.Count > 0)
-				{
-					<td colspan="2" >
-						@{
-							Write(Html.Raw($"<h{Model.Level + 3} class=\"mt-4 mb-3\">"));
-							Write(key);
-							Write(Html.Raw($"</h{Model.Level + 3}>"));
-						}
-                        <partial name="PosData" model="(subItems, Model.Level + 1)"/>
-                    </td>
-                }
+                <td colspan="2" >
+                    @{
+                        Write(Html.Raw($"<h{Model.Level + 3} class=\"mt-4 mb-3\">"));
+                        Write(key);
+                        Write(Html.Raw($"</h{Model.Level + 3}>"));
+                    } 
+                    <partial name="PosData" model="@((subItems, Model.Level + 1))"/>
+                </td>
             }
         </tr>
     }

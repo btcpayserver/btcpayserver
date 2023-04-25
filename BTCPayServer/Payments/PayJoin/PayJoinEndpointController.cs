@@ -383,7 +383,7 @@ namespace BTCPayServer.Payments.PayJoin
                 WellknownMetadataKeys.AccountHDKey);
             if (extKeyStr == null)
             {
-                // This should not happen, as we check the existance of private key before creating invoice with payjoin
+                // This should not happen, as we check the existence of private key before creating invoice with payjoin
                 return CreatePayjoinErrorAndLog(503, PayjoinReceiverWellknownErrors.Unavailable, "The HD Key of the store changed");
             }
 

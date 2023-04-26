@@ -383,7 +383,7 @@ namespace BTCPayServer.Tests
             Assert.Contains("lang=de", s.Driver.Url);
 
             s.Driver.Navigate().Refresh();
-            languageSelect = new SelectElement(s.Driver.FindElement(By.Id("DefaultLang")));
+            languageSelect = new SelectElement(s.Driver.WaitForElement(By.Id("DefaultLang")));
             Assert.Equal("Deutsch", languageSelect.SelectedOption.Text);
             Assert.Equal("Details anzeigen", s.Driver.FindElement(By.Id("DetailsToggle")).Text);
             languageSelect.SelectByText("English");

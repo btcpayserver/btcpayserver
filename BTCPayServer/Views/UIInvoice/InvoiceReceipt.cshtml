@@ -42,7 +42,7 @@
                 
                 <div class="d-flex flex-column justify-content-center gap-4">
                     <partial name="_StoreHeader" model="(Model.StoreName, Model.LogoFileId)" />
-                    <div id="InvoiceSummary" class="bg-tile p-3 p-sm-4 rounded d-flex flex-wrap align-items-center">
+                    <div id="InvoiceSummary" class="bg-tile p-3 p-sm-4 rounded d-flex flex-wrap align-items-center justify-content-center">
                         @if (isProcessing)
                         {
                             <div class="lead text-center p-4 fw-semibold" id="invoice-processing">
@@ -59,9 +59,7 @@
                         {
                             if (Model.ReceiptOptions.ShowQR is true)
                             {
-                                <div class="mx-auto">
-                                    <vc:qr-code data="@Context.Request.GetCurrentUrl()"></vc:qr-code>
-                                </div>
+                                <vc:qr-code data="@Context.Request.GetCurrentUrl()"></vc:qr-code>
                             }
                             <dl class="d-flex flex-column gap-4 mb-0 flex-fill">
                                 <div class="d-flex flex-column">
@@ -115,58 +113,70 @@
                         if (Model.Payments?.Any() is true)
                         {
                             <div id="PaymentDetails" class="bg-tile p-3 p-sm-4 rounded">
-                                <h2 class="h4 mb-3 d-print-none">Payment Details</h2>
-                                <div class="table-responsive my-0">
+                                <h2 class="h4 mb-3">Payment Details</h2>
+                                <div class="table-responsive my-0 d-print-none">
                                     <table class="table table-borderless my-0">
                                         <thead>
-                                            <tr>
-                                                <th class="fw-normal text-secondary">Date</th>
-                                                <th class="fw-normal text-secondary">Payment</th>
-                                                <th class="fw-normal text-secondary text-end">Paid</th>
-                                                <th class="fw-normal text-secondary text-end">Rate</th>
-                                            </tr>
+                                        <tr>
+                                            <th class="fw-normal text-secondary">Date</th>
+                                            <th class="fw-normal text-secondary">Payment</th>
+                                            <th class="fw-normal text-secondary text-end">Paid</th>
+                                            <th class="fw-normal text-secondary text-end">Rate</th>
+                                        </tr>
                                         </thead>
                                         @foreach (var payment in Model.Payments)
                                         {
                                             <tbody>
+                                            <tr>
+                                                <td class="text-nowrap">@payment.ReceivedDate.ToBrowserDate()</td>
+                                                <td class="text-nowrap">@payment.Amount @payment.PaymentMethod</td>
+                                                <td class="text-end text-nowrap">@payment.PaidFormatted</td>
+                                                <td class="text-end text-nowrap">@payment.RateFormatted</td>
+                                            </tr>
+                                            @if (!string.IsNullOrEmpty(payment.Destination))
+                                            {
                                                 <tr>
-                                                    <td class="text-nowrap">@payment.ReceivedDate.ToBrowserDate()</td>
-                                                    <td class="text-nowrap">@payment.Amount @payment.PaymentMethod</td>
-                                                    <td class="text-end text-nowrap">@payment.PaidFormatted</td>
-                                                    <td class="text-end text-nowrap">@payment.RateFormatted</td>
+                                                    <th class="fw-normal text-nowrap text-secondary">
+                                                        Destination
+                                                    </th>
+                                                    <td class="fw-normal" colspan="3">
+                                                        <vc:truncate-center text="@payment.Destination" classes="truncate-center-id" />
+                                                    </td>
                                                 </tr>
-                                                @if (!string.IsNullOrEmpty(payment.Destination))
-                                                {
-                                                    <tr>
-                                                        <th class="fw-normal text-nowrap text-secondary">
-                                                            Destination
-                                                        </th>
-                                                        <td class="fw-normal" colspan="3">
-                                                            <vc:truncate-center text="@payment.Destination" classes="truncate-center-id" />
-                                                        </td>
-                                                    </tr>
-                                                }
-                                                @if (!string.IsNullOrEmpty(payment.PaymentProof))
-                                                {
-                                                    <tr>
-                                                        <th class="fw-normal text-nowrap text-secondary">
-                                                            Payment Proof
-                                                        </th>
-                                                        <td class="fw-normal" colspan="3">
-                                                            <vc:truncate-center text="@payment.PaymentProof" link="@payment.Link" classes="truncate-center-id" />
-                                                        </td>
-                                                    </tr>
-                                                }
+                                            }
+                                            @if (!string.IsNullOrEmpty(payment.PaymentProof))
+                                            {
+                                                <tr>
+                                                    <th class="fw-normal text-nowrap text-secondary">
+                                                        Payment Proof
+                                                    </th>
+                                                    <td class="fw-normal" colspan="3">
+                                                        <vc:truncate-center text="@payment.PaymentProof" link="@payment.Link" classes="truncate-center-id" />
+                                                    </td>
+                                                </tr>
+                                            }
                                             </tbody>
                                         }
                                     </table>
+                                </div>
+                                <div class="d-none d-print-block">
+                                    @foreach (var payment in Model.Payments)
+                                    {
+                                        <div class="mb-4">
+                                            <strong>@payment.PaidFormatted</strong> = @payment.Amount @payment.PaymentMethod, Rate: @payment.RateFormatted
+                                            @if (!string.IsNullOrEmpty(payment.PaymentProof))
+                                            {
+                                                <div>Proof: @payment.PaymentProof</div>
+                                            }
+                                        </div>
+                                    }
                                 </div>
                             </div>
                         }
                         if (Model.AdditionalData?.Any() is true)
                         {
                             <div id="AdditionalData" class="bg-tile p-3 p-sm-4 rounded">
-                                <h2 class="h4 mb-3 d-print-none">Additional Data</h2>
+                                <h2 class="h4 mb-3">Additional Data</h2>
                                 <div class="table-responsive my-0">
                                     <partial name="PosData" model="(Model.AdditionalData, 1)"/>
                                 </div>
@@ -177,7 +187,7 @@
             </div>
         </main>
         <footer class="store-footer">
-            <p permission="@Policies.CanViewInvoices">
+            <p permission="@Policies.CanViewInvoices" class="d-print-none">
                 <a asp-action="Invoice" asp-route-invoiceId="@Model.InvoiceId">
                     Admin details
                 </a>

@@ -10,6 +10,8 @@
 * Fix: After opening payouts page of a pull payment, then clicking on the store's `Payouts` menu would still show only the same pull payment's payout (#4788) @Kukks
 * Fix: Optimized print view in receipt (#4916 #4902) @dennisreimann
 * Fix: NFC and PoS print view not working without checking "Allow LNUrl for standard invoice". This superfluous option has been removed. (#4911) @NicolasDorier
+* Fix: Automated payouts could hang the restart of the server. @NicolasDorier
+* Fix: Missing validation on payout processor configuration @NicolasDorier
 
 ## 1.9.1
 

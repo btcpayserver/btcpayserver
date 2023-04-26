@@ -35,7 +35,7 @@ namespace BTCPayServer.Services
             }
             else
             {
-                await Task.Delay(TimeSpan.FromSeconds(120), Cancellation);
+                await Task.Delay(TimeSpan.FromSeconds(120), CancellationToken);
             }
             List<TorService> result = new List<TorService>();
             try

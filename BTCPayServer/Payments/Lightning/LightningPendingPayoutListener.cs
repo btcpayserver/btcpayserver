@@ -101,7 +101,7 @@ public class LightningPendingPayoutListener : BaseAsyncService
                             break;
                         case PayoutLightningBlob payoutLightningBlob:
                             {
-                                var payment = await client.GetPayment(payoutLightningBlob.Id, Cancellation);
+                                var payment = await client.GetPayment(payoutLightningBlob.Id, CancellationToken);
                                 if (payment is null)
                                 {
                                     continue;
@@ -126,8 +126,8 @@ public class LightningPendingPayoutListener : BaseAsyncService
             }
         }
 
-        await context.SaveChangesAsync(Cancellation);
-        await Task.Delay(TimeSpan.FromSeconds(SecondsDelay), Cancellation);
+        await context.SaveChangesAsync(CancellationToken);
+        await Task.Delay(TimeSpan.FromSeconds(SecondsDelay), CancellationToken);
     }
 
     internal override Task[] InitializeTasks()

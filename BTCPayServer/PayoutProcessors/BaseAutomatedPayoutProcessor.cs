@@ -74,7 +74,7 @@ public abstract class BaseAutomatedPayoutProcessor<T> : BaseAsyncService where T
                     States = new[] { PayoutState.AwaitingPayment },
                     PaymentMethods = new[] { _PayoutProcesserSettings.PaymentMethod },
                     Stores = new[] { _PayoutProcesserSettings.StoreId }
-                }, context);
+                }, context, CancellationToken);
             if (payouts.Any())
             {
                 Logs.PayServer.LogInformation($"{payouts.Count} found to process. Starting (and after will sleep for {blob.Interval})");

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
@@ -66,6 +67,8 @@ public class UILightningAutomatedPayoutProcessorsController : Controller
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> Configure(string storeId, string cryptoCode, LightningTransferViewModel automatedTransferBlob)
     {
+        if (!ModelState.IsValid)
+            return View(automatedTransferBlob);
         if (!_lightningAutomatedPayoutSenderFactory.GetSupportedPaymentMethods().Any(id =>
                 id.CryptoCode.Equals(cryptoCode, StringComparison.InvariantCultureIgnoreCase)))
         {
@@ -120,7 +123,7 @@ public class UILightningAutomatedPayoutProcessorsController : Controller
         {
             IntervalMinutes = blob.Interval.TotalMinutes;
         }
-
+        [Range(AutomatedPayoutConstants.MinIntervalMinutes, AutomatedPayoutConstants.MaxIntervalMinutes)]
         public double IntervalMinutes { get; set; }
 
         public AutomatedPayoutBlob ToBlob()

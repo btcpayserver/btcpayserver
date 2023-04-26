@@ -16,6 +16,11 @@ using PayoutProcessorData = BTCPayServer.Data.PayoutProcessorData;
 
 namespace BTCPayServer.PayoutProcessors;
 
+public class AutomatedPayoutConstants
+{
+    public const double MinIntervalMinutes = 10.0;
+    public const double MaxIntervalMinutes = 60.0;
+}
 public abstract class BaseAutomatedPayoutProcessor<T> : BaseAsyncService where T : AutomatedPayoutBlob
 {
     protected readonly StoreRepository _storeRepository;
@@ -86,6 +91,12 @@ public abstract class BaseAutomatedPayoutProcessor<T> : BaseAsyncService where T
                     new AfterPayoutFilterData(store, paymentMethod, payouts));
             }
         }
+
+        // Clip interval
+        if (blob.Interval < TimeSpan.FromMinutes(AutomatedPayoutConstants.MinIntervalMinutes))
+            blob.Interval = TimeSpan.FromMinutes(AutomatedPayoutConstants.MinIntervalMinutes);
+        if (blob.Interval > TimeSpan.FromMinutes(AutomatedPayoutConstants.MaxIntervalMinutes))
+            blob.Interval = TimeSpan.FromMinutes(AutomatedPayoutConstants.MaxIntervalMinutes);
         await Task.Delay(blob.Interval, CancellationToken);
     }
 

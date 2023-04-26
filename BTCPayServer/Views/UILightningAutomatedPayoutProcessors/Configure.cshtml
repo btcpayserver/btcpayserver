@@ -1,4 +1,4 @@
-﻿@using BTCPayServer.Abstractions.Extensions
+@using BTCPayServer.Abstractions.Extensions
 @using BTCPayServer.Views.Stores
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @model BTCPayServer.PayoutProcessors.Lightning.UILightningAutomatedPayoutProcessorsController.LightningTransferViewModel
@@ -23,6 +23,7 @@
                 <div class="input-group">
                     <input asp-for="IntervalMinutes" class="form-control" inputmode="numeric" style="max-width:10ch;">
                     <span class="input-group-text">minutes</span>
+                    <span asp-validation-for="IntervalMinutes" class="text-danger"></span>
                 </div>
             </div>
             <button name="command" type="submit" class="btn btn-primary mt-2" value="Save" id="Save">Save</button>

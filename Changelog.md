@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.9.2
+
+### Bug fixes
+
+* Fix: Shop's new receipt and cart not displaying items correctly and missing additional information (#4890. @Kukks
+* Fix: Email sent to PoS URL via POST not being inserted into email/custom form (#4810). @Kukks
+* Fix: Regression causing payment request form data to not be saved in invoices (#4895) @NicolasDorier @Kukks
+* Fix: After opening payouts page of a pull payment, then clicking on the store's `Payouts` menu would still show only the same pull payment's payout (#4788) @Kukks
+* Fix: Optimized print view in receipt (#4916 #4902) @dennisreimann
+* Fix: NFC and PoS print view not working without checking "Allow LNUrl for standard invoice". This superfluous option has been removed. (#4911) @NicolasDorier
+
 ## 1.9.1
 
 ### Bug fixes

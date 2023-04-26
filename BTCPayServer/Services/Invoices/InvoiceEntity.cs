@@ -461,6 +461,7 @@ namespace BTCPayServer.Services.Invoices
 
         [JsonConverter(typeof(StringEnumConverter))]
         public CheckoutType? CheckoutType { get; set; }
+        public bool LazyPaymentMethods { get; set; }
 
         public bool IsExpired()
         {

@@ -50,55 +50,21 @@ namespace BTCPayServer.Payments.Lightning
             BTCPayNetwork network, object preparePaymentObject, IEnumerable<PaymentMethodId> invoicePaymentMethods)
         {
             var lnPmi = new PaymentMethodId(supportedPaymentMethod.CryptoCode, PaymentTypes.LightningLike);
-            if (!supportedPaymentMethod.EnableForStandardInvoices &&
-                paymentMethod.ParentEntity.Type == InvoiceType.Standard &&
-                invoicePaymentMethods.Contains(lnPmi))
+            var lnSupported = store.GetSupportedPaymentMethods(_networkProvider)
+                .OfType<LightningSupportedPaymentMethod>()
+                .SingleOrDefault(method => method.PaymentId == lnPmi);
+            if (lnSupported is null)
             {
-                throw new PaymentMethodUnavailableException("LNURL is not enabled for standard invoices");
-            }
-            if (string.IsNullOrEmpty(paymentMethod.ParentEntity.Id))
-            {
-                var lnSupported = store.GetSupportedPaymentMethods(_networkProvider)
-                    .OfType<LightningSupportedPaymentMethod>().SingleOrDefault(method =>
-                        method.PaymentId.CryptoCode == supportedPaymentMethod.CryptoCode &&
-                        method.PaymentId.PaymentType == LightningPaymentType.Instance);
-
-                if (lnSupported is null)
-                {
-                    throw new PaymentMethodUnavailableException("LNURL requires a lightning node to be configured for the store.");
-                }
-                using var cts = new CancellationTokenSource(LightningLikePaymentHandler.LightningTimeout);
-                try
-                {
-                    var client = lnSupported.CreateLightningClient(network, Options.Value, _lightningClientFactoryService);
-                    await client.GetInfo(cts.Token);
-                }
-                catch (OperationCanceledException) when (cts.IsCancellationRequested)
-                {
-                    throw new PaymentMethodUnavailableException("The lightning node did not reply in a timely manner");
-                }
-
-                return new LNURLPayPaymentMethodDetails()
-                {
-                    Activated = false,
-                    LightningSupportedPaymentMethod = lnSupported
-                };
+                throw new PaymentMethodUnavailableException("LNURL requires a lightning node to be configured for the store.");
             }
 
+            var client = lnSupported.CreateLightningClient(network, Options.Value, _lightningClientFactoryService);
+            var nodeInfo = (await _lightningLikePaymentHandler.GetNodeInfo(lnSupported, _networkProvider.GetNetwork<BTCPayNetwork>(supportedPaymentMethod.CryptoCode), logs, paymentMethod.PreferOnion)).FirstOrDefault();
 
-            var lnLightningSupportedPaymentMethod =
-                ((LNURLPayPaymentMethodDetails)paymentMethod.GetPaymentMethodDetails()).LightningSupportedPaymentMethod;
-
-            NodeInfo? nodeInfo = null;
-            if (lnLightningSupportedPaymentMethod != null)
-            {
-                nodeInfo = (await _lightningLikePaymentHandler.GetNodeInfo(lnLightningSupportedPaymentMethod, _networkProvider.GetNetwork<BTCPayNetwork>(supportedPaymentMethod.CryptoCode), logs, paymentMethod.PreferOnion)).FirstOrDefault();
-            }
-
-            return new LNURLPayPaymentMethodDetails
+            return new LNURLPayPaymentMethodDetails()
             {
                 Activated = true,
-                LightningSupportedPaymentMethod = lnLightningSupportedPaymentMethod,
+                LightningSupportedPaymentMethod = lnSupported,
                 Bech32Mode = supportedPaymentMethod.UseBech32Scheme,
                 NodeInfo = nodeInfo?.ToString()
             };

@@ -45,14 +45,6 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("Save")).Click();
             Assert.Contains("Store successfully updated", s.FindAlertMessage().Text);
 
-            // Enable LNURL, which we will need for (non-)presence checks throughout this test
-            s.GoToHome();
-            s.GoToLightningSettings();
-            s.Driver.SetCheckbox(By.Id("LNURLEnabled"), true);
-            s.Driver.SetCheckbox(By.Id("LNURLStandardInvoiceEnabled"), true);
-            s.Driver.FindElement(By.Id("save")).Click();
-            Assert.Contains("BTC Lightning settings successfully updated", s.FindAlertMessage().Text);
-
             s.GoToStore(StoreNavPages.CheckoutAppearance);
             s.Driver.WaitForAndClick(By.Id("Presets"));
             s.Driver.WaitForAndClick(By.Id("Presets_InStore"));
@@ -296,7 +288,6 @@ namespace BTCPayServer.Tests
             s.GoToHome();
             s.GoToLightningSettings();
             Assert.True(s.Driver.FindElement(By.Id("LNURLEnabled")).Selected);
-            Assert.True(s.Driver.FindElement(By.Id("LNURLStandardInvoiceEnabled")).Selected);
 
             // BIP21 with top-up invoice
             invoiceId = s.CreateInvoice(amount: null);

@@ -303,10 +303,6 @@
                         "type": "boolean",
                         "description": "Whether to use [LUD-01](https://github.com/fiatjaf/lnurl-rfc/blob/luds/01.md)'s bech32 format or to use [LUD-17](https://github.com/fiatjaf/lnurl-rfc/blob/luds/17.md) url formatting. "
                     },
-                    "enableForStandardInvoices": {
-                        "type": "boolean",
-                        "description": "Whether to allow this payment method to also be used for standard invoices and not just top-up invoices."
-                    },
                     "lud12Enabled": {
                         "type": "boolean",
                         "description": "Allow comments to be passed on via lnurl."

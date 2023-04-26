@@ -12,19 +12,9 @@
 	ViewData["Title"] = Model.HtmlTitle;
 	Csp.UnsafeEval();
 	var hasPaymentPlugins = UiExtensions.Any(extension => extension.Location == "checkout-payment-method");
-    // Show LNURL as selectable payment method only for top up invoices + non-BIP21 case
-    var displayedPaymentMethods = Model.IsUnsetTopUp && !Model.OnChainWithLnInvoiceFallback
-        ? Model.AvailableCryptos
-        : Model.AvailableCryptos.Where(c => c.PaymentMethodId != "BTC_LNURLPAY").ToList();
+	var displayedPaymentMethods = Model.AvailableCryptos.Where(c => c.Displayed).ToList();
 }
 @functions {
-    private string PaymentMethodName(PaymentModel.AvailableCrypto pm)
-    {
-        return Model.AltcoinsBuild
-            ? pm.PaymentMethodName
-            : pm.PaymentMethodName.Replace("Bitcoin (", "").Replace(")", "").Replace("Lightning ", "");
-    }
-
     private string ToJsValue(object value)
     {
         return Safe.Json(value).ToString()?.Replace("\"", "'");
@@ -99,7 +89,7 @@
                                    class="btcpay-pill m-0 payment-method"
                                    :class="{ active: pmId === @ToJsValue(crypto.PaymentMethodId) }"
                                    v-on:click.prevent="changePaymentMethod(@ToJsValue(crypto.PaymentMethodId))">
-                                    @PaymentMethodName(crypto)
+                                    @crypto.PaymentMethodName
                                 </a>
                             }
                             @await Component.InvokeAsync("UiExtensionPoint", new { location = "checkout-payment-method", model = Model })

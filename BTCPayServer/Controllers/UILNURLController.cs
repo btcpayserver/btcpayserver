@@ -59,6 +59,7 @@ namespace BTCPayServer
         private readonly PullPaymentHostedService _pullPaymentHostedService;
         private readonly BTCPayNetworkJsonSerializerSettings _btcPayNetworkJsonSerializerSettings;
         private readonly IPluginHookService _pluginHookService;
+        private readonly InvoiceActivator _invoiceActivator;
 
         public UILNURLController(InvoiceRepository invoiceRepository,
             EventAggregator eventAggregator,
@@ -72,7 +73,8 @@ namespace BTCPayServer
             LightningLikePayoutHandler lightningLikePayoutHandler,
             PullPaymentHostedService pullPaymentHostedService,
             BTCPayNetworkJsonSerializerSettings btcPayNetworkJsonSerializerSettings,
-            IPluginHookService pluginHookService)
+            IPluginHookService pluginHookService,
+            InvoiceActivator invoiceActivator)
         {
             _invoiceRepository = invoiceRepository;
             _eventAggregator = eventAggregator;
@@ -87,6 +89,7 @@ namespace BTCPayServer
             _pullPaymentHostedService = pullPaymentHostedService;
             _btcPayNetworkJsonSerializerSettings = btcPayNetworkJsonSerializerSettings;
             _pluginHookService = pluginHookService;
+            _invoiceActivator = invoiceActivator;
         }
 
         [HttpGet("withdraw/pp/{pullPaymentId}")]
@@ -436,12 +439,16 @@ namespace BTCPayServer
             List<string> additionalTags = null,
             bool allowOverpay = true)
         {
-            if (GetLNUrlPaymentMethodId(cryptoCode, store, out _) is null)
+            var pmi = GetLNUrlPaymentMethodId(cryptoCode, store, out _);
+            if (pmi is null)
                 return NotFound("LNUrl or LN is disabled");
 
             InvoiceEntity i;
             try
             {
+                createInvoice.Checkout ??= new InvoiceDataBase.CheckoutOptions();
+                createInvoice.Checkout.LazyPaymentMethods = false;
+                createInvoice.Checkout.PaymentMethods = new[] { pmi.ToStringNormalized() };
                 i = await _invoiceController.CreateInvoiceCoreRaw(createInvoice, store, Request.GetAbsoluteRoot(), additionalTags);
             }
             catch (Exception e)
@@ -572,6 +579,15 @@ namespace BTCPayServer
                 var lightningPaymentMethod = i.GetPaymentMethod(pmi);
                 var paymentMethodDetails =
                     lightningPaymentMethod?.GetPaymentMethodDetails() as LNURLPayPaymentMethodDetails;
+                if (paymentMethodDetails is not null && !paymentMethodDetails.Activated)
+                {
+                    if (!await _invoiceActivator.ActivateInvoicePaymentMethod(pmi, i, store))
+                        return NotFound();
+                    i = await _invoiceRepository.GetInvoice(invoiceId, true);
+                    lightningPaymentMethod = i.GetPaymentMethod(pmi);
+                    paymentMethodDetails = lightningPaymentMethod.GetPaymentMethodDetails() as LNURLPayPaymentMethodDetails;
+                }
+
                 if (paymentMethodDetails?.LightningSupportedPaymentMethod is null)
                     return NotFound();
 

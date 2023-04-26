@@ -11,8 +11,10 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
+using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.Lightning;
+using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
@@ -2088,21 +2090,22 @@ namespace BTCPayServer.Tests
             });
             // Standard invoice test
             s.GoToStore(storeId);
-            s.GoToLightningSettings();
-            s.Driver.SetCheckbox(By.Id("LNURLStandardInvoiceEnabled"), true);
-            SudoForceSaveLightningSettingsRightNowAndFast(s, cryptoCode);
             i = s.CreateInvoice(storeId, 0.0000001m, cryptoCode);
             s.GoToInvoiceCheckout(i);
-            s.Driver.FindElement(By.ClassName("payment__currencies")).Click();
-            // BOLT11 is also available for standard invoices
-            Assert.Equal(2, s.Driver.FindElements(By.CssSelector(".vex.vex-theme-btcpay .vex-content .vexmenu li.vexmenuitem")).Count);
-            s.Driver.FindElement(By.CssSelector(".vex.vex-theme-btcpay .vex-content .vexmenu li.vexmenuitem")).Click();
+            s.Driver.FindElement(By.ClassName("payment__currencies_noborder")).Click();
+            // BOLT11 is also displayed for standard invoice (not LNURL, even if it is available)
             s.Driver.FindElement(By.Id("copy-tab")).Click();
-            lnurl = s.Driver.FindElement(By.CssSelector("input.checkoutTextbox")).GetAttribute("value");
-            parsed = LNURL.LNURL.Parse(lnurl, out tag);
-            fetchedReuqest = Assert.IsType<LNURLPayRequest>(await LNURL.LNURL.FetchInformation(parsed, new HttpClient()));
+            var bolt11 = s.Driver.FindElement(By.CssSelector("input.checkoutTextbox")).GetAttribute("value");
+            var bolt11Parsed = Lightning.BOLT11PaymentRequest.Parse(bolt11, s.Server.ExplorerNode.Network);
+            var invoiceId = s.Driver.Url.Split('/').Last();
+            using (var resp = await s.Server.PayTester.HttpClient.GetAsync("BTC/lnurl/pay/i/" + invoiceId))
+            {
+                resp.EnsureSuccessStatusCode();
+                fetchedReuqest = JsonConvert.DeserializeObject<LNURLPayRequest>(await resp.Content.ReadAsStringAsync());
+            }
             Assert.Equal(0.0000001m, fetchedReuqest.MaxSendable.ToDecimal(LightMoneyUnit.BTC));
             Assert.Equal(0.0000001m, fetchedReuqest.MinSendable.ToDecimal(LightMoneyUnit.BTC));
+
 
             await Assert.ThrowsAsync<LNUrlException>(async () =>
             {
@@ -2125,13 +2128,6 @@ namespace BTCPayServer.Tests
             Assert.Equal(new LightMoney(0.0000001m, LightMoneyUnit.BTC),
                 lnurlResponse2.GetPaymentRequest(network).MinimumAmount);
             s.GoToHome();
-            s.GoToLightningSettings();
-            // LNURL is enabled and settings are expanded
-            Assert.True(s.Driver.FindElement(By.Id("LNURLEnabled")).Selected);
-            Assert.Contains("show", s.Driver.FindElement(By.Id("LNURLSettings")).GetAttribute("class"));
-            s.Driver.SetCheckbox(By.Id("LNURLStandardInvoiceEnabled"), false);
-            s.Driver.FindElement(By.Id("save")).Click();
-            Assert.Contains($"{cryptoCode} Lightning settings successfully updated", s.FindAlertMessage().Text);
 
             i = s.CreateInvoice(storeId, 0.000001m, cryptoCode);
             s.GoToInvoiceCheckout(i);
@@ -2145,23 +2141,12 @@ namespace BTCPayServer.Tests
             s.GoToHome();
             s.GoToLightningSettings();
             s.Driver.SetCheckbox(By.Id("LNURLBech32Mode"), false);
-            s.Driver.SetCheckbox(By.Id("LNURLStandardInvoiceEnabled"), false);
-            s.Driver.SetCheckbox(By.Id("DisableBolt11PaymentMethod"), true);
             s.Driver.FindElement(By.Id("save")).Click();
             Assert.Contains($"{cryptoCode} Lightning settings successfully updated", s.FindAlertMessage().Text);
 
             // Ensure the toggles are set correctly
             s.GoToLightningSettings();
-
-            //TODO: DisableBolt11PaymentMethod is actually disabled because LNURLStandardInvoiceEnabled is disabled
-            // checkboxes is not good choice here, in next release we should have multi choice instead
             Assert.False(s.Driver.FindElement(By.Id("LNURLBech32Mode")).Selected);
-            Assert.False(s.Driver.FindElement(By.Id("LNURLStandardInvoiceEnabled")).Selected);
-
-            //even though we set DisableBolt11PaymentMethod to true, logic when saving it turns it back off as otherwise no lightning option is available at all!
-            Assert.False(s.Driver.FindElement(By.Id("DisableBolt11PaymentMethod")).Selected);
-            // Invoice creation should fail, because it is a standard invoice with amount, but DisableBolt11PaymentMethod  = true and LNURLStandardInvoiceEnabled = false
-            s.CreateInvoice(storeId, 0.0000001m, cryptoCode, "", null, expectedSeverity: StatusMessageModel.StatusSeverity.Success);
 
             i = s.CreateInvoice(storeId, null, cryptoCode);
             s.GoToInvoiceCheckout(i);
@@ -2177,15 +2162,13 @@ namespace BTCPayServer.Tests
             s.AddLightningNode(LightningConnectionType.LndREST, false);
             s.GoToLightningSettings();
             s.Driver.SetCheckbox(By.Id("LNURLEnabled"), true);
-            s.Driver.SetCheckbox(By.Id("DisableBolt11PaymentMethod"), true);
-            s.Driver.SetCheckbox(By.Id("LNURLStandardInvoiceEnabled"), true);
             s.Driver.FindElement(By.Id("save")).Click();
             Assert.Contains($"{cryptoCode} Lightning settings successfully updated", s.FindAlertMessage().Text);
-            var invForPP = s.CreateInvoice(0.0000001m, cryptoCode);
+            var invForPP = s.CreateInvoice(null, cryptoCode);
             s.GoToInvoiceCheckout(invForPP);
             s.Driver.FindElement(By.Id("copy-tab")).Click();
             lnurl = s.Driver.FindElement(By.CssSelector("input.checkoutTextbox")).GetAttribute("value");
-            parsed = LNURL.LNURL.Parse(lnurl, out tag);
+            LNURL.LNURL.Parse(lnurl, out tag);
 
             // Check that pull payment has lightning option
             s.GoToStore(s.StoreId, StoreNavPages.PullPayments);

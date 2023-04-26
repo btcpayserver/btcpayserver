@@ -1,5 +1,7 @@
 @model PaymentModel
-
+@{
+    var displayedPaymentMethods = Model.AvailableCryptos.Where(a => a.Displayed).ToList();
+}
 <div class="top-header">
     <div class="header">
         @if (!string.IsNullOrEmpty(Model.CustomLogoLink))
@@ -45,26 +47,23 @@
             </div>
         </div>
         <div class="single-item-order__right">
-            @if (Model.AvailableCryptos.Count > 1)
+            @if (displayedPaymentMethods.Count > 1)
             {
                 <div class="paywithRowRight cursorPointer" v-on:click="openPaymentMethodDialog">
                     <span class="payment__currencies " v-show="!changingCurrencies">
                         <img v-bind:src="srvModel.cryptoImage" />
-                        <span>{{srvModel.paymentMethodName}} ({{srvModel.cryptoCode}})</span>
-                        <span v-show="srvModel.isLightning">&#9889;</span>
+                        <span>{{srvModel.paymentMethodName}}</span>
                         <span class="clickable_indicator fa fa-angle-right"></span>
                     </span>
                 </div>
                 <div id="vexPopupDialog">
                     <ul class="vexmenu">
-                        @foreach (var crypto in Model.AvailableCryptos)
+                        @foreach (var crypto in displayedPaymentMethods)
                         {
                             <li class="vexmenuitem">
                                 <a href="@crypto.Link" class="payment-method" data-payment-method="@crypto.PaymentMethodId" rel="noreferrer noopener">
                                     <img alt="@crypto.PaymentMethodName" src="@crypto.CryptoImage" asp-append-version="true" />
                                     @crypto.PaymentMethodName
-                                    @(crypto.IsLightning ? Html.Raw("&#9889;") : null)
-                                    <span>@crypto.CryptoCode</span>
                                 </a>
                             </li>
                         }
@@ -75,7 +74,7 @@
             {
                 <div class="payment__currencies_noborder">
                     <img v-bind:src="srvModel.cryptoImage" />
-                    <span>{{srvModel.paymentMethodName}} ({{srvModel.cryptoCode}})</span>
+                    <span>{{srvModel.paymentMethodName}}</span>
                     <span v-show="srvModel.isLightning">&#9889;</span>
                 </div>
             }

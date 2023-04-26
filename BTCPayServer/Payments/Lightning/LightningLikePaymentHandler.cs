@@ -53,10 +53,6 @@ namespace BTCPayServer.Payments.Lightning
             LightningSupportedPaymentMethod supportedPaymentMethod, PaymentMethod paymentMethod, Data.StoreData store,
             BTCPayNetwork network, object preparePaymentObject, IEnumerable<PaymentMethodId> invoicePaymentMethods)
         {
-            if (supportedPaymentMethod.DisableBOLT11PaymentOption)
-            {
-                throw new PaymentMethodUnavailableException("BOLT11 payment method is disabled");
-            }
             if (paymentMethod.ParentEntity.Type == InvoiceType.TopUp)
             {
                 throw new PaymentMethodUnavailableException("Lightning Network payment method is not available for top-up invoices");

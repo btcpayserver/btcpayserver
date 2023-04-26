@@ -248,6 +248,7 @@ namespace BTCPayServer.Controllers
             entity.RedirectAutomatically = invoice.Checkout.RedirectAutomatically ?? storeBlob.RedirectAutomatically;
             entity.CheckoutType = invoice.Checkout.CheckoutType;
             entity.RequiresRefundEmail = invoice.Checkout.RequiresRefundEmail;
+            entity.LazyPaymentMethods = invoice.Checkout.LazyPaymentMethods ?? storeBlob.LazyPaymentMethods;
             IPaymentFilter? excludeFilter = null;
             if (invoice.Checkout.PaymentMethods != null)
             {
@@ -460,7 +461,7 @@ namespace BTCPayServer.Controllers
                 var storeBlob = store.GetStoreBlob();
 
                 // Checkout v2 does not show a payment method switch for Bitcoin-only + BIP21, so exclude that case
-                var preparePayment = storeBlob.LazyPaymentMethods && !storeBlob.OnChainWithLnInvoiceFallback
+                var preparePayment = entity.LazyPaymentMethods && !storeBlob.OnChainWithLnInvoiceFallback
                     ? null
                     : handler.PreparePayment(supportedPaymentMethod, store, network);
                 var rate = await fetchingByCurrencyPair[new CurrencyPair(network.CryptoCode, entity.Currency)];

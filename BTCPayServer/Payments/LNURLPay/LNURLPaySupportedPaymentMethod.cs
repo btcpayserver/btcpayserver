@@ -14,8 +14,6 @@ namespace BTCPayServer.Payments.Lightning
 
         public bool UseBech32Scheme { get; set; }
 
-        public bool EnableForStandardInvoices { get; set; } = false;
-
         public bool LUD12Enabled { get; set; } = true;
 
     }

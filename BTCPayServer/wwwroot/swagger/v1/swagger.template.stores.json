@@ -326,8 +326,8 @@
                     "supportUrl": {
                         "type": "string",
                         "nullable": true,
-                        "description": "The support URL of the store, can contain the placeholders `{OrderId}` and `{InvoiceId}`",
-                        "format": "email"
+                        "description": "The support URI of the store, can contain the placeholders `{OrderId}` and `{InvoiceId}`. Can be any valid URI, such as a website, email, and nostr.",
+                        "format": "uri"
                     },
                     "defaultCurrency": {
                         "type": "string",

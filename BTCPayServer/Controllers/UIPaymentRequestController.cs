@@ -235,6 +235,14 @@ namespace BTCPayServer.Controllers
             }
 
             var form = Form.Parse(formData.Config);
+            if (!string.IsNullOrEmpty(prBlob.Email))
+            {
+                var emailField = form.GetFieldByFullName("buyerEmail");
+                if (emailField is not null)
+                {
+                    emailField.Value = prBlob.Email;
+                }
+            }
             if (Request.Method == "POST" && Request.HasFormContentType)
             {
                 form.ApplyValuesFromForm(Request.Form);

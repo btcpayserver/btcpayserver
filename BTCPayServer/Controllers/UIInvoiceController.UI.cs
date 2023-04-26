@@ -184,8 +184,14 @@ namespace BTCPayServer.Controllers
             var receipt = InvoiceDataBase.ReceiptOptions.Merge(store.GetStoreBlob().ReceiptOptions, i.ReceiptOptions);
 
             if (receipt.Enabled is not true)
+            {
+                if (i.RedirectURL is not null)
+                {
+                    return Redirect(i.RedirectURL.ToString());
+                }   
                 return NotFound();
 
+            }
             var storeBlob = store.GetStoreBlob();
             var vm = new InvoiceReceiptViewModel
             {

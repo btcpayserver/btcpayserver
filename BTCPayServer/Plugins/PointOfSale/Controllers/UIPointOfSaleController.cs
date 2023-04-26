@@ -253,15 +253,15 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                     {
                         var vm = new PostRedirectViewModel
                         {
-                            AspAction = nameof(POSForm),
-                            AspController = "UIPointOfSale",
-                            RouteParameters = new Dictionary<string, string> { { "appId", appId } },
-                            FormParameters = new MultiValueDictionary<string, string>(Request.Form.Select(pair => new KeyValuePair<string, IReadOnlyCollection<string>>(pair.Key, pair.Value)))
+                            FormUrl = Url.Action(nameof(POSForm), "UIPointOfSale", new {appId, buyerEmail = email}),
+                            FormParameters = new MultiValueDictionary<string, string>(Request.Form.Select(pair =>
+                                new KeyValuePair<string, IReadOnlyCollection<string>>(pair.Key, pair.Value)))
                         };
                         if (viewType.HasValue)
                         {
                             vm.RouteParameters.Add("viewType", viewType.Value.ToString());
                         }
+
                         return View("PostRedirect", vm);
                     }
 
@@ -405,6 +405,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             var store = await _appService.GetStore(app);
             var storeBlob = store.GetStoreBlob();
             var form = Form.Parse(formData.Config);
+            form.ApplyValuesFromForm(Request.Query);
             var vm = new FormViewModel
             {
                 StoreName = store.StoreName,

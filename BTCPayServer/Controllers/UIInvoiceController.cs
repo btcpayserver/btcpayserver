@@ -197,12 +197,13 @@ namespace BTCPayServer.Controllers
                 amount = amountDue;
             var redirectUrl = _linkGenerator.PaymentRequestLink(id, request.Scheme, request.Host, request.PathBase);
 
-            JObject invoiceMetadata = prData.GetBlob()?.FormResponse is JObject formResponse ? formResponse : new JObject();
+            JObject invoiceMetadata = prData.GetBlob()?.FormResponse ?? new JObject();
             invoiceMetadata.Merge(new InvoiceMetadata
             {
                 OrderId = PaymentRequestRepository.GetOrderIdForPaymentRequest(id),
                 PaymentRequestId = id,
-                BuyerEmail = string.IsNullOrEmpty(prBlob.Email) ? null : prBlob.Email
+                BuyerEmail = invoiceMetadata.TryGetValue("buyerEmail", out var formEmail) && formEmail.Type == JTokenType.String ? formEmail.Value<string>():
+                    string.IsNullOrEmpty(prBlob.Email) ? null : prBlob.Email
             }.ToJObject(), new JsonMergeSettings() { MergeNullValueHandling = MergeNullValueHandling.Ignore });
 
             var invoiceRequest =

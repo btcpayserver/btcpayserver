@@ -45,6 +45,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="YamlDotNet" Version="8.0.0" />
     <PackageReference Include="BIP78.Sender" Version="0.2.2" />
     <PackageReference Include="BTCPayServer.Hwi" Version="2.0.2" />
     <PackageReference Include="BTCPayServer.Lightning.All" Version="1.4.24" />

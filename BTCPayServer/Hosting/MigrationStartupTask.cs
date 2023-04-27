@@ -28,11 +28,13 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NBitcoin;
-using NBXplorer;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using PeterO.Cbor;
+using YamlDotNet.RepresentationModel;
+using YamlDotNet.Serialization;
 using LightningAddressData = BTCPayServer.Data.LightningAddressData;
+using Serializer = NBXplorer.Serializer;
 
 namespace BTCPayServer.Hosting
 {
@@ -342,130 +344,97 @@ namespace BTCPayServer.Hosting
             await ctx.SaveChangesAsync();
             
         }
-        
-        
-            public static ViewPointOfSaleViewModel.Item[] ParsePOSYML(string yaml)
+        public static ViewPointOfSaleViewModel.Item[] ParsePOSYML(string yaml)
+        {
+            var items = new List<ViewPointOfSaleViewModel.Item>();
+            var stream = new YamlStream();
+            stream.Load(new StringReader(yaml));
+
+            var root = stream.Documents.First().RootNode as YamlMappingNode;
+            foreach (var posItem in root.Children)
             {
-                var items = new List<ViewPointOfSaleViewModel.Item>();
-                using var reader = new StringReader(yaml);
-                ViewPointOfSaleViewModel.Item currentItem = null;
-                var handlingPaymentMethodsForCurrentItem = false;
-                while (reader.ReadLine() is { } line)
+                var trimmedKey = ((YamlScalarNode)posItem.Key).Value?.Trim();
+                if (string.IsNullOrEmpty(trimmedKey))
                 {
-                    if (string.IsNullOrWhiteSpace(line))
-                    {
-                        continue;
-                    }
+                    continue;
+                }
 
-                    var parts = line.Split(':', StringSplitOptions.RemoveEmptyEntries);
-                    if (!line.StartsWith("  "))
-                    {
-                        if(parts.Length <1)
-                            continue;
-                        currentItem = new ViewPointOfSaleViewModel.Item
-                        {
-                            Id = parts[0].Trim(), Title = parts[0].Trim(),
-                            PriceType = ViewPointOfSaleViewModel.ItemPriceType.Fixed
-                        };
-                        items.Add(currentItem);
+                var currentItem = new ViewPointOfSaleViewModel.Item
+                {
+                    Id = trimmedKey, Title = trimmedKey, PriceType = ViewPointOfSaleViewModel.ItemPriceType.Fixed
+                };
+                var itemSpecs = (YamlMappingNode)posItem.Value;
+                foreach (var spec in itemSpecs)
+                {
+                    if (spec.Key is not YamlScalarNode {Value: string keyString} || string.IsNullOrEmpty(keyString))
                         continue;
-                    }
-
-                    if (currentItem is null)
+                    var scalarValue = spec.Value as YamlScalarNode;
+                    switch (keyString)
                     {
-                        continue;
-                    }
+                        case "title":
+                            currentItem.Title = scalarValue?.Value ?? trimmedKey;
+                            break;
+                        case "description":
+                            currentItem.Description = scalarValue?.Value;
+                            break;
+                        case "image":
+                            currentItem.Image = scalarValue?.Value;
+                            break;
+                        case "payment_methods" when spec.Value is YamlSequenceNode pmSequenceNode:
 
-                    var key = parts[0].Trim().ToLower();
-                        if (handlingPaymentMethodsForCurrentItem)
-                        {
-                            if(parts.Length >1)
-                                handlingPaymentMethodsForCurrentItem = false;
-                            else
+                            currentItem.PaymentMethods = pmSequenceNode.Children
+                                .Select(node => (node as YamlScalarNode)?.Value?.Trim())
+                                .Where(node => !string.IsNullOrEmpty(node)).ToArray();
+                            break;
+                        case "price_type":
+                        case "custom":
+                            if (bool.TryParse(scalarValue?.Value, out var customBoolValue))
                             {
-                                parts = line.Split('-', StringSplitOptions.RemoveEmptyEntries);
-                                if (parts.Length !=2 )
-                                {
-                                    continue;
-                                }
-                                currentItem.PaymentMethods = currentItem.PaymentMethods.Append(parts[1].Trim().Trim('"')).ToArray();
-                                continue;
-                            }
-                        }
-                        if (key == "payment_methods")
-                        {
-                            handlingPaymentMethodsForCurrentItem = true;
-                            currentItem.PaymentMethods = Array.Empty<string>();
-                            continue;
-                        }
-                        if (parts.Length != 2)
-                        {
-                            throw new Exception($"Invalid line format: {line}");
-                        }
-                        var value = parts[1].Trim().Trim('"');
-                        switch (key)
-                        {
-                            case "price_type":
-                            case "custom":
-                                if (value.Equals("true", StringComparison.InvariantCultureIgnoreCase))
+                                if (customBoolValue)
                                 {
                                     currentItem.PriceType = currentItem.Price is null or 0
                                         ? ViewPointOfSaleViewModel.ItemPriceType.Topup
                                         : ViewPointOfSaleViewModel.ItemPriceType.Minimum;
                                 }
-                                else if (value.Equals("false", StringComparison.InvariantCultureIgnoreCase))
+                                else
                                 {
                                     currentItem.PriceType = ViewPointOfSaleViewModel.ItemPriceType.Fixed;
                                 }
-                                else if (Enum.TryParse<ViewPointOfSaleViewModel.ItemPriceType>(value, true,
-                                             out var customPriceType))
-                                {
-                                    currentItem.PriceType = customPriceType;
-                                }
+                            }
+                            else if (Enum.TryParse<ViewPointOfSaleViewModel.ItemPriceType>(scalarValue?.Value, true,
+                                         out var customPriceType))
+                            {
+                                currentItem.PriceType = customPriceType;
+                            }
 
-                                break;
-                            case "description":
-                                currentItem.Description = value;
-                                break;
-                            case "image":
-                                currentItem.Image = value;
-                                break;
-                            case "price":
-                                if (decimal.TryParse(value, out var price))
-                                {
-                                    currentItem.Price = price;
-                                }
+                            break;
+                        case "price":
+                            if (decimal.TryParse(scalarValue?.Value, out var price))
+                            {
+                                currentItem.Price = price;
+                            }
 
-                                break;
-                            case "title":
-                                currentItem.Title = value;
-                                break;
-                            case "buybuttontext":
-                                currentItem.BuyButtonText = value;
-                                break;
-                            case "inventory":
-                                if (int.TryParse(value, out var inventory))
-                                {
-                                    currentItem.Inventory = inventory;
-                                }
+                            break;
 
-                                break;
-                            case "disabled":
-                                if (bool.TryParse(value, out var disabled))
-                                {
-                                    currentItem.Disabled = disabled;
-                                }
-                                break;
-                            default:
-                                currentItem.AdditionalData ??= new Dictionary<string, JToken>();
-                                currentItem.AdditionalData.AddOrReplace(key, value);
-                                break;
-                        }
-                    
+                        case "buybuttontext":
+                            currentItem.BuyButtonText = scalarValue?.Value;
+                            break;
+
+                        case "disabled":
+                            if (bool.TryParse(scalarValue?.Value, out var disabled))
+                            {
+                                currentItem.Disabled = disabled;
+                            }
+
+                            break;
+                    }
                 }
 
-                return items.ToArray();
+                items.Add(currentItem);
             }
+
+            return items.ToArray();
+        }
 
 #pragma warning disable CS0612 // Type or member is obsolete
 

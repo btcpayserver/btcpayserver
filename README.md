@@ -217,6 +217,7 @@ The BTCPay Server Project is proudly supported by these entities through the [BT
 [![Baillie Gifford](BTCPayServer/wwwroot/img/readme/supporter_bailliegifford.svg)](https://www.bailliegifford.com)
 [![Strike](BTCPayServer/wwwroot/img/readme/supporter_strike.svg)](https://strike.me)
 [![Human Rights Foundation](BTCPayServer/wwwroot/img/readme/supporter_hrf.svg)](https://hrf.org)
+[![Escape to El Salvador](BTCPayServer/wwwroot/img/readme/supporter_esc.svg)](https://escapetoelsalvador.org/)
 [![LunaNode](BTCPayServer/wwwroot/img/readme/supporter_lunanode.svg)](https://lunanode.com)
 [![Wallet of Satoshi](BTCPayServer/wwwroot/img/readme/supporter_walletofsatoshi.svg)](https://walletofsatoshi.com/)
 [![Coincards](BTCPayServer/wwwroot/img/readme/supporter_coincards.svg)](https://coincards.com/)

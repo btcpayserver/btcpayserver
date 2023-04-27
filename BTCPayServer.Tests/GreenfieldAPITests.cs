@@ -3412,8 +3412,8 @@ namespace BTCPayServer.Tests
                 });
             Assert.Empty(await adminClient.GetStoreLightningAutomatedPayoutProcessors(admin.StoreId, "BTC_LightningNetwork"));
             await adminClient.UpdateStoreLightningAutomatedPayoutProcessors(admin.StoreId, "BTC_LightningNetwork",
-                new LightningAutomatedPayoutSettings() { IntervalSeconds = TimeSpan.FromSeconds(2) });
-            Assert.Equal(2, Assert.Single(await adminClient.GetStoreLightningAutomatedPayoutProcessors(admin.StoreId, "BTC_LightningNetwork")).IntervalSeconds.TotalSeconds);
+                new LightningAutomatedPayoutSettings() { IntervalSeconds = TimeSpan.FromSeconds(600) });
+            Assert.Equal(600, Assert.Single(await adminClient.GetStoreLightningAutomatedPayoutProcessors(admin.StoreId, "BTC_LightningNetwork")).IntervalSeconds.TotalSeconds);
             await TestUtils.EventuallyAsync(async () =>
             {
                 var payoutC =
@@ -3513,7 +3513,7 @@ namespace BTCPayServer.Tests
             Assert.Empty(await adminClient.GetPayoutProcessors(admin.StoreId));
 
             // Send just enough money to cover the smallest of the payouts.
-            var fee = (await tester.ExplorerClient.GetFeeRateAsync(1000)).FeeRate.GetFee(150);
+            var fee = (await tester.PayTester.GetService<IFeeProviderFactory>().CreateFeeProvider(tester.DefaultNetwork).GetFeeRateAsync(100)).GetFee(150);
             await tester.ExplorerNode.SendToAddressAsync(BitcoinAddress.Create((await adminClient.GetOnChainWalletReceiveAddress(admin.StoreId, "BTC", true)).Address,
                 tester.ExplorerClient.Network.NBitcoinNetwork), Money.Coins(0.00001m) + fee);
             await tester.ExplorerNode.GenerateAsync(1);

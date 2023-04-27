@@ -316,7 +316,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 return InvoiceNotFound();
             }
 
-            return Ok(ToPaymentMethodModels(invoice, onlyAccountedPayments));
+            return Ok(ToPaymentMethodModels(invoice, onlyAccountedPayments, Request));
         }
 
         [Authorize(Policy = Policies.CanViewInvoices,
@@ -524,7 +524,7 @@ namespace BTCPayServer.Controllers.Greenfield
             return this.CreateAPIError(404, "store-not-found", "The store was not found");
         }
 
-        private InvoicePaymentMethodDataModel[] ToPaymentMethodModels(InvoiceEntity entity, bool includeAccountedPaymentOnly)
+        public static  InvoicePaymentMethodDataModel[] ToPaymentMethodModels(InvoiceEntity entity, bool includeAccountedPaymentOnly, HttpRequest? request)
         {
             return entity.GetPaymentMethods().Select(
                 method =>
@@ -546,9 +546,9 @@ namespace BTCPayServer.Controllers.Greenfield
                         PaymentMethodPaid = accounting.CryptoPaid.ToDecimal(MoneyUnit.BTC),
                         Amount = accounting.TotalDue.ToDecimal(MoneyUnit.BTC),
                         NetworkFee = accounting.NetworkFee.ToDecimal(MoneyUnit.BTC),
-                        PaymentLink =
+                        PaymentLink = request is null? null:
                             method.GetId().PaymentType.GetPaymentLink(method.Network, entity, details, accounting.Due,
-                                Request.GetAbsoluteRoot()),
+                                request.GetAbsoluteRoot()),
                         Payments = payments.Select(paymentEntity => ToPaymentModel(entity, paymentEntity)).ToList(),
                         AdditionalData = details.GetAdditionalData()
                     };

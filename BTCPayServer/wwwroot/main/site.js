@@ -207,16 +207,32 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     // rich text editor
     if ($.summernote) {
-        $('.richtext').summernote({
-            minHeight: 300,
-            tableClassName: 'table table-sm',
-            insertTableMaxSize: {
-                col: 5,
-                row: 10
-            },
-            codeviewFilter: true,
-            codeviewFilterRegex: new RegExp($.summernote.options.codeviewFilterRegex.source + '|<.*?( on\\w+?=.*?)>', 'gi'),
-            codeviewIframeWhitelistSrc: ['twitter.com', 'syndication.twitter.com']
+        $('.richtext').each(function () {
+            const el = $(this);
+            // const hints  =null;
+            let hints = el.data("summernote-hints");
+            if (hints) {
+                hints = hints.split(",");
+            }
+            el.summernote({
+                minHeight: 300,
+                tableClassName: 'table table-sm',
+                insertTableMaxSize: {
+                    col: 5,
+                    row: 10
+                },
+                codeviewFilter: true,
+                codeviewFilterRegex: new RegExp($.summernote.options.codeviewFilterRegex.source + '|<.*?( on\\w+?=.*?)>', 'gi'),
+                codeviewIframeWhitelistSrc: ['twitter.com', 'syndication.twitter.com'],
+                hint: !hints? null:
+                    {
+                        match: /{((\w*\.*)+)/,
+                        search: function (keyword, callback) {
+                        callback($.grep(hints, function (item) {
+                            return item.indexOf("{"+keyword) === 0;
+                    }));
+                }}
+            });
         });
     }
 

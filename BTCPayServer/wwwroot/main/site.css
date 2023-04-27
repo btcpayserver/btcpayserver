@@ -250,6 +250,9 @@ h2 svg.icon.icon-info {
 }
 
 /* Richtext editor */
+.note-editor .note-hint-popover {
+    position: absolute;
+}
 .note-editor .table.table-sm {
     border-collapse: collapse !important;
 }

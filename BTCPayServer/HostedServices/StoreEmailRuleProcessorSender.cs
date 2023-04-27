@@ -1,8 +1,11 @@
 using System;
 using System.Globalization;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers;
 using BTCPayServer.Controllers.Greenfield;
 using BTCPayServer.Data;
@@ -79,25 +82,27 @@ public class StoreEmailRuleProcessorSender : EventHostedServiceBase
                             recipients.Add(bmb);
                         }
                         var i = GreenfieldInvoiceController.ToModel(invoiceEvent.Invoice, _linkGenerator, null);
-                        sender.SendEmail(recipients.ToArray(), null, null, Interpolator(actionableRule.Subject, i),
-                            Interpolator(actionableRule.Body, i));
+                        var pm = GreenfieldInvoiceController.ToPaymentMethodModels(invoiceEvent.Invoice, true, null);
+                        
+                        sender.SendEmail(recipients.ToArray(), null, null, Interpolator(actionableRule.Subject, i, pm),
+                            Interpolator(actionableRule.Body, i, pm));
                     }
                 }
             }
         }
     }
 
-    private string Interpolator(string str, InvoiceData i)
+    private string ReplaceMacro<T>(string value, T item, string propName)
     {
-        //TODO: we should switch to https://dotnetfiddle.net/MoqJFk later
-        return str.Replace("{Invoice.Id}", i.Id)
-            .Replace("{Invoice.StoreId}", i.StoreId)
-            .Replace("{Invoice.Price}",
-                decimal.Round(i.Amount, _currencyNameTable.GetCurrencyData(i.Currency, true).Divisibility,
-                    MidpointRounding.ToEven).ToString(CultureInfo.InvariantCulture))
-            .Replace("{Invoice.Currency}", i.Currency)
-            .Replace("{Invoice.Status}", i.Status.ToString())
-            .Replace("{Invoice.AdditionalStatus}", i.AdditionalStatus.ToString())
-            .Replace("{Invoice.OrderId}", i.Metadata.ToObject<InvoiceMetadata>().OrderId);
+        return Regex.Replace(value, @"{(?<exp>[^}]+)}", match => {
+            var p = Expression.Parameter(typeof(T), propName);
+            var e = System.Linq.Dynamic.Core.DynamicExpressionParser.ParseLambda(new[] { p }, null, match.Groups["exp"].Value);
+            return (e.Compile().DynamicInvoke(item) ?? value).ToString();
+        });
+    }
+    private string Interpolator(string str, InvoiceData i,
+        InvoicePaymentMethodDataModel[] invoicePaymentMethodDataModels)
+    {
+        return ReplaceMacro(str, i, "Invoice");
     }
 }

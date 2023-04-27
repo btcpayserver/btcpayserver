@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
+using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
@@ -69,6 +70,9 @@ namespace BTCPayServer.Controllers.Greenfield
         public async Task<IActionResult> UpdateStoreLightningAutomatedPayoutProcessor(
             string storeId, string paymentMethod, LightningAutomatedPayoutSettings request)
         {
+            AutomatedPayoutConstants.ValidateInterval(ModelState, request.IntervalSeconds, nameof(request.IntervalSeconds));
+            if (!ModelState.IsValid)
+                return this.CreateValidationError(ModelState);
             paymentMethod = PaymentMethodId.Parse(paymentMethod).ToString();
             var activeProcessor =
                 (await _payoutProcessorService.GetProcessors(

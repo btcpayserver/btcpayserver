@@ -9,8 +9,10 @@ using BTCPayServer.HostedServices;
 using BTCPayServer.Payments;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using NBitcoin.Protocol;
 using PayoutData = BTCPayServer.Data.PayoutData;
 using PayoutProcessorData = BTCPayServer.Data.PayoutProcessorData;
 
@@ -20,6 +22,17 @@ public class AutomatedPayoutConstants
 {
     public const double MinIntervalMinutes = 10.0;
     public const double MaxIntervalMinutes = 60.0;
+    public static void ValidateInterval(ModelStateDictionary modelState, TimeSpan timeSpan, string parameterName)
+    {
+        if (timeSpan < TimeSpan.FromMinutes(AutomatedPayoutConstants.MinIntervalMinutes))
+        {
+            modelState.AddModelError(parameterName, $"The minimum interval is {AutomatedPayoutConstants.MinIntervalMinutes * 60} seconds");
+        }
+        if (timeSpan > TimeSpan.FromMinutes(AutomatedPayoutConstants.MaxIntervalMinutes))
+        {
+            modelState.AddModelError(parameterName, $"The maximum interval is {AutomatedPayoutConstants.MaxIntervalMinutes * 60} seconds");
+        }
+    }
 }
 public abstract class BaseAutomatedPayoutProcessor<T> : BaseAsyncService where T : AutomatedPayoutBlob
 {

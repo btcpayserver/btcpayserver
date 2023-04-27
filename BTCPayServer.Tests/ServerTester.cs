@@ -194,7 +194,8 @@ namespace BTCPayServer.Tests
                     tcs.TrySetResult(evt);
                 }
             });
-            await action.Invoke();
+            if (action != null)
+                await action.Invoke();
             var result = await tcs.Task;
             sub.Dispose();
             return result;

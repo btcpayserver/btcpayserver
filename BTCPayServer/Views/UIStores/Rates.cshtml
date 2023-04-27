@@ -88,49 +88,29 @@
                         The script language is composed of several rules composed of a currency pair and a mathematic expression.
                         The example below will use <code>kraken</code> for both <code>LTC_USD</code> and <code>BTC_USD</code> pairs.
                     </p>
-                    <pre>
-                        <code>
-                            LTC_USD = kraken(LTC_USD);
-                            BTC_USD = kraken(BTC_USD);
-                        </code>
-                    </pre>
+                    <pre><code class="text hljs">LTC_USD = kraken(LTC_USD);
+BTC_USD = kraken(BTC_USD);</code></pre>
                     <p>However, explicitely setting specific pairs like this can be a bit difficult. Instead, you can define a rule <code>X_X</code> which will match any currency pair. The following example will use <code>kraken</code> for getting the rate of any currency pair.</p>
-                    <pre>
-                        <code>
-                            X_X = kraken(X_X);
-                        </code>
-                    </pre>
+                    <pre><code class="text hljs">X_X = kraken(X_X);</code></pre>
                     <p>However, <code>kraken</code> does not support the <code>BTC_CAD</code> pair. For this reason you can add a rule mapping all <code>X_CAD</code> to <code>ndax</code>, a Canadian exchange.</p>
-                    <pre>
-                    <code>
-                            X_CAD = ndax(X_CAD);
-                            X_X = kraken(X_X);
-                        </code>
-                    </pre>
+                    <pre><code class="text hljs">X_CAD = ndax(X_CAD);
+X_X = kraken(X_X);</code></pre>
                     <p>A given currency pair match the most specific rule. If two rules are matching and are as specific, the first rule will be chosen.</p>
                     <p>
                         But now, what if you want to support <code>DOGE</code>? The problem with <code>DOGE</code> is that most exchange do not have any pair for it. But <code>bittrex</code> has a <code>DOGE_BTC</code> pair. <br />
                         Luckily, the rule engine allow you to reference rules:
                     </p>
-                    <pre>
-                    <code>
-                            DOGE_X = bittrex(DOGE_BTC) * BTC_X
-                            X_CAD = ndax(X_CAD);
-                            X_X = kraken(X_X);
-                        </code>
-                    </pre>
+                    <pre><code class="text hljs">DOGE_X = bittrex(DOGE_BTC) * BTC_X;
+X_CAD = ndax(X_CAD);
+X_X = kraken(X_X);</code></pre>
                     <p>
                         With <code>DOGE_USD</code> will be expanded to <code>bittrex(DOGE_BTC) * kraken(BTC_USD)</code>. And <code>DOGE_CAD</code> will be expanded to <code>bittrex(DOGE_BTC) * ndax(BTC_CAD)</code>. <br />
                         However, we advise you to write it that way to increase coverage so that <code>DOGE_BTC</code> is also supported:
                     </p>
-                    <pre>
-                    <code>
-                            DOGE_X = DOGE_BTC * BTC_X
-                            DOGE_BTC = bittrex(DOGE_BTC)
-                            X_CAD = ndax(X_CAD);
-                            X_X = kraken(X_X);
-                        </code>
-                    </pre>
+                    <pre><code class="text hljs">DOGE_X = DOGE_BTC * BTC_X;
+DOGE_BTC = bittrex(DOGE_BTC);
+X_CAD = ndax(X_CAD);
+X_X = kraken(X_X);</code></pre>
                     <p>
                         It is worth noting that the inverses of those pairs are automatically supported as well.<br />
                         It means that the rule <code>USD_DOGE = 1 / DOGE_USD</code> implicitely exists.
@@ -201,6 +181,11 @@
 </div>
 
 <partial name="_Confirm" model="@(new ConfirmModel("Rate rule scripting", Model.ShowScripting ? "This action will delete your rate script. Are you sure to turn off rate rules scripting?" : "This action will modify your current rate sources. Are you sure to turn on rate rules scripting? (Advanced users)", "Continue", Model.ShowScripting ? "btn-danger" : "btn-primary"))" />
+
+
+@section PageHeadContent {
+    <link rel="stylesheet" href="~/vendor/highlightjs/default.min.css" asp-append-version="true">
+}
 
 @section PageFootContent {
     <script>

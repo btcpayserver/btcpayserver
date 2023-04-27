@@ -95,7 +95,7 @@ namespace BTCPayServer.PayoutProcessors.OnChain
                 storePaymentMethod.AccountDerivation, DerivationFeature.Change, 0, true);
 
             var processorBlob = GetBlob(_PayoutProcesserSettings);
-            var feeRate = await explorerClient.GetFeeRateAsync(processorBlob.FeeTargetBlock, new FeeRate(1m));
+            var feeRate = await explorerClient.GetFeeRateAsync(Math.Max(processorBlob.FeeTargetBlock, 1), new FeeRate(1m));
 
             var transfersProcessing = new List<PayoutData>();
             foreach (var transferRequest in payouts)

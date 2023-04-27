@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -43,6 +44,15 @@ public class PayoutProcessorService : EventHostedServiceBase
 
     public class PayoutProcessorQuery
     {
+        public PayoutProcessorQuery()
+        {
+            
+        }
+        public PayoutProcessorQuery(string storeId, string paymentMethod)
+        {
+            Stores = new[] { storeId };
+            PaymentMethods = new[] { paymentMethod };
+        }
         public string[] Stores { get; set; }
         public string[] Processors { get; set; }
         public string[] PaymentMethods { get; set; }
@@ -164,6 +174,14 @@ public class PayoutProcessorService : EventHostedServiceBase
             }
 
             processorUpdated.Processed?.SetResult();
+        }
+    }
+
+    internal async Task Restart(PayoutProcessorQuery payoutProcessorQuery)
+    {
+        foreach (var data in await GetProcessors(payoutProcessorQuery))
+        {
+            await StartOrUpdateProcessor(data, default);
         }
     }
 }

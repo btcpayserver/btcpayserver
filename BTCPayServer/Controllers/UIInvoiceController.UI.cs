@@ -383,6 +383,8 @@ namespace BTCPayServer.Controllers
                         model.CurrentRateText = _displayFormatter.Currency(model.CryptoAmountNow, paymentMethodId.CryptoCode);
                         model.FiatAmount = paidCurrency;
                     }
+                    model.CryptoCode = paymentMethodId.CryptoCode;
+                    model.InvoiceCurrency = invoice.Currency;
                     model.CustomAmount = model.FiatAmount;
                     model.CustomCurrency = invoice.Currency;
                     model.FiatText = _displayFormatter.Currency(model.FiatAmount, invoice.Currency);

@@ -68,6 +68,27 @@
             const response = await fetch(url, { method, body })
             await handleRefundResponse(response)
         })
+        
+        function checkCustomAmount() {
+            const $refundForm = document.getElementById('RefundForm');
+            const currency = $refundForm.querySelector('#CustomCurrency').value;
+            const cryptoCode = $refundForm.querySelector('#CryptoCode').value;
+            const invoiceCurrency = $refundForm.querySelector('#InvoiceCurrency').value;
+            const amount = parseFloat($refundForm.querySelector('#CustomAmount').value);
+            const fiatAmount = parseFloat($refundForm.querySelector('#FiatAmount').value);
+            const cryptoAmountNow = parseFloat($refundForm.querySelector('#CryptoAmountNow').value);
+            const cryptoAmountThen = parseFloat($refundForm.querySelector('#CryptoAmountThen').value);
+            
+            let isOverpaying = false;
+            if (currency === cryptoCode) {
+                isOverpaying = amount > Math.max(cryptoAmountNow, cryptoAmountThen);
+            } else if (currency === invoiceCurrency) {
+                isOverpaying = amount > fiatAmount;
+            }
+            document.getElementById('CustomAmountWarning').hidden = !isOverpaying;
+        }
+        delegate('change', '#CustomAmount', checkCustomAmount);
+        delegate('change', '#CustomCurrency', checkCustomAmount);
     </script>
 }
 

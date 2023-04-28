@@ -28,5 +28,7 @@ namespace BTCPayServer.Models.InvoicingModels
         [Display(Name = "Specify the amount and currency for the refund")]
         public decimal CustomAmount { get; set; }
         public string CustomCurrency { get; set; }
+        public string InvoiceCurrency { get; set; }
+        public string CryptoCode { get; set; }
     }
 }

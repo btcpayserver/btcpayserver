@@ -189,7 +189,7 @@
             "StoreUserDataList": {
                 "type": "array",
                 "items": {
-                    "$ref": "#/components/schemas/StoreUserData"
+                    "$ref": "#/components/schemas/StoreData"
                 }
             },
             "StoreUserData": {

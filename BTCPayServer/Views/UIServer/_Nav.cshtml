@@ -7,6 +7,7 @@
     <nav id="SectionNav">
         <div class="nav">
             <a asp-controller="UIServer" id="SectionNav-@ServerNavPages.Users" class="nav-link @ViewData.IsActivePage(ServerNavPages.Users)" asp-action="ListUsers">Users</a>
+            <a asp-controller="UIServer" id="SectionNav-@ServerNavPages.Roles" class="nav-link @ViewData.IsActivePage(ServerNavPages.Roles)" asp-action="ListRoles">Roles</a>
             <a asp-controller="UIServer" id="SectionNav-@ServerNavPages.Emails" class="nav-link @ViewData.IsActivePage(ServerNavPages.Emails)" asp-action="Emails">Email</a>
             <a asp-controller="UIServer" id="SectionNav-@ServerNavPages.Policies" class="nav-link @ViewData.IsActivePage(ServerNavPages.Policies)" asp-action="Policies">Policies</a>
             <a asp-controller="UIServer" id="SectionNav-@ServerNavPages.Services" class="nav-link @ViewData.IsActivePage(ServerNavPages.Services)" asp-action="Services">Services</a>

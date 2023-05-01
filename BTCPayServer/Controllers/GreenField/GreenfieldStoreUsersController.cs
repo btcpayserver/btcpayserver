@@ -74,7 +74,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
         private IEnumerable<StoreUserData> FromModel(Data.StoreData data)
         {
-            return data.UserStores.Select(store => new StoreUserData() { UserId = store.ApplicationUserId, Role = store.Role });
+            return data.UserStores.Select(store => new StoreUserData() { UserId = store.ApplicationUserId, Role = store.StoreRoleId });
         }
         private IActionResult StoreNotFound()
         {

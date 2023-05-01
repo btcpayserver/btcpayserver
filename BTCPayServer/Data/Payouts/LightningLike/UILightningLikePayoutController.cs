@@ -84,7 +84,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                     if (approvedStores.TryGetValue(payout.PullPaymentData.StoreId, out var value))
                         return value;
                     value = payout.PullPaymentData.StoreData.UserStores
-                        .Any(store => store.Role == StoreRoles.Owner && store.ApplicationUserId == userId);
+                        .Any(store => store.ApplicationUserId == userId && store.StoreRole.Policies.Contains(Policies.CanModifyStoreSettings));
                     approvedStores.Add(payout.PullPaymentData.StoreId, value);
                     return value;
                 }).ToList();

@@ -43,7 +43,6 @@ namespace BTCPayServer.Components.StoreSelector
                         Text = store.StoreName,
                         Value = store.Id,
                         Selected = store.Id == currentStore?.Id,
-                        IsOwner = store.Role == StoreRoles.Owner,
                         WalletId = walletId
                     };
                 })
@@ -57,7 +56,6 @@ namespace BTCPayServer.Components.StoreSelector
                 Options = options,
                 CurrentStoreId = currentStore?.Id,
                 CurrentDisplayName = currentStore?.StoreName,
-                CurrentStoreIsOwner = currentStore?.Role == StoreRoles.Owner,
                 CurrentStoreLogoFileId = blob?.LogoFileId
             };
 

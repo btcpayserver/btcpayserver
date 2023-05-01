@@ -142,7 +142,7 @@ namespace BTCPayServer.Controllers
             {
                 Email = u.Email,
                 Id = u.Id,
-                Role = u.Role
+                Role = u.StoreRole.Role
             }).ToList();
         }
 
@@ -163,7 +163,9 @@ namespace BTCPayServer.Controllers
                 ModelState.AddModelError(nameof(vm.Email), "User not found");
                 return View(vm);
             }
-            if (!StoreRoles.AllRoles.Contains(vm.Role))
+
+            var roles = await _Repo.GetStoreRoles(CurrentStore.Id);
+            if (roles.All(role => role.Role != vm.Role))
             {
                 ModelState.AddModelError(nameof(vm.Role), "Invalid role");
                 return View(vm);
@@ -938,8 +940,9 @@ namespace BTCPayServer.Controllers
             ViewBag.HidePublicKey = true;
             ViewBag.ShowStores = true;
             ViewBag.ShowMenu = false;
-            var stores = await _Repo.GetStoresByUserId(userId);
-            model.Stores = new SelectList(stores.Where(s => s.Role == StoreRoles.Owner), nameof(CurrentStore.Id), nameof(CurrentStore.StoreName));
+            var stores = (await _Repo.GetStoresByUserId(userId)).Where(data => data.HasPermission(userId, Policies.CanModifyStoreSettings)).ToArray();
+
+            model.Stores = new SelectList(stores, nameof(CurrentStore.Id), nameof(CurrentStore.StoreName));
             if (!model.Stores.Any())
             {
                 TempData[WellKnownTempData.ErrorMessage] = "You need to be owner of at least one store before pairing";
@@ -1004,14 +1007,14 @@ namespace BTCPayServer.Controllers
                 return RedirectToAction(nameof(UIHomeController.Index), "UIHome");
             }
 
-            var stores = await _Repo.GetStoresByUserId(userId);
+            var stores = (await _Repo.GetStoresByUserId(userId)).Where(data => data.HasPermission(userId, Policies.CanModifyStoreSettings)).ToArray();
             return View(new PairingModel
             {
                 Id = pairing.Id,
                 Label = pairing.Label,
                 SIN = pairing.SIN ?? "Server-Initiated Pairing",
                 StoreId = selectedStore ?? stores.FirstOrDefault()?.Id,
-                Stores = stores.Where(u => u.Role == StoreRoles.Owner).Select(s => new PairingModel.StoreViewModel
+                Stores = stores.Select(s => new PairingModel.StoreViewModel
                 {
                     Id = s.Id,
                     Name = string.IsNullOrEmpty(s.StoreName) ? s.Id : s.StoreName

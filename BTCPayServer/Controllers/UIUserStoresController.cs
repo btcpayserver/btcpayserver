@@ -69,7 +69,7 @@ namespace BTCPayServer.Controllers
             blob.DefaultCurrency = vm.DefaultCurrency;
             blob.PreferredExchange = vm.PreferredExchange;
             store.SetStoreBlob(blob);
-            await _repo.CreateStore(GetUserId(), store);
+            await _repo.CreateStore(GetUserId(), store, vm.RoleId);
             CreatedStoreId = store.Id;
             TempData[WellKnownTempData.SuccessMessage] = "Store successfully created";
             return RedirectToAction(nameof(UIStoresController.Dashboard), "UIStores", new

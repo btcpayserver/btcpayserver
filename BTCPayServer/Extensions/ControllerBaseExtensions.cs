@@ -26,6 +26,8 @@ namespace BTCPayServer
                 prop = typeof(UserPrefsCookie).GetProperty(nameof(UserPrefsCookie.PayoutsQuery));
             else if (model is PullPaymentsModel)
                 prop = typeof(UserPrefsCookie).GetProperty(nameof(UserPrefsCookie.PullPaymentsQuery));
+            else if (model is RolesViewModel)
+                prop = typeof(UserPrefsCookie).GetProperty(nameof(UserPrefsCookie.RolesQuery));
             else
                 throw new Exception("Unsupported BasePagingViewModel for cookie user preferences saving");
 

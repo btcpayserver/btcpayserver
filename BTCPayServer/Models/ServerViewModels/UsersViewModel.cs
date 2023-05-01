@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using BTCPayServer.Services.Stores;
 
 namespace BTCPayServer.Models.ServerViewModels
 {
@@ -19,6 +20,11 @@ namespace BTCPayServer.Models.ServerViewModels
         public List<UserViewModel> Users { get; set; } = new List<UserViewModel>();
         public override int CurrentPageCount => Users.Count;
         public Dictionary<string, string> Roles { get; set; }
+    }
+    public class RolesViewModel : BasePagingViewModel
+    {
+        public List<StoreRepository.StoreRole> Roles { get; set; } = new List<StoreRepository.StoreRole>();
+        public override int CurrentPageCount => Roles.Count;
     }
 
 }

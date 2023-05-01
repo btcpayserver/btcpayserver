@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
+using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
@@ -57,7 +58,7 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Au
         var lightningSupportedPaymentMethod = (LightningSupportedPaymentMethod)paymentMethod;
         if (lightningSupportedPaymentMethod.IsInternalNode &&
             !(await Task.WhenAll((await _storeRepository.GetStoreUsers(_PayoutProcesserSettings.StoreId))
-                .Where(user => user.Role == StoreRoles.Owner).Select(user => user.Id)
+                .Where(user => user.StoreRole.ToPermissionSet( _PayoutProcesserSettings.StoreId).Contains(Policies.CanModifyStoreSettings, _PayoutProcesserSettings.StoreId)).Select(user => user.Id)
                 .Select(s => _userService.IsAdminUser(s)))).Any(b => b))
         {
             return;

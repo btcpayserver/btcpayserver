@@ -6,12 +6,12 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
+using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
 using BTCPayServer.Fido2;
 using BTCPayServer.Fido2.Models;
-using BTCPayServer.Logging;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Plugins.Crowdfund;
@@ -40,7 +40,6 @@ namespace BTCPayServer.Hosting
 {
     public class MigrationStartupTask : IStartupTask
     {
-        public Logs Logs { get; }
 
         private readonly ApplicationDbContextFactory _DBContextFactory;
         private readonly StoreRepository _StoreRepository;
@@ -257,12 +256,62 @@ namespace BTCPayServer.Hosting
                     settings.MigrateAppYmlToJson = true;
                     await _Settings.UpdateSetting(settings);
                 }
+                if (!settings.AddStoreRoles)
+                {
+                    await AddStoreRoles();
+                    settings.AddStoreRoles = true;
+                    await _Settings.UpdateSetting(settings);
+                }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error on the MigrationStartupTask");
                 throw;
             }
+        }
+        private async Task AddStoreRoles()
+        {
+            await using var ctx = _DBContextFactory.CreateContext();
+
+            var owner = new StoreRole()
+            {
+                Policies = new List<string>()
+                {
+                    Policies.CanModifyStoreSettings,
+                    Policies.CanTradeCustodianAccount,
+                    Policies.CanWithdrawFromCustodianAccounts,
+                    Policies.CanDepositToCustodianAccounts
+                },
+                Role = StoreRoles.Owner,
+                StoreDataId = null
+            };
+            var guest = new StoreRole()
+            {
+                Policies = new List<string>()
+                {
+                    Policies.CanViewStoreSettings,
+                    Policies.CanModifyInvoices,
+                    Policies.CanViewCustodianAccounts,
+                    Policies.CanDepositToCustodianAccounts
+                },
+                Role = StoreRoles.Guest,
+                StoreDataId = null
+            };
+
+            await ctx.StoreRoles.AddAsync(guest);
+            await ctx.StoreRoles.AddAsync(owner);
+            
+            var stores = await ctx.Stores
+                .Include(data => data.UserStores)
+                .ToArrayAsync();
+            foreach (var store in stores)
+            {
+                foreach (UserStore storeUserStore in store.UserStores)
+                {
+                    storeUserStore.StoreRoleId = storeUserStore.LegacyRole == StoreRoles.Owner ? owner.Id : guest.Id;
+                }
+            }
+            await ctx.SaveChangesAsync();
         }
 
         private async Task FixMappedDomainAppType()

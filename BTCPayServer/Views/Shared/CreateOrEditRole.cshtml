@@ -1,0 +1,53 @@
+﻿@using BTCPayServer.Client
+@using BTCPayServer.Views.Server
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using BTCPayServer.Abstractions.Extensions
+@using BTCPayServer.Views.Stores
+@model UpdateRoleViewModel
+@{
+    var roleId = Context.GetRouteValue("roleId") as string;
+    
+    if (roleId == "create")
+        roleId = null;
+    
+    var storeId = Context.GetRouteValue("storeId") as string;
+    var controller = ViewContext.RouteData.Values["controller"].ToString().TrimEnd("Controller", StringComparison.InvariantCultureIgnoreCase);
+    if(storeId is null)
+        ViewData.SetActivePage(ServerNavPages.Roles, roleId is null ? "Create role" : "Update role");
+        
+    else
+    {
+        ViewData.SetActivePage(StoreNavPages.Roles, roleId is null ? "Create role" : "Update role");
+    }
+    var storePolicies = Policies.AllPolicies.Where(Policies.IsStorePolicy).ToArray();
+    
+}
+
+<h3 class="mb-4">@ViewData["Title"]</h3>
+
+<div class="row">
+    <div class="col-xl-6 col-xxl-constrain">
+        <form method="post" asp-controller="@controller" asp-action="CreateOrEditRole" asp-route-roleId="@(roleId??"create")" asp-route-storeId="@storeId">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="form-group">
+                <label asp-for="Role" class="form-label"></label>
+                <input asp-for="Role" required="required" class="form-control" />
+                <span asp-validation-for="Role" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Policies" class="form-label"></label>
+                <select multiple="multiple" asp-for="Policies" class="form-select">
+                    @foreach (var policy in storePolicies)
+                    {
+                        <option value="@policy" class="text-truncate" asp-selected="@(Model.Policies?.Contains(policy) ?? false)">@policy</option>
+                    }
+                </select>
+                <span asp-validation-for="Policies" class="text-danger"></span>
+            </div>
+
+            <button id="Save" type="submit" class="btn btn-primary mt-2" name="command" value="Save">Save</button>
+        </form>
+    </div>
+</div>

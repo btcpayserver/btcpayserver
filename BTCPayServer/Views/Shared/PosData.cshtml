@@ -1,3 +1,5 @@
+@using System.Text.RegularExpressions
+@using Microsoft.AspNetCore.Mvc.TagHelpers
 @model (Dictionary<string, object> Items, int Level)
 
 @functions {
@@ -26,7 +28,7 @@
                     }
                     else
                     {
-                        @value?.ToString()
+                        @Safe.Raw(Regex.Replace(str.Trim(), @"(\r\n)|\n|\r", "<br/>"))
                     }
                 </td>
             }

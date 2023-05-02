@@ -174,6 +174,8 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
 
             try
             {
+                var appPath = await _appService.ViewLink(app);
+                var appUrl = HttpContext.Request.GetAbsoluteUri(appPath);
                 var invoice = await _invoiceController.CreateInvoiceCore(new BitpayCreateInvoiceRequest()
                 {
                     OrderId = AppService.GetAppOrderId(app),
@@ -186,12 +188,12 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                     FullNotifications = true,
                     ExtendedNotifications = true,
                     SupportedTransactionCurrencies = paymentMethods,
-                    RedirectURL = request.RedirectUrl ?? Request.GetDisplayUrl(),
+                    RedirectURL = request.RedirectUrl ?? appUrl,
                 }, store, HttpContext.Request.GetAbsoluteRoot(),
-                    new List<string>() { AppService.GetAppInternalTag(appId) },
-                    cancellationToken, (entity) =>
+                    new List<string> { AppService.GetAppInternalTag(appId) },
+                    cancellationToken, entity =>
                     {
-                        entity.Metadata.OrderUrl = Request.GetDisplayUrl();
+                        entity.Metadata.OrderUrl = appUrl;
                     });
 
                 if (request.RedirectToCheckout)

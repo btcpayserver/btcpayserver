@@ -21,14 +21,14 @@
                 {
                     <th class="w-150px">@key</th>
                 }
-                <td>
+                <td style="white-space:pre-wrap">
                     @if (IsValidURL(str))
                     {
                         <a href="@str" target="_blank" rel="noreferrer noopener">@str</a>
                     }
                     else
                     {
-                        @Safe.Raw(Regex.Replace(str.Trim(), @"(\r\n)|\n|\r", "<br/>"))
+                        @str.Trim()
                     }
                 </td>
             }

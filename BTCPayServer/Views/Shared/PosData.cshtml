@@ -30,9 +30,9 @@
                     }
                 </td>
             }
-            else if (value is Dictionary<string, object> {Count: > 0 } subItems)
+            else if (value is Dictionary<string, object> { Count: > 0 } subItems)
             {
-                <td colspan="2" >
+                <td colspan="2">
                     @{
                         Write(Html.Raw($"<h{Model.Level + 3} class=\"mt-4 mb-3\">"));
                         Write(key);

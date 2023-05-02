@@ -41,12 +41,13 @@
             <input type="hidden" asp-for="SelectedPaymentMethod"/>
             <input type="hidden" asp-for="CryptoAmountThen"/>
             <input type="hidden" asp-for="FiatAmount"/>
-            <input type="hidden" asp-for="CryptoAmountNow"/>
+            <input type="hidden" asp-for="CryptoAmountNow"/>            
+            <input type="hidden" asp-for="CryptoDivisibility"/>
             <input type="hidden" asp-for="CryptoCode"/>
             <input type="hidden" asp-for="InvoiceCurrency"/>
             <style>
-                #CustomOption ~ .form-group { display: none; }
-                #CustomOption:checked ~ .form-group { display: block; }
+                .additional-options { display: none; }
+                [name="SelectedRefundOption"]:checked ~ .additional-options { display: block; }
             </style>
             <div class="form-group">
                 <div class="form-check">
@@ -69,13 +70,28 @@
                     <div class="form-text">The invoice currency, at the rate when the refund will be sent.</div>
                 </div>
             </div>
-
+            <div class="form-group">
+                <div class="form-check">
+                    <input id="MinusPercentageOption" asp-for="SelectedRefundOption" type="radio" value="MinusPercentage" class="form-check-input"/>
+                    <label for="MinusPercentageOption" class="form-check-label">@Model.RateThenText, minus x%</label>
+                    <div class="form-text">The crypto currency amount received, less a specified percentage as processing fee.</div>
+                    <div class="form-group pt-2 additional-options">
+                        <label asp-for="CustomPercentage" class="form-label"></label>
+                        <div class="input-group">
+                            <input asp-for="CustomPercentage" type="number" step=".01" min="0" class="form-control" style="flex: 0 0 10ch;" />
+                            <span class="input-group-text">%</span>
+                            <span class="input-group-text" id="CustomPercentageResult" hidden></span>
+                        </div>
+                        <span asp-validation-for="CustomPercentage" class="text-danger w-100"></span>
+                    </div>
+                </div>
+            </div>
             <div class="form-group">
                 <div class="form-check">
                     <input id="CustomOption" asp-for="SelectedRefundOption" type="radio" value="Custom" class="form-check-input"/>
                     <label for="CustomOption" class="form-check-label">Custom amount</label>
                     <div class="form-text">The specified amount with the specified currency, at the rate when the refund will be sent.</div>
-                    <div class="form-group pt-2">
+                    <div class="form-group pt-2 additional-options">
                         <label asp-for="CustomAmount" class="form-label"></label>
                         <div class="input-group">
                             <input asp-for="CustomAmount" type="number" step="any" asp-format="{0}" class="form-control"/>

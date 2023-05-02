@@ -347,23 +347,31 @@ namespace BTCPayServer.Controllers
             RateRules rules;
             RateResult rateResult;
             CreatePullPayment createPullPayment;
+            var pms = invoice.GetPaymentMethods();
+            var paymentMethod = pms.SingleOrDefault(method => method.GetId() == paymentMethodId);
+            decimal paidAmount = default;
+            decimal cryptoPaid = default;
+
+            //TODO: Make this clean
+            if (paymentMethod is null && paymentMethodId.PaymentType == LightningPaymentType.Instance)
+            {
+                paymentMethod = pms[new PaymentMethodId(paymentMethodId.CryptoCode, PaymentTypes.LNURLPay)];
+            }
+
+            if (paymentMethod != null)
+            {
+                cryptoPaid = paymentMethod.Calculate().Paid.ToDecimal(MoneyUnit.BTC);
+                paidAmount = cryptoPaid.RoundToSignificant(paymentMethodDivisibility);
+            }
+
             switch (model.RefundStep)
             {
                 case RefundSteps.SelectPaymentMethod:
                     model.RefundStep = RefundSteps.SelectRate;
                     model.Title = "How much to refund?";
-                    var pms = invoice.GetPaymentMethods();
-                    var paymentMethod = pms.SingleOrDefault(method => method.GetId() == paymentMethodId);
 
-                    //TODO: Make this clean
-                    if (paymentMethod is null && paymentMethodId.PaymentType == LightningPaymentType.Instance)
+                    if (paymentMethod != null && cryptoPaid != default)
                     {
-                        paymentMethod = pms[new PaymentMethodId(paymentMethodId.CryptoCode, PaymentTypes.LNURLPay)];
-                    }
-
-                    if (paymentMethod != null)
-                    {
-                        var cryptoPaid = paymentMethod.Calculate().Paid.ToDecimal(MoneyUnit.BTC);
                         var paidCurrency = Math.Round(cryptoPaid * paymentMethod.Rate, cdCurrency.Divisibility);
                         model.CryptoAmountThen = cryptoPaid.RoundToSignificant(paymentMethodDivisibility);
                         model.RateThenText = _displayFormatter.Currency(model.CryptoAmountThen, paymentMethodId.CryptoCode);
@@ -384,9 +392,11 @@ namespace BTCPayServer.Controllers
                         model.FiatAmount = paidCurrency;
                     }
                     model.CryptoCode = paymentMethodId.CryptoCode;
+                    model.CryptoDivisibility = paymentMethodDivisibility;
                     model.InvoiceCurrency = invoice.Currency;
                     model.CustomAmount = model.FiatAmount;
                     model.CustomCurrency = invoice.Currency;
+                    model.CustomPercentage = 0;
                     model.FiatText = _displayFormatter.Currency(model.FiatAmount, invoice.Currency);
                     return View("_RefundModal", model);
 
@@ -421,22 +431,38 @@ namespace BTCPayServer.Controllers
                             createPullPayment.AutoApproveClaims = false;
                             break;
 
+                        case "MinusPercentage":
+                            model.Title = "How much to refund?";
+                            model.RefundStep = RefundSteps.SelectRate;
+
+                            if (model.CustomPercentage is <= 0 or > 100)
+                            {
+                                ModelState.AddModelError(nameof(model.CustomPercentage), "Percentage must be a numeric value between 0 and 100");
+                            }
+                            if (!ModelState.IsValid)
+                            {
+                                return View("_RefundModal", model);
+                            }
+                    
+                            var reduceByAmount = paidAmount * (model.CustomPercentage / 100);
+                            createPullPayment.Currency = paymentMethodId.CryptoCode;
+                            createPullPayment.Amount = Math.Round(paidAmount - reduceByAmount, paymentMethodDivisibility);
+                            createPullPayment.AutoApproveClaims = true;
+                            break;
+
                         case "Custom":
                             model.Title = "How much to refund?";
-
                             model.RefundStep = RefundSteps.SelectRate;
 
                             if (model.CustomAmount <= 0)
                             {
                                 model.AddModelError(refundModel => refundModel.CustomAmount, "Amount must be greater than 0", this);
                             }
-
                             if (string.IsNullOrEmpty(model.CustomCurrency) ||
                                 _CurrencyNameTable.GetCurrencyData(model.CustomCurrency, false) == null)
                             {
                                 ModelState.AddModelError(nameof(model.CustomCurrency), "Invalid currency");
                             }
-
                             if (!ModelState.IsValid)
                             {
                                 return View("_RefundModal", model);

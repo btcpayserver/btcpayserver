@@ -1950,6 +1950,28 @@ namespace BTCPayServer.Tests
                 CustomCurrency = "BTC"
             });
             Assert.True(pp.AutoApproveClaims);
+            
+            // test RefundVariant.MinusPercentage
+            validationError = await AssertValidationError(new[] { "CustomPercentage" }, async () =>
+            {
+                await client.RefundInvoice(user.StoreId, invoice.Id, new RefundInvoiceRequest
+                {
+                    PaymentMethod = method.PaymentMethod,
+                    RefundVariant = RefundVariant.MinusPercentage,
+                });
+            });
+            Assert.Contains("CustomPercentage: Percentage must be a numeric value between 0 and 100", validationError.Message);
+
+            // should auto-approve
+            pp = await client.RefundInvoice(user.StoreId, invoice.Id, new RefundInvoiceRequest
+            {
+                PaymentMethod = method.PaymentMethod,
+                RefundVariant = RefundVariant.MinusPercentage,
+                CustomPercentage = 6.15m
+            });
+            Assert.Equal("BTC", pp.Currency);
+            Assert.True(pp.AutoApproveClaims);
+            Assert.Equal(0.9385m, pp.Amount);
         }
 
         [Fact(Timeout = TestTimeout)]

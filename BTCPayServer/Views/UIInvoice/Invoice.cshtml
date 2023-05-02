@@ -1,4 +1,3 @@
-@using BTCPayServer.Client.Models
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @using BTCPayServer.Client
 @using BTCPayServer.Abstractions.TagHelpers
@@ -89,6 +88,23 @@
         }
         delegate('change', '#CustomAmount', checkCustomAmount);
         delegate('change', '#CustomCurrency', checkCustomAmount);
+        
+        function updateCustomPercentageResult() {
+            const $refundForm = document.getElementById('RefundForm');
+            const $result = document.getElementById('CustomPercentageResult');
+            const cryptoCode = $refundForm.querySelector('#CryptoCode').value;
+            const cryptoAmountThen = parseFloat($refundForm.querySelector('#CryptoAmountThen').value);
+            const percentage = parseFloat($refundForm.querySelector('#CustomPercentage').value);
+            const divisibility = parseInt($refundForm.querySelector('#CryptoDivisibility').value);
+            const isInvalid = isNaN(percentage);
+            $result.hidden = isInvalid;
+            if (!isInvalid) {
+                const reduceByAmount = (cryptoAmountThen * (percentage / 100));
+                const refundAmount = (cryptoAmountThen - reduceByAmount).toFixed(divisibility);
+                $result.innerText = `= ${refundAmount} ${cryptoCode} refund`;
+            }
+        }
+        delegate('change', '#CustomPercentage', updateCustomPercentageResult);
     </script>
 }
 

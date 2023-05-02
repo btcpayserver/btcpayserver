@@ -399,6 +399,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 cancellationToken
             );
             var paymentMethodDivisibility = _currencyNameTable.GetCurrencyData(paymentMethodId.CryptoCode, false)?.Divisibility ?? 8;
+            var paidAmount = cryptoPaid.RoundToSignificant(paymentMethodDivisibility);
             var createPullPayment = new HostedServices.CreatePullPayment()
             {
                 BOLT11Expiration = store.GetStoreBlob().RefundBOLT11Expiration,
@@ -418,11 +419,19 @@ namespace BTCPayServer.Controllers.Greenfield
                     return this.CreateValidationError(ModelState);
             }
 
+            if (request.RefundVariant != RefundVariant.MinusPercentage)
+            {
+                if (request.CustomPercentage is not null)
+                    this.ModelState.AddModelError(nameof(request.CustomCurrency), "CustomPercentage should only be set if the refundVariant is MinusPercentage");
+                if (!ModelState.IsValid)
+                    return this.CreateValidationError(ModelState);
+            }
+
             switch (request.RefundVariant)
             {
                 case RefundVariant.RateThen:
                     createPullPayment.Currency = invoicePaymentMethod.GetId().CryptoCode;
-                    createPullPayment.Amount = cryptoPaid.RoundToSignificant(paymentMethodDivisibility);
+                    createPullPayment.Amount = paidAmount;
                     createPullPayment.AutoApproveClaims = true;
                     break;
 
@@ -436,6 +445,22 @@ namespace BTCPayServer.Controllers.Greenfield
                     createPullPayment.Currency = invoice.Currency;
                     createPullPayment.Amount = paidCurrency;
                     createPullPayment.AutoApproveClaims = false;
+                    break;
+
+                case RefundVariant.MinusPercentage:
+                    if (request.CustomPercentage is null or <= 0 or > 100)
+                    {
+                        ModelState.AddModelError(nameof(request.CustomPercentage), "Percentage must be a numeric value between 0 and 100");
+                    }
+                    if (!ModelState.IsValid || request.CustomPercentage is null)
+                    {
+                        return this.CreateValidationError(ModelState);
+                    }
+                    
+                    var reduceByAmount = paidAmount * (request.CustomPercentage.Value / 100);
+                    createPullPayment.Currency = invoicePaymentMethod.GetId().CryptoCode;
+                    createPullPayment.Amount = Math.Round(paidAmount - reduceByAmount, paymentMethodDivisibility);
+                    createPullPayment.AutoApproveClaims = true;
                     break;
 
                 case RefundVariant.Custom:

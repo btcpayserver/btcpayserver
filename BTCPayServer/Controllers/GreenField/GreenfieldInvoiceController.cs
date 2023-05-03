@@ -390,7 +390,8 @@ namespace BTCPayServer.Controllers.Greenfield
             if (!ModelState.IsValid || invoicePaymentMethod is null || paymentMethodId is null)
                 return this.CreateValidationError(ModelState);
 
-            var cryptoPaid = invoicePaymentMethod.Calculate().Paid.ToDecimal(MoneyUnit.BTC);
+            var accounting = invoicePaymentMethod.Calculate();
+            var cryptoPaid = accounting.Paid.ToDecimal(MoneyUnit.BTC);
             var cdCurrency = _currencyNameTable.GetCurrencyData(invoice.Currency, true);
             var paidCurrency = Math.Round(cryptoPaid * invoicePaymentMethod.Rate, cdCurrency.Divisibility);
             var rateResult = await _rateProvider.FetchRate(
@@ -398,9 +399,10 @@ namespace BTCPayServer.Controllers.Greenfield
                 store.GetStoreBlob().GetRateRules(_networkProvider),
                 cancellationToken
             );
+            var cryptoCode = invoicePaymentMethod.GetId().CryptoCode;
             var paymentMethodDivisibility = _currencyNameTable.GetCurrencyData(paymentMethodId.CryptoCode, false)?.Divisibility ?? 8;
             var paidAmount = cryptoPaid.RoundToSignificant(paymentMethodDivisibility);
-            var createPullPayment = new HostedServices.CreatePullPayment()
+            var createPullPayment = new CreatePullPayment
             {
                 BOLT11Expiration = store.GetStoreBlob().RefundBOLT11Expiration,
                 Name = request.Name ?? $"Refund {invoice.Id}",
@@ -430,13 +432,13 @@ namespace BTCPayServer.Controllers.Greenfield
             switch (request.RefundVariant)
             {
                 case RefundVariant.RateThen:
-                    createPullPayment.Currency = invoicePaymentMethod.GetId().CryptoCode;
+                    createPullPayment.Currency = cryptoCode;
                     createPullPayment.Amount = paidAmount;
                     createPullPayment.AutoApproveClaims = true;
                     break;
 
                 case RefundVariant.CurrentRate:
-                    createPullPayment.Currency = invoicePaymentMethod.GetId().CryptoCode;
+                    createPullPayment.Currency = cryptoCode;
                     createPullPayment.Amount = Math.Round(paidCurrency / rateResult.BidAsk.Bid, paymentMethodDivisibility);
                     createPullPayment.AutoApproveClaims = true;
                     break;
@@ -445,6 +447,22 @@ namespace BTCPayServer.Controllers.Greenfield
                     createPullPayment.Currency = invoice.Currency;
                     createPullPayment.Amount = paidCurrency;
                     createPullPayment.AutoApproveClaims = false;
+                    break;
+
+                case RefundVariant.OverpaidAmount:
+                    if (invoice.ExceptionStatus != InvoiceExceptionStatus.PaidOver)
+                    {
+                        ModelState.AddModelError(nameof(request.RefundVariant), "Invoice is not overpaid");
+                    }
+                    if (!ModelState.IsValid)
+                    {
+                        return this.CreateValidationError(ModelState);
+                    }
+                    
+                    var dueAmount = accounting.TotalDue.ToDecimal(MoneyUnit.BTC);
+                    createPullPayment.Currency = cryptoCode;
+                    createPullPayment.Amount = Math.Round(paidAmount - dueAmount, paymentMethodDivisibility);
+                    createPullPayment.AutoApproveClaims = true;
                     break;
 
                 case RefundVariant.MinusPercentage:
@@ -458,7 +476,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     }
                     
                     var reduceByAmount = paidAmount * (request.CustomPercentage.Value / 100);
-                    createPullPayment.Currency = invoicePaymentMethod.GetId().CryptoCode;
+                    createPullPayment.Currency = cryptoCode;
                     createPullPayment.Amount = Math.Round(paidAmount - reduceByAmount, paymentMethodDivisibility);
                     createPullPayment.AutoApproveClaims = true;
                     break;

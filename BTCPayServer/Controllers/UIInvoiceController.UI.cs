@@ -347,8 +347,10 @@ namespace BTCPayServer.Controllers
             RateRules rules;
             RateResult rateResult;
             CreatePullPayment createPullPayment;
+            PaymentMethodAccounting accounting;
             var pms = invoice.GetPaymentMethods();
             var paymentMethod = pms.SingleOrDefault(method => method.GetId() == paymentMethodId);
+            decimal dueAmount = default;
             decimal paidAmount = default;
             decimal cryptoPaid = default;
 
@@ -360,9 +362,14 @@ namespace BTCPayServer.Controllers
 
             if (paymentMethod != null)
             {
-                cryptoPaid = paymentMethod.Calculate().Paid.ToDecimal(MoneyUnit.BTC);
+                accounting = paymentMethod.Calculate();
+                cryptoPaid = accounting.Paid.ToDecimal(MoneyUnit.BTC);
+                dueAmount = accounting.TotalDue.ToDecimal(MoneyUnit.BTC);
                 paidAmount = cryptoPaid.RoundToSignificant(paymentMethodDivisibility);
             }
+
+            var isPaidOver = invoice.ExceptionStatus == InvoiceExceptionStatus.PaidOver;
+            decimal? overpaidAmount = isPaidOver ? Math.Round(paidAmount - dueAmount, paymentMethodDivisibility) : null;
 
             switch (model.RefundStep)
             {
@@ -397,6 +404,8 @@ namespace BTCPayServer.Controllers
                     model.CustomAmount = model.FiatAmount;
                     model.CustomCurrency = invoice.Currency;
                     model.CustomPercentage = 0;
+                    model.OverpaidAmount = overpaidAmount;
+                    model.OverpaidAmountText = overpaidAmount != null ? _displayFormatter.Currency(overpaidAmount.Value, paymentMethodId.CryptoCode) : null;
                     model.FiatText = _displayFormatter.Currency(model.FiatAmount, invoice.Currency);
                     return View("_RefundModal", model);
 
@@ -429,6 +438,28 @@ namespace BTCPayServer.Controllers
                             createPullPayment.Currency = invoice.Currency;
                             createPullPayment.Amount = model.FiatAmount;
                             createPullPayment.AutoApproveClaims = false;
+                            break;
+                        
+                        case "OverpaidAmount":
+                            model.Title = "How much to refund?";
+                            model.RefundStep = RefundSteps.SelectRate;
+                            
+                            if (isPaidOver)
+                            {
+                                ModelState.AddModelError(nameof(model.SelectedRefundOption), "Invoice is not overpaid");
+                            }
+                            if (overpaidAmount == null)
+                            {
+                                ModelState.AddModelError(nameof(model.SelectedRefundOption), "Overpaid amount cannot be calculated");
+                            }
+                            if (!ModelState.IsValid)
+                            {
+                                return this.CreateValidationError(ModelState);
+                            }
+                    
+                            createPullPayment.Currency = paymentMethodId.CryptoCode;
+                            createPullPayment.Amount = overpaidAmount!.Value;
+                            createPullPayment.AutoApproveClaims = true;
                             break;
 
                         case "MinusPercentage":

@@ -1972,6 +1972,48 @@ namespace BTCPayServer.Tests
             Assert.Equal("BTC", pp.Currency);
             Assert.True(pp.AutoApproveClaims);
             Assert.Equal(0.9385m, pp.Amount);
+            
+            // test RefundVariant.OverpaidAmount
+            validationError = await AssertValidationError(new[] { "RefundVariant" }, async () =>
+            {
+                await client.RefundInvoice(user.StoreId, invoice.Id, new RefundInvoiceRequest
+                {
+                    PaymentMethod = method.PaymentMethod,
+                    RefundVariant = RefundVariant.OverpaidAmount
+                });
+            });
+            Assert.Contains("Invoice is not overpaid", validationError.Message);
+            
+            // should auto-approve
+            invoice = await client.CreateInvoice(user.StoreId, new CreateInvoiceRequest() { Amount = 5000.0m, Currency = "USD" });
+            methods = await client.GetInvoicePaymentMethods(user.StoreId, invoice.Id);
+            method = methods.First();
+
+            await tester.WaitForEvent<NewOnChainTransactionEvent>(async () =>
+            {
+                await tester.ExplorerNode.SendToAddressAsync(
+                    BitcoinAddress.Create(method.Destination, tester.NetworkProvider.BTC.NBitcoinNetwork),
+                    Money.Coins(method.Due * 2)
+                );
+            });
+
+            await tester.ExplorerNode.GenerateAsync(5);
+
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                invoice = await client.GetInvoice(user.StoreId, invoice.Id);    
+                Assert.True(invoice.Status == InvoiceStatus.Settled);           
+                Assert.True(invoice.AdditionalStatus == InvoiceExceptionStatus.PaidOver);
+            });
+            
+            pp = await client.RefundInvoice(user.StoreId, invoice.Id, new RefundInvoiceRequest
+            {
+                PaymentMethod = method.PaymentMethod,
+                RefundVariant = RefundVariant.OverpaidAmount
+            });
+            Assert.Equal("BTC", pp.Currency);
+            Assert.True(pp.AutoApproveClaims);
+            Assert.Equal(method.Due, pp.Amount);
         }
 
         [Fact(Timeout = TestTimeout)]

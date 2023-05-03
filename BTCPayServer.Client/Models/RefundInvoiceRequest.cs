@@ -10,6 +10,7 @@ namespace BTCPayServer.Client.Models
         RateThen,
         CurrentRate,
         MinusPercentage,
+        OverpaidAmount,
         Fiat,
         Custom
     }

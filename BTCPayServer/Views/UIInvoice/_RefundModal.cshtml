@@ -70,6 +70,16 @@
                     <div class="form-text">The invoice currency, at the rate when the refund will be sent.</div>
                 </div>
             </div>
+            @if (Model.OverpaidAmount is not null)
+            {
+                <div class="form-group">
+                    <div class="form-check">
+                        <input id="OverpaidAmountOption" asp-for="SelectedRefundOption" type="radio" value="OverpaidAmount" class="form-check-input"/>
+                        <label for="OverpaidAmountOption" class="form-check-label">@Model.OverpaidAmountText</label>
+                        <div class="form-text">The crypto currency amount that was overpaid.</div>
+                    </div>
+                </div>
+            }
             <div class="form-group">
                 <div class="form-check">
                     <input id="MinusPercentageOption" asp-for="SelectedRefundOption" type="radio" value="MinusPercentage" class="form-check-input"/>

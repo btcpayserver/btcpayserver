@@ -702,7 +702,7 @@
                   },
                   "refundVariant": {
                     "type": "string",
-                    "description": "* `RateThen`: Refund the crypto currency price, at the rate the invoice got paid.\r\n* `CurrentRate`: Refund the crypto currency price, at the current rate.\r\n*`Fiat`: Refund the invoice currency, at the rate when the refund will be sent.\r\n*`MinusPercentage`: Specify the percentage by which to reduce the refund. (see `customPercentage`)\r\n*`Custom`: Specify the amount, currency, and rate of the refund. (see `customAmount` and `customCurrency`)",
+                    "description": "* `RateThen`: Refund the crypto currency price, at the rate the invoice got paid.\r\n* `CurrentRate`: Refund the crypto currency price, at the current rate.\r\n*`Fiat`: Refund the invoice currency, at the rate when the refund will be sent.\r\n*`OverpaidAmount`: Refund the crypto currency amount that was overpaid.\r\n*`Custom`: Specify the amount, currency, and rate of the refund. (see `customAmount` and `customCurrency`)",
                     "x-enumNames": [
                       "RateThen",
                       "CurrentRate",
@@ -712,15 +712,15 @@
                     "enum": [
                       "RateThen",
                       "CurrentRate",
+                      "OverpaidAmount",
                       "Fiat",
-                      "MinusPercentage",
                       "Custom"
                     ]
                   },
-                  "customPercentage": {
+                  "subtractPercentage": {
                     "type": "string",
                     "format": "decimal",
-                    "description": "The percentage by which to reduce the refund if the `refundVariant` is `MinusPercentage`.",
+                    "description": "Optional percentage by which to reduce the refund, e.g. as processing charge or to compensate for the mining fee.",
                     "example": "2.1"
                   },
                   "customAmount": {

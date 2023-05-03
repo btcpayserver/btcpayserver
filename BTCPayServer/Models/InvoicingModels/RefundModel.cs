@@ -26,9 +26,7 @@ namespace BTCPayServer.Models.InvoicingModels
         public decimal FiatAmount { get; set; }
         public decimal? OverpaidAmount { get; set; }
         public string OverpaidAmountText { get; set; }
-        
-        [Display(Name = "Specify the percentage by which to reduce the refund")]
-        public decimal CustomPercentage { get; set; }
+        public decimal SubtractPercentage { get; set; }
 
         [Display(Name = "Specify the amount and currency for the refund")]
         public decimal CustomAmount { get; set; }
@@ -36,5 +34,6 @@ namespace BTCPayServer.Models.InvoicingModels
         public string InvoiceCurrency { get; set; }
         public string CryptoCode { get; set; }
         public int CryptoDivisibility { get; set; }
+        public int InvoiceDivisibility { get; set; }
     }
 }

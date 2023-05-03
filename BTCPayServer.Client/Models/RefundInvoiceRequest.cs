@@ -9,7 +9,6 @@ namespace BTCPayServer.Client.Models
     {
         RateThen,
         CurrentRate,
-        MinusPercentage,
         OverpaidAmount,
         Fiat,
         Custom
@@ -25,7 +24,7 @@ namespace BTCPayServer.Client.Models
         public RefundVariant? RefundVariant { get; set; }
         
         [JsonConverter(typeof(NumericStringJsonConverter))]
-        public decimal? CustomPercentage { get; set; }
+        public decimal SubtractPercentage { get; set; }
         
         [JsonConverter(typeof(NumericStringJsonConverter))]
         public decimal? CustomAmount { get; set; }

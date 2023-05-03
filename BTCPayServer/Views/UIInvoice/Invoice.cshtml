@@ -89,22 +89,69 @@
         delegate('change', '#CustomAmount', checkCustomAmount);
         delegate('change', '#CustomCurrency', checkCustomAmount);
         
-        function updateCustomPercentageResult() {
+        function updateSubtractPercentageResult() {
             const $refundForm = document.getElementById('RefundForm');
-            const $result = document.getElementById('CustomPercentageResult');
-            const cryptoCode = $refundForm.querySelector('#CryptoCode').value;
-            const cryptoAmountThen = parseFloat($refundForm.querySelector('#CryptoAmountThen').value);
-            const percentage = parseFloat($refundForm.querySelector('#CustomPercentage').value);
-            const divisibility = parseInt($refundForm.querySelector('#CryptoDivisibility').value);
-            const isInvalid = isNaN(percentage);
-            $result.hidden = isInvalid;
-            if (!isInvalid) {
-                const reduceByAmount = (cryptoAmountThen * (percentage / 100));
-                const refundAmount = (cryptoAmountThen - reduceByAmount).toFixed(divisibility);
-                $result.innerText = `= ${refundAmount} ${cryptoCode} refund`;
+            const $result = document.getElementById('SubtractPercentageResult');
+            const $selectedRefundOption = $refundForm.querySelector('[name="SelectedRefundOption"]:checked');
+            if (!$selectedRefundOption) {
+                $result.hidden = true;
+                return;
             }
+            
+            const refundOption = $selectedRefundOption.value;
+            const cryptoCode = $refundForm.querySelector('#CryptoCode').value;
+            const customCurrency = $refundForm.querySelector('#CustomCurrency').value;
+            const invoiceCurrency = $refundForm.querySelector('#InvoiceCurrency').value;
+            const customAmount = parseFloat($refundForm.querySelector('#CustomAmount').value);
+            const fiatAmount = parseFloat($refundForm.querySelector('#FiatAmount').value);
+            const overpaidAmount = parseFloat($refundForm.querySelector('#OverpaidAmount').value);
+            const cryptoAmountNow = parseFloat($refundForm.querySelector('#CryptoAmountNow').value);
+            const cryptoAmountThen = parseFloat($refundForm.querySelector('#CryptoAmountThen').value);
+            const cryptoDivisibility = parseInt($refundForm.querySelector('#CryptoDivisibility').value);
+            const invoiceDivisibility = parseInt($refundForm.querySelector('#InvoiceDivisibility').value);
+            const percentage = parseFloat($refundForm.querySelector('#SubtractPercentage').value);
+            const isInvalid = isNaN(percentage);
+            
+            let amount = null;
+            let currency = cryptoCode;
+            let divisibility = cryptoDivisibility;
+            switch (refundOption) {
+                case 'RateThen':
+                    amount = cryptoAmountThen;
+                    break;
+                case 'CurrentRate':
+                    amount = cryptoAmountNow;
+                    break;
+                case 'OverpaidAmount':
+                    amount = overpaidAmount;
+                    break;
+                case 'Fiat':
+                    amount = fiatAmount;
+                    currency = invoiceCurrency;
+                    divisibility = invoiceDivisibility;
+                    break;
+                case 'Custom':
+                    amount = customAmount;
+                    currency = customCurrency;
+                    divisibility = customCurrency === invoiceCurrency ? invoiceDivisibility : cryptoDivisibility;
+                    break;
+            }
+            
+            if (amount == null || isInvalid) {
+                $result.hidden = true;
+                return;
+            }
+            
+            console.log({ refundOption, isInvalid, amount, currency })
+            const reduceByAmount = (amount * (percentage / 100));
+            const refundAmount = (amount - reduceByAmount).toFixed(divisibility);
+            $result.innerText = `= ${refundAmount} ${currency} refund`;
+            $result.hidden = false;
         }
-        delegate('change', '#CustomPercentage', updateCustomPercentageResult);
+        delegate('change', '[name="SelectedRefundOption"]', updateSubtractPercentageResult);
+        delegate('change', '#SubtractPercentage', updateSubtractPercentageResult);
+        delegate('change', '#CustomCurrency', updateSubtractPercentageResult);
+        delegate('change', '#CustomAmount', updateSubtractPercentageResult);
     </script>
 }
 

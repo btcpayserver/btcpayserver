@@ -1951,23 +1951,24 @@ namespace BTCPayServer.Tests
             });
             Assert.True(pp.AutoApproveClaims);
             
-            // test RefundVariant.MinusPercentage
-            validationError = await AssertValidationError(new[] { "CustomPercentage" }, async () =>
+            // test subtract percentage
+            validationError = await AssertValidationError(new[] { "SubtractPercentage" }, async () =>
             {
                 await client.RefundInvoice(user.StoreId, invoice.Id, new RefundInvoiceRequest
                 {
                     PaymentMethod = method.PaymentMethod,
-                    RefundVariant = RefundVariant.MinusPercentage,
+                    RefundVariant = RefundVariant.RateThen,
+                    SubtractPercentage = 101
                 });
             });
-            Assert.Contains("CustomPercentage: Percentage must be a numeric value between 0 and 100", validationError.Message);
+            Assert.Contains("SubtractPercentage: Percentage must be a numeric value between 0 and 100", validationError.Message);
 
             // should auto-approve
             pp = await client.RefundInvoice(user.StoreId, invoice.Id, new RefundInvoiceRequest
             {
                 PaymentMethod = method.PaymentMethod,
-                RefundVariant = RefundVariant.MinusPercentage,
-                CustomPercentage = 6.15m
+                RefundVariant = RefundVariant.RateThen,
+                SubtractPercentage = 6.15m
             });
             Assert.Equal("BTC", pp.Currency);
             Assert.True(pp.AutoApproveClaims);
@@ -1985,7 +1986,7 @@ namespace BTCPayServer.Tests
             Assert.Contains("Invoice is not overpaid", validationError.Message);
             
             // should auto-approve
-            invoice = await client.CreateInvoice(user.StoreId, new CreateInvoiceRequest() { Amount = 5000.0m, Currency = "USD" });
+            invoice = await client.CreateInvoice(user.StoreId, new CreateInvoiceRequest { Amount = 5000.0m, Currency = "USD" });
             methods = await client.GetInvoicePaymentMethods(user.StoreId, invoice.Id);
             method = methods.First();
 
@@ -2014,6 +2015,17 @@ namespace BTCPayServer.Tests
             Assert.Equal("BTC", pp.Currency);
             Assert.True(pp.AutoApproveClaims);
             Assert.Equal(method.Due, pp.Amount);
+            
+            // once more with subtract percentage
+            pp = await client.RefundInvoice(user.StoreId, invoice.Id, new RefundInvoiceRequest
+            {
+                PaymentMethod = method.PaymentMethod,
+                RefundVariant = RefundVariant.OverpaidAmount,
+                SubtractPercentage = 21m
+            });
+            Assert.Equal("BTC", pp.Currency);
+            Assert.True(pp.AutoApproveClaims);
+            Assert.Equal(0.79m, pp.Amount);
         }
 
         [Fact(Timeout = TestTimeout)]

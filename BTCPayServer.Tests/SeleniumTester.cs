@@ -180,7 +180,7 @@ namespace BTCPayServer.Tests
             {
                 Driver.FindElement(By.Id("StoreSelectorToggle")).Click();
             }
-            Driver.WaitForElement(By.Id("StoreSelectorCreate")).Click();
+            GoToUrl("/stores/create");
             var name = "Store" + RandomUtils.GetUInt64();
             TestLogs.LogInformation($"Created store {name}");
             Driver.WaitForElement(By.Id("Name")).SendKeys(name);

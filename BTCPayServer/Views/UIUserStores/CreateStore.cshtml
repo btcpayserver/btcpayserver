@@ -1,6 +1,6 @@
 ﻿@model BTCPayServer.Models.StoreViewModels.CreateStoreViewModel
 @{
-    ViewData.SetActivePage(StoreNavPages.Create, "Create a new store");
+    ViewData.SetActivePage(StoreNavPages.Create, Model.IsFirstStore ? "Create your first store" : "Create a new store");
 }
 
 @section PageFootContent {
@@ -20,7 +20,15 @@
 
 <partial name="_StatusMessage" />
 
-<h2 class="mt-1 mb-4">@ViewData["Title"]</h2>
+@if (Model.IsFirstStore)
+{
+    <h2>@ViewData["Title"]</h2>
+    <p class="lead text-secondary">To start accepting payments, set up a store.</p>
+}
+else
+{
+    <h2 class="mt-1 mb-4">@ViewData["Title"]</h2>
+}
 <div class="row">
     <div class="col-xl-8 col-xxl-constrain">
         <form asp-action="CreateStore">

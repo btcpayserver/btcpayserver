@@ -39,10 +39,12 @@ namespace BTCPayServer.Controllers
 
         [HttpGet("create")]
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanModifyStoreSettingsUnscoped)]
-        public IActionResult CreateStore()
+        public async Task<IActionResult> CreateStore()
         {
+            var stores = await _repo.GetStoresByUserId(GetUserId());
             var vm = new CreateStoreViewModel
             {
+                IsFirstStore = !stores.Any(),
                 DefaultCurrency = StoreBlob.StandardDefaultCurrency,
                 Exchanges = GetExchangesSelectList(null)
             };
@@ -56,6 +58,8 @@ namespace BTCPayServer.Controllers
         {
             if (!ModelState.IsValid)
             {
+                var stores = await _repo.GetStoresByUserId(GetUserId());
+                vm.IsFirstStore = !stores.Any();
                 vm.Exchanges = GetExchangesSelectList(vm.PreferredExchange);
                 return View(vm);
             }

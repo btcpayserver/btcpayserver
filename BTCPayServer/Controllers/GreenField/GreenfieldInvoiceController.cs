@@ -183,7 +183,8 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 ModelState.AddModelError(nameof(request.Amount), "The amount should be 0 or more.");
             }
-            request.Checkout = request.Checkout ?? new CreateInvoiceRequest.CheckoutOptions();
+            request.Checkout ??= new CreateInvoiceRequest.CheckoutOptions();
+            request.Checkout.DefaultPaymentMethod ??= store.GetDefaultPaymentId()?.ToStringNormalized();
             if (request.Checkout.PaymentMethods?.Any() is true)
             {
                 for (int i = 0; i < request.Checkout.PaymentMethods.Length; i++)
@@ -226,7 +227,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
             if (!ModelState.IsValid)
                 return this.CreateValidationError(ModelState);
-
+            
             try
             {
                 var invoice = await _invoiceController.CreateInvoiceCoreRaw(request, store,

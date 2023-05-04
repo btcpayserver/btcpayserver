@@ -51,6 +51,17 @@
             </style>
                            
             <span asp-validation-for="SelectedRefundOption" class="text-danger w-100"></span>
+            @if (Model.OverpaidAmount is not null)
+            {
+                <div class="form-group">
+                    <div class="form-check">
+                        <input id="OverpaidAmountOption" asp-for="SelectedRefundOption" type="radio" value="OverpaidAmount" class="form-check-input"/>
+                        <label for="OverpaidAmountOption" class="form-check-label d-flex align-items-center gap-2">@Model.OverpaidAmountText <span class="badge bg-info">Overpaid amount</span></label>
+                        <div class="form-text">The crypto currency amount that was overpaid.</div>
+                    </div>
+                </div>
+                <hr class="border" />
+            }
             <div class="form-group">
                 <div class="form-check">
                     <input id="RateThenOption" asp-for="SelectedRefundOption" type="radio" value="RateThen" class="form-check-input"/>
@@ -65,16 +76,6 @@
                     <div class="form-text">The crypto currency price, at the current rate.</div>
                 </div>
             </div>
-            @if (Model.OverpaidAmount is not null)
-            {
-                <div class="form-group">
-                    <div class="form-check">
-                        <input id="OverpaidAmountOption" asp-for="SelectedRefundOption" type="radio" value="OverpaidAmount" class="form-check-input"/>
-                        <label for="OverpaidAmountOption" class="form-check-label">@Model.OverpaidAmountText</label>
-                        <div class="form-text">The crypto currency amount that was overpaid.</div>
-                    </div>
-                </div>
-            }
             <div class="form-group">
                 <div class="form-check">
                     <input id="FiatOption" asp-for="SelectedRefundOption" type="radio" value="Fiat" class="form-check-input"/>

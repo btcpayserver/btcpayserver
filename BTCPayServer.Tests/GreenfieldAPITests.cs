@@ -2257,7 +2257,7 @@ namespace BTCPayServer.Tests
             Assert.Single(paymentMethods);
             Assert.True(paymentMethods.First().Activated);
 
-            var invoiceWithdefaultPaymentMethodLN = await client.CreateInvoice(user.StoreId,
+            var invoiceWithDefaultPaymentMethodLN = await client.CreateInvoice(user.StoreId,
                 new CreateInvoiceRequest()
                 {
                     Currency = "USD",
@@ -2268,9 +2268,9 @@ namespace BTCPayServer.Tests
                         DefaultPaymentMethod = "BTC_LightningLike"
                     }
                 });
-            Assert.Equal("BTC_LightningLike", invoiceWithdefaultPaymentMethodLN.Checkout.DefaultPaymentMethod);
+            Assert.Equal("BTC_LightningLike", invoiceWithDefaultPaymentMethodLN.Checkout.DefaultPaymentMethod);
 
-            var invoiceWithdefaultPaymentMethodOnChain = await client.CreateInvoice(user.StoreId,
+            var invoiceWithDefaultPaymentMethodOnChain = await client.CreateInvoice(user.StoreId,
                 new CreateInvoiceRequest()
                 {
                     Currency = "USD",
@@ -2281,13 +2281,35 @@ namespace BTCPayServer.Tests
                         DefaultPaymentMethod = "BTC"
                     }
                 });
-            Assert.Equal("BTC", invoiceWithdefaultPaymentMethodOnChain.Checkout.DefaultPaymentMethod);
-
+            Assert.Equal("BTC", invoiceWithDefaultPaymentMethodOnChain.Checkout.DefaultPaymentMethod);
+            
+            // reset lazy payment methods
             store = await client.GetStore(user.StoreId);
             store.LazyPaymentMethods = false;
             store = await client.UpdateStore(store.Id,
                 JObject.FromObject(store).ToObject<UpdateStoreRequest>());
+            Assert.False(store.LazyPaymentMethods);
+            
+            // use store default payment method
+            store = await client.GetStore(user.StoreId);
+            Assert.Null(store.DefaultPaymentMethod);
+            var storeDefaultPaymentMethod = "BTC-LightningNetwork";
+            store.DefaultPaymentMethod = storeDefaultPaymentMethod;
+            store = await client.UpdateStore(store.Id,
+                JObject.FromObject(store).ToObject<UpdateStoreRequest>());
+            Assert.Equal(storeDefaultPaymentMethod, store.DefaultPaymentMethod);
 
+            var invoiceWithStoreDefaultPaymentMethod = await client.CreateInvoice(user.StoreId,
+                new CreateInvoiceRequest()
+                {
+                    Currency = "USD",
+                    Amount = 100,
+                    Checkout = new CreateInvoiceRequest.CheckoutOptions()
+                    {
+                        PaymentMethods = new[] { "BTC", "BTC-LightningNetwork", "BTC_LightningLike" }
+                    }
+                });
+            Assert.Equal(storeDefaultPaymentMethod, invoiceWithStoreDefaultPaymentMethod.Checkout.DefaultPaymentMethod);
 
             //let's see the overdue amount 
             invoice = await client.CreateInvoice(user.StoreId,

@@ -25,6 +25,11 @@
         .invoice-payments {
             padding-left: var(--btcpay-space-l);
         }
+        .dropdown > .btn {
+            min-width: 7rem;
+            padding-left: 1rem;
+            text-align: left;
+        }
         @@media (max-width: 568px) {
             #SearchText {
                 width: 100%;
@@ -222,14 +227,11 @@
     </div>
 </div>
 
-<form class="d-flex flex-wrap flex-sm-nowrap align-items-center gap-3 mb-4 col-xl-7 col-xxl-8" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" method="get">
+<form class="d-flex flex-wrap flex-sm-nowrap align-items-center gap-3 mb-4 @(Model.Invoices.Any() ? "col-xl-7 col-xxl-8" : null)" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" method="get">
     <input asp-for="Count" type="hidden" />
     <input asp-for="TimezoneOffset" type="hidden" />
     <input asp-for="SearchTerm" type="hidden" value="@Model.Search.WithoutSearchText()"/>
-    <div class="input-group" id="SearchText">
-        <input asp-for="SearchText" class="form-control" />
-        <button type="submit" class="btn btn-secondary px-3">Search</button>
-    </div>
+    <input asp-for="SearchText" class="form-control" placeholder="Search …" />
     <div class="dropdown">
         <button id="StatusOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">
             Status
@@ -249,7 +251,7 @@
     </div>
     <div class="dropdown">
         <button id="DateOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-            Date
+            Time
         </button>
         <div class="dropdown-menu" aria-labelledby="DateOptionsToggle">
             <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("startdate", "-1d")" class="dropdown-item @(HasArrayFilter("startdate", "-1d") ? "dropdown-item-custom-active" : "")">Last 24 hours</a>
@@ -260,7 +262,7 @@
     </div>
 </form>
 
-@if (Model.Invoices.Count > 0)
+@if (Model.Invoices.Any())
 {
     <form method="post" id="MassAction" asp-action="MassAction" class="">
         <div class="d-inline-flex align-items-center pb-2 float-xl-end mb-2 gap-3">

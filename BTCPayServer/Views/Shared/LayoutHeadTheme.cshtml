@@ -25,6 +25,7 @@ else
 {
     <link href="~/main/themes/default.css" asp-append-version="true" rel="stylesheet" />
     <link href="~/main/themes/default-dark.css" asp-append-version="true" rel="stylesheet" id="DarkThemeLinkTag" />
+    <script>if (window.localStorage.getItem('btcpay-hide-sensitive-info') === 'true') { document.documentElement.setAttribute('data-hide-sensitive-info', 'true')}</script>
     <script src="~/js/theme-switch.js" asp-append-version="true"></script>
     <noscript><style>.btcpay-theme-switch { display: none !important; }</style></noscript>
 }

@@ -65,7 +65,9 @@
                             </span>
                         }
                     </td>
-                    <td class="text-end">@DisplayFormatter.Currency(invoice.Amount, invoice.Currency)</td>
+                    <td class="text-end">
+                        <span data-sensitive>@DisplayFormatter.Currency(invoice.Amount, invoice.Currency)</span>
+                    </td>
                 </tr>
             }
             </tbody>

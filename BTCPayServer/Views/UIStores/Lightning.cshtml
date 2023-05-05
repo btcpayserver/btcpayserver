@@ -11,14 +11,14 @@
     <h3 class="mb-3">@ViewData["Title"]</h3>
     <div class="mb-3">
         <span class="me-3" id="NodeType">@Model.LightningNodeType Node</span>
-        
+
         @if (Model.LightningNodeType != LightningNodeType.Internal)
         {
             <span class="me-3" id="CustomNodeInfo">
                 @if (LightningConnectionString.TryParse(Model.ConnectionString, out var cs))
                 {
                     @typeof(LightningConnectionType).DisplayName(cs.ConnectionType.ToString())
-                    <span>(@cs.BaseUri)</span>
+                    <span>(@cs.BaseUri.Host)</span>
                 }
                 else
                 {
@@ -37,7 +37,7 @@
             Public Node Info
         </a>
     </div>
-    
+
     @if (Model.Services != null && Model.Services.Any())
     {
         <div permission="@Policies.CanModifyServerSettings" class="mt-5">

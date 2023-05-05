@@ -10,13 +10,10 @@
             <img class="qr-icon" :src="model.cryptoImage" :alt="model.paymentMethodName"/>
         </div>
         <div v-if="model.btcAddress" class="input-group mt-3">
-            <div class="form-floating">
-                <input id="Lightning_@Model.PaymentMethodId" class="form-control-plaintext" readonly="readonly" :value="model.btcAddress">
-                <label for="Lightning_@Model.PaymentMethodId" v-t="'lightning'"></label>
+            <div class="form-floating" id="Lightning_@Model.PaymentMethodId">
+                <vc:truncate-center text="model.btcAddress" is-vue="true" padding="15" elastic="true" classes="form-control-plaintext" />
+                <label v-t="'lightning'"></label>
             </div>
-            <button type="button" class="btn btn-link" data-clipboard-target="#Lightning_@Model.PaymentMethodId">
-                <vc:icon symbol="copy" />
-            </button>
         </div>
         <a v-if="model.invoiceBitcoinUrl && model.showPayInWalletButton" class="btn btn-primary rounded-pill w-100 mt-4" target="_top" id="PayInWallet"
            :href="model.invoiceBitcoinUrl" v-t="'pay_in_wallet'"></a>

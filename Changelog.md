@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.9.3
+
+### Bug fixes
+
+* Fix: Missing Shopify link (#4945). @Kukks
+* Rates: Fix advanced rules example formatting (#4926). @dennisreimann
+* Crowdfund: Fix redirect URL fallback (#4943). @dennisreimann
+* Greenfield: Apply store default payment method on invoice creation (#4947). @dennisreimann
+* POS: Fix Firefox issues (#4950) @r0ckstardev
+
+### Improvements
+
+* LN Settings: Show only node host name (#4927).  @dennisreimann
+* Checkout: Improve truncation of shown addresses (#4924). @dennisreimann
+
 ## 1.9.2
 
 ### Bug fixes

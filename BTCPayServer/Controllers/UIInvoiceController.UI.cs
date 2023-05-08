@@ -1304,14 +1304,9 @@ namespace BTCPayServer.Controllers
                         var arrayResult = new List<object>();
                         for (var i = 0; i < items.Count; i++)
                         {
-                            if (items[i] is JObject)
-                            {
-                                arrayResult.Add( ParsePosData(items[i]));
-                            }
-                            else
-                            {
-                                arrayResult.Add( items[i].ToString());
-                            }
+                            arrayResult.Add(items[i] is JObject
+                                ? ParsePosData(items[i])
+                                : items[i].ToString());
                         }
                         
                         result.TryAdd(item.Key, arrayResult);

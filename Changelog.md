@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.9.3
+
+### Bug fixes
+
+* Fix: Missing Shopify link (#4945) @Kukks
+* Rates: Fix advanced rules example formatting (#4926) @dennisreimann
+* Crowdfund: Fix redirect URL fallback (#4943) @dennisreimann
+* Greenfield: Apply store default payment method on invoice creation (#4947) @dennisreimann
+* POS: Fix Firefox issues (#4950) @r0ckstardev
+* Fix viewing arrays in the invoice details when set in metadata (#4954) @Kukks 
+* Do not crash checkout when attempting LNURL checkout through non-secure page (#4964) @Kukks
+* NFC: Handle HTTP-related exceptions (#4965) @dennisreimann 
+
+### Improvements
+
+* LN Settings: Show only node host name (#4927) @dennisreimann
+* Checkout: Improve truncation of shown addresses (#4924) @dennisreimann
+
 ## 1.9.2
 
 ### Bug fixes

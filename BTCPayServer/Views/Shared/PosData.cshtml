@@ -1,47 +1,77 @@
 @model (Dictionary<string, object> Items, int Level)
 
 @functions {
+
     private bool IsValidURL(string source)
     {
-        return Uri.TryCreate(source, UriKind.Absolute, out var uriResult) && 
-            (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
+        return Uri.TryCreate(source, UriKind.Absolute, out var uriResult) &&
+               (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
     }
+
 }
+
 @if (Model.Items.Count > 0)
 {
-<table class="table my-0" v-pre>
-    @foreach (var (key, value) in Model.Items)
-    {
-        <tr>
-            @if (value is string str)
-            {
-                if (!string.IsNullOrEmpty(key))
+    <table class="table my-0" v-pre>
+        @foreach (var (key, value) in Model.Items)
+        {
+            <tr>
+                @if (value is string str)
                 {
-                    <th class="w-150px">@key</th>
+                    if (!string.IsNullOrEmpty(key))
+                    {
+                        <th class="w-150px">@key</th>
+                    }
+                    <td>
+                        @if (IsValidURL(str))
+                        {
+                            <a href="@str" target="_blank" rel="noreferrer noopener">@str</a>
+                        }
+                        else
+                        {
+                            @value?.ToString()
+                        }
+                    </td>
                 }
-                <td>
-                    @if (IsValidURL(str))
-                    {
-                        <a href="@str" target="_blank" rel="noreferrer noopener">@str</a>
-                    }
-                    else
-                    {
-                        @value?.ToString()
-                    }
-                </td>
-            }
-            else if (value is Dictionary<string, object> {Count: > 0 } subItems)
-            {
-                <td colspan="2" >
-                    @{
-                        Write(Html.Raw($"<h{Model.Level + 3} class=\"mt-4 mb-3\">"));
-                        Write(key);
-                        Write(Html.Raw($"</h{Model.Level + 3}>"));
-                    } 
-                    <partial name="PosData" model="@((subItems, Model.Level + 1))"/>
-                </td>
-            }
-        </tr>
-    }
-</table>
+                else if (value is Dictionary<string, object> {Count: > 0 } subItems)
+                {
+                    <td colspan="2">
+                        @{
+                            @if (!string.IsNullOrEmpty(key))
+                            {
+                                Write(Html.Raw($"<h{Model.Level + 3} class=\"mt-4 mb-3\">"));
+                                Write(key);
+                                Write(Html.Raw($"</h{Model.Level + 3}>"));
+                            }
+                        }
+                        <partial name="PosData" model="@((subItems, Model.Level + 1))" />
+                    </td>
+                }
+                else if (value is IEnumerable<object> valueArray)
+                {
+                    <td colspan="2">
+                        @{
+                            @if (!string.IsNullOrEmpty(key))
+                            {
+                                Write(Html.Raw($"<h{Model.Level + 3} class=\"mt-4 mb-3\">"));
+                                Write(key);
+                                Write(Html.Raw($"</h{Model.Level + 3}>"));
+                            }
+                        }
+                        @foreach (var item in valueArray)
+                        {
+                            @if (item is Dictionary<string, object> {Count: > 0 } subItems2)
+                            {
+                                <partial name="PosData" model="@((subItems2, Model.Level + 1))" />
+                            }
+                            else
+                            {
+                                <partial name="PosData" model="@((new Dictionary<string, object>() {{"", item}}, Model.Level + 1))" />
+                            }
+                        }
+                    </td>
+                }
+            </tr>
+        }
+    </table>
 }

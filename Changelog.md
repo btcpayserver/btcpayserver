@@ -11,6 +11,7 @@
 * POS: Fix Firefox issues (#4950) @r0ckstardev
 * Fix viewing arrays in the invoice details when set in metadata (#4954) @Kukks 
 * Do not crash checkout when attempting lnurl checkout through non secure page (#4964) @Kukks
+* NFC: Handle HTTP-related exceptions (#4965) @dennisreimann 
 
 ### Improvements
 

@@ -2,8 +2,7 @@
 <script type="text/x-template" id="lightning-method-checkout-template">
     <div>
         <div class="bp-view payment scan" id="scan" v-bind:class="{ 'active': currentTab == 'scan'}">
-        <div v-if="!srvModel.invoiceBitcoinUrl && !srvModel.btcAddress"  class="alert alert-danger">This payment method is not available when using an insecure connection. Please use HTTPS or Tor.</div>
-               
+        <div v-if="!srvModel.invoiceBitcoinUrl && !srvModel.btcAddress" class="alert alert-danger">This payment method is not available when using an insecure connection. Please use HTTPS or Tor.</div>
             <div class="wrapBtnGroup" v-bind:class="{ invisible: !scanDisplayQr }">
                 <div class="btnGroupLnd" 
                         v-if="srvModel.peerInfo" >

@@ -44,9 +44,9 @@ namespace BTCPayServer.Payments
             }
             catch (Exception e)
             {
-                // TODO: we need tos witch payment types from static singletons to DI
+                // TODO: we need to switch payment types from static singletons to DI
                 // _logger.LogError(e, "Error generating LNURL payment link");
-                Console.WriteLine("Error generating LNURL payment lin: " + e.Message);
+                Console.WriteLine($"Error generating LNURL payment link: {e.Message}");
                 return null;
             }
         }

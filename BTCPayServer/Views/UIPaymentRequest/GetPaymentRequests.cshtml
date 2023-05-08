@@ -93,7 +93,9 @@
                             <td>
                                 <span class="badge badge-@item.Status.ToLower()">@item.Status</span>
                             </td>
-                            <td class="text-end">@item.AmountFormatted</td>
+                            <td class="text-end">
+                                <span data-sensitive>@item.AmountFormatted</span>
+                            </td>
                             <td class="text-end">
                                 <a asp-controller="UIInvoice" asp-action="ListInvoices" asp-route-storeId="@item.StoreId" asp-route-searchterm="@($"orderid:{PaymentRequestRepository.GetOrderIdForPaymentRequest(item.Id)}")">Invoices</a>
                                 <span> - </span>

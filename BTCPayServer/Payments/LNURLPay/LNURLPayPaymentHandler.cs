@@ -85,7 +85,9 @@ namespace BTCPayServer.Payments.Lightning
             var paymentMethodId = paymentMethod.GetId();
             var network = _networkProvider.GetNetwork<BTCPayNetwork>(model.CryptoCode);
             var cryptoInfo = invoiceResponse.CryptoInfo.First(o => o.GetpaymentMethodId() == paymentMethodId);
-            var lnurl = cryptoInfo.PaymentUrls?.AdditionalData["LNURLP"].ToObject<string>();
+            var lnurl = cryptoInfo.PaymentUrls?.AdditionalData.TryGetValue("LNURLP", out var lnurlpObj) is true
+                ? lnurlpObj?.ToObject<string>()
+                : null;
 
             model.PaymentMethodName = GetPaymentMethodName(network);
             model.BtcAddress = lnurl?.Replace(UriScheme, "");

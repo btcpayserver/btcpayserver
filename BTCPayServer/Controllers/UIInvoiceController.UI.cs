@@ -1301,10 +1301,15 @@ namespace BTCPayServer.Controllers
                 {
                     case JTokenType.Array:
                         var items = item.Value.AsEnumerable().ToList();
+                        var arrayResult = new List<object>();
                         for (var i = 0; i < items.Count; i++)
                         {
-                            result.TryAdd($"{item.Key}[{i}]", ParsePosData(items[i]));
+                            arrayResult.Add(items[i] is JObject
+                                ? ParsePosData(items[i])
+                                : items[i].ToString());
                         }
+                        
+                        result.TryAdd(item.Key, arrayResult);
 
                         break;
                     case JTokenType.Object:

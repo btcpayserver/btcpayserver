@@ -12,7 +12,7 @@ namespace BTCPayServer.Payments
 {
     public class LNURLPayPaymentType : LightningPaymentType
     {
-        public new static LNURLPayPaymentType Instance { get; } = new LNURLPayPaymentType();
+        public new static LNURLPayPaymentType Instance { get; } = new();
         public override string ToPrettyString() => "LNURL-Pay";
         public override string GetId() => "LNURLPAY";
         public override string ToStringNormalized() => "LNURLPAY";
@@ -34,10 +34,21 @@ namespace BTCPayServer.Payments
             {
                 return null;
             }
-            var lnurlPaymentMethodDetails = (LNURLPayPaymentMethodDetails)paymentMethodDetails;
-            var uri = new Uri(
-                $"{serverUri.WithTrailingSlash()}{network.CryptoCode}/UILNURL/pay/i/{invoice.Id}");
-            return LNURL.LNURL.EncodeUri(uri, "payRequest", lnurlPaymentMethodDetails.Bech32Mode).ToString();
+
+            try
+            {
+                var lnurlPaymentMethodDetails = (LNURLPayPaymentMethodDetails)paymentMethodDetails;
+                var uri = new Uri(
+                    $"{serverUri.WithTrailingSlash()}{network.CryptoCode}/UILNURL/pay/i/{invoice.Id}");
+                return LNURL.LNURL.EncodeUri(uri, "payRequest", lnurlPaymentMethodDetails.Bech32Mode).ToString();
+            }
+            catch (Exception e)
+            {
+                // TODO: we need to switch payment types from static singletons to DI
+                // _logger.LogError(e, "Error generating LNURL payment link");
+                Console.WriteLine($"Error generating LNURL payment link: {e.Message}");
+                return null;
+            }
         }
 
         public override string InvoiceViewPaymentPartialName { get; } = "Lightning/ViewLightningLikePaymentData";

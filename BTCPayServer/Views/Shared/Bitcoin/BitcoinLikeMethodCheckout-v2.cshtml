@@ -1,4 +1,6 @@
 @using BTCPayServer.BIP78.Sender
+@using BTCPayServer.Components.TruncateCenter
+@using BTCPayServer.Abstractions.TagHelpers
 @model BTCPayServer.Models.InvoicingModels.PaymentModel
 
 <template id="bitcoin-method-checkout-template">
@@ -11,22 +13,16 @@
             <img class="qr-icon" :src="model.cryptoImage" :alt="model.paymentMethodName"/>
         </div>
         <div v-if="model.btcAddress" class="input-group mt-3">
-            <div class="form-floating">
-                <input id="Address_@Model.PaymentMethodId" class="form-control-plaintext" readonly="readonly" :value="model.btcAddress">
-                <label for="Address_@Model.PaymentMethodId" v-t="{ path: 'address', args: { paymentMethod: model.paymentMethodName }}"></label>
+            <div class="form-floating" id="Address_@Model.PaymentMethodId">
+                <vc:truncate-center text="model.btcAddress" is-vue="true" padding="15" elastic="true" classes="form-control-plaintext" />
+                <label v-t="{ path: 'address', args: { paymentMethod: model.paymentMethodName }}"></label>
             </div>
-            <button type="button" class="btn btn-link" data-clipboard-target="#Address_@Model.PaymentMethodId">
-                <vc:icon symbol="copy" />
-            </button>
         </div>
         <div v-if="lightning" class="input-group mt-3">
-            <div class="form-floating">
-                <input id="Lightning_@Model.PaymentMethodId" class="form-control-plaintext" readonly="readonly" :value="lightning" />
-                <label for="Lightning_@Model.PaymentMethodId" v-t="'lightning'"></label>
+            <div class="form-floating" id="Lightning_@Model.PaymentMethodId">
+                <vc:truncate-center text="lightning" is-vue="true" padding="15" elastic="true" classes="form-control-plaintext" />
+                <label v-t="'lightning'"></label>
             </div>
-            <button type="button" class="btn btn-link" data-clipboard-target="#Lightning_@Model.PaymentMethodId">
-                <vc:icon symbol="copy" />
-            </button>
         </div>
         <a v-if="model.invoiceBitcoinUrl && model.showPayInWalletButton" class="btn btn-primary rounded-pill w-100 mt-4" target="_top" id="PayInWallet"
            :href="model.invoiceBitcoinUrl" :title="$t(hasPayjoin ? 'BIP21 payment link with PayJoin support' : 'BIP21 payment link')" v-t="'pay_in_wallet'"></a>

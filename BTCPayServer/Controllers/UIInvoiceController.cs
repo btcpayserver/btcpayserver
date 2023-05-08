@@ -245,7 +245,7 @@ namespace BTCPayServer.Controllers
             }
             entity.SpeedPolicy = invoice.Checkout.SpeedPolicy ?? store.SpeedPolicy;
             entity.DefaultLanguage = invoice.Checkout.DefaultLanguage;
-            entity.DefaultPaymentMethod = invoice.Checkout.DefaultPaymentMethod;
+            entity.DefaultPaymentMethod = invoice.Checkout.DefaultPaymentMethod ?? store.GetDefaultPaymentId()?.ToStringNormalized() ?? new PaymentMethodId(_NetworkProvider.DefaultNetwork.CryptoCode, PaymentTypes.BTCLike).ToStringNormalized();
             entity.RedirectAutomatically = invoice.Checkout.RedirectAutomatically ?? storeBlob.RedirectAutomatically;
             entity.CheckoutType = invoice.Checkout.CheckoutType;
             entity.RequiresRefundEmail = invoice.Checkout.RequiresRefundEmail;

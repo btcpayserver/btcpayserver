@@ -10,6 +10,7 @@
 * Greenfield: Apply store default payment method on invoice creation (#4947). @dennisreimann
 * POS: Fix Firefox issues (#4950) @r0ckstardev
 * Fix viewing arrays in the invoice details when set in metadata (#4954) @Kukks 
+* Do not crash checkout when attempting lnurl checkout through non secure page (#4964) @Kukks
 
 ### Improvements
 

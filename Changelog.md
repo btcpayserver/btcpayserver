@@ -15,8 +15,8 @@
 
 ### Improvements
 
-* LN Settings: Show only node host name (#4927).  @dennisreimann
-* Checkout: Improve truncation of shown addresses (#4924). @dennisreimann
+* LN Settings: Show only node host name (#4927) @dennisreimann
+* Checkout: Improve truncation of shown addresses (#4924) @dennisreimann
 
 ## 1.9.2
 

@@ -1,39 +1,30 @@
 @using BTCPayServer.Forms
 @using Microsoft.AspNetCore.Mvc.TagHelpers
-@using BTCPayServer.Abstractions.TagHelpers
-@using Newtonsoft.Json
+@inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model BTCPayServer.Forms.ModifyForm
-
 @{
+    Csp.UnsafeEval();
     var formId = Context.GetRouteValue("id");
     var isNew = formId is null;
     Layout = "../Shared/_NavLayout.cshtml";
     ViewData["NavPartialName"] = "../UIStores/_Nav";
     ViewData.SetActivePage(StoreNavPages.Forms, $"{(isNew ? "Create" : "Edit")} Form", Model.Name);
-
     var storeId = Context.GetCurrentStoreId();
 }
 
 @section PageFootContent {
+    <template id="form-template-email">
+	    @FormDataService.StaticFormEmail
+    </template>
+    <template id="form-template-address">
+	    @FormDataService.StaticFormAddress
+    </template>
+    <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/vue-sortable/sortable.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/vue-sortable/vue-sortable.js" asp-append-version="true"></script>
+    <script src="~/js/form-editor.js" asp-append-version="true"></script>
     <partial name="_ValidationScriptsPartial"/>
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            const $config = document.getElementById("FormConfig");
-            delegate("click", "[data-form-template]", e => {
-                const { formTemplate: id } = e.target.dataset
-                const $template = document.getElementById(`form-template-${id}`)
-                $config.value = $template.innerHTML.trim()
-            })
-        })
-    </script>
 }
-
-<template id="form-template-email">
-	@FormDataService.StaticFormEmail
-</template>
-<template id="form-template-address">
-	@FormDataService.StaticFormAddress
-</template>
 
 <form method="post" asp-action="Modify" asp-route-id="@formId" asp-route-storeId="@storeId">
     <div class="row">
@@ -69,17 +60,45 @@
                     </div>
                 </div>
             </div>
-            <div class="form-group">
-                <div class="d-flex align-items-center justify-content-between gap-3">
-                    <label asp-for="FormConfig" class="form-label" data-required></label>
-                    <div class="d-flex align-items-center gap-2 mb-2">
-                        <span>Templates:</span>
-                        <button type="button" class="btn btn-link p-0" data-form-template="email">Email</button>
-                        <button type="button" class="btn btn-link p-0" data-form-template="address">Address</button>
+            <div id="FormEditor">
+                <div class="row mb-3">
+                    <div class="col-lg-7">
+                        <div class="fields bg-tile" v-sortable="{ handle: '.handle', onUpdate: sortFields }">
+                            <div
+                                v-for="(field, index) in fields" :key="field.name"
+                                class="d-flex align-items-center gap-3">
+                                <div class="field">
+                                    {{field.name}}
+                                </div>
+                                <div class="controls d-flex align-items-center gap-2 ms-auto">
+                                    <em class="handle">
+                                        MOV
+                                    </em>
+                                    <button type="button" class="btn btn-outline-danger" v-on:click="removeField(index)">
+                                        DEL
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-5">
+                        <div class="bg-tile">
+                            TODO: Field Editor
+                        </div>
                     </div>
                 </div>
-                <textarea asp-for="FormConfig" class="form-control" rows="10" cols="21"></textarea>
-                <span asp-validation-for="FormConfig" class="text-danger"></span>
+                <div class="form-group">
+                    <div class="d-flex align-items-center justify-content-between gap-3">
+                        <label asp-for="FormConfig" class="form-label" data-required></label>
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <span>Templates:</span>
+                            <button type="button" class="btn btn-link p-0" v-on:click="applyTemplate('email')">Email</button>
+                            <button type="button" class="btn btn-link p-0" v-on:click="applyTemplate('address')">Address</button>
+                        </div>
+                    </div>
+                    <textarea asp-for="FormConfig" class="form-control" rows="10" cols="21" v-model="configJSON" v-on:change="updateFromJSON"></textarea>
+                    <span asp-validation-for="FormConfig" class="text-danger"></span>
+                </div>
             </div>
         </div>
     </div>

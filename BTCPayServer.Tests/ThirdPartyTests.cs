@@ -358,6 +358,11 @@ retry:
             version = Regex.Match(actual, "Original file: /npm/dom-confetti@([0-9]+.[0-9]+.[0-9]+)/lib/main.js").Groups[1].Value;
             expected = (await (await client.GetAsync($"https://cdn.jsdelivr.net/npm/dom-confetti@{version}/lib/main.min.js")).Content.ReadAsStringAsync()).Trim();
             Assert.Equal(expected, actual);
+
+            actual = GetFileContent("BTCPayServer", "wwwroot", "vendor", "vue-sortable", "sortable.min.js").Trim();
+            version = Regex.Match(actual, "Sortable ([0-9]+.[0-9]+.[0-9]+) ").Groups[1].Value;
+            expected = (await (await client.GetAsync($"https://unpkg.com/sortablejs@{version}/Sortable.min.js")).Content.ReadAsStringAsync()).Trim();
+            Assert.Equal(expected, actual);
         }
 
         string GetFileContent(params string[] path)

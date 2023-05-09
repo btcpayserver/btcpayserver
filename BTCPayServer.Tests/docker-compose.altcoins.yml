@@ -96,7 +96,7 @@ services:
     extra_hosts:
       - "tests:172.18.0.18"
   nbxplorer:
-    image: nicolasdorier/nbxplorer:2.3.58
+    image: nicolasdorier/nbxplorer:2.3.63
     restart: unless-stopped
     ports:
       - "32838:32838"

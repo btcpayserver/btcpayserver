@@ -1,3 +1,5 @@
+@using System.Text.RegularExpressions
+@using Microsoft.AspNetCore.Mvc.TagHelpers
 @model (Dictionary<string, object> Items, int Level)
 
 @functions {
@@ -22,14 +24,14 @@
                     {
                         <th class="w-150px">@key</th>
                     }
-                    <td>
+                    <td style="white-space:pre-wrap">
                         @if (IsValidURL(str))
                         {
                             <a href="@str" target="_blank" rel="noreferrer noopener">@str</a>
                         }
                         else
                         {
-                            @value?.ToString()
+                            @str.Trim()
                         }
                     </td>
                 }

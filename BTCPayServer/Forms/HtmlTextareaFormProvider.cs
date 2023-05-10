@@ -1,18 +1,17 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using BTCPayServer.Abstractions.Form;
-using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace BTCPayServer.Forms;
 
-public class HtmlSelectFormProvider : FormComponentProviderBase
+public class HtmlTextareaFormProvider : FormComponentProviderBase
 {
     public override void Register(Dictionary<string, IFormComponentProvider> typeToComponentProvider)
     {
-        typeToComponentProvider.Add("select", this);
+        typeToComponentProvider.Add("textarea", this);
     }
 
-    public override string View => "Forms/SelectElement";
+    public override string View => "Forms/TextareaElement";
 
     public override void Validate(Form form, Field field)
     {
@@ -21,9 +20,4 @@ public class HtmlSelectFormProvider : FormComponentProviderBase
             ValidateField<RequiredAttribute>(field);
         }
     }
-}
-
-public class SelectField : Field
-{
-    public List<SelectListItem> Options { get; set; }
 }

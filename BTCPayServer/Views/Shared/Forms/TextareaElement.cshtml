@@ -7,7 +7,7 @@
     <label class="form-label" for="@Model.Name"@(Model.Required ? " data-required" : "")>
         @Model.Label
     </label>
-    <textarea id="@Model.Name" type="@Model.Type" class="form-control @(errors is null ? "" : "is-invalid")"
+    <textarea id="@Model.Name" class="form-control @(errors is null ? "" : "is-invalid")"
            name="@Model.Name" data-val="true"
            @if (!string.IsNullOrEmpty(Model.HelpText))
            {

@@ -165,8 +165,8 @@
                 <label asp-for="FormConfig" class="form-label" data-required></label>
                 <div class="d-flex align-items-center gap-2 mb-2">
                     <span>Templates:</span>
-                    <button type="button" class="btn btn-link p-0" v-on:click="applyTemplate('email')">Email</button>
-                    <button type="button" class="btn btn-link p-0" v-on:click="applyTemplate('address')">Address</button>
+                    <button type="button" class="btn btn-link p-0" v-on:click="applyTemplate('email')" id="ApplyEmailTemplate">Email</button>
+                    <button type="button" class="btn btn-link p-0" v-on:click="applyTemplate('address')" id="ApplyAddressTemplate">Address</button>
                 </div>
             </div>
             <textarea asp-for="FormConfig" class="form-control" rows="10" cols="21" v-model="configJSON" v-on:change="updateFromJSON"></textarea>

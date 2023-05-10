@@ -129,7 +129,7 @@ namespace BTCPayServer.Tests
             Assert.Contains("There are no forms yet.", s.Driver.PageSource);
             s.Driver.FindElement(By.Id("CreateForm")).Click();
             s.Driver.FindElement(By.Name("Name")).SendKeys("Custom Form 1");
-            s.Driver.FindElement((By.CssSelector("[data-form-template='email']"))).Click();
+            s.Driver.FindElement(By.Id("ApplyEmailTemplate")).Click();
             var emailtemplate = s.Driver.FindElement(By.Name("FormConfig")).GetAttribute("value");
             Assert.Contains("buyerEmail", emailtemplate);
             s.Driver.FindElement(By.Name("FormConfig")).Clear();
@@ -157,7 +157,7 @@ namespace BTCPayServer.Tests
             Assert.DoesNotContain("Custom Form 1", s.Driver.PageSource);
             s.Driver.FindElement(By.Id("CreateForm")).Click();
             s.Driver.FindElement(By.Name("Name")).SendKeys("Custom Form 2");
-            s.Driver.FindElement((By.CssSelector("[data-form-template='email']"))).Click();
+            s.Driver.FindElement(By.Id("ApplyEmailTemplate")).Click();
             s.Driver.SetCheckbox(By.Name("Public"), true);
 
             s.Driver.FindElement(By.Name("FormConfig")).Clear();

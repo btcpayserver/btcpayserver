@@ -12,6 +12,14 @@
     var storeId = Context.GetCurrentStoreId();
 }
 
+@section PageHeadCOntent {
+    <style>
+        #FormEditor .list-group-item:not(.active) {
+            background: none;
+        }
+    </style>
+}
+
 @section PageFootContent {
     <template id="form-template-email">
         @FormDataService.StaticFormEmail
@@ -19,37 +27,68 @@
     <template id="form-template-address">
         @FormDataService.StaticFormAddress
     </template>
+    <template id="field-editor">
+        <div class="field" v-if="field">
+            <div class="form-group">
+                <label for="field-editor-field-name" class="form-label" data-required>Name</label>
+                <input id="field-editor-field-name" class="form-control" required v-model="field.name" />
+            </div>
+            <div class="form-group">
+                <label for="field-editor-field-type" class="form-label" data-required>Type</label>
+                <select id="field-editor-field-type" class="form-select" required v-model="field.type">
+                    <option v-for="option in fieldTypeOptions" :key="option" :value="option" v-text="option"></option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="field-editor-field-label" class="form-label" data-required>Label</label>
+                <input id="field-editor-field-label" class="form-control" required v-model="field.label" />
+            </div>
+            <div class="form-group">
+                <label for="field-editor-field-value" class="form-label">Value</label>
+                <input id="field-editor-field-value" class="form-control" v-model="field.value" />
+            </div>
+            <div class="form-group">
+                <input id="field-editor-field-required" type="checkbox" class="form-check-input" v-model="field.required" />
+                <label for="field-editor-field-required" class="form-check-label">Required</label>
+            </div>
+            <div class="form-group">
+                <label for="field-editor-field-helpText" class="form-label">Help Text</label>
+                <input id="field-editor-field-helpText" class="form-control" v-model="field.helpText" />
+            </div>
+        </div>
+        <div v-else>Select a field to edit</div>
+    </template>
     <template id="fields-editor">
-        <div class="fields" v-sortable="{ handle: '.handle', onUpdate (event) { $emit('sort-fields', event, this.el.__vue__.$options.propsData.path) } }">
-            <div v-for="(field, index) in fields" :key="field.name" class="d-flex align-items-center gap-3">
+        <div class="fields list-group list-group-flush" v-sortable="{ handle: '.handle', onUpdate (event) { $emit('sort-fields', event, this.el.__vue__.$options.propsData.path) } }">
+            <div v-for="(field, index) in fields" :key="field.name" class="d-flex align-items-center gap-3 py-3 list-group-item" :class="{ active: field === selectedField }" v-on:click="$emit('select-field', $event, path, index)">
                 <div class="field flex-grow-1">
-                    <component :is="getFieldComponent(field.type)" v-bind="field" :path="path.concat(field.name)" v-on="$listeners" />
+                    <component :is="getFieldComponent(field.type)" v-bind="field" :path="path.concat(field.name)" :selected-field="selectedField" v-on="$listeners" />
                 </div>
                 <button type="button" class="btn btn-outline-danger p-1" v-on:click="$emit('remove-field', $event, path, index)">
                     <vc:icon symbol="close" />
                 </button>
                 <span class="handle">
-                    MOV
+                    DRAG
                 </span>
             </div>
         </div>
     </template>
     <template id="field-type-input">
-        <div class="form-group">
+        <div class="form-group mb-0">
             <label class="form-label" :for="name" :data-required="required" v-text="label"></label>
             <input class="form-control" :id="name" :name="name" :type="type" v-model="value" />
             <div v-if="helpText" :id="`HelpText-{name}`" class="form-text" v-text="helpText"></div>
         </div>
     </template>
     <template id="field-type-textarea">
-        <div class="form-group">
+        <div class="form-group mb-0">
             <label class="form-label" :for="name" :data-required="required" v-text="label"></label>
             <textarea class="form-control" :id="name" :name="name" :id="name" :name="name" v-model="value"></textarea>
             <div v-if="helpText" :id="`HelpText-${name}`" class="form-text" v-text="helpText"></div>
         </div>
     </template>
     <template id="field-type-select">
-        <div class="form-group">
+        <div class="form-group mb-0">
             <label class="form-label" :for="name" :data-required="required" v-text="label"></label>
             <select class="form-select" :id="name" :name="name">
                 <option v-for="option in options" :key="option.value" :value="option.value" v-text="option.text"></option>
@@ -60,7 +99,7 @@
     <template id="field-type-fieldset">
         <fieldset>
             <legend class="h3 mt-4 mb-3" v-text="label"></legend>
-            <fields-editor :path="path" :fields="fields" v-on="$listeners" />
+            <fields-editor :path="path" :fieldsName="fields" :selected-field="selectedField" v-on="$listeners" />
         </fieldset>
     </template>
     <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
@@ -109,14 +148,16 @@
     <div id="FormEditor">
         <div class="row mb-3">
             <div class="col-lg-7">
-                <fields-editor :path="[]" :fields="fields" class="bg-tile p-3"
+                <fields-editor :path="[]"
+                               :fields="fields"
+                               :selected-field="selectedField"
                                v-on:sort-fields="sortFields"
-                               v-on:remove-field="removeField" />
+                               v-on:select-field="selectField" 
+                               v-on:remove-field="removeField"
+                               class="bg-tile" />
             </div>
             <div class="col-lg-5">
-                <div class="bg-tile">
-                    TODO: Field Editor
-                </div>
+                <field-editor :field="selectedField" class="bg-tile p-3" />
             </div>
         </div>
         <div class="form-group">

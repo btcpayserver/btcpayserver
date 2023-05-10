@@ -8,28 +8,31 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     const $config = document.getElementById('FormConfig')
     let config = parseConfig($config.value) || {}
+    
+    const specialFieldTypeOptions = ['fieldset', 'textarea', 'select']
+    const inputFieldTypeOptions = ['text', 'number', 'password', 'email', 'url', 'tel', 'date', 'hidden']
+    const fieldTypeOptions = inputFieldTypeOptions.concat(specialFieldTypeOptions)
 
-    Vue.use(vSortable)
-
-    const getFieldComponent = type =>
-        ['fieldset', 'textarea', 'select'].includes(type)
-            ? `field-type-${type}`
-            : 'field-type-input';
-
+    const getFieldComponent = type => `field-type-${specialFieldTypeOptions.includes(type) ? type : 'input'}`
+    
+    const fieldProps = {
+        type: String,
+        constant: Boolean,
+        options: Array,
+        fields: Array,
+        name: String,
+        label: String,
+        value: String,
+        helpText: String,
+        required: Boolean
+    }
+    
     const fieldTypeBase = {
         props: {
             // internal
             path: Array,
             // field config
-            type: String,
-            constant: Boolean,
-            options: Array,
-            fields: Array,
-            name: String,
-            label: String,
-            value: String,
-            helpText: String,
-            required: Boolean
+            ...fieldProps
         }
     }
 
@@ -66,7 +69,8 @@ document.addEventListener('DOMContentLoaded', () => {
         template: '#field-type-fieldset',
         components,
         props: {
-            fields: Array
+            fields: Array,
+            selectedField: fieldProps
         }
     })
 
@@ -75,19 +79,40 @@ document.addEventListener('DOMContentLoaded', () => {
         components,
         props: {
             path: Array,
-            fields: Array
+            fields: Array,
+            selectedField: fieldProps
         },
         methods: {
             getFieldComponent
         }
     })
 
+    Vue.component('field-editor', {
+        template: '#field-editor',
+        components,
+        data () {
+            return {
+                fieldTypeOptions
+            }
+        },
+        props: {
+            path: Array,
+            field: fieldProps
+        },
+        methods: {
+            getFieldComponent
+        }
+    })
+
+    Vue.use(vSortable)
+
     new Vue({
         el: '#FormEditor',
         name: 'form-editor',
         data () {
             return {
-                config
+                config,
+                selectedField: null
             }
         },
         computed: {
@@ -102,19 +127,28 @@ document.addEventListener('DOMContentLoaded', () => {
             applyTemplate(id) {
                 const $template = document.getElementById(`form-template-${id}`)
                 this.config = JSON.parse($template.innerHTML.trim())
+                this.selectedField = null
             },
             updateFromJSON(event) {
                 const config = parseConfig(event.target.value)
-                if (config) this.config = config
+                if (!config) return
+                this.config = config
+                this.selectedField = null
+            },
+            selectField(event, path, index) {
+                const fields = this.getFieldsForPath(path)
+                this.selectedField = fields[index]
             },
             removeField(event, path, index) {
                 const fields = this.getFieldsForPath(path)
                 fields.splice(index, 1)
+                this.selectedField = null
             },
             sortFields(event, path) {
                 const { newIndex, oldIndex } = event
                 const fields = this.getFieldsForPath(path)
                 fields.splice(newIndex, 0, fields.splice(oldIndex, 1)[0])
+                this.selectedField = null
             },
             getFieldsForPath (path) {
                 let fields = this.config.fields

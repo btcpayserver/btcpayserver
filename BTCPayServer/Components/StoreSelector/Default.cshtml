@@ -37,10 +37,9 @@ else
 {
     <a asp-controller="UIInvoice" asp-action="ListInvoices" asp-route-storeId="@Model.CurrentStoreId" id="StoreSelectorHome" class="navbar-brand py-2">@{await LogoContent();}</a>
 }
-
-<div id="StoreSelector">
-    @if (Model.Options.Any())
-    {
+@if (Model.Options.Any())
+{
+    <div id="StoreSelector">
         <div id="StoreSelectorDropdown" class="dropdown only-for-js">
             <button id="StoreSelectorToggle" class="btn btn-secondary dropdown-toggle rounded-pill px-3 @(Model.CurrentStoreId == null ? "empty-state" : "")" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                 @if (!string.IsNullOrEmpty(Model.CurrentStoreLogoFileId))
@@ -72,9 +71,5 @@ else
                 <li><a asp-controller="UIUserStores" asp-action="CreateStore" class="dropdown-item" id="StoreSelectorCreate">Create Store</a></li>
             </ul>
         </div>
-    }
-    else if (SignInManager.IsSignedIn(User))
-    {
-        <a asp-controller="UIUserStores" asp-action="CreateStore" class="btn btn-primary w-100 rounded-pill text-nowrap" id="StoreSelectorCreate">Create Store</a>
-    }
-</div>
+    </div>
+}

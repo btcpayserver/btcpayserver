@@ -1097,6 +1097,16 @@ namespace BTCPayServer.Controllers
             invoiceQuery.IncludeRefunds = true;
             var list = await _InvoiceRepository.GetInvoices(invoiceQuery);
 
+            // Apps
+            var apps = await _appService.GetAllApps(GetUserId(), false, storeId);
+            model.Apps = apps.Select(a => new InvoiceAppModel
+            {
+                Id = a.Id,
+                AppName = a.AppName,
+                AppType = a.AppType,
+                AppOrderId = AppService.GetAppOrderId(a.AppType, a.Id)
+            }).ToList();
+
             foreach (var invoice in list)
             {
                 var state = invoice.GetInvoiceState();

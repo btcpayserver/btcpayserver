@@ -249,6 +249,20 @@
             <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("includearchived", "true")" class="dropdown-item @(HasBooleanFilter("includearchived") ? "dropdown-item-custom-active" : "")" id="StatusOptionsIncludeArchived">Archived</a>
         </div>
     </div>
+    @if (Model.Apps.Any())
+    {
+        <div class="dropdown">
+            <button id="AppOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                App
+            </button>
+            <div class="dropdown-menu" aria-labelledby="AppOptionsToggle">
+                @foreach (var app in Model.Apps)
+                {
+                    <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("orderid", app.AppOrderId)" class="dropdown-item @(HasArrayFilter("orderid", app.AppOrderId) ? "dropdown-item-custom-active" : "")">@app.AppName</a>
+                }
+            </div>
+        </div> 
+    }
     <div class="dropdown">
         <button id="DateOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">
             Time

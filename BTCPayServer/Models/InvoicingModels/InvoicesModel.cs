@@ -12,6 +12,7 @@ namespace BTCPayServer.Models.InvoicingModels
         
         public string SearchText { get; set; }
         public SearchString Search { get; set; }
+        public List<InvoiceAppModel> Apps { get; set; }
     }
 
     public class InvoiceModel
@@ -33,5 +34,13 @@ namespace BTCPayServer.Models.InvoicingModels
 
         public InvoiceDetailsModel Details { get; set; }
         public bool HasRefund { get; set; }
+    }
+    
+    public class InvoiceAppModel
+    {
+        public string Id { get; set; }
+        public string AppName { get; set; }
+        public string AppType { get; set; }
+        public string AppOrderId { get; set; }
     }
 }

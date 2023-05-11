@@ -347,23 +347,39 @@ namespace BTCPayServer.Controllers
             RateRules rules;
             RateResult rateResult;
             CreatePullPayment createPullPayment;
+            PaymentMethodAccounting accounting;
+            var pms = invoice.GetPaymentMethods();
+            var paymentMethod = pms.SingleOrDefault(method => method.GetId() == paymentMethodId);
+            var appliedDivisibility = paymentMethodDivisibility;
+            decimal dueAmount = default;
+            decimal paidAmount = default;
+            decimal cryptoPaid = default;
+
+            //TODO: Make this clean
+            if (paymentMethod is null && paymentMethodId.PaymentType == LightningPaymentType.Instance)
+            {
+                paymentMethod = pms[new PaymentMethodId(paymentMethodId.CryptoCode, PaymentTypes.LNURLPay)];
+            }
+
+            if (paymentMethod != null)
+            {
+                accounting = paymentMethod.Calculate();
+                cryptoPaid = accounting.Paid.ToDecimal(MoneyUnit.BTC);
+                dueAmount = accounting.TotalDue.ToDecimal(MoneyUnit.BTC);
+                paidAmount = cryptoPaid.RoundToSignificant(appliedDivisibility);
+            }
+
+            var isPaidOver = invoice.ExceptionStatus == InvoiceExceptionStatus.PaidOver;
+            decimal? overpaidAmount = isPaidOver ? Math.Round(paidAmount - dueAmount, appliedDivisibility) : null;
+
             switch (model.RefundStep)
             {
                 case RefundSteps.SelectPaymentMethod:
                     model.RefundStep = RefundSteps.SelectRate;
                     model.Title = "How much to refund?";
-                    var pms = invoice.GetPaymentMethods();
-                    var paymentMethod = pms.SingleOrDefault(method => method.GetId() == paymentMethodId);
 
-                    //TODO: Make this clean
-                    if (paymentMethod is null && paymentMethodId.PaymentType == LightningPaymentType.Instance)
+                    if (paymentMethod != null && cryptoPaid != default)
                     {
-                        paymentMethod = pms[new PaymentMethodId(paymentMethodId.CryptoCode, PaymentTypes.LNURLPay)];
-                    }
-
-                    if (paymentMethod != null)
-                    {
-                        var cryptoPaid = paymentMethod.Calculate().Paid.ToDecimal(MoneyUnit.BTC);
                         var paidCurrency = Math.Round(cryptoPaid * paymentMethod.Rate, cdCurrency.Divisibility);
                         model.CryptoAmountThen = cryptoPaid.RoundToSignificant(paymentMethodDivisibility);
                         model.RateThenText = _displayFormatter.Currency(model.CryptoAmountThen, paymentMethodId.CryptoCode);
@@ -383,8 +399,15 @@ namespace BTCPayServer.Controllers
                         model.CurrentRateText = _displayFormatter.Currency(model.CryptoAmountNow, paymentMethodId.CryptoCode);
                         model.FiatAmount = paidCurrency;
                     }
+                    model.CryptoCode = paymentMethodId.CryptoCode;
+                    model.CryptoDivisibility = paymentMethodDivisibility;
+                    model.InvoiceDivisibility = cdCurrency.Divisibility;
+                    model.InvoiceCurrency = invoice.Currency;
                     model.CustomAmount = model.FiatAmount;
                     model.CustomCurrency = invoice.Currency;
+                    model.SubtractPercentage = 0;
+                    model.OverpaidAmount = overpaidAmount;
+                    model.OverpaidAmountText = overpaidAmount != null ? _displayFormatter.Currency(overpaidAmount.Value, paymentMethodId.CryptoCode) : null;
                     model.FiatText = _displayFormatter.Currency(model.FiatAmount, invoice.Currency);
                     return View("_RefundModal", model);
 
@@ -399,6 +422,15 @@ namespace BTCPayServer.Controllers
                     var authorizedForAutoApprove = (await
                             _authorizationService.AuthorizeAsync(User, invoice.StoreId, Policies.CanCreatePullPayments))
                         .Succeeded;
+                    if (model.SubtractPercentage is < 0 or > 100)
+                    {
+                        ModelState.AddModelError(nameof(model.SubtractPercentage), "Percentage must be a numeric value between 0 and 100");
+                    }
+                    if (!ModelState.IsValid)
+                    {
+                        return View("_RefundModal", model);
+                    }
+                    
                     switch (model.SelectedRefundOption)
                     {
                         case "RateThen":
@@ -414,27 +446,47 @@ namespace BTCPayServer.Controllers
                             break;
 
                         case "Fiat":
+                            appliedDivisibility = cdCurrency.Divisibility;
                             createPullPayment.Currency = invoice.Currency;
                             createPullPayment.Amount = model.FiatAmount;
                             createPullPayment.AutoApproveClaims = false;
                             break;
+                        
+                        case "OverpaidAmount":
+                            model.Title = "How much to refund?";
+                            model.RefundStep = RefundSteps.SelectRate;
+                            
+                            if (isPaidOver)
+                            {
+                                ModelState.AddModelError(nameof(model.SelectedRefundOption), "Invoice is not overpaid");
+                            }
+                            if (overpaidAmount == null)
+                            {
+                                ModelState.AddModelError(nameof(model.SelectedRefundOption), "Overpaid amount cannot be calculated");
+                            }
+                            if (!ModelState.IsValid)
+                            {
+                                return this.CreateValidationError(ModelState);
+                            }
+                    
+                            createPullPayment.Currency = paymentMethodId.CryptoCode;
+                            createPullPayment.Amount = overpaidAmount!.Value;
+                            createPullPayment.AutoApproveClaims = true;
+                            break;
 
                         case "Custom":
                             model.Title = "How much to refund?";
-
                             model.RefundStep = RefundSteps.SelectRate;
 
                             if (model.CustomAmount <= 0)
                             {
                                 model.AddModelError(refundModel => refundModel.CustomAmount, "Amount must be greater than 0", this);
                             }
-
                             if (string.IsNullOrEmpty(model.CustomCurrency) ||
                                 _CurrencyNameTable.GetCurrencyData(model.CustomCurrency, false) == null)
                             {
                                 ModelState.AddModelError(nameof(model.CustomCurrency), "Invalid currency");
                             }
-
                             if (!ModelState.IsValid)
                             {
                                 return View("_RefundModal", model);
@@ -466,6 +518,13 @@ namespace BTCPayServer.Controllers
 
                 default:
                     throw new ArgumentOutOfRangeException();
+            }
+
+            // reduce by percentage
+            if (model.SubtractPercentage is > 0 and <= 100)
+            {
+                var reduceByAmount = createPullPayment.Amount * (model.SubtractPercentage / 100);
+                createPullPayment.Amount = Math.Round(createPullPayment.Amount - reduceByAmount, appliedDivisibility);
             }
 
             var ppId = await _paymentHostedService.CreatePullPayment(createPullPayment);

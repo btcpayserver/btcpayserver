@@ -5,12 +5,16 @@
 @model InvoicesModel
 @{
     ViewData.SetActivePage(InvoiceNavPages.Index, "Invoices");
+
+    var hasStatusFilter = HasArrayFilter("status") || HasArrayFilter("exceptionstatus") || HasBooleanFilter("includearchived") || HasBooleanFilter("unusual");
+    var hasDateFilter = HasArrayFilter("startdate") || HasArrayFilter("enddate");
+    var hasAppFilter = Model.Apps.Any(app => HasArrayFilter("orderid", app.AppOrderId));
 }
 
 @functions
 {
-    private bool HasArrayFilter(string type, string key) =>
-        Model.Search.ContainsFilter(type) && Model.Search.GetFilterArray(type).Contains(key);
+    private bool HasArrayFilter(string type, string key = null) =>
+        Model.Search.ContainsFilter(type) && (key is null || Model.Search.GetFilterArray(type).Contains(key));
 
     private bool HasBooleanFilter(string key) =>
         Model.Search.ContainsFilter(key) && Model.Search.GetFilterBool(key) is true;
@@ -233,45 +237,45 @@
     <input asp-for="SearchTerm" type="hidden" value="@Model.Search.WithoutSearchText()"/>
     <input asp-for="SearchText" class="form-control" placeholder="Search …" />
     <div class="dropdown">
-        <button id="StatusOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+        <button id="StatusOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret @(hasStatusFilter ? "custom-active" : "")" type="button" data-bs-toggle="dropdown" aria-expanded="false">
             Status
         </button>
         <div class="dropdown-menu" aria-labelledby="StatusOptionsToggle">
-            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("status", "invalid")" class="dropdown-item @(HasArrayFilter("status", "invalid") ? "dropdown-item-custom-active" : "")">Invalid</a>
-            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("status", "processing")" class="dropdown-item @(HasArrayFilter("status", "processing") ? "dropdown-item-custom-active" : "")">Processing</a>
-            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("status", "settled")" class="dropdown-item @(HasArrayFilter("status", "settled") ? "dropdown-item-custom-active" : "")">Settled</a>
+            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("status", "invalid")" class="dropdown-item @(HasArrayFilter("status", "invalid") ? "custom-active" : "")">Invalid</a>
+            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("status", "processing")" class="dropdown-item @(HasArrayFilter("status", "processing") ? "custom-active" : "")">Processing</a>
+            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("status", "settled")" class="dropdown-item @(HasArrayFilter("status", "settled") ? "custom-active" : "")">Settled</a>
             <hr class="dropdown-divider">
-            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("exceptionstatus", "paidLate")" class="dropdown-item @(HasArrayFilter("exceptionstatus", "paidLate") ? "dropdown-item-custom-active" : "")">Settled Late</a>
-            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("exceptionstatus", "paidPartial")" class="dropdown-item @(HasArrayFilter("exceptionstatus", "paidPartial") ? "dropdown-item-custom-active" : "")">Settled Partial</a>
-            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("exceptionstatus", "paidOver")" class="dropdown-item @(HasArrayFilter("exceptionstatus", "paidOver") ? "dropdown-item-custom-active" : "")">Settled Over</a>
+            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("exceptionstatus", "paidLate")" class="dropdown-item @(HasArrayFilter("exceptionstatus", "paidLate") ? "custom-active" : "")">Settled Late</a>
+            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("exceptionstatus", "paidPartial")" class="dropdown-item @(HasArrayFilter("exceptionstatus", "paidPartial") ? "custom-active" : "")">Settled Partial</a>
+            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("exceptionstatus", "paidOver")" class="dropdown-item @(HasArrayFilter("exceptionstatus", "paidOver") ? "custom-active" : "")">Settled Over</a>
             <hr class="dropdown-divider">
-            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("unusual", "true")" class="dropdown-item @(HasBooleanFilter("unusual") ? "dropdown-item-custom-active" : "")">Unusual</a>
-            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("includearchived", "true")" class="dropdown-item @(HasBooleanFilter("includearchived") ? "dropdown-item-custom-active" : "")" id="StatusOptionsIncludeArchived">Archived</a>
+            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("unusual", "true")" class="dropdown-item @(HasBooleanFilter("unusual") ? "custom-active" : "")">Unusual</a>
+            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("includearchived", "true")" class="dropdown-item @(HasBooleanFilter("includearchived") ? "custom-active" : "")" id="StatusOptionsIncludeArchived">Archived</a>
         </div>
     </div>
     @if (Model.Apps.Any())
     {
         <div class="dropdown">
-            <button id="AppOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <button id="AppOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret @(hasAppFilter ? "custom-active" : "")" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                 App
             </button>
             <div class="dropdown-menu" aria-labelledby="AppOptionsToggle">
                 @foreach (var app in Model.Apps)
                 {
-                    <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("orderid", app.AppOrderId)" class="dropdown-item @(HasArrayFilter("orderid", app.AppOrderId) ? "dropdown-item-custom-active" : "")">@app.AppName</a>
+                    <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("orderid", app.AppOrderId)" class="dropdown-item @(HasArrayFilter("orderid", app.AppOrderId) ? "custom-active" : "")">@app.AppName</a>
                 }
             </div>
         </div> 
     }
     <div class="dropdown">
-        <button id="DateOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+        <button id="DateOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret @(hasDateFilter ? "custom-active" : "")" type="button" data-bs-toggle="dropdown" aria-expanded="false">
             Time
         </button>
         <div class="dropdown-menu" aria-labelledby="DateOptionsToggle">
-            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("startdate", "-1d")" class="dropdown-item @(HasArrayFilter("startdate", "-1d") ? "dropdown-item-custom-active" : "")">Last 24 hours</a>
-            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("startdate", "-3d")" class="dropdown-item @(HasArrayFilter("startdate", "-3d") ? "dropdown-item-custom-active" : "")">Last 3 days</a>
-            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("startdate", "-7d")" class="dropdown-item @(HasArrayFilter("startdate", "-7d") ? "dropdown-item-custom-active" : "")">Last 7 days</a>
-            <button type="button" class="dropdown-item @(HasCustomDateFilter() ? "dropdown-item-custom-active" : "")" data-bs-toggle="modal" data-bs-target="#customRangeModal">Custom Range</button>
+            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("startdate", "-1d")" class="dropdown-item @(HasArrayFilter("startdate", "-1d") ? "custom-active" : "")">Last 24 hours</a>
+            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("startdate", "-3d")" class="dropdown-item @(HasArrayFilter("startdate", "-3d") ? "custom-active" : "")">Last 3 days</a>
+            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("startdate", "-7d")" class="dropdown-item @(HasArrayFilter("startdate", "-7d") ? "custom-active" : "")">Last 7 days</a>
+            <button type="button" class="dropdown-item @(HasCustomDateFilter() ? "custom-active" : "")" data-bs-toggle="modal" data-bs-target="#customRangeModal">Custom Range</button>
         </div>
     </div>
 </form>

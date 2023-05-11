@@ -11034,6 +11034,7 @@ fieldset:disabled .btn {
   background-repeat: no-repeat;
   background-position: right 0.75rem center;
   background-size: 16px 12px;
+  padding-right: 2.25rem;
 }
 
 .dropdown-toggle.dropdown-toggle-custom-caret::after {
@@ -11247,19 +11248,19 @@ ul:not([class]) li {
   padding-left: 1rem;
 }
 
-.dropdown-item.dropdown-item-custom-active {
+.dropdown .custom-active {
   display: inline-flex;
   align-items: center;
   gap: var(--btcpay-space-s);
 }
 
-.dropdown-item.dropdown-item-custom-active::after {
+.dropdown .custom-active::after {
   display: inline-block;
   margin-left: auto;
   content: '';
   width: 0.5em;
   height: 0.5em;
-  background-color: var(--btcpay-dropdown-link-active-bg);
+  background-color: var(--btcpay-body-bg-active);
   border-radius: 50%;
 }
 

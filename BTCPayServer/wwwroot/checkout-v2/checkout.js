@@ -132,6 +132,9 @@ function initApp() {
             isActive () {
                 return STATUS_PAYABLE.includes(this.srvModel.status);
             },
+            isPaidPartial () {
+                return this.btcPaid > 0 && this.btcDue > 0;
+            },
             showInfo () {
                 return this.showTimer || this.showPaymentDueInfo;
             },
@@ -139,7 +142,7 @@ function initApp() {
                 return this.isActive && this.remainingSeconds < this.srvModel.displayExpirationTimer;
             },
             showPaymentDueInfo () {
-                return this.btcPaid > 0 && this.btcDue > 0;
+                return this.isPaidPartial;
             },
             showRecommendedFee () {
                 return this.isActive && this.srvModel.showRecommendedFee && this.srvModel.feeRate;
@@ -320,7 +323,6 @@ function initApp() {
                     const { status } = data;
                     window.parent.postMessage({ invoiceId, status }, '*');
                 }
-                
                 const newEnd = new Date();
                 newEnd.setSeconds(newEnd.getSeconds() + data.expirationSeconds);
                 this.endDate = newEnd;

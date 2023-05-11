@@ -323,6 +323,12 @@
                         "description": "The absolute url of the store",
                         "format": "url"
                     },
+                    "supportUrl": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "The support URI of the store, can contain the placeholders `{OrderId}` and `{InvoiceId}`. Can be any valid URI, such as a website, email, and nostr.",
+                        "format": "uri"
+                    },
                     "defaultCurrency": {
                         "type": "string",
                         "description": "The default currency of the store",

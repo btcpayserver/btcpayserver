@@ -854,16 +854,23 @@ namespace BTCPayServer.Controllers
 
             var isAltcoinsBuild = false;
 #if ALTCOINS
-                isAltcoinsBuild = true;
+            isAltcoinsBuild = true;
 #endif
+
+            var orderId = invoice.Metadata.OrderId;
+            var supportUrl = !string.IsNullOrEmpty(storeBlob.StoreSupportUrl)
+                ? storeBlob.StoreSupportUrl
+                    .Replace("{OrderId}", string.IsNullOrEmpty(orderId) ? string.Empty : Uri.EscapeDataString(orderId))
+                    .Replace("{InvoiceId}", Uri.EscapeDataString(invoice.Id))
+                : null;
 
             var model = new PaymentModel
             {
                 Activated = paymentMethodDetails.Activated,
                 CryptoCode = network.CryptoCode,
                 RootPath = Request.PathBase.Value.WithTrailingSlash(),
-                OrderId = invoice.Metadata.OrderId,
-                InvoiceId = invoice.Id,
+                OrderId = orderId,
+                InvoiceId = invoiceId,
                 DefaultLang = lang ?? invoice.DefaultLanguage ?? storeBlob.DefaultLang ?? "en",
                 ShowPayInWalletButton = storeBlob.ShowPayInWalletButton,
                 ShowStoreHeader = storeBlob.ShowStoreHeader,
@@ -895,6 +902,7 @@ namespace BTCPayServer.Controllers
                 ReceiptLink = receiptUrl,
                 RedirectAutomatically = invoice.RedirectAutomatically,
                 StoreName = store.StoreName,
+                StoreSupportUrl = supportUrl,
                 TxCount = accounting.TxRequired,
                 TxCountForFee = storeBlob.NetworkFeeMode switch
                 {

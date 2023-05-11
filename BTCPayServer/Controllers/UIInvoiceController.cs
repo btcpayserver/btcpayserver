@@ -154,6 +154,7 @@ namespace BTCPayServer.Controllers
                 entity.Type = InvoiceType.TopUp;
             }
 
+            entity.StoreSupportUrl = storeBlob.StoreSupportUrl;
             entity.RedirectURLTemplate = invoice.RedirectURL ?? store.StoreWebsite;
             entity.RedirectAutomatically =
                 invoice.RedirectAutomatically.GetValueOrDefault(storeBlob.RedirectAutomatically);

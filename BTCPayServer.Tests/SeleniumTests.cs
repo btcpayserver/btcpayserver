@@ -600,7 +600,7 @@ namespace BTCPayServer.Tests
             TestUtils.Eventually(() =>
             {
                 s.Driver.Navigate().Refresh();
-                s.Driver.FindElement(By.Id("receipt-btn")).Click();
+                s.Driver.FindElement(By.Id("ReceiptLink")).Click();
             });
             TestUtils.Eventually(() =>
             {
@@ -612,7 +612,7 @@ namespace BTCPayServer.Tests
 
             await s.Server.PayTester.InvoiceRepository.MarkInvoiceStatus(i, InvoiceStatus.Settled);
 
-            TestUtils.Eventually(() => s.Driver.FindElement(By.Id("receipt-btn")).Click());
+            TestUtils.Eventually(() => s.Driver.FindElement(By.Id("ReceiptLink")).Click());
             TestUtils.Eventually(() =>
             {
                 s.Driver.Navigate().Refresh();

@@ -61,7 +61,7 @@ namespace BTCPayServer.Models.InvoicingModels
         public int TxCount { get; set; }
         public int TxCountForFee { get; set; }
         public string BtcPaid { get; set; }
-        public string StoreEmail { get; set; }
+        public string StoreSupportUrl { get; set; }
 
         public string OrderId { get; set; }
         public decimal NetworkFee { get; set; }

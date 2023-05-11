@@ -408,6 +408,8 @@ namespace BTCPayServer.Services.Invoices
         // public bool Refundable { get; set; }
         public bool? RequiresRefundEmail { get; set; } = null;
         public string RefundMail { get; set; }
+
+        public string StoreSupportUrl { get; set; }
         [JsonProperty("redirectURL")]
         public string RedirectURLTemplate { get; set; }
 

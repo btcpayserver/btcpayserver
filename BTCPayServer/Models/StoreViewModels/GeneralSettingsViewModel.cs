@@ -22,6 +22,10 @@ namespace BTCPayServer.Models.StoreViewModels
         [MaxLength(500)]
         public string StoreWebsite { get; set; }
 
+        [Display(Name = "Support URL")]
+        [MaxLength(500)]
+        public string StoreSupportUrl { get; set; }
+
         [Display(Name = "Brand Color")]
         public string BrandColor { get; set; }
 

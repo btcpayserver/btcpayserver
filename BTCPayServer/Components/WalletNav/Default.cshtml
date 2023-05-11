@@ -8,7 +8,7 @@
 <div class="d-sm-flex align-items-center justify-content-between">
     <a asp-controller="UIWallets" asp-action="WalletTransactions" asp-route-walletId="@Model.WalletId" class="unobtrusive-link">
         <h2 class="mb-1">@Model.Label</h2>
-        <div class="text-muted fw-semibold">
+        <div class="text-muted fw-semibold" data-sensitive>
             @Model.Balance @Model.Network.CryptoCode
         </div>
     </a>

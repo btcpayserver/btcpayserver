@@ -1,6 +1,5 @@
 @using BTCPayServer.Views.Server
 @using BTCPayServer.Views.Stores
-@using BTCPayServer.Views.Apps
 @using BTCPayServer.Views.Invoice
 @using BTCPayServer.Views.Manage
 @using BTCPayServer.Views.PaymentRequest
@@ -239,7 +238,7 @@
                     <span>Account</span>
                 </a>   
                 <ul class="dropdown-menu py-0 w-100" aria-labelledby="Nav-Account">
-                    <li class="p-3">
+                    <li class="p-3 border-bottom">
                         <strong class="d-block text-truncate" style="max-width:195px">@User.Identity.Name</strong>
                         @if (User.IsInRole(Roles.ServerAdmin))
                         {
@@ -248,10 +247,19 @@
                     </li>
                     @if (!Theme.CustomTheme)
                     {
-                        <li class="border-top py-1 px-3">
-                            <vc:theme-switch css-class="nav-link"/>
+                        <li class="py-1 px-3">
+                            <vc:theme-switch css-class="nav-link pb-0"/>
                         </li>
                     }
+                    <li class="py-1 px-3">
+                        <label class="d-flex align-items-center justify-content-between gap-3 nav-link">
+                            <span class="fw-semibold">Hide Sensitive Info</span>
+                            <input id="HideSensitiveInfo" name="HideSensitiveInfo" type="checkbox" class="btcpay-toggle" />
+                        </label>
+                        <script>
+                            document.getElementById('HideSensitiveInfo').checked = window.localStorage.getItem('btcpay-hide-sensitive-info') === 'true';
+                        </script>
+                    </li>
                     <li class="border-top py-1 px-3">
                         <a asp-area="" asp-controller="UIManage" asp-action="Index" class="nav-link @ViewData.IsActiveCategory(typeof(ManageNavPages))" id="Nav-ManageAccount">
                             <span>Manage Account</span>

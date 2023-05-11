@@ -375,7 +375,9 @@
                                     <span class="badge bg-warning">Refund</span>
                                 }
                             </td>
-                            <td class="text-end text-nowrap">@DisplayFormatter.Currency(invoice.Amount, invoice.Currency)</td>
+                            <td class="text-end text-nowrap">
+                                <span data-sensitive>@DisplayFormatter.Currency(invoice.Amount, invoice.Currency)</span>
+                            </td>
                             <td class="text-end text-nowrap">
                                 @if (invoice.ShowCheckout)
                                 {

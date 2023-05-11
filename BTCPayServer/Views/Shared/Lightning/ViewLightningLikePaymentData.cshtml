@@ -52,7 +52,7 @@
                                 <vc:truncate-center text="@payment.PaymentProof" classes="truncate-center-id" />
                             </td>
                             <td class="payment-value text-end text-nowrap">
-                                @payment.Amount
+                                <span data-sensitive>@payment.Amount</span>
                             </td>
                         </tr>
                     }

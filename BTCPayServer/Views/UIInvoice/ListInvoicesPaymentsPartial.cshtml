@@ -35,12 +35,12 @@
                             <vc:truncate-center text="@payment.Address" classes="truncate-center-id" />
                         </td>
                     }
-                    <td class="text-nowrap text-end">@payment.Rate</td>
-                    <td class="text-nowrap text-end">@payment.Paid</td>
-                    <td class="text-nowrap text-end">@payment.Due</td>
+                    <td class="text-nowrap text-end"><span data-sensitive>@payment.Rate</span></td>
+                    <td class="text-nowrap text-end"><span data-sensitive>@payment.Paid</span></td>
+                    <td class="text-nowrap text-end"><span data-sensitive>@payment.Due</span></td>
                     @if (invoice.Overpaid)
                     {
-                        <td class="text-nowrap text-end">@payment.Overpaid</td>
+                        <td class="text-nowrap text-end"><span data-sensitive>@payment.Overpaid</span></td>
                     }
                 </tr>
                 var details = payment.PaymentMethodRaw.GetPaymentMethodDetails();

@@ -8,6 +8,26 @@
     --chart-series-e-rgb: 160, 98, 75;
 }
 
+/* Hide sensitive info */
+[data-hide-sensitive-info="true"] [data-sensitive] {
+    visibility: hidden;
+    position: relative;
+}
+
+[data-hide-sensitive-info="true"] [data-sensitive]:before {
+    content: '***';
+    visibility: visible;
+    position: absolute;
+}
+
+[data-hide-sensitive-info="true"] .text-end [data-sensitive]:before {
+    right: 0;
+}
+
+[data-hide-sensitive-info="true"] .store-wallet-balance .ct-label.ct-vertical.ct-start {
+    visibility: hidden;
+}
+
 /* General and site-wide Bootstrap modifications */
 p {
     margin-bottom: 1.5rem;

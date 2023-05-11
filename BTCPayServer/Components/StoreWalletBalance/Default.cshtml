@@ -18,7 +18,7 @@
         @if (Model.Balance != null)
         {
             <div class="balance">
-                <h3 class="d-inline-block me-1" data-balance="@Model.Balance">@Model.Balance</h3>
+                <h3 class="d-inline-block me-1" data-balance="@Model.Balance" data-sensitive>@Model.Balance</h3>
                 <span class="text-secondary fw-semibold currency">@Model.CryptoCode</span>
             </div>
         }

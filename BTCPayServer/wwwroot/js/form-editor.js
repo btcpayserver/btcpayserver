@@ -135,6 +135,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 this.config = config
                 this.selectedField = null
             },
+            addField(event, path) {
+                const fields = this.getFieldsForPath(path)
+                const index = fields.length + 1
+                const length = fields.push({ type: 'text', name: `newField${index}`, label: `New field ${index}` })
+                this.selectedField = fields[length - 1]
+            },
             selectField(event, path, index) {
                 const fields = this.getFieldsForPath(path)
                 this.selectedField = fields[index]

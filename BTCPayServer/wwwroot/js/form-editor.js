@@ -17,14 +17,14 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const fieldProps = {
         type: String,
-        constant: Boolean,
-        options: Array,
-        fields: Array,
         name: String,
         label: String,
         value: String,
         helpText: String,
-        required: Boolean
+        required: Boolean,
+        constant: Boolean,
+        options: Array,
+        fields: Array
     }
     
     const fieldTypeBase = {
@@ -100,7 +100,20 @@ document.addEventListener('DOMContentLoaded', () => {
             field: fieldProps
         },
         methods: {
-            getFieldComponent
+            getFieldComponent,
+            addOption (event) {
+                if (!this.field.options) this.$set(this.field, 'options', [])
+                const index = this.field.options.length + 1
+                this.field.options.push({ value: `newOption${index}`, text: `New option ${index}` })
+            },
+            removeOption(event, index) {
+                console.log(this.field.options, index)
+                this.field.options.splice(index, 1)
+            },
+            sortOptions (event) {
+                const { newIndex, oldIndex } = event
+                this.field.options.splice(newIndex, 0, this.field.options.splice(oldIndex, 1)[0])
+            }
         }
     })
 
@@ -138,7 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
             addField(event, path) {
                 const fields = this.getFieldsForPath(path)
                 const index = fields.length + 1
-                const length = fields.push({ type: 'text', name: `newField${index}`, label: `New field ${index}` })
+                const length = fields.push({ type: 'text', name: `newField${index}`, label: `New field ${index}`, fields: [], options: [] })
                 this.selectedField = fields[length - 1]
             },
             selectField(event, path, index) {

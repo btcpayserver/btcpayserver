@@ -32,37 +32,72 @@
     <template id="field-editor">
         <div class="field" v-if="field">
             <div class="form-group">
-                <label for="field-editor-field-name" class="form-label" data-required>Name</label>
-                <input id="field-editor-field-name" class="form-control" required v-model="field.name" />
-            </div>
-            <div class="form-group">
                 <label for="field-editor-field-type" class="form-label" data-required>Type</label>
                 <select id="field-editor-field-type" class="form-select" required v-model="field.type">
-                    <option v-for="option in fieldTypeOptions" :key="option" :value="option" v-text="option"></option>
+                    <option v-for="option in fieldTypeOptions" :key="option" :value="option" v-text="option.charAt(0).toUpperCase() + option.slice(1)"></option>
                 </select>
+            </div>
+            <div class="form-group">
+                <label for="field-editor-field-name" class="form-label" data-required>Name</label>
+                <input id="field-editor-field-name" class="form-control" required v-model="field.name" />
+                <div class="form-text">The property name of the field as it will appear in the invoice's metadata</div>
             </div>
             <div class="form-group">
                 <label for="field-editor-field-label" class="form-label" data-required>Label</label>
                 <input id="field-editor-field-label" class="form-control" required v-model="field.label" />
             </div>
+            <div class="form-group" v-if="field.type === 'select'">
+                <h5 class="mt-2">Options</h5>
+                <div class="options" v-sortable="{ handle: '.drag', onUpdate: sortOptions }">
+                    <div v-for="(option, index) in field.options" :key="option.value" class="d-flex align-items-start gap-3 pt-3">
+                        <div class="field flex-grow-1">
+                            <label :for="`field-option-value-${index}`" class="form-label">Value</label>
+                            <input :for="`field-option-value-${index}`" class="form-control" v-model="option.value" />
+                        </div>
+                        <div class="field flex-grow-1">
+                            <label :for="`field-option-text-${index}`" class="form-label">Text</label>
+                            <input :for="`field-option-text-${index}`" class="form-control" v-model="option.text" />
+                        </div>
+                        <div class="controls d-flex align-items-center gap-1">
+                            <button type="button" class="btn b-0 remove" v-on:click="removeOption($event, index)">
+                                <vc:icon symbol="trash" />
+                            </button>
+                            <button type="button" class="btn b-0 drag">
+                                <vc:icon symbol="drag" />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-link px-1 py-2 gap-1 add fw-semibold d-inline-flex align-items-center" v-on:click.stop="addOption($event)">
+                    <vc:icon symbol="new" />
+                    Add option
+                </button>
+            </div>
             <div class="form-group">
                 <label for="field-editor-field-value" class="form-label">Value</label>
                 <input id="field-editor-field-value" class="form-control" v-model="field.value" />
+                <div class="form-text">The default value of the field</div>
             </div>
             <div class="form-group form-check">
                 <input id="field-editor-field-required" type="checkbox" class="form-check-input" v-model="field.required" />
                 <label for="field-editor-field-required" class="form-check-label">Required</label>
             </div>
-            <div class="form-group">
+            <div class="form-group form-check">
+                <input id="field-editor-field-constant" type="checkbox" class="form-check-input" v-model="field.constant" />
+                <label for="field-editor-field-constant" class="form-check-label">Constant</label>
+                <div class="form-text">For constants the value must be set in the form definition, and the user will not be able to change the field's value</div>
+            </div>
+            <div class="form-group mb-0">
                 <label for="field-editor-field-helpText" class="form-label">Help Text</label>
                 <input id="field-editor-field-helpText" class="form-control" v-model="field.helpText" />
+                <div class="form-text">Additional text to provide an explanation for the field</div>
             </div>
         </div>
         <div v-else>Select a field to edit</div>
     </template>
     <template id="fields-editor">
         <div>
-            <div class="fields list-group" v-sortable="{ handle: '.drag', onUpdate (event) { $emit('sort-fields', event, this.el.__vue__.$options.propsData.path) } }">
+            <div class="fields list-group" :data-path="path.join(',')" v-sortable="{ handle: '.drag', onUpdate (event) { const { path } = this.el.dataset; $emit('sort-fields', event, (path.indexOf(',') !== -1 ? path.split(',') : [])) } }">
                 <div v-for="(field, index) in fields" :key="field.name" class="d-flex align-items-start gap-3 py-3 list-group-item" :class="{ active: field === selectedField }" v-on:click.stop="$emit('select-field', $event, path, index)">
                     <div class="field flex-grow-1">
                         <component :is="getFieldComponent(field.type)" v-bind="field" :path="path.concat(field.name)" :selected-field="selectedField" v-on="$listeners" />
@@ -77,7 +112,7 @@
                     </div>
                 </div>
             </div>
-            <button type="button" class="btn btn-link px-1 py-2 gap-1 add fw-semibold d-inline-flex align-items-center" v-on:click="$emit('add-field', $event, path)">
+            <button type="button" class="btn btn-link px-1 py-2 gap-1 add fw-semibold d-inline-flex align-items-center" v-on:click.stop="$emit('add-field', $event, path)">
                 <vc:icon symbol="new" />
                 Add form element
             </button>
@@ -108,7 +143,7 @@
     </template>
     <template id="field-type-fieldset">
         <fieldset>
-            <legend class="h3 mb-3" v-text="label"></legend>
+            <legend class="h5 mb-3" v-text="label"></legend>
             <fields-editor :path="path" :fields="fields" :selected-field="selectedField" v-on="$listeners" />
         </fieldset>
     </template>
@@ -120,7 +155,7 @@
 }
 
 <form method="post" asp-action="Modify" asp-route-id="@formId" asp-route-storeId="@storeId">
-    <div class="row">
+    <div class="row mb-4">
         <div class="col-xl-8 col-xxl-constrain">
             <div class="d-flex align-items-center justify-content-between mb-3">
                 <h3 class="mb-0">
@@ -155,15 +190,24 @@
             </div>
         </div>
     </div>
+    
     <div id="FormEditor">
-        <div class="row mb-3">
-            <div class="col-lg-7">
+        <div class="d-flex align-items-center justify-content-between gap-3 mb-3">
+            <h4>Form Configuration</h4>
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <span>Templates:</span>
+                <button type="button" class="btn btn-link p-0" v-on:click="applyTemplate('email')" id="ApplyEmailTemplate">Email</button>
+                <button type="button" class="btn btn-link p-0" v-on:click="applyTemplate('address')" id="ApplyAddressTemplate">Address</button>
+            </div>
+        </div>
+        <div class="row mb-4">
+            <div class="col-lg-7 mb-4 mb-lg-0">
                 <fields-editor :path="[]"
                                :fields="fields"
                                :selected-field="selectedField"
                                v-on:add-field="addField"
                                v-on:sort-fields="sortFields"
-                               v-on:select-field="selectField" 
+                               v-on:select-field="selectField"
                                v-on:remove-field="removeField"
                                class="bg-tile" />
             </div>
@@ -171,14 +215,12 @@
                 <field-editor :field="selectedField" class="bg-tile p-3" />
             </div>
         </div>
-        <div class="form-group">
+        <button type="button" class="btn btn-secondary my-4" id="ToggleRawEditor" data-bs-toggle="collapse" data-bs-target="#RawEditor" aria-expanded="false" aria-controls="RawEditor">
+            Toggle JSON editor
+        </button>
+        <div class="form-group collapse" id="RawEditor">
             <div class="d-flex align-items-center justify-content-between gap-3">
-                <label asp-for="FormConfig" class="form-label" data-required></label>
-                <div class="d-flex align-items-center gap-2 mb-2">
-                    <span>Templates:</span>
-                    <button type="button" class="btn btn-link p-0" v-on:click="applyTemplate('email')" id="ApplyEmailTemplate">Email</button>
-                    <button type="button" class="btn btn-link p-0" v-on:click="applyTemplate('address')" id="ApplyAddressTemplate">Address</button>
-                </div>
+                <label asp-for="FormConfig" class="form-label" data-required>Form JSON</label>
             </div>
             <textarea asp-for="FormConfig" class="form-control" rows="10" cols="21" v-model="configJSON" v-on:change="updateFromJSON"></textarea>
             <span asp-validation-for="FormConfig" class="text-danger"></span>

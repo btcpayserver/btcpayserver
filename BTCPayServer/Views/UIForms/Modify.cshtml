@@ -39,13 +39,13 @@
                 </select>
             </div>
             <div class="form-group">
-                <label for="field-editor-field-name" class="form-label" data-required>Name</label>
-                <input id="field-editor-field-name" class="form-control" required v-model="field.name" />
-                <div class="form-text">The property name of the field as it will appear in the invoice's metadata</div>
-            </div>
-            <div class="form-group">
                 <label for="field-editor-field-label" class="form-label" data-required>Label</label>
                 <input id="field-editor-field-label" class="form-control" required v-model="field.label" />
+            </div>
+            <div class="form-group">
+                <label for="field-editor-field-name" class="form-label" data-required>Name</label>
+                <input id="field-editor-field-name" class="form-control" required v-model="field.name" />
+                <div class="form-text">The name of the field in the invoice's metadata</div>
             </div>
             <div class="form-group" v-if="field.type === 'select'">
                 <h5 class="mt-2">Options</h5>
@@ -81,15 +81,15 @@
             </div>
             <div class="form-group form-check" v-if="field.type !== 'fieldset'">
                 <input id="field-editor-field-required" type="checkbox" class="form-check-input" v-model="field.required" />
-                <label for="field-editor-field-required" class="form-check-label">Required</label>
+                <label for="field-editor-field-required" class="form-check-label">Required Field</label>
             </div>
             <div class="form-group form-check" v-if="field.type !== 'fieldset' && field.type !== 'select'">
                 <input id="field-editor-field-constant" type="checkbox" class="form-check-input" v-model="field.constant" />
                 <label for="field-editor-field-constant" class="form-check-label">Constant</label>
-                <div class="form-text">For constants the value must be set in the form definition, and the user will not be able to change the field's value</div>
+                <div class="form-text">The user will not be able to change the field's value</div>
             </div>
             <div class="form-group" v-if="field.type !== 'fieldset'">
-                <label for="field-editor-field-helpText" class="form-label">Help Text</label>
+                <label for="field-editor-field-helpText" class="form-label">Helper Text</label>
                 <input id="field-editor-field-helpText" class="form-control" v-model="field.helpText" />
                 <div class="form-text">Additional text to provide an explanation for the field</div>
             </div>
@@ -113,7 +113,7 @@
                     </div>
                 </div>
             </div>
-            <button type="button" class="btn btn-link px-1 py-2 gap-1 add fw-semibold d-inline-flex align-items-center" v-on:click.stop="$emit('add-field', $event, path)">
+            <button type="button" class="btn btn-link px-0 py-3 gap-1 add fw-semibold d-inline-flex align-items-center" v-on:click.stop="$emit('add-field', $event, path)">
                 <vc:icon symbol="new" />
                 Add form element
             </button>
@@ -157,7 +157,7 @@
 
 <form method="post" asp-action="Modify" asp-route-id="@formId" asp-route-storeId="@storeId">
     <div class="row mb-4">
-        <div class="col-xl-8 col-xxl-constrain">
+        <div class="col-12">
             <div class="d-flex align-items-center justify-content-between mb-3">
                 <h3 class="mb-0">
                     <span>@ViewData["Title"]</span>
@@ -174,7 +174,7 @@
                 </div>
             </div>
             <div asp-validation-summary="All" class="text-danger"></div>
-            <div class="form-group">
+            <div class="form-group" style="max-width: 27rem;">
                 <label asp-for="Name" class="form-label" data-required></label>
                 <input asp-for="Name" class="form-control" required />
                 <span asp-validation-for="Name" class="text-danger"></span>
@@ -183,7 +183,7 @@
                 <input asp-for="Public" type="checkbox" class="btcpay-toggle" />
                 <div>
                     <label asp-for="Public"></label>
-                    <div class="form-text" style="max-width:27rem">
+                    <div class="form-text">
                         Standalone mode, which can be used to generate invoices
                         independent of payment requests or apps.
                     </div>
@@ -210,10 +210,10 @@
                                v-on:sort-fields="sortFields"
                                v-on:select-field="selectField"
                                v-on:remove-field="removeField"
-                               class="bg-tile" />
+                               class="" />
             </div>
             <div class="col-lg-5">
-                <field-editor :field="selectedField" class="bg-tile p-3" />
+                <field-editor :field="selectedField" class="bg-tile p-4 rounded" />
             </div>
         </div>
         <button type="button" class="btn btn-secondary my-4" id="ToggleRawEditor" data-bs-toggle="collapse" data-bs-target="#RawEditor" aria-expanded="false" aria-controls="RawEditor">

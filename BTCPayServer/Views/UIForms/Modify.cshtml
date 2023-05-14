@@ -52,7 +52,7 @@
                 <div class="options" v-sortable="{ handle: '.drag', onUpdate: sortOptions }">
                     <div v-for="(option, index) in field.options" :key="option.value" class="d-flex align-items-start gap-3 pt-3">
                         <div class="field flex-grow-1">
-                            <label :for="`field-option-value-${index}`" class="form-label">Value</label>
+                            <label :for="`field-option-value-${index}`" class="form-label">Default</label>
                             <input :for="`field-option-value-${index}`" class="form-control" v-model="option.value" />
                         </div>
                         <div class="field flex-grow-1">

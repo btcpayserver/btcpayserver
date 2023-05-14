@@ -245,7 +245,7 @@ namespace BTCPayServer.Tests
                 await tester.EnsureChannelsSetup();
                 var user = tester.NewAccount();
                 user.GrantAccess(true);
-                user.RegisterLightningNode("BTC", LightningConnectionType.Charge);
+                user.RegisterLightningNode("BTC");
                 user.RegisterDerivationScheme("BTC");
                 user.RegisterDerivationScheme("LTC");
 

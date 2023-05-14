@@ -235,7 +235,7 @@
     <input asp-for="Count" type="hidden" />
     <input asp-for="TimezoneOffset" type="hidden" />
     <input asp-for="SearchTerm" type="hidden" value="@Model.Search.WithoutSearchText()"/>
-    <input asp-for="SearchText" class="form-control" placeholder="Search …" />
+    <input asp-for="SearchText" class="form-control" placeholder="Search…" />
     <div class="dropdown">
         <button id="StatusOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret @(hasStatusFilter ? "custom-active" : "")" type="button" data-bs-toggle="dropdown" aria-expanded="false">
             Status
@@ -257,7 +257,7 @@
     {
         <div class="dropdown">
             <button id="AppOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret @(hasAppFilter ? "custom-active" : "")" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                App
+                Plugin
             </button>
             <div class="dropdown-menu" aria-labelledby="AppOptionsToggle">
                 @foreach (var app in Model.Apps)

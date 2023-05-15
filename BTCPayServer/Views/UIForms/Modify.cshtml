@@ -16,8 +16,8 @@
     <style>
         #FormEditor .nav-link { background: none; padding: 0; font-weight: var(--btcpay-font-weight-bold); font-size: 1.5rem; }
         #FormEditor .list-group-item:not(.active) { background: none; }
-        #FormEditor .list-group-item { border: none !important; margin-top: 0 !important; padding: var(--btcpay-space-m) var(--btcpay-space-m) var(--btcpay-space-s) var(--btcpay-space-s) !important; }
-        #FormEditor fieldset .list-group-item { padding: var(--btcpay-space-m) 0 var(--btcpay-space-s) !important; }
+        #FormEditor .list-group-item { border: none !important; margin-top: 0 !important; padding: var(--btcpay-space-m) var(--btcpay-space-m) var(--btcpay-space-m) var(--btcpay-space-s) !important; }
+        #FormEditor fieldset .list-group-item { padding: var(--btcpay-space-m) 0 var(--btcpay-space-m) !important; }
         #FormEditor .control { color: var(--btcpay-body-text-muted); border: none !important; padding: 0 var(--btcpay-space-xs); }
         #FormEditor .control.drag:hover { color: var(--btcpay-body-text-active); }
         #FormEditor .control.remove:hover { color: var(--btcpay-danger); }
@@ -112,7 +112,7 @@
                     </button>
                 </div>
             </div>
-            <button type="button" class="btn btn-link py-0 px-2 mt-2 gap-1 add fw-semibold d-inline-flex align-items-center" v-on:click.stop="$emit('add-field', $event, path)">
+            <button type="button" class="btn btn-link py-0 px-2 mt-2 mb-2 gap-1 add fw-semibold d-inline-flex align-items-center" v-on:click.stop="$emit('add-field', $event, path)">
                 <vc:icon symbol="new" />
                 Add form element
             </button>

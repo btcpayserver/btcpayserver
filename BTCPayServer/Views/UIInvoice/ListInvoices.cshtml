@@ -6,13 +6,16 @@
 @{
     ViewData.SetActivePage(InvoiceNavPages.Index, "Invoices");
 
-    var hasStatusFilter = HasArrayFilter("status") || HasArrayFilter("exceptionstatus") || HasBooleanFilter("includearchived") || HasBooleanFilter("unusual");
+    var statusFilterCount = CountArrayFilter("status") + CountArrayFilter("exceptionstatus") + (HasBooleanFilter("includearchived") ? 1 : 0) + (HasBooleanFilter("unusual") ? 1 : 0);
     var hasDateFilter = HasArrayFilter("startdate") || HasArrayFilter("enddate");
-    var hasAppFilter = Model.Apps.Any(app => HasArrayFilter("orderid", app.AppOrderId));
+    var appFilterCount = Model.Apps.Count(app => HasArrayFilter("orderid", app.AppOrderId));
 }
 
 @functions
 {
+    private int CountArrayFilter(string type) =>
+        Model.Search.ContainsFilter(type) ? Model.Search.GetFilterArray(type).Length : 0;
+    
     private bool HasArrayFilter(string type, string key = null) =>
         Model.Search.ContainsFilter(type) && (key is null || Model.Search.GetFilterArray(type).Contains(key));
 
@@ -237,8 +240,15 @@
     <input asp-for="SearchTerm" type="hidden" value="@Model.Search.WithoutSearchText()"/>
     <input asp-for="SearchText" class="form-control" placeholder="Search…" />
     <div class="dropdown">
-        <button id="StatusOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret @(hasStatusFilter ? "custom-active" : "")" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-            Status
+        <button id="StatusOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            @if (statusFilterCount > 0)
+            {
+                <span>@statusFilterCount Status</span>
+            }
+            else
+            {
+                <span>Status</span>
+            }
         </button>
         <div class="dropdown-menu" aria-labelledby="StatusOptionsToggle">
             <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("status", "invalid")" class="dropdown-item @(HasArrayFilter("status", "invalid") ? "custom-active" : "")">Invalid</a>
@@ -256,8 +266,15 @@
     @if (Model.Apps.Any())
     {
         <div class="dropdown">
-            <button id="AppOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret @(hasAppFilter ? "custom-active" : "")" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                Plugin
+            <button id="AppOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                @if (appFilterCount > 0)
+                {
+                    <span>@appFilterCount Plugin@(appFilterCount > 1 ? "s" : "")</span>
+                }
+                else
+                {
+                    <span>Plugin</span>
+                }
             </button>
             <div class="dropdown-menu" aria-labelledby="AppOptionsToggle">
                 @foreach (var app in Model.Apps)
@@ -268,8 +285,30 @@
         </div> 
     }
     <div class="dropdown">
-        <button id="DateOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret @(hasDateFilter ? "custom-active" : "")" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-            Time
+        <button id="DateOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            @if (hasDateFilter)
+            {
+                if (HasArrayFilter("startdate", "-1d"))
+                {
+                    <span>24 Hours</span>
+                }
+                else if (HasArrayFilter("startdate", "-3d"))
+                {
+                    <span>3 Days</span>
+                }
+                else if (HasArrayFilter("startdate", "-7d"))
+                {
+                    <span>7 Days</span>
+                }
+                else
+                {
+                    <span>Custom</span>
+                }
+            }
+            else
+            {
+                <span>Time</span>
+            }
         </button>
         <div class="dropdown-menu" aria-labelledby="DateOptionsToggle">
             <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("startdate", "-1d")" class="dropdown-item @(HasArrayFilter("startdate", "-1d") ? "custom-active" : "")">Last 24 hours</a>

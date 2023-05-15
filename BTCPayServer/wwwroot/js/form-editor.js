@@ -24,7 +24,8 @@ document.addEventListener('DOMContentLoaded', () => {
         required: Boolean,
         constant: Boolean,
         options: Array,
-        fields: Array
+        fields: Array,
+        validationErrors: Array
     }
     
     const fieldTypeBase = {

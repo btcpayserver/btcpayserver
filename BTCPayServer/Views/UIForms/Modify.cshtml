@@ -59,7 +59,7 @@
                             <vc:icon symbol="drag" />
                         </button>
                         <div class="field flex-grow-1">
-                            <label :for="`field-option-value-${index}`" class="form-label">Default</label>
+                            <label :for="`field-option-value-${index}`" class="form-label">Value</label>
                             <input :for="`field-option-value-${index}`" class="form-control" v-model="option.value" />
                         </div>
                         <div class="field flex-grow-1">
@@ -76,10 +76,9 @@
                     Add option
                 </button>
             </div>
-            <div class="form-group" v-if="field.type !== 'fieldset' && field.type !== 'select'">
-                <label for="field-editor-field-value" class="form-label">Value</label>
+            <div class="form-group" v-if="field.type !== 'fieldset'">
+                <label for="field-editor-field-value" class="form-label">Default Value</label>
                 <input id="field-editor-field-value" class="form-control" v-model="field.value" />
-                <div class="form-text">The default value of the field</div>
             </div>
             <div class="form-group" v-if="field.type !== 'fieldset'">
                 <label for="field-editor-field-helpText" class="form-label">Helper Text</label>
@@ -137,7 +136,7 @@
         <div class="form-group mb-0">
             <label class="form-label" :for="name" :data-required="required" v-text="label"></label>
             <select class="form-select" :id="name" :name="name">
-                <option v-for="option in options" :key="option.value" :value="option.value" v-text="option.text"></option>
+                <option v-for="option in options" :key="option.value" :value="option.value" :selected="option.value === value" v-text="option.text"></option>
             </select>
             <div v-if="helpText" :id="`HelpText-${name}`" class="form-text" v-text="helpText"></div>
         </div>
@@ -196,10 +195,10 @@
         <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-3">
             <ul class="nav nav-pills gap-4" id="form-editor-tab" role="tablist">
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="editor-tab" data-bs-toggle="pill" data-bs-target="#editor-pane" type="button" role="tab" aria-controls="editor-pane" aria-selected="true">Editor</button>
+                    <button class="nav-link active" id="EditorTabButton" data-bs-toggle="pill" data-bs-target="#EditorTabPane" type="button" role="tab" aria-controls="EditorTabPane" aria-selected="true">Editor</button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="code-tab" data-bs-toggle="pill" data-bs-target="#code-pane" type="button" role="tab" aria-controls="code-pane" aria-selected="false">Code</button>
+                    <button class="nav-link" id="CodeTabButton" data-bs-toggle="pill" data-bs-target="#CodeTabPane" type="button" role="tab" aria-controls="CodeTabPane" aria-selected="false">Code</button>
                 </li>
             </ul>
             <div class="d-flex align-items-center gap-2 mb-1">
@@ -209,7 +208,7 @@
             </div>
         </div>
         <div class="tab-content">
-            <div class="tab-pane fade show active" id="editor-pane" role="tabpanel" aria-labelledby="editor-tab" tabindex="0">
+            <div class="tab-pane fade show active" id="EditorTabPane" role="tabpanel" aria-labelledby="EditorTabButton" tabindex="0">
                 <div class="row align-items-start">
                     <div class="col-lg-7 mb-4 mb-lg-0">
                         <fields-editor :path="[]"
@@ -226,7 +225,7 @@
                     </div>
                 </div>
             </div>
-            <div class="tab-pane fade" id="code-pane" role="tabpanel" aria-labelledby="code-tab" tabindex="0">
+            <div class="tab-pane fade" id="CodeTabPane" role="tabpanel" aria-labelledby="CodeTabButton" tabindex="0">
                 <div class="d-flex align-items-center justify-content-between gap-3">
                     <label asp-for="FormConfig" class="form-label" data-required>Form JSON</label>
                 </div>

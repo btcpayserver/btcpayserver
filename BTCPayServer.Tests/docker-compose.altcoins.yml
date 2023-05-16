@@ -24,7 +24,6 @@ services:
       TESTS_AzureBlobStorageConnectionString: ${TESTS_AzureBlobStorageConnectionString:-none}
       TEST_MERCHANTLIGHTNINGD: "type=clightning;server=unix://etc/merchant_lightningd_datadir/lightning-rpc"
       TEST_CUSTOMERLIGHTNINGD: "type=clightning;server=unix://etc/customer_lightningd_datadir/lightning-rpc"
-      TEST_MERCHANTCHARGE: "type=charge;server=http://lightning-charged:9112/;api-token=foiewnccewuify;allowinsecure=true"
       TEST_MERCHANTLND: "http://lnd:lnd@merchant_lnd:8080/"
       TESTS_INCONTAINER: "true"
       TESTS_SSHCONNECTION: "root@sshd:22"
@@ -56,7 +55,6 @@ services:
       - postgres
       - customer_lightningd
       - merchant_lightningd
-      - lightning-charged
       - customer_lnd
       - merchant_lnd
       - sshd
@@ -89,12 +87,17 @@ services:
       - postgres
       - customer_lnd
       - merchant_lnd
+
   selenium:
     image: selenium/standalone-chrome:101.0
+    extra_hosts:
+      - "tests:172.23.0.18"
     expose:
       - "4444"
-    extra_hosts:
-      - "tests:172.18.0.18"
+    networks:
+      default:
+      custom:
+
   nbxplorer:
     image: nicolasdorier/nbxplorer:2.3.63
     restart: unless-stopped
@@ -160,7 +163,7 @@ services:
       - "bitcoin_datadir:/data"
 
   customer_lightningd:
-    image: btcpayserver/lightning:v23.02-1-dev
+    image: btcpayserver/lightning:v23.05-dev
     stop_signal: SIGKILL
     restart: unless-stopped
     environment:
@@ -186,30 +189,8 @@ services:
     depends_on:
       - bitcoind
 
-  lightning-charged:
-    image: shesek/lightning-charge:0.4.23-1-standalone
-    restart: unless-stopped
-    environment:
-      NETWORK: regtest
-      API_TOKEN: foiewnccewuify
-      BITCOIND_RPCCONNECT: bitcoind
-      LN_NET_PATH: /etc/lightning
-      LN_NET: /etc/lightning
-    volumes:
-      - "bitcoin_datadir:/etc/bitcoin"
-      - "lightning_charge_datadir:/data"
-      - "merchant_lightningd_datadir:/etc/lightning"
-    expose:
-      - "9112" # Charge
-      - "9735" # Lightning
-    ports:
-      - "54938:9112" # Charge
-    depends_on:
-      - bitcoind
-      - merchant_lightningd
-
   merchant_lightningd:
-    image: btcpayserver/lightning:v23.02-1-dev
+    image: btcpayserver/lightning:v23.05-dev
     stop_signal: SIGKILL
     environment:
       EXPOSE_TCP: "true"

@@ -92,7 +92,7 @@ namespace BTCPayServer.Tests
 #endif
         public void ActivateLightning()
         {
-            ActivateLightning(LightningConnectionType.Charge);
+            ActivateLightning(LightningConnectionType.CLightning);
         }
         public void ActivateLightning(LightningConnectionType internalNode)
         {
@@ -109,14 +109,7 @@ namespace BTCPayServer.Tests
             string connectionString = null;
             if (connectionType is null)
                 return LightningSupportedPaymentMethod.InternalNode;
-            if (connectionType == LightningConnectionType.Charge)
-            {
-                if (isMerchant)
-                    connectionString = $"type=charge;server={MerchantCharge.Client.Uri.AbsoluteUri};allowinsecure=true";
-                else
-                    throw new NotSupportedException();
-            }
-            else if (connectionType == LightningConnectionType.CLightning)
+            if (connectionType == LightningConnectionType.CLightning)
             {
                 if (isMerchant)
                     connectionString = "type=clightning;server=" +

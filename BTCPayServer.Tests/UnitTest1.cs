@@ -469,14 +469,6 @@ namespace BTCPayServer.Tests
         [Fact(Timeout = 60 * 2 * 1000)]
         [Trait("Integration", "Integration")]
         [Trait("Lightning", "Lightning")]
-        public async Task CanSendLightningPaymentCharge()
-        {
-            await ProcessLightningPayment(LightningConnectionType.Charge);
-        }
-
-        [Fact(Timeout = 60 * 2 * 1000)]
-        [Trait("Integration", "Integration")]
-        [Trait("Lightning", "Lightning")]
         public async Task CanSendLightningPaymentLnd()
         {
             await ProcessLightningPayment(LightningConnectionType.LndREST);
@@ -1634,7 +1626,7 @@ namespace BTCPayServer.Tests
             var user = tester.NewAccount();
             var cryptoCode = "BTC";
             user.GrantAccess(true);
-            user.RegisterLightningNode(cryptoCode, LightningConnectionType.Charge);
+            user.RegisterLightningNode(cryptoCode);
             user.SetLNUrl(cryptoCode, false);
             var vm = user.GetController<UIStoresController>().CheckoutAppearance().AssertViewModel<CheckoutAppearanceViewModel>();
             var criteria = Assert.Single(vm.PaymentMethodCriteria);
@@ -1654,7 +1646,7 @@ namespace BTCPayServer.Tests
             Assert.Equal(PaymentTypes.LightningLike.ToString(), invoice.CryptoInfo[0].PaymentType);
 
             // Activating LNUrl, we should still have only 1 payment criteria that can be set.
-            user.RegisterLightningNode(cryptoCode, LightningConnectionType.Charge);
+            user.RegisterLightningNode(cryptoCode);
             user.SetLNUrl(cryptoCode, true);
             vm = user.GetController<UIStoresController>().CheckoutAppearance().AssertViewModel<CheckoutAppearanceViewModel>();
             criteria = Assert.Single(vm.PaymentMethodCriteria);

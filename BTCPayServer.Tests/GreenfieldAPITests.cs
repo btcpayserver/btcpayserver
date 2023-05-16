@@ -2442,27 +2442,10 @@ namespace BTCPayServer.Tests
             Assert.NotNull(merchantInvoice.PaymentHash);
             Assert.Equal(merchantInvoice.Id, merchantInvoice.PaymentHash);
 
-            // The default client is using charge, so we should not be able to query channels
-            var chargeClient = await user.CreateClient(Policies.CanUseInternalLightningNode);
-
-            var info = await chargeClient.GetLightningNodeInfo("BTC");
-            Assert.Single(info.NodeURIs);
-            Assert.NotEqual(0, info.BlockHeight);
-            Assert.NotNull(info.Alias);
-            Assert.NotNull(info.Color);
-            Assert.NotNull(info.Version);
-            Assert.NotNull(info.PeersCount);
-            Assert.NotNull(info.ActiveChannelsCount);
-            Assert.NotNull(info.InactiveChannelsCount);
-            Assert.NotNull(info.PendingChannelsCount);
-
-            var gex = await AssertAPIError("lightning-node-unavailable", () => chargeClient.ConnectToLightningNode("BTC", new ConnectToNodeRequest(NodeInfo.Parse($"{new Key().PubKey.ToHex()}@localhost:3827"))));
-            Assert.Contains("NotSupported", gex.Message);
-
-            await AssertAPIError("lightning-node-unavailable", () => chargeClient.GetLightningNodeChannels("BTC"));
+            var client = await user.CreateClient(Policies.CanUseInternalLightningNode);
             // Not permission for the store!
-            await AssertAPIError("missing-permission", () => chargeClient.GetLightningNodeChannels(user.StoreId, "BTC"));
-            var invoiceData = await chargeClient.CreateLightningInvoice("BTC", new CreateLightningInvoiceRequest()
+            await AssertAPIError("missing-permission", () => client.GetLightningNodeChannels(user.StoreId, "BTC"));
+            var invoiceData = await client.CreateLightningInvoice("BTC", new CreateLightningInvoiceRequest()
             {
                 Amount = LightMoney.Satoshis(1000),
                 Description = "lol",
@@ -2470,17 +2453,17 @@ namespace BTCPayServer.Tests
                 PrivateRouteHints = false
             });
             var chargeInvoice = invoiceData;
-            Assert.NotNull(await chargeClient.GetLightningInvoice("BTC", invoiceData.Id));
+            Assert.NotNull(await client.GetLightningInvoice("BTC", invoiceData.Id));
 
             // check list for internal node
-            var invoices = await chargeClient.GetLightningInvoices("BTC");
-            var pendingInvoices = await chargeClient.GetLightningInvoices("BTC", true);
+            var invoices = await client.GetLightningInvoices("BTC");
+            var pendingInvoices = await client.GetLightningInvoices("BTC", true);
             Assert.NotEmpty(invoices);
             Assert.Contains(invoices, i => i.Id == invoiceData.Id);
             Assert.NotEmpty(pendingInvoices);
             Assert.Contains(pendingInvoices, i => i.Id == invoiceData.Id);
 
-            var client = await user.CreateClient($"{Policies.CanUseLightningNodeInStore}:{user.StoreId}");
+            client = await user.CreateClient($"{Policies.CanUseLightningNodeInStore}:{user.StoreId}");
             // Not permission for the server
             await AssertAPIError("missing-permission", () => client.GetLightningNodeChannels("BTC"));
 
@@ -2559,7 +2542,7 @@ namespace BTCPayServer.Tests
             Assert.Contains(payments, i => i.BOLT11 == merchantInvoice.BOLT11);
 
             // Node info
-            info = await client.GetLightningNodeInfo(user.StoreId, "BTC");
+            var info = await client.GetLightningNodeInfo(user.StoreId, "BTC");
             Assert.Single(info.NodeURIs);
             Assert.NotEqual(0, info.BlockHeight);
 

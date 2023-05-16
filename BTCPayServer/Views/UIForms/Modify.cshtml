@@ -14,12 +14,14 @@
 
 @section PageHeadCOntent {
     <style>
-        #FormEditor .nav-link { background: none; padding: 0; font-weight: var(--btcpay-font-weight-bold); font-size: 1.5rem; }
+        #FormEditor .nav-link { background: none; padding: 0; font-weight: var(--btcpay-font-weight-semibold); font-size: 1.125rem; }
+        #FormEditor .nav-link.active { color: var(--btcpay-primary); }
         #FormEditor .list-group-item:not(.active) { background: none; }
         #FormEditor .list-group-item { border: none !important; margin-top: 0 !important; padding: var(--btcpay-space-m) var(--btcpay-space-m) var(--btcpay-space-m) var(--btcpay-space-s) !important; }
         #FormEditor fieldset .list-group-item { padding: var(--btcpay-space-m) 0 var(--btcpay-space-m) !important; }
         #FormEditor .control { color: var(--btcpay-body-text-muted); border: none !important; padding: 0 var(--btcpay-space-xs); }
-        #FormEditor .control.drag:hover { color: var(--btcpay-body-text-active); }
+        #FormEditor .control.drag[disabled] { visibility: hidden; }
+        #FormEditor .control.drag:hover { color: var(--btcpay-primary); }
         #FormEditor .control.remove:hover { color: var(--btcpay-danger); }
         #FormEditor .field .form-group:last-child { margin-bottom: 0; }
         #FormEditor .nested-fields { margin: 0 -3.1rem 0 -.5rem; }
@@ -101,7 +103,7 @@
         <div>
             <div class="fields list-group" :class="{ 'list-group-flush': path.length }" :data-path="path.join(',')" v-sortable="{ handle: '.drag', onUpdate (event) { const { path } = this.el.dataset; $emit('sort-fields', event, (path.indexOf(',') !== -1 ? path.split(',') : [])) } }">
                 <div v-for="(field, index) in fields" :key="field.name" class="d-flex align-items-start gap-2 list-group-item" :class="{ active: field === selectedField }" v-on:click.stop="$emit('select-field', $event, path, index)">
-                    <button type="button" class="btn b-0 control drag">
+                    <button type="button" class="btn b-0 control drag" :disabled="fields.length === 1">
                         <vc:icon symbol="drag" />
                     </button>
                     <div class="field flex-grow-1">

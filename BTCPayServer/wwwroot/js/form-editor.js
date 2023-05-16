@@ -170,12 +170,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 fields.splice(newIndex, 0, fields.splice(oldIndex, 1)[0])
             },
             getFieldsForPath (path) {
+                if (!this.config.fields) this.$set(this.config, 'fields', [])
                 let fields = this.config.fields
                 while (path.length) {
                     const name = path.shift()
-                    fields = fields.find(field => field.name === name).fields
+                    const field = fields.find(field => field.name === name)
+                    if (!field.fields) this.$set(field, 'fields', [])
+                    fields = field.fields
                 }
                 return fields
+            }
+        },
+        mounted () {
+            if (!this.config.fields || this.config.fields.length === 0) {
+                this.addField(null,[])
             }
         }
     })

@@ -7,10 +7,12 @@ using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Services.Wallets;
+using Dapper;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Npgsql;
 
 namespace BTCPayServer.Services
 {
@@ -365,6 +367,11 @@ namespace BTCPayServer.Services
         {
             SortWalletObjectLinks(ref a, ref b);
             await using var ctx = _ContextFactory.CreateContext();
+            await UpdateWalletObjectLink(a, b, data, ctx, true);
+        }
+
+        private static async Task UpdateWalletObjectLink(WalletObjectId a, WalletObjectId b, JObject? data, ApplicationDbContext ctx, bool doNothingIfExists)
+        {
             var l = new WalletObjectLinkData()
             {
                 WalletId = a.WalletId.ToString(),
@@ -374,13 +381,34 @@ namespace BTCPayServer.Services
                 BId = b.Id,
                 Data = data?.ToString(Formatting.None)
             };
-            ctx.WalletObjectLinks.Add(l);
-            try
+            if (!ctx.Database.IsNpgsql())
             {
-                await ctx.SaveChangesAsync();
+                var e = ctx.WalletObjectLinks.Add(l);
+                try
+                {
+                    await ctx.SaveChangesAsync();
+                }
+                catch (DbUpdateException) // already exists
+                {
+                    if (!doNothingIfExists)
+                    {
+                        e.State = EntityState.Modified;
+                        await ctx.SaveChangesAsync();
+                    }
+                }
             }
-            catch (DbUpdateException) // already exists
+            else
             {
+                var connection = ctx.Database.GetDbConnection();
+                var conflict = doNothingIfExists ? "ON CONFLICT DO NOTHING" : "ON CONFLICT ON CONSTRAINT \"PK_WalletObjectLinks\" DO UPDATE SET \"Data\"=EXCLUDED.\"Data\"";
+                try
+                {
+                    await connection.ExecuteAsync("INSERT INTO \"WalletObjectLinks\" VALUES (@WalletId, @AType, @AId, @BType, @BId, @Data::JSONB) " + conflict, l);
+                }
+                catch (PostgresException ex) when (ex.SqlState == PostgresErrorCodes.ForeignKeyViolation)
+                {
+                    throw new DbUpdateException();
+                }
             }
         }
 
@@ -411,25 +439,7 @@ namespace BTCPayServer.Services
 
 
             await using var ctx = _ContextFactory.CreateContext();
-            var l = new WalletObjectLinkData()
-            {
-                WalletId = a.WalletId.ToString(),
-                AType = a.Type,
-                AId = a.Id,
-                BType = b.Type,
-                BId = b.Id,
-                Data = data?.ToString(Formatting.None)
-            };
-            var e = ctx.WalletObjectLinks.Add(l);
-            try
-            {
-                await ctx.SaveChangesAsync();
-            }
-            catch (DbUpdateException) // already exists
-            {
-                e.State = EntityState.Modified;
-                await ctx.SaveChangesAsync();
-            }
+            await UpdateWalletObjectLink(a, b, data, ctx, false);
         }
 
         public static int MaxCommentSize = 200;
@@ -558,30 +568,47 @@ namespace BTCPayServer.Services
         {
             ArgumentNullException.ThrowIfNull(id);
             await using var ctx = _ContextFactory.CreateContext();
-            var o = NewWalletObjectData(id, data);
-            ctx.WalletObjects.Add(o);
-            try
+            var wo = NewWalletObjectData(id, data);
+            if (!ctx.Database.IsNpgsql())
             {
-                await ctx.SaveChangesAsync();
+                ctx.WalletObjects.Add(wo);
+                try
+                {
+                    await ctx.SaveChangesAsync();
+                }
+                catch (DbUpdateException) // already exists
+                {
+                    ctx.Entry(wo).State = EntityState.Modified;
+                    await ctx.SaveChangesAsync();
+                }
             }
-            catch (DbUpdateException) // already exists
+            else
             {
-                ctx.Entry(o).State = EntityState.Modified;
-                await ctx.SaveChangesAsync();
+                var connection = ctx.Database.GetDbConnection();
+                await connection.ExecuteAsync("INSERT INTO \"WalletObjects\" VALUES (@WalletId, @Type, @Id, @Data::JSONB) ON CONFLICT ON CONSTRAINT \"PK_WalletObjects\" DO UPDATE SET \"Data\"=EXCLUDED.\"Data\"", wo);
             }
         }
 
         public async Task EnsureWalletObject(WalletObjectId id, JObject? data = null)
         {
             ArgumentNullException.ThrowIfNull(id);
+            var wo = NewWalletObjectData(id, data);
             await using var ctx = _ContextFactory.CreateContext();
-            ctx.WalletObjects.Add(NewWalletObjectData(id, data));
-            try
+            if (!ctx.Database.IsNpgsql())
             {
-                await ctx.SaveChangesAsync();
+                ctx.WalletObjects.Add(wo);
+                try
+                {
+                    await ctx.SaveChangesAsync();
+                }
+                catch (DbUpdateException) // already exists
+                {
+                }
             }
-            catch (DbUpdateException) // already exists
+            else
             {
+                var connection = ctx.Database.GetDbConnection();
+                await connection.ExecuteAsync("INSERT INTO \"WalletObjects\" VALUES (@WalletId, @Type, @Id, @Data::JSONB) ON CONFLICT DO NOTHING", wo);
             }
         }
 #nullable restore

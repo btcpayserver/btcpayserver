@@ -5,7 +5,6 @@
 @using BTCPayServer.Abstractions.TagHelpers
 @using BTCPayServer.Controllers
 @using BTCPayServer.Views.Stores
-@using Microsoft.AspNetCore.Html
 @model UpdateRoleViewModel
 @{
     Layout = "_NavLayout.cshtml";
@@ -41,21 +40,14 @@
             </div>
 
             <div class="form-group">
-                <label asp-for="Policies" class="form-label"></label>
-                <select multiple="multiple" asp-for="Policies" class="form-select">
+                <h5 class="mt-4 mb-3">Permissions</h5>
+                <select multiple="multiple" asp-for="Policies" class="form-select hide-when-js">
                     @foreach (var policy in storePolicies)
                     {
                         <option value="@policy" class="text-truncate" asp-selected="@(Model.Policies?.Contains(policy) ?? false)">@policy</option>
                     }
                 </select>
-                <h5 class="mt-4 mb-3">Permissions</h5>
                 <div class="list-group mb-4">
-                    @* 
-                    1.) Use Permission.PolicyMaps to get the list of policies and their subpolicies. 
-                    2.) Filter the list of policies to only include store policies.
-                    3.) Find policies which are the topmost policies (i.e. they have no parent policies) 
-                    3.) Recursively Loop through the list of policies and subpolicies and create a tree of policies using ul and li tags                    
-*@
                     @{
                         var storePolicyMap = Permission.PolicyMap.Where(pair => Policies.IsStorePolicy(pair.Key));
                         var topMostPolicies = storePolicyMap.Where(pair => !storePolicyMap.Any(valuePair => valuePair.Value.Contains(pair.Key)));
@@ -79,7 +71,7 @@
     void RenderTree(KeyValuePair<string, HashSet<string>> policy, IEnumerable<KeyValuePair<string, HashSet<string>>> storePolicyMap, bool isChecked)
     {
         <div class="form-check">
-            <input type="checkbox" class="form-check-input ms-n4" checked="@isChecked" />
+            <input type="checkbox" class="form-check-input ms-n4 policy-cb" checked="@isChecked" value="@policy.Key" />
             <label class="h5 form-check-label me-2 mb-1">
                 <span class="me-lg-1">@UIManageController.AddApiKeyViewModel.PermissionValueItem.PermissionDescriptions[policy.Key].Title</span>
                 <small class="text-muted text-break d-block my-2 d-lg-inline-block my-lg-0">@policy.Key</small>
@@ -109,3 +101,35 @@
         </div>
     }
 }
+<script>
+    function handleCheckboxChange(element){
+        const checked = element.checked;
+        const policy = element.value;
+        const policySelect = document.querySelector("#Policies");
+        const subPolicies = element.parentElement.querySelectorAll(`.list-group .policy-cb:not([value="${policy}"])`)
+        policySelect.querySelector(`option[value="${policy}"]`).selected = checked;
+        subPolicies.forEach((subPolicy)=>{
+        
+            
+            subPolicy.checked = checked? false : subPolicy.checked;
+            if (checked){
+            subPolicy.setAttribute("disabled", "disabled");
+            }else{
+            
+            subPolicy.removeAttribute("disabled");
+            }
+            
+            policySelect.querySelector(`option[value="${subPolicy.value}"]`).selected = subPolicy.checked ;
+            
+        });
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll(".policy-cb:checked").forEach((element)=>{
+            handleCheckboxChange(element);
+        });
+        delegate('change', '.policy-cb', (event)=>{
+           handleCheckboxChange(event.target);
+        });
+        
+    });    
+</script>

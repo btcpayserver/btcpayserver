@@ -164,7 +164,6 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             var blob = model.GetStoreBlob();
             model.StoreName = restModel.Name;
-            model.StoreName = restModel.Name;
             model.StoreWebsite = restModel.Website;
             model.SpeedPolicy = restModel.SpeedPolicy;
             model.SetDefaultPaymentId(defaultPaymentMethod);
@@ -240,7 +239,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 ModelState.AddModelError(nameof(request.DisplayExpirationTimer), "DisplayExpirationTimer can only be between 1 and 34560 mins");
             if (request.MonitoringExpiration < TimeSpan.FromMinutes(10) && request.MonitoringExpiration > TimeSpan.FromMinutes(60 * 24 * 24))
                 ModelState.AddModelError(nameof(request.MonitoringExpiration), "MonitoringExpiration can only be between 10 and 34560 mins");
-            if (request.PaymentTolerance < 0 && request.PaymentTolerance > 100)
+            if (request.PaymentTolerance < 0 || request.PaymentTolerance > 100)
                 ModelState.AddModelError(nameof(request.PaymentTolerance), "PaymentTolerance can only be between 0 and 100 percent");
 
             if (request.PaymentMethodCriteria?.Any() is true)

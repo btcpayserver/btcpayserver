@@ -430,11 +430,6 @@ namespace BTCPayServer.Services.Invoices
         {
             using var context = _applicationDbContextFactory.CreateContext();
             var items = context.Invoices.Where(a => invoiceIds.Contains(a.Id));
-            if (items == null)
-            {
-                return;
-            }
-
             foreach (InvoiceData invoice in items)
             {
                 invoice.Archived = archive;

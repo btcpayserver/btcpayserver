@@ -889,8 +889,11 @@ namespace BTCPayServer.Controllers
             var userId = GetUserId();
             if (userId == null)
                 return Challenge(AuthenticationSchemes.Cookie);
-            storeId = model.StoreId;
-            var store = CurrentStore ?? await _Repo.FindStore(storeId, userId);
+            var store = model.StoreId switch
+            {
+                null => CurrentStore,
+                string id => await _Repo.FindStore(storeId, userId)
+            };
             if (store == null)
                 return Challenge(AuthenticationSchemes.Cookie);
             var tokenRequest = new TokenRequest()
@@ -908,7 +911,7 @@ namespace BTCPayServer.Controllers
                     Id = tokenRequest.PairingCode,
                     Label = model.Label,
                 });
-                await _TokenRepository.PairWithStoreAsync(tokenRequest.PairingCode, storeId);
+                await _TokenRepository.PairWithStoreAsync(tokenRequest.PairingCode, store.Id);
                 pairingCode = tokenRequest.PairingCode;
             }
             else

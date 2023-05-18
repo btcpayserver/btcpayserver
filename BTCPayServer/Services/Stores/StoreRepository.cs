@@ -84,7 +84,7 @@ namespace BTCPayServer.Services.Stores
             {
                 query = query.Include(u => u.Users);
             }
-            return (await query.ToArrayAsync()).Select(role => ToStoreRole(role, storeId)).ToArray();
+            return (await query.ToArrayAsync()).Select(role => ToStoreRole(role)).ToArray();
         }
 
         public async Task<StoreRole?> GetStoreRole(string roleId, string? storeId, bool includeUsers = false)
@@ -98,7 +98,7 @@ namespace BTCPayServer.Services.Stores
             var match = await query.SingleOrDefaultAsync(role => role.Id == roleId);
             if (match == null || match.StoreDataId != storeId)
                 return null;
-            return ToStoreRole(match, storeId);
+            return ToStoreRole(match);
         }
         public async Task<bool> RemoveStoreRole(string roleId, string? storeId)
         {
@@ -106,6 +106,8 @@ namespace BTCPayServer.Services.Stores
             var match = await ctx.StoreRoles.FindAsync(roleId);
             if (match != null && match.StoreDataId == storeId)
             {
+                if(storeId is null && match.Policies.Contains(Policies.CanModifyStoreSettings) && await ctx.StoreRoles.CountAsync(role => role.StoreDataId == null && role.Policies.Contains(Policies.CanModifyStoreSettings)) == 1)
+                    return false;
                 ctx.StoreRoles.Remove(match);
                 await ctx.SaveChangesAsync();
                 return true;
@@ -144,7 +146,7 @@ namespace BTCPayServer.Services.Stores
             }
 
             await ctx.SaveChangesAsync();
-            return ToStoreRole(match, storeId);
+            return ToStoreRole(match);
         }
         
         public async Task<StoreUser[]> GetStoreUsers(string storeId)
@@ -161,18 +163,18 @@ namespace BTCPayServer.Services.Stores
                         Id = u.ApplicationUserId, u.ApplicationUser.Email, u.StoreRole
                     }).ToArrayAsync()).Select(arg => new StoreUser()
             {
-                StoreRole = ToStoreRole(arg.StoreRole, storeId),
+                StoreRole = ToStoreRole(arg.StoreRole),
                 Id = arg.Id,
                 Email = arg.Email
             }).ToArray();
         }
 
-        public static StoreRole ToStoreRole(Data.StoreRole storeRole, string? storeId)
+        public static StoreRole ToStoreRole(Data.StoreRole storeRole)
         {
             return new StoreRole()
             {
                 Id = storeRole.Id,
-                Role = storeRole.Role, Policies = storeRole.Policies, IsServerRole = storeId == null, IsUsed = storeRole.Users?.Any()
+                Role = storeRole.Role, Policies = storeRole.Policies, IsServerRole = storeRole.StoreDataId == null, IsUsed = storeRole.Users?.Any()
             };
         }
 
@@ -260,7 +262,7 @@ namespace BTCPayServer.Services.Stores
                 }
             }
         }
-        public async Task CreateStore(string ownerId, StoreData storeData, string roleId = null)
+        public async Task CreateStore(string ownerId, StoreData storeData, string? roleId = null)
         {
             if (!string.IsNullOrEmpty(storeData.Id))
                 throw new ArgumentException("id should be empty", nameof(storeData.StoreName));
@@ -269,6 +271,9 @@ namespace BTCPayServer.Services.Stores
             ArgumentNullException.ThrowIfNull(ownerId);
             await using var ctx = _ContextFactory.CreateContext();
             storeData.Id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(32));
+            roleId ??= (await ctx.StoreRoles.FirstOrDefaultAsync(role =>
+                role.StoreDataId == null && role.Policies.Contains(Policies.CanModifyStoreSettings)))?.Id;
+            
             var userStore = new UserStore
             {
                 StoreDataId = storeData.Id,

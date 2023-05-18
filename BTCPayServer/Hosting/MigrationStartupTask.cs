@@ -282,7 +282,9 @@ namespace BTCPayServer.Hosting
                     Policies.CanWithdrawFromCustodianAccounts,
                     Policies.CanDepositToCustodianAccounts
                 },
+#pragma warning disable CS0618
                 Role = StoreRoles.Owner,
+#pragma warning restore CS0618
                 StoreDataId = null
             };
             var guest = new StoreRole()
@@ -294,7 +296,9 @@ namespace BTCPayServer.Hosting
                     Policies.CanViewCustodianAccounts,
                     Policies.CanDepositToCustodianAccounts
                 },
+#pragma warning disable CS0618
                 Role = StoreRoles.Guest,
+#pragma warning restore CS0618
                 StoreDataId = null
             };
 

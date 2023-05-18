@@ -257,7 +257,7 @@ namespace BTCPayServer.Services.Apps
                 .OrderBy(b => b.app.Created)
                 .ToArrayAsync()).Select(arg => new ListAppsViewModel.ListAppViewModel
             {
-                Role = StoreRepository.ToStoreRole(arg.us.StoreRole, arg.us.StoreDataId),
+                Role = StoreRepository.ToStoreRole(arg.us.StoreRole),
                 StoreId = arg.us.StoreDataId,
                 StoreName = arg.us.StoreData.StoreName,
                 AppName = arg.app.Name,

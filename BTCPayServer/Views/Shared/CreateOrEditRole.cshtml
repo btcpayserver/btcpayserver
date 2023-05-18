@@ -2,32 +2,36 @@
 @using BTCPayServer.Views.Server
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @using BTCPayServer.Abstractions.Extensions
+@using BTCPayServer.Abstractions.TagHelpers
+@using BTCPayServer.Controllers
 @using BTCPayServer.Views.Stores
+@using Microsoft.AspNetCore.Html
 @model UpdateRoleViewModel
 @{
+    Layout = "_NavLayout.cshtml";
     var roleId = Context.GetRouteValue("roleId") as string;
-    
+
     if (roleId == "create")
         roleId = null;
-    
+
     var storeId = Context.GetRouteValue("storeId") as string;
     var controller = ViewContext.RouteData.Values["controller"].ToString().TrimEnd("Controller", StringComparison.InvariantCultureIgnoreCase);
-    if(storeId is null)
+    if (storeId is null)
         ViewData.SetActivePage(ServerNavPages.Roles, roleId is null ? "Create role" : "Update role");
-        
+
     else
     {
         ViewData.SetActivePage(StoreNavPages.Roles, roleId is null ? "Create role" : "Update role");
     }
     var storePolicies = Policies.AllPolicies.Where(Policies.IsStorePolicy).ToArray();
-    
+
 }
 
 <h3 class="mb-4">@ViewData["Title"]</h3>
 
 <div class="row">
     <div class="col-xl-6 col-xxl-constrain">
-        <form method="post" asp-controller="@controller" asp-action="CreateOrEditRole" asp-route-roleId="@(roleId??"create")" asp-route-storeId="@storeId">
+        <form method="post" asp-controller="@controller" asp-action="CreateOrEditRole" asp-route-roleId="@(roleId ?? "create")" asp-route-storeId="@storeId">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
             <div class="form-group">
@@ -44,6 +48,25 @@
                         <option value="@policy" class="text-truncate" asp-selected="@(Model.Policies?.Contains(policy) ?? false)">@policy</option>
                     }
                 </select>
+                <h5 class="mt-4 mb-3">Permissions</h5>
+                <div class="list-group mb-4">
+                    @* 
+                    1.) Use Permission.PolicyMaps to get the list of policies and their subpolicies. 
+                    2.) Filter the list of policies to only include store policies.
+                    3.) Find policies which are the topmost policies (i.e. they have no parent policies) 
+                    3.) Recursively Loop through the list of policies and subpolicies and create a tree of policies using ul and li tags                    
+*@
+                    @{
+                        var storePolicyMap = Permission.PolicyMap.Where(pair => Policies.IsStorePolicy(pair.Key));
+                        var topMostPolicies = storePolicyMap.Where(pair => !storePolicyMap.Any(valuePair => valuePair.Value.Contains(pair.Key)));
+                        @foreach (var policy in topMostPolicies)
+                        {
+                            RenderTree(policy, storePolicyMap, Model.Policies.Contains(policy.Key));
+                        }
+
+                    }
+
+                </div>
                 <span asp-validation-for="Policies" class="text-danger"></span>
             </div>
 
@@ -51,3 +74,38 @@
         </form>
     </div>
 </div>
+
+@{
+    void RenderTree(KeyValuePair<string, HashSet<string>> policy, IEnumerable<KeyValuePair<string, HashSet<string>>> storePolicyMap, bool isChecked)
+    {
+        <div class="form-check">
+            <input type="checkbox" class="form-check-input ms-n4" checked="@isChecked" />
+            <label class="h5 form-check-label me-2 mb-1">
+                <span class="me-lg-1">@UIManageController.AddApiKeyViewModel.PermissionValueItem.PermissionDescriptions[policy.Key].Title</span>
+                <small class="text-muted text-break d-block my-2 d-lg-inline-block my-lg-0">@policy.Key</small>
+            </label>
+            <div>
+                <span class="text-muted">@UIManageController.AddApiKeyViewModel.PermissionValueItem.PermissionDescriptions[policy.Key].Description</span>
+            </div>
+            @if (policy.Value?.Any() is true)
+            {
+                <div class="list-group">
+                    @foreach (var subPolicy in policy.Value)
+                    {
+                        var match = storePolicyMap.SingleOrDefault(pair => pair.Key == subPolicy);
+                        @if (match.Key is {})
+                        {
+                            RenderTree(match, storePolicyMap, !isChecked && Model.Policies.Contains(match.Key));
+                        }
+                        else
+                        {
+                            RenderTree(new KeyValuePair<string, HashSet<string>>(subPolicy, null), storePolicyMap, !isChecked && Model.Policies.Contains(match.Key));
+                        }
+                    }
+
+
+                </div>
+            }
+        </div>
+    }
+}

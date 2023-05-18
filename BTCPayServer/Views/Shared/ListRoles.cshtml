@@ -4,14 +4,15 @@
 @using BTCPayServer.Views.Stores
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @using BTCPayServer.Abstractions.Extensions
+@using BTCPayServer.Client
 @model BTCPayServer.Models.ServerViewModels.RolesViewModel
 @{
-    
+    Layout = "_NavLayout.cshtml";
     var storeId = Context.GetRouteValue("storeId") as string;
     var controller = ViewContext.RouteData.Values["controller"].ToString().TrimEnd("Controller", StringComparison.InvariantCultureIgnoreCase);
-    if(storeId is null)
+    if (storeId is null)
         ViewData.SetActivePage(ServerNavPages.Roles);
-        
+
     else
     {
         ViewData.SetActivePage(StoreNavPages.Roles);
@@ -36,19 +37,21 @@
 
     var sortByDesc = "Sort by descending...";
     var sortByAsc = "Sort by ascending...";
+
+    var showInUseColumn = !Model.Roles.Any(r => r.IsUsed is null);
 }
 
 <div class="d-flex align-items-center justify-content-between mb-3">
     <h3 class="mb-0">@ViewData["Title"]</h3>
-    <a asp-action="CreateOrEditRole" class="btn btn-primary" role="button" id="CreateRole" asp-route-roleId="create" 
-                    asp-controller="@controller">
+    <a asp-action="CreateOrEditRole" asp-route-storeId="@storeId" class="btn btn-primary" role="button" id="CreateRole" asp-route-roleId="create"
+       asp-controller="@controller">
         <span class="fa fa-plus"></span>
         Add Role
     </a>
 </div>
 
-<form asp-action="ListUsers" asp-route-sortOrder="@(roleSortOrder)" style="max-width:640px" 
-                    asp-controller="@controller">
+<form asp-action="ListRoles" asp-route-storeId="@storeId" asp-route-sortOrder="@(roleSortOrder)" style="max-width:640px"
+      asp-controller="@controller">
     <div class="input-group">
         <input asp-for="SearchTerm" class="form-control" placeholder="Search by role..." />
         <button type="submit" class="btn btn-secondary" title="Search by role">
@@ -63,9 +66,10 @@
         <thead>
         <tr>
             <th>
-                <a 
+                <a
                     asp-controller="@controller"
                     asp-action="ListRoles"
+                    asp-route-storeId="@storeId"
                     asp-route-sortOrder="@(nextRoleSortOrder ?? "asc")"
                     class="text-nowrap"
                     title="@(nextRoleSortOrder == "desc" ? sortByAsc : sortByDesc)">
@@ -74,6 +78,10 @@
                 </a>
             </th>
             <th >Policies</th>
+            @if (showInUseColumn)
+            {
+                <th>In use</th>
+            }
             <th class="text-end">Actions</th>
         </tr>
         </thead>
@@ -81,8 +89,14 @@
         @foreach (var role in Model.Roles)
         {
             <tr>
-                <td class="d-flex align-items-center">
+                <td class="d-flex justify-content-between">
                     <span class="me-2">@role.Role</span>
+                    @if (role.IsServerRole)
+                    {
+                        <span class="badge bg-dark">
+                            Server-wide
+                        </span>
+                    }
 
                 </td>
                 <td>
@@ -91,11 +105,29 @@
                         <span class="badge bg-secondary mx-1">@policy</span>
                     }
                 </td>
+                @if (showInUseColumn)
+                {
+                    <td class="text-center">
+                        @if (role.IsUsed is true)
+                        {
+                            <span class="text-success fa fa-check"></span>
+                        }
+                        else
+                        {
+                            <span class="text-danger fa fa-times"></span>
+                        }
+                    </td>
+                }
                 <td class="text-end">
-                    <a asp-action="CreateOrEditRole" asp-route-roleId="@role.Id" 
-                    asp-controller="@controller">Edit</a> - 
-                    <a asp-action="DeleteRole" asp-route-roleId="@role.Id" 
-                    asp-controller="@controller">Remove</a>
+
+                    <a permission="@(role.IsServerRole ? Policies.CanModifyServerSettings : Policies.CanModifyStoreSettings)" asp-action="CreateOrEditRole" asp-route-storeId="@storeId" asp-route-roleId="@role.Id"
+                       asp-controller="@(role.IsServerRole ? "UIServer" : "UIStores")">
+                        Edit
+                    </a> -
+                    <a permission="@(role.IsServerRole ? Policies.CanModifyServerSettings : Policies.CanModifyStoreSettings)" asp-action="DeleteRole" asp-route-storeId="@storeId" asp-route-roleId="@role.Id"
+                       asp-controller="@(role.IsServerRole ? "UIServer" : "UIStores")">
+                        Remove
+                    </a>
 
                 </td>
             </tr>

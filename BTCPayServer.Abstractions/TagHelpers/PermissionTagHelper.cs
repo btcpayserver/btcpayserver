@@ -6,7 +6,8 @@ using Microsoft.Extensions.Logging;
 
 namespace BTCPayServer.Abstractions.TagHelpers;
 
-[HtmlTargetElement(Attributes = nameof(Permission) + "," + "NotPermission")]
+[HtmlTargetElement(Attributes = "[permission]")]
+[HtmlTargetElement(Attributes = "[not-permission]"  )]
 public class PermissionTagHelper : TagHelper
 {
     private readonly IAuthorizationService _authorizationService;

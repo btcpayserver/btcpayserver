@@ -25,7 +25,7 @@ namespace BTCPayServer.Controllers
         {
             model = this.ParseListQuery(model ?? new RolesViewModel());
 
-            var roles = await storeRepository.GetStoreRoles(storeId, false, true);
+            var roles = await storeRepository.GetStoreRoles(storeId, false, false);
             if (!string.IsNullOrWhiteSpace(model.SearchTerm))
             {
                 roles = roles.Where(r => r.Role.Contains(model.SearchTerm, StringComparison.InvariantCultureIgnoreCase))
@@ -115,7 +115,7 @@ namespace BTCPayServer.Controllers
                 Message = roleId is null? "Role created" : "Role updated"
             });
                 
-            return RedirectToAction(nameof(ListRoles));
+            return RedirectToAction(nameof(ListRoles), new {storeId});
         }
         
 

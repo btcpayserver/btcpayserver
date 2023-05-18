@@ -149,9 +149,17 @@ namespace BTCPayServer.Controllers
             {
                 return BadRequest();
             }
-            await storeRepository.RemoveStoreRole(roleId, null);
 
-            TempData[WellKnownTempData.SuccessMessage] = "Role deleted";
+            if (await storeRepository.RemoveStoreRole(roleId, null))
+            {
+                
+                TempData[WellKnownTempData.SuccessMessage] = "Role deleted";
+            }
+            else
+            {
+                TempData[WellKnownTempData.ErrorMessage] = "Role could not be deleted (Is it the last permission for store administrator?)";
+            }
+
             return RedirectToAction(nameof(ListRoles));
         }
     }
@@ -162,6 +170,5 @@ public class UpdateRoleViewModel
     [Display(Name = "Role")]
     public string Role { get; set; }
 
-    [Display(Name = "Policies")]
-    public List<string> Policies { get; set; }
+    [Display(Name = "Policies")] public List<string> Policies { get; set; } = new();
 }

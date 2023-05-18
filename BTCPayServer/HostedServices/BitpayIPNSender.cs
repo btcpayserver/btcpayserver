@@ -261,7 +261,6 @@ namespace BTCPayServer.HostedServices
                 {
                     if (e.Name == InvoiceEvent.Expired ||
                        e.Name == InvoiceEvent.PaidInFull ||
-                       e.Name == InvoiceEvent.FailedToConfirm ||
                        e.Name == InvoiceEvent.MarkedInvalid ||
                        e.Name == InvoiceEvent.MarkedCompleted ||
                        e.Name == InvoiceEvent.FailedToConfirm ||

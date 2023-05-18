@@ -133,7 +133,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     "A valid node info was not provided to open a channel with");
             }
 
-            if (request.ChannelAmount == null)
+            if (request?.ChannelAmount is null)
             {
                 ModelState.AddModelError(nameof(request.ChannelAmount), "ChannelAmount is missing");
             }
@@ -142,7 +142,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 ModelState.AddModelError(nameof(request.ChannelAmount), "ChannelAmount must be more than 0");
             }
 
-            if (request.FeeRate == null)
+            if (request?.FeeRate is null)
             {
                 ModelState.AddModelError(nameof(request.FeeRate), "FeeRate is missing");
             }

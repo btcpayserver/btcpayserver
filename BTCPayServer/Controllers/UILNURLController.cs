@@ -361,11 +361,6 @@ namespace BTCPayServer
 
             public ConcurrentDictionary<string, LightningAddressItem> Items { get; } = new();
             public ConcurrentDictionary<string, string[]> StoreToItemMap { get; } = new();
-
-            public override string ToString()
-            {
-                return null;
-            }
         }
 
         [HttpGet("~/.well-known/lnurlp/{username}")]

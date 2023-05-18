@@ -352,7 +352,7 @@ namespace BTCPayServer.Controllers.Greenfield
         [Authorize(Policy = Policies.CanCreateNonApprovedPullPayments, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> CreatePayoutThroughStore(string storeId, CreatePayoutThroughStoreRequest request)
         {
-            if (request.Approved is true)
+            if (request?.Approved is true)
             {
                 if (!(await _authorizationService.AuthorizeAsync(User, null,
                         new PolicyRequirement(Policies.CanCreatePullPayments))).Succeeded)

@@ -2146,7 +2146,7 @@ namespace BTCPayServer.Tests
                 txFee = localInvoice.BtcDue - invoice.BtcDue;
                 Assert.Equal("paidPartial", localInvoice.ExceptionStatus.ToString());
                 Assert.Equal(1, localInvoice.CryptoInfo[0].TxCount);
-                Assert.NotEqual(localInvoice.BitcoinAddress, invoice.BitcoinAddress); //New address
+                Assert.Equal(localInvoice.BitcoinAddress, invoice.BitcoinAddress); //Same address
                 Assert.True(IsMapped(invoice, ctx));
                 Assert.True(IsMapped(localInvoice, ctx));
 

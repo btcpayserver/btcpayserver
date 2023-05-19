@@ -228,7 +228,7 @@ namespace BTCPayServer.Tests
             await Assert.ThrowsAsync<GreenfieldAPIException>(() => newUserClient.GetInvoices(store.Id));
 
             // if user is a guest or owner, then it should be ok
-            await unrestricted.AddStoreUser(store.Id, new StoreUserData() { UserId = newUser.Id, Role = "Guest" });
+            await unrestricted.AddStoreUser(store.Id, new StoreUserData() { UserId = newUser.Id});
             await newUserClient.GetInvoices(store.Id);
         }
 

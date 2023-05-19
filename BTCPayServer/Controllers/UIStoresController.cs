@@ -165,7 +165,7 @@ namespace BTCPayServer.Controllers
             }
 
             var roles = await _Repo.GetStoreRoles(CurrentStore.Id);
-            if (roles.All(role => role.Role != vm.Role))
+            if (roles.All(role => role.Id != vm.Role))
             {
                 ModelState.AddModelError(nameof(vm.Role), "Invalid role");
                 return View(vm);

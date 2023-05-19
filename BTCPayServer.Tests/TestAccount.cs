@@ -540,12 +540,14 @@ retry:
         public async Task AddGuest(string userId)
         {
             var repo = this.parent.PayTester.GetService<StoreRepository>();
-            await repo.AddStoreUser(StoreId, userId, "Guest");
+            var role = (await repo.GetStoreRoles(null)).Single(storeRole => storeRole.Role == "Guest");
+            await repo.AddStoreUser(StoreId, userId, role.Id);
         }
         public async Task AddOwner(string userId)
         {
             var repo = this.parent.PayTester.GetService<StoreRepository>();
-            await repo.AddStoreUser(StoreId, userId, "Owner");
+            var role = (await repo.GetStoreRoles(null)).Single(storeRole => storeRole.Role == "Owner");
+            await repo.AddStoreUser(StoreId, userId, role.Id);
         }
     }
 }

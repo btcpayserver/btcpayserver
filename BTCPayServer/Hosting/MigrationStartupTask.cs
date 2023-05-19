@@ -274,37 +274,54 @@ namespace BTCPayServer.Hosting
         {
             await using var ctx = _DBContextFactory.CreateContext();
 
-            var owner = new StoreRole()
-            {
-                Policies = new List<string>()
-                {
-                    Policies.CanModifyStoreSettings,
-                    Policies.CanTradeCustodianAccount,
-                    Policies.CanWithdrawFromCustodianAccounts,
-                    Policies.CanDepositToCustodianAccounts
-                },
 #pragma warning disable CS0618
-                Role = StoreRoles.Owner,
+            var owner = await ctx.StoreRoles.FirstOrDefaultAsync(role =>
+                role.StoreDataId == null && role.Role == StoreRoles.Owner);
+            
 #pragma warning restore CS0618
-                StoreDataId = null
-            };
-            var guest = new StoreRole()
-            {
-                Policies = new List<string>()
-                {
-                    Policies.CanViewStoreSettings,
-                    Policies.CanModifyInvoices,
-                    Policies.CanViewCustodianAccounts,
-                    Policies.CanDepositToCustodianAccounts
-                },
-#pragma warning disable CS0618
-                Role = StoreRoles.Guest,
-#pragma warning restore CS0618
-                StoreDataId = null
-            };
 
-            await ctx.StoreRoles.AddAsync(guest);
-            await ctx.StoreRoles.AddAsync(owner);
+            if (owner is null)
+            {
+                owner = new StoreRole()
+                {
+                    Policies = new List<string>()
+                    {
+                        Policies.CanModifyStoreSettings,
+                        Policies.CanTradeCustodianAccount,
+                        Policies.CanWithdrawFromCustodianAccounts,
+                        Policies.CanDepositToCustodianAccounts
+                    },
+#pragma warning disable CS0618
+                    Role = StoreRoles.Owner,
+#pragma warning restore CS0618
+                    StoreDataId = null
+                };
+                await ctx.StoreRoles.AddAsync(owner);
+            }
+            
+#pragma warning disable CS0618
+            var guest = await ctx.StoreRoles.FirstOrDefaultAsync(role =>
+                role.StoreDataId == null && role.Role == StoreRoles.Guest);
+
+            if (guest is null)
+            {
+                guest = new StoreRole()
+#pragma warning restore CS0618
+                {
+                    Policies = new List<string>()
+                    {
+                        Policies.CanViewStoreSettings,
+                        Policies.CanModifyInvoices,
+                        Policies.CanViewCustodianAccounts,
+                        Policies.CanDepositToCustodianAccounts
+                    },
+#pragma warning disable CS0618
+                    Role = StoreRoles.Guest,
+#pragma warning restore CS0618
+                    StoreDataId = null
+                };
+                await ctx.StoreRoles.AddAsync(guest);
+            }
             
             var stores = await ctx.Stores
                 .Include(data => data.UserStores)

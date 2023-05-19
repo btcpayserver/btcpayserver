@@ -52,19 +52,27 @@ namespace BTCPayServer.Migrations
                 columns: new[] { "StoreDataId", "Role" },
                 unique: true);
 
+            if (this.SupportAddForeignKey(migrationBuilder.ActiveProvider))
+            {
+                
             migrationBuilder.AddForeignKey(
                 name: "FK_UserStore_StoreRoles_StoreRoleId",
                 table: "UserStore",
                 column: "StoreRoleId",
                 principalTable: "StoreRoles",
                 principalColumn: "Id");
+            }
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropForeignKey(
-                name: "FK_UserStore_StoreRoles_StoreRoleId",
-                table: "UserStore");
+
+            if (this.SupportDropForeignKey(migrationBuilder.ActiveProvider))
+            {
+                migrationBuilder.DropForeignKey(
+                    name: "FK_UserStore_StoreRoles_StoreRoleId",
+                    table: "UserStore");
+            }
 
             migrationBuilder.DropTable(
                 name: "StoreRoles");

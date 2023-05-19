@@ -253,6 +253,7 @@ namespace BTCPayServer.Services.Apps
                     (allowNoUser && string.IsNullOrEmpty(userId) || us.ApplicationUserId == userId) &&
                     (storeId == null || us.StoreDataId == storeId))
                 .Include(store => store.StoreRole)
+                .Include(store => store.StoreData)
                 .Join(ctx.Apps, us => us.StoreDataId, app => app.StoreDataId, (us, app) => new { us, app })
                 .OrderBy(b => b.app.Created)
                 .ToArrayAsync()).Select(arg => new ListAppsViewModel.ListAppViewModel

@@ -331,7 +331,8 @@ namespace BTCPayServer.Hosting
             {
                 foreach (UserStore storeUserStore in store.UserStores)
                 {
-                    storeUserStore.StoreRoleId = storeUserStore.LegacyRole == StoreRoles.Owner ? owner.Id : guest.Id;
+                    if(string.IsNullOrEmpty(storeUserStore.StoreRoleId))
+                        storeUserStore.StoreRoleId = storeUserStore.LegacyRole == StoreRoles.Owner ? owner.Id : guest.Id;
                 }
             }
 

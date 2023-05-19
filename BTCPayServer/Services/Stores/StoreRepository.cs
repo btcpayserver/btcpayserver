@@ -203,7 +203,9 @@ namespace BTCPayServer.Services.Stores
             await using var ctx = _ContextFactory.CreateContext();
             return (await ctx.UserStore
                 .Where(u => u.ApplicationUserId == userId && (storeIds == null || storeIds.Contains(u.StoreDataId)))
-                .Include(store => store.StoreData.UserStores)
+                .Include(store => store.StoreData)
+                .ThenInclude(data => data.UserStores)
+                .ThenInclude(data => data.StoreRole)
                 .Select(store => store.StoreData)
                 .ToArrayAsync());
         }

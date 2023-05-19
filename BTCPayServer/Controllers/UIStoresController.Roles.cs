@@ -25,6 +25,7 @@ namespace BTCPayServer.Controllers
         {
             model = this.ParseListQuery(model ?? new RolesViewModel());
 
+            model.DefaultRole = await storeRepository.GetDefaultRole();
             var roles = await storeRepository.GetStoreRoles(storeId, false, false);
             if (!string.IsNullOrWhiteSpace(model.SearchTerm))
             {
@@ -80,7 +81,7 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> CreateOrEditRole(
             string storeId,
             [FromServices] StoreRepository storeRepository,
-            string? roleId, UpdateRoleViewModel viewModel)
+            string roleId, UpdateRoleViewModel viewModel)
         {
             if (roleId == "create")
                 roleId = null;

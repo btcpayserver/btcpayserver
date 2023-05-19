@@ -24,6 +24,7 @@ namespace BTCPayServer.Controllers
         {
             model = this.ParseListQuery(model ?? new RolesViewModel());
 
+            model.DefaultRole = await storeRepository.GetDefaultRole();
             var roles = await storeRepository.GetStoreRoles(null);
             if (!string.IsNullOrWhiteSpace(model.SearchTerm))
             {
@@ -79,7 +80,7 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> CreateOrEditRole(
             
             [FromServices] StoreRepository storeRepository,
-            string? roleId, UpdateRoleViewModel viewModel)
+            string roleId, UpdateRoleViewModel viewModel)
         {
             if (roleId == "create")
                 roleId = null;
@@ -150,16 +151,29 @@ namespace BTCPayServer.Controllers
                 return BadRequest();
             }
 
-            if (await storeRepository.RemoveStoreRole(roleId, null))
+            var errorMessage = await storeRepository.RemoveStoreRole(roleId, null);
+            if (errorMessage is null)
             {
                 
                 TempData[WellKnownTempData.SuccessMessage] = "Role deleted";
             }
             else
             {
-                TempData[WellKnownTempData.ErrorMessage] = "Role could not be deleted (Is it the last permission for store administrator?)";
+                TempData[WellKnownTempData.ErrorMessage] = errorMessage;
             }
 
+            return RedirectToAction(nameof(ListRoles));
+        }
+
+        [HttpGet("server/roles/{roleId}/default")]
+        public async Task<IActionResult> SetDefaultRole(
+            [FromServices] StoreRepository storeRepository, 
+            string roleId)
+        {
+            await storeRepository.SetDefaultRole(roleId);
+            
+            TempData[WellKnownTempData.SuccessMessage] = "Role set default";
+            
             return RedirectToAction(nameof(ListRoles));
         }
     }

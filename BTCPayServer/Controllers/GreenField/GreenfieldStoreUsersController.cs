@@ -63,7 +63,17 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 return StoreNotFound();
             }
-            //we do not need to validate the role string as any value other than `StoreRoles.Owner` is currently treated like a guest
+
+            if (request.Role is not null)
+            {
+                var roleExists =null != await _storeRepository.GetStoreRole(request.Role, storeId, false);
+                ModelState.AddModelError(nameof(request.Role), "The role id provided does not exist");
+                if (!roleExists)
+                {
+                    this.CreateValidationError(ModelState);
+                }
+            }
+            
             if (await _storeRepository.AddStoreUser(storeId, request.UserId, request.Role))
             {
                 return Ok();

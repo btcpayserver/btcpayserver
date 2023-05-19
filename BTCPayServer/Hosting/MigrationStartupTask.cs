@@ -96,6 +96,7 @@ namespace BTCPayServer.Hosting
                     // Ensure these checks still get run
                     settings.CheckedFirstRun = false;
                     settings.FileSystemStorageAsDefault = false;
+                    settings.AddStoreRoles = false; 
                     await _Settings.UpdateSetting(settings);
                 }
 
@@ -308,6 +309,7 @@ namespace BTCPayServer.Hosting
             var stores = await ctx.Stores
                 .Include(data => data.UserStores)
                 .ToArrayAsync();
+            
             foreach (var store in stores)
             {
                 foreach (UserStore storeUserStore in store.UserStores)
@@ -315,6 +317,10 @@ namespace BTCPayServer.Hosting
                     storeUserStore.StoreRoleId = storeUserStore.LegacyRole == StoreRoles.Owner ? owner.Id : guest.Id;
                 }
             }
+
+            var p = await _Settings.GetSettingAsync<PoliciesSettings>()?? new PoliciesSettings();
+            p.DefaultRole = owner.Id;
+            await _Settings.UpdateSetting(p);
             await ctx.SaveChangesAsync();
         }
 

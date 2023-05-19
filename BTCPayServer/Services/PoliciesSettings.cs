@@ -52,6 +52,9 @@ namespace BTCPayServer.Services
         public List<DomainToAppMappingItem> DomainToAppMapping { get; set; } = new List<DomainToAppMappingItem>();
         [Display(Name = "Enable experimental features")]
         public bool Experimental { get; set; }
+        
+        [Display(Name = "Default role for users on a new store")]
+        public string DefaultRole { get; set; }
 
         public class BlockExplorerOverrideItem
         {

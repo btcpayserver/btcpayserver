@@ -24,6 +24,7 @@ namespace BTCPayServer.Models.ServerViewModels
     public class RolesViewModel : BasePagingViewModel
     {
         public List<StoreRepository.StoreRole> Roles { get; set; } = new List<StoreRepository.StoreRole>();
+        public string DefaultRole { get; set; }
         public override int CurrentPageCount => Roles.Count;
     }
 

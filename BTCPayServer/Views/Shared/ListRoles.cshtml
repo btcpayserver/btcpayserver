@@ -96,6 +96,12 @@
                         <span class="badge bg-dark">
                             Server-wide
                         </span>
+                        @if (Model.DefaultRole == role.Id)
+                        {
+                            <span class="badge bg-info">
+                                Default
+                            </span>
+                        }
                     }
 
                 </td>
@@ -128,6 +134,14 @@
                        asp-controller="@(role.IsServerRole ? "UIServer" : "UIStores")">
                         Remove
                     </a>
+                    @if (role.IsServerRole && Model.DefaultRole != role.Id)
+                    {
+                        
+                        <a permission="@Policies.CanModifyServerSettings" asp-action="SetDefaultRole" asp-route-roleId="@role.Id"
+                           asp-controller="UIServer">
+                            - Set as default
+                        </a>
+                    }
 
                 </td>
             </tr>

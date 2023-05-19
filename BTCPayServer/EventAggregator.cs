@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using BTCPayServer.Events;
 using BTCPayServer.Logging;
 using Microsoft.Extensions.Logging;
 
@@ -86,9 +87,6 @@ namespace BTCPayServer
                 }
             }
 
-            var log = evt.ToString();
-            if (!String.IsNullOrEmpty(log))
-                Logs.Events.LogInformation(log);
             foreach (var sub in actionList)
             {
                 try

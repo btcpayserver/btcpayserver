@@ -1073,34 +1073,44 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> ListInvoices(InvoicesModel? model = null)
         {
             model = this.ParseListQuery(model ?? new InvoicesModel());
-            var fs = new SearchString(model.SearchTerm);
+            var timezoneOffset = model.TimezoneOffset ?? 0;
+            var searchTerm = string.IsNullOrEmpty(model.SearchText) ? model.SearchTerm : $"{model.SearchText},{model.SearchTerm}";
+            var fs = new SearchString(searchTerm, timezoneOffset);
             string? storeId = model.StoreId;
             var storeIds = new HashSet<string>();
-            if (fs.GetFilterArray("storeid") is string[] l)
+            if (storeId is not null)
+            {
+                storeIds.Add(storeId);
+            }
+            if (fs.GetFilterArray("storeid") is { } l)
             {
                 foreach (var i in l)
                     storeIds.Add(i);
             }
-            if (storeId is not null)
-            {
-                storeIds.Add(storeId);
-                model.StoreId = storeId;
-            }
-            model.StoreIds = storeIds.ToArray();
-
-            InvoiceQuery invoiceQuery = GetInvoiceQuery(model.SearchTerm, model.TimezoneOffset ?? 0);
-            invoiceQuery.StoreId = model.StoreIds;
+            model.Search = fs;
+            model.SearchText = fs.TextSearch;
+            
+            InvoiceQuery invoiceQuery = GetInvoiceQuery(fs, timezoneOffset);
+            invoiceQuery.StoreId = storeIds.ToArray();
             invoiceQuery.Take = model.Count;
             invoiceQuery.Skip = model.Skip;
             invoiceQuery.IncludeRefunds = true;
             var list = await _InvoiceRepository.GetInvoices(invoiceQuery);
 
-            model.IncludeArchived = invoiceQuery.IncludeArchived;
+            // Apps
+            var apps = await _appService.GetAllApps(GetUserId(), false, storeId);
+            model.Apps = apps.Select(a => new InvoiceAppModel
+            {
+                Id = a.Id,
+                AppName = a.AppName,
+                AppType = a.AppType,
+                AppOrderId = AppService.GetAppOrderId(a.AppType, a.Id)
+            }).ToList();
 
             foreach (var invoice in list)
             {
                 var state = invoice.GetInvoiceState();
-                model.Invoices.Add(new InvoiceModel()
+                model.Invoices.Add(new InvoiceModel
                 {
                     Status = state,
                     ShowCheckout = invoice.Status == InvoiceStatusLegacy.New,
@@ -1119,10 +1129,9 @@ namespace BTCPayServer.Controllers
             return View(model);
         }
 
-        private InvoiceQuery GetInvoiceQuery(string? searchTerm = null, int timezoneOffset = 0)
+        private InvoiceQuery GetInvoiceQuery(SearchString fs, int timezoneOffset = 0)
         {
-            var fs = new SearchString(searchTerm);
-            var invoiceQuery = new InvoiceQuery()
+            return new InvoiceQuery
             {
                 TextSearch = fs.TextSearch,
                 UserId = GetUserId(),
@@ -1136,7 +1145,6 @@ namespace BTCPayServer.Controllers
                 StartDate = fs.GetFilterDate("startdate", timezoneOffset),
                 EndDate = fs.GetFilterDate("enddate", timezoneOffset)
             };
-            return invoiceQuery;
         }
 
         [HttpGet]
@@ -1147,17 +1155,17 @@ namespace BTCPayServer.Controllers
             var model = new InvoiceExport(_CurrencyNameTable);
             var fs = new SearchString(searchTerm);
             var storeIds = new HashSet<string>();
-            if (fs.GetFilterArray("storeid") is string[] l)
-            {
-                foreach (var i in l)
-                    storeIds.Add(i);
-            }
             if (storeId is not null)
             {
                 storeIds.Add(storeId);
             }
+            if (fs.GetFilterArray("storeid") is { } l)
+            {
+                foreach (var i in l)
+                    storeIds.Add(i);
+            }
 
-            InvoiceQuery invoiceQuery = GetInvoiceQuery(searchTerm, timezoneOffset);
+            InvoiceQuery invoiceQuery = GetInvoiceQuery(fs, timezoneOffset);
             invoiceQuery.StoreId = storeIds.ToArray();
             invoiceQuery.Skip = 0;
             invoiceQuery.Take = int.MaxValue;

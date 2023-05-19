@@ -58,6 +58,7 @@ namespace BTCPayServer.Controllers
         private readonly InvoiceActivator _invoiceActivator;
         private readonly LinkGenerator _linkGenerator;
         private readonly IAuthorizationService _authorizationService;
+        private readonly AppService _appService;
 
         public WebhookSender WebhookNotificationManager { get; }
 
@@ -81,6 +82,7 @@ namespace BTCPayServer.Controllers
             UIWalletsController walletsController,
             InvoiceActivator invoiceActivator,
             LinkGenerator linkGenerator,
+            AppService appService,
             IAuthorizationService authorizationService)
         {
             _displayFormatter = displayFormatter;
@@ -102,6 +104,7 @@ namespace BTCPayServer.Controllers
             _invoiceActivator = invoiceActivator;
             _linkGenerator = linkGenerator;
             _authorizationService = authorizationService;
+            _appService = appService;
         }
 
 

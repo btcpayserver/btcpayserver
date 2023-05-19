@@ -1042,14 +1042,13 @@ namespace BTCPayServer.Tests
         [Fact]
         public void CanParseFilter()
         {
+            var storeId = "6DehZnc9S7qC6TUTNWuzJ1pFsHTHvES6An21r3MjvLey";
             var filter = "storeid:abc, status:abed, blabhbalh ";
             var search = new SearchString(filter);
             Assert.Equal("storeid:abc, status:abed, blabhbalh", search.ToString());
             Assert.Equal("blabhbalh", search.TextSearch);
-            Assert.Single(search.Filters["storeid"]);
-            Assert.Single(search.Filters["status"]);
-            Assert.Equal("abc", search.Filters["storeid"].First());
-            Assert.Equal("abed", search.Filters["status"].First());
+            Assert.Single(search.Filters["storeid"], "abc");
+            Assert.Single(search.Filters["status"], "abed");
 
             filter = "status:abed, status:abed2";
             search = new SearchString(filter);
@@ -1064,6 +1063,48 @@ namespace BTCPayServer.Tests
             search = new SearchString(filter);
             Assert.Equal("2019-04-25 01:00 AM", search.Filters["startdate"].First());
             Assert.Equal("hekki", search.TextSearch);
+            
+            // modify search
+            filter = $"status:settled,exceptionstatus:paidLate,unusual:true, fulltext searchterm, storeid:{storeId},startdate:2019-04-25 01:00:00";
+            search = new SearchString(filter);
+            Assert.Equal(filter, search.ToString());
+            Assert.Equal("fulltext searchterm", search.TextSearch);
+            Assert.Single(search.Filters["storeid"], storeId);
+            Assert.Single(search.Filters["status"], "settled");
+            Assert.Single(search.Filters["exceptionstatus"], "paidLate");
+            Assert.Single(search.Filters["unusual"], "true");
+            
+            // toggle off bool with same value
+            var modified = new SearchString(search.Toggle("unusual", "true"));
+            Assert.Null(modified.GetFilterBool("unusual"));
+            
+            // add to array
+            modified = new SearchString(modified.Toggle("status", "processing"));
+            var statusArray = modified.GetFilterArray("status");
+            Assert.Equal(2, statusArray.Length);
+            Assert.Contains("processing", statusArray);
+            Assert.Contains("settled", statusArray);
+            
+            // toggle off array with same value
+            modified = new SearchString(modified.Toggle("status", "settled"));
+            statusArray = modified.GetFilterArray("status");
+            Assert.Single(statusArray, "processing");
+            
+            // toggle off array with null value
+            modified = new SearchString(modified.Toggle("status", null));
+            Assert.Null(modified.GetFilterArray("status"));
+            
+            // toggle off date with null value
+            modified = new SearchString(modified.Toggle("startdate", "-7d"));
+            Assert.Single(modified.GetFilterArray("startdate"), "-7d");
+            modified = new SearchString(modified.Toggle("startdate", null));
+            Assert.Null(modified.GetFilterArray("startdate"));
+            
+            // toggle off date with same value
+            modified = new SearchString(modified.Toggle("enddate", "-7d"));
+            Assert.Single(modified.GetFilterArray("enddate"), "-7d");
+            modified = new SearchString(modified.Toggle("enddate", "-7d"));
+            Assert.Null(modified.GetFilterArray("enddate"));
         }
 
         [Fact]

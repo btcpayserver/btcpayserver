@@ -5,9 +5,25 @@
 @model InvoicesModel
 @{
     ViewData.SetActivePage(InvoiceNavPages.Index, "Invoices");
-    var storeIds = string.Join("", Model.StoreIds.Select(storeId => $",storeid:{storeId}"));
-	if (this.Context.GetRouteValue("storeId") is string)
-		storeIds = string.Empty;
+
+    var statusFilterCount = CountArrayFilter("status") + CountArrayFilter("exceptionstatus") + (HasBooleanFilter("includearchived") ? 1 : 0) + (HasBooleanFilter("unusual") ? 1 : 0);
+    var hasDateFilter = HasArrayFilter("startdate") || HasArrayFilter("enddate");
+    var appFilterCount = Model.Apps.Count(app => HasArrayFilter("orderid", app.AppOrderId));
+}
+
+@functions
+{
+    private int CountArrayFilter(string type) =>
+        Model.Search.ContainsFilter(type) ? Model.Search.GetFilterArray(type).Length : 0;
+    
+    private bool HasArrayFilter(string type, string key = null) =>
+        Model.Search.ContainsFilter(type) && (key is null || Model.Search.GetFilterArray(type).Contains(key));
+
+    private bool HasBooleanFilter(string key) =>
+        Model.Search.ContainsFilter(key) && Model.Search.GetFilterBool(key) is true;
+    
+    private bool HasCustomDateFilter() =>
+        Model.Search.ContainsFilter("startdate") && Model.Search.ContainsFilter("enddate");
 }
 
 @section PageHeadContent
@@ -15,6 +31,16 @@
     <style>
         .invoice-payments {
             padding-left: var(--btcpay-space-l);
+        }
+        .dropdown > .btn {
+            min-width: 7rem;
+            padding-left: 1rem;
+            text-align: left;
+        }
+        @@media (max-width: 568px) {
+            #SearchText {
+                width: 100%;
+            }
         }
     </style>
 }
@@ -59,7 +85,7 @@
 
             var dtpStartDate = $("#dtpStartDate").val();
             if (dtpStartDate !== null && dtpStartDate !== "") {
-                filterString = "startDate%3A" + dtpStartDate;
+                filterString = "startdate%3A" + dtpStartDate;
             }
 
             var dtpEndDate = $("#dtpEndDate").val();
@@ -67,7 +93,7 @@
                 if (filterString !== "") {
                     filterString += ",";
                 }
-                filterString += "endDate%3A" + dtpEndDate;
+                filterString += "enddate%3A" + dtpEndDate;
             }
 
             if (filterString !== "") {
@@ -143,6 +169,14 @@
         <div class="flex-fill">
             <p class="mb-2">Invoices are documents issued by the seller to a buyer to collect payment.</p>
             <p class="mb-3">An invoice must be paid within a defined time interval at a fixed exchange rate to protect the issuer from price fluctuations.</p>
+            <p class="mb-3">
+                You can also apply filters to your search by searching for <code>filtername:value</code>.
+                Be sure to split your search parameters with comma. Supported filters are:
+            </p>
+            <ul>
+                <li><code>orderid:id</code> for filtering a specific order</li>
+                <li><code>itemcode:code</code> for filtering a specific type of item purchased through the pos or crowdfund apps</li>
+            </ul>
             <a href="https://docs.btcpayserver.org/Invoices/" target="_blank" rel="noreferrer noopener">Learn More</a>
         </div>
         <button type="button" class="btn-close ms-auto" data-bs-toggle="collapse" data-bs-target="#descriptor" aria-expanded="false" aria-label="Close">
@@ -200,75 +234,103 @@
     </div>
 </div>
 
-<div id="help" class="row collapse">
-    <div class="col-xl-8 pb-3">
-        <p>
-            You can search for invoice Id, deposit address, price, order id, store id, any buyer information and any product information.
-            Be sure to split your search parameters with comma, for example:<br />
-            <code>startdate:2019-04-25 13:00:00, status:paid</code>
-        </p>
-        <p class="mb-2">
-            You can also apply filters to your search by searching for <code>filtername:value</code>, supported filters are:
-        </p>
-        <ul>
-            <li><code>storeid:id</code> for filtering a specific store</li>
-            <li><code>orderid:id</code> for filtering a specific order</li>
-            <li><code>itemcode:code</code> for filtering a specific type of item purchased through the pos or crowdfund apps</li>
-            <li><code>status:(expired|invalid|complete|confirmed|paid|new)</code> for filtering a specific status</li>
-            <li><code>exceptionstatus:(paidover|paidlate|paidpartial)</code> for filtering a specific exception state</li>
-            <li><code>unusual:(true|false)</code> for filtering invoices which might requires merchant attention (those invalid or with an exceptionstatus)</li>
-            <li><code>startdate:yyyy-MM-dd HH:mm:ss</code> getting invoices that were created after certain date</li>
-            <li><code>enddate:yyyy-MM-dd HH:mm:ss</code> getting invoices that were created before certain date</li>
-        </ul>
-    </div>
-</div>
-<form class="@(Model.Invoices.Count > 0 ? "col-xl-7 col-xxl-8 " : "")mb-4" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" method="get">
-    <input type="hidden" asp-for="Count" />
+<form class="d-flex flex-wrap flex-sm-nowrap align-items-center gap-3 mb-4 @(Model.Invoices.Any() ? "col-xl-7 col-xxl-8" : null)" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" method="get">
+    <input asp-for="Count" type="hidden" />
     <input asp-for="TimezoneOffset" type="hidden" />
-    <div class="input-group">
-        <a href="#help" class="input-group-text text-secondary text-decoration-none" data-bs-toggle="collapse">
-            <span class="fa fa-filter"></span>
-        </a>
-        <input asp-for="SearchTerm" class="form-control" />
-        <button type="submit" class="btn btn-secondary" title="Search invoice">
-            <span class="fa fa-search"></span> Search
+    <input asp-for="SearchTerm" type="hidden" value="@Model.Search.WithoutSearchText()"/>
+    <input asp-for="SearchText" class="form-control" placeholder="Search…" />
+    <div class="dropdown">
+        <button id="StatusOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            @if (statusFilterCount > 0)
+            {
+                <span>@statusFilterCount Status</span>
+            }
+            else
+            {
+                <span>All Status</span>
+            }
         </button>
-        <button type="button" id="SearchOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-            <span class="visually-hidden">Toggle Dropdown</span>
-        </button>
-
-        <div class="dropdown-menu dropdown-menu-end" aria-labelledby="SearchOptionsToggle">
-            <a class="dropdown-item" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="status:invalid@{@storeIds}">Invalid Invoices</a>
-            <a class="dropdown-item" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="status:processing,status:settled@{@storeIds}">Settled Invoices</a>
-            <a class="dropdown-item" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="exceptionstatus:paidLate@{@storeIds}">Settled Late Invoices</a>
-            <a class="dropdown-item" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="exceptionstatus:paidPartial@{@storeIds}">Settled Partial Invoices</a>
-            <a class="dropdown-item" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="exceptionstatus:paidOver@{@storeIds}">Settled Over Invoices</a>
-            <a class="dropdown-item" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="unusual:true@{@storeIds}">Unusual Invoices</a>
-            <a class="dropdown-item" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="includearchived:true@{@storeIds}" id="SearchOptionsIncludeArchived">Archived Invoices</a>
-            <div role="separator" class="dropdown-divider"></div>
-            <a class="dropdown-item" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-timezoneoffset="0" asp-route-searchTerm="startDate:-24h@{@storeIds}">Last 24 hours</a>
-            <a class="dropdown-item" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-timezoneoffset="0" asp-route-searchTerm="startDate:-3d@{@storeIds}">Last 3 days</a>
-            <a class="dropdown-item" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-timezoneoffset="0" asp-route-searchTerm="startDate:-7d@{@storeIds}">Last 7 days</a>
-            <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#customRangeModal">Custom Range</button>
-            <div role="separator" class="dropdown-divider"></div>
-            <a class="dropdown-item" href="?searchTerm=">Unfiltered</a>
+        <div class="dropdown-menu" aria-labelledby="StatusOptionsToggle">
+            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("status", "invalid")" class="dropdown-item @(HasArrayFilter("status", "invalid") ? "custom-active" : "")">Invalid</a>
+            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("status", "processing")" class="dropdown-item @(HasArrayFilter("status", "processing") ? "custom-active" : "")">Processing</a>
+            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("status", "settled")" class="dropdown-item @(HasArrayFilter("status", "settled") ? "custom-active" : "")">Settled</a>
+            <hr class="dropdown-divider">
+            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("exceptionstatus", "paidLate")" class="dropdown-item @(HasArrayFilter("exceptionstatus", "paidLate") ? "custom-active" : "")">Settled Late</a>
+            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("exceptionstatus", "paidPartial")" class="dropdown-item @(HasArrayFilter("exceptionstatus", "paidPartial") ? "custom-active" : "")">Settled Partial</a>
+            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("exceptionstatus", "paidOver")" class="dropdown-item @(HasArrayFilter("exceptionstatus", "paidOver") ? "custom-active" : "")">Settled Over</a>
+            <hr class="dropdown-divider">
+            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("unusual", "true")" class="dropdown-item @(HasBooleanFilter("unusual") ? "custom-active" : "")">Unusual</a>
+            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("includearchived", "true")" class="dropdown-item @(HasBooleanFilter("includearchived") ? "custom-active" : "")" id="StatusOptionsIncludeArchived">Archived</a>
         </div>
     </div>
-    <span asp-validation-for="SearchTerm" class="text-danger"></span>
+    @if (Model.Apps.Any())
+    {
+        <div class="dropdown">
+            <button id="AppOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                @if (appFilterCount > 0)
+                {
+                    <span>@appFilterCount Plugin@(appFilterCount > 1 ? "s" : "")</span>
+                }
+                else
+                {
+                    <span>All Plugins</span>
+                }
+            </button>
+            <div class="dropdown-menu" aria-labelledby="AppOptionsToggle">
+                @foreach (var app in Model.Apps)
+                {
+                    <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("orderid", app.AppOrderId)" class="dropdown-item @(HasArrayFilter("orderid", app.AppOrderId) ? "custom-active" : "")">@app.AppName</a>
+                }
+            </div>
+        </div> 
+    }
+    <div class="dropdown">
+        <button id="DateOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            @if (hasDateFilter)
+            {
+                if (HasArrayFilter("startdate", "-1d"))
+                {
+                    <span>24 Hours</span>
+                }
+                else if (HasArrayFilter("startdate", "-3d"))
+                {
+                    <span>3 Days</span>
+                }
+                else if (HasArrayFilter("startdate", "-7d"))
+                {
+                    <span>7 Days</span>
+                }
+                else
+                {
+                    <span>Custom</span>
+                }
+            }
+            else
+            {
+                <span>All Time</span>
+            }
+        </button>
+        <div class="dropdown-menu" aria-labelledby="DateOptionsToggle">
+            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("startdate", "-1d")" class="dropdown-item @(HasArrayFilter("startdate", "-1d") ? "custom-active" : "")">Last 24 hours</a>
+            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("startdate", "-3d")" class="dropdown-item @(HasArrayFilter("startdate", "-3d") ? "custom-active" : "")">Last 3 days</a>
+            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("startdate", "-7d")" class="dropdown-item @(HasArrayFilter("startdate", "-7d") ? "custom-active" : "")">Last 7 days</a>
+            <button type="button" class="dropdown-item @(HasCustomDateFilter() ? "custom-active" : "")" data-bs-toggle="modal" data-bs-target="#customRangeModal">Custom Range</button>
+        </div>
+    </div>
 </form>
 
-@if (Model.Invoices.Count > 0)
+@if (Model.Invoices.Any())
 {
     <form method="post" id="MassAction" asp-action="MassAction" class="">
         <div class="d-inline-flex align-items-center pb-2 float-xl-end mb-2 gap-3">
             <input type="hidden" name="storeId" value="@Model.StoreId" />
             <div class="dropdown order-xl-1">
-                <button class="btn btn-secondary dropdown-toggle" type="button" id="ActionsDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <button class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" id="ActionsDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     Actions
                 </button>
                 <div class="dropdown-menu dropdown-menu-xl-end" aria-labelledby="ActionsDropdownToggle">
                     <button type="submit" class="dropdown-item" name="command" value="archive" id="ActionsDropdownArchive">Archive</button>
-                    @if (Model.IncludeArchived)
+                    @if (HasBooleanFilter("includearchived"))
                     {
                         <button type="submit" asp-action="MassAction" class="dropdown-item" name="command" value="unarchive" id="ActionsDropdownUnarchive">Unarchive</button>
                     }
@@ -276,7 +338,7 @@
                 </div>
             </div>
             <div class="dropdown d-inline-flex align-items-center gap-3">
-                <button class="btn btn-secondary dropdown-toggle order-xl-1" type="button" id="ExportDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <button class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret order-xl-1" type="button" id="ExportDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     Export
                 </button>
                 <div class="dropdown-menu" aria-labelledby="ExportDropdownToggle">

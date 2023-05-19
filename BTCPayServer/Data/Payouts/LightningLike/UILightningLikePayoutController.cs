@@ -74,6 +74,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                     .Include(data => data.PullPaymentData)
                     .ThenInclude(data => data.StoreData)
                     .ThenInclude(data => data.UserStores)
+                    .ThenInclude(data => data.StoreRole)
                     .Where(data =>
                         payoutIds.Contains(data.Id) &&
                         data.State == PayoutState.AwaitingPayment &&

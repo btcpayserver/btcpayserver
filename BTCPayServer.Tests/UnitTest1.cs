@@ -2442,11 +2442,12 @@ namespace BTCPayServer.Tests
             using var tester = CreateServerTester(newDb: true);
             await tester.StartAsync();
             var f = tester.PayTester.GetService<ApplicationDbContextFactory>();
-            using (var ctx = f.CreateContext())
+            await using (var ctx = f.CreateContext())
             {
-                var setting = new SettingData() { Id = "BTCPayServer.Services.PoliciesSettings" };
+                
+                var setting = await ctx.Settings.FindAsync("BTCPayServer.Services.PoliciesSettings");
                 setting.Value = JObject.Parse("{\"RootAppId\": null, \"RootAppType\": 1, \"Experimental\": false, \"PluginSource\": null, \"LockSubscription\": false, \"DisableSSHService\": false, \"PluginPreReleases\": false, \"BlockExplorerLinks\": [],\"DomainToAppMapping\": [{\"AppId\": \"87kj5yKay8mB4UUZcJhZH5TqDKMD3CznjwLjiu1oYZXe\", \"Domain\": \"donate.nicolas-dorier.com\", \"AppType\": 0}], \"CheckForNewVersions\": false, \"AllowHotWalletForAll\": false, \"RequiresConfirmedEmail\": false, \"DiscourageSearchEngines\": false, \"DisableInstantNotifications\": false, \"DisableNonAdminCreateUserApi\": false, \"AllowHotWalletRPCImportForAll\": false, \"AllowLightningInternalNodeForAll\": false, \"DisableStoresToUseServerEmailSettings\": false}").ToString();
-                ctx.Settings.Add(setting);
+                ctx.Settings.Update(setting);
                 await ctx.SaveChangesAsync();
             }
             await RestartMigration(tester);

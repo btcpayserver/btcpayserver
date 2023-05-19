@@ -336,8 +336,11 @@ namespace BTCPayServer.Hosting
             }
 
             var p = await _Settings.GetSettingAsync<PoliciesSettings>()?? new PoliciesSettings();
-            p.DefaultRole = owner.Id;
-            await _Settings.UpdateSetting(p);
+            if (p.DefaultRole != owner.Id)
+            {
+                p.DefaultRole = owner.Id;
+                await _Settings.UpdateSetting(p);
+            }
             await ctx.SaveChangesAsync();
         }
 

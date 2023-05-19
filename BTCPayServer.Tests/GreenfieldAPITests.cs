@@ -1320,7 +1320,8 @@ namespace BTCPayServer.Tests
             // We strip the user's Owner right, so the key should not work
             using var ctx = tester.PayTester.GetService<Data.ApplicationDbContextFactory>().CreateContext();
             var storeEntity = await ctx.UserStore.SingleAsync(u => u.ApplicationUserId == user.UserId && u.StoreDataId == newStore.Id);
-            // storeEntity.Role = "Guest";
+            var roleId  = (await tester.PayTester.GetService<StoreRepository>().GetStoreRoles(null)).Single(r => r.Id == "Guest").Id;
+            storeEntity.StoreRoleId = roleId;
             await ctx.SaveChangesAsync();
             await AssertHttpError(403, async () => await client.UpdateStore(newStore.Id, new UpdateStoreRequest() { Name = "B" }));
 

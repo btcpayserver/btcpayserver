@@ -29,40 +29,35 @@
 <h3 class="mb-4">@ViewData["Title"]</h3>
 
 <div class="row">
-    <div class="col-xl-6 col-xxl-constrain">
+    <div class="col-xxl-constrain">
         <form method="post" asp-controller="@controller" asp-action="CreateOrEditRole" asp-route-roleId="@(roleId ?? "create")" asp-route-storeId="@storeId">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
-            <div class="form-group">
+            <div class="form-group" style="max-width:320px">
                 <label asp-for="Role" class="form-label"></label>
                 <input asp-for="Role" required="required" class="form-control" />
                 <span asp-validation-for="Role" class="text-danger"></span>
             </div>
 
-            <div class="form-group">
-                <h5 class="mt-4 mb-3">Permissions</h5>
-                <select multiple="multiple" asp-for="Policies" class="form-select hide-when-js">
-                    @foreach (var policy in storePolicies)
+            <h4 class="mt-4 mb-3">Permissions</h4>
+            <select multiple="multiple" asp-for="Policies" class="form-select hide-when-js">
+                @foreach (var policy in storePolicies)
+                {
+                    <option value="@policy" class="text-truncate" asp-selected="@(Model.Policies?.Contains(policy) ?? false)">@policy</option>
+                }
+            </select>
+            <div class="list-group mb-2">
+                @{
+                    var storePolicyMap = Permission.PolicyMap.Where(pair => Policies.IsStorePolicy(pair.Key));
+                    var topMostPolicies = storePolicyMap.Where(pair => !storePolicyMap.Any(valuePair => valuePair.Value.Contains(pair.Key)));
+                    @foreach (var policy in topMostPolicies)
                     {
-                        <option value="@policy" class="text-truncate" asp-selected="@(Model.Policies?.Contains(policy) ?? false)">@policy</option>
+                        RenderTree(policy, storePolicyMap, Model.Policies.Contains(policy.Key));
                     }
-                </select>
-                <div class="list-group mb-4">
-                    @{
-                        var storePolicyMap = Permission.PolicyMap.Where(pair => Policies.IsStorePolicy(pair.Key));
-                        var topMostPolicies = storePolicyMap.Where(pair => !storePolicyMap.Any(valuePair => valuePair.Value.Contains(pair.Key)));
-                        @foreach (var policy in topMostPolicies)
-                        {
-                            RenderTree(policy, storePolicyMap, Model.Policies.Contains(policy.Key));
-                        }
-
-                    }
-
-                </div>
-                <span asp-validation-for="Policies" class="text-danger"></span>
+                }
             </div>
-
-            <button id="Save" type="submit" class="btn btn-primary mt-2" name="command" value="Save">Save</button>
+            <span asp-validation-for="Policies" class="text-danger"></span>
+            <button id="Save" type="submit" class="btn btn-primary" name="command" value="Save">Save</button>
         </form>
     </div>
 </div>
@@ -70,66 +65,48 @@
 @{
     void RenderTree(KeyValuePair<string, HashSet<string>> policy, IEnumerable<KeyValuePair<string, HashSet<string>>> storePolicyMap, bool isChecked)
     {
-        <div class="form-check">
-            <input type="checkbox" class="form-check-input ms-n4 policy-cb" checked="@isChecked" value="@policy.Key" />
-            <label class="h5 form-check-label me-2 mb-1">
-                <span class="me-lg-1">@UIManageController.AddApiKeyViewModel.PermissionValueItem.PermissionDescriptions[policy.Key].Title</span>
-                <small class="text-muted text-break d-block my-2 d-lg-inline-block my-lg-0">@policy.Key</small>
+        <div class="form-check mb-0">
+            <input type="checkbox" class="form-check-input policy-cb" checked="@isChecked" value="@policy.Key" id="Policy-@policy.Key.Replace(".", "_")" />
+            <label class="h5 fw-semibold form-check-label mb-1" for="Policy-@policy.Key.Replace(".", "_")" data-bs-toggle="tooltip" title="@policy.Key">
+                @UIManageController.AddApiKeyViewModel.PermissionValueItem.PermissionDescriptions[policy.Key].Title
             </label>
-            <div>
-                <span class="text-muted">@UIManageController.AddApiKeyViewModel.PermissionValueItem.PermissionDescriptions[policy.Key].Description</span>
-            </div>
+            <p class="text-muted">@UIManageController.AddApiKeyViewModel.PermissionValueItem.PermissionDescriptions[policy.Key].Description</p>
             @if (policy.Value?.Any() is true)
             {
                 <div class="list-group">
                     @foreach (var subPolicy in policy.Value)
                     {
                         var match = storePolicyMap.SingleOrDefault(pair => pair.Key == subPolicy);
-                        @if (match.Key is {})
-                        {
-                            RenderTree(match, storePolicyMap, !isChecked && Model.Policies.Contains(match.Key));
-                        }
-                        else
-                        {
-                            RenderTree(new KeyValuePair<string, HashSet<string>>(subPolicy, null), storePolicyMap, !isChecked && Model.Policies.Contains(match.Key));
-                        }
+                        RenderTree(match.Key is not null ? match : new KeyValuePair<string, HashSet<string>>(subPolicy, null), storePolicyMap, !isChecked && Model.Policies.Contains(match.Key));
                     }
-
-
                 </div>
             }
         </div>
     }
 }
 <script>
-    function handleCheckboxChange(element){
-        const checked = element.checked;
-        const policy = element.value;
-        const policySelect = document.querySelector("#Policies");
-        const subPolicies = element.parentElement.querySelectorAll(`.list-group .policy-cb:not([value="${policy}"])`)
-        policySelect.querySelector(`option[value="${policy}"]`).selected = checked;
-        subPolicies.forEach((subPolicy)=>{
+    function handleCheckboxChange(element) {
+        const { checked, value: policy } = element;
+        const policySelect = document.getElementById('Policies');
+        const subPolicies = element.parentElement.querySelectorAll(`.list-group .policy-cb:not([value="${policy}"])`);
         
-            
+        policySelect.querySelector(`option[value="${policy}"]`).selected = checked;
+        subPolicies.forEach(subPolicy => {
             subPolicy.checked = checked? false : subPolicy.checked;
             if (checked){
-            subPolicy.setAttribute("disabled", "disabled");
-            }else{
-            
-            subPolicy.removeAttribute("disabled");
+                subPolicy.setAttribute("disabled", "disabled");
+            } else {
+                subPolicy.removeAttribute("disabled");
             }
-            
-            policySelect.querySelector(`option[value="${subPolicy.value}"]`).selected = subPolicy.checked ;
-            
+            policySelect.querySelector(`option[value="${subPolicy.value}"]`).selected = subPolicy.checked;
         });
     }
+    
     document.addEventListener('DOMContentLoaded', () => {
-        document.querySelectorAll(".policy-cb:checked").forEach((element)=>{
-            handleCheckboxChange(element);
-        });
-        delegate('change', '.policy-cb', (event)=>{
+        document.querySelectorAll(".policy-cb:checked").forEach(handleCheckboxChange);
+        
+        delegate('change', '.policy-cb', event => {
            handleCheckboxChange(event.target);
         });
-        
     });    
 </script>

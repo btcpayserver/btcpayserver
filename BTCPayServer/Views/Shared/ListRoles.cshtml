@@ -1,4 +1,3 @@
-@using BTCPayServer.Abstractions.Models
 @using BTCPayServer.Components
 @using BTCPayServer.Views.Server
 @using BTCPayServer.Views.Stores
@@ -89,26 +88,34 @@
         @foreach (var role in Model.Roles)
         {
             <tr>
-                <td class="d-flex justify-content-between">
-                    <span class="me-2">@role.Role</span>
-                    @if (role.IsServerRole)
-                    {
-                        <span class="badge bg-dark">
-                            Server-wide
-                        </span>
-                        @if (Model.DefaultRole == role.Id)
+                <td>
+                    <div class="d-flex flex-wrap align-items-center gap-2">
+                        <span class="me-1">@role.Role</span>
+                        @if (role.IsServerRole)
                         {
-                            <span class="badge bg-info">
-                                Default
+                            <span class="badge bg-dark">
+                                Server-wide
                             </span>
+                            @if (Model.DefaultRole == role.Id)
+                            {
+                                <span class="badge bg-info">
+                                    Default
+                                </span>
+                            }
                         }
-                    }
-
+                    </div>
                 </td>
                 <td>
-                    @foreach (var policy in role.Policies)
+                    @if (!role.Policies.Any())
                     {
-                        <span class="badge bg-secondary mx-1">@policy</span>
+                        <span class="text-warning">No policies</span>
+                    }
+                    else
+                    {
+                        @foreach (var policy in role.Policies)
+                        {
+                            <code class="d-block text-break">@policy</code>
+                        }
                     }
                 </td>
                 @if (showInUseColumn)
@@ -125,7 +132,6 @@
                     </td>
                 }
                 <td class="text-end">
-
                     <a permission="@(role.IsServerRole ? Policies.CanModifyServerSettings : Policies.CanModifyStoreSettings)" asp-action="CreateOrEditRole" asp-route-storeId="@storeId" asp-route-roleId="@role.Id"
                        asp-controller="@(role.IsServerRole ? "UIServer" : "UIStores")">
                         Edit
@@ -142,7 +148,6 @@
                             - Set as default
                         </a>
                     }
-
                 </td>
             </tr>
         }

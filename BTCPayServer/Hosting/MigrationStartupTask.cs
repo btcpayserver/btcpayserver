@@ -374,6 +374,12 @@ namespace BTCPayServer.Hosting
                         case "title":
                             currentItem.Title = scalarValue?.Value ?? trimmedKey;
                             break;
+                        case "inventory":
+                            if (int.TryParse(scalarValue?.Value, out var inv))
+                            {
+                                currentItem.Inventory = inv;
+                            }
+                            break;
                         case "description":
                             currentItem.Description = scalarValue?.Value;
                             break;

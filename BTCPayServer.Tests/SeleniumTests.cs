@@ -2513,8 +2513,8 @@ retry:
                 if (roleItem.Text.Contains("owner", StringComparison.InvariantCultureIgnoreCase))
                 {
                     ownerRow = roleItem;
-                   
-                }else if (roleItem.Text.Contains("guest", StringComparison.InvariantCultureIgnoreCase))
+                }
+                else if (roleItem.Text.Contains("guest", StringComparison.InvariantCultureIgnoreCase))
                 {
                     guestRow = roleItem;
                 }

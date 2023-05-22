@@ -2587,11 +2587,15 @@ retry:
             Assert.Equal(2, options.Count);
             Assert.Contains(options, element => element.Text.Equals("store role", StringComparison.InvariantCultureIgnoreCase));
             s.CreateNewStore();
-            
+            s.GoToStore(StoreNavPages.Roles);
             existingStoreRoles = s.Driver.FindElement(By.CssSelector("table")).FindElements(By.CssSelector("tr"));
             Assert.Equal(2, existingStoreRoles.Count);
             Assert.Equal(1, existingStoreRoles.Count(element => element.Text.Contains("Server-wide", StringComparison.InvariantCultureIgnoreCase)));
             Assert.Equal(0, existingStoreRoles.Count(element => element.Text.Contains("store role", StringComparison.InvariantCultureIgnoreCase)));
+            s.GoToStore(StoreNavPages.Users);
+            options = s.Driver.FindElements(By.CssSelector("#Role option"));
+            Assert.Equal(1, options.Count);
+            Assert.DoesNotContain(options, element => element.Text.Equals("store role", StringComparison.InvariantCultureIgnoreCase));
         }
 
         private static void CanBrowseContent(SeleniumTester s)

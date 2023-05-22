@@ -77,7 +77,6 @@ public class UIFormsController : Controller
 
         if (!_formDataService.IsFormSchemaValid(modifyForm.FormConfig, out var form, out var error))
         {
-
             ModelState.AddModelError(nameof(modifyForm.FormConfig),
                 $"Form config was invalid: {error})");
         }
@@ -85,7 +84,6 @@ public class UIFormsController : Controller
         {
             modifyForm.FormConfig = form.ToString();
         }
-
 
         if (!ModelState.IsValid)
         {

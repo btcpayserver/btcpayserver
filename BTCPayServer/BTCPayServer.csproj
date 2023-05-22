@@ -111,9 +111,6 @@
 	  <None Include="wwwroot\vendor\font-awesome\scss\_screen-reader.scss" />
 	  <None Include="wwwroot\vendor\font-awesome\scss\_stacked.scss" />
 	  <None Include="wwwroot\vendor\font-awesome\scss\_variables.scss" />
-	  <None Include="wwwroot\vendor\jquery-easing\jquery.easing.compatibility.js" />
-	  <None Include="wwwroot\vendor\jquery-easing\jquery.easing.js" />
-	  <None Include="wwwroot\vendor\jquery-easing\jquery.easing.min.js" />
 	  <None Include="wwwroot\vendor\jquery\jquery.js" />
 	  <None Include="wwwroot\vendor\jquery\jquery.min.js" />
 	</ItemGroup>

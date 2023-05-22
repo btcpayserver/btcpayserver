@@ -1,43 +1,164 @@
 @using BTCPayServer.Forms
 @using Microsoft.AspNetCore.Mvc.TagHelpers
-@using BTCPayServer.Abstractions.TagHelpers
-@using Newtonsoft.Json
+@inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model BTCPayServer.Forms.ModifyForm
-
 @{
+    Csp.UnsafeEval();
     var formId = Context.GetRouteValue("id");
     var isNew = formId is null;
     Layout = "../Shared/_NavLayout.cshtml";
     ViewData["NavPartialName"] = "../UIStores/_Nav";
     ViewData.SetActivePage(StoreNavPages.Forms, $"{(isNew ? "Create" : "Edit")} Form", Model.Name);
-
     var storeId = Context.GetCurrentStoreId();
 }
 
-@section PageFootContent {
-    <partial name="_ValidationScriptsPartial"/>
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            const $config = document.getElementById("FormConfig");
-            delegate("click", "[data-form-template]", e => {
-                const { formTemplate: id } = e.target.dataset
-                const $template = document.getElementById(`form-template-${id}`)
-                $config.value = $template.innerHTML.trim()
-            })
-        })
-    </script>
+@section PageHeadCOntent {
+    <style>
+        #FormEditor .nav-link { background: none; padding: 0; font-weight: var(--btcpay-font-weight-semibold); font-size: 1.125rem; }
+        #FormEditor .nav-link.active { color: var(--btcpay-primary); }
+        #FormEditor .list-group-item:not(.active) { background: none; }
+        #FormEditor .list-group-item { border: none !important; margin-top: 0 !important; padding: var(--btcpay-space-m) var(--btcpay-space-m) var(--btcpay-space-m) var(--btcpay-space-s) !important; }
+        #FormEditor fieldset .list-group-item { padding: var(--btcpay-space-m) 0 var(--btcpay-space-m) !important; }
+        #FormEditor .control { color: var(--btcpay-body-text-muted); border: none !important; padding: 0 var(--btcpay-space-xs); }
+        #FormEditor .control.drag[disabled] { visibility: hidden; }
+        #FormEditor .control.drag:hover { color: var(--btcpay-primary); }
+        #FormEditor .control.remove:hover { color: var(--btcpay-danger); }
+        #FormEditor .field .form-group:last-child { margin-bottom: 0; }
+        #FormEditor .nested-fields { margin: 0 -3.1rem 0 -.5rem; }
+        #FormEditor .nested-fields .list-group-item { padding-right: 1rem !important; }
+    </style>
 }
 
-<template id="form-template-email">
-	@FormDataService.StaticFormEmail
-</template>
-<template id="form-template-address">
-	@FormDataService.StaticFormAddress
-</template>
+@section PageFootContent {
+    <template id="form-template-email">
+        @FormDataService.StaticFormEmail
+    </template>
+    <template id="form-template-address">
+        @FormDataService.StaticFormAddress
+    </template>
+    <template id="field-editor">
+        <div class="field" v-if="field">
+            <div class="form-group">
+                <label for="field-editor-field-type" class="form-label" data-required>Type</label>
+                <select id="field-editor-field-type" class="form-select" required v-model="field.type">
+                    <option v-for="option in fieldTypeOptions" :key="option" :value="option" v-text="option.charAt(0).toUpperCase() + option.slice(1)"></option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="field-editor-field-label" class="form-label" data-required>Label</label>
+                <input id="field-editor-field-label" class="form-control" required v-model="field.label" />
+            </div>
+            <div class="form-group">
+                <label for="field-editor-field-name" class="form-label" data-required>Name</label>
+                <input id="field-editor-field-name" class="form-control" required v-model="field.name" />
+                <div class="form-text">The name of the field in the invoice's metadata</div>
+            </div>
+            <div class="form-group" v-if="field.type === 'select'">
+                <h5 class="mt-2">Options</h5>
+                <div class="options" v-sortable="{ handle: '.drag', onUpdate: sortOptions }">
+                    <div v-for="(option, index) in field.options" :key="option.value" class="d-flex align-items-start gap-2 pt-3">
+                        <button type="button" class="btn b-0 control drag">
+                            <vc:icon symbol="drag" />
+                        </button>
+                        <div class="field flex-grow-1">
+                            <label :for="`field-option-value-${index}`" class="form-label">Value</label>
+                            <input :for="`field-option-value-${index}`" class="form-control" v-model="option.value" />
+                        </div>
+                        <div class="field flex-grow-1">
+                            <label :for="`field-option-text-${index}`" class="form-label">Text</label>
+                            <input :for="`field-option-text-${index}`" class="form-control" v-model="option.text" />
+                        </div>
+                        <button type="button" class="btn b-0 control remove" v-on:click="removeOption($event, index)">
+                            <vc:icon symbol="trash" />
+                        </button>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-link px-1 py-2 gap-1 add fw-semibold d-inline-flex align-items-center" v-on:click.stop="addOption($event)">
+                    <vc:icon symbol="new" />
+                    Add option
+                </button>
+            </div>
+            <div class="form-group" v-if="field.type !== 'fieldset'">
+                <label for="field-editor-field-value" class="form-label">Default Value</label>
+                <input id="field-editor-field-value" class="form-control" v-model="field.value" />
+            </div>
+            <div class="form-group" v-if="field.type !== 'fieldset'">
+                <label for="field-editor-field-helpText" class="form-label">Helper Text</label>
+                <input id="field-editor-field-helpText" class="form-control" v-model="field.helpText" />
+                <div class="form-text">Additional text to provide an explanation for the field</div>
+            </div>
+            <div class="form-group form-check" v-if="field.type !== 'fieldset'">
+                <input id="field-editor-field-required" type="checkbox" class="form-check-input" v-model="field.required" />
+                <label for="field-editor-field-required" class="form-check-label">Required Field</label>
+            </div>
+            <div class="form-group form-check" v-if="field.type !== 'fieldset' && field.type !== 'select'">
+                <input id="field-editor-field-constant" type="checkbox" class="form-check-input" v-model="field.constant" />
+                <label for="field-editor-field-constant" class="form-check-label">Constant</label>
+                <div class="form-text">The user will not be able to change the field's value</div>
+            </div>
+        </div>
+        <div v-else>Select a field to edit</div>
+    </template>
+    <template id="fields-editor">
+        <div>
+            <div class="fields list-group" :class="{ 'list-group-flush': path.length }" :data-path="path.join(',')" v-sortable="{ handle: '.drag', onUpdate (event) { const { path } = this.el.dataset; $emit('sort-fields', event, (path.indexOf(',') !== -1 ? path.split(',') : [])) } }">
+                <div v-for="(field, index) in fields" :key="field.name" class="d-flex align-items-start gap-2 list-group-item" :class="{ active: field === selectedField }" v-on:click.stop="$emit('select-field', $event, path, index)">
+                    <button type="button" class="btn b-0 control drag" :disabled="fields.length === 1">
+                        <vc:icon symbol="drag" />
+                    </button>
+                    <div class="field flex-grow-1">
+                        <component :is="getFieldComponent(field.type)" v-bind="field" :path="path.concat(field.name)" :selected-field="selectedField" v-on="$listeners" />
+                    </div>
+                    <button type="button" class="btn b-0 control remove" v-on:click="$emit('remove-field', $event, path, index)">
+                        <vc:icon symbol="trash" />
+                    </button>
+                </div>
+            </div>
+            <button type="button" class="btn btn-link py-0 px-2 mt-2 mb-2 gap-1 add fw-semibold d-inline-flex align-items-center" v-on:click.stop="$emit('add-field', $event, path)">
+                <vc:icon symbol="new" />
+                Add form element
+            </button>
+        </div>
+    </template>
+    <template id="field-type-input">
+        <div class="form-group mb-0">
+            <label class="form-label" :for="name" :data-required="required" v-text="label"></label>
+            <input class="form-control" :id="name" :name="name" :type="type" v-model="value" />
+            <div v-if="helpText" :id="`HelpText-{name}`" class="form-text" v-text="helpText"></div>
+        </div>
+    </template>
+    <template id="field-type-textarea">
+        <div class="form-group mb-0">
+            <label class="form-label" :for="name" :data-required="required" v-text="label"></label>
+            <textarea class="form-control" :id="name" :name="name" v-model="value"></textarea>
+            <div v-if="helpText" :id="`HelpText-${name}`" class="form-text" v-text="helpText"></div>
+        </div>
+    </template>
+    <template id="field-type-select">
+        <div class="form-group mb-0">
+            <label class="form-label" :for="name" :data-required="required" v-text="label"></label>
+            <select class="form-select" :id="name" :name="name">
+                <option v-for="option in options" :key="option.value" :value="option.value" :selected="option.value === value" v-text="option.text"></option>
+            </select>
+            <div v-if="helpText" :id="`HelpText-${name}`" class="form-text" v-text="helpText"></div>
+        </div>
+    </template>
+    <template id="field-type-fieldset">
+        <fieldset>
+            <legend class="h5 mt-1 mb-2" v-text="label"></legend>
+            <fields-editor :path="path" :fields="fields" :selected-field="selectedField" v-on="$listeners" class="nested-fields" />
+        </fieldset>
+    </template>
+    <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/vue-sortable/sortable.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/vue-sortable/vue-sortable.js" asp-append-version="true"></script>
+    <script src="~/js/form-editor.js" asp-append-version="true"></script>
+    <partial name="_ValidationScriptsPartial" />
+}
 
 <form method="post" asp-action="Modify" asp-route-id="@formId" asp-route-storeId="@storeId">
-    <div class="row">
-        <div class="col-xl-10 col-xxl-constrain">
+    <div class="row mb-4">
+        <div class="col-12">
             <div class="d-flex align-items-center justify-content-between mb-3">
                 <h3 class="mb-0">
                     <span>@ViewData["Title"]</span>
@@ -54,31 +175,63 @@
                 </div>
             </div>
             <div asp-validation-summary="All" class="text-danger"></div>
-            <div class="form-group">
+            <div class="form-group" style="max-width: 27rem;">
                 <label asp-for="Name" class="form-label" data-required></label>
-                <input asp-for="Name" class="form-control" required/>
+                <input asp-for="Name" class="form-control" required />
                 <span asp-validation-for="Name" class="text-danger"></span>
             </div>
             <div class="d-flex align-items-center mb-4 gap-3">
                 <input asp-for="Public" type="checkbox" class="btcpay-toggle" />
                 <div>
                     <label asp-for="Public"></label>
-                    <div class="form-text" style="max-width:27rem">
+                    <div class="form-text">
                         Standalone mode, which can be used to generate invoices
                         independent of payment requests or apps.
                     </div>
                 </div>
             </div>
-            <div class="form-group">
-                <div class="d-flex align-items-center justify-content-between gap-3">
-                    <label asp-for="FormConfig" class="form-label" data-required></label>
-                    <div class="d-flex align-items-center gap-2 mb-2">
-                        <span>Templates:</span>
-                        <button type="button" class="btn btn-link p-0" data-form-template="email">Email</button>
-                        <button type="button" class="btn btn-link p-0" data-form-template="address">Address</button>
+        </div>
+    </div>
+    
+    <div id="FormEditor">
+        <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-3">
+            <ul class="nav nav-pills gap-4" id="form-editor-tab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="EditorTabButton" data-bs-toggle="pill" data-bs-target="#EditorTabPane" type="button" role="tab" aria-controls="EditorTabPane" aria-selected="true">Editor</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="CodeTabButton" data-bs-toggle="pill" data-bs-target="#CodeTabPane" type="button" role="tab" aria-controls="CodeTabPane" aria-selected="false">Code</button>
+                </li>
+            </ul>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="fw-semibold">Templates</span>
+                <button type="button" class="btn btn-link p-0 fw-semibold" v-on:click="applyTemplate('email')" id="ApplyEmailTemplate">Email</button>
+                <button type="button" class="btn btn-link p-0 fw-semibold" v-on:click="applyTemplate('address')" id="ApplyAddressTemplate">Address</button>
+            </div>
+        </div>
+        <div class="tab-content">
+            <div class="tab-pane fade show active" id="EditorTabPane" role="tabpanel" aria-labelledby="EditorTabButton" tabindex="0">
+                <div class="row align-items-start">
+                    <div class="col-lg-7 mb-4 mb-lg-0">
+                        <fields-editor :path="[]"
+                                       :fields="fields"
+                                       :selected-field="selectedField"
+                                       v-on:add-field="addField"
+                                       v-on:sort-fields="sortFields"
+                                       v-on:select-field="selectField"
+                                       v-on:remove-field="removeField"
+                                       class="bg-tile pb-2 rounded" />
+                    </div>
+                    <div class="col-lg-5">
+                        <field-editor :field="selectedField" class="bg-tile p-4 rounded" />
                     </div>
                 </div>
-                <textarea asp-for="FormConfig" class="form-control" rows="10" cols="21"></textarea>
+            </div>
+            <div class="tab-pane fade" id="CodeTabPane" role="tabpanel" aria-labelledby="CodeTabButton" tabindex="0">
+                <div class="d-flex align-items-center justify-content-between gap-3">
+                    <label asp-for="FormConfig" class="form-label" data-required>Form JSON</label>
+                </div>
+                <textarea asp-for="FormConfig" class="form-control font-monospace" style="font-size:.85rem" rows="21" cols="21" v-model="configJSON" v-on:change="updateFromJSON"></textarea>
                 <span asp-validation-for="FormConfig" class="text-danger"></span>
             </div>
         </div>

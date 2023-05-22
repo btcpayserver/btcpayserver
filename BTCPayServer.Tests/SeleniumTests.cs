@@ -129,15 +129,19 @@ namespace BTCPayServer.Tests
             Assert.Contains("There are no forms yet.", s.Driver.PageSource);
             s.Driver.FindElement(By.Id("CreateForm")).Click();
             s.Driver.FindElement(By.Name("Name")).SendKeys("Custom Form 1");
-            s.Driver.FindElement((By.CssSelector("[data-form-template='email']"))).Click();
-            var emailtemplate = s.Driver.FindElement(By.Name("FormConfig")).GetAttribute("value");
-            Assert.Contains("buyerEmail", emailtemplate);
+            s.Driver.FindElement(By.Id("ApplyEmailTemplate")).Click();
+            
+            s.Driver.FindElement(By.Id("CodeTabButton")).Click();
+            s.Driver.WaitForElement(By.Id("CodeTabPane"));
+            
+            var config = s.Driver.FindElement(By.Name("FormConfig")).GetAttribute("value");
+            Assert.Contains("buyerEmail", config);
+            
             s.Driver.FindElement(By.Name("FormConfig")).Clear();
             s.Driver.FindElement(By.Name("FormConfig"))
-                .SendKeys(emailtemplate.Replace("Enter your email", "CustomFormInputTest"));
+                .SendKeys(config.Replace("Enter your email", "CustomFormInputTest"));
             s.Driver.FindElement(By.Id("SaveButton")).Click();
             s.Driver.FindElement(By.Id("ViewForm")).Click();
-
 
             var formurl = s.Driver.Url;
             Assert.Contains("CustomFormInputTest", s.Driver.PageSource);
@@ -157,12 +161,16 @@ namespace BTCPayServer.Tests
             Assert.DoesNotContain("Custom Form 1", s.Driver.PageSource);
             s.Driver.FindElement(By.Id("CreateForm")).Click();
             s.Driver.FindElement(By.Name("Name")).SendKeys("Custom Form 2");
-            s.Driver.FindElement((By.CssSelector("[data-form-template='email']"))).Click();
+            s.Driver.FindElement(By.Id("ApplyEmailTemplate")).Click();
+            
+            s.Driver.FindElement(By.Id("CodeTabButton")).Click();
+            s.Driver.WaitForElement(By.Id("CodeTabPane"));
+            
             s.Driver.SetCheckbox(By.Name("Public"), true);
 
             s.Driver.FindElement(By.Name("FormConfig")).Clear();
             s.Driver.FindElement(By.Name("FormConfig"))
-                .SendKeys(emailtemplate.Replace("Enter your email", "CustomFormInputTest2"));
+                .SendKeys(config.Replace("Enter your email", "CustomFormInputTest2"));
             s.Driver.FindElement(By.Id("SaveButton")).Click();
             s.Driver.FindElement(By.Id("ViewForm")).Click();
             formurl = s.Driver.Url;

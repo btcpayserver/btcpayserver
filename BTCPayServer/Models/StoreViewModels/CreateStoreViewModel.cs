@@ -21,8 +21,5 @@ namespace BTCPayServer.Models.StoreViewModels
         public string PreferredExchange { get; set; }
 
         public SelectList Exchanges { get; set; }
-
-        [Display(Name = "Preferred Price Source")]
-        public string RoleId { get; set; }
     }
 }

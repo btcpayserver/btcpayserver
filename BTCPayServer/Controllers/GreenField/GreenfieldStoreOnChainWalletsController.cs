@@ -585,6 +585,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 {
                     await _delayedTransactionBroadcaster.Schedule(DateTimeOffset.UtcNow + TimeSpan.FromMinutes(2.0),
                         transaction, network);
+                    _payjoinClient.MinimumFeeRate = minRelayFee;
                     var payjoinPSBT = await _payjoinClient.RequestPayjoin(
                         new BitcoinUrlBuilder(signingContext.PayJoinBIP21, network.NBitcoinNetwork),
                         new PayjoinWallet(derivationScheme),

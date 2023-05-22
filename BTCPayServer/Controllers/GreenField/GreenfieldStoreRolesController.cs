@@ -45,33 +45,4 @@ namespace BTCPayServer.Controllers.Greenfield
             return this.CreateAPIError(404, "store-not-found", "The store was not found");
         }
     }
-    
-    [ApiController]
-    [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-    [EnableCors(CorsPolicies.All)]
-    public class GreenfieldServerRolesController : ControllerBase
-    {
-        private readonly StoreRepository _storeRepository;
-
-        public GreenfieldServerRolesController(StoreRepository storeRepository)
-        {
-            _storeRepository = storeRepository;
-        }
-
-        [Authorize(Policy = Policies.CanModifyServerSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        [HttpGet("~/api/v1/server/roles")]
-        public async Task<IActionResult> GetServerRoles()
-        {
-            return Ok(FromModel(await _storeRepository.GetStoreRoles(null, false, false)));
-        }
-        private List<RoleData> FromModel(StoreRepository.StoreRole[] data)
-        {
-            return data.Select(r => new RoleData() {Role = r.Role, Id = r.Id, Policies = r.Policies}).ToList();
-        }
-
-        private IActionResult StoreNotFound()
-        {
-            return this.CreateAPIError(404, "store-not-found", "The store was not found");
-        }
-    }
 }

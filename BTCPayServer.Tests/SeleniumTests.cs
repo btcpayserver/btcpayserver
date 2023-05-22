@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
@@ -2468,6 +2469,129 @@ retry:
             {
                 Assert.StartsWith(s.ServerUri.ToString(), s.Driver.Url);
             });
+        }
+        [Fact]
+        [Trait("Selenium", "Selenium")]
+        public async Task CanUseRoleManager()
+        {
+            using var s = CreateSeleniumTester(newDb: true);
+            await s.StartAsync();
+            var user = s.RegisterNewUser(true);
+            s.GoToServer(ServerNavPages.Roles);
+            var existingServerRoles = s.Driver.FindElement(By.CssSelector("table")).FindElements(By.CssSelector("tr"));
+            Assert.Equal(3, existingServerRoles.Count);
+            IWebElement ownerRow = null;
+            IWebElement guestRow = null;
+            foreach (var roleItem in existingServerRoles)
+            {
+                if (roleItem.Text.Contains("owner", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    ownerRow = roleItem;
+                   
+                }else if (roleItem.Text.Contains("guest", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    guestRow = roleItem;
+                }
+            }
+            
+            Assert.NotNull(ownerRow);
+            Assert.NotNull(guestRow);
+
+            var ownerBadges = ownerRow.FindElements(By.CssSelector(".badge"));
+            Assert.Contains(ownerBadges, element => element.Text.Equals("Default", StringComparison.InvariantCultureIgnoreCase));
+            Assert.Contains(ownerBadges, element => element.Text.Equals("Server-wide", StringComparison.InvariantCultureIgnoreCase));
+            
+            var guestBadges = guestRow.FindElements(By.CssSelector(".badge"));
+            Assert.DoesNotContain(guestBadges, element => element.Text.Equals("Default", StringComparison.InvariantCultureIgnoreCase));
+            Assert.Contains(guestBadges, element => element.Text.Equals("Server-wide", StringComparison.InvariantCultureIgnoreCase));
+            guestRow.FindElement(By.Id("SetDefault")).Click();
+            s.FindAlertMessage();
+            
+            existingServerRoles = s.Driver.FindElement(By.CssSelector("table")).FindElements(By.CssSelector("tr"));
+            foreach (var roleItem in existingServerRoles)
+            {
+                if (roleItem.Text.Contains("owner", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    ownerRow = roleItem;
+                   
+                }else if (roleItem.Text.Contains("guest", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    guestRow = roleItem;
+                }
+            }
+            guestBadges = guestRow.FindElements(By.CssSelector(".badge"));
+            Assert.Contains(guestBadges, element => element.Text.Equals("Default", StringComparison.InvariantCultureIgnoreCase));
+            
+            ownerBadges = ownerRow.FindElements(By.CssSelector(".badge"));
+            Assert.DoesNotContain(ownerBadges, element => element.Text.Equals("Default", StringComparison.InvariantCultureIgnoreCase));
+            ownerRow.FindElement(By.Id("SetDefault")).Click();
+            s.FindAlertMessage();
+            
+            
+
+            s.CreateNewStore();
+            s.GoToStore(StoreNavPages.Roles);
+            var existingStoreRoles = s.Driver.FindElement(By.CssSelector("table")).FindElements(By.CssSelector("tr"));
+            Assert.Equal(3, existingStoreRoles.Count);
+            Assert.Equal(2, existingStoreRoles.Count(element => element.Text.Contains("Server-wide", StringComparison.InvariantCultureIgnoreCase)));
+
+            foreach (var roleItem in existingStoreRoles)
+            {
+                if (roleItem.Text.Contains("owner", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    ownerRow = roleItem;
+                    break;
+                }
+            }
+            
+            ownerRow.FindElement(By.LinkText("Remove")).Click();
+            Assert.DoesNotContain("ConfirmContinue", s.Driver.PageSource);
+            s.Driver.Navigate().Back();
+            existingStoreRoles = s.Driver.FindElement(By.CssSelector("table")).FindElements(By.CssSelector("tr"));
+            foreach (var roleItem in existingStoreRoles)
+            {
+                if (roleItem.Text.Contains("guest", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    guestRow = roleItem;
+                    break;
+                }
+            }
+            
+            guestRow.FindElement(By.LinkText("Remove")).Click();
+            s.Driver.FindElement(By.Id("ConfirmContinue")).Click();
+            s.FindAlertMessage();
+            
+            s.GoToStore(StoreNavPages.Roles);
+            s.Driver.FindElement(By.Id("CreateRole")).Click();
+
+            Assert.Contains("Create role", s.Driver.PageSource);
+            s.Driver.FindElement(By.Id("Save")).Click();
+            s.Driver.FindElement(By.Id("Role")).SendKeys("store role");
+            s.Driver.FindElement(By.Id("Save")).Click();
+            s.FindAlertMessage();
+            
+            existingStoreRoles = s.Driver.FindElement(By.CssSelector("table")).FindElements(By.CssSelector("tr"));
+            foreach (var roleItem in existingStoreRoles)
+            {
+                if (roleItem.Text.Contains("store role", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    guestRow = roleItem;
+                    break;
+                }
+            }
+            
+            guestBadges = guestRow.FindElements(By.CssSelector(".badge"));
+            Assert.DoesNotContain(guestBadges, element => element.Text.Equals("server-wide", StringComparison.InvariantCultureIgnoreCase));
+            s.GoToStore(StoreNavPages.Users);
+            var options = s.Driver.FindElements(By.CssSelector("#Role option"));
+            Assert.Equal(2, options.Count);
+            Assert.Contains(options, element => element.Text.Equals("store role", StringComparison.InvariantCultureIgnoreCase));
+            s.CreateNewStore();
+            
+            existingStoreRoles = s.Driver.FindElement(By.CssSelector("table")).FindElements(By.CssSelector("tr"));
+            Assert.Equal(2, existingStoreRoles.Count);
+            Assert.Equal(1, existingStoreRoles.Count(element => element.Text.Contains("Server-wide", StringComparison.InvariantCultureIgnoreCase)));
+            Assert.Equal(0, existingStoreRoles.Count(element => element.Text.Contains("store role", StringComparison.InvariantCultureIgnoreCase)));
         }
 
         private static void CanBrowseContent(SeleniumTester s)

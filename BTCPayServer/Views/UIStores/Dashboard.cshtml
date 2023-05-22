@@ -7,7 +7,6 @@
 @using BTCPayServer.Components.AppSales
 @using BTCPayServer.Components.AppTopItems
 @using BTCPayServer.Services.Apps
-@inject AppService AppService
 @model StoreDashboardViewModel
 @{
     ViewData.SetActivePage(StoreNavPages.Dashboard, Model.StoreName, Model.StoreId);
@@ -63,8 +62,11 @@
             displayDefaultCurrency(amount, rate, currency, divisibility) {
                 const value = DashboardUtils.toDefaultCurrency(amount, rate);
                 const locale = currency === 'USD' ? 'en-US' : navigator.language;
+                const isSats = currency === 'SATS';
+                if (isSats) currency = 'BTC';
                 const opts = { currency, style: 'decimal', minimumFractionDigits: divisibility };
-                return new Intl.NumberFormat(locale, opts).format(value);
+                const val = new Intl.NumberFormat(locale, opts).format(value);
+                return isSats ? val.replace(/[\\.,]/g, ' ') : val;
             },
             async fetchRate(currencyPair) {
                 const storeId = @Safe.Json(Context.GetRouteValue("storeId"));

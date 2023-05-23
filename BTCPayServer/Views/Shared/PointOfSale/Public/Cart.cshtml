@@ -1,5 +1,7 @@
 @using BTCPayServer.Plugins.PointOfSale.Models
+@using BTCPayServer.Services
 @model BTCPayServer.Plugins.PointOfSale.Models.ViewPointOfSaleViewModel
+@inject DisplayFormatter DisplayFormatter
 @{
     Layout = "PointOfSale/Public/_Layout";
     var customTipPercentages = Model.CustomTipPercentages;
@@ -253,11 +255,12 @@
 
                             <span class="text-muted small">
                                 @{
-                                    var buttonText = string.IsNullOrEmpty(item.BuyButtonText) ? item.Price.Type != ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Fixed ? Model.CustomButtonText : Model.ButtonText : item.BuyButtonText;
-                                    if (item.Price.Type != ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Topup)
+                                    var buttonText = string.IsNullOrEmpty(item.BuyButtonText) ? item.PriceType != ViewPointOfSaleViewModel.ItemPriceType.Fixed ? Model.CustomButtonText : Model.ButtonText : item.BuyButtonText;
+                                    if (item.PriceType != ViewPointOfSaleViewModel.ItemPriceType.Topup)
                                     {
-                                        buttonText = buttonText.Replace("{0}",item.Price.Formatted)
-                                            ?.Replace("{Price}",item.Price.Formatted);
+                                        var formatted = DisplayFormatter.Currency(item.Price ?? 0, Model.CurrencyCode, DisplayFormatter.CurrencyFormat.Symbol);
+                                        buttonText = buttonText.Replace("{0}",formatted)
+                                            ?.Replace("{Price}",formatted);
                                     }
                                 }
                                 @Safe.Raw(buttonText)

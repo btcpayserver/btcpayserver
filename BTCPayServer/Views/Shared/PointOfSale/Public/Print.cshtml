@@ -1,11 +1,12 @@
 @using BTCPayServer.Payments.Lightning
 @using BTCPayServer.Plugins.PointOfSale.Models
+@using BTCPayServer.Services
 @using BTCPayServer.Services.Stores
 @using LNURL
 @inject BTCPayNetworkProvider BTCPayNetworkProvider
 @inject StoreRepository StoreRepository
 @model BTCPayServer.Plugins.PointOfSale.Models.ViewPointOfSaleViewModel
-
+@inject DisplayFormatter DisplayFormatter
 @{
     var store = await StoreRepository.FindStore(Model.StoreId);
     Layout = "PointOfSale/Public/_Layout";
@@ -68,11 +69,7 @@ else
                         Description = "Create invoice to pay custom amount",
                         Title = "Custom amount",
                         BuyButtonText = Model.CustomButtonText,
-                        Price = new ViewPointOfSaleViewModel.Item.ItemPrice()
-                        {
-                            Type = ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Topup,
-
-                        }
+                        PriceType = ViewPointOfSaleViewModel.ItemPriceType.Topup
                     }
                 }).ToArray();
             }
@@ -90,16 +87,19 @@ else
                             <p class="card-title text-center">@Safe.Raw(item.Description)</p>
                         }
                         <div class="w-100 mb-3 fs-5 text-center">
-                            @switch (item.Price.Type)
+                            @{
+                                var formatted = DisplayFormatter.Currency(item.Price ?? 0, Model.CurrencyCode, DisplayFormatter.CurrencyFormat.Symbol);
+                            }
+                            @switch (item.PriceType)
                             {
-                                case ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Topup:
+                                case ViewPointOfSaleViewModel.ItemPriceType.Topup:
                                     <span>Any amount</span>
                                     break;
-                                case ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Minimum:
-                                    <span>@item.Price.Formatted minimum</span>
+                                case ViewPointOfSaleViewModel.ItemPriceType.Minimum:
+                                    <span>@formatted minimum</span>
                                     break;
-                                case ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Fixed:
-                                    @item.Price.Formatted
+                                case ViewPointOfSaleViewModel.ItemPriceType.Fixed:
+                                    @formatted
                                     break;
                                 default:
                                     throw new ArgumentOutOfRangeException();

@@ -13,18 +13,12 @@ using BTCPayServer.Plugins.PointOfSale.Models;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
-using ExchangeSharp;
 using Ganss.XSS;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin;
 using NBitcoin.DataEncoders;
-using NBitpayClient;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using YamlDotNet.Core;
-using YamlDotNet.RepresentationModel;
-using YamlDotNet.Serialization;
-using PosViewType = BTCPayServer.Plugins.PointOfSale.PosViewType;
 using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Services.Apps
@@ -32,6 +26,17 @@ namespace BTCPayServer.Services.Apps
     public class AppService
     {
         private readonly Dictionary<string, AppBaseType> _appTypes;
+        static AppService()
+        {
+            _defaultSerializer = new JsonSerializerSettings()
+            {
+                ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(),
+                Formatting = Formatting.None
+            };
+        }
+
+        private static JsonSerializerSettings _defaultSerializer;
+
         readonly ApplicationDbContextFactory _ContextFactory;
         private readonly InvoiceRepository _InvoiceRepository;
         readonly CurrencyNameTable _Currencies;
@@ -342,169 +347,20 @@ namespace BTCPayServer.Services.Apps
         {
             return _storeRepository.FindStore(app.StoreDataId);
         }
+        
 
-        public string SerializeTemplate(ViewPointOfSaleViewModel.Item[] items)
+        public static string SerializeTemplate(ViewPointOfSaleViewModel.Item[] items)
         {
-            var mappingNode = new YamlMappingNode();
-            foreach (var item in items)
-            {
-                var itemNode = new YamlMappingNode();
-                itemNode.Add("title", new YamlScalarNode(item.Title));
-                if (item.Price.Type != ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Topup && item.Price.Value is not null)
-                    itemNode.Add("price", new YamlScalarNode(item.Price.Value.ToStringInvariant()));
-                if (!string.IsNullOrEmpty(item.Description))
-                {
-                    itemNode.Add("description", new YamlScalarNode(item.Description)
-                    {
-                        Style = ScalarStyle.DoubleQuoted
-                    });
-                }
-                if (!string.IsNullOrEmpty(item.Image))
-                {
-                    itemNode.Add("image", new YamlScalarNode(item.Image));
-                }
-                itemNode.Add("price_type", new YamlScalarNode(item.Price.Type.ToStringLowerInvariant()));
-                itemNode.Add("disabled", new YamlScalarNode(item.Disabled.ToStringLowerInvariant()));
-                if (item.Inventory.HasValue)
-                {
-                    itemNode.Add("inventory", new YamlScalarNode(item.Inventory.ToString()));
-                }
-
-                if (!string.IsNullOrEmpty(item.BuyButtonText))
-                {
-                    itemNode.Add("buyButtonText", new YamlScalarNode(item.BuyButtonText));
-                }
-
-                if (item.PaymentMethods?.Any() is true)
-                {
-                    itemNode.Add("payment_methods", new YamlSequenceNode(item.PaymentMethods.Select(s => new YamlScalarNode(s))));
-                }
-                mappingNode.Add(item.Id, itemNode);
-            }
-
-            var serializer = new SerializerBuilder().Build();
-            return serializer.Serialize(mappingNode);
+               return JsonConvert.SerializeObject(items, Formatting.Indented, _defaultSerializer);
         }
-
-        public ViewPointOfSaleViewModel.Item[] Parse(string template, string currency)
-        {
-            return Parse(_HtmlSanitizer, _displayFormatter, template, currency);
-        }
-
-
-        public ViewPointOfSaleViewModel.Item[] GetPOSItems(string template, string currency)
-        {
-            return GetPOSItems(_HtmlSanitizer, _displayFormatter, template, currency);
-        }
-        public static ViewPointOfSaleViewModel.Item[] Parse(HtmlSanitizer htmlSanitizer, DisplayFormatter displayFormatter, string template, string currency)
+        public static ViewPointOfSaleViewModel.Item[] Parse(string template, bool includeDisabled = true)
         {
             if (string.IsNullOrWhiteSpace(template))
                 return Array.Empty<ViewPointOfSaleViewModel.Item>();
-            using var input = new StringReader(template);
-            YamlStream stream = new();
-            stream.Load(input);
-            var root = (YamlMappingNode)stream.Documents[0].RootNode;
-            return root
-                .Children
-                .Select(kv => new PosHolder(htmlSanitizer) { Key = htmlSanitizer.Sanitize((kv.Key as YamlScalarNode)?.Value), Value = kv.Value as YamlMappingNode })
-                .Where(kv => kv.Value != null)
-                .Select(c =>
-                {
-                    ViewPointOfSaleViewModel.Item.ItemPrice price = new();
-                    var pValue = c.GetDetail("price")?.FirstOrDefault();
 
-                    switch (c.GetDetailString("custom") ?? c.GetDetailString("price_type")?.ToLowerInvariant())
-                    {
-                        case "topup":
-                        case null when pValue is null:
-                            price.Type = ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Topup;
-                            break;
-                        case "true":
-                        case "minimum":
-                            price.Type = ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Minimum;
-                            if (pValue != null && !string.IsNullOrEmpty(pValue.Value?.Value))
-                            {
-                                price.Value = decimal.Parse(pValue.Value.Value, CultureInfo.InvariantCulture);
-                                price.Formatted = displayFormatter.Currency(price.Value.Value, currency, DisplayFormatter.CurrencyFormat.Symbol);
-                            }
-                            break;
-                        case "fixed":
-                        case "false":
-                        case null:
-                            price.Type = ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Fixed;
-                            if (pValue?.Value.Value is not null)
-                            {
-                                price.Value = decimal.Parse(pValue.Value.Value, CultureInfo.InvariantCulture);
-                                price.Formatted = displayFormatter.Currency(price.Value.Value, currency, DisplayFormatter.CurrencyFormat.Symbol);
-                            }
-                            break;
-                    }
-
-                    return new ViewPointOfSaleViewModel.Item
-                    {
-                        Description = c.GetDetailString("description"),
-                        Id = c.Key,
-                        Image = c.GetDetailString("image"),
-                        Title = c.GetDetailString("title") ?? c.Key,
-                        Price = price,
-                        BuyButtonText = c.GetDetailString("buyButtonText"),
-                        Inventory =
-                            string.IsNullOrEmpty(c.GetDetailString("inventory"))
-                                ? null
-                                : int.Parse(c.GetDetailString("inventory"), CultureInfo.InvariantCulture),
-                        PaymentMethods = c.GetDetailStringList("payment_methods"),
-                        Disabled = c.GetDetailString("disabled") == "true"
-                    };
-                })
-                .ToArray();
-        }
-
-        public static ViewPointOfSaleViewModel.Item[] GetPOSItems(HtmlSanitizer htmlSanitizer, DisplayFormatter displayFormatter, string template, string currency)
-        {
-            return Parse(htmlSanitizer, displayFormatter, template, currency).Where(c => !c.Disabled).ToArray();
+            return  JsonConvert.DeserializeObject<ViewPointOfSaleViewModel.Item[]>(template, _defaultSerializer)!.Where(item => includeDisabled || !item.Disabled).ToArray();
         }
 #nullable restore
-        private class PosHolder
-        {
-            private readonly HtmlSanitizer _htmlSanitizer;
-
-            public PosHolder(
-                HtmlSanitizer htmlSanitizer)
-            {
-                _htmlSanitizer = htmlSanitizer;
-            }
-
-            public string Key { get; set; }
-            public YamlMappingNode Value { get; set; }
-
-            public IEnumerable<PosScalar> GetDetail(string field)
-            {
-                var res = Value.Children
-                                 .Where(kv => kv.Value != null)
-                                 .Select(kv => new PosScalar { Key = (kv.Key as YamlScalarNode)?.Value, Value = kv.Value as YamlScalarNode })
-                                 .Where(cc => cc.Key == field);
-                return res;
-            }
-
-            public string GetDetailString(string field)
-            {
-                var raw = GetDetail(field).FirstOrDefault()?.Value?.Value;
-                return raw is null ? null : _htmlSanitizer.Sanitize(raw);
-            }
-            public string[] GetDetailStringList(string field)
-            {
-                if (!Value.Children.ContainsKey(field) || !(Value.Children[field] is YamlSequenceNode sequenceNode))
-                {
-                    return null;
-                }
-                return sequenceNode.Children.Select(node => (node as YamlScalarNode)?.Value).Where(s => s != null).Select(s => _htmlSanitizer.Sanitize(s)).ToArray();
-            }
-        }
-        private class PosScalar
-        {
-            public string Key { get; set; }
-            public YamlScalarNode Value { get; set; }
-        }
 #nullable enable
         public async Task<AppData?> GetAppDataIfOwner(string userId, string appId, string? type = null)
         {

@@ -1,34 +1,45 @@
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using BTCPayServer.JsonConverters;
 using BTCPayServer.Services.Apps;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Plugins.PointOfSale.Models
 {
     public class ViewPointOfSaleViewModel
     {
+        public enum ItemPriceType
+        {
+            Topup,
+            Minimum,
+            Fixed
+        }
+        
         public class Item
         {
-            public class ItemPrice
-            {
-                public enum ItemPriceType
-                {
-                    Topup,
-                    Minimum,
-                    Fixed
-                }
-
-                public ItemPriceType Type { get; set; }
-                public string Formatted { get; set; }
-                public decimal? Value { get; set; }
-            }
+           
+            [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
             public string Description { get; set; }
             public string Id { get; set; }
+            [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
             public string Image { get; set; }
-            public ItemPrice Price { get; set; }
+            [JsonConverter(typeof(StringEnumConverter))]
+            public ItemPriceType PriceType { get; set; }
+            [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+            [JsonConverter(typeof(NumericStringJsonConverter))]
+            public decimal? Price { get; set; }
             public string Title { get; set; }
+            [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
             public string BuyButtonText { get; set; }
+            [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
             public int? Inventory { get; set; } = null;
+            [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
             public string[] PaymentMethods { get; set; }
             public bool Disabled { get; set; } = false;
+            
+            [JsonExtensionData] public Dictionary<string, JToken> AdditionalData { get; set; }
         }
 
         public class CurrencyInfoData

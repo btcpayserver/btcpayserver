@@ -964,7 +964,7 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("ToggleRawEditor")).Click();
 
             var template = s.Driver.FindElement(By.Id("Template")).GetAttribute("value");
-            Assert.Contains("buyButtonText: Take my money", template);
+            Assert.Contains("\"buyButtonText\":\"Take my money\"", template);
 
             s.Driver.FindElement(By.Id("SaveSettings")).Click();
             Assert.Contains("App updated", s.FindAlertMessage().Text);

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -26,11 +27,14 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using NBXplorer;
+using NBitcoin;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using PeterO.Cbor;
+using YamlDotNet.RepresentationModel;
+using YamlDotNet.Serialization;
 using LightningAddressData = BTCPayServer.Data.LightningAddressData;
+using Serializer = NBXplorer.Serializer;
 
 namespace BTCPayServer.Hosting
 {
@@ -246,6 +250,11 @@ namespace BTCPayServer.Hosting
                 {
                     await FixMappedDomainAppType();
                     settings.FixMappedDomainAppType = true;
+                }
+                if (!settings.MigrateAppYmlToJson)
+                {
+                    await MigrateAppYmlToJson();
+                    settings.MigrateAppYmlToJson = true;
                     await _Settings.UpdateSetting(settings);
                 }
             }
@@ -303,6 +312,134 @@ namespace BTCPayServer.Hosting
             if (state != "complete")
                 return;
             await ToPostgresMigrationStartupTask.UpdateSequenceInvoiceSearch(ctx);
+        }
+        private async Task MigrateAppYmlToJson()
+        {
+            await using var ctx = _DBContextFactory.CreateContext();
+            var apps = await ctx.Apps.Where(data => CrowdfundAppType.AppType == data.AppType || PointOfSaleAppType.AppType  == data.AppType)
+                .ToListAsync();
+            foreach (var app  in apps)
+            {
+                switch (app.AppType)
+                {
+                   case CrowdfundAppType.AppType :
+                       var cfSettings = app.GetSettings<CrowdfundSettings>();
+                       if (!string.IsNullOrEmpty(cfSettings?.PerksTemplate))
+                       {
+                           cfSettings.PerksTemplate = AppService.SerializeTemplate(ParsePOSYML(cfSettings?.PerksTemplate));
+                           app.SetSettings(cfSettings);
+                       }
+                       break;
+                   case PointOfSaleAppType.AppType:
+                       var pSettings = app.GetSettings<PointOfSaleSettings>();
+                       if (!string.IsNullOrEmpty(pSettings?.Template))
+                       {
+                           pSettings.Template = AppService.SerializeTemplate(ParsePOSYML(pSettings?.Template));
+                           app.SetSettings(pSettings);
+                       }
+                       break;
+                }
+            }
+
+            await ctx.SaveChangesAsync();
+            
+        }
+        public static ViewPointOfSaleViewModel.Item[] ParsePOSYML(string yaml)
+        {
+            var items = new List<ViewPointOfSaleViewModel.Item>();
+            var stream = new YamlStream();
+            stream.Load(new StringReader(yaml));
+
+            var root = stream.Documents.First().RootNode as YamlMappingNode;
+            foreach (var posItem in root.Children)
+            {
+                var trimmedKey = ((YamlScalarNode)posItem.Key).Value?.Trim();
+                if (string.IsNullOrEmpty(trimmedKey))
+                {
+                    continue;
+                }
+
+                var currentItem = new ViewPointOfSaleViewModel.Item
+                {
+                    Id = trimmedKey, Title = trimmedKey, PriceType = ViewPointOfSaleViewModel.ItemPriceType.Fixed
+                };
+                var itemSpecs = (YamlMappingNode)posItem.Value;
+                foreach (var spec in itemSpecs)
+                {
+                    if (spec.Key is not YamlScalarNode {Value: string keyString} || string.IsNullOrEmpty(keyString))
+                        continue;
+                    var scalarValue = spec.Value as YamlScalarNode;
+                    switch (keyString)
+                    {
+                        case "title":
+                            currentItem.Title = scalarValue?.Value ?? trimmedKey;
+                            break;
+                        case "inventory":
+                            if (int.TryParse(scalarValue?.Value, out var inv))
+                            {
+                                currentItem.Inventory = inv;
+                            }
+                            break;
+                        case "description":
+                            currentItem.Description = scalarValue?.Value;
+                            break;
+                        case "image":
+                            currentItem.Image = scalarValue?.Value;
+                            break;
+                        case "payment_methods" when spec.Value is YamlSequenceNode pmSequenceNode:
+
+                            currentItem.PaymentMethods = pmSequenceNode.Children
+                                .Select(node => (node as YamlScalarNode)?.Value?.Trim())
+                                .Where(node => !string.IsNullOrEmpty(node)).ToArray();
+                            break;
+                        case "price_type":
+                        case "custom":
+                            if (bool.TryParse(scalarValue?.Value, out var customBoolValue))
+                            {
+                                if (customBoolValue)
+                                {
+                                    currentItem.PriceType = currentItem.Price is null or 0
+                                        ? ViewPointOfSaleViewModel.ItemPriceType.Topup
+                                        : ViewPointOfSaleViewModel.ItemPriceType.Minimum;
+                                }
+                                else
+                                {
+                                    currentItem.PriceType = ViewPointOfSaleViewModel.ItemPriceType.Fixed;
+                                }
+                            }
+                            else if (Enum.TryParse<ViewPointOfSaleViewModel.ItemPriceType>(scalarValue?.Value, true,
+                                         out var customPriceType))
+                            {
+                                currentItem.PriceType = customPriceType;
+                            }
+
+                            break;
+                        case "price":
+                            if (decimal.TryParse(scalarValue?.Value, out var price))
+                            {
+                                currentItem.Price = price;
+                            }
+
+                            break;
+
+                        case "buybuttontext":
+                            currentItem.BuyButtonText = scalarValue?.Value;
+                            break;
+
+                        case "disabled":
+                            if (bool.TryParse(scalarValue?.Value, out var disabled))
+                            {
+                                currentItem.Disabled = disabled;
+                            }
+
+                            break;
+                    }
+                }
+
+                items.Add(currentItem);
+            }
+
+            return items.ToArray();
         }
 
 #pragma warning disable CS0612 // Type or member is obsolete
@@ -521,8 +658,8 @@ WHERE cte.""Id""=p.""Id""
                             settings1.TargetCurrency = app.StoreData.GetStoreBlob().DefaultCurrency;
                             app.SetSettings(settings1);
                         }
-                        items = _appService.Parse(settings1.PerksTemplate, settings1.TargetCurrency);
-                        newTemplate = _appService.SerializeTemplate(items);
+                        items = AppService.Parse(settings1.PerksTemplate);
+                        newTemplate = AppService.SerializeTemplate(items);
                         if (settings1.PerksTemplate != newTemplate)
                         {
                             settings1.PerksTemplate = newTemplate;
@@ -538,8 +675,8 @@ WHERE cte.""Id""=p.""Id""
                             settings2.Currency = app.StoreData.GetStoreBlob().DefaultCurrency;
                             app.SetSettings(settings2);
                         }
-                        items = _appService.Parse(settings2.Template, settings2.Currency);
-                        newTemplate = _appService.SerializeTemplate(items);
+                        items = AppService.Parse(settings2.Template);
+                        newTemplate = AppService.SerializeTemplate(items);
                         if (settings2.Template != newTemplate)
                         {
                             settings2.Template = newTemplate;

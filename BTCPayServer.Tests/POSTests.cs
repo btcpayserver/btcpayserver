@@ -1,10 +1,12 @@
 using System.Threading.Tasks;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
+using BTCPayServer.Hosting;
 using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Plugins.PointOfSale;
 using BTCPayServer.Plugins.PointOfSale.Controllers;
 using BTCPayServer.Plugins.PointOfSale.Models;
+using BTCPayServer.Services.Apps;
 using Microsoft.AspNetCore.Mvc;
 using Xunit;
 using Xunit.Abstractions;
@@ -19,6 +21,74 @@ namespace BTCPayServer.Tests
         {
         }
 
+        [Fact]
+        [Trait("Fast", "Fast")]
+        public void CanParseOldYmlCorrectly()
+        {
+              var testOriginalDefaultYmlTemplate = @"
+green tea:
+  price: 1
+  title: Green Tea
+  description:  Lovely, fresh and tender, Meng Ding Gan Lu ('sweet dew') is grown in the lush Meng Ding Mountains of the southwestern province of Sichuan where it has been cultivated for over a thousand years.
+  image: ~/img/pos-sample/green-tea.jpg
+
+black tea:
+  price: 1
+  title: Black Tea
+  description: Tian Jian Tian Jian means 'heavenly tippy tea' in Chinese, and it describes the finest grade of dark tea. Our Tian Jian dark tea is from Hunan province which is famous for making some of the best dark teas available.
+  image: ~/img/pos-sample/black-tea.jpg
+
+rooibos:
+  price: 1.2
+  title: Rooibos
+  description: Rooibos is a dramatic red tea made from a South African herb that contains polyphenols and flavonoids. Often called 'African redbush tea', Rooibos herbal tea delights the senses and delivers potential health benefits with each caffeine-free sip.
+  image: ~/img/pos-sample/rooibos.jpg
+
+pu erh:
+  price: 2
+  title: Pu Erh
+  description: This loose pur-erh tea is produced in Yunnan Province, China. The process in a relatively high humidity environment has mellowed the elemental character of the tea when compared to young Pu-erh.
+  image: ~/img/pos-sample/pu-erh.jpg
+
+herbal tea:
+  price: 1.8
+  title: Herbal Tea
+  description: Chamomile tea is made from the flower heads of the chamomile plant. The medicinal use of chamomile dates back to the ancient Egyptians, Romans and Greeks. Pay us what you want!
+  image: ~/img/pos-sample/herbal-tea.jpg
+  custom: true
+
+fruit tea:
+  price: 1.5
+  title: Fruit Tea
+  description: The Tibetan Himalayas, the land is majestic and beautiful—a spiritual place where, despite the perilous environment, many journey seeking enlightenment. Pay us what you want!
+  image: ~/img/pos-sample/fruit-tea.jpg
+  inventory: 5
+  custom: true
+";
+        var parsedDefault =     MigrationStartupTask.ParsePOSYML(testOriginalDefaultYmlTemplate);
+        Assert.Equal(6, parsedDefault.Length);
+        Assert.Equal( "Green Tea" ,parsedDefault[0].Title);
+        Assert.Equal( "green tea" ,parsedDefault[0].Id);
+        Assert.Equal( "Lovely, fresh and tender, Meng Ding Gan Lu ('sweet dew') is grown in the lush Meng Ding Mountains of the southwestern province of Sichuan where it has been cultivated for over a thousand years." ,parsedDefault[0].Description);
+        Assert.Null( parsedDefault[0].BuyButtonText);
+        Assert.Equal( "~/img/pos-sample/green-tea.jpg" ,parsedDefault[0].Image);
+        Assert.Equal( 1 ,parsedDefault[0].Price);
+        Assert.Equal( ViewPointOfSaleViewModel.ItemPriceType.Fixed ,parsedDefault[0].PriceType);
+        Assert.Null( parsedDefault[0].AdditionalData);
+        Assert.Null( parsedDefault[0].PaymentMethods);
+        
+        
+        Assert.Equal( "Herbal Tea" ,parsedDefault[4].Title);
+        Assert.Equal( "herbal tea" ,parsedDefault[4].Id);
+        Assert.Equal( "Chamomile tea is made from the flower heads of the chamomile plant. The medicinal use of chamomile dates back to the ancient Egyptians, Romans and Greeks. Pay us what you want!" ,parsedDefault[4].Description);
+        Assert.Null( parsedDefault[4].BuyButtonText);
+        Assert.Equal( "~/img/pos-sample/herbal-tea.jpg" ,parsedDefault[4].Image);
+        Assert.Equal( 1.8m ,parsedDefault[4].Price);
+        Assert.Equal( ViewPointOfSaleViewModel.ItemPriceType.Minimum ,parsedDefault[4].PriceType);
+        Assert.Null( parsedDefault[4].AdditionalData);
+        Assert.Null( parsedDefault[4].PaymentMethods);
+        }
+        
         [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task CanUsePoSApp1()
@@ -53,6 +123,7 @@ donation:
   price: 1.02
   custom: true
 ";
+            vmpos.Template = AppService.SerializeTemplate(MigrationStartupTask.ParsePOSYML(vmpos.Template));
             Assert.IsType<RedirectToActionResult>(pos.UpdatePointOfSale(app.Id, vmpos).Result);
             await pos.UpdatePointOfSale(app.Id).AssertViewModelAsync<UpdatePointOfSaleViewModel>();
             var publicApps = user.GetController<UIPointOfSaleController>();

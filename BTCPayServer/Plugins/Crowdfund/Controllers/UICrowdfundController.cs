@@ -127,13 +127,13 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
             ViewPointOfSaleViewModel.Item choice = null;
             if (!string.IsNullOrEmpty(request.ChoiceKey))
             {
-                var choices = _appService.GetPOSItems(settings.PerksTemplate, settings.TargetCurrency);
+                var choices = AppService.Parse(settings.PerksTemplate, false);
                 choice = choices?.FirstOrDefault(c => c.Id == request.ChoiceKey);
                 if (choice == null)
                     return NotFound("Incorrect option provided");
                 title = choice.Title;
 
-                if (choice.Price.Type == ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Topup)
+                if (choice.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Topup)
                 {
                     price = null;
                 }
@@ -273,7 +273,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
 
             try
             {
-                vm.PerksTemplate = _appService.SerializeTemplate(_appService.Parse(vm.PerksTemplate, vm.TargetCurrency));
+                vm.PerksTemplate = AppService.SerializeTemplate(AppService.Parse(vm.PerksTemplate));
             }
             catch
             {

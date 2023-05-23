@@ -1,2 +1,2 @@
 paths-ignore:
-  - 'BTCPayServer/wwwroot/vendor/**/*.test.js'
+  - 'BTCPayServer/wwwroot/vendor/**/*.js'

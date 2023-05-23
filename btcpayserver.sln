@@ -14,6 +14,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Misc", "Misc", "{29290EC7-0
 		arm32v7.Dockerfile = arm32v7.Dockerfile
 		arm64v8.Dockerfile = arm64v8.Dockerfile
 		Changelog.md = Changelog.md
+		.github\codeql\codeql-config.yml = .github\codeql\codeql-config.yml
 		Build\Common.csproj = Build\Common.csproj
 		.circleci\config.yml = .circleci\config.yml
 		docker-entrypoint.sh = docker-entrypoint.sh

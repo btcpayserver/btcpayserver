@@ -9,10 +9,9 @@ public class HtmlSelectFormProvider : FormComponentProviderBase
 {
     public override void Register(Dictionary<string, IFormComponentProvider> typeToComponentProvider)
     {
-        foreach (var t in new[] {
-            "select"})
-            typeToComponentProvider.Add(t, this);
+        typeToComponentProvider.Add("select", this);
     }
+
     public override string View => "Forms/SelectElement";
 
     public override void Validate(Form form, Field field)
@@ -24,7 +23,7 @@ public class HtmlSelectFormProvider : FormComponentProviderBase
     }
 }
 
-public class SelectField: Field
+public class SelectField : Field
 {
     public List<SelectListItem> Options { get; set; }
 }

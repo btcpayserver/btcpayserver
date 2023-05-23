@@ -1,4 +1,5 @@
 using System;
+using System.Configuration.Provider;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -26,6 +27,8 @@ using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Payments.PayJoin;
 using BTCPayServer.PayoutProcessors;
 using BTCPayServer.Plugins;
+using BTCPayServer.Rating;
+using BTCPayServer.Rating.Providers;
 using BTCPayServer.Security;
 using BTCPayServer.Security.Bitpay;
 using BTCPayServer.Security.Greenfield;
@@ -42,6 +45,7 @@ using BTCPayServer.Services.PaymentRequests;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
+using ExchangeSharp;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -61,10 +65,6 @@ using NBXplorer.DerivationStrategy;
 using Newtonsoft.Json;
 using NicolasDorier.RateLimits;
 using Serilog;
-using ExchangeSharp;
-using BTCPayServer.Rating;
-using System.Configuration.Provider;
-using BTCPayServer.Rating.Providers;
 #if ALTCOINS
 using BTCPayServer.Services.Altcoins.Monero;
 using BTCPayServer.Services.Altcoins.Zcash;
@@ -477,6 +477,17 @@ namespace BTCPayServer.Hosting
                 services.AddSingleton<Cheater>();
                 services.AddSingleton<IHostedService, Cheater>(o => o.GetRequiredService<Cheater>());
             }
+
+            var userAgent = new System.Net.Http.Headers.ProductInfoHeaderValue("BTCPayServer", BTCPayServerEnvironment.GetInformationalVersion());
+            foreach (var clientName in WebhookSender.AllClients.Concat(new[] { BitpayIPNSender.NamedClient }))
+            {
+                services.AddHttpClient(clientName)
+                    .ConfigureHttpClient(client =>
+                    {
+                        client.DefaultRequestHeaders.UserAgent.Add(userAgent);
+                    });
+            }
+
             return services;
         }
 

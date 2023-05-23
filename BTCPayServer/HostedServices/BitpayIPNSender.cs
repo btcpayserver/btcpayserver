@@ -43,7 +43,7 @@ namespace BTCPayServer.HostedServices
         readonly InvoiceRepository _InvoiceRepository;
         private readonly EmailSenderFactory _EmailSenderFactory;
         private readonly StoreRepository _StoreRepository;
-
+        public const string NamedClient = "bitpay-ipn";
         public BitpayIPNSender(
             IHttpClientFactory httpClientFactory,
             IBackgroundJobClient jobClient,
@@ -52,7 +52,7 @@ namespace BTCPayServer.HostedServices
             StoreRepository storeRepository,
             EmailSenderFactory emailSenderFactory)
         {
-            _Client = httpClientFactory.CreateClient();
+            _Client = httpClientFactory.CreateClient(NamedClient);
             _JobClient = jobClient;
             _EventAggregator = eventAggregator;
             _InvoiceRepository = invoiceRepository;
@@ -232,7 +232,6 @@ namespace BTCPayServer.HostedServices
 
             request.RequestUri = new Uri(notification.NotificationURL, UriKind.Absolute);
             request.Content = new StringContent(notificationString, UTF8, "application/json");
-
             using CancellationTokenSource cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             cts.CancelAfter(TimeSpan.FromMinutes(1.0));
             var response = await _Client.SendAsync(request, cts.Token);
@@ -262,7 +261,6 @@ namespace BTCPayServer.HostedServices
                 {
                     if (e.Name == InvoiceEvent.Expired ||
                        e.Name == InvoiceEvent.PaidInFull ||
-                       e.Name == InvoiceEvent.FailedToConfirm ||
                        e.Name == InvoiceEvent.MarkedInvalid ||
                        e.Name == InvoiceEvent.MarkedCompleted ||
                        e.Name == InvoiceEvent.FailedToConfirm ||

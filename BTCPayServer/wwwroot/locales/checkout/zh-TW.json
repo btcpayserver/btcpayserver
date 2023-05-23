@@ -34,5 +34,10 @@
   "copy": "複製",
   "copy_confirm": "已複製",
   "powered_by": "動力來自",
-  "conversion_body": "本服務由第三方提供。請謹記我們無法控制提供者如何轉發您的資金。發票只有在資金到達{{cryptoCode}}區塊鏈時才會被標記為已付款。"
+  "conversion_body": "本服務由第三方提供。請謹記我們無法控制提供者如何轉發您的資金。發票只有在資金到達{{cryptoCode}}區塊鏈時才會被標記為已付款。",
+  "scanning_nfc": "掃描 NFC ...",
+  "submitting_nfc": "提交 NFC ...",
+  "payment_received": "已收到付款",
+  "payment_received_body": "您的付款已經收到並正在處理中",
+  "payment_received_confirmations": "當{{cryptoCode}} 區塊鏈確認您的支付已收到{{requiredConfirmations}}次確認時，您的發票將會完成結算。"
 }

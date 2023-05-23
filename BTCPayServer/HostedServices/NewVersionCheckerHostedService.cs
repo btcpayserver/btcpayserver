@@ -44,7 +44,7 @@ namespace BTCPayServer.HostedServices
             {
                 Logs.Events.LogError(ex, "Error while performing new version check");
             }
-            await Task.Delay(TimeSpan.FromDays(1), Cancellation);
+            await Task.Delay(TimeSpan.FromDays(1), CancellationToken);
         }
 
         public async Task ProcessVersionCheck()
@@ -52,7 +52,7 @@ namespace BTCPayServer.HostedServices
             var policies = await _settingsRepository.GetSettingAsync<PoliciesSettings>() ?? new PoliciesSettings();
             if (policies.CheckForNewVersions)
             {
-                var tag = await _versionFetcher.Fetch(Cancellation);
+                var tag = await _versionFetcher.Fetch(CancellationToken);
                 if (tag != null && tag != _env.Version)
                 {
                     var dh = await _settingsRepository.GetSettingAsync<NewVersionCheckerDataHolder>() ?? new NewVersionCheckerDataHolder();

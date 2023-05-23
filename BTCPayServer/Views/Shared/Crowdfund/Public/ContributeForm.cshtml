@@ -33,15 +33,15 @@
                             <span>@item.Price.Value</span>
                             <span>@vm.TargetCurrency</span>
 
-                            if (item.Price.Type == ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Minimum)
+                            if (item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Minimum)
                             {
                                 @Safe.Raw("or more")
                             }
                         }
-                        else if (item.Price.Type != ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Fixed )
+                        else if (item.PriceType != ViewPointOfSaleViewModel.ItemPriceType.Fixed )
                         {
                             @Safe.Raw("Any amount")
-                        }else if (item.Price.Type == ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Fixed)
+                        }else if (item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Fixed)
                         {
                             @Safe.Raw("Free")
                         }
@@ -56,7 +56,7 @@
                     {
                         case null:
                             break;
-                        case var i when i <= 0:
+                        case <= 0:
                             <span>Sold out</span>
                             break;
                         default:

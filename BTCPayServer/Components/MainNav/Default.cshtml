@@ -1,6 +1,5 @@
 @using BTCPayServer.Views.Server
 @using BTCPayServer.Views.Stores
-@using BTCPayServer.Views.Apps
 @using BTCPayServer.Views.Invoice
 @using BTCPayServer.Views.Manage
 @using BTCPayServer.Views.PaymentRequest
@@ -33,7 +32,7 @@
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a asp-area="" asp-controller="UIStores" asp-action="GeneralSettings" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.IsActivePage(new [] {StoreNavPages.Rates, StoreNavPages.CheckoutAppearance, StoreNavPages.General, StoreNavPages.Tokens, StoreNavPages.Users, StoreNavPages.Plugins, StoreNavPages.Webhooks, StoreNavPages.PayoutProcessors, StoreNavPages.Emails})" id="StoreNav-StoreSettings">
+                                <a asp-area="" asp-controller="UIStores" asp-action="GeneralSettings" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.IsActivePage(new [] {StoreNavPages.Rates, StoreNavPages.CheckoutAppearance, StoreNavPages.General, StoreNavPages.Tokens, StoreNavPages.Users, StoreNavPages.Webhooks, StoreNavPages.PayoutProcessors, StoreNavPages.Emails})" id="StoreNav-StoreSettings">
                                     <vc:icon symbol="settings"/>
                                     <span>Settings</span>
                                 </a>
@@ -145,7 +144,10 @@
                                         </a>
                                     </li>
                                     <li class="nav-item" permission="@Policies.CanModifyStoreSettings">
-                                        <a asp-area="" asp-controller="UIStorePullPayments" asp-action="Payouts" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.IsActivePage(StoreNavPages.Payouts)" id="StoreNav-Payouts">
+                                        <a asp-area="" 
+                                           asp-controller="UIStorePullPayments" asp-action="Payouts" 
+                                           asp-route-pullPaymentId=""
+                                           asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.IsActivePage(StoreNavPages.Payouts)" id="StoreNav-Payouts">
                                             <vc:icon symbol="payouts"/>
                                             <span>Payouts</span>
                                         </a>
@@ -175,7 +177,7 @@
                         <ul class="navbar-nav">
                             <li class="nav-item" permission="@Policies.CanModifyServerSettings">
                                 <a asp-area="" asp-controller="UIServer" asp-action="ListPlugins" class="nav-link @ViewData.IsActivePage(ServerNavPages.Plugins)" id="Nav-ManagePlugins">
-                                    <vc:icon symbol="plugin"/>
+                                    <vc:icon symbol="manage-plugins"/>
                                     <span>Manage Plugins</span>
                                 </a>
                             </li>
@@ -236,7 +238,7 @@
                     <span>Account</span>
                 </a>   
                 <ul class="dropdown-menu py-0 w-100" aria-labelledby="Nav-Account">
-                    <li class="p-3">
+                    <li class="p-3 border-bottom">
                         <strong class="d-block text-truncate" style="max-width:195px">@User.Identity.Name</strong>
                         @if (User.IsInRole(Roles.ServerAdmin))
                         {
@@ -245,10 +247,19 @@
                     </li>
                     @if (!Theme.CustomTheme)
                     {
-                        <li class="border-top py-1 px-3">
-                            <vc:theme-switch css-class="nav-link"/>
+                        <li class="py-1 px-3">
+                            <vc:theme-switch css-class="nav-link pb-0"/>
                         </li>
                     }
+                    <li class="py-1 px-3">
+                        <label class="d-flex align-items-center justify-content-between gap-3 nav-link">
+                            <span class="fw-semibold">Hide Sensitive Info</span>
+                            <input id="HideSensitiveInfo" name="HideSensitiveInfo" type="checkbox" class="btcpay-toggle" />
+                        </label>
+                        <script>
+                            document.getElementById('HideSensitiveInfo').checked = window.localStorage.getItem('btcpay-hide-sensitive-info') === 'true';
+                        </script>
+                    </li>
                     <li class="border-top py-1 px-3">
                         <a asp-area="" asp-controller="UIManage" asp-action="Index" class="nav-link @ViewData.IsActiveCategory(typeof(ManageNavPages))" id="Nav-ManageAccount">
                             <span>Manage Account</span>

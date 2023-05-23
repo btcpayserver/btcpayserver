@@ -28,8 +28,8 @@ namespace BTCPayServer.HostedServices
         {
             while (true)
             {
-                await _transactionBroadcaster.ProcessAll(Cancellation);
-                await Task.Delay(PollInternal, Cancellation);
+                await _transactionBroadcaster.ProcessAll(CancellationToken);
+                await Task.Delay(PollInternal, CancellationToken);
             }
         }
     }

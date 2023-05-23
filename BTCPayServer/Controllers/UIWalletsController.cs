@@ -340,7 +340,7 @@ namespace BTCPayServer.Controllers
                 CryptoImage = GetImage(paymentMethod.PaymentId, network),
                 PaymentLink = bip21.ToString(),
                 ReturnUrl = returnUrl ?? HttpContext.Request.GetTypedHeaders().Referer?.AbsolutePath,
-                SelectedLabels = labels?? Array.Empty<string>()
+                SelectedLabels = labels ?? Array.Empty<string>()
             });
         }
 
@@ -453,7 +453,7 @@ namespace BTCPayServer.Controllers
                 {
                     if (!string.IsNullOrEmpty(link))
                     {
-                        LoadFromBIP21(model, link, network);
+                        await LoadFromBIP21(walletId, model, link, network);
                     }
                 }
             }
@@ -568,7 +568,7 @@ namespace BTCPayServer.Controllers
             if (!string.IsNullOrEmpty(bip21))
             {
                 vm.Outputs?.Clear();
-                LoadFromBIP21(vm, bip21, network);
+                await LoadFromBIP21(walletId, vm, bip21, network);
             }
 
             decimal transactionAmountSum = 0;
@@ -586,7 +586,7 @@ namespace BTCPayServer.Controllers
                     .GetUnspentCoins(schemeSettings.AccountDerivation, false, cancellation);
 
                 var walletTransactionsInfoAsync = await this.WalletRepository.GetWalletTransactionsInfo(walletId,
-                    utxos.SelectMany(u => GetWalletObjectsQuery.Get(u)).Distinct().ToArray());
+                    utxos.SelectMany(GetWalletObjectsQuery.Get).Distinct().ToArray());
                 vm.InputsAvailable = utxos.Select(coin =>
                 {
                     walletTransactionsInfoAsync.TryGetValue(coin.OutPoint.Hash.ToString(), out var info1);
@@ -733,14 +733,14 @@ namespace BTCPayServer.Controllers
             {
                 var labels = transactionOutput.Labels.Where(s => !string.IsNullOrWhiteSpace(s)).ToArray();
                 var walletObjectAddress = new WalletObjectId(walletId, WalletObjectData.Types.Address, transactionOutput.DestinationAddress.ToLowerInvariant());
-                var obj = await WalletRepository.GetWalletObject(walletObjectAddress); 
-                if (obj is null) 
+                var obj = await WalletRepository.GetWalletObject(walletObjectAddress);
+                if (obj is null)
                 {
-                    await WalletRepository.EnsureWalletObject(walletObjectAddress); 
+                    await WalletRepository.EnsureWalletObject(walletObjectAddress);
                 }
                 await WalletRepository.AddWalletObjectLabels(walletObjectAddress, labels);
             }
-            
+
             var derivationScheme = GetDerivationSchemeSettings(walletId);
             if (derivationScheme is null)
                 return NotFound();
@@ -787,10 +787,10 @@ namespace BTCPayServer.Controllers
                         switch (response.Result)
                         {
                             case ClaimRequest.ClaimResult.Duplicate:
-                                errorMessage += $"{claimRequest.Value} to {claimRequest.Destination.ToString() } - address reuse<br/>";
+                                errorMessage += $"{claimRequest.Value} to {claimRequest.Destination.ToString()} - address reuse<br/>";
                                 break;
                             case ClaimRequest.ClaimResult.AmountTooLow:
-                                errorMessage += $"{claimRequest.Value} to {claimRequest.Destination.ToString() } - amount too low<br/>";
+                                errorMessage += $"{claimRequest.Value} to {claimRequest.Destination.ToString()} - amount too low<br/>";
                                 break;
                         }
                     }
@@ -863,8 +863,10 @@ namespace BTCPayServer.Controllers
         }
 
 
-        private void LoadFromBIP21(WalletSendModel vm, string bip21, BTCPayNetwork network)
+        private async Task LoadFromBIP21(WalletId walletId, WalletSendModel vm, string bip21,
+            BTCPayNetwork network)
         {
+            BitcoinAddress? address = null;
             vm.Outputs ??= new();
             try
             {
@@ -879,6 +881,7 @@ namespace BTCPayServer.Controllers
                         ? uriBuilder.UnknownParameters["payout"]
                         : null
                 });
+                address = uriBuilder.Address;
                 if (!string.IsNullOrEmpty(uriBuilder.Label) || !string.IsNullOrEmpty(uriBuilder.Message))
                 {
                     TempData.SetStatusMessageModel(new StatusMessageModel()
@@ -896,9 +899,10 @@ namespace BTCPayServer.Controllers
             {
                 try
                 {
+                    address = BitcoinAddress.Create(bip21, network.NBitcoinNetwork);
                     vm.Outputs.Add(new WalletSendModel.TransactionOutput()
                     {
-                        DestinationAddress = BitcoinAddress.Create(bip21, network.NBitcoinNetwork).ToString()
+                        DestinationAddress = address.ToString()
                     }
                     );
                 }
@@ -913,6 +917,11 @@ namespace BTCPayServer.Controllers
             }
 
             ModelState.Clear();
+            if (address is not null)
+            {
+                var addressLabels = await WalletRepository.GetWalletLabels(new WalletObjectId(walletId, WalletObjectData.Types.Address, address.ToString()));
+                vm.Outputs.Last().Labels = addressLabels.Select(tuple => tuple.Label).ToArray();
+            }
         }
 
         private IActionResult ViewVault(WalletId walletId, WalletPSBTViewModel vm)
@@ -1341,14 +1350,14 @@ namespace BTCPayServer.Controllers
             Response.Headers.Add("X-Content-Type-Options", "nosniff");
             return Content(res, mimeType);
         }
-        
+
         public class UpdateLabelsRequest
         {
             public string? Id { get; set; }
             public string? Type { get; set; }
             public string[]? Labels { get; set; }
         }
-        
+
         [HttpPost("{walletId}/update-labels")]
         [IgnoreAntiforgeryToken]
         public async Task<IActionResult> UpdateLabels(
@@ -1357,23 +1366,23 @@ namespace BTCPayServer.Controllers
         {
             if (string.IsNullOrEmpty(request.Type) || string.IsNullOrEmpty(request.Id) || request.Labels is null)
                 return BadRequest();
-            
+
             var objid = new WalletObjectId(walletId, request.Type, request.Id);
-            var obj = await WalletRepository.GetWalletObject(objid); 
-            if (obj is null) 
+            var obj = await WalletRepository.GetWalletObject(objid);
+            if (obj is null)
             {
-                await WalletRepository.EnsureWalletObject(objid); 
+                await WalletRepository.EnsureWalletObject(objid);
             }
             else
             {
-                var currentLabels = obj.GetNeighbours().Where(data => data.Type == WalletObjectData.Types.Label).ToArray(); 
-                var toRemove = currentLabels.Where(data => !request.Labels.Contains(data.Id)).Select(data => data.Id).ToArray(); 
-                await WalletRepository.RemoveWalletObjectLabels(objid, toRemove); 
+                var currentLabels = obj.GetNeighbours().Where(data => data.Type == WalletObjectData.Types.Label).ToArray();
+                var toRemove = currentLabels.Where(data => !request.Labels.Contains(data.Id)).Select(data => data.Id).ToArray();
+                await WalletRepository.RemoveWalletObjectLabels(objid, toRemove);
             }
             await WalletRepository.AddWalletObjectLabels(objid, request.Labels);
             return Ok();
         }
-        
+
         [HttpGet("{walletId}/labels")]
         [IgnoreAntiforgeryToken]
         public async Task<IActionResult> GetLabels(
@@ -1390,11 +1399,11 @@ namespace BTCPayServer.Controllers
                 : await WalletRepository.GetWalletLabels(walletObjectId);
             return Ok(labels
                 .Where(l => !excludeTypes || !WalletObjectData.Types.AllTypes.Contains(l.Label))
-                .Select(tuple => new 
+                .Select(tuple => new
                 {
                     label = tuple.Label,
                     color = tuple.Color,
-                    textColor = ColorPalette.Default.TextColor(tuple.Color) 
+                    textColor = ColorPalette.Default.TextColor(tuple.Color)
                 }));
         }
 

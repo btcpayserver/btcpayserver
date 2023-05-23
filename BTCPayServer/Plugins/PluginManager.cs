@@ -98,7 +98,7 @@ namespace BTCPayServer.Plugins
                 // Formatted either as "<PLUGIN_IDENTIFIER>::<PathToDll>" or "<PathToDll>"
                 var idx = plugin.IndexOf("::");
                 if (idx != -1)
-                    pluginsToLoad.Add((plugin[0..idx], plugin[(idx+1)..]));
+                    pluginsToLoad.Add((plugin[0..idx], plugin[(idx + 1)..]));
                 else
                     pluginsToLoad.Add((Path.GetFileNameWithoutExtension(plugin), plugin));
             }
@@ -198,7 +198,7 @@ namespace BTCPayServer.Plugins
                 if (ordersByPlugin.TryAdd(p.PluginIdentifier, order))
                     order++;
             }
-            pluginsToLoad.Sort((a,b) => ordersByPlugin[a.PluginIdentifier] - ordersByPlugin[b.PluginIdentifier]);
+            pluginsToLoad.Sort((a, b) => ordersByPlugin[a.PluginIdentifier] - ordersByPlugin[b.PluginIdentifier]);
         }
 
         public static void UsePlugins(this IApplicationBuilder applicationBuilder)

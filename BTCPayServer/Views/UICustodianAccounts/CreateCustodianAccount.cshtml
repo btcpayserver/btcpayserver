@@ -1,8 +1,9 @@
-@using BTCPayServer.Views.Apps
 @using BTCPayServer.Abstractions.Extensions
+@using BTCPayServer.Views.CustodianAccounts
+@using Microsoft.AspNetCore.Mvc.TagHelpers
 @model BTCPayServer.Models.CustodianAccountViewModels.CreateCustodianAccountViewModel
 @{
-    ViewData.SetActivePage(AppsNavPages.Create, "Add a custodian account");
+    ViewData.SetActivePage( CustodianAccountsNavPages.Create, "Add a custodian account");
 }
 
 @section PageFootContent {

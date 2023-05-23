@@ -127,13 +127,13 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
             ViewPointOfSaleViewModel.Item choice = null;
             if (!string.IsNullOrEmpty(request.ChoiceKey))
             {
-                var choices = _appService.GetPOSItems(settings.PerksTemplate, settings.TargetCurrency);
+                var choices = AppService.Parse(settings.PerksTemplate, false);
                 choice = choices?.FirstOrDefault(c => c.Id == request.ChoiceKey);
                 if (choice == null)
                     return NotFound("Incorrect option provided");
                 title = choice.Title;
 
-                if (choice.Price.Type == ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Topup)
+                if (choice.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Topup)
                 {
                     price = null;
                 }
@@ -174,6 +174,8 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
 
             try
             {
+                var appPath = await _appService.ViewLink(app);
+                var appUrl = HttpContext.Request.GetAbsoluteUri(appPath);
                 var invoice = await _invoiceController.CreateInvoiceCore(new BitpayCreateInvoiceRequest()
                 {
                     OrderId = AppService.GetAppOrderId(app),
@@ -186,12 +188,12 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                     FullNotifications = true,
                     ExtendedNotifications = true,
                     SupportedTransactionCurrencies = paymentMethods,
-                    RedirectURL = request.RedirectUrl ?? Request.GetDisplayUrl(),
+                    RedirectURL = request.RedirectUrl ?? appUrl,
                 }, store, HttpContext.Request.GetAbsoluteRoot(),
-                    new List<string>() { AppService.GetAppInternalTag(appId) },
-                    cancellationToken, (entity) =>
+                    new List<string> { AppService.GetAppInternalTag(appId) },
+                    cancellationToken, entity =>
                     {
-                        entity.Metadata.OrderUrl = Request.GetDisplayUrl();
+                        entity.Metadata.OrderUrl = appUrl;
                     });
 
                 if (request.RedirectToCheckout)
@@ -271,7 +273,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
 
             try
             {
-                vm.PerksTemplate = _appService.SerializeTemplate(_appService.Parse(vm.PerksTemplate, vm.TargetCurrency));
+                vm.PerksTemplate = AppService.SerializeTemplate(AppService.Parse(vm.PerksTemplate));
             }
             catch
             {
@@ -403,7 +405,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
             {
                 return null;
             }
-            var info = (ViewCrowdfundViewModel) await _app.GetInfo(app);
+            var info = (ViewCrowdfundViewModel)await _app.GetInfo(app);
             info.HubPath = AppHub.GetHubPath(Request);
             info.SimpleDisplay = Request.Query.ContainsKey("simple");
             return info;

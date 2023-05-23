@@ -1,10 +1,12 @@
 using System;
+using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Lightning;
 using BTCPayServer.Lightning.CLightning;
 using BTCPayServer.Views.Manage;
@@ -63,7 +65,6 @@ namespace BTCPayServer.Tests
                 var containerIp = File.ReadAllText("/etc/hosts").Split('\n', StringSplitOptions.RemoveEmptyEntries).Last()
                     .Split('\t', StringSplitOptions.RemoveEmptyEntries)[0].Trim();
                 TestLogs.LogInformation($"Selenium: Container's IP {containerIp}");
-                ServerUri = new Uri(Server.PayTester.ServerUri.AbsoluteUri.Replace($"http://{Server.PayTester.HostName}", $"http://{containerIp}", StringComparison.OrdinalIgnoreCase), UriKind.Absolute);
             }
             else
             {
@@ -75,8 +76,8 @@ namespace BTCPayServer.Tests
                 Driver = new ChromeDriver(cds, options,
                     // A bit less than test timeout
                     TimeSpan.FromSeconds(50));
-                ServerUri = Server.PayTester.ServerUri;
             }
+            ServerUri = Server.PayTester.ServerUri;
             Driver.Manage().Window.Maximize();
 
             TestLogs.LogInformation($"Selenium: Using {Driver.GetType()}");
@@ -86,7 +87,7 @@ namespace BTCPayServer.Tests
             Driver.AssertNoError();
         }
 
-        public void PayInvoice(bool mine = false, decimal? amount= null)
+        public void PayInvoice(bool mine = false, decimal? amount = null)
         {
 
             if (amount is not null)
@@ -94,6 +95,7 @@ namespace BTCPayServer.Tests
                 Driver.FindElement(By.Id("test-payment-amount")).Clear();
                 Driver.FindElement(By.Id("test-payment-amount")).SendKeys(amount.ToString());
             }
+            Driver.WaitUntilAvailable(By.Id("FakePayment"));
             Driver.FindElement(By.Id("FakePayment")).Click();
             if (mine)
             {
@@ -178,7 +180,7 @@ namespace BTCPayServer.Tests
             {
                 Driver.FindElement(By.Id("StoreSelectorToggle")).Click();
             }
-            Driver.WaitForElement(By.Id("StoreSelectorCreate")).Click();
+            GoToUrl("/stores/create");
             var name = "Store" + RandomUtils.GetUInt64();
             TestLogs.LogInformation($"Created store {name}");
             Driver.WaitForElement(By.Id("Name")).SendKeys(name);
@@ -193,16 +195,22 @@ namespace BTCPayServer.Tests
                 StoreId = storeId;
             return (name, storeId);
         }
-
-        public void EnableCheckoutV2(bool bip21 = false)
+        public void EnableCheckout(CheckoutType checkoutType, bool bip21 = false)
         {
             GoToStore(StoreNavPages.CheckoutAppearance);
-            Driver.SetCheckbox(By.Id("UseNewCheckout"), true);
-            Driver.WaitForElement(By.Id("OnChainWithLnInvoiceFallback"));
-            Driver.SetCheckbox(By.Id("OnChainWithLnInvoiceFallback"), bip21);
+            if (checkoutType == CheckoutType.V2)
+            {
+                Driver.SetCheckbox(By.Id("UseClassicCheckout"), false);
+                Driver.WaitForElement(By.Id("OnChainWithLnInvoiceFallback"));
+                Driver.SetCheckbox(By.Id("OnChainWithLnInvoiceFallback"), bip21);
+            }
+            else
+            {
+                Driver.SetCheckbox(By.Id("UseClassicCheckout"), true);
+            }
             Driver.FindElement(By.Id("Save")).SendKeys(Keys.Enter);
             Assert.Contains("Store successfully updated", FindAlertMessage().Text);
-            Assert.True(Driver.FindElement(By.Id("UseNewCheckout")).Selected);
+            Assert.True(Driver.FindElement(By.Id("UseClassicCheckout")).Selected);
         }
 
         public Mnemonic GenerateWallet(string cryptoCode = "BTC", string seed = "", bool? importkeys = null, bool isHotWallet = false, ScriptPubKeyType format = ScriptPubKeyType.Segwit)
@@ -305,8 +313,6 @@ namespace BTCPayServer.Tests
 
             var connectionString = connectionType switch
             {
-                LightningConnectionType.Charge =>
-                    $"type=charge;server={Server.MerchantCharge.Client.Uri.AbsoluteUri};allowinsecure=true",
                 LightningConnectionType.CLightning =>
                     $"type=clightning;server={((CLightningClient)Server.MerchantLightningD).Address.AbsoluteUri}",
                 LightningConnectionType.LndREST =>

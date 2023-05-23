@@ -44,7 +44,7 @@ namespace BTCPayServer.Services.Wallets.Export
 
                 return model;
             }).ToList();
-            
+
             return fileFormat switch
             {
                 "bip329" => ProcessBip329(list),

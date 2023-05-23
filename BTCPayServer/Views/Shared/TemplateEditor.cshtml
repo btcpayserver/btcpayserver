@@ -61,11 +61,11 @@
                             <div class="form-group row">
                                 <div class="col-sm-6">
                                     <label class="form-label">Price</label>
-                                    <select class="form-select" v-model="editingItem.custom">
+                                    <select class="form-select" v-model="editingItem.priceType">
                                         <option v-for="option in customPriceOptions" :value="option.value">{{option.text}}</option>
                                     </select>
                                 </div>
-                                <div class="col-sm-6" v-show="editingItem.custom !== 'topup'">
+                                <div class="col-sm-6" v-show="editingItem.priceType !== 'Topup'">
                                     <label class="form-label">&nbsp;</label>
                                     <div class="input-group mb-2">
                                         <input class="form-control"
@@ -129,9 +129,9 @@ document.addEventListener("DOMContentLoaded", function () {
             items: [],
             editingItem: null,
             customPriceOptions: [
-                { text: 'Fixed', value: "fixed" },
-                { text: 'Minimum', value: "minimum" },
-                { text: 'Custom', value: 'topup' },
+                { text: 'Fixed', value: "Fixed" },
+                { text: 'Minimum', value: "Minimum" },
+                { text: 'Custom', value: 'Topup' },
             ],
             elementId: "@Model.templateId"
         },
@@ -141,8 +141,8 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         },
         mounted: function() {
-            this.loadYml();
-            this.getInputElement().on("input change", this.loadYml.bind(this));            
+            this.load();
+            this.getInputElement().on("input change", this.load.bind(this));            
             this.getModalElement().on("hide.bs.modal", this.clearEditingItem.bind(this));
         },
         methods: {
@@ -156,148 +156,22 @@ document.addEventListener("DOMContentLoaded", function () {
             },
             getInputElement : function(){ return $("#" + this.elementId); },
             getModalElement : function(){ return $("#product-modal"); },
-            loadYml: function(){
-                var result = [];
-                var template = this.getInputElement().val().trim();
-                var lines = [];
-                var items = template.split("\n");
-
-                for (var i = 0; i < items.length; i++) {
-                    if (items[i] === ""){
-                        continue;
-                    }
-                    if (items[i].startsWith("  ")){
-                        lines[lines.length-1]+=items[i] + "\n";
-                    } else {
-                        lines.push(items[i] + "\n");
-                    }
+            load: function(){
+                const template = this.getInputElement().val().trim();
+                if (!template){
+                    this.items = [];
+                } else {
+                    this.items =  JSON.parse(template);
                 }
-
-                // Split products from the template
-                for (var kl in lines) {
-                    var line = lines[kl], product = line.split("\n"), goingThroughMethods = false,
-                        id = null, price = null, title = null, description = null, image = null,
-                        custom = null, buyButtonText = null, inventory = null, paymentMethods = [],
-                        disabled = false;
-
-                    for (var kp in product) {
-                        var productProperty = product[kp].trim();
-            
-                        if (kp == 0) {
-                            id = productProperty.replace(":", "");
-                        }
-                        if (productProperty.startsWith("-") && goingThroughMethods) {
-                            paymentMethods.push(productProperty.substr(1));
-                        } else {
-                            goingThroughMethods = false;
-                        }
-            
-                        if (productProperty.indexOf('price:') !== -1) {
-                            price = parseFloat(productProperty.replace('price:', '').trim()).noExponents();
-                        }
-                        if (productProperty.indexOf('title:') !== -1) {
-                            title = productProperty.replace('title:', '').trim();
-                        }
-                        if (productProperty.indexOf('description:') !== -1) {
-                            description =productProperty.replace('description:', '').trim();
-                            if (description.startsWith('"') && description.endsWith('"')){
-                                description = description.substr(1, description.length-2);
-                            }
-                            description = description
-                            .replaceAll("<br>", "\n")
-                            .replaceAll("<br/>", "\n")
-                            .replaceAll('\\"', '"')
-                        }
-                        if (productProperty.indexOf('image:') !== -1) {
-                            image = productProperty.replace('image:', '').trim();
-                        }
-                        if (productProperty.indexOf('price_type:') !== -1) {
-                            custom = productProperty.replace('price_type:', '').trim();
-                        }
-                        if (productProperty.indexOf('buyButtonText:') !== -1) {
-                            buyButtonText = productProperty.replace('buyButtonText:', '').trim();
-                        }
-                        if (productProperty.indexOf('inventory:') !== -1) {
-                            inventory = parseInt(productProperty.replace('inventory:', '').trim(),10);
-                        }
-                        if (productProperty.indexOf('payment_methods:') !== -1) {
-                            goingThroughMethods = true;
-                        }
-                        if (productProperty.indexOf('disabled:') !== -1) {
-                            disabled = productProperty.replace('disabled:', '').trim() === "true";
-                        }
-                    }
-            
-                    if (title != null) {
-                        // Add product to the list
-                        result.push({
-                            id: id,
-                            title: title,
-                            price: price,
-                            image: image || null,
-                            description:  description || '',
-                            custom: custom || "fixed",
-                            buyButtonText: buyButtonText,
-                            inventory: isNaN(inventory)? null: inventory,
-                            paymentMethods: paymentMethods,
-                            disabled: disabled
-                        });
-                    }                    
-                }
-                this.items = result;
             },
-            toYml: function(){
-                    let template = '';
-                    // Construct template from the product list
-                    for (const key in this.items) {
-                        const product = this.items[key],
-                            id = product.id,
-                            title = product.title,
-                            price = product.custom === 'topup'? null : product.price??0,
-                            image = product.image,
-                            description = product.description,
-                            custom = product.custom,
-                            buyButtonText = product.buyButtonText,
-                            inventory = product.inventory,
-                            paymentMethods = product.paymentMethods,
-                            disabled = product.disabled;
-                        let itemTemplate = id+":\n";                        
-                       itemTemplate += ( product.custom === 'topup'? '' : ('  price: ' + parseFloat(price).noExponents() + '\n'));
-                        itemTemplate+= '  title: ' + title + '\n';
-
-                        if (description) {
-                            itemTemplate += '  description: "' + description.replaceAll("\n", "<br/>").replaceAll('"', '\\"') + '"\n';
-                        }
-                        if (image) {
-                            itemTemplate += '  image: ' + image + '\n';
-                        }
-                        if (inventory) {
-                            itemTemplate += '  inventory: ' + inventory + '\n';
-                        }
-                        if (custom != null) {
-                            itemTemplate += '  price_type: "' + custom + '" \n';
-                        }
-                        if (buyButtonText != null && buyButtonText.length > 0) {
-                            itemTemplate += '  buyButtonText: ' + buyButtonText + '\n';
-                        }
-                        if (disabled != null) {
-                            itemTemplate += '  disabled: ' + disabled.toString() + '\n';
-                        }
-                        if(paymentMethods != null && paymentMethods.length > 0){
-                            itemTemplate+= '  payment_methods:\n';
-                            for (var method of paymentMethods){
-                                itemTemplate+= '    - '+method+'\n';
-                            }
-                        }                       
-                        itemTemplate += '\n';
-                        template+=itemTemplate;
-                    }
-                    this.getInputElement().val(template);
+            save: function(){
+                let template = JSON.stringify(this.items);
+                this.getInputElement().val(template);
             },
             editItem: function(index){
                 this.errors = [];
                 if(index < 0){
-                    this.editingItem = {index:-1, id:"", title: "", price: 0, image: "", description: "", custom: "fixed", inventory: null, paymentMethods: [], disabled: false};
+                    this.editingItem = {index:-1, id:"", title: "", price: 0, image: "", description: "", priceType: "Fixed", inventory: null, disabled: false};
                 }else{
                     this.editingItem = {...this.items[index], index};
                 }
@@ -307,7 +181,7 @@ document.addEventListener("DOMContentLoaded", function () {
             },
             removeItem: function(index){
                 this.items.splice(index,1);
-                this.toYml();
+                this.save();
             },
             clearEditingItem: function(){
                 this.editingItem = null;
@@ -343,7 +217,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     this.errors.push("Image cannot start with \"- \"");
                 }
                 
-                if (this.editingItem.custom !== "topup" && !this.$refs.txtPrice.checkValidity()) {
+                if (this.editingItem["priceType"] !== "Topup" && !this.$refs.txtPrice.checkValidity()) {
                     this.errors.push("Price must be a valid number");
                 }
                 if (!this.$refs.txtTitle.checkValidity()) {
@@ -375,7 +249,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 }else{
                     this.items.splice(this.editingItem.index,1,this.editingItem);
                 }
-                this.toYml();
+                this.save();
                 this.getModalElement().modal("hide");
             },
             escape: function(item) {

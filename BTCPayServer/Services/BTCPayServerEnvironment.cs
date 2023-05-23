@@ -1,6 +1,7 @@
 using System;
 using System.Globalization;
 using System.Linq;
+using System.Net.Http;
 using System.Reflection;
 using System.Text;
 using BTCPayServer.Configuration;
@@ -17,7 +18,7 @@ namespace BTCPayServer.Services
         readonly TorServices torServices;
         public BTCPayServerEnvironment(IWebHostEnvironment env, BTCPayNetworkProvider provider, TorServices torServices, BTCPayServerOptions opts)
         {
-            Version = typeof(BTCPayServerEnvironment).GetTypeInfo().Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
+            Version = GetInformationalVersion();
             Commit = typeof(BTCPayServerEnvironment).GetTypeInfo().Assembly.GetCustomAttribute<GitCommitAttribute>()?.ShortSHA;
 #if DEBUG
             Build = "Debug";
@@ -35,6 +36,12 @@ namespace BTCPayServer.Services
             this.torServices = torServices;
             CheatMode = opts.CheatMode;
         }
+
+        internal static string GetInformationalVersion()
+        {
+            return typeof(BTCPayServerEnvironment).GetTypeInfo().Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
+        }
+
         public IWebHostEnvironment Environment
         {
             get; set;

@@ -414,20 +414,6 @@ namespace BTCPayServer.Payments.Bitcoin
             if (invoice == null)
                 return null;
             var paymentMethod = invoice.GetPaymentMethod(wallet.Network, PaymentTypes.BTCLike);
-            if (paymentMethod != null &&
-                paymentMethod.GetPaymentMethodDetails() is BitcoinLikeOnChainPaymentMethod btc &&
-                btc.Activated &&
-                btc.GetDepositAddress(wallet.Network.NBitcoinNetwork).ScriptPubKey == paymentData.ScriptPubKey &&
-                paymentMethod.Calculate().Due > Money.Zero)
-            {
-                var address = await wallet.ReserveAddressAsync(invoice.StoreId, strategy, "invoice");
-                btc.DepositAddress = address.Address.ToString();
-                btc.KeyPath = address.KeyPath;
-                await _InvoiceRepository.NewPaymentDetails(invoice.Id, btc, wallet.Network);
-                _Aggregator.Publish(new InvoiceNewPaymentDetailsEvent(invoice.Id, btc, paymentMethod.GetId()));
-                paymentMethod.SetPaymentMethodDetails(btc);
-                invoice.SetPaymentMethod(paymentMethod);
-            }
             wallet.InvalidateCache(strategy);
             _Aggregator.Publish(new InvoiceEvent(invoice, InvoiceEvent.ReceivedPayment) { Payment = payment });
             return invoice;

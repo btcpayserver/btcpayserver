@@ -469,14 +469,6 @@ namespace BTCPayServer.Tests
         [Fact(Timeout = 60 * 2 * 1000)]
         [Trait("Integration", "Integration")]
         [Trait("Lightning", "Lightning")]
-        public async Task CanSendLightningPaymentCharge()
-        {
-            await ProcessLightningPayment(LightningConnectionType.Charge);
-        }
-
-        [Fact(Timeout = 60 * 2 * 1000)]
-        [Trait("Integration", "Integration")]
-        [Trait("Lightning", "Lightning")]
         public async Task CanSendLightningPaymentLnd()
         {
             await ProcessLightningPayment(LightningConnectionType.LndREST);
@@ -1609,7 +1601,7 @@ namespace BTCPayServer.Tests
             // Check correct casing: Addresses in payment URI need to be …
             // - lowercase in link version
             // - uppercase in QR version
-            
+
             // Standard for all uppercase characters in QR codes is still not implemented in all wallets
             // But we're proceeding with BECH32 being uppercase
             Assert.Equal($"bitcoin:{paymentMethodUnified.BtcAddress}", paymentMethodUnified.InvoiceBitcoinUrl.Split('?')[0]);
@@ -1634,7 +1626,8 @@ namespace BTCPayServer.Tests
             var user = tester.NewAccount();
             var cryptoCode = "BTC";
             user.GrantAccess(true);
-            user.RegisterLightningNode(cryptoCode, LightningConnectionType.Charge);
+            user.RegisterLightningNode(cryptoCode);
+            user.SetLNUrl(cryptoCode, false);
             var vm = user.GetController<UIStoresController>().CheckoutAppearance().AssertViewModel<CheckoutAppearanceViewModel>();
             var criteria = Assert.Single(vm.PaymentMethodCriteria);
             Assert.Equal(new PaymentMethodId(cryptoCode, LightningPaymentType.Instance).ToString(), criteria.PaymentMethod);
@@ -1649,16 +1642,12 @@ namespace BTCPayServer.Tests
                     Price = 1.5m,
                     Currency = "USD"
                 }, Facade.Merchant);
-
             Assert.Single(invoice.CryptoInfo);
             Assert.Equal(PaymentTypes.LightningLike.ToString(), invoice.CryptoInfo[0].PaymentType);
 
             // Activating LNUrl, we should still have only 1 payment criteria that can be set.
-            user.RegisterLightningNode(cryptoCode, LightningConnectionType.Charge);
-            var lnSettingsVm = user.GetController<UIStoresController>().LightningSettings(user.StoreId, cryptoCode).AssertViewModel<LightningSettingsViewModel>();
-            lnSettingsVm.LNURLEnabled = true;
-            lnSettingsVm.LNURLStandardInvoiceEnabled = true;
-            Assert.IsType<RedirectToActionResult>(user.GetController<UIStoresController>().LightningSettings(lnSettingsVm).Result);
+            user.RegisterLightningNode(cryptoCode);
+            user.SetLNUrl(cryptoCode, true);
             vm = user.GetController<UIStoresController>().CheckoutAppearance().AssertViewModel<CheckoutAppearanceViewModel>();
             criteria = Assert.Single(vm.PaymentMethodCriteria);
             Assert.Equal(new PaymentMethodId(cryptoCode, LightningPaymentType.Instance).ToString(), criteria.PaymentMethod);
@@ -2157,7 +2146,7 @@ namespace BTCPayServer.Tests
                 txFee = localInvoice.BtcDue - invoice.BtcDue;
                 Assert.Equal("paidPartial", localInvoice.ExceptionStatus.ToString());
                 Assert.Equal(1, localInvoice.CryptoInfo[0].TxCount);
-                Assert.NotEqual(localInvoice.BitcoinAddress, invoice.BitcoinAddress); //New address
+                Assert.Equal(localInvoice.BitcoinAddress, invoice.BitcoinAddress); //Same address
                 Assert.True(IsMapped(invoice, ctx));
                 Assert.True(IsMapped(localInvoice, ctx));
 
@@ -2443,6 +2432,31 @@ namespace BTCPayServer.Tests
             Assert.Equal($"New version {newVersion} released!", fn.Body);
             Assert.Equal($"https://github.com/btcpayserver/btcpayserver/releases/tag/v{newVersion}", fn.ActionLink);
             Assert.False(fn.Seen);
+        }
+
+        [Fact(Timeout = LongRunningTestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task CanFixMappedDomainAppType()
+        {
+            using var tester = CreateServerTester(newDb: true);
+            await tester.StartAsync();
+            var f = tester.PayTester.GetService<ApplicationDbContextFactory>();
+            using (var ctx = f.CreateContext())
+            {
+                var setting = new SettingData() { Id = "BTCPayServer.Services.PoliciesSettings" };
+                setting.Value = JObject.Parse("{\"RootAppId\": null, \"RootAppType\": 1, \"Experimental\": false, \"PluginSource\": null, \"LockSubscription\": false, \"DisableSSHService\": false, \"PluginPreReleases\": false, \"BlockExplorerLinks\": [],\"DomainToAppMapping\": [{\"AppId\": \"87kj5yKay8mB4UUZcJhZH5TqDKMD3CznjwLjiu1oYZXe\", \"Domain\": \"donate.nicolas-dorier.com\", \"AppType\": 0}], \"CheckForNewVersions\": false, \"AllowHotWalletForAll\": false, \"RequiresConfirmedEmail\": false, \"DiscourageSearchEngines\": false, \"DisableInstantNotifications\": false, \"DisableNonAdminCreateUserApi\": false, \"AllowHotWalletRPCImportForAll\": false, \"AllowLightningInternalNodeForAll\": false, \"DisableStoresToUseServerEmailSettings\": false}").ToString();
+                ctx.Settings.Add(setting);
+                await ctx.SaveChangesAsync();
+            }
+            await RestartMigration(tester);
+            using (var ctx = f.CreateContext())
+            {
+                var setting = await ctx.Settings.FirstOrDefaultAsync(c => c.Id == "BTCPayServer.Services.PoliciesSettings");
+                var o = JObject.Parse(setting.Value);
+                Assert.Equal("Crowdfund", o["RootAppType"].Value<string>());
+                o = (JObject)((JArray)o["DomainToAppMapping"])[0];
+                Assert.Equal("PointOfSale", o["AppType"].Value<string>());
+            }
         }
 
         [Fact(Timeout = LongRunningTestTimeout)]

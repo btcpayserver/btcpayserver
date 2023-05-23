@@ -58,6 +58,7 @@ namespace BTCPayServer.Controllers
         private readonly InvoiceActivator _invoiceActivator;
         private readonly LinkGenerator _linkGenerator;
         private readonly IAuthorizationService _authorizationService;
+        private readonly AppService _appService;
 
         public WebhookSender WebhookNotificationManager { get; }
 
@@ -81,6 +82,7 @@ namespace BTCPayServer.Controllers
             UIWalletsController walletsController,
             InvoiceActivator invoiceActivator,
             LinkGenerator linkGenerator,
+            AppService appService,
             IAuthorizationService authorizationService)
         {
             _displayFormatter = displayFormatter;
@@ -102,6 +104,7 @@ namespace BTCPayServer.Controllers
             _invoiceActivator = invoiceActivator;
             _linkGenerator = linkGenerator;
             _authorizationService = authorizationService;
+            _appService = appService;
         }
 
 
@@ -154,6 +157,7 @@ namespace BTCPayServer.Controllers
                 entity.Type = InvoiceType.TopUp;
             }
 
+            entity.StoreSupportUrl = storeBlob.StoreSupportUrl;
             entity.RedirectURLTemplate = invoice.RedirectURL ?? store.StoreWebsite;
             entity.RedirectAutomatically =
                 invoice.RedirectAutomatically.GetValueOrDefault(storeBlob.RedirectAutomatically);
@@ -187,33 +191,36 @@ namespace BTCPayServer.Controllers
             return await CreateInvoiceCoreRaw(entity, store, excludeFilter, null, cancellationToken, entityManipulator);
         }
 
-        internal async Task<InvoiceEntity> CreatePaymentRequestInvoice(ViewPaymentRequestViewModel pr, decimal? amount, StoreData storeData, HttpRequest request, CancellationToken cancellationToken)
+        internal async Task<InvoiceEntity> CreatePaymentRequestInvoice(Data.PaymentRequestData prData, decimal? amount, decimal amountDue, StoreData storeData, HttpRequest request, CancellationToken cancellationToken)
         {
-            if (pr.AllowCustomPaymentAmounts && amount != null)
-                amount = Math.Min(pr.AmountDue, amount.Value);
+            var id = prData.Id;
+            var prBlob = prData.GetBlob();
+            if (prBlob.AllowCustomPaymentAmounts && amount != null)
+                amount = Math.Min(amountDue, amount.Value);
             else
-                amount = pr.AmountDue;
-            var redirectUrl = _linkGenerator.PaymentRequestLink(pr.Id, request.Scheme, request.Host, request.PathBase);
+                amount = amountDue;
+            var redirectUrl = _linkGenerator.PaymentRequestLink(id, request.Scheme, request.Host, request.PathBase);
 
-            var invoiceMetadata =
-                new InvoiceMetadata
-                {
-                    OrderId = PaymentRequestRepository.GetOrderIdForPaymentRequest(pr.Id),
-                    PaymentRequestId = pr.Id,
-                    BuyerEmail = pr.Email
-                };
+            JObject invoiceMetadata = prData.GetBlob()?.FormResponse ?? new JObject();
+            invoiceMetadata.Merge(new InvoiceMetadata
+            {
+                OrderId = PaymentRequestRepository.GetOrderIdForPaymentRequest(id),
+                PaymentRequestId = id,
+                BuyerEmail = invoiceMetadata.TryGetValue("buyerEmail", out var formEmail) && formEmail.Type == JTokenType.String ? formEmail.Value<string>():
+                    string.IsNullOrEmpty(prBlob.Email) ? null : prBlob.Email
+            }.ToJObject(), new JsonMergeSettings() { MergeNullValueHandling = MergeNullValueHandling.Ignore });
 
             var invoiceRequest =
                 new CreateInvoiceRequest
                 {
-                    Metadata = invoiceMetadata.ToJObject(),
-                    Currency = pr.Currency,
+                    Metadata = invoiceMetadata,
+                    Currency = prBlob.Currency,
                     Amount = amount,
                     Checkout = { RedirectURL = redirectUrl },
                     Receipt = new InvoiceDataBase.ReceiptOptions { Enabled = false }
                 };
 
-            var additionalTags = new List<string> { PaymentRequestRepository.GetInternalTag(pr.Id) };
+            var additionalTags = new List<string> { PaymentRequestRepository.GetInternalTag(id) };
             return await CreateInvoiceCoreRaw(invoiceRequest, storeData, request.GetAbsoluteRoot(), additionalTags, cancellationToken);
         }
 
@@ -242,10 +249,11 @@ namespace BTCPayServer.Controllers
             }
             entity.SpeedPolicy = invoice.Checkout.SpeedPolicy ?? store.SpeedPolicy;
             entity.DefaultLanguage = invoice.Checkout.DefaultLanguage;
-            entity.DefaultPaymentMethod = invoice.Checkout.DefaultPaymentMethod;
+            entity.DefaultPaymentMethod = invoice.Checkout.DefaultPaymentMethod ?? store.GetDefaultPaymentId()?.ToStringNormalized() ?? new PaymentMethodId(_NetworkProvider.DefaultNetwork.CryptoCode, PaymentTypes.BTCLike).ToStringNormalized();
             entity.RedirectAutomatically = invoice.Checkout.RedirectAutomatically ?? storeBlob.RedirectAutomatically;
             entity.CheckoutType = invoice.Checkout.CheckoutType;
             entity.RequiresRefundEmail = invoice.Checkout.RequiresRefundEmail;
+            entity.LazyPaymentMethods = invoice.Checkout.LazyPaymentMethods ?? storeBlob.LazyPaymentMethods;
             IPaymentFilter? excludeFilter = null;
             if (invoice.Checkout.PaymentMethods != null)
             {
@@ -458,7 +466,7 @@ namespace BTCPayServer.Controllers
                 var storeBlob = store.GetStoreBlob();
 
                 // Checkout v2 does not show a payment method switch for Bitcoin-only + BIP21, so exclude that case
-                var preparePayment = storeBlob.LazyPaymentMethods && !storeBlob.OnChainWithLnInvoiceFallback
+                var preparePayment = entity.LazyPaymentMethods && !storeBlob.OnChainWithLnInvoiceFallback
                     ? null
                     : handler.PreparePayment(supportedPaymentMethod, store, network);
                 var rate = await fetchingByCurrencyPair[new CurrencyPair(network.CryptoCode, entity.Currency)];

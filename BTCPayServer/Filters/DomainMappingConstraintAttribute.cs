@@ -13,12 +13,12 @@ namespace BTCPayServer.Filters
         public DomainMappingConstraintAttribute()
         {
         }
-        
+
         public DomainMappingConstraintAttribute(string appType)
         {
             AppType = appType;
         }
-        
+
         public int Order => 100;
         private string AppType { get; }
 
@@ -33,21 +33,22 @@ namespace BTCPayServer.Filters
             {
                 var appId = (string)context.RouteContext.RouteData.Values["appId"];
                 var matchedDomainMapping = mapping.FirstOrDefault(item => item.AppId == appId);
-                
+
                 // App is accessed via path, redirect to canonical domain
                 var req = context.RouteContext.HttpContext.Request;
                 if (matchedDomainMapping != null && req.Method != "POST" && !req.HasFormContentType)
                 {
                     var uri = new UriBuilder(req.Scheme, matchedDomainMapping.Domain);
-                    if (req.Host.Port.HasValue) uri.Port = req.Host.Port.Value;
+                    if (req.Host.Port.HasValue)
+                        uri.Port = req.Host.Port.Value;
                     context.RouteContext.HttpContext.Response.Redirect(uri.ToString());
                     return true;
                 }
             }
-            
+
             if (hasDomainMapping)
             {
-                var matchedDomainMapping = mapping.FirstOrDefault(item => 
+                var matchedDomainMapping = mapping.FirstOrDefault(item =>
                     item.Domain.Equals(context.RouteContext.HttpContext.Request.Host.Host,
                         StringComparison.InvariantCultureIgnoreCase));
                 if (matchedDomainMapping != null)

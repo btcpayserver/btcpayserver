@@ -1,8 +1,8 @@
+using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using System;
-using Newtonsoft.Json;
 using System.Net.Http.Headers;
+using Newtonsoft.Json;
 
 namespace BTCPayServer.Client.Models;
 
@@ -14,9 +14,9 @@ public class WithdrawRequestData
 
     public WithdrawRequestData()
     {
-        
+
     }
-    
+
     public WithdrawRequestData(string paymentMethod, TradeQuantity qty)
     {
         PaymentMethod = paymentMethod;

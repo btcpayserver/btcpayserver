@@ -33,12 +33,15 @@ namespace BTCPayServer.Data
             RecommendedFeeBlockTarget = 1;
             PaymentMethodCriteria = new List<PaymentMethodCriteria>();
             ReceiptOptions = InvoiceDataBase.ReceiptOptions.CreateDefault();
+            CheckoutType = CheckoutType.V2;
         }
 
         [JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
         public NetworkFeeMode NetworkFeeMode { get; set; }
 
         [JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
+        [DefaultValue(CheckoutType.V1)]
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
         public CheckoutType CheckoutType { get; set; }
         public bool RequiresRefundEmail { get; set; }
         public bool LightningAmountInSatoshi { get; set; }
@@ -62,6 +65,8 @@ namespace BTCPayServer.Data
                     _DefaultCurrency = _DefaultCurrency.Trim().ToUpperInvariant();
             }
         }
+        
+        public string StoreSupportUrl { get; set; }
 
         CurrencyPair[] _DefaultCurrencyPairs;
         [JsonProperty("defaultCurrencyPairs", ItemConverterType = typeof(CurrencyPairJsonConverter))]
@@ -222,11 +227,11 @@ namespace BTCPayServer.Data
         [DefaultValue(true)]
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
         public bool ShowPayInWalletButton { get; set; } = true;
-        
+
         [DefaultValue(true)]
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
         public bool ShowStoreHeader { get; set; } = true;
-        
+
         [DefaultValue(true)]
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
         public bool CelebratePayment { get; set; } = true;

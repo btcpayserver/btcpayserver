@@ -128,7 +128,7 @@
   --btcpay-body-text: var(--btcpay-neutral-900);
   --btcpay-body-text-striped: var(--btcpay-body-text);
   --btcpay-body-text-hover: var(--btcpay-body-text);
-  --btcpay-body-text-active: var(--btcpay-white);
+  --btcpay-body-text-active: var(--btcpay-primary-text-active);
   --btcpay-body-text-muted: var(--btcpay-neutral-500);
   --btcpay-body-text-rgb: 41, 41, 41;
   --btcpay-body-link: var(--btcpay-primary);

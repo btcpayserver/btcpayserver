@@ -214,6 +214,13 @@ namespace BTCPayServer.Tests
             get => GenerateWalletResponseV.DerivationScheme;
         }
 
+        public void SetLNUrl(string cryptoCode, bool activated)
+        {
+            var lnSettingsVm = GetController<UIStoresController>().LightningSettings(StoreId, cryptoCode).AssertViewModel<LightningSettingsViewModel>();
+            lnSettingsVm.LNURLEnabled = activated;
+            Assert.IsType<RedirectToActionResult>(GetController<UIStoresController>().LightningSettings(lnSettingsVm).Result);
+        }
+
         private async Task RegisterAsync(bool isAdmin = false)
         {
             var account = parent.PayTester.GetController<UIAccountController>();
@@ -270,7 +277,7 @@ namespace BTCPayServer.Tests
 
         public bool IsAdmin { get; internal set; }
 
-        public void RegisterLightningNode(string cryptoCode, LightningConnectionType connectionType, bool isMerchant = true)
+        public void RegisterLightningNode(string cryptoCode, LightningConnectionType? connectionType = null, bool isMerchant = true)
         {
             RegisterLightningNodeAsync(cryptoCode, connectionType, isMerchant).GetAwaiter().GetResult();
         }

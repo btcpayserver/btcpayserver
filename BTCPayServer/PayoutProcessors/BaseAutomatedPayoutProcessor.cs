@@ -9,13 +9,31 @@ using BTCPayServer.HostedServices;
 using BTCPayServer.Payments;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using NBitcoin.Protocol;
 using PayoutData = BTCPayServer.Data.PayoutData;
 using PayoutProcessorData = BTCPayServer.Data.PayoutProcessorData;
 
 namespace BTCPayServer.PayoutProcessors;
 
+public class AutomatedPayoutConstants
+{
+    public const double MinIntervalMinutes = 10.0;
+    public const double MaxIntervalMinutes = 60.0;
+    public static void ValidateInterval(ModelStateDictionary modelState, TimeSpan timeSpan, string parameterName)
+    {
+        if (timeSpan < TimeSpan.FromMinutes(AutomatedPayoutConstants.MinIntervalMinutes))
+        {
+            modelState.AddModelError(parameterName, $"The minimum interval is {AutomatedPayoutConstants.MinIntervalMinutes * 60} seconds");
+        }
+        if (timeSpan > TimeSpan.FromMinutes(AutomatedPayoutConstants.MaxIntervalMinutes))
+        {
+            modelState.AddModelError(parameterName, $"The maximum interval is {AutomatedPayoutConstants.MaxIntervalMinutes * 60} seconds");
+        }
+    }
+}
 public abstract class BaseAutomatedPayoutProcessor<T> : BaseAsyncService where T : AutomatedPayoutBlob
 {
     protected readonly StoreRepository _storeRepository;
@@ -62,9 +80,9 @@ public abstract class BaseAutomatedPayoutProcessor<T> : BaseAsyncService where T
         var blob = GetBlob(_PayoutProcesserSettings);
         if (paymentMethod is not null)
         {
-            
+
             // Allow plugins to do something before the automatic payouts are executed
-            await _pluginHookService.ApplyFilter("before-automated-payout-processing", 
+            await _pluginHookService.ApplyFilter("before-automated-payout-processing",
                 new BeforePayoutFilterData(store, paymentMethod));
 
             await using var context = _applicationDbContextFactory.CreateContext();
@@ -74,18 +92,24 @@ public abstract class BaseAutomatedPayoutProcessor<T> : BaseAsyncService where T
                     States = new[] { PayoutState.AwaitingPayment },
                     PaymentMethods = new[] { _PayoutProcesserSettings.PaymentMethod },
                     Stores = new[] { _PayoutProcesserSettings.StoreId }
-                }, context);
+                }, context, CancellationToken);
             if (payouts.Any())
             {
                 Logs.PayServer.LogInformation($"{payouts.Count} found to process. Starting (and after will sleep for {blob.Interval})");
                 await Process(paymentMethod, payouts);
                 await context.SaveChangesAsync();
-                
+
                 // Allow plugins do to something after automatic payout processing
-                await _pluginHookService.ApplyFilter("after-automated-payout-processing", 
+                await _pluginHookService.ApplyFilter("after-automated-payout-processing",
                     new AfterPayoutFilterData(store, paymentMethod, payouts));
             }
         }
+
+        // Clip interval
+        if (blob.Interval < TimeSpan.FromMinutes(AutomatedPayoutConstants.MinIntervalMinutes))
+            blob.Interval = TimeSpan.FromMinutes(AutomatedPayoutConstants.MinIntervalMinutes);
+        if (blob.Interval > TimeSpan.FromMinutes(AutomatedPayoutConstants.MaxIntervalMinutes))
+            blob.Interval = TimeSpan.FromMinutes(AutomatedPayoutConstants.MaxIntervalMinutes);
         await Task.Delay(blob.Interval, CancellationToken);
     }
 

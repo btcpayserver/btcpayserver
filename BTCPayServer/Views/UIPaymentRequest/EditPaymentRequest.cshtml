@@ -86,7 +86,7 @@
                 <label asp-for="Email" class="form-label"></label>
                 <input type="email" asp-for="Email" placeholder="Firstname Lastname <email@example.com>" class="form-control" />
                 <span asp-validation-for="Email" class="text-danger"></span>
-                <div id="PaymentRequestEmailHelpBlock" class="form-text">Receive updates for this payment request.</div>
+                <div id="PaymentRequestEmailHelpBlock" class="form-text">The recipient's email. This will send notification mails to the recipient, as configured by the <a asp-action="StoreEmails" asp-controller="UIStores" asp-route-storeId="@Model.StoreId">email rules</a>, and include the email in the invoice export data.</div>
             </div>
             <div class="form-group">
                 <label asp-for="FormId" class="form-label"></label>

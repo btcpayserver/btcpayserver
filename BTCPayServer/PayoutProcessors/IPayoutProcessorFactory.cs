@@ -14,4 +14,5 @@ public interface IPayoutProcessorFactory
     public string ConfigureLink(string storeId, PaymentMethodId paymentMethodId, HttpRequest request);
     public IEnumerable<PaymentMethodId> GetSupportedPaymentMethods();
     public Task<IHostedService> ConstructProcessor(PayoutProcessorData settings);
+    public Task<bool> CanRemove() => Task.FromResult(true);
 }

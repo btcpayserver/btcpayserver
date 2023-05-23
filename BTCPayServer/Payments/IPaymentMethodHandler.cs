@@ -90,21 +90,16 @@ namespace BTCPayServer.Payments
             };
         }
 
-        public PaymentMethod GetPaymentMethodInInvoice(InvoiceEntity invoice, PaymentMethodId paymentMethodId)
-        {
-            return invoice.GetPaymentMethod(paymentMethodId);
-        }
-
         public virtual object PreparePayment(TSupportedPaymentMethod supportedPaymentMethod, StoreData store,
             BTCPayNetworkBase network)
         {
             return null;
         }
-        
+
         public virtual void PreparePaymentModelForAmountInSats(PaymentModel model, IPaymentMethod paymentMethod, DisplayFormatter displayFormatter)
         {
             var satoshiCulture = new CultureInfo(CultureInfo.InvariantCulture.Name)
-            { 
+            {
                 NumberFormat = { NumberGroupSeparator = " " }
             };
             model.CryptoCode = "sats";

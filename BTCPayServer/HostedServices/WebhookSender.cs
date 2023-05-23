@@ -13,6 +13,7 @@ using BTCPayServer.Controllers.Greenfield;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Logging;
+using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
 using Microsoft.EntityFrameworkCore;
@@ -31,6 +32,7 @@ namespace BTCPayServer.HostedServices
     {
         readonly Encoding UTF8 = new UTF8Encoding(false);
         public readonly static JsonSerializerSettings DefaultSerializerSettings;
+
         static WebhookSender()
         {
             DefaultSerializerSettings = WebhookEvent.DefaultSerializerSettings;
@@ -38,6 +40,7 @@ namespace BTCPayServer.HostedServices
         public const string OnionNamedClient = "greenfield-webhook.onion";
         public const string ClearnetNamedClient = "greenfield-webhook.clearnet";
         public const string LoopbackNamedClient = "greenfield-webhook.loopback";
+        public static string[] AllClients = new[] { OnionNamedClient, ClearnetNamedClient, LoopbackNamedClient };
         private HttpClient GetClient(Uri uri)
         {
             return HttpClientFactory.CreateClient(uri.IsOnion() ? OnionNamedClient : uri.IsLoopback ? LoopbackNamedClient : ClearnetNamedClient);

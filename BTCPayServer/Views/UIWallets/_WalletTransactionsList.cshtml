@@ -29,11 +29,15 @@
         </td>
         @if (transaction.Positive)
         {
-            <td class="text-end text-success">@transaction.Balance</td>
+            <td class="text-end text-success">
+                <span data-sensitive>@transaction.Balance</span>
+            </td>
         }
         else
         {
-            <td class="text-end text-danger">@transaction.Balance</td>
+            <td class="text-end text-danger">
+                <span data-sensitive>@transaction.Balance</span>
+            </td>
         }
         <td class="text-end">
             <div class="dropstart d-inline-block">

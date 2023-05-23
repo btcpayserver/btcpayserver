@@ -163,7 +163,7 @@ namespace BTCPayServer.Services.Stores
                     {
                         ctx.Stores.Remove(store);
                         await ctx.SaveChangesAsync();
-                         _eventAggregator.Publish(new StoreRemovedEvent(store.Id));
+                        _eventAggregator.Publish(new StoreRemovedEvent(store.Id));
                     }
                 }
             }

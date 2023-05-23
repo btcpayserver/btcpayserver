@@ -123,12 +123,20 @@ new Vue({
 
                 if (this.hideDustAmounts) {
                     rows = rows.filter(function (row) {
-                        return row.fiatValue > t.account.dustThresholdInFiat;
+                        return row.fiatValue === null || row.fiatValue > t.account.dustThresholdInFiat;
                     });
                 }
 
                 rows = rows.sort(function (a, b) {
-                    return b.fiatValue - a.fiatValue;
+                    if(b.fiatValue !== null && a.fiatValue !== null){
+                        return b.fiatValue - a.fiatValue;
+                    }else if(b.fiatValue !== null && a.fiatValue === null){
+                        return 1;
+                    }else if(b.fiatValue === null && a.fiatValue !== null) {
+                        return -1;
+                    }else{
+                        return b.asset.localeCompare(a.asset);
+                    }
                 });
 
                 return rows;

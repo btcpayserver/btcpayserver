@@ -9,7 +9,7 @@ namespace BTCPayServer.Models
         public string FormUrl { get; set; }
         public bool AllowExternal { get; set; }
 
-        public MultiValueDictionary<string, string> FormParameters { get; set; } = new ();
-        public Dictionary<string, string> RouteParameters { get; set; } = new ();
+        public MultiValueDictionary<string, string> FormParameters { get; set; } = new();
+        public Dictionary<string, string> RouteParameters { get; set; } = new();
     }
 }

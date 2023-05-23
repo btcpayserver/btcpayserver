@@ -33,12 +33,12 @@ namespace BTCPayServer.Plugins.Crowdfund
             services.AddSingleton<IUIExtension>(new UIExtension("Crowdfund/NavExtension", "header-nav"));
             services.AddSingleton<CrowdfundAppType>();
             services.AddSingleton<AppBaseType, CrowdfundAppType>();
-            
+
             base.Execute(services);
         }
     }
-    
-    public class CrowdfundAppType: AppBaseType, IHasSaleStatsAppType, IHasItemStatsAppType
+
+    public class CrowdfundAppType : AppBaseType, IHasSaleStatsAppType, IHasItemStatsAppType
     {
         private readonly LinkGenerator _linkGenerator;
         private readonly IOptions<BTCPayServerOptions> _options;
@@ -74,14 +74,14 @@ namespace BTCPayServer.Plugins.Crowdfund
         public Task<SalesStats> GetSalesStats(AppData app, InvoiceEntity[] paidInvoices, int numberOfDays)
         {
             var cfS = app.GetSettings<CrowdfundSettings>();
-            var items = AppService.Parse(_htmlSanitizer, _displayFormatter, cfS.PerksTemplate, cfS.TargetCurrency);
+            var items = AppService.Parse( cfS.PerksTemplate);
             return AppService.GetSalesStatswithPOSItems(items, paidInvoices, numberOfDays);
         }
 
         public Task<IEnumerable<ItemStats>> GetItemStats(AppData appData, InvoiceEntity[] paidInvoices)
         {
             var settings = appData.GetSettings<CrowdfundSettings>();
-            var perks = AppService.Parse(_htmlSanitizer, _displayFormatter, settings.PerksTemplate, settings.TargetCurrency);
+            var perks = AppService.Parse( settings.PerksTemplate);
             var perkCount = paidInvoices
                 .Where(entity => entity.Currency.Equals(settings.TargetCurrency, StringComparison.OrdinalIgnoreCase) &&
                                  // we need the item code to know which perk it is and group by that
@@ -146,7 +146,7 @@ namespace BTCPayServer.Plugins.Crowdfund
                 }
             }
 
-            var invoices = await AppService.GetInvoicesForApp(_invoiceRepository,appData, lastResetDate);
+            var invoices = await AppService.GetInvoicesForApp(_invoiceRepository, appData, lastResetDate);
             var completeInvoices = invoices.Where(IsComplete).ToArray();
             var pendingInvoices = invoices.Where(IsPending).ToArray();
             var paidInvoices = invoices.Where(IsPaid).ToArray();
@@ -176,7 +176,7 @@ namespace BTCPayServer.Plugins.Crowdfund
                         })));
             }
 
-            var perks = AppService.GetPOSItems(_htmlSanitizer, _displayFormatter, settings.PerksTemplate, settings.TargetCurrency);
+            var perks = AppService.Parse( settings.PerksTemplate, false);
             if (settings.SortPerksByPopularity)
             {
                 var ordered = perkCount.OrderByDescending(pair => pair.Value);
@@ -256,7 +256,7 @@ namespace BTCPayServer.Plugins.Crowdfund
         public override Task<string> ViewLink(AppData app)
         {
             return Task.FromResult(_linkGenerator.GetPathByAction(nameof(UICrowdfundController.ViewCrowdfund),
-                "UICrowdfund", new {appId = app.Id}, _options.Value.RootPath)!);
+                "UICrowdfund", new { appId = app.Id }, _options.Value.RootPath)!);
         }
 
         private static bool IsPaid(InvoiceEntity entity)

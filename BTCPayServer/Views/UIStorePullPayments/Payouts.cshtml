@@ -72,7 +72,12 @@
 <div id="descriptor" class="collapse">
     <div class="d-flex px-4 py-4 mb-4 bg-tile rounded">
         <div class="flex-fill">
-            <p class="mb-3">Payouts allow you to process pull payments, in the form of refunds, salary payouts, or withdrawals.</p>
+            <p class="mb-3">
+                Payouts allow you to process pull payments, in the form of refunds, salary payouts, or withdrawals.
+                You can also
+                <a id="PayoutProcessors" asp-action="ConfigureStorePayoutProcessors" asp-controller="UIPayoutProcessors" asp-route-storeId="@storeId">configure payout processors</a>
+                to automate payouts.
+            </p>
             <a href="https://docs.btcpayserver.org/Payouts/" target="_blank" rel="noreferrer noopener">Learn More</a>
         </div>
         <button type="button" class="btn-close ms-auto" data-bs-toggle="collapse" data-bs-target="#descriptor" aria-expanded="false" aria-label="Close">
@@ -108,7 +113,7 @@
                        asp-route-payoutState="@Model.PayoutState"
                        asp-route-paymentMethodId="@state.ToString()"
                        asp-route-pullPaymentId="@Model.PullPaymentId"
-                       class="btcpay-pill position-relative @(state.ToString() == Model.PaymentMethodId ? "active" : "")"
+                       class="btcpay-pill position-relative me-0 @(state.ToString() == Model.PaymentMethodId ? "active" : "")"
                        id="@state.ToString()-view"
                        role="tab">
                         @state.ToPrettyString()
@@ -197,7 +202,7 @@
                                 <span class="text-break">@pp.Destination</span>
                             </td>
                             <td class="text-end text-nowrap">
-                                <span>@pp.Amount</span>
+                                <span data-sensitive>@pp.Amount</span>
                             </td>
                             @if (Model.PayoutState != PayoutState.AwaitingApproval)
                             {

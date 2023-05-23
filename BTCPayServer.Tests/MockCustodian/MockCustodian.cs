@@ -139,7 +139,7 @@ public class MockCustodian : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
         var r = new WithdrawResult(WithdrawalPaymentMethod, WithdrawalAsset, ledgerEntries, WithdrawalId, WithdrawalStatus, createdTime, WithdrawalTargetAddress, WithdrawalTransactionId);
         return r;
     }
-    
+
     private SimulateWithdrawalResult CreateWithdrawSimulationResult()
     {
         var ledgerEntries = new List<LedgerEntryData>();
@@ -153,7 +153,7 @@ public class MockCustodian : ICustodian, ICanDeposit, ICanTrade, ICanWithdraw
     {
         if (paymentMethod == WithdrawalPaymentMethod)
         {
-            if (amount.ToString(CultureInfo.InvariantCulture).Equals(""+WithdrawalAmount, StringComparison.InvariantCulture) || WithdrawalAmountPercentage.Equals(amount))
+            if (amount.ToString(CultureInfo.InvariantCulture).Equals("" + WithdrawalAmount, StringComparison.InvariantCulture) || WithdrawalAmountPercentage.Equals(amount))
             {
                 return Task.FromResult(CreateWithdrawResult());
             }

@@ -15,6 +15,7 @@ namespace BTCPayServer.Plugins.Shopify
         public override void Execute(IServiceCollection applicationBuilder)
         {
             applicationBuilder.AddSingleton<IHostedService, ShopifyOrderMarkerHostedService>();
+            applicationBuilder.AddSingleton<IUIExtension>(new UIExtension("Shopify/NavExtension", "header-nav"));
             base.Execute(applicationBuilder);
         }
     }

@@ -8,6 +8,26 @@
     --chart-series-e-rgb: 160, 98, 75;
 }
 
+/* Hide sensitive info */
+[data-hide-sensitive-info="true"] [data-sensitive] {
+    visibility: hidden;
+    position: relative;
+}
+
+[data-hide-sensitive-info="true"] [data-sensitive]:before {
+    content: '***';
+    visibility: visible;
+    position: absolute;
+}
+
+[data-hide-sensitive-info="true"] .text-end [data-sensitive]:before {
+    right: 0;
+}
+
+[data-hide-sensitive-info="true"] .store-wallet-balance .ct-label.ct-vertical.ct-start {
+    visibility: hidden;
+}
+
 /* General and site-wide Bootstrap modifications */
 p {
     margin-bottom: 1.5rem;
@@ -928,6 +948,14 @@ input.ts-wrapper.form-control:not(.ts-hidden-accessible,.ts-inline) {
     display: inline-flex;
     align-items: center;
     gap: var(--btcpay-space-s);
+    max-width: 100%;
+}
+
+.truncate-center--elastic .truncate-center-start {
+    flex: 0 1 auto;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }
 
 .truncate-center-id {
@@ -941,13 +969,34 @@ input.ts-wrapper.form-control:not(.ts-hidden-accessible,.ts-inline) {
 }
 
 .truncate-center a,
-.truncate-center button,
-.truncate-center-truncated {
+.truncate-center button {
     line-height: 1;
+}
+
+.truncate-center-truncated {
+    text-align: left;
+    display: inline-flex;
+    max-width: 100%;
 }
 
 .truncate-center button.btn .icon {
     --btn-icon-size: 1em;
+}
+
+.truncate-center--elastic .truncate-center-truncated {
+    max-width: 100%;
+}
+
+.truncate-center--elastic.truncate-center--copy .truncate-center-truncated {
+    max-width: calc(100% - 2em);
+}
+
+.truncate-center.form-control-plaintext {
+    padding-right: 3px;
+}
+
+.truncate-center.form-control-plaintext button.btn .icon {
+    --btn-icon-size: 1.25em;
 }
 
 @media screen {

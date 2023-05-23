@@ -424,7 +424,7 @@ namespace BTCPayServer.Controllers
         {
             var types = _AppService.GetAvailableAppTypes();
             var apps = (await _AppService.GetAllApps(null, true))
-                .Select(a => 
+                .Select(a =>
                     new SelectListItem($"{types[a.AppType]} - {a.AppName} - {a.StoreName}", a.Id)).ToList();
             apps.Insert(0, new SelectListItem("(None)", null));
             return apps;

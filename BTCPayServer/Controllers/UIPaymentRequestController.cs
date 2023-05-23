@@ -78,7 +78,7 @@ namespace BTCPayServer.Controllers
             model = this.ParseListQuery(model ?? new ListPaymentRequestsViewModel());
 
             var store = GetCurrentStore();
-            var includeArchived = new SearchString(model.SearchTerm).GetFilterBool("includearchived") == true;
+            var includeArchived = new SearchString(model.SearchTerm, model.TimezoneOffset ?? 0).GetFilterBool("includearchived") == true;
             var result = await _PaymentRequestRepository.FindPaymentRequests(new PaymentRequestQuery
             {
                 UserId = GetUserId(),
@@ -198,14 +198,14 @@ namespace BTCPayServer.Controllers
             {
                 return NotFound();
             }
-            
+
             var storeBlob = store.GetStoreBlob();
             vm.StoreName = store.StoreName;
             vm.BrandColor = storeBlob.BrandColor;
             vm.LogoFileId = storeBlob.LogoFileId;
             vm.CssFileId = storeBlob.CssFileId;
             vm.HubPath = PaymentRequestHub.GetHubPath(Request);
-            
+
             return View(vm);
         }
 
@@ -224,26 +224,34 @@ namespace BTCPayServer.Controllers
             var prBlob = result.GetBlob();
             if (prBlob.FormResponse is not null)
             {
-                return RedirectToAction("PayPaymentRequest", new {payReqId});
+                return RedirectToAction("PayPaymentRequest", new { payReqId });
             }
             var prFormId = prBlob.FormId;
             var formData = await FormDataService.GetForm(prFormId);
             if (formData is null)
             {
-                
-                return RedirectToAction("PayPaymentRequest", new {payReqId});
+
+                return RedirectToAction("PayPaymentRequest", new { payReqId });
             }
 
             var form = Form.Parse(formData.Config);
+            if (!string.IsNullOrEmpty(prBlob.Email))
+            {
+                var emailField = form.GetFieldByFullName("buyerEmail");
+                if (emailField is not null)
+                {
+                    emailField.Value = prBlob.Email;
+                }
+            }
             if (Request.Method == "POST" && Request.HasFormContentType)
             {
                 form.ApplyValuesFromForm(Request.Form);
                 if (FormDataService.Validate(form, ModelState))
-                {  
+                {
                     prBlob.FormResponse = FormDataService.GetValues(form);
                     result.SetBlob(prBlob);
                     await _PaymentRequestRepository.CreateOrUpdatePaymentRequest(result);
-                    return RedirectToAction("PayPaymentRequest", new {payReqId});
+                    return RedirectToAction("PayPaymentRequest", new { payReqId });
                 }
             }
             viewModel.FormName = formData.Name;
@@ -277,13 +285,12 @@ namespace BTCPayServer.Controllers
 
                 return BadRequest("Payment Request cannot be paid as it has been archived");
             }
-
             if (!result.FormSubmitted && !string.IsNullOrEmpty(result.FormId))
             {
                 var formData = await FormDataService.GetForm(result.FormId);
                 if (formData is not null)
                 {
-                    return RedirectToAction("ViewPaymentRequestForm", new {payReqId});
+                    return RedirectToAction("ViewPaymentRequestForm", new { payReqId });
                 }
             }
 
@@ -322,7 +329,8 @@ namespace BTCPayServer.Controllers
             try
             {
                 var store = await _storeRepository.FindStore(result.StoreId);
-                var newInvoice = await _InvoiceController.CreatePaymentRequestInvoice(result, amount, store, Request, cancellationToken);
+                var prData = await _PaymentRequestRepository.FindPaymentRequest(result.Id, null);
+                var newInvoice = await _InvoiceController.CreatePaymentRequestInvoice(prData, amount, result.AmountDue, store, Request, cancellationToken);
                 if (redirectToInvoice)
                 {
                     return RedirectToAction("Checkout", "UIInvoice", new { invoiceId = newInvoice.Id });

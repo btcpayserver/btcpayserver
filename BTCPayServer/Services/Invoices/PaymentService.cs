@@ -44,6 +44,8 @@ namespace BTCPayServer.Services.Invoices
                 return null;
             InvoiceEntity invoiceEntity = invoice.GetBlob(_btcPayNetworkProvider);
             PaymentMethod paymentMethod = invoiceEntity.GetPaymentMethod(new PaymentMethodId(network.CryptoCode, paymentData.GetPaymentType()));
+            if (paymentMethod is null)
+                return null;
             IPaymentMethodDetails paymentMethodDetails = paymentMethod.GetPaymentMethodDetails();
             PaymentEntity entity = new PaymentEntity
             {

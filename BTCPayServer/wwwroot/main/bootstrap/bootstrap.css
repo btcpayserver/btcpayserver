@@ -11028,6 +11028,19 @@ fieldset:disabled .btn {
 [list]::-webkit-list-button {
   content: none;
 }
+
+.dropdown-toggle.dropdown-toggle-custom-caret {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%236E7681' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 16px 12px;
+  padding-right: 2.25rem;
+}
+
+.dropdown-toggle.dropdown-toggle-custom-caret::after {
+  border: none;
+  margin-left: var(--btcpay-space-s);
+}
 /* Scrollbar - first works on Firefox, rest on WebKit-based browsers */
 * {
   --btcpay-scrollbar-width: 0.375rem;
@@ -11233,6 +11246,22 @@ ul:not([class]) li {
 .dropdown-toggle-split {
   padding-right: 1rem;
   padding-left: 1rem;
+}
+
+.dropdown .custom-active {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--btcpay-space-s);
+}
+
+.dropdown .custom-active::after {
+  display: inline-block;
+  margin-left: auto;
+  content: '';
+  width: 0.5em;
+  height: 0.5em;
+  background-color: var(--btcpay-body-bg-active);
+  border-radius: 50%;
 }
 
 .font-monospace {

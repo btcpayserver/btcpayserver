@@ -267,7 +267,7 @@ namespace BTCPayServer.Controllers
                     ModelState.Remove(nameof(vm.PSBT));
                     ModelState.Remove(nameof(vm.FileName));
                     ModelState.Remove(nameof(vm.UploadedPSBTFile));
-                    await FetchTransactionDetails(walletId,derivationSchemeSettings, vm, network);
+                    await FetchTransactionDetails(walletId, derivationSchemeSettings, vm, network);
                     return View("WalletPSBTDecoded", vm);
 
                 case "save-psbt":
@@ -318,6 +318,8 @@ namespace BTCPayServer.Controllers
             await _broadcaster.Schedule(DateTimeOffset.UtcNow + TimeSpan.FromMinutes(2.0), cloned.ExtractTransaction(), btcPayNetwork);
             using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             cts.CancelAfter(TimeSpan.FromSeconds(30));
+            var minRelayFee = _dashboard.Get(btcPayNetwork.CryptoCode).Status.BitcoinStatus?.MinRelayTxFee;
+            _payjoinClient.MinimumFeeRate = minRelayFee;
             return await _payjoinClient.RequestPayjoin(bip21, new PayjoinWallet(derivationSchemeSettings), psbt, cts.Token);
         }
 
@@ -386,15 +388,15 @@ namespace BTCPayServer.Controllers
                 inputVm.BalanceChange = ValueToString(balanceChange2, network);
                 inputVm.Positive = balanceChange2 >= Money.Zero;
                 inputVm.Index = (int)input.Index;
-                
+
                 var walletObjectIds = new List<ObjectTypeId>();
-                walletObjectIds.Add(new ObjectTypeId(WalletObjectData.Types.Utxo,  input.PrevOut.ToString()));
-                walletObjectIds.Add(new ObjectTypeId(WalletObjectData.Types.Tx,  input.PrevOut.Hash.ToString()));
+                walletObjectIds.Add(new ObjectTypeId(WalletObjectData.Types.Utxo, input.PrevOut.ToString()));
+                walletObjectIds.Add(new ObjectTypeId(WalletObjectData.Types.Tx, input.PrevOut.Hash.ToString()));
                 var address = txOut?.ScriptPubKey.GetDestinationAddress(network.NBitcoinNetwork)?.ToString();
-                if(address != null)
+                if (address != null)
                     walletObjectIds.Add(new ObjectTypeId(WalletObjectData.Types.Address, address));
                 inputToObjects.Add(input.Index, walletObjectIds.ToArray());
-               
+
             }
             vm.Destinations = new List<WalletPSBTReadyViewModel.DestinationViewModel>();
             foreach (var output in psbtObject.Outputs)
@@ -409,9 +411,9 @@ namespace BTCPayServer.Controllers
                 dest.Positive = balanceChange2 >= Money.Zero;
                 dest.Destination = output.ScriptPubKey.GetDestinationAddress(network.NBitcoinNetwork)?.ToString() ?? output.ScriptPubKey.ToString();
                 var address = output.ScriptPubKey.GetDestinationAddress(network.NBitcoinNetwork)?.ToString();
-                if(address != null)
+                if (address != null)
                     outputToObjects.Add(dest.Destination, new ObjectTypeId(WalletObjectData.Types.Address, address));
-                
+
             }
 
             if (psbtObject.TryGetFee(out var fee))
@@ -442,13 +444,14 @@ namespace BTCPayServer.Controllers
                 .DistinctBy(id => $"{id.Type}:{id.Id}").ToArray();
 
             var labelInfo = await WalletRepository.GetWalletTransactionsInfo(walletId, combinedTypeIds);
-            foreach (KeyValuePair<uint,ObjectTypeId[]> inputToObject in inputToObjects)
+            foreach (KeyValuePair<uint, ObjectTypeId[]> inputToObject in inputToObjects)
             {
                 var keys = inputToObject.Value.Select(id => id.Id).ToArray();
                 WalletTransactionInfo ix = null;
                 foreach (var key in keys)
                 {
-                    if (!labelInfo.TryGetValue(key, out var i)) continue;
+                    if (!labelInfo.TryGetValue(key, out var i))
+                        continue;
                     if (ix is null)
                     {
                         ix = i;
@@ -458,17 +461,22 @@ namespace BTCPayServer.Controllers
                         ix.Merge(i);
                     }
                 }
-                if (ix is null) continue;
+                if (ix is null)
+                    continue;
+
+                var labels = _labelService.CreateTransactionTagModels(ix, Request);
                 var input = vm.Inputs.First(model => model.Index == inputToObject.Key);
-                input.Labels = ix.LabelColors;
+                input.Labels = labels;
             }
             foreach (var outputToObject in outputToObjects)
             {
-                if (!labelInfo.TryGetValue(outputToObject.Value.Id, out var ix)) continue;
+                if (!labelInfo.TryGetValue(outputToObject.Value.Id, out var ix))
+                    continue;
+                var labels = _labelService.CreateTransactionTagModels(ix, Request);
                 var destination = vm.Destinations.First(model => model.Destination == outputToObject.Key);
-                destination.Labels = ix.LabelColors;
+                destination.Labels = labels;
             }
-            
+
         }
 
         [HttpPost("{walletId}/psbt/ready")]
@@ -488,7 +496,7 @@ namespace BTCPayServer.Controllers
             if (derivationSchemeSettings == null)
                 return NotFound();
 
-            await FetchTransactionDetails(walletId,derivationSchemeSettings, vm, network);
+            await FetchTransactionDetails(walletId, derivationSchemeSettings, vm, network);
 
             switch (command)
             {
@@ -619,7 +627,7 @@ namespace BTCPayServer.Controllers
                         BackUrl = vm.BackUrl
                     });
                 case "decode":
-                    await FetchTransactionDetails(walletId,derivationSchemeSettings, vm, network);
+                    await FetchTransactionDetails(walletId, derivationSchemeSettings, vm, network);
                     return View("WalletPSBTDecoded", vm);
                 default:
                     vm.Errors.Add("Unknown command");

@@ -115,7 +115,7 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 ModelState.AddModelError(nameof(request.Period), $"The period should be positive");
             }
-            if (request.BOLT11Expiration <= TimeSpan.Zero)
+            if (request.BOLT11Expiration < TimeSpan.Zero)
             {
                 ModelState.AddModelError(nameof(request.BOLT11Expiration), $"The BOLT11 expiration should be positive");
             }
@@ -142,7 +142,7 @@ namespace BTCPayServer.Controllers.Greenfield
             }
             if (!ModelState.IsValid)
                 return this.CreateValidationError(ModelState);
-            var ppId = await _pullPaymentService.CreatePullPayment(new HostedServices.CreatePullPayment()
+            var ppId = await _pullPaymentService.CreatePullPayment(new CreatePullPayment()
             {
                 StartsAt = request.StartsAt,
                 ExpiresAt = request.ExpiresAt,
@@ -264,7 +264,8 @@ namespace BTCPayServer.Controllers.Greenfield
                     pullPaymentId = pullPaymentId
                 }, Request.Scheme, Request.Host.ToString())!);
 
-                return base.Ok(new PullPaymentLNURL() {
+                return base.Ok(new PullPaymentLNURL()
+                {
                     LNURLBech32 = LNURL.LNURL.EncodeUri(lnurlEndpoint, "withdrawRequest", true).ToString(),
                     LNURLUri = LNURL.LNURL.EncodeUri(lnurlEndpoint, "withdrawRequest", false).ToString()
                 });
@@ -351,7 +352,7 @@ namespace BTCPayServer.Controllers.Greenfield
         [Authorize(Policy = Policies.CanCreateNonApprovedPullPayments, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> CreatePayoutThroughStore(string storeId, CreatePayoutThroughStoreRequest request)
         {
-            if (request.Approved is true)
+            if (request?.Approved is true)
             {
                 if (!(await _authorizationService.AuthorizeAsync(User, null,
                         new PolicyRequirement(Policies.CanCreatePullPayments))).Succeeded)
@@ -359,7 +360,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     return this.CreateAPIPermissionError(Policies.CanCreatePullPayments);
                 }
             }
-            
+
             if (request is null || !PaymentMethodId.TryParse(request?.PaymentMethod, out var paymentMethodId))
             {
                 ModelState.AddModelError(nameof(request.PaymentMethod), "Invalid payment method");

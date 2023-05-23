@@ -299,9 +299,8 @@ namespace BTCPayServer.Payments.PayJoin
                 if (walletReceiveMatch is null && invoice is not null)
                 {
                     var paymentMethod = invoice.GetPaymentMethod(paymentMethodId);
-                    var paymentDetails =
-                        paymentMethod.GetPaymentMethodDetails() as Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod;
-                    if (paymentDetails is null || !paymentDetails.PayjoinEnabled)
+                    var paymentDetails = paymentMethod?.GetPaymentMethodDetails() as Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod;
+                    if (paymentMethod is null || paymentDetails is null || !paymentDetails.PayjoinEnabled)
                         continue;
                     due = paymentMethod.Calculate().TotalDue - output.Value;
                     if (due > Money.Zero)
@@ -384,7 +383,7 @@ namespace BTCPayServer.Payments.PayJoin
                 WellknownMetadataKeys.AccountHDKey);
             if (extKeyStr == null)
             {
-                // This should not happen, as we check the existance of private key before creating invoice with payjoin
+                // This should not happen, as we check the existence of private key before creating invoice with payjoin
                 return CreatePayjoinErrorAndLog(503, PayjoinReceiverWellknownErrors.Unavailable, "The HD Key of the store changed");
             }
 

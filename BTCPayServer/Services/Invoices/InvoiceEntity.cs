@@ -408,6 +408,8 @@ namespace BTCPayServer.Services.Invoices
         // public bool Refundable { get; set; }
         public bool? RequiresRefundEmail { get; set; } = null;
         public string RefundMail { get; set; }
+
+        public string StoreSupportUrl { get; set; }
         [JsonProperty("redirectURL")]
         public string RedirectURLTemplate { get; set; }
 
@@ -461,6 +463,7 @@ namespace BTCPayServer.Services.Invoices
 
         [JsonConverter(typeof(StringEnumConverter))]
         public CheckoutType? CheckoutType { get; set; }
+        public bool LazyPaymentMethods { get; set; }
 
         public bool IsExpired()
         {
@@ -546,7 +549,7 @@ namespace BTCPayServer.Services.Invoices
                 if (details?.Activated is true)
                 {
 
-                    paymentId.PaymentType.PopulateCryptoInfo(info, cryptoInfo, ServerUrl);
+                    paymentId.PaymentType.PopulateCryptoInfo(this, info, cryptoInfo, ServerUrl);
                     if (paymentId.PaymentType == PaymentTypes.BTCLike)
                     {
                         var minerInfo = new MinerFeeInfo();
@@ -1330,5 +1333,7 @@ namespace BTCPayServer.Services.Invoices
 
         PaymentType GetPaymentType();
         string GetDestination();
+
+        string GetPaymentProof();
     }
 }

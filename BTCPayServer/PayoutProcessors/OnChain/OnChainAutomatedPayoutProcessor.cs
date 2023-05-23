@@ -43,7 +43,8 @@ namespace BTCPayServer.PayoutProcessors.OnChain
             PayoutProcessorData payoutProcesserSettings,
             PullPaymentHostedService pullPaymentHostedService,
             BTCPayNetworkProvider btcPayNetworkProvider,
-            IPluginHookService pluginHookService) :
+            IPluginHookService pluginHookService,
+            IFeeProviderFactory feeProviderFactory) :
             base(logger, storeRepository, payoutProcesserSettings, applicationDbContextFactory, pullPaymentHostedService,
                 btcPayNetworkProvider, pluginHookService)
         {
@@ -53,9 +54,11 @@ namespace BTCPayServer.PayoutProcessors.OnChain
             _bitcoinLikePayoutHandler = bitcoinLikePayoutHandler;
             _eventAggregator = eventAggregator;
             WalletRepository = walletRepository;
+            FeeProvider = feeProviderFactory.CreateFeeProvider(_btcPayNetworkProvider.GetNetwork(PaymentMethodId.CryptoCode));
         }
 
         public WalletRepository WalletRepository { get; }
+        public IFeeProvider FeeProvider { get; }
 
         protected override async Task Process(ISupportedPaymentMethod paymentMethod, List<PayoutData> payouts)
         {
@@ -95,7 +98,7 @@ namespace BTCPayServer.PayoutProcessors.OnChain
                 storePaymentMethod.AccountDerivation, DerivationFeature.Change, 0, true);
 
             var processorBlob = GetBlob(_PayoutProcesserSettings);
-            var feeRate = await explorerClient.GetFeeRateAsync(processorBlob.FeeTargetBlock, new FeeRate(1m));
+            var feeRate = await FeeProvider.GetFeeRateAsync(Math.Max(processorBlob.FeeTargetBlock, 1));
 
             var transfersProcessing = new List<PayoutData>();
             foreach (var transferRequest in payouts)
@@ -133,7 +136,7 @@ namespace BTCPayServer.PayoutProcessors.OnChain
                 try
                 {
                     txBuilder.SetChange(changeAddress.Address);
-                    txBuilder.SendEstimatedFees(feeRate.FeeRate);
+                    txBuilder.SendEstimatedFees(feeRate);
                     workingTx = txBuilder.BuildTransaction(true);
                     transfersProcessing.Add(transferRequest);
                 }

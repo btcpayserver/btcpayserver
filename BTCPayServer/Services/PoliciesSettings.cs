@@ -61,8 +61,8 @@ namespace BTCPayServer.Services
 
         public class DomainToAppMappingItem
         {
-            [Display(Name = "Domain")] [Required] [HostName] public string Domain { get; set; }
-            [Display(Name = "App")] [Required] public string AppId { get; set; }
+            [Display(Name = "Domain")][Required][HostName] public string Domain { get; set; }
+            [Display(Name = "App")][Required] public string AppId { get; set; }
 
             public string AppType { get; set; }
         }

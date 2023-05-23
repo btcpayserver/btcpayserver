@@ -32,7 +32,7 @@ namespace BTCPayServer.Controllers.GreenField
             _rateProviderFactory = rateProviderFactory;
             _btcPayNetworkProvider = btcPayNetworkProvider;
         }
-      
+
         [HttpGet("")]
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> GetStoreRates([FromQuery] string[]? currencyPair)
@@ -59,7 +59,7 @@ namespace BTCPayServer.Controllers.GreenField
             {
                 parsedCurrencyPairs = blob.DefaultCurrencyPairs.ToHashSet();
             }
-            
+
 
             var rules = blob.GetRateRules(_btcPayNetworkProvider);
 

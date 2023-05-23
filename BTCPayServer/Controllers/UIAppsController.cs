@@ -54,7 +54,7 @@ namespace BTCPayServer.Controllers
             var app = await _appService.GetApp(appId, null);
             if (app is null)
                 return NotFound();
-            
+
             var res = await _appService.ViewLink(app);
             if (res is null)
             {
@@ -150,11 +150,11 @@ namespace BTCPayServer.Controllers
             var defaultCurrency = await GetStoreDefaultCurrentIfEmpty(appData.StoreDataId, null);
             await _appService.SetDefaultSettings(appData, defaultCurrency);
             await _appService.UpdateOrCreateApp(appData);
-            
+
             TempData[WellKnownTempData.SuccessMessage] = "App successfully created";
             CreatedAppId = appData.Id;
 
-            
+
             var url = await type.ConfigureLink(appData);
             return Redirect(url);
         }

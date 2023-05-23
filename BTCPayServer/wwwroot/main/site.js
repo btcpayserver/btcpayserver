@@ -279,6 +279,21 @@ document.addEventListener("DOMContentLoaded", () => {
         setColorMode(mode)
         e.target.closest('.btcpay-theme-switch').blur()
     })
+
+    // Sensitive Info
+    const SENSITIVE_INFO_STORE_KEY = 'btcpay-hide-sensitive-info';
+    const SENSITIVE_INFO_DATA_ATTR = 'data-hide-sensitive-info';
+    delegate('change', '#HideSensitiveInfo', e => {
+        e.preventDefault()
+        const isActive = window.localStorage.getItem(SENSITIVE_INFO_STORE_KEY) === 'true';
+        if (isActive) {
+            window.localStorage.removeItem(SENSITIVE_INFO_STORE_KEY);
+            document.documentElement.removeAttribute(SENSITIVE_INFO_DATA_ATTR);
+        } else {
+            window.localStorage.setItem(SENSITIVE_INFO_STORE_KEY, 'true');
+            document.documentElement.setAttribute(SENSITIVE_INFO_DATA_ATTR, 'true');
+        }
+    });
     
     // Currency Selection: Remove the current input value once the element is focused, so that the user gets to
     // see the available options. If no selection or change is made, reset it to the previous value on blur.

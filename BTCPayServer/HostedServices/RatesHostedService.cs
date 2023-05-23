@@ -64,10 +64,10 @@ namespace BTCPayServer.HostedServices
             var usedProviders = GetStillUsedProviders().ToArray();
             if (usedProviders.Length == 0)
             {
-                await Task.Delay(TimeSpan.FromSeconds(30), Cancellation);
+                await Task.Delay(TimeSpan.FromSeconds(30), CancellationToken);
                 return;
             }
-            using (var timeout = CancellationTokenSource.CreateLinkedTokenSource(Cancellation))
+            using (var timeout = CancellationTokenSource.CreateLinkedTokenSource(CancellationToken))
             {
                 timeout.CancelAfter(TimeSpan.FromSeconds(20.0));
                 try
@@ -97,7 +97,7 @@ namespace BTCPayServer.HostedServices
                     await SaveRateCache();
                 }
             }
-            await Task.Delay(TimeSpan.FromSeconds(30), Cancellation);
+            await Task.Delay(TimeSpan.FromSeconds(30), CancellationToken);
         }
 
         public override async Task StartAsync(CancellationToken cancellationToken)

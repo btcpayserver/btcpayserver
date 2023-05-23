@@ -115,11 +115,12 @@ namespace BTCPayServer.Controllers.Greenfield
         internal static Client.Models.StoreData FromModel(Data.StoreData data)
         {
             var storeBlob = data.GetStoreBlob();
-            return new Client.Models.StoreData()
+            return new Client.Models.StoreData
             {
                 Id = data.Id,
                 Name = data.StoreName,
                 Website = data.StoreWebsite,
+                SupportUrl = storeBlob.StoreSupportUrl,
                 SpeedPolicy = data.SpeedPolicy,
                 DefaultPaymentMethod = data.GetDefaultPaymentId()?.ToStringNormalized(),
                 //blob
@@ -149,20 +150,19 @@ namespace BTCPayServer.Controllers.Greenfield
                 LightningDescriptionTemplate = storeBlob.LightningDescriptionTemplate,
                 PaymentTolerance = storeBlob.PaymentTolerance,
                 PayJoinEnabled = storeBlob.PayJoinEnabled,
-                PaymentMethodCriteria = storeBlob.PaymentMethodCriteria?.Where(criteria => criteria.Value is not null)?.Select(criteria =>  new PaymentMethodCriteriaData()
+                PaymentMethodCriteria = storeBlob.PaymentMethodCriteria?.Where(criteria => criteria.Value is not null)?.Select(criteria => new PaymentMethodCriteriaData()
                 {
                     Above = criteria.Above,
                     Amount = criteria.Value.Value,
                     CurrencyCode = criteria.Value.Currency,
                     PaymentMethod = criteria.PaymentMethod.ToStringNormalized()
-                })?.ToList()?? new List<PaymentMethodCriteriaData>()
+                })?.ToList() ?? new List<PaymentMethodCriteriaData>()
             };
         }
 
         private void ToModel(StoreBaseData restModel, StoreData model, PaymentMethodId defaultPaymentMethod)
         {
             var blob = model.GetStoreBlob();
-            model.StoreName = restModel.Name;
             model.StoreName = restModel.Name;
             model.StoreWebsite = restModel.Website;
             model.SpeedPolicy = restModel.SpeedPolicy;
@@ -186,6 +186,7 @@ namespace BTCPayServer.Controllers.Greenfield
             blob.ShowRecommendedFee = restModel.ShowRecommendedFee;
             blob.RecommendedFeeBlockTarget = restModel.RecommendedFeeBlockTarget;
             blob.DefaultLang = restModel.DefaultLang;
+            blob.StoreSupportUrl = restModel.SupportUrl;
             blob.MonitoringExpiration = restModel.MonitoringExpiration;
             blob.InvoiceExpiration = restModel.InvoiceExpiration;
             blob.DisplayExpirationTimer = restModel.DisplayExpirationTimer;
@@ -238,7 +239,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 ModelState.AddModelError(nameof(request.DisplayExpirationTimer), "DisplayExpirationTimer can only be between 1 and 34560 mins");
             if (request.MonitoringExpiration < TimeSpan.FromMinutes(10) && request.MonitoringExpiration > TimeSpan.FromMinutes(60 * 24 * 24))
                 ModelState.AddModelError(nameof(request.MonitoringExpiration), "MonitoringExpiration can only be between 10 and 34560 mins");
-            if (request.PaymentTolerance < 0 && request.PaymentTolerance > 100)
+            if (request.PaymentTolerance < 0 || request.PaymentTolerance > 100)
                 ModelState.AddModelError(nameof(request.PaymentTolerance), "PaymentTolerance can only be between 0 and 100 percent");
 
             if (request.PaymentMethodCriteria?.Any() is true)
@@ -249,7 +250,8 @@ namespace BTCPayServer.Controllers.Greenfield
                     if (string.IsNullOrEmpty(pmc.CurrencyCode))
                     {
                         request.AddModelError(data => data.PaymentMethodCriteria[index].CurrencyCode, "CurrencyCode is required", this);
-                    }else if (CurrencyNameTable.Instance.GetCurrencyData(pmc.CurrencyCode, false) is null)
+                    }
+                    else if (CurrencyNameTable.Instance.GetCurrencyData(pmc.CurrencyCode, false) is null)
                     {
                         request.AddModelError(data => data.PaymentMethodCriteria[index].CurrencyCode, "CurrencyCode is invalid", this);
                     }

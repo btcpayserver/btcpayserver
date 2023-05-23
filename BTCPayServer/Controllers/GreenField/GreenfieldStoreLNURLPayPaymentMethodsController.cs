@@ -54,7 +54,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     new LNURLPayPaymentMethodData(
                         paymentMethod.PaymentId.CryptoCode,
                         !excludedPaymentMethods.Match(paymentMethod.PaymentId),
-                        paymentMethod.UseBech32Scheme, paymentMethod.EnableForStandardInvoices
+                        paymentMethod.UseBech32Scheme
                     )
                 )
                 .Where((result) => enabled is null || enabled == result.Enabled)
@@ -124,8 +124,7 @@ namespace BTCPayServer.Controllers.Greenfield
             LNURLPaySupportedPaymentMethod? paymentMethod = new LNURLPaySupportedPaymentMethod()
             {
                 CryptoCode = cryptoCode,
-                UseBech32Scheme = paymentMethodData.UseBech32Scheme,
-                EnableForStandardInvoices = paymentMethodData.EnableForStandardInvoices
+                UseBech32Scheme = paymentMethodData.UseBech32Scheme
             };
 
             var store = Store;
@@ -154,7 +153,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 : new LNURLPayPaymentMethodData(
                     paymentMethod.PaymentId.CryptoCode,
                     !excluded,
-                    paymentMethod.UseBech32Scheme, paymentMethod.EnableForStandardInvoices
+                    paymentMethod.UseBech32Scheme
                 );
         }
         private void AssertCryptoCodeWallet(string cryptoCode, out BTCPayNetwork network)

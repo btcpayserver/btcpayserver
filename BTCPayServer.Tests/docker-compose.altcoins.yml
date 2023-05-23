@@ -24,7 +24,6 @@ services:
       TESTS_AzureBlobStorageConnectionString: ${TESTS_AzureBlobStorageConnectionString:-none}
       TEST_MERCHANTLIGHTNINGD: "type=clightning;server=unix://etc/merchant_lightningd_datadir/lightning-rpc"
       TEST_CUSTOMERLIGHTNINGD: "type=clightning;server=unix://etc/customer_lightningd_datadir/lightning-rpc"
-      TEST_MERCHANTCHARGE: "type=charge;server=http://lightning-charged:9112/;api-token=foiewnccewuify;allowinsecure=true"
       TEST_MERCHANTLND: "http://lnd:lnd@merchant_lnd:8080/"
       TESTS_INCONTAINER: "true"
       TESTS_SSHCONNECTION: "root@sshd:22"
@@ -38,6 +37,10 @@ services:
       - selenium
     extra_hosts:
       - "tests:127.0.0.1"
+    networks:
+      default:
+      custom:
+        ipv4_address: 172.23.0.18
     volumes:
       - "sshd_datadir:/root/.ssh"
       - "customer_lightningd_datadir:/etc/customer_lightningd_datadir"
@@ -52,7 +55,6 @@ services:
       - postgres
       - customer_lightningd
       - merchant_lightningd
-      - lightning-charged
       - customer_lnd
       - merchant_lnd
       - sshd
@@ -71,7 +73,7 @@ services:
         - "sshd_datadir:/root/.ssh"
 
   devlnd:
-    image: btcpayserver/bitcoin:24.0
+    image: btcpayserver/bitcoin:24.1-1
     environment:
       BITCOIN_NETWORK: regtest
       BITCOIN_WALLETDIR: "/data/wallets"
@@ -85,12 +87,19 @@ services:
       - postgres
       - customer_lnd
       - merchant_lnd
+
   selenium:
     image: selenium/standalone-chrome:101.0
+    extra_hosts:
+      - "tests:172.23.0.18"
     expose:
       - "4444"
+    networks:
+      default:
+      custom:
+
   nbxplorer:
-    image: nicolasdorier/nbxplorer:2.3.58
+    image: nicolasdorier/nbxplorer:2.3.63
     restart: unless-stopped
     ports:
       - "32838:32838"
@@ -126,7 +135,7 @@ services:
 
   bitcoind:
     restart: unless-stopped
-    image: btcpayserver/bitcoin:24.0
+    image: btcpayserver/bitcoin:24.1-1
     environment:
       BITCOIN_NETWORK: regtest
       BITCOIN_WALLETDIR: "/data/wallets"
@@ -154,7 +163,7 @@ services:
       - "bitcoin_datadir:/data"
 
   customer_lightningd:
-    image: btcpayserver/lightning:v23.02-1-dev
+    image: btcpayserver/lightning:v23.05-dev
     stop_signal: SIGKILL
     restart: unless-stopped
     environment:
@@ -180,30 +189,8 @@ services:
     depends_on:
       - bitcoind
 
-  lightning-charged:
-    image: shesek/lightning-charge:0.4.23-1-standalone
-    restart: unless-stopped
-    environment:
-      NETWORK: regtest
-      API_TOKEN: foiewnccewuify
-      BITCOIND_RPCCONNECT: bitcoind
-      LN_NET_PATH: /etc/lightning
-      LN_NET: /etc/lightning
-    volumes:
-      - "bitcoin_datadir:/etc/bitcoin"
-      - "lightning_charge_datadir:/data"
-      - "merchant_lightningd_datadir:/etc/lightning"
-    expose:
-      - "9112" # Charge
-      - "9735" # Lightning
-    ports:
-      - "54938:9112" # Charge
-    depends_on:
-      - bitcoind
-      - merchant_lightningd
-
   merchant_lightningd:
-    image: btcpayserver/lightning:v23.02-1-dev
+    image: btcpayserver/lightning:v23.05-dev
     stop_signal: SIGKILL
     environment:
       EXPOSE_TCP: "true"
@@ -237,7 +224,7 @@ services:
       - "5432"
 
   merchant_lnd:
-    image: btcpayserver/lnd:v0.15.4-beta-1
+    image: btcpayserver/lnd:v0.16.2-beta
     restart: unless-stopped
     environment:
       LND_CHAIN: "btc"
@@ -272,7 +259,7 @@ services:
       - bitcoind
 
   customer_lnd:
-    image: btcpayserver/lnd:v0.15.4-beta-1
+    image: btcpayserver/lnd:v0.16.2-beta
     restart: unless-stopped
     environment:
       LND_CHAIN: "btc"
@@ -404,3 +391,12 @@ volumes:
     torrcdir:
     tor_servicesdir:
     monero_data:
+
+networks:
+  default:
+    driver: bridge
+  custom:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.23.0.0/16

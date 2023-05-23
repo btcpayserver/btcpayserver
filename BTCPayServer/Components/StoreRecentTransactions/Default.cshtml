@@ -46,7 +46,7 @@
                 <tr>
                     <td>@tx.Timestamp.ToTimeAgo()</td>
                     <td>
-                        <vc:truncate-center text="@tx.Id" link="tx.Link" classes="truncate-center-id" />
+                        <vc:truncate-center text="@tx.Id" link="@tx.Link" classes="truncate-center-id" />
                     </td>
                     <td>
                         @if (tx.Labels.Any())
@@ -72,11 +72,15 @@
                     </td>
                     @if (tx.Positive)
                     {
-                        <td class="text-end text-success">@DisplayFormatter.Currency(tx.Balance, tx.Currency)</td>
+                        <td class="text-end text-success">
+                            <span data-sensitive>@DisplayFormatter.Currency(tx.Balance, tx.Currency)</span>
+                        </td>
                     }
                     else
                     {
-                        <td class="text-end text-danger">@DisplayFormatter.Currency(tx.Balance, tx.Currency)</td>
+                        <td class="text-end text-danger">
+                            <span data-sensitive>@DisplayFormatter.Currency(tx.Balance, tx.Currency)</span>
+                        </td>
                     }
                 </tr>
             }

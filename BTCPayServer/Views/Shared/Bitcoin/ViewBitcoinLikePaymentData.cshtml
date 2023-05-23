@@ -96,7 +96,7 @@
                         }
                         <td class="text-end">@payment.Confirmations</td>
                         <td class="payment-value text-end text-nowrap">
-                            @DisplayFormatter.Currency(payment.CryptoPaymentData.GetValue(), payment.Crypto)
+                            <span data-sensitive>@DisplayFormatter.Currency(payment.CryptoPaymentData.GetValue(), payment.Crypto)</span>
                             @if (!string.IsNullOrEmpty(payment.AdditionalInformation))
                             {
                                 <div>(@payment.AdditionalInformation)</div>

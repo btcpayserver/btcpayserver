@@ -69,7 +69,6 @@ public class Form
             if (!nameReturned.Add(fullName))
             {
                 errors.Add($"Form contains duplicate field names '{fullName}'");
-                continue;
             }
         }
         return errors.Count == 0;
@@ -86,15 +85,10 @@ public class Form
                 thisPath.Add(field.Name);
                 yield return (thisPath, field);
             }
-
-            foreach (var child in field.Fields)
+            foreach (var descendant in GetAllFieldsCore(thisPath, field.Fields))
             {
-                if (field.Constant)
-                    child.Constant = true;
-                foreach (var descendant in GetAllFieldsCore(thisPath, field.Fields))
-                {
-                    yield return descendant;
-                }
+                descendant.Field.Constant = field.Constant || descendant.Field.Constant;
+                yield return descendant;
             }
         }
     }

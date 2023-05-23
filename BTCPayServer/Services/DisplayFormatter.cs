@@ -13,7 +13,7 @@ public class DisplayFormatter
     {
         _currencyNameTable = currencyNameTable;
     }
-        
+
     public enum CurrencyFormat
     {
         Code,
@@ -49,7 +49,7 @@ public class DisplayFormatter
             _ => throw new ArgumentOutOfRangeException(nameof(format), format, null)
         };
     }
-        
+
     public string Currency(string value, string currency, CurrencyFormat format = CurrencyFormat.Code)
     {
         return Currency(decimal.Parse(value, CultureInfo.InvariantCulture), currency, format);

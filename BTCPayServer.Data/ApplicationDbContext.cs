@@ -124,14 +124,14 @@ namespace BTCPayServer.Data
 #pragma warning disable CS0612 // Type or member is obsolete
             WalletTransactionData.OnModelCreating(builder);
 #pragma warning restore CS0612 // Type or member is obsolete
-			WebhookDeliveryData.OnModelCreating(builder, Database);
-			LightningAddressData.OnModelCreating(builder, Database);
-			PayoutProcessorData.OnModelCreating(builder, Database);
-			WebhookData.OnModelCreating(builder, Database);
-			FormData.OnModelCreating(builder, Database);
+            WebhookDeliveryData.OnModelCreating(builder, Database);
+            LightningAddressData.OnModelCreating(builder, Database);
+            PayoutProcessorData.OnModelCreating(builder, Database);
+            WebhookData.OnModelCreating(builder, Database);
+            FormData.OnModelCreating(builder, Database);
 
 
-			if (Database.IsSqlite() && !_designTime)
+            if (Database.IsSqlite() && !_designTime)
             {
                 // SQLite does not have proper support for DateTimeOffset via Entity Framework Core, see the limitations
                 // here: https://docs.microsoft.com/en-us/ef/core/providers/sqlite/limitations#query-limitations

@@ -59,7 +59,7 @@ public class StoreRecentTransactions : ViewComponent
             var network = derivationSettings.Network;
             var wallet = _walletProvider.GetWallet(network);
             var allTransactions = await wallet.FetchTransactionHistory(derivationSettings.AccountDerivation, 0, 5, TimeSpan.FromDays(31.0));
-            var walletTransactionsInfo = await _walletRepository.GetWalletTransactionsInfo( vm.WalletId , allTransactions.Select(t => t.TransactionId.ToString()).ToArray());
+            var walletTransactionsInfo = await _walletRepository.GetWalletTransactionsInfo(vm.WalletId, allTransactions.Select(t => t.TransactionId.ToString()).ToArray());
 
             transactions = allTransactions
                 .Select(tx =>

@@ -92,8 +92,7 @@
                 window.setTimeout(() => {
                     const yLabels = [...document.querySelectorAll('.ct-label.ct-vertical.ct-start')];
                     if (yLabels) {
-                        const factor = rate ? 6 : 8;
-                        const width = Math.max(...(yLabels.map(l => l.innerText.length * factor)));
+                        const width = Math.max(...(yLabels.map(l => l.innerText.length * 7.5)));
                         const opts = Object.assign({}, renderOpts, { 
                             axisY: Object.assign({}, renderOpts.axisY, { offset: width })
                         });

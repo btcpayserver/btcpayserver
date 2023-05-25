@@ -2583,7 +2583,12 @@ namespace BTCPayServer.Tests
             user.RegisterLightningNode("BTC", LightningConnectionType.CLightning);
 
             var client = await user.CreateClient(Policies.Unrestricted);
-            var invoice = await client.CreateInvoice(user.StoreId,
+            var invoices = new Task<Client.Models.InvoiceData>[5];
+
+            // Create invoices
+            for (int i = 0; i < invoices.Length; i++)
+            {
+                invoices[i] = client.CreateInvoice(user.StoreId,
                 new CreateInvoiceRequest
                 {
                     Currency = "USD",
@@ -2594,18 +2599,35 @@ namespace BTCPayServer.Tests
                         DefaultPaymentMethod = "BTC_LightningLike"
                     }
                 });
-            var pm = Assert.Single(await client.GetInvoicePaymentMethods(user.StoreId, invoice.Id));
-            Assert.False(pm.AdditionalData.HasValues);
+            }
 
-            var resp = await tester.CustomerLightningD.Pay(pm.Destination);
-            Assert.Equal(PayResult.Ok, resp.Result);
-            Assert.NotNull(resp.Details.PaymentHash);
-            Assert.NotNull(resp.Details.Preimage);
+            var pm = new InvoicePaymentMethodDataModel[invoices.Length];
+            for (int i = 0; i < invoices.Length; i++)
+            {
+                pm[i] = Assert.Single(await client.GetInvoicePaymentMethods(user.StoreId, (await invoices[i]).Id));
+                Assert.False(pm[i].AdditionalData.HasValues);
+            }
 
-            pm = Assert.Single(await client.GetInvoicePaymentMethods(user.StoreId, invoice.Id));
-            Assert.True(pm.AdditionalData.HasValues);
-            Assert.Equal(resp.Details.PaymentHash.ToString(), pm.AdditionalData.GetValue("paymentHash"));
-            Assert.Equal(resp.Details.Preimage.ToString(), pm.AdditionalData.GetValue("preimage"));
+            // Pay them all at once
+            Task<PayResponse>[] payResponses = new Task<PayResponse>[invoices.Length];
+            for (int i = 0; i < invoices.Length; i++)
+            {
+                payResponses[i] = tester.CustomerLightningD.Pay(pm[i].Destination);
+            }
+
+            // Checking the results
+            for (int i = 0; i < invoices.Length; i++)
+            {
+                var resp = await payResponses[i];
+                Assert.Equal(PayResult.Ok, resp.Result);
+                Assert.NotNull(resp.Details.PaymentHash);
+                Assert.NotNull(resp.Details.Preimage);
+
+                pm[i] = Assert.Single(await client.GetInvoicePaymentMethods(user.StoreId, (await invoices[i]).Id));
+                Assert.True(pm[i].AdditionalData.HasValues);
+                Assert.Equal(resp.Details.PaymentHash.ToString(), pm[i].AdditionalData.GetValue("paymentHash"));
+                Assert.Equal(resp.Details.Preimage.ToString(), pm[i].AdditionalData.GetValue("preimage"));
+            }
         }
 
         [Fact(Timeout = 60 * 20 * 1000)]

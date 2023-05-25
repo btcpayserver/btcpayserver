@@ -17,7 +17,7 @@ namespace BTCPayServer.Client.Models
         /// </summary>
         public string UserId { get; set; }
 
-        public string? Role { get; set; }
+        public string Role { get; set; }
     }
 
     public class RoleData

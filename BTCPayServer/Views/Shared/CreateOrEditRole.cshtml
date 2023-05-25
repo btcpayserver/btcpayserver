@@ -48,7 +48,7 @@
             </select>
             <div class="list-group mb-2">
                 @{
-                    var storePolicyMap = Permission.PolicyMap.Where(pair => Policies.IsStorePolicy(pair.Key));
+                    var storePolicyMap = Permission.PolicyMap.Where(pair => Policies.IsStorePolicy(pair.Key)).ToArray();
                     var topMostPolicies = storePolicyMap.Where(pair => !storePolicyMap.Any(valuePair => valuePair.Value.Contains(pair.Key)));
                     @foreach (var policy in topMostPolicies)
                     {
@@ -63,7 +63,7 @@
 </div>
 
 @{
-    void RenderTree(KeyValuePair<string, HashSet<string>> policy, IEnumerable<KeyValuePair<string, HashSet<string>>> storePolicyMap, bool isChecked)
+    void RenderTree(KeyValuePair<string, HashSet<string>> policy, KeyValuePair<string, HashSet<string>>[] storePolicyMap, bool isChecked)
     {
         <div class="form-check mb-0">
             <input type="checkbox" class="form-check-input policy-cb" checked="@isChecked" value="@policy.Key" id="Policy-@policy.Key.Replace(".", "_")" />

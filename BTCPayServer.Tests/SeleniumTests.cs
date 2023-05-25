@@ -2594,8 +2594,20 @@ retry:
             Assert.Equal(0, existingStoreRoles.Count(element => element.Text.Contains("store role", StringComparison.InvariantCultureIgnoreCase)));
             s.GoToStore(StoreNavPages.Users);
             options = s.Driver.FindElements(By.CssSelector("#Role option"));
-            Assert.Equal(1, options.Count);
+            Assert.Single(options);
             Assert.DoesNotContain(options, element => element.Text.Equals("store role", StringComparison.InvariantCultureIgnoreCase));
+            
+            
+            s.GoToStore(StoreNavPages.Roles);
+            s.Driver.FindElement(By.Id("CreateRole")).Click();
+            s.Driver.FindElement(By.Id("Role")).SendKeys("Malice");
+           
+            s.Driver.ExecuteJavaScript($"document.getElementById('Policies')['{Policies.CanModifyServerSettings}']=new Option('{Policies.CanModifyServerSettings}', '{Policies.CanModifyServerSettings}', true,true);");
+            
+            s.Driver.FindElement(By.Id("Save")).Click();
+            s.FindAlertMessage();
+            Assert.Contains("Malice",s.Driver.PageSource);
+            Assert.DoesNotContain(Policies.CanModifyServerSettings,s.Driver.PageSource);
         }
 
         private static void CanBrowseContent(SeleniumTester s)

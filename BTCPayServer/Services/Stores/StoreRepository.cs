@@ -95,7 +95,7 @@ namespace BTCPayServer.Services.Stores
         }
         public async Task SetDefaultRole(string roleId)
         {
-            var s = await _settingsRepository.GetSettingAsync<PoliciesSettings>();
+            var s = (await _settingsRepository.GetSettingAsync<PoliciesSettings>())?? new PoliciesSettings();
             s.DefaultRole = roleId;
             await _settingsRepository.UpdateSetting(s);
         }
@@ -138,6 +138,7 @@ namespace BTCPayServer.Services.Stores
 
         public async Task<StoreRole?> AddOrUpdateStoreRole(string? roleId,string role, string storeId, List<string> policies)
         {
+            policies = policies.Where(s => Policies.IsValidPolicy(s) && Policies.IsStorePolicy(s)).ToList();
             await using var ctx = _ContextFactory.CreateContext();
             Data.StoreRole? match;
             if (roleId is not null)

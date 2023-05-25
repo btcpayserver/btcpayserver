@@ -329,10 +329,11 @@ namespace BTCPayServer.Hosting
             
             foreach (var store in stores)
             {
-                foreach (UserStore storeUserStore in store.UserStores)
+                foreach (var storeUserStore in store.UserStores.Where(storeUserStore => string.IsNullOrEmpty(storeUserStore.StoreRoleId)))
                 {
-                    if(string.IsNullOrEmpty(storeUserStore.StoreRoleId))
-                        storeUserStore.StoreRoleId = storeUserStore.LegacyRole == StoreRoles.Owner ? owner.Id : guest.Id;
+#pragma warning disable CS0618
+                    storeUserStore.StoreRoleId = storeUserStore.LegacyRole == StoreRoles.Owner ? owner.Id : guest.Id;
+#pragma warning restore CS0618
                 }
             }
 

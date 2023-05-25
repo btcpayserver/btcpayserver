@@ -136,7 +136,16 @@ public class PayoutProcessorService : EventHostedServiceBase
         if (matchedProcessor is not null)
         {
             await StopProcessor(data.Id, cancellationToken);
-            var processor = await matchedProcessor.ConstructProcessor(data);
+            IHostedService processor = null;
+            try
+            {
+                processor = await matchedProcessor.ConstructProcessor(data);
+            }
+            catch(Exception ex)
+            {
+                Logs.PayServer.LogWarning(ex, $"Payout processor ({data.PaymentMethod}) failed to start. Skipping...");
+                return;
+            }
             await processor.StartAsync(cancellationToken);
             Services.TryAdd(data.Id, processor);
         }

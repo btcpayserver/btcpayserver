@@ -49,17 +49,6 @@
     </a>
 </div>
 
-<form asp-action="ListRoles" asp-route-storeId="@storeId" asp-route-sortOrder="@(roleSortOrder)" style="max-width:640px"
-      asp-controller="@controller">
-    <div class="input-group">
-        <input asp-for="SearchTerm" class="form-control" placeholder="Search by role..." />
-        <button type="submit" class="btn btn-secondary" title="Search by role">
-            <span class="fa fa-search"></span> Search
-        </button>
-    </div>
-    <span asp-validation-for="SearchTerm" class="text-danger"></span>
-</form>
-
 <div class="table-responsive">
     <table class="table table-hover">
         <thead>

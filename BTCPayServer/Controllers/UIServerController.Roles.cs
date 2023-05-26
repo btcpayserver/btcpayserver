@@ -26,11 +26,6 @@ namespace BTCPayServer.Controllers
 
             model.DefaultRole = (await storeRepository.GetDefaultRole()).Role;
             var roles = await storeRepository.GetStoreRoles(null);
-            if (!string.IsNullOrWhiteSpace(model.SearchTerm))
-            {
-                roles = roles.Where(r => r.Role.Contains(model.SearchTerm, StringComparison.InvariantCultureIgnoreCase))
-                    .ToArray();
-            }
 
             if (sortOrder != null)
             {

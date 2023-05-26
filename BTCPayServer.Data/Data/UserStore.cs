@@ -20,7 +20,7 @@ namespace BTCPayServer.Data
         {
             builder.Entity<UserStore>()
                    .HasOne(o => o.StoreData)
-                   .WithMany(i => i.UserStores).OnDelete(DeleteBehavior.Cascade).IsRequired(false);
+                   .WithMany(i => i.UserStores).OnDelete(DeleteBehavior.Cascade);
             builder.Entity<UserStore>()
                    .HasKey(t => new
                    {

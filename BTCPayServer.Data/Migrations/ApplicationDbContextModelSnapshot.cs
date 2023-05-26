@@ -1481,7 +1481,8 @@ namespace BTCPayServer.Migrations
                     b.HasOne("BTCPayServer.Data.StoreData", "StoreData")
                         .WithMany("UserStores")
                         .HasForeignKey("StoreDataId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("BTCPayServer.Data.StoreRole", "StoreRole")
                         .WithMany("Users")

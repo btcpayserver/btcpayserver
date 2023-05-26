@@ -1,4 +1,4 @@
-﻿
+
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -12,7 +12,6 @@ namespace BTCPayServer.Data;
 
 public class StoreRole
 {
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public string Id { get; set; }
     public string StoreDataId { get; set; }
     public string Role { get; set; }

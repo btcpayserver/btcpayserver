@@ -38,6 +38,5 @@ namespace BTCPayServer.Services
         public bool FixSeqAfterSqliteMigration { get; set; }
         public bool FixMappedDomainAppType { get; set; }
         public bool MigrateAppYmlToJson { get; set; }
-        public bool AddStoreRoles { get; set; }
     }
 }

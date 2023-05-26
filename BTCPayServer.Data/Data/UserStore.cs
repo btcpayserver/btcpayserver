@@ -11,7 +11,6 @@ namespace BTCPayServer.Data
         public string StoreDataId { get; set; }
         public StoreData StoreData { get; set; }
         [Column("Role")]
-        public string LegacyRole { get; set; }
         public string StoreRoleId { get; set; }
         public StoreRole StoreRole { get; set; }
         

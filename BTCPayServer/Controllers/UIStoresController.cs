@@ -130,6 +130,7 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> StoreUsers()
         {
             StoreUsersViewModel vm = new StoreUsersViewModel();
+            vm.Role = StoreRoleId.Guest.Role;
             await FillUsers(vm);
             return View(vm);
         }
@@ -150,7 +151,7 @@ namespace BTCPayServer.Controllers
 
         [HttpPost]
         [Route("{storeId}/users")]
-        public async Task<IActionResult> StoreUsers(StoreUsersViewModel vm)
+        public async Task<IActionResult> StoreUsers(string storeId, StoreUsersViewModel vm)
         {
             await FillUsers(vm);
             if (!ModelState.IsValid)
@@ -170,7 +171,9 @@ namespace BTCPayServer.Controllers
                 ModelState.AddModelError(nameof(vm.Role), "Invalid role");
                 return View(vm);
             }
-            if (!await _Repo.AddStoreUser(CurrentStore.Id, user.Id, vm.Role))
+            var roleId = await _Repo.ResolveStoreRoleId(storeId, vm.Role);
+
+            if (!await _Repo.AddStoreUser(CurrentStore.Id, user.Id, roleId))
             {
                 ModelState.AddModelError(nameof(vm.Email), "The user already has access to this store");
                 return View(vm);

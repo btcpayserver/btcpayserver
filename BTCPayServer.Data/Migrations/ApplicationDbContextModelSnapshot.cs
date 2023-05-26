@@ -808,15 +808,12 @@ namespace BTCPayServer.Migrations
             modelBuilder.Entity("BTCPayServer.Data.StoreRole", b =>
                 {
                     b.Property<string>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Policies")
-                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Role")
-                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<string>("StoreDataId")
@@ -906,12 +903,9 @@ namespace BTCPayServer.Migrations
                     b.Property<string>("StoreDataId")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("LegacyRole")
+                    b.Property<string>("StoreRoleId")
                         .HasColumnType("TEXT")
                         .HasColumnName("Role");
-
-                    b.Property<string>("StoreRoleId")
-                        .HasColumnType("TEXT");
 
                     b.HasKey("ApplicationUserId", "StoreDataId");
 

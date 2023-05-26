@@ -63,18 +63,19 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 return StoreNotFound();
             }
+            StoreRoleId roleId = null;
 
             if (request.Role is not null)
             {
-                var roleExists =null != await _storeRepository.GetStoreRole(request.Role, storeId, false);
-                ModelState.AddModelError(nameof(request.Role), "The role id provided does not exist");
-                if (!roleExists)
-                {
-                    this.CreateValidationError(ModelState);
-                }
+                roleId = await _storeRepository.ResolveStoreRoleId(storeId, request.Role);
+                if (roleId is null)
+                    ModelState.AddModelError(nameof(request.Role), "The role id provided does not exist");
             }
             
-            if (await _storeRepository.AddStoreUser(storeId, request.UserId, request.Role))
+            if (!ModelState.IsValid)
+                return this.CreateValidationError(ModelState);
+
+            if (await _storeRepository.AddStoreUser(storeId, request.UserId, roleId))
             {
                 return Ok();
             }

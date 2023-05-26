@@ -1,4 +1,4 @@
-﻿@using BTCPayServer.Client
+@using BTCPayServer.Client
 @using BTCPayServer.Views.Server
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @using BTCPayServer.Abstractions.Extensions
@@ -8,19 +8,19 @@
 @model UpdateRoleViewModel
 @{
     Layout = "_NavLayout.cshtml";
-    var roleId = Context.GetRouteValue("roleId") as string;
+    var role = Context.GetRouteValue("role") as string;
 
-    if (roleId == "create")
-        roleId = null;
+    if (role == "create")
+        role = null;
 
     var storeId = Context.GetRouteValue("storeId") as string;
     var controller = ViewContext.RouteData.Values["controller"].ToString().TrimEnd("Controller", StringComparison.InvariantCultureIgnoreCase);
     if (storeId is null)
-        ViewData.SetActivePage(ServerNavPages.Roles, roleId is null ? "Create role" : "Update role");
+        ViewData.SetActivePage(ServerNavPages.Roles, role is null ? "Create role" : "Update role");
 
     else
     {
-        ViewData.SetActivePage(StoreNavPages.Roles, roleId is null ? "Create role" : "Update role");
+        ViewData.SetActivePage(StoreNavPages.Roles, role is null ? "Create role" : "Update role");
     }
     var storePolicies = Policies.AllPolicies.Where(Policies.IsStorePolicy).ToArray();
 
@@ -30,13 +30,20 @@
 
 <div class="row">
     <div class="col-xxl-constrain">
-        <form method="post" asp-controller="@controller" asp-action="CreateOrEditRole" asp-route-roleId="@(roleId ?? "create")" asp-route-storeId="@storeId">
+        <form method="post">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
             <div class="form-group" style="max-width:320px">
                 <label asp-for="Role" class="form-label"></label>
-                <input asp-for="Role" required="required" class="form-control" />
-                <span asp-validation-for="Role" class="text-danger"></span>
+				@if (role == null)
+				{
+					<input asp-for="Role" required="required" class="form-control" />
+				}
+				else
+				{
+					<input asp-for="Role" required="required" class="form-control" readonly />					
+				}
+				<span asp-validation-for="Role" class="text-danger"></span>
             </div>
 
             <h4 class="mt-4 mb-3">Permissions</h4>

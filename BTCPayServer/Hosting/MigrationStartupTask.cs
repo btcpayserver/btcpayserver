@@ -96,7 +96,6 @@ namespace BTCPayServer.Hosting
                     // Ensure these checks still get run
                     settings.CheckedFirstRun = false;
                     settings.FileSystemStorageAsDefault = false;
-                    settings.AddStoreRoles = false; 
                     await _Settings.UpdateSetting(settings);
                 }
 
@@ -257,93 +256,12 @@ namespace BTCPayServer.Hosting
                     settings.MigrateAppYmlToJson = true;
                     await _Settings.UpdateSetting(settings);
                 }
-                if (!settings.AddStoreRoles)
-                {
-                    await AddStoreRoles();
-                    settings.AddStoreRoles = true;
-                    await _Settings.UpdateSetting(settings);
-                }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error on the MigrationStartupTask");
                 throw;
             }
-        }
-        private async Task AddStoreRoles()
-        {
-            await using var ctx = _DBContextFactory.CreateContext();
-
-#pragma warning disable CS0618
-            var owner = await ctx.StoreRoles.FirstOrDefaultAsync(role =>
-                role.StoreDataId == null && role.Role == StoreRoles.Owner);
-            
-#pragma warning restore CS0618
-
-            if (owner is null)
-            {
-                owner = new StoreRole()
-                {
-                    Policies = new List<string>()
-                    {
-                        Policies.CanModifyStoreSettings,
-                        Policies.CanTradeCustodianAccount,
-                        Policies.CanWithdrawFromCustodianAccounts,
-                        Policies.CanDepositToCustodianAccounts
-                    },
-#pragma warning disable CS0618
-                    Role = StoreRoles.Owner,
-#pragma warning restore CS0618
-                    StoreDataId = null
-                };
-                await ctx.StoreRoles.AddAsync(owner);
-            }
-            
-#pragma warning disable CS0618
-            var guest = await ctx.StoreRoles.FirstOrDefaultAsync(role =>
-                role.StoreDataId == null && role.Role == StoreRoles.Guest);
-
-            if (guest is null)
-            {
-                guest = new StoreRole()
-#pragma warning restore CS0618
-                {
-                    Policies = new List<string>()
-                    {
-                        Policies.CanViewStoreSettings,
-                        Policies.CanModifyInvoices,
-                        Policies.CanViewCustodianAccounts,
-                        Policies.CanDepositToCustodianAccounts
-                    },
-#pragma warning disable CS0618
-                    Role = StoreRoles.Guest,
-#pragma warning restore CS0618
-                    StoreDataId = null
-                };
-                await ctx.StoreRoles.AddAsync(guest);
-            }
-            
-            var stores = await ctx.Stores
-                .Include(data => data.UserStores)
-                .ToArrayAsync();
-            
-            foreach (var store in stores)
-            {
-                foreach (var storeUserStore in store.UserStores.Where(storeUserStore => string.IsNullOrEmpty(storeUserStore.StoreRoleId)))
-                {
-#pragma warning disable CS0618
-                    storeUserStore.StoreRoleId = storeUserStore.LegacyRole == StoreRoles.Owner ? owner.Id : guest.Id;
-#pragma warning restore CS0618
-                }
-            }
-
-            var p = await _Settings.GetSettingAsync<PoliciesSettings>()?? new PoliciesSettings();
-            if (p.DefaultRole != owner.Id)
-            {
-                p.DefaultRole = owner.Id;
-                await _Settings.UpdateSetting(p);
-            }
-            await ctx.SaveChangesAsync();
         }
 
         private async Task FixMappedDomainAppType()

@@ -1,9 +1,11 @@
-﻿using System;
+using System;
 using BTCPayServer.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using NBitcoin;
+using Newtonsoft.Json;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 #nullable disable
 
@@ -15,12 +17,7 @@ namespace BTCPayServer.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<string>(
-                name: "StoreRoleId",
-                table: "UserStore",
-                type: "TEXT",
-                nullable: true);
-
+            var policiesType = migrationBuilder.IsNpgsql() ? "TEXT[]" : "TEXT";
             migrationBuilder.CreateTable(
                 name: "StoreRoles",
                 columns: table => new
@@ -28,7 +25,7 @@ namespace BTCPayServer.Migrations
                     Id = table.Column<string>(type: "TEXT", nullable: false),
                     StoreDataId = table.Column<string>(type: "TEXT", nullable: true),
                     Role = table.Column<string>(type: "TEXT", nullable: false),
-                    Policies = table.Column<string>(type: migrationBuilder.IsNpgsql()? "TEXT[]":"TEXT", nullable: false)
+                    Policies = table.Column<string>(type: policiesType, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -42,25 +39,53 @@ namespace BTCPayServer.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_UserStore_StoreRoleId",
-                table: "UserStore",
-                column: "StoreRoleId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_StoreRoles_StoreDataId_Role",
                 table: "StoreRoles",
                 columns: new[] { "StoreDataId", "Role" },
                 unique: true);
 
+            object GetPoliciesData(string[] policies)
+            {
+                if (migrationBuilder.IsNpgsql())
+                    return policies;
+                return JsonConvert.SerializeObject(policies);
+            }
+
+            migrationBuilder.InsertData(
+                "StoreRoles",
+                columns: new[] { "Id", "Role", "Policies" },
+                columnTypes: new[] { "TEXT", "TEXT", policiesType },
+                values: new object[,]
+                {
+                    {
+                        "Owner", "Owner", GetPoliciesData(new[]
+                        {
+                            "btcpay.store.canmodifystoresettings",
+                            "btcpay.store.cantradecustodianaccount",
+                            "btcpay.store.canwithdrawfromcustodianaccount",
+                            "btcpay.store.candeposittocustodianaccount"
+                        })
+                    },
+                    {
+                        "Guest", "Guest", GetPoliciesData(new[]
+                        {
+                            "btcpay.store.canviewstoresettings",
+                            "btcpay.store.canmodifyinvoices",
+                            "btcpay.store.canviewcustodianaccounts",
+                            "btcpay.store.candeposittocustodianaccount"
+                        })
+                }
+                });
+
             if (this.SupportAddForeignKey(migrationBuilder.ActiveProvider))
             {
                 
-            migrationBuilder.AddForeignKey(
-                name: "FK_UserStore_StoreRoles_StoreRoleId",
-                table: "UserStore",
-                column: "StoreRoleId",
-                principalTable: "StoreRoles",
-                principalColumn: "Id");
+                migrationBuilder.AddForeignKey(
+                    name: "FK_UserStore_StoreRoles_Role",
+                    table: "UserStore",
+                    column: "Role",
+                    principalTable: "StoreRoles",
+                    principalColumn: "Id");
             }
         }
 
@@ -70,24 +95,12 @@ namespace BTCPayServer.Migrations
             if (this.SupportDropForeignKey(migrationBuilder.ActiveProvider))
             {
                 migrationBuilder.DropForeignKey(
-                    name: "FK_UserStore_StoreRoles_StoreRoleId",
+                    name: "FK_UserStore_StoreRoles_Role",
                     table: "UserStore");
             }
 
             migrationBuilder.DropTable(
                 name: "StoreRoles");
-
-            migrationBuilder.DropIndex(
-                name: "IX_UserStore_StoreRoleId",
-                table: "UserStore");
-
-            migrationBuilder.DropColumn(
-                name: "StoreRoleId",
-                table: "UserStore");
-
-            migrationBuilder.DropColumn(
-                name: "Blob2",
-                table: "PayoutProcessors");
         }
     }
 }

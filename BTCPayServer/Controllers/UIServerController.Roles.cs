@@ -24,7 +24,7 @@ namespace BTCPayServer.Controllers
         {
             model = this.ParseListQuery(model ?? new RolesViewModel());
 
-            model.DefaultRole = await storeRepository.GetDefaultRole();
+            model.DefaultRole = (await storeRepository.GetDefaultRole()).Role;
             var roles = await storeRepository.GetStoreRoles(null);
             if (!string.IsNullOrWhiteSpace(model.SearchTerm))
             {
@@ -52,44 +52,46 @@ namespace BTCPayServer.Controllers
             return View(model);
         }
 
-        [HttpGet("server/roles/{roleId}")]
+        [HttpGet("server/roles/{role}")]
         public async Task<IActionResult> CreateOrEditRole(
-            
             [FromServices] StoreRepository storeRepository,
-            string roleId )
+            string role)
         {
-            if (roleId == "create")
-                roleId = null;
-            if (roleId is not null)
+            if (role == "create")
             {
-                var role = await storeRepository.GetStoreRole(roleId, null);
-                if (role == null)
-                    return NotFound();
-                return View(new UpdateRoleViewModel()
-                {
-                    Policies = role.Policies,
-                    Role = role.Role
-                });
+                ModelState.Remove(nameof(role));
+                return View(new UpdateRoleViewModel());
             }
             else
             {
-                return View(new UpdateRoleViewModel());
+                var roleData = await storeRepository.GetStoreRole(new StoreRoleId(role));
+                if (roleData == null)
+                    return NotFound();
+                return View(new UpdateRoleViewModel()
+                {
+                    Policies = roleData.Policies,
+                    Role = roleData.Role
+                });
             }
         } 
-        [HttpPost("server/roles/{roleId}")]
+        [HttpPost("server/roles/{role}")]
         public async Task<IActionResult> CreateOrEditRole(
             
             [FromServices] StoreRepository storeRepository,
-            string roleId, UpdateRoleViewModel viewModel)
+            [FromRoute] string role, UpdateRoleViewModel viewModel)
         {
-            if (roleId == "create")
-                roleId = null;
-            if (roleId is not null)
+            string successMessage = null;
+            if (role == "create")
             {
-                var role = await storeRepository.GetStoreRole(roleId, null);
-                if (role == null)
+                successMessage = "Role created";
+                role = viewModel.Role;
+            }
+            else
+            {
+                successMessage = "Role updated";
+                var storeRole = await storeRepository.GetStoreRole(new StoreRoleId(role));
+                if (storeRole == null)
                     return NotFound();
-              
             }
 
             if (!ModelState.IsValid)
@@ -97,7 +99,7 @@ namespace BTCPayServer.Controllers
                 return View(viewModel);
             }
 
-            var r = await storeRepository.AddOrUpdateStoreRole(roleId, viewModel.Role, null, viewModel.Policies);
+            var r = await storeRepository.AddOrUpdateStoreRole(new StoreRoleId(role), viewModel.Policies);
             if (r is null)
             {
                 TempData.SetStatusMessageModel(new StatusMessageModel()
@@ -105,14 +107,13 @@ namespace BTCPayServer.Controllers
                     Severity = StatusMessageModel.StatusSeverity.Error,
                     Message = "Role could not be updated"
                 });
-                
                 return View(viewModel);
             }
 
             TempData.SetStatusMessageModel(new StatusMessageModel()
             {
                 Severity = StatusMessageModel.StatusSeverity.Success,
-                Message = roleId is null? "Role created" : "Role updated"
+                Message = successMessage
             });
                 
             return RedirectToAction(nameof(ListRoles));
@@ -120,38 +121,39 @@ namespace BTCPayServer.Controllers
         
 
 
-        [HttpGet("server/roles/{roleId}/delete")]
+        [HttpGet("server/roles/{role}/delete")]
         public async Task<IActionResult> DeleteRole(
             [FromServices] StoreRepository storeRepository,
-            string roleId)
+            string role)
         {
-            var role = await storeRepository.GetStoreRole(roleId, null, true);
-            if (role == null)
+            var roleData = await storeRepository.GetStoreRole(new StoreRoleId(role), true);
+            if (roleData == null)
                 return NotFound();
 
             return View("Confirm",
-                role.IsUsed is true
+                roleData.IsUsed is true
                     ? new ConfirmModel("Delete role",
-                        $"Unable to proceed: The role <strong>{Html.Encode(role.Role)}</strong> is currently assigned to one or more users, it cannot be removed.")
+                        $"Unable to proceed: The role <strong>{Html.Encode(roleData.Role)}</strong> is currently assigned to one or more users, it cannot be removed.")
                     : new ConfirmModel("Delete role",
-                        $"The role <strong>{Html.Encode(role.Role)}</strong> will be permanently deleted. Are you sure?",
+                        $"The role <strong>{Html.Encode(roleData.Role)}</strong> will be permanently deleted. Are you sure?",
                         "Delete"));
         }
 
-        [HttpPost("server/roles/{roleId}/delete")]
+        [HttpPost("server/roles/{role}/delete")]
         public async Task<IActionResult> DeleteRolePost(
             [FromServices] StoreRepository storeRepository,
-            string roleId)
+            string role)
         {
-            var role = await storeRepository.GetStoreRole(roleId, null, true);
-            if (role == null)
+            var roleId = new StoreRoleId(role);
+            var roleData = await storeRepository.GetStoreRole(roleId, true);
+            if (roleData == null)
                 return NotFound();
-            if (role.IsUsed is true)
+            if (roleData.IsUsed is true)
             {
                 return BadRequest();
             }
 
-            var errorMessage = await storeRepository.RemoveStoreRole(roleId, null);
+            var errorMessage = await storeRepository.RemoveStoreRole(roleId);
             if (errorMessage is null)
             {
                 
@@ -165,12 +167,12 @@ namespace BTCPayServer.Controllers
             return RedirectToAction(nameof(ListRoles));
         }
 
-        [HttpGet("server/roles/{roleId}/default")]
+        [HttpGet("server/roles/{role}/default")]
         public async Task<IActionResult> SetDefaultRole(
             [FromServices] StoreRepository storeRepository, 
-            string roleId)
+            string role)
         {
-            await storeRepository.SetDefaultRole(roleId);
+            await storeRepository.SetDefaultRole(role);
             
             TempData[WellKnownTempData.SuccessMessage] = "Role set default";
             

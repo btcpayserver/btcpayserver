@@ -67,12 +67,12 @@ namespace BTCPayServer.Services.Stores
         {
             public PermissionSet ToPermissionSet(string storeId)
             {
-                return new PermissionSet(Policies
+                return new PermissionSet(Permissions
                     .Select(s => Permission.TryCreatePermission(s, storeId, out var permission) ? permission : null)
                     .Where(s => s != null).ToArray());
             }
             public string Role { get; set; }
-            public List<string> Policies { get; set; }
+            public List<string> Permissions { get; set; }
             public bool IsServerRole { get; set; }
             public string Id { get; set; }
             public bool? IsUsed { get; set; }
@@ -131,9 +131,9 @@ namespace BTCPayServer.Services.Stores
             var match = await ctx.StoreRoles.FindAsync(role.Id);
             if (match != null && match.StoreDataId == role.StoreId)
             {
-                if (role.StoreId is null && match.Policies.Contains(Policies.CanModifyStoreSettings) &&
+                if (role.StoreId is null && match.Permissions.Contains(Policies.CanModifyStoreSettings) &&
                     await ctx.StoreRoles.CountAsync(role =>
-                        role.StoreDataId == null && role.Policies.Contains(Policies.CanModifyStoreSettings)) == 1)
+                        role.StoreDataId == null && role.Permissions.Contains(Policies.CanModifyStoreSettings)) == 1)
                     return "This is the last role that allows to modify store settings, you cannot remove it";
                 ctx.StoreRoles.Remove(match);
                 await ctx.SaveChangesAsync();
@@ -153,7 +153,7 @@ namespace BTCPayServer.Services.Stores
                 match = new Data.StoreRole() { Id = role.Id, StoreDataId = role.StoreId, Role = role.Role };
                 ctx.StoreRoles.Add(match);
             }
-            match.Policies = policies;
+            match.Permissions = policies;
             try
             {
                 await ctx.SaveChangesAsync();
@@ -194,7 +194,7 @@ namespace BTCPayServer.Services.Stores
             {
                 Id = storeRole.Id,
                 Role = storeRole.Role,
-                Policies = storeRole.Policies,
+                Permissions = storeRole.Permissions,
                 IsServerRole = storeRole.StoreDataId == null,
                 IsUsed = storeRole.Users?.Any()
             };
@@ -280,7 +280,7 @@ namespace BTCPayServer.Services.Stores
             var events = new List<Events.StoreRemovedEvent>();
             foreach (var store in await ctx.Stores.Include(data => data.UserStores)
                          .ThenInclude(store => store.StoreRole).Where(s =>
-                             s.UserStores.All(u => !u.StoreRole.Policies.Contains(Policies.CanModifyStoreSettings)))
+                             s.UserStores.All(u => !u.StoreRole.Permissions.Contains(Policies.CanModifyStoreSettings)))
                          .ToArrayAsync())
             {
                 ctx.Stores.Remove(store);
@@ -294,7 +294,7 @@ namespace BTCPayServer.Services.Stores
         {
             await using var ctx = _ContextFactory.CreateContext();
             if (!await ctx.UserStore.Include(store => store.StoreRole).AnyAsync(store =>
-                    store.StoreDataId == storeId && store.StoreRole.Policies.Contains(Policies.CanModifyStoreSettings) &&
+                    store.StoreDataId == storeId && store.StoreRole.Permissions.Contains(Policies.CanModifyStoreSettings) &&
                     userId != store.ApplicationUserId))
                 return false;
             var userStore = new UserStore() { StoreDataId = storeId, ApplicationUserId = userId };
@@ -310,7 +310,7 @@ namespace BTCPayServer.Services.Stores
             await using var ctx = _ContextFactory.CreateContext();
             if (ctx.Database.SupportDropForeignKey())
             {
-                if (!await ctx.UserStore.Where(u => u.StoreDataId == storeId && u.StoreRole.Policies.Contains(Policies.CanModifyStoreSettings)).AnyAsync())
+                if (!await ctx.UserStore.Where(u => u.StoreDataId == storeId && u.StoreRole.Permissions.Contains(Policies.CanModifyStoreSettings)).AnyAsync())
                 {
                     var store = await ctx.Stores.FindAsync(storeId);
                     if (store != null)

@@ -361,7 +361,7 @@ namespace BTCPayServer.Services.Apps
             await using var ctx = _ContextFactory.CreateContext();
             var app = await ctx.UserStore
                             .Include(store => store.StoreRole)
-                            .Where(us => us.ApplicationUserId == userId && us.StoreRole.Policies.Contains(Policies.CanModifyStoreSettings))
+                            .Where(us => us.ApplicationUserId == userId && us.StoreRole.Permissions.Contains(Policies.CanModifyStoreSettings))
                             .SelectMany(us => us.StoreData.Apps.Where(a => a.Id == appId))
                .FirstOrDefaultAsync();
             if (app == null)

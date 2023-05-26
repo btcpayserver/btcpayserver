@@ -810,7 +810,7 @@ namespace BTCPayServer.Migrations
                     b.Property<string>("Id")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Policies")
+                    b.Property<string>("Permissions")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Role")

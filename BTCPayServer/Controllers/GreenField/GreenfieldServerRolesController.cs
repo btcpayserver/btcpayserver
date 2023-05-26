@@ -32,7 +32,7 @@ public class GreenfieldServerRolesController : ControllerBase
     }
     private List<RoleData> FromModel(StoreRepository.StoreRole[] data)
     {
-        return data.Select(r => new RoleData() {Role = r.Role, Id = r.Id, Policies = r.Policies, IsServerRole = true}).ToList();
+        return data.Select(r => new RoleData() {Role = r.Role, Id = r.Id, Permissions = r.Permissions, IsServerRole = true}).ToList();
     }
 
     private IActionResult StoreNotFound()

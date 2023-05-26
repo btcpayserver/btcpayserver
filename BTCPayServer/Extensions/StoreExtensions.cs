@@ -14,7 +14,7 @@ namespace BTCPayServer
         
         public static PermissionSet GetPermissionSet(this StoreRole storeRole, string storeId)
         {
-            return new PermissionSet(storeRole.Policies
+            return new PermissionSet(storeRole.Permissions
                 .Select(s => Permission.TryCreatePermission(s, storeId, out var permission) ? permission : null)
                 .Where(s => s != null).ToArray());
         }

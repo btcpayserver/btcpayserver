@@ -320,7 +320,7 @@
                         "nullable": false,
                         "example": "Owner"
                     },
-                    "policies": {
+                    "permissions": {
                         "description": "The permissions attached to this role",
                         "type": "array",
                         "items": {

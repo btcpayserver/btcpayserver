@@ -17,7 +17,7 @@ namespace BTCPayServer.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            var policiesType = migrationBuilder.IsNpgsql() ? "TEXT[]" : "TEXT";
+            var permissionsType = migrationBuilder.IsNpgsql() ? "TEXT[]" : "TEXT";
             migrationBuilder.CreateTable(
                 name: "StoreRoles",
                 columns: table => new
@@ -25,7 +25,7 @@ namespace BTCPayServer.Migrations
                     Id = table.Column<string>(type: "TEXT", nullable: false),
                     StoreDataId = table.Column<string>(type: "TEXT", nullable: true),
                     Role = table.Column<string>(type: "TEXT", nullable: false),
-                    Policies = table.Column<string>(type: policiesType, nullable: false)
+                    Permissions = table.Column<string>(type: permissionsType, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -44,21 +44,21 @@ namespace BTCPayServer.Migrations
                 columns: new[] { "StoreDataId", "Role" },
                 unique: true);
 
-            object GetPoliciesData(string[] policies)
+            object GetPermissionsData(string[] permissions)
             {
                 if (migrationBuilder.IsNpgsql())
-                    return policies;
-                return JsonConvert.SerializeObject(policies);
+                    return permissions;
+                return JsonConvert.SerializeObject(permissions);
             }
 
             migrationBuilder.InsertData(
                 "StoreRoles",
-                columns: new[] { "Id", "Role", "Policies" },
-                columnTypes: new[] { "TEXT", "TEXT", policiesType },
+                columns: new[] { "Id", "Role", "Permissions" },
+                columnTypes: new[] { "TEXT", "TEXT", permissionsType },
                 values: new object[,]
                 {
                     {
-                        "Owner", "Owner", GetPoliciesData(new[]
+                        "Owner", "Owner", GetPermissionsData(new[]
                         {
                             "btcpay.store.canmodifystoresettings",
                             "btcpay.store.cantradecustodianaccount",
@@ -67,7 +67,7 @@ namespace BTCPayServer.Migrations
                         })
                     },
                     {
-                        "Guest", "Guest", GetPoliciesData(new[]
+                        "Guest", "Guest", GetPermissionsData(new[]
                         {
                             "btcpay.store.canviewstoresettings",
                             "btcpay.store.canmodifyinvoices",

@@ -23,7 +23,7 @@ namespace BTCPayServer.Client.Models
     public class RoleData
     {
         public string Id { get; set; }
-        public List<string> Policies { get; set; }
+        public List<string> Permissions { get; set; }
         public string Role { get; set; }
         public bool IsServerRole { get; set; }
     }

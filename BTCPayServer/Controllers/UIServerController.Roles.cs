@@ -64,7 +64,7 @@ namespace BTCPayServer.Controllers
                     return NotFound();
                 return View(new UpdateRoleViewModel()
                 {
-                    Policies = roleData.Policies,
+                    Policies = roleData.Permissions,
                     Role = roleData.Role
                 });
             }

@@ -65,7 +65,7 @@
                     <span class="fa @(sortIconClass)" />
                 </a>
             </th>
-            <th >Policies</th>
+            <th >Permissions</th>
             @if (showInUseColumn)
             {
                 <th>In use</th>
@@ -95,13 +95,13 @@
                     </div>
                 </td>
                 <td>
-                    @if (!role.Policies.Any())
+                    @if (!role.Permissions.Any())
                     {
                         <span class="text-warning">No policies</span>
                     }
                     else
                     {
-                        @foreach (var policy in role.Policies)
+                        @foreach (var policy in role.Permissions)
                         {
                             <code class="d-block text-break">@policy</code>
                         }

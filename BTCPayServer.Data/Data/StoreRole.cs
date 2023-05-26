@@ -15,7 +15,7 @@ public class StoreRole
     public string Id { get; set; }
     public string StoreDataId { get; set; }
     public string Role { get; set; }
-    public List<string> Policies { get; set; }
+    public List<string> Permissions { get; set; }
     public List<UserStore> Users { get; set; }
     public StoreData StoreData { get; set; }
 
@@ -37,7 +37,7 @@ public class StoreRole
         if (!databaseFacade.IsNpgsql())
         {
             builder.Entity<StoreRole>()
-                .Property(o => o.Policies)
+                .Property(o => o.Permissions)
                 .HasConversion(
                     v => JsonConvert.SerializeObject(v),
                     v => JsonConvert.DeserializeObject<List<string>>(v)?? new List<string>(),

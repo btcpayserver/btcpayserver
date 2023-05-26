@@ -37,7 +37,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
         private List<RoleData> FromModel(StoreRepository.StoreRole[] data)
         {
-            return data.Select(r => new RoleData() {Role = r.Role, Id = r.Id, Policies = r.Policies}).ToList();
+            return data.Select(r => new RoleData() {Role = r.Role, Id = r.Id, Policies = r.Policies, IsServerRole = r.IsServerRole}).ToList();
         }
 
         private IActionResult StoreNotFound()

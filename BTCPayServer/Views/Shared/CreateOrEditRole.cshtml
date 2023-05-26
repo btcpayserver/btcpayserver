@@ -84,7 +84,7 @@
                     @foreach (var subPolicy in policy.Value)
                     {
                         var match = storePolicyMap.SingleOrDefault(pair => pair.Key == subPolicy);
-                        RenderTree(match.Key is not null ? match : new KeyValuePair<string, HashSet<string>>(subPolicy, null), storePolicyMap, !isChecked && Model.Policies.Contains(match.Key));
+                        RenderTree(match.Key is not null ? match : new KeyValuePair<string, HashSet<string>>(subPolicy, null), storePolicyMap, !isChecked && Model.Policies.Contains(subPolicy));
                     }
                 </div>
             }

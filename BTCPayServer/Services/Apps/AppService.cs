@@ -5,6 +5,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Plugins.Crowdfund;
@@ -236,15 +237,6 @@ namespace BTCPayServer.Services.Apps
             return invoices;
         }
 
-        public async Task<StoreData[]> GetOwnedStores(string userId)
-        {
-            await using var ctx = _ContextFactory.CreateContext();
-            return await ctx.UserStore
-                .Where(us => us.ApplicationUserId == userId && us.Role == StoreRoles.Owner)
-                .Select(u => u.StoreData)
-                .ToArrayAsync();
-        }
-
         public async Task<bool> DeleteApp(AppData appData)
         {
             await using var ctx = _ContextFactory.CreateContext();
@@ -256,25 +248,25 @@ namespace BTCPayServer.Services.Apps
         public async Task<ListAppsViewModel.ListAppViewModel[]> GetAllApps(string? userId, bool allowNoUser = false, string? storeId = null)
         {
             await using var ctx = _ContextFactory.CreateContext();
-            var listApps = await ctx.UserStore
+            var listApps = (await ctx.UserStore
                 .Where(us =>
                     (allowNoUser && string.IsNullOrEmpty(userId) || us.ApplicationUserId == userId) &&
                     (storeId == null || us.StoreDataId == storeId))
-                .Join(ctx.Apps, us => us.StoreDataId, app => app.StoreDataId,
-                    (us, app) =>
-                        new ListAppsViewModel.ListAppViewModel
-                        {
-                            IsOwner = us.Role == StoreRoles.Owner,
-                            StoreId = us.StoreDataId,
-                            StoreName = us.StoreData.StoreName,
-                            AppName = app.Name,
-                            AppType = app.AppType,
-                            Id = app.Id,
-                            Created = app.Created,
-                            App = app
-                        })
-                .OrderBy(b => b.Created)
-                .ToArrayAsync();
+                .Include(store => store.StoreRole)
+                .Include(store => store.StoreData)
+                .Join(ctx.Apps, us => us.StoreDataId, app => app.StoreDataId, (us, app) => new { us, app })
+                .OrderBy(b => b.app.Created)
+                .ToArrayAsync()).Select(arg => new ListAppsViewModel.ListAppViewModel
+            {
+                Role = StoreRepository.ToStoreRole(arg.us.StoreRole),
+                StoreId = arg.us.StoreDataId,
+                StoreName = arg.us.StoreData.StoreName,
+                AppName = arg.app.Name,
+                AppType = arg.app.AppType,
+                Id = arg.app.Id,
+                Created = arg.app.Created,
+                App = arg.app
+            }).ToArray();
 
             // allowNoUser can lead to apps being included twice, unify them with distinct
             if (allowNoUser)
@@ -368,7 +360,8 @@ namespace BTCPayServer.Services.Apps
                 return null;
             await using var ctx = _ContextFactory.CreateContext();
             var app = await ctx.UserStore
-                            .Where(us => us.ApplicationUserId == userId && us.Role == StoreRoles.Owner)
+                            .Include(store => store.StoreRole)
+                            .Where(us => us.ApplicationUserId == userId && us.StoreRole.Permissions.Contains(Policies.CanModifyStoreSettings))
                             .SelectMany(us => us.StoreData.Apps.Where(a => a.Id == appId))
                .FirstOrDefaultAsync();
             if (app == null)

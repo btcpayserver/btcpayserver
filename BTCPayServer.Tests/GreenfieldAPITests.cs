@@ -21,6 +21,7 @@ using BTCPayServer.Services;
 using BTCPayServer.Services.Custodian.Client.MockCustodian;
 using BTCPayServer.Services.Notifications;
 using BTCPayServer.Services.Notifications.Blobs;
+using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
@@ -228,7 +229,7 @@ namespace BTCPayServer.Tests
             await Assert.ThrowsAsync<GreenfieldAPIException>(() => newUserClient.GetInvoices(store.Id));
 
             // if user is a guest or owner, then it should be ok
-            await unrestricted.AddStoreUser(store.Id, new StoreUserData() { UserId = newUser.Id, Role = "Guest" });
+            await unrestricted.AddStoreUser(store.Id, new StoreUserData() { UserId = newUser.Id});
             await newUserClient.GetInvoices(store.Id);
         }
 
@@ -1319,7 +1320,8 @@ namespace BTCPayServer.Tests
             // We strip the user's Owner right, so the key should not work
             using var ctx = tester.PayTester.GetService<Data.ApplicationDbContextFactory>().CreateContext();
             var storeEntity = await ctx.UserStore.SingleAsync(u => u.ApplicationUserId == user.UserId && u.StoreDataId == newStore.Id);
-            storeEntity.Role = "Guest";
+            var roleId  = (await tester.PayTester.GetService<StoreRepository>().GetStoreRoles(null)).Single(r => r.Role == "Guest").Id;
+            storeEntity.StoreRoleId = roleId;
             await ctx.SaveChangesAsync();
             await AssertHttpError(403, async () => await client.UpdateStore(newStore.Id, new UpdateStoreRequest() { Name = "B" }));
 
@@ -3365,11 +3367,16 @@ namespace BTCPayServer.Tests
 
             var client = await user.CreateClient(Policies.CanModifyStoreSettings, Policies.CanModifyServerSettings);
 
+            var roles = await client.GetServerRoles();
+            Assert.Equal(2,roles.Count);
+#pragma warning disable CS0618
+            var ownerRole = roles.Single(data => data.Role == StoreRoles.Owner);
+            var guestRole = roles.Single(data => data.Role == StoreRoles.Guest);
+#pragma warning restore CS0618
             var users = await client.GetStoreUsers(user.StoreId);
             var storeuser = Assert.Single(users);
             Assert.Equal(user.UserId, storeuser.UserId);
-            Assert.Equal(StoreRoles.Owner, storeuser.Role);
-
+            Assert.Equal(ownerRole.Id, storeuser.Role);
             var user2 = tester.NewAccount();
             await user2.GrantAccessAsync(false);
 
@@ -3380,7 +3387,7 @@ namespace BTCPayServer.Tests
             await AssertPermissionError(Policies.CanModifyStoreSettings, async () => await user2Client.AddStoreUser(user.StoreId, new StoreUserData()));
             await AssertPermissionError(Policies.CanModifyStoreSettings, async () => await user2Client.RemoveStoreUser(user.StoreId, user.UserId));
 
-            await client.AddStoreUser(user.StoreId, new StoreUserData() { Role = StoreRoles.Guest, UserId = user2.UserId });
+            await client.AddStoreUser(user.StoreId, new StoreUserData() { Role = guestRole.Id, UserId = user2.UserId });
 
             //test no access to api when only a guest
             await AssertPermissionError(Policies.CanModifyStoreSettings, async () => await user2Client.GetStoreUsers(user.StoreId));
@@ -3394,10 +3401,10 @@ namespace BTCPayServer.Tests
                 await user2Client.GetStore(user.StoreId));
 
 
-            await client.AddStoreUser(user.StoreId, new StoreUserData() { Role = StoreRoles.Owner, UserId = user2.UserId });
+            await client.AddStoreUser(user.StoreId, new StoreUserData() { Role = ownerRole.Id, UserId = user2.UserId });
             await AssertAPIError("duplicate-store-user-role", async () =>
                  await client.AddStoreUser(user.StoreId,
-                     new StoreUserData() { Role = StoreRoles.Owner, UserId = user2.UserId }));
+                     new StoreUserData() { Role = ownerRole.Id, UserId = user2.UserId }));
             await user2Client.RemoveStoreUser(user.StoreId, user.UserId);
 
 

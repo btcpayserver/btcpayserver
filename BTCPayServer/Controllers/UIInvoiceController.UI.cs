@@ -638,7 +638,7 @@ namespace BTCPayServer.Controllers
                         }
                         if (explorer is null)
                             return NotSupported("This feature is only available to BTC wallets");
-                        if (this.GetCurrentStore().Role != StoreRoles.Owner)
+                        if (!GetCurrentStore().HasPermission(GetUserId(), Policies.CanModifyStoreSettings))
                             return Forbid();
 
                         var derivationScheme = (this.GetCurrentStore().GetDerivationSchemeSettings(_NetworkProvider, network.CryptoCode))?.AccountDerivation;

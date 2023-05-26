@@ -16,32 +16,6 @@ namespace BTCPayServer.Data
 {
     public static class StoreDataExtensions
     {
-        public static PermissionSet GetPermissionSet(this StoreData store)
-        {
-            ArgumentNullException.ThrowIfNull(store);
-            if (store.Role is null)
-                return new PermissionSet();
-            return new PermissionSet(store.Role == StoreRoles.Owner
-                        ? new[]
-                        {
-                        Permission.Create(Policies.CanModifyStoreSettings, store.Id),
-                        Permission.Create(Policies.CanTradeCustodianAccount, store.Id),
-                        Permission.Create(Policies.CanWithdrawFromCustodianAccounts, store.Id),
-                        Permission.Create(Policies.CanDepositToCustodianAccounts, store.Id)
-                        }
-                        : new[]
-                        {
-                        Permission.Create(Policies.CanViewStoreSettings, store.Id),
-                        Permission.Create(Policies.CanModifyInvoices, store.Id),
-                        Permission.Create(Policies.CanViewCustodianAccounts, store.Id),
-                        Permission.Create(Policies.CanDepositToCustodianAccounts, store.Id)
-                        });
-        }
-        public static bool HasPermission(this StoreData store, string permission)
-        {
-            ArgumentNullException.ThrowIfNull(store);
-            return store.GetPermissionSet().Contains(permission, store.Id);
-        }
 
 #pragma warning disable CS0618
         public static PaymentMethodId? GetDefaultPaymentId(this StoreData storeData)

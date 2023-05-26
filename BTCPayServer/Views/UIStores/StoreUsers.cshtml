@@ -1,8 +1,13 @@
 @using BTCPayServer.Abstractions.Models
+@using BTCPayServer.Services.Stores
+@using BTCPayServer.Abstractions.Contracts
 @model StoreUsersViewModel
+@inject IScopeProvider ScopeProvider
+@inject StoreRepository StoreRepository
 @{
     Layout = "../Shared/_NavLayout.cshtml";
     ViewData.SetActivePage(StoreNavPages.Users, "Store Users", Context.GetStoreData().Id);
+    var roles = new SelectList(await StoreRepository.GetStoreRoles(ScopeProvider.GetCurrentStoreId()), nameof(StoreRepository.StoreRole.Id), nameof(StoreRepository.StoreRole.Role), Model.Role);
 }
 
 <div class="row">
@@ -24,9 +29,7 @@
                     <input asp-for="Email" type="text" class="form-control" placeholder="user@example.com">
                 </div>
                 <div class="ms-3">
-                    <select asp-for="Role" class="form-select">
-                        <option value="@StoreRoles.Owner">Owner</option>
-                        <option value="@StoreRoles.Guest">Guest</option>
+                    <select asp-for="Role" class="form-select" asp-items="roles">
                     </select>
                 </div>
                 <div class="ms-3">

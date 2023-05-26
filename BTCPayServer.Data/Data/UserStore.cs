@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
 namespace BTCPayServer.Data
@@ -9,7 +10,10 @@ namespace BTCPayServer.Data
 
         public string StoreDataId { get; set; }
         public StoreData StoreData { get; set; }
-        public string Role { get; set; }
+        [Column("Role")]
+        public string StoreRoleId { get; set; }
+        public StoreRole StoreRole { get; set; }
+        
 
 
         internal static void OnModelCreating(ModelBuilder builder)
@@ -32,6 +36,10 @@ namespace BTCPayServer.Data
                 .HasOne(pt => pt.StoreData)
                 .WithMany(t => t.UserStores)
                 .HasForeignKey(pt => pt.StoreDataId);
+
+            builder.Entity<UserStore>().HasOne(e => e.StoreRole)
+                .WithMany(role => role.Users)
+                .HasForeignKey(e => e.StoreRoleId);
         }
     }
 }

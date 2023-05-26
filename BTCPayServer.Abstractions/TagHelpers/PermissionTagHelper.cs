@@ -6,7 +6,8 @@ using Microsoft.Extensions.Logging;
 
 namespace BTCPayServer.Abstractions.TagHelpers;
 
-[HtmlTargetElement(Attributes = nameof(Permission))]
+[HtmlTargetElement(Attributes = "[permission]")]
+[HtmlTargetElement(Attributes = "[not-permission]"  )]
 public class PermissionTagHelper : TagHelper
 {
     private readonly IAuthorizationService _authorizationService;
@@ -21,16 +22,19 @@ public class PermissionTagHelper : TagHelper
     }
 
     public string Permission { get; set; }
+    public string NotPermission { get; set; }
     public string PermissionResource { get; set; }
+    
 
     public override async Task ProcessAsync(TagHelperContext context, TagHelperOutput output)
     {
-        if (string.IsNullOrEmpty(Permission))
+        if (string.IsNullOrEmpty(Permission) && string.IsNullOrEmpty(NotPermission))
             return;
         if (_httpContextAccessor.HttpContext is null)
             return;
 
-        var key = $"{Permission}_{PermissionResource}";
+        var expectedResult = !string.IsNullOrEmpty(Permission);
+        var key = $"{Permission??NotPermission}_{PermissionResource}";
         if (!_httpContextAccessor.HttpContext.Items.TryGetValue(key, out var o) ||
             o is not AuthorizationResult res)
         {
@@ -39,7 +43,7 @@ public class PermissionTagHelper : TagHelper
                 Permission);
             _httpContextAccessor.HttpContext.Items.Add(key, res);
         }
-        if (!res.Succeeded)
+        if (expectedResult != res.Succeeded)
         {
             output.SuppressOutput();
         }

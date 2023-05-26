@@ -470,7 +470,10 @@ namespace BTCPayServer.Tests
                     var req = await _server.GetNextRequest(cancellation);
                     var bytes = await req.Request.Body.ReadBytesAsync((int)req.Request.Headers.ContentLength);
                     var callback = Encoding.UTF8.GetString(bytes);
-                    _webhookEvents.Add(JsonConvert.DeserializeObject<WebhookInvoiceEvent>(callback));
+                    lock (_webhookEvents)
+                    {
+                        _webhookEvents.Add(JsonConvert.DeserializeObject<WebhookInvoiceEvent>(callback));
+                    }
                     req.Response.StatusCode = 200;
                     _server.Done();
                 }
@@ -487,18 +490,21 @@ namespace BTCPayServer.Tests
         {
             int retry = 0;
 retry:
-            foreach (var evt in WebhookEvents)
+            lock (WebhookEvents)
             {
-                if (evt.Type == eventType)
+                foreach (var evt in WebhookEvents)
                 {
-                    var typedEvt = evt.ReadAs<TEvent>();
-                    try
+                    if (evt.Type == eventType)
                     {
-                        assert(typedEvt);
-                        return typedEvt;
-                    }
-                    catch (XunitException)
-                    {
+                        var typedEvt = evt.ReadAs<TEvent>();
+                        try
+                        {
+                            assert(typedEvt);
+                            return typedEvt;
+                        }
+                        catch (XunitException)
+                        {
+                        }
                     }
                 }
             }
@@ -540,12 +546,12 @@ retry:
         public async Task AddGuest(string userId)
         {
             var repo = this.parent.PayTester.GetService<StoreRepository>();
-            await repo.AddStoreUser(StoreId, userId, "Guest");
+            await repo.AddStoreUser(StoreId, userId, StoreRoleId.Guest);
         }
         public async Task AddOwner(string userId)
         {
             var repo = this.parent.PayTester.GetService<StoreRepository>();
-            await repo.AddStoreUser(StoreId, userId, "Owner");
+            await repo.AddStoreUser(StoreId, userId, StoreRoleId.Owner);
         }
     }
 }

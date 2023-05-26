@@ -267,6 +267,21 @@ namespace BTCPayServer.Client
             PolicyHasChild(policyMap, Policies.CanModifyInvoices, Policies.CanViewInvoices, Policies.CanCreateInvoice, Policies.CanCreateLightningInvoiceInStore);
             PolicyHasChild(policyMap, Policies.CanViewStoreSettings, Policies.CanViewInvoices, Policies.CanViewPaymentRequests);
 
+            var missingPolicies = Policies.AllPolicies.ToHashSet();
+            //recurse through the tree to see which policies are not included in the tree
+            foreach (var policy in policyMap)
+            {
+                missingPolicies.Remove(policy.Key);
+                foreach (var subPolicy in policy.Value)
+                {
+                    missingPolicies.Remove(subPolicy);
+                }
+            }
+
+            foreach (var missingPolicy in missingPolicies)
+            {
+                policyMap.Add(missingPolicy, new HashSet<string>());
+            }
             return new ReadOnlyDictionary<string, HashSet<string>>(policyMap);
         }
 

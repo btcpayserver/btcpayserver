@@ -22,7 +22,7 @@ namespace BTCPayServer.Controllers
             string sortOrder = null
         )
         {
-            model = this.ParseListQuery(model ?? new RolesViewModel());
+            model ??= new RolesViewModel();
 
             model.DefaultRole = (await storeRepository.GetDefaultRole()).Role;
             var roles = await storeRepository.GetStoreRoles(null);

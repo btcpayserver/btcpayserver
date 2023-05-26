@@ -47,6 +47,42 @@
                     }
                 ]
             }
+        },
+        "/api/v1/server/roles": {
+            "get": {
+                "tags": [
+                    "ServerInfo"
+                ],
+                "summary": "Get store's roles",
+                "description": "View information about the store's roles at the server's scope",
+                "operationId": "Server_GetStoreRoles",
+                "responses": {
+                    "200": {
+                        "description": "The user roles available at the server's scope",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RoleData"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to get the store's roles"
+                    },
+                    "404": {
+                        "description": "Store not found"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.server.canmodifyserversettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
         }
     },
     "components": {

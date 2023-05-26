@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
@@ -32,7 +32,7 @@ public class GreenfieldServerRolesController : ControllerBase
     }
     private List<RoleData> FromModel(StoreRepository.StoreRole[] data)
     {
-        return data.Select(r => new RoleData() {Role = r.Role, Id = r.Id, Policies = r.Policies}).ToList();
+        return data.Select(r => new RoleData() {Role = r.Role, Id = r.Id, Policies = r.Policies, IsServerRole = true}).ToList();
     }
 
     private IActionResult StoreNotFound()

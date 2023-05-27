@@ -603,8 +603,8 @@ retry:
             }
             else
             {
-                role = str[0..i];
-                storeId = str[(i + 2)..];
+                storeId = str[0..i];
+                role = str[(i + 2)..];
                 return new StoreRoleId(storeId, role);
             }
         }

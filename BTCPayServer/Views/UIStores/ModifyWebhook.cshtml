@@ -104,6 +104,7 @@
                                     {
                                         <span class="d-flex align-items-center fa fa-times text-danger" title="@delivery.ErrorMessage"></span>
                                     }
+                                    @if (!delivery.Pruned) {
                                     <span class="ms-3">
                                         <a asp-action="WebhookDelivery"
                                            asp-route-storeId="@this.Context.GetRouteValue("storeId")"
@@ -113,6 +114,7 @@
                                             @delivery.Id
                                         </a>
                                     </span>
+                                    }
                                 </span>
                                 <span class="d-flex align-items-center">
                                     <strong class="d-flex align-items-center text-muted small">

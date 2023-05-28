@@ -22,13 +22,16 @@ namespace BTCPayServer.Models.StoreViewModels
             Success = blob.Status == WebhookDeliveryStatus.HttpSuccess;
             ErrorMessage = blob.ErrorMessage ?? "Success";
             Time = s.Timestamp;
-            Type = blob.ReadRequestAs<WebhookEvent>().Type;
+            var evt = blob.ReadRequestAs<WebhookEvent>();
+            Type = evt.Type;
+            Pruned = evt.IsPruned();
             WebhookId = s.Id;
             PayloadUrl = s.Webhook?.GetBlob().Url;
         }
         public string Id { get; set; }
         public DateTimeOffset Time { get; set; }
         public WebhookEventType Type { get; private set; }
+        public bool Pruned { get; set; }
         public string WebhookId { get; set; }
         public bool Success { get; set; }
         public string ErrorMessage { get; set; }

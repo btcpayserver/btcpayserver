@@ -1019,11 +1019,11 @@ namespace BTCPayServer.Migrations
                         .HasMaxLength(25)
                         .HasColumnType("TEXT");
 
-                    b.Property<byte[]>("Blob")
-                        .HasColumnType("BLOB");
-
-                    b.Property<string>("Blob2")
+                    b.Property<string>("Blob")
                         .HasColumnType("TEXT");
+
+                    b.Property<bool>("Pruned")
+                        .HasColumnType("INTEGER");
 
                     b.Property<DateTimeOffset>("Timestamp")
                         .HasColumnType("TEXT");
@@ -1034,6 +1034,8 @@ namespace BTCPayServer.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Timestamp");
 
                     b.HasIndex("WebhookId");
 

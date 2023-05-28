@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using BTCPayServer.BIP78.Sender;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
+using BTCPayServer.HostedServices;
 using BTCPayServer.Lightning;
 using BTCPayServer.Logging;
 using BTCPayServer.Models;
@@ -25,6 +26,7 @@ using BTCPayServer.Services.Wallets;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBitcoin.Payment;
@@ -113,6 +115,14 @@ namespace BTCPayServer
                 value = value / 10m;
             }
             return value;
+        }
+
+        public static IServiceCollection AddScheduledTask<T>(this IServiceCollection services, TimeSpan every)
+            where T : class, IPeriodicTask
+        {
+            services.AddSingleton<T>();
+            services.AddTransient<ScheduledTask>(o => new ScheduledTask(typeof(T), every));
+            return services;
         }
 
         public static PaymentMethodId GetpaymentMethodId(this InvoiceCryptoInfo info)

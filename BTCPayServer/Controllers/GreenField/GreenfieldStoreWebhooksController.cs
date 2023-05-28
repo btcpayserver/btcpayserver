@@ -153,7 +153,14 @@ namespace BTCPayServer.Controllers.Greenfield
             var delivery = await StoreRepository.GetWebhookDelivery(CurrentStoreId, webhookId, deliveryId);
             if (delivery is null)
                 return WebhookDeliveryNotFound();
+            if (delivery.GetBlob().IsPruned())
+                return WebhookDeliveryPruned();
             return this.Ok(new JValue(await WebhookSender.Redeliver(deliveryId)));
+        }
+
+        private IActionResult WebhookDeliveryPruned()
+        {
+            return this.CreateAPIError(409, "webhookdelivery-pruned", "This webhook delivery has been pruned, so it can't be redelivered");
         }
 
         [HttpGet("~/api/v1/stores/{storeId}/webhooks/{webhookId}/deliveries/{deliveryId}/request")]
@@ -162,6 +169,8 @@ namespace BTCPayServer.Controllers.Greenfield
             var delivery = await StoreRepository.GetWebhookDelivery(CurrentStoreId, webhookId, deliveryId);
             if (delivery is null)
                 return WebhookDeliveryNotFound();
+            if (delivery.GetBlob().IsPruned())
+                return WebhookDeliveryPruned();
             return File(delivery.GetBlob().Request, "application/json");
         }
 

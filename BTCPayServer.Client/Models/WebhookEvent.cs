@@ -51,6 +51,10 @@ namespace BTCPayServer.Client.Models
         public DateTimeOffset Timestamp { get; set; }
         [JsonExtensionData]
         public IDictionary<string, JToken> AdditionalData { get; set; }
+        public bool IsPruned()
+        {
+            return DeliveryId is null;
+        }
         public T ReadAs<T>()
         {
             var str = JsonConvert.SerializeObject(this, DefaultSerializerSettings);

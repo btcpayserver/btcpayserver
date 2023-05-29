@@ -836,8 +836,8 @@ namespace BTCPayServer.Services.Invoices
         {
             return (Status == InvoiceStatusLegacy.Paid) ||
                    (Status == InvoiceStatusLegacy.New) ||
-                   ((Status == InvoiceStatusLegacy.New || Status == InvoiceStatusLegacy.Expired) && ExceptionStatus == InvoiceExceptionStatus.PaidPartial) ||
-                   ((Status == InvoiceStatusLegacy.New || Status == InvoiceStatusLegacy.Expired) && ExceptionStatus == InvoiceExceptionStatus.PaidLate) ||
+                   ((Status == InvoiceStatusLegacy.New || Status == InvoiceStatusLegacy.Expired)) ||
+                   ((Status == InvoiceStatusLegacy.New || Status == InvoiceStatusLegacy.Expired)) ||
                    (Status != InvoiceStatusLegacy.Complete && ExceptionStatus == InvoiceExceptionStatus.Marked) ||
                    (Status == InvoiceStatusLegacy.Invalid);
         }
@@ -846,8 +846,8 @@ namespace BTCPayServer.Services.Invoices
         {
             return (Status == InvoiceStatusLegacy.Paid) ||
                    (Status == InvoiceStatusLegacy.New) ||
-                   ((Status == InvoiceStatusLegacy.New || Status == InvoiceStatusLegacy.Expired) && ExceptionStatus == InvoiceExceptionStatus.PaidPartial) ||
-                   ((Status == InvoiceStatusLegacy.New || Status == InvoiceStatusLegacy.Expired) && ExceptionStatus == InvoiceExceptionStatus.PaidLate) ||
+                   ((Status == InvoiceStatusLegacy.New || Status == InvoiceStatusLegacy.Expired)) ||
+                   ((Status == InvoiceStatusLegacy.New || Status == InvoiceStatusLegacy.Expired)) ||
                    (Status != InvoiceStatusLegacy.Invalid && ExceptionStatus == InvoiceExceptionStatus.Marked);
         }
 

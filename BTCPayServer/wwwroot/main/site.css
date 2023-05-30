@@ -10,18 +10,17 @@
 
 /* Hide sensitive info */
 [data-hide-sensitive-info="true"] [data-sensitive] {
-    visibility: hidden;
+    display: inline-flex;
     position: relative;
+    visibility: hidden;
+    overflow: hidden;
 }
 
 [data-hide-sensitive-info="true"] [data-sensitive]:before {
-    content: '***';
+    content: '***********************';
     visibility: visible;
     position: absolute;
-}
-
-[data-hide-sensitive-info="true"] .text-end [data-sensitive]:before {
-    right: 0;
+    top: .2em;
 }
 
 [data-hide-sensitive-info="true"] .store-wallet-balance .ct-label.ct-vertical.ct-start {

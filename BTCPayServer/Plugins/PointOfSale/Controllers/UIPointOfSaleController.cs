@@ -240,6 +240,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             }
 
             var store = await _appService.GetStore(app);
+            var storeBlob = store.GetStoreBlob();
             var posFormId = settings.FormId;
             var formData = await FormDataService.GetForm(posFormId);
 
@@ -297,7 +298,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                     RedirectAutomatically = settings.RedirectAutomatically,
                     SupportedTransactionCurrencies = paymentMethods,
                     RequiresRefundEmail = requiresRefundEmail == RequiresRefundEmail.InheritFromStore
-                        ? store.GetStoreBlob().RequiresRefundEmail
+                        ? storeBlob.RequiresRefundEmail
                         : requiresRefundEmail == RequiresRefundEmail.On,
                 }, store, HttpContext.Request.GetAbsoluteRoot(),
                     new List<string> { AppService.GetAppInternalTag(appId) },
@@ -355,6 +356,10 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                         meta.Merge(formResponseJObject);
                         entity.Metadata = InvoiceMetadata.FromJObject(meta);
                     });
+                if (price is 0 && storeBlob.ReceiptOptions.Enabled is true)
+                {
+                    return RedirectToAction(nameof(UIInvoiceController.InvoiceReceipt), "UIInvoice", new { invoiceId = invoice.Data.Id });
+                }
                 return RedirectToAction(nameof(UIInvoiceController.Checkout), "UIInvoice", new { invoiceId = invoice.Data.Id });
             }
             catch (BitpayHttpException e)

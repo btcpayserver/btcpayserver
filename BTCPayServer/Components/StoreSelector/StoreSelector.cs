@@ -1,5 +1,6 @@
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Identity;
@@ -38,12 +39,14 @@ namespace BTCPayServer.Components.StoreSelector
                         .FirstOrDefault()?
                         .Network.CryptoCode;
                     var walletId = cryptoCode != null ? new WalletId(store.Id, cryptoCode) : null;
+                    var role = store.GetStoreRoleOfUser(userId);
                     return new StoreSelectorOption
                     {
                         Text = store.StoreName,
                         Value = store.Id,
                         Selected = store.Id == currentStore?.Id,
-                        WalletId = walletId
+                        WalletId = walletId,
+                        IsOwner = role != null && role.Permissions.Contains(Policies.CanModifyStoreSettings)
                     };
                 })
                 .OrderBy(s => s.Text)

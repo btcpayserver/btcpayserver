@@ -3,7 +3,6 @@
 @using BTCPayServer.Abstractions.Contracts
 @using BTCPayServer.Client
 @using BTCPayServer.Services
-@inject SignInManager<ApplicationUser> SignInManager
 @inject BTCPayServerEnvironment Env
 @inject IFileService FileService
 @model BTCPayServer.Components.StoreSelector.StoreSelectorViewModel
@@ -33,8 +32,7 @@
 else
 {
     <a asp-controller="UIStores" asp-action="Dashboard" permission="@Policies.CanModifyStoreSettings" asp-route-storeId="@Model.CurrentStoreId" id="StoreSelectorHome" class="navbar-brand py-2">@{await LogoContent();}</a>
-
-    <a asp-controller="UIInvoice" asp-action="ListInvoices" not-permission="@Policies.CanModifyStoreSettings"  asp-route-storeId="@Model.CurrentStoreId" id="StoreSelectorHome" class="navbar-brand py-2">@{await LogoContent();}</a>
+    <a asp-controller="UIInvoice" asp-action="ListInvoices" not-permission="@Policies.CanModifyStoreSettings" asp-route-storeId="@Model.CurrentStoreId" id="StoreSelectorHome" class="navbar-brand py-2">@{await LogoContent();}</a>
 }
 @if (Model.Options.Any())
 {

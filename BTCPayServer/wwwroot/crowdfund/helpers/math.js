@@ -1,5 +1,5 @@
-Number.prototype.noExponents= function(){
-    var data= String(this).split(/[eE]/);
+String.prototype.noExponents= function(){
+    const data = String(this).split(/[eE]/);
     if(data.length== 1) return data[0];
 
     var  z= '', sign= this<0? '-':'',
@@ -14,4 +14,8 @@ Number.prototype.noExponents= function(){
     mag -= str.length;
     while(mag--) z += '0';
     return str + z;
+}
+
+Number.prototype.noExponents= function(){
+    return  String(this).noExponents();
 };

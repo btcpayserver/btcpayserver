@@ -50,19 +50,22 @@ document.addEventListener("DOMContentLoaded",function (ev) {
                 }
             },
             setAmount: function (amount) {
-                this.amount = this.perk.price.type === 0? null : (amount || 0).noExponents();
+                if(typeof amount === "string"){
+                    amount = parseFloat(amount);
+                }
+                this.amount = this.perk.priceType === "Topup"? null : (amount || 0).noExponents();
                 this.expanded = false;
             }
         },
         mounted: function () {
-            this.setAmount(this.perk.price.value);
+            this.setAmount(this.perk.price);
         },
         watch: {
             perk: function (newValue, oldValue) {
-                if(newValue.price.type ===0){
+                if(newValue.price.type === "Topup"){
                     this.setAmount();
-                }else if (newValue.price.value != oldValue.price.value) {
-                    this.setAmount(newValue.price.value);
+                }else if (newValue.price != oldValue.price) {
+                    this.setAmount(newValue.price);
                 }
             }
         }
@@ -147,9 +150,9 @@ document.addEventListener("DOMContentLoaded",function (ev) {
                 return result;
             },
             perks: function(){
-                var result = [];
-                for (var i = 0; i < this.srvModel.perks.length; i++) {
-                    var currentPerk = this.srvModel.perks[i];
+                const result = [];
+                for (let i = 0; i < this.srvModel.perks.length; i++) {
+                    const currentPerk = this.srvModel.perks[i];
                     if(this.srvModel.perkCount.hasOwnProperty(currentPerk.id)){
                         currentPerk.sold = this.srvModel.perkCount[currentPerk.id];
                     }

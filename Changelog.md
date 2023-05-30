@@ -19,6 +19,7 @@ This data, generally used for debugging integrations, will be regularly purged. 
 * Fix: When using LNbank, payments would sometimes not be detected by BTCPay Server (dennisreimann/btcpayserver-plugin-lnbank#33) @NicolasDorier
 * Fix: If a altcoins is disabled from BTCPay and payout processor is used, it would crash at restart (#4997) @NicolasDorier
 * Fix: When the default currency of the store is SATS, the display on the dashboard was broken (#4994) @dennisreimann
+* Fix: When using a LND node, multi path payments with custom records would not be detected as valid payment @dennisreimann
 
 ### Improvements
 

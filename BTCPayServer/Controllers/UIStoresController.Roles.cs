@@ -101,12 +101,12 @@ namespace BTCPayServer.Controllers
             }
 
             var r = await storeRepository.AddOrUpdateStoreRole(roleId, viewModel.Policies);
-            if (r is null)
+            if (r.error is not null)
             {
                 TempData.SetStatusMessageModel(new StatusMessageModel()
                 {
                     Severity = StatusMessageModel.StatusSeverity.Error,
-                    Message = "Role could not be updated"
+                    Message = r.error
                 });
                 return View(viewModel);
             }

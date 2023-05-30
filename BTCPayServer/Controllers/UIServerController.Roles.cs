@@ -95,12 +95,12 @@ namespace BTCPayServer.Controllers
             }
 
             var r = await storeRepository.AddOrUpdateStoreRole(new StoreRoleId(role), viewModel.Policies);
-            if (r is null)
+            if (r.error is not null)
             {
                 TempData.SetStatusMessageModel(new StatusMessageModel()
                 {
                     Severity = StatusMessageModel.StatusSeverity.Error,
-                    Message = "Role could not be updated"
+                    Message = r.error
                 });
                 return View(viewModel);
             }
@@ -167,9 +167,18 @@ namespace BTCPayServer.Controllers
             [FromServices] StoreRepository storeRepository, 
             string role)
         {
-            await storeRepository.SetDefaultRole(role);
+            var resolved  = await storeRepository.ResolveStoreRoleId(null, role);
+            if (resolved is null)
+            {
+                TempData[WellKnownTempData.ErrorMessage] = "Role could not be set as default";
+            }
+            else
+            {
+                
+                await storeRepository.SetDefaultRole(role);
             
-            TempData[WellKnownTempData.SuccessMessage] = "Role set default";
+                TempData[WellKnownTempData.SuccessMessage] = "Role set default";
+            }
             
             return RedirectToAction(nameof(ListRoles));
         }

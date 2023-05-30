@@ -143,7 +143,7 @@ namespace BTCPayServer.Services.Stores
             return "Role not found";
         }
 
-        public async Task<StoreRole?> AddOrUpdateStoreRole(StoreRoleId role, List<string> policies)
+        public async Task<(StoreRole? role, string? error)> AddOrUpdateStoreRole(StoreRoleId role, List<string> policies)
         {
             policies = policies.Where(s => Policies.IsValidPolicy(s) && Policies.IsStorePolicy(s)).ToList();
             await using var ctx = _ContextFactory.CreateContext();
@@ -153,6 +153,21 @@ namespace BTCPayServer.Services.Stores
                 match = new Data.StoreRole() { Id = role.Id, StoreDataId = role.StoreId, Role = role.Role };
                 ctx.StoreRoles.Add(match);
             }
+            else if(match.Permissions.Contains(Policies.CanModifyStoreSettings) && !policies.Contains(Policies.CanModifyStoreSettings))
+            {
+                //the role is being nerfed, we need to check that there is another role that can modify store settings and that a user with this role exists on all existing stores
+                var effectedStores = await ctx.UserStore
+                    .Where(store => store.StoreRoleId == role.Id)
+                    .Include(store => store.StoreData).ThenInclude(data => data.UserStores)
+                    .ThenInclude(us => us.StoreRole).ToListAsync();
+
+                if (effectedStores.Any(store => store.StoreData.UserStores.All(userStore => !userStore.StoreRole.Permissions.Contains(Policies.CanModifyStoreSettings))))
+                {
+                    return (null,
+                        "The updated permissions would make some stores unmanageable, and then automatically removed. You need to assign another role to the users of these stores first.");
+
+                }
+            }
             match.Permissions = policies;
             try
             {
@@ -160,9 +175,9 @@ namespace BTCPayServer.Services.Stores
             }
             catch (DbUpdateException)
             {
-                return null;
+                return (null, "Could not be saved");
             }
-            return ToStoreRole(match);
+            return (ToStoreRole(match), null);
         }
 
 
@@ -272,7 +287,6 @@ namespace BTCPayServer.Services.Stores
             if (roleId?.StoreId != null && storeId != roleId.StoreId)
                 throw new ArgumentException("The roleId doesn't belong to this storeId", nameof(roleId));
         }
-
         public async Task CleanUnreachableStores()
         {
             await using var ctx = _ContextFactory.CreateContext();

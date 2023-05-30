@@ -255,7 +255,7 @@
 
                             <span class="text-muted small">
                                 @{
-                                    var buttonText = string.IsNullOrEmpty(item.BuyButtonText) ? item.PriceType != ViewPointOfSaleViewModel.ItemPriceType.Fixed ? Model.CustomButtonText : Model.ButtonText : item.BuyButtonText;
+                                    var buttonText = string.IsNullOrEmpty(item.BuyButtonText) ? item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Topup ? Model.CustomButtonText : Model.ButtonText : item.BuyButtonText;
                                     if (item.PriceType != ViewPointOfSaleViewModel.ItemPriceType.Topup)
                                     {
                                         var formatted = DisplayFormatter.Currency(item.Price ?? 0, Model.CurrencyCode, DisplayFormatter.CurrencyFormat.Symbol);

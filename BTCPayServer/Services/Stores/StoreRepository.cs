@@ -233,7 +233,8 @@ namespace BTCPayServer.Services.Stores
         {
             if (string.IsNullOrWhiteSpace(role))
                 return null;
-            if (role.Contains("::", StringComparison.OrdinalIgnoreCase) || storeId.Contains("::", StringComparison.OrdinalIgnoreCase))
+            var isStoreRole = role.Contains("::", StringComparison.OrdinalIgnoreCase);
+            if(isStoreRole && (string.IsNullOrEmpty(storeId) || !role.Contains(storeId, StringComparison.InvariantCultureIgnoreCase)))
                 return null;
             var roleId = StoreRoleId.Parse(role);
             if (roleId.StoreId != null && roleId.StoreId != storeId)

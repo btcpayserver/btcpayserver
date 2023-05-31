@@ -111,12 +111,6 @@ namespace BTCPayServer.Hosting
                     settings.DeprecatedLightningConnectionStringCheck = true;
                     await _Settings.UpdateSetting(settings);
                 }
-                if (!settings.UnreachableStoreCheck)
-                {
-                    await UnreachableStoreCheck();
-                    settings.UnreachableStoreCheck = true;
-                    await _Settings.UpdateSetting(settings);
-                }
                 if (!settings.ConvertMultiplierToSpread)
                 {
                     await ConvertMultiplierToSpread();
@@ -1066,11 +1060,6 @@ retry:
             {
                 return rate * (decimal)Multiplier;
             }
-        }
-
-        private Task UnreachableStoreCheck()
-        {
-            return _StoreRepository.CleanUnreachableStores();
         }
 
         private async Task DeprecatedLightningConnectionStringCheck()

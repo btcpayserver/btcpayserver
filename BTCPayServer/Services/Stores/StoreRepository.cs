@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Amazon.S3;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
@@ -229,18 +230,19 @@ namespace BTCPayServer.Services.Stores
         /// <param name="storeId"></param>
         /// <param name="role"></param>
         /// <returns></returns>
-        public async Task<StoreRoleId?> ResolveStoreRoleId(string storeId, string? role)
+        public async Task<StoreRoleId?> ResolveStoreRoleId(string? storeId, string? role)
         {
             if (string.IsNullOrWhiteSpace(role))
                 return null;
-            var isStoreRole = role.Contains("::", StringComparison.OrdinalIgnoreCase);
-            if(isStoreRole && (string.IsNullOrEmpty(storeId) || !role.Contains(storeId, StringComparison.InvariantCultureIgnoreCase)))
+            if (storeId?.Contains("::", StringComparison.OrdinalIgnoreCase) is true)
                 return null;
             var roleId = StoreRoleId.Parse(role);
             if (roleId.StoreId != null && roleId.StoreId != storeId)
                 return null;
             if ((await GetStoreRole(roleId)) != null)
                 return roleId;
+            if (string.IsNullOrEmpty(storeId))
+                return null;
             if (roleId.IsServerRole)
                 roleId = new StoreRoleId(storeId, role);
             if ((await GetStoreRole(roleId)) != null)

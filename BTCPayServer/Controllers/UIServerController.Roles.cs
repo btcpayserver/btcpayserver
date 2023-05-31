@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
-using Amazon.S3.Transfer;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
@@ -167,9 +166,17 @@ namespace BTCPayServer.Controllers
             [FromServices] StoreRepository storeRepository, 
             string role)
         {
-            await storeRepository.SetDefaultRole(role);
-            
-            TempData[WellKnownTempData.SuccessMessage] = "Role set default";
+            var resolved = await storeRepository.ResolveStoreRoleId(null, role);
+            if (resolved is null)
+            {
+                TempData[WellKnownTempData.ErrorMessage] = "Role could not be set as default";
+            }
+            else
+            {
+
+                await storeRepository.SetDefaultRole(role);
+                TempData[WellKnownTempData.SuccessMessage] = "Role set default";
+            }
             
             return RedirectToAction(nameof(ListRoles));
         }

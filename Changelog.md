@@ -32,6 +32,7 @@ This data, generally used for debugging integrations, will be regularly purged. 
 * Improve create first store case (#4951) @dennisreimann @dstrukt
 * Improve Refund UI/UX (#4934 #3839 #4812) @dennisreimann @dstrukt
 * Prune old webhook delivery data (#5005) @NicolasDorier
+* Can mark expired invoices as complete or invalid (#5006) @dennisreimann
 
 ## 1.9.3
 

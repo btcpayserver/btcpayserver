@@ -356,7 +356,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                         meta.Merge(formResponseJObject);
                         entity.Metadata = InvoiceMetadata.FromJObject(meta);
                     });
-                if (price is 0 && storeBlob.ReceiptOptions.Enabled is true)
+                if (price is 0 && storeBlob.ReceiptOptions?.Enabled is true)
                 {
                     return RedirectToAction(nameof(UIInvoiceController.InvoiceReceipt), "UIInvoice", new { invoiceId = invoice.Data.Id });
                 }

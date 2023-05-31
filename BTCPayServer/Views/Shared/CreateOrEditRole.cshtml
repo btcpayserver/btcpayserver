@@ -41,7 +41,8 @@
 				}
 				else
 				{
-					<input asp-for="Role" required="required" class="form-control" readonly />					
+				    <input type="hidden" asp-for="Role"/>
+					<input  required="required" class="form-control" disabled value="@Model.Role" />					
 				}
 				<span asp-validation-for="Role" class="text-danger"></span>
             </div>

@@ -271,6 +271,7 @@ namespace BTCPayServer.Controllers
             GenerateWalletResponse response;
             try
             {
+				//this is required because AdditionalOptions comes from NBXPlorer and is a readonly dictionary, so we overwrite it
                 if(request.AdditionalOptions is not null)
                     ((GenerateWalletRequest)request).AdditionalOptions = new ReadOnlyDictionary<string, string>(request.AdditionalOptions);
                 response = await client.GenerateWalletAsync(request);

@@ -141,7 +141,7 @@ namespace BTCPayServer.Controllers
                         "Delete"));
         }
 
-        [HttpPost("{storeId}/roles/{roleId}/delete")]
+        [HttpPost("{storeId}/roles/{role}/delete")]
         public async Task<IActionResult> DeleteRolePost(
             string storeId,
             [FromServices] StoreRepository storeRepository,

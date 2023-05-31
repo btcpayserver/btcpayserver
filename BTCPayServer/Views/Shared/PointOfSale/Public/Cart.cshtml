@@ -236,6 +236,10 @@
                 @for (var index = 0; index < Model.Items.Length; index++)
                 {
                     var item = Model.Items[index];
+                    if (item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Topup)
+                    {
+                        continue;
+                    }
                     var image = item.Image;
                     var description = item.Description;
 

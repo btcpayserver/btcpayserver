@@ -40,7 +40,7 @@ namespace BTCPayServer.Controllers.Greenfield
         public Task<ActionResult<IEnumerable<Client.Models.StoreData>>> GetStores()
         {
             var stores = HttpContext.GetStoresData();
-            return Task.FromResult<ActionResult<IEnumerable<Client.Models.StoreData>>>(Ok(stores.Select(FromModel)));
+            return Task.FromResult<ActionResult<IEnumerable<Client.Models.StoreData>>>(Ok(stores.Select(data => FromModel(data, _paymentTypeRegistry))));
         }
 
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -52,7 +52,7 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 return StoreNotFound();
             }
-            return Ok(FromModel(store));
+            return Ok(FromModel(store, _paymentTypeRegistry));
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -89,7 +89,7 @@ namespace BTCPayServer.Controllers.Greenfield
             _paymentTypeRegistry.TryParsePaymentMethod(request.DefaultPaymentMethod, out var defaultPaymentMethodId);
             ToModel(request, store, defaultPaymentMethodId);
             await _storeRepository.CreateStore(_userManager.GetUserId(User), store);
-            return Ok(FromModel(store));
+            return Ok(FromModel(store, _paymentTypeRegistry));
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -111,10 +111,10 @@ namespace BTCPayServer.Controllers.Greenfield
 
             ToModel(request, store, defaultPaymentMethodId);
             await _storeRepository.UpdateStore(store);
-            return Ok(FromModel(store));
+            return Ok(FromModel(store, _paymentTypeRegistry));
         }
 
-        internal static Client.Models.StoreData FromModel(Data.StoreData data)
+        internal static Client.Models.StoreData FromModel(StoreData data, PaymentTypeRegistry paymentTypeRegistry)
         {
             var storeBlob = data.GetStoreBlob();
             return new Client.Models.StoreData
@@ -124,7 +124,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 Website = data.StoreWebsite,
                 SupportUrl = storeBlob.StoreSupportUrl,
                 SpeedPolicy = data.SpeedPolicy,
-                DefaultPaymentMethod = data.GetDefaultPaymentId()?.ToStringNormalized(),
+                DefaultPaymentMethod = data.GetDefaultPaymentId(paymentTypeRegistry)?.ToStringNormalized(),
                 //blob
                 //we do not include DefaultCurrencyPairs,Spread, PreferredExchange, RateScripting, RateScript  in this model and instead opt to set it in stores/storeid/rates endpoints
                 //we do not include ExcludedPaymentMethods in this model and instead opt to set it in stores/storeid/payment-methods endpoints

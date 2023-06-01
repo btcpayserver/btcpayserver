@@ -28,17 +28,19 @@ namespace BTCPayServer.Controllers.Greenfield
         private readonly IOptions<LightningNetworkOptions> _lightningNetworkOptions;
         private readonly LightningClientFactoryService _lightningClientFactory;
         private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
+        private readonly PaymentTypeRegistry _paymentTypeRegistry;
 
         public GreenfieldStoreLightningNodeApiController(
             IOptions<LightningNetworkOptions> lightningNetworkOptions,
             LightningClientFactoryService lightningClientFactory, BTCPayNetworkProvider btcPayNetworkProvider,
             PoliciesSettings policiesSettings,
-            IAuthorizationService authorizationService) : base(
+            IAuthorizationService authorizationService, PaymentTypeRegistry paymentTypeRegistry) : base(
             btcPayNetworkProvider, policiesSettings, authorizationService)
         {
             _lightningNetworkOptions = lightningNetworkOptions;
             _lightningClientFactory = lightningClientFactory;
             _btcPayNetworkProvider = btcPayNetworkProvider;
+            _paymentTypeRegistry = paymentTypeRegistry;
         }
 
         [Authorize(Policy = Policies.CanUseLightningNodeInStore,
@@ -151,7 +153,7 @@ namespace BTCPayServer.Controllers.Greenfield
             }
 
             var id = new PaymentMethodId(cryptoCode, LightningPaymentType.Instance);
-            var existing = store.GetSupportedPaymentMethods(_btcPayNetworkProvider)
+            var existing = store.GetSupportedPaymentMethods(_btcPayNetworkProvider, _paymentTypeRegistry)
                 .OfType<LightningSupportedPaymentMethod>()
                 .FirstOrDefault(d => d.PaymentId == id);
             if (existing == null)

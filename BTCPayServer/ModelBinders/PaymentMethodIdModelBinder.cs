@@ -2,6 +2,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using BTCPayServer.Payments;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace BTCPayServer.ModelBinders
 {
@@ -21,8 +22,8 @@ namespace BTCPayServer.ModelBinders
             {
                 return Task.CompletedTask;
             }
-
-            if (_paymentTypeRegistry.TryParsePaymentMethod(key, out var paymentId))
+            var paymentTypeRegistry = bindingContext.HttpContext.RequestServices.GetRequiredService<PaymentTypeRegistry>();
+            if (paymentTypeRegistry.TryParsePaymentMethod(key, out var paymentId))
             {
                 bindingContext.Result = ModelBindingResult.Success(paymentId);
             }

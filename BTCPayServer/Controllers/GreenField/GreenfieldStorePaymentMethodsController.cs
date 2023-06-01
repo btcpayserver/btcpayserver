@@ -6,6 +6,7 @@ using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
+using BTCPayServer.Payments;
 using BTCPayServer.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
@@ -22,11 +23,13 @@ namespace BTCPayServer.Controllers.Greenfield
         private StoreData Store => HttpContext.GetStoreData();
         private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
         private readonly IAuthorizationService _authorizationService;
+        private readonly PaymentTypeRegistry _paymentTypeRegistry;
 
-        public GreenfieldStorePaymentMethodsController(BTCPayNetworkProvider btcPayNetworkProvider, IAuthorizationService authorizationService)
+        public GreenfieldStorePaymentMethodsController(BTCPayNetworkProvider btcPayNetworkProvider, IAuthorizationService authorizationService, PaymentTypeRegistry paymentTypeRegistry)
         {
             _btcPayNetworkProvider = btcPayNetworkProvider;
             _authorizationService = authorizationService;
+            _paymentTypeRegistry = paymentTypeRegistry;
         }
 
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -40,7 +43,7 @@ namespace BTCPayServer.Controllers.Greenfield
             var canModifyStore = (await _authorizationService.AuthorizeAsync(User, null,
                 new PolicyRequirement(Policies.CanModifyStoreSettings))).Succeeded;
             ;
-            return Ok(Store.GetSupportedPaymentMethods(_btcPayNetworkProvider)
+            return Ok(Store.GetSupportedPaymentMethods(_btcPayNetworkProvider, _paymentTypeRegistry)
                 .Where(method =>
                     enabled is null || (enabled is false && excludedPaymentMethods.Match(method.PaymentId)))
                 .ToDictionary(

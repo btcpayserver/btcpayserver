@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
+using BTCPayServer.Payments;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
@@ -22,14 +23,12 @@ namespace BTCPayServer.Controllers.Greenfield
     public class GreenfieldTestApiKeyController : ControllerBase
     {
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly StoreRepository _storeRepository;
-        private readonly BTCPayServerClient _localBTCPayServerClient;
+        private readonly PaymentTypeRegistry _paymentTypeRegistry;
 
-        public GreenfieldTestApiKeyController(UserManager<ApplicationUser> userManager, StoreRepository storeRepository, BTCPayServerClient localBTCPayServerClient)
+        public GreenfieldTestApiKeyController(UserManager<ApplicationUser> userManager, PaymentTypeRegistry paymentTypeRegistry)
         {
             _userManager = userManager;
-            _storeRepository = storeRepository;
-            _localBTCPayServerClient = localBTCPayServerClient;
+            _paymentTypeRegistry = paymentTypeRegistry;
         }
 
         [HttpGet("me/id")]
@@ -57,7 +56,7 @@ namespace BTCPayServer.Controllers.Greenfield
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public BTCPayServer.Client.Models.StoreData[] GetCurrentUserStores()
         {
-            return this.HttpContext.GetStoresData().Select(Greenfield.GreenfieldStoresController.FromModel).ToArray();
+            return this.HttpContext.GetStoresData().Select(data => Greenfield.GreenfieldStoresController.FromModel(data, _paymentTypeRegistry)).ToArray();
         }
 
         [HttpGet("me/stores/{storeId}/can-view")]

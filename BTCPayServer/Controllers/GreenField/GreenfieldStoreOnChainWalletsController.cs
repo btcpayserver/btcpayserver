@@ -14,6 +14,7 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Models.WalletViewModels;
+using BTCPayServer.Payments;
 using BTCPayServer.Payments.PayJoin;
 using BTCPayServer.Payments.PayJoin.Sender;
 using BTCPayServer.Services;
@@ -54,6 +55,7 @@ namespace BTCPayServer.Controllers.Greenfield
         private readonly WalletReceiveService _walletReceiveService;
         private readonly IFeeProviderFactory _feeProviderFactory;
         private readonly UTXOLocker _utxoLocker;
+        private readonly PaymentTypeRegistry _paymentTypeRegistry;
 
         public GreenfieldStoreOnChainWalletsController(
             IAuthorizationService authorizationService,
@@ -69,7 +71,8 @@ namespace BTCPayServer.Controllers.Greenfield
             EventAggregator eventAggregator,
             WalletReceiveService walletReceiveService,
             IFeeProviderFactory feeProviderFactory,
-            UTXOLocker utxoLocker
+            UTXOLocker utxoLocker,
+            PaymentTypeRegistry paymentTypeRegistry
         )
         {
             _authorizationService = authorizationService;
@@ -86,6 +89,7 @@ namespace BTCPayServer.Controllers.Greenfield
             _walletReceiveService = walletReceiveService;
             _feeProviderFactory = feeProviderFactory;
             _utxoLocker = utxoLocker;
+            _paymentTypeRegistry = paymentTypeRegistry;
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -801,7 +805,7 @@ namespace BTCPayServer.Controllers.Greenfield
         private DerivationSchemeSettings? GetDerivationSchemeSettings(string cryptoCode)
         {
             var paymentMethod = Store
-                .GetSupportedPaymentMethods(_btcPayNetworkProvider)
+                .GetSupportedPaymentMethods(_btcPayNetworkProvider, _paymentTypeRegistry)
                 .OfType<DerivationSchemeSettings>()
                 .FirstOrDefault(p =>
                     p.PaymentId.PaymentType == Payments.BitcoinPaymentType.Instance &&

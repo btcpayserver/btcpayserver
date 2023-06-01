@@ -66,6 +66,7 @@ namespace BTCPayServer.Controllers
         private readonly DelayedTransactionBroadcaster _broadcaster;
         private readonly PayjoinClient _payjoinClient;
         private readonly LabelService _labelService;
+        private readonly PaymentTypeRegistry _paymentTypeRegistry;
         private readonly PullPaymentHostedService _pullPaymentHostedService;
         private readonly WalletHistogramService _walletHistogramService;
 
@@ -89,10 +90,12 @@ namespace BTCPayServer.Controllers
                                  PayjoinClient payjoinClient,
                                  IServiceProvider serviceProvider,
                                  PullPaymentHostedService pullPaymentHostedService,
-                                 LabelService labelService)
+                                 LabelService labelService,
+                                 PaymentTypeRegistry paymentTypeRegistry)
         {
             _currencyTable = currencyTable;
             _labelService = labelService;
+            _paymentTypeRegistry = paymentTypeRegistry;
             Repository = repo;
             WalletRepository = walletRepository;
             RateFetcher = rateProvider;
@@ -171,7 +174,7 @@ namespace BTCPayServer.Controllers
             var stores = await Repository.GetStoresByUserId(GetUserId());
 
             var onChainWallets = stores
-                .SelectMany(s => s.GetSupportedPaymentMethods(NetworkProvider)
+                .SelectMany(s => s.GetSupportedPaymentMethods(NetworkProvider, _paymentTypeRegistry)
                     .OfType<DerivationSchemeSettings>()
                     .Select(d => ((Wallet: _walletProvider.GetWallet(d.Network),
                         DerivationStrategy: d.AccountDerivation,

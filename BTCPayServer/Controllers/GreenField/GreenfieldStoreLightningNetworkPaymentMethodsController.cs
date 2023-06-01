@@ -37,27 +37,30 @@ namespace BTCPayServer.Controllers.Greenfield
         private readonly StoreRepository _storeRepository;
         private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
         private readonly IAuthorizationService _authorizationService;
+        private readonly PaymentTypeRegistry _paymentTypeRegistry;
 
         public GreenfieldStoreLightningNetworkPaymentMethodsController(
             StoreRepository storeRepository,
             BTCPayNetworkProvider btcPayNetworkProvider,
             IAuthorizationService authorizationService,
             ISettingsRepository settingsRepository,
-            PoliciesSettings policiesSettings)
+            PoliciesSettings policiesSettings,
+            PaymentTypeRegistry paymentTypeRegistry)
         {
             _storeRepository = storeRepository;
             _btcPayNetworkProvider = btcPayNetworkProvider;
             _authorizationService = authorizationService;
+            _paymentTypeRegistry = paymentTypeRegistry;
             PoliciesSettings = policiesSettings;
         }
 
         public static IEnumerable<LightningNetworkPaymentMethodData> GetLightningPaymentMethods(StoreData store,
-            BTCPayNetworkProvider networkProvider, bool? enabled)
+            BTCPayNetworkProvider networkProvider, bool? enabled, PaymentTypeRegistry paymentTypeRegistry)
         {
             var blob = store.GetStoreBlob();
             var excludedPaymentMethods = blob.GetExcludedPaymentMethods();
 
-            return store.GetSupportedPaymentMethods(networkProvider)
+            return store.GetSupportedPaymentMethods(networkProvider, paymentTypeRegistry )
                 .Where((method) => method.PaymentId.PaymentType == LightningPaymentType.Instance)
                 .OfType<LightningSupportedPaymentMethod>()
                 .Select(paymentMethod =>
@@ -79,7 +82,7 @@ namespace BTCPayServer.Controllers.Greenfield
             string storeId,
             [FromQuery] bool? enabled)
         {
-            return Ok(GetLightningPaymentMethods(Store, _btcPayNetworkProvider, enabled));
+            return Ok(GetLightningPaymentMethods(Store, _btcPayNetworkProvider, enabled, _paymentTypeRegistry));
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -88,7 +91,7 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             AssertSupportLightning(cryptoCode);
 
-            var method = GetExistingLightningLikePaymentMethod(_btcPayNetworkProvider, cryptoCode, Store);
+            var method = GetExistingLightningLikePaymentMethod(_btcPayNetworkProvider, cryptoCode, Store, _paymentTypeRegistry);
             if (method is null)
             {
                 throw ErrorPaymentMethodNotConfigured();
@@ -137,7 +140,7 @@ namespace BTCPayServer.Controllers.Greenfield
             LightningSupportedPaymentMethod? paymentMethod = null;
             var store = Store;
             var storeBlob = store.GetStoreBlob();
-            var existing = GetExistingLightningLikePaymentMethod(_btcPayNetworkProvider, cryptoCode, store);
+            var existing = GetExistingLightningLikePaymentMethod(_btcPayNetworkProvider, cryptoCode, store, _paymentTypeRegistry);
             if (existing == null || existing.ConnectionString != request.ConnectionString)
             {
                 if (request.ConnectionString == LightningSupportedPaymentMethod.InternalNode)
@@ -187,17 +190,17 @@ namespace BTCPayServer.Controllers.Greenfield
             storeBlob.SetExcluded(paymentMethodId, !request.Enabled);
             store.SetStoreBlob(storeBlob);
             await _storeRepository.UpdateStore(store);
-            return Ok(GetExistingLightningLikePaymentMethod(_btcPayNetworkProvider, cryptoCode, store));
+            return Ok(GetExistingLightningLikePaymentMethod(_btcPayNetworkProvider, cryptoCode, store, _paymentTypeRegistry));
         }
 
         public static LightningNetworkPaymentMethodData? GetExistingLightningLikePaymentMethod(BTCPayNetworkProvider btcPayNetworkProvider, string cryptoCode,
-            StoreData store)
+            StoreData store, PaymentTypeRegistry paymentTypeRegistry)
         {
 
             var storeBlob = store.GetStoreBlob();
             var id = new PaymentMethodId(cryptoCode, LightningPaymentType.Instance);
             var paymentMethod = store
-                .GetSupportedPaymentMethods(btcPayNetworkProvider)
+                .GetSupportedPaymentMethods(btcPayNetworkProvider, paymentTypeRegistry)
                 .OfType<LightningSupportedPaymentMethod>()
                 .FirstOrDefault(method => method.PaymentId == id);
 

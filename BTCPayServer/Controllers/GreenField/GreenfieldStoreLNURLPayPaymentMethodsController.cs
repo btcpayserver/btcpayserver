@@ -32,22 +32,25 @@ namespace BTCPayServer.Controllers.Greenfield
         private StoreData Store => HttpContext.GetStoreData();
         private readonly StoreRepository _storeRepository;
         private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
+        private readonly PaymentTypeRegistry _paymentTypeRegistry;
 
         public GreenfieldStoreLNURLPayPaymentMethodsController(
             StoreRepository storeRepository,
-            BTCPayNetworkProvider btcPayNetworkProvider)
+            BTCPayNetworkProvider btcPayNetworkProvider, 
+            PaymentTypeRegistry paymentTypeRegistry)
         {
             _storeRepository = storeRepository;
             _btcPayNetworkProvider = btcPayNetworkProvider;
+            _paymentTypeRegistry = paymentTypeRegistry;
         }
 
         public static IEnumerable<LNURLPayPaymentMethodData> GetLNURLPayPaymentMethods(StoreData store,
-            BTCPayNetworkProvider networkProvider, bool? enabled)
+            BTCPayNetworkProvider networkProvider, bool? enabled, PaymentTypeRegistry paymentTypeRegistry)
         {
             var blob = store.GetStoreBlob();
             var excludedPaymentMethods = blob.GetExcludedPaymentMethods();
 
-            return store.GetSupportedPaymentMethods(networkProvider)
+            return store.GetSupportedPaymentMethods(networkProvider, paymentTypeRegistry)
                 .Where((method) => method.PaymentId.PaymentType == LNURLPayPaymentType.Instance)
                 .OfType<LNURLPaySupportedPaymentMethod>()
                 .Select(paymentMethod =>
@@ -67,7 +70,7 @@ namespace BTCPayServer.Controllers.Greenfield
             string storeId,
             [FromQuery] bool? enabled)
         {
-            return Ok(GetLNURLPayPaymentMethods(Store, _btcPayNetworkProvider, enabled));
+            return Ok(GetLNURLPayPaymentMethods(Store, _btcPayNetworkProvider, enabled, _paymentTypeRegistry));
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -110,7 +113,7 @@ namespace BTCPayServer.Controllers.Greenfield
             AssertCryptoCodeWallet(cryptoCode, out _);
 
             var lnMethod = GreenfieldStoreLightningNetworkPaymentMethodsController.GetExistingLightningLikePaymentMethod(_btcPayNetworkProvider,
-                cryptoCode, Store);
+                cryptoCode, Store, _paymentTypeRegistry);
 
             if ((lnMethod is null || lnMethod.Enabled is false) && paymentMethodData.Enabled)
             {
@@ -143,7 +146,7 @@ namespace BTCPayServer.Controllers.Greenfield
             var storeBlob = store.GetStoreBlob();
             var id = new PaymentMethodId(cryptoCode, LNURLPayPaymentType.Instance);
             var paymentMethod = store
-                .GetSupportedPaymentMethods(_btcPayNetworkProvider)
+                .GetSupportedPaymentMethods(_btcPayNetworkProvider, _paymentTypeRegistry)
                 .OfType<LNURLPaySupportedPaymentMethod>()
                 .FirstOrDefault(method => method.PaymentId == id);
 

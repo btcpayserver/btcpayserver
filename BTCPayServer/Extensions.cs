@@ -125,9 +125,9 @@ namespace BTCPayServer
             return services;
         }
 
-        public static PaymentMethodId GetpaymentMethodId(this InvoiceCryptoInfo info)
+        public static PaymentMethodId GetpaymentMethodId(this InvoiceCryptoInfo info, PaymentTypeRegistry paymentTypeRegistry)
         {
-            return new PaymentMethodId(info.CryptoCode, PaymentTypes.Parse(info.PaymentType));
+            return new PaymentMethodId(info.CryptoCode, paymentTypeRegistry.Parse(info.PaymentType));
         }
 
         public static async Task CloseSocket(this WebSocket webSocket)

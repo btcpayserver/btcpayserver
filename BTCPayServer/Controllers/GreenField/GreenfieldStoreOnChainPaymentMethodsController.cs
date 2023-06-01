@@ -38,6 +38,7 @@ namespace BTCPayServer.Controllers.Greenfield
         private readonly IAuthorizationService _authorizationService;
         private readonly ExplorerClientProvider _explorerClientProvider;
         private readonly EventAggregator _eventAggregator;
+        private readonly PaymentTypeRegistry _paymentTypeRegistry;
 
         public GreenfieldStoreOnChainPaymentMethodsController(
             StoreRepository storeRepository,
@@ -46,7 +47,8 @@ namespace BTCPayServer.Controllers.Greenfield
             IAuthorizationService authorizationService,
             ExplorerClientProvider explorerClientProvider,
             PoliciesSettings policiesSettings,
-            EventAggregator eventAggregator)
+            EventAggregator eventAggregator,
+            PaymentTypeRegistry paymentTypeRegistry)
         {
             _storeRepository = storeRepository;
             _btcPayNetworkProvider = btcPayNetworkProvider;
@@ -54,16 +56,17 @@ namespace BTCPayServer.Controllers.Greenfield
             _authorizationService = authorizationService;
             _explorerClientProvider = explorerClientProvider;
             _eventAggregator = eventAggregator;
+            _paymentTypeRegistry = paymentTypeRegistry;
             PoliciesSettings = policiesSettings;
         }
 
         public static IEnumerable<OnChainPaymentMethodData> GetOnChainPaymentMethods(StoreData store,
-            BTCPayNetworkProvider networkProvider, bool? enabled)
+            BTCPayNetworkProvider networkProvider, bool? enabled, PaymentTypeRegistry paymentTypeRegistry)
         {
             var blob = store.GetStoreBlob();
             var excludedPaymentMethods = blob.GetExcludedPaymentMethods();
 
-            return store.GetSupportedPaymentMethods(networkProvider)
+            return store.GetSupportedPaymentMethods(networkProvider, paymentTypeRegistry)
                 .Where((method) => method.PaymentId.PaymentType == BitcoinPaymentType.Instance)
                 .OfType<DerivationSchemeSettings>()
                 .Select(strategy =>
@@ -81,7 +84,7 @@ namespace BTCPayServer.Controllers.Greenfield
             string storeId,
             [FromQuery] bool? enabled)
         {
-            return Ok(GetOnChainPaymentMethods(Store, _btcPayNetworkProvider, enabled));
+            return Ok(GetOnChainPaymentMethods(Store, _btcPayNetworkProvider, enabled, _paymentTypeRegistry));
         }
 
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -295,7 +298,7 @@ namespace BTCPayServer.Controllers.Greenfield
             var storeBlob = store.GetStoreBlob();
             var id = new PaymentMethodId(cryptoCode, BitcoinPaymentType.Instance);
             var paymentMethod = store
-                .GetSupportedPaymentMethods(_btcPayNetworkProvider)
+                .GetSupportedPaymentMethods(_btcPayNetworkProvider, _paymentTypeRegistry)
                 .OfType<DerivationSchemeSettings>()
                 .FirstOrDefault(method => method.PaymentId == id);
 

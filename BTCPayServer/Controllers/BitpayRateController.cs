@@ -9,6 +9,7 @@ using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
 using BTCPayServer.Models;
+using BTCPayServer.Payments;
 using BTCPayServer.Rating;
 using BTCPayServer.Security;
 using BTCPayServer.Security.Bitpay;
@@ -30,6 +31,7 @@ namespace BTCPayServer.Controllers
         readonly BTCPayNetworkProvider _networkProvider;
         readonly CurrencyNameTable _currencyNameTable;
         readonly StoreRepository _storeRepo;
+        private readonly PaymentTypeRegistry _paymentTypeRegistry;
 
         private StoreData CurrentStore => HttpContext.GetStoreData();
 
@@ -37,12 +39,13 @@ namespace BTCPayServer.Controllers
             RateFetcher rateProviderFactory,
             BTCPayNetworkProvider networkProvider,
             StoreRepository storeRepo,
-            CurrencyNameTable currencyNameTable)
+            CurrencyNameTable currencyNameTable, PaymentTypeRegistry paymentTypeRegistry)
         {
             _rateProviderFactory = rateProviderFactory ?? throw new ArgumentNullException(nameof(rateProviderFactory));
             _networkProvider = networkProvider;
             _storeRepo = storeRepo;
             _currencyNameTable = currencyNameTable ?? throw new ArgumentNullException(nameof(currencyNameTable));
+            _paymentTypeRegistry = paymentTypeRegistry;
         }
 
         [Route("rates/{baseCurrency}")]
@@ -50,7 +53,7 @@ namespace BTCPayServer.Controllers
         [BitpayAPIConstraint]
         public async Task<IActionResult> GetBaseCurrencyRates(string baseCurrency, CancellationToken cancellationToken)
         {
-            var supportedMethods = CurrentStore.GetSupportedPaymentMethods(_networkProvider);
+            var supportedMethods = CurrentStore.GetSupportedPaymentMethods(_networkProvider, _paymentTypeRegistry);
 
             var currencyCodes = supportedMethods.Where(method => !string.IsNullOrEmpty(method.PaymentId.CryptoCode))
                 .Select(method => method.PaymentId.CryptoCode).Distinct();

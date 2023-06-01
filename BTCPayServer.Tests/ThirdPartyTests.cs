@@ -306,6 +306,8 @@ retry:
             foreach ((CurrencyPair key, Task<RateResult> value) in result)
             {
                 var rateResult = value.GetAwaiter().GetResult();
+                if (key.ToString() == "BTG_USD")
+                    continue; // shitcoin not supported by bitfinex anymore
                 TestLogs.LogInformation($"Testing {key}");
                 if (brokenShitcoins.Contains(key.ToString()))
                     continue;

@@ -18,9 +18,9 @@ namespace BTCPayServer.Data
     {
 
 #pragma warning disable CS0618
-        public static PaymentMethodId? GetDefaultPaymentId(this StoreData storeData)
+        public static PaymentMethodId? GetDefaultPaymentId(this StoreData storeData, PaymentTypeRegistry paymentTypeRegistry)
         {
-            PaymentMethodId.TryParse(storeData.DefaultCrypto, out var defaultPaymentId);
+            paymentTypeRegistry.TryParsePaymentMethod(storeData.DefaultCrypto, out var defaultPaymentId);
             return defaultPaymentId;
         }
 
@@ -36,7 +36,7 @@ namespace BTCPayServer.Data
                 .Where(a => !excludeFilter.Match(a.PaymentId))
                 .OrderByDescending(a => a.PaymentId.CryptoCode == "BTC")
                 .ThenBy(a => a.PaymentId.CryptoCode)
-                .ThenBy(a => a.PaymentId.PaymentType == PaymentTypes.LightningLike ? 1 : 0)
+                .ThenBy(a => a.PaymentId.PaymentType == LightningPaymentType.Instance ? 1 : 0)
                 .ToArray();
             return paymentMethodIds;
         }
@@ -80,14 +80,14 @@ namespace BTCPayServer.Data
                 JObject strategies = JObject.Parse(storeData.DerivationStrategies);
                 foreach (var strat in strategies.Properties())
                 {
-                    if (!PaymentMethodId.TryParse(strat.Name, out var paymentMethodId))
+                    if (!_paymentTypeRegistry.TryParsePaymentMethod(strat.Name, out var paymentMethodId))
                     {
                         continue;
                     }
                     var network = networks.GetNetwork<BTCPayNetworkBase>(paymentMethodId.CryptoCode);
                     if (network != null)
                     {
-                        if (network == networks.BTC && paymentMethodId.PaymentType == PaymentTypes.BTCLike && btcReturned)
+                        if (network == networks.BTC && paymentMethodId.PaymentType == BitcoinPaymentType.Instance && btcReturned)
                             continue;
                         if (strat.Value.Type == JTokenType.Null)
                             continue;
@@ -127,7 +127,7 @@ namespace BTCPayServer.Data
             bool existing = false;
             foreach (var strat in strategies.Properties().ToList())
             {
-                if (!PaymentMethodId.TryParse(strat.Name, out var stratId))
+                if (!_paymentTypeRegistry.TryParsePaymentMethod(strat.Name, out var stratId))
                 {
                     continue;
                 }

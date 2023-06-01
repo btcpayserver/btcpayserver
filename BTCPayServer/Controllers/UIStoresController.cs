@@ -373,7 +373,7 @@ namespace BTCPayServer.Controllers
             vm.PaymentMethodCriteria = CurrentStore.GetSupportedPaymentMethods(_NetworkProvider)
                                     .Where(s => !storeBlob.GetExcludedPaymentMethods().Match(s.PaymentId))
                                     .Where(s => _NetworkProvider.GetNetwork(s.PaymentId.CryptoCode) != null)
-                                    .Where(s => s.PaymentId.PaymentType != PaymentTypes.LNURLPay)
+                                    .Where(s => s.PaymentId.PaymentType != LNURLPayPaymentType.Instance)
                                     .Select(method =>
             {
                 var existing = storeBlob.PaymentMethodCriteria.SingleOrDefault(criteria =>
@@ -440,8 +440,8 @@ namespace BTCPayServer.Controllers
             var defaultChoice = defaultPaymentId is not null ? defaultPaymentId.FindNearest(enabled) : null;
             if (defaultChoice is null)
             {
-                defaultChoice = enabled.FirstOrDefault(e => e.CryptoCode == _NetworkProvider.DefaultNetwork.CryptoCode && e.PaymentType == PaymentTypes.BTCLike) ??
-                                enabled.FirstOrDefault(e => e.CryptoCode == _NetworkProvider.DefaultNetwork.CryptoCode && e.PaymentType == PaymentTypes.LightningLike) ??
+                defaultChoice = enabled.FirstOrDefault(e => e.CryptoCode == _NetworkProvider.DefaultNetwork.CryptoCode && e.PaymentType == BitcoinPaymentType.Instance) ??
+                                enabled.FirstOrDefault(e => e.CryptoCode == _NetworkProvider.DefaultNetwork.CryptoCode && e.PaymentType == LightningPaymentType.Instance) ??
                                 enabled.FirstOrDefault();
             }
             var choices = GetEnabledPaymentMethodChoices(storeData);
@@ -485,15 +485,15 @@ namespace BTCPayServer.Controllers
             foreach (var newCriteria in model.PaymentMethodCriteria.ToList())
             {
                 var paymentMethodId = PaymentMethodId.Parse(newCriteria.PaymentMethod);
-                if (paymentMethodId.PaymentType == PaymentTypes.LightningLike)
+                if (paymentMethodId.PaymentType == LightningPaymentType.Instance)
                     model.PaymentMethodCriteria.Add(new PaymentMethodCriteriaViewModel()
                     {
-                        PaymentMethod = new PaymentMethodId(paymentMethodId.CryptoCode, PaymentTypes.LNURLPay).ToString(),
+                        PaymentMethod = new PaymentMethodId(paymentMethodId.CryptoCode, LNURLPayPaymentType.Instance).ToString(),
                         Type = newCriteria.Type,
                         Value = newCriteria.Value
                     });
                 // Should not be able to set LNUrlPay criteria directly in UI
-                if (paymentMethodId.PaymentType == PaymentTypes.LNURLPay)
+                if (paymentMethodId.PaymentType == LNURLPayPaymentType.Instance)
                     model.PaymentMethodCriteria.Remove(newCriteria);
             }
             blob.PaymentMethodCriteria ??= new List<PaymentMethodCriteria>();

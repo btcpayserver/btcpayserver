@@ -66,7 +66,7 @@ namespace BTCPayServer.Controllers
 
         private LightningSupportedPaymentMethod GetExistingLightningSupportedPaymentMethod(string cryptoCode, StoreData store)
         {
-            var id = new PaymentMethodId(cryptoCode, PaymentTypes.LightningLike);
+            var id = new PaymentMethodId(cryptoCode, LightningPaymentType.Instance);
             var existing = store.GetSupportedPaymentMethods(_BtcPayNetworkProvider)
                 .OfType<LightningSupportedPaymentMethod>()
                 .FirstOrDefault(d => d.PaymentId == id);
@@ -76,7 +76,7 @@ namespace BTCPayServer.Controllers
 
         private string GetImage(PaymentMethodId paymentMethodId, BTCPayNetwork network)
         {
-            var res = paymentMethodId.PaymentType == PaymentTypes.BTCLike
+            var res = paymentMethodId.PaymentType == BitcoinPaymentType.Instance
                 ? Url.Content(network.CryptoImagePath)
                 : Url.Content(network.LightningImagePath);
             return "/" + res;

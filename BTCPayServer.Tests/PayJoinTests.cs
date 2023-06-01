@@ -930,7 +930,7 @@ retry:
                     tester.ExplorerClient.Network.NBitcoinNetwork);
 
                 var senderStore = await tester.PayTester.StoreRepository.FindStore(senderUser.StoreId);
-                var paymentMethodId = new PaymentMethodId("BTC", PaymentTypes.BTCLike);
+                var paymentMethodId = new PaymentMethodId("BTC", BitcoinPaymentType.Instance);
                 var derivationSchemeSettings = senderStore.GetSupportedPaymentMethods(tester.NetworkProvider)
                     .OfType<DerivationSchemeSettings>().SingleOrDefault(settings =>
                         settings.PaymentId == paymentMethodId);

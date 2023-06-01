@@ -210,7 +210,7 @@ namespace BTCPayServer.Tests
                 Assert.True(s.Driver.FindElement(By.Name("btcpay")).Displayed);
             });
             await s.Server.ExplorerNode.SendToAddressAsync(BitcoinAddress.Create(invoice
-                    .GetPaymentMethod(new PaymentMethodId("BTC", PaymentTypes.BTCLike))
+                    .GetPaymentMethod(new PaymentMethodId("BTC", BitcoinPaymentType.Instance))
                     .GetPaymentMethodDetails().GetPaymentDestination(), Network.RegTest),
                 new Money(0.001m, MoneyUnit.BTC));
 

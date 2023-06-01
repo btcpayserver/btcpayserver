@@ -36,6 +36,7 @@ namespace BTCPayServer.Controllers.Greenfield
         private readonly IEnumerable<IPayoutHandler> _payoutHandlers;
         private readonly BTCPayNetworkProvider _networkProvider;
         private readonly IAuthorizationService _authorizationService;
+        private readonly PaymentTypeRegistry _paymentTypeRegistry;
 
         public GreenfieldPullPaymentController(PullPaymentHostedService pullPaymentService,
             LinkGenerator linkGenerator,
@@ -44,7 +45,8 @@ namespace BTCPayServer.Controllers.Greenfield
             Services.BTCPayNetworkJsonSerializerSettings serializerSettings,
             IEnumerable<IPayoutHandler> payoutHandlers,
             BTCPayNetworkProvider btcPayNetworkProvider,
-            IAuthorizationService authorizationService)
+            IAuthorizationService authorizationService,
+            PaymentTypeRegistry paymentTypeRegistry)
         {
             _pullPaymentService = pullPaymentService;
             _linkGenerator = linkGenerator;
@@ -54,6 +56,7 @@ namespace BTCPayServer.Controllers.Greenfield
             _payoutHandlers = payoutHandlers;
             _networkProvider = btcPayNetworkProvider;
             _authorizationService = authorizationService;
+            _paymentTypeRegistry = paymentTypeRegistry;
         }
 
         [HttpGet("~/api/v1/stores/{storeId}/pull-payments")]
@@ -124,7 +127,7 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 paymentMethods = paymentMethodsStr.Select(s =>
                 {
-                    PaymentMethodId.TryParse(s, out var pmi);
+                    _paymentTypeRegistry.TryParsePaymentMethod(s, out var pmi);
                     return pmi;
                 }).ToArray();
                 var supported = (await _payoutHandlers.GetSupportedPaymentMethods(HttpContext.GetStoreData())).ToArray();
@@ -298,7 +301,7 @@ namespace BTCPayServer.Controllers.Greenfield
         [AllowAnonymous]
         public async Task<IActionResult> CreatePayout(string pullPaymentId, CreatePayoutRequest request, CancellationToken cancellationToken)
         {
-            if (!PaymentMethodId.TryParse(request?.PaymentMethod, out var paymentMethodId))
+            if (!_paymentTypeRegistry.TryParsePaymentMethod(request?.PaymentMethod, out var paymentMethodId))
             {
                 ModelState.AddModelError(nameof(request.PaymentMethod), "Invalid payment method");
                 return this.CreateValidationError(ModelState);
@@ -361,7 +364,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 }
             }
 
-            if (request is null || !PaymentMethodId.TryParse(request?.PaymentMethod, out var paymentMethodId))
+            if (request is null || !_paymentTypeRegistry.TryParsePaymentMethod(request?.PaymentMethod, out var paymentMethodId))
             {
                 ModelState.AddModelError(nameof(request.PaymentMethod), "Invalid payment method");
                 return this.CreateValidationError(ModelState);

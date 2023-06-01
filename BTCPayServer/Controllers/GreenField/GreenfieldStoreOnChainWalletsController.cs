@@ -804,7 +804,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 .GetSupportedPaymentMethods(_btcPayNetworkProvider)
                 .OfType<DerivationSchemeSettings>()
                 .FirstOrDefault(p =>
-                    p.PaymentId.PaymentType == Payments.PaymentTypes.BTCLike &&
+                    p.PaymentId.PaymentType == Payments.BitcoinPaymentType.Instance &&
                     p.PaymentId.CryptoCode.Equals(cryptoCode, StringComparison.InvariantCultureIgnoreCase));
             return paymentMethod;
         }

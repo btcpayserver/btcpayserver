@@ -144,7 +144,7 @@ namespace BTCPayServer.Payments.Lightning
         {
             var listenedInvoices = new List<ListenedInvoice>();
             foreach (var paymentMethod in invoice.GetPaymentMethods()
-                                                          .Where(c => new[] { PaymentTypes.LightningLike, LNURLPayPaymentType.Instance }.Contains(c.GetId().PaymentType)))
+                                                          .Where(c => new[] { LightningPaymentType.Instance, LNURLPayPaymentType.Instance }.Contains(c.GetId().PaymentType)))
             {
                 LightningLikePaymentMethodDetails lightningMethod;
                 LightningSupportedPaymentMethod? lightningSupportedMethod;
@@ -264,7 +264,7 @@ namespace BTCPayServer.Payments.Lightning
         private async Task CreateNewLNInvoiceForBTCPayInvoice(InvoiceEntity invoice)
         {
             var paymentMethods = invoice.GetPaymentMethods()
-                .Where(method => new[] { PaymentTypes.LightningLike, LNURLPayPaymentType.Instance }.Contains(method.GetId().PaymentType))
+                .Where(method => new[] { LightningPaymentType.Instance, LNURLPayPaymentType.Instance }.Contains(method.GetId().PaymentType))
                 .ToArray();
             var store = await _storeRepository.FindStore(invoice.StoreId);
             if (store is null)

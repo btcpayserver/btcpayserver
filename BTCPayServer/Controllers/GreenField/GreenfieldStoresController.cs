@@ -27,11 +27,13 @@ namespace BTCPayServer.Controllers.Greenfield
     {
         private readonly StoreRepository _storeRepository;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly PaymentTypeRegistry _paymentTypeRegistry;
 
-        public GreenfieldStoresController(StoreRepository storeRepository, UserManager<ApplicationUser> userManager)
+        public GreenfieldStoresController(StoreRepository storeRepository, UserManager<ApplicationUser> userManager, PaymentTypeRegistry paymentTypeRegistry)
         {
             _storeRepository = storeRepository;
             _userManager = userManager;
+            _paymentTypeRegistry = paymentTypeRegistry;
         }
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores")]
@@ -84,7 +86,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
             var store = new Data.StoreData();
 
-            PaymentMethodId.TryParse(request.DefaultPaymentMethod, out var defaultPaymentMethodId);
+            _paymentTypeRegistry.TryParsePaymentMethod(request.DefaultPaymentMethod, out var defaultPaymentMethodId);
             ToModel(request, store, defaultPaymentMethodId);
             await _storeRepository.CreateStore(_userManager.GetUserId(User), store);
             return Ok(FromModel(store));
@@ -105,7 +107,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 return validationResult;
             }
 
-            PaymentMethodId.TryParse(request.DefaultPaymentMethod, out var defaultPaymentMethodId);
+            _paymentTypeRegistry.TryParsePaymentMethod(request.DefaultPaymentMethod, out var defaultPaymentMethodId);
 
             ToModel(request, store, defaultPaymentMethodId);
             await _storeRepository.UpdateStore(store);
@@ -206,7 +208,7 @@ namespace BTCPayServer.Controllers.Greenfield
                         Currency = criteria.CurrencyCode,
                         Value = criteria.Amount
                     },
-                    PaymentMethod = PaymentMethodId.Parse(criteria.PaymentMethod)
+                    PaymentMethod = _paymentTypeRegistry.ParsePaymentMethod(criteria.PaymentMethod)
                 }).ToList() ?? new List<PaymentMethodCriteria>();
             blob.NormalizeToRelativeLinks(Request);
             model.SetStoreBlob(blob);
@@ -220,7 +222,7 @@ namespace BTCPayServer.Controllers.Greenfield
             }
 
             if (!string.IsNullOrEmpty(request.DefaultPaymentMethod) &&
-                !PaymentMethodId.TryParse(request.DefaultPaymentMethod, out var defaultPaymentMethodId))
+                !_paymentTypeRegistry.TryParsePaymentMethod(request.DefaultPaymentMethod, out var defaultPaymentMethodId))
             {
                 ModelState.AddModelError(nameof(request.Name), "DefaultPaymentMethod is invalid");
             }
@@ -256,7 +258,7 @@ namespace BTCPayServer.Controllers.Greenfield
                         request.AddModelError(data => data.PaymentMethodCriteria[index].CurrencyCode, "CurrencyCode is invalid", this);
                     }
 
-                    if (string.IsNullOrEmpty(pmc.PaymentMethod) || PaymentMethodId.TryParse(pmc.PaymentMethod) is null)
+                    if (string.IsNullOrEmpty(pmc.PaymentMethod) || _paymentTypeRegistry.TryParsePaymentMethod(pmc.PaymentMethod) is null)
                     {
                         request.AddModelError(data => data.PaymentMethodCriteria[index].PaymentMethod, "Payment method was invalid", this);
                     }

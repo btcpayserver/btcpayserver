@@ -13,7 +13,7 @@ namespace BTCPayServer.JsonConverters
                 return null;
             if (reader.TokenType != JsonToken.String)
                 throw new JsonObjectException("A payment method id should be a string", reader);
-            if (PaymentMethodId.TryParse((string)reader.Value, out var result))
+            if (_paymentTypeRegistry.TryParsePaymentMethod((string)reader.Value, out var result))
                 return result;
             return null;
             // We need to do this gracefully as we have removed support for a payment type in the past which will throw here on your store each time it is loaded.

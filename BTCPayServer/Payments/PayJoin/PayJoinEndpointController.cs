@@ -246,7 +246,7 @@ namespace BTCPayServer.Payments.PayJoin
                     $"Provided transaction isn't mempool eligible {mempool.RPCCodeMessage}"));
             }
             var enforcedLowR = ctx.OriginalTransaction.Inputs.All(IsLowR);
-            var paymentMethodId = new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike);
+            var paymentMethodId = new PaymentMethodId(network.CryptoCode, BitcoinPaymentType.Instance);
             Money? due = null;
             Dictionary<OutPoint, UTXO> selectedUTXOs = new Dictionary<OutPoint, UTXO>();
             PSBTOutput? originalPaymentOutput = null;

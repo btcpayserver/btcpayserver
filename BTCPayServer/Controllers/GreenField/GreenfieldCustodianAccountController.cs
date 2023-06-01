@@ -50,14 +50,17 @@ namespace BTCPayServer.Controllers.Greenfield
         private readonly CustodianAccountRepository _custodianAccountRepository;
         private readonly IEnumerable<ICustodian> _custodianRegistry;
         private readonly IAuthorizationService _authorizationService;
+        private readonly PaymentTypeRegistry _paymentTypeRegistry;
 
         public GreenfieldCustodianAccountController(CustodianAccountRepository custodianAccountRepository,
             IEnumerable<ICustodian> custodianRegistry,
-            IAuthorizationService authorizationService)
+            IAuthorizationService authorizationService,
+            PaymentTypeRegistry paymentTypeRegistry)
         {
             _custodianAccountRepository = custodianAccountRepository;
             _custodianRegistry = custodianRegistry;
             _authorizationService = authorizationService;
+            _paymentTypeRegistry = paymentTypeRegistry;
         }
 
         [HttpGet("~/api/v1/stores/{storeId}/custodian-accounts")]
@@ -223,8 +226,8 @@ namespace BTCPayServer.Controllers.Greenfield
 
             if (custodian is ICanDeposit depositableCustodian)
             {
-                var pm = PaymentMethodId.TryParse(paymentMethod);
-                if (pm == null)
+                var pm = _paymentTypeRegistry.TryParsePaymentMethod(paymentMethod, out _);
+                if (!pm)
                 {
                     return this.CreateAPIError(400, "unsupported-payment-method",
                         $"Unsupported payment method.");
@@ -346,7 +349,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
             if (custodian is ICanWithdraw withdrawableCustodian)
             {
-                var pm = PaymentMethodId.TryParse(request.PaymentMethod);
+                var pm = _paymentTypeRegistry.TryParsePaymentMethod(request.PaymentMethod);
                 if (pm == null)
                 {
                     return this.CreateAPIError(400, "unsupported-payment-method",
@@ -385,7 +388,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
             if (custodian is ICanWithdraw withdrawableCustodian)
             {
-                var pm = PaymentMethodId.TryParse(request.PaymentMethod);
+                var pm = _paymentTypeRegistry.TryParsePaymentMethod(request.PaymentMethod);
                 if (pm == null)
                 {
                     return this.CreateAPIError(400, "unsupported-payment-method",

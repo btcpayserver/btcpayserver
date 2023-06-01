@@ -246,7 +246,7 @@ namespace BTCPayServer.Payments.Bitcoin
             var paymentEntitiesByPrevOut = new Dictionary<OutPoint, PaymentEntity>();
             foreach (var payment in invoice.GetPayments(wallet.Network, false))
             {
-                if (payment.GetPaymentMethodId()?.PaymentType != PaymentTypes.BTCLike)
+                if (payment.GetPaymentMethodId()?.PaymentType != BitcoinPaymentType.Instance)
                     continue;
                 var paymentData = (BitcoinLikePaymentData)payment.GetCryptoPaymentData();
                 if (!transactions.TryGetValue(paymentData.Outpoint.Hash, out TransactionResult tx))
@@ -365,7 +365,7 @@ namespace BTCPayServer.Payments.Bitcoin
                 var strategy = GetDerivationStrategy(invoice, network);
                 if (strategy == null)
                     continue;
-                var cryptoId = new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike);
+                var cryptoId = new PaymentMethodId(network.CryptoCode, BitcoinPaymentType.Instance);
 
                 if (!invoice.Support(cryptoId))
                     continue;
@@ -402,7 +402,7 @@ namespace BTCPayServer.Payments.Bitcoin
 
         private DerivationStrategyBase GetDerivationStrategy(InvoiceEntity invoice, BTCPayNetworkBase network)
         {
-            return invoice.GetSupportedPaymentMethod<DerivationSchemeSettings>(new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike))
+            return invoice.GetSupportedPaymentMethod<DerivationSchemeSettings>(new PaymentMethodId(network.CryptoCode, BitcoinPaymentType.Instance))
                           .Select(d => d.AccountDerivation)
                           .FirstOrDefault();
         }
@@ -413,7 +413,7 @@ namespace BTCPayServer.Payments.Bitcoin
             invoice = (await UpdatePaymentStates(wallet, invoice.Id));
             if (invoice == null)
                 return null;
-            var paymentMethod = invoice.GetPaymentMethod(wallet.Network, PaymentTypes.BTCLike);
+            var paymentMethod = invoice.GetPaymentMethod(wallet.Network, BitcoinPaymentType.Instance);
             wallet.InvalidateCache(strategy);
             _Aggregator.Publish(new InvoiceEvent(invoice, InvoiceEvent.ReceivedPayment) { Payment = payment });
             return invoice;

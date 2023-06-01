@@ -24,12 +24,14 @@ namespace BTCPayServer.Controllers.Greenfield
     {
         private readonly PayoutProcessorService _payoutProcessorService;
         private readonly EventAggregator _eventAggregator;
+        private readonly PaymentTypeRegistry _paymentTypeRegistry;
 
         public GreenfieldStoreAutomatedLightningPayoutProcessorsController(PayoutProcessorService payoutProcessorService,
-            EventAggregator eventAggregator)
+            EventAggregator eventAggregator, PaymentTypeRegistry paymentTypeRegistry)
         {
             _payoutProcessorService = payoutProcessorService;
             _eventAggregator = eventAggregator;
+            _paymentTypeRegistry = paymentTypeRegistry;
         }
 
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -38,7 +40,7 @@ namespace BTCPayServer.Controllers.Greenfield
         public async Task<IActionResult> GetStoreLightningAutomatedPayoutProcessors(
             string storeId, string? paymentMethod)
         {
-            paymentMethod = !string.IsNullOrEmpty(paymentMethod) ? PaymentMethodId.Parse(paymentMethod).ToString() : null;
+            paymentMethod = !string.IsNullOrEmpty(paymentMethod) ? _paymentTypeRegistry.ParsePaymentMethod(paymentMethod).ToString() : null;
             var configured =
                 await _payoutProcessorService.GetProcessors(
                     new PayoutProcessorService.PayoutProcessorQuery()
@@ -73,7 +75,7 @@ namespace BTCPayServer.Controllers.Greenfield
             AutomatedPayoutConstants.ValidateInterval(ModelState, request.IntervalSeconds, nameof(request.IntervalSeconds));
             if (!ModelState.IsValid)
                 return this.CreateValidationError(ModelState);
-            paymentMethod = PaymentMethodId.Parse(paymentMethod).ToString();
+            paymentMethod = _paymentTypeRegistry.ParsePaymentMethod(paymentMethod).ToString();
             var activeProcessor =
                 (await _payoutProcessorService.GetProcessors(
                     new PayoutProcessorService.PayoutProcessorQuery()

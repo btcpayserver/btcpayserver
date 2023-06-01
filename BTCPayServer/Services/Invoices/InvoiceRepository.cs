@@ -277,7 +277,7 @@ namespace BTCPayServer.Services.Invoices
         private string GetDestination(PaymentMethod paymentMethod)
         {
             // For legacy reason, BitcoinLikeOnChain is putting the hashes of addresses in database
-            if (paymentMethod.GetId().PaymentType == Payments.PaymentTypes.BTCLike)
+            if (paymentMethod.GetId().PaymentType == Payments.BitcoinPaymentType.Instance)
             {
                 var network = (BTCPayNetwork)paymentMethod.Network;
                 var details =
@@ -791,7 +791,7 @@ namespace BTCPayServer.Services.Invoices
                 .SelectMany(p =>
                 {
                     var contribution = new InvoiceStatistics.Contribution();
-                    contribution.PaymentMethodId = new PaymentMethodId(p.Currency, PaymentTypes.BTCLike);
+                    contribution.PaymentMethodId = new PaymentMethodId(p.Currency, BitcoinPaymentType.Instance);
                     contribution.CurrencyValue = p.Price;
                     contribution.Value = contribution.CurrencyValue;
 

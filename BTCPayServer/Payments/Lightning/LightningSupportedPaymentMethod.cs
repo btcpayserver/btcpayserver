@@ -11,7 +11,7 @@ namespace BTCPayServer.Payments.Lightning
         public string CryptoCode { get; set; } = string.Empty;
 
         [JsonIgnore]
-        public PaymentMethodId PaymentId => new PaymentMethodId(CryptoCode, PaymentTypes.LightningLike);
+        public PaymentMethodId PaymentId => new PaymentMethodId(CryptoCode, LightningPaymentType.Instance);
 
         [Obsolete("Use Get/SetLightningUrl")]
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]

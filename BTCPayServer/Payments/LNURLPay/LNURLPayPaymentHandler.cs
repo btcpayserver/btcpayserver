@@ -38,7 +38,7 @@ namespace BTCPayServer.Payments.Lightning
             Options = options;
         }
 
-        public override PaymentType PaymentType => PaymentTypes.LightningLike;
+        public override PaymentType PaymentType => LightningPaymentType.Instance;
 
         private const string UriScheme = "lightning:";
 
@@ -49,7 +49,7 @@ namespace BTCPayServer.Payments.Lightning
             LNURLPaySupportedPaymentMethod supportedPaymentMethod, PaymentMethod paymentMethod, Data.StoreData store,
             BTCPayNetwork network, object preparePaymentObject, IEnumerable<PaymentMethodId> invoicePaymentMethods)
         {
-            var lnPmi = new PaymentMethodId(supportedPaymentMethod.CryptoCode, PaymentTypes.LightningLike);
+            var lnPmi = new PaymentMethodId(supportedPaymentMethod.CryptoCode, LightningPaymentType.Instance);
             var lnSupported = store.GetSupportedPaymentMethods(_networkProvider)
                 .OfType<LightningSupportedPaymentMethod>()
                 .SingleOrDefault(method => method.PaymentId == lnPmi);
@@ -76,7 +76,7 @@ namespace BTCPayServer.Payments.Lightning
                 .GetAll()
                 .OfType<BTCPayNetwork>()
                 .Where(network => network.NBitcoinNetwork.Consensus.SupportSegwit && network.SupportLightning)
-                .Select(network => new PaymentMethodId(network.CryptoCode, PaymentTypes.LNURLPay));
+                .Select(network => new PaymentMethodId(network.CryptoCode, LNURLPayPaymentType.Instance));
         }
 
         public override void PreparePaymentModel(PaymentModel model, InvoiceResponse invoiceResponse,

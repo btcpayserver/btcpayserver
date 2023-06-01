@@ -53,7 +53,7 @@ public class LightningPendingPayoutListener : BaseAsyncService
         var networks = _networkProvider.GetAll()
             .OfType<BTCPayNetwork>()
             .Where(network => network.SupportLightning)
-            .ToDictionary(network => new PaymentMethodId(network.CryptoCode, PaymentTypes.LightningLike));
+            .ToDictionary(network => new PaymentMethodId(network.CryptoCode, LightningPaymentType.Instance));
 
 
         var payouts = await PullPaymentHostedService.GetPayouts(

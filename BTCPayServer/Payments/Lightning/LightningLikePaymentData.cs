@@ -41,7 +41,7 @@ namespace BTCPayServer.Payments.Lightning
 
         public PaymentType GetPaymentType()
         {
-            return string.IsNullOrEmpty(PaymentType) ? PaymentTypes.LightningLike : PaymentTypes.Parse(PaymentType);
+            return string.IsNullOrEmpty(PaymentType) ? LightningPaymentType.Instance : PaymentTypes.Parse(PaymentType);
         }
 
         public string[] GetSearchTerms()

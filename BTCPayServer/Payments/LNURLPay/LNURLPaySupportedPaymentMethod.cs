@@ -10,7 +10,7 @@ namespace BTCPayServer.Payments.Lightning
         public string CryptoCode { get; set; } = string.Empty;
 
         [JsonIgnore]
-        public PaymentMethodId PaymentId => new PaymentMethodId(CryptoCode, PaymentTypes.LNURLPay);
+        public PaymentMethodId PaymentId => new PaymentMethodId(CryptoCode, LNURLPayPaymentType.Instance);
 
         public bool UseBech32Scheme { get; set; }
 

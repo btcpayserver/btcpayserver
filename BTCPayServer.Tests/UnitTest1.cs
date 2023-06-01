@@ -1329,7 +1329,7 @@ namespace BTCPayServer.Tests
             var invoiceAddress = BitcoinAddress.Create(btcmethod.Destination, cashCow.Network);
 
 
-            var btc = new PaymentMethodId("BTC", PaymentTypes.BTCLike);
+            var btc = new PaymentMethodId("BTC", BitcoinPaymentType.Instance);
             var networkFee = (await tester.PayTester.InvoiceRepository.GetInvoice(invoice.Id))
                             .GetPaymentMethods()[btc]
                             .GetPaymentMethodDetails()
@@ -1484,8 +1484,8 @@ namespace BTCPayServer.Tests
             await user.RegisterLightningNodeAsync("BTC");
 
 
-            var lnMethod = new PaymentMethodId("BTC", PaymentTypes.LightningLike).ToString();
-            var btcMethod = new PaymentMethodId("BTC", PaymentTypes.BTCLike).ToString();
+            var lnMethod = new PaymentMethodId("BTC", LightningPaymentType.Instance).ToString();
+            var btcMethod = new PaymentMethodId("BTC", BitcoinPaymentType.Instance).ToString();
 
             // We allow BTC and LN, but not BTC under 5 USD, so only LN should be in the invoice
             var vm = Assert.IsType<CheckoutAppearanceViewModel>(Assert
@@ -1510,7 +1510,7 @@ namespace BTCPayServer.Tests
                 }, Facade.Merchant);
 
             Assert.Single(invoice.CryptoInfo);
-            Assert.Equal(PaymentTypes.LightningLike.ToString(), invoice.CryptoInfo[0].PaymentType);
+            Assert.Equal(LightningPaymentType.Instance.ToString(), invoice.CryptoInfo[0].PaymentType);
 
             // Let's replicate https://github.com/btcpayserver/btcpayserver/issues/2963
             // We allow BTC for more than 5 USD, and LN for less than 150. The default is LN, so the default
@@ -1643,7 +1643,7 @@ namespace BTCPayServer.Tests
                     Currency = "USD"
                 }, Facade.Merchant);
             Assert.Single(invoice.CryptoInfo);
-            Assert.Equal(PaymentTypes.LightningLike.ToString(), invoice.CryptoInfo[0].PaymentType);
+            Assert.Equal(LightningPaymentType.Instance.ToString(), invoice.CryptoInfo[0].PaymentType);
 
             // Activating LNUrl, we should still have only 1 payment criteria that can be set.
             user.RegisterLightningNode(cryptoCode);
@@ -1807,7 +1807,7 @@ namespace BTCPayServer.Tests
         public async Task CanChangeNetworkFeeMode()
         {
             using var tester = CreateServerTester();
-            var btc = new PaymentMethodId("BTC", PaymentTypes.BTCLike);
+            var btc = new PaymentMethodId("BTC", BitcoinPaymentType.Instance);
             await tester.StartAsync();
             var user = tester.NewAccount();
             user.GrantAccess();
@@ -2242,7 +2242,7 @@ namespace BTCPayServer.Tests
                 c =>
                 {
                     Assert.False(c.AfterExpiration);
-                    Assert.Equal(new PaymentMethodId("BTC", PaymentTypes.BTCLike).ToStringNormalized(), c.PaymentMethod);
+                    Assert.Equal(new PaymentMethodId("BTC", BitcoinPaymentType.Instance).ToStringNormalized(), c.PaymentMethod);
                     Assert.NotNull(c.Payment);
                     Assert.Equal(invoice.BitcoinAddress, c.Payment.Destination);
                     Assert.StartsWith(txId.ToString(), c.Payment.Id);
@@ -2252,7 +2252,7 @@ namespace BTCPayServer.Tests
                 c =>
                 {
                     Assert.False(c.AfterExpiration);
-                    Assert.Equal(new PaymentMethodId("BTC", PaymentTypes.BTCLike).ToStringNormalized(), c.PaymentMethod);
+                    Assert.Equal(new PaymentMethodId("BTC", BitcoinPaymentType.Instance).ToStringNormalized(), c.PaymentMethod);
                     Assert.NotNull(c.Payment);
                     Assert.Equal(invoice.BitcoinAddress, c.Payment.Destination);
                     Assert.StartsWith(txId.ToString(), c.Payment.Id);

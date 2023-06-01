@@ -37,6 +37,7 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
     private readonly ApplicationDbContextFactory _dbContextFactory;
     private readonly NotificationSender _notificationSender;
     private readonly Logs Logs;
+    private readonly PaymentTypeRegistry _paymentTypeRegistry;
 
     public WalletRepository WalletRepository { get; }
 
@@ -46,7 +47,8 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
         BTCPayNetworkJsonSerializerSettings jsonSerializerSettings,
         ApplicationDbContextFactory dbContextFactory,
         NotificationSender notificationSender,
-        Logs logs)
+        Logs logs, 
+        PaymentTypeRegistry paymentTypeRegistry)
     {
         _btcPayNetworkProvider = btcPayNetworkProvider;
         WalletRepository = walletRepository;
@@ -55,6 +57,7 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
         _dbContextFactory = dbContextFactory;
         _notificationSender = notificationSender;
         this.Logs = logs;
+        _paymentTypeRegistry = paymentTypeRegistry;
     }
 
 
@@ -215,7 +218,7 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
                         Stores = new[] { storeId },
                         PayoutIds = payoutIds
                     }, context)).Where(data =>
-                        PaymentMethodId.TryParse(data.PaymentMethodId, out var paymentMethodId) &&
+                        _paymentTypeRegistry.TryParsePaymentMethod(data.PaymentMethodId, out var paymentMethodId) &&
                         CanHandle(paymentMethodId))
                         .Select(data => (data, ParseProof(data) as PayoutTransactionOnChainBlob)).Where(tuple => tuple.Item2 != null && tuple.Item2.TransactionId != null && tuple.Item2.Accounted == false);
                     foreach (var valueTuple in payouts)
@@ -240,7 +243,7 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
                         Stores = new[] { storeId },
                         PayoutIds = payoutIds
                     }, context)).Where(data =>
-                        PaymentMethodId.TryParse(data.PaymentMethodId, out var paymentMethodId) &&
+                        _paymentTypeRegistry.TryParsePaymentMethod(data.PaymentMethodId, out var paymentMethodId) &&
                         CanHandle(paymentMethodId))
                         .Select(data => (data, ParseProof(data) as PayoutTransactionOnChainBlob)).Where(tuple => tuple.Item2 != null && tuple.Item2.TransactionId != null && tuple.Item2.Accounted == true);
                     foreach (var valueTuple in payouts)

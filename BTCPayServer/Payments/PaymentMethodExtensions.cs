@@ -8,7 +8,7 @@ namespace BTCPayServer.Payments
         public static JToken Serialize(ISupportedPaymentMethod factory)
         {
             // Legacy
-            if (factory.PaymentId.PaymentType == PaymentTypes.BTCLike)
+            if (factory.PaymentId.PaymentType == BitcoinPaymentType.Instance)
             {
                 var derivation = (DerivationSchemeSettings)factory;
                 var str = derivation.Network.NBXplorerNetwork.Serializer.ToString(derivation);

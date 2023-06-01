@@ -44,7 +44,7 @@ namespace BTCPayServer.Payments.Lightning
             Options = options;
         }
 
-        public override PaymentType PaymentType => PaymentTypes.LightningLike;
+        public override PaymentType PaymentType => LightningPaymentType.Instance;
 
         public IOptions<LightningNetworkOptions> Options { get; }
 
@@ -199,7 +199,7 @@ namespace BTCPayServer.Payments.Lightning
                 .GetAll()
                 .OfType<BTCPayNetwork>()
                 .Where(network => network.NBitcoinNetwork.Consensus.SupportSegwit && network.SupportLightning)
-                .Select(network => new PaymentMethodId(network.CryptoCode, PaymentTypes.LightningLike));
+                .Select(network => new PaymentMethodId(network.CryptoCode, LightningPaymentType.Instance));
         }
 
         public override void PreparePaymentModel(PaymentModel model, InvoiceResponse invoiceResponse,

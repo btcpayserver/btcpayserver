@@ -818,13 +818,13 @@ normal:
                 Assert.Single(btcOnlyInvoice.CryptoInfo);
                 Assert.Equal("BTC",
                     btcOnlyInvoice.CryptoInfo.First().CryptoCode);
-                Assert.Equal(PaymentTypes.BTCLike.ToString(),
+                Assert.Equal(BitcoinPaymentType.Instance.ToString(),
                     btcOnlyInvoice.CryptoInfo.First().PaymentType);
 
                 Assert.Equal(2, normalInvoice.CryptoInfo.Length);
                 Assert.Contains(
                     normalInvoice.CryptoInfo,
-                    s => PaymentTypes.BTCLike.ToString() == s.PaymentType && new[] { "BTC", "LTC" }.Contains(
+                    s => BitcoinPaymentType.Instance.ToString() == s.PaymentType && new[] { "BTC", "LTC" }.Contains(
                              s.CryptoCode));
 
                 //test topup option

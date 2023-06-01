@@ -88,7 +88,7 @@ public class StoreLightningBalance : ViewComponent
     private ILightningClient GetLightningClient(StoreData store, string cryptoCode)
     {
         var network = _networkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
-        var id = new PaymentMethodId(cryptoCode, PaymentTypes.LightningLike);
+        var id = new PaymentMethodId(cryptoCode, LightningPaymentType.Instance);
         var existing = store.GetSupportedPaymentMethods(_networkProvider)
             .OfType<LightningSupportedPaymentMethod>()
             .FirstOrDefault(d => d.PaymentId == id);

@@ -8,7 +8,7 @@ namespace BTCPayServer.Payments.Bitcoin
 {
     public class BitcoinLikeOnChainPaymentMethod : IPaymentMethodDetails
     {
-        public PaymentType GetPaymentType() => PaymentTypes.BTCLike;
+        public PaymentType GetPaymentType() => BitcoinPaymentType.Instance;
 
         public string GetPaymentDestination()
         {

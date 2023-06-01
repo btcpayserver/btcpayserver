@@ -401,7 +401,7 @@ namespace BTCPayServer.HostedServices
                     return;
                 }
 
-                if (!PaymentMethodId.TryParse(payout.PaymentMethodId, out var paymentMethod))
+                if (!_paymentTypeRegistry.TryParsePaymentMethod(payout.PaymentMethodId, out var paymentMethod))
                 {
                     req.Completion.SetResult(new PayoutApproval.ApprovalResult(PayoutApproval.Result.NotFound, null));
                     return;

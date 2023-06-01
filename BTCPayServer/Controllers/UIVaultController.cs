@@ -398,7 +398,7 @@ askdevice:
             var paymentMethod = CurrentStore
                             .GetSupportedPaymentMethods(Networks)
                             .OfType<DerivationSchemeSettings>()
-                            .FirstOrDefault(p => p.PaymentId.PaymentType == Payments.PaymentTypes.BTCLike && p.PaymentId.CryptoCode == walletId.CryptoCode);
+                            .FirstOrDefault(p => p.PaymentId.PaymentType == Payments.BitcoinPaymentType.Instance && p.PaymentId.CryptoCode == walletId.CryptoCode);
             return paymentMethod;
         }
     }

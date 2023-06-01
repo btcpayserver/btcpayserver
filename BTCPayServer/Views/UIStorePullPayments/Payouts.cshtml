@@ -17,7 +17,7 @@
     Model.PaginationQuery.Add("paymentMethodId", Model.PaymentMethodId);
     Model.PaginationQuery.Add("payoutState", Model.PayoutState);
     var stateActions = new List<(string Action, string Text)>();
-    if (PaymentMethodId.TryParse(Model.PaymentMethodId, out var paymentMethodId))
+    if (_paymentTypeRegistry.TryParsePaymentMethod(Model.PaymentMethodId, out var paymentMethodId))
     {
         var payoutHandler = PayoutHandlers.FindPayoutHandler(paymentMethodId);
         if (payoutHandler is null)

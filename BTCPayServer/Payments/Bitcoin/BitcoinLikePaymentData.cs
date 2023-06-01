@@ -10,7 +10,7 @@ namespace BTCPayServer.Payments.Bitcoin
     {
         public PaymentType GetPaymentType()
         {
-            return PaymentTypes.BTCLike;
+            return BitcoinPaymentType.Instance;
         }
         public BitcoinLikePaymentData()
         {

@@ -40,7 +40,7 @@ namespace BTCPayServer
             var paymentMethod = store
                 .GetSupportedPaymentMethods(networkProvider)
                 .OfType<DerivationSchemeSettings>()
-                .FirstOrDefault(p => p.PaymentId.PaymentType == Payments.PaymentTypes.BTCLike && p.PaymentId.CryptoCode == cryptoCode);
+                .FirstOrDefault(p => p.PaymentId.PaymentType == Payments.BitcoinPaymentType.Instance && p.PaymentId.CryptoCode == cryptoCode);
             return paymentMethod;
         }
     }

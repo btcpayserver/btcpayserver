@@ -40,6 +40,7 @@ namespace BTCPayServer.Controllers.Greenfield
         private readonly RateFetcher _rateProvider;
         private readonly InvoiceActivator _invoiceActivator;
         private readonly ApplicationDbContextFactory _dbContextFactory;
+        private readonly PaymentTypeRegistry _paymentTypeRegistry;
 
         public LanguageService LanguageService { get; }
 
@@ -47,7 +48,8 @@ namespace BTCPayServer.Controllers.Greenfield
             LinkGenerator linkGenerator, LanguageService languageService, BTCPayNetworkProvider btcPayNetworkProvider,
             CurrencyNameTable currencyNameTable, RateFetcher rateProvider,
             InvoiceActivator invoiceActivator,
-            PullPaymentHostedService pullPaymentService, ApplicationDbContextFactory dbContextFactory)
+            PullPaymentHostedService pullPaymentService, ApplicationDbContextFactory dbContextFactory,
+             PaymentTypeRegistry paymentTypeRegistry)
         {
             _invoiceController = invoiceController;
             _invoiceRepository = invoiceRepository;
@@ -58,6 +60,7 @@ namespace BTCPayServer.Controllers.Greenfield
             _invoiceActivator = invoiceActivator;
             _pullPaymentService = pullPaymentService;
             _dbContextFactory = dbContextFactory;
+            _paymentTypeRegistry = paymentTypeRegistry;
             LanguageService = languageService;
         }
 
@@ -188,7 +191,7 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 for (int i = 0; i < request.Checkout.PaymentMethods.Length; i++)
                 {
-                    if (!PaymentMethodId.TryParse(request.Checkout.PaymentMethods[i], out _))
+                    if (!_paymentTypeRegistry.TryParsePaymentMethod(request.Checkout.PaymentMethods[i], out _))
                     {
                         request.AddModelError(invoiceRequest => invoiceRequest.Checkout.PaymentMethods[i],
                             "Invalid payment method", this);
@@ -335,8 +338,7 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 return InvoiceNotFound();
             }
-
-            if (PaymentMethodId.TryParse(paymentMethod, out var paymentMethodId))
+            if (_paymentTypeRegistry.TryParsePaymentMethod(paymentMethod, out var paymentMethodId))
             {
                 await _invoiceActivator.ActivateInvoicePaymentMethod(paymentMethodId, invoice, store);
                 return Ok();
@@ -377,7 +379,7 @@ namespace BTCPayServer.Controllers.Greenfield
             }
             PaymentMethod? invoicePaymentMethod = null;
             PaymentMethodId? paymentMethodId = null;
-            if (request.PaymentMethod is not null && PaymentMethodId.TryParse(request.PaymentMethod, out paymentMethodId))
+            if (request.PaymentMethod is not null && _paymentTypeRegistry.TryParsePaymentMethod(request.PaymentMethod, out paymentMethodId))
             {
                 invoicePaymentMethod = invoice.GetPaymentMethods().SingleOrDefault(method => method.GetId() == paymentMethodId);
             }

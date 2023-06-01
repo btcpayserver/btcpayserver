@@ -358,7 +358,7 @@ namespace BTCPayServer.Controllers
             //TODO: Make this clean
             if (paymentMethod is null && paymentMethodId.PaymentType == LightningPaymentType.Instance)
             {
-                paymentMethod = pms[new PaymentMethodId(paymentMethodId.CryptoCode, PaymentTypes.LNURLPay)];
+                paymentMethod = pms[new PaymentMethodId(paymentMethodId.CryptoCode, LNURLPayPaymentType.Instance)];
             }
 
             if (paymentMethod != null)
@@ -777,8 +777,8 @@ namespace BTCPayServer.Controllers
                 }
                 if (paymentMethodId is null)
                 {
-                    paymentMethodId = displayedPaymentMethods.FirstOrDefault(e => e.CryptoCode == _NetworkProvider.DefaultNetwork.CryptoCode && e.PaymentType == PaymentTypes.BTCLike) ??
-                                      displayedPaymentMethods.FirstOrDefault(e => e.CryptoCode == _NetworkProvider.DefaultNetwork.CryptoCode && e.PaymentType != PaymentTypes.LNURLPay) ??
+                    paymentMethodId = displayedPaymentMethods.FirstOrDefault(e => e.CryptoCode == _NetworkProvider.DefaultNetwork.CryptoCode && e.PaymentType == BitcoinPaymentType.Instance) ??
+                                      displayedPaymentMethods.FirstOrDefault(e => e.CryptoCode == _NetworkProvider.DefaultNetwork.CryptoCode && e.PaymentType != LNURLPayPaymentType.Instance) ??
                                       displayedPaymentMethods.FirstOrDefault();
                 }
                 isDefaultPaymentId = true;
@@ -941,7 +941,7 @@ namespace BTCPayServer.Controllers
                                                       ? pmName
                                                       : pmName.Replace("Bitcoin (", "").Replace(")", "").Replace("Lightning ", ""),
                                                   IsLightning =
-                                                      kv.GetId().PaymentType == PaymentTypes.LightningLike,
+                                                      kv.GetId().PaymentType == LightningPaymentType.Instance,
                                                   CryptoImage = Request.GetRelativePathOrAbsolute(availableCryptoHandler.GetCryptoImage(availableCryptoPaymentMethodId)),
                                                   Link = Url.Action(nameof(Checkout),
                                                       new

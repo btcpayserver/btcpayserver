@@ -1405,7 +1405,7 @@ namespace BTCPayServer.Controllers
 
         private string GetImage(PaymentMethodId paymentMethodId, BTCPayNetwork network)
         {
-            var res = paymentMethodId.PaymentType == PaymentTypes.BTCLike
+            var res = paymentMethodId.PaymentType == BitcoinPaymentType.Instance
                 ? Url.Content(network.CryptoImagePath)
                 : Url.Content(network.LightningImagePath);
             return Request.GetRelativePathOrAbsolute(res);

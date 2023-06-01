@@ -1859,7 +1859,7 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("Destination")).SendKeys(bolt);
             s.Driver.FindElement(By.Id("SelectedPaymentMethod")).Click();
             s.Driver.FindElement(By.CssSelector(
-                    $"#SelectedPaymentMethod option[value={new PaymentMethodId("BTC", PaymentTypes.LightningLike)}]"))
+                    $"#SelectedPaymentMethod option[value={new PaymentMethodId("BTC", LightningPaymentType.Instance)}]"))
                 .Click();
 
             s.Driver.FindElement(By.Id("ClaimedAmount")).SendKeys(Keys.Enter);
@@ -1874,7 +1874,7 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("Destination")).SendKeys(bolt);
             s.Driver.FindElement(By.Id("SelectedPaymentMethod")).Click();
             s.Driver.FindElement(By.CssSelector(
-                    $"#SelectedPaymentMethod option[value={new PaymentMethodId("BTC", PaymentTypes.LightningLike)}]"))
+                    $"#SelectedPaymentMethod option[value={new PaymentMethodId("BTC", LightningPaymentType.Instance)}]"))
                 .Click();
 
             s.Driver.FindElement(By.Id("ClaimedAmount")).SendKeys(Keys.Enter);
@@ -1883,7 +1883,7 @@ namespace BTCPayServer.Tests
             Assert.Contains(PayoutState.AwaitingApproval.GetStateString(), s.Driver.PageSource);
 
             s.GoToStore(newStore.storeId, StoreNavPages.Payouts);
-            s.Driver.FindElement(By.Id($"{new PaymentMethodId("BTC", PaymentTypes.LightningLike)}-view")).Click();
+            s.Driver.FindElement(By.Id($"{new PaymentMethodId("BTC", LightningPaymentType.Instance)}-view")).Click();
             s.Driver.FindElement(By.Id($"{PayoutState.AwaitingApproval}-view")).Click();
             s.Driver.FindElement(By.Id($"{PayoutState.AwaitingApproval}-selectAllCheckbox")).Click();
             s.Driver.FindElement(By.Id($"{PayoutState.AwaitingApproval}-actions")).Click();
@@ -1894,7 +1894,7 @@ namespace BTCPayServer.Tests
 
             s.FindAlertMessage(StatusMessageModel.StatusSeverity.Success);
             s.GoToStore(newStore.storeId, StoreNavPages.Payouts);
-            s.Driver.FindElement(By.Id($"{new PaymentMethodId("BTC", PaymentTypes.LightningLike)}-view")).Click();
+            s.Driver.FindElement(By.Id($"{new PaymentMethodId("BTC", LightningPaymentType.Instance)}-view")).Click();
 
             s.Driver.FindElement(By.Id($"{PayoutState.Completed}-view")).Click();
             if (!s.Driver.PageSource.Contains(bolt))
@@ -1905,7 +1905,7 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.Id($"{PayoutState.AwaitingPayment}-selectAllCheckbox")).Click();
                 s.Driver.FindElement(By.Id($"{PayoutState.AwaitingPayment}-actions")).Click();
                 s.Driver.FindElement(By.Id($"{PayoutState.AwaitingPayment}-mark-paid")).Click();
-                s.Driver.FindElement(By.Id($"{new PaymentMethodId("BTC", PaymentTypes.LightningLike)}-view")).Click();
+                s.Driver.FindElement(By.Id($"{new PaymentMethodId("BTC", LightningPaymentType.Instance)}-view")).Click();
 
                 s.Driver.FindElement(By.Id($"{PayoutState.Completed}-view")).Click();
                 Assert.Contains(bolt, s.Driver.PageSource);
@@ -2185,7 +2185,7 @@ namespace BTCPayServer.Tests
             // Check that pull payment has lightning option
             s.GoToStore(s.StoreId, StoreNavPages.PullPayments);
             s.Driver.FindElement(By.Id("NewPullPayment")).Click();
-            Assert.Equal(new PaymentMethodId(cryptoCode, PaymentTypes.LightningLike), PaymentMethodId.Parse(Assert.Single(s.Driver.FindElements(By.CssSelector("input[name='PaymentMethods']"))).GetAttribute("value")));
+            Assert.Equal(new PaymentMethodId(cryptoCode, LightningPaymentType.Instance), PaymentMethodId.Parse(Assert.Single(s.Driver.FindElements(By.CssSelector("input[name='PaymentMethods']"))).GetAttribute("value")));
             s.Driver.FindElement(By.Id("Name")).SendKeys("PP1");
             s.Driver.FindElement(By.Id("Amount")).Clear();
             s.Driver.FindElement(By.Id("Amount")).SendKeys("0.0000001");
@@ -2306,7 +2306,7 @@ namespace BTCPayServer.Tests
             var emailSuffix = $"@{s.Server.PayTester.HostName}:{s.Server.PayTester.Port}";
             foreach (var i in invoices)
             {
-                var lightningPaymentMethod = i.GetPaymentMethod(new PaymentMethodId("BTC", PaymentTypes.LNURLPay));
+                var lightningPaymentMethod = i.GetPaymentMethod(new PaymentMethodId("BTC", LNURLPayPaymentType.Instance));
                 var paymentMethodDetails =
                     lightningPaymentMethod.GetPaymentMethodDetails() as LNURLPayPaymentMethodDetails;
                 Assert.Contains(

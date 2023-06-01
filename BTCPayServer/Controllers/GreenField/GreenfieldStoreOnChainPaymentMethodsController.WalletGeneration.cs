@@ -86,7 +86,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
             var store = Store;
             var storeBlob = store.GetStoreBlob();
-            store.SetSupportedPaymentMethod(new PaymentMethodId(cryptoCode, PaymentTypes.BTCLike),
+            store.SetSupportedPaymentMethod(new PaymentMethodId(cryptoCode, BitcoinPaymentType.Instance),
                 derivationSchemeSettings);
             store.SetStoreBlob(storeBlob);
             await _storeRepository.UpdateStore(store);

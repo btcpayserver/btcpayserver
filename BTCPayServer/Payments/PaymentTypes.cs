@@ -10,58 +10,22 @@ using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Payments
 {
-    /// <summary>
-    /// The different ways to pay an invoice
-    /// </summary>
-    public static class PaymentTypes
-    {
-        private static PaymentType[] _paymentTypes =
-        {
-            BTCLike, LightningLike, LNURLPay,
-#if ALTCOINS
-            MoneroLike, ZcashLike,
-#endif
-        };
-        /// <summary>
-        /// On-Chain UTXO based, bitcoin compatible
-        /// </summary>
-        public static BitcoinPaymentType BTCLike => BitcoinPaymentType.Instance;
-        /// <summary>
-        /// Lightning payment
-        /// </summary>
-        public static LightningPaymentType LightningLike => LightningPaymentType.Instance;
-        /// <summary>
-        /// Lightning payment
-        /// </summary>
-        public static LNURLPayPaymentType LNURLPay => LNURLPayPaymentType.Instance;
-
-#if ALTCOINS
-        /// <summary>
-        /// Monero payment
-        /// </summary>
-        public static MoneroPaymentType MoneroLike => MoneroPaymentType.Instance;
-        /// <summary>
-        /// Zcash payment
-        /// </summary>
-        public static ZcashPaymentType ZcashLike => ZcashPaymentType.Instance;
-#endif
-
-        public static bool TryParse(string paymentType, out PaymentType type)
-        {
-            type = _paymentTypes.FirstOrDefault(type1 => type1.IsPaymentType(paymentType));
-            return type != null;
-        }
-        public static PaymentType Parse(string paymentType)
-        {
-            if (!TryParse(paymentType, out var result))
-                throw new FormatException("Invalid payment type");
-            return result;
-        }
-    }
-
     public abstract class PaymentType
     {
         public abstract string ToPrettyString();
+
+        public virtual string GetPaymentMethodId(PaymentMethodId paymentMethodId)
+        {
+            if (paymentMethodId.PaymentType == BitcoinPaymentType.Instance)
+                return paymentMethodId.CryptoCode;
+#if ALTCOINS
+            if (paymentMethodId.CryptoCode == "XMR" && paymentMethodId.PaymentType == MoneroPaymentType.Instance)
+                return paymentMethodId.CryptoCode;
+            if ((paymentMethodId.CryptoCode == "YEC" || paymentMethodId.CryptoCode == "ZEC") && paymentMethodId.PaymentType == ZcashPaymentType.Instance)
+                return paymentMethodId.CryptoCode;
+#endif
+            return $"{paymentMethodId.CryptoCode}-{paymentMethodId.PaymentType.ToStringNormalized()}";
+        }
         public override string ToString()
         {
             return GetId();

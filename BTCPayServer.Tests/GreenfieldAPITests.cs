@@ -3267,7 +3267,7 @@ namespace BTCPayServer.Tests
 
             void VerifyLightning(Dictionary<string, GenericPaymentMethodData> dictionary)
             {
-                Assert.True(dictionary.TryGetValue(new PaymentMethodId("BTC", PaymentTypes.LightningLike).ToStringNormalized(), out var item));
+                Assert.True(dictionary.TryGetValue(new PaymentMethodId("BTC", LightningPaymentType.Instance).ToStringNormalized(), out var item));
                 var lightningNetworkPaymentMethodBaseData = Assert.IsType<JObject>(item.Data).ToObject<LightningNetworkPaymentMethodBaseData>();
                 Assert.Equal("Internal Node", lightningNetworkPaymentMethodBaseData.ConnectionString);
             }
@@ -3282,7 +3282,7 @@ namespace BTCPayServer.Tests
 
             void VerifyOnChain(Dictionary<string, GenericPaymentMethodData> dictionary)
             {
-                Assert.True(dictionary.TryGetValue(new PaymentMethodId("BTC", PaymentTypes.BTCLike).ToStringNormalized(), out var item));
+                Assert.True(dictionary.TryGetValue(new PaymentMethodId("BTC", BitcoinPaymentType.Instance).ToStringNormalized(), out var item));
                 var paymentMethodBaseData = Assert.IsType<JObject>(item.Data).ToObject<OnChainPaymentMethodBaseData>();
                 Assert.Equal(randK, paymentMethodBaseData.DerivationScheme);
             }
@@ -3304,14 +3304,14 @@ namespace BTCPayServer.Tests
                      tester.GetLightningConnectionString(LightningConnectionType.CLightning, true), true));
             methods = await viewerOnlyClient.GetStorePaymentMethods(store.Id);
 
-            Assert.True(methods.TryGetValue(new PaymentMethodId("BTC", PaymentTypes.LightningLike).ToStringNormalized(), out var item));
+            Assert.True(methods.TryGetValue(new PaymentMethodId("BTC", LightningPaymentType.Instance).ToStringNormalized(), out var item));
             var lightningNetworkPaymentMethodBaseData = Assert.IsType<JObject>(item.Data).ToObject<LightningNetworkPaymentMethodBaseData>();
             Assert.Equal("*NEED CanModifyStoreSettings PERMISSION TO VIEW*", lightningNetworkPaymentMethodBaseData.ConnectionString);
 
 
             methods = await adminClient.GetStorePaymentMethods(store.Id);
 
-            Assert.True(methods.TryGetValue(new PaymentMethodId("BTC", PaymentTypes.LightningLike).ToStringNormalized(), out item));
+            Assert.True(methods.TryGetValue(new PaymentMethodId("BTC", LightningPaymentType.Instance).ToStringNormalized(), out item));
             lightningNetworkPaymentMethodBaseData = Assert.IsType<JObject>(item.Data).ToObject<LightningNetworkPaymentMethodBaseData>();
             Assert.NotEqual("*NEED CanModifyStoreSettings PERMISSION TO VIEW*", lightningNetworkPaymentMethodBaseData.ConnectionString);
 

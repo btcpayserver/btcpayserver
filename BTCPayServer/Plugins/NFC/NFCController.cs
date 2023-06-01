@@ -55,8 +55,8 @@ namespace BTCPayServer.Plugins.NFC
 
             var methods = invoice.GetPaymentMethods();
             PaymentMethod lnPaymentMethod = null;
-            if (!methods.TryGetValue(new PaymentMethodId("BTC", PaymentTypes.LNURLPay), out var lnurlPaymentMethod) &&
-                !methods.TryGetValue(new PaymentMethodId("BTC", PaymentTypes.LightningLike), out lnPaymentMethod))
+            if (!methods.TryGetValue(new PaymentMethodId("BTC", LNURLPayPaymentType.Instance), out var lnurlPaymentMethod) &&
+                !methods.TryGetValue(new PaymentMethodId("BTC", LightningPaymentType.Instance), out lnPaymentMethod))
             {
                 return BadRequest("Destination for LNURL-Withdraw was not specified");
             }

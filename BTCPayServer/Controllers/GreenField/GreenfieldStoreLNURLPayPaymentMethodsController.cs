@@ -48,7 +48,7 @@ namespace BTCPayServer.Controllers.Greenfield
             var excludedPaymentMethods = blob.GetExcludedPaymentMethods();
 
             return store.GetSupportedPaymentMethods(networkProvider)
-                .Where((method) => method.PaymentId.PaymentType == PaymentTypes.LNURLPay)
+                .Where((method) => method.PaymentId.PaymentType == LNURLPayPaymentType.Instance)
                 .OfType<LNURLPaySupportedPaymentMethod>()
                 .Select(paymentMethod =>
                     new LNURLPayPaymentMethodData(
@@ -93,7 +93,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
             AssertCryptoCodeWallet(cryptoCode, out _);
 
-            var id = new PaymentMethodId(cryptoCode, PaymentTypes.LNURLPay);
+            var id = new PaymentMethodId(cryptoCode, LNURLPayPaymentType.Instance);
             var store = Store;
             store.SetSupportedPaymentMethod(id, null);
             await _storeRepository.UpdateStore(store);
@@ -105,7 +105,7 @@ namespace BTCPayServer.Controllers.Greenfield
         public async Task<IActionResult> UpdateLNURLPayPaymentMethod(string storeId, string cryptoCode,
             [FromBody] LNURLPayPaymentMethodData paymentMethodData)
         {
-            var paymentMethodId = new PaymentMethodId(cryptoCode, PaymentTypes.LNURLPay);
+            var paymentMethodId = new PaymentMethodId(cryptoCode, LNURLPayPaymentType.Instance);
 
             AssertCryptoCodeWallet(cryptoCode, out _);
 
@@ -141,7 +141,7 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             store ??= Store;
             var storeBlob = store.GetStoreBlob();
-            var id = new PaymentMethodId(cryptoCode, PaymentTypes.LNURLPay);
+            var id = new PaymentMethodId(cryptoCode, LNURLPayPaymentType.Instance);
             var paymentMethod = store
                 .GetSupportedPaymentMethods(_btcPayNetworkProvider)
                 .OfType<LNURLPaySupportedPaymentMethod>()

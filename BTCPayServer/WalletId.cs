@@ -34,7 +34,7 @@ namespace BTCPayServer
 
         public PaymentMethodId GetPaymentMethodId()
         {
-            return new PaymentMethodId(CryptoCode, PaymentTypes.BTCLike);
+            return new PaymentMethodId(CryptoCode, BitcoinPaymentType.Instance);
         }
         public override bool Equals(object obj)
         {

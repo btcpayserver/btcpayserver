@@ -60,6 +60,7 @@ namespace BTCPayServer
         private readonly BTCPayNetworkJsonSerializerSettings _btcPayNetworkJsonSerializerSettings;
         private readonly IPluginHookService _pluginHookService;
         private readonly InvoiceActivator _invoiceActivator;
+        private readonly PaymentTypeRegistry _paymentTypeRegistry;
 
         public UILNURLController(InvoiceRepository invoiceRepository,
             EventAggregator eventAggregator,
@@ -74,7 +75,8 @@ namespace BTCPayServer
             PullPaymentHostedService pullPaymentHostedService,
             BTCPayNetworkJsonSerializerSettings btcPayNetworkJsonSerializerSettings,
             IPluginHookService pluginHookService,
-            InvoiceActivator invoiceActivator)
+            InvoiceActivator invoiceActivator,
+            PaymentTypeRegistry paymentTypeRegistry)
         {
             _invoiceRepository = invoiceRepository;
             _eventAggregator = eventAggregator;
@@ -90,6 +92,7 @@ namespace BTCPayServer
             _btcPayNetworkJsonSerializerSettings = btcPayNetworkJsonSerializerSettings;
             _pluginHookService = pluginHookService;
             _invoiceActivator = invoiceActivator;
+            _paymentTypeRegistry = paymentTypeRegistry;
         }
 
         [HttpGet("withdraw/pp/{pullPaymentId}")]
@@ -101,7 +104,7 @@ namespace BTCPayServer
                 return NotFound();
             }
 
-            var pmi = new PaymentMethodId(cryptoCode, PaymentTypes.LightningLike);
+            var pmi = new PaymentMethodId(cryptoCode, LightningPaymentType.Instance);
             var pp = await _pullPaymentHostedService.GetPullPayment(pullPaymentId, true);
             if (!pp.IsRunning() || !pp.IsSupported(pmi))
             {
@@ -283,7 +286,7 @@ namespace BTCPayServer
                 if (item is null ||
                     item.Inventory <= 0 ||
                     (item.PaymentMethods?.Any() is true &&
-                     item.PaymentMethods?.Any(s => PaymentMethodId.Parse(s) == pmi) is false))
+                     item.PaymentMethods?.Any(s => _paymentTypeRegistry.ParsePaymentMethod(s) == pmi) is false))
                 {
                     return NotFound();
                 }
@@ -530,8 +533,8 @@ namespace BTCPayServer
             var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
             if (network is null || !network.SupportLightning)
                 return null;
-            var pmi = new PaymentMethodId(cryptoCode, PaymentTypes.LNURLPay);
-            var lnpmi = new PaymentMethodId(cryptoCode, PaymentTypes.LightningLike);
+            var pmi = new PaymentMethodId(cryptoCode, LNURLPayPaymentType.Instance);
+            var lnpmi = new PaymentMethodId(cryptoCode, LightningPaymentType.Instance);
             var methods = store.GetSupportedPaymentMethods(_btcPayNetworkProvider);
             var lnUrlMethod =
                 methods.FirstOrDefault(method => method.PaymentId == pmi) as LNURLPaySupportedPaymentMethod;

@@ -58,6 +58,7 @@ namespace BTCPayServer.Controllers
         private readonly InvoiceActivator _invoiceActivator;
         private readonly LinkGenerator _linkGenerator;
         private readonly IAuthorizationService _authorizationService;
+        private readonly PaymentTypeRegistry _paymentTypeRegistry;
         private readonly AppService _appService;
 
         public WebhookSender WebhookNotificationManager { get; }
@@ -83,7 +84,8 @@ namespace BTCPayServer.Controllers
             InvoiceActivator invoiceActivator,
             LinkGenerator linkGenerator,
             AppService appService,
-            IAuthorizationService authorizationService)
+            IAuthorizationService authorizationService,
+            PaymentTypeRegistry paymentTypeRegistry)
         {
             _displayFormatter = displayFormatter;
             _CurrencyNameTable = currencyNameTable ?? throw new ArgumentNullException(nameof(currencyNameTable));
@@ -104,6 +106,7 @@ namespace BTCPayServer.Controllers
             _invoiceActivator = invoiceActivator;
             _linkGenerator = linkGenerator;
             _authorizationService = authorizationService;
+            _paymentTypeRegistry = paymentTypeRegistry;
             _appService = appService;
         }
 
@@ -179,7 +182,7 @@ namespace BTCPayServer.Controllers
             {
                 var supportedTransactionCurrencies = invoice.SupportedTransactionCurrencies
                                                             .Where(c => c.Value.Enabled)
-                                                            .Select(c => PaymentMethodId.TryParse(c.Key, out var p) ? p : null)
+                                                            .Select(c => _paymentTypeRegistry.TryParsePaymentMethod(c.Key, out var p) ? p : null)
                                                             .Where(c => c != null)
                                                             .ToHashSet();
                 excludeFilter = PaymentFilter.Where(p => !supportedTransactionCurrencies.Contains(p));
@@ -249,7 +252,7 @@ namespace BTCPayServer.Controllers
             }
             entity.SpeedPolicy = invoice.Checkout.SpeedPolicy ?? store.SpeedPolicy;
             entity.DefaultLanguage = invoice.Checkout.DefaultLanguage;
-            entity.DefaultPaymentMethod = invoice.Checkout.DefaultPaymentMethod ?? store.GetDefaultPaymentId()?.ToStringNormalized() ?? new PaymentMethodId(_NetworkProvider.DefaultNetwork.CryptoCode, PaymentTypes.BTCLike).ToStringNormalized();
+            entity.DefaultPaymentMethod = invoice.Checkout.DefaultPaymentMethod ?? store.GetDefaultPaymentId()?.ToStringNormalized() ?? new PaymentMethodId(_NetworkProvider.DefaultNetwork.CryptoCode, BitcoinPaymentType.Instance).ToStringNormalized();
             entity.RedirectAutomatically = invoice.Checkout.RedirectAutomatically ?? storeBlob.RedirectAutomatically;
             entity.CheckoutType = invoice.Checkout.CheckoutType;
             entity.RequiresRefundEmail = invoice.Checkout.RequiresRefundEmail;
@@ -258,7 +261,7 @@ namespace BTCPayServer.Controllers
             if (invoice.Checkout.PaymentMethods != null)
             {
                 var supportedTransactionCurrencies = invoice.Checkout.PaymentMethods
-                                                            .Select(c => PaymentMethodId.TryParse(c, out var p) ? p : null)
+                                                            .Select(c => _paymentTypeRegistry.TryParsePaymentMethod(c, out var p) ? p : null)
                                                             .ToHashSet();
                 excludeFilter = PaymentFilter.Where(p => !supportedTransactionCurrencies.Contains(p));
             }

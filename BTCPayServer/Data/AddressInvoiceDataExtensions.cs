@@ -20,16 +20,16 @@ namespace BTCPayServer.Data
             addressInvoiceData.Address = address + "#" + paymentMethodId.ToString();
             return addressInvoiceData;
         }
-        public static PaymentMethodId GetPaymentMethodId(this AddressInvoiceData addressInvoiceData)
+        public static PaymentMethodId GetPaymentMethodId(this AddressInvoiceData addressInvoiceData, PaymentTypeRegistry paymentTypeRegistry)
         {
             if (addressInvoiceData.Address == null)
                 return null;
             var index = addressInvoiceData.Address.LastIndexOf("#", StringComparison.InvariantCulture);
             // Legacy AddressInvoiceData does not have the paymentMethodId attached to the Address
             if (index == -1)
-                return PaymentMethodId.Parse("BTC");
+                return paymentTypeRegistry.ParsePaymentMethod("BTC");
             /////////////////////////
-            return PaymentMethodId.Parse(addressInvoiceData.Address.Substring(index + 1));
+            return paymentTypeRegistry.ParsePaymentMethod(addressInvoiceData.Address.Substring(index + 1));
         }
 #pragma warning restore CS0618
     }

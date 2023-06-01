@@ -64,7 +64,7 @@ namespace BTCPayServer.Controllers.Greenfield
             var excludedPaymentMethods = blob.GetExcludedPaymentMethods();
 
             return store.GetSupportedPaymentMethods(networkProvider)
-                .Where((method) => method.PaymentId.PaymentType == PaymentTypes.BTCLike)
+                .Where((method) => method.PaymentId.PaymentType == BitcoinPaymentType.Instance)
                 .OfType<DerivationSchemeSettings>()
                 .Select(strategy =>
                     new OnChainPaymentMethodData(strategy.PaymentId.CryptoCode,
@@ -210,7 +210,7 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             AssertCryptoCodeWallet(cryptoCode, out _, out _);
 
-            var id = new PaymentMethodId(cryptoCode, PaymentTypes.BTCLike);
+            var id = new PaymentMethodId(cryptoCode, BitcoinPaymentType.Instance);
             var store = Store;
             store.SetSupportedPaymentMethod(id, null);
             await _storeRepository.UpdateStore(store);
@@ -228,7 +228,7 @@ namespace BTCPayServer.Controllers.Greenfield
             string cryptoCode,
             [FromBody] UpdateOnChainPaymentMethodRequest request)
         {
-            var id = new PaymentMethodId(cryptoCode, PaymentTypes.BTCLike);
+            var id = new PaymentMethodId(cryptoCode, BitcoinPaymentType.Instance);
             AssertCryptoCodeWallet(cryptoCode, out var network, out var wallet);
 
             if (string.IsNullOrEmpty(request?.DerivationScheme))
@@ -293,7 +293,7 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             store ??= Store;
             var storeBlob = store.GetStoreBlob();
-            var id = new PaymentMethodId(cryptoCode, PaymentTypes.BTCLike);
+            var id = new PaymentMethodId(cryptoCode, BitcoinPaymentType.Instance);
             var paymentMethod = store
                 .GetSupportedPaymentMethods(_btcPayNetworkProvider)
                 .OfType<DerivationSchemeSettings>()

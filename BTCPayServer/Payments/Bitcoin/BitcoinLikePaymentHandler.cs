@@ -72,7 +72,7 @@ namespace BTCPayServer.Payments.Bitcoin
             if (model.Activated && bip21Case)
             {
                 var lightningInfo = invoiceResponse.CryptoInfo.FirstOrDefault(a =>
-                    a.GetpaymentMethodId() == new PaymentMethodId(model.CryptoCode, PaymentTypes.LightningLike));
+                    a.GetpaymentMethodId() == new PaymentMethodId(model.CryptoCode, LightningPaymentType.Instance));
                 if (lightningInfo is not null && !string.IsNullOrEmpty(lightningInfo.PaymentUrls?.BOLT11))
                 {
                     lightningFallback = lightningInfo.PaymentUrls.BOLT11;
@@ -80,7 +80,7 @@ namespace BTCPayServer.Payments.Bitcoin
                 else
                 {
                     var lnurlInfo = invoiceResponse.CryptoInfo.FirstOrDefault(a =>
-                        a.GetpaymentMethodId() == new PaymentMethodId(model.CryptoCode, PaymentTypes.LNURLPay));
+                        a.GetpaymentMethodId() == new PaymentMethodId(model.CryptoCode, LNURLPayPaymentType.Instance));
                     if (lnurlInfo is not null)
                     {
                         lightningFallback = lnurlInfo.PaymentUrls?.AdditionalData["LNURLP"].ToObject<string>();
@@ -169,7 +169,7 @@ namespace BTCPayServer.Payments.Bitcoin
             return _networkProvider
                 .GetAll()
                 .OfType<BTCPayNetwork>()
-                .Select(network => new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike));
+                .Select(network => new PaymentMethodId(network.CryptoCode, BitcoinPaymentType.Instance));
         }
 
         private string GetPaymentMethodName(BTCPayNetworkBase network)
@@ -194,7 +194,7 @@ namespace BTCPayServer.Payments.Bitcoin
             };
         }
 
-        public override PaymentType PaymentType => PaymentTypes.BTCLike;
+        public override PaymentType PaymentType => BitcoinPaymentType.Instance;
 
         public override async Task<IPaymentMethodDetails> CreatePaymentMethodDetails(
             InvoiceLogs logs,

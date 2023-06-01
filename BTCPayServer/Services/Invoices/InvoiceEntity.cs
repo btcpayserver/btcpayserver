@@ -287,7 +287,7 @@ namespace BTCPayServer.Services.Invoices
 #nullable enable
         public PaymentMethodId? GetDefaultPaymentMethod()
         {
-            PaymentMethodId.TryParse(DefaultPaymentMethod, out var id);
+            _paymentTypeRegistry.TryParsePaymentMethod(DefaultPaymentMethod, out var id);
             return id;
         }
 #nullable restore
@@ -351,7 +351,7 @@ namespace BTCPayServer.Services.Invoices
             {
                 foreach (var strat in DerivationStrategies.Properties())
                 {
-                    if (!PaymentMethodId.TryParse(strat.Name, out var paymentMethodId))
+                    if (!_paymentTypeRegistry.TryParsePaymentMethod(strat.Name, out var paymentMethodId))
                     {
                         continue;
                     }
@@ -550,7 +550,7 @@ namespace BTCPayServer.Services.Invoices
                 {
 
                     paymentId.PaymentType.PopulateCryptoInfo(this, info, cryptoInfo, ServerUrl);
-                    if (paymentId.PaymentType == PaymentTypes.BTCLike)
+                    if (paymentId.PaymentType == BitcoinPaymentType.Instance)
                     {
                         var minerInfo = new MinerFeeInfo();
                         minerInfo.TotalFee = accounting.NetworkFee.Satoshi;
@@ -635,7 +635,7 @@ namespace BTCPayServer.Services.Invoices
                 foreach (var prop in PaymentMethod.Properties())
                 {
                     var r = serializer.ToObject<PaymentMethod>(prop.Value.ToString());
-                    if (!PaymentMethodId.TryParse(prop.Name, out var paymentMethodId))
+                    if (!_paymentTypeRegistry.TryParsePaymentMethod(prop.Name, out var paymentMethodId))
                     {
                         continue;
                     }
@@ -974,7 +974,7 @@ namespace BTCPayServer.Services.Invoices
         public PaymentMethodId GetId()
         {
 #pragma warning disable CS0618 // Type or member is obsolete
-            return new PaymentMethodId(CryptoCode, string.IsNullOrEmpty(PaymentType) ? PaymentTypes.BTCLike : PaymentTypes.Parse(PaymentType));
+            return new PaymentMethodId(CryptoCode, string.IsNullOrEmpty(PaymentType) ? BitcoinPaymentType.Instance : PaymentTypes.Parse(PaymentType));
 #pragma warning restore CS0618 // Type or member is obsolete
         }
 

@@ -38,7 +38,7 @@ namespace BTCPayServer.Data
 #pragma warning restore CS0618 // Type or member is obsolete
             if (paymentData.Blob2 is not null)
             {
-                if (!PaymentMethodId.TryParse(paymentData.Type, out var pmi))
+                if (!_paymentTypeRegistry.TryParsePaymentMethod(paymentData.Type, out var pmi))
                     return null;
                 var network = networks.GetNetwork<BTCPayNetworkBase>(pmi.CryptoCode);
                 if (network is null)

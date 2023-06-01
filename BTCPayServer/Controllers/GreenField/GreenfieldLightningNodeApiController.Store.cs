@@ -150,7 +150,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 throw new JsonHttpException(StoreNotFound());
             }
 
-            var id = new PaymentMethodId(cryptoCode, PaymentTypes.LightningLike);
+            var id = new PaymentMethodId(cryptoCode, LightningPaymentType.Instance);
             var existing = store.GetSupportedPaymentMethods(_btcPayNetworkProvider)
                 .OfType<LightningSupportedPaymentMethod>()
                 .FirstOrDefault(d => d.PaymentId == id);

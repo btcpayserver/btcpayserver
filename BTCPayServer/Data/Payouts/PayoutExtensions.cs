@@ -30,7 +30,7 @@ namespace BTCPayServer.Data
 
         public static PaymentMethodId GetPaymentMethodId(this PayoutData data)
         {
-            return PaymentMethodId.TryParse(data.PaymentMethodId, out var paymentMethodId) ? paymentMethodId : null;
+            return _paymentTypeRegistry.TryParsePaymentMethod(data.PaymentMethodId, out var paymentMethodId) ? paymentMethodId : null;
         }
 
         public static PayoutBlob GetBlob(this PayoutData data, BTCPayNetworkJsonSerializerSettings serializers)

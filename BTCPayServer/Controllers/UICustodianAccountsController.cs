@@ -40,6 +40,7 @@ namespace BTCPayServer.Controllers
         private readonly BTCPayNetworkProvider _networkProvider;
         private readonly LinkGenerator _linkGenerator;
         private readonly FormDataService _formDataService;
+        private readonly PaymentTypeRegistry _paymentTypeRegistry;
 
         public UICustodianAccountsController(
             DisplayFormatter displayFormatter,
@@ -49,7 +50,8 @@ namespace BTCPayServer.Controllers
             BTCPayServerClient btcPayServerClient,
             BTCPayNetworkProvider networkProvider,
             LinkGenerator linkGenerator,
-            FormDataService formDataService
+            FormDataService formDataService,
+            PaymentTypeRegistry paymentTypeRegistry
         )
         {
             _displayFormatter = displayFormatter;
@@ -59,6 +61,7 @@ namespace BTCPayServer.Controllers
             _networkProvider = networkProvider;
             _linkGenerator = linkGenerator;
             _formDataService = formDataService;
+            _paymentTypeRegistry = paymentTypeRegistry;
         }
 
         public string CreatedCustodianAccountId { get; set; }
@@ -505,13 +508,13 @@ namespace BTCPayServer.Controllers
                             await depositableCustodian.GetDepositAddressAsync(paymentMethod, config, default);
                         vm.Address = depositAddressResult.Address;
 
-                        var paymentMethodObj = PaymentMethodId.Parse(paymentMethod);
+                        var paymentMethodObj = _paymentTypeRegistry.ParsePaymentMethod(paymentMethod);
                         if (paymentMethodObj.IsBTCOnChain)
                         {
                             var network = _networkProvider.GetNetwork<BTCPayNetwork>("BTC");
                             var bip21 = network.GenerateBIP21(depositAddressResult.Address, null);
                             vm.Link = bip21.ToString();
-                            var paymentMethodId = PaymentMethodId.TryParse(paymentMethod);
+                            var paymentMethodId = _paymentTypeRegistry.TryParsePaymentMethod(paymentMethod);
                             if (paymentMethodId != null)
                             {
                                 var walletId = new WalletId(storeId, paymentMethodId.CryptoCode);
@@ -552,7 +555,7 @@ namespace BTCPayServer.Controllers
         private string GetImage(PaymentMethodId paymentMethodId, BTCPayNetwork network)
         {
             // TODO this method was copy-pasted from BTCPayServer.Controllers.UIWalletsController.GetImage(). Maybe refactor this?
-            var res = paymentMethodId.PaymentType == PaymentTypes.BTCLike
+            var res = paymentMethodId.PaymentType == BitcoinPaymentType.Instance
                 ? Url.Content(network.CryptoImagePath)
                 : Url.Content(network.LightningImagePath);
             return Request.GetRelativePathOrAbsolute(res);

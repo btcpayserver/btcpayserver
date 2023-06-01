@@ -27,7 +27,7 @@ namespace BTCPayServer.Payments.Lightning
 
         public virtual PaymentType GetPaymentType()
         {
-            return PaymentTypes.LightningLike;
+            return LightningPaymentType.Instance;
         }
 
         public decimal GetNextNetworkFee()

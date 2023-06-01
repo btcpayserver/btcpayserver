@@ -32,6 +32,7 @@ namespace BTCPayServer.Controllers
         private readonly BTCPayNetworkJsonSerializerSettings _serializerSettings;
         private readonly IEnumerable<IPayoutHandler> _payoutHandlers;
         private readonly StoreRepository _storeRepository;
+        private readonly PaymentTypeRegistry _paymentTypeRegistry;
 
         public UIPullPaymentController(ApplicationDbContextFactory dbContextFactory,
             CurrencyNameTable currencyNameTable,
@@ -39,7 +40,8 @@ namespace BTCPayServer.Controllers
             PullPaymentHostedService pullPaymentHostedService,
             BTCPayNetworkJsonSerializerSettings serializerSettings,
             IEnumerable<IPayoutHandler> payoutHandlers,
-            StoreRepository storeRepository)
+            StoreRepository storeRepository,
+            PaymentTypeRegistry paymentTypeRegistry)
         {
             _dbContextFactory = dbContextFactory;
             _currencyNameTable = currencyNameTable;
@@ -48,6 +50,7 @@ namespace BTCPayServer.Controllers
             _serializerSettings = serializerSettings;
             _payoutHandlers = payoutHandlers;
             _storeRepository = storeRepository;
+            _paymentTypeRegistry = paymentTypeRegistry;
         }
 
         [AllowAnonymous]
@@ -96,7 +99,7 @@ namespace BTCPayServer.Controllers
                               Currency = blob.Currency,
                               Status = entity.Entity.State,
                               Destination = entity.Blob.Destination,
-                              PaymentMethod = PaymentMethodId.Parse(entity.Entity.PaymentMethodId),
+                              PaymentMethod = _paymentTypeRegistry.ParsePaymentMethod(entity.Entity.PaymentMethodId),
                               Link = entity.ProofBlob?.Link,
                               TransactionId = entity.ProofBlob?.Id
                           }).ToList()

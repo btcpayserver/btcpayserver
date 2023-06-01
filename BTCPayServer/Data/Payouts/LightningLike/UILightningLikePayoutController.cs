@@ -96,7 +96,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
         {
             await SetStoreContext();
 
-            var pmi = new PaymentMethodId(cryptoCode, PaymentTypes.LightningLike);
+            var pmi = new PaymentMethodId(cryptoCode, LightningPaymentType.Instance);
 
             await using var ctx = _applicationDbContextFactory.CreateContext();
             var payouts = await GetPayouts(ctx, pmi, payoutIds);
@@ -120,7 +120,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
         {
             await SetStoreContext();
 
-            var pmi = new PaymentMethodId(cryptoCode, PaymentTypes.LightningLike);
+            var pmi = new PaymentMethodId(cryptoCode, LightningPaymentType.Instance);
             var payoutHandler = (LightningLikePayoutHandler)_payoutHandlers.FindPayoutHandler(pmi);
 
             await using var ctx = _applicationDbContextFactory.CreateContext();

@@ -150,7 +150,7 @@ namespace BTCPayServer.Controllers
             vm.Config = ProtectString(strategy.ToJson());
             ModelState.Remove(nameof(vm.Config));
 
-            PaymentMethodId paymentMethodId = new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike);
+            PaymentMethodId paymentMethodId = new PaymentMethodId(network.CryptoCode, BitcoinPaymentType.Instance);
             var storeBlob = store.GetStoreBlob();
             if (vm.Confirmation)
             {
@@ -719,7 +719,7 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             }
 
-            PaymentMethodId paymentMethodId = new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike);
+            PaymentMethodId paymentMethodId = new PaymentMethodId(network.CryptoCode, BitcoinPaymentType.Instance);
             store.SetSupportedPaymentMethod(paymentMethodId, null);
 
             await _Repo.UpdateStore(store);
@@ -768,7 +768,7 @@ namespace BTCPayServer.Controllers
 
         private DerivationSchemeSettings GetExistingDerivationStrategy(string cryptoCode, StoreData store)
         {
-            var id = new PaymentMethodId(cryptoCode, PaymentTypes.BTCLike);
+            var id = new PaymentMethodId(cryptoCode, BitcoinPaymentType.Instance);
             var existing = store.GetSupportedPaymentMethods(_NetworkProvider)
                 .OfType<DerivationSchemeSettings>()
                 .FirstOrDefault(d => d.PaymentId == id);

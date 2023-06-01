@@ -22,7 +22,7 @@ namespace BTCPayServer.ModelBinders
                 return Task.CompletedTask;
             }
 
-            if (PaymentMethodId.TryParse(key, out var paymentId))
+            if (_paymentTypeRegistry.TryParsePaymentMethod(key, out var paymentId))
             {
                 bindingContext.Result = ModelBindingResult.Success(paymentId);
             }

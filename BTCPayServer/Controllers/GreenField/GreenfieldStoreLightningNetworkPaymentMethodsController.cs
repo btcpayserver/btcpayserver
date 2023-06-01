@@ -58,7 +58,7 @@ namespace BTCPayServer.Controllers.Greenfield
             var excludedPaymentMethods = blob.GetExcludedPaymentMethods();
 
             return store.GetSupportedPaymentMethods(networkProvider)
-                .Where((method) => method.PaymentId.PaymentType == PaymentTypes.LightningLike)
+                .Where((method) => method.PaymentId.PaymentType == LightningPaymentType.Instance)
                 .OfType<LightningSupportedPaymentMethod>()
                 .Select(paymentMethod =>
                     new LightningNetworkPaymentMethodData(
@@ -110,7 +110,7 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             AssertSupportLightning(cryptoCode);
 
-            var id = new PaymentMethodId(cryptoCode, PaymentTypes.LightningLike);
+            var id = new PaymentMethodId(cryptoCode, LightningPaymentType.Instance);
             var store = Store;
             store.SetSupportedPaymentMethod(id, null);
             await _storeRepository.UpdateStore(store);
@@ -122,7 +122,7 @@ namespace BTCPayServer.Controllers.Greenfield
         public async Task<IActionResult> UpdateLightningNetworkPaymentMethod(string storeId, string cryptoCode,
             [FromBody] UpdateLightningNetworkPaymentMethodRequest request)
         {
-            var paymentMethodId = new PaymentMethodId(cryptoCode, PaymentTypes.LightningLike);
+            var paymentMethodId = new PaymentMethodId(cryptoCode, LightningPaymentType.Instance);
             AssertSupportLightning(cryptoCode);
 
             if (string.IsNullOrEmpty(request.ConnectionString))
@@ -195,7 +195,7 @@ namespace BTCPayServer.Controllers.Greenfield
         {
 
             var storeBlob = store.GetStoreBlob();
-            var id = new PaymentMethodId(cryptoCode, PaymentTypes.LightningLike);
+            var id = new PaymentMethodId(cryptoCode, LightningPaymentType.Instance);
             var paymentMethod = store
                 .GetSupportedPaymentMethods(btcPayNetworkProvider)
                 .OfType<LightningSupportedPaymentMethod>()

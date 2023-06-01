@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace BTCPayServer.Client.Models
 {
     public class StoreData : StoreBaseData
@@ -16,5 +18,13 @@ namespace BTCPayServer.Client.Models
         public string UserId { get; set; }
 
         public string Role { get; set; }
+    }
+
+    public class RoleData
+    {
+        public string Id { get; set; }
+        public List<string> Permissions { get; set; }
+        public string Role { get; set; }
+        public bool IsServerRole { get; set; }
     }
 }

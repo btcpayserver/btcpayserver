@@ -350,6 +350,9 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<HostedServices.WebhookSender>();
             services.AddSingleton<IHostedService, WebhookSender>(o => o.GetRequiredService<WebhookSender>());
             services.AddSingleton<IHostedService, StoreEmailRuleProcessorSender>();
+            services.AddSingleton<IHostedService, PeriodicTaskLauncherHostedService>();
+            services.AddScheduledTask<CleanupWebhookDeliveriesTask>(TimeSpan.FromHours(6.0));
+
             services.AddHttpClient(WebhookSender.OnionNamedClient)
                 .ConfigurePrimaryHttpMessageHandler<Socks5HttpClientHandler>();
             services.AddHttpClient(WebhookSender.LoopbackNamedClient)

@@ -189,11 +189,7 @@ namespace BTCPayServer.Controllers
                 ListWalletsViewModel.WalletViewModel walletVm = new ListWalletsViewModel.WalletViewModel();
                 wallets.Wallets.Add(walletVm);
                 walletVm.Balance = await wallet.Balance + " " + wallet.Wallet.Network.CryptoCode;
-                walletVm.IsOwner = wallet.Store.Role == StoreRoles.Owner;
-                if (!walletVm.IsOwner)
-                {
-                    walletVm.Balance = "";
-                }
+                
 
                 walletVm.CryptoCode = wallet.Network.CryptoCode;
                 walletVm.StoreId = wallet.Store.Id;

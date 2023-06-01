@@ -51,7 +51,6 @@ namespace BTCPayServer.Plugins.PointOfSale
         private readonly LinkGenerator _linkGenerator;
         private readonly IOptions<BTCPayServerOptions> _btcPayServerOptions;
         private readonly DisplayFormatter _displayFormatter;
-        private readonly HtmlSanitizer _htmlSanitizer;
         public const string AppType = "PointOfSale";
 
         public PointOfSaleAppType(
@@ -65,7 +64,6 @@ namespace BTCPayServer.Plugins.PointOfSale
             _linkGenerator = linkGenerator;
             _btcPayServerOptions = btcPayServerOptions;
             _displayFormatter = displayFormatter;
-            _htmlSanitizer = htmlSanitizer;
         }
 
         public override Task<string> ConfigureLink(AppData app)

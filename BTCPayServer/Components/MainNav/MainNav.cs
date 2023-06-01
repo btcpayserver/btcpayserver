@@ -72,7 +72,6 @@ namespace BTCPayServer.Components.MainNav
                 vm.Apps = apps.Select(a => new StoreApp
                 {
                     Id = a.Id,
-                    IsOwner = a.IsOwner,
                     AppName = a.AppName,
                     AppType = a.AppType
                 }).ToList();

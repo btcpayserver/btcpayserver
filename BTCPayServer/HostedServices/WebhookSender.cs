@@ -105,6 +105,8 @@ namespace BTCPayServer.HostedServices
             var newDeliveryBlob = new WebhookDeliveryBlob();
             newDeliveryBlob.Request = oldDeliveryBlob.Request;
             var webhookEvent = newDeliveryBlob.ReadRequestAs<WebhookEvent>();
+            if (webhookEvent.IsPruned())
+                return null;
             webhookEvent.DeliveryId = newDelivery.Id;
             webhookEvent.WebhookId = webhookDelivery.Webhook.Id;
             // if we redelivered a redelivery, we still want the initial delivery here

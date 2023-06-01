@@ -26,6 +26,7 @@ using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Labels;
 using BTCPayServer.Services.Rates;
+using BTCPayServer.Services.Stores;
 using BTCPayServer.Validation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -1380,6 +1381,24 @@ namespace BTCPayServer.Tests
             Assert.Equal(cache.Created.ToUnixTimeSeconds(), cache2.Created.ToUnixTimeSeconds());
             Assert.Equal(cache.States[0].Rates[0].BidAsk, cache2.States[0].Rates[0].BidAsk);
             Assert.Equal(cache.States[0].Rates[0].Pair, cache2.States[0].Rates[0].Pair);
+        }
+
+        [Fact]
+        public void CanParseStoreRoleId()
+        {
+            var id = StoreRoleId.Parse("test::lol");
+            Assert.Equal("test", id.StoreId);
+            Assert.Equal("lol", id.Role);
+            Assert.Equal("test::lol", id.ToString());
+            Assert.Equal("test::lol", id.Id);
+            Assert.False(id.IsServerRole);
+
+            id = StoreRoleId.Parse("lol");
+            Assert.Null(id.StoreId);
+            Assert.Equal("lol", id.Role);
+            Assert.Equal("lol", id.ToString());
+            Assert.Equal("lol", id.Id);
+            Assert.True(id.IsServerRole);
         }
 
         [Fact]

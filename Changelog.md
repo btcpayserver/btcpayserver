@@ -1,5 +1,39 @@
 # Changelog
 
+## 1.10.0
+
+Notice: Due to the substantial disk space consumption, we are removing all data pertaining to past webhook deliveries (#5005).
+
+This data, generally used for debugging integrations, will be regularly purged. Hereafter, any Webhook delivery data older than two months will be automatically deleted.
+
+### New features
+
+* In addition to the `Owner` and `Guest` role available for users of a store, it is now possible to create new custom roles and to adjust the permissions granted by `Owner` and `Guest`. (#4940) @Kukks
+* Forms: It was only possible to configure a forms via some JSON configuration, we now have a nice UI editor for it (#4968) @dennisreimann @dstrukt
+* Setting to hide sensitive info, such as balances and amounts (#4966) @dennisreimann
+* Forms: Add multiline input (#4942) @dennisreimann
+* In the refund workflow, make it easier to only reimburse overpaid amounts (#4934 #4812) @dennisreimann
+
+### Bug fixes
+
+* Fix: When using LNbank, payments would sometimes not be detected by BTCPay Server (dennisreimann/btcpayserver-plugin-lnbank#33) @NicolasDorier
+* Fix: If a altcoins is disabled from BTCPay and payout processor is used, it would crash at restart (#4997) @NicolasDorier
+* Fix: When the default currency of the store is SATS, the display on the dashboard was broken (#4994) @dennisreimann
+* Fix: When using a LND node, multi path payments with custom records would not be detected as valid payment @dennisreimann
+
+### Improvements
+
+* Crowdfund and PoS app settings were saved in YAML, we are now using JSON. (#4792) @Kukks
+* Add minrelayfee to payjoin request (#4689) @Kukks
+* Improve invoice filtering UI (#4914) @dennisreimann @dstrukt
+* Stop generating new addresses when a new payment is detected (#4984) @NicolasDorier
+* Support Core Lightning v23.05 (#4970) @NicolasDorier
+* Checkout v2: Improve expired paid partial state (#4827) @dennisreimann
+* Improve create first store case (#4951) @dennisreimann @dstrukt
+* Improve Refund UI/UX (#4934 #3839 #4812) @dennisreimann @dstrukt
+* Prune old webhook delivery data (#5005) @NicolasDorier
+* Can mark expired invoices as complete or invalid (#5006) @dennisreimann
+
 ## 1.9.3
 
 ### Bug fixes

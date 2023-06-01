@@ -9,6 +9,13 @@ namespace BTCPayServer.Client
 {
     public partial class BTCPayServerClient
     {
+        public virtual async Task<List<RoleData>> GetStoreRoles(string storeId,
+            CancellationToken token = default)
+        {
+            using var response = await _httpClient.SendAsync(CreateHttpRequest($"api/v1/stores/{storeId}/roles"), token);
+            return await HandleResponse<List<RoleData>>(response);
+        }
+        
         public virtual async Task<IEnumerable<StoreUserData>> GetStoreUsers(string storeId,
             CancellationToken token = default)
         {

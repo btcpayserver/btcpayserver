@@ -12,6 +12,7 @@
     Layout = null;
     ViewData["Title"] = $"Receipt from {Model.StoreName}";
     var isProcessing = Model.Status == InvoiceStatus.Processing;
+    var isFreeInvoice = (Model.Status == InvoiceStatus.New && Model.Amount == 0);
     var isSettled = Model.Status == InvoiceStatus.Settled;
 }
 <!DOCTYPE html>
@@ -22,8 +23,14 @@
     <meta name="robots" content="noindex,nofollow">
     @if (isProcessing)
     {
-        <script type="text/javascript">       
-            setTimeout(() => { window.location.reload(); }, 10000); 
+        <script type="text/javascript">
+            setTimeout(() => { window.location.reload(); }, 10000);
+        </script>
+    }
+	else if (isFreeInvoice)
+    {
+        <script type="text/javascript">
+            setTimeout(() => { window.location.reload(); }, 2000);
         </script>
     }
     <style>

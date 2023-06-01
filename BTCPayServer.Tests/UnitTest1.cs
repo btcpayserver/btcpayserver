@@ -1962,7 +1962,8 @@ namespace BTCPayServer.Tests
             Assert.Empty(appList2.Apps);
             Assert.Equal("test", appList.Apps[0].AppName);
             Assert.Equal(apps.CreatedAppId, appList.Apps[0].Id);
-            Assert.True(app.IsOwner);
+            
+            Assert.True(app.Role.ToPermissionSet(app.StoreId).Contains(Policies.CanModifyStoreSettings, app.StoreId));
             Assert.Equal(user.StoreId, appList.Apps[0].StoreId);
             Assert.IsType<NotFoundResult>(apps2.DeleteApp(appList.Apps[0].Id));
             Assert.IsType<ViewResult>(apps.DeleteApp(appList.Apps[0].Id));

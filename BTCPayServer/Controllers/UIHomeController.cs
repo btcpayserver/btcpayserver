@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -9,30 +8,18 @@ using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
-using BTCPayServer.Components.StoreSelector;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
-using BTCPayServer.HostedServices;
 using BTCPayServer.Models;
 using BTCPayServer.Models.StoreViewModels;
-using BTCPayServer.Payments;
-using BTCPayServer.Payments.Lightning;
-using BTCPayServer.Security;
 using BTCPayServer.Services;
-using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Stores;
-using ExchangeSharp;
-using Google.Apis.Auth.OAuth2;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.FileProviders;
-using Microsoft.Extensions.Logging;
-using NBitcoin;
-using NBitcoin.Payment;
-using NBitpayClient;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -92,13 +79,13 @@ namespace BTCPayServer.Controllers
                     var store = await _storeRepository.FindStore(storeId, userId);
                     if (store != null)
                     {
-                        return RedirectToStore(store);
+                        return RedirectToStore(userId, store);
                     }
                 }
 
                 var stores = await _storeRepository.GetStoresByUserId(userId);
                 return stores.Any()
-                    ? RedirectToStore(stores.First())
+                    ? RedirectToStore(userId, stores.First())
                     : RedirectToAction(nameof(UIUserStoresController.CreateStore), "UIUserStores");
             }
 
@@ -211,9 +198,9 @@ namespace BTCPayServer.Controllers
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
 
-        public RedirectToActionResult RedirectToStore(StoreData store)
+        public RedirectToActionResult RedirectToStore(string userId, StoreData store)
         {
-            return store.HasPermission(Policies.CanModifyStoreSettings)
+            return store.HasPermission(userId, Policies.CanModifyStoreSettings)
                 ? RedirectToAction("Dashboard", "UIStores", new { storeId = store.Id })
                 : RedirectToAction("ListInvoices", "UIInvoice", new { storeId = store.Id });
         }

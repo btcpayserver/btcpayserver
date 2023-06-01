@@ -1,5 +1,6 @@
 @using BTCPayServer.Services.Apps
 @using BTCPayServer.Abstractions.Models
+@using BTCPayServer.Client
 @model ListAppsViewModel
 @inject AppService AppService
 @{
@@ -79,14 +80,11 @@
                 {
                     <tr>
                         <td>
-                            @if (app.IsOwner)
-                            {
-                                <span><a asp-controller="UIStores" asp-action="GeneralSettings" asp-route-storeId="@app.StoreId">@app.StoreName</a></span>
-                            }
-                            else
-                            {
-                                <span>@app.StoreName</span>
-                            }
+                            <span permission="@Policies.CanModifyStoreSettings">
+                                <a asp-controller="UIStores" asp-action="GeneralSettings" asp-route-storeId="@app.StoreId">@app.StoreName</a>
+                            </span>
+
+                            <span not-permission="@Policies.CanModifyStoreSettings">@app.StoreName</span>
                         </td>
                         <td>@app.AppName</td>
                         <td>
@@ -100,13 +98,14 @@
                                 <span>@viewStyle</span>
                             }
                         </td>
-                        <td class="text-end">
-                            @if (app.IsOwner)
-                            {
+                        <td class="text-end" permission="@Policies.CanModifyStoreSettings">
+                           
                                 <a asp-action="@app.UpdateAction" asp-controller="UIApps" asp-route-appId="@app.Id" asp-route-storeId="@app.StoreId">Settings</a>
                                 <span> - </span>
-                            }
+                            
 					        <a asp-action="DeleteApp" asp-route-appId="@app.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The app <strong>@Html.Encode(app.AppName)</strong> and its settings will be permanently deleted from your store <strong>@Html.Encode(app.StoreName)</strong>." data-confirm-input="DELETE">Delete</a>
+                        </td>
+                        <td class="text-end" no-permission="@Policies.CanModifyStoreSettings">
                         </td>
                     </tr>
                 }

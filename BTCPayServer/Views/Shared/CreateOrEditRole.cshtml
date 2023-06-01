@@ -1,0 +1,120 @@
+@using BTCPayServer.Client
+@using BTCPayServer.Views.Server
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using BTCPayServer.Abstractions.Extensions
+@using BTCPayServer.Abstractions.TagHelpers
+@using BTCPayServer.Controllers
+@using BTCPayServer.Views.Stores
+@model UpdateRoleViewModel
+@{
+    Layout = "_NavLayout.cshtml";
+    var role = Context.GetRouteValue("role") as string;
+
+    if (role == "create")
+        role = null;
+
+    var storeId = Context.GetRouteValue("storeId") as string;
+    var controller = ViewContext.RouteData.Values["controller"].ToString().TrimEnd("Controller", StringComparison.InvariantCultureIgnoreCase);
+    if (storeId is null)
+        ViewData.SetActivePage(ServerNavPages.Roles, role is null ? "Create role" : "Update role");
+
+    else
+    {
+        ViewData.SetActivePage(StoreNavPages.Roles, role is null ? "Create role" : "Update role");
+    }
+    var storePolicies = Policies.AllPolicies.Where(Policies.IsStorePolicy).ToArray();
+
+}
+
+<h3 class="mb-4">@ViewData["Title"]</h3>
+
+<div class="row">
+    <div class="col-xxl-constrain">
+        <form method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="form-group" style="max-width:320px">
+                <label asp-for="Role" class="form-label"></label>
+				@if (role == null)
+				{
+					<input asp-for="Role" required="required" class="form-control" />
+				}
+				else
+				{
+				    <input type="hidden" asp-for="Role"/>
+					<input  required="required" class="form-control" disabled value="@Model.Role" />					
+				}
+				<span asp-validation-for="Role" class="text-danger"></span>
+            </div>
+
+            <h4 class="mt-4 mb-3">Permissions</h4>
+            <select multiple="multiple" asp-for="Policies" class="form-select hide-when-js">
+                @foreach (var policy in storePolicies)
+                {
+                    <option value="@policy" class="text-truncate" asp-selected="@(Model.Policies?.Contains(policy) ?? false)">@policy</option>
+                }
+            </select>
+            <div class="list-group mb-2">
+                @{
+                    var storePolicyMap = Permission.PolicyMap.Where(pair => Policies.IsStorePolicy(pair.Key)).ToArray();
+                    var topMostPolicies = storePolicyMap.Where(pair => !storePolicyMap.Any(valuePair => valuePair.Value.Contains(pair.Key)));
+                    @foreach (var policy in topMostPolicies)
+                    {
+                        RenderTree(policy, storePolicyMap, Model.Policies.Contains(policy.Key));
+                    }
+                }
+            </div>
+            <span asp-validation-for="Policies" class="text-danger"></span>
+            <button id="Save" type="submit" class="btn btn-primary" name="command" value="Save">Save</button>
+        </form>
+    </div>
+</div>
+
+@{
+    void RenderTree(KeyValuePair<string, HashSet<string>> policy, KeyValuePair<string, HashSet<string>>[] storePolicyMap, bool isChecked)
+    {
+        <div class="form-check mb-0">
+            <input type="checkbox" class="form-check-input policy-cb" checked="@isChecked" value="@policy.Key" id="Policy-@policy.Key.Replace(".", "_")" />
+            <label class="h5 fw-semibold form-check-label mb-1" for="Policy-@policy.Key.Replace(".", "_")" data-bs-toggle="tooltip" title="@policy.Key">
+                @UIManageController.AddApiKeyViewModel.PermissionValueItem.PermissionDescriptions[policy.Key].Title
+            </label>
+            <p class="text-muted">@UIManageController.AddApiKeyViewModel.PermissionValueItem.PermissionDescriptions[policy.Key].Description</p>
+            @if (policy.Value?.Any() is true)
+            {
+                <div class="list-group">
+                    @foreach (var subPolicy in policy.Value)
+                    {
+                        var match = storePolicyMap.SingleOrDefault(pair => pair.Key == subPolicy);
+                        RenderTree(match.Key is not null ? match : new KeyValuePair<string, HashSet<string>>(subPolicy, null), storePolicyMap, !isChecked && Model.Policies.Contains(subPolicy));
+                    }
+                </div>
+            }
+        </div>
+    }
+}
+<script>
+    function handleCheckboxChange(element) {
+        const { checked, value: policy } = element;
+        const policySelect = document.getElementById('Policies');
+        const subPolicies = element.parentElement.querySelectorAll(`.list-group .policy-cb:not([value="${policy}"])`);
+        
+        policySelect.querySelector(`option[value="${policy}"]`).selected = checked;
+        subPolicies.forEach(subPolicy => {
+            subPolicy.checked = checked? false : subPolicy.checked;
+            if (checked){
+                subPolicy.setAttribute("disabled", "disabled");
+            } else {
+                subPolicy.removeAttribute("disabled");
+            }
+            policySelect.querySelector(`option[value="${subPolicy.value}"]`).selected = subPolicy.checked;
+        });
+    }
+    
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll(".policy-cb:checked").forEach(handleCheckboxChange);
+        
+        delegate('change', '.policy-cb', event => {
+           handleCheckboxChange(event.target);
+        });
+    });    
+</script>

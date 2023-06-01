@@ -38,7 +38,7 @@
                                 @Safe.Raw("or more")
                             }
                         }
-                        else if (item.PriceType != ViewPointOfSaleViewModel.ItemPriceType.Fixed )
+                        else if (item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Topup )
                         {
                             @Safe.Raw("Any amount")
                         }else if (item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Fixed)

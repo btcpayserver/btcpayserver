@@ -6,12 +6,12 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
+using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
 using BTCPayServer.Fido2;
 using BTCPayServer.Fido2.Models;
-using BTCPayServer.Logging;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Plugins.Crowdfund;
@@ -40,7 +40,6 @@ namespace BTCPayServer.Hosting
 {
     public class MigrationStartupTask : IStartupTask
     {
-        public Logs Logs { get; }
 
         private readonly ApplicationDbContextFactory _DBContextFactory;
         private readonly StoreRepository _StoreRepository;
@@ -110,12 +109,6 @@ namespace BTCPayServer.Hosting
                 {
                     await DeprecatedLightningConnectionStringCheck();
                     settings.DeprecatedLightningConnectionStringCheck = true;
-                    await _Settings.UpdateSetting(settings);
-                }
-                if (!settings.UnreachableStoreCheck)
-                {
-                    await UnreachableStoreCheck();
-                    settings.UnreachableStoreCheck = true;
                     await _Settings.UpdateSetting(settings);
                 }
                 if (!settings.ConvertMultiplierToSpread)
@@ -1067,11 +1060,6 @@ retry:
             {
                 return rate * (decimal)Multiplier;
             }
-        }
-
-        private Task UnreachableStoreCheck()
-        {
-            return _StoreRepository.CleanUnreachableStores();
         }
 
         private async Task DeprecatedLightningConnectionStringCheck()

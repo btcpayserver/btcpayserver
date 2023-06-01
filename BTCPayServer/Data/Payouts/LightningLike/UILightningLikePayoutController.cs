@@ -74,6 +74,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                     .Include(data => data.PullPaymentData)
                     .ThenInclude(data => data.StoreData)
                     .ThenInclude(data => data.UserStores)
+                    .ThenInclude(data => data.StoreRole)
                     .Where(data =>
                         payoutIds.Contains(data.Id) &&
                         data.State == PayoutState.AwaitingPayment &&
@@ -84,7 +85,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                     if (approvedStores.TryGetValue(payout.PullPaymentData.StoreId, out var value))
                         return value;
                     value = payout.PullPaymentData.StoreData.UserStores
-                        .Any(store => store.Role == StoreRoles.Owner && store.ApplicationUserId == userId);
+                        .Any(store => store.ApplicationUserId == userId && store.StoreRole.Permissions.Contains(Policies.CanModifyStoreSettings));
                     approvedStores.Add(payout.PullPaymentData.StoreId, value);
                     return value;
                 }).ToList();

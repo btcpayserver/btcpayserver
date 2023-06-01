@@ -397,6 +397,9 @@
                     },
                     "404": {
                         "description": "The delivery does not exists."
+                    },
+                    "409": {
+                        "description": "`webhookdelivery-pruned`: This webhook delivery has been pruned, so it can't be redelivered."
                     }
                 },
                 "security": [
@@ -459,6 +462,9 @@
                     },
                     "404": {
                         "description": "The delivery does not exists."
+                    },
+                    "409": {
+                        "description": "`webhookdelivery-pruned`: This webhook delivery has been pruned, so it can't be redelivered."
                     }
                 },
                 "security": [

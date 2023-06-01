@@ -34,44 +34,44 @@ namespace BTCPayServer.Services.Apps
                 new()
                 {
                     Id = "rooibos",
-                    Title = "Rooibos",
+                    Title = "Rooibos (limited)",
                     Description =
                         "Rooibos is a dramatic red tea made from a South African herb that contains polyphenols and flavonoids. Often called 'African redbush tea', Rooibos herbal tea delights the senses and delivers potential health benefits with each caffeine-free sip.",
                     Image = "~/img/pos-sample/rooibos.jpg",
                     PriceType = ViewPointOfSaleViewModel.ItemPriceType.Fixed,
-                    Price = 1.2m
+                    Price = 1.2m,
+                    Inventory = 5,
                 },
                 new()
                 {
                     Id = "pu-erh",
-                    Title = "Pu Erh",
+                    Title = "Pu Erh (free)",
                     Description =
                         "This loose pur-erh tea is produced in Yunnan Province, China. The process in a relatively high humidity environment has mellowed the elemental character of the tea when compared to young Pu-erh.",
                     Image = "~/img/pos-sample/pu-erh.jpg",
                     PriceType = ViewPointOfSaleViewModel.ItemPriceType.Fixed,
-                    Price = 2
+                    Price = 0
                 },
                 new()
                 {
                     Id = "herbal-tea",
-                    Title = "Herbal Tea",
+                    Title = "Herbal Tea (minimum)",
                     Description =
                         "Chamomile tea is made from the flower heads of the chamomile plant. The medicinal use of chamomile dates back to the ancient Egyptians, Romans and Greeks. Pay us what you want!",
                     Image = "~/img/pos-sample/herbal-tea.jpg",
                     PriceType = ViewPointOfSaleViewModel.ItemPriceType.Minimum,
                     Price = 1.8m,
-                    Disabled = true
+                    Disabled = false
                 },
                 new()
                 {
                     Id = "fruit-tea",
-                    Title = "Fruit Tea",
+                    Title = "Fruit Tea (any amount)",
                     Description =
                         "The Tibetan Himalayas, the land is majestic and beautiful—a spiritual place where, despite the perilous environment, many journey seeking enlightenment. Pay us what you want!",
                     Image = "~/img/pos-sample/fruit-tea.jpg",
                     PriceType = ViewPointOfSaleViewModel.ItemPriceType.Topup,
-                    Inventory = 5,
-                    Disabled = true
+                    Disabled = false
                 }
             });
             DefaultView = PosViewType.Static;

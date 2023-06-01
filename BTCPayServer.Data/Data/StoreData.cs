@@ -1,13 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Text;
-using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using PayoutProcessorData = BTCPayServer.Data.PayoutProcessorData;
 
 namespace BTCPayServer.Data
 {
@@ -37,8 +34,6 @@ namespace BTCPayServer.Data
 
         public byte[] StoreCertificate { get; set; }
 
-        [NotMapped] public string Role { get; set; }
-
         public string StoreBlob { get; set; }
 
         [Obsolete("Use GetDefaultPaymentId instead")]
@@ -52,6 +47,7 @@ namespace BTCPayServer.Data
         public IEnumerable<CustodianAccountData> CustodianAccounts { get; set; }
         public IEnumerable<StoreSettingData> Settings { get; set; }
         public IEnumerable<FormData> Forms { get; set; }
+        public IEnumerable<StoreRole> StoreRoles { get; set; }
 
         internal static void OnModelCreating(ModelBuilder builder, DatabaseFacade databaseFacade)
         {

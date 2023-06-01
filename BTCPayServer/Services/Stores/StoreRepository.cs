@@ -3,7 +3,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Amazon.S3;
 using BTCPayServer.Abstractions.Contracts;
+using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Migrations;
@@ -18,6 +20,7 @@ namespace BTCPayServer.Services.Stores
     {
         private readonly ApplicationDbContextFactory _ContextFactory;
         private readonly EventAggregator _eventAggregator;
+        private readonly SettingsRepository _settingsRepository;
 
         public JsonSerializerSettings SerializerSettings { get; }
 
@@ -25,10 +28,11 @@ namespace BTCPayServer.Services.Stores
         {
             return _ContextFactory.CreateContext();
         }
-        public StoreRepository(ApplicationDbContextFactory contextFactory, JsonSerializerSettings serializerSettings, EventAggregator eventAggregator)
+        public StoreRepository(ApplicationDbContextFactory contextFactory, JsonSerializerSettings serializerSettings, EventAggregator eventAggregator, SettingsRepository settingsRepository)
         {
             _ContextFactory = contextFactory ?? throw new ArgumentNullException(nameof(contextFactory));
             _eventAggregator = eventAggregator;
+            _settingsRepository = settingsRepository;
             SerializerSettings = serializerSettings;
         }
 
@@ -45,56 +49,168 @@ namespace BTCPayServer.Services.Stores
         {
             ArgumentNullException.ThrowIfNull(userId);
             await using var ctx = _ContextFactory.CreateContext();
-            return (await ctx
-                    .UserStore
-                    .Where(us => us.ApplicationUserId == userId && us.StoreDataId == storeId)
-                    .Include(store => store.StoreData.UserStores)
-                    .Select(us => new
-                    {
-                        Store = us.StoreData,
-                        Role = us.Role
-                    }).ToArrayAsync())
-                .Select(us =>
-                {
-                    us.Store.Role = us.Role;
-                    return us.Store;
-                }).FirstOrDefault();
+            return await ctx
+                .UserStore
+                .Where(us => us.ApplicationUserId == userId && us.StoreDataId == storeId)
+                .Include(store => store.StoreData.UserStores)
+                .ThenInclude(store => store.StoreRole)
+                .Select(us => us.StoreData).FirstOrDefaultAsync();
         }
 #nullable disable
         public class StoreUser
         {
             public string Id { get; set; }
             public string Email { get; set; }
+            public StoreRole StoreRole { get; set; }
+        }
+
+        public class StoreRole
+        {
+            public PermissionSet ToPermissionSet(string storeId)
+            {
+                return new PermissionSet(Permissions
+                    .Select(s => Permission.TryCreatePermission(s, storeId, out var permission) ? permission : null)
+                    .Where(s => s != null).ToArray());
+            }
             public string Role { get; set; }
+            public List<string> Permissions { get; set; }
+            public bool IsServerRole { get; set; }
+            public string Id { get; set; }
+            public bool? IsUsed { get; set; }
         }
 #nullable enable
+        public async Task<StoreRole[]> GetStoreRoles(string? storeId, bool includeUsers = false, bool storeOnly = false)
+        {
+            await using var ctx = _ContextFactory.CreateContext();
+            var query = ctx.StoreRoles.Where(u => (storeOnly && u.StoreDataId == storeId) || (!storeOnly && (u.StoreDataId == null || u.StoreDataId == storeId)));
+            if (includeUsers)
+            {
+                query = query.Include(u => u.Users);
+            }
+            return (await query.ToArrayAsync()).Select(role => ToStoreRole(role)).ToArray();
+        }
+
+        public async Task<StoreRoleId> GetDefaultRole()
+        {
+            var r = (await _settingsRepository.GetSettingAsync<PoliciesSettings>())?.DefaultRole;
+            if (r is not null)
+                return new StoreRoleId(r);
+            return StoreRoleId.Owner;
+        }
+        public async Task SetDefaultRole(string role)
+        {
+            var s = (await _settingsRepository.GetSettingAsync<PoliciesSettings>()) ?? new PoliciesSettings();
+            s.DefaultRole = role;
+            await _settingsRepository.UpdateSetting(s);
+        }
+
+        public async Task<StoreRole?> GetStoreRole(StoreRoleId role, bool includeUsers = false)
+        {
+            await using var ctx = _ContextFactory.CreateContext();
+            var query = ctx.StoreRoles.AsQueryable();
+            if (includeUsers)
+            {
+                query = query.Include(u => u.Users);
+            }
+            var match = await query.SingleOrDefaultAsync(r => r.Id == role.Id);
+            if (match == null)
+                return null;
+            if (match.StoreDataId != role.StoreId)
+                // Should never happen because the roleId include the storeId
+                throw new InvalidOperationException("Bug 03991: This should never happen");
+            return ToStoreRole(match);
+        }
+
+        public async Task<string?> RemoveStoreRole(StoreRoleId role)
+        {
+            await using var ctx = _ContextFactory.CreateContext();
+            if (await GetDefaultRole() == role)
+            {
+                return "Cannot remove the default role";
+            }
+
+            var match = await ctx.StoreRoles.FindAsync(role.Id);
+            if (match != null && match.StoreDataId == role.StoreId)
+            {
+                if (role.StoreId is null && match.Permissions.Contains(Policies.CanModifyStoreSettings) &&
+                    await ctx.StoreRoles.CountAsync(role =>
+                        role.StoreDataId == null && role.Permissions.Contains(Policies.CanModifyStoreSettings)) == 1)
+                    return "This is the last role that allows to modify store settings, you cannot remove it";
+                ctx.StoreRoles.Remove(match);
+                await ctx.SaveChangesAsync();
+                return null;
+            }
+
+            return "Role not found";
+        }
+
+        public async Task<StoreRole?> AddOrUpdateStoreRole(StoreRoleId role, List<string> policies)
+        {
+            policies = policies.Where(s => Policies.IsValidPolicy(s) && Policies.IsStorePolicy(s)).ToList();
+            await using var ctx = _ContextFactory.CreateContext();
+            Data.StoreRole? match = await ctx.StoreRoles.FindAsync(role.Id);
+            if (match is null)
+            {
+                match = new Data.StoreRole() { Id = role.Id, StoreDataId = role.StoreId, Role = role.Role };
+                ctx.StoreRoles.Add(match);
+            }
+            match.Permissions = policies;
+            try
+            {
+                await ctx.SaveChangesAsync();
+            }
+            catch (DbUpdateException)
+            {
+                return null;
+            }
+            return ToStoreRole(match);
+        }
+
+
         public async Task<StoreUser[]> GetStoreUsers(string storeId)
         {
             ArgumentNullException.ThrowIfNull(storeId);
-            using var ctx = _ContextFactory.CreateContext();
-            return await ctx
-                .UserStore
-                .Where(u => u.StoreDataId == storeId)
-                .Select(u => new StoreUser()
-                {
-                    Id = u.ApplicationUserId,
-                    Email = u.ApplicationUser.Email,
-                    Role = u.Role
-                }).ToArrayAsync();
+            await using var ctx = _ContextFactory.CreateContext();
+            return (await
+                ctx
+                    .UserStore
+                    .Where(u => u.StoreDataId == storeId)
+                    .Include(u => u.StoreRole)
+                    .Select(u => new
+                    {
+                        Id = u.ApplicationUserId,
+                        u.ApplicationUser.Email,
+                        u.StoreRole
+                    }).ToArrayAsync()).Select(arg => new StoreUser()
+                    {
+                        StoreRole = ToStoreRole(arg.StoreRole),
+                        Id = arg.Id,
+                        Email = arg.Email
+                    }).ToArray();
+        }
+
+        public static StoreRole ToStoreRole(Data.StoreRole storeRole)
+        {
+            return new StoreRole()
+            {
+                Id = storeRole.Id,
+                Role = storeRole.Role,
+                Permissions = storeRole.Permissions,
+                IsServerRole = storeRole.StoreDataId == null,
+                IsUsed = storeRole.Users?.Any()
+            };
         }
 
         public async Task<StoreData[]> GetStoresByUserId(string userId, IEnumerable<string>? storeIds = null)
         {
-            using var ctx = _ContextFactory.CreateContext();
+            await using var ctx = _ContextFactory.CreateContext();
             return (await ctx.UserStore
                 .Where(u => u.ApplicationUserId == userId && (storeIds == null || storeIds.Contains(u.StoreDataId)))
-                .Select(u => new { u.StoreData, u.Role })
-                .ToArrayAsync())
-                .Select(u =>
-                {
-                    u.StoreData.Role = u.Role;
-                    return u.StoreData;
-                }).ToArray();
+                .Include(store => store.StoreData)
+                .ThenInclude(data => data.UserStores)
+                .ThenInclude(data => data.StoreRole)
+                .Select(store => store.StoreData)
+                .ToArrayAsync());
         }
 
         public async Task<StoreData?> GetStoreByInvoiceId(string invoiceId)
@@ -105,20 +221,58 @@ namespace BTCPayServer.Services.Stores
             return matched?.StoreData;
         }
 
-        public async Task<bool> AddStoreUser(string storeId, string userId, string role)
+        /// <summary>
+        /// `role` can be passed in two format:
+        /// STOREID::ROLE or ROLE.
+        /// If the first case, this method make sure the storeId is same as <paramref name="storeId"/>.
+        /// In the second case, we interprete ROLE as a server level roleId first, then if it does not exist, check if there is a store level role.
+        /// </summary>
+        /// <param name="storeId"></param>
+        /// <param name="role"></param>
+        /// <returns></returns>
+        public async Task<StoreRoleId?> ResolveStoreRoleId(string? storeId, string? role)
         {
-            using var ctx = _ContextFactory.CreateContext();
-            var userStore = new UserStore() { StoreDataId = storeId, ApplicationUserId = userId, Role = role };
+            if (string.IsNullOrWhiteSpace(role))
+                return null;
+            if (storeId?.Contains("::", StringComparison.OrdinalIgnoreCase) is true)
+                return null;
+            var roleId = StoreRoleId.Parse(role);
+            if (roleId.StoreId != null && roleId.StoreId != storeId)
+                return null;
+            if ((await GetStoreRole(roleId)) != null)
+                return roleId;
+            if (string.IsNullOrEmpty(storeId))
+                return null;
+            if (roleId.IsServerRole)
+                roleId = new StoreRoleId(storeId, role);
+            if ((await GetStoreRole(roleId)) != null)
+                return roleId;
+            return null;
+        }
+
+        public async Task<bool> AddStoreUser(string storeId, string userId, StoreRoleId? roleId = null)
+        {
+            ArgumentNullException.ThrowIfNull(storeId);
+            AssertStoreRoleIfNeeded(storeId, roleId);
+            roleId ??= await GetDefaultRole();
+            await using var ctx = _ContextFactory.CreateContext();
+            var userStore = new UserStore() { StoreDataId = storeId, ApplicationUserId = userId, StoreRoleId = roleId.Id };
             ctx.UserStore.Add(userStore);
             try
             {
                 await ctx.SaveChangesAsync();
                 return true;
             }
-            catch (Microsoft.EntityFrameworkCore.DbUpdateException)
+            catch (DbUpdateException)
             {
                 return false;
             }
+        }
+
+        static void AssertStoreRoleIfNeeded(string storeId, StoreRoleId? roleId)
+        {
+            if (roleId?.StoreId != null && storeId != roleId.StoreId)
+                throw new ArgumentException("The roleId doesn't belong to this storeId", nameof(roleId));
         }
 
         public async Task CleanUnreachableStores()
@@ -127,7 +281,10 @@ namespace BTCPayServer.Services.Stores
             if (!ctx.Database.SupportDropForeignKey())
                 return;
             var events = new List<Events.StoreRemovedEvent>();
-            foreach (var store in await ctx.Stores.Where(s => s.UserStores.All(u => u.Role != StoreRoles.Owner)).ToArrayAsync())
+            foreach (var store in await ctx.Stores.Include(data => data.UserStores)
+                         .ThenInclude(store => store.StoreRole).Where(s =>
+                             s.UserStores.All(u => !u.StoreRole.Permissions.Contains(Policies.CanModifyStoreSettings)))
+                         .ToArrayAsync())
             {
                 ctx.Stores.Remove(store);
                 events.Add(new Events.StoreRemovedEvent(store.Id));
@@ -139,8 +296,8 @@ namespace BTCPayServer.Services.Stores
         public async Task<bool> RemoveStoreUser(string storeId, string userId)
         {
             await using var ctx = _ContextFactory.CreateContext();
-            if (!await ctx.UserStore.AnyAsync(store =>
-                    store.StoreDataId == storeId && store.Role == StoreRoles.Owner &&
+            if (!await ctx.UserStore.Include(store => store.StoreRole).AnyAsync(store =>
+                    store.StoreDataId == storeId && store.StoreRole.Permissions.Contains(Policies.CanModifyStoreSettings) &&
                     userId != store.ApplicationUserId))
                 return false;
             var userStore = new UserStore() { StoreDataId = storeId, ApplicationUserId = userId };
@@ -156,7 +313,7 @@ namespace BTCPayServer.Services.Stores
             await using var ctx = _ContextFactory.CreateContext();
             if (ctx.Database.SupportDropForeignKey())
             {
-                if (!await ctx.UserStore.Where(u => u.StoreDataId == storeId && u.Role == StoreRoles.Owner).AnyAsync())
+                if (!await ctx.UserStore.Where(u => u.StoreDataId == storeId && u.StoreRole.Permissions.Contains(Policies.CanModifyStoreSettings)).AnyAsync())
                 {
                     var store = await ctx.Stores.FindAsync(storeId);
                     if (store != null)
@@ -168,20 +325,23 @@ namespace BTCPayServer.Services.Stores
                 }
             }
         }
-        public async Task CreateStore(string ownerId, StoreData storeData)
+        public async Task CreateStore(string ownerId, StoreData storeData, StoreRoleId? roleId = null)
         {
             if (!string.IsNullOrEmpty(storeData.Id))
                 throw new ArgumentException("id should be empty", nameof(storeData.StoreName));
             if (string.IsNullOrEmpty(storeData.StoreName))
                 throw new ArgumentException("name should not be empty", nameof(storeData.StoreName));
             ArgumentNullException.ThrowIfNull(ownerId);
-            using var ctx = _ContextFactory.CreateContext();
+            AssertStoreRoleIfNeeded(storeData.Id, roleId);
+            await using var ctx = _ContextFactory.CreateContext();
             storeData.Id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(32));
+            roleId ??= await GetDefaultRole();
+
             var userStore = new UserStore
             {
                 StoreDataId = storeData.Id,
                 ApplicationUserId = ownerId,
-                Role = StoreRoles.Owner,
+                StoreRoleId = roleId.Id,
             };
 
             ctx.Add(storeData);
@@ -234,7 +394,7 @@ namespace BTCPayServer.Services.Stores
                 .Where(s => s.StoreId == storeId && s.WebhookId == webhookId)
                 .SelectMany(s => s.Webhook.Deliveries)
                 .OrderByDescending(s => s.Timestamp);
-            if (count is int c)
+            if (count is { } c)
                 req = req.Take(c);
             return await req
                 .ToArrayAsync();
@@ -429,6 +589,68 @@ retry:
         {
             using var ctx = _ContextFactory.CreateContext();
             return ctx.Database.SupportDropForeignKey();
+        }
+    }
+
+    public record StoreRoleId
+    {
+        public static StoreRoleId Parse(string str)
+        {
+            var i = str.IndexOf("::");
+            string? storeId = null;
+            string role;
+            if (i == -1)
+            {
+                role = str;
+                return new StoreRoleId(role);
+            }
+            else
+            {
+                storeId = str[0..i];
+                role = str[(i + 2)..];
+                return new StoreRoleId(storeId, role);
+            }
+        }
+        public StoreRoleId(string role)
+        {
+            if (string.IsNullOrWhiteSpace(role))
+                throw new ArgumentException("Role shouldn't be null or empty", nameof(role));
+            if (role.Contains("::", StringComparison.OrdinalIgnoreCase))
+                throw new ArgumentException("Role shouldn't contains '::'", nameof(role));
+            Role = role;
+        }
+        public StoreRoleId(string storeId, string role)
+        {
+            if (string.IsNullOrWhiteSpace(role))
+                throw new ArgumentException("Role shouldn't be null or empty", nameof(role));
+            if (string.IsNullOrWhiteSpace(storeId))
+                throw new ArgumentException("StoreId shouldn't be null or empty", nameof(storeId));
+            if (role.Contains("::", StringComparison.OrdinalIgnoreCase))
+                throw new ArgumentException("Role shouldn't contains '::'", nameof(role));
+            if (storeId.Contains("::", StringComparison.OrdinalIgnoreCase))
+                throw new ArgumentException("StoreId shouldn't contains '::'", nameof(storeId));
+            StoreId = storeId;
+            Role = role;
+        }
+
+        public static StoreRoleId Owner { get; } = new StoreRoleId("Owner");
+        public static StoreRoleId Guest { get; } = new StoreRoleId("Guest");
+        public string? StoreId { get; }
+        public string Role { get; }
+        public string Id
+        {
+            get
+            {
+                if (StoreId is null)
+                    return Role;
+                return $"{StoreId}::{Role}";
+            }
+        }
+
+        public bool IsServerRole => StoreId is null;
+        public override string ToString()
+        {
+            return Id;
         }
     }
 }

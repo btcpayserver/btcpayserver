@@ -51,7 +51,8 @@ namespace BTCPayServer.Client
             {
                 if (message.StatusCode == System.Net.HttpStatusCode.UnprocessableEntity)
                 {
-                    var err = JsonConvert.DeserializeObject<Models.GreenfieldValidationError[]>(await message.Content.ReadAsStringAsync());
+                    var aa = await message.Content.ReadAsStringAsync();
+                    var err = JsonConvert.DeserializeObject<Models.GreenfieldValidationError[]>(aa);
                     throw new GreenfieldValidationException(err);
                 }
                 if (message.StatusCode == System.Net.HttpStatusCode.Forbidden)

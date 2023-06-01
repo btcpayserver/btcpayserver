@@ -157,8 +157,6 @@ namespace BTCPayServer.Services
             {
                 _logger.LogError($"Failed to delete user {user.Id}");
             }
-
-            await _storeRepository.CleanUnreachableStores();
         }
 
 

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -250,7 +251,7 @@ namespace BTCPayServer.Controllers
                 CryptoCode = cryptoCode,
                 Method = method,
                 SetupRequest = request,
-                Confirmation = string.IsNullOrEmpty(request.ExistingMnemonic),
+                Confirmation = !isImport,
                 Network = network,
                 Source = isImport ? "SeedImported" : "NBXplorerGenerated",
                 IsHotWallet = isImport ? request.SavePrivateKeys : method == WalletSetupMethod.HotWallet,
@@ -311,7 +312,7 @@ namespace BTCPayServer.Controllers
 
             var result = await UpdateWallet(vm);
 
-            if (!ModelState.IsValid || !(result is RedirectToActionResult))
+            if (!ModelState.IsValid || result is not RedirectToActionResult)
                 return result;
 
             if (!isImport)

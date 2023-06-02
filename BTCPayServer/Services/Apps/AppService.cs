@@ -176,7 +176,7 @@ namespace BTCPayServer.Services.Apps
                             res.Add(new InvoiceStatsItem
                             {
                                 ItemCode = item.Id,
-                                FiatPrice = lineItem.Price.Value,
+                                FiatPrice = lineItem.Price,
                                 Date = e.InvoiceTime.Date
                             });
                         }

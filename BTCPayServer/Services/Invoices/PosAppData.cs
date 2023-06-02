@@ -34,7 +34,7 @@ public class PosAppCartItem
     public string Id { get; set; }
 
     [JsonProperty(PropertyName = "price")]
-    public PosAppCartItemPrice Price { get; set; }
+    public decimal Price { get; set; }
 
     [JsonProperty(PropertyName = "title")]
     public string Title { get; set; }
@@ -54,8 +54,6 @@ public class PosAppCartItemPrice
     [JsonProperty(PropertyName = "formatted")]
     public string Formatted { get; set; }
 
-    [JsonProperty(PropertyName = "value")]
-    public decimal Value { get; set; }
 
     [JsonProperty(PropertyName = "type")]
     public ViewPointOfSaleViewModel.ItemPriceType Type { get; set; }

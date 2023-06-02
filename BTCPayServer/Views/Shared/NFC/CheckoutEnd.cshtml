@@ -22,7 +22,38 @@
     </template>
 </template>
 <script type="text/javascript">
-// https://developer.chrome.com/articles/nfc/
+class NDEFReaderWrapper {
+    constructor() {
+        this.onreading = null;
+        this.onreadingerror = null;
+    }
+
+    async scan( opts) {
+        
+        if (opts && opts.signal){
+            opts.signal.addEventListener("abort", () => {
+                window.parent.postMessage("abortNfc", "*");
+            });
+        }
+        window.parent.postMessage("startNfcScan", "*");
+    }
+}
+
+window.addEventListener("message", (event) => {
+    const { action, data } = event.data;
+    if (action === "nfcData") {
+        if (ndef.onreading) {
+            ndef.onreading({ message: { records: [{ data }] } });
+        }
+    } else if (action === "nfcError") {
+        if (ndef.onreadingerror) {
+            ndef.onreadingerror();
+        }
+    }
+});
+
+
+
 Vue.component("lnurl-withdraw-checkout", {
     template: "#lnurl-withdraw-template",
     props: {
@@ -69,7 +100,7 @@ Vue.component("lnurl-withdraw-checkout", {
     data () {
         return {
             url: @Safe.Json(Context.Request.GetAbsoluteUri(Url.Action("SubmitLNURLWithdrawForInvoice", "NFC"))),
-            supported: 'NDEFReader' in window && window.self === window.top,
+            supported: 'NDEFReader' in window ,
             scanning: false,
             submitting: false,
             permissionGranted: false,
@@ -135,7 +166,7 @@ Vue.component("lnurl-withdraw-checkout", {
             this.submitting = false;
             this.scanning = true;
             try {
-                const ndef = new NDEFReader()
+                const ndef = window.self === window.top?  new NDEFReader() : new NDEFReaderWrapper();
                 this.readerAbortController = new AbortController()
                 this.readerAbortController.signal.onabort = () => {
                     this.scanning = false;

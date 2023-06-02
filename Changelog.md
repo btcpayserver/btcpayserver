@@ -6,6 +6,10 @@
 
 * Point of Sale bug after filling out form Shop + cart (#5031) @Kukks
 
+### Improvements
+
+* Language translation update for el-GR
+
 ## 1.10.0
 
 Notice: Due to the substantial disk space consumption, we are removing all data pertaining to past webhook deliveries (#5005).

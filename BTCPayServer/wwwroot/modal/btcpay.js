@@ -48,7 +48,7 @@
     var scriptMatch = thisScript.match(scriptSrcRegex)
     if (scriptMatch) {
         // We can't just take the domain as btcpay can run under a sub path with RootPath
-        origin = thisScript.substr(0, thisScript.length - scriptMatch[0].length);
+        origin = thisScript.slice(0, thisScript.length - scriptMatch[0].length);
     }
     // urlPrefix should be site root without trailing slash
     function setApiUrlPrefix(urlPrefix) {
@@ -62,6 +62,7 @@
     var onModalWillLeaveMethod = function () { };
     var onModalReceiveMessageMethod = function (event) { };
 
+    var nfcSupportAvailable = "NDEFReader" in window;
     function showFrame() {
         if (window.document.getElementsByName('btcpay').length === 0) {
             window.document.body.appendChild(iframe);
@@ -88,7 +89,40 @@
     function onModalReceiveMessage(customOnModalReceiveMessage) {
         onModalReceiveMessageMethod = customOnModalReceiveMessage;
     }
+    var readerAbortController = null;
 
+    function startNfcScan() {
+        const ndef = new NDEFReader();
+        readerAbortController = new AbortController()
+        readerAbortController.signal.onabort = () => {
+            this.scanning = false;
+        };
+        ndef.scan({signal:readerAbortController.signal}).then(() => {
+            console.log("> Scan started successfully.");
+            ndef.onreading = (event) => {
+                const message = event.message;
+                const record = message.records[0];
+                const textDecoder = new TextDecoder('utf-8');
+                const lnurl = textDecoder.decode(record.data);
+
+                // Send NFC data back to the iframe
+                if (iframe) {
+                    iframe.contentWindow.postMessage({ action: "nfcData", data: lnurl }, "*");
+                }
+            };
+            ndef.onerror = () => {
+                console.log("Error! Cannot read data from the NFC tag. Try another one.");
+
+                // Send error message back to the iframe
+                if (iframe) {
+                    iframe.contentWindow.postMessage({ action: "nfcError" }, "*");
+                }
+            };
+        }).catch(error => {
+            console.log(`Argh! ${error}`);
+        });
+    }
+    
     function receiveMessage(event) {
         var uri;
 
@@ -99,6 +133,14 @@
             hideFrame();
         } else if (event.data === 'loaded') {
             showFrame();
+        }
+        else if(event.data === "startNfcScan") {
+            startNfcScan();
+        }
+        else if(event.data === "abortNfc") {
+            if (readerAbortController) {
+                readerAbortController.abort()
+            }
         } else if (event.data && event.data.open) {
             uri = event.data.open;
             if (uri.indexOf('bitcoin:') === 0) {

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.10.1
+
+### Bug fixes
+
+* Point of Sale bug after filling out form Shop + cart (#5031) @Kukks
+
 ## 1.10.0
 
 Notice: Due to the substantial disk space consumption, we are removing all data pertaining to past webhook deliveries (#5005).

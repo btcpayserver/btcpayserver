@@ -26,12 +26,12 @@
         }
     }
     
-    
     string lnurl = null;
     string lnurlUri = null;
-
+    var lnurlSupportedCurrencies = new [] { "BTC", "SATS" };
+    
     var pms = Model.PaymentMethods.FirstOrDefault(id => id.PaymentType == LightningPaymentType.Instance && BtcPayNetworkProvider.DefaultNetwork.CryptoCode == id.CryptoCode);
-    if (pms is not null && Model.Currency.Equals(pms.CryptoCode, StringComparison.InvariantCultureIgnoreCase))
+    if (pms is not null && lnurlSupportedCurrencies.Contains(Model.Currency))
     {
         var lnurlEndpoint = new Uri(Url.Action("GetLNURLForPullPayment", "UILNURL", new
         {

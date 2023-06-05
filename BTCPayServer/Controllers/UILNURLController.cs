@@ -108,9 +108,8 @@ namespace BTCPayServer
                 return NotFound();
             }
 
-            var lnurlSupportedCurrencies = new [] { "BTC", "SATS" };
             var blob = pp.GetBlob();
-            if (!lnurlSupportedCurrencies.Contains(blob.Currency))
+            if (!_pullPaymentHostedService.SupportsLNURL(blob))
             {
                 return NotFound();
             }

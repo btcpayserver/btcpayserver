@@ -5,6 +5,7 @@
 @inject ThemeSettings Theme
 @inject IFileService FileService
 
+<script>if (window.localStorage.getItem('btcpay-hide-sensitive-info') === 'true') { document.documentElement.setAttribute('data-hide-sensitive-info', 'true')}</script>
 @if (Theme.CustomTheme && !string.IsNullOrEmpty(Theme.CssUri))
 {   // legacy customization with CSS URI - keep it for backwards-compatibility
     <link href="@Context.Request.GetRelativePathOrAbsolute(Theme.CssUri)" rel="stylesheet" asp-append-version="true" />
@@ -25,7 +26,6 @@ else
 {
     <link href="~/main/themes/default.css" asp-append-version="true" rel="stylesheet" />
     <link href="~/main/themes/default-dark.css" asp-append-version="true" rel="stylesheet" id="DarkThemeLinkTag" />
-    <script>if (window.localStorage.getItem('btcpay-hide-sensitive-info') === 'true') { document.documentElement.setAttribute('data-hide-sensitive-info', 'true')}</script>
     <script src="~/js/theme-switch.js" asp-append-version="true"></script>
     <noscript><style>.btcpay-theme-switch { display: none !important; }</style></noscript>
 }

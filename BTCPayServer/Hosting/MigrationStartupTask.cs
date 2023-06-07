@@ -171,12 +171,6 @@ namespace BTCPayServer.Hosting
                     settings.MigrateHotwalletProperty = true;
                     await _Settings.UpdateSetting(settings);
                 }
-                if (!settings.MigrateAppCustomOption)
-                {
-                    await MigrateAppCustomOption();
-                    settings.MigrateAppCustomOption = true;
-                    await _Settings.UpdateSetting(settings);
-                }
                 if (!settings.MigratePayoutDestinationId)
                 {
                     await MigratePayoutDestinationId();
@@ -248,6 +242,13 @@ namespace BTCPayServer.Hosting
                 {
                     await MigrateAppYmlToJson();
                     settings.MigrateAppYmlToJson = true;
+                    await _Settings.UpdateSetting(settings);
+                }
+                
+                if (!settings.MigrateAppCustomOption && settings.MigrateAppYmlToJson)
+                {
+                    await MigrateAppCustomOption();
+                    settings.MigrateAppCustomOption = true;
                     await _Settings.UpdateSetting(settings);
                 }
             }

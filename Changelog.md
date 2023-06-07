@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.10.2
+
+### Bug fixes
+
+* Fix: Stale data when fetching invoice after webhook (#5049) @Kukks
+* Fix: Crash on migation of old instances (#5051) @NicolasDorier
+* Fix: Hide sensitive info feature not working with custom theme (#5044) @dennisreimann
+* Fix: Pay button not rendering on the invoice page (#5043) @dennisreimann
+
 ## 1.10.1
 
 ### Bug fixes

@@ -651,13 +651,6 @@ WHERE cte.""Id""=p.""Id""
                             settings1.TargetCurrency = app.StoreData.GetStoreBlob().DefaultCurrency;
                             app.SetSettings(settings1);
                         }
-                        items = AppService.Parse(settings1.PerksTemplate);
-                        newTemplate = AppService.SerializeTemplate(items);
-                        if (settings1.PerksTemplate != newTemplate)
-                        {
-                            settings1.PerksTemplate = newTemplate;
-                            app.SetSettings(settings1);
-                        };
                         break;
 
                     case PointOfSaleAppType.AppType:
@@ -668,13 +661,6 @@ WHERE cte.""Id""=p.""Id""
                             settings2.Currency = app.StoreData.GetStoreBlob().DefaultCurrency;
                             app.SetSettings(settings2);
                         }
-                        items = AppService.Parse(settings2.Template);
-                        newTemplate = AppService.SerializeTemplate(items);
-                        if (settings2.Template != newTemplate)
-                        {
-                            settings2.Template = newTemplate;
-                            app.SetSettings(settings2);
-                        };
                         break;
                 }
             }

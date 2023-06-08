@@ -521,8 +521,14 @@ namespace BTCPayServer.Services.Invoices
 
                 invoiceData.Status = legacyStatus.ToLowerInvariant();
                 invoiceData.ExceptionStatus = InvoiceExceptionStatus.Marked.ToString().ToLowerInvariant();
-                _eventAggregator.Publish(new InvoiceEvent(ToEntity(invoiceData), eventName));
-                await context.SaveChangesAsync();
+                try
+                {
+                    await context.SaveChangesAsync();
+                }
+                finally
+                {
+                    _eventAggregator.Publish(new InvoiceEvent(ToEntity(invoiceData), eventName));
+                }
             }
 
             return true;

@@ -106,7 +106,8 @@ namespace BTCPayServer.Tests
             s.Driver.ElementDoesNotExist(By.Id("Address_BTC"));
 
             // Lightning amount in sats
-            Assert.Contains("BTC", s.Driver.FindElement(By.Id("AmountDue")).Text);
+            s.Driver.ToggleCollapse("PaymentDetails");
+            Assert.Contains("BTC", s.Driver.FindElement(By.Id("PaymentDetails-TotalPrice")).Text);
             s.GoToHome();
             s.GoToLightningSettings();
             s.Driver.SetCheckbox(By.Id("LightningAmountInSatoshi"), true);
@@ -114,10 +115,9 @@ namespace BTCPayServer.Tests
             Assert.Contains("BTC Lightning settings successfully updated", s.FindAlertMessage().Text);
             s.GoToInvoiceCheckout(invoiceId);
             s.Driver.WaitUntilAvailable(By.Id("Checkout-v2"));
-            Assert.Contains("sats", s.Driver.FindElement(By.Id("AmountDue")).Text);
+            Assert.Contains("sats", s.Driver.FindElement(By.Id("PaymentDetails-TotalPrice")).Text);
 
             // Details should not show exchange rate
-            s.Driver.ToggleCollapse("PaymentDetails");
             s.Driver.ElementDoesNotExist(By.Id("PaymentDetails-ExchangeRate"));
             s.Driver.ElementDoesNotExist(By.Id("PaymentDetails-TotalFiat"));
             s.Driver.ElementDoesNotExist(By.Id("PaymentDetails-RecommendedFee"));

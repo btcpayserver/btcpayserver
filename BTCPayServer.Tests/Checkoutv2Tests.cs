@@ -115,6 +115,7 @@ namespace BTCPayServer.Tests
             Assert.Contains("BTC Lightning settings successfully updated", s.FindAlertMessage().Text);
             s.GoToInvoiceCheckout(invoiceId);
             s.Driver.WaitUntilAvailable(By.Id("Checkout-v2"));
+            s.Driver.ToggleCollapse("PaymentDetails");
             Assert.Contains("sats", s.Driver.FindElement(By.Id("PaymentDetails-TotalPrice")).Text);
 
             // Details should not show exchange rate

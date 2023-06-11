@@ -8,6 +8,55 @@
     ViewData["Title"] = "Payment Requests";
 }
 
+@section PageHeadContent
+{
+    <style>
+        .no-caret::after {
+            display: none;
+        }
+    </style>
+
+    <script>
+        function handleStatusClick(selectedValue) {
+            console.log("Clicked on:", selectedValue);
+            if (selectedValue === "all") {
+                showAllRows();
+            } else {
+                filterTable(selectedValue);
+            }
+        }
+
+        function showAllRows() {
+            var tableRows = document.querySelectorAll("#yourTableId tbody tr");
+            for (var i = 0; i < tableRows.length; i++) {
+                tableRows[i].style.display = "";
+            }
+        }
+
+
+        function filterTable(selectedValue) {
+            var tableRows = document.querySelectorAll("#yourTableId tbody tr");
+            for (var i = 0; i < tableRows.length; i++) {
+                var statusCell = tableRows[i].querySelector(".status-badge");
+                if (statusCell.textContent.trim().toLowerCase() === selectedValue.toLowerCase()) {
+                    tableRows[i].style.display = "";
+                } else {
+                    tableRows[i].style.display = "none";
+                }
+            }
+        }
+    </script>
+
+
+}
+
+@{
+    var status = Model.Items
+        .GroupBy(item => item.Status)
+        .Select(group => new { Name = group.Key, Count = group.Count() })
+        .ToList();
+}
+
 <div class="sticky-header-setup"></div>
 <div class="sticky-header d-sm-flex align-items-center justify-content-between">
     <h2 class="mb-0">
@@ -17,8 +66,7 @@
         </a>
     </h2>
     <a asp-action="EditPaymentRequest" asp-route-storeId="@Context.GetStoreData().Id" class="btn btn-primary mt-3 mt-sm-0" role="button" id="CreatePaymentRequest">
-        <span class="fa fa-plus"></span>
-        Create Payment Request
+        Create Request
     </a>
 </div>
 
@@ -38,34 +86,59 @@
 <partial name="_StatusMessage" />
 
 <div class="row mb-2">
-    <div class="col col-lg-8 col-xl-6 mr-auto">
-        <form asp-action="GetPaymentRequests" method="get">
-            <input type="hidden" asp-for="Count" />
-            <input type="hidden" asp-for="TimezoneOffset" />
-            <div class="input-group">
-                <input asp-for="SearchTerm" class="form-control" />
-                <button type="submit" class="btn btn-secondary text-nowrap" title="Search invoice">
-                    <span class="fa fa-search"></span> Search
-                </button>
-                <button type="button" class="btn btn-secondary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id="SearchDropdownToggle">
-                    <span class="visually-hidden">Toggle Dropdown</span>
-                </button>
-                <div class="dropdown-menu dropdown-menu-end" aria-labelledby="SearchDropdownToggle">
-                    <a class="dropdown-item" asp-action="GetPaymentRequests" asp-route-storeId="@Context.GetStoreData().Id" asp-route-count="@Model.Count" asp-route-searchTerm="includearchived:true" id="SearchIncludeArchived">Include Archived</a>
-                    <div role="separator" class="dropdown-divider"></div>
-                    <a class="dropdown-item" href="?searchTerm=" id="SearchUnfiltered">Unfiltered</a>
+    <div class="d-flex">
+        <div class="col-lg-4 col-xl-4 me-3">
+            <form asp-action="GetPaymentRequests" method="get">
+                <input type="hidden" asp-for="Count" />
+                <input type="hidden" asp-for="TimezoneOffset" />
+                <div class="input-group">
+                    <input asp-for="SearchTerm" class="form-control" />
+                    <button type="submit" class="btn btn-secondary text-nowrap" title="Search invoice">
+                        <span class="fa fa-search"></span> Search
+                    </button>
+                    <button type="button" class="btn btn-secondary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id="SearchDropdownToggle">
+                        <span class="visually-hidden">Toggle Dropdown</span>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end" aria-labelledby="SearchDropdownToggle">
+                        <a class="dropdown-item" asp-action="GetPaymentRequests" asp-route-storeId="@Context.GetStoreData().Id" asp-route-count="@Model.Count" asp-route-searchTerm="includearchived:true" id="SearchIncludeArchived">Include Archived</a>
+                        <div role="separator" class="dropdown-divider"></div>
+                        <a class="dropdown-item" href="?searchTerm=" id="SearchUnfiltered">Unfiltered</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="col-lg-4 col-xl-4">
+            <div class="form-group">
+                <div class="dropdown">
+                    <button id="StatusOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <span>Status</span>
+                    </button>
+                    <div class="dropdown-menu" aria-labelledby="StatusOptionsToggle">
+                        <a class="dropdown-item d-flex justify-content-between" href="#" onclick="event.preventDefault(); handleStatusClick('all');">
+                            <span class="fw-bold">All</span>
+                            <span class="text-end">@status.Sum(s => s.Count)</span>
+                        </a>
+                        @foreach (var statusValue in status)
+                        {
+                            <a class="dropdown-item d-flex justify-content-between" href="#" onclick="event.preventDefault(); handleStatusClick('@statusValue.Name')">
+                                <span class="fw-bold">@statusValue.Name</span>
+                                <span class="text-end">@statusValue.Count</span>
+                            </a>
+                        }
+                    </div>
                 </div>
             </div>
-            <span asp-validation-for="SearchTerm" class="text-danger"></span>
-        </form>
+        </div>
     </div>
 </div>
+
+
 
 <div class="row">
     <div class="col-lg-12">
         @if (Model.Items.Count > 0)
         {
-            <table class="table table-hover table-responsive-md">
+            <table class="table table-hover table-responsive-md" id="yourTableId">
                 <thead>
                     <tr>
                         <th>Title</th>
@@ -75,8 +148,8 @@
                                 <button type="button" class="btn btn-link p-0 fa fa-clock-o switch-time-format only-for-js" title="Switch date format"></button>
                             </div>
                         </th>
+                        <th>Price</th>
                         <th>Status</th>
-                        <th class="text-end">Amount</th>
                         <th class="text-end">Actions</th>
                     </tr>
                 </thead>
@@ -91,19 +164,27 @@
                                 @(item.ExpiryDate?.ToBrowserDate() ?? new HtmlString($"<span class=\"text-muted\">No Expiry</span>"))
                             </td>
                             <td>
-                                <span class="badge badge-@item.Status.ToLower()">@item.Status</span>
-                            </td>
-                            <td class="text-end">
                                 <span data-sensitive>@item.AmountFormatted</span>
                             </td>
-                            <td class="text-end">
-                                <a asp-controller="UIInvoice" asp-action="ListInvoices" asp-route-storeId="@item.StoreId" asp-route-searchterm="@($"orderid:{PaymentRequestRepository.GetOrderIdForPaymentRequest(item.Id)}")">Invoices</a>
-                                <span> - </span>
-                                <a asp-action="ClonePaymentRequest" asp-route-storeId="@item.StoreId" asp-route-payReqId="@item.Id" id="Clone-@item.Id">Clone</a>
-                                <span> - </span>
-                                <a asp-action="TogglePaymentRequestArchival" asp-route-storeId="@item.StoreId" asp-route-payReqId="@item.Id" id="ToggleArchival-@item.Id">@(item.Archived ? "Unarchive" : "Archive")</a>
-                                <span> - </span>
-                                <a asp-action="ViewPaymentRequest" asp-route-payReqId="@item.Id" id="PaymentRequest-@item.Id">View</a>
+                            <td>
+                                <span class="badge badge-@item.Status.ToLower() status-badge">@item.Status</span>
+                            </td>
+                            <td class ="text-end">
+                                <div class="d-inline-flex">
+                                  <a class="me-3" href="#">Edit</a>
+                                  <div class="dropdown">
+                                    <a class="dropdown-toggle no-caret" href="#" role="button" id="actionDropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                      <i class="fa fa-ellipsis-h fa-fw fa-2x border-circle"></i>
+                                    </a>
+                                    <ul class="dropdown-menu" aria-labelledby="actionDropdown">
+                                      <li><a class="dropdown-item" asp-controller="UIInvoice" asp-action="ListInvoices" asp-route-storeId="@item.StoreId" asp-route-searchterm="@($"orderid:{PaymentRequestRepository.GetOrderIdForPaymentRequest(item.Id)}")">View Invoices</a></li>
+                                      <li><a class="dropdown-item" asp-action="ClonePaymentRequest" asp-route-storeId="@item.StoreId" asp-route-payReqId="@item.Id" id="Clone-@item.Id">Clone</a></li>
+                                      <li><a class="dropdown-item" asp-action="ViewPaymentRequest" asp-route-payReqId="@item.Id" id="PaymentRequest-@item.Id">View</a></li>
+                                      <li class="dropdown-divider"></li>
+                                      <li><a class="dropdown-item" asp-action="TogglePaymentRequestArchival" asp-route-storeId="@item.StoreId" asp-route-payReqId="@item.Id" id="ToggleArchival-@item.Id">@(item.Archived ? "Unarchive" : "Archive")</a></li>
+                                    </ul>
+                                  </div>
+                                </div>
                             </td>
                         </tr>
                     }

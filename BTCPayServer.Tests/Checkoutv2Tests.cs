@@ -264,7 +264,7 @@ namespace BTCPayServer.Tests
             s.GoToInvoiceCheckout(invoiceId);
             s.Driver.WaitUntilAvailable(By.Id("Checkout-v2"));
             Assert.Empty(s.Driver.FindElements(By.CssSelector(".payment-method")));
-            Assert.Contains("BTC", s.Driver.FindElement(By.Id("AmountDue")).Text);
+            Assert.Contains("$", s.Driver.FindElement(By.Id("AmountDue")).Text);
             qrValue = s.Driver.FindElement(By.CssSelector(".qr-container")).GetAttribute("data-qr-value");
             address = s.Driver.FindElement(By.CssSelector(".qr-container")).GetAttribute("data-clipboard");
             payUrl = s.Driver.FindElement(By.Id("PayInWallet")).GetAttribute("href");
@@ -295,7 +295,7 @@ namespace BTCPayServer.Tests
             Assert.Contains("Store successfully updated", s.FindAlertMessage().Text);
             s.GoToInvoiceCheckout(invoiceId);
             s.Driver.WaitUntilAvailable(By.Id("Checkout-v2"));
-            Assert.Contains("sats", s.Driver.FindElement(By.Id("AmountDue")).Text);
+            Assert.Contains("$", s.Driver.FindElement(By.Id("AmountDue")).Text);
 
             // Check details
             s.Driver.ToggleCollapse("PaymentDetails");

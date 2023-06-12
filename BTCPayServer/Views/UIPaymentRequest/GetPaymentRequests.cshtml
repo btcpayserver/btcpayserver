@@ -25,17 +25,14 @@
                 filterTable(selectedValue);
             }
         }
-
         function showAllRows() {
-            var tableRows = document.querySelectorAll("#yourTableId tbody tr");
+            var tableRows = document.querySelectorAll("#tableId tbody tr");
             for (var i = 0; i < tableRows.length; i++) {
                 tableRows[i].style.display = "";
             }
         }
-
-
         function filterTable(selectedValue) {
-            var tableRows = document.querySelectorAll("#yourTableId tbody tr");
+            var tableRows = document.querySelectorAll("#tableId tbody tr");
             for (var i = 0; i < tableRows.length; i++) {
                 var statusCell = tableRows[i].querySelector(".status-badge");
                 if (statusCell.textContent.trim().toLowerCase() === selectedValue.toLowerCase()) {
@@ -138,7 +135,7 @@
     <div class="col-lg-12">
         @if (Model.Items.Count > 0)
         {
-            <table class="table table-hover table-responsive-md" id="yourTableId">
+            <table class="table table-hover table-responsive-md" id="tableId">
                 <thead>
                     <tr>
                         <th>Title</th>
@@ -171,17 +168,17 @@
                             </td>
                             <td class ="text-end">
                                 <div class="d-inline-flex">
-                                  <a class="me-3" href="#">Edit</a>
+                                    <a class="me-3" asp-action="EditPaymentRequest" asp-route-storeId="@item.StoreId" asp-route-payReqId="@item.Id" id="Edit-@item.Id">Edit</a>
                                   <div class="dropdown">
                                     <a class="dropdown-toggle no-caret" href="#" role="button" id="actionDropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                       <i class="fa fa-ellipsis-h fa-fw fa-2x border-circle"></i>
                                     </a>
                                     <ul class="dropdown-menu" aria-labelledby="actionDropdown">
-                                      <li><a class="dropdown-item" asp-controller="UIInvoice" asp-action="ListInvoices" asp-route-storeId="@item.StoreId" asp-route-searchterm="@($"orderid:{PaymentRequestRepository.GetOrderIdForPaymentRequest(item.Id)}")">View Invoices</a></li>
-                                      <li><a class="dropdown-item" asp-action="ClonePaymentRequest" asp-route-storeId="@item.StoreId" asp-route-payReqId="@item.Id" id="Clone-@item.Id">Clone</a></li>
-                                      <li><a class="dropdown-item" asp-action="ViewPaymentRequest" asp-route-payReqId="@item.Id" id="PaymentRequest-@item.Id">View</a></li>
+                                      <li><a class="dropdown-item fw-bold" asp-controller="UIInvoice" asp-action="ListInvoices" asp-route-storeId="@item.StoreId" asp-route-searchterm="@($"orderid:{PaymentRequestRepository.GetOrderIdForPaymentRequest(item.Id)}")">View Invoices</a></li>
+                                      <li><a class="dropdown-item fw-bold" asp-action="ClonePaymentRequest" asp-route-storeId="@item.StoreId" asp-route-payReqId="@item.Id" id="Clone-@item.Id">Clone</a></li>
+                                      <li><a class="dropdown-item fw-bold" asp-action="ViewPaymentRequest" asp-route-payReqId="@item.Id" id="PaymentRequest-@item.Id">View</a></li>
                                       <li class="dropdown-divider"></li>
-                                      <li><a class="dropdown-item" asp-action="TogglePaymentRequestArchival" asp-route-storeId="@item.StoreId" asp-route-payReqId="@item.Id" id="ToggleArchival-@item.Id">@(item.Archived ? "Unarchive" : "Archive")</a></li>
+                                      <li><a class="dropdown-item fw-bold" asp-action="TogglePaymentRequestArchival" asp-route-storeId="@item.StoreId" asp-route-payReqId="@item.Id" id="ToggleArchival-@item.Id">@(item.Archived ? "Unarchive" : "Archive")</a></li>
                                     </ul>
                                   </div>
                                 </div>

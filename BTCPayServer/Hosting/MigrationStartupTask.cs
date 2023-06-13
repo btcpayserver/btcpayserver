@@ -640,8 +640,6 @@ WHERE cte.""Id""=p.""Id""
             await using var ctx = _DBContextFactory.CreateContext();
             foreach (var app in await ctx.Apps.Include(data => data.StoreData).AsQueryable().ToArrayAsync())
             {
-                ViewPointOfSaleViewModel.Item[] items;
-                string newTemplate;
                 switch (app.AppType)
                 {
                     case CrowdfundAppType.AppType:

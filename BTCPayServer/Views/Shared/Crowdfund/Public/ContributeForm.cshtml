@@ -1,4 +1,3 @@
-@using BTCPayServer.Models.AppViewModels
 @using BTCPayServer.Plugins.PointOfSale.Models
 @model BTCPayServer.Plugins.Crowdfund.Models.ContributeToCrowdfund
 
@@ -28,7 +27,7 @@
                         @(string.IsNullOrEmpty(item.Title) ? item.Id : item.Title)
                     </label>
                     <span class="text-muted">
-                        @if (item.Price.Value > 0)
+                        @if (item.Price is > 0)
                         {
                             <span>@item.Price.Value</span>
                             <span>@vm.TargetCurrency</span>

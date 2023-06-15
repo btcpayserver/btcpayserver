@@ -71,9 +71,7 @@
                             <dl class="d-flex flex-column gap-4 mb-0 flex-fill">
                                 <div class="d-flex flex-column">
                                     <div class="d-flex align-items-center justify-content-between">
-                                        <button type="button" class="btn btn-link p-0 d-print-none fw-semibold order-1" onclick="window.print()">
-                                            Print
-                                        </button>
+                                        <a href="?print=true" class="btn btn-link p-0 d-print-none fw-semibold order-1" target="_blank">Print</a>
                                         <dd class="text-muted mb-0 fw-semibold">Amount Paid</dd>
                                     </div>
                                     <dt class="fs-2 mb-0 text-nowrap fw-semibold">@DisplayFormatter.Currency(Model.Amount, Model.Currency, DisplayFormatter.CurrencyFormat.Symbol)</dt>

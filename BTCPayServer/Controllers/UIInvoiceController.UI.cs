@@ -172,7 +172,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("i/{invoiceId}/receipt")]
-        public async Task<IActionResult> InvoiceReceipt(string invoiceId)
+        public async Task<IActionResult> InvoiceReceipt(string invoiceId, [FromQuery] bool print = false)
         {
             var i = await _InvoiceRepository.GetInvoice(invoiceId);
             if (i is null)
@@ -255,7 +255,7 @@ namespace BTCPayServer.Controllers
             vm.Payments = receipt.ShowPayments is false ? null : payments;
             vm.AdditionalData = PosDataParser.ParsePosData(receiptData);
 
-            return View(vm);
+            return View(print ? "InvoiceReceiptPrint" : "InvoiceReceipt", vm);
         }
 
         private string? GetTransactionLink(PaymentMethodId paymentMethodId, string txId)

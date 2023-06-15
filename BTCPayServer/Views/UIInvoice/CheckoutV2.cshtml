@@ -105,7 +105,9 @@
                             <div id="confetti" v-if="srvModel.celebratePayment" v-on:click="celebratePayment(5000)"></div>
                             <vc:icon symbol="payment-sent" />
                         </span>
-                        <h4 v-t="'payment_received'"></h4>
+                        <h4 v-t="'payment_received'" class="mb-4"></h4>
+                        <p class="text-center" v-t="'payment_received_body'"></p>
+                        <p class="text-center" v-if="srvModel.receivedConfirmations !== null && srvModel.requiredConfirmations" v-t="{ path: 'payment_received_confirmations', args: { cryptoCode: realCryptoCode, receivedConfirmations: srvModel.receivedConfirmations, requiredConfirmations: srvModel.requiredConfirmations } }"></p>
                         <div id="PaymentDetails" class="payment-details">
                             <dl class="mb-0">
                                 <div>
@@ -130,10 +132,8 @@
                             <span class="fw-semibold" v-t="'view_details'"></span>
                             <vc:icon symbol="caret-down" />
                         </button>
-                        <p class="text-center mt-3" v-t="'payment_received_body'"></p>
-                        <p class="text-center" v-if="srvModel.receivedConfirmations !== null && srvModel.requiredConfirmations" v-t="{ path: 'payment_received_confirmations', args: { cryptoCode: realCryptoCode, receivedConfirmations: srvModel.receivedConfirmations, requiredConfirmations: srvModel.requiredConfirmations } }"></p>
                     </div>
-                    <div class="buttons" v-if="storeLink || isModal">
+                    <div class="buttons mt-3" v-if="storeLink || isModal">
                         <a v-if="storeLink" class="btn btn-secondary rounded-pill w-100" :href="storeLink" :target="isModal ? '_top' : null" v-html="$t('return_to_store', { storeName: srvModel.storeName })" id="StoreLink"></a>
                         <button v-else-if="isModal" class="btn btn-secondary rounded-pill w-100" v-on:click="close" v-t="'Close'"></button>
                     </div>

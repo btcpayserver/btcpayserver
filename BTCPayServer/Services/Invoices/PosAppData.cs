@@ -1,4 +1,3 @@
-using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Plugins.PointOfSale.Models;
 using Newtonsoft.Json;
 
@@ -53,7 +52,6 @@ public class PosAppCartItemPrice
 {
     [JsonProperty(PropertyName = "formatted")]
     public string Formatted { get; set; }
-
 
     [JsonProperty(PropertyName = "type")]
     public ViewPointOfSaleViewModel.ItemPriceType Type { get; set; }

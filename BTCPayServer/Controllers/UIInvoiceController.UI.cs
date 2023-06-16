@@ -456,7 +456,7 @@ namespace BTCPayServer.Controllers
                             model.Title = "How much to refund?";
                             model.RefundStep = RefundSteps.SelectRate;
                             
-                            if (isPaidOver)
+                            if (!isPaidOver)
                             {
                                 ModelState.AddModelError(nameof(model.SelectedRefundOption), "Invoice is not overpaid");
                             }
@@ -466,7 +466,7 @@ namespace BTCPayServer.Controllers
                             }
                             if (!ModelState.IsValid)
                             {
-                                return this.CreateValidationError(ModelState);
+                                return View("_RefundModal", model);
                             }
                     
                             createPullPayment.Currency = paymentMethodId.CryptoCode;

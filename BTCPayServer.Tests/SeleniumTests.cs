@@ -1748,7 +1748,6 @@ namespace BTCPayServer.Tests
                 Assert.Contains(labels, element => element.Text == "pull-payment");
             });
             
-
             s.GoToStore(s.StoreId, StoreNavPages.Payouts);
             s.Driver.FindElement(By.Id($"{PayoutState.InProgress}-view")).Click();
             ReadOnlyCollection<IWebElement> txs;
@@ -1932,8 +1931,7 @@ namespace BTCPayServer.Tests
 
             Assert.Contains(PayoutState.AwaitingPayment.GetStateString(), s.Driver.PageSource);
 
-            //lnurl-w support check
-
+            // LNURL Withdraw support check with BTC denomination
             s.GoToStore(s.StoreId, StoreNavPages.PullPayments);
             s.Driver.FindElement(By.Id("NewPullPayment")).Click();
             s.Driver.FindElement(By.Id("Name")).SendKeys("PP1");
@@ -2000,6 +1998,42 @@ namespace BTCPayServer.Tests
                 Assert.Contains(bolt2.BOLT11, s.Driver.PageSource);
 
                 Assert.Contains(PayoutState.AwaitingApproval.GetStateString(), s.Driver.PageSource);
+            });
+            
+            // LNURL Withdraw support check with SATS denomination
+            s.GoToStore(s.StoreId, StoreNavPages.PullPayments);
+            s.Driver.FindElement(By.Id("NewPullPayment")).Click();
+            s.Driver.FindElement(By.Id("Name")).SendKeys("PP SATS");
+            s.Driver.SetCheckbox(By.Id("AutoApproveClaims"), true);
+            s.Driver.FindElement(By.Id("Amount")).Clear();
+            s.Driver.FindElement(By.Id("Amount")).SendKeys("21021");
+            s.Driver.FindElement(By.Id("Currency")).Clear();
+            s.Driver.FindElement(By.Id("Currency")).SendKeys("SATS" + Keys.Enter);
+            s.FindAlertMessage(StatusMessageModel.StatusSeverity.Success);
+            s.Driver.FindElement(By.LinkText("View")).Click();
+            s.Driver.FindElement(By.CssSelector("#lnurlwithdraw-button")).Click();
+            lnurl = new Uri(LNURL.LNURL.Parse(s.Driver.FindElement(By.Id("qr-code-data-input")).GetAttribute("value"), out _).ToString().Replace("https", "http"));
+            s.Driver.FindElement(By.CssSelector("button[data-bs-dismiss='modal']")).Click();
+            var amount = new LightMoney(21021, LightMoneyUnit.Satoshi);
+            info = Assert.IsType<LNURLWithdrawRequest>(await LNURL.LNURL.FetchInformation(lnurl, s.Server.PayTester.HttpClient));
+            Assert.Equal(amount, info.MaxWithdrawable);
+            Assert.Equal(amount, info.CurrentBalance);
+            info = Assert.IsType<LNURLWithdrawRequest>(await LNURL.LNURL.FetchInformation(info.BalanceCheck, s.Server.PayTester.HttpClient));
+            Assert.Equal(amount, info.MaxWithdrawable);
+            Assert.Equal(amount, info.CurrentBalance);
+
+            bolt2 = (await s.Server.CustomerLightningD.CreateInvoice(
+                amount,
+                $"LNurl w payout test {DateTime.UtcNow.Ticks}",
+                TimeSpan.FromHours(1), CancellationToken.None));
+            response = await info.SendRequest(bolt2.BOLT11, s.Server.PayTester.HttpClient);
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                s.Driver.Navigate().Refresh();
+                Assert.Contains(bolt2.BOLT11, s.Driver.PageSource);
+
+                Assert.Contains(PayoutState.Completed.GetStateString(), s.Driver.PageSource);
+                Assert.Equal(LightningInvoiceStatus.Paid, (await s.Server.CustomerLightningD.GetInvoice(bolt2.Id)).Status);
             });
         }
 

@@ -1074,6 +1074,22 @@ namespace BTCPayServer.Tests
             var lnrURLs = await unauthenticated.GetPullPaymentLNURL(test4.Id);
             Assert.IsType<string>(lnrURLs.LNURLBech32);
             Assert.IsType<string>(lnrURLs.LNURLUri);
+            Assert.Equal(12.303228134m, test4.Amount);
+            Assert.Equal("BTC", test4.Currency);
+            
+            // Test with SATS denomination values
+            var testSats = await client.CreatePullPayment(storeId, new Client.Models.CreatePullPaymentRequest()
+            {
+                Name = "Test SATS",
+                Amount = 21000,
+                Currency = "SATS",
+                PaymentMethods = new[] { "BTC", "BTC-LightningNetwork", "BTC_LightningLike" }
+            });
+            lnrURLs = await unauthenticated.GetPullPaymentLNURL(testSats.Id);
+            Assert.IsType<string>(lnrURLs.LNURLBech32);
+            Assert.IsType<string>(lnrURLs.LNURLUri);
+            Assert.Equal(21000, testSats.Amount);
+            Assert.Equal("SATS", testSats.Currency);
 
             //permission test around auto approved pps and payouts
             var nonApproved = await acc.CreateClient(Policies.CanCreateNonApprovedPullPayments);

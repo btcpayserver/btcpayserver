@@ -105,16 +105,23 @@ namespace BTCPayServer
 
         public static decimal RoundUp(decimal value, int precision)
         {
-            for (int i = 0; i < precision; i++)
+            try
             {
-                value = value * 10m;
+                for (int i = 0; i < precision; i++)
+                {
+                    value = value * 10m;
+                }
+                value = Math.Ceiling(value);
+                for (int i = 0; i < precision; i++)
+                {
+                    value = value / 10m;
+                }
+                return value;
             }
-            value = Math.Ceiling(value);
-            for (int i = 0; i < precision; i++)
+            catch (OverflowException)
             {
-                value = value / 10m;
+                return value;
             }
-            return value;
         }
 
         public static IServiceCollection AddScheduledTask<T>(this IServiceCollection services, TimeSpan every)

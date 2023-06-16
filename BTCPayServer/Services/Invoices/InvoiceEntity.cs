@@ -272,6 +272,7 @@ namespace BTCPayServer.Services.Invoices
         public SpeedPolicy SpeedPolicy { get; set; }
         public string DefaultLanguage { get; set; }
         [Obsolete("Use GetPaymentMethod(network) instead")]
+        [JsonConverter(typeof(NumericStringJsonConverter))]
         public decimal Rate { get; set; }
         public DateTimeOffset InvoiceTime { get; set; }
         public DateTimeOffset ExpirationTime { get; set; }
@@ -280,7 +281,7 @@ namespace BTCPayServer.Services.Invoices
         public string DepositAddress { get; set; }
 
         public InvoiceMetadata Metadata { get; set; }
-
+        [JsonConverter(typeof(NumericStringJsonConverter))]
         public decimal Price { get; set; }
         public string Currency { get; set; }
         public string DefaultPaymentMethod { get; set; }
@@ -1072,7 +1073,8 @@ namespace BTCPayServer.Services.Invoices
             var cryptoPaid = 0.0m;
 
             int precision = Network?.Divisibility ?? 8;
-            var totalDueNoNetworkCost = Money.Coins(Extensions.RoundUp(totalDue, precision));
+
+            var totalDueNoNetworkCost = Coins(Extensions.RoundUp(totalDue, precision));
             bool paidEnough = paid >= Extensions.RoundUp(totalDue, precision);
             int txRequired = 0;
             decimal networkFeeAlreadyPaid = 0.0m;
@@ -1107,14 +1109,14 @@ namespace BTCPayServer.Services.Invoices
                 totalDue += GetTxFee();
             }
 
-            accounting.TotalDue = Money.Coins(Extensions.RoundUp(totalDue, precision));
-            accounting.Paid = Money.Coins(Extensions.RoundUp(paid, precision));
+            accounting.TotalDue = Coins(Extensions.RoundUp(totalDue, precision));
+            accounting.Paid = Coins(Extensions.RoundUp(paid, precision));
             accounting.TxRequired = txRequired;
-            accounting.CryptoPaid = Money.Coins(Extensions.RoundUp(cryptoPaid, precision));
+            accounting.CryptoPaid = Coins(Extensions.RoundUp(cryptoPaid, precision));
             accounting.Due = Money.Max(accounting.TotalDue - accounting.Paid, Money.Zero);
             accounting.DueUncapped = accounting.TotalDue - accounting.Paid;
             accounting.NetworkFee = accounting.TotalDue - totalDueNoNetworkCost;
-            accounting.NetworkFeeAlreadyPaid = Money.Coins(Extensions.RoundUp(networkFeeAlreadyPaid, precision));
+            accounting.NetworkFeeAlreadyPaid = Coins(Extensions.RoundUp(networkFeeAlreadyPaid, precision));
             // If the total due is 0, there is no payment tolerance to calculate
             var minimumTotalDueSatoshi = accounting.TotalDue.Satoshi == 0
                 ? 0
@@ -1122,6 +1124,20 @@ namespace BTCPayServer.Services.Invoices
                     accounting.TotalDue.Satoshi * (1.0m - ((decimal)ParentEntity.PaymentTolerance / 100.0m)));
             accounting.MinimumTotalDue = Money.Satoshis(minimumTotalDueSatoshi);
             return accounting;
+        }
+
+        const decimal MaxCoinValue = decimal.MaxValue / 1_0000_0000m;
+        private Money Coins(decimal v)
+        {
+            if (v > MaxCoinValue)
+                v = MaxCoinValue;
+            // Clamp the value to not crash on degenerate invoices
+            v *= 1_0000_0000m;
+            if (v > long.MaxValue)
+                return Money.Satoshis(long.MaxValue);
+            if (v < long.MinValue)
+                return Money.Satoshis(long.MinValue);
+            return Money.Satoshis(v);
         }
 
         private decimal GetTxFee()

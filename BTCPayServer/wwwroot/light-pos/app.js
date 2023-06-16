@@ -138,7 +138,7 @@ document.addEventListener("DOMContentLoaded",function () {
                 const currency = this.srvModel.currencyCode;
                 if (currency === 'BTC' || currency === 'SATS') return this.formatCrypto(value, withSymbol); 
                 const divisibility = this.srvModel.currencyInfo.divisibility;
-                const locale = currency === 'USD' ? 'en-US' : navigator.language;
+                const locale = this.getLocale(currency);
                 const style = withSymbol ? 'currency' : 'decimal';
                 const opts = { currency, style, maximumFractionDigits: divisibility, minimumFractionDigits: divisibility };
                 try {
@@ -179,6 +179,14 @@ document.addEventListener("DOMContentLoaded",function () {
                 this.tipPercent = this.tipPercent !== percentage
                     ? percentage
                     : null;
+            },
+            getLocale(currency) {
+                switch (currency) {
+                    case 'USD': return 'en-US';
+                    case 'EUR': return 'de-DE';
+                    case 'JPY': return 'ja-JP';
+                    default: return navigator.language;
+                }
             }
         },
         created () {

@@ -8,11 +8,11 @@
         <div class="d-flex align-items-center justify-content-between mt-n1 mb-4">
             <h3 class="mb-0">@ViewData["Title"]</h3>
             <a asp-action="storage" asp-route-forceChoice="true" asp-route-returnurl="@ViewData["ReturnUrl"]" class="btn btn-secondary d-flex align-items-center">
-                <vc:icon symbol="settings"/>
+                <vc:icon symbol="settings" />
                 <span class="ms-1">Settings</span>
             </a>
         </div>
-        
+
         @if (!Model.StorageConfigured)
         {
             <p>
@@ -57,11 +57,15 @@
                     @foreach (var file in Model.Files)
                     {
                         <tr>
-                            <td>@file.FileName</td>
+                            <td>
+                                <a asp-action="Files" asp-route-fileIds="@file.Id">
+                                    @file.FileName
+                                </a>
+                            </td>
                             <td>@file.Timestamp.ToBrowserDate()</td>
                             <td>@file.ApplicationUser.UserName</td>
                             <td class="text-end">
-                                <a href="@Url.Action("Files", "UIServer", new { fileIds = new string[] { file.Id } })">Get Link</a>
+                                <a href="@Url.Action("Files", "UIServer", new {fileIds = new string[] {file.Id}})">Get Link</a>
                                 - <a asp-action="DeleteFile" asp-route-fileId="@file.Id">Remove</a>
                             </td>
                         </tr>
@@ -83,21 +87,49 @@
             {
                 var fileId = fileUrlPair.Key;
                 var file = Model.Files.Single(storedFile => storedFile.Id.Equals(fileId, StringComparison.InvariantCultureIgnoreCase));
-
+                var url = @Url.Action("GetFile", "UIStorage", new
+                {
+                    fileId
+                }, Context.Request.Scheme, Context.Request.Host.ToString());
                 <div class="card mb-2">
                     <div class="card-text">
                         <ul class="list-group list-group-flush">
                             <li class="list-group-item">
-                                @file.FileName
-                            </li>
-                            <li class="list-group-item">
-                                <strong>URL:</strong>
-                                <a asp-action="GetFile" asp-controller="UIStorage" asp-route-fileId="@fileId" target="_blank">
-                                    @Url.Action("GetFile", "UIStorage", new
-                                    {
-                                        fileId = fileId
-                                    }, Context.Request.Scheme, Context.Request.Host.ToString())
-                                </a>
+                                <div class="row">
+                                    <div class=" col-sm-12 col-md-4 ">
+                                        <div class="input-group  ">
+                                            <div class="form-floating">
+                                                <input id="@fileId-name" class="form-control-plaintext" readonly="readonly" value="@file.FileName">
+                                                <label >File name</label>
+                                            </div>
+                                            <button type="button" class="btn btn-link" data-clipboard-target="#@fileId-name">
+                                                <vc:icon symbol="copy" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class=" col-sm-12 col-md-4 ">
+                                        <div class="input-group  ">
+                                            <div class="form-floating">
+                                                <input id="@fileId" class="form-control-plaintext" readonly="readonly" value="@fileId">
+                                                <label >File Id</label>
+                                            </div>
+                                            <button type="button" class="btn btn-link" data-clipboard-target="#@fileId">
+                                                <vc:icon symbol="copy" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class=" col-sm-12 col-md-4 ">
+                                        <div class="input-group  ">
+                                            <div class="form-floating">
+                                                <input id="@fileId-url" class="form-control-plaintext" readonly="readonly" value="@url">
+                                                <label >Permanent Url</label>
+                                            </div>
+                                            <button type="button" class="btn btn-link" data-clipboard-target="#@fileId-url">
+                                                <vc:icon symbol="copy" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
                             </li>
                         </ul>
                     </div>

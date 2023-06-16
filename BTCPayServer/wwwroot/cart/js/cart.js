@@ -15,7 +15,7 @@ function Cart() {
     this.$summaryTip = $('.js-cart-summary-tip');
     this.$destroy = $('.js-cart-destroy');
     this.$confirm = $('#js-cart-confirm');
-
+    this.$groups = $('.js-groups');
     this.listItems();
     this.bindEmptyCart();
 
@@ -419,7 +419,19 @@ Cart.prototype.listItems = function() {
         self = this,
         list = [],
         tableTemplate = '';
-
+    this.$groups.on('change', function (event) {
+        if ($(this).is(':checked')) {
+            var group = $(this).val();
+            $(".js-add-cart").each(function () {
+                var el = $(this);
+                var groups = JSON.parse(el.attr("data-groups"));
+                if (group == "*" || groups.includes(group))
+                    el.show();
+                else
+                    el.hide();
+            });
+        }
+    });
     if (this.content.length > 0) {
         // Prepare the list of items in the cart
         for (var key in this.content) {

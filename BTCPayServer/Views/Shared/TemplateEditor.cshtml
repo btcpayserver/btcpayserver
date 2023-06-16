@@ -90,6 +90,11 @@
                                 <label class="form-label">Description</label>
                                 <textarea rows="3" cols="40" class="form-control mb-2" v-model="editingItem.description" ref="txtDescription"></textarea>
                             </div>
+							<div class="form-group">
+								<label class="form-label">Groups</label>
+								<input type="text" placeholder="drinks, tea" required pattern="[^\*#]+" class="form-control mb-2" v-model="editingItem.groups" ref="txtgroups" />
+								<div class="form-text">Easily filter the different items using groups, used only in the product list with cart.</div>
+							</div>
                             <div class="form-group">
                                 <label class="form-label">Inventory</label>
                                 <input type="number" inputmode="numeric" min="0" step="1" class="form-control mb-2" v-model="editingItem.inventory" ref="txtInventory" />
@@ -174,6 +179,10 @@ document.addEventListener("DOMContentLoaded", function () {
                     this.editingItem = {index:-1, id:"", title: "", price: 0, image: "", description: "", priceType: "Fixed", inventory: null, disabled: false};
                 }else{
                     this.editingItem = {...this.items[index], index};
+					if (this.editingItem.groups)
+					{
+						this.editingItem.groups = this.editingItem.groups.join(", ");
+					}
                 }
                 
                 this.editingItem = this.unEscape(this.editingItem);
@@ -243,7 +252,10 @@ document.addEventListener("DOMContentLoaded", function () {
                     return;
                 }
                 this.editingItem = this.escape(this.editingItem);
-                
+                if (this.editingItem.groups)
+				{
+					this.editingItem.groups = this.editingItem.groups.split(",").map(function(f){return f.trim();});
+				}
                 if(this.editingItem.index < 0){
                     this.items.push(this.editingItem);
                 }else{

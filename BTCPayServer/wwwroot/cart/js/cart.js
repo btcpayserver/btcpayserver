@@ -423,12 +423,11 @@ Cart.prototype.listItems = function() {
         if ($(this).is(':checked')) {
             var group = $(this).val();
             $(".js-add-cart").each(function () {
-                var el = $(this);
-                var groups = JSON.parse(el.attr("data-groups"));
-                if (group == "*" || groups.includes(group))
-                    el.show();
+                var groups = JSON.parse(this.getAttribute("data-groups"));
+                if (group === "*" || groups.includes(group))
+                    this.classList.remove("d-none");
                 else
-                    el.hide();
+                    this.classList.add("d-none");
             });
         }
     });

@@ -234,13 +234,12 @@
             }
 			@if (Model.Groups != null)
 			{
-				<div class="btn-group btn-group-toggle" data-toggle="buttons" v-pre>
-				@foreach (var g in Model.Groups)
-				{
-					<label class="btn btn-secondary">
-						<input type="radio" name="group" class="js-groups" value="@g.Value" @(g.Selected ? "checked" : "") autocomplete="off">&nbsp;@g.Text
-					</label>
-				}
+				<div class="btcpay-pills d-flex flex-wrap align-items-center justify-content-center gap-2" data-toggle="buttons" v-pre>
+				    @foreach (var g in Model.Groups)
+				    {
+				        <input id="Group-@g.Value" type="radio" name="group" class="js-groups" value="@g.Value" @(g.Selected ? "checked" : "") autocomplete="off">
+					    <label class="btcpay-pill" for="Group-@g.Value">@g.Text</label>
+				    }
 				</div>
 			}
         </div>
@@ -269,7 +268,6 @@
                             }
                         </div>
                         <div class="card-footer bg-transparent border-0 pt-0 pb-3">
-
                             <span class="text-muted small">
                                 @{
                                     var buttonText = string.IsNullOrEmpty(item.BuyButtonText) ? item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Topup ? Model.CustomButtonText : Model.ButtonText : item.BuyButtonText;
@@ -295,7 +293,8 @@
                                          <span>Sold out</span>
                                      }
                                  </div>
-                             } else if (anyInventoryItems)
+                             }
+                             else if (anyInventoryItems)
                              {
                                  <div class="w-100 pt-2">&nbsp;</div>
                              }

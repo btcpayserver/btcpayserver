@@ -201,7 +201,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
 
                 title = settings.Title;
                 //if cart IS enabled and we detect posdata that matches the cart system's, check inventory for the items
-
+                price = amount;
                 if (currentView == PosViewType.Cart &&
                     AppService.TryParsePosCartItems(jposData, out cartItems))
                 {

@@ -9,6 +9,7 @@ using BTCPayServer.Configuration;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Lightning;
+using BTCPayServer.Lightning.LndHub;
 using BTCPayServer.Logging;
 using BTCPayServer.Models;
 using BTCPayServer.Models.InvoicingModels;
@@ -135,6 +136,10 @@ namespace BTCPayServer.Payments.Lightning
                 catch (OperationCanceledException) when (cts.IsCancellationRequested)
                 {
                     throw new PaymentMethodUnavailableException("The lightning node did not reply in a timely manner");
+                }
+                catch (NullReferenceException) when (client is LndHubLightningClient)
+                {   // LNDhub-compatible implementation by LNbits does not support GetInfo, see https://github.com/lnbits/lnbits/issues/1182
+                    return new NodeInfo[] {};
                 }
                 catch (Exception ex)
                 {

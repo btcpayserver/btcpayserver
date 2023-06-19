@@ -109,24 +109,24 @@ namespace BTCPayServer
             }
 
             var blob = pp.GetBlob();
-            if (!blob.Currency.Equals(cryptoCode, StringComparison.InvariantCultureIgnoreCase))
+            if (!_pullPaymentHostedService.SupportsLNURL(blob))
             {
                 return NotFound();
             }
 
+            var unit = blob.Currency == "SATS" ? LightMoneyUnit.Satoshi : LightMoneyUnit.BTC;
             var progress = _pullPaymentHostedService.CalculatePullPaymentProgress(pp, DateTimeOffset.UtcNow);
-
             var remaining = progress.Limit - progress.Completed - progress.Awaiting;
             var request = new LNURLWithdrawRequest
             {
-                MaxWithdrawable = LightMoney.FromUnit(remaining, LightMoneyUnit.BTC),
+                MaxWithdrawable = LightMoney.FromUnit(remaining, unit),
                 K1 = pullPaymentId,
                 BalanceCheck = new Uri(Request.GetCurrentUrl()),
-                CurrentBalance = LightMoney.FromUnit(remaining, LightMoneyUnit.BTC),
+                CurrentBalance = LightMoney.FromUnit(remaining, unit),
                 MinWithdrawable =
                     LightMoney.FromUnit(
                         Math.Min(await _lightningLikePayoutHandler.GetMinimumPayoutAmount(pmi, null), remaining),
-                        LightMoneyUnit.BTC),
+                        unit),
                 Tag = "withdrawRequest",
                 Callback = new Uri(Request.GetCurrentUrl()),
                 // It's not `pp.GetBlob().Description` because this would be HTML
@@ -154,13 +154,13 @@ namespace BTCPayServer
                 return NotFound();
             }
 
-            var claimResponse = await _pullPaymentHostedService.Claim(new ClaimRequest()
+            var claimResponse = await _pullPaymentHostedService.Claim(new ClaimRequest
             {
                 Destination = new BoltInvoiceClaimDestination(pr, result),
                 PaymentMethodId = pmi,
                 PullPaymentId = pullPaymentId,
                 StoreId = pp.StoreId,
-                Value = result.MinimumAmount.ToDecimal(LightMoneyUnit.BTC)
+                Value = result.MinimumAmount.ToDecimal(unit)
             });
 
             if (claimResponse.Result != ClaimRequest.ClaimResult.Ok)

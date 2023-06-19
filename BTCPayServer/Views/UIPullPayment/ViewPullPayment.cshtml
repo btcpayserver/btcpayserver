@@ -1,11 +1,9 @@
 @using BTCPayServer.Client
-@using BTCPayServer.Payments
 @using BTCPayServer.Services
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @using BTCPayServer.Abstractions.TagHelpers
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @inject BTCPayServerEnvironment Env
-@inject BTCPayNetworkProvider BtcPayNetworkProvider
 @inject DisplayFormatter DisplayFormatter
 @model BTCPayServer.Models.ViewPullPaymentModel
 @{
@@ -24,22 +22,6 @@
             default:
                 return "bg-warning";
         }
-    }
-    
-    
-    string lnurl = null;
-    string lnurlUri = null;
-
-    var pms = Model.PaymentMethods.FirstOrDefault(id => id.PaymentType == LightningPaymentType.Instance && BtcPayNetworkProvider.DefaultNetwork.CryptoCode == id.CryptoCode);
-    if (pms is not null && Model.Currency.Equals(pms.CryptoCode, StringComparison.InvariantCultureIgnoreCase))
-    {
-        var lnurlEndpoint = new Uri(Url.Action("GetLNURLForPullPayment", "UILNURL", new
-        {
-            cryptoCode = pms.CryptoCode,
-            pullPaymentId = Model.Id
-        }, Context.Request.Scheme, Context.Request.Host.ToString()));
-        lnurl = LNURL.LNURL.EncodeUri(lnurlEndpoint, "withdrawRequest", true).ToString();
-        lnurlUri = LNURL.LNURL.EncodeUri(lnurlEndpoint, "withdrawRequest", false).ToString();
     }
 }
 <!DOCTYPE html>
@@ -62,7 +44,7 @@
                         <div class="row align-items-center" style="width:calc(100% + 30px)">
                             <div class="col-12 mb-3 col-lg-6 mb-lg-0">
                                 <div class="input-group">
-                                    @if (lnurl is not null)
+                                    @if (Model.LnurlEndpoint is not null)
                                     {
                                         <button type="button" class="input-group-prepend btn btn-outline-secondary" id="lnurlwithdraw-button" data-bs-toggle="modal" data-bs-target="#scan-qr-modal">
                                             <span class="fa fa-qrcode  fa-2x" title="LNURL-Withdraw"></span>
@@ -223,8 +205,10 @@
         </footer>
     </div>
     <partial name="LayoutFoot" />
-  @if (lnurl is not null)
+  @if (Model.LnurlEndpoint is not null)
   {
+      var lnurlUri = LNURL.LNURL.EncodeUri(Model.LnurlEndpoint, "withdrawRequest", false).ToString();
+      var lnurlBech32 = LNURL.LNURL.EncodeUri(Model.LnurlEndpoint, "withdrawRequest", true).ToString();
       var note = "You can scan or open this link with a <a href='https://github.com/fiatjaf/lnurl-rfc#lnurl-documents' target='_blank' rel='noreferrer noopener'>LNURL-Withdraw</a> enabled wallet.";
       if (!Model.AutoApprove)
       {
@@ -237,7 +221,7 @@
         document.addEventListener("DOMContentLoaded", () => {
             const modes = {
                 uri: { title: "URI", fragments: [@Safe.Json(lnurlUri)], showData: true, href: @Safe.Json(lnurlUri) },
-                bech32: { title: "Bech32", fragments: [@Safe.Json(lnurl)], showData: true, href: @Safe.Json(lnurl) }
+                bech32: { title: "Bech32", fragments: [@Safe.Json(lnurlBech32)], showData: true, href: @Safe.Json(lnurlBech32) }
             };
             initQRShow({ title: "LNURL Withdraw", note: @Safe.Json(note), modes })
     });

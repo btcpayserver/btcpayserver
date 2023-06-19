@@ -17,6 +17,7 @@ using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Rating;
 using BTCPayServer.Security;
+using BTCPayServer.Security.Greenfield;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
@@ -126,6 +127,14 @@ namespace BTCPayServer.Controllers
             if (entity.ExpirationTime - TimeSpan.FromSeconds(30.0) < entity.InvoiceTime)
             {
                 throw new BitpayHttpException(400, "The expirationTime is set too soon");
+            }
+            if (entity.Price < 0.0m)
+            {
+                throw new BitpayHttpException(400, "The price should be 0 or more.");
+            }
+            if (entity.Price > GreenfieldConstants.MaxAmount)
+            {
+                throw new BitpayHttpException(400, $"The price should less than {GreenfieldConstants.MaxAmount}.");
             }
             entity.Metadata.OrderId = invoice.OrderId;
             entity.Metadata.PosDataLegacy = invoice.PosData;
@@ -278,6 +287,7 @@ namespace BTCPayServer.Controllers
             if (string.IsNullOrEmpty(entity.Currency))
                 entity.Currency = storeBlob.DefaultCurrency;
             entity.Currency = entity.Currency.Trim().ToUpperInvariant();
+            entity.Price = Math.Min(GreenfieldConstants.MaxAmount, entity.Price);
             entity.Price = Math.Max(0.0m, entity.Price);
             var currencyInfo = _CurrencyNameTable.GetNumberFormatInfo(entity.Currency, false);
             if (currencyInfo != null)

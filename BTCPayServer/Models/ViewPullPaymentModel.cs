@@ -96,6 +96,7 @@ namespace BTCPayServer.Models
         public DateTimeOffset StartDate { get; set; }
         public DateTime LastRefreshed { get; set; }
         public CurrencyData CurrencyData { get; set; }
+        public Uri LnurlEndpoint { get; set; }
         public bool Archived { get; set; }
         public bool AutoApprove { get; set; }
 

@@ -2,7 +2,7 @@
 
 <div id="template-editor-app" v-cloak>
     <div class="form-group mb-0">
-        <h3 class="mt-5 mb-4">@Model.title</h3>
+        <h3 class="mt-5 mb-4" v-pre>@Model.title</h3>
         @if (ViewContext.ViewData.ModelState.TryGetValue(Model.templateId, out var errors))
         {
             foreach (var error in errors.Errors)
@@ -78,7 +78,7 @@
                                                v-model="editingItem.price"
                                                ref="txtPrice"
                                                aria-describedby="currency-addon"/>
-                                        <span class="input-group-text" id="currency-addon">@Model.currency</span>
+                                        <span class="input-group-text" id="currency-addon" v-pre>@Model.currency</span>
                                     </div>
                                 </div>
                             </div>
@@ -90,11 +90,14 @@
                                 <label class="form-label">Description</label>
                                 <textarea rows="3" cols="40" class="form-control mb-2" v-model="editingItem.description" ref="txtDescription"></textarea>
                             </div>
-							<div class="form-group">
-								<label class="form-label">Categories</label>
-								<input type="text" placeholder="drinks, tea" required pattern="[^\*#]+" class="form-control mb-2" v-model="editingItem.categories" ref="txtcategories" />
-								<div class="form-text">Easily filter the different items using categories, used only in the product list with cart.</div>
-							</div>
+                            <div class="form-group">
+                                <label class="form-label">Categories</label>
+                                <input type="text" placeholder="drinks, tea" required pattern="[^\*#]+" class="form-control mb-2" v-model="editingItem.categories" ref="txtcategories" />
+                                <div>
+                                    <button v-for="category in allCategories" type="button" class="btn btn-outline-primary" :data-category="category" v-on:click="addCategory()">{{ category }}</button>
+                                </div>
+                                <div class="form-text">Easily filter the different items using categories, used only in the product list with cart.</div>
+                            </div>
                             <div class="form-group">
                                 <label class="form-label">Inventory</label>
                                 <input type="number" inputmode="numeric" min="0" step="1" class="form-control mb-2" v-model="editingItem.inventory" ref="txtInventory" />
@@ -132,13 +135,14 @@ document.addEventListener("DOMContentLoaded", function () {
         data: {
             errors: [],
             items: [],
-            editingItem: null,
+            allCategories: [],
+            editingItem: { category: null },
             customPriceOptions: [
                 { text: 'Fixed', value: "Fixed" },
                 { text: 'Minimum', value: "Minimum" },
                 { text: 'Custom', value: 'Topup' },
             ],
-            elementId: "@Model.templateId"
+            elementId: @Safe.Json(Model.templateId)
         },
         computed: {
             anyImages: function(){
@@ -166,12 +170,37 @@ document.addEventListener("DOMContentLoaded", function () {
                 if (!template){
                     this.items = [];
                 } else {
-                    this.items =  JSON.parse(template);
+                    this.items = JSON.parse(template);
                 }
+                this.updateAllCategories();
+            },
+            updateAllCategories: function(){
+                let allCategoriesSet = new Set();
+                this.items.forEach(item => {
+                    if (item.categories)
+                    {
+                        item.categories.forEach(category => {
+                            allCategoriesSet.add(category);
+                        });
+                    }
+                });
+                this.allCategories = Array.from(allCategoriesSet);
+            },
+            addCategory: function(){
+                    let category = event.target.getAttribute('data-category');
+                    let categories = new Set();
+                    if (this.editingItem.categories)
+                    {
+                        categories = new Set(this.editingItem.categories.split(",").map(function (f) { return f.trim(); }));
+                    }
+                    categories.add(category);
+                    categories = [...new Set(categories)];
+                    this.editingItem.categories = categories.join(", ");
             },
             save: function(){
                 let template = JSON.stringify(this.items);
                 this.getInputElement().val(template);
+                this.updateAllCategories();
             },
             editItem: function(index){
                 this.errors = [];
@@ -179,10 +208,10 @@ document.addEventListener("DOMContentLoaded", function () {
                     this.editingItem = {index:-1, id:"", title: "", price: 0, image: "", description: "", priceType: "Fixed", inventory: null, disabled: false};
                 }else{
                     this.editingItem = {...this.items[index], index};
-					if (this.editingItem.categories)
-					{
-						this.editingItem.categories = this.editingItem.categories.join(", ");
-					}
+                    if (this.editingItem.categories)
+                    {
+                        this.editingItem.categories = this.editingItem.categories.join(", ");
+                    }
                 }
                 
                 this.editingItem = this.unEscape(this.editingItem);
@@ -253,9 +282,10 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
                 this.editingItem = this.escape(this.editingItem);
                 if (this.editingItem.categories)
-				{
-					this.editingItem.categories = this.editingItem.categories.split(",").map(function(f){return f.trim();});
-				}
+                {
+                    this.editingItem.categories = this.editingItem.categories.split(",").map(function(f){return f.trim();});
+                    this.editingItem.categories = [...new Set(this.editingItem.categories)];
+                }
                 if(this.editingItem.index < 0){
                     this.items.push(this.editingItem);
                 }else{

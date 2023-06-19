@@ -166,7 +166,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
             },
             save: function(){
-                let template = JSON.stringify(this.items);
+                let template = JSON.stringify(this.items, null, 2);
                 this.getInputElement().val(template);
             },
             editItem: function(index){

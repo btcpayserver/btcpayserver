@@ -17,7 +17,7 @@
 <head>
     <partial name="LayoutHead"/>
     <partial name="LayoutHeadStoreBranding" model="@(Model.BrandColor, Model.CssFileId, Model.CustomCSSLink, Model.EmbeddedCSS)" />
-    <link href="~/vendor/bootstrap-vue/bootstrap-vue.css" asp-append-version="true"  rel="stylesheet" />
+    <link href="~/vendor/bootstrap-vue/bootstrap-vue.min.css" asp-append-version="true"  rel="stylesheet" />
     <link href="~/crowdfund/styles/main.css" asp-append-version="true"  rel="stylesheet" />
 
     @if (!string.IsNullOrEmpty(Model.CustomCSSLink))
@@ -81,16 +81,14 @@
                 }
                 @if (Model.EnforceTargetAmount)
                 {
-                    <span v-if="srvModel.enforceTargetAmount" class="h5 ms-2">
+                    <span v-if="srvModel.enforceTargetAmount" class="h5 ms-2" v-b-tooltip title="No contributions allowed after the goal has been reached">
                         Hardcap Goal
-                        <span v-b-tooltip title="No contributions allowed after the goal has been reached"><vc:icon symbol="info" /></span>
                     </span>
                 }
                 else
                 {
-                    <span v-if="!srvModel.enforceTargetAmount" class="h5 ms-2">
+                    <span v-if="!srvModel.enforceTargetAmount" class="h5 ms-2" v-b-tooltip title="Contributions allowed even after goal is reached">
                         Softcap Goal
-                        <span v-b-tooltip title="Contributions allowed even after goal is reached"><vc:icon symbol="info" /></span>
                     </span>
                 }
             </span>
@@ -393,7 +391,7 @@
     <script src="~/vendor/moment/moment.min.js" asp-append-version="true"></script>
     <script src="~/vendor/vue-qrcode/vue-qrcode.min.js" asp-append-version="true"></script>
     <script src="~/vendor/vue-toasted/vue-toasted.min.js" asp-append-version="true"></script>
-    <script src="~/vendor/bootstrap-vue/bootstrap-vue.js" asp-append-version="true"></script>
+    <script src="~/vendor/bootstrap-vue/bootstrap-vue.min.js" asp-append-version="true"></script>
     <script src="~/vendor/signalr/signalr.js" asp-append-version="true"></script>
     <script src="~/vendor/animejs/anime.min.js" asp-append-version="true"></script>
     <script src="~/crowdfund/app.js" asp-append-version="true"></script>

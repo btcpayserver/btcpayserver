@@ -123,11 +123,16 @@ namespace BTCPayServer.Payments.Lightning
         {
             if (!_Dashboard.IsFullySynched(network.CryptoCode, out var summary))
                 throw new PaymentMethodUnavailableException("Full node not available");
-
+            
             try
             {
                 using var cts = new CancellationTokenSource(LightningTimeout);
                 var client = CreateLightningClient(supportedPaymentMethod, network);
+
+                // LNDhub-compatible implementations might not offer all of GetInfo data.
+                // Skip checks in those cases, see https://github.com/lnbits/lnbits/issues/1182
+                var isLndHub = client is LndHubLightningClient;
+                
                 LightningNodeInformation info;
                 try
                 {
@@ -137,8 +142,8 @@ namespace BTCPayServer.Payments.Lightning
                 {
                     throw new PaymentMethodUnavailableException("The lightning node did not reply in a timely manner");
                 }
-                catch (NullReferenceException) when (client is LndHubLightningClient)
-                {   // LNDhub-compatible implementation by LNbits does not support GetInfo, see https://github.com/lnbits/lnbits/issues/1182
+                catch (NotSupportedException) when (isLndHub)
+                {
                     return new NodeInfo[] {};
                 }
                 catch (Exception ex)
@@ -151,9 +156,9 @@ namespace BTCPayServer.Payments.Lightning
                 var nodeInfo = preferOnion != null && info.NodeInfoList.Any(i => i.IsTor == preferOnion)
                     ? info.NodeInfoList.Where(i => i.IsTor == preferOnion.Value).ToArray()
                     : info.NodeInfoList.Select(i => i).ToArray();
-
+                
                 var blocksGap = summary.Status.ChainHeight - info.BlockHeight;
-                if (blocksGap > 10)
+                if (blocksGap > 10 && !(isLndHub && info.BlockHeight == 0))
                 {
                     throw new PaymentMethodUnavailableException($"The lightning node is not synched ({blocksGap} blocks left)");
                 }

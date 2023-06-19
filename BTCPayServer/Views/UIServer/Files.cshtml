@@ -42,6 +42,53 @@
                 </form>
             }
 
+            @if (Model.DirectUrlByFiles is { Count: > 0 })
+            {
+                foreach (var fileUrlPair in Model.DirectUrlByFiles)
+                {
+                    var fileId = fileUrlPair.Key;
+                    var file = Model.Files.Single(storedFile => storedFile.Id.Equals(fileId, StringComparison.InvariantCultureIgnoreCase));
+                    var url = Url.Action("GetFile", "UIStorage", new { fileId }, Context.Request.Scheme, Context.Request.Host.ToString());
+                    <div class="border border-light rounded bg-tile mt-3">
+                        <div class="row">
+                            <div class="col-sm-12 col-md-4">
+                                <div class="input-group">
+                                    <div class="form-floating">
+                                        <input id="@fileId-name" class="form-control-plaintext" readonly="readonly" value="@file.FileName">
+                                        <label>File name</label>
+                                    </div>
+                                    <button type="button" class="btn btn-link" data-clipboard="@file.FileName">
+                                        <vc:icon symbol="copy" />
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-sm-12 col-md-4 ">
+                                <div class="input-group  ">
+                                    <div class="form-floating">
+                                        <input id="@fileId" class="form-control-plaintext" readonly="readonly" value="@fileId">
+                                        <label>File Id</label>
+                                    </div>
+                                    <button type="button" class="btn btn-link" data-clipboard="@fileId">
+                                        <vc:icon symbol="copy" />
+                                    </button>
+                                </div>
+                            </div>
+                            <div class=" col-sm-12 col-md-4">
+                                <div class="input-group">
+                                    <div class="form-floating">
+                                        <input id="@fileId-url" class="form-control-plaintext" readonly="readonly" value="@url">
+                                        <label>Permanent Url</label>
+                                    </div>
+                                    <button type="button" class="btn btn-link" data-clipboard="@url">
+                                        <vc:icon symbol="copy" />
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+
             @if (Model.Files.Any())
             {
                 <div class="table-responsive">
@@ -76,53 +123,6 @@
             else
             {
                 <p class="text-secondary mt-3">There are no files yet.</p>
-            }
-        }
-
-        @if (Model.DirectUrlByFiles != null && Model.DirectUrlByFiles.Count > 0)
-        {
-            foreach (var fileUrlPair in Model.DirectUrlByFiles)
-            {
-                var fileId = fileUrlPair.Key;
-                var file = Model.Files.Single(storedFile => storedFile.Id.Equals(fileId, StringComparison.InvariantCultureIgnoreCase));
-                var url = Url.Action("GetFile", "UIStorage", new { fileId }, Context.Request.Scheme, Context.Request.Host.ToString());
-                <div class="border border-light rounded">
-                    <div class="row">
-                        <div class="col-sm-12 col-md-4">
-                            <div class="input-group">
-                                <div class="form-floating">
-                                    <input id="@fileId-name" class="form-control-plaintext" readonly="readonly" value="@file.FileName">
-                                    <label>File name</label>
-                                </div>
-                                <button type="button" class="btn btn-link" data-clipboard="@file.FileName">
-                                    <vc:icon symbol="copy" />
-                                </button>
-                            </div>
-                        </div>
-                        <div class="col-sm-12 col-md-4 ">
-                            <div class="input-group  ">
-                                <div class="form-floating">
-                                    <input id="@fileId" class="form-control-plaintext" readonly="readonly" value="@fileId">
-                                    <label>File Id</label>
-                                </div>
-                                <button type="button" class="btn btn-link" data-clipboard="@fileId">
-                                    <vc:icon symbol="copy" />
-                                </button>
-                            </div>
-                        </div>
-                        <div class=" col-sm-12 col-md-4">
-                            <div class="input-group">
-                                <div class="form-floating">
-                                    <input id="@fileId-url" class="form-control-plaintext" readonly="readonly" value="@url">
-                                    <label>Permanent Url</label>
-                                </div>
-                                <button type="button" class="btn btn-link" data-clipboard="@url">
-                                    <vc:icon symbol="copy" />
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             }
         }
     </div>

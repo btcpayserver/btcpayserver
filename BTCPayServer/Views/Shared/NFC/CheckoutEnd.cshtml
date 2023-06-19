@@ -80,6 +80,7 @@ Vue.component("lnurl-withdraw-checkout", {
         }
     },
     async mounted () {
+        if (!this.supported) return;
         try {
             this.permissionGranted = navigator.permissions &&
                 (await navigator.permissions.query({ name: 'nfc' })).state === 'granted'

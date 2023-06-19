@@ -232,13 +232,13 @@
             {
                 <div class="lead text-center mt-3">@Safe.Raw(Model.Description)</div>
             }
-			@if (Model.Groups != null)
+			@if (Model.AllCategories != null)
 			{
-				<div class="btcpay-pills d-flex flex-wrap align-items-center justify-content-center gap-2" data-toggle="buttons" v-pre>
-				    @foreach (var g in Model.Groups)
+				<div class="btcpay-pills d-flex flex-wrap align-items-center justify-content-center gap-2 mt-3" data-toggle="buttons" v-pre>
+				    @foreach (var g in Model.AllCategories)
 				    {
-				        <input id="Group-@g.Value" type="radio" name="group" class="js-groups" value="@g.Value" @(g.Selected ? "checked" : "") autocomplete="off">
-					    <label class="btcpay-pill" for="Group-@g.Value">@g.Text</label>
+				        <input id="Category-@g.Value" type="radio" name="category" class="js-categories" value="@g.Value" @(g.Selected ? "checked" : "") autocomplete="off">
+					    <label class="btcpay-pill" for="Category-@g.Value">@g.Text</label>
 				    }
 				</div>
 			}
@@ -255,7 +255,7 @@
                     var image = item.Image;
                     var description = item.Description;
 
-                    <div class="js-add-cart card px-0 card-wrapper" data-index="@index" data-groups="@(new JArray(item.Groups).ToString())">
+                    <div class="js-add-cart card px-0 card-wrapper" data-index="@index" data-categories="@(new JArray(item.Categories).ToString())">
                         @if (!string.IsNullOrWhiteSpace(image))
                         {
                             <img class="card-img-top" src="@image" alt="@Safe.Raw(item.Title)" asp-append-version="true">

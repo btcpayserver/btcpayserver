@@ -27,7 +27,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Models
             public string Description { get; set; }
             public string Id { get; set; }
             [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-            public string[] Groups { get; set; }
+            public string[] Categories { get; set; }
             [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
             public string Image { get; set; }
             [JsonConverter(typeof(StringEnumConverter))]
@@ -84,17 +84,17 @@ namespace BTCPayServer.Plugins.PointOfSale.Models
 
         private void UpdateGroups()
         {
-            Groups = null;
+            AllCategories = null;
             if (Items is null)
                 return;
-            var groups = Items.SelectMany(g => g.Groups ?? Array.Empty<string>())
+            var groups = Items.SelectMany(g => g.Categories ?? Array.Empty<string>())
                               .ToHashSet()
                               .Select(o => new KeyValuePair<string, string>(o, o))
                               .ToList();
             if (groups.Count == 0)
                 return;
             groups.Insert(0, new KeyValuePair<string, string>("All items", "*"));
-            Groups = new SelectList(groups, "Value", "Key", "*");
+            AllCategories = new SelectList(groups, "Value", "Key", "*");
         }
 
         public string CurrencyCode { get; set; }
@@ -109,7 +109,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Models
         public string CustomCSSLink { get; set; }
         public string CustomLogoLink { get; set; }
         public string Description { get; set; }
-        public SelectList Groups { get; set; }
+        public SelectList AllCategories { get; set; }
         [Display(Name = "Custom CSS Code")]
         public string EmbeddedCSS { get; set; }
         public RequiresRefundEmail RequiresRefundEmail { get; set; } = RequiresRefundEmail.InheritFromStore;

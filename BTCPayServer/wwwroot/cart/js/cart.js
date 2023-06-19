@@ -15,7 +15,7 @@ function Cart() {
     this.$summaryTip = $('.js-cart-summary-tip');
     this.$destroy = $('.js-cart-destroy');
     this.$confirm = $('#js-cart-confirm');
-    this.$groups = $('.js-groups');
+    this.$categories = $('.js-categories');
     this.listItems();
     this.bindEmptyCart();
 
@@ -419,12 +419,12 @@ Cart.prototype.listItems = function() {
         self = this,
         list = [],
         tableTemplate = '';
-    this.$groups.on('change', function (event) {
+    this.$categories.on('change', function (event) {
         if ($(this).is(':checked')) {
-            var group = $(this).val();
+            var selectedCategory = $(this).val();
             $(".js-add-cart").each(function () {
-                var groups = JSON.parse(this.getAttribute("data-groups"));
-                if (group === "*" || groups.includes(group))
+                var categories = JSON.parse(this.getAttribute("data-categories"));
+                if (selectedCategory === "*" || categories.includes(selectedCategory))
                     this.classList.remove("d-none");
                 else
                     this.classList.add("d-none");

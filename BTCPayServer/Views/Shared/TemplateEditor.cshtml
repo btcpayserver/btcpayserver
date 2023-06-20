@@ -131,7 +131,7 @@
         <div class="col-xxl-constrain">
             <div class="form-group pt-3">
                 <label for="@Model.templateId" class="form-label">Template</label>
-                <textarea id="@Model.templateId" name="@Model.templateId" rows="10" cols="40" class="form-control" v-model="configJSON" v-on:change="updateFromJSON">@Model.template</textarea>
+                <textarea id="@Model.templateId" name="@Model.templateId" rows="10" cols="40" class="form-control" v-model="configJSON" v-on:change="updateFromJSON"></textarea>
             </div>
         </div>
     </div>
@@ -148,8 +148,8 @@ document.addEventListener("DOMContentLoaded", () => {
             console.error('Error deserializing template config:', err)
         }
     }
-    const $config = document.getElementById(@Safe.Json(Model.templateId))
-    let config = parseConfig($config.value) || []
+    const template = @Safe.Json(Model.template)
+    let config = parseConfig(template) || []
     
     new Vue({
         el: '#template-editor-app',

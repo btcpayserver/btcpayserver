@@ -10,6 +10,7 @@ using BTCPayServer.Models;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Payments.Lightning;
+using BTCPayServer.Rating;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using NBitpayClient;
@@ -465,6 +466,7 @@ namespace BTCPayServer.Services.Invoices
         [JsonConverter(typeof(StringEnumConverter))]
         public CheckoutType? CheckoutType { get; set; }
         public bool LazyPaymentMethods { get; set; }
+        public RateRules? ExplicitRateRules { get; set; }
 
         public bool IsExpired()
         {

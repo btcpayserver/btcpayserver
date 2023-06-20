@@ -238,6 +238,10 @@ namespace BTCPayServer.Controllers
         {
             var storeBlob = store.GetStoreBlob();
             var entity = _InvoiceRepository.CreateNewInvoice();
+            if (!string.IsNullOrEmpty(invoice.Checkout.ExplicitRateScript) && RateRules.TryParse(invoice.Checkout.ExplicitRateScript, out var explicitRateRule) && explicitRateRule is not null)
+            {
+                entity.ExplicitRateRules = explicitRateRule;
+            }
             entity.ServerUrl = serverUrl;
             entity.ExpirationTime = entity.InvoiceTime + (invoice.Checkout.Expiration ?? storeBlob.InvoiceExpiration);
             entity.MonitoringExpiration = entity.ExpirationTime + (invoice.Checkout.Monitoring ?? storeBlob.MonitoringExpiration);
@@ -315,7 +319,6 @@ namespace BTCPayServer.Controllers
             }
             entity.Status = InvoiceStatusLegacy.New;
             HashSet<CurrencyPair> currencyPairsToFetch = new HashSet<CurrencyPair>();
-            var rules = storeBlob.GetRateRules(_NetworkProvider);
             var excludeFilter = storeBlob.GetExcludedPaymentMethods(); // Here we can compose filters from other origin with PaymentFilter.Any()
             if (invoicePaymentMethodFilter != null)
             {
@@ -337,7 +340,7 @@ namespace BTCPayServer.Controllers
                 }
             }
 
-            var rateRules = storeBlob.GetRateRules(_NetworkProvider);
+            var rateRules =  entity.ExplicitRateRules?? storeBlob.GetRateRules(_NetworkProvider);
             var fetchingByCurrencyPair = _RateProvider.FetchRates(currencyPairsToFetch, rateRules, cancellationToken);
             var fetchingAll = WhenAllFetched(logs, fetchingByCurrencyPair);
 

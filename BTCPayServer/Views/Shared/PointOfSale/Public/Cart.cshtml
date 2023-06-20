@@ -22,6 +22,10 @@
             justify-content: center;
             align-items: center;
         }
+        .card:not(.d-none:only-of-type) {
+            max-width: 320px;
+            margin: auto !important;
+        }
     </style>
 }
 @section PageFootContent {
@@ -234,7 +238,7 @@
             }
 			@if (Model.AllCategories != null)
 			{
-				<div class="btcpay-pills d-flex flex-wrap align-items-center justify-content-center gap-2 mt-3" data-toggle="buttons" v-pre>
+				<div class="btcpay-pills d-flex flex-wrap align-items-center justify-content-center gap-3 mt-3" data-toggle="buttons" v-pre>
 				    @foreach (var g in Model.AllCategories)
 				    {
 				        <input id="Category-@g.Value" type="radio" name="category" class="js-categories" value="@g.Value" @(g.Selected ? "checked" : "") autocomplete="off">

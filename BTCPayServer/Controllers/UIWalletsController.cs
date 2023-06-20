@@ -212,7 +212,8 @@ namespace BTCPayServer.Controllers
             WalletId walletId,
             string? labelFilter = null,
             int skip = 0,
-            int count = 50
+            int count = 50,
+            bool loadTransactions = false
         )
         {
             var paymentMethod = GetDerivationSchemeSettings(walletId);
@@ -223,25 +224,25 @@ namespace BTCPayServer.Controllers
 
             // We can't filter at the database level if we need to apply label filter
             var preFiltering = string.IsNullOrEmpty(labelFilter);
-            var transactions = await wallet.FetchTransactionHistory(paymentMethod.AccountDerivation, preFiltering ? skip : null, preFiltering ? count : null);
-            var walletTransactionsInfo = await WalletRepository.GetWalletTransactionsInfo(walletId, transactions.Select(t => t.TransactionId.ToString()).ToArray());
             var model = new ListTransactionsViewModel { Skip = skip, Count = count };
             model.Labels.AddRange(
                 (await WalletRepository.GetWalletLabels(walletId))
                 .Select(c => (c.Label, c.Color, ColorPalette.Default.TextColor(c.Color))));
 
+            IList<TransactionHistoryLine>? transactions = null;
+            Dictionary<string, WalletTransactionInfo>? walletTransactionsInfo = null;
+            if (loadTransactions)
+            {
+                transactions = await wallet.FetchTransactionHistory(paymentMethod.AccountDerivation, preFiltering ? skip : null, preFiltering ? count : null);
+                walletTransactionsInfo = await WalletRepository.GetWalletTransactionsInfo(walletId, transactions.Select(t => t.TransactionId.ToString()).ToArray());
+            }
+
             if (labelFilter != null)
             {
                 model.PaginationQuery = new Dictionary<string, object> { { "labelFilter", labelFilter } };
             }
-            if (transactions == null)
+            if (transactions == null || walletTransactionsInfo is null)
             {
-                TempData.SetStatusMessageModel(new StatusMessageModel()
-                {
-                    Severity = StatusMessageModel.StatusSeverity.Error,
-                    Message =
-                        "There was an error retrieving the transactions list. Is NBXplorer configured correctly?"
-                });
                 model.Transactions = new List<ListTransactionsViewModel.TransactionViewModel>();
             }
             else

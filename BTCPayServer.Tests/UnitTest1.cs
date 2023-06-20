@@ -719,7 +719,7 @@ namespace BTCPayServer.Tests
                 btcDerivationScheme.GetDerivation(new KeyPath("0/90")).ScriptPubKey, Money.Coins(1.0m));
             tester.ExplorerNode.Generate(1);
             var transactions = Assert.IsType<ListTransactionsViewModel>(Assert
-                .IsType<ViewResult>(walletController.WalletTransactions(walletId).Result).Model);
+                .IsType<ViewResult>(walletController.WalletTransactions(walletId, loadTransactions: true).Result).Model);
             Assert.Empty(transactions.Transactions);
 
             Assert.IsType<RedirectToActionResult>(walletController.WalletRescan(walletId, rescan).Result);
@@ -748,7 +748,7 @@ namespace BTCPayServer.Tests
             Assert.NotNull(rescan.TimeOfScan);
             Assert.Equal(1, rescan.LastSuccess.Found);
             transactions = Assert.IsType<ListTransactionsViewModel>(Assert
-                .IsType<ViewResult>(walletController.WalletTransactions(walletId).Result).Model);
+                .IsType<ViewResult>(walletController.WalletTransactions(walletId, loadTransactions: true).Result).Model);
             var tx = Assert.Single(transactions.Transactions);
             Assert.Equal(tx.Id, txId.ToString());
 
@@ -763,7 +763,7 @@ namespace BTCPayServer.Tests
                 await walletController.ModifyTransaction(walletId, tx.Id, addcomment: "hello"));
 
             transactions = Assert.IsType<ListTransactionsViewModel>(Assert
-                .IsType<ViewResult>(walletController.WalletTransactions(walletId).Result).Model);
+                .IsType<ViewResult>(walletController.WalletTransactions(walletId, loadTransactions: true).Result).Model);
             tx = Assert.Single(transactions.Transactions);
 
             Assert.Equal("hello", tx.Comment);
@@ -775,7 +775,7 @@ namespace BTCPayServer.Tests
                 await walletController.ModifyTransaction(walletId, tx.Id, removelabel: "test2"));
 
             transactions = Assert.IsType<ListTransactionsViewModel>(Assert
-                .IsType<ViewResult>(walletController.WalletTransactions(walletId).Result).Model);
+                .IsType<ViewResult>(walletController.WalletTransactions(walletId, loadTransactions: true).Result).Model);
             tx = Assert.Single(transactions.Transactions);
 
             Assert.Equal("hello", tx.Comment);

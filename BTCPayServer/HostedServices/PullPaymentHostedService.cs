@@ -46,6 +46,8 @@ namespace BTCPayServer.HostedServices
 
     public class PullPaymentHostedService : BaseAsyncService
     {
+        private readonly string[] _lnurlSupportedCurrencies = { "BTC", "SATS" };
+        
         public class CancelRequest
         {
             public CancelRequest(string pullPaymentId)
@@ -335,6 +337,14 @@ namespace BTCPayServer.HostedServices
                     }
                 }
             }
+        }
+
+        public bool SupportsLNURL(PullPaymentBlob blob)
+        {
+            var pms = blob.SupportedPaymentMethods.FirstOrDefault(id => 
+                id.PaymentType == LightningPaymentType.Instance && 
+                _networkProvider.DefaultNetwork.CryptoCode == id.CryptoCode);
+            return pms is not null && _lnurlSupportedCurrencies.Contains(blob.Currency);
         }
 
         public Task<RateResult> GetRate(PayoutData payout, string explicitRateRule, CancellationToken cancellationToken)

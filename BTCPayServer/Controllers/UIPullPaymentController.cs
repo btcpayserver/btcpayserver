@@ -29,6 +29,7 @@ namespace BTCPayServer.Controllers
         private readonly CurrencyNameTable _currencyNameTable;
         private readonly DisplayFormatter _displayFormatter;
         private readonly PullPaymentHostedService _pullPaymentHostedService;
+        private readonly BTCPayNetworkProvider _networkProvider;
         private readonly BTCPayNetworkJsonSerializerSettings _serializerSettings;
         private readonly IEnumerable<IPayoutHandler> _payoutHandlers;
         private readonly StoreRepository _storeRepository;
@@ -37,6 +38,7 @@ namespace BTCPayServer.Controllers
             CurrencyNameTable currencyNameTable,
             DisplayFormatter displayFormatter,
             PullPaymentHostedService pullPaymentHostedService,
+            BTCPayNetworkProvider networkProvider,
             BTCPayNetworkJsonSerializerSettings serializerSettings,
             IEnumerable<IPayoutHandler> payoutHandlers,
             StoreRepository storeRepository)
@@ -48,6 +50,7 @@ namespace BTCPayServer.Controllers
             _serializerSettings = serializerSettings;
             _payoutHandlers = payoutHandlers;
             _storeRepository = storeRepository;
+            _networkProvider = networkProvider;
         }
 
         [AllowAnonymous]
@@ -102,6 +105,13 @@ namespace BTCPayServer.Controllers
                           }).ToList()
             };
             vm.IsPending &= vm.AmountDue > 0.0m;
+            
+            if (_pullPaymentHostedService.SupportsLNURL(blob))
+            {
+                var url = Url.Action("GetLNURLForPullPayment", "UILNURL", new { cryptoCode = _networkProvider.DefaultNetwork.CryptoCode, pullPaymentId = vm.Id }, Request.Scheme, Request.Host.ToString());
+                vm.LnurlEndpoint = url != null ? new Uri(url) : null;
+            }
+            
             return View(nameof(ViewPullPayment), vm);
         }
 

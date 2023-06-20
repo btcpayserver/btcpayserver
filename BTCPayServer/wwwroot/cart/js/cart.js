@@ -328,6 +328,8 @@ Cart.prototype.updateTip = function(amount) {
 // Update hidden total amount value to be sent to the checkout page
 Cart.prototype.updateAmount = function() {
     $('#js-cart-amount').val(this.getTotal(true));
+    $('#js-cart-tip').val(this.tip);
+    $('#js-cart-discount').val(this.discount);
 }
 Cart.prototype.updatePosData = function() {
 
@@ -690,7 +692,6 @@ Cart.prototype.destroy = function(keepAmount) {
     } else {
         this.removeItemAll();
     }
-
     localStorage.removeItem(this.getStorageKey('cart'));
 }
 

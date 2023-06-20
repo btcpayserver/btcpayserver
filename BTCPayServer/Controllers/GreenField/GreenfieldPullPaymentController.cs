@@ -255,16 +255,15 @@ namespace BTCPayServer.Controllers.Greenfield
                 return PullPaymentNotFound();
 
             var blob = pp.GetBlob();
-            var pms = blob.SupportedPaymentMethods.FirstOrDefault(id => id.PaymentType == LightningPaymentType.Instance && _networkProvider.DefaultNetwork.CryptoCode == id.CryptoCode);
-            if (pms is not null && blob.Currency.Equals(pms.CryptoCode, StringComparison.InvariantCultureIgnoreCase))
+            if (_pullPaymentService.SupportsLNURL(blob))
             {
                 var lnurlEndpoint = new Uri(Url.Action("GetLNURLForPullPayment", "UILNURL", new
                 {
                     cryptoCode = _networkProvider.DefaultNetwork.CryptoCode,
-                    pullPaymentId = pullPaymentId
+                    pullPaymentId
                 }, Request.Scheme, Request.Host.ToString())!);
 
-                return base.Ok(new PullPaymentLNURL()
+                return base.Ok(new PullPaymentLNURL
                 {
                     LNURLBech32 = LNURL.LNURL.EncodeUri(lnurlEndpoint, "withdrawRequest", true).ToString(),
                     LNURLUri = LNURL.LNURL.EncodeUri(lnurlEndpoint, "withdrawRequest", false).ToString()

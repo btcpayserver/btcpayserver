@@ -182,7 +182,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 options: this.allCategories.map(value => ({ value, text: value })),
             });          
             this.categoriesSelect.on('change', () => {
-                this.editingItem.categories = this.categoriesSelect.getValue().split(',');
+                const value = this.categoriesSelect.getValue();
+                this.editingItem.categories = Array.from(value.split(',').reduce((res,  item) => {
+                    const category = item.trim();
+                    if (category) res.add(category);
+                    return res;
+                }, new Set()));
             });
         },
         beforeDestroy () {

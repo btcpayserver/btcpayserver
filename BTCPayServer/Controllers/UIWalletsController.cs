@@ -213,7 +213,8 @@ namespace BTCPayServer.Controllers
             string? labelFilter = null,
             int skip = 0,
             int count = 50,
-            bool loadTransactions = false
+            bool loadTransactions = false,
+            CancellationToken cancellationToken = default
         )
         {
             var paymentMethod = GetDerivationSchemeSettings(walletId);
@@ -233,7 +234,7 @@ namespace BTCPayServer.Controllers
             Dictionary<string, WalletTransactionInfo>? walletTransactionsInfo = null;
             if (loadTransactions)
             {
-                transactions = await wallet.FetchTransactionHistory(paymentMethod.AccountDerivation, preFiltering ? skip : null, preFiltering ? count : null);
+                transactions = await wallet.FetchTransactionHistory(paymentMethod.AccountDerivation, preFiltering ? skip : null, preFiltering ? count : null, cancellationToken: cancellationToken);
                 walletTransactionsInfo = await WalletRepository.GetWalletTransactionsInfo(walletId, transactions.Select(t => t.TransactionId.ToString()).ToArray());
             }
 
@@ -1312,7 +1313,7 @@ namespace BTCPayServer.Controllers
         [HttpGet("{walletId}/export")]
         public async Task<IActionResult> Export(
             [ModelBinder(typeof(WalletIdModelBinder))] WalletId walletId,
-            string format, string? labelFilter = null)
+            string format, string? labelFilter = null, CancellationToken cancellationToken = default)
         {
             var paymentMethod = GetDerivationSchemeSettings(walletId);
             if (paymentMethod == null)
@@ -1320,7 +1321,7 @@ namespace BTCPayServer.Controllers
 
             var wallet = _walletProvider.GetWallet(paymentMethod.Network);
             var walletTransactionsInfoAsync = WalletRepository.GetWalletTransactionsInfo(walletId, (string[]?)null);
-            var input = await wallet.FetchTransactionHistory(paymentMethod.AccountDerivation);
+            var input = await wallet.FetchTransactionHistory(paymentMethod.AccountDerivation, cancellationToken: cancellationToken);
             var walletTransactionsInfo = await walletTransactionsInfoAsync;
             var export = new TransactionsExport(wallet, walletTransactionsInfo);
             var res = export.Process(input, format);

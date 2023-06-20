@@ -182,7 +182,8 @@ namespace BTCPayServer.Controllers.Greenfield
             [FromQuery] TransactionStatus[]? statusFilter = null,
             [FromQuery] string? labelFilter = null,
             [FromQuery] int skip = 0,
-            [FromQuery] int limit = int.MaxValue
+            [FromQuery] int limit = int.MaxValue,
+            CancellationToken cancellationToken = default
         )
         {
             if (IsInvalidWalletRequest(cryptoCode, out var network,
@@ -197,7 +198,7 @@ namespace BTCPayServer.Controllers.Greenfield
             if (statusFilter?.Any() is true || !string.IsNullOrWhiteSpace(labelFilter))
                 preFiltering = false;
             var txs = await wallet.FetchTransactionHistory(derivationScheme.AccountDerivation, preFiltering ? skip : 0,
-                preFiltering ? limit : int.MaxValue);
+                preFiltering ? limit : int.MaxValue, cancellationToken: cancellationToken);
             if (!preFiltering)
             {
                 var filteredList = new List<TransactionHistoryLine>(txs.Count);

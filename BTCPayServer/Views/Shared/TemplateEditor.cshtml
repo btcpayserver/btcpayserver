@@ -72,6 +72,7 @@
                             <input type="checkbox" id="Disabled" class="btcpay-toggle me-3" v-model="editingItem && editingItem.disabled" />
                             <label class="form-label mb-0">Disabled</label>
                         </div>
+                        <vc:ui-extension-point location="app-template-editor-item-detail" model="Model"></vc:ui-extension-point>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -216,7 +217,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 this.config.splice(index, 1);
             },
             addItem() {
-                this.setEditingItem(null, { id: '', title: '', price: 0, image: '', description: '', categories: [], priceType: 'Fixed', inventory: null, disabled: false })
+                this.setEditingItem(null, { id: '', title: '', price: 0, image: '', description: '', categories: [], priceType: 'Fixed', inventory: null, disabled: false });
             },
             editItem(index) {
                 this.setEditingItem(index, Object.assign({}, this.config[index]));

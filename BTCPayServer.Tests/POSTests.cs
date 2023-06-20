@@ -135,10 +135,10 @@ donation:
             Assert.Equal("donation", vmview.Items[1].Title);
             // orange is available
             Assert.IsType<RedirectToActionResult>(publicApps
-                .ViewPointOfSale(app.Id, PosViewType.Cart, 0, null, null, null, null, "orange").Result);
+                .ViewPointOfSale(app.Id, PosViewType.Cart, 0, choiceKey: "orange").Result);
             // apple is not found
             Assert.IsType<NotFoundResult>(publicApps
-                .ViewPointOfSale(app.Id, PosViewType.Cart, 0, null, null, null, null, "apple").Result);
+                .ViewPointOfSale(app.Id, PosViewType.Cart, 0, choiceKey: "apple").Result);
         }
     }
 }

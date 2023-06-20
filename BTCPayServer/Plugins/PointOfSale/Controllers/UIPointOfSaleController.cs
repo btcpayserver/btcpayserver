@@ -131,6 +131,8 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
         public async Task<IActionResult> ViewPointOfSale(string appId,
                                                         PosViewType? viewType = null,
                                                         [ModelBinder(typeof(InvariantDecimalModelBinder))] decimal? amount = null,
+                                                        [ModelBinder(typeof(InvariantDecimalModelBinder))] decimal? tip = null,
+                                                        [ModelBinder(typeof(InvariantDecimalModelBinder))] decimal? discount = null,
                                                         string email = null,
                                                         string orderId = null,
                                                         string notificationUrl = null,
@@ -197,15 +199,14 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 if (!settings.ShowCustomAmount && currentView != PosViewType.Cart && currentView != PosViewType.Light)
                     return NotFound();
 
-                price = amount;
                 title = settings.Title;
                 //if cart IS enabled and we detect posdata that matches the cart system's, check inventory for the items
-
+                price = amount;
                 if (currentView == PosViewType.Cart &&
                     AppService.TryParsePosCartItems(jposData, out cartItems))
                 {
+                    price = 0.0m;
                     choices = AppService.Parse(settings.Template, false);
-                    var expectedMinimumAmount = 0m;
                     foreach (var cartItem in cartItems)
                     {
                         var itemChoice = choices.FirstOrDefault(c => c.Id == cartItem.Key);
@@ -229,13 +230,12 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                             expectedCartItemPrice = itemChoice.Price ?? 0;
                         }
 
-                        expectedMinimumAmount += expectedCartItemPrice * cartItem.Value;
+                        price += expectedCartItemPrice * cartItem.Value;
                     }
-
-                    if (expectedMinimumAmount > amount)
-                    {
-                        return RedirectToAction(nameof(ViewPointOfSale), new { appId });
-                    }
+                    if (discount is decimal d)
+                        price -= price * d/100.0m;
+                    if (tip is decimal t)
+                        price += t;
                 }
             }
 

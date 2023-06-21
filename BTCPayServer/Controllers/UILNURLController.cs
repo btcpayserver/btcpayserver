@@ -41,6 +41,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using LightningAddressData = BTCPayServer.Data.LightningAddressData;
 using MarkPayoutRequest = BTCPayServer.HostedServices.MarkPayoutRequest;
+using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer
 {
@@ -252,6 +253,10 @@ namespace BTCPayServer
             {
                 return NotFound();
             }
+            
+            var pmi = GetLNUrlPaymentMethodId(cryptoCode, store, out var lnurlPM);
+            if (pmi is null)
+                return NotFound("LNUrl or LN is disabled");
 
             ViewPointOfSaleViewModel.Item[] items;
             string currencyCode;
@@ -276,9 +281,6 @@ namespace BTCPayServer
             ViewPointOfSaleViewModel.Item item = null;
             if (!string.IsNullOrEmpty(itemCode))
             {
-                var pmi = GetLNUrlPaymentMethodId(cryptoCode, store, out _);
-                if (pmi is null)
-                    return NotFound("LNUrl or LN is disabled");
                 var escapedItemId = Extensions.UnescapeBackSlashUriString(itemCode);
                 item = items.FirstOrDefault(item1 =>
                     item1.Id.Equals(itemCode, StringComparison.InvariantCultureIgnoreCase) ||
@@ -322,12 +324,12 @@ namespace BTCPayServer
             createInvoice.Metadata = invoiceMetadata.ToJObject();
 
 
-            return await CreateLNURLRequestWithoutInvoice( new LNURLRequestParams(cryptoCode,
-                store,
-                store.GetStoreBlob(),
+            return await CreateLNURLRequestWithoutInvoice( new LNURLRequestParams(
+                store.Id,
+                pmi,
                 createInvoice,
                 additionalTags: new List<string> { AppService.GetAppInternalTag(appId) },
-                allowOverpay: false));
+                allowOverpay: false), store, store.GetStoreBlob(), lnurlPM);
         }
 
         public class EditLightningAddressVM
@@ -379,18 +381,20 @@ namespace BTCPayServer
             if (store is null)
                 return NotFound("Unknown username");
 
+            var pmi = GetLNUrlPaymentMethodId("BTC", store, out var lnurlPaymentMethod);
+            if (pmi is null)
+                return NotFound("LNUrl or LN is disabled");
             var blob = lightningAddressSettings.GetBlob();
             return await CreateLNURLRequestWithoutInvoice(new LNURLRequestParams(
-                "BTC",
-                store,
-                store.GetStoreBlob(),
+                store.Id,
+                pmi,
                 new CreateInvoiceRequest() {Currency = blob?.CurrencyCode, Metadata = blob?.InvoiceMetadata},
                 new LNURLPayRequest()
                 {
                     MinSendable = blob?.Min is decimal min ? new LightMoney(min, LightMoneyUnit.Satoshi) : null,
                     MaxSendable = blob?.Max is decimal max ? new LightMoney(max, LightMoneyUnit.Satoshi) : null,
                 },
-                new Dictionary<string, string>() {{"text/identifier", $"{username}@{Request.Host}"}}));
+                new Dictionary<string, string>() {{"text/identifier", $"{username}@{Request.Host}"}}), store, store.GetStoreBlob(), lnurlPaymentMethod);
         }
 
 
@@ -406,53 +410,51 @@ namespace BTCPayServer
             if (store is null)
                 return NotFound();
 
+            var pmi = GetLNUrlPaymentMethodId("BTC", store, out var lnurlPaymentMethod);
+            if (pmi is null)
+                return NotFound("LNUrl or LN is disabled");
             var blob = store.GetStoreBlob();
             if (!blob.AnyoneCanInvoice)
                 return NotFound("'Anyone can invoice' is turned off");
-            return await CreateLNURLRequestWithoutInvoice(new LNURLRequestParams(cryptoCode,
-                store,
-                blob,
+            return await CreateLNURLRequestWithoutInvoice(new LNURLRequestParams(
+                storeId,
+                pmi,
                 new CreateInvoiceRequest
                 {
                     Currency = currencyCode
-                }));
+                }), store, blob, lnurlPaymentMethod);
         }
         class LNURLRequestParams
         {
-            public LNURLRequestParams(string cryptoCode,
-                Data.StoreData store,
-                Data.StoreBlob blob,
+            public LNURLRequestParams(
+                string storeId,
+                PaymentMethodId paymentMethodId,
                 CreateInvoiceRequest createInvoice,
                 LNURLPayRequest lnurlRequest = null,
                 Dictionary<string, string> lnUrlMetadata = null,
                 List<string> additionalTags = null,
                 bool allowOverpay = true)
             {
-                CryptoCode = cryptoCode;
-                Store = store;
-                Blob = blob;
+                StoreId = storeId;
+                PaymentMethodId = paymentMethodId;
                 CreateInvoice = createInvoice;
                 LNURLRequest = lnurlRequest;
                 LNURLMetadata = lnUrlMetadata;
                 AdditionalTags = additionalTags;
                 AllowOverpay = allowOverpay;
             }
-            public string CryptoCode { get; set; }
-            public Data.StoreData Store { get; set; }
-            public Data.StoreBlob Blob { get; set; }
+
+            public string StoreId { get; }
+            public PaymentMethodId PaymentMethodId { get; set; }
             public CreateInvoiceRequest CreateInvoice { get; set; }
             public LNURLPayRequest LNURLRequest { get; set; }
             public Dictionary<string, string> LNURLMetadata { get; set; }
             public List<string> AdditionalTags { get; set; }
             public bool AllowOverpay { get; set; }
         }
-        private async Task<IActionResult> CreateLNURLRequestWithoutInvoice(LNURLRequestParams requestParams)
+        private async Task<IActionResult> CreateLNURLRequestWithoutInvoice(LNURLRequestParams requestParams,
+            StoreData store, StoreBlob storeBlob, LNURLPaySupportedPaymentMethod lnurlPaySupportedPaymentMethod)
         {
-            var pmi = GetLNUrlPaymentMethodId(requestParams.CryptoCode, requestParams.Store, out LNURLPaySupportedPaymentMethod lnUrlMethod);
-            if (pmi is null)
-                return NotFound("LNUrl or LN is disabled");
-
-            
             var k = Guid.NewGuid();
             
             requestParams.LNURLRequest ??= new LNURLPayRequest();
@@ -470,14 +472,14 @@ namespace BTCPayServer
             if (!requestParams.LNURLMetadata.ContainsKey("text/plain"))
             {
                 var invMetadata = InvoiceMetadata.FromJObject(requestParams.CreateInvoice.Metadata);
-                var invoiceDescription = requestParams.Blob.LightningDescriptionTemplate
-                        .Replace("{StoreName}", requestParams.Store.StoreName ?? "", StringComparison.OrdinalIgnoreCase)
+                var invoiceDescription = storeBlob.LightningDescriptionTemplate
+                        .Replace("{StoreName}", store.StoreName ?? "", StringComparison.OrdinalIgnoreCase)
                         .Replace("{ItemDescription}", invMetadata.ItemDesc ?? "", StringComparison.OrdinalIgnoreCase)
                         .Replace("{OrderId}", invMetadata.OrderId ?? "", StringComparison.OrdinalIgnoreCase);
                 requestParams.LNURLMetadata.Add("text/plain", invoiceDescription);
             }
 
-            requestParams.LNURLRequest.CommentAllowed = lnUrlMethod.LUD12Enabled ? 2000 : 0;
+            requestParams.LNURLRequest.CommentAllowed = lnurlPaySupportedPaymentMethod.LUD12Enabled ? 2000 : 0;
             requestParams.LNURLRequest.Metadata = JsonConvert.SerializeObject(requestParams.LNURLMetadata.Select(kv => new[] { kv.Key, kv.Value }));
             // We don't think BTCPay handle well 0 sats payments, just in case make it minimum one sat.
             if (requestParams.LNURLRequest.MinSendable is null || requestParams.LNURLRequest.MinSendable < LightMoney.Satoshis(1.0m))
@@ -489,18 +491,18 @@ namespace BTCPayServer
             if (requestParams.CreateInvoice.Type != InvoiceType.TopUp)
             {
                 LightMoney cAmount;
-                if (requestParams.CreateInvoice.Currency != pmi.CryptoCode)
+                if (requestParams.CreateInvoice.Currency !=  requestParams.PaymentMethodId.CryptoCode)
                 {
-                    var rr = requestParams.Store.GetStoreBlob().GetRateRules(_btcPayNetworkProvider);
+                    var rr = storeBlob.GetRateRules(_btcPayNetworkProvider);
                     var rate = _rateFetcher.FetchRates(
                         new HashSet<CurrencyPair>()
                         {
-                            new CurrencyPair(pmi.CryptoCode, requestParams.CreateInvoice.Currency)
+                            new CurrencyPair( requestParams.PaymentMethodId.CryptoCode, requestParams.CreateInvoice.Currency)
                         }, rr, CancellationToken.None).First();
                     var rateResult = await rate.Value;
                     cAmount = LightMoney.FromUnit(rateResult.BidAsk.Bid, LightMoneyUnit.BTC);
                     requestParams.CreateInvoice.Checkout.ExplicitRateScript =
-                        $"{pmi.CryptoCode}_{requestParams.CreateInvoice.Currency}={rateResult.BidAsk.Bid}";
+                        $"{ requestParams.PaymentMethodId.CryptoCode}_{requestParams.CreateInvoice.Currency}={rateResult.BidAsk.Bid}";
                 }
                 else
                 {
@@ -630,12 +632,13 @@ namespace BTCPayServer
             InvoiceEntity i;
             try
             {
-                var pmi = GetLNUrlPaymentMethodId(lnurlReq.CryptoCode, lnurlReq.Store, out _);
+               var store = await _storeRepository.FindStore(lnurlReq.StoreId);
+                
                 lnurlReq.CreateInvoice.Checkout ??= new InvoiceDataBase.CheckoutOptions();
                 lnurlReq.CreateInvoice.Checkout.LazyPaymentMethods = false;
-                lnurlReq.CreateInvoice.Checkout.PaymentMethods = new[] { pmi.ToStringNormalized() };
-                i = await _invoiceController.CreateInvoiceCoreRaw(lnurlReq.CreateInvoice, lnurlReq.Store, Request.GetAbsoluteRoot(), lnurlReq.AdditionalTags);
-                return await GetLNURLForInvoice(i, lnurlReq.CryptoCode, amount, comment);
+                lnurlReq.CreateInvoice.Checkout.PaymentMethods = new[] {  lnurlReq.PaymentMethodId.ToStringNormalized() };
+                i = await _invoiceController.CreateInvoiceCoreRaw(lnurlReq.CreateInvoice, store, Request.GetAbsoluteRoot(), lnurlReq.AdditionalTags);
+                return await GetLNURLForInvoice(i, lnurlReq.PaymentMethodId.CryptoCode, amount, comment);
             }
             catch (Exception e)
             {

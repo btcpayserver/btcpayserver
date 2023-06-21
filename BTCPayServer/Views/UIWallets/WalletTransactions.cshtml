@@ -51,8 +51,10 @@
     <script>
         const $actions = document.getElementById('ListActions');
         const $list = document.getElementById('WalletTransactionsList');
+        const $table = document.getElementById('WalletTable');
+        const $dropdowns = document.getElementById('Dropdowns');
         const $indicator = document.getElementById('LoadingIndicator');
-        window.areTransactionsLoaded = false;
+        
         delegate('click', '#selectAllCheckbox', e => {
             document.querySelectorAll(".selector").forEach(checkbox => {
                 checkbox.checked = e.target.checked;
@@ -87,14 +89,22 @@
             
             if (response.ok) {
                 const html = await response.text();
+                const responseEmpty = html.trim() === '';
                 $list.insertAdjacentHTML('beforeend', html);
                 skip = skipNext;
                 
-                if (html.trim() === '') {
+                if (responseEmpty) {
                     // in case the response html was empty, remove the observer and stop loading
                     observer.unobserve($actions);
                 }
-                window.areTransactionsLoaded = true;
+                if (!$list.dataset.loaded) {
+                    $list.dataset.loaded = 'true';
+                    // replace table and dropdowns if initial response was empty
+                    if (responseEmpty) {
+                        $dropdowns.remove();
+                        $table.outerHTML = '<div class="text-secondary">There are no transactions yet.</div>';
+                    }
+                }
             }
             
             $indicator.classList.add('d-none');
@@ -102,11 +112,12 @@
             initLabelManagers();
         }
 		let observer = new IntersectionObserver(async entries => {
-                        const { isIntersecting } = entries[0];
-                        if (isIntersecting) {
-                            await loadMoreTransactions();
-                        }
-                    }, { rootMargin: '128px' });
+            const { isIntersecting } = entries[0];
+            if (isIntersecting) {
+                await loadMoreTransactions();
+            }
+        }, { rootMargin: '128px' });
+        
 		// the actions div marks the end of the list table
 		observer.observe($actions);
     </script>
@@ -155,31 +166,29 @@
 </div>
 <div style="clear:both"></div>
 
-<div class="row">
-    <div class="col table-responsive-md" id="walletTable">
-        <table class="table table-hover">
-            <thead class="thead-inverse">
-            <tr>
-                <th style="width:2rem;" class="only-for-js">
-                    <input id="selectAllCheckbox" type="checkbox" class="form-check-input" />
-                </th>
-                <th class="w-150px">
-                    <div class="d-flex align-items-center gap-1">
-                        Date
-                        <button type="button" class="btn btn-link p-0 fa fa-clock-o switch-time-format" title="Switch date format" id="switchTimeFormat"></button>
-                    </div>
-                </th>
-                <th class="text-start">Label</th>
-                <th>Transaction Id</th>
-                <th class="text-end">Amount</th>
-                <th class="text-end" style="min-width:60px"></th>
-            </tr>
-            </thead>
-            <tbody id="WalletTransactionsList">
-                <partial name="_WalletTransactionsList" model="Model" />
-            </tbody>
-        </table>
-    </div>
+<div class="table-responsive-md" id="WalletTable">
+    <table class="table table-hover">
+        <thead class="thead-inverse">
+        <tr>
+            <th style="width:2rem;" class="only-for-js">
+                <input id="selectAllCheckbox" type="checkbox" class="form-check-input" />
+            </th>
+            <th class="w-150px">
+                <div class="d-flex align-items-center gap-1">
+                    Date
+                    <button type="button" class="btn btn-link p-0 fa fa-clock-o switch-time-format" title="Switch date format" id="switchTimeFormat"></button>
+                </div>
+            </th>
+            <th class="text-start">Label</th>
+            <th>Transaction Id</th>
+            <th class="text-end">Amount</th>
+            <th class="text-end" style="min-width:60px"></th>
+        </tr>
+        </thead>
+        <tbody id="WalletTransactionsList">
+            <partial name="_WalletTransactionsList" model="Model" />
+        </tbody>
+    </table>
 </div>
 <noscript>
     <vc:pager view-model="Model"/>

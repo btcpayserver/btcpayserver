@@ -126,7 +126,7 @@ retry:
         {
             var wait = new WebDriverWait(driver, SeleniumTester.ImplicitWait);
             wait.UntilJsIsReady();
-            wait.Until(d => d.ExecuteJavaScript<bool>("return window.areTransactionsLoaded;"));
+            wait.Until(d => d.WaitForElement(By.CssSelector("#WalletTransactionsList[data-loaded='true']")));
         }
         public static IWebElement WaitForElement(this IWebDriver driver, By selector)
         {

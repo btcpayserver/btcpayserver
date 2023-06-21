@@ -459,19 +459,19 @@ namespace BTCPayServer
             
             requestParams.LNURLRequest ??= new LNURLPayRequest();
             requestParams.LNURLMetadata ??= new Dictionary<string, string>();
-
+            requestParams.CreateInvoice.Currency ??= storeBlob.DefaultCurrency;
             // Set the callback endpoint to trigger invoice generation
             requestParams.LNURLRequest.Tag = "payRequest";
             requestParams.LNURLRequest.Callback = new Uri(_linkGenerator.GetUriByAction(
                 action: nameof(LNURLCallback),
                 controller: "UILNURL",
-                values: new { k },
+                values: new {requestParams.PaymentMethodId.CryptoCode, k },
                 Request.Scheme, Request.Host, Request.PathBase));
             
             
             if (!requestParams.LNURLMetadata.ContainsKey("text/plain"))
             {
-                var invMetadata = InvoiceMetadata.FromJObject(requestParams.CreateInvoice.Metadata);
+                var invMetadata = InvoiceMetadata.FromJObject(requestParams.CreateInvoice.Metadata?? new JObject());
                 var invoiceDescription = storeBlob.LightningDescriptionTemplate
                         .Replace("{StoreName}", store.StoreName ?? "", StringComparison.OrdinalIgnoreCase)
                         .Replace("{ItemDescription}", invMetadata.ItemDesc ?? "", StringComparison.OrdinalIgnoreCase)
@@ -488,7 +488,7 @@ namespace BTCPayServer
             if (requestParams.LNURLRequest.MaxSendable is null)
                 requestParams.LNURLRequest.MaxSendable = LightMoney.FromUnit(6.12m, LightMoneyUnit.BTC);
 
-            if (requestParams.CreateInvoice.Type != InvoiceType.TopUp)
+            if (requestParams.CreateInvoice.Type != InvoiceType.TopUp && requestParams.CreateInvoice.Amount is not null)
             {
                 LightMoney cAmount;
                 if (requestParams.CreateInvoice.Currency !=  requestParams.PaymentMethodId.CryptoCode)

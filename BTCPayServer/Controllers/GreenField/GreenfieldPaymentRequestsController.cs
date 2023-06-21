@@ -255,7 +255,9 @@ namespace BTCPayServer.Controllers.Greenfield
                 Email = blob.Email,
                 AllowCustomPaymentAmounts = blob.AllowCustomPaymentAmounts,
                 EmbeddedCSS = blob.EmbeddedCSS,
-                CustomCSSLink = blob.CustomCSSLink
+                CustomCSSLink = blob.CustomCSSLink,
+                FormResponse = blob.FormResponse,
+                FormId = blob.FormId
             };
         }
 

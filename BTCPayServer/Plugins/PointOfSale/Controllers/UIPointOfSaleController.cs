@@ -304,7 +304,6 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                     new List<string> { AppService.GetAppInternalTag(appId) },
                     cancellationToken, entity =>
                     {
-                        entity.Metadata.OrderUrl = Request.GetDisplayUrl();
                         entity.Metadata.PosData = jposData;
                         var receiptData = new JObject();
                         if (choice is not null)
@@ -345,7 +344,6 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                             {
                                 receiptData.Add("Tip", _displayFormatter.Currency(appPosData.Tip, settings.Currency, DisplayFormatter.CurrencyFormat.Symbol));
                             }
-
                         }
                         entity.Metadata.SetAdditionalData("receiptData", receiptData);
 

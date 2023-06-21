@@ -1,5 +1,7 @@
 @using BTCPayServer.Views.Stores
+@using AngleSharp.Io
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
+@inject BTCPayNetworkProvider NetworkProvider
 @model BTCPayServer.Plugins.PayButton.Models.PayButtonViewModel
 @{
     ViewData.SetActivePage(StoreNavPages.PayButton, "Pay Button", Context.GetStoreData().Id);
@@ -14,6 +16,7 @@
     <script src="~/vendor/highlightjs/highlight.min.js" asp-append-version="true"></script>
     <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
     <script src="~/vendor/vuejs-vee-validate/vee-validate.js" asp-append-version="true"></script>
+    <script src="~/vendor/vue-qrcode/vue-qrcode.min.js" asp-append-version="true"></script>
     <script src="~/paybutton/paybutton.js" asp-append-version="true"></script>
     <template id="template-modal" csp-allow>
     if (!window.btcpay) {
@@ -116,13 +119,35 @@
     </template>
     
     <script>
+        window.lnurlEndpoint = @Safe.Json(Url.Action("GetLNUrlForStore", "UILNURL", new
+                              {
+                                  storeId = Model.StoreId,
+                                  cryptoCode = NetworkProvider.DefaultNetwork.CryptoCode,
+                              }, "lnurlp", Context.Request.Host.ToString()));
         const srvModel = @Safe.Json(Model);
         const payButtonCtrl = new Vue({
             el: '#payButtonCtrl',
+            components: {
+                qrcode: VueQrcode
+            },
             data: {
                 srvModel: srvModel,
                 originalButtonImageUrl: srvModel.payButtonImageUrl,
-                buttonInlineTextMode: false
+                buttonInlineTextMode: false,
+                previewLink: "",
+                previewLinkHtml: "",
+                lnurlLink: "",
+                lnurlLinkHtml: "",
+                qrOptions: {
+                    width: 256,
+                    height: 256,
+                    margin: 1,
+                    color: {
+                        dark: '#000',
+                        light: '#f5f5f7'
+                    }
+                }
+                
             },
             computed: {
                 imageUrlRequired() {
@@ -131,7 +156,7 @@
             },
             methods: {
                 inputChanges(event, buttonSize) {
-                    inputChanges(event, buttonSize);
+                    inputChanges(payButtonCtrl, event, buttonSize, );
                 }
             },
             watch: {
@@ -145,8 +170,9 @@
                     }
                     this.inputChanges();
                 }
-            }
+            },
         });
+        inputChanges(payButtonCtrl);
     </script>
 }
 
@@ -311,9 +337,21 @@
         <div class="col-xl-4 mt-4 mt-xl-0">
             <h5 class="mb-3">Preview</h5>
             <div id="preview"></div>
-            <div v-show="!srvModel.appIdEndpoint">
+            <div v-if="!srvModel.appIdEndpoint && previewLink">
                 <h5 class="mt-4 mb-3">Link</h5>
-                <span>Alternatively, you can share <a id="preview-link" href="#">this link</a> or encode it in a QR code.</span>
+                <span>Alternatively, you can share <a id="preview-link" :href="previewLink">this link</a> or encode it in a QR code.</span>
+                <a class="qr-container d-inline-block" :href="previewLink">
+                    <qrcode :value="previewLink" :options="qrOptions" tag="img" :ref="(el) => { const newVal  = el?.$el?.parentElement?.outerHTML; if(newVal)  previewLinkHtml = newVal; }"></qrcode>
+                </a>
+                <input type="text" v-if="previewLinkHtml" :value="previewLinkHtml" class="form-control" />
+            </div>
+            <div v-if="!srvModel.appIdEndpoint && lnurlLink">
+                <h5 class="mt-4 mb-3">LNURL</h5>
+                <span>Alternatively, you can share <a id="preview-link-lnurl" :href="lnurlLink">this LNURL</a> or encode it in a QR code, which would work natively for lightning wallets.</span>
+                <a class="qr-container d-inline-block" :href="lnurlLink">
+                    <qrcode :value="lnurlLink" :options="qrOptions" tag="img" :ref="(el) => { const newVal  = el?.$el?.parentElement?.outerHTML; if(newVal)  lnurlLinkHtml = newVal; }"></qrcode>
+                </a>
+                <input type="text" v-if="lnurlLinkHtml" :value="lnurlLinkHtml" class="form-control" />
             </div>
         </div>
     </div>

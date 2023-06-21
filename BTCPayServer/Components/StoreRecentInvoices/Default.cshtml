@@ -51,6 +51,10 @@
                         <a asp-controller="UIInvoice" asp-action="Invoice" asp-route-invoiceId="@invoice.InvoiceId" class="text-break">@invoice.InvoiceId</a>
                     </td>
                     <td>
+                        @if (invoice.Details.Archived)
+                        {
+                            <span class="badge bg-warning">archived</span>
+                        }
                         <span class="badge badge-@invoice.Status.Status.ToModernStatus().ToString().ToLower()">
                             @invoice.Status.Status.ToModernStatus().ToString()
                             @if (invoice.Status.ExceptionStatus != InvoiceExceptionStatus.None)
@@ -58,6 +62,10 @@
                                 @($"({invoice.Status.ExceptionStatus.ToString()})")
                             }
                         </span>
+                        @foreach (var paymentType in invoice.Details.Payments.Select(payment => payment.GetPaymentMethodId()?.PaymentType).Distinct().Where(type => type != null && !string.IsNullOrEmpty(type.GetBadge())))
+                        {
+                            <span class="badge">@paymentType.GetBadge()</span>
+                        }
                         @if (invoice.HasRefund)
                         {
                             <span class="badge bg-warning">

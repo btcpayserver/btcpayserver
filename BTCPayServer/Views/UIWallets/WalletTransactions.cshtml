@@ -52,7 +52,7 @@
         const $actions = document.getElementById('ListActions');
         const $list = document.getElementById('WalletTransactionsList');
         const $indicator = document.getElementById('LoadingIndicator');
-        
+        window.areTransactionsLoaded = false;
         delegate('click', '#selectAllCheckbox', e => {
             document.querySelectorAll(".selector").forEach(checkbox => {
                 checkbox.checked = e.target.checked;
@@ -94,6 +94,7 @@
                     // in case the response html was empty, remove the observer and stop loading
                     observer.unobserve($actions);
                 }
+                window.areTransactionsLoaded = true;
             }
             
             $indicator.classList.add('d-none');

@@ -22,7 +22,7 @@
                 exclude-types="false"
                 display-inline="true"/>
         </td>
-        <td class="smMaxWidth text-truncate@(transaction.IsConfirmed ? "" : " unconf")">
+        <td class="smMaxWidth text-truncate@(transaction.IsConfirmed ? "" : " unconf") wallet-tx">
             <a href="@transaction.Link" target="_blank" rel="noreferrer noopener">
                 @transaction.Id
             </a>

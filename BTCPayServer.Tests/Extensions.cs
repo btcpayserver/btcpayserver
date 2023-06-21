@@ -122,6 +122,12 @@ retry:
             driver.ExecuteJavaScript($"document.getElementById('{element}').{funcName}()");
         }
 
+        public static void WaitWalletTransactionsLoaded(this IWebDriver driver)
+        {
+            var wait = new WebDriverWait(driver, SeleniumTester.ImplicitWait);
+            wait.UntilJsIsReady();
+            wait.Until(d => d.ExecuteJavaScript<bool>("return window.areTransactionsLoaded;"));
+        }
         public static IWebElement WaitForElement(this IWebDriver driver, By selector)
         {
             var wait = new WebDriverWait(driver, SeleniumTester.ImplicitWait);

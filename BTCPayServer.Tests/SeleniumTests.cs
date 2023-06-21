@@ -1621,7 +1621,7 @@ namespace BTCPayServer.Tests
             // Transactions list is empty 
             s.Driver.FindElement(By.Id($"StoreNav-Wallet{cryptoCode}")).Click();
             s.Driver.WaitWalletTransactionsLoaded();
-            s.Driver.AssertElementNotFound(By.ClassName("wallet-tx"));
+            Assert.Contains("There are no transactions yet", s.Driver.FindElement(By.Id("WalletTransactions")).Text);
         }
 
         [Fact]

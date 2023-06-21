@@ -50,8 +50,8 @@
     @* Custom Range Modal *@
     <script>
         const $actions = document.getElementById('ListActions');
+        const $transactions = document.getElementById('WalletTransactions');
         const $list = document.getElementById('WalletTransactionsList');
-        const $table = document.getElementById('WalletTable');
         const $dropdowns = document.getElementById('Dropdowns');
         const $indicator = document.getElementById('LoadingIndicator');
         
@@ -97,12 +97,12 @@
                     // in case the response html was empty, remove the observer and stop loading
                     observer.unobserve($actions);
                 }
-                if (!$list.dataset.loaded) {
-                    $list.dataset.loaded = 'true';
+                if (!$transactions.dataset.loaded) {
+                    $transactions.dataset.loaded = 'true';
                     // replace table and dropdowns if initial response was empty
                     if (responseEmpty) {
                         $dropdowns.remove();
-                        $table.outerHTML = '<div class="text-secondary">There are no transactions yet.</div>';
+                        $transactions.innerHTML = '<div class="text-secondary" data-loaded="true">There are no transactions yet.</div>';
                     }
                 }
             }
@@ -111,15 +111,16 @@
             formatDateTimes(document.getElementById('switchTimeFormat').dataset.mode);
             initLabelManagers();
         }
-		let observer = new IntersectionObserver(async entries => {
+        
+		const observer = new IntersectionObserver(async entries => {
             const { isIntersecting } = entries[0];
             if (isIntersecting) {
                 await loadMoreTransactions();
             }
         }, { rootMargin: '128px' });
         
-		// the actions div marks the end of the list table
-		observer.observe($actions);
+        // the actions div marks the end of the list table
+        observer.observe($actions);
     </script>
 }
 
@@ -166,7 +167,7 @@
 </div>
 <div style="clear:both"></div>
 
-<div class="table-responsive-md" id="WalletTable">
+<div id="WalletTransactions" class="table-responsive-md">
     <table class="table table-hover">
         <thead class="thead-inverse">
         <tr>

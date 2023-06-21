@@ -234,7 +234,7 @@
     </div>
 </div>
 
-<form class="d-flex flex-wrap flex-sm-nowrap align-items-center gap-3 mb-4 @(Model.Invoices.Any() ? "col-xl-7 col-xxl-8" : null)" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" method="get">
+<form class="d-flex flex-wrap flex-sm-nowrap align-items-center gap-3 mb-4 @(Model.Invoices.Any() ? "col-xxl-8" : null)" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" method="get">
     <input asp-for="Count" type="hidden" />
     <input asp-for="TimezoneOffset" type="hidden" />
     <input asp-for="SearchTerm" type="hidden" value="@Model.Search.WithoutSearchText()"/>
@@ -322,13 +322,13 @@
 @if (Model.Invoices.Any())
 {
     <form method="post" id="MassAction" asp-action="MassAction" class="">
-        <div class="d-inline-flex align-items-center pb-2 float-xl-end mb-2 gap-3">
+        <div class="d-inline-flex align-items-center pb-2 float-xxl-end mb-2 gap-3">
             <input type="hidden" name="storeId" value="@Model.StoreId" />
-            <div class="dropdown order-xl-1">
+            <div class="dropdown order-xxl-1">
                 <button class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" id="ActionsDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     Actions
                 </button>
-                <div class="dropdown-menu dropdown-menu-xl-end" aria-labelledby="ActionsDropdownToggle">
+                <div class="dropdown-menu dropdown-menu-xxl-end" aria-labelledby="ActionsDropdownToggle">
                     <button type="submit" class="dropdown-item" name="command" value="archive" id="ActionsDropdownArchive">Archive</button>
                     @if (HasBooleanFilter("includearchived"))
                     {
@@ -338,7 +338,7 @@
                 </div>
             </div>
             <div class="dropdown d-inline-flex align-items-center gap-3">
-                <button class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret order-xl-1" type="button" id="ExportDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <button class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret order-xxl-1" type="button" id="ExportDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     Export
                 </button>
                 <div class="dropdown-menu" aria-labelledby="ExportDropdownToggle">

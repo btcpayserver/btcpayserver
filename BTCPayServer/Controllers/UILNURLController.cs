@@ -234,12 +234,8 @@ namespace BTCPayServer
         [HttpGet("pay/app/{appId}/{itemCode}")]
         public async Task<IActionResult> GetLNURLForApp(string cryptoCode, string appId, string itemCode = null)
         {
-            var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
-            if (network is null || !network.SupportLightning)
-            {
-                return NotFound();
-            }
-
+            if (!NetworkSupportsLightning(cryptoCode, out _))
+                return null;
             var app = await _appService.GetApp(appId, null, true);
             if (app is null)
             {
@@ -520,11 +516,6 @@ namespace BTCPayServer
 
             requestParams.LNURLRequest = await _pluginHookService.ApplyFilter("modify-lnurlp-request", requestParams.LNURLRequest) as LNURLPayRequest;
             
-
-            
-            
-
-            
             var invoiceParamsCacheEntryOptions = new MemoryCacheEntryOptions()
                 .SetAbsoluteExpiration(TimeSpan.FromMinutes(5)); // Set an appropriate expiration time
 
@@ -608,8 +599,7 @@ namespace BTCPayServer
         PaymentMethodId GetLNUrlPaymentMethodId(string cryptoCode, Data.StoreData store, out LNURLPaySupportedPaymentMethod lnUrlSettings)
         {
             lnUrlSettings = null;
-            var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
-            if (network is null || !network.SupportLightning)
+            if (!NetworkSupportsLightning(cryptoCode, out _))
                 return null;
             var pmi = new PaymentMethodId(cryptoCode, PaymentTypes.LNURLPay);
             var lnpmi = new PaymentMethodId(cryptoCode, PaymentTypes.LightningLike);
@@ -668,11 +658,8 @@ namespace BTCPayServer
         private async Task<IActionResult> GetLNURLForInvoice(InvoiceEntity i, string cryptoCode,
             [FromQuery] long? amount = null, string comment = null)
         {
-            var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
-            if (network is null || !network.SupportLightning)
-            {
-                return NotFound();
-            }
+            if (!NetworkSupportsLightning(cryptoCode, out var network))
+                return null;
 
             if (i is null)
                 return NotFound();
@@ -829,6 +816,12 @@ namespace BTCPayServer
             });
         }
 
+        private bool NetworkSupportsLightning(string cryptoCode, out BTCPayNetwork network)
+        {
+            network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
+            return !(network is null || !network.SupportLightning);
+        }
+        
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [HttpGet("~/stores/{storeId}/plugins/lightning-address")]

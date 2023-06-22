@@ -215,7 +215,7 @@ namespace BTCPayServer.Services.Wallets
             return await completionSource.Task;
         }
         List<TransactionInformation> dummy = new List<TransactionInformation>();
-        public async Task<IList<TransactionHistoryLine>> FetchTransactionHistory(DerivationStrategyBase derivationStrategyBase, int? skip = null, int? count = null, TimeSpan? interval = null)
+        public async Task<IList<TransactionHistoryLine>> FetchTransactionHistory(DerivationStrategyBase derivationStrategyBase, int? skip = null, int? count = null, TimeSpan? interval = null, CancellationToken cancellationToken = default)
         {
             // This is two paths:
             // * Sometimes we can ask the DB to do the filtering of rows: If that's the case, we should try to filter at the DB level directly as it is the most efficient.
@@ -243,18 +243,21 @@ namespace BTCPayServer.Services.Wallets
             else
             {
                 await using var ctx = await NbxplorerConnectionFactory.OpenConnection();
-                var rows = await ctx.QueryAsync<(string tx_id, DateTimeOffset seen_at, string blk_id, long? blk_height, long balance_change, string asset_id, long confs)>(
-                    "SELECT r.tx_id, r.seen_at, t.blk_id, t.blk_height, r.balance_change, r.asset_id, COALESCE((SELECT height FROM get_tip('BTC')) - t.blk_height + 1, 0) AS confs " +
+                var cmd = new CommandDefinition(
+                    commandText: "SELECT r.tx_id, r.seen_at, t.blk_id, t.blk_height, r.balance_change, r.asset_id, COALESCE((SELECT height FROM get_tip('BTC')) - t.blk_height + 1, 0) AS confs " +
                     "FROM get_wallets_recent(@wallet_id, @code, @interval, @count, @skip) r " +
                     "JOIN txs t USING (code, tx_id) " +
-                    "ORDER BY r.seen_at DESC", new
+                    "ORDER BY r.seen_at DESC",
+                    parameters: new
                     {
                         wallet_id = NBXplorer.Client.DBUtils.nbxv1_get_wallet_id(Network.CryptoCode, derivationStrategyBase.ToString()),
                         code = Network.CryptoCode,
                         count = count,
                         skip = skip,
                         interval = interval is TimeSpan t ? t : TimeSpan.FromDays(365 * 1000)
-                    });
+                    },
+                    cancellationToken: cancellationToken);
+                var rows = await ctx.QueryAsync<(string tx_id, DateTimeOffset seen_at, string blk_id, long? blk_height, long balance_change, string asset_id, long confs)>(cmd);
                 rows.TryGetNonEnumeratedCount(out int c);
                 var lines = new List<TransactionHistoryLine>(c);
                 foreach (var row in rows)

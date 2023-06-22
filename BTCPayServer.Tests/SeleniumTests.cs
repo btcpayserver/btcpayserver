@@ -1441,7 +1441,7 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("CancelWizard")).Click();
 
             // Check the label is applied to the tx
-
+            s.Driver.WaitWalletTransactionsLoaded();
             Assert.Equal("label2", s.Driver.FindElement(By.XPath("//*[@id=\"WalletTransactionsList\"]//*[contains(@class, 'transaction-label')]")).Text);
 
             //change the wallet and ensure old address is not there and generating a new one does not result in the prev one
@@ -1492,7 +1492,9 @@ namespace BTCPayServer.Tests
 
             // Check the tx sent earlier arrived
             s.Driver.FindElement(By.Id($"StoreNav-Wallet{cryptoCode}")).Click();
-            Assert.Contains(tx.ToString(), s.Driver.PageSource);
+            s.Driver.WaitWalletTransactionsLoaded();
+            s.Driver.FindElement(By.PartialLinkText(tx.ToString()));
+
             var walletTransactionUri = new Uri(s.Driver.Url);
 
             // Send to bob
@@ -1618,9 +1620,8 @@ namespace BTCPayServer.Tests
 
             // Transactions list is empty 
             s.Driver.FindElement(By.Id($"StoreNav-Wallet{cryptoCode}")).Click();
-            Assert.Contains("There are no transactions yet.", s.Driver.PageSource);
-            s.Driver.AssertElementNotFound(By.Id("ExportDropdownToggle"));
-            s.Driver.AssertElementNotFound(By.Id("ActionsDropdownToggle"));
+            s.Driver.WaitWalletTransactionsLoaded();
+            Assert.Contains("There are no transactions yet", s.Driver.FindElement(By.Id("WalletTransactions")).Text);
         }
 
         [Fact]

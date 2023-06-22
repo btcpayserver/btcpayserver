@@ -49,10 +49,10 @@
     <script src="~/modal/btcpay.js" asp-append-version="true" async></script>
     @* Custom Range Modal *@
     <script>
-        let observer = null;
-        let $loadMore = document.getElementById('LoadMore');
         const $actions = document.getElementById('ListActions');
+        const $transactions = document.getElementById('WalletTransactions');
         const $list = document.getElementById('WalletTransactionsList');
+        const $dropdowns = document.getElementById('Dropdowns');
         const $indicator = document.getElementById('LoadingIndicator');
         
         delegate('click', '#selectAllCheckbox', e => {
@@ -65,19 +65,15 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         });
         
-        delegate('click', '#LoadMore', async () => {
-            $loadMore.setAttribute('disabled', 'disabled');
-            await loadMoreTransactions();
-        });
-        
         if ($actions && $actions.offsetTop - window.innerHeight > 0) {
             document.getElementById('GoToTop').classList.remove('d-none');
         }
         
         const count = @Safe.Json(Model.Count);
         const skipInitial = @Safe.Json(Model.Skip);
-        const loadMoreUrl = @Safe.Json(Url.Action("WalletTransactions", new { walletId, labelFilter, skip = Model.Skip, count = Model.Count }));
-        let skip = @Safe.Json(Model.Skip);
+		const loadMoreUrl = @Safe.Json(Url.Action("WalletTransactions", new { walletId, labelFilter, skip = Model.Skip, count = Model.Count, loadTransactions = true }));
+		// The next time we load transactions, skip will become 0
+        let skip = @Safe.Json(Model.Skip) - count;
         
         async function loadMoreTransactions() {
             $indicator.classList.remove('d-none');
@@ -93,38 +89,38 @@
             
             if (response.ok) {
                 const html = await response.text();
+                const responseEmpty = html.trim() === '';
                 $list.insertAdjacentHTML('beforeend', html);
                 skip = skipNext;
                 
-                if ($loadMore) {
-                    // remove load more button
-                    $loadMore.remove();
-                    $loadMore = null;
-                    
-                    // switch to infinite scroll mode
-                    observer = new IntersectionObserver(async entries => {
-                        const { isIntersecting } = entries[0];
-                        if (isIntersecting) {
-                            await loadMoreTransactions();
-                        }
-                    }, { rootMargin: '128px' });
-                    
-                    // the actions div marks the end of the list table
-                    observer.observe($actions);
-                }
-                
-                if (html.trim() === '') {
+                if (responseEmpty) {
                     // in case the response html was empty, remove the observer and stop loading
                     observer.unobserve($actions);
                 }
-            } else if ($loadMore) {
-                $loadMore.removeAttribute('disabled');
+                if (!$transactions.dataset.loaded) {
+                    $transactions.dataset.loaded = 'true';
+                    // replace table and dropdowns if initial response was empty
+                    if (responseEmpty) {
+                        $dropdowns.remove();
+                        $transactions.innerHTML = '<div class="text-secondary" data-loaded="true">There are no transactions yet.</div>';
+                    }
+                }
             }
             
             $indicator.classList.add('d-none');
             formatDateTimes(document.getElementById('switchTimeFormat').dataset.mode);
             initLabelManagers();
         }
+        
+		const observer = new IntersectionObserver(async entries => {
+            const { isIntersecting } = entries[0];
+            if (isIntersecting) {
+                await loadMoreTransactions();
+            }
+        }, { rootMargin: '128px' });
+        
+        // the actions div marks the end of the list table
+        observer.observe($actions);
     </script>
 }
 
@@ -147,80 +143,66 @@
     </div>
 }
 
-@if (Model.Transactions.Any())
-{
-    <div class="d-inline-flex align-items-center gap-3" id="Dropdowns">
-        <div class="dropdown ms-auto" id="Actions">
-            <button class="btn btn-secondary dropdown-toggle" type="button" id="ActionsDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                Actions
-            </button>
-            <div class="dropdown-menu dropdown-menu-end" aria-labelledby="ActionsDropdownToggle">
-                <form id="WalletActions" method="post" asp-action="WalletActions" asp-route-walletId="@walletId">
-                    <button id="BumpFee" name="command" type="submit" class="dropdown-item" value="cpfp">Bump fee (CPFP)</button>
-                </form>
-            </div>
-        </div>
-        <div class="dropdown d-inline-flex align-items-center gap-3" id="Export">
-            <button class="btn btn-secondary dropdown-toggle" type="button" id="ExportDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                Export
-            </button>
-            <div class="dropdown-menu" aria-labelledby="ExportDropdownToggle">
-                <a asp-action="Export" asp-route-walletId="@walletId" asp-route-format="csv" asp-route-labelFilter="@labelFilter" class="dropdown-item export-link" target="_blank" id="ExportCSV">CSV</a>
-                <a asp-action="Export" asp-route-walletId="@walletId" asp-route-format="json" asp-route-labelFilter="@labelFilter" class="dropdown-item export-link" target="_blank" id="ExportJSON">JSON</a>
-                <a asp-action="Export" asp-route-walletId="@walletId" asp-route-format="bip329" asp-route-labelFilter="@labelFilter" class="dropdown-item export-link" target="_blank" id="ExportBIP329">Wallet Labels (BIP-329)</a>
-            </div>
-        </div>
-    </div>
-    <div style="clear:both"></div>
-
-    <div class="row">
-        <div class="col table-responsive-md" id="walletTable">
-            <table class="table table-hover">
-                <thead class="thead-inverse">
-                <tr>
-                    <th style="width:2rem;" class="only-for-js">
-                        <input id="selectAllCheckbox" type="checkbox" class="form-check-input" />
-                    </th>
-                    <th class="w-150px">
-                        <div class="d-flex align-items-center gap-1">
-                            Date
-                            <button type="button" class="btn btn-link p-0 fa fa-clock-o switch-time-format" title="Switch date format" id="switchTimeFormat"></button>
-                        </div>
-                    </th>
-                    <th class="text-start">Label</th>
-                    <th>Transaction Id</th>
-                    <th class="text-end">Amount</th>
-                    <th class="text-end" style="min-width:60px"></th>
-                </tr>
-                </thead>
-                <tbody id="WalletTransactionsList">
-                    <partial name="_WalletTransactionsList" model="Model" />
-                </tbody>
-            </table>
-        </div>
-    </div>
-    <noscript>
-        <vc:pager view-model="Model"/>
-    </noscript>
-    
-    <div class="text-center only-for-js d-none" id="LoadingIndicator">
-        <div class="spinner-border spinner-border-sm text-secondary ms-2" role="status">
-            <span class="visually-hidden">Loading...</span>
-        </div>
-    </div>
-    <div class="d-flex flex-wrap align-items-center justify-content-center gap-3 mb-5 only-for-js" id="ListActions">
-        <button type="button" class="btn btn-secondary d-flex align-items-center" id="LoadMore">
-            Load more
+<div class="d-inline-flex align-items-center gap-3" id="Dropdowns">
+    <div class="dropdown ms-auto" id="Actions">
+        <button class="btn btn-secondary dropdown-toggle" type="button" id="ActionsDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            Actions
         </button>
-        <button type="button" class="btn btn-secondary d-none" id="GoToTop">Go to top</button>
+        <div class="dropdown-menu dropdown-menu-end" aria-labelledby="ActionsDropdownToggle">
+            <form id="WalletActions" method="post" asp-action="WalletActions" asp-route-walletId="@walletId">
+                <button id="BumpFee" name="command" type="submit" class="dropdown-item" value="cpfp">Bump fee (CPFP)</button>
+            </form>
+        </div>
     </div>
-}
-else
-{
-    <p class="text-secondary mt-3">
-        There are no transactions @(string.IsNullOrEmpty(labelFilter) ? "yet" : $"labeled with \"{labelFilter}\"").
-    </p>
-}
+    <div class="dropdown d-inline-flex align-items-center gap-3" id="Export">
+        <button class="btn btn-secondary dropdown-toggle" type="button" id="ExportDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            Export
+        </button>
+        <div class="dropdown-menu" aria-labelledby="ExportDropdownToggle">
+            <a asp-action="Export" asp-route-walletId="@walletId" asp-route-format="csv" asp-route-labelFilter="@labelFilter" class="dropdown-item export-link" target="_blank" id="ExportCSV">CSV</a>
+            <a asp-action="Export" asp-route-walletId="@walletId" asp-route-format="json" asp-route-labelFilter="@labelFilter" class="dropdown-item export-link" target="_blank" id="ExportJSON">JSON</a>
+            <a asp-action="Export" asp-route-walletId="@walletId" asp-route-format="bip329" asp-route-labelFilter="@labelFilter" class="dropdown-item export-link" target="_blank" id="ExportBIP329">Wallet Labels (BIP-329)</a>
+        </div>
+    </div>
+</div>
+<div style="clear:both"></div>
+
+<div id="WalletTransactions" class="table-responsive-md">
+    <table class="table table-hover">
+        <thead class="thead-inverse">
+        <tr>
+            <th style="width:2rem;" class="only-for-js">
+                <input id="selectAllCheckbox" type="checkbox" class="form-check-input" />
+            </th>
+            <th class="w-150px">
+                <div class="d-flex align-items-center gap-1">
+                    Date
+                    <button type="button" class="btn btn-link p-0 fa fa-clock-o switch-time-format" title="Switch date format" id="switchTimeFormat"></button>
+                </div>
+            </th>
+            <th class="text-start">Label</th>
+            <th>Transaction Id</th>
+            <th class="text-end">Amount</th>
+            <th class="text-end" style="min-width:60px"></th>
+        </tr>
+        </thead>
+        <tbody id="WalletTransactionsList">
+            <partial name="_WalletTransactionsList" model="Model" />
+        </tbody>
+    </table>
+</div>
+<noscript>
+    <vc:pager view-model="Model"/>
+</noscript>
+    
+<div class="text-center only-for-js d-none" id="LoadingIndicator">
+    <div class="spinner-border spinner-border-sm text-secondary ms-2" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+</div>
+<div class="d-flex flex-wrap align-items-center justify-content-center gap-3 mb-5 only-for-js" id="ListActions">
+    <button type="button" class="btn btn-secondary d-none" id="GoToTop">Go to top</button>
+</div>
 
 <p class="mt-4 mb-0">
     If BTCPay Server shows you an invalid balance, <a asp-action="WalletRescan" asp-route-walletId="@Context.GetRouteValue("walletId")">rescan your wallet</a>.

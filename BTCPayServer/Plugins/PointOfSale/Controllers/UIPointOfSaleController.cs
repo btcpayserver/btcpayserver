@@ -304,6 +304,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                     new List<string> { AppService.GetAppInternalTag(appId) },
                     cancellationToken, entity =>
                     {
+                        entity.Metadata.OrderUrl = Request.GetDisplayUrl();
                         entity.Metadata.PosData = jposData;
                         var receiptData = new JObject();
                         if (choice is not null)

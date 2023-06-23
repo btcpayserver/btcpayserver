@@ -2381,6 +2381,8 @@ namespace BTCPayServer.Tests
             var emailSuffix = $"@{s.Server.PayTester.HostName}:{s.Server.PayTester.Port}";
             Assert.Equal(2, addresses.Count);
 
+            LNURLPayRequest.LNURLPayRequestCallbackResponse lnAddressOneResponse = null;
+            LNURLPayRequest.LNURLPayRequestCallbackResponse lnAddressTwoResponse = null;
             foreach (IWebElement webElement in addresses)
             {
                 var value = webElement.GetAttribute("value");
@@ -2392,10 +2394,22 @@ namespace BTCPayServer.Tests
                 var m = request.ParsedMetadata.ToDictionary(o => o.Key, o => o.Value);
                 switch (value)
                 {
-                    case not null when value.Equals($"{lnaddress1}{emailSuffix}"):
+                    case { } v when v.StartsWith(lnaddress2):
+                        Assert.StartsWith(lnaddress2 + "@", m["text/identifier"]);
+                        lnaddress2 = m["text/identifier"];
+                        Assert.Equal(2, request.MinSendable.ToDecimal(LightMoneyUnit.Satoshi));
+                        Assert.Equal(10, request.MaxSendable.ToDecimal(LightMoneyUnit.Satoshi));
+                        lnAddressTwoResponse = await request.SendRequest(request.MinSendable, ((BTCPayNetwork)s.Server.DefaultNetwork).NBitcoinNetwork,
+                            new HttpClient());
+                        break;
+
+                    case { } v when v.StartsWith(lnaddress1):
+                        Assert.StartsWith(lnaddress1 + "@", m["text/identifier"]);
                         lnaddress1 = m["text/identifier"];
                         Assert.Equal(1, request.MinSendable.ToDecimal(LightMoneyUnit.Satoshi));
                         Assert.Equal(6.12m, request.MaxSendable.ToDecimal(LightMoneyUnit.BTC));
+                        lnAddressOneResponse = await request.SendRequest(request.MinSendable, ((BTCPayNetwork)s.Server.DefaultNetwork).NBitcoinNetwork,
+                            new HttpClient());
                         break;
                     
                     case not null when value.Equals($"{lnaddress2}{emailSuffix}"):

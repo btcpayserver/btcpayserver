@@ -643,6 +643,7 @@ namespace BTCPayServer
                 lnurlReq.CreateInvoice.Checkout.LazyPaymentMethods = false;
                 lnurlReq.CreateInvoice.Checkout.PaymentMethods = new[] {  lnurlReq.PaymentMethodId.ToStringNormalized() };
                 i = await _invoiceController.CreateInvoiceCoreRaw(lnurlReq.CreateInvoice, store, Request.GetAbsoluteRoot(), lnurlReq.AdditionalTags);
+                await CreateLNUrlRequestFromInvoice(lnurlReq.PaymentMethodId.CryptoCode,i, store,store.GetStoreBlob(),lnurlReq.LNURLRequest, lnurlReq.LNURLMetadata, lnurlReq.AllowOverpay);
                 return await GetLNURLForInvoice(i, lnurlReq.PaymentMethodId.CryptoCode, amount, comment);
             }
             catch (Exception e)

@@ -2409,14 +2409,8 @@ namespace BTCPayServer.Tests
                         break;
                 }
             }
-            
-            // Check that no BTCPay invoice got generated on initial LNURL request
-            var repo = s.Server.PayTester.GetService<InvoiceRepository>();
-            var invoices = await repo.GetInvoices(new InvoiceQuery { StoreId = new[] { s.StoreId } });
-            Assert.Empty(invoices);
 
             var lnUsername = lnaddress1.Split('@')[0];
-
             LNURLPayRequest req;
             using (var resp = await s.Server.PayTester.HttpClient.GetAsync($"/.well-known/lnurlp/{lnUsername}"))
             {
@@ -2428,30 +2422,42 @@ namespace BTCPayServer.Tests
                 Assert.Equal(new LightMoney(1000), req.MinSendable);
                 Assert.Equal(LightMoney.FromUnit(6.12m, LightMoneyUnit.BTC), req.MaxSendable);
             }
+            
             lnUsername = lnaddress2.Split('@')[0];
             using (var resp = await s.Server.PayTester.HttpClient.GetAsync($"/.well-known/lnurlp/{lnUsername}"))
             {
                 var str = await resp.Content.ReadAsStringAsync();
                 req = JsonConvert.DeserializeObject<LNURLPayRequest>(str);
+                Assert.Contains(req.ParsedMetadata, m => m.Key == "text/identifier" && m.Value == lnaddress2);
+                Assert.Contains(req.ParsedMetadata, m => m.Key == "text/plain" && m.Value.StartsWith("Paid to"));
                 Assert.Equal(new LightMoney(2000), req.MinSendable);
                 Assert.Equal(new LightMoney(10_000), req.MaxSendable);
             }
+            
             // Check if we can get the same payrequest through the callback
             using (var resp = await s.Server.PayTester.HttpClient.GetAsync(req.Callback))
             {
                 var str = await resp.Content.ReadAsStringAsync();
                 req = JsonConvert.DeserializeObject<LNURLPayRequest>(str);
+                Assert.Contains(req.ParsedMetadata, m => m.Key == "text/identifier" && m.Value == lnaddress2);
+                Assert.Contains(req.ParsedMetadata, m => m.Key == "text/plain" && m.Value.StartsWith("Paid to"));
                 Assert.Equal(new LightMoney(2000), req.MinSendable);
                 Assert.Equal(new LightMoney(10_000), req.MaxSendable);
             }
 
             // Can we ask for invoice? (Should fail, below minSpendable)
-            using (var resp = await s.Server.PayTester.HttpClient.GetAsync(req.Callback + "?amount=1999"))
+            using (var resp = await s.Server.PayTester.HttpClient.GetAsync(req.Callback + "?amount=999"))
             {
                 var str = await resp.Content.ReadAsStringAsync();
                 var err = JsonConvert.DeserializeObject<LNUrlStatusResponse>(str);
                 Assert.Equal("Amount is out of bounds.", err.Reason);
             }
+            
+            // Check that no BTCPay invoice got generated on initial LN Address requests
+            var repo = s.Server.PayTester.GetService<InvoiceRepository>();
+            var invoices = await repo.GetInvoices(new InvoiceQuery { StoreId = new[] { s.StoreId } });
+            Assert.Empty(invoices);
+            
             // Can we ask for invoice?
             using (var resp = await s.Server.PayTester.HttpClient.GetAsync(req.Callback + "?amount=2000"))
             {
@@ -2460,6 +2466,8 @@ namespace BTCPayServer.Tests
                 Assert.NotNull(succ.Pr);
                 Assert.Equal(new LightMoney(2000), BOLT11PaymentRequest.Parse(succ.Pr, Network.RegTest).MinimumAmount);
             }
+            invoices = await repo.GetInvoices(new InvoiceQuery { StoreId = new[] { s.StoreId } });
+            Assert.Single(invoices);
 
             // Can we change comment?
             using (var resp = await s.Server.PayTester.HttpClient.GetAsync(req.Callback + "?amount=2001"))
@@ -2469,8 +2477,6 @@ namespace BTCPayServer.Tests
                 Assert.NotNull(succ.Pr);
                 Assert.Equal(new LightMoney(2001), BOLT11PaymentRequest.Parse(succ.Pr, Network.RegTest).MinimumAmount);
             }
-            
-            // Again, check the invoices
             invoices = await repo.GetInvoices(new InvoiceQuery { StoreId = new[] { s.StoreId } });
             Assert.Equal(2, invoices.Length);
             

@@ -384,19 +384,19 @@ namespace BTCPayServer
             var pmi = GetLNUrlPaymentMethodId("BTC", store, out var lnurlPaymentMethod);
             if (pmi is null)
                 return NotFound("LNUrl or LN is disabled");
+            
             var blob = lightningAddressSettings.GetBlob();
             return await CreateLNURLRequestWithoutInvoice(new LNURLRequestParams(
                 store.Id,
                 pmi,
-                new CreateInvoiceRequest() {Currency = blob?.CurrencyCode, Metadata = blob?.InvoiceMetadata},
-                new LNURLPayRequest()
+                new CreateInvoiceRequest {Currency = blob?.CurrencyCode, Metadata = blob?.InvoiceMetadata},
+                new LNURLPayRequest
                 {
                     MinSendable = blob?.Min is decimal min ? new LightMoney(min, LightMoneyUnit.Satoshi) : null,
                     MaxSendable = blob?.Max is decimal max ? new LightMoney(max, LightMoneyUnit.Satoshi) : null,
                 },
-                new Dictionary<string, string>() {{"text/identifier", $"{username}@{Request.Host}"}}), store, store.GetStoreBlob(), lnurlPaymentMethod);
+                new Dictionary<string, string> {{"text/identifier", $"{username}@{Request.Host}"}}), store,store.GetStoreBlob(), lnurlPaymentMethod);
         }
-
 
         [HttpGet("pay")]
         [EnableCors(CorsPolicies.All)]
@@ -548,7 +548,7 @@ namespace BTCPayServer
                 return null;
             var paymentMethodDetails = (LNURLPayPaymentMethodDetails)pm.GetPaymentMethodDetails();
             bool updatePaymentMethodDetails = false;
-            if (lnUrlMetadata?.TryGetValue("text/identifier", out var lnAddress) is true && lnAddress is not null)
+            if (lnUrlMetadata.TryGetValue("text/identifier", out var lnAddress) && lnAddress is not null)
             {
                 paymentMethodDetails.ConsumedLightningAddress = lnAddress;
                 updatePaymentMethodDetails = true;
@@ -628,6 +628,11 @@ namespace BTCPayServer
             {
                 return Ok(lnurlReq.LNURLRequest);
             }
+
+            var lnurlPayRequest = lnurlReq.LNURLRequest;
+            var amt = new LightMoney(amount.Value);
+            if (amt < lnurlPayRequest.MinSendable || amt > lnurlPayRequest.MaxSendable)
+                return BadRequest(new LNUrlStatusResponse { Status = "ERROR", Reason = "Amount is out of bounds." });
             
             InvoiceEntity i;
             try
@@ -705,7 +710,7 @@ namespace BTCPayServer
                     return Ok(lnurlPayRequest);
 
                 var amt = new LightMoney(amount.Value);
-                if (amt < lnurlPayRequest.MinSendable || amount > lnurlPayRequest.MaxSendable)
+                if (amt < lnurlPayRequest.MinSendable || amt > lnurlPayRequest.MaxSendable)
                     return BadRequest(new LNUrlStatusResponse { Status = "ERROR", Reason = "Amount is out of bounds." });
 
                 LNURLPayRequest.LNURLPayRequestCallbackResponse.ILNURLPayRequestSuccessAction successAction = null;
@@ -787,7 +792,7 @@ namespace BTCPayServer
                                 string.IsNullOrEmpty(ex.Message) ? "" : $": {ex.Message}")
                         });
                     }
-
+                    
                     paymentMethodDetails.BOLT11 = invoice.BOLT11;
                     paymentMethodDetails.PaymentHash = string.IsNullOrEmpty(invoice.PaymentHash) ? null : uint256.Parse(invoice.PaymentHash);
                     paymentMethodDetails.Preimage = string.IsNullOrEmpty(invoice.Preimage) ? null : uint256.Parse(invoice.Preimage);

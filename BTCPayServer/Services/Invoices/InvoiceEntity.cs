@@ -1007,6 +1007,11 @@ namespace BTCPayServer.Services.Invoices
                 };
             }
 
+            // A bug in previous version of BTCPay Server wasn't properly serializing those fields
+            if (PaymentMethodDetails["PaymentHash"] is JObject)
+                PaymentMethodDetails["PaymentHash"] = null;
+            if (PaymentMethodDetails["Preimage"] is JObject)
+                PaymentMethodDetails["Preimage"] = null;
             IPaymentMethodDetails details = GetId().PaymentType.DeserializePaymentMethodDetails(Network, PaymentMethodDetails.ToString());
             switch (details)
             {

@@ -1,4 +1,9 @@
+@using BTCPayServer.Controllers
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using BTCPayServer.Components.UIExtensionPoint
+@using BTCPayServer.Components.QRCode
 @model LightningNodeViewModel
+
 @{
     Layout = "_LayoutWalletSetup.cshtml";
     ViewData.SetActivePage(StoreNavPages.LightningSettings, "Connect to a Lightning node", Context.GetStoreData().Id);
@@ -32,6 +37,8 @@
         
         <input asp-for="LightningNodeType" value="@LightningNodeType.Custom" type="radio" id="LightningNodeType-@LightningNodeType.Custom" data-bs-toggle="pill" data-bs-target="#CustomSetup" role="tab" aria-controls="CustomSetup" aria-selected="@(Model.LightningNodeType == LightningNodeType.Custom ? "true" : "false")" class="@(Model.LightningNodeType == LightningNodeType.Custom ? "active" : "")">
         <label asp-for="LightningNodeType" for="@($"LightningNodeType-{LightningNodeType.Custom}")">Use custom node</label>
+        <input asp-for="LightningNodeType" value="@LightningNodeType.BTCPayApp" type="radio" id="LightningNodeType-@LightningNodeType.BTCPayApp" data-bs-toggle="pill" data-bs-target="#BTCPayAppSetup" role="tab" aria-controls="CustomSetup" aria-selected="@(Model.LightningNodeType == LightningNodeType.BTCPayApp ? "true" : "false")">
+        <label asp-for="LightningNodeType" for="@($"LightningNodeType-{LightningNodeType.BTCPayApp}")">BTCPay App</label>
 
         <vc:ui-extension-point location="ln-payment-method-setup-tabhead" model="@Model"/>
     </div>
@@ -181,6 +188,22 @@
                 </div>
             </div>
         </div>
+        @inject BtcPayAppService BtcPayAppService
+        @inject UserManager<ApplicationUser> UserManager
+        <div id="LightningNodeType-@LightningNodeType.BTCPayApp" class="pt-3 tab-pane fade @(Model.LightningNodeType == LightningNodeType.BTCPayApp ? "show active" : "")" role="tabpanel" aria-labelledby="LightningNodeType-@LightningNodeType.BTCPayApp">
+            @{
+                var code = await BtcPayAppService.GeneratePairingCode(Context.GetStoreData().Id, UserManager.GetUserId(User));
+                var url = Url.ActionLink("StartPair","BtcPayApp", new { code });
+                <vc:qr-code data="@url"></vc:qr-code>
+                <div class="input-group" data-clipboard="@url">
+                    <input type="text" class="form-control copy-cursor" readonly="readonly" value="@url"/>
+                    <button type="button" class="btn btn-outline-secondary px-3">
+                        <vc:icon symbol="copy" />
+                    </button>
+                </div>
+            }
+            <vc:qr-code data=""></vc:qr-code>
+                </div>
         <vc:ui-extension-point location="ln-payment-method-setup-tab" model="@Model"/>
     </div>
 

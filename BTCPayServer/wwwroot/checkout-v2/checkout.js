@@ -339,6 +339,12 @@ function initApp() {
                 return value ? value.replace(/\n/ig, '<br>') : '';
             },
             async celebratePayment (duration) {
+                const $soundEl = document.getElementById('sound');
+                if ($soundEl && !$soundEl.dataset.running) {
+                    $soundEl.dataset.running = true;
+                    $soundEl.play();
+                    delete $soundEl.dataset.running;
+                }
                 const $confettiEl = document.getElementById('confetti')
                 if (window.confetti && $confettiEl && !$confettiEl.dataset.running) {
                     $confettiEl.dataset.running = true;

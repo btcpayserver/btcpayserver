@@ -401,6 +401,7 @@ namespace BTCPayServer.Controllers
             vm.RedirectAutomatically = storeBlob.RedirectAutomatically;
             vm.CustomCSS = storeBlob.CustomCSS;
             vm.CustomLogo = storeBlob.CustomLogo;
+            vm.SoundFileId = storeBlob.SoundFileId;
             vm.HtmlTitle = storeBlob.HtmlTitle;
             vm.DisplayExpirationTimer = (int)storeBlob.DisplayExpirationTimer.TotalMinutes;
             vm.ReceiptOptions = CheckoutAppearanceViewModel.ReceiptOptionsViewModel.Create(storeBlob.ReceiptOptions);
@@ -450,7 +451,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost("{storeId}/checkout")]
-        public async Task<IActionResult> CheckoutAppearance(CheckoutAppearanceViewModel model)
+        public async Task<IActionResult> CheckoutAppearance(CheckoutAppearanceViewModel model, [FromForm] bool RemoveSoundFile = false)
         {
             bool needUpdate = false;
             var blob = CurrentStore.GetStoreBlob();
@@ -474,6 +475,58 @@ namespace BTCPayServer.Controllers
                             $"{methodCriterion.PaymentMethod}: Invalid format. Make sure to enter a valid amount and currency code. Examples: '5 USD', '0.001 BTC'", this);
                     }
                 }
+            }
+            
+            var userId = GetUserId();
+            if (userId is null)
+                return NotFound();
+
+            if (model.SoundFile != null)
+            {
+                if (model.SoundFile.Length > 1_000_000)
+                {
+                    TempData[WellKnownTempData.ErrorMessage] = "The uploaded sound file should be less than 1MB";
+                }
+                else if (!model.SoundFile.ContentType.StartsWith("audio/", StringComparison.InvariantCulture))
+                {
+                    TempData[WellKnownTempData.ErrorMessage] = "The uploaded sound file needs to be an audio file";
+                }
+                else
+                {
+                    var formFile = await model.SoundFile.Bufferize();
+                    /* TODO: Check if we can detect audio 
+                    if (!FileTypeDetector.IsAudio(formFile.Buffer, formFile.FileName))
+                    {
+                        TempData[WellKnownTempData.ErrorMessage] = "The uploaded sound file needs to be an audio file";
+                    }
+                    else
+                    {*/
+                        model.SoundFile = formFile;
+                        // delete existing image
+                        if (!string.IsNullOrEmpty(blob.SoundFileId))
+                        {
+                            await _fileService.RemoveFile(blob.SoundFileId, userId);
+                        }
+
+                        // add new image
+                        try
+                        {
+                            var storedFile = await _fileService.AddFile(model.SoundFile, userId);
+                            blob.SoundFileId = storedFile.Id;
+                            needUpdate = true;
+                        }
+                        catch (Exception e)
+                        {
+                            TempData[WellKnownTempData.ErrorMessage] = $"Could not save sound: {e.Message}";
+                        }
+                    /*}*/
+                }
+            }
+            else if (RemoveSoundFile && !string.IsNullOrEmpty(blob.SoundFileId))
+            {
+                await _fileService.RemoveFile(blob.SoundFileId, userId);
+                blob.SoundFileId = null;
+                needUpdate = true;
             }
 
             if (!ModelState.IsValid)

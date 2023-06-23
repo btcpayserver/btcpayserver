@@ -141,6 +141,9 @@ section dl > div dd {
     height: 3rem;
     margin: .5rem auto 1.5rem;
 }
+#result #sound {
+    display: none;
+}
 #result #confetti {
     position: absolute;
     left: 50%;

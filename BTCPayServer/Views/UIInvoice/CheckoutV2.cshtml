@@ -4,6 +4,7 @@
 @inject LanguageService LangService
 @inject BTCPayServerEnvironment Env
 @inject IEnumerable<IUIExtension> UiExtensions 
+@inject IFileService FileService
 @inject PaymentMethodHandlerDictionary PaymentMethodHandlerDictionary
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model PaymentModel
@@ -103,6 +104,10 @@
                     <div class="top">
                         <span class="icn">
                             <div id="confetti" v-if="srvModel.celebratePayment" v-on:click="celebratePayment(5000)"></div>
+                            @if (!string.IsNullOrEmpty(Model.SoundFileId))
+                            {
+                                <audio src="@(await FileService.GetFileUrl(Context.Request.GetAbsoluteRootUri(), Model.SoundFileId))" id="sound"></audio>
+                            }
                             <vc:icon symbol="payment-sent" />
                         </span>
                         <h4 v-t="'payment_received'" class="mb-4"></h4>
@@ -142,6 +147,10 @@
                     <div class="top">
                         <span class="icn">
                             <div id="confetti" v-if="srvModel.celebratePayment" v-on:click="celebratePayment(5000)"></div>
+                            @if (!string.IsNullOrEmpty(Model.SoundFileId))
+                            {
+                                <audio src="@(await FileService.GetFileUrl(Context.Request.GetAbsoluteRootUri(), Model.SoundFileId))" id="sound"></audio>
+                            }
                             <vc:icon symbol="payment-complete" />
                         </span>
                         <h4 v-t="'invoice_paid'"></h4>

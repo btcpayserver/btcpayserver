@@ -238,6 +238,8 @@ namespace BTCPayServer.Data
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
         public bool CelebratePayment { get; set; } = true;
 
+        public string SoundFileId { get; set; }
+
         public IPaymentFilter GetExcludedPaymentMethods()
         {
 #pragma warning disable CS0618 // Type or member is obsolete

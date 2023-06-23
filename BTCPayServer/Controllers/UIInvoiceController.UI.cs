@@ -873,6 +873,7 @@ namespace BTCPayServer.Controllers
                 CustomCSSLink = storeBlob.CustomCSS,
                 CustomLogoLink = storeBlob.CustomLogo,
                 LogoFileId = storeBlob.LogoFileId,
+                SoundFileId = storeBlob.SoundFileId,
                 CssFileId = storeBlob.CssFileId,
                 BrandColor = storeBlob.BrandColor,
                 CheckoutType = invoice.CheckoutType ?? storeBlob.CheckoutType,

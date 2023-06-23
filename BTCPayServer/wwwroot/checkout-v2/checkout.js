@@ -116,7 +116,8 @@ function initApp() {
                 paymentMethodId: null,
                 endData: null,
                 isModal: srvModel.isModal,
-                pollTimeoutID: null
+                pollTimeoutID: null,
+                paymentSound: null
             }
         },
         computed: {
@@ -236,6 +237,9 @@ function initApp() {
             if (this.isProcessing) {
                 this.listenForConfirmations();
             }
+            if (this.srvModel.paymentSoundUrl) {
+                this.preparePaymentSound();
+            }
             updateLanguageSelect();
             window.parent.postMessage('loaded', '*');
         },
@@ -339,12 +343,17 @@ function initApp() {
                 return value ? value.replace(/\n/ig, '<br>') : '';
             },
             async celebratePayment (duration) {
-                const $soundEl = document.getElementById('sound');
-                if ($soundEl && !$soundEl.dataset.running) {
-                    $soundEl.dataset.running = true;
-                    $soundEl.play();
-                    delete $soundEl.dataset.running;
+                // sound
+                if (this.paymentSound && !this.paymentSound.playing) {
+                    const { audioContext, audioBuffer } = this.paymentSound;
+                    const source = audioContext.createBufferSource();
+                    source.onended = () => { this.paymentSound.playing = false; };
+                    source.buffer = audioBuffer;
+                    source.connect(audioContext.destination);
+                    source.start();
+                    this.paymentSound.playing = true;
                 }
+                // confetti
                 const $confettiEl = document.getElementById('confetti')
                 if (window.confetti && $confettiEl && !$confettiEl.dataset.running) {
                     $confettiEl.dataset.running = true;
@@ -357,6 +366,14 @@ function initApp() {
                     });
                     delete $confettiEl.dataset.running;
                 }
+            },
+            async preparePaymentSound () {
+                const audioContext = new AudioContext();
+                const response = await fetch(this.srvModel.paymentSoundUrl)
+                if (!response.ok) return console.error(`Could not load payment sound, HTTP error ${response.status}`);
+                const arrayBuffer = await response.arrayBuffer();
+                const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+                this.paymentSound = { audioContext, audioBuffer, playing: false };
             }
         }
     });

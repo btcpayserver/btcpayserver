@@ -466,7 +466,7 @@ namespace BTCPayServer.Services.Invoices
         [JsonConverter(typeof(StringEnumConverter))]
         public CheckoutType? CheckoutType { get; set; }
         public bool LazyPaymentMethods { get; set; }
-        public RateRules? ExplicitRateRules { get; set; }
+        public RateRules ExplicitRateRules { get; set; }
 
         public bool IsExpired()
         {
@@ -492,13 +492,13 @@ namespace BTCPayServer.Services.Invoices
                 Currency = Currency,
                 PaymentSubtotals = new Dictionary<string, decimal>(),
                 PaymentTotals = new Dictionary<string, decimal>(),
-                SupportedTransactionCurrencies = new Dictionary<string, NBitpayClient.InvoiceSupportedTransactionCurrency>(),
+                SupportedTransactionCurrencies = new Dictionary<string, InvoiceSupportedTransactionCurrency>(),
                 Addresses = new Dictionary<string, string>(),
                 PaymentCodes = new Dictionary<string, InvoiceCryptoInfo.InvoicePaymentUrls>(),
                 ExchangeRates = new Dictionary<string, Dictionary<string, decimal>>()
             };
 
-            dto.Url = ServerUrl.WithTrailingSlash() + $"invoice?id=" + Id;
+            dto.Url = ServerUrl.WithTrailingSlash() + $"invoice?id={Id}";
             dto.CryptoInfo = new List<InvoiceCryptoInfo>();
             dto.MinerFees = new Dictionary<string, MinerFeeInfo>();
             foreach (var info in this.GetPaymentMethods())

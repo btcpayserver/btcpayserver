@@ -87,7 +87,7 @@ namespace BTCPayServer.Client.Models
             public string DefaultLanguage { get; set; }
             public CheckoutType? CheckoutType { get; set; }
             public bool? LazyPaymentMethods { get; set; }
-            public string? ExplicitRateScript { get; set; }
+            public string ExplicitRateScript { get; set; }
         }
     }
     public class InvoiceData : InvoiceDataBase

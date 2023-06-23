@@ -2361,11 +2361,11 @@ namespace BTCPayServer.Tests
             var lnaddress1 = Guid.NewGuid().ToString();
             s.Driver.FindElement(By.Id("Add_Username")).SendKeys(lnaddress1);
             s.Driver.FindElement(By.CssSelector("button[value='add']")).Click();
-            s.FindAlertMessage(StatusMessageModel.StatusSeverity.Success);
+            s.FindAlertMessage();
 
             s.Driver.ToggleCollapse("AddAddress");
 
-            var lnaddress2 = "EUR" + Guid.NewGuid().ToString();
+            var lnaddress2 = "EUR" + Guid.NewGuid();
             s.Driver.FindElement(By.Id("Add_Username")).SendKeys(lnaddress2);
             lnaddress2 = lnaddress2.ToLowerInvariant();
 
@@ -2375,9 +2375,10 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("Add_Max")).SendKeys("10");
             s.Driver.FindElement(By.Id("Add_InvoiceMetadata")).SendKeys("{\"test\":\"lol\"}");
             s.Driver.FindElement(By.CssSelector("button[value='add']")).Click();
-            s.FindAlertMessage(StatusMessageModel.StatusSeverity.Success);
+            s.FindAlertMessage();
 
             var addresses = s.Driver.FindElements(By.ClassName("lightning-address-value"));
+            var emailSuffix = $"@{s.Server.PayTester.HostName}:{s.Server.PayTester.Port}";
             Assert.Equal(2, addresses.Count);
 
             foreach (IWebElement webElement in addresses)
@@ -2386,51 +2387,35 @@ namespace BTCPayServer.Tests
                 //cannot test this directly as https is not supported on our e2e tests
                 // var request = await LNURL.LNURL.FetchPayRequestViaInternetIdentifier(value, new HttpClient());
 
-                var lnurl = new Uri(LNURL.LNURL.ExtractUriFromInternetIdentifier(value).ToString()
-                    .Replace("https", "http"));
-                var request = (LNURL.LNURLPayRequest)await LNURL.LNURL.FetchInformation(lnurl, new HttpClient());
+                var lnurl = new Uri(LNURL.LNURL.ExtractUriFromInternetIdentifier(value).ToString().Replace("https", "http"));
+                var request = (LNURLPayRequest)await LNURL.LNURL.FetchInformation(lnurl, new HttpClient());
                 var m = request.ParsedMetadata.ToDictionary(o => o.Key, o => o.Value);
                 switch (value)
                 {
-                    case { } v when v.StartsWith(lnaddress2):
-                        Assert.StartsWith(lnaddress2 + "@", m["text/identifier"]);
-                        lnaddress2 = m["text/identifier"];
-                        Assert.Equal(2, request.MinSendable.ToDecimal(LightMoneyUnit.Satoshi));
-                        Assert.Equal(10, request.MaxSendable.ToDecimal(LightMoneyUnit.Satoshi));
-                        break;
-
-                    case { } v when v.StartsWith(lnaddress1):
-                        Assert.StartsWith(lnaddress1 + "@", m["text/identifier"]);
+                    case not null when value.Equals($"{lnaddress1}{emailSuffix}"):
                         lnaddress1 = m["text/identifier"];
                         Assert.Equal(1, request.MinSendable.ToDecimal(LightMoneyUnit.Satoshi));
                         Assert.Equal(6.12m, request.MaxSendable.ToDecimal(LightMoneyUnit.BTC));
                         break;
+                    
+                    case not null when value.Equals($"{lnaddress2}{emailSuffix}"):
+                        lnaddress2 = m["text/identifier"];
+                        Assert.Equal(2, request.MinSendable.ToDecimal(LightMoneyUnit.Satoshi));
+                        Assert.Equal(10, request.MaxSendable.ToDecimal(LightMoneyUnit.Satoshi));
+                        break;
+                    
                     default:
-                        Assert.False(true, "Should have matched");
+                        Assert.False(true, "Should have matched one of the Lightning addresses");
                         break;
                 }
             }
+            
+            // Check that no BTCPay invoice got generated on initial LNURL request
             var repo = s.Server.PayTester.GetService<InvoiceRepository>();
-            var invoices = await repo.GetInvoices(new InvoiceQuery() { StoreId = new[] { s.StoreId } });
-            Assert.Equal(2, invoices.Length);
-            var emailSuffix = $"@{s.Server.PayTester.HostName}:{s.Server.PayTester.Port}";
-            foreach (var i in invoices)
-            {
-                var lightningPaymentMethod = i.GetPaymentMethod(new PaymentMethodId("BTC", PaymentTypes.LNURLPay));
-                var paymentMethodDetails =
-                    lightningPaymentMethod.GetPaymentMethodDetails() as LNURLPayPaymentMethodDetails;
-                Assert.Contains(
-                    paymentMethodDetails.ConsumedLightningAddress,
-                    new[] { lnaddress1, lnaddress2 });
-
-                if (paymentMethodDetails.ConsumedLightningAddress == lnaddress2)
-                {
-                    Assert.Equal("lol", i.Metadata.AdditionalData["test"].Value<string>());
-                }
-            }
+            var invoices = await repo.GetInvoices(new InvoiceQuery { StoreId = new[] { s.StoreId } });
+            Assert.Empty(invoices);
 
             var lnUsername = lnaddress1.Split('@')[0];
-
 
             LNURLPayRequest req;
             using (var resp = await s.Server.PayTester.HttpClient.GetAsync($"/.well-known/lnurlp/{lnUsername}"))
@@ -2483,6 +2468,25 @@ namespace BTCPayServer.Tests
                 var succ = JsonConvert.DeserializeObject<LNURLPayRequest.LNURLPayRequestCallbackResponse>(str);
                 Assert.NotNull(succ.Pr);
                 Assert.Equal(new LightMoney(2001), BOLT11PaymentRequest.Parse(succ.Pr, Network.RegTest).MinimumAmount);
+            }
+            
+            // Again, check the invoices
+            invoices = await repo.GetInvoices(new InvoiceQuery { StoreId = new[] { s.StoreId } });
+            Assert.Equal(2, invoices.Length);
+            
+            foreach (var i in invoices)
+            {
+                var lightningPaymentMethod = i.GetPaymentMethod(new PaymentMethodId("BTC", PaymentTypes.LNURLPay));
+                var paymentMethodDetails =
+                    lightningPaymentMethod.GetPaymentMethodDetails() as LNURLPayPaymentMethodDetails;
+                Assert.Contains(
+                    paymentMethodDetails.ConsumedLightningAddress,
+                    new[] { lnaddress1, lnaddress2 });
+
+                if (paymentMethodDetails.ConsumedLightningAddress == lnaddress2)
+                {
+                    Assert.Equal("lol", i.Metadata.AdditionalData["test"].Value<string>());
+                }
             }
         }
 

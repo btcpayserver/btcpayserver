@@ -1,6 +1,5 @@
 @using BTCPayServer.Views.Stores
-@using AngleSharp.Io
-@inject BTCPayServer.Security.ContentSecurityPolicies Csp
+@inject Security.ContentSecurityPolicies Csp
 @inject BTCPayNetworkProvider NetworkProvider
 @model BTCPayServer.Plugins.PayButton.Models.PayButtonViewModel
 @{
@@ -120,10 +119,10 @@
     
     <script>
         window.lnurlEndpoint = @Safe.Json(Url.Action("GetLNUrlForStore", "UILNURL", new
-                              {
-                                  storeId = Model.StoreId,
-                                  cryptoCode = NetworkProvider.DefaultNetwork.CryptoCode,
-                              }, "lnurlp", Context.Request.Host.ToString()));
+                               {
+                                   storeId = Model.StoreId, 
+                                   cryptoCode = NetworkProvider.DefaultNetwork.CryptoCode
+                               }, "lnurlp", Context.Request.Host.ToString()));
         const srvModel = @Safe.Json(Model);
         const payButtonCtrl = new Vue({
             el: '#payButtonCtrl',

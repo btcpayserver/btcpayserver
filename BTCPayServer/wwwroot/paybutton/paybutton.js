@@ -185,16 +185,16 @@ function inputChanges(vueApp, event, buttonSize) {
     });
     url = url.href;
     vueApp.previewLink = url;
-    if(window.lnurlEndpoint){
+    if (window.lnurlEndpoint){
         let lnurlResult = lnurlEndpoint + "?";
-        if(srvModel.currency){
-            lnurlResult += "&currency=" + srvModel.currency;
+        if (srvModel.currency){
+            lnurlResult += `&currency=${srvModel.currency}`;
         }
-        if(srvModel.price){
-            lnurlResult += "&amount=" + srvModel.price;
+        if (srvModel.price){
+            lnurlResult += `&amount=${srvModel.price}`;
         }
-        if(srvModel.orderId){
-            lnurlResult += "&orderId=" + srvModel.orderId;
+        if (srvModel.orderId){
+            lnurlResult += `&orderId=${srvModel.orderId}`;
         }
         lnurlResult= lnurlResult.replace("?&", "?");
 

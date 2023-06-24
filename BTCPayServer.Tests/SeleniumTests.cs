@@ -1,5 +1,6 @@
 using System;
 using System.Buffers;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
@@ -2379,7 +2380,7 @@ namespace BTCPayServer.Tests
 
             var addresses = s.Driver.FindElements(By.ClassName("lightning-address-value"));
             Assert.Equal(2, addresses.Count);
-
+            var callbacks = new List<Uri>();
             foreach (IWebElement webElement in addresses)
             {
                 var value = webElement.GetAttribute("value");
@@ -2397,6 +2398,7 @@ namespace BTCPayServer.Tests
                         lnaddress2 = m["text/identifier"];
                         Assert.Equal(2, request.MinSendable.ToDecimal(LightMoneyUnit.Satoshi));
                         Assert.Equal(10, request.MaxSendable.ToDecimal(LightMoneyUnit.Satoshi));
+                        callbacks.Add(request.Callback);
                         break;
 
                     case { } v when v.StartsWith(lnaddress1):
@@ -2404,6 +2406,7 @@ namespace BTCPayServer.Tests
                         lnaddress1 = m["text/identifier"];
                         Assert.Equal(1, request.MinSendable.ToDecimal(LightMoneyUnit.Satoshi));
                         Assert.Equal(6.12m, request.MaxSendable.ToDecimal(LightMoneyUnit.BTC));
+                        callbacks.Add(request.Callback);
                         break;
                     default:
                         Assert.False(true, "Should have matched");
@@ -2411,7 +2414,19 @@ namespace BTCPayServer.Tests
                 }
             }
             var repo = s.Server.PayTester.GetService<InvoiceRepository>();
+
             var invoices = await repo.GetInvoices(new InvoiceQuery() { StoreId = new[] { s.StoreId } });
+            // Resolving a ln address shouldn't create any btcpay invoice.
+            // This must be done because some NOST clients resolve ln addresses preemptively without user interaction
+            Assert.Empty(invoices);
+
+            // Calling the callbacks should create the invoices
+            foreach (var callback in callbacks)
+            {
+                using var r = await s.Server.PayTester.HttpClient.GetAsync(callback);
+                await r.Content.ReadAsStringAsync();
+            }
+            invoices = await repo.GetInvoices(new InvoiceQuery() { StoreId = new[] { s.StoreId } });
             Assert.Equal(2, invoices.Length);
             var emailSuffix = $"@{s.Server.PayTester.HostName}:{s.Server.PayTester.Port}";
             foreach (var i in invoices)

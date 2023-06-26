@@ -62,7 +62,6 @@
     var onModalWillLeaveMethod = function () { };
     var onModalReceiveMessageMethod = function (event) { };
 
-    var nfcSupportAvailable = "NDEFReader" in window;
     function showFrame() {
         if (window.document.getElementsByName('btcpay').length === 0) {
             window.document.body.appendChild(iframe);
@@ -97,35 +96,28 @@
         readerAbortController.signal.onabort = () => {
             this.scanning = false;
         };
-        ndef.scan({signal:readerAbortController.signal}).then(() => {
-            console.log("> Scan started successfully.");
-            ndef.onreading = (event) => {
+        ndef.scan({ signal:readerAbortController.signal }).then(() => {
+            ndef.onreading = event => {
                 const message = event.message;
                 const record = message.records[0];
                 const textDecoder = new TextDecoder('utf-8');
-                const lnurl = textDecoder.decode(record.data);
+                const data = textDecoder.decode(record.data);
 
                 // Send NFC data back to the iframe
                 if (iframe) {
-                    iframe.contentWindow.postMessage({ action: "nfcData", data: lnurl }, "*");
+                    iframe.contentWindow.postMessage({ action: 'nfc:data', data }, '*');
                 }
             };
-            ndef.onerror = () => {
-                console.log("Error! Cannot read data from the NFC tag. Try another one.");
-
+            ndef.onreadingerror = () => {
                 // Send error message back to the iframe
                 if (iframe) {
-                    iframe.contentWindow.postMessage({ action: "nfcError" }, "*");
+                    iframe.contentWindow.postMessage({ action: 'nfc:error' }, '*');
                 }
             };
-        }).catch(error => {
-            console.log(`Argh! ${error}`);
-        });
+        }).catch(console.error);
     }
     
     function receiveMessage(event) {
-        var uri;
-
         if (!origin.startsWith(event.origin) || !showingInvoice) {
             return;
         }
@@ -133,16 +125,14 @@
             hideFrame();
         } else if (event.data === 'loaded') {
             showFrame();
-        }
-        else if(event.data === "startNfcScan") {
+        } else if (event.data === 'nfc:startScan') {
             startNfcScan();
-        }
-        else if(event.data === "abortNfc") {
+        } else if (event.data === 'nfc:abort') {
             if (readerAbortController) {
                 readerAbortController.abort()
             }
         } else if (event.data && event.data.open) {
-            uri = event.data.open;
+            const uri = event.data.open;
             if (uri.indexOf('bitcoin:') === 0) {
                 window.location = uri;
             }
@@ -191,5 +181,4 @@
         setApiUrlPrefix: setApiUrlPrefix,
         onModalReceiveMessage: onModalReceiveMessage
     };
-
 })();

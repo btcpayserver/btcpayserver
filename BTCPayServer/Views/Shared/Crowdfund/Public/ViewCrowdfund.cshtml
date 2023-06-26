@@ -277,7 +277,7 @@
 <template id="perks-template">
     <div class="perks-container">
         <perk v-if="!perks || perks.length === 0"
-              :perk="{title: 'Donate Custom Amount', price: { type: 0, value: null }}"
+              :perk="{title: 'Donate Custom Amount', priceType: 'Topup', price: { type: 'Topup' } }"
               :target-currency="targetCurrency"
               :active="active"
               :loading="loading"

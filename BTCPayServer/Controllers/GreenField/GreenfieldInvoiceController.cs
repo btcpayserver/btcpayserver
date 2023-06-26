@@ -41,6 +41,7 @@ namespace BTCPayServer.Controllers.Greenfield
         private readonly RateFetcher _rateProvider;
         private readonly InvoiceActivator _invoiceActivator;
         private readonly ApplicationDbContextFactory _dbContextFactory;
+        private readonly IAuthorizationService _authorizationService;
 
         public LanguageService LanguageService { get; }
 
@@ -48,7 +49,7 @@ namespace BTCPayServer.Controllers.Greenfield
             LinkGenerator linkGenerator, LanguageService languageService, BTCPayNetworkProvider btcPayNetworkProvider,
             CurrencyNameTable currencyNameTable, RateFetcher rateProvider,
             InvoiceActivator invoiceActivator,
-            PullPaymentHostedService pullPaymentService, ApplicationDbContextFactory dbContextFactory)
+            PullPaymentHostedService pullPaymentService, ApplicationDbContextFactory dbContextFactory, IAuthorizationService authorizationService)
         {
             _invoiceController = invoiceController;
             _invoiceRepository = invoiceRepository;
@@ -59,6 +60,7 @@ namespace BTCPayServer.Controllers.Greenfield
             _invoiceActivator = invoiceActivator;
             _pullPaymentService = pullPaymentService;
             _dbContextFactory = dbContextFactory;
+            _authorizationService = authorizationService;
             LanguageService = languageService;
         }
 
@@ -187,6 +189,12 @@ namespace BTCPayServer.Controllers.Greenfield
             if (request.Amount > GreenfieldConstants.MaxAmount)
             {
                 ModelState.AddModelError(nameof(request.Amount), $"The amount should less than {GreenfieldConstants.MaxAmount}.");
+            }
+            if (!string.IsNullOrEmpty(request.Checkout.ExplicitRateScript) && 
+                !(await _authorizationService.AuthorizeAsync(User, Policies.CanModifyInvoices)).Succeeded)
+            {
+                request.AddModelError(invoiceRequest => invoiceRequest.Checkout.ExplicitRateScript,
+                    $"You are not authorized to use explicit rate script (missing {Policies.CanModifyInvoices} permission)", this);
             }
             request.Checkout ??= new CreateInvoiceRequest.CheckoutOptions();
             if (request.Checkout.PaymentMethods?.Any() is true)

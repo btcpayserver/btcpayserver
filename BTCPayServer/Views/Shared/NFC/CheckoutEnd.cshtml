@@ -21,38 +21,22 @@
         </div>
     </template>
 </template>
-<script type="text/javascript">
+<script>
 class NDEFReaderWrapper {
     constructor() {
         this.onreading = null;
         this.onreadingerror = null;
     }
 
-    async scan( opts) {
-        
+    async scan(opts) {
         if (opts && opts.signal){
-            opts.signal.addEventListener("abort", () => {
-                window.parent.postMessage("abortNfc", "*");
+            opts.signal.addEventListener('abort', () => {
+                window.parent.postMessage('nfc:abort', '*');
             });
         }
-        window.parent.postMessage("startNfcScan", "*");
+        window.parent.postMessage('nfc:startScan', '*');
     }
 }
-
-window.addEventListener("message", (event) => {
-    const { action, data } = event.data;
-    if (action === "nfcData") {
-        if (ndef.onreading) {
-            ndef.onreading({ message: { records: [{ data }] } });
-        }
-    } else if (action === "nfcError") {
-        if (ndef.onreadingerror) {
-            ndef.onreadingerror();
-        }
-    }
-});
-
-
 
 Vue.component("lnurl-withdraw-checkout", {
     template: "#lnurl-withdraw-template",
@@ -100,7 +84,7 @@ Vue.component("lnurl-withdraw-checkout", {
     data () {
         return {
             url: @Safe.Json(Context.Request.GetAbsoluteUri(Url.Action("SubmitLNURLWithdrawForInvoice", "NFC"))),
-            supported: 'NDEFReader' in window ,
+            supported: 'NDEFReader' in window,
             scanning: false,
             submitting: false,
             permissionGranted: false,
@@ -166,7 +150,8 @@ Vue.component("lnurl-withdraw-checkout", {
             this.submitting = false;
             this.scanning = true;
             try {
-                const ndef = window.self === window.top?  new NDEFReader() : new NDEFReaderWrapper();
+                const inModal = window.self !== window.top;
+                const ndef = inModal ? new NDEFReaderWrapper() : new NDEFReader();
                 this.readerAbortController = new AbortController()
                 this.readerAbortController.signal.onabort = () => {
                     this.scanning = false;
@@ -174,15 +159,31 @@ Vue.component("lnurl-withdraw-checkout", {
                 
                 await ndef.scan({ signal: this.readerAbortController.signal })
 
-                ndef.onreadingerror = () => {
-                    this.errorMessage = "Could not read NFC tag";
-                }
+                ndef.onreadingerror = this.reportNfcError
 
-                ndef.onreading = async ({ message, serialNumber }) => {
+                ndef.onreading = async ({ message }) => {
                     const record = message.records[0]
                     const textDecoder = new TextDecoder('utf-8')
                     const lnurl = textDecoder.decode(record.data)
                     await this.sendData(lnurl)
+                }
+                
+                if (inModal) {
+                    // receive messages from iframe
+                    window.addEventListener('message', async event => {
+                        // deny messages from other origins
+                        if (event.origin !== window.location.origin) return
+                        
+                        const { action, data } = event.data
+                        switch (action) {
+                            case 'nfc:data':
+                                await this.sendData(data)
+                                break;
+                            case 'nfc:error':
+                                this.reportNfcError()
+                                break;
+                        }
+                    });
                 }
                 
                 // we came here, so the user must have allowed NFC access
@@ -213,6 +214,9 @@ Vue.component("lnurl-withdraw-checkout", {
                 this.errorMessage = error;
             }
             this.submitting = false;
+        },
+        reportNfcError() {
+            this.errorMessage = 'Could not read NFC tag';    
         }
     }
 });

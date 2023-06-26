@@ -594,6 +594,7 @@ namespace BTCPayServer
             {
                 pm.SetPaymentMethodDetails(paymentMethodDetails);
                 await _invoiceRepository.UpdateInvoicePaymentMethod(i.Id, pm);
+                i.SetPaymentMethod(pm);
             }
             return lnurlRequest;
         }

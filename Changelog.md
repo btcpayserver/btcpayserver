@@ -21,7 +21,6 @@
 * Fix: Incorrect rounding in the receipt of PoS invoice (#5071 #5072) @NicolasDorier
 * Crowdfund: Fix null pointer exception for topup type (missing price) (#5068) @dennisreimann
 * Greenfield: Default currency missing from stores API (#5126) @dennisreimann
-* Fix: Exposing ln address on Nostr should not result in lots of invoice being created (#5117) @NicolasDorier
 
 ### Improvements
 

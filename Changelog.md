@@ -20,6 +20,7 @@
 * NFC: Do not start scanning if unsupported (#5067) @dennisreimann
 * Fix: Incorrect rounding in the receipt of PoS invoice (#5071 #5072) @NicolasDorier
 * Crowdfund: Fix null pointer exception for topup type (missing price) (#5068) @dennisreimann
+* Greenfield: Default currency missing from stores API (#5126) @dennisreimann
 
 ### Improvements
 
@@ -29,6 +30,7 @@
 * Make file management UI more useful (#5081) @Kukks
 * After changing PoS items values, the JSON template should be indented @NicolasDorier
 * Add extension point to template editor (#5080) @Kukks
+* Querying a lightning address no longer generates an invoice each time (#5117) @NicolasDorier
 
 ## 1.10.2
 

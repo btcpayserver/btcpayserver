@@ -19,6 +19,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using NBitcoin;
+using NBitcoin.DataEncoders;
 using NBitpayClient;
 using NicolasDorier.RateLimits;
 
@@ -173,11 +175,12 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
 
             try
             {
+                var appOrderId = AppService.GetAppOrderId(app);
                 var appPath = await _appService.ViewLink(app);
                 var appUrl = HttpContext.Request.GetAbsoluteUri(appPath);
-                var invoice = await _invoiceController.CreateInvoiceCore(new BitpayCreateInvoiceRequest()
+                var invoice = await _invoiceController.CreateInvoiceCore(new BitpayCreateInvoiceRequest
                 {
-                    OrderId = AppService.GetAppOrderId(app),
+                    OrderId = $"{appOrderId}-{Encoders.Base58.EncodeData(RandomUtils.GetBytes(16))}",
                     Currency = settings.TargetCurrency,
                     ItemCode = request.ChoiceKey ?? string.Empty,
                     ItemDesc = title,
@@ -190,6 +193,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                     RedirectURL = request.RedirectUrl ?? appUrl,
                 }, store, HttpContext.Request.GetAbsoluteRoot(),
                     new List<string> { AppService.GetAppInternalTag(appId) },
+                    new [] { appOrderId },
                     cancellationToken, entity =>
                     {
                         entity.Metadata.OrderUrl = appUrl;

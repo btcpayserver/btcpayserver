@@ -1142,6 +1142,7 @@ namespace BTCPayServer.Controllers
                 StoreId = fs.GetFilterArray("storeid"),
                 ItemCode = fs.GetFilterArray("itemcode"),
                 OrderId = fs.GetFilterArray("orderid"),
+                AdditionalSearchTerms = fs.GetFilterArray("plugin"),
                 StartDate = fs.GetFilterDate("startdate", timezoneOffset),
                 EndDate = fs.GetFilterDate("enddate", timezoneOffset)
             };

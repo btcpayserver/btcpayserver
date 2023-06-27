@@ -671,24 +671,28 @@ namespace BTCPayServer.Services.Invoices
 #pragma warning restore CA1310 // Specify StringComparison
             }
 
+            if (queryObject.AdditionalSearchTerms is { Length: > 0 })
+                query = query.Where(i => i.InvoiceSearchData.Any(data => 
+                    queryObject.AdditionalSearchTerms.Contains(data.Value)));
+
             if (queryObject.StartDate != null)
                 query = query.Where(i => queryObject.StartDate.Value <= i.Created);
 
             if (queryObject.EndDate != null)
                 query = query.Where(i => i.Created <= queryObject.EndDate.Value);
 
-            if (queryObject.OrderId != null && queryObject.OrderId.Length > 0)
+            if (queryObject.OrderId is { Length: > 0 })
             {
                 var statusSet = queryObject.OrderId.ToHashSet().ToArray();
                 query = query.Where(i => statusSet.Contains(i.OrderId));
             }
-            if (queryObject.ItemCode != null && queryObject.ItemCode.Length > 0)
+            if (queryObject.ItemCode is { Length: > 0 })
             {
                 var statusSet = queryObject.ItemCode.ToHashSet().ToArray();
                 query = query.Where(i => statusSet.Contains(i.ItemCode));
             }
 
-            if (queryObject.Status != null && queryObject.Status.Length > 0)
+            if (queryObject.Status is { Length: > 0 })
             {
                 var statusSet = queryObject.Status.ToHashSet();
                 // We make sure here that the old filters still work
@@ -907,6 +911,7 @@ namespace BTCPayServer.Services.Invoices
             get;
             set;
         }
+        public string[] AdditionalSearchTerms { get; set; }
         public bool IncludeAddresses { get; set; }
 
         public bool IncludeEvents { get; set; }

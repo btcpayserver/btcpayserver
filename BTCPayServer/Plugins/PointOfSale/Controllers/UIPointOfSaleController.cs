@@ -283,6 +283,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             }
             try
             {
+                var appOrderId = AppService.GetAppOrderId(app);
                 var invoice = await _invoiceController.CreateInvoiceCore(new BitpayCreateInvoiceRequest
                 {
                     ItemCode = choice?.Id,
@@ -290,7 +291,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                     Currency = settings.Currency,
                     Price = price,
                     BuyerEmail = email,
-                    OrderId = orderId ?? AppService.GetAppOrderId(app),
+                    OrderId = orderId ?? $"{appOrderId}-{Encoders.Base58.EncodeData(RandomUtils.GetBytes(16))}",
                     NotificationURL =
                             string.IsNullOrEmpty(notificationUrl) ? settings.NotificationUrl : notificationUrl,
                     RedirectURL = !string.IsNullOrEmpty(redirectUrl) ? redirectUrl
@@ -305,6 +306,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                         : requiresRefundEmail == RequiresRefundEmail.On,
                 }, store, HttpContext.Request.GetAbsoluteRoot(),
                     new List<string> { AppService.GetAppInternalTag(appId) },
+                    new [] { appOrderId },
                     cancellationToken, entity =>
                     {
                         entity.Metadata.OrderUrl = Request.GetDisplayUrl();

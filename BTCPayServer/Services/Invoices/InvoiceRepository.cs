@@ -185,7 +185,7 @@ namespace BTCPayServer.Services.Invoices
             invoice.StoreId = storeId;
             using (var context = _applicationDbContextFactory.CreateContext())
             {
-                var invoiceData = new Data.InvoiceData()
+                var invoiceData = new InvoiceData
                 {
                     StoreDataId = storeId,
                     Id = invoice.Id,
@@ -544,7 +544,7 @@ namespace BTCPayServer.Services.Invoices
         {
             var invoiceIdSet = invoiceIds.ToHashSet();
             using var context = _applicationDbContextFactory.CreateContext();
-            IQueryable<Data.InvoiceData> query =
+            IQueryable<InvoiceData> query =
                 context
                 .Invoices
                 .Include(o => o.Payments)
@@ -555,7 +555,7 @@ namespace BTCPayServer.Services.Invoices
 
         private async Task<InvoiceData> GetInvoiceRaw(string id, ApplicationDbContext dbContext, bool includeAddressData = false)
         {
-            IQueryable<Data.InvoiceData> query =
+            IQueryable<InvoiceData> query =
                     dbContext
                     .Invoices
                     .Include(o => o.Payments);
@@ -564,13 +564,10 @@ namespace BTCPayServer.Services.Invoices
             query = query.Where(i => i.Id == id);
 
             var invoice = (await query.ToListAsync()).FirstOrDefault();
-            if (invoice == null)
-                return null;
-
             return invoice;
         }
 
-        public InvoiceEntity ToEntity(Data.InvoiceData invoice)
+        public InvoiceEntity ToEntity(InvoiceData invoice)
         {
             var entity = invoice.GetBlob(_btcPayNetworkProvider);
             PaymentMethodDictionary paymentMethods = null;
@@ -620,9 +617,9 @@ namespace BTCPayServer.Services.Invoices
             return entity;
         }
 
-        private IQueryable<Data.InvoiceData> GetInvoiceQuery(ApplicationDbContext context, InvoiceQuery queryObject)
+        private IQueryable<InvoiceData> GetInvoiceQuery(ApplicationDbContext context, InvoiceQuery queryObject)
         {
-            IQueryable<Data.InvoiceData> query = queryObject.UserId is null
+            IQueryable<InvoiceData> query = queryObject.UserId is null
                 ? context.Invoices
                 : context.UserStore
                     .Where(u => u.ApplicationUserId == queryObject.UserId)
@@ -633,7 +630,7 @@ namespace BTCPayServer.Services.Invoices
                 query = query.Where(i => !i.Archived);
             }
 
-            if (queryObject.InvoiceId != null && queryObject.InvoiceId.Length > 0)
+            if (queryObject.InvoiceId is { Length: > 0 })
             {
                 if (queryObject.InvoiceId.Length > 1)
                 {
@@ -647,7 +644,7 @@ namespace BTCPayServer.Services.Invoices
                 }
             }
 
-            if (queryObject.StoreId != null && queryObject.StoreId.Length > 0)
+            if (queryObject.StoreId is { Length: > 0 })
             {
                 if (queryObject.StoreId.Length > 1)
                 {
@@ -727,7 +724,7 @@ namespace BTCPayServer.Services.Invoices
                 query = query.Where(i => unused == (i.Status == "invalid" || !string.IsNullOrEmpty(i.ExceptionStatus)));
             }
 
-            if (queryObject.ExceptionStatus != null && queryObject.ExceptionStatus.Length > 0)
+            if (queryObject.ExceptionStatus is { Length: > 0 })
             {
                 var exceptionStatusSet = queryObject.ExceptionStatus.Select(s => NormalizeExceptionStatus(s)).ToHashSet().ToArray();
                 query = query.Where(i => exceptionStatusSet.Contains(i.ExceptionStatus));
@@ -745,7 +742,7 @@ namespace BTCPayServer.Services.Invoices
 
         public async Task<InvoiceEntity[]> GetInvoices(InvoiceQuery queryObject)
         {
-            using var context = _applicationDbContextFactory.CreateContext();
+            await using var context = _applicationDbContextFactory.CreateContext();
             var query = GetInvoiceQuery(context, queryObject);
             query = query.Include(o => o.Payments);
             if (queryObject.IncludeAddresses)
@@ -793,7 +790,6 @@ namespace BTCPayServer.Services.Invoices
             return network == null ? JsonConvert.SerializeObject(data, DefaultSerializerSettings) : network.ToString(data);
         }
 
-
         public InvoiceStatistics GetContributionsByPaymentMethodId(string currency, InvoiceEntity[] invoices, bool softcap)
         {
             var contributions = invoices
@@ -824,7 +820,6 @@ namespace BTCPayServer.Services.Invoices
                     if (p.ExceptionStatus == InvoiceExceptionStatus.Marked &&
                         p.Status == InvoiceStatusLegacy.Invalid)
                         return new[] { contribution };
-
 
                     // Else, we just sum the payments
                     return payments

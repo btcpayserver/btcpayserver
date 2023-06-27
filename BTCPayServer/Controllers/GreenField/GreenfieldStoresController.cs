@@ -129,6 +129,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 //we do not include EmailSettings in this model and instead opt to set it in stores/storeid/email endpoints
                 //we do not include PaymentMethodCriteria because moving the CurrencyValueJsonConverter to the Client csproj is hard and requires a refactor (#1571 & #1572)
                 NetworkFeeMode = storeBlob.NetworkFeeMode,
+                DefaultCurrency = storeBlob.DefaultCurrency,
                 RequiresRefundEmail = storeBlob.RequiresRefundEmail,
                 CheckoutType = storeBlob.CheckoutType,
                 Receipt = InvoiceDataBase.ReceiptOptions.Merge(storeBlob.ReceiptOptions, null),

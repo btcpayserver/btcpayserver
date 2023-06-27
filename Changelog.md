@@ -13,19 +13,19 @@
 * Dashboard: Limit "Top Items" to five (#5110) @dennisreimann
 * ToolTip causes glitching when scrolling down on mobile (#4956) @dennisreimann
 * LN payments failed to be detected on litd (#5104) @NicolasDorier
-* Fix LNBank and LNDHub (via lnbits extension) Stopped to work (#5083, #4482) @dennisreimann
+* Fix for LNDHub via LNbits integration (#5083 #4482) @dennisreimann
 * Applying a discount in PoS with cart wasn't working (#5079) @NicolasDorier
-* Refund: Fix overpaid option (#5076, #5066) @dennisreimann
+* Refund: Fix overpaid option (#5076 #5066) @dennisreimann
 * Do not crash when an invoice have an amount that is too big (#5070) @NicolasDorier
 * NFC: Do not start scanning if unsupported (#5067) @dennisreimann
-* Fix: Incorrect rounding in the receipt of PoS invoice (fix #5071) (#5072) @NicolasDorier
+* Fix: Incorrect rounding in the receipt of PoS invoice (#5071 #5072) @NicolasDorier
 * Crowdfund: Fix null pointer exception for topup type (missing price) (#5068) @dennisreimann
 
 ### Improvements
 
-* Load wallet transaction list asynchronously to avoid timeout on large wallets (Fix #4987) (#5100) @NicolasDorier
+* Load wallet transaction list asynchronously to avoid timeout on large wallets (#5100 #4987) @NicolasDorier
 * Receipt improvements (#5077) @dennisreimann
-* Dashboard: Make invoice badges consistent with those on invoices list (#5108, #4969) @dennisreimann
+* Dashboard: Make invoice badges consistent with those on invoices list (#5108 #4969) @dennisreimann
 * Make file management UI more useful (#5081) @Kukks
 * After changing PoS items values, the JSON template should be indented @NicolasDorier
 * Add extension point to template editor (#5080) @Kukks

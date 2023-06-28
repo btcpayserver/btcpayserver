@@ -57,7 +57,7 @@
                                 <input type="hidden" asp-for="PermissionValues[i].StoreMode" value="@Model.PermissionValues[i].StoreMode" />
                                 @if (Model.PermissionValues[i].StoreMode == UIManageController.AddApiKeyViewModel.ApiKeyStoreMode.AllStores)
                                 {
-                                    <div class="form-check">
+                                    <div class="form-check mb-0">
                                         <input id="@Model.PermissionValues[i].Permission" type="checkbox" asp-for="PermissionValues[i].Value" class="form-check-input ms-n4"/>
                                         <label for="@Model.PermissionValues[i].Permission" class="h5 form-check-label me-2 mb-1">
                                             <span class="me-lg-1">@Model.PermissionValues[i].Title</span>
@@ -108,7 +108,7 @@
                                     }
                                     @if (Model.PermissionValues[i].SpecificStores.Count < Model.Stores.Length)
                                     {
-                                        <div class="mt-3 mb-2">
+                                        <div class="mt-3">
                                             <button type="submit" name="command" value="@($"{Model.PermissionValues[i].Permission}:add-store")" class="btn btn-secondary">Add another store</button>
                                         </div>
                                     }
@@ -116,7 +116,7 @@
                             }
                             else
                             {
-                                <div class="form-check">
+                                <div class="form-check mb-0">
                                     <input id="@Model.PermissionValues[i].Permission" type="checkbox" asp-for="PermissionValues[i].Value" class="form-check-input ms-n4" />
                                     <label for="@Model.PermissionValues[i].Permission" class="h5 form-check-label me-2 mb-1">
                                         <span class="me-lg-1">@Model.PermissionValues[i].Title</span>

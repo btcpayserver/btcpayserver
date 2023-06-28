@@ -365,6 +365,11 @@ retry:
             version = Regex.Match(actual, "Sortable ([0-9]+.[0-9]+.[0-9]+) ").Groups[1].Value;
             expected = (await (await client.GetAsync($"https://unpkg.com/sortablejs@{version}/Sortable.min.js")).Content.ReadAsStringAsync()).Trim();
             Assert.Equal(expected, actual);
+
+            actual = GetFileContent("BTCPayServer", "wwwroot", "vendor", "bootstrap-vue", "bootstrap-vue.min.js").Trim();
+            version = Regex.Match(actual, "BootstrapVue ([0-9]+.[0-9]+.[0-9]+)").Groups[1].Value;
+            expected = (await (await client.GetAsync($"https://cdnjs.cloudflare.com/ajax/libs/bootstrap-vue/{version}/bootstrap-vue.min.js")).Content.ReadAsStringAsync()).Trim();
+            Assert.Equal(expected, actual);
         }
 
         string GetFileContent(params string[] path)

@@ -157,7 +157,7 @@ h2 svg.icon.icon-info {
     cursor: pointer;
     padding: 0;
 }
-@media (min-width: 1200px) {
+@media (min-width: 1400px) {
     #MassAction {
         margin-top: -4rem;
     }

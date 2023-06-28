@@ -1,5 +1,37 @@
 # Changelog
 
+## 1.10.3
+
+### New Features
+
+* Pull Payment: Support LNURL Withdraw with SATS denomination (#5041) @dennnisreimann
+
+### Bug fixes
+
+* Crowdfund: Fix JS errors in empty state (#5121) @dennisreimann
+* The current preimage of a invoice's lightning payment method should be available via API (#5111) @NicolasDorier
+* Dashboard: Limit "Top Items" to five (#5110) @dennisreimann
+* ToolTip causes glitching when scrolling down on mobile (#4956) @dennisreimann
+* LN payments failed to be detected on litd (#5104) @NicolasDorier
+* Fix for LNDHub via LNbits integration (#5083 #4482) @dennisreimann
+* Applying a discount in PoS with cart wasn't working (#5079) @NicolasDorier
+* Refund: Fix overpaid option (#5076 #5066) @dennisreimann
+* Do not crash when an invoice have an amount that is too big (#5070) @NicolasDorier
+* NFC: Do not start scanning if unsupported (#5067) @dennisreimann
+* Fix: Incorrect rounding in the receipt of PoS invoice (#5071 #5072) @NicolasDorier
+* Crowdfund: Fix null pointer exception for topup type (missing price) (#5068) @dennisreimann
+* Greenfield: Default currency missing from stores API (#5126) @dennisreimann
+
+### Improvements
+
+* Load wallet transaction list asynchronously to avoid timeout on large wallets (#5100 #4987) @NicolasDorier
+* Receipt improvements (#5077) @dennisreimann
+* Dashboard: Make invoice badges consistent with those on invoices list (#5108 #4969) @dennisreimann
+* Make file management UI more useful (#5081) @Kukks
+* After changing PoS items values, the JSON template should be indented @NicolasDorier
+* Add extension point to template editor (#5080) @Kukks
+* Querying a lightning address no longer generates an invoice each time (#5117) @NicolasDorier
+
 ## 1.10.2
 
 ### Bug fixes
@@ -8,6 +40,7 @@
 * Fix: Crash on migation of old instances (#5051) @NicolasDorier
 * Fix: Hide sensitive info feature not working with custom theme (#5044) @dennisreimann
 * Fix: Pay button not rendering on the invoice page (#5043) @dennisreimann
+* Doc update: Remove id from create webhook endpoint; fix consistency. (#5045) @ndeet
 
 ## 1.10.1
 

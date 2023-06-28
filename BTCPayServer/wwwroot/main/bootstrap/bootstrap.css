@@ -11041,6 +11041,11 @@ fieldset:disabled .btn {
   border: none;
   margin-left: var(--btcpay-space-s);
 }
+
+.dropdown-toggle.dropdown-toggle-no-caret::after {
+    content: none;
+}
+
 /* Scrollbar - first works on Firefox, rest on WebKit-based browsers */
 * {
   --btcpay-scrollbar-width: 0.375rem;

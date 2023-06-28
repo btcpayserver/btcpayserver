@@ -78,16 +78,20 @@ namespace BTCPayServer.Controllers
             model = this.ParseListQuery(model ?? new ListPaymentRequestsViewModel());
 
             var store = GetCurrentStore();
-            var includeArchived = new SearchString(model.SearchTerm, model.TimezoneOffset ?? 0).GetFilterBool("includearchived") == true;
+            var fs = new SearchString(model.SearchTerm, model.TimezoneOffset ?? 0);
             var result = await _PaymentRequestRepository.FindPaymentRequests(new PaymentRequestQuery
             {
                 UserId = GetUserId(),
                 StoreId = store.Id,
                 Skip = model.Skip,
                 Count = model.Count,
-                IncludeArchived = includeArchived
+                Status = fs.GetFilterArray("status")?.Select(s => Enum.Parse<Client.Models.PaymentRequestData.PaymentRequestStatus>(s, true)).ToArray(),
+                IncludeArchived = fs.GetFilterBool("includearchived") ?? false
             });
-
+            
+            model.Search = fs;
+            model.SearchText = fs.TextSearch;
+            
             model.Items = result.Select(data =>
             {
                 var blob = data.GetBlob();

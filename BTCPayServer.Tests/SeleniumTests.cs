@@ -1146,12 +1146,13 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("ArchivePaymentRequest")).Click();
             Assert.Contains("The payment request has been archived", s.FindAlertMessage().Text);
             Assert.DoesNotContain("Pay123", s.Driver.PageSource);
-            s.Driver.FindElement(By.Id("SearchDropdownToggle")).Click();
-            s.Driver.FindElement(By.Id("SearchIncludeArchived")).Click();
+            s.Driver.FindElement(By.Id("StatusOptionsToggle")).Click();
+            s.Driver.WaitForElement(By.Id("StatusOptionsIncludeArchived")).Click();
             Assert.Contains("Pay123", s.Driver.PageSource);
 
             // unarchive (from list)
-            s.Driver.FindElement(By.Id($"ToggleArchival-{payReqId}")).Click();
+            s.Driver.FindElement(By.Id($"ToggleActions-{payReqId}")).Click();
+            s.Driver.WaitForElement(By.Id($"ToggleArchival-{payReqId}")).Click();
             Assert.Contains("The payment request has been unarchived", s.FindAlertMessage().Text);
             Assert.Contains("Pay123", s.Driver.PageSource);
         }

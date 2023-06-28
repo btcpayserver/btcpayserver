@@ -190,7 +190,7 @@
         </div>
         @inject BtcPayAppService BtcPayAppService
         @inject UserManager<ApplicationUser> UserManager
-        <div id="LightningNodeType-@LightningNodeType.BTCPayApp" class="pt-3 tab-pane fade @(Model.LightningNodeType == LightningNodeType.BTCPayApp ? "show active" : "")" role="tabpanel" aria-labelledby="LightningNodeType-@LightningNodeType.BTCPayApp">
+        <div id="BTCPayAppSetup" class="pt-3 tab-pane fade @(Model.LightningNodeType == LightningNodeType.BTCPayApp ? "show active" : "")" role="tabpanel" aria-labelledby="LightningNodeType-@LightningNodeType.BTCPayApp">
             @{
                 var code = await BtcPayAppService.GeneratePairingCode(Context.GetStoreData().Id, UserManager.GetUserId(User));
                 var url = Url.ActionLink("StartPair","BtcPayApp", new { code });
@@ -202,7 +202,6 @@
                     </button>
                 </div>
             }
-            <vc:qr-code data=""></vc:qr-code>
                 </div>
         <vc:ui-extension-point location="ln-payment-method-setup-tab" model="@Model"/>
     </div>

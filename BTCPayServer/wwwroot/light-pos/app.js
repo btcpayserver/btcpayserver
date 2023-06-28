@@ -74,11 +74,11 @@ document.addEventListener("DOMContentLoaded",function () {
             },
             posdata () {
                 const data = {
-                    subTotal: this.formatCurrency(this.amountNumeric),
-                    total: this.formatCurrency(this.totalNumeric)
+                    subTotal: this.amountNumeric,
+                    total: this.totalNumeric
                 }
-                if (this.tipNumeric > 0) data.tip = this.formatCurrency(this.tipNumeric)
-                if (this.discountNumeric > 0) data.discountAmount = this.formatCurrency(this.discountNumeric)
+                if (this.tipNumeric > 0) data.tip = this.tipNumeric
+                if (this.discountNumeric > 0) data.discountAmount = this.discountNumeric
                 if (this.discountPercentNumeric > 0) data.discountPercentage = this.discountPercentNumeric
                 return JSON.stringify(data)
             }
@@ -138,7 +138,7 @@ document.addEventListener("DOMContentLoaded",function () {
                 const currency = this.srvModel.currencyCode;
                 if (currency === 'BTC' || currency === 'SATS') return this.formatCrypto(value, withSymbol); 
                 const divisibility = this.srvModel.currencyInfo.divisibility;
-                const locale = currency === 'USD' ? 'en-US' : navigator.language;
+                const locale = this.getLocale(currency);
                 const style = withSymbol ? 'currency' : 'decimal';
                 const opts = { currency, style, maximumFractionDigits: divisibility, minimumFractionDigits: divisibility };
                 try {
@@ -179,6 +179,14 @@ document.addEventListener("DOMContentLoaded",function () {
                 this.tipPercent = this.tipPercent !== percentage
                     ? percentage
                     : null;
+            },
+            getLocale(currency) {
+                switch (currency) {
+                    case 'USD': return 'en-US';
+                    case 'EUR': return 'de-DE';
+                    case 'JPY': return 'ja-JP';
+                    default: return navigator.language;
+                }
             }
         },
         created () {

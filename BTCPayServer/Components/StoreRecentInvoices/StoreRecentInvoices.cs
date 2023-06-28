@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
+using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using NBitcoin;
 
 namespace BTCPayServer.Components.StoreRecentInvoices;
 
@@ -53,17 +55,22 @@ public class StoreRecentInvoices : ViewComponent
         });
 
         vm.Invoices = (from invoice in invoiceEntities
-                       let state = invoice.GetInvoiceState()
-                       select new StoreRecentInvoiceViewModel
-                       {
-                           Date = invoice.InvoiceTime,
-                           Status = state,
-                           HasRefund = invoice.Refunds.Any(),
-                           InvoiceId = invoice.Id,
-                           OrderId = invoice.Metadata.OrderId ?? string.Empty,
-                           Amount = invoice.Price,
-                           Currency = invoice.Currency
-                       }).ToList();
+            let state = invoice.GetInvoiceState()
+            select new StoreRecentInvoiceViewModel
+            {
+                Date = invoice.InvoiceTime, 
+                Status = state, 
+                HasRefund = invoice.Refunds.Any(), 
+                InvoiceId = invoice.Id,
+                OrderId = invoice.Metadata.OrderId ?? string.Empty, 
+                Amount = invoice.Price,
+                Currency = invoice.Currency,
+                Details = new InvoiceDetailsModel
+                {
+                    Archived = invoice.Archived,
+                    Payments = invoice.GetPayments(false) 
+                }
+           }).ToList();
 
         return View(vm);
     }

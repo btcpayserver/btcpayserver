@@ -38,13 +38,13 @@
 <head>
     <partial name="LayoutHead" />
     <partial name="LayoutHeadStoreBranding" model="@(Model.BrandColor, Model.CssFileId, Model.CustomCSSLink, Model.EmbeddedCSS)" />
-    <link href="~/vendor/bootstrap-vue/bootstrap-vue.css" asp-append-version="true"  rel="stylesheet" />
+    <link href="~/vendor/bootstrap-vue/bootstrap-vue.min.css" asp-append-version="true"  rel="stylesheet" />
     <script type="text/javascript">
         var srvModel = @Safe.Json(Model);
     </script>
     <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
     <script src="~/vendor/vue-toasted/vue-toasted.min.js" asp-append-version="true"></script>
-    <script src="~/vendor/bootstrap-vue/bootstrap-vue.js" asp-append-version="true"></script>
+    <script src="~/vendor/bootstrap-vue/bootstrap-vue.min.js" asp-append-version="true"></script>
     <script src="~/vendor/signalr/signalr.js" asp-append-version="true"></script>
     <script src="~/vendor/animejs/anime.min.js" asp-append-version="true"></script>
     <script src="~/payment-request/app.js" asp-append-version="true"></script>

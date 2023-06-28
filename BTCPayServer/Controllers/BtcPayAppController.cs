@@ -106,8 +106,9 @@ public class BtcPayAppController : Controller
             Key = key.Id,
             StoreId = store.Id,
             UserId = res.UserId,
-            ExistingWallet = onchain?.AccountDerivation?.ToString(),
-            ExistingWalletSeed = onchainSeed
+            ExistingWallet = onchain?.AccountDerivation?.GetExtPubKeys()?.FirstOrDefault()?.ToString(onchain.Network.NBitcoinNetwork),
+            ExistingWalletSeed = onchainSeed,
+            Network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>("BTC").NBitcoinNetwork.Name
         });
     }
     
@@ -127,5 +128,6 @@ public class BtcPayAppController : Controller
 
         public string? ExistingWallet { get; set; }
         public string? ExistingWalletSeed { get; set; }
+        public string Network { get; set; }
     }
 }

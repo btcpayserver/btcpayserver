@@ -19,8 +19,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using NBitcoin;
-using NBitcoin.DataEncoders;
 using NBitpayClient;
 using NicolasDorier.RateLimits;
 
@@ -175,12 +173,11 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
 
             try
             {
-                var appOrderId = AppService.GetAppOrderId(app);
                 var appPath = await _appService.ViewLink(app);
                 var appUrl = HttpContext.Request.GetAbsoluteUri(appPath);
                 var invoice = await _invoiceController.CreateInvoiceCore(new BitpayCreateInvoiceRequest
                 {
-                    OrderId = $"{appOrderId}-{Encoders.Base58.EncodeData(RandomUtils.GetBytes(16))}",
+                    OrderId = AppService.GetRandomOrderId(),
                     Currency = settings.TargetCurrency,
                     ItemCode = request.ChoiceKey ?? string.Empty,
                     ItemDesc = title,
@@ -193,7 +190,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                     RedirectURL = request.RedirectUrl ?? appUrl,
                 }, store, HttpContext.Request.GetAbsoluteRoot(),
                     new List<string> { AppService.GetAppInternalTag(appId) },
-                    new [] { appOrderId },
+                    new [] { AppService.GetAppOrderId(app) },
                     cancellationToken, entity =>
                     {
                         entity.Metadata.OrderUrl = appUrl;
@@ -252,7 +249,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                 IsRecurring = resetEvery != nameof(CrowdfundResetEvery.Never),
                 UseAllStoreInvoices = app.TagAllInvoices,
                 AppId = appId,
-                SearchTerm = app.TagAllInvoices ? $"storeid:{app.StoreDataId}" : $"orderid:{AppService.GetAppOrderId(app)}",
+                SearchTerm = app.TagAllInvoices ? $"storeid:{app.StoreDataId}" : $"plugin:{AppService.GetAppOrderId(app)}",
                 DisplayPerksRanking = settings.DisplayPerksRanking,
                 DisplayPerksValue = settings.DisplayPerksValue,
                 SortPerksByPopularity = settings.SortPerksByPopularity,

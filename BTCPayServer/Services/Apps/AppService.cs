@@ -216,13 +216,19 @@ namespace BTCPayServer.Services.Apps
         {
             return invoice.GetInternalTags("APP#");
         }
+        
+        public static string GetRandomOrderId(int length = 16)
+        {
+            return Encoders.Base58.EncodeData(RandomUtils.GetBytes(length));
+        }
 
         public static async Task<InvoiceEntity[]> GetInvoicesForApp(InvoiceRepository invoiceRepository, AppData appData, DateTimeOffset? startDate = null, string[]? status = null)
         {
+            var searchCriteria = appData.TagAllInvoices ? null : new[] { GetAppOrderId(appData) };
             var invoices = await invoiceRepository.GetInvoices(new InvoiceQuery
             {
                 StoreId = new[] { appData.StoreDataId },
-                OrderId = appData.TagAllInvoices ? null : new[] { GetAppOrderId(appData) },
+                AdditionalSearchTerms = searchCriteria,
                 Status = status ?? new[]{
                     InvoiceState.ToString(InvoiceStatusLegacy.New),
                     InvoiceState.ToString(InvoiceStatusLegacy.Paid),

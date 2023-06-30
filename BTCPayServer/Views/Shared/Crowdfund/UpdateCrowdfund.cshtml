@@ -165,19 +165,8 @@
             </div>
         </div>
     </div>
-    <div class="row">
-        <div class="col-xl-10 col-xxl-constrain">
-            <partial name="TemplateEditor" model="@(nameof(Model.PerksTemplate), "Perks", Model.TargetCurrency ?? Model.StoreDefaultCurrency)" />
-        </div>
-    </div>
-    <div class="row collapse" id="RawEditor">
-        <div class="col-xl-10 col-xxl-constrain">
-            <div class="form-group pt-3">
-                <label asp-for="PerksTemplate" class="form-label"></label>
-                <textarea asp-for="PerksTemplate" rows="10" cols="40" class="form-control"></textarea>
-                <span asp-validation-for="PerksTemplate" class="text-danger"></span>
-            </div>
-        </div>
+    <div id="perks">
+        <partial name="TemplateEditor" model="@(nameof(Model.PerksTemplate), Model.PerksTemplate, "Perks", Model.TargetCurrency ?? Model.StoreDefaultCurrency)" />
     </div>
     <div class="row">
         <div class="col-xl-8 col-xxl-constrain">

@@ -1,231 +1,278 @@
-@model (string templateId, string title, string currency)
+@model (string templateId, string template, string title, string currency)
 
 <div id="template-editor-app" v-cloak>
-    <div class="form-group mb-0">
-        <h3 class="mt-5 mb-4">@Model.title</h3>
-        @if (ViewContext.ViewData.ModelState.TryGetValue(Model.templateId, out var errors))
-        {
-            foreach (var error in errors.Errors)
-            {
-                <br/>
-                <span class="text-danger" v-pre>@error.ErrorMessage</span>
-            }
-        }
-
-        <div class="bg-light card">
-            <div class="card-body " v-bind:class="{ 'card-deck': items.length > 0}">
-                <div v-for="(item, index) of items" class="card my-2 card-wrapper template-item me-0 ms-0" v-bind:key="item.id">
-                    <div v-if="anyImages" class="card-img-top border-bottom" v-bind:style="getImage(item)"></div>
-                    <div class="card-body">
-                        <h6 class="card-title" v-html="item.title"></h6>
-                        <div class="gap-3 d-flex">
-                            <button type="button" class="btn btn-primary" v-on:click="editItem(index)">Edit</button>
-                            <button type="button" class="btn btn-danger" v-on:click="removeItem(index)">
-                                <i class="fa fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                <div v-if="!items || items.length === 0" class="col-12 text-center">
-                    No items.<br/>
-                    <button type="button" class="btn btn-link" v-on:click="editItem(-1)" id="btn-add-first">
-                        Add your first item
+    <div class="modal" id="product-modal" tabindex="-1" role="dialog" ref="productModal">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">{{editingItem && editingItem.id ? "Edit" : "Add"}} Item</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" ref="close">
+                        <vc:icon symbol="close" />
                     </button>
                 </div>
-            </div>
-            <div class="card-footer text-start p-3 gap-3 d-flex">
-                <button type="button" class="btn btn-primary" v-on:click="editItem(-1)" id="btn-add">
-                    <i class="fa fa-plus fa-fw"></i> Add
-                </button>
-                <button type="button" class="btn btn-secondary" id="ToggleRawEditor" data-bs-toggle="collapse" data-bs-target="#RawEditor" aria-expanded="false" aria-controls="RawEditor">
-                    Toggle raw editor
-                </button>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <div class="text-danger mb-3" v-for="error of errors">{{error}}</div>
+                        <div class="form-group">
+                            <label for="EditorTitle" class="form-label" data-required>Title</label>
+                            <input id="EditorTitle" required pattern="[^\*#]+" class="form-control mb-2" v-model="editingItem && editingItem.title" autofocus ref="txtTitle" />
+                        </div>
+                        <div class="form-group row">
+                            <div class="col-sm-6">
+                                <label for="EditorPrice" class="form-label">Price</label>
+                                <select id="EditorPrice" class="form-select" v-model="editingItem && editingItem.priceType">
+                                    <option v-for="option in customPriceOptions" :value="option.value">{{option.text}}</option>
+                                </select>
+                            </div>
+                            <div class="col-sm-6" v-show="editingItem && editingItem.priceType !== 'Topup'">
+                                <label for="EditorAmount" class="form-label">&nbsp;</label>
+                                <div class="input-group mb-2">
+                                    <input class="form-control"
+                                           id="EditorAmount"
+                                           inputmode="decimal"
+                                           pattern="\d*"
+                                           step="any"
+                                           min="0"
+                                           type="number"
+                                           required
+                                           v-model="editingItem && editingItem.price"
+                                           ref="txtPrice"
+                                           aria-describedby="currency-addon" />
+                                    <span class="input-group-text" id="currency-addon" v-pre>@Model.currency</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="EditorImageUrl" class="form-label">Image Url</label>
+                            <input id="EditorImageUrl" class="form-control mb-2" pattern="[^\*#]+" v-model="editingItem && editingItem.image" ref="txtImage" />
+                        </div>
+                        <div class="form-group">
+                            <label for="EditorDescription" class="form-label">Description</label>
+                            <textarea id="EditorDescription" rows="3" cols="40" class="form-control mb-2" v-model="editingItem && editingItem.description" ref="txtDescription"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="EditorCategories" class="form-label">Categories</label>
+                            <input id="EditorCategories" class="form-control mb-2" autocomplete="off" ref="editorCategories" />
+                            <div class="form-text">Easily filter the different items using categories, used only in the product list with cart.</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="EditorInventory" class="form-label">Inventory</label>
+                            <input id="EditorInventory" type="number" inputmode="numeric" min="0" step="1" class="form-control mb-2" v-model="editingItem && editingItem.inventory" ref="txtInventory" />
+                            <div class="form-text">Leave blank to not use this feature.</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="EditorId" class="form-label">ID</label>
+                            <input id="EditorId" required pattern="[^\*#]+" class="form-control mb-2" v-model="editingItem && editingItem.id" ref="txtId" />
+                            <div class="form-text">Leave blank to generate ID from title.</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="BuyButtonText" class="form-label">Buy Button Text</label>
+                            <input id="BuyButtonText" type="text" class="form-control mb-2" v-model="editingItem && editingItem.buyButtonText" ref="txtBuyButtonText" />
+                        </div>
+                        <div class="form-group d-flex align-items-center">
+                            <input type="checkbox" id="Disabled" class="btcpay-toggle me-3" v-model="editingItem && editingItem.disabled" />
+                            <label for="Disabled" class="form-label mb-0">Disabled</label>
+                        </div>
+                        <vc:ui-extension-point location="app-template-editor-item-detail" model="Model"></vc:ui-extension-point>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" v-on:click="saveItem()" id="SaveItemChanges">Save</button>
+                </div>
             </div>
         </div>
-        <div class="modal" id="product-modal" tabindex="-1" role="dialog">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" v-if="editingItem">{{editingItem.index>=0? "Edit" : "Add"}} Item</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" ref="close">
-                            <vc:icon symbol="close"/>
-                        </button>
-                    </div>
-                    <div class="modal-body" v-if="editingItem">
-                        <div class="mb-3">
-                            <span class="text-danger row m-2" v-for="error of errors">{{error}}</span>
-                            <div class="form-group">
-                                <label class="form-label" data-required>Title</label>
-                                <input type="text" required pattern="[^\*#]+" class="form-control mb-2" v-model="editingItem.title" autofocus ref="txtTitle" />
-                            </div>
-                            <div class="form-group row">
-                                <div class="col-sm-6">
-                                    <label class="form-label">Price</label>
-                                    <select class="form-select" v-model="editingItem.priceType">
-                                        <option v-for="option in customPriceOptions" :value="option.value">{{option.text}}</option>
-                                    </select>
-                                </div>
-                                <div class="col-sm-6" v-show="editingItem.priceType !== 'Topup'">
-                                    <label class="form-label">&nbsp;</label>
-                                    <div class="input-group mb-2">
-                                        <input class="form-control"
-                                               inputmode="decimal"
-                                               pattern="\d*"
-                                               step="any"
-                                               min="0"
-                                               type="number"
-                                               required
-                                               v-model="editingItem.price"
-                                               ref="txtPrice"
-                                               aria-describedby="currency-addon"/>
-                                        <span class="input-group-text" id="currency-addon">@Model.currency</span>
-                                    </div>
+    </div>
+    <div class="row">
+        <div class="col-xxl-constrain">
+            <div class="form-group mb-0">
+                <h3 class="mt-5 mb-4" v-pre>@Model.title</h3>
+                @if (ViewContext.ViewData.ModelState.TryGetValue(Model.templateId, out var errors))
+                {
+                    foreach (var error in errors.Errors)
+                    {
+                        <br />
+                        <span class="text-danger" v-pre>@error.ErrorMessage</span>
+                    }
+                }
+                <div class="bg-light card">
+                    <div class="card-body " v-bind:class="{ 'card-deck': config.length > 0}">
+                        <div v-if="!config || config.length === 0" class="col-12 text-center">
+                            No items.<br />
+                            <button type="button" class="btn btn-link" v-on:click="addItem()" id="btn-add-first">
+                                Add your first item
+                            </button>
+                        </div>
+                        <div v-else v-for="(item, index) of config" class="card my-2 card-wrapper template-item me-0 ms-0" v-bind:key="item.id">
+                            <div class="card-img-top border-bottom" v-bind:style="getImage(item)"></div>
+                            <div class="card-body">
+                                <h6 class="card-title" v-html="item.title"></h6>
+                                <div class="gap-3 d-flex">
+                                    <button type="button" class="btn btn-primary" v-on:click="editItem(index)">Edit</button>
+                                    <button type="button" class="btn btn-danger" v-on:click="removeItem(index)">
+                                        <i class="fa fa-trash"></i>
+                                    </button>
                                 </div>
                             </div>
-                            <div class="form-group">
-                                <label class="form-label">Image Url</label>
-                                <input type="text" class="form-control mb-2" pattern="[^\*#]+" v-model="editingItem.image" ref="txtImage" />
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Description</label>
-                                <textarea rows="3" cols="40" class="form-control mb-2" v-model="editingItem.description" ref="txtDescription"></textarea>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Inventory</label>
-                                <input type="number" inputmode="numeric" min="0" step="1" class="form-control mb-2" v-model="editingItem.inventory" ref="txtInventory" />
-                                <div class="form-text">Leave blank to not use this feature.</div>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">ID</label>
-                                <input type="text" required pattern="[^\*#]+" class="form-control mb-2" v-model="editingItem.id" ref="txtId" />
-                                <div class="form-text">Leave blank to generate ID from title.</div>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Buy Button Text</label>
-                                <input type="text" id="BuyButtonText" class="form-control mb-2" v-model="editingItem.buyButtonText" ref="txtBuyButtonText" />
-                            </div>
-                            <div class="form-group d-flex align-items-center">
-                                <input type="checkbox" id="Disabled" class="btcpay-toggle me-3" v-model="editingItem.disabled" />
-                                <label class="form-label mb-0">Disabled</label>
-                            </div>
-                            <vc:ui-extension-point location="app-template-editor-item-detail" model="Model"></vc:ui-extension-point>
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" v-on:click="clearEditingItem()">Close</button>
-                        <button type="button" class="btn btn-primary" v-on:click="saveEditingItem()" id="SaveItemChanges">Save</button>
+                    <div class="card-footer text-start p-3 gap-3 d-flex">
+                        <button type="button" class="btn btn-primary" v-on:click="addItem()" id="btn-add">
+                            <i class="fa fa-plus fa-fw"></i> Add
+                        </button>
+                        <button type="button" class="btn btn-secondary" id="ToggleRawEditor" data-bs-toggle="collapse" data-bs-target="#RawEditor" aria-expanded="false" aria-controls="RawEditor">
+                            Toggle raw editor
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+    <div class="row collapse" id="RawEditor">
+        <div class="col-xxl-constrain">
+            <div class="form-group pt-3">
+                <label for="@Model.templateId" class="form-label">Template</label>
+                <textarea id="@Model.templateId" name="@Model.templateId" rows="10" cols="40" class="form-control" v-model="configJSON" v-on:change="updateFromJSON"></textarea>
+            </div>
+        </div>
+    </div>
 </div>
 
+<link href="~/vendor/tom-select/tom-select.bootstrap5.min.css" asp-append-version="true" rel="stylesheet">
+<script src="~/vendor/tom-select/tom-select.complete.min.js" asp-append-version="true"></script>
 <script>
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", () => {
+    const parseConfig = str => {
+        try {
+            return JSON.parse(str)
+        } catch (err) {
+            console.error('Error deserializing template config:', err)
+        }
+    }
+    const template = @Safe.Json(Model.template)
+    let config = parseConfig(template) || []
+    
     new Vue({
         el: '#template-editor-app',
-        data: {
-            errors: [],
-            items: [],
-            editingItem: null,
-            customPriceOptions: [
-                { text: 'Fixed', value: "Fixed" },
-                { text: 'Minimum', value: "Minimum" },
-                { text: 'Custom', value: 'Topup' },
-            ],
-            elementId: "@Model.templateId"
-        },
-        computed: {
-            anyImages: function(){
-                return !!this.items.find(function(i){ return !!i.image;});
+        data () {
+            return {
+                config,
+                errors: [],
+                editingIndex: null,
+                editingItem: null,
+                customPriceOptions: [
+                    { text: 'Fixed', value: "Fixed" },
+                    { text: 'Minimum', value: "Minimum" },
+                    { text: 'Custom', value: 'Topup' },
+                ],
+                categoriesSelect: null,
+                productModal: null
             }
         },
-        mounted: function() {
-            this.load();
-            this.getInputElement().on("input change", this.load.bind(this));            
-            this.getModalElement().on("hide.bs.modal", this.clearEditingItem.bind(this));
+        mounted() {
+            // modal
+            const $modalEl = this.$refs.productModal;
+            $modalEl.addEventListener('hide.bs.modal', () => { this.setEditingItem(null, null); });
+            this.productModal = new bootstrap.Modal($modalEl, {})
+            
+            // categories
+            this.categoriesSelect = new TomSelect(this.$refs.editorCategories, {
+                persist: false,
+                createOnBlur: true,
+                create: true,
+                options: this.allCategories.map(value => ({ value, text: value })),
+            });          
+            this.categoriesSelect.on('change', () => {
+                const value = this.categoriesSelect.getValue();
+                this.editingItem.categories = Array.from(value.split(',').reduce((res,  item) => {
+                    const category = item.trim();
+                    if (category) res.add(category);
+                    return res;
+                }, new Set()));
+            });
+        },
+        beforeDestroy () {
+            this.categoriesSelect.destroy();
+        },
+        computed: {
+            allCategories() {
+                return Array.from(this.config.reduce((res,  item) => {
+                    (item.categories || []).forEach(category => { res.add(category); });
+                    return res;
+                }, new Set()));
+            },
+            configJSON() {
+                return JSON.stringify(this.config, null, 2)
+            }
         },
         methods: {
-            getImage: function(item){
-                var image = this.unEscapeKey(item.image) || "~/img/img-placeholder.svg";
-                var url = image.startsWith("~") ? image.replace('~', window.location.pathname.substring(0, image.indexOf('/apps'))) : image;
+            updateFromJSON(event) {
+                const config = parseConfig(event.target.value)
+                if (!config) return
+                this.config = config
+            },
+            getImage(item) {
+                const image = item.image || "~/img/img-placeholder.svg";
+                const url = image.startsWith("~") ? image.replace('~', window.location.pathname.substring(0, image.indexOf('/apps'))) : image;
                 return {
                     "background-image" : "url('" + url +"')",
                     "opacity": item.image? 1: 0.5
                 }
             },
-            getInputElement : function(){ return $("#" + this.elementId); },
-            getModalElement : function(){ return $("#product-modal"); },
-            load: function(){
-                const template = this.getInputElement().val().trim();
-                if (!template){
-                    this.items = [];
-                } else {
-                    this.items =  JSON.parse(template);
-                }
+            removeItem(index) {
+                this.config.splice(index, 1);
             },
-            save: function(){
-                let template = JSON.stringify(this.items, null, 2);
-                this.getInputElement().val(template);
+            addItem() {
+                this.setEditingItem(null, { id: '', title: '', price: 0, image: '', description: '', categories: [], priceType: 'Fixed', inventory: null, disabled: false });
             },
-            editItem: function(index){
-                this.errors = [];
-                if(index < 0){
-                    this.editingItem = {index:-1, id:"", title: "", price: 0, image: "", description: "", priceType: "Fixed", inventory: null, disabled: false};
-                }else{
-                    this.editingItem = {...this.items[index], index};
-                }
-                
-                this.editingItem = this.unEscape(this.editingItem);
-                this.getModalElement().modal("show");
+            editItem(index) {
+                this.setEditingItem(index, Object.assign({}, this.config[index]));
             },
-            removeItem: function(index){
-                this.items.splice(index,1);
-                this.save();
+            saveItem() {
+                // set id from title if not set
+                if (!this.editingItem.id) this.editingItem.id = this.editingItem.title.toLowerCase().trim();
+                // validate
+                if (!this.validate()) return;
+                // add or update
+                const idx = this.editingIndex === null ? this.config.length : this.editingIndex;
+                this.$set(this.config, idx, this.editingItem);
+                // update categories
+                this.categoriesSelect.clearOptions();
+                this.categoriesSelect.addOptions(this.allCategories.map(value => ({ value, text: value })));
+                // hide modal
+                this.productModal.hide();
             },
-            clearEditingItem: function(){
-                this.editingItem = null;
-                this.errors = [];
-            },
-            validate: function(){
+            validate () {
                 this.errors = [];
                 if (this.editingItem.id) {
-                    var matchedId = this.items.findIndex((x)=> { return this.unEscapeKey(x.id) === this.editingItem.id;});
-                    if( matchedId>= 0 && matchedId != this.editingItem.index)
+                    const matchedId = this.config.findIndex(x => x.id === this.editingItem.id);
+                    if (matchedId >= 0 && matchedId !== this.editingIndex)
                         this.errors.push("You cannot have multiple items with the same id");
-                    
-                    if (!this.$refs.txtId.checkValidity()) {
-                        this.errors.push("Id is required and cannot have * or #");
-                    }
-                    if(this.editingItem.id.startsWith("- ")){
+                    if (this.editingItem.id.startsWith("- "))
                         this.errors.push("Id cannot start with \"- \"");
-                    }else if(this.editingItem.id.trim() == ""){
+                    else if (this.editingItem.id.trim() === "")
                         this.errors.push("Id is required");
-                    }                   
                 }   
-                
                 if (this.editingItem.description.indexOf("*") >= 0 || this.editingItem.description.indexOf("#") >= 0) {
                     this.errors.push("Description cannot have * or #");
                 }
-                if(this.editingItem.description.startsWith("- ")){
+                if (this.editingItem.description.startsWith("- ")){
                     this.errors.push("Description cannot start with \"- \"");
                 }
                 if (!this.$refs.txtImage.checkValidity()) {
                     this.errors.push("Image cannot have * or #");
                 }
-                if(this.editingItem.image.startsWith("- ")){
+                if (this.editingItem.image.startsWith("- ")){
                     this.errors.push("Image cannot start with \"- \"");
                 }
-                
                 if (this.editingItem["priceType"] !== "Topup" && !this.$refs.txtPrice.checkValidity()) {
                     this.errors.push("Price must be a valid number");
                 }
                 if (!this.$refs.txtTitle.checkValidity()) {
                     this.errors.push("Title is required and cannot have * or #");
-                }else if(this.editingItem.title.startsWith("- ")){
+                } else if (this.editingItem.title.startsWith("- ")){
                     this.errors.push("Title cannot start with \"- \"");
-                }else if(this.editingItem.title.trim() == ""){
+                } else if (!this.editingItem.title.trim()){
                     this.errors.push("Title is required");
                 }                
                 if (!this.$refs.txtInventory.checkValidity()) {
@@ -233,57 +280,22 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
                 return this.errors.length === 0;
             },
-            saveEditingItem: function(){
-                const fallbackId = this.editingItem.title.toLowerCase().trim();
-                if(!this.editingItem.id && fallbackId){
-                    this.editingItem.id = fallbackId;
-                    this.$nextTick(this.saveEditingItem.bind(this));
-                    return;
+            setEditingItem(index, item) {
+                this.errors = [];
+                this.editingIndex = index;
+                this.editingItem = item;
+                if (this.editingItem != null) {
+                    this.categoriesSelect.setValue(this.editingItem.categories);
+                    this.productModal.show();
                 }
-                if(!this.validate()){
-                    return;
-                }
-                this.editingItem = this.escape(this.editingItem);
-                
-                if(this.editingItem.index < 0){
-                    this.items.push(this.editingItem);
-                }else{
-                    this.items.splice(this.editingItem.index,1,this.editingItem);
-                }
-                this.save();
-                this.getModalElement().modal("hide");
-            },
-            escape: function(item) {
-                for(var k in item){
-                    if(k !== "paymentMethods" && k!=="id"){
-                        item[k] = $('<div/>').text(item[k]).html();
-                    }
-                }
-                return item;
-            },
-            unEscape: function(item){
-                for(var k in item){
-                    if(k !== "paymentMethods" && k!=="id" && k !== "disabled"){
-                        item[k] = this.unEscapeKey(item[k]);
-                    }
-                }
-                return item;
-            },
-            unEscapeKey : function(k){
-                // Without this check a `false` boolean value will always be returned as an empty string
-                if (k === false) {
-                    return "false";
-                }
-
-                return $('<div/>').html(k).text();
             }
         }
     });
 });
 
-Number.prototype.noExponents= function(){
+Number.prototype.noExponents = function(){
     var data= String(this).split(/[eE]/);
-    if(data.length== 1) return data[0];
+    if (data.length== 1) return data[0];
 
     var  z= '', sign= this<0? '-':'',
         str= data[0].replace('.', ''),
@@ -298,5 +310,4 @@ Number.prototype.noExponents= function(){
     while(mag--) z += '0';
     return str + z;
 };
-
 </script>

@@ -15,7 +15,7 @@ function Cart() {
     this.$summaryTip = $('.js-cart-summary-tip');
     this.$destroy = $('.js-cart-destroy');
     this.$confirm = $('#js-cart-confirm');
-
+    this.$categories = $('.js-categories');
     this.listItems();
     this.bindEmptyCart();
 
@@ -421,7 +421,18 @@ Cart.prototype.listItems = function() {
         self = this,
         list = [],
         tableTemplate = '';
-
+    this.$categories.on('change', function (event) {
+        if ($(this).is(':checked')) {
+            var selectedCategory = $(this).val();
+            $(".js-add-cart").each(function () {
+                var categories = JSON.parse(this.getAttribute("data-categories"));
+                if (selectedCategory === "*" || categories.includes(selectedCategory))
+                    this.classList.remove("d-none");
+                else
+                    this.classList.add("d-none");
+            });
+        }
+    });
     if (this.content.length > 0) {
         // Prepare the list of items in the cart
         for (var key in this.content) {

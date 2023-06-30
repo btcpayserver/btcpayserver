@@ -1,6 +1,8 @@
 @using BTCPayServer.Plugins.PointOfSale.Models
 @using BTCPayServer.Services
+@using Newtonsoft.Json.Linq;
 @model BTCPayServer.Plugins.PointOfSale.Models.ViewPointOfSaleViewModel
+
 @inject DisplayFormatter DisplayFormatter
 @{
     Layout = "PointOfSale/Public/_Layout";
@@ -19,6 +21,10 @@
             display: inline-flex;
             justify-content: center;
             align-items: center;
+        }
+        .card:not(.d-none:only-of-type) {
+            max-width: 320px;
+            margin: auto !important;
         }
     </style>
 }
@@ -232,6 +238,16 @@
             {
                 <div class="lead text-center mt-3">@Safe.Raw(Model.Description)</div>
             }
+			@if (Model.AllCategories != null)
+			{
+				<div class="btcpay-pills d-flex flex-wrap align-items-center justify-content-center gap-3 mt-3" data-toggle="buttons" v-pre>
+				    @foreach (var g in Model.AllCategories)
+				    {
+				        <input id="Category-@g.Value" type="radio" name="category" class="js-categories" value="@g.Value" @(g.Selected ? "checked" : "") autocomplete="off">
+					    <label class="btcpay-pill" for="Category-@g.Value">@g.Text</label>
+				    }
+				</div>
+			}
         </div>
         <div id="js-pos-list" class="text-center mx-auto px-2 px-sm-4 py-4 py-sm-2">
             <div class="card-deck">
@@ -245,7 +261,7 @@
                     var image = item.Image;
                     var description = item.Description;
 
-                    <div class="js-add-cart card px-0 card-wrapper" data-index="@index">
+                    <div class="js-add-cart card px-0 card-wrapper" data-index="@index" data-categories="@(new JArray(item.Categories).ToString())">
                         @if (!string.IsNullOrWhiteSpace(image))
                         {
                             <img class="card-img-top" src="@image" alt="@Safe.Raw(item.Title)" asp-append-version="true">
@@ -258,7 +274,6 @@
                             }
                         </div>
                         <div class="card-footer bg-transparent border-0 pt-0 pb-3">
-
                             <span class="text-muted small">
                                 @{
                                     var buttonText = string.IsNullOrEmpty(item.BuyButtonText) ? item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Topup ? Model.CustomButtonText : Model.ButtonText : item.BuyButtonText;
@@ -284,7 +299,8 @@
                                          <span>Sold out</span>
                                      }
                                  </div>
-                             } else if (anyInventoryItems)
+                             }
+                             else if (anyInventoryItems)
                              {
                                  <div class="w-100 pt-2">&nbsp;</div>
                              }

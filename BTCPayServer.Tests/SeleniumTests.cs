@@ -962,11 +962,13 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.CssSelector("label[for='DefaultView_Cart']")).Click();
             s.Driver.FindElement(By.CssSelector(".template-item:nth-of-type(1) .btn-primary")).Click();
             s.Driver.FindElement(By.Id("BuyButtonText")).SendKeys("Take my money");
+            s.Driver.FindElement(By.Id("EditorCategories-ts-control")).SendKeys("Drinks");
             s.Driver.FindElement(By.Id("SaveItemChanges")).Click();
             s.Driver.FindElement(By.Id("ToggleRawEditor")).Click();
 
             var template = s.Driver.FindElement(By.Id("Template")).GetAttribute("value");
             Assert.Contains("\"buyButtonText\": \"Take my money\"", template);
+            Assert.Matches("\"categories\": \\[\n\\s+\"Drinks\"\n\\s+\\]", template);
 
             s.Driver.FindElement(By.Id("SaveSettings")).Click();
             Assert.Contains("App updated", s.FindAlertMessage().Text);
@@ -980,6 +982,14 @@ namespace BTCPayServer.Tests
             Assert.True(s.Driver.PageSource.Contains("Tea shop"), "Unable to create PoS");
             Assert.True(s.Driver.PageSource.Contains("Cart"), "PoS not showing correct default view");
             Assert.True(s.Driver.PageSource.Contains("Take my money"), "PoS not showing correct default view");
+            Assert.Equal(5, s.Driver.FindElements(By.CssSelector(".card-deck .card:not(.d-none)")).Count);
+
+            var drinks = s.Driver.FindElement(By.CssSelector("label[for='Category-Drinks']"));
+            Assert.Equal("Drinks", drinks.Text);
+            drinks.Click();
+            Assert.Single(s.Driver.FindElements(By.CssSelector(".card-deck .card:not(.d-none)")));
+            s.Driver.FindElement(By.CssSelector("label[for='Category-*']")).Click();
+            Assert.Equal(5, s.Driver.FindElements(By.CssSelector(".card-deck .card:not(.d-none)")).Count);
 
             s.Driver.Url = posBaseUrl + "/static";
             Assert.False(s.Driver.PageSource.Contains("Cart"), "Static PoS not showing correct view");

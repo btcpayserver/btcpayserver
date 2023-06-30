@@ -392,6 +392,7 @@ namespace BTCPayServer.Controllers
 
             vm.UseClassicCheckout = storeBlob.CheckoutType == Client.Models.CheckoutType.V1;
             vm.CelebratePayment = storeBlob.CelebratePayment;
+            vm.PlaySoundOnPayment = storeBlob.PlaySoundOnPayment;
             vm.OnChainWithLnInvoiceFallback = storeBlob.OnChainWithLnInvoiceFallback;
             vm.ShowPayInWalletButton = storeBlob.ShowPayInWalletButton;
             vm.ShowStoreHeader = storeBlob.ShowStoreHeader;
@@ -568,6 +569,7 @@ namespace BTCPayServer.Controllers
             blob.ShowStoreHeader = model.ShowStoreHeader;
             blob.CheckoutType = model.UseClassicCheckout ? Client.Models.CheckoutType.V1 : Client.Models.CheckoutType.V2;
             blob.CelebratePayment = model.CelebratePayment;
+            blob.PlaySoundOnPayment = model.PlaySoundOnPayment;
             blob.OnChainWithLnInvoiceFallback = model.OnChainWithLnInvoiceFallback;
             blob.LightningAmountInSatoshi = model.LightningAmountInSatoshi;
             blob.RequiresRefundEmail = model.RequiresRefundEmail;

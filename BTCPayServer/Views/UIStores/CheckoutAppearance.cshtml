@@ -112,36 +112,44 @@
                     </div>
                     <span asp-validation-for="DisplayExpirationTimer" class="text-danger"></span>
                 </div>
-                <div class="form-group">
-                    <div class="d-flex align-items-center justify-content-between gap-2">
-                        <label asp-for="SoundFile" class="form-label"></label>
-                        @if (!string.IsNullOrEmpty(Model.SoundFileId))
-                        {
-                            <button type="submit" class="btn btn-link p-0 text-danger" name="RemoveSoundFile" value="true">
-                                <span class="fa fa-times"></span> Remove
-                            </button>
-                        }
-                    </div>
-                    @if (canUpload)
-                    {
-                        <div class="d-flex align-items-center gap-3">
-                            <input asp-for="SoundFile" type="file" class="form-control flex-grow">
-                            @if (!string.IsNullOrEmpty(Model.SoundFileId))
-                            {
-                                <audio controls src="@(await FileService.GetFileUrl(Context.Request.GetAbsoluteRootUri(), Model.SoundFileId))" style="height:2.1rem;max-width:10.5rem;"></audio>
-                            }
-                        </div>
-                        <span asp-validation-for="SoundFile" class="text-danger"></span>
-                    }
-                    else
-                    {
-                        <input asp-for="SoundFile" type="file" class="form-control" disabled>
-                        <div class="form-text">In order to upload a sound, a <a asp-controller="UIServer" asp-action="Files">file storage</a> must be configured.</div>
-                    }
-                </div>
                 <div class="form-check">
                     <input asp-for="CelebratePayment" type="checkbox" class="form-check-input" />
                     <label asp-for="CelebratePayment" class="form-check-label"></label>
+                </div>
+                <div class="form-check">
+                    <input asp-for="PlaySoundOnPayment" type="checkbox" class="form-check-input" data-bs-toggle="collapse" data-bs-target="#PlaySoundOnPaymentOptions" aria-expanded="@Model.PlaySoundOnPayment" aria-controls="PlaySoundOnPaymentOptions" />
+                    <label asp-for="PlaySoundOnPayment" class="form-check-label"></label>
+                    <div class="collapse @(Model.PlaySoundOnPayment ? "show" : "")" id="PlaySoundOnPaymentOptions">
+                        <div class="form-group mb-0 pt-2 pb-3">
+                            <div class="d-flex align-items-center justify-content-between gap-2">
+                                <label asp-for="SoundFile" class="form-label"></label>
+                                @if (!string.IsNullOrEmpty(Model.SoundFileId))
+                                {
+                                    <button type="submit" class="btn btn-link p-0 text-danger" name="RemoveSoundFile" value="true">
+                                        <span class="fa fa-times"></span> Remove
+                                    </button>
+                                }
+                            </div>
+                            @if (canUpload)
+                            {
+                                <div class="d-flex align-items-center gap-3">
+                                    <input asp-for="SoundFile" type="file" class="form-control flex-grow">
+                                    @{
+                                        var soundUrl = string.IsNullOrEmpty(Model.SoundFileId)
+                                            ? string.Concat(Context.Request.GetAbsoluteRootUri().ToString(), "checkout-v2/payment.mp3")
+                                            : await FileService.GetFileUrl(Context.Request.GetAbsoluteRootUri(), Model.SoundFileId);
+                                    }
+                                    <audio controls src="@soundUrl" style="height:2.1rem;max-width:10.5rem;"></audio>
+                                </div>
+                                <span asp-validation-for="SoundFile" class="text-danger"></span>
+                            }
+                            else
+                            {
+                                <input asp-for="SoundFile" type="file" class="form-control" disabled>
+                                <div class="form-text">In order to upload a custom sound, a <a asp-controller="UIServer" asp-action="Files">file storage</a> must be configured.</div>
+                            }
+                        </div>
+                    </div>
                 </div>
 				<div class="form-check">
 					<input asp-for="ShowStoreHeader" type="checkbox" class="form-check-input" />

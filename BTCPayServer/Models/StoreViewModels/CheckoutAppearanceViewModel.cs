@@ -45,6 +45,9 @@ namespace BTCPayServer.Models.StoreViewModels
         [Display(Name = "Celebrate payment with confetti")]
         public bool CelebratePayment { get; set; }
 
+        [Display(Name = "Play sound on payment")]
+        public bool PlaySoundOnPayment { get; set; }
+
         [Display(Name = "Requires a refund email")]
         public bool RequiresRefundEmail { get; set; }
 
@@ -66,7 +69,7 @@ namespace BTCPayServer.Models.StoreViewModels
         [Display(Name = "Link to a custom logo")]
         public string CustomLogo { get; set; }
 
-        [Display(Name = "Sound to play when a payment is made")]
+        [Display(Name = "Custom sound file")]
         public IFormFile SoundFile { get; set; }
         public string SoundFileId { get; set; }
 

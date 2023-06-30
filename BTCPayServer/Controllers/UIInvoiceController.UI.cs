@@ -955,9 +955,11 @@ namespace BTCPayServer.Controllers
             model.PaymentType = paymentMethodId.PaymentType.ToString();
             model.OrderAmountFiat = OrderAmountFromInvoice(model.CryptoCode, invoice, DisplayFormatter.CurrencyFormat.Symbol);
 
-            if (!string.IsNullOrEmpty(storeBlob.SoundFileId))
+            if (storeBlob.PlaySoundOnPayment)
             {
-                model.PaymentSoundUrl = await _fileService.GetFileUrl(Request.GetAbsoluteRootUri(), storeBlob.SoundFileId);
+                model.PaymentSoundUrl = string.IsNullOrEmpty(storeBlob.SoundFileId)
+                    ? string.Concat(Request.GetAbsoluteRootUri().ToString(), "checkout-v2/payment.mp3")
+                    : await _fileService.GetFileUrl(Request.GetAbsoluteRootUri(), storeBlob.SoundFileId);
             }
             
             var expiration = TimeSpan.FromSeconds(model.ExpirationSeconds);

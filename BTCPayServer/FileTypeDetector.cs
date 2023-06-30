@@ -10,6 +10,7 @@ namespace BTCPayServer
     {
         // Thanks to https://www.garykessler.net/software/FileSigs_20220731.zip
 
+
         const string pictureSigs =
             "JPEG2000 image files,00 00 00 0C 6A 50 20 20,JP2,Picture,0,(null)\n" +
             "Bitmap image,42 4D,BMP|DIB,Picture,0,(null)\n" +
@@ -19,19 +20,29 @@ namespace BTCPayServer
             "JPEG-EXIF-SPIFF images,FF D8 FF,JFIF|JPE|JPEG|JPG,Picture,0,FF D9\n" +
             "SVG images, 3C 73 76 67,SVG,Picture,0,(null)\n" +
             "Google WebP image file, 52 49 46 46 XX XX XX XX 57 45 42 50,WEBP,Picture,0,(null)\n" +
-            "AVIF image file, XX XX XX XX 66 74 79 70,AVIF,Picture,0,(null)\n";
+            "AVIF image file, XX XX XX XX 66 74 79 70,AVIF,Picture,0,(null)\n" +
+            "MP3 audio file,49 44 33,MP3,Multimedia,0,(null)\n" +
+            "RIFF Windows Audio,57 41 56 45 66 6D 74 20,WAV,Multimedia,8,(null)\n" +
+            "Free Lossless Audio Codec file,66 4C 61 43 00 00 00 22,FLAC,Multimedia,0,(null)\n" +
+            "MPEG-4 AAC audio,FF F1,AAC,Audio,0,(null)\n" +
+            "Ogg Vorbis Codec compressed file,4F 67 67 53,OGA|OGG|OGV|OGX,Multimedia,0,(null)\n" +
+            "Apple Lossless Audio Codec file,66 74 79 70 4D 34 41 20,M4A,Multimedia,4,(null)\n" +
+            "WebM/WebA,66 74 79 70 4D 34 41 20,M4A,Multimedia,4,(null)\n" +
+            "WebM/WEBA video file,1A 45 DF A3,WEBM|WEBA,Multimedia,0,(null)\n" +
+            "Resource Interchange File Format,52 49 46 46,AVI|CDA|QCP|RMI|WAV|WEBP,Multimedia,0,(null)\n";
 
-        readonly static (int[] Header, int[]? Trailer, string[] Extensions)[] headerTrailers;
+        readonly static (int[] Header, int[]? Trailer, string Type, string[] Extensions)[] headerTrailers;
         static FileTypeDetector()
         {
             var lines = pictureSigs.Split('\n', StringSplitOptions.RemoveEmptyEntries);
-            headerTrailers = new (int[] Header, int[]? Trailer, string[] Extensions)[lines.Length];
+            headerTrailers = new (int[] Header, int[]? Trailer, string Type, string[] Extensions)[lines.Length];
             for (int i = 0; i < lines.Length; i++)
             {
                 var cells = lines[i].Split(',');
                 headerTrailers[i] = (
                     DecodeData(cells[1]),
                     cells[^1] == "(null)" ? null : DecodeData(cells[^1]),
+                    cells[3],
                     cells[2].Split('|').Select(p => $".{p}").ToArray()
                     );
             }
@@ -51,11 +62,21 @@ namespace BTCPayServer
             }
             return res;
         }
-
         public static bool IsPicture(byte[] bytes, string? filename)
+        {
+            return IsFileType(bytes, filename, new[] { "Picture" });
+        }
+        public static bool IsAudio(byte[] bytes, string? filename)
+        {
+            return IsFileType(bytes, filename, new[] { "Multimedia", "Audio" });
+        }
+
+        static bool IsFileType(byte[] bytes, string? filename, string[] types)
         {
             for (int i = 0; i < headerTrailers.Length; i++)
             {
+                if (!types.Contains(headerTrailers[i].Type))
+                    goto next;
                 if (headerTrailers[i].Header is int[] header)
                 {
                     if (header.Length > bytes.Length)

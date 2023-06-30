@@ -494,13 +494,13 @@ namespace BTCPayServer.Controllers
                 else
                 {
                     var formFile = await model.SoundFile.Bufferize();
-                    /* TODO: Check if we can detect audio 
+
                     if (!FileTypeDetector.IsAudio(formFile.Buffer, formFile.FileName))
                     {
                         TempData[WellKnownTempData.ErrorMessage] = "The uploaded sound file needs to be an audio file";
                     }
                     else
-                    {*/
+                    {
                         model.SoundFile = formFile;
                         // delete existing image
                         if (!string.IsNullOrEmpty(blob.SoundFileId))
@@ -519,7 +519,7 @@ namespace BTCPayServer.Controllers
                         {
                             TempData[WellKnownTempData.ErrorMessage] = $"Could not save sound: {e.Message}";
                         }
-                    /*}*/
+                    }
                 }
             }
             else if (RemoveSoundFile && !string.IsNullOrEmpty(blob.SoundFileId))

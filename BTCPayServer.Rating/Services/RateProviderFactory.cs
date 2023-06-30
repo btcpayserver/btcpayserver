@@ -66,8 +66,8 @@ namespace BTCPayServer.Services.Rates
             foreach (var provider in Providers.ToArray())
             {
                 var prov = new BackgroundFetcherRateProvider(Providers[provider.Key]);
-                prov.RefreshRate = TimeSpan.FromMinutes(1.0);
-                prov.ValidatyTime = TimeSpan.FromMinutes(5.0);
+                prov.RefreshRate = TimeSpan.FromMinutes(0.5);
+                prov.ValidatyTime = TimeSpan.FromMinutes(1.0);
                 Providers[provider.Key] = prov;
                 var rsi = provider.Value.RateSourceInfo;
                 AvailableRateProviders.Add(new(rsi.Id, rsi.DisplayName, rsi.Url));
@@ -82,8 +82,8 @@ namespace BTCPayServer.Services.Rates
                         UnderlyingExchange = supportedExchange.Id
                     };
                     var bgFetcher = new BackgroundFetcherRateProvider(coingecko);
-                    bgFetcher.RefreshRate = TimeSpan.FromMinutes(1.0);
-                    bgFetcher.ValidatyTime = TimeSpan.FromMinutes(5.0);
+                    bgFetcher.RefreshRate = TimeSpan.FromMinutes(0.5);
+                    bgFetcher.ValidatyTime = TimeSpan.FromMinutes(1.0);
                     Providers.Add(supportedExchange.Id, bgFetcher);
                     var rsi = coingecko.RateSourceInfo;
                     AvailableRateProviders.Add(new(rsi.Id, rsi.DisplayName, rsi.Url, RateSource.Coingecko));

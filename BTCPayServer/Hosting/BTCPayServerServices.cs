@@ -519,6 +519,7 @@ namespace BTCPayServer.Hosting
             services.AddRateProvider<CryptoMarketExchangeRateProvider>();
             services.AddRateProvider<BitflyerRateProvider>();
             services.AddRateProvider<YadioRateProvider>();
+            services.AddRateProvider<BitcoinJungleRateProvider>();
             services.AddRateProvider<BtcTurkRateProvider>();
 
             // Broken

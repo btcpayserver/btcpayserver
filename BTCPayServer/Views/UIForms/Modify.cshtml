@@ -122,25 +122,25 @@
     </template>
     <template id="field-type-input">
         <div class="form-group mb-0">
-            <label class="form-label" :for="name" :data-required="required" v-text="label"></label>
+            <label class="form-label" :for="name" :data-required="required" v-html="label"></label>
             <input class="form-control" :id="name" :name="name" :type="type" v-model="value" />
-            <div v-if="helpText" :id="`HelpText-{name}`" class="form-text" v-text="helpText"></div>
+            <div v-if="helpText" :id="`HelpText-{name}`" class="form-text" v-html="helpText"></div>
         </div>
     </template>
     <template id="field-type-textarea">
         <div class="form-group mb-0">
-            <label class="form-label" :for="name" :data-required="required" v-text="label"></label>
+            <label class="form-label" :for="name" :data-required="required" v-html="label"></label>
             <textarea class="form-control" :id="name" :name="name" v-model="value"></textarea>
-            <div v-if="helpText" :id="`HelpText-${name}`" class="form-text" v-text="helpText"></div>
+            <div v-if="helpText" :id="`HelpText-${name}`" class="form-text" v-html="helpText"></div>
         </div>
     </template>
     <template id="field-type-select">
         <div class="form-group mb-0">
-            <label class="form-label" :for="name" :data-required="required" v-text="label"></label>
+            <label class="form-label" :for="name" :data-required="required" v-html="label"></label>
             <select class="form-select" :id="name" :name="name">
                 <option v-for="option in options" :key="option.value" :value="option.value" :selected="option.value === value" v-text="option.text"></option>
             </select>
-            <div v-if="helpText" :id="`HelpText-${name}`" class="form-text" v-text="helpText"></div>
+            <div v-if="helpText" :id="`HelpText-${name}`" class="form-text" v-html="helpText"></div>
         </div>
     </template>
     <template id="field-type-fieldset">

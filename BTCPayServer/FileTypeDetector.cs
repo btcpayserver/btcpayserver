@@ -22,6 +22,7 @@ namespace BTCPayServer
             "Google WebP image file, 52 49 46 46 XX XX XX XX 57 45 42 50,WEBP,Picture,0,(null)\n" +
             "AVIF image file, XX XX XX XX 66 74 79 70,AVIF,Picture,0,(null)\n" +
             "MP3 audio file,49 44 33,MP3,Multimedia,0,(null)\n" +
+            "MP3 audio file,FF,MP3,Multimedia,0,(null)\n" +
             "RIFF Windows Audio,57 41 56 45 66 6D 74 20,WAV,Multimedia,8,(null)\n" +
             "Free Lossless Audio Codec file,66 4C 61 43 00 00 00 22,FLAC,Multimedia,0,(null)\n" +
             "MPEG-4 AAC audio,FF F1,AAC,Audio,0,(null)\n" +
@@ -101,7 +102,7 @@ namespace BTCPayServer
                 if (filename is not null)
                 {
                     if (!headerTrailers[i].Extensions.Any(ext => filename.Length > ext.Length && filename.EndsWith(ext, StringComparison.OrdinalIgnoreCase)))
-                        return false;
+                        goto next;
                 }
                 return true;
 next:

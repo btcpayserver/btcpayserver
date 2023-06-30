@@ -59,7 +59,8 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 FeeBlockTarget = blob.FeeTargetBlock,
                 PaymentMethod = data.PaymentMethod,
-                IntervalSeconds = blob.Interval
+                IntervalSeconds = blob.Interval,
+                Threshold = blob.Threshold
             };
         }
 

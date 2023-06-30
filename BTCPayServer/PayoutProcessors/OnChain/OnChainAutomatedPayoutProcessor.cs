@@ -98,12 +98,18 @@ namespace BTCPayServer.PayoutProcessors.OnChain
                 storePaymentMethod.AccountDerivation, DerivationFeature.Change, 0, true);
 
             var processorBlob = GetBlob(_PayoutProcesserSettings);
+            var payoutToBlobs = payouts.ToDictionary(data => data, data => data.GetBlob(_btcPayNetworkJsonSerializerSettings));
+            if (payoutToBlobs.Sum(pair => pair.Value.CryptoAmount) < processorBlob.Threshold)
+            {
+                return;
+            }
+            
             var feeRate = await FeeProvider.GetFeeRateAsync(Math.Max(processorBlob.FeeTargetBlock, 1));
 
-            var transfersProcessing = new List<PayoutData>();
-            foreach (var transferRequest in payouts)
+            var transfersProcessing = new List<KeyValuePair<PayoutData, PayoutBlob>>();
+            foreach (var transferRequest in payoutToBlobs)
             {
-                var blob = transferRequest.GetBlob(_btcPayNetworkJsonSerializerSettings);
+                var blob = transferRequest.Value;
                 if (failedAmount.HasValue && blob.CryptoAmount >= failedAmount)
                 {
                     continue;
@@ -153,10 +159,10 @@ namespace BTCPayServer.PayoutProcessors.OnChain
                 try
                 {
                     var txHash = workingTx.GetHash();
-                    foreach (PayoutData payoutData in transfersProcessing)
+                    foreach (var payoutData in transfersProcessing)
                     {
-                        payoutData.State = PayoutState.InProgress;
-                        _bitcoinLikePayoutHandler.SetProofBlob(payoutData,
+                        payoutData.Key.State = PayoutState.InProgress;
+                        _bitcoinLikePayoutHandler.SetProofBlob(payoutData.Key,
                             new PayoutTransactionOnChainBlob()
                             {
                                 Accounted = true,
@@ -176,11 +182,11 @@ namespace BTCPayServer.PayoutProcessors.OnChain
                         tcs.SetResult(false);
                     }
                     var walletId = new WalletId(_PayoutProcesserSettings.StoreId, PaymentMethodId.CryptoCode);
-                    foreach (PayoutData payoutData in transfersProcessing)
+                    foreach (var payoutData in transfersProcessing)
                     {
                         await WalletRepository.AddWalletTransactionAttachment(walletId,
                             txHash,
-                            Attachment.Payout(payoutData.PullPaymentDataId, payoutData.Id));
+                            Attachment.Payout(payoutData.Key.PullPaymentDataId, payoutData.Key.Id));
                     }
                     await Task.WhenAny(tcs.Task, task);
                 }

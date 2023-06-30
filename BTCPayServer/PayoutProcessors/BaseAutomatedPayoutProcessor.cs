@@ -20,17 +20,17 @@ namespace BTCPayServer.PayoutProcessors;
 
 public class AutomatedPayoutConstants
 {
-    public const double MinIntervalMinutes = 10.0;
-    public const double MaxIntervalMinutes = 60.0;
+    public const double MinIntervalMinutes = 1.0;
+    public const double MaxIntervalMinutes = 24 * 60; //1 day
     public static void ValidateInterval(ModelStateDictionary modelState, TimeSpan timeSpan, string parameterName)
     {
         if (timeSpan < TimeSpan.FromMinutes(AutomatedPayoutConstants.MinIntervalMinutes))
         {
-            modelState.AddModelError(parameterName, $"The minimum interval is {AutomatedPayoutConstants.MinIntervalMinutes * 60} seconds");
+            modelState.AddModelError(parameterName, $"The minimum interval is {MinIntervalMinutes * 60} seconds");
         }
         if (timeSpan > TimeSpan.FromMinutes(AutomatedPayoutConstants.MaxIntervalMinutes))
         {
-            modelState.AddModelError(parameterName, $"The maximum interval is {AutomatedPayoutConstants.MaxIntervalMinutes * 60} seconds");
+            modelState.AddModelError(parameterName, $"The maximum interval is {MaxIntervalMinutes * 60} seconds");
         }
     }
 }

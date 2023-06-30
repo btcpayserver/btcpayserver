@@ -18,12 +18,13 @@ using LNURL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using NBitcoin;
 using PayoutData = BTCPayServer.Data.PayoutData;
 using PayoutProcessorData = BTCPayServer.Data.PayoutProcessorData;
 
 namespace BTCPayServer.PayoutProcessors.Lightning;
 
-public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<AutomatedPayoutBlob>
+public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<LightningAutomatedPayoutBlob>
 {
     private readonly BTCPayNetworkJsonSerializerSettings _btcPayNetworkJsonSerializerSettings;
     private readonly LightningClientFactoryService _lightningClientFactoryService;
@@ -31,6 +32,7 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Au
     private readonly IOptions<LightningNetworkOptions> _options;
     private readonly LightningLikePayoutHandler _payoutHandler;
     private readonly BTCPayNetwork _network;
+    private Dictionary<string, int> failedPayoutCounter = new();
 
     public LightningAutomatedPayoutProcessor(
         BTCPayNetworkJsonSerializerSettings btcPayNetworkJsonSerializerSettings,
@@ -55,6 +57,7 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Au
 
     protected override async Task Process(ISupportedPaymentMethod paymentMethod, List<PayoutData> payouts)
     {
+        var processorBlob = GetBlob(_PayoutProcesserSettings);
         var lightningSupportedPaymentMethod = (LightningSupportedPaymentMethod)paymentMethod;
         if (lightningSupportedPaymentMethod.IsInternalNode &&
             !(await Task.WhenAll((await _storeRepository.GetStoreUsers(_PayoutProcesserSettings.StoreId))
@@ -70,6 +73,7 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Au
         foreach (var payoutData in payouts)
         {
             var blob = payoutData.GetBlob(_btcPayNetworkJsonSerializerSettings);
+            var failed = false;
             var claim = await _payoutHandler.ParseClaimDestination(PaymentMethodId, blob.Destination, CancellationToken);
             try
             {
@@ -83,17 +87,40 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Au
                         {
                             continue;
                         }
-                        await TrypayBolt(client, blob, payoutData,
+                        failed = await TrypayBolt(client, blob, payoutData,
                             lnurlResult.Item1);
                         break;
                     case BoltInvoiceClaimDestination item1:
-                        await TrypayBolt(client, blob, payoutData, item1.PaymentRequest);
+                        failed = await TrypayBolt(client, blob, payoutData, item1.PaymentRequest);
                         break;
                 }
             }
             catch (Exception e)
             {
                 Logs.PayServer.LogError(e, $"Could not process payout {payoutData.Id}");
+                failed = true;
+            }
+
+            if (payoutData.State == PayoutState.Cancelled)
+            {
+                failedPayoutCounter.Remove(payoutData.Id);
+            }else if (failed && processorBlob.CancelPayoutAfterFailures is not null)
+            {
+                if (!failedPayoutCounter.TryGetValue(payoutData.Id, out int counter))
+                {
+                    counter = 0;
+                }
+                counter++;
+                if(counter >= processorBlob.CancelPayoutAfterFailures)
+                {
+                    payoutData.State = PayoutState.Cancelled;
+                    failedPayoutCounter.Remove(payoutData.Id);
+                    Logs.PayServer.LogError($"Payout {payoutData.Id} has failed {counter} times, cancelling it");
+                }
+                else
+                {
+                    failedPayoutCounter.AddOrReplace(payoutData.Id, counter);
+                }
             }
         }
     }

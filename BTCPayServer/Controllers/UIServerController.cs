@@ -29,6 +29,7 @@ using BTCPayServer.Storage.Services;
 using BTCPayServer.Storage.Services.Providers;
 using BTCPayServer.Validation;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -664,6 +665,8 @@ namespace BTCPayServer.Controllers
 
         [Route("lnd-config/{configKey}/lnd.config")]
         [AllowAnonymous]
+        [EnableCors(CorsPolicies.All)]
+        [IgnoreAntiforgeryToken]
         public IActionResult GetLNDConfig(ulong configKey)
         {
             var conf = _LnConfigProvider.GetConfig(configKey);

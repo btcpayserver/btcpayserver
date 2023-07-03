@@ -99,6 +99,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <ProjectReference Include="..\BTCPayApp.CommonServer\BTCPayApp.CommonServer.csproj" />
 	  <ProjectReference Include="..\BTCPayServer.Abstractions\BTCPayServer.Abstractions.csproj" />
 	  <ProjectReference Include="..\BTCPayServer.Client\BTCPayServer.Client.csproj" />
 	  <ProjectReference Include="..\BTCPayServer.Data\BTCPayServer.Data.csproj" />

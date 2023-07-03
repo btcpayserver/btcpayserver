@@ -115,7 +115,7 @@ public class BtcPayAppController : Controller
     private async Task<string?> GetSeed(ExplorerClient client, DerivationSchemeSettings derivation)
     {
         return derivation.IsHotWallet &&
-               await client.GetMetadataAsync<string>(derivation.AccountDerivation, WellknownMetadataKeys.MasterHDKey) is { } seed &&
+               await client.GetMetadataAsync<string>(derivation.AccountDerivation, WellknownMetadataKeys.Mnemonic) is { } seed &&
                !string.IsNullOrEmpty(seed) ? seed : null;
     }
 

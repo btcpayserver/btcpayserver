@@ -1,0 +1,15 @@
+using System.Collections.Generic;
+using BTCPayServer.Client.Models;
+
+namespace BTCPayServer.Services.Reporting
+{
+    public class ViewDefinition
+    {
+        public string Name { get; set; }
+        public IList<StoreReportResponse.Field> Fields
+        {
+            get;
+            set;
+        } = new List<StoreReportResponse.Field>();
+    }
+}

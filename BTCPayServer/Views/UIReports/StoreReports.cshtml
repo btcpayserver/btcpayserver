@@ -1,0 +1,96 @@
+@using BTCPayServer.Abstractions.Extensions;
+@using BTCPayServer.Client.Models;
+@using BTCPayServer.Models.StoreReportsViewModels;
+@using BTCPayServer.Views.Invoice;
+@using BTCPayServer.Views.Stores;
+@using BTCPayServer.Abstractions.Services;
+@using Microsoft.AspNetCore.Routing;
+@inject Safe Safe
+@inject BTCPayServer.Security.ContentSecurityPolicies Csp
+@model StoreReportsViewModel
+@{
+	ViewData.SetActivePage(StoreNavPages.Reporting, "Reporting");
+	Csp.AllowUnsafeHashes("javascript:void(0)");
+	Csp.UnsafeEval();
+}
+
+<div class="d-inline-flex align-items-center gap-3">
+	<div class="dropdown" v-pre>
+		<button id="ViewNameToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">@Model.Request.ViewName</button>
+		<div class="dropdown-menu" aria-labelledby="ViewNameToggle">
+			@foreach (var v in Model.AvailableViews)
+			{
+				<a data-view="@v" class="available-view dropdown-item @(Model.Request.ViewName == v ? "custom-active" : "")">@v</a>
+			}
+		</div>
+	</div>
+
+
+	<div class="input-group">
+		<input id="fromDate" class="form-control flatdtpicker" type="datetime-local"
+			   data-fdtp='{ "time_24hr": true, "defaultHour": 0 }'
+			   placeholder="Start Date" />
+		<button type="button" class="btn btn-primary input-group-clear" title="Clear">
+			<span class="fa fa-times"></span>
+		</button>
+	</div>
+
+
+
+	<div class="input-group">
+		<input id="toDate" class="form-control flatdtpicker" type="datetime-local"
+			   data-fdtp='{"time_24hr": true, "defaultHour": 0 }'
+			   placeholder="End Date" />
+		<button type="button" class="btn btn-primary input-group-clear" title="Clear">
+			<span class="fa fa-times"></span>
+		</button>
+	</div>
+
+	<button id="exportCSV" class="btn btn-secondary" type="button">
+		Export CSV
+	</button>
+</div>
+
+<table id="app" class="table table-bordered">
+	<thead>
+		<tr>
+			<th v-for="field in root.result.fields">
+				<a class="text-nowrap sort-column"
+					href="javascript:void(0)"
+				   :data-field="field.name"
+				   @@click="root.sortBy(field.name)"
+				   :title="root.fieldViews[field.name].sortByTitle">
+					{{ field.name }}
+					<span :class="root.fieldViews[field.name].sortIconClass" />
+				</a>
+			</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr v-for="(row, index) in root.result.data" :key="index">
+			<td class="text-nowrap" v-for="(value, columnIndex) in row" :key="columnIndex">
+				<a 
+					:href="getInvoiceUrl(value)"
+					target="_blank"
+					v-if="root.result.fields[columnIndex].type === 'invoice_id'">{{ value }}</a>
+
+				<a :href="getExplorerUrl(value, row[columnIndex-1])"
+				   target="_blank"
+				   rel="noreferrer noopener"
+				   v-else-if="root.result.fields[columnIndex].type === 'tx_id'">{{ value }}</a>
+				<span v-else>{{ value }}</span>
+			</td>
+		</tr>
+	</tbody>
+</table>
+
+
+@section PageFootContent {
+	<script src="~/vendor/FileSaver/FileSaver.min.js" asp-append-version="true"></script>
+	<script src="~/vendor/papaparse/papaparse.min.js" asp-append-version="true"></script>
+	<script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
+	<script>
+		var srv = @Safe.Json(Model);
+	</script>
+	<script src="~/js/store-reports.js" asp-append-version="true"></script>
+}

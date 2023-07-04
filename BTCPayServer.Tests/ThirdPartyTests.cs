@@ -390,7 +390,15 @@ retry:
             version = Regex.Match(actual, "BootstrapVue ([0-9]+.[0-9]+.[0-9]+)").Groups[1].Value;
             expected = (await (await client.GetAsync($"https://cdnjs.cloudflare.com/ajax/libs/bootstrap-vue/{version}/bootstrap-vue.min.js")).Content.ReadAsStringAsync()).Trim();
             EqualJsContent(expected, actual);
-        }
+
+			actual = GetFileContent("BTCPayServer", "wwwroot", "vendor", "FileSaver", "FileSaver.min.js").Trim();
+			expected = (await (await client.GetAsync($"https://raw.githubusercontent.com/eligrey/FileSaver.js/43bbd2f0ae6794f8d452cd360e9d33aef6071234/dist/FileSaver.min.js")).Content.ReadAsStringAsync()).Trim();
+			EqualJsContent(expected, actual);
+
+			actual = GetFileContent("BTCPayServer", "wwwroot", "vendor", "papaparse", "papaparse.min.js").Trim();
+			expected = (await (await client.GetAsync($"https://raw.githubusercontent.com/mholt/PapaParse/5.4.1/papaparse.min.js")).Content.ReadAsStringAsync()).Trim();
+			EqualJsContent(expected, actual);
+		}
 
         private void EqualJsContent(string expected, string actual)
         {

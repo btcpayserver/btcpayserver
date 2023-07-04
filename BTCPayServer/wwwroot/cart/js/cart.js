@@ -330,9 +330,9 @@ Cart.prototype.updateAmount = function() {
     $('#js-cart-amount').val(this.getTotal(true));
     $('#js-cart-tip').val(this.tip);
     $('#js-cart-discount').val(this.discount);
+    $('#js-cart-custom-amount').val(this.customAmount);
 }
 Cart.prototype.updatePosData = function() {
-
     var result = {
       cart: this.content,
       customAmount: this.fromCents(this.getCustomAmount()),

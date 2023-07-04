@@ -2164,6 +2164,70 @@ namespace BTCPayServer.Tests
         [Fact]
         [Trait("Selenium", "Selenium")]
         [Trait("Lightning", "Lightning")]
+        public async Task CanUsePOSCart()
+        {
+            using var s = CreateSeleniumTester();
+            s.Server.ActivateLightning();
+            await s.StartAsync();
+
+            await s.Server.EnsureChannelsSetup();
+
+            s.RegisterNewUser(true);
+            s.CreateNewStore();
+            s.GoToStore();
+            s.AddLightningNode(LightningConnectionType.CLightning, false);
+            s.Driver.FindElement(By.Id("StoreNav-CreatePointOfSale")).Click();
+            s.Driver.FindElement(By.Id("AppName")).SendKeys(Guid.NewGuid().ToString());
+            s.Driver.FindElement(By.Id("Create")).Click();
+            TestUtils.Eventually(() => Assert.Contains("App successfully created", s.FindAlertMessage().Text));
+            s.Driver.FindElement(By.CssSelector("label[for='DefaultView_Cart']")).Click();
+            s.Driver.FindElement(By.Id("Currency")).SendKeys("EUR");
+            s.Driver.FindElement(By.Id("ShowCustomAmount")).Click();
+            s.Driver.FindElement(By.Id("SaveSettings")).Click();
+            Assert.Contains("App updated", s.FindAlertMessage().Text);
+            s.Driver.FindElement(By.Id("ViewApp")).Click();
+            var windows = s.Driver.WindowHandles;
+            Assert.Equal(2, windows.Count);
+            s.Driver.SwitchTo().Window(windows[1]);
+            s.Driver.WaitForElement(By.Id("js-cart-list"));
+            Assert.Empty(s.Driver.FindElements(By.CssSelector("#js-cart-list tbody tr")));
+            Assert.Equal("0,00 €", s.Driver.FindElement(By.Id("CartTotal")).Text);
+            Assert.False(s.Driver.FindElement(By.Id("CartClear")).Displayed);
+            
+            // Select and clear
+            s.Driver.FindElement(By.CssSelector(".card.js-add-cart:nth-child(1)")).Click();
+            Assert.Single(s.Driver.FindElements(By.CssSelector("#js-cart-list tbody tr")));
+            s.Driver.FindElement(By.Id("CartClear")).Click();
+            Assert.Empty(s.Driver.FindElements(By.CssSelector("#js-cart-list tbody tr")));
+            Thread.Sleep(250);
+            
+            // Select items
+            s.Driver.FindElement(By.CssSelector(".card.js-add-cart:nth-child(2)")).Click();
+            Thread.Sleep(250);
+            s.Driver.FindElement(By.CssSelector(".card.js-add-cart:nth-child(1)")).Click();
+            Thread.Sleep(250);
+            Assert.Equal(2, s.Driver.FindElements(By.CssSelector("#js-cart-list tbody tr")).Count);
+            Assert.Equal("2,00 €", s.Driver.FindElement(By.Id("CartTotal")).Text);
+            
+            // Custom amount
+            s.Driver.FindElement(By.Id("CartCustomAmount")).SendKeys("1,5");
+            s.Driver.FindElement(By.Id("CartTotal")).Click();
+            Assert.Equal("3,50 €", s.Driver.FindElement(By.Id("CartTotal")).Text);
+            s.Driver.FindElement(By.Id("js-cart-confirm")).Click();
+            
+            // Pay
+            Assert.Equal("3,50 €", s.Driver.FindElement(By.Id("CartSummaryTotal")).Text);
+            s.Driver.FindElement(By.Id("js-cart-pay")).Click();
+            
+            s.Driver.WaitUntilAvailable(By.Id("Checkout-v2"));
+            s.Driver.FindElement(By.Id("DetailsToggle")).Click();
+            s.Driver.WaitForElement(By.Id("PaymentDetails-TotalFiat"));
+            Assert.Contains("3,50 €", s.Driver.FindElement(By.Id("PaymentDetails-TotalFiat")).Text);
+        }
+
+        [Fact]
+        [Trait("Selenium", "Selenium")]
+        [Trait("Lightning", "Lightning")]
         public async Task CanUseLNURL()
         {
             using var s = CreateSeleniumTester();

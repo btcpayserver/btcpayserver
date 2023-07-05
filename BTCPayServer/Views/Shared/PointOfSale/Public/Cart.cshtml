@@ -51,17 +51,15 @@
             <td class="align-middle text-end">{price}</td>
         </tr>
     </script>
-
     <script id="template-cart-item-image" type="text/template">
         <img class="cart-item-image" src="{image}" alt="">
     </script>
-
     <script id="template-cart-custom-amount" type="text/template">
         <tr>
             <td colspan="5">
                 <div class="input-group">
                     <span class="input-group-text"><i class="fa fa-shopping-cart fa-fw"></i></span>
-                    <input class="js-cart-custom-amount form-control" type="number" min="0" step="@Model.Step" name="amount" placeholder="Pay what you want">
+                    <input class="js-cart-custom-amount form-control" type="number" min="0" step="@Model.Step" name="amount" placeholder="Pay what you want" id="CartCustomAmount">
                     <div class="input-group-text">
                         <a class="js-cart-custom-amount-remove btn btn-danger" href="#"><i class="fa fa-times"></i></a>
                     </div>
@@ -69,34 +67,32 @@
             </td>
         </tr>
     </script>
-
     <script id="template-cart-extra" type="text/template">
-       @if (Model.ShowCustomAmount)
-       {
-           <tr>
+        @if (Model.ShowCustomAmount)
+        {
+            <tr>
                 <th colspan="5" class="border-0 pb-0">
                     <div class="input-group">
                         <span class="input-group-text"><i class="fa fa-shopping-cart fa-fw"></i></span>
-                        <input class="js-cart-custom-amount form-control" type="number" min="0" step="@Model.Step" name="amount" value="{customAmount}" placeholder="Pay what you want">
+                        <input class="js-cart-custom-amount form-control" type="number" min="0" step="@Model.Step" name="amount" value="{customAmount}" placeholder="Pay what you want" id="CartCustomAmount">
                         <a class="js-cart-custom-amount-remove btn btn-danger" href="#"><i class="fa fa-times"></i></a>
                     </div>
                 </th>
             </tr>
-       }
+        }
         @if (Model.ShowDiscount)
         {
             <tr>
                 <th colspan="5" class="border-top-0">
                     <div class="input-group">
                         <span class="input-group-text"><i class="fa fa-percent fa-fw"></i></span>
-                        <input class="js-cart-discount form-control" type="number" min="0" step="@Model.Step" value="{discount}" name="discount" placeholder="Discount in %">
+                        <input class="js-cart-discount form-control" type="number" min="0" step="@Model.Step" value="{discount}" name="discount" placeholder="Discount in %" id="CartDiscount">
                         <a class="js-cart-discount-remove btn btn-danger" href="#"><i class="fa fa-times"></i></a>
                     </div>
                 </th>
             </tr>
         }
     </script>
-
     <script id="template-cart-tip" type="text/template">
         @if (Model.EnableTips)
         {
@@ -133,14 +129,13 @@
                     </div>
                 </th>
             </tr>
-            }
+        }
     </script>
-
     <script id="template-cart-total" type="text/template">
         <tr>
             <th colspan="1" class="pb-4 h4">Total</th>
             <th colspan="4" class="pb-4 h4 text-end">
-                <span class="js-cart-total">{total}</span>
+                <span class="js-cart-total" id="CartTotal">{total}</span>
             </th>
         </tr>
     </script>
@@ -162,7 +157,7 @@
                         </tr>
                         <tr>
                             <td class="border-0 pb-0 h6">Total products</td>
-                            <td align="right" class="border-0 pb-0 h6">
+                            <td class="text-end border-0 pb-0 h6">
                                 <span class="js-cart-summary-products text-nowrap"></span>
                             </td>
                         </tr>
@@ -170,8 +165,8 @@
                         {
                             <tr>
                                 <td class="border-0 pb-y h6">Discount</td>
-                                <td align="right" class="border-0 pb-y h6">
-                                    <span class="js-cart-summary-discount text-nowrap"></span>
+                                <td class="text-end border-0 pb-y h6">
+                                    <span class="js-cart-summary-discount text-nowrap" id="CartSummaryDiscount"></span>
                                 </td>
                             </tr>
                         }
@@ -179,15 +174,15 @@
                         {
                             <tr>
                                 <td class="border-top-0 pt-0 h6">Tip</td>
-                                <td align="right" class="border-top-0 pt-0 h6">
-                                    <span class="js-cart-summary-tip text-nowrap"></span>
+                                <td class="text-end border-top-0 pt-0 h6">
+                                    <span class="js-cart-summary-tip text-nowrap" id="CartSummaryTip"></span>
                                 </td>
                             </tr>
                         }
                         <tr>
                             <td class="h3 table-light">Total</td>
                             <td class="h3 table-light text-end">
-                                <span class="js-cart-summary-total text-nowrap"></span>
+                                <span class="js-cart-summary-total text-nowrap" id="CartSummaryTotal"></span>
                             </td>
                         </tr>
                     </tbody>
@@ -202,10 +197,11 @@
                     asp-antiforgery="false"
                     data-buy
                 >
-                    <input id="js-cart-amount" class="form-control" type="hidden" name="amount">
-                    <input id="js-cart-tip" class="form-control" type="hidden" name="tip">
-                    <input id="js-cart-discount" class="form-control" type="hidden" name="discount">
-                    <input id="js-cart-posdata" class="form-control" type="hidden" name="posdata">
+                    <input id="js-cart-amount" type="hidden" name="amount">
+                    <input id="js-cart-custom-amount" type="hidden" name="customAmount">
+                    <input id="js-cart-tip" type="hidden" name="tip">
+                    <input id="js-cart-discount" type="hidden" name="discount">
+                    <input id="js-cart-posdata" type="hidden" name="posdata">
                     <button id="js-cart-pay" class="btn btn-primary btn-lg" type="submit">
                         <b>@Model.CustomButtonText</b>
                     </button>
@@ -318,7 +314,7 @@
             <a class="js-cart btn btn-sm bg-white text-black pull-right ms-5" href="#">
                 <i class="fa fa-times fa-lg"></i>
             </a>
-            <a class="js-cart-destroy btn btn-danger pull-right" href="#" style="display: none;">Empty cart <i class="fa fa-trash fa-fw fa-lg"></i></a>
+            <a class="js-cart-destroy btn btn-danger pull-right" href="#" style="display: none;" id="CartClear">Empty cart <i class="fa fa-trash fa-fw fa-lg"></i></a>
         </div>
 
         <table id="js-cart-list" class="table table-responsive table-light mt-0 mb-0">

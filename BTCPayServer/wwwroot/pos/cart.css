@@ -158,3 +158,19 @@
         width: 100%;
     }
 }
+
+
+.js-cart-item-minus .fa,
+.js-cart-item-plus .fa {
+    background: #fff;
+    border-radius: 50%;
+    width: 17px;
+    height: 17px;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+}
+.card:not(.d-none:only-of-type) {
+    max-width: 320px;
+    margin: auto !important;
+}

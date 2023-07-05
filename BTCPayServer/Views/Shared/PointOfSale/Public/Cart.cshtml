@@ -1,35 +1,23 @@
 @using BTCPayServer.Plugins.PointOfSale.Models
 @using BTCPayServer.Services
 @using Newtonsoft.Json.Linq;
-@model BTCPayServer.Plugins.PointOfSale.Models.ViewPointOfSaleViewModel
-
 @inject DisplayFormatter DisplayFormatter
+@inject BTCPayServer.Security.ContentSecurityPolicies Csp
+@model BTCPayServer.Plugins.PointOfSale.Models.ViewPointOfSaleViewModel
 @{
     Layout = "PointOfSale/Public/_Layout";
+    Csp.UnsafeEval();
     var customTipPercentages = Model.CustomTipPercentages;
     var anyInventoryItems = Model.Items.Any(item => item.Inventory.HasValue);
 }
 @section PageHeadContent {
-    <link rel="stylesheet" href="~/cart/css/style.css" asp-append-version="true">
-    <style>
-        .js-cart-item-minus .fa,
-        .js-cart-item-plus .fa {
-            background: #fff;
-            border-radius: 50%;
-            width: 17px;
-            height: 17px;
-            display: inline-flex;
-            justify-content: center;
-            align-items: center;
-        }
-        .card:not(.d-none:only-of-type) {
-            max-width: 320px;
-            margin: auto !important;
-        }
-    </style>
+    <link href="~/pos/cart.css" asp-append-version="true" rel="stylesheet" />
 }
 @section PageFootContent {
     <script>var srvModel = @Safe.Json(Model);</script>
+    <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
+    <script src="~/pos/cart.js" asp-append-version="true"></script>
+    
     <script src="~/cart/js/cart.js" asp-append-version="true"></script>
     <script src="~/cart/js/cart.jquery.js" asp-append-version="true"></script>
     <script id="template-cart-item" type="text/template">
@@ -110,16 +98,15 @@
                             step="@Model.Step"
                             value="{tip}"
                             name="tip"
-                            placeholder="Tip in @(Model.CurrencyInfo.CurrencySymbol != null ? Model.CurrencyInfo.CurrencySymbol : Model.CurrencyCode)"
+                            placeholder="Tip in @(Model.CurrencyInfo.CurrencySymbol ?? Model.CurrencyCode)"
                         />
                         <a class="js-cart-tip-remove btn btn-lg btn-danger" href="#"><i class="fa fa-times"></i></a>
                     </div>
                     <div class="row mb-1">
-                        @if (customTipPercentages != null && customTipPercentages.Length > 0)
+                        @if (customTipPercentages is {Length: > 0 })
                         {
-                            @for (int i = 0; i < customTipPercentages.Length; i++)
+                            @foreach (var percentage in customTipPercentages)
                             {
-                                var percentage = customTipPercentages[i];
                                 <div class="col">
                                     <a class="js-cart-tip-btn btn btn-lg btn-light w-100 border mb-2" href="#" data-tip="@percentage">@percentage%</a>
                                 </div>

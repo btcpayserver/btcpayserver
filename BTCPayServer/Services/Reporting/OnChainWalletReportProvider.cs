@@ -10,7 +10,6 @@ using Dapper;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin;
 using NBXplorer.DerivationStrategy;
-using NodaTime;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace BTCPayServer.Services.Reporting;

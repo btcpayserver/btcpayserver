@@ -2179,7 +2179,7 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("StoreNav-CreatePointOfSale")).Click();
             s.Driver.FindElement(By.Id("AppName")).SendKeys(Guid.NewGuid().ToString());
             s.Driver.FindElement(By.Id("Create")).Click();
-            TestUtils.Eventually(() => Assert.Contains("App successfully created", s.FindAlertMessage().Text));
+            Assert.Contains("App successfully created", s.FindAlertMessage().Text);
             s.Driver.FindElement(By.CssSelector("label[for='DefaultView_Cart']")).Click();
             s.Driver.FindElement(By.Id("Currency")).SendKeys("EUR");
             s.Driver.FindElement(By.Id("ShowCustomAmount")).Click();
@@ -2210,7 +2210,7 @@ namespace BTCPayServer.Tests
             Assert.Equal("2,00 €", s.Driver.FindElement(By.Id("CartTotal")).Text);
             
             // Custom amount
-            s.Driver.FindElement(By.Id("CartCustomAmount")).SendKeys("1,5");
+            s.Driver.FindElement(By.Id("CartCustomAmount")).SendKeys("1.5");
             s.Driver.FindElement(By.Id("CartTotal")).Click();
             Assert.Equal("3,50 €", s.Driver.FindElement(By.Id("CartTotal")).Text);
             s.Driver.FindElement(By.Id("js-cart-confirm")).Click();

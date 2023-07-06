@@ -1,6 +1,3 @@
-$(function () {
-    inputChanges();
-});
 
 function esc(input) {
     return ('' + input) /* Forces the conversion to string. */
@@ -61,7 +58,7 @@ function getScripts(srvModel) {
     return scripts
 }
 
-function inputChanges(event, buttonSize) {
+function inputChanges(vueApp, event, buttonSize) {
     if (buttonSize !== null && buttonSize !== undefined) {
         srvModel.buttonSize = buttonSize;
     }
@@ -187,8 +184,22 @@ function inputChanges(event, buttonSize) {
         }
     });
     url = url.href;
-    
-    $("#preview-link").attr('href', url);
+    vueApp.previewLink = url;
+    if (window.lnurlEndpoint){
+        let lnurlResult = lnurlEndpoint + "?";
+        if (srvModel.currency){
+            lnurlResult += `&currency=${srvModel.currency}`;
+        }
+        if (srvModel.price){
+            lnurlResult += `&amount=${srvModel.price}`;
+        }
+        if (srvModel.orderId){
+            lnurlResult += `&orderId=${srvModel.orderId}`;
+        }
+        lnurlResult= lnurlResult.replace("?&", "?");
+
+        vueApp.lnurlLink = lnurlResult;
+    }
     
     $('pre code').each(function (i, block) {
         hljs.highlightBlock(block);

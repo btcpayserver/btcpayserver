@@ -7,6 +7,13 @@
     var anyInventoryItems = Model.Items.Any(item => item.Inventory.HasValue);
 }
 
+<style>
+    .card:only-of-type {
+        max-width: 320px;
+        margin: auto !important;
+    }
+</style>
+
 <div class="container public-page-wrap flex-column">
     <partial name="_StatusMessage" />
     <partial name="_StoreHeader" model="(string.IsNullOrEmpty(Model.Title) ? Model.StoreName : Model.Title, Model.LogoFileId)" />

@@ -21,7 +21,7 @@ namespace BTCPayServer.Services.Altcoins.Monero
         {
             serviceCollection.AddSingleton(provider =>
                 provider.ConfigureMoneroLikeConfiguration());
-            serviceCollection.AddHttpClient("moneroclient")
+            serviceCollection.AddHttpClient("XMRclient")
                 .ConfigurePrimaryHttpMessageHandler(provider =>
                 {
                     var configuration = provider.GetRequiredService<MoneroLikeConfiguration>();

@@ -30,6 +30,11 @@
 }
 
 @section PageFootContent {
+    <datalist id="special-field-names">
+        <option value="invoice_amount">Determine the generated invoice amount</option>
+        <option value="invoice_currency">Determine the generated invoice currency</option>
+        <option value="invoice_amount_adjustment">Adjusts the generated invoice amount</option>
+    </datalist>
     <template id="form-template-email">
         @FormDataService.StaticFormEmail
     </template>
@@ -50,7 +55,7 @@
             </div>
             <div class="form-group">
                 <label for="field-editor-field-name" class="form-label" data-required>Name</label>
-                <input id="field-editor-field-name" class="form-control" required v-model="field.name" />
+                <input id="field-editor-field-name" class="form-control" list="special-field-names" required v-model="field.name" />
                 <div class="form-text">The name of the field in the invoice's metadata</div>
                 <div class="form-text text-info" v-if="field.name === 'invoice_currency' ">The configured name means the value of this field will determine the invoice currency for public forms</div>
                 <div class="form-text text-info" v-if="field.name === 'invoice_amount' ">The configured name means the value of this field will determine the invoice amount for public forms</div>
@@ -178,9 +183,10 @@
         </div>
     </template>
     <template id="field-type-mirror">
-        <p class="mb-0">
-            Mirror of {{name}}
-        </p>
+        <div class="form-group mb-0">
+            <label class="form-label" v-text="label" v-if="label"></label>
+            <div class="form-text">Mirror of {{value}}</div>
+        </div>
     </template>
     <template id="field-type-fieldset">
         <fieldset>

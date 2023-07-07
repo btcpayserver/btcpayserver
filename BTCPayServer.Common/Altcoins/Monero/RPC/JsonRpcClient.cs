@@ -45,23 +45,10 @@ namespace BTCPayServer.Services.Altcoins.Monero.RPC
             httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Basic",
                 Convert.ToBase64String(Encoding.Default.GetBytes($"{_username}:{_password}")));
 
-            HttpResponseMessage rawResult = null;
-            try
-            {
-                rawResult = await _httpClient.SendAsync(httpRequest, cts);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Exception: {ex.Message}");
-                if (ex.InnerException != null)
-                {
-                    Console.WriteLine($"Inner Exception: {ex.InnerException.Message}");
-                }
-                throw;
-            }
-
-            var rawJson = await rawResult.Content.ReadAsStringAsync();
+            HttpResponseMessage rawResult = await _httpClient.SendAsync(httpRequest, cts);
             rawResult.EnsureSuccessStatusCode();
+            var rawJson = await rawResult.Content.ReadAsStringAsync();
+            
             JsonRpcResult<TResponse> response;
             try
             {

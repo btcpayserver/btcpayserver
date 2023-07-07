@@ -1,6 +1,8 @@
 #if ALTCOINS
 using System;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Services;
 using BTCPayServer.Configuration;
@@ -19,6 +21,20 @@ namespace BTCPayServer.Services.Altcoins.Monero
         {
             serviceCollection.AddSingleton(provider =>
                 provider.ConfigureMoneroLikeConfiguration());
+            serviceCollection.AddHttpClient("moneroclient")
+                .ConfigurePrimaryHttpMessageHandler(provider =>
+                {
+                    var configuration = provider.GetRequiredService<IConfiguration>();
+                    var username = configuration["xmr_daemon_username"];
+                    var password = configuration["xmr_daemon_password"];
+
+                    var handler = new HttpClientHandler
+                    {
+                        Credentials = new NetworkCredential(username, password),
+                        PreAuthenticate = true
+                    };
+                    return handler;
+                });
             serviceCollection.AddSingleton<MoneroRPCProvider>();
             serviceCollection.AddHostedService<MoneroLikeSummaryUpdaterHostedService>();
             serviceCollection.AddHostedService<MoneroListener>();

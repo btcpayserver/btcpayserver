@@ -24,16 +24,15 @@ namespace BTCPayServer.Services.Altcoins.Monero
             serviceCollection.AddHttpClient("moneroclient")
                 .ConfigurePrimaryHttpMessageHandler(provider =>
                 {
-                    var configuration = provider.GetRequiredService<IConfiguration>();
-                    var username = configuration["xmr_daemon_username"];
-                    var password = configuration["xmr_daemon_password"];
-
-                    var handler = new HttpClientHandler
+                    var configuration = provider.GetRequiredService<MoneroLikeConfiguration>();
+                    if(!configuration.TryGetValue("XMR", out var xmrConfig) || xmrConfig.Username is null || xmrConfig.Password is null){
+                        return new HttpClientHandler();
+                    }
+                    return new HttpClientHandler
                     {
-                        Credentials = new NetworkCredential(username, password),
+                        Credentials = new NetworkCredential(xmrConfig.Username, xmrConfig.Password),
                         PreAuthenticate = true
                     };
-                    return handler;
                 });
             serviceCollection.AddSingleton<MoneroRPCProvider>();
             serviceCollection.AddHostedService<MoneroLikeSummaryUpdaterHostedService>();

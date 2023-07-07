@@ -25,7 +25,7 @@ namespace BTCPayServer.Services.Altcoins.Monero
                 .ConfigurePrimaryHttpMessageHandler(provider =>
                 {
                     var configuration = provider.GetRequiredService<MoneroLikeConfiguration>();
-                    if(!configuration.TryGetValue("XMR", out var xmrConfig) || xmrConfig.Username is null || xmrConfig.Password is null){
+                    if(!configuration.MoneroLikeConfigurationItems.TryGetValue("XMR", out var xmrConfig) || xmrConfig.Username is null || xmrConfig.Password is null){
                         return new HttpClientHandler();
                     }
                     return new HttpClientHandler

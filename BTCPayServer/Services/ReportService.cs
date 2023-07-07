@@ -11,8 +11,10 @@ namespace BTCPayServer.Services
         {
             foreach (var r in reportProviders)
             {
-                var definition = r.CreateViewDefinition();
-                ReportProviders.Add(definition.Name, r);
+                foreach (var definition in r.CreateViewDefinitions())
+                {
+                    ReportProviders.Add(definition.Name, r);
+                }
             }
         }
 

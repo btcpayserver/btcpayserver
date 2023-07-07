@@ -26,6 +26,7 @@ srv.sortBy = function (field) {
     }
     this.applySort();
 }
+
 srv.applySort = function () {
     var fieldIndex;
     var fieldView;
@@ -33,7 +34,7 @@ srv.applySort = function () {
         if (this.fieldViews.hasOwnProperty(key)) {
             fieldView = this.fieldViews[key];
             if (fieldView.sortBy !== "") {
-                fieldIndex = srv.result.fields.findIndex((a) => a.name === key);
+                fieldIndex = this.result.fields.findIndex((a) => a.name === key);
                 break;
             }
             fieldView = null;
@@ -121,7 +122,7 @@ $(function () {
     updateUIDateRange();
     app = new Vue({
         el: '#app',
-        data: { root: srv }
+        data: { srv: srv }
     });
     fetchStoreReports();
 });
@@ -141,10 +142,6 @@ function modifyFields(fields, data, type, action) {
             data[i][fieldIndices[f]] = action(data[i][fieldIndices[f]]);
         }
     }
-}
-
-function clone(a) {
-    return Array.from(a, subArray => [...subArray]);
 }
 function downloadCSV() {
     if (!origData)
@@ -178,16 +175,64 @@ async function fetchStoreReports() {
 
     // Dates from API are UTC, convert them to local time
     modifyFields(srv.result.fields, srv.result.data, 'datetime', (a) => moment(a).format())
-    app.root = srv;
+    app.srv = srv;
     updateUIDateRange();
+
+    //var summaryDefinition = {
+    //    groups: ["Crypto", "PaymentType"],
+    //    totals: [ "Crypto" ],
+    //    hasGrandTotal: true,
+    //    aggregates: ["Amount", "CurrencyAmount"]
+    //};
+     var summaryDefinition = {
+        groups: ["Region", "Crypto", "PaymentType"],
+        totals: [ "Region", "Crypto" ],
+        hasGrandTotal: true,
+        aggregates: ["Amount", "CryptoAmount"]
+    };
+    
+    new Vue({
+        el: '#summary',
+        data: createTable(summaryDefinition, ["Region", "Crypto", "PaymentType", "Amount", "CryptoAmount"], generateRandomRows(1000))
+        //data: createTable(summaryDefinition, srv.result.fields.map(f => f.name) , origData)
+    });
 }
+
+function getRandomValue(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function getRandomNumber(min, max) {
+    return Math.random() * (max - min) + min;
+}
+
+function generateRandomRows(numRows) {
+    const regions = ["Russia", "France", "Japan", "Portugal"];
+    const cryptos = ["BTC", "LTC", "DASH", "DOGE"];
+    const paymentTypes = ["On-Chain", "Off-Chain"];
+    const rows = [];
+
+    for (let i = 0; i < numRows; i++) {
+        const region = getRandomValue(regions);
+        const crypto = getRandomValue(cryptos);
+        const paymentType = getRandomValue(paymentTypes);
+        const amount = getRandomNumber(10, 5000);
+        const cryptoAmount = getRandomNumber(0.1, 2.5);
+
+        const row = [region, crypto, paymentType, amount, cryptoAmount];
+        rows.push(row);
+    }
+
+    return rows;
+}
+
 
 function getInvoiceUrl(value) {
     if (!value)
         return;
     return srv.invoiceTemplateUrl.replace("INVOICE_ID", value);
 }
-
+window.getInvoiceUrl = getInvoiceUrl;
 
 function getExplorerUrl(tx_id, cryptoCode) {
     if (!tx_id || !cryptoCode)
@@ -197,3 +242,4 @@ function getExplorerUrl(tx_id, cryptoCode) {
         return null;
     return explorer.replace("TX_ID", tx_id);
 }
+window.getExplorerUrl = getExplorerUrl;

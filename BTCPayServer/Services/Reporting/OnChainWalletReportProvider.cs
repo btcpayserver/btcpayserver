@@ -32,20 +32,23 @@ public class OnChainWalletReportProvider : ReportProvider
     public BTCPayNetworkProvider NetworkProvider { get; }
     public WalletRepository WalletRepository { get; }
 
-    public override ViewDefinition CreateViewDefinition()
+    public override ViewDefinition[] CreateViewDefinitions()
     {
-        return new()
+        return new ViewDefinition[]
         {
-            Name = "On-Chain Wallets",
-            Fields =
+            new()
             {
-                    new ("Date", "datetime"),
-                    new ("CryptoCode", "string"),
-                    // For proper rendering of explorer links, CryptoCode should always be before tx_id
-                    new ("TransactionId", "tx_id"),
-                    new ("InvoiceId", "invoice_id"),
-                    new ("Confirmed", "boolean"),
-                    new ("BalanceChange", "decimal")
+                Name = "On-Chain Wallets",
+                Fields =
+                {
+                        new ("Date", "datetime"),
+                        new ("CryptoCode", "string"),
+                        // For proper rendering of explorer links, CryptoCode should always be before tx_id
+                        new ("TransactionId", "tx_id"),
+                        new ("InvoiceId", "invoice_id"),
+                        new ("Confirmed", "boolean"),
+                        new ("BalanceChange", "decimal")
+                }
             }
         };
     }

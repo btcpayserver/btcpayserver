@@ -11,5 +11,6 @@ namespace BTCPayServer.Services.Reporting
             get;
             set;
         } = new List<StoreReportResponse.Field>();
+
     }
 }

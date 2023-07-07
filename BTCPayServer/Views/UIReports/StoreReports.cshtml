@@ -54,33 +54,50 @@
 <table id="app" class="table table-bordered">
 	<thead>
 		<tr>
-			<th v-for="field in root.result.fields">
+			<th v-for="field in srv.result.fields">
 				<a class="text-nowrap sort-column"
-					href="javascript:void(0)"
+				   href="javascript:void(0)"
 				   :data-field="field.name"
-				   @@click="root.sortBy(field.name)"
-				   :title="root.fieldViews[field.name].sortByTitle">
+				   @@click="srv.sortBy(field.name)"
+				   :title="srv.fieldViews[field.name].sortByTitle">
 					{{ field.name }}
-					<span :class="root.fieldViews[field.name].sortIconClass" />
+					<span :class="srv.fieldViews[field.name].sortIconClass" />
 				</a>
 			</th>
 		</tr>
 	</thead>
 	<tbody>
-		<tr v-for="(row, index) in root.result.data" :key="index">
+		<tr v-for="(row, index) in srv.result.data" :key="index">
 			<td class="text-nowrap" v-for="(value, columnIndex) in row" :key="columnIndex">
-				<a 
-					:href="getInvoiceUrl(value)"
-					target="_blank"
-					v-if="root.result.fields[columnIndex].type === 'invoice_id'">{{ value }}</a>
+				<a :href="getInvoiceUrl(value)"
+				   target="_blank"
+				   v-if="srv.result.fields[columnIndex].type === 'invoice_id'">{{ value }}</a>
 
 				<a :href="getExplorerUrl(value, row[columnIndex-1])"
 				   target="_blank"
 				   rel="noreferrer noopener"
-				   v-else-if="root.result.fields[columnIndex].type === 'tx_id'">{{ value }}</a>
+				   v-else-if="srv.result.fields[columnIndex].type === 'tx_id'">{{ value }}</a>
 				<span v-else>{{ value }}</span>
 			</td>
 		</tr>
+	</tbody>
+</table>
+
+
+<table id="summary" class="table table-bordered">
+	<thead>
+		<tr>
+			<th v-for="group in groups">{{ group }}</th>
+			<th v-for="agg in aggregates">{{ agg }}</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr v-for="row in rows">
+			<td v-for="group in row.groups" :rowspan="group.rowCount">{{ group.name }}</td>
+			<td v-if="row.isTotal" :colspan="row.rLevel">Total</td>
+			<td v-for="value in row.values">{{ value }}</td>
+		</tr>
+		<tr v-if="hasGrandTotal"><td :colspan="groups.length">Grand total</td><td v-for="value in grandTotalValues">{{ value }}</td></tr>
 	</tbody>
 </table>
 
@@ -92,5 +109,6 @@
 	<script>
 		var srv = @Safe.Json(Model);
 	</script>
+	<script src="~/js/datatable.js" asp-append-version="true"></script>
 	<script src="~/js/store-reports.js" asp-append-version="true"></script>
 }

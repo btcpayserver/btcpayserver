@@ -22,9 +22,14 @@ namespace BTCPayServer.Services.Reporting
 
         public IList<object> AddData()
         {
-            var l = new List<object>(ViewDefinition.Fields.Count);
+            var l = CreateData();
             Data.Add(l);
             return l;
+        }
+
+        public IList<object> CreateData()
+        {
+            return new List<object>(ViewDefinition.Fields.Count);
         }
 
         public IList<IList<object>> Data { get; set; } = new List<IList<object>>();

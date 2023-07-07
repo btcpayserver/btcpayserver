@@ -45,9 +45,9 @@ public class GreenfieldReportsController : Controller
     {
         return Json(ReportService.ReportProviders.Values
         .Where(k => k.IsAvailable())
-        .Select(k =>
+        .SelectMany(k => k.CreateViewDefinitions())
+        .Select (def => 
         {
-            var def = k.CreateViewDefinition();
             return new
             {
                 ViewName = def.Name,
@@ -74,7 +74,7 @@ public class GreenfieldReportsController : Controller
             if (!report.IsAvailable())
                 return this.CreateAPIError(503, "view-unavailable", $"This view is unavailable at this moment");
 
-            var definition = report.CreateViewDefinition();
+            var definition = report.CreateViewDefinition(vm.ViewName);
             var ctx = new Services.Reporting.QueryContext(storeId, from, to, definition);
             await report.Query(ctx, cancellationToken);
             var result = new StoreReportResponse()

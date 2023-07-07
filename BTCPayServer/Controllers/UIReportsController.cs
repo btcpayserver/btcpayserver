@@ -70,7 +70,8 @@ public class UIReportsController : Controller
         vm.AvailableViews = ReportService.ReportProviders
                                          .Values
                                          .Where(r => r.IsAvailable())
-                                         .Select(k => k.CreateViewDefinition().Name)
+                                         .SelectMany(k => k.CreateViewDefinitions())
+                                         .Select(k => k.Name)
                                          .OrderBy(k => k).ToList();
         return View(vm);
     }

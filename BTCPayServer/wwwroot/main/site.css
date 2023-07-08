@@ -650,6 +650,7 @@ input:checked + label.btcpay-list-select-item {
 /* Public pages */
 .public-page-wrap {
     display: flex;
+    flex-direction: column;
     gap: 1.5rem;
     margin: 0 auto;
     padding: var(--btcpay-space-l) var(--btcpay-space-m);

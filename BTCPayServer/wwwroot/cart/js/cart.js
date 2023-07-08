@@ -6,99 +6,17 @@ function Cart() {
     this.loadLocalStorage();
     this.buildUI();
 
-    this.$list = $('#js-cart-list');
     this.$items = $('#js-cart-items');
     this.$total = $('.js-cart-total');
     this.$summaryProducts = $('.js-cart-summary-products');
     this.$summaryDiscount = $('.js-cart-summary-discount');
     this.$summaryTotal = $('.js-cart-summary-total');
     this.$summaryTip = $('.js-cart-summary-tip');
-    this.$destroy = $('.js-cart-destroy');
-    this.$confirm = $('#js-cart-confirm');
-    this.$categories = $('.js-categories');
     this.listItems();
-    this.bindEmptyCart();
 
     this.updateItemsCount();
     this.updateAmount();
     this.updatePosData();
-}
-
-Cart.prototype.setCustomAmount = function(amount) {
-    if (!srvModel.showCustomAmount) {
-        return 0;
-    }
-
-    this.customAmount = this.toNumber(amount);
-
-    if (this.customAmount > 0) {
-        localStorage.setItem(this.getStorageKey('cartCustomAmount'), this.customAmount);
-    } else {
-        localStorage.removeItem(this.getStorageKey('cartCustomAmount'));
-    }
-    return this.customAmount;
-}
-
-Cart.prototype.getCustomAmount = function() {
-    if (!srvModel.showCustomAmount) {
-        return 0;
-    }
-
-    return this.toCents(this.customAmount);
-}
-
-Cart.prototype.setTip = function(amount) {
-    if (!srvModel.enableTips) {
-        return 0;
-    }
-
-    this.tip = this.toNumber(amount);
-
-    if (this.tip > 0) {
-        localStorage.setItem(this.getStorageKey('cartTip'), this.tip);
-    } else {
-        localStorage.removeItem(this.getStorageKey('cartTip'));
-    }
-    return this.tip;
-}
-
-Cart.prototype.getTip = function() {
-    if (!srvModel.enableTips) {
-        return 0;
-    }
-
-    return this.toCents(this.tip);
-}
-
-Cart.prototype.setDiscount = function(amount) {
-    if (!srvModel.showDiscount) {
-        return 0;
-    }
-
-    this.discount = this.toNumber(amount);
-
-    if (this.discount > 0) {
-        localStorage.setItem(this.getStorageKey('cartDiscount'), this.discount);
-    } else {
-        localStorage.removeItem(this.getStorageKey('cartDiscount'));
-    }
-    return this.discount;
-}
-
-Cart.prototype.getDiscount = function() {
-    if (!srvModel.showDiscount) {
-        return 0;
-    }
-
-    return this.toCents(this.discount);
-}
-
-Cart.prototype.getDiscountAmount = function(amount) {
-    if (!srvModel.showDiscount) {
-        return 0;
-    }
-
-    return this.percentage(amount, this.getDiscount());
 }
 
 // Get total amount of products
@@ -117,9 +35,6 @@ Cart.prototype.getTotalProducts = function() {
         }
     }
 
-    // Add custom amount
-    amount += this.getCustomAmount();
-
     return amount;
 }
 
@@ -136,81 +51,6 @@ Cart.prototype.getTotal = function(includeTip) {
     }
 
     return this.fromCents(this.totalAmount);
-}
-
-/*
-* Data manipulation
-*/
-// Add item to the cart or update its count
-Cart.prototype.addItem = function(item) {
-    var id = item.id,
-        result = this.content.filter(function(obj){
-            return obj.id === id;
-        });
-
-    // Add new item because it doesn't exist yet
-    if (!result.length) {
-        this.content.push({id: id, title: item.title, price: item.price, count: 0, image: item.image, inventory: item.inventory});
-        this.emptyCartToggle();
-    }
-
-    // Increment item count
-    this.incrementItem(id);
-}
-
-Cart.prototype.incrementItem = function(id) {
-    var oldItemsCount = this.items;
-    this.items = 0; // Calculate total # of items from scratch just to make sure
-    var result = true;
-    for (var i = 0; i < this.content.length; i++) {
-        var obj = this.content[i];
-        if (obj.id === id){
-            if(obj.inventory != null && obj.inventory <= obj.count){
-                result = false;
-                continue;
-            }
-
-            obj.count++;
-            delete(obj.disabled);
-        }
-
-        // Increment the total # of items
-        this.items += obj.count;
-    }
-    if(!result){
-        this.items = oldItemsCount;
-    }
-
-    this.updateAll();
-    return result;
-}
-
-// Disable cart item so it doesn't count towards total amount
-Cart.prototype.disableItem = function(id) {
-    var self = this;
-
-    this.content.filter(function(obj){
-        if (obj.id === id){
-            obj.disabled = true;
-            self.items -= obj.count;
-        }
-    });
-
-    this.updateAll();
-}
-
-// Enable cart item so it counts towards total amount
-Cart.prototype.enableItem = function(id) {
-    var self = this;
-
-    this.content.filter(function(obj){
-        if (obj.id === id){
-            delete(obj.disabled);
-            self.items += obj.count;
-        }
-    });
-
-    this.updateAll();
 }
 
 Cart.prototype.decrementItem = function(id) {
@@ -258,7 +98,6 @@ Cart.prototype.removeItemAll = function(id) {
         this.content = [];
     }
 
-    this.emptyCartToggle();
     this.updateAll();
 }
 
@@ -330,12 +169,10 @@ Cart.prototype.updateAmount = function() {
     $('#js-cart-amount').val(this.getTotal(true));
     $('#js-cart-tip').val(this.tip);
     $('#js-cart-discount').val(this.discount);
-    $('#js-cart-custom-amount').val(this.customAmount);
 }
 Cart.prototype.updatePosData = function() {
     var result = {
       cart: this.content,
-      customAmount: this.fromCents(this.getCustomAmount()),
       discountPercentage: this.discount? parseFloat(this.discount): 0,
       subTotal: this.fromCents(this.getTotalProducts()),
       discountAmount: this.fromCents(this.getDiscountAmount(this.totalAmount)),
@@ -355,11 +192,6 @@ Cart.prototype.resetTip = function() {
     this.setTip(0);
     this.updateTip(0);
     $('.js-cart-tip').val('');
-}
-
-Cart.prototype.resetCustomAmount = function() {
-    this.setCustomAmount(0);
-    $('.js-cart-custom-amount').val('');
 }
 
 // Escape html characters
@@ -392,7 +224,6 @@ Cart.prototype.buildUI = function() {
 
     tableTemplate = this.template($('#template-cart-extra'), {
         'discount': this.escape(this.fromCents(this.getDiscount()) || ''),
-        'customAmount': this.escape(this.fromCents(this.getCustomAmount()) || '')
     });
     list.push($(tableTemplate));
 
@@ -408,11 +239,6 @@ Cart.prototype.buildUI = function() {
     $('.js-cart-discount').inputAmount(this, 'discount');
     // Remove discount
     $('.js-cart-discount-remove').removeAmount(this, 'discount');
-
-    // Change total when discount is changed
-    $('.js-cart-custom-amount').inputAmount(this, 'customAmount');
-    // Remove discount
-    $('.js-cart-custom-amount-remove').removeAmount(this, 'customAmount');
 }
 
 // List cart items and bind their events
@@ -421,18 +247,6 @@ Cart.prototype.listItems = function() {
         self = this,
         list = [],
         tableTemplate = '';
-    this.$categories.on('change', function (event) {
-        if ($(this).is(':checked')) {
-            var selectedCategory = $(this).val();
-            $(".js-add-cart").each(function () {
-                var categories = JSON.parse(this.getAttribute("data-categories"));
-                if (selectedCategory === "*" || categories.includes(selectedCategory))
-                    this.classList.remove("d-none");
-                else
-                    this.classList.add("d-none");
-            });
-        }
-    });
     if (this.content.length > 0) {
         // Prepare the list of items in the cart
         for (var key in this.content) {
@@ -455,127 +269,6 @@ Cart.prototype.listItems = function() {
             });
             list.push($(tableTemplate));
         }
-
-        // Add the list to DOM
-        $table.html(list);
-        list = [];
-
-        // Update the cart when number of items is changed
-        $('.js-cart-item-count').off().on('input', function(event){
-            var _this = this,
-                id = $(this).closest('tr').data('id'),
-                qty = parseInt($(this).val()),
-                isQty = !isNaN(qty),
-                prevQty = parseInt($(this).data('prev')),
-                qtyDiff = Math.abs(qty - prevQty),
-                qtyIncreased = qty > prevQty;
-
-            if (isQty) {
-                $(this).data('prev', qty);
-            } else {
-                // User hasn't inputed any quantity
-                qty = null;
-            }
-
-            self.resetTip();
-
-            // Quantity was increased
-            if (qtyIncreased) {
-                var item = self.content.filter(function(obj){
-                    return obj.id === id;
-                });
-
-                // Quantity may have been increased by more than one
-                for (var i = 0; i < qtyDiff; i++) {
-                    self.addItem({
-                        id: id,
-                        title: item.title,
-                        price: item.price,
-                        image: item.image
-                    });
-                }
-            } else if (!qtyIncreased) { // Quantity decreased
-                // No quantity set (e.g. empty string)
-                if (!isQty) {
-                    // Disable the item so it doesn't count towards total amount
-                    self.disableItem(id);
-                } else {
-                     // Quantity vas decreased
-                    if (qtyDiff > 0) {
-                        // Quantity may have been decreased by more than one
-                        for (var i = 0; i < qtyDiff; i++) {
-                            self.decrementItem(id);
-                        }
-                    } else {
-                        // Quantity hasn't changed, enable the item so it counts towards the total amount
-                        self.enableItem(id);
-                    }
-                }
-            }
-        });
-
-        // Remove item from the cart
-        $('.js-cart-item-remove').off().on('click', function(event){
-            event.preventDefault();
-
-            self.resetTip();
-            self.removeItemAll($(this).closest('tr').data('id'));
-        });
-
-        // Increment item
-        $('.js-cart-item-plus').off().on('click', function(event){
-            event.preventDefault();
-            if(self.incrementItem($(this).closest('tr').data('id'))){
-                var $val = $(this).parents('.input-group').find('.js-cart-item-count'),
-                    val = parseInt($val.val() || $val.data('prev')) + 1;
-
-                $val.val(val);
-                $val.data('prev', val);
-                self.resetTip();
-            }
-        });
-
-        // Decrement item
-        $('.js-cart-item-minus').off().on('click', function(event){
-            event.preventDefault();
-
-            var $val = $(this).parents('.input-group').find('.js-cart-item-count'),
-                id = $(this).closest('tr').data('id'),
-                val = parseInt($val.val() || $val.data('prev')) - 1;
-
-            self.resetTip();
-
-            if (val === 0) {
-                self.removeItemAll(id);
-            } else {
-                $val.val(val);
-                $val.data('prev', val);
-                self.decrementItem(id);
-            }
-        });
-    }
-}
-
-Cart.prototype.bindEmptyCart = function() {
-    var self = this;
-
-    this.emptyCartToggle();
-
-    this.$destroy.click(function(event){
-        event.preventDefault();
-
-        self.destroy();
-        self.emptyCartToggle();
-    });
-}
-
-Cart.prototype.emptyCartToggle = function() {
-    if (this.content.length > 0 || this.getCustomAmount()) {
-        this.$destroy.show();
-        this.$confirm.removeAttr('disabled');
-    } else {
-        this.$destroy.hide();
-        this.$confirm.attr('disabled', 'disabled');
     }
 }
 
@@ -638,63 +331,9 @@ Cart.prototype.percentage = function(amount, percentage) {
     return this.fromCents((amount / 100) * percentage);
 }
 
-/*
-* Storage
-*/
-Cart.prototype.getStorageKey = function (name) {
-    return (name + srvModel.appId + srvModel.currencyCode);
-}
-
-Cart.prototype.saveLocalStorage = function() {
-    localStorage.setItem(this.getStorageKey('cart'), JSON.stringify(this.content));
-}
-
-Cart.prototype.loadLocalStorage = function() {
-    this.content = $.parseJSON(localStorage.getItem(this.getStorageKey('cart'))) || [];
-    var self = this;
-
-    // Get number of cart items
-    for (var i = this.content.length-1; i >= 0; i--) {
-        if (!this.content[i]) {
-            this.content.splice(i,1);
-            continue;
-        }
-
-        //check if the pos items still has the cached cart items
-        var matchedItem = srvModel.items.find(function(item){
-            return item.id === self.content[i].id;
-        });
-        if(!matchedItem){
-            //remove if no longer available
-            this.content.splice(i,1);
-            continue;
-        }else{
-
-            if(matchedItem.inventory != null && matchedItem.inventory <= 0){
-                //item is out of stock
-                this.content.splice(i,1);
-            }else if(matchedItem.inventory != null && matchedItem.inventory <  this.content[i].count){
-                //not enough stock for original cart amount, reduce to available stock
-                this.content[i].count = matchedItem.inventory;
-            }
-            //update its stock
-            this.content[i].inventory = matchedItem.inventory;
-
-        }
-        this.items += this.content[i].count;
-            // Delete the disabled flag if any
-            delete(this.content[i].disabled);
-    }
-
-    this.discount = localStorage.getItem(this.getStorageKey('cartDiscount'));
-    this.customAmount = localStorage.getItem(this.getStorageKey('cartCustomAmount'));
-    this.tip = localStorage.getItem(this.getStorageKey('cartTip'));
-}
-
 Cart.prototype.destroy = function(keepAmount) {
     this.resetDiscount();
     this.resetTip();
-    this.resetCustomAmount();
 
     // When form is sent
     if (keepAmount) {
@@ -715,13 +354,6 @@ $.fn.inputAmount = function(obj, type) {
         var val = obj.toNumber($(this).val());
 
         switch (type) {
-            case 'customAmount':
-                obj.setCustomAmount(val);
-                obj.updateDiscount();
-                obj.updateSummaryProducts();
-                obj.updateTotal();
-                obj.resetTip();
-                break;
             case 'discount':
                 obj.setDiscount(val);
                 obj.updateDiscount();
@@ -738,7 +370,6 @@ $.fn.inputAmount = function(obj, type) {
         obj.updateSummaryTotal();
         obj.updateAmount();
         obj.updatePosData();
-        obj.emptyCartToggle();
     });
 }
 
@@ -747,10 +378,6 @@ $.fn.removeAmount = function(obj, type) {
         event.preventDefault();
 
         switch (type) {
-            case 'customAmount':
-                obj.resetCustomAmount();
-                obj.updateSummaryProducts();
-                break;
             case 'discount':
                 obj.resetDiscount();
                 obj.updateSummaryProducts();
@@ -760,6 +387,5 @@ $.fn.removeAmount = function(obj, type) {
         obj.resetTip();
         obj.updateTotal();
         obj.updateSummaryTotal();
-        obj.emptyCartToggle();
     });
 }

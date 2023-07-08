@@ -12,7 +12,7 @@
     <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
     <script src="~/pos/keypad.js" asp-append-version="true"></script>
 }
-<div class="public-page-wrap flex-column">
+<div class="public-page-wrap">
     <partial name="_StatusMessage" />
     <partial name="_StoreHeader" model="(string.IsNullOrEmpty(Model.Title) ? Model.StoreName : Model.Title, Model.LogoFileId)" />
     @if (Context.Request.Query.ContainsKey("simple"))

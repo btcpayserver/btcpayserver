@@ -12447,6 +12447,9 @@ main [class*='table-responsive'] {
 }
 
 @media screen {
+  .w-50px {
+    width: 50px;
+  }
   .w-75px {
     width: 75px;
   }

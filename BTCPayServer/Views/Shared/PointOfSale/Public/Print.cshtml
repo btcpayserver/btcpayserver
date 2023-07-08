@@ -50,7 +50,7 @@ else
         <a asp-route-viewType="static" class="alert-link">Regular version</a>
     </div>
 }
-<div class="container public-page-wrap flex-column">
+<div class="container public-page-wrap">
     <partial name="_StatusMessage" />
     <partial name="_StoreHeader" model="(string.IsNullOrEmpty(Model.Title) ? Model.StoreName : Model.Title, Model.LogoFileId)" />
     @if (!string.IsNullOrEmpty(Model.Description))

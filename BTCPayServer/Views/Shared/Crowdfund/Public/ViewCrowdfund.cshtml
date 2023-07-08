@@ -53,7 +53,7 @@
     <canvas id="fireworks" class="d-none"></canvas>
 }
 
-<div class="public-page-wrap flex-column container" id="app" @(Model.SimpleDisplay ? "" : "v-cloak")>
+<div class="public-page-wrap container" id="app" @(Model.SimpleDisplay ? "" : "v-cloak")>
     @if (!string.IsNullOrEmpty(Model.MainImageUrl))
     {
         <img v-if="srvModel.mainImageUrl" :src="srvModel.mainImageUrl" :alt="srvModel.title" id="crowdfund-main-image" asp-append-version="true"/>

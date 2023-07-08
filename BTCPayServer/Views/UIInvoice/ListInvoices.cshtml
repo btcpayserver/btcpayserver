@@ -2,6 +2,7 @@
 @using BTCPayServer.Client.Models
 @using BTCPayServer.Services
 @inject DisplayFormatter DisplayFormatter
+@inject PaymentMethodHandlerDictionary PaymentMethodHandlerDictionary
 @model InvoicesModel
 @{
     ViewData.SetActivePage(InvoiceNavPages.Index, "Invoices");
@@ -391,50 +392,66 @@
                             </td>
                             <td class="text-break">@invoice.InvoiceId</td>
                             <td>
-                                @if (invoice.Details.Archived)
-                                {
-                                    <span class="badge bg-warning">archived</span>
-                                }
-                                @if (invoice.CanMarkStatus)
-                                {
-                                    <div id="pavpill_@invoice.InvoiceId" class="badge badge-@invoice.Status.Status.ToModernStatus().ToString().ToLower()">
-                                        <span class="dropdown-toggle changeInvoiceStateToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                            @invoice.Status.ToString()
-                                        </span>
-                                        <div class="dropdown-menu">
-                                            @if (invoice.CanMarkInvalid)
-                                            {
-                                                <button type="button" class="dropdown-item lh-base changeInvoiceState" data-invoice-id="@invoice.InvoiceId" data-new-state="invalid">
-                                                    Mark as invalid
-                                                </button>
-                                            }
-                                            @if (invoice.CanMarkSettled)
-                                            {
-                                                <button type="button" class="dropdown-item lh-base changeInvoiceState" data-invoice-id="@invoice.InvoiceId" data-new-state="settled">
-                                                    Mark as settled
-                                                </button>
-                                            }
+                                <div class="d-flex align-items-center gap-2">
+                                    @if (invoice.Details.Archived)
+                                    {
+                                        <span class="badge bg-warning">archived</span>
+                                    }
+                                    @if (invoice.CanMarkStatus)
+                                    {
+                                        <div id="pavpill_@invoice.InvoiceId" class="badge badge-@invoice.Status.Status.ToModernStatus().ToString().ToLower()">
+                                            <span class="dropdown-toggle changeInvoiceStateToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                @invoice.Status.ToString()
+                                            </span>
+                                            <div class="dropdown-menu">
+                                                @if (invoice.CanMarkInvalid)
+                                                {
+                                                    <button type="button" class="dropdown-item lh-base changeInvoiceState" data-invoice-id="@invoice.InvoiceId" data-new-state="invalid">
+                                                        Mark as invalid
+                                                    </button>
+                                                }
+                                                @if (invoice.CanMarkSettled)
+                                                {
+                                                    <button type="button" class="dropdown-item lh-base changeInvoiceState" data-invoice-id="@invoice.InvoiceId" data-new-state="settled">
+                                                        Mark as settled
+                                                    </button>
+                                                }
+                                            </div>
                                         </div>
-                                    </div>
-                                }
-                                else
-                                {
-                                    <span class="badge badge-@invoice.Status.Status.ToModernStatus().ToString().ToLower()">
-                                        @invoice.Status.Status.ToModernStatus().ToString()
-                                        @if (invoice.Status.ExceptionStatus != InvoiceExceptionStatus.None)
+                                    }
+                                    else
+                                    {
+                                        <span class="badge badge-@invoice.Status.Status.ToModernStatus().ToString().ToLower()">
+                                            @invoice.Status.Status.ToModernStatus().ToString()
+                                            @if (invoice.Status.ExceptionStatus != InvoiceExceptionStatus.None)
+                                            {
+                                                @($"({invoice.Status.ExceptionStatus.ToString()})")
+                                            }
+                                        </span>
+                                    }
+                                    @foreach (var paymentMethodId in invoice.Details.Payments.Select(payment => payment.GetPaymentMethodId()).Distinct())
+                                    {
+                                        var image = PaymentMethodHandlerDictionary[paymentMethodId]?.GetCryptoImage(paymentMethodId);
+                                        var badge = paymentMethodId.PaymentType.GetBadge();
+                                        if (!string.IsNullOrEmpty(image) || !string.IsNullOrEmpty(badge))
                                         {
-                                            @($"({invoice.Status.ExceptionStatus.ToString()})")
+                                            <span class="d-inline-flex align-items-center gap-1">
+                                                @if (!string.IsNullOrEmpty(image))
+                                                {
+                                                    <img src="@Context.Request.GetRelativePathOrAbsolute(image)" alt="@paymentMethodId.PaymentType.ToString()" style="height:1.5em" />
+                                                }
+                                                @if (!string.IsNullOrEmpty(badge))
+                                                {
+                                                    @badge
+                                                }
+                                            </span>
                                         }
-                                    </span>
-                                }
-                                @foreach (var paymentType in invoice.Details.Payments.Select(payment => payment.GetPaymentMethodId()?.PaymentType).Distinct().Where(type => type != null && !string.IsNullOrEmpty(type.GetBadge())))
-                                {
-                                    <span class="badge">@paymentType.GetBadge()</span>
-                                }
-                                @if (invoice.HasRefund)
-                                {
-                                    <span class="badge bg-warning">Refund</span>
-                                }
+                                    }
+                                    @if (invoice.HasRefund)
+                                    {
+                                        <span class="badge bg-warning">Refund</span>
+                                    }
+                                </div>
                             </td>
                             <td class="text-end text-nowrap">
                                 <span data-sensitive>@DisplayFormatter.Currency(invoice.Amount, invoice.Currency)</span>

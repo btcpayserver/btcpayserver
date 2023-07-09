@@ -3,6 +3,7 @@
 @using BTCPayServer.Services
 @using BTCPayServer.Services.Invoices
 @inject DisplayFormatter DisplayFormatter
+@inject PaymentMethodHandlerDictionary PaymentMethodHandlerDictionary
 @model BTCPayServer.Components.StoreRecentInvoices.StoreRecentInvoicesViewModel
 
 <div class="widget store-recent-invoices" id="StoreRecentInvoices-@Model.Store.Id">
@@ -51,27 +52,41 @@
                         <a asp-controller="UIInvoice" asp-action="Invoice" asp-route-invoiceId="@invoice.InvoiceId" class="text-break">@invoice.InvoiceId</a>
                     </td>
                     <td>
-                        @if (invoice.Details.Archived)
-                        {
-                            <span class="badge bg-warning">archived</span>
-                        }
-                        <span class="badge badge-@invoice.Status.Status.ToModernStatus().ToString().ToLower()">
-                            @invoice.Status.Status.ToModernStatus().ToString()
-                            @if (invoice.Status.ExceptionStatus != InvoiceExceptionStatus.None)
+                        <div class="d-flex align-items-center gap-2">
+                            @if (invoice.Details.Archived)
                             {
-                                @($"({invoice.Status.ExceptionStatus.ToString()})")
+                                <span class="badge bg-warning">archived</span>
                             }
-                        </span>
-                        @foreach (var paymentType in invoice.Details.Payments.Select(payment => payment.GetPaymentMethodId()?.PaymentType).Distinct().Where(type => type != null && !string.IsNullOrEmpty(type.GetBadge())))
-                        {
-                            <span class="badge">@paymentType.GetBadge()</span>
-                        }
-                        @if (invoice.HasRefund)
-                        {
-                            <span class="badge bg-warning">
-                                Refund
+                            <span class="badge badge-@invoice.Status.Status.ToModernStatus().ToString().ToLower()">
+                                @invoice.Status.Status.ToModernStatus().ToString()
+                                @if (invoice.Status.ExceptionStatus != InvoiceExceptionStatus.None)
+                                {
+                                    @($"({invoice.Status.ExceptionStatus.ToString()})")
+                                }
                             </span>
-                        }
+                            @foreach (var paymentMethodId in invoice.Details.Payments.Select(payment => payment.GetPaymentMethodId()).Distinct())
+                            {
+                                var image = PaymentMethodHandlerDictionary[paymentMethodId]?.GetCryptoImage(paymentMethodId);
+                                var badge = paymentMethodId.PaymentType.GetBadge();
+                                if (!string.IsNullOrEmpty(image) || !string.IsNullOrEmpty(badge))
+                                {
+                                    <span class="d-inline-flex align-items-center gap-1">
+                                        @if (!string.IsNullOrEmpty(image))
+                                        {
+                                            <img src="@Context.Request.GetRelativePathOrAbsolute(image)" alt="@paymentMethodId.PaymentType.ToString()" style="height:1.5em" />
+                                        }
+                                        @if (!string.IsNullOrEmpty(badge))
+                                        {
+                                            @badge
+                                        }
+                                    </span>
+                                }
+                            }
+                            @if (invoice.HasRefund)
+                            {
+                                <span class="badge bg-warning">Refund</span>
+                            }
+                        </div>
                     </td>
                     <td class="text-end">
                         <span data-sensitive>@DisplayFormatter.Currency(invoice.Amount, invoice.Currency)</span>

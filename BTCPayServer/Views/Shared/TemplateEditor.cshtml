@@ -43,8 +43,13 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label for="EditorImageUrl" class="form-label">Image Url</label>
+                            <label for="EditorImage" class="form-label">Image Url</label>
                             <input id="EditorImageUrl" class="form-control mb-2" pattern="[^\*#]+" v-model="editingItem && editingItem.image" ref="txtImage" />
+                            <div class="d-flex align-items-center gap-2">
+                                <input id="EditorImage" type="file" class="form-control" ref="editorImage" v-on:change="uploadFileChanged">
+                                <button class="btn btn-primary" type="button" id="EditorUploadButton" v-on:click="uploadFile" :disabled="uploadDisabled">Upload</button>
+                            </div>
+                            <span v-if="uploadError" v-text="uploadError" class="text-danger"></span>
                         </div>
                         <div class="form-group">
                             <label for="EditorDescription" class="form-label">Description</label>
@@ -142,6 +147,7 @@
 <script src="~/vendor/tom-select/tom-select.complete.min.js" asp-append-version="true"></script>
 <script>
 document.addEventListener("DOMContentLoaded", () => {
+    const fileUploadUrl = @Safe.Json(Url.Action("FileUpload", "UIApps", new { appId = Context.GetRouteValue("appId") }));
     const parseConfig = str => {
         try {
             return JSON.parse(str)
@@ -166,7 +172,9 @@ document.addEventListener("DOMContentLoaded", () => {
                     { text: 'Custom', value: 'Topup' },
                 ],
                 categoriesSelect: null,
-                productModal: null
+                productModal: null,
+                uploadDisabled: true,
+                uploadError: null
             }
         },
         mounted() {
@@ -259,7 +267,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (this.editingItem.description.startsWith("- ")){
                     this.errors.push("Description cannot start with \"- \"");
                 }
-                if (!this.$refs.txtImage.checkValidity()) {
+                if (!this.$refs.editorImage.checkValidity()) {
                     this.errors.push("Image cannot have * or #");
                 }
                 if (this.editingItem.image.startsWith("- ")){
@@ -288,6 +296,32 @@ document.addEventListener("DOMContentLoaded", () => {
                     this.categoriesSelect.setValue(this.editingItem.categories);
                     this.productModal.show();
                 }
+            },
+            uploadFileChanged () {
+                this.uploadDisabled = !this.$refs.editorImage || this.$refs.editorImage.files.length === 0;
+            },
+            async uploadFile() {
+                const file = this.$refs.editorImage.files[0];
+                if (!file) return this.uploadError = 'No file selected';
+                
+                this.uploadError = null;
+                const formData = new FormData(); 
+                formData.append('file', file);
+                try {
+                    const response = await fetch(fileUploadUrl, { method: 'POST', body: formData });
+                    if (response.ok) {
+                        const { error, fileUrl } = await response.json();
+                        if (error) return this.uploadError = error;
+                        
+                        this.editingItem.image = fileUrl;
+                        this.$refs.editorImage.value = null;
+                        this.uploadDisabled = true;
+                        return;
+                    }
+                } catch (e) { 
+                    console.error(e);
+                }
+                this.uploadError = 'Upload failed';
             }
         }
     });

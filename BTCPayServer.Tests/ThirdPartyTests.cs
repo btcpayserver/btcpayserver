@@ -389,6 +389,11 @@ retry:
             version = Regex.Match(actual, "BootstrapVue ([0-9]+.[0-9]+.[0-9]+)").Groups[1].Value;
             expected = (await (await client.GetAsync($"https://cdnjs.cloudflare.com/ajax/libs/bootstrap-vue/{version}/bootstrap-vue.min.js")).Content.ReadAsStringAsync()).Trim();
             Assert.Equal(expected, actual);
+
+            actual = GetFileContent("BTCPayServer", "wwwroot", "vendor", "vue-sanitize-directive", "vue-sanitize-directive.umd.min.js").Trim();
+            version = Regex.Match(actual, "Original file: /npm/vue-sanitize-directive@([0-9]+.[0-9]+.[0-9]+)").Groups[1].Value;
+            expected = (await (await client.GetAsync($"https://cdn.jsdelivr.net/npm/vue-sanitize-directive@{version}/dist/vue-sanitize-directive.umd.min.js")).Content.ReadAsStringAsync()).Trim();
+            Assert.Equal(expected, actual);
         }
 
         string GetFileContent(params string[] path)

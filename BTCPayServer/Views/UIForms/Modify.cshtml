@@ -62,7 +62,7 @@
                         </button>
                         <div class="field flex-grow-1">
                             <label :for="`field-option-value-${index}`" class="form-label">Value</label>
-                            <input :for="`field-option-value-${index}`" class="form-control" v-model="option.value" />
+                            <input :for="`field-option-value-${index}`" class="form-control" v-model.lazy="option.value" />
                         </div>
                         <div class="field flex-grow-1">
                             <label :for="`field-option-text-${index}`" class="form-label">Text</label>

@@ -17,7 +17,7 @@ namespace BTCPayServer
                 DefaultRateRules = new[]
                 {
                                 "BTX_X = BTX_BTC * BTC_X",
-                                "BTX_BTC = hitbtc(BTX_BTC)"
+                                "BTX_BTC = graviex(BTX_BTC)"
                 },
                 CryptoImagePath = "imlegacy/bitcore.svg",
                 LightningImagePath = "imlegacy/bitcore-lightning.svg",

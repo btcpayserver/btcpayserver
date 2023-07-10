@@ -290,9 +290,9 @@ retry:
         }
 
         [Fact]
-        public void CanGetRateCryptoCurrenciesByDefault()
+        public async Task CanGetRateCryptoCurrenciesByDefault()
         {
-            string[] brokenShitcoins = { "BTX_USD", "CHC_USD" };
+            string[] brokenShitcoins = { };
             var provider = new BTCPayNetworkProvider(ChainName.Mainnet);
             var factory = FastTests.CreateBTCPayRateFactory();
             var fetcher = new RateFetcher(factory);
@@ -305,14 +305,33 @@ retry:
             var result = fetcher.FetchRates(pairs, rules, default);
             foreach ((CurrencyPair key, Task<RateResult> value) in result)
             {
-                var rateResult = value.GetAwaiter().GetResult();
-                if (key.ToString() == "BTG_USD")
-                    continue; // shitcoin not supported by bitfinex anymore
+                var rateResult = await value;
                 TestLogs.LogInformation($"Testing {key}");
                 if (brokenShitcoins.Contains(key.ToString()))
                     continue;
                 Assert.True(rateResult.BidAsk != null, $"Impossible to get the rate {rateResult.EvaluatedRule}");
             }
+
+            var b = new StoreBlob();
+            foreach (var k in StoreBlob.RecommendedExchanges)
+            {
+                b.DefaultCurrency = k.Key;
+                rules = b.GetDefaultRateRules(provider);
+                pairs =
+                    provider.GetAll()
+                        .Select(c => new CurrencyPair(c.CryptoCode, k.Key))
+                        .ToHashSet();
+                result = fetcher.FetchRates(pairs, rules, default);
+                foreach ((CurrencyPair key, Task<RateResult> value) in result)
+                {
+                    var rateResult = await value;
+                    TestLogs.LogInformation($"Testing {key} when default currency is {k.Key}");
+                    if (brokenShitcoins.Contains(key.ToString()))
+                        continue;
+                    Assert.True(rateResult.BidAsk != null, $"Impossible to get the rate {rateResult.EvaluatedRule}");
+                }
+            }
+
         }
 
         [Fact]

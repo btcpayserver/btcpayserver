@@ -80,6 +80,7 @@ public class GreenfieldReportsController : Controller
             var result = new StoreReportResponse()
             {
                 Fields = definition.Fields,
+                Charts = definition.Charts,
                 Data = ctx.Data.Select(d => new JArray(d)).ToList(),
                 From = from,
                 To = to

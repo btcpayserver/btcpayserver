@@ -19,36 +19,50 @@ using Microsoft.EntityFrameworkCore.Internal;
 using System.Text.Json.Nodes;
 using Org.BouncyCastle.Ocsp;
 using System.Threading;
+using System.Collections.Generic;
+using Newtonsoft.Json.Linq;
+using NBitcoin.DataEncoders;
+
 
 namespace BTCPayServer.Controllers;
 
 [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
 [AutoValidateAntiforgeryToken]
-public class UIReportsController : Controller
+public partial class UIReportsController : Controller
 {
     public UIReportsController(
         BTCPayNetworkProvider networkProvider,
         ApplicationDbContextFactory dbContextFactory,
         GreenfieldReportsController api,
-        ReportService reportService)
+        ReportService reportService,
+        BTCPayServerEnvironment env
+        )
     {
         Api = api;
         ReportService = reportService;
+        Env = env;
         DBContextFactory = dbContextFactory;
         NetworkProvider = networkProvider;
     }
     private BTCPayNetworkProvider NetworkProvider { get; }
     public GreenfieldReportsController Api { get; }
     public ReportService ReportService { get; }
+    public BTCPayServerEnvironment Env { get; }
     public ApplicationDbContextFactory DBContextFactory { get; }
 
     [HttpPost("stores/{storeId}/reports")]
     [AcceptMediaTypeConstraint("application/json")]
     [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     [IgnoreAntiforgeryToken]
-    public async Task<IActionResult> StoreReportsJson(string storeId, [FromBody] StoreReportRequest? request = null, CancellationToken cancellation = default)
+    public async Task<IActionResult> StoreReportsJson(string storeId, [FromBody] StoreReportRequest? request = null, bool fakeData = false, CancellationToken cancellation = default)
     {
-        return await Api.StoreReports(storeId, request, cancellation);
+        var result = await Api.StoreReports(storeId, request, cancellation);
+        if (fakeData && Env.CheatMode)
+        {
+            var r = (StoreReportResponse)((JsonResult)result!).Value!;
+            r.Data = Generate(r.Fields).Select(r => new JArray(r)).ToList();
+        }
+        return result;
     }
 
     [HttpGet("stores/{storeId}/reports")]

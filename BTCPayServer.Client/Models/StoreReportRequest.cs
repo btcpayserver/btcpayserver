@@ -33,7 +33,20 @@ public class StoreReportResponse
     public List<JArray> Data { get; set; }
     public DateTimeOffset From { get; set; }
     public DateTimeOffset To { get; set; }
+    public List<ChartDefinition> Charts { get; set; }
 }
+
+public class ChartDefinition
+{
+    public string Name { get; set; }
+
+    public List<string> Groups { get; set; } = new List<string>();
+    public List<string> Totals { get; set; } = new List<string>();
+    public bool HasGrandTotal { get; set; }
+    public List<string> Aggregates { get; set; } = new List<string>();
+    public List<string> Filters { get; set; } = new List<string>();
+}
+
 public class TimePeriod
 {
     [JsonConverter(typeof(NBitcoin.JsonConverters.DateTimeToUnixTimeConverter))]

@@ -42,12 +42,22 @@ public class OnChainWalletReportProvider : ReportProvider
                 Fields =
                 {
                         new ("Date", "datetime"),
-                        new ("CryptoCode", "string"),
-                        // For proper rendering of explorer links, CryptoCode should always be before tx_id
+                        new ("Crypto", "string"),
+                        // For proper rendering of explorer links, Crypto should always be before tx_id
                         new ("TransactionId", "tx_id"),
                         new ("InvoiceId", "invoice_id"),
                         new ("Confirmed", "boolean"),
                         new ("BalanceChange", "decimal")
+                },
+                Charts =
+                {
+                    new ()
+                    {
+                        Name = "Group by Crypto",
+                        Totals = { "Crypto" },
+                        Groups = { "Crypto", "Confirmed" },
+                        Aggregates = { "BalanceChange" }
+                    }
                 }
             }
         };

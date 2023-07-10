@@ -56,6 +56,33 @@ public class PaymentsReportProvider : ReportProvider
                         new ("Currency", "string"),
                         new ("CurrencyAmount", "decimal"),
                         new ("Rate", "decimal")
+                },
+                Charts = 
+                {
+                    new ()
+                    {
+                        Name = "Aggregated crypto amount",
+                        Groups = { "Crypto", "PaymentType" },
+                        Totals = { "Crypto" },
+                        HasGrandTotal = false,
+                        Aggregates = { "Amount" }
+                    },
+                    new ()
+                    {
+                        Name = "Aggregated currency amount",
+                        Groups = { "Currency" },
+                        Totals = { "Currency" },
+                        HasGrandTotal = false,
+                        Aggregates = { "CurrencyAmount" }
+                    },
+                    new ()
+                    {
+                        Name = "Group by Lightning Address",
+                        Filters = { "typeof this.LightningAddress === 'string' && this.Crypto == \"BTC\"" },
+                        Groups = { "LightningAddress", "Currency" },
+                        Aggregates = { "Amount", "CurrencyAmount" },
+                        HasGrandTotal = true
+                    }
                 }
             }
         };
@@ -99,7 +126,14 @@ public class PaymentsReportProvider : ReportProvider
             values.Add((string)r.invoice_id);
             values.Add((string)r.order_id);
             if (PaymentMethodId.TryParse((string)r.payment_type, out var paymentType))
-                values.Add(paymentType.ToStringNormalized());
+            {
+                if (paymentType.PaymentType == PaymentTypes.LightningLike || paymentType.PaymentType == PaymentTypes.LNURLPay)
+                    values.Add("Lightning");
+                else if (paymentType.PaymentType == PaymentTypes.BTCLike)
+                    values.Add("On-Chain");
+                else
+                    values.Add(paymentType.ToStringNormalized());
+            }
             else
                 continue;
             values.Add((string)r.payment_id);

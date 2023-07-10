@@ -6,8 +6,6 @@ namespace BTCPayServer.Services.Reporting
 {
     public record QueryContext
     {
-        private readonly int _fieldsCount;
-
         public QueryContext(string storeId, DateTimeOffset from, DateTimeOffset to, ViewDefinition viewDefinition)
         {
             StoreId = storeId;

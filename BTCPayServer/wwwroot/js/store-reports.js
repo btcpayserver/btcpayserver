@@ -175,8 +175,16 @@ async function fetchStoreReports() {
 
     // Dates from API are UTC, convert them to local time
     modifyFields(srv.result.fields, srv.result.data, 'datetime', (a) => moment(a).format())
-    app.srv = srv;
     updateUIDateRange();
+
+    srv.charts = [];
+    for (var i = 0; i < srv.result.charts.length; i++) {
+        var chart = srv.result.charts[i];
+        srv.charts.push(createTable(chart, srv.result.fields.map(f => f.name), srv.result.data));
+    }
+
+    app.srv = srv;
+
 
     //var summaryDefinition = {
     //    groups: ["Crypto", "PaymentType"],
@@ -184,18 +192,18 @@ async function fetchStoreReports() {
     //    hasGrandTotal: true,
     //    aggregates: ["Amount", "CurrencyAmount"]
     //};
-     var summaryDefinition = {
-        groups: ["Region", "Crypto", "PaymentType"],
-        totals: [ "Region", "Crypto" ],
-        hasGrandTotal: true,
-        aggregates: ["Amount", "CryptoAmount"]
-    };
+    // var summaryDefinition = {
+    //    groups: ["Region", "Crypto", "PaymentType"],
+    //    totals: [ "Region", "Crypto" ],
+    //    hasGrandTotal: true,
+    //    aggregates: ["Amount", "CryptoAmount"]
+    //};
     
-    new Vue({
-        el: '#summary',
-        data: createTable(summaryDefinition, ["Region", "Crypto", "PaymentType", "Amount", "CryptoAmount"], generateRandomRows(1000))
-        //data: createTable(summaryDefinition, srv.result.fields.map(f => f.name) , origData)
-    });
+    //new Vue({
+    //    el: '#summary',
+    //    data: createTable(summaryDefinition, ["Region", "Crypto", "PaymentType", "Amount", "CryptoAmount"], generateRandomRows(1000))
+    //    //data: createTable(summaryDefinition, srv.result.fields.map(f => f.name) , origData)
+    //});
 }
 
 function getRandomValue(arr) {

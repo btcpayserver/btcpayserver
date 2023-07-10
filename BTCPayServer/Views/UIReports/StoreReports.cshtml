@@ -53,22 +53,26 @@
 </div>
 
 <div id="app">
-	<table v-for="chart in srv.charts" class="table table-bordered">
-		<thead>
-			<tr>
-				<th v-for="group in chart.groups">{{ group }}</th>
-				<th v-for="agg in chart.aggregates">{{ agg }}</th>
-			</tr>
-		</thead>
-		<tbody>
-			<tr v-for="row in chart.rows">
-				<td v-for="group in row.groups" :rowspan="group.rowCount">{{ group.name }}</td>
-				<td v-if="row.isTotal" :colspan="row.rLevel">Total</td>
-				<td v-for="value in row.values">{{ value }}</td>
-			</tr>
-			<tr v-if="chart.hasGrandTotal"><td :colspan="chart.groups.length">Grand total</td><td v-for="value in chart.grandTotalValues">{{ value }}</td></tr>
-		</tbody>
-	</table>
+	<div v-for="chart in srv.charts">
+		<h3>{{ chart.name }}</h3>
+		<table class="table table-bordered">
+			<thead>
+				<tr>
+					<th v-for="group in chart.groups">{{ group }}</th>
+					<th v-for="agg in chart.aggregates">{{ agg }}</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr v-for="row in chart.rows">
+					<td v-for="group in row.groups" :rowspan="group.rowCount">{{ group.name }}</td>
+					<td v-if="row.isTotal" :colspan="row.rLevel">Total</td>
+					<td v-for="value in row.values">{{ value }}</td>
+				</tr>
+				<tr v-if="chart.hasGrandTotal"><td :colspan="chart.groups.length">Grand total</td><td v-for="value in chart.grandTotalValues">{{ value }}</td></tr>
+			</tbody>
+		</table>
+	</div>
+	<h3>Raw data</h3>
 	<table class="table table-bordered">
 		<thead>
 			<tr>

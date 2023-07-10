@@ -77,10 +77,18 @@ public class PaymentsReportProvider : ReportProvider
                     },
                     new ()
                     {
-                        Name = "Group by Lightning Address",
+                        Name = "Group by Lightning Address (Currency amount)",
                         Filters = { "typeof this.LightningAddress === 'string' && this.Crypto == \"BTC\"" },
                         Groups = { "LightningAddress", "Currency" },
-                        Aggregates = { "Amount", "CurrencyAmount" },
+                        Aggregates = { "CurrencyAmount" },
+                        HasGrandTotal = true
+                    },
+                    new ()
+                    {
+                        Name = "Group by Lightning Address (Crypto amount)",
+                        Filters = { "typeof this.LightningAddress === 'string' && this.Crypto == \"BTC\"" },
+                        Groups = { "LightningAddress" },
+                        Aggregates = { "Amount" },
                         HasGrandTotal = true
                     }
                 }

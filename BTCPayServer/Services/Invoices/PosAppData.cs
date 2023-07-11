@@ -52,18 +52,6 @@ public class PosAppCartItem
     public string Image { get; set; }
 }
 
-public class PosAppCartItemPrice
-{
-    [JsonProperty(PropertyName = "formatted")]
-    public string Formatted { get; set; }
-
-    [JsonProperty(PropertyName = "value")]
-    public decimal Value { get; set; }
-
-    [JsonProperty(PropertyName = "type")]
-    public ViewPointOfSaleViewModel.ItemPriceType Type { get; set; }
-}
-
 public class PosAppCartItemPriceJsonConverter : JsonConverter
 {
     public override bool CanConvert(Type objectType)
@@ -89,7 +77,7 @@ public class PosAppCartItemPriceJsonConverter : JsonConverter
             case JTokenType.Null:
                 return null;
             case JTokenType.Object:
-                return token.ToObject<PosAppCartItemPrice>().Value;
+                return token.ToObject<JObject>()?["value"]?.Value<decimal?>();
             default:
                 throw new JsonSerializationException($"Unexpected token type: {token.Type}");
         }
@@ -103,9 +91,6 @@ public class PosAppCartItemPriceJsonConverter : JsonConverter
                 break;
             case decimal x:
                 writer.WriteValue(x.ToString(CultureInfo.InvariantCulture));
-                break;
-            case PosAppCartItemPrice x:
-                writer.WriteValue(x.Value.ToString(CultureInfo.InvariantCulture));
                 break;
         }
     }

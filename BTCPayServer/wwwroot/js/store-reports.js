@@ -1,6 +1,5 @@
 var app;
 var origData;
-
 srv.sortBy = function (field) {
     for (let key in this.fieldViews) {
         if (this.fieldViews.hasOwnProperty(key)) {
@@ -128,8 +127,8 @@ $(function () {
 });
 
 function updateUIDateRange() {
-    flatpickr("#toDate").setDate(moment.unix(srv.request.timePeriod.to).toDate());
-    flatpickr("#fromDate").setDate(moment.unix(srv.request.timePeriod.from).toDate());
+    document.getElementById("toDate")._flatpickr.setDate(moment.unix(srv.request.timePeriod.to).toDate());
+    document.getElementById("fromDate")._flatpickr.setDate(moment.unix(srv.request.timePeriod.from).toDate());
 }
 
 // This function modify all the fields of a given type

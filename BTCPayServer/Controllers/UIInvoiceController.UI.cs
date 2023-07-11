@@ -1100,10 +1100,9 @@ namespace BTCPayServer.Controllers
 
             // Apps
             var apps = await _appService.GetAllApps(GetUserId(), false, storeId);
-            var appIds = fs.GetFilterArray("appid");
-            if (appIds is { Length: > 0 })
+            var appTags = fs.GetFilterArray("appid")?.Select(AppService.GetAppInternalTag);
+            if (appTags != null)
             {
-                var appTags = appIds.Select(AppService.GetAppInternalTag);
                 list = list.Where(inv => inv.Version < InvoiceEntity.InternalTagSupport_Version ||
                                 inv.InternalTags.Any(it => appTags.Contains(it))).ToArray();
             }

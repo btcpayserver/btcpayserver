@@ -278,8 +278,10 @@ function initApp() {
                             if (e.data !== 'ping') await updateFn();
                         };
                         socket.onerror = function (e) {
-                            self.pollUpdates(2000, socket)
                             console.error('Error while connecting to websocket for invoice notifications (callback):', e);
+                        };
+                        socket.onclose = function () {
+                            self.pollUpdates(2000, socket);
                         };
                     }
                     catch (e) {

@@ -85,13 +85,7 @@ public class PosAppCartItemPriceJsonConverter : JsonConverter
 
     public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
     {
-        switch (value)
-        {
-            case null:
-                break;
-            case decimal x:
-                writer.WriteValue(x.ToString(CultureInfo.InvariantCulture));
-                break;
-        }
+        if (value is decimal x)
+            writer.WriteValue(x);
     }
 }

@@ -1162,6 +1162,14 @@ namespace BTCPayServer.Tests
                 }
             }.ToString();
             Assert.Equal(1.65m, JsonConvert.DeserializeObject<PosAppCartItem>(data).Price);
+            data = new JObject()
+            {
+                ["price"] = new JObject()
+                {
+                    ["value"] = "1.6305"
+                }
+            }.ToString();
+            Assert.Equal(1.6305m, JsonConvert.DeserializeObject<PosAppCartItem>(data).Price);
 
             data = new JObject()
             {

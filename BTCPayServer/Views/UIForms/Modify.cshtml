@@ -62,7 +62,7 @@
                         </button>
                         <div class="field flex-grow-1">
                             <label :for="`field-option-value-${index}`" class="form-label">Value</label>
-                            <input :for="`field-option-value-${index}`" class="form-control" v-model="option.value" />
+                            <input :for="`field-option-value-${index}`" class="form-control" v-model.lazy="option.value" />
                         </div>
                         <div class="field flex-grow-1">
                             <label :for="`field-option-text-${index}`" class="form-label">Text</label>
@@ -122,25 +122,25 @@
     </template>
     <template id="field-type-input">
         <div class="form-group mb-0">
-            <label class="form-label" :for="name" :data-required="required" v-text="label"></label>
+            <label class="form-label" :for="name" :data-required="required" v-sanitize="label"></label>
             <input class="form-control" :id="name" :name="name" :type="type" v-model="value" />
-            <div v-if="helpText" :id="`HelpText-{name}`" class="form-text" v-text="helpText"></div>
+            <div v-if="helpText" :id="`HelpText-{name}`" class="form-text" v-sanitize="helpText"></div>
         </div>
     </template>
     <template id="field-type-textarea">
         <div class="form-group mb-0">
-            <label class="form-label" :for="name" :data-required="required" v-text="label"></label>
+            <label class="form-label" :for="name" :data-required="required" v-sanitize="label"></label>
             <textarea class="form-control" :id="name" :name="name" v-model="value"></textarea>
-            <div v-if="helpText" :id="`HelpText-${name}`" class="form-text" v-text="helpText"></div>
+            <div v-if="helpText" :id="`HelpText-${name}`" class="form-text" v-sanitize="helpText"></div>
         </div>
     </template>
     <template id="field-type-select">
         <div class="form-group mb-0">
-            <label class="form-label" :for="name" :data-required="required" v-text="label"></label>
+            <label class="form-label" :for="name" :data-required="required" v-sanitize="label"></label>
             <select class="form-select" :id="name" :name="name">
                 <option v-for="option in options" :key="option.value" :value="option.value" :selected="option.value === value" v-text="option.text"></option>
             </select>
-            <div v-if="helpText" :id="`HelpText-${name}`" class="form-text" v-text="helpText"></div>
+            <div v-if="helpText" :id="`HelpText-${name}`" class="form-text" v-sanitize="helpText"></div>
         </div>
     </template>
     <template id="field-type-fieldset">
@@ -150,6 +150,7 @@
         </fieldset>
     </template>
     <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/vue-sanitize-directive/vue-sanitize-directive.umd.min.js" asp-append-version="true"></script>
     <script src="~/vendor/vue-sortable/sortable.min.js" asp-append-version="true"></script>
     <script src="~/vendor/vue-sortable/vue-sortable.js" asp-append-version="true"></script>
     <script src="~/js/form-editor.js" asp-append-version="true"></script>

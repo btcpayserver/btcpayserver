@@ -1146,6 +1146,45 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        public void CanParseOldPosAppData()
+        {
+            var data = new JObject()
+            {
+                ["price"] = 1.64m
+            }.ToString();
+            Assert.Equal(1.64m, JsonConvert.DeserializeObject<PosAppCartItem>(data).Price);
+
+            data = new JObject()
+            {
+                ["price"] = new JObject()
+                {
+                    ["value"] = 1.65m
+                }
+            }.ToString();
+            Assert.Equal(1.65m, JsonConvert.DeserializeObject<PosAppCartItem>(data).Price);
+            data = new JObject()
+            {
+                ["price"] = new JObject()
+                {
+                    ["value"] = "1.6305"
+                }
+            }.ToString();
+            Assert.Equal(1.6305m, JsonConvert.DeserializeObject<PosAppCartItem>(data).Price);
+
+            data = new JObject()
+            {
+                ["price"] = new JObject()
+                {
+                    ["value"] = null
+                }
+            }.ToString();
+            Assert.Equal(0.0m, JsonConvert.DeserializeObject<PosAppCartItem>(data).Price);
+
+            var o = JObject.Parse(JsonConvert.SerializeObject(new PosAppCartItem() { Price = 1.356m }));
+            Assert.Equal(1.356m, o["price"].Value<decimal>());
+        }
+
+        [Fact]
         public void CanParseCurrencyValue()
         {
             Assert.True(CurrencyValue.TryParse("1.50USD", out var result));

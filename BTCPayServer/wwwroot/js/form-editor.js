@@ -106,6 +106,12 @@ document.addEventListener('DOMContentLoaded', () => {
             path: Array,
             field: fieldProps
         },
+        computed: {
+            mirroredField() {
+                return this.field.type === 'mirror' &&
+                    this.$root.allFields.find(f => f.name === this.field.value)
+            }
+        },
         methods: {
             getFieldComponent,
             addOption (event) {
@@ -124,7 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
             addValueMap (event) {
                 if (!this.field.valuemap) this.$set(this.field, 'valuemap', {})
                 const index = Object.keys(this.field.valuemap).length + 1;
-                this.$set(this.field.valuemap, '', '')
+                this.$set(this.field.valuemap, `valuemap_${index}`, '')
             },
             updateValueMap(oldK, newK, newV) {
                 if (oldK !== newK) {
@@ -152,7 +158,16 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         computed: {
             allFields() {
-                return this.getAllFields()
+                const getFields = (fields, path) => {
+                    let result = [];
+                    for (const field of fields) {
+                        result.push(field)
+                        if (field.fields && field.fields.length > 0)
+                            result= result.concat(getFields(field.fields, path + field.name));
+                    }
+                    return result;
+                }
+                return getFields(this.fields, "")
             },
             fields() {
                 return this.config.fields || []
@@ -203,18 +218,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     fields = field.fields
                 }
                 return fields
-            },
-            getAllFields() {
-                const getFields = (fields, path) => {
-                    let result = [];
-                    for (const field of fields) {
-                        result.push(field)
-                        if (field.fields && field.fields.length > 0)
-                            result= result.concat(getFields(field.fields, path + field.name));
-                    }
-                    return result;
-                }
-                return getFields(this.fields, "")
             }
         },
         mounted () {

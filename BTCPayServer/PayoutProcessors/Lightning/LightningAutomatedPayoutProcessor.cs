@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -32,7 +33,7 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Li
     private readonly IOptions<LightningNetworkOptions> _options;
     private readonly LightningLikePayoutHandler _payoutHandler;
     private readonly BTCPayNetwork _network;
-    private Dictionary<string, int> failedPayoutCounter = new();
+    private readonly ConcurrentDictionary<string, int> _failedPayoutCounter = new();
 
     public LightningAutomatedPayoutProcessor(
         BTCPayNetworkJsonSerializerSettings btcPayNetworkJsonSerializerSettings,
@@ -103,7 +104,7 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Li
 
             if (failed && processorBlob.CancelPayoutAfterFailures is not null)
             {
-                if (!failedPayoutCounter.TryGetValue(payoutData.Id, out int counter))
+                if (!_failedPayoutCounter.TryGetValue(payoutData.Id, out int counter))
                 {
                     counter = 0;
                 }
@@ -115,12 +116,12 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Li
                 }
                 else
                 {
-                    failedPayoutCounter.AddOrReplace(payoutData.Id, counter);
+                    _failedPayoutCounter.AddOrReplace(payoutData.Id, counter);
                 }
             }
             if (payoutData.State == PayoutState.Cancelled)
             {
-                failedPayoutCounter.Remove(payoutData.Id);
+                _failedPayoutCounter.TryRemove(payoutData.Id, out _);
             }
         }
     }

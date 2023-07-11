@@ -101,10 +101,7 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Li
                 failed = true;
             }
 
-            if (payoutData.State == PayoutState.Cancelled)
-            {
-                failedPayoutCounter.Remove(payoutData.Id);
-            }else if (failed && processorBlob.CancelPayoutAfterFailures is not null)
+            if (failed && processorBlob.CancelPayoutAfterFailures is not null)
             {
                 if (!failedPayoutCounter.TryGetValue(payoutData.Id, out int counter))
                 {
@@ -114,13 +111,16 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Li
                 if(counter >= processorBlob.CancelPayoutAfterFailures)
                 {
                     payoutData.State = PayoutState.Cancelled;
-                    failedPayoutCounter.Remove(payoutData.Id);
                     Logs.PayServer.LogError($"Payout {payoutData.Id} has failed {counter} times, cancelling it");
                 }
                 else
                 {
                     failedPayoutCounter.AddOrReplace(payoutData.Id, counter);
                 }
+            }
+            if (payoutData.State == PayoutState.Cancelled)
+            {
+                failedPayoutCounter.Remove(payoutData.Id);
             }
         }
     }

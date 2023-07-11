@@ -124,7 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
             addValueMap (event) {
                 if (!this.field.valuemap) this.$set(this.field, 'valuemap', {})
                 const index = Object.keys(this.field.valuemap).length + 1;
-                this.$set(this.field.valuemap, `value to match${index}`, `value to set${index}`)
+                this.$set(this.field.valuemap, '', '')
             },
             updateValueMap(oldK, newK, newV) {
                 if (oldK !== newK) {

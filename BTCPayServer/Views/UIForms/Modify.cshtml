@@ -60,8 +60,8 @@
                 <label for="field-editor-field-name" class="form-label" data-required>Name</label>
                 <input id="field-editor-field-name" class="form-control" list="special-field-names" required v-model="field.name" />
                 <div class="form-text">The name of the field in the invoice's metadata</div>
-                <div class="form-text text-info" v-if="field.name === 'invoice_currency' ">The configured name means the value of this field will determine the invoice currency for public forms</div>
-                <div class="form-text text-info" v-if="field.name === 'invoice_amount' ">The configured name means the value of this field will determine the invoice amount for public forms</div>
+                <div class="form-text text-info" v-if="field.name === 'invoice_currency'">The configured name means the value of this field will determine the invoice currency for public forms</div>
+                <div class="form-text text-info" v-if="field.name === 'invoice_amount'">The configured name means the value of this field will determine the invoice amount for public forms</div>
                 <div class="form-text text-info" v-if="field.name && field.name.startsWith('invoice_amount_adjustment')">The configured name means the value of this field will adjust the invoice amount for public forms and the point of sale app.</div>
             </div>
             <div class="form-group" v-if="field.type === 'select'">
@@ -73,11 +73,11 @@
                         </button>
                         <div class="field flex-grow-1">
                             <label :for="`field-option-value-${index}`" class="form-label">Value</label>
-                            <input :for="`field-option-value-${index}`" class="form-control" v-model.lazy="option.value" />
+                            <input :id="`field-option-value-${index}`" class="form-control" v-model.lazy="option.value" />
                         </div>
                         <div class="field flex-grow-1">
                             <label :for="`field-option-text-${index}`" class="form-label">Text</label>
-                            <input :for="`field-option-text-${index}`" class="form-control" v-model="option.text" />
+                            <input :id="`field-option-text-${index}`" class="form-control" v-model="option.text" />
                         </div>
                         <button type="button" class="btn b-0 control remove" v-on:click="removeOption($event, index)">
                             <vc:icon symbol="trash" />
@@ -95,7 +95,7 @@
             </div>
             <div class="form-group" v-if="field.type === 'mirror'">
                 <label for="field-editor-field-value" class="form-label">Field to mirror</label>
-                <select id="field-editor-field-value" class="form-control" v-model="field.value">
+                <select id="field-editor-field-value" class="form-select" v-model="field.value">
                     <option v-for="option in $root.allFields" v-if="option.name && option.name !== field.name" :key="option.name" :value="option.name" :selected="option.name === field.value" v-text="option.label||option.name"></option>
                 </select>
                 <div class="form-text">The chosen field's selected value will be copied to this field upon submission.</div>
@@ -105,12 +105,12 @@
                 <div class="options" >
                     <div v-if="field.valuemap" v-for="(v, k, index) in field.valuemap" :key="k" class="d-flex align-items-start gap-2 pt-3">
                         <div class="field flex-grow-1">
-                            <label :for="`field-option-value-${index}`" class="form-label">Value</label>
-                            <input :for="`field-option-value-${index}`" class="form-control" :value="k" v-on:change="updateValueMap(k, $event.target.value,v)" />
+                            <label :for="`field-valuemap-value-${index}`" class="form-label">Value</label>
+                            <input :id="`field-valuemap-value-${index}`" class="form-control" placeholder="Value to match" :value="k" v-on:change="updateValueMap(k, $event.target.value,v)" />
                         </div>
                         <div class="field flex-grow-1">
-                            <label :for="`field-option-mapped-${index}`" class="form-label">Mapped Value</label>
-                            <input :for="`field-option-text-${index}`" class="form-control" :value="v" v-on:change="updateValueMap(k, k,  $event.target.value)"  />
+                            <label :for="`field-valuemap-mapped-${index}`" class="form-label">Mapped Value</label>
+                            <input :id="`field-valuemap-mapped-${index}`" class="form-control" placeholder="Value to set" :value="v" v-on:change="updateValueMap(k, k,  $event.target.value)"  />
                         </div>
                         <button type="button" class="btn b-0 control remove" v-on:click="removeValueMap($event, k)">
                             <vc:icon symbol="trash" />

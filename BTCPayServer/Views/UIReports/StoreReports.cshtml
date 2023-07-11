@@ -14,106 +14,111 @@
 	Csp.UnsafeEval();
 }
 
-<div class="d-inline-flex align-items-center gap-3">
-	<div class="dropdown" v-pre>
-		<button id="ViewNameToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">@Model.Request.ViewName</button>
-		<div class="dropdown-menu" aria-labelledby="ViewNameToggle">
-			@foreach (var v in Model.AvailableViews)
-			{
-				<a data-view="@v" class="available-view dropdown-item @(Model.Request.ViewName == v ? "custom-active" : "")">@v</a>
-			}
-		</div>
-	</div>
-
-
-	<div class="input-group">
-		<input id="fromDate" class="form-control flatdtpicker" type="datetime-local"
-			   data-fdtp='{ "enableTime": true, "enableSeconds": true, "dateFormat": "Y-m-d H:i:S", "time_24hr": true, "defaultHour": 0 }'
-			   placeholder="Start Date" />
-		<button type="button" class="btn btn-primary input-group-clear" title="Clear">
-			<span class="fa fa-times"></span>
-		</button>
-	</div>
-
-
-
-	<div class="input-group">
-		<input id="toDate" class="form-control flatdtpicker" type="datetime-local"
-			   data-fdtp='{ "enableTime": true, "enableSeconds": true, "dateFormat": "Y-m-d H:i:S", "time_24hr": true, "defaultHour": 0 }'
-			   placeholder="End Date" />
-		<button type="button" class="btn btn-primary input-group-clear" title="Clear">
-			<span class="fa fa-times"></span>
-		</button>
-	</div>
-
-	<button id="exportCSV" class="btn btn-secondary" type="button">
-		Export CSV
-	</button>
-	<a cheat-mode="true" class="btn btn-info" asp-action="StoreReports" asp-route-fakeData="true" asp-route-viewName="@Model.Request?.ViewName">Create fake date</a>
+<div class="sticky-header-setup"></div>
+<div class="sticky-header">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
+        <h2 class="mb-0">@ViewData["Title"]</h2>
+        <div class="d-flex flex-wrap gap-3">
+	        <a cheat-mode="true" class="btn btn-outline-info text-nowrap" asp-action="StoreReports" asp-route-fakeData="true" asp-route-viewName="@Model.Request?.ViewName">Create fake date</a>
+	        <button id="exportCSV" class="btn btn-primary text-nowrap" type="button">
+		        Export CSV
+	        </button>
+        </div>
+    </div>
+    <div class="d-flex flex-column flex-sm-row align-items-sm-0center gap-3">
+	    <div class="dropdown" v-pre>
+		    <button id="ViewNameToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">@Model.Request.ViewName</button>
+		    <div class="dropdown-menu" aria-labelledby="ViewNameToggle">
+			    @foreach (var v in Model.AvailableViews)
+			    {
+				    <a data-view="@v" class="available-view dropdown-item @(Model.Request.ViewName == v ? "custom-active" : "")">@v</a>
+			    }
+		    </div>
+	    </div>
+	    <div class="input-group">
+		    <input id="fromDate" class="form-control flatdtpicker" type="datetime-local"
+			       data-fdtp='{ "enableTime": true, "enableSeconds": true, "dateFormat": "Y-m-d H:i:S", "time_24hr": true, "defaultHour": 0 }'
+			       placeholder="Start Date" />
+		    <button type="button" class="btn btn-primary input-group-clear" title="Clear">
+			    <span class="fa fa-times"></span>
+		    </button>
+	    </div>
+	    <div class="input-group">
+		    <input id="toDate" class="form-control flatdtpicker" type="datetime-local"
+			       data-fdtp='{ "enableTime": true, "enableSeconds": true, "dateFormat": "Y-m-d H:i:S", "time_24hr": true, "defaultHour": 0 }'
+			       placeholder="End Date" />
+		    <button type="button" class="btn btn-primary input-group-clear" title="Clear">
+			    <span class="fa fa-times"></span>
+		    </button>
+        </div>
+    </div>
 </div>
 
-<div id="app">
-	<div v-for="chart in srv.charts">
-		<h3>{{ chart.name }}</h3>
-		<table class="table table-bordered">
-			<thead>
-				<tr>
-					<th v-for="group in chart.groups">{{ group }}</th>
-					<th v-for="agg in chart.aggregates">{{ agg }}</th>
-				</tr>
-			</thead>
-			<tbody>
-				<tr v-for="row in chart.rows">
-					<td v-for="group in row.groups" :rowspan="group.rowCount">{{ group.name }}</td>
-					<td v-if="row.isTotal" :colspan="row.rLevel">Total</td>
-					<td v-for="value in row.values">{{ value }}</td>
-				</tr>
-				<tr v-if="chart.hasGrandTotal"><td :colspan="chart.groups.length">Grand total</td><td v-for="value in chart.grandTotalValues">{{ value }}</td></tr>
-			</tbody>
-		</table>
-	</div>
-	<h3>Raw data</h3>
-	<table class="table table-bordered">
-		<thead>
-			<tr>
-				<th v-for="field in srv.result.fields">
-					<a class="text-nowrap sort-column"
-					   href="javascript:void(0)"
-					   :data-field="field.name"
-					   @@click="srv.sortBy(field.name)"
-					   :title="srv.fieldViews[field.name].sortByTitle">
-						{{ field.name }}
-						<span :class="srv.fieldViews[field.name].sortIconClass" />
-					</a>
-				</th>
-			</tr>
-		</thead>
-		<tbody>
-			<tr v-for="(row, index) in srv.result.data" :key="index">
-				<td class="text-nowrap" v-for="(value, columnIndex) in row" :key="columnIndex">
-					<a :href="getInvoiceUrl(value)"
-					   target="_blank"
-					   v-if="srv.result.fields[columnIndex].type === 'invoice_id'">{{ value }}</a>
+<div id="app" v-cloak class="w-100-fixed">
+	<article v-for="chart in srv.charts" class="mb-5">
+        <h3>{{ chart.name }}</h3>
+        <div class="table-responsive">
+		    <table class="table table-hover w-auto">
+			    <thead>
+				    <tr>
+					    <th v-for="group in chart.groups">{{ group }}</th>
+					    <th v-for="agg in chart.aggregates">{{ agg }}</th>
+				    </tr>
+			    </thead>
+			    <tbody>
+				    <tr v-for="row in chart.rows">
+					    <td v-for="group in row.groups" :rowspan="group.rowCount">{{ group.name }}</td>
+					    <td v-if="row.isTotal" :colspan="row.rLevel">Total</td>
+					    <td v-for="value in row.values">{{ value }}</td>
+				    </tr>
+				    <tr v-if="chart.hasGrandTotal"><td :colspan="chart.groups.length">Grand total</td><td v-for="value in chart.grandTotalValues">{{ value }}</td></tr>
+			    </tbody>
+		    </table>
+        </div>
+	</article>
+    <article>
+        <h3>Raw data</h3>
+        <div class="table-responsive">
+            <table class="table table-hover w-auto">
+                <thead>
+                <tr>
+                    <th v-for="field in srv.result.fields">
+                        <a class="text-nowrap sort-column"
+                           href="javascript:void(0)"
+                           :data-field="field.name"
+                           @@click="srv.sortBy(field.name)"
+                           :title="srv.fieldViews[field.name].sortByTitle">
+                            {{ field.name }}
+                            <span :class="srv.fieldViews[field.name].sortIconClass" />
+                        </a>
+                    </th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr v-for="(row, index) in srv.result.data" :key="index">
+                    <td class="text-nowrap" v-for="(value, columnIndex) in row" :key="columnIndex">
+                        <a :href="getInvoiceUrl(value)"
+                           target="_blank"
+                           v-if="srv.result.fields[columnIndex].type === 'invoice_id'">{{ value }}</a>
 
-					<a :href="getExplorerUrl(value, row[columnIndex-1])"
-					   target="_blank"
-					   rel="noreferrer noopener"
-					   v-else-if="srv.result.fields[columnIndex].type === 'tx_id'">{{ value }}</a>
-					<span v-else>{{ value }}</span>
-				</td>
-			</tr>
-		</tbody>
-	</table>
+                        <a :href="getExplorerUrl(value, row[columnIndex-1])"
+                           target="_blank"
+                           rel="noreferrer noopener"
+                           v-else-if="srv.result.fields[columnIndex].type === 'tx_id'">{{ value }}</a>
+                        <span v-else>{{ value }}</span>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </article>
 </div>
-
 
 @section PageFootContent {
 	<script src="~/vendor/FileSaver/FileSaver.min.js" asp-append-version="true"></script>
 	<script src="~/vendor/papaparse/papaparse.min.js" asp-append-version="true"></script>
 	<script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
-	<script>
-		var srv = @Safe.Json(Model);
-	</script>
+	<script>const srv = @Safe.Json(Model);</script>
 	<script src="~/js/datatable.js" asp-append-version="true"></script>
 	<script src="~/js/store-reports.js" asp-append-version="true"></script>
 }

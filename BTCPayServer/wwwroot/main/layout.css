@@ -677,6 +677,11 @@
         max-width: none;
     }
 
+    #mainContent > section .w-100-fixed {
+        /* constrains the content to respect the maximum width and enable responsive tables */
+        width: calc(100vw - var(--sidebar-width) - var(--content-padding-horizontal) * 2);
+    }
+
     #SectionNav .nav {
         margin-top: calc(var(--btcpay-space-m) * -1);
     }

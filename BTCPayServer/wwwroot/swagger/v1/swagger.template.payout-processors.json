@@ -587,6 +587,11 @@
                         "description": "How many failures should the processor tolerate before cancelling the payout",
                         "type": "number",
                         "nullable": true
+                    },
+                    "processNewPayoutsInstantly": {
+                        "description": "Skip the interval when ane eligible payout has been approved (or created with pre-approval)",
+                        "type": "boolean",
+                        "default": false
                     }
                 }
             },
@@ -610,6 +615,11 @@
                         "description": "How many failures should the processor tolerate before cancelling the payout",
                         "type": "number",
                         "nullable": true
+                    },
+                    "processNewPayoutsInstantly": {
+                        "description": "Skip the interval when ane eligible payout has been approved (or created with pre-approval)",
+                        "type": "boolean",
+                        "default": false
                     }
                 }
             },
@@ -636,6 +646,11 @@
                         "minimum": 0,
                         "description": "Only process payouts when this payout sum is reached.",
                         "example": "0.1"
+                    },
+                    "processNewPayoutsInstantly": {
+                        "description": "Skip the interval when ane eligible payout has been approved (or created with pre-approval)",
+                        "type": "boolean",
+                        "default": false
                     }
                 }
             },
@@ -665,6 +680,11 @@
                         "minimum": 0,
                         "description": "Only process payouts when this payout sum is reached.",
                         "example": "0.1"
+                    },
+                    "processNewPayoutsInstantly": {
+                        "description": "Skip the interval when ane eligible payout has been approved (or created with pre-approval)",
+                        "type": "boolean",
+                        "default": false
                     }
                 }
             }

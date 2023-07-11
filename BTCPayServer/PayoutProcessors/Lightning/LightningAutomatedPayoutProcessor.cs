@@ -15,8 +15,6 @@ using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Stores;
-using LNURL;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NBitcoin;
@@ -41,11 +39,13 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Li
         IEnumerable<IPayoutHandler> payoutHandlers,
         UserService userService,
         ILoggerFactory logger, IOptions<LightningNetworkOptions> options,
-        StoreRepository storeRepository, PayoutProcessorData payoutProcesserSettings,
-        ApplicationDbContextFactory applicationDbContextFactory, PullPaymentHostedService pullPaymentHostedService, BTCPayNetworkProvider btcPayNetworkProvider,
-        IPluginHookService pluginHookService) :
-        base(logger, storeRepository, payoutProcesserSettings, applicationDbContextFactory, pullPaymentHostedService,
-            btcPayNetworkProvider, pluginHookService)
+        StoreRepository storeRepository, PayoutProcessorData payoutProcessorSettings,
+        ApplicationDbContextFactory applicationDbContextFactory, 
+        BTCPayNetworkProvider btcPayNetworkProvider,
+        IPluginHookService pluginHookService,
+        EventAggregator eventAggregator) :
+        base(logger, storeRepository, payoutProcessorSettings, applicationDbContextFactory,
+            btcPayNetworkProvider, pluginHookService, eventAggregator)
     {
         _btcPayNetworkJsonSerializerSettings = btcPayNetworkJsonSerializerSettings;
         _lightningClientFactoryService = lightningClientFactoryService;
@@ -53,16 +53,16 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Li
         _options = options;
         _payoutHandler = (LightningLikePayoutHandler)payoutHandlers.FindPayoutHandler(PaymentMethodId);
 
-        _network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(_PayoutProcesserSettings.GetPaymentMethodId().CryptoCode);
+        _network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(PayoutProcessorSettings.GetPaymentMethodId().CryptoCode);
     }
 
     protected override async Task Process(ISupportedPaymentMethod paymentMethod, List<PayoutData> payouts)
     {
-        var processorBlob = GetBlob(_PayoutProcesserSettings);
+        var processorBlob = GetBlob(PayoutProcessorSettings);
         var lightningSupportedPaymentMethod = (LightningSupportedPaymentMethod)paymentMethod;
         if (lightningSupportedPaymentMethod.IsInternalNode &&
-            !(await Task.WhenAll((await _storeRepository.GetStoreUsers(_PayoutProcesserSettings.StoreId))
-                .Where(user => user.StoreRole.ToPermissionSet( _PayoutProcesserSettings.StoreId).Contains(Policies.CanModifyStoreSettings, _PayoutProcesserSettings.StoreId)).Select(user => user.Id)
+            !(await Task.WhenAll((await _storeRepository.GetStoreUsers(PayoutProcessorSettings.StoreId))
+                .Where(user => user.StoreRole.ToPermissionSet( PayoutProcessorSettings.StoreId).Contains(Policies.CanModifyStoreSettings, PayoutProcessorSettings.StoreId)).Select(user => user.Id)
                 .Select(s => _userService.IsAdminUser(s)))).Any(b => b))
         {
             return;

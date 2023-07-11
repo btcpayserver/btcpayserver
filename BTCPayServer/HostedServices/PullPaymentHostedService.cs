@@ -389,7 +389,7 @@ namespace BTCPayServer.HostedServices
         {
             try
             {
-                using var ctx = _dbContextFactory.CreateContext();
+                await using var ctx = _dbContextFactory.CreateContext();
                 var payout = await ctx.Payouts.Include(p => p.PullPaymentData).Where(p => p.Id == req.PayoutId)
                     .FirstOrDefaultAsync();
                 if (payout is null)
@@ -440,6 +440,7 @@ namespace BTCPayServer.HostedServices
                 payout.SetBlob(payoutBlob, _jsonSerializerSettings);
                 await ctx.SaveChangesAsync();
 
+                _eventAggregator.Publish(new PayoutEvent(PayoutEvent.PayoutEventType.Approved, payout));
                 req.Completion.SetResult(new PayoutApproval.ApprovalResult(PayoutApproval.Result.Ok, payoutBlob.CryptoAmount));
             }
             catch (Exception ex)
@@ -604,6 +605,8 @@ namespace BTCPayServer.HostedServices
                 {
                     await payoutHandler.TrackClaim(req.ClaimRequest, payout);
                     await ctx.SaveChangesAsync();
+                    var response = new ClaimRequest.ClaimResponse(ClaimRequest.ClaimResult.Ok, payout);
+                    _eventAggregator.Publish(new PayoutEvent(PayoutEvent.PayoutEventType.Created, payout));
                     if (req.ClaimRequest.PreApprove.GetValueOrDefault(ppBlob?.AutoApproveClaims is true))
                     {
                         payout.StoreData = await ctx.Stores.FindAsync(payout.StoreDataId);
@@ -628,7 +631,7 @@ namespace BTCPayServer.HostedServices
                         }
                     }
 
-                    req.Completion.TrySetResult(new ClaimRequest.ClaimResponse(ClaimRequest.ClaimResult.Ok, payout));
+                    req.Completion.TrySetResult(response);
                     await _notificationSender.SendNotification(new StoreScope(payout.StoreDataId),
                         new PayoutNotification()
                         {
@@ -887,5 +890,15 @@ namespace BTCPayServer.HostedServices
         public IClaimDestination Destination { get; set; }
         public string StoreId { get; set; }
         public bool? PreApprove { get; set; }
+    }
+
+    public record PayoutEvent(PayoutEvent.PayoutEventType Type,PayoutData Payout)
+    {
+        public enum PayoutEventType
+        {
+            Created,
+            Approved
+        }
+
     }
 }

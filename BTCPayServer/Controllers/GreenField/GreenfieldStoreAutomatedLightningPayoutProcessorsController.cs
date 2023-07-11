@@ -58,7 +58,8 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 PaymentMethod = data.PaymentMethod,
                 IntervalSeconds = blob.Interval,
-                CancelPayoutAfterFailures = blob.CancelPayoutAfterFailures
+                CancelPayoutAfterFailures = blob.CancelPayoutAfterFailures,
+                ProcessNewPayoutsInstantly = blob.ProcessNewPayoutsInstantly
             };
         }
 
@@ -66,7 +67,9 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             return new LightningAutomatedPayoutBlob() { 
                 Interval = data.IntervalSeconds, 
-                CancelPayoutAfterFailures = data.CancelPayoutAfterFailures};
+                CancelPayoutAfterFailures = data.CancelPayoutAfterFailures,
+                ProcessNewPayoutsInstantly = data.ProcessNewPayoutsInstantly
+            };
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]

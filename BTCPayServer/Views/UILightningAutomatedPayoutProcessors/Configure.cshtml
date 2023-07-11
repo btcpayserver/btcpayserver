@@ -18,6 +18,11 @@
             <div asp-validation-summary="All" class="text-danger"></div>
         }
         <form method="post">
+            <div class="form-check">
+                <input asp-for="ProcessNewPayoutsInstantly" type="checkbox" class="form-check-input" />
+                <label asp-for="ProcessNewPayoutsInstantly" class="form-check-label">Process approved payouts instantly</label>
+                <span asp-validation-for="ProcessNewPayoutsInstantly" class="text-danger"></span>
+            </div>
             <div class="form-group">
                 <label asp-for="IntervalMinutes" class="form-label" data-required>Interval</label>
                 <div class="input-group">

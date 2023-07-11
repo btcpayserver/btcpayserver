@@ -123,7 +123,10 @@ public class UILightningAutomatedPayoutProcessorsController : Controller
         {
             IntervalMinutes = blob.Interval.TotalMinutes;
             CancelPayoutAfterFailures = blob.CancelPayoutAfterFailures;
+            ProcessNewPayoutsInstantly = blob.ProcessNewPayoutsInstantly;
         }
+
+        public bool ProcessNewPayoutsInstantly { get; set; }
 
         public int? CancelPayoutAfterFailures { get; set; }
 
@@ -132,7 +135,8 @@ public class UILightningAutomatedPayoutProcessorsController : Controller
 
         public LightningAutomatedPayoutBlob ToBlob()
         {
-            return new LightningAutomatedPayoutBlob { 
+            return new LightningAutomatedPayoutBlob {
+                ProcessNewPayoutsInstantly = ProcessNewPayoutsInstantly,
                 Interval = TimeSpan.FromMinutes(IntervalMinutes), 
                 CancelPayoutAfterFailures = CancelPayoutAfterFailures};
         }

@@ -12,7 +12,6 @@ using BTCPayServer.Payments;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBXplorer;
@@ -45,8 +44,8 @@ namespace BTCPayServer.PayoutProcessors.OnChain
             BTCPayNetworkProvider btcPayNetworkProvider,
             IPluginHookService pluginHookService,
             IFeeProviderFactory feeProviderFactory) :
-            base(logger, storeRepository, payoutProcesserSettings, applicationDbContextFactory, pullPaymentHostedService,
-                btcPayNetworkProvider, pluginHookService)
+            base(logger, storeRepository, payoutProcesserSettings, applicationDbContextFactory,
+                btcPayNetworkProvider, pluginHookService, eventAggregator)
         {
             _explorerClientProvider = explorerClientProvider;
             _btcPayWalletProvider = btcPayWalletProvider;
@@ -97,7 +96,7 @@ namespace BTCPayServer.PayoutProcessors.OnChain
             var changeAddress = await explorerClient.GetUnusedAsync(
                 storePaymentMethod.AccountDerivation, DerivationFeature.Change, 0, true);
 
-            var processorBlob = GetBlob(_PayoutProcesserSettings);
+            var processorBlob = GetBlob(PayoutProcessorSettings);
             var payoutToBlobs = payouts.ToDictionary(data => data, data => data.GetBlob(_btcPayNetworkJsonSerializerSettings));
             if (payoutToBlobs.Sum(pair => pair.Value.CryptoAmount) < processorBlob.Threshold)
             {
@@ -181,7 +180,7 @@ namespace BTCPayServer.PayoutProcessors.OnChain
                     {
                         tcs.SetResult(false);
                     }
-                    var walletId = new WalletId(_PayoutProcesserSettings.StoreId, PaymentMethodId.CryptoCode);
+                    var walletId = new WalletId(PayoutProcessorSettings.StoreId, PaymentMethodId.CryptoCode);
                     foreach (var payoutData in transfersProcessing)
                     {
                         await WalletRepository.AddWalletTransactionAttachment(walletId,

@@ -305,7 +305,6 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                         : requiresRefundEmail == RequiresRefundEmail.On,
                 }, store, HttpContext.Request.GetAbsoluteRoot(),
                     new List<string> { AppService.GetAppInternalTag(appId) },
-                    new [] { AppService.GetAppOrderId(app) },
                     cancellationToken, entity =>
                     {
                         entity.Metadata.OrderUrl = Request.GetDisplayUrl();
@@ -517,7 +516,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 Description = settings.Description,
                 NotificationUrl = settings.NotificationUrl,
                 RedirectUrl = settings.RedirectUrl,
-                SearchTerm = app.TagAllInvoices ? $"storeid:{app.StoreDataId}" : $"plugin:{AppService.GetAppOrderId(app)}",
+                SearchTerm = app.TagAllInvoices ? $"storeid:{app.StoreDataId}" : $"appid:{app.Id}",
                 RedirectAutomatically = settings.RedirectAutomatically.HasValue ? settings.RedirectAutomatically.Value ? "true" : "false" : "",
                 FormId = settings.FormId
             };

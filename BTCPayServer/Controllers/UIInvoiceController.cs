@@ -110,15 +110,15 @@ namespace BTCPayServer.Controllers
 
 
         internal async Task<DataWrapper<InvoiceResponse>> CreateInvoiceCore(BitpayCreateInvoiceRequest invoice,
-            StoreData store, string serverUrl, List<string>? additionalTags = null, string[]? additionalSearchTerms = null, 
+            StoreData store, string serverUrl, List<string>? additionalTags = null,
             CancellationToken cancellationToken = default, Action<InvoiceEntity>? entityManipulator = null)
         {
-            var entity = await CreateInvoiceCoreRaw(invoice, store, serverUrl, additionalTags, additionalSearchTerms, cancellationToken, entityManipulator);
+            var entity = await CreateInvoiceCoreRaw(invoice, store, serverUrl, additionalTags, cancellationToken, entityManipulator);
             var resp = entity.EntityToDTO();
             return new DataWrapper<InvoiceResponse>(resp) { Facade = "pos/invoice" };
         }
 
-        internal async Task<InvoiceEntity> CreateInvoiceCoreRaw(BitpayCreateInvoiceRequest invoice, StoreData store, string serverUrl, List<string>? additionalTags = null, string[]? additionalSearchTerms = null, CancellationToken cancellationToken = default, Action<InvoiceEntity>? entityManipulator = null)
+        internal async Task<InvoiceEntity> CreateInvoiceCoreRaw(BitpayCreateInvoiceRequest invoice, StoreData store, string serverUrl, List<string>? additionalTags = null, CancellationToken cancellationToken = default, Action<InvoiceEntity>? entityManipulator = null)
         {
             var storeBlob = store.GetStoreBlob();
             var entity = _InvoiceRepository.CreateNewInvoice();
@@ -197,7 +197,7 @@ namespace BTCPayServer.Controllers
             entity.DefaultPaymentMethod = invoice.DefaultPaymentMethod;
             entity.RequiresRefundEmail = invoice.RequiresRefundEmail;
 
-            return await CreateInvoiceCoreRaw(entity, store, excludeFilter, additionalSearchTerms, cancellationToken, entityManipulator);
+            return await CreateInvoiceCoreRaw(entity, store, excludeFilter, null, cancellationToken, entityManipulator);
         }
 
         internal async Task<InvoiceEntity> CreatePaymentRequestInvoice(Data.PaymentRequestData prData, decimal? amount, decimal amountDue, StoreData storeData, HttpRequest request, CancellationToken cancellationToken)

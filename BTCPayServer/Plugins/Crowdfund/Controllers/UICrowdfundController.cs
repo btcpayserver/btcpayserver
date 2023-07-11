@@ -190,7 +190,6 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                     RedirectURL = request.RedirectUrl ?? appUrl,
                 }, store, HttpContext.Request.GetAbsoluteRoot(),
                     new List<string> { AppService.GetAppInternalTag(appId) },
-                    new [] { AppService.GetAppOrderId(app) },
                     cancellationToken, entity =>
                     {
                         entity.Metadata.OrderUrl = appUrl;
@@ -249,7 +248,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                 IsRecurring = resetEvery != nameof(CrowdfundResetEvery.Never),
                 UseAllStoreInvoices = app.TagAllInvoices,
                 AppId = appId,
-                SearchTerm = app.TagAllInvoices ? $"storeid:{app.StoreDataId}" : $"plugin:{AppService.GetAppOrderId(app)}",
+                SearchTerm = app.TagAllInvoices ? $"storeid:{app.StoreDataId}" : $"appid:{app.Id}",
                 DisplayPerksRanking = settings.DisplayPerksRanking,
                 DisplayPerksValue = settings.DisplayPerksValue,
                 SortPerksByPopularity = settings.SortPerksByPopularity,

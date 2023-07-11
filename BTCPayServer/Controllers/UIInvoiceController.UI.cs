@@ -1095,16 +1095,24 @@ namespace BTCPayServer.Controllers
             invoiceQuery.Take = model.Count;
             invoiceQuery.Skip = model.Skip;
             invoiceQuery.IncludeRefunds = true;
+            
             var list = await _InvoiceRepository.GetInvoices(invoiceQuery);
 
             // Apps
             var apps = await _appService.GetAllApps(GetUserId(), false, storeId);
+            var appIds = fs.GetFilterArray("appid");
+            if (appIds is { Length: > 0 })
+            {
+                var appTags = appIds.Select(AppService.GetAppInternalTag);
+                list = list.Where(inv => inv.Version < InvoiceEntity.InternalTagSupport_Version ||
+                                inv.InternalTags.Any(it => appTags.Contains(it))).ToArray();
+            }
+
             model.Apps = apps.Select(a => new InvoiceAppModel
             {
                 Id = a.Id,
                 AppName = a.AppName,
-                AppType = a.AppType,
-                AppOrderId = AppService.GetAppOrderId(a.AppType, a.Id)
+                AppType = a.AppType
             }).ToList();
 
             foreach (var invoice in list)
@@ -1142,7 +1150,6 @@ namespace BTCPayServer.Controllers
                 StoreId = fs.GetFilterArray("storeid"),
                 ItemCode = fs.GetFilterArray("itemcode"),
                 OrderId = fs.GetFilterArray("orderid"),
-                AdditionalSearchTerms = fs.GetFilterArray("plugin"),
                 StartDate = fs.GetFilterDate("startdate", timezoneOffset),
                 EndDate = fs.GetFilterDate("enddate", timezoneOffset)
             };

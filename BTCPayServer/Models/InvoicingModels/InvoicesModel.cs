@@ -41,6 +41,5 @@ namespace BTCPayServer.Models.InvoicingModels
         public string Id { get; set; }
         public string AppName { get; set; }
         public string AppType { get; set; }
-        public string AppOrderId { get; set; }
     }
 }

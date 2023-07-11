@@ -316,7 +316,6 @@ namespace BTCPayServer
                 invoiceMetadata.ItemDesc = item.Description;
             }
             createInvoice.Metadata = invoiceMetadata.ToJObject();
-            createInvoice.AdditionalSearchTerms = new [] { AppService.GetAppOrderId(app) };
 
             return await GetLNURLRequest(
                 cryptoCode,

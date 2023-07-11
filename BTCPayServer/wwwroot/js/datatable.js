@@ -52,7 +52,7 @@
 
     // Build a representation of the HTML table's data 'rows' from the tree of nodes.
     function buildRows(node, rows) {
-        if (node.children.length === 0) {
+        if (node.children.length === 0 && node.level !== 0) {
             var row =
             {
                 values: node.values,

@@ -31,14 +31,12 @@ public class OnChainWalletReportProvider : ReportProvider
     public StoreRepository StoreRepository { get; }
     public BTCPayNetworkProvider NetworkProvider { get; }
     public WalletRepository WalletRepository { get; }
-
-    public override ViewDefinition[] CreateViewDefinitions()
+    public override string Name => "On-Chain Wallets";
+    ViewDefinition CreateViewDefinition()
     {
-        return new ViewDefinition[]
-        {
+        return
             new()
             {
-                Name = "On-Chain Wallets",
                 Fields =
                 {
                         new ("Date", "datetime"),
@@ -59,8 +57,7 @@ public class OnChainWalletReportProvider : ReportProvider
                         Aggregates = { "BalanceChange" }
                     }
                 }
-            }
-        };
+            };
     }
 
     public override bool IsAvailable()
@@ -70,6 +67,7 @@ public class OnChainWalletReportProvider : ReportProvider
 
     public override async Task Query(QueryContext queryContext, CancellationToken cancellation)
     {
+        queryContext.ViewDefinition = CreateViewDefinition();
         await using var conn = await NbxplorerConnectionFactory.OpenConnection();
         var store = await StoreRepository.FindStore(queryContext.StoreId);
         if (store is null)

@@ -6,17 +6,16 @@ namespace BTCPayServer.Services.Reporting
 {
     public record QueryContext
     {
-        public QueryContext(string storeId, DateTimeOffset from, DateTimeOffset to, ViewDefinition viewDefinition)
+        public QueryContext(string storeId, DateTimeOffset from, DateTimeOffset to)
         {
             StoreId = storeId;
             From = from;
             To = to;
-            ViewDefinition = viewDefinition;
         }
         public string StoreId { get; }
         public DateTimeOffset From { get; }
         public DateTimeOffset To { get; }
-        public ViewDefinition ViewDefinition { get; }
+        public ViewDefinition? ViewDefinition { get; set; }
 
         public IList<object> AddData()
         {

@@ -5,7 +5,6 @@ namespace BTCPayServer.Services.Reporting
 {
     public class ViewDefinition
     {
-        public string Name { get; set; }
         public IList<StoreReportResponse.Field> Fields
         {
             get;

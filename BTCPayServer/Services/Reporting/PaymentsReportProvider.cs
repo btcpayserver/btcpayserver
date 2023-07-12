@@ -29,17 +29,15 @@ public class PaymentsReportProvider : ReportProvider
         DbContextFactory = dbContextFactory;
         CurrencyNameTable = currencyNameTable;
     }
-
+    public override string Name => "Payments";
     public ApplicationDbContextFactory DbContextFactory { get; }
     public CurrencyNameTable CurrencyNameTable { get; }
 
-    public override ViewDefinition[] CreateViewDefinitions()
+    ViewDefinition CreateViewDefinition()
     {
-        return new ViewDefinition[]
-        {
+        return 
             new()
             {
-                Name = "Payments",
                 Fields =
                 {
                         new ("Date", "datetime"),
@@ -50,7 +48,7 @@ public class PaymentsReportProvider : ReportProvider
                         new ("Confirmed", "boolean"),
                         new ("Address", "string"),
                         new ("Crypto", "string"),
-                        new ("Amount", "decimal"),
+                        new ("CryptoAmount", "decimal"),
                         new ("NetworkFee", "decimal"),
                         new ("LightningAddress", "string"),
                         new ("Currency", "string"),
@@ -65,7 +63,7 @@ public class PaymentsReportProvider : ReportProvider
                         Groups = { "Crypto", "PaymentType" },
                         Totals = { "Crypto" },
                         HasGrandTotal = false,
-                        Aggregates = { "Amount" }
+                        Aggregates = { "CryptoAmount" }
                     },
                     new ()
                     {
@@ -88,17 +86,17 @@ public class PaymentsReportProvider : ReportProvider
                         Name = "Group by Lightning Address (Crypto amount)",
                         Filters = { "typeof this.LightningAddress === 'string' && this.Crypto == \"BTC\"" },
                         Groups = { "LightningAddress" },
-                        Aggregates = { "Amount" },
+                        Aggregates = { "CryptoAmount" },
                         HasGrandTotal = true
                     }
                 }
-            }
         };
     }
 
 
     public override async Task Query(QueryContext queryContext, CancellationToken cancellation)
     {
+        queryContext.ViewDefinition = CreateViewDefinition();
         await using var ctx = DbContextFactory.CreateContext();
         var conn = ctx.Database.GetDbConnection();
         string[] fields = new[]

@@ -39,23 +39,6 @@ public class GreenfieldReportsController : Controller
     public ApplicationDbContextFactory DBContextFactory { get; }
     public ReportService ReportService { get; }
 
-    [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-    [HttpGet("~/api/v1/stores/{storeId}/reports")]
-    public IActionResult GetAvailableViews(string storeId)
-    {
-        return Json(ReportService.ReportProviders.Values
-        .Where(k => k.IsAvailable())
-        .SelectMany(k => k.CreateViewDefinitions())
-        .Select (def => 
-        {
-            return new
-            {
-                ViewName = def.Name,
-                Fields = def.Fields
-            };
-        }).ToList());
-    }
-
 
     [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
     [HttpPost("~/api/v1/stores/{storeId}/reports")]
@@ -74,13 +57,12 @@ public class GreenfieldReportsController : Controller
             if (!report.IsAvailable())
                 return this.CreateAPIError(503, "view-unavailable", $"This view is unavailable at this moment");
 
-            var definition = report.CreateViewDefinition(vm.ViewName);
-            var ctx = new Services.Reporting.QueryContext(storeId, from, to, definition);
+            var ctx = new Services.Reporting.QueryContext(storeId, from, to);
             await report.Query(ctx, cancellationToken);
             var result = new StoreReportResponse()
             {
-                Fields = definition.Fields,
-                Charts = definition.Charts,
+                Fields = ctx.ViewDefinition?.Fields ?? new List<StoreReportResponse.Field>(),
+                Charts = ctx.ViewDefinition?.Charts ?? new List<ChartDefinition>(),
                 Data = ctx.Data.Select(d => new JArray(d)).ToList(),
                 From = from,
                 To = to

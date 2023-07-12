@@ -81,7 +81,7 @@ public partial class UIReportsController
             return Encoders.Bech32("bc1").Encode(0, GenerateBytes(20));
         if (f.Name == "Crypto")
             return rand.NextSingle() > 0.2 ? "BTC" : TakeOne("LTC", "DOGE", "DASH");
-        if (f.Name == "Amount")
+        if (f.Name == "CryptoAmount")
             return GenerateDecimal(0.1m, 5m, 8);
         if (f.Name == "LightningAddress")
             return TakeOne("satoshi", "satosan", "satoichi") + "@bitcoin.org";

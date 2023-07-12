@@ -396,20 +396,13 @@
     background: var(--btcpay-nav-bg-active);
 }
 
-/* Sticky Header: The <div class="sticky-header-setup"></div> needs to be included once
-   before the first sticky-header on the page. The sticky-header has a padding-top so
-   that it does not scroll underneath the fixed header on mobile. The sticky-header-setup
-   negates that padding with a negative margin, so that everything fits in the end. */
-.sticky-header-setup {
-    margin-top: calc(var(--content-padding-top) * -1);
-}
-
 .sticky-header {
     position: -webkit-sticky;
     position: sticky;
     top: 0;
-    z-index: 1020;
+    z-index: 1021;
     background: var(--btcpay-body-bg);
+    margin-top: calc(var(--content-padding-top) * -1);
     /* pull it out of the content padding and adjust its inner padding to make up for that space */
     margin-left: calc(var(--content-padding-horizontal) * -1);
     margin-right: calc(var(--content-padding-horizontal) * -1);

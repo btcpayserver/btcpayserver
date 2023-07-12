@@ -13,8 +13,13 @@
 	Csp.AllowUnsafeHashes("javascript:void(0)");
 	Csp.UnsafeEval();
 }
+@section PageHeadContent
+{
+    @* Set a height for the responsive table container to make it work with the fixed table headers.
+       Details described here: thttps://uxdesign.cc/position-stuck-96c9f55d9526 *@
+    <style>#app .table-responsive { max-height: 80vh; }</style>
+}
 
-<div class="sticky-header-setup"></div>
 <div class="sticky-header">
     <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
         <h2 class="mb-0">@ViewData["Title"]</h2>
@@ -59,7 +64,7 @@
         <h3>{{ chart.name }}</h3>
         <div class="table-responsive">
 		    <table class="table table-hover w-auto">
-			    <thead>
+                <thead class="sticky-top bg-body">
 				    <tr>
 					    <th v-for="group in chart.groups">{{ group }}</th>
 					    <th v-for="agg in chart.aggregates">{{ agg }}</th>
@@ -77,10 +82,10 @@
         </div>
 	</article>
     <article>
-        <h3>Raw data</h3>
+        <h3 id="raw-data">Raw data</h3>
         <div class="table-responsive">
             <table class="table table-hover w-auto">
-                <thead>
+                <thead class="sticky-top bg-body">
                 <tr>
                     <th v-for="field in srv.result.fields">
                         <a class="text-nowrap sort-column"

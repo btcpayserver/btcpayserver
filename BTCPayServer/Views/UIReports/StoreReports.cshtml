@@ -10,7 +10,6 @@
 @model StoreReportsViewModel
 @{
 	ViewData.SetActivePage(StoreNavPages.Reporting, "Reporting");
-	Csp.AllowUnsafeHashes("javascript:void(0)");
 	Csp.UnsafeEval();
 }
 @section PageHeadContent
@@ -89,9 +88,9 @@
                 <tr>
                     <th v-for="field in srv.result.fields">
                         <a class="text-nowrap sort-column"
-                           href="javascript:void(0)"
+                           href="#"
                            :data-field="field.name"
-                           @@click="srv.sortBy(field.name)"
+                           @@click.prevent="srv.sortBy(field.name)"
                            :title="srv.fieldViews[field.name].sortByTitle">
                             {{ field.name }}
                             <span :class="srv.fieldViews[field.name].sortIconClass" />

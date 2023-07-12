@@ -101,6 +101,7 @@ document.addEventListener("DOMContentLoaded", () => {
     
     const $viewNameToggle = document.getElementById("ViewNameToggle")
     delegate("click", ".available-view", function (e) {
+        e.preventDefault();
         const { view } = e.target.dataset;
         $viewNameToggle.innerText = view;
         document.querySelectorAll(".available-view").forEach($el => $el.classList.remove("custom-active"));

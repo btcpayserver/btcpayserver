@@ -36,7 +36,7 @@
 		    <div class="dropdown-menu" aria-labelledby="ViewNameToggle">
 			    @foreach (var v in Model.AvailableViews)
 			    {
-				    <a data-view="@v" class="available-view dropdown-item @(Model.Request.ViewName == v ? "custom-active" : "")">@v</a>
+				    <a href="#" data-view="@v" class="available-view dropdown-item @(Model.Request.ViewName == v ? "custom-active" : "")">@v</a>
 			    }
 		    </div>
 	    </div>

@@ -1,10 +1,9 @@
-var app;
-var origData;
+let app, origData;
 srv.sortBy = function (field) {
     for (let key in this.fieldViews) {
         if (this.fieldViews.hasOwnProperty(key)) {
-            var sortedField = field == key;
-            var fieldView = this.fieldViews[key];
+            const sortedField = field === key;
+            const fieldView = this.fieldViews[key];
 
             if (sortedField && (fieldView.sortBy === "" || fieldView.sortBy === "desc")) {
                 fieldView.sortByTitle = "asc";
@@ -27,8 +26,7 @@ srv.sortBy = function (field) {
 }
 
 srv.applySort = function () {
-    var fieldIndex;
-    var fieldView;
+    let fieldIndex, fieldView;
     for (let key in this.fieldViews) {
         if (this.fieldViews.hasOwnProperty(key)) {
             fieldView = this.fieldViews[key];
@@ -41,10 +39,10 @@ srv.applySort = function () {
     }
     if (!fieldView)
         return;
-    var sortType = fieldView.sortBy === "desc" ? 1 : -1;
+    const sortType = fieldView.sortBy === "desc" ? 1 : -1;
     srv.result.data.sort(function (a, b) {
-        var aVal = a[fieldIndex];
-        var bVal = b[fieldIndex];
+        const aVal = a[fieldIndex];
+        const bVal = b[fieldIndex];
         if (aVal === bVal) return 0;
         if (aVal === null) return 1 * sortType;
         if (bVal === null) return -1 * sortType;
@@ -82,11 +80,11 @@ srv.updateFieldViews = function () {
     }
 };
 
-$(function () {
-    $(".flatdtpicker").on("input", function () {
+document.addEventListener("DOMContentLoaded", () => {
+    delegate("input", ".flatdtpicker", function () {
         // We don't use vue to bind dates, because VueJS break the flatpickr as soon as binding occurs.
-        var to = $("#toDate").val();
-        var from = $("#fromDate").val();
+        let to = document.getElementById("toDate").value
+        let from = document.getElementById("fromDate").value
 
         if (!to || !from)
             return;
@@ -99,18 +97,20 @@ $(function () {
         fetchStoreReports();
     });
 
-    $("#exportCSV").on("click", downloadCSV);
-    $(".available-view").on("click", function () {
-        var view = $(this).data("view");
-        $("#ViewNameToggle").text(view);
-        $(".available-view").removeClass("custom-active");
-        $(this).addClass("custom-active");
+    delegate("click", "#exportCSV", downloadCSV);
+    
+    const $viewNameToggle = document.getElementById("ViewNameToggle")
+    delegate("click", ".available-view", function (e) {
+        const { view } = e.target.dataset;
+        $viewNameToggle.innerText = view;
+        document.querySelectorAll(".available-view").forEach($el => $el.classList.remove("custom-active"));
+        e.target.classList.add("custom-active");
         srv.request.viewName = view;
         fetchStoreReports();
     });
 
-    var to = new Date();
-    var from = new Date(to.getTime() - 1000 * 60 * 60 * 24 * 30);
+    const to = new Date();
+    const from = new Date(to.getTime() - 1000 * 60 * 60 * 24 * 30);
     srv.request = srv.request || {};
     srv.request.timePeriod = srv.request.timePeriod || {};
     srv.request.timePeriod.to = moment(to).unix();
@@ -121,7 +121,7 @@ $(function () {
     updateUIDateRange();
     app = new Vue({
         el: '#app',
-        data: { srv: srv }
+        data() { return { srv } }
     });
     fetchStoreReports();
 });
@@ -143,24 +143,18 @@ function modifyFields(fields, data, type, action) {
     }
 }
 function downloadCSV() {
-    if (!origData)
-        return;
-    var data = clone(origData);
+    if (!origData) return;
+    const data = clone(origData);
 
     // Convert ISO8601 dates to YYYY-MM-DD HH:mm:ss so the CSV easily integrate with Excel
-    modifyFields(srv.result.fields, data, 'datetime', (v) => moment(v).format('YYYY-MM-DD hh:mm:ss'));
-    var csv = Papa.unparse(
-        {
-            fields: srv.result.fields.map(f => f.name),
-            data: data
-        });
-
-    var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    modifyFields(srv.result.fields, data, 'datetime', v => moment(v).format('YYYY-MM-DD hh:mm:ss'));
+    const csv = Papa.unparse({ fields: srv.result.fields.map(f => f.name), data });
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     saveAs(blob, "export.csv");
 }
 
 async function fetchStoreReports() {
-    var result = await fetch(window.location, {
+    const result = await fetch(window.location, {
         method: 'POST',
         headers: {
             'Accept': 'application/json',
@@ -173,13 +167,13 @@ async function fetchStoreReports() {
     srv.dataUpdated();
 
     // Dates from API are UTC, convert them to local time
-    modifyFields(srv.result.fields, srv.result.data, 'datetime', (a) => moment(a).format())
+    modifyFields(srv.result.fields, srv.result.data, 'datetime', a => moment(a).format())
     updateUIDateRange();
 
     srv.charts = [];
-    for (var i = 0; i < srv.result.charts.length; i++) {
-        var chart = srv.result.charts[i];
-        var table = createTable(chart, srv.result.fields.map(f => f.name), srv.result.data);
+    for (let i = 0; i < srv.result.charts.length; i++) {
+        const chart = srv.result.charts[i];
+        const table = createTable(chart, srv.result.fields.map(f => f.name), srv.result.data);
         table.name = chart.name;
         srv.charts.push(table);
     }
@@ -207,14 +201,12 @@ function generateRandomRows(numRows) {
         const paymentType = getRandomValue(paymentTypes);
         const amount = getRandomNumber(10, 5000);
         const cryptoAmount = getRandomNumber(0.1, 2.5);
-
         const row = [region, crypto, paymentType, amount, cryptoAmount];
         rows.push(row);
     }
 
     return rows;
 }
-
 
 function getInvoiceUrl(value) {
     if (!value)

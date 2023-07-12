@@ -73,10 +73,10 @@ public partial class UIReportsController
         if (f.Name == "PaymentType")
             return TakeOne("On-Chain", "Lightning");
         if (f.Name == "PaymentId")
-            if (row[fi -1] is "BTC")
+            if (row[fi -1] is "On-Chain")
                 return Encoders.Hex.EncodeData(GenerateBytes(32)) + "-" + rand.NextInt64(0, 4);
             else
-                return GenerateBytes(32);
+                return Encoders.Hex.EncodeData(GenerateBytes(32));
         if (f.Name == "Address")
             return Encoders.Bech32("bc1").Encode(0, GenerateBytes(20));
         if (f.Name == "Crypto")

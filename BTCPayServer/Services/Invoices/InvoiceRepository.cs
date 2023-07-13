@@ -617,6 +617,7 @@ namespace BTCPayServer.Services.Invoices
                 entity.Metadata.BuyerEmail = entity.RefundMail;
             }
             entity.Archived = invoice.Archived;
+            entity.UpdateTotals();
             return entity;
         }
 
@@ -828,9 +829,8 @@ namespace BTCPayServer.Services.Invoices
                              {
                                  var paymentMethodContribution = new InvoiceStatistics.Contribution();
                                  paymentMethodContribution.PaymentMethodId = pay.GetPaymentMethodId();
-                                 paymentMethodContribution.Value = pay.GetCryptoPaymentData().GetValue() - pay.NetworkFee;
-                                 var rate = p.GetPaymentMethod(paymentMethodContribution.PaymentMethodId).Rate;
-                                 paymentMethodContribution.CurrencyValue = rate * paymentMethodContribution.Value;
+                                 paymentMethodContribution.CurrencyValue = pay.InvoicePaidAmount.Net;
+                                 paymentMethodContribution.Value = pay.PaidAmount.Net;
                                  return paymentMethodContribution;
                              })
                              .ToArray();

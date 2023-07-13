@@ -167,7 +167,7 @@ namespace BTCPayServer.PaymentRequest
                                 new object[]
                                 {
                                     data.GetValue(),
-                                    invoiceEvent.Payment.GetCryptoCode(),
+                                    invoiceEvent.Payment.PaymentCurrency,
                                     invoiceEvent.Payment.GetPaymentMethodId()?.PaymentType?.ToString()
                                 }, cancellationToken);
                         }

@@ -314,6 +314,7 @@ namespace BTCPayServer.Controllers
                 entity.RefundMail = entity.Metadata.BuyerEmail;
             }
             entity.Status = InvoiceStatusLegacy.New;
+            entity.UpdateTotals();
             HashSet<CurrencyPair> currencyPairsToFetch = new HashSet<CurrencyPair>();
             var rules = storeBlob.GetRateRules(_NetworkProvider);
             var excludeFilter = storeBlob.GetExcludedPaymentMethods(); // Here we can compose filters from other origin with PaymentFilter.Any()
@@ -391,6 +392,7 @@ namespace BTCPayServer.Controllers
             }
             entity.SetSupportedPaymentMethods(supported);
             entity.SetPaymentMethods(paymentMethods);
+            entity.UpdateTotals();
             foreach (var app in await getAppsTaggingStore)
             {
                 entity.InternalTags.Add(AppService.GetAppInternalTag(app.Id));

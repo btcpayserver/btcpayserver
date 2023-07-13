@@ -24,6 +24,7 @@ namespace BTCPayServer.Plugins
         // Trigger simple action hook for registered plugins
         public async Task ApplyAction(string hook, object args)
         {
+            ActionInvoked?.Invoke(this, (hook, args));
             var filters = _actions
                 .Where(filter => filter.Hook.Equals(hook, StringComparison.InvariantCultureIgnoreCase)).ToList();
             foreach (IPluginHookAction pluginHookFilter in filters)
@@ -42,6 +43,7 @@ namespace BTCPayServer.Plugins
         // Trigger hook on which registered plugins can optionally return modified args or new object back
         public async Task<object> ApplyFilter(string hook, object args)
         {
+            FilterInvoked?.Invoke(this, (hook, args));
             var filters = _filters
                 .Where(filter => filter.Hook.Equals(hook, StringComparison.InvariantCultureIgnoreCase)).ToList();
             foreach (IPluginHookFilter pluginHookFilter in filters)
@@ -58,5 +60,8 @@ namespace BTCPayServer.Plugins
 
             return args;
         }
+
+        public event EventHandler<(string hook, object args)> ActionInvoked;
+        public event EventHandler<(string hook, object args)> FilterInvoked;
     }
 }

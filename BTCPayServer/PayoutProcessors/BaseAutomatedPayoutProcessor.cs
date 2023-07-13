@@ -102,29 +102,28 @@ public abstract class BaseAutomatedPayoutProcessor<T> : BaseAsyncService where T
         var blob = GetBlob(PayoutProcessorSettings);
         if (paymentMethod is not null)
         {
-
-            // Allow plugins to do something before the automatic payouts are executed
-            await _pluginHookService.ApplyFilter("before-automated-payout-processing",
-                new BeforePayoutFilterData(store, paymentMethod));
-
             await using var context = _applicationDbContextFactory.CreateContext();
             var payouts = await PullPaymentHostedService.GetPayouts(
                 new PullPaymentHostedService.PayoutQuery()
                 {
                     States = new[] { PayoutState.AwaitingPayment },
                     PaymentMethods = new[] { PayoutProcessorSettings.PaymentMethod },
-                    Stores = new[] { PayoutProcessorSettings.StoreId }
+                    Stores = new[] {PayoutProcessorSettings.StoreId}
                 }, context, CancellationToken);
+
+            await _pluginHookService.ApplyAction("before-automated-payout-processing",
+                new BeforePayoutActionData(store, PayoutProcessorSettings, payouts));
             if (payouts.Any())
             {
-                Logs.PayServer.LogInformation($"{payouts.Count} found to process. Starting (and after will sleep for {blob.Interval})");
+                Logs.PayServer.LogInformation(
+                    $"{payouts.Count} found to process. Starting (and after will sleep for {blob.Interval})");
                 await Process(paymentMethod, payouts);
                 await context.SaveChangesAsync();
-
-                // Allow plugins do to something after automatic payout processing
-                await _pluginHookService.ApplyFilter("after-automated-payout-processing",
-                    new AfterPayoutFilterData(store, paymentMethod, payouts));
             }
+
+            // Allow plugins do to something after automatic payout processing
+            await _pluginHookService.ApplyAction("after-automated-payout-processing",
+                new AfterPayoutActionData(store, PayoutProcessorSettings, payouts));
         }
 
         // Clip interval

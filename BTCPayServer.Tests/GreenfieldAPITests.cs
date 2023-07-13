@@ -2631,7 +2631,7 @@ namespace BTCPayServer.Tests
             for (int i = 0; i < invoices.Length; i++)
             {
                 pm[i] = Assert.Single(await client.GetInvoicePaymentMethods(user.StoreId, (await invoices[i]).Id));
-                Assert.False(pm[i].AdditionalData.HasValues);
+                Assert.True(pm[i].AdditionalData.HasValues);
             }
 
             // Pay them all at once

@@ -29,7 +29,7 @@
 <head>
     <partial name="LayoutHead" />
     <partial name="LayoutHeadStoreBranding" model="@(Model.BrandColor, Model.CssFileId, Model.CustomCSSLink, Model.EmbeddedCSS)" />
-    <link href="~/vendor/bootstrap-vue/bootstrap-vue.css" asp-append-version="true"  rel="stylesheet" />
+    <link href="~/vendor/bootstrap-vue/bootstrap-vue.min.css" asp-append-version="true"  rel="stylesheet" />
     <style>
         .no-marker > ul { list-style-type: none; }
     </style>
@@ -227,10 +227,11 @@
     });
     </script>
   }
-    <script>
+<script>
         document.addEventListener("DOMContentLoaded", () => {
             document.getElementById("copyLink").addEventListener("click", window.copyUrlToClipboard);
         });
 </script>
+<vc:ui-extension-point location="pullpayment-foot"  model="@Model"></vc:ui-extension-point>
 </body>
 </html>

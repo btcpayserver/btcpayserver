@@ -119,6 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
     })
 
     Vue.use(vSortable)
+    Vue.use(VueSanitizeDirective.default)
 
     new Vue({
         el: '#FormEditor',

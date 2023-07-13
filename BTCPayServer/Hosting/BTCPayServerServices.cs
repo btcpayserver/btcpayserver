@@ -520,6 +520,8 @@ namespace BTCPayServer.Hosting
             services.AddRateProvider<BitflyerRateProvider>();
             services.AddRateProvider<YadioRateProvider>();
             services.AddRateProvider<BtcTurkRateProvider>();
+            services.AddRateProvider<FreeCurrencyRatesRateProvider>();
+            services.AddRateProvider<ExchangeRateHostRateProvider>();
 
             // Broken
             // Providers.Add("argoneum", new ArgoneumRateProvider(_httpClientFactory?.CreateClient("EXCHANGE_ARGONEUM")));

@@ -2,10 +2,10 @@
 @using BTCPayServer.Client.Models
 @using BTCPayServer.Services
 @inject DisplayFormatter DisplayFormatter
+@inject PaymentMethodHandlerDictionary PaymentMethodHandlerDictionary
 @model InvoicesModel
 @{
     ViewData.SetActivePage(InvoiceNavPages.Index, "Invoices");
-
     var statusFilterCount = CountArrayFilter("status") + CountArrayFilter("exceptionstatus") + (HasBooleanFilter("includearchived") ? 1 : 0) + (HasBooleanFilter("unusual") ? 1 : 0);
     var hasDateFilter = HasArrayFilter("startdate") || HasArrayFilter("enddate");
     var appFilterCount = Model.Apps.Count(app => HasArrayFilter("orderid", app.AppOrderId));
@@ -234,7 +234,7 @@
     </div>
 </div>
 
-<form class="d-flex flex-wrap flex-sm-nowrap align-items-center gap-3 mb-4 @(Model.Invoices.Any() ? "col-xl-7 col-xxl-8" : null)" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" method="get">
+<form class="d-flex flex-wrap flex-sm-nowrap align-items-center gap-3 mb-4 @(Model.Invoices.Any() ? "col-xxl-8" : null)" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" method="get">
     <input asp-for="Count" type="hidden" />
     <input asp-for="TimezoneOffset" type="hidden" />
     <input asp-for="SearchTerm" type="hidden" value="@Model.Search.WithoutSearchText()"/>
@@ -322,13 +322,13 @@
 @if (Model.Invoices.Any())
 {
     <form method="post" id="MassAction" asp-action="MassAction" class="">
-        <div class="d-inline-flex align-items-center pb-2 float-xl-end mb-2 gap-3">
+        <div class="d-inline-flex align-items-center pb-2 float-xxl-end mb-2 gap-3">
             <input type="hidden" name="storeId" value="@Model.StoreId" />
-            <div class="dropdown order-xl-1">
+            <div class="dropdown order-xxl-1">
                 <button class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" id="ActionsDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     Actions
                 </button>
-                <div class="dropdown-menu dropdown-menu-xl-end" aria-labelledby="ActionsDropdownToggle">
+                <div class="dropdown-menu dropdown-menu-xxl-end" aria-labelledby="ActionsDropdownToggle">
                     <button type="submit" class="dropdown-item" name="command" value="archive" id="ActionsDropdownArchive">Archive</button>
                     @if (HasBooleanFilter("includearchived"))
                     {
@@ -338,7 +338,7 @@
                 </div>
             </div>
             <div class="dropdown d-inline-flex align-items-center gap-3">
-                <button class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret order-xl-1" type="button" id="ExportDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <button class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret order-xxl-1" type="button" id="ExportDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     Export
                 </button>
                 <div class="dropdown-menu" aria-labelledby="ExportDropdownToggle">
@@ -392,50 +392,66 @@
                             </td>
                             <td class="text-break">@invoice.InvoiceId</td>
                             <td>
-                                @if (invoice.Details.Archived)
-                                {
-                                    <span class="badge bg-warning">archived</span>
-                                }
-                                @if (invoice.CanMarkStatus)
-                                {
-                                    <div id="pavpill_@invoice.InvoiceId" class="badge badge-@invoice.Status.Status.ToModernStatus().ToString().ToLower()">
-                                        <span class="dropdown-toggle changeInvoiceStateToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                            @invoice.Status.ToString()
-                                        </span>
-                                        <div class="dropdown-menu">
-                                            @if (invoice.CanMarkInvalid)
-                                            {
-                                                <button type="button" class="dropdown-item lh-base changeInvoiceState" data-invoice-id="@invoice.InvoiceId" data-new-state="invalid">
-                                                    Mark as invalid
-                                                </button>
-                                            }
-                                            @if (invoice.CanMarkSettled)
-                                            {
-                                                <button type="button" class="dropdown-item lh-base changeInvoiceState" data-invoice-id="@invoice.InvoiceId" data-new-state="settled">
-                                                    Mark as settled
-                                                </button>
-                                            }
+                                <div class="d-flex align-items-center gap-2">
+                                    @if (invoice.Details.Archived)
+                                    {
+                                        <span class="badge bg-warning">archived</span>
+                                    }
+                                    @if (invoice.CanMarkStatus)
+                                    {
+                                        <div id="pavpill_@invoice.InvoiceId" class="badge badge-@invoice.Status.Status.ToModernStatus().ToString().ToLower()">
+                                            <span class="dropdown-toggle changeInvoiceStateToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                @invoice.Status.ToString()
+                                            </span>
+                                            <div class="dropdown-menu">
+                                                @if (invoice.CanMarkInvalid)
+                                                {
+                                                    <button type="button" class="dropdown-item lh-base changeInvoiceState" data-invoice-id="@invoice.InvoiceId" data-new-state="invalid">
+                                                        Mark as invalid
+                                                    </button>
+                                                }
+                                                @if (invoice.CanMarkSettled)
+                                                {
+                                                    <button type="button" class="dropdown-item lh-base changeInvoiceState" data-invoice-id="@invoice.InvoiceId" data-new-state="settled">
+                                                        Mark as settled
+                                                    </button>
+                                                }
+                                            </div>
                                         </div>
-                                    </div>
-                                }
-                                else
-                                {
-                                    <span class="badge badge-@invoice.Status.Status.ToModernStatus().ToString().ToLower()">
-                                        @invoice.Status.Status.ToModernStatus().ToString()
-                                        @if (invoice.Status.ExceptionStatus != InvoiceExceptionStatus.None)
+                                    }
+                                    else
+                                    {
+                                        <span class="badge badge-@invoice.Status.Status.ToModernStatus().ToString().ToLower()">
+                                            @invoice.Status.Status.ToModernStatus().ToString()
+                                            @if (invoice.Status.ExceptionStatus != InvoiceExceptionStatus.None)
+                                            {
+                                                @($"({invoice.Status.ExceptionStatus.ToString()})")
+                                            }
+                                        </span>
+                                    }
+                                    @foreach (var paymentMethodId in invoice.Details.Payments.Select(payment => payment.GetPaymentMethodId()).Distinct())
+                                    {
+                                        var image = PaymentMethodHandlerDictionary[paymentMethodId]?.GetCryptoImage(paymentMethodId);
+                                        var badge = paymentMethodId.PaymentType.GetBadge();
+                                        if (!string.IsNullOrEmpty(image) || !string.IsNullOrEmpty(badge))
                                         {
-                                            @($"({invoice.Status.ExceptionStatus.ToString()})")
+                                            <span class="d-inline-flex align-items-center gap-1">
+                                                @if (!string.IsNullOrEmpty(image))
+                                                {
+                                                    <img src="@Context.Request.GetRelativePathOrAbsolute(image)" alt="@paymentMethodId.PaymentType.ToString()" style="height:1.5em" />
+                                                }
+                                                @if (!string.IsNullOrEmpty(badge))
+                                                {
+                                                    @badge
+                                                }
+                                            </span>
                                         }
-                                    </span>
-                                }
-                                @foreach (var paymentType in invoice.Details.Payments.Select(payment => payment.GetPaymentMethodId()?.PaymentType).Distinct().Where(type => type != null && !string.IsNullOrEmpty(type.GetBadge())))
-                                {
-                                    <span class="badge">@paymentType.GetBadge()</span>
-                                }
-                                @if (invoice.HasRefund)
-                                {
-                                    <span class="badge bg-warning">Refund</span>
-                                }
+                                    }
+                                    @if (invoice.HasRefund)
+                                    {
+                                        <span class="badge bg-warning">Refund</span>
+                                    }
+                                </div>
                             </td>
                             <td class="text-end text-nowrap">
                                 <span data-sensitive>@DisplayFormatter.Currency(invoice.Amount, invoice.Currency)</span>

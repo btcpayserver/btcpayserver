@@ -62,7 +62,7 @@ namespace BTCPayServer.Services.Reporting
                 var appIds = tagAllinvoicesApps.Select(a => a.Id);
                 var taggedAppId = AppService.GetAppInternalTags(i)?.FirstOrDefault();
                 if (taggedAppId is string)
-                    appIds = appIds.Concat(new[] { taggedAppId });
+                    appIds = appIds.Concat(new[] { taggedAppId }).Distinct().ToArray();
 
                 foreach (var appId in appIds)
                 {

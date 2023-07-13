@@ -414,7 +414,7 @@ namespace BTCPayServer.Services.Invoices
                 // If any payment method exactly pay the invoice, the overpayment is caused by
                 // rounding limitation of the underlying payment method.
                 // Document this overpayment as dust, and set the net due to 0
-                if (GetPaymentMethods().Any(p => p.Calculate().DueUncapped == Money.Zero))
+                if (GetPaymentMethods().Any(p => p.Calculate().DueUncapped == 0.0m))
                 {
                     Dust = -NetDue;
                     NetDue = 0.0m;
@@ -630,7 +630,7 @@ namespace BTCPayServer.Services.Invoices
                     if (paymentId.PaymentType == PaymentTypes.BTCLike)
                     {
                         var minerInfo = new MinerFeeInfo();
-                        minerInfo.TotalFee = accounting.NetworkFee.Satoshi;
+                        minerInfo.TotalFee = accounting.ToSmallestUnit(accounting.NetworkFee);
                         minerInfo.SatoshiPerBytes = ((BitcoinLikeOnChainPaymentMethod)details).FeeRate
                             .GetFee(1).Satoshi;
                         dto.MinerFees.TryAdd(cryptoInfo.CryptoCode, minerInfo);
@@ -652,8 +652,8 @@ namespace BTCPayServer.Services.Invoices
 
                 dto.CryptoInfo.Add(cryptoInfo);
                 dto.PaymentCodes.Add(paymentId.ToString(), cryptoInfo.PaymentUrls);
-                dto.PaymentSubtotals.Add(paymentId.ToString(), subtotalPrice.Satoshi);
-                dto.PaymentTotals.Add(paymentId.ToString(), accounting.TotalDue.Satoshi);
+                dto.PaymentSubtotals.Add(paymentId.ToString(), accounting.ToSmallestUnit(subtotalPrice));
+                dto.PaymentTotals.Add(paymentId.ToString(), accounting.ToSmallestUnit(accounting.TotalDue));
                 dto.SupportedTransactionCurrencies.TryAdd(cryptoCode, new InvoiceSupportedTransactionCurrency()
                 {
                     Enabled = true
@@ -976,30 +976,31 @@ namespace BTCPayServer.Services.Invoices
 
     public class PaymentMethodAccounting
     {
+        public int Divisibility { get; set; }
         /// <summary>Total amount of this invoice</summary>
-        public Money TotalDue { get; set; }
+        public decimal TotalDue { get; set; }
 
         /// <summary>Amount of crypto remaining to pay this invoice</summary>
-        public Money Due { get; set; }
+        public decimal Due { get; set; }
 
         /// <summary>Same as Due, can be negative</summary>
-        public Money DueUncapped { get; set; }
+        public decimal DueUncapped { get; set; }
 
         /// <summary>If DueUncapped is negative, that means user overpaid invoice</summary>
-        public Money OverpaidHelper
+        public decimal OverpaidHelper
         {
-            get { return DueUncapped > Money.Zero ? Money.Zero : -DueUncapped; }
+            get { return DueUncapped > 0.0m ? 0.0m : -DueUncapped; }
         }
 
         /// <summary>
         /// Total amount of the invoice paid after conversion to this crypto currency
         /// </summary>
-        public Money Paid { get; set; }
+        public decimal Paid { get; set; }
 
         /// <summary>
         /// Total amount of the invoice paid in this currency
         /// </summary>
-        public Money CryptoPaid { get; set; }
+        public decimal CryptoPaid { get; set; }
 
         /// <summary>
         /// Number of transactions required to pay
@@ -1013,15 +1014,25 @@ namespace BTCPayServer.Services.Invoices
         /// <summary>
         /// Total amount of network fee to pay to the invoice
         /// </summary>
-        public Money NetworkFee { get; set; }
+        public decimal NetworkFee { get; set; }
         /// <summary>
         /// Total amount of network fee to pay to the invoice
         /// </summary>
-        public Money NetworkFeeAlreadyPaid { get; set; }
+        public decimal NetworkFeeAlreadyPaid { get; set; }
         /// <summary>
         /// Minimum required to be paid in order to accept invoice as paid
         /// </summary>
-        public Money MinimumTotalDue { get; set; }
+        public decimal MinimumTotalDue { get; set; }
+
+        public decimal ToSmallestUnit(decimal v)
+        {
+            for (int i = 0; i < Divisibility; i++)
+            {
+                v *= 10.0m;
+            }
+            return v;
+        }
+        public string ShowMoney(decimal v) => MoneyExtensions.ShowMoney(v, Divisibility);
     }
 
     public interface IPaymentMethod
@@ -1160,33 +1171,41 @@ namespace BTCPayServer.Services.Invoices
                 accounting.TxRequired++;
                 grossDue += Rate * (GetPaymentMethodDetails()?.GetNextNetworkFee() ?? 0m);
             }
-
+            accounting.Divisibility = precision;
             accounting.TotalDue = Coins(grossDue / Rate, precision);
             accounting.Paid = Coins(i.PaidAmount.Gross / Rate, precision);
             accounting.CryptoPaid = Coins(thisPaymentMethodPayments.Sum(p => p.PaidAmount.Gross), precision);
 
             accounting.DueUncapped = Coins((grossDue - i.PaidAmount.Gross)/ Rate, precision);
-            accounting.Due = Money.Max(accounting.DueUncapped, Money.Zero);
+            accounting.Due = Max(accounting.DueUncapped, 0.0m);
             
             accounting.NetworkFee = Coins((grossDue - i.Price) / Rate, precision);
             accounting.NetworkFeeAlreadyPaid = Coins(i.PaidFee / Rate, precision);
-            accounting.MinimumTotalDue = Money.Max(Money.Satoshis(1.0m), Coins((grossDue * (1.0m - ((decimal)i.PaymentTolerance / 100.0m))) / Rate, precision));
+            
+            accounting.MinimumTotalDue = Max(Smallest(precision), Coins((grossDue * (1.0m - ((decimal)i.PaymentTolerance / 100.0m))) / Rate, precision));
             return accounting;
         }
 
+        private decimal Smallest(int precision)
+        {
+            decimal a = 1.0m;
+            for (int i = 0; i < precision; i++)
+            {
+                a /= 10.0m;
+            }
+            return a;
+        }
+
+        decimal Max(decimal a, decimal b) => a > b ? a : b;
+
         const decimal MaxCoinValue = decimal.MaxValue / 1_0000_0000m;
-        internal static Money Coins(decimal v, int precision)
+        internal static decimal Coins(decimal v, int precision)
         {
             v = Extensions.RoundUp(v, precision);
-            if (v > MaxCoinValue)
-                v = MaxCoinValue;
             // Clamp the value to not crash on degenerate invoices
-            v *= 1_0000_0000m;
-            if (v > long.MaxValue)
-                return Money.Satoshis(long.MaxValue);
-            if (v < long.MinValue)
-                return Money.Satoshis(long.MinValue);
-            return Money.Satoshis(v);
+            if (v > MaxCoinValue)
+                v = MaxCoinValue;            
+            return v;
         }
     }
 

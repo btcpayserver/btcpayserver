@@ -126,7 +126,7 @@ namespace BTCPayServer.Services.Altcoins.Monero.Services
                 paymentMethod.GetPaymentMethodDetails() is MoneroLikeOnChainPaymentMethodDetails monero &&
                 monero.Activated && 
                 monero.GetPaymentDestination() == paymentData.GetDestination() &&
-                paymentMethod.Calculate().Due > Money.Zero)
+                paymentMethod.Calculate().Due > 0.0m)
             {
                 var walletClient = _moneroRpcProvider.WalletRpcClients[payment.PaymentCurrency];
 

@@ -73,7 +73,7 @@ namespace BTCPayServer.Payments.Lightning
             decimal due = Extensions.RoundUp(invoice.Price / paymentMethod.Rate, network.Divisibility);
             try
             {
-                due = paymentMethod.Calculate().Due.ToDecimal(MoneyUnit.BTC);
+                due = paymentMethod.Calculate().Due;
             }
             catch (Exception)
             {

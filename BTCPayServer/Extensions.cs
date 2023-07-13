@@ -30,6 +30,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBitcoin.Payment;
+using NBitpayClient;
 using NBXplorer.Models;
 using Newtonsoft.Json;
 using InvoiceCryptoInfo = BTCPayServer.Services.Invoices.InvoiceCryptoInfo;
@@ -38,6 +39,14 @@ namespace BTCPayServer
 {
     public static class Extensions
     {
+        public static decimal? GetDue(this InvoiceCryptoInfo invoiceCryptoInfo)
+        {
+            if (invoiceCryptoInfo is null)
+                return null;
+            if (decimal.TryParse(invoiceCryptoInfo.Due, NumberStyles.Any, CultureInfo.InvariantCulture, out var v))
+                return v;
+            return null;
+        }
         public static Task<BufferizedFormFile> Bufferize(this IFormFile formFile)
         {
             return BufferizedFormFile.Bufferize(formFile);

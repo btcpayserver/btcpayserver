@@ -360,8 +360,8 @@ namespace BTCPayServer.Controllers
             if (paymentMethod != null)
             {
                 accounting = paymentMethod.Calculate();
-                cryptoPaid = accounting.Paid.ToDecimal(MoneyUnit.BTC);
-                dueAmount = accounting.TotalDue.ToDecimal(MoneyUnit.BTC);
+                cryptoPaid = accounting.Paid;
+                dueAmount = accounting.TotalDue;
                 paidAmount = cryptoPaid.RoundToSignificant(appliedDivisibility);
             }
 
@@ -556,7 +556,7 @@ namespace BTCPayServer.Controllers
                     {
                         var accounting = data.Calculate();
                         var paymentMethodId = data.GetId();
-                        var overpaidAmount = accounting.OverpaidHelper.ToDecimal(MoneyUnit.BTC);
+                        var overpaidAmount = accounting.OverpaidHelper;
 
                         if (overpaidAmount > 0)
                         {
@@ -567,8 +567,8 @@ namespace BTCPayServer.Controllers
                         {
                             PaymentMethodId = paymentMethodId,
                             PaymentMethod = paymentMethodId.ToPrettyString(),
-                            Due = _displayFormatter.Currency(accounting.Due.ToDecimal(MoneyUnit.BTC), paymentMethodId.CryptoCode),
-                            Paid = _displayFormatter.Currency(accounting.CryptoPaid.ToDecimal(MoneyUnit.BTC), paymentMethodId.CryptoCode),
+                            Due = _displayFormatter.Currency(accounting.Due, paymentMethodId.CryptoCode),
+                            Paid = _displayFormatter.Currency(accounting.CryptoPaid, paymentMethodId.CryptoCode),
                             Overpaid = _displayFormatter.Currency(overpaidAmount, paymentMethodId.CryptoCode),
                             Address = data.GetPaymentMethodDetails().GetPaymentDestination(),
                             Rate = ExchangeRate(data.GetId().CryptoCode, data),
@@ -823,7 +823,6 @@ namespace BTCPayServer.Controllers
             var dto = invoice.EntityToDTO();
             var accounting = paymentMethod.Calculate();
             var paymentMethodHandler = _paymentMethodHandlerDictionary[paymentMethodId];
-            var divisibility = _CurrencyNameTable.GetNumberFormatInfo(paymentMethod.GetId().CryptoCode, false)?.CurrencyDecimalDigits;
 
             switch (lang?.ToLowerInvariant())
             {
@@ -881,10 +880,10 @@ namespace BTCPayServer.Controllers
                 OnChainWithLnInvoiceFallback = storeBlob.OnChainWithLnInvoiceFallback,
                 CryptoImage = Request.GetRelativePathOrAbsolute(paymentMethodHandler.GetCryptoImage(paymentMethodId)),
                 BtcAddress = paymentMethodDetails.GetPaymentDestination(),
-                BtcDue = accounting.Due.ShowMoney(divisibility),
-                BtcPaid = accounting.Paid.ShowMoney(divisibility),
+                BtcDue = accounting.ShowMoney(accounting.Due),
+                BtcPaid = accounting.ShowMoney(accounting.Paid),
                 InvoiceCurrency = invoice.Currency,
-                OrderAmount = (accounting.TotalDue - accounting.NetworkFee).ShowMoney(divisibility),
+                OrderAmount = accounting.ShowMoney(accounting.TotalDue - accounting.NetworkFee),
                 IsUnsetTopUp = invoice.IsUnsetTopUp(),
                 CustomerEmail = invoice.RefundMail,
                 RequiresRefundEmail = invoice.RequiresRefundEmail ?? storeBlob.RequiresRefundEmail,

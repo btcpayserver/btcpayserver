@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using BTCPayServer.Common;
@@ -87,13 +88,13 @@ namespace BTCPayServer
             });
         }
 
-        public virtual PaymentUrlBuilder GenerateBIP21(string cryptoInfoAddress, Money cryptoInfoDue)
+        public virtual PaymentUrlBuilder GenerateBIP21(string cryptoInfoAddress, decimal? cryptoInfoDue)
         {
             var builder = new PaymentUrlBuilder(this.NBitcoinNetwork.UriScheme);
             builder.Host = cryptoInfoAddress;
-            if (cryptoInfoDue != null && cryptoInfoDue != Money.Zero)
+            if (cryptoInfoDue is not null && cryptoInfoDue.Value != 0.0m)
             {
-                builder.QueryParams.Add("amount", cryptoInfoDue.ToString(false, true));
+                builder.QueryParams.Add("amount", cryptoInfoDue.Value.ToString(CultureInfo.InvariantCulture));
             }
             return builder;
         }

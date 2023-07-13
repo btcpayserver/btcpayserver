@@ -396,7 +396,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 return this.CreateValidationError(ModelState);
 
             var accounting = invoicePaymentMethod.Calculate();
-            var cryptoPaid = accounting.Paid.ToDecimal(MoneyUnit.BTC);
+            var cryptoPaid = accounting.Paid;
             var cdCurrency = _currencyNameTable.GetCurrencyData(invoice.Currency, true);
             var paidCurrency = Math.Round(cryptoPaid * invoicePaymentMethod.Rate, cdCurrency.Divisibility);
             var rateResult = await _rateProvider.FetchRate(
@@ -464,7 +464,7 @@ namespace BTCPayServer.Controllers.Greenfield
                         return this.CreateValidationError(ModelState);
                     }
                     
-                    var dueAmount = accounting.TotalDue.ToDecimal(MoneyUnit.BTC);
+                    var dueAmount = accounting.TotalDue;
                     createPullPayment.Currency = cryptoCode;
                     createPullPayment.Amount = Math.Round(paidAmount - dueAmount, appliedDivisibility);
                     createPullPayment.AutoApproveClaims = true;
@@ -580,11 +580,11 @@ namespace BTCPayServer.Controllers.Greenfield
                         CryptoCode = method.GetId().CryptoCode,
                         Destination = details.GetPaymentDestination(),
                         Rate = method.Rate,
-                        Due = accounting.DueUncapped.ToDecimal(MoneyUnit.BTC),
-                        TotalPaid = accounting.Paid.ToDecimal(MoneyUnit.BTC),
-                        PaymentMethodPaid = accounting.CryptoPaid.ToDecimal(MoneyUnit.BTC),
-                        Amount = accounting.TotalDue.ToDecimal(MoneyUnit.BTC),
-                        NetworkFee = accounting.NetworkFee.ToDecimal(MoneyUnit.BTC),
+                        Due = accounting.DueUncapped,
+                        TotalPaid = accounting.Paid,
+                        PaymentMethodPaid = accounting.CryptoPaid,
+                        Amount = accounting.TotalDue,
+                        NetworkFee = accounting.NetworkFee,
                         PaymentLink =
                             method.GetId().PaymentType.GetPaymentLink(method.Network, entity, details, accounting.Due,
                                 Request.GetAbsoluteRoot()),

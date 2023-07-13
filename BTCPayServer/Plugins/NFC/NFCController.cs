@@ -119,7 +119,7 @@ namespace BTCPayServer.Plugins.NFC
                 }
                 else
                 {
-                    due = new LightMoney(lnPaymentMethod.Calculate().Due);
+                    due = LightMoney.Coins(lnPaymentMethod.Calculate().Due);
                 }
 
                 if (info.MinWithdrawable > due || due > info.MaxWithdrawable)
@@ -135,10 +135,10 @@ namespace BTCPayServer.Plugins.NFC
 
             if (lnurlPaymentMethod is not null)
             {
-                Money due;
+                decimal due;
                 if (invoice.Type == InvoiceType.TopUp && request.Amount is not null)
                 {
-                    due = new Money(request.Amount.Value, MoneyUnit.Satoshi);
+                    due = new Money(request.Amount.Value, MoneyUnit.Satoshi).ToDecimal(MoneyUnit.BTC);
                 }
                 else if (invoice.Type == InvoiceType.TopUp)
                 {
@@ -152,7 +152,7 @@ namespace BTCPayServer.Plugins.NFC
                 try
                 {
                     httpClient = CreateHttpClient(info.Callback);
-                    var amount = LightMoney.Satoshis(due.Satoshi);
+                    var amount = LightMoney.Coins(due);
                     var actionPath = Url.Action(nameof(UILNURLController.GetLNURLForInvoice), "UILNURL",
                         new { invoiceId = request.InvoiceId, cryptoCode = "BTC", amount = amount.MilliSatoshi });
                     var url = Request.GetAbsoluteUri(actionPath);

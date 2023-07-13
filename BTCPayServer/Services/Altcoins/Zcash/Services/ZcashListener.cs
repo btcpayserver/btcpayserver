@@ -121,7 +121,7 @@ namespace BTCPayServer.Services.Altcoins.Zcash.Services
                 paymentMethod.GetPaymentMethodDetails() is ZcashLikeOnChainPaymentMethodDetails Zcash &&
                 Zcash.Activated && 
                 Zcash.GetPaymentDestination() == paymentData.GetDestination() &&
-                paymentMethod.Calculate().Due > Money.Zero)
+                paymentMethod.Calculate().Due > 0.0m)
             {
                 var walletClient = _ZcashRpcProvider.WalletRpcClients[payment.PaymentCurrency];
 

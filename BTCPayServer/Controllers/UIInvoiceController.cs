@@ -508,7 +508,7 @@ namespace BTCPayServer.Controllers
                         await fetchingByCurrencyPair[new CurrencyPair(supportedPaymentMethod.PaymentId.CryptoCode, criteria.Value.Currency)];
                     if (currentRateToCrypto?.BidAsk != null)
                     {
-                        var amount = paymentMethod.Calculate().Due.GetValue(network as BTCPayNetwork);
+                        var amount = paymentMethod.Calculate().Due;
                         var limitValueCrypto = criteria.Value.Value / currentRateToCrypto.BidAsk.Bid;
 
                         if (amount < limitValueCrypto && criteria.Above)

@@ -34,12 +34,12 @@ namespace BTCPayServer
                     output.Value is AssetMoney assetMoney && assetMoney.AssetId == AssetId));
         }
 
-        public override PaymentUrlBuilder GenerateBIP21(string cryptoInfoAddress, Money cryptoInfoDue)
+        public override PaymentUrlBuilder GenerateBIP21(string cryptoInfoAddress, decimal? cryptoInfoDue)
         {
             //precision 0: 10 = 0.00000010
             //precision 2: 10 = 0.00001000
             //precision 8: 10 = 10
-            var money = cryptoInfoDue is null ? null : new Money(cryptoInfoDue.ToDecimal(MoneyUnit.BTC) / decimal.Parse("1".PadRight(1 + 8 - Divisibility, '0')), MoneyUnit.BTC);
+            var money = cryptoInfoDue is null ? (decimal?)null : cryptoInfoDue.Value / decimal.Parse("1".PadRight(1 + 8 - Divisibility, '0'));
             var builder = base.GenerateBIP21(cryptoInfoAddress, money);
             builder.QueryParams.Add("assetid", AssetId.ToString());
             return builder;

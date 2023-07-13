@@ -548,7 +548,7 @@ namespace BTCPayServer
             lnurlRequest.Metadata = JsonConvert.SerializeObject(lnUrlMetadata.Select(kv => new[] { kv.Key, kv.Value }));
             if (i.Type != InvoiceType.TopUp)
             {
-                lnurlRequest.MinSendable = new LightMoney(pm.Calculate().Due.ToDecimal(MoneyUnit.Satoshi), LightMoneyUnit.Satoshi);
+                lnurlRequest.MinSendable = LightMoney.Coins(pm.Calculate().Due);
                 if (!allowOverpay)
                     lnurlRequest.MaxSendable = lnurlRequest.MinSendable;
             }

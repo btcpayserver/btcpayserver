@@ -738,8 +738,11 @@ namespace BTCPayServer.Services.Invoices
                 query = query.Take(queryObject.Take.Value);
             return query;
         }
-
-        public async Task<InvoiceEntity[]> GetInvoices(InvoiceQuery queryObject)
+        public Task<InvoiceEntity[]> GetInvoices(InvoiceQuery queryObject)
+        {
+            return GetInvoices(queryObject, default);
+        }
+        public async Task<InvoiceEntity[]> GetInvoices(InvoiceQuery queryObject, CancellationToken cancellationToken)
         {
             using var context = _applicationDbContextFactory.CreateContext();
             var query = GetInvoiceQuery(context, queryObject);
@@ -750,7 +753,7 @@ namespace BTCPayServer.Services.Invoices
                 query = query.Include(o => o.Events);
             if (queryObject.IncludeRefunds)
                 query = query.Include(o => o.Refunds).ThenInclude(refundData => refundData.PullPaymentData);
-            var data = await query.ToArrayAsync().ConfigureAwait(false);
+            var data = await query.ToArrayAsync(cancellationToken).ConfigureAwait(false);
             return data.Select(ToEntity).ToArray();
         }
 

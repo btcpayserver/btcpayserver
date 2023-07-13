@@ -45,7 +45,7 @@ namespace BTCPayServer.Services.Reporting
                 StartDate = queryContext.From,
                 EndDate = queryContext.To,
                 StoreId = new[] { queryContext.StoreId }
-            })).OrderBy(c => c.InvoiceTime))
+            }, cancellation)).OrderBy(c => c.InvoiceTime))
             {
                 var values = queryContext.CreateData();
                 values.Add(i.InvoiceTime);

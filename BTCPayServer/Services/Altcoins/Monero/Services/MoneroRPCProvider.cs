@@ -29,10 +29,10 @@ namespace BTCPayServer.Services.Altcoins.Monero.Services
             _eventAggregator = eventAggregator;
             DaemonRpcClients =
                 _moneroLikeConfiguration.MoneroLikeConfigurationItems.ToImmutableDictionary(pair => pair.Key,
-                    pair => new JsonRpcClient(pair.Value.DaemonRpcUri, "", "", httpClientFactory.CreateClient()));
+                    pair => new JsonRpcClient(pair.Value.DaemonRpcUri, pair.Value.Username, pair.Value.Password, httpClientFactory.CreateClient($"{pair.Key}client")));
             WalletRpcClients =
                 _moneroLikeConfiguration.MoneroLikeConfigurationItems.ToImmutableDictionary(pair => pair.Key,
-                    pair => new JsonRpcClient(pair.Value.InternalWalletRpcUri, "", "", httpClientFactory.CreateClient()));
+                    pair => new JsonRpcClient(pair.Value.InternalWalletRpcUri, "", "", httpClientFactory.CreateClient($"{pair.Key}client")));
         }
 
         public bool IsAvailable(string cryptoCode)

@@ -296,7 +296,8 @@ namespace BTCPayServer
 
             var createInvoice = new CreateInvoiceRequest()
             {
-                Amount = item?.Price.Value,
+                Amount =  item?.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Topup? null:  item?.Price,
+                
                 Currency = currencyCode,
                 Checkout = new InvoiceDataBase.CheckoutOptions()
                 {

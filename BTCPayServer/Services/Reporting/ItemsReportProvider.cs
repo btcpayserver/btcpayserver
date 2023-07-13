@@ -18,19 +18,23 @@ namespace BTCPayServer.Services.Reporting
 {
     public class ItemsReportProvider : ReportProvider
     {
-        public ItemsReportProvider(InvoiceRepository invoiceRepository, CurrencyNameTable currencyNameTable)
+        public ItemsReportProvider(InvoiceRepository invoiceRepository, CurrencyNameTable currencyNameTable, AppService apps)
         {
             InvoiceRepository = invoiceRepository;
             CurrencyNameTable = currencyNameTable;
+            Apps = apps;
         }
 
         public InvoiceRepository InvoiceRepository { get; }
         public CurrencyNameTable CurrencyNameTable { get; }
+        public AppService Apps { get; }
 
         public override string Name => "Items sold";
 
         public override async Task Query(QueryContext queryContext, CancellationToken cancellation)
         {
+            var appsById = (await Apps.GetApps(queryContext.StoreId)).ToDictionary(o => o.Id);
+            var tagAllinvoicesApps = appsById.Values.Where(a => a.TagAllInvoices).ToList();
             queryContext.ViewDefinition = CreateDefinition();
             foreach (var i in (await InvoiceRepository.GetInvoices(new InvoiceQuery()
             {
@@ -50,31 +54,42 @@ namespace BTCPayServer.Services.Reporting
                 if (status == Client.Models.InvoiceStatus.Expired && i.ExceptionStatus == Client.Models.InvoiceExceptionStatus.None)
                     continue;
                 values.Add(status.ToString());
-                var appId = AppService.GetAppInternalTags(i)?.FirstOrDefault();
-                if (appId is null)
-                    continue;
-                values.Add(appId);
-                if (i.Metadata?.ItemCode is string code)
+
+                // There are two ways an invoice belong to a particular app.
+                // 1. The invoice is internally tagged with the app id
+                // 2. The app is a tag all invoices app
+                // In both cases, we want to include the invoice in the report
+                var appIds = tagAllinvoicesApps.Select(a => a.Id);
+                var taggedAppId = AppService.GetAppInternalTags(i)?.FirstOrDefault();
+                if (taggedAppId is string)
+                    appIds = appIds.Concat(new[] { taggedAppId });
+
+                foreach (var appId in appIds)
                 {
-                    values.Add(code);
-                    values.Add(1);
-                    values.Add(i.Currency);
-                    values.Add(i.Price);
-                    queryContext.Data.Add(values);
-                }
-                else
-                {
-                    var posData = i.Metadata.PosData?.ToObject<PosAppData>();
-                    if (posData.Cart is { } cart)
+                    values = values.ToList();
+                    values.Add(appId);
+                    if (i.Metadata?.ItemCode is string code)
                     {
-                        foreach (var item in cart)
+                        values.Add(code);
+                        values.Add(1);
+                        values.Add(i.Currency);
+                        values.Add(i.Price);
+                        queryContext.Data.Add(values);
+                    }
+                    else
+                    {
+                        var posData = i.Metadata.PosData?.ToObject<PosAppData>();
+                        if (posData.Cart is { } cart)
                         {
-                            var copy = values.ToList();
-                            copy.Add(item.Id);
-                            copy.Add(item.Count);
-                            copy.Add(i.Currency);
-                            copy.Add(item.Price * item.Count);
-                            queryContext.Data.Add(copy);
+                            foreach (var item in cart)
+                            {
+                                var copy = values.ToList();
+                                copy.Add(item.Id);
+                                copy.Add(item.Count);
+                                copy.Add(i.Currency);
+                                copy.Add(item.Price * item.Count);
+                                queryContext.Data.Add(copy);
+                            }
                         }
                     }
                 }

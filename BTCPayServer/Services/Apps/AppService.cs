@@ -202,8 +202,8 @@ namespace BTCPayServer.Services.Apps
             };
         }
 
-        public static string GetAppOrderId(AppData app) => GetAppOrderId(app.AppType, app.Id);
-        public static string GetAppOrderId(string appType, string appId) =>
+        public static string GetAppSearchTerm(AppData app) => GetAppSearchTerm(app.AppType, app.Id);
+        public static string GetAppSearchTerm(string appType, string appId) =>
             appType switch
             {
                 CrowdfundAppType.AppType => $"crowdfund-app_{appId}",
@@ -224,11 +224,10 @@ namespace BTCPayServer.Services.Apps
 
         public static async Task<InvoiceEntity[]> GetInvoicesForApp(InvoiceRepository invoiceRepository, AppData appData, DateTimeOffset? startDate = null, string[]? status = null)
         {
-            var searchCriteria = appData.TagAllInvoices ? null : new[] { GetAppOrderId(appData) };
             var invoices = await invoiceRepository.GetInvoices(new InvoiceQuery
             {
                 StoreId = new[] { appData.StoreDataId },
-                AdditionalSearchTerms = searchCriteria,
+                TextSearch = appData.TagAllInvoices ? null : GetAppSearchTerm(appData),
                 Status = status ?? new[]{
                     InvoiceState.ToString(InvoiceStatusLegacy.New),
                     InvoiceState.ToString(InvoiceStatusLegacy.Paid),

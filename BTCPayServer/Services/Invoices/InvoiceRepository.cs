@@ -668,10 +668,6 @@ namespace BTCPayServer.Services.Invoices
 #pragma warning restore CA1310 // Specify StringComparison
             }
 
-            if (queryObject.AdditionalSearchTerms is { Length: > 0 })
-                query = query.Where(i => i.InvoiceSearchData.Any(data => 
-                    queryObject.AdditionalSearchTerms.Contains(data.Value)));
-
             if (queryObject.StartDate != null)
                 query = query.Where(i => queryObject.StartDate.Value <= i.Created);
 
@@ -906,7 +902,6 @@ namespace BTCPayServer.Services.Invoices
             get;
             set;
         }
-        public string[] AdditionalSearchTerms { get; set; }
         public bool IncludeAddresses { get; set; }
 
         public bool IncludeEvents { get; set; }

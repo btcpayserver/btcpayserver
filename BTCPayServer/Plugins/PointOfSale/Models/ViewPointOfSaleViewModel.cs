@@ -1,7 +1,10 @@
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using BTCPayServer.JsonConverters;
 using BTCPayServer.Services.Apps;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
@@ -23,6 +26,8 @@ namespace BTCPayServer.Plugins.PointOfSale.Models
             [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
             public string Description { get; set; }
             public string Id { get; set; }
+            [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+            public string[] Categories { get; set; }
             [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
             public string Image { get; set; }
             [JsonConverter(typeof(StringEnumConverter))]
@@ -63,7 +68,35 @@ namespace BTCPayServer.Plugins.PointOfSale.Models
         public bool EnableTips { get; set; }
         public string Step { get; set; }
         public string Title { get; set; }
-        public Item[] Items { get; set; }
+        Item[] _Items;
+        public Item[] Items
+        {
+            get
+            {
+                return _Items;
+            }
+            set
+            {
+                _Items = value;
+                UpdateGroups();
+            }
+        }
+
+        private void UpdateGroups()
+        {
+            AllCategories = null;
+            if (Items is null)
+                return;
+            var groups = Items.SelectMany(g => g.Categories ?? Array.Empty<string>())
+                              .ToHashSet()
+                              .Select(o => new KeyValuePair<string, string>(o, o))
+                              .ToList();
+            if (groups.Count == 0)
+                return;
+            groups.Insert(0, new KeyValuePair<string, string>("All items", "*"));
+            AllCategories = new SelectList(groups, "Value", "Key", "*");
+        }
+
         public string CurrencyCode { get; set; }
         public string CurrencySymbol { get; set; }
         public string AppId { get; set; }
@@ -76,6 +109,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Models
         public string CustomCSSLink { get; set; }
         public string CustomLogoLink { get; set; }
         public string Description { get; set; }
+        public SelectList AllCategories { get; set; }
         [Display(Name = "Custom CSS Code")]
         public string EmbeddedCSS { get; set; }
         public RequiresRefundEmail RequiresRefundEmail { get; set; } = RequiresRefundEmail.InheritFromStore;

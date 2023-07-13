@@ -17,7 +17,7 @@
         notificationDisabled = user?.DisabledNotifications == "all";
     }
 	var expectedScheme = _context.HttpContext.Request.Scheme;
-	var expectedHost = _context.HttpContext.Request.Host.ToString();
+	var expectedHost = _context.HttpContext.Request.Host.ToString().ToLower();
 }
 
 <!DOCTYPE html>
@@ -79,7 +79,7 @@
     {
         <script>
 			var mainContent = document.getElementById("mainContent");
-			if (window.location.protocol != "@(expectedScheme):" || window.location.host != "@expectedHost")
+			if (window.location.protocol != "@(expectedScheme):" || window.location.host.toLowerCase() != "@expectedHost")
 			{
 				var tmpl = document.getElementById("badUrl");
 				mainContent.prepend(tmpl.content.cloneNode(true));

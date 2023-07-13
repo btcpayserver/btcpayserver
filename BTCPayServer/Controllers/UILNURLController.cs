@@ -443,28 +443,37 @@ namespace BTCPayServer
         }
 
 
-        [HttpGet("pay")]
+        [HttpGet("{storeId}/pay")]
         [EnableCors(CorsPolicies.All)]
         [IgnoreAntiforgeryToken]
         public async Task<IActionResult> GetLNUrlForStore(
             string cryptoCode,
             string storeId,
-            string currencyCode = null)
+            string currency = null, 
+            string orderId = null, 
+            decimal? amount = null)
         {
-            var store = this.HttpContext.GetStoreData();
+            var store = await _storeRepository.FindStore(storeId);
             if (store is null)
                 return NotFound();
 
-            var blob = store.GetStoreBlob();
+			var blob = store.GetStoreBlob();
             if (!blob.AnyoneCanInvoice)
                 return NotFound("'Anyone can invoice' is turned off");
+            var metadata = new InvoiceMetadata();
+            if (!string.IsNullOrEmpty(orderId))
+            {
+                metadata.OrderId = orderId;
+            }
             return await GetLNURLRequest(
                 cryptoCode,
                 store,
                 blob,
                 new CreateInvoiceRequest
                 {
-                    Currency = currencyCode
+                    Amount = amount,
+                    Metadata = metadata.ToJObject(),
+                    Currency = currency
                 });
         }
 

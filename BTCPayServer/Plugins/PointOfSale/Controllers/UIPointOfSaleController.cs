@@ -133,6 +133,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                                                         [ModelBinder(typeof(InvariantDecimalModelBinder))] decimal? amount = null,
                                                         [ModelBinder(typeof(InvariantDecimalModelBinder))] decimal? tip = null,
                                                         [ModelBinder(typeof(InvariantDecimalModelBinder))] decimal? discount = null,
+                                                        [ModelBinder(typeof(InvariantDecimalModelBinder))] decimal? customAmount = null,
                                                         string email = null,
                                                         string orderId = null,
                                                         string notificationUrl = null,
@@ -232,9 +233,11 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
 
                         price += expectedCartItemPrice * cartItem.Value;
                     }
-                    if (discount is decimal d)
+                    if (customAmount is { } c)
+                        price += c;
+                    if (discount is { } d)
                         price -= price * d/100.0m;
-                    if (tip is decimal t)
+                    if (tip is { } t)
                         price += t;
                 }
             }
@@ -563,6 +566,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             if (app == null)
                 return NotFound();
 
+            vm.Id = app.Id;
             if (!ModelState.IsValid)
                 return View("PointOfSale/UpdatePointOfSale", vm);
 

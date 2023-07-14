@@ -246,7 +246,6 @@ namespace BTCPayServer.Services.Invoices
                 await context.SaveChangesAsync().ConfigureAwait(false);
             }
 
-
             return invoice;
         }
 
@@ -254,7 +253,9 @@ namespace BTCPayServer.Services.Invoices
         {
             var temp = new InvoiceData();
             temp.SetBlob(invoice);
-            return temp.GetBlob(_btcPayNetworkProvider);
+            var entity = temp.GetBlob(_btcPayNetworkProvider);
+            entity.UpdateTotals();
+            return entity;
         }
 
         public async Task AddInvoiceLogs(string invoiceId, InvoiceLogs logs)

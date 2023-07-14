@@ -103,10 +103,9 @@ namespace BTCPayServer.Payments
         public override void PopulateCryptoInfo(InvoiceEntity invoice, PaymentMethod details, InvoiceCryptoInfo cryptoInfo,
             string serverUrl)
         {
-            var due = cryptoInfo.Due is null ? 0.0m : decimal.Parse(cryptoInfo.Due, NumberStyles.Any, CultureInfo.InvariantCulture);
             cryptoInfo.PaymentUrls = new InvoiceCryptoInfo.InvoicePaymentUrls()
             {
-                BIP21 = GetPaymentLink(details.Network, invoice, details.GetPaymentMethodDetails(), due, serverUrl),
+                BIP21 = GetPaymentLink(details.Network, invoice, details.GetPaymentMethodDetails(), cryptoInfo.GetDue().Value, serverUrl),
             };
         }
     }

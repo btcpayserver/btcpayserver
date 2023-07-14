@@ -71,12 +71,11 @@ namespace BTCPayServer.Payments
 
         public override void PopulateCryptoInfo(InvoiceEntity invoice, PaymentMethod details, InvoiceCryptoInfo invoiceCryptoInfo, string serverUrl)
         {
-            var due = invoiceCryptoInfo.Due is null ? 0.0m : decimal.Parse(invoiceCryptoInfo.Due, NumberStyles.Any, CultureInfo.InvariantCulture);
             invoiceCryptoInfo.PaymentUrls = new InvoiceCryptoInfo.InvoicePaymentUrls()
             {
                 AdditionalData = new Dictionary<string, JToken>()
                 {
-                    {"LNURLP", JToken.FromObject(GetPaymentLink(details.Network, invoice, details.GetPaymentMethodDetails(), due,
+                    {"LNURLP", JToken.FromObject(GetPaymentLink(details.Network, invoice, details.GetPaymentMethodDetails(), invoiceCryptoInfo.GetDue().Value,
                         serverUrl))}
                 }
             };

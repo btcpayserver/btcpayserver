@@ -1176,7 +1176,10 @@ namespace BTCPayServer.Services.Invoices
             accounting.Paid = Coins(i.PaidAmount.Gross / Rate, precision);
             accounting.CryptoPaid = Coins(thisPaymentMethodPayments.Sum(p => p.PaidAmount.Gross), precision);
 
-            accounting.DueUncapped = Coins((grossDue - i.PaidAmount.Gross)/ Rate, precision);
+            // This one deal with the fact where it might looks like a slight over payment due to the dust of another payment method.
+            // So if we detect the NetDue is zero, just cap dueUncapped to 0
+            var dueUncapped = i.NetDue == 0.0m ? 0.0m : grossDue - i.PaidAmount.Gross;
+            accounting.DueUncapped = Coins(dueUncapped / Rate, precision);
             accounting.Due = Max(accounting.DueUncapped, 0.0m);
             
             accounting.NetworkFee = Coins((grossDue - i.Price) / Rate, precision);

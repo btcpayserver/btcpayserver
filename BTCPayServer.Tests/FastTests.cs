@@ -349,7 +349,6 @@ namespace BTCPayServer.Tests
         [Fact]
         public void CanCalculateDust()
         {
-            ;
             var entity = new InvoiceEntity();
             entity.Networks = new BTCPayNetworkProvider(ChainName.Regtest);
 #pragma warning disable CS0618
@@ -377,6 +376,20 @@ namespace BTCPayServer.Tests
             Assert.True(Money.Satoshis(1.0m).ToDecimal(MoneyUnit.BTC) * entity.Rates["BTC"] > entity.Dust);
             Assert.True(!entity.IsOverPaid);
             Assert.True(!entity.IsUnderPaid);
+
+            // Now, imagine there is litecoin. It might seem from its
+            // perspecitve that there has been a slight over payment.
+            // However, Calculate() should just cap it to 0.0m
+            entity.SetPaymentMethod(new PaymentMethod()
+            {
+                PaymentCurrency = "LTC",
+                Rate = 3400m
+            });
+            entity.UpdateTotals();
+            var method = entity.GetPaymentMethods().First(p => p.PaymentCurrency == "LTC");
+            accounting = method.Calculate();
+            Assert.Equal(0.0m, accounting.DueUncapped);
+
 #pragma warning restore CS0618
         }
 #if ALTCOINS

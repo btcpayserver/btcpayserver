@@ -103,7 +103,7 @@ namespace BTCPayServer.HostedServices
                     invoiceEvent.Payment.GetPaymentMethodId()?.PaymentType == BitcoinPaymentType.Instance &&
                     invoiceEvent.Payment.GetCryptoPaymentData() is BitcoinLikePaymentData bitcoinLikePaymentData:
                     {
-                        var walletId = new WalletId(invoiceEvent.Invoice.StoreId, invoiceEvent.Payment.PaymentCurrency);
+                        var walletId = new WalletId(invoiceEvent.Invoice.StoreId, invoiceEvent.Payment.Currency);
                         var transactionId = bitcoinLikePaymentData.Outpoint.Hash;
                         var labels = new List<Attachment>
                     {

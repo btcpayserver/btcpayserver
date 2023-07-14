@@ -348,7 +348,7 @@ namespace BTCPayServer.HostedServices
                         if ((onChainPaymentData.ConfirmationCount < network.MaxTrackedConfirmation && payment.Accounted)
                             && (onChainPaymentData.Legacy || invoice.MonitoringExpiration < DateTimeOffset.UtcNow))
                         {
-                            var client = _explorerClientProvider.GetExplorerClient(payment.PaymentCurrency);
+                            var client = _explorerClientProvider.GetExplorerClient(payment.Currency);
                             var transactionResult = client is null ? null : await client.GetTransactionAsync(onChainPaymentData.Outpoint.Hash);
                             var confirmationCount = transactionResult?.Confirmations ?? 0;
                             onChainPaymentData.ConfirmationCount = confirmationCount;

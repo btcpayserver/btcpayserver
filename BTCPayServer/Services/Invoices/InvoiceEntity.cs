@@ -398,7 +398,7 @@ namespace BTCPayServer.Services.Invoices
             foreach (var payment in GetPayments(false))
             {
                 payment.InvoiceCurrency = Currency;
-                payment.Rate = Rates[payment.PaymentCurrency];
+                payment.Rate = Rates[payment.Currency];
                 payment.UpdateAmounts();
                 if (payment.Accounted)
                 {
@@ -475,7 +475,7 @@ namespace BTCPayServer.Services.Invoices
         }
         public List<PaymentEntity> GetPayments(string cryptoCode, bool accountedOnly)
         {
-            return GetPayments(accountedOnly).Where(p => p.PaymentCurrency == cryptoCode).ToList();
+            return GetPayments(accountedOnly).Where(p => p.Currency == cryptoCode).ToList();
         }
         public List<PaymentEntity> GetPayments(BTCPayNetworkBase network, bool accountedOnly)
         {
@@ -1270,17 +1270,17 @@ namespace BTCPayServer.Services.Invoices
             get; set;
         }
 
-        string _PaymentCurrency;
+        string _Currency;
         [JsonProperty("cryptoCode")]
-        public string PaymentCurrency
+        public string Currency
         {
             get
             {
-                return _PaymentCurrency ?? "BTC";
+                return _Currency ?? "BTC";
             }
             set
             {
-                _PaymentCurrency = value;
+                _Currency = value;
             }
         }
 
@@ -1293,7 +1293,7 @@ namespace BTCPayServer.Services.Invoices
         [JsonIgnore]
         public string InvoiceCurrency { get; set; }
         /// <summary>
-        /// The amount paid by this payment in the <see cref="PaymentCurrency"/>
+        /// The amount paid by this payment in the <see cref="Currency"/>
         /// </summary>
         [JsonIgnore]
         public Amounts PaidAmount { get; set; }
@@ -1311,7 +1311,7 @@ namespace BTCPayServer.Services.Invoices
             var value = pd.GetValue();
             PaidAmount = new Amounts()
             {
-                Currency = PaymentCurrency,
+                Currency = Currency,
                 Gross = value,
                 Net = value - NetworkFee
             };
@@ -1393,7 +1393,7 @@ namespace BTCPayServer.Services.Invoices
             {
                 return null;
             }
-            return new PaymentMethodId(PaymentCurrency ?? "BTC", paymentType);
+            return new PaymentMethodId(Currency ?? "BTC", paymentType);
 #pragma warning restore CS0618 // Type or member is obsolete
         }
     }

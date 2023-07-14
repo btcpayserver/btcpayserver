@@ -71,7 +71,7 @@ namespace BTCPayServer.Services.Invoices.Export
                     {
                         ReceivedDate = payment.ReceivedTime.UtcDateTime,
                         PaymentId = pdata.GetPaymentId(),
-                        CryptoCode = payment.PaymentCurrency,
+                        CryptoCode = payment.Currency,
                         ConversionRate = payment.Rate,
                         PaymentType = payment.GetPaymentMethodId().PaymentType.ToPrettyString(),
                         Destination = pdata.GetDestination(),

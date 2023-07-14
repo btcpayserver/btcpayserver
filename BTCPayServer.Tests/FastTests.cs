@@ -355,7 +355,7 @@ namespace BTCPayServer.Tests
             entity.Payments = new System.Collections.Generic.List<PaymentEntity>();
             entity.SetPaymentMethod(new PaymentMethod()
             {
-                PaymentCurrency = "BTC",
+                Currency = "BTC",
                 Rate = 34_000m
             });
             entity.Price = 4000;
@@ -382,11 +382,11 @@ namespace BTCPayServer.Tests
             // However, Calculate() should just cap it to 0.0m
             entity.SetPaymentMethod(new PaymentMethod()
             {
-                PaymentCurrency = "LTC",
+                Currency = "LTC",
                 Rate = 3400m
             });
             entity.UpdateTotals();
-            var method = entity.GetPaymentMethods().First(p => p.PaymentCurrency == "LTC");
+            var method = entity.GetPaymentMethods().First(p => p.Currency == "LTC");
             accounting = method.Calculate();
             Assert.Equal(0.0m, accounting.DueUncapped);
 
@@ -403,7 +403,7 @@ namespace BTCPayServer.Tests
             entity.Payments = new System.Collections.Generic.List<PaymentEntity>();
             entity.SetPaymentMethod(new PaymentMethod()
             {
-                PaymentCurrency = "BTC",
+                Currency = "BTC",
                 Rate = 5000,
                 NextNetworkFee = Money.Coins(0.1m)
             });
@@ -466,9 +466,9 @@ namespace BTCPayServer.Tests
             entity.Price = 5000;
             PaymentMethodDictionary paymentMethods = new PaymentMethodDictionary();
             paymentMethods.Add(
-                new PaymentMethod() { PaymentCurrency = "BTC", Rate = 1000, NextNetworkFee = Money.Coins(0.1m) });
+                new PaymentMethod() { Currency = "BTC", Rate = 1000, NextNetworkFee = Money.Coins(0.1m) });
             paymentMethods.Add(
-                new PaymentMethod() { PaymentCurrency = "LTC", Rate = 500, NextNetworkFee = Money.Coins(0.01m) });
+                new PaymentMethod() { Currency = "LTC", Rate = 500, NextNetworkFee = Money.Coins(0.01m) });
             entity.SetPaymentMethods(paymentMethods);
             entity.Payments = new List<PaymentEntity>();
             entity.UpdateTotals();
@@ -596,7 +596,7 @@ namespace BTCPayServer.Tests
             entity.Payments = new List<PaymentEntity>();
             entity.SetPaymentMethod(new PaymentMethod()
             {
-                PaymentCurrency = "BTC",
+                Currency = "BTC",
                 Rate = 5000,
                 NextNetworkFee = Money.Coins(0.1m)
             });
@@ -1946,14 +1946,14 @@ namespace BTCPayServer.Tests
             invoiceEntity.Payments = new System.Collections.Generic.List<PaymentEntity>();
             invoiceEntity.Price = 100;
             PaymentMethodDictionary paymentMethods = new PaymentMethodDictionary();
-            paymentMethods.Add(new PaymentMethod() { Network = networkBTC, PaymentCurrency = "BTC", Rate = 10513.44m, }
+            paymentMethods.Add(new PaymentMethod() { Network = networkBTC, Currency = "BTC", Rate = 10513.44m, }
                 .SetPaymentMethodDetails(
                     new BTCPayServer.Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod()
                     {
                         NextNetworkFee = Money.Coins(0.00000100m),
                         DepositAddress = dummy
                     }));
-            paymentMethods.Add(new PaymentMethod() { Network = networkLTC, PaymentCurrency = "LTC", Rate = 216.79m }
+            paymentMethods.Add(new PaymentMethod() { Network = networkLTC, Currency = "LTC", Rate = 216.79m }
                 .SetPaymentMethodDetails(
                     new BTCPayServer.Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod()
                     {

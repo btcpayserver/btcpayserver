@@ -389,7 +389,7 @@ namespace BTCPayServer.Services.Invoices
             Rates = new Dictionary<string, decimal>();
             foreach (var p in GetPaymentMethods())
             {
-                Rates.TryAdd(p.PaymentCurrency, p.Rate);
+                Rates.TryAdd(p.Currency, p.Rate);
             }
             PaidAmount = new Amounts()
             {
@@ -636,7 +636,7 @@ namespace BTCPayServer.Services.Invoices
                         dto.MinerFees.TryAdd(cryptoInfo.CryptoCode, minerInfo);
 
 #pragma warning disable 618
-                        if (info.PaymentCurrency == "BTC")
+                        if (info.Currency == "BTC")
                         {
                             dto.BTCPrice = cryptoInfo.Price;
                             dto.Rate = cryptoInfo.Rate;
@@ -716,12 +716,12 @@ namespace BTCPayServer.Services.Invoices
                     {
                         continue;
                     }
-                    r.PaymentCurrency = paymentMethodId.CryptoCode;
+                    r.Currency = paymentMethodId.CryptoCode;
                     r.PaymentType = paymentMethodId.PaymentType.ToString();
                     r.ParentEntity = this;
                     if (Networks != null)
                     {
-                        r.Network = Networks.GetNetwork<BTCPayNetworkBase>(r.PaymentCurrency);
+                        r.Network = Networks.GetNetwork<BTCPayNetworkBase>(r.Currency);
                         if (r.Network is null)
                             continue;
                     }
@@ -747,7 +747,7 @@ namespace BTCPayServer.Services.Invoices
             foreach (var v in paymentMethods)
             {
                 var clone = serializer.ToObject<PaymentMethod>(serializer.ToString(v));
-                clone.PaymentCurrency = null;
+                clone.Currency = null;
                 clone.PaymentType = null;
                 obj.Add(new JProperty(v.GetId().ToString(), JObject.Parse(serializer.ToString(clone))));
             }
@@ -1049,7 +1049,7 @@ namespace BTCPayServer.Services.Invoices
         [JsonIgnore]
         public BTCPayNetworkBase Network { get; set; }
         [JsonProperty(PropertyName = "cryptoCode", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public string PaymentCurrency { get; set; }
+        public string Currency { get; set; }
         [JsonProperty(PropertyName = "paymentType", DefaultValueHandling = DefaultValueHandling.Ignore)]
         [Obsolete("Use GetId().PaymentType instead")]
         public string PaymentType { get; set; }
@@ -1064,14 +1064,14 @@ namespace BTCPayServer.Services.Invoices
         public PaymentMethodId GetId()
         {
 #pragma warning disable CS0618 // Type or member is obsolete
-            return new PaymentMethodId(PaymentCurrency, string.IsNullOrEmpty(PaymentType) ? PaymentTypes.BTCLike : PaymentTypes.Parse(PaymentType));
+            return new PaymentMethodId(Currency, string.IsNullOrEmpty(PaymentType) ? PaymentTypes.BTCLike : PaymentTypes.Parse(PaymentType));
 #pragma warning restore CS0618 // Type or member is obsolete
         }
 
         public void SetId(PaymentMethodId id)
         {
 #pragma warning disable CS0618 // Type or member is obsolete
-            PaymentCurrency = id.CryptoCode;
+            Currency = id.CryptoCode;
             PaymentType = id.PaymentType.ToString();
 #pragma warning restore CS0618 // Type or member is obsolete
         }

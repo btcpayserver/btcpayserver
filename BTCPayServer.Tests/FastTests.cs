@@ -1934,11 +1934,6 @@ namespace BTCPayServer.Tests
 #pragma warning disable CS0618
             var dummy = new Key().PubKey.GetAddress(ScriptPubKeyType.Legacy, Network.RegTest).ToString();
             var networkProvider = new BTCPayNetworkProvider(ChainName.Regtest);
-            var paymentMethodHandlerDictionary = new PaymentMethodHandlerDictionary(new IPaymentMethodHandler[]
-            {
-                new BitcoinLikePaymentHandler(null, networkProvider, null, null, null, null),
-                new LightningLikePaymentHandler(null, null, networkProvider, null, null, null),
-            });
             var networkBTC = networkProvider.GetNetwork("BTC");
             var networkLTC = networkProvider.GetNetwork("LTC");
             InvoiceEntity invoiceEntity = new InvoiceEntity();
@@ -2002,8 +1997,9 @@ namespace BTCPayServer.Tests
             accounting = ltc.Calculate();
 
             Assert.Equal(0.0m, accounting.Due);
-            // LTC might have over paid due to BTC paying above what it should (round 1 satoshi up)
-            Assert.True(accounting.DueUncapped < 0.0m);
+            // LTC might should be over paid due to BTC paying above what it should (round 1 satoshi up), but we handle this case
+            // and set DueUncapped to zero.
+            Assert.Equal(0.0m, accounting.DueUncapped);
         }
 
         [Fact]

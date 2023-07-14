@@ -445,7 +445,7 @@ namespace BTCPayServer.Services.Invoices
         public decimal MinimumNetDue { get; set; }
         public bool IsUnderPaid => MinimumNetDue > 0;
         [JsonIgnore]
-        public bool IsOverPaid => NetDue > 0;
+        public bool IsOverPaid => NetDue < 0;
 
 
         /// <summary>

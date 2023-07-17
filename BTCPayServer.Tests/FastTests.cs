@@ -349,7 +349,7 @@ namespace BTCPayServer.Tests
         [Fact]
         public void CanCalculateDust()
         {
-            var entity = new InvoiceEntity();
+            var entity = new InvoiceEntity() { Currency = "USD" };
             entity.Networks = new BTCPayNetworkProvider(ChainName.Regtest);
 #pragma warning disable CS0618
             entity.Payments = new System.Collections.Generic.List<PaymentEntity>();
@@ -397,7 +397,7 @@ namespace BTCPayServer.Tests
         public void CanCalculateCryptoDue()
         {
             var networkProvider = new BTCPayNetworkProvider(ChainName.Regtest);
-            var entity = new InvoiceEntity();
+            var entity = new InvoiceEntity() { Currency = "USD" };
             entity.Networks = networkProvider;
 #pragma warning disable CS0618
             entity.Payments = new System.Collections.Generic.List<PaymentEntity>();

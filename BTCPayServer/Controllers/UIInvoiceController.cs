@@ -392,7 +392,6 @@ namespace BTCPayServer.Controllers
             }
             entity.SetSupportedPaymentMethods(supported);
             entity.SetPaymentMethods(paymentMethods);
-            entity.UpdateTotals();
             foreach (var app in await getAppsTaggingStore)
             {
                 entity.InternalTags.Add(AppService.GetAppInternalTag(app.Id));

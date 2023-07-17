@@ -397,8 +397,8 @@ namespace BTCPayServer.Services.Invoices
             };
             foreach (var payment in GetPayments(false))
             {
-                payment.InvoiceCurrency = Currency;
                 payment.Rate = Rates[payment.Currency];
+                payment.InvoiceEntity = this;
                 payment.UpdateAmounts();
                 if (payment.Accounted)
                 {
@@ -1142,7 +1142,6 @@ namespace BTCPayServer.Services.Invoices
                 DepositAddress = bitcoinPaymentMethod.DepositAddress;
             }
             PaymentMethodDetails = JObject.Parse(paymentMethod.GetPaymentType().SerializePaymentMethodDetails(Network, paymentMethod));
-
 #pragma warning restore CS0618 // Type or member is obsolete
             return this;
         }
@@ -1291,8 +1290,8 @@ namespace BTCPayServer.Services.Invoices
         [JsonIgnore]
         public decimal Rate { get; set; }
         [JsonIgnore]
-        public string InvoiceCurrency { get; set; }
         /// <summary>
+        public string InvoiceCurrency => InvoiceEntity.Currency;
         /// The amount paid by this payment in the <see cref="Currency"/>
         /// </summary>
         [JsonIgnore]
@@ -1302,6 +1301,8 @@ namespace BTCPayServer.Services.Invoices
         /// </summary>
         [JsonIgnore]
         public Amounts InvoicePaidAmount { get; set; }
+        [JsonIgnore]
+        public InvoiceEntity InvoiceEntity { get; set; }
 
         public void UpdateAmounts()
         {

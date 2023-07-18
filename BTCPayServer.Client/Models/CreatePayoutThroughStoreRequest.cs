@@ -7,5 +7,5 @@ public class CreatePayoutThroughStoreRequest : CreatePayoutRequest
 {
     public string? PullPaymentId { get; set; }
     public bool? Approved { get; set; }
-    public JObject Metadata { get; set; }
+    public JObject? Metadata { get; set; }
 }

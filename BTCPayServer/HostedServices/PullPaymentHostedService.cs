@@ -830,6 +830,30 @@ namespace BTCPayServer.HostedServices
 
     public class ClaimRequest
     {
+        public static (string error, decimal? amount) IsPayoutAmountOk(IClaimDestination destination, decimal? amount, string payoutCurrency = null, string ppCurrency = null)
+        {
+            return amount switch
+            {
+                null when destination.Amount is null => ("Amount is not specified in destination or payout request", null),
+                null when destination.Amount != null => (null,destination.Amount),
+                not null when destination.Amount is null => (null,amount),
+                not null when destination.Amount != null && amount != destination.Amount &&
+                              destination.IsExplicitAmountMinimum &&
+                              payoutCurrency == "BTC" && ppCurrency == "SATS" &&
+                              amount/1000m < destination.Amount =>
+                    ($"Amount is implied in both destination ({destination.Amount}) and payout request ({amount}), but the payout request amount is less than the destination amount",null),
+                not null when destination.Amount != null && amount != destination.Amount &&
+                              destination.IsExplicitAmountMinimum &&
+                              payoutCurrency != "BTC" && ppCurrency != "SATS" &&
+                              amount < destination.Amount =>
+                    ($"Amount is implied in both destination ({destination.Amount}) and payout request ({amount}), but the payout request amount is less than the destination amount",null),
+                not null when destination.Amount != null && amount != destination.Amount &&
+                              !destination.IsExplicitAmountMinimum =>
+                    ($"Amount is implied in destination ({destination.Amount}) that does not match the payout amount provided {amount})", null),
+                _ => (null, amount)
+            };
+        }
+        
         public static string GetErrorMessage(ClaimResult result)
         {
             switch (result)

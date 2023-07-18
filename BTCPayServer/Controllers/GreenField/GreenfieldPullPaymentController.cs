@@ -321,21 +321,14 @@ namespace BTCPayServer.Controllers.Greenfield
                 ModelState.AddModelError(nameof(request.Destination), destination.error ?? "The destination is invalid for the payment specified");
                 return this.CreateValidationError(ModelState);
             }
-
-            if (request.Amount is null && destination.destination.Amount != null)
+            
+            var amtError = ClaimRequest.IsPayoutAmountOk(destination.destination, request.Amount);
+            if (amtError.error is not null)
             {
-                request.Amount = destination.destination.Amount;
-            }
-            else if (request.Amount != null && destination.destination.Amount != null && request.Amount != destination.destination.Amount && (!destination.destination.IsExplicitAmountMinimum ||  destination.destination.Amount > request.Amount ))
-            {
-                ModelState.AddModelError(nameof(request.Amount), $"Amount is implied in destination ({destination.destination.Amount}) that does not match the payout amount provided {request.Amount})");
+                ModelState.AddModelError(nameof(request.Amount), amtError.error );
                 return this.CreateValidationError(ModelState);
             }
-            if (request.Amount is { } v && (v < ppBlob.MinimumClaim || v == 0.0m))
-            {
-                ModelState.AddModelError(nameof(request.Amount), $"Amount too small (should be at least {ppBlob.MinimumClaim})");
-                return this.CreateValidationError(ModelState);
-            }
+            request.Amount = amtError.amount;
             var result = await _pullPaymentService.Claim(new ClaimRequest()
             {
                 Destination = destination.destination,
@@ -393,15 +386,13 @@ namespace BTCPayServer.Controllers.Greenfield
                 return this.CreateValidationError(ModelState);
             }
 
-            if (request.Amount is null && destination.destination.Amount != null)
+            var amtError = ClaimRequest.IsPayoutAmountOk(destination.destination, request.Amount);
+            if (amtError.error is not null)
             {
-                request.Amount = destination.destination.Amount;
-            }
-            else if (request.Amount != null && destination.destination.Amount != null && request.Amount != destination.destination.Amount)
-            {
-                ModelState.AddModelError(nameof(request.Amount), $"Amount is implied in destination ({destination.destination.Amount}) that does not match the payout amount provided {request.Amount})");
+                ModelState.AddModelError(nameof(request.Amount), amtError.error );
                 return this.CreateValidationError(ModelState);
             }
+            request.Amount = amtError.amount;
             if (request.Amount is { } v && (v < ppBlob?.MinimumClaim || v == 0.0m))
             {
                 var minimumClaim = ppBlob?.MinimumClaim is decimal val ? val : 0.0m;

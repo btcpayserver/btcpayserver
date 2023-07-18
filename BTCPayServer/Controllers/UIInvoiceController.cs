@@ -121,7 +121,7 @@ namespace BTCPayServer.Controllers
         internal async Task<InvoiceEntity> CreateInvoiceCoreRaw(BitpayCreateInvoiceRequest invoice, StoreData store, string serverUrl, List<string>? additionalTags = null, CancellationToken cancellationToken = default, Action<InvoiceEntity>? entityManipulator = null)
         {
             var storeBlob = store.GetStoreBlob();
-            var entity = _InvoiceRepository.CreateNewInvoice();
+            var entity = _InvoiceRepository.CreateNewInvoice(store.Id);
             entity.ExpirationTime = invoice.ExpirationTime is DateTimeOffset v ? v : entity.InvoiceTime + storeBlob.InvoiceExpiration;
             entity.MonitoringExpiration = entity.ExpirationTime + storeBlob.MonitoringExpiration;
             if (entity.ExpirationTime - TimeSpan.FromSeconds(30.0) < entity.InvoiceTime)
@@ -237,7 +237,7 @@ namespace BTCPayServer.Controllers
         public async Task<InvoiceEntity> CreateInvoiceCoreRaw(CreateInvoiceRequest invoice, StoreData store, string serverUrl, List<string>? additionalTags = null, CancellationToken cancellationToken = default, Action<InvoiceEntity>? entityManipulator = null)
         {
             var storeBlob = store.GetStoreBlob();
-            var entity = _InvoiceRepository.CreateNewInvoice();
+            var entity = _InvoiceRepository.CreateNewInvoice(store.Id);
             entity.ServerUrl = serverUrl;
             entity.ExpirationTime = entity.InvoiceTime + (invoice.Checkout.Expiration ?? storeBlob.InvoiceExpiration);
             entity.MonitoringExpiration = entity.ExpirationTime + (invoice.Checkout.Monitoring ?? storeBlob.MonitoringExpiration);
@@ -403,7 +403,7 @@ namespace BTCPayServer.Controllers
             }
             using (logs.Measure("Saving invoice"))
             {
-                entity = await _InvoiceRepository.CreateInvoiceAsync(store.Id, entity, additionalSearchTerms);
+                await _InvoiceRepository.CreateInvoiceAsync(entity, additionalSearchTerms);
                 foreach (var method in paymentMethods)
                 {
                     if (method.GetPaymentMethodDetails() is BitcoinLikeOnChainPaymentMethod bp)

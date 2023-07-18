@@ -39,6 +39,7 @@ namespace BTCPayServer
 {
     public static class Extensions
     {
+        public static DateTimeOffset TruncateMilliSeconds(this DateTimeOffset dt) => new (dt.Year, dt.Month, dt.Day, dt.Hour, dt.Minute, dt.Second, 0, dt.Offset);
         public static decimal? GetDue(this InvoiceCryptoInfo invoiceCryptoInfo)
         {
             if (invoiceCryptoInfo is null)

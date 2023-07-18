@@ -265,6 +265,7 @@ function initApp() {
                 }
             },
             listenIn () {
+                const self = this;
                 let socket = null;
                 const updateFn = this.fetchData;
                 const supportsWebSockets = 'WebSocket' in window && window.WebSocket.CLOSING === 2;
@@ -278,6 +279,9 @@ function initApp() {
                         };
                         socket.onerror = function (e) {
                             console.error('Error while connecting to websocket for invoice notifications (callback):', e);
+                        };
+                        socket.onclose = function () {
+                            self.pollUpdates(2000, socket);
                         };
                     }
                     catch (e) {

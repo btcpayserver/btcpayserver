@@ -63,6 +63,7 @@ namespace BTCPayServer
                     "LCAD_CAD = 1",
                     "LCAD_X = CAD_BTC * BTC_X",
                     "LCAD_BTC = bylls(CAD_BTC)",
+                    "CAD_BTC = LCAD_BTC"
                 },
                 AssetId = new uint256("0e99c1a6da379d1f4151fb9df90449d40d0608f6cb33a5bcbfc8c265f42bab0a"),
                 DisplayName = "Liquid CAD",

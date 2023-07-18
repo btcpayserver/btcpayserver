@@ -1,5 +1,6 @@
 @using BTCPayServer.Views.Stores
-@inject BTCPayServer.Security.ContentSecurityPolicies Csp
+@inject Security.ContentSecurityPolicies Csp
+@inject BTCPayNetworkProvider NetworkProvider
 @model BTCPayServer.Plugins.PayButton.Models.PayButtonViewModel
 @{
     ViewData.SetActivePage(StoreNavPages.PayButton, "Pay Button", Context.GetStoreData().Id);
@@ -14,6 +15,7 @@
     <script src="~/vendor/highlightjs/highlight.min.js" asp-append-version="true"></script>
     <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
     <script src="~/vendor/vuejs-vee-validate/vee-validate.js" asp-append-version="true"></script>
+    <script src="~/vendor/vue-qrcode/vue-qrcode.min.js" asp-append-version="true"></script>
     <script src="~/paybutton/paybutton.js" asp-append-version="true"></script>
     <template id="template-modal" csp-allow>
     if (!window.btcpay) {
@@ -116,13 +118,34 @@
     </template>
     
     <script>
+        window.lnurlEndpoint = @Safe.Json(Url.Action("GetLNUrlForStore", "UILNURL", new
+                               {
+                                   storeId = Model.StoreId, 
+                                   cryptoCode = NetworkProvider.DefaultNetwork.CryptoCode
+                               }, "lnurlp", Context.Request.Host.ToString()));
         const srvModel = @Safe.Json(Model);
         const payButtonCtrl = new Vue({
             el: '#payButtonCtrl',
+            components: {
+                qrcode: VueQrcode
+            },
             data: {
                 srvModel: srvModel,
                 originalButtonImageUrl: srvModel.payButtonImageUrl,
-                buttonInlineTextMode: false
+                buttonInlineTextMode: false,
+                previewLink: "",
+                lnurlLink: "",
+                alternativeMode: 'link',
+                qrOptions: {
+                    width: 256,
+                    height: 256,
+                    margin: 1,
+                    color: {
+                        dark: '#000',
+                        light: '#f5f5f7'
+                    }
+                }
+                
             },
             computed: {
                 imageUrlRequired() {
@@ -131,7 +154,7 @@
             },
             methods: {
                 inputChanges(event, buttonSize) {
-                    inputChanges(event, buttonSize);
+                    inputChanges(payButtonCtrl, event, buttonSize, );
                 }
             },
             watch: {
@@ -145,8 +168,9 @@
                     }
                     this.inputChanges();
                 }
-            }
+            },
         });
+        inputChanges(payButtonCtrl);
     </script>
 }
 
@@ -311,10 +335,6 @@
         <div class="col-xl-4 mt-4 mt-xl-0">
             <h5 class="mb-3">Preview</h5>
             <div id="preview"></div>
-            <div v-show="!srvModel.appIdEndpoint">
-                <h5 class="mt-4 mb-3">Link</h5>
-                <span>Alternatively, you can share <a id="preview-link" href="#">this link</a> or encode it in a QR code.</span>
-            </div>
         </div>
     </div>
 
@@ -388,7 +408,6 @@
     </div>
 
     <h4 class="mt-5 mb-3">Generated Code</h4>
-
     <div class="row" v-show="!errors.any()">
         <div class="col-xxl-8">
             <pre><code id="mainCode" class="html"></code></pre>
@@ -400,6 +419,49 @@
     <div class="row" v-show="errors.any()">
         <div class="col-xl-8 col-xxl-constrain text-danger">
             Please fix errors shown in order for code generation to successfully execute.
+        </div>
+    </div>
+    
+    <div v-if="!srvModel.appIdEndpoint && (previewLink || lnurlLink)">
+        <h4 class="mt-4 mb-3">Alternatives</h4>
+        <p>You can also share the link/LNURL or encode it in a QR code.</p>
+        <div class="align-items-center" style="width:256px">
+            <ul class="nav my-3 btcpay-pills align-items-center gap-2">
+                <li class="nav-item" v-if="previewLink">
+                    <a class="btcpay-pill" :class="{ active: alternativeMode === 'link' }" data-bs-toggle="tab" data-bs-target="#Alternative-Link" role="tab" href="#Alternative-Link">
+                        Link
+                    </a>
+                </li>
+                <li class="nav-item" v-if="previewLink">
+                    <a class="btcpay-pill" :class="{ active: alternativeMode === 'lnurl' }" data-bs-toggle="tab" data-bs-target="#Alternative-LNURL" role="tab" href="#Alternative-LNURL">
+                        LNURL
+                    </a>
+                </li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane" :class="{ active: alternativeMode === 'link' }" id="Alternative-Link" role="tabpanel">
+                    <a class="qr-container d-inline-block" :class="{ active: true }" :href="previewLink">
+                        <qrcode :value="previewLink" :options="qrOptions" tag="img"></qrcode>
+                    </a>
+                    <div class="input-group mt-3">
+                        <div class="form-floating">
+                            <vc:truncate-center text="previewLink" is-vue="true" padding="15" elastic="true" classes="form-control-plaintext" />
+                            <label>Link URL</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane" :class="{ active: alternativeMode === 'lnurl' }" id="Alternative-LNURL" role="tabpanel">
+                    <a class="qr-container d-inline-block" :href="lnurlLink">
+                        <qrcode :value="lnurlLink" :options="qrOptions" tag="img"></qrcode>
+                    </a>
+                    <div class="input-group mt-3">
+                        <div class="form-floating">
+                            <vc:truncate-center text="lnurlLink" is-vue="true" padding="15" elastic="true" classes="form-control-plaintext" />
+                            <label>LNURL</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>

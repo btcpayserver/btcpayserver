@@ -1,5 +1,8 @@
+using System;
+using System.Globalization;
 using BTCPayServer.Plugins.PointOfSale.Models;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Services.Invoices;
 
@@ -33,6 +36,7 @@ public class PosAppCartItem
     public string Id { get; set; }
 
     [JsonProperty(PropertyName = "price")]
+    [JsonConverter(typeof(PosAppCartItemPriceJsonConverter))]
     public decimal Price { get; set; }
 
     [JsonProperty(PropertyName = "title")]
@@ -48,11 +52,40 @@ public class PosAppCartItem
     public string Image { get; set; }
 }
 
-public class PosAppCartItemPrice
+public class PosAppCartItemPriceJsonConverter : JsonConverter
 {
-    [JsonProperty(PropertyName = "formatted")]
-    public string Formatted { get; set; }
+    public override bool CanConvert(Type objectType)
+    {
+        return objectType == typeof(decimal) || objectType == typeof(object);
+    }
 
-    [JsonProperty(PropertyName = "type")]
-    public ViewPointOfSaleViewModel.ItemPriceType Type { get; set; }
+    public override object ReadJson(JsonReader reader, Type objectType, object existingValue,
+        JsonSerializer serializer)
+    {
+        JToken token = JToken.Load(reader);
+        switch (token.Type)
+        {
+            case JTokenType.Float:
+                if (objectType == typeof(decimal))
+                    return token.Value<decimal>();
+                throw new JsonSerializationException($"Unexpected object type: {objectType}");
+            case JTokenType.Integer:
+            case JTokenType.String:
+                if (objectType == typeof(decimal))
+                    return decimal.Parse(token.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture);
+                throw new JsonSerializationException($"Unexpected object type: {objectType}");
+            case JTokenType.Null:
+                return null;
+            case JTokenType.Object:
+                return token.ToObject<JObject>()?["value"]?.Value<decimal?>();
+            default:
+                throw new JsonSerializationException($"Unexpected token type: {token.Type}");
+        }
+    }
+
+    public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+    {
+        if (value is decimal x)
+            writer.WriteValue(x);
+    }
 }

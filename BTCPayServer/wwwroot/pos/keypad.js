@@ -2,26 +2,20 @@ document.addEventListener("DOMContentLoaded",function () {
     const displayFontSize = 64;
     new Vue({
         el: '#app',
+        mixins: [posCommon],
         data () {
             return {
-                srvModel: window.srvModel,
                 mode: 'amount',
-                amount: null,
-                tip: null,
-                tipPercent: null,
-                discount: null,
-                discountPercent: null,
                 fontSize: displayFontSize,
                 defaultFontSize: displayFontSize,
-                keys: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', 'del'],
-                payButtonLoading: false
+                keys: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', 'del']
             }
         },
         computed: {
             modes () {
                 const modes = [{ title: 'Amount', type: 'amount' }]
-                if (this.srvModel.showDiscount) modes.push({ title: 'Discount', type: 'discount' })
-                if (this.srvModel.enableTips) modes.push({ title: 'Tip', type: 'tip'})
+                if (this.showDiscount) modes.push({ title: 'Discount', type: 'discount' })
+                if (this.enableTips) modes.push({ title: 'Tip', type: 'tip'})
                 return modes
             },
             keypadTarget () {
@@ -42,36 +36,6 @@ document.addEventListener("DOMContentLoaded",function () {
                 if (this.tipPercent) calc += ` (${this.tipPercent}%)`
                 return calc
             },
-            amountNumeric () {
-                const value = parseFloat(this.amount)
-                return isNaN(value) ? 0.0 : value
-            },
-            discountPercentNumeric () {
-                const value = parseFloat(this.discountPercent)
-                return isNaN(value) ? 0.0 : value;
-            },
-            discountNumeric () {
-                return this.amountNumeric && this.discountPercentNumeric
-                    ? this.amountNumeric * (this.discountPercentNumeric / 100)
-                    : 0.0;
-            },
-            amountMinusDiscountNumeric () {
-                return this.amountNumeric - this.discountNumeric;
-            },
-            tipNumeric () {
-                if (this.tipPercent) {
-                    return this.amountMinusDiscountNumeric * (this.tipPercent / 100);
-                } else {
-                    const value = parseFloat(this.tip)
-                    return isNaN(value) ? 0.0 : value;
-                }
-            },
-            total () {
-                return (this.amountNumeric - this.discountNumeric + this.tipNumeric);
-            },
-            totalNumeric () {
-                return parseFloat(this.total);
-            },
             posdata () {
                 const data = {
                     subTotal: this.amountNumeric,
@@ -84,15 +48,6 @@ document.addEventListener("DOMContentLoaded",function () {
             }
         },
         watch: {
-            discountPercent (val) {
-                const value = parseFloat(val)
-                if (isNaN(value)) this.discountPercent = null
-                else if (value > 100) this.discountPercent = '100'
-                else this.discountPercent = value.toString();
-            },
-            tip (val) {
-                this.tipPercent = null;
-            },
             total () {
                 // This must be timed out because the updated width is not available yet
                 this.$nextTick(function () {
@@ -123,30 +78,6 @@ document.addEventListener("DOMContentLoaded",function () {
                 this.amount = this.tip = this.discount = this.tipPercent = this.discountPercent = null;
                 this.mode = 'amount';
             },
-            handleFormSubmit () {
-                this.payButtonLoading = true;
-            },
-            unsetPayButtonLoading () {
-                this.payButtonLoading = false;
-            },
-            formatCrypto (value, withSymbol) {
-                const symbol = withSymbol ? ` ${this.srvModel.currencySymbol || this.srvModel.currencyCode}` : '';
-                const divisibility = this.srvModel.currencyInfo.divisibility;
-                return parseFloat(value).toFixed(divisibility) + symbol;
-            },
-            formatCurrency (value, withSymbol) {
-                const currency = this.srvModel.currencyCode;
-                if (currency === 'BTC' || currency === 'SATS') return this.formatCrypto(value, withSymbol); 
-                const divisibility = this.srvModel.currencyInfo.divisibility;
-                const locale = this.getLocale(currency);
-                const style = withSymbol ? 'currency' : 'decimal';
-                const opts = { currency, style, maximumFractionDigits: divisibility, minimumFractionDigits: divisibility };
-                try {
-                    return new Intl.NumberFormat(locale, opts).format(value);
-                } catch (err) {
-                    return this.formatCrypto(value, withSymbol);
-                }
-            },
             applyKeyToValue (key, value) {
                 if (!value) value = '';
                 if (key === 'del') {
@@ -162,7 +93,7 @@ document.addEventListener("DOMContentLoaded",function () {
                         value = '';
                     }
                     value += key;
-                    const { divisibility } = this.srvModel.currencyInfo;
+                    const { divisibility } = this.currencyInfo;
                     const decimalIndex = value.indexOf('.')
                     if (decimalIndex !== -1 && (value.length - decimalIndex - 1  > divisibility)) {
                         value = value.replace('.', '');
@@ -174,27 +105,7 @@ document.addEventListener("DOMContentLoaded",function () {
             },
             keyPressed (key) {
                 this[this.keypadTarget] = this.applyKeyToValue(key, this[this.keypadTarget]);
-            },
-            tipPercentage (percentage) {
-                this.tipPercent = this.tipPercent !== percentage
-                    ? percentage
-                    : null;
-            },
-            getLocale(currency) {
-                switch (currency) {
-                    case 'USD': return 'en-US';
-                    case 'EUR': return 'de-DE';
-                    case 'JPY': return 'ja-JP';
-                    default: return navigator.language;
-                }
             }
-        },
-        created () {
-            /** We need to unset state in case user clicks the browser back button */
-            window.addEventListener('pagehide', this.unsetPayButtonLoading);
-        },
-        destroyed () {
-            window.removeEventListener('pagehide', this.unsetPayButtonLoading);
         }
     });
 });

@@ -7,7 +7,6 @@
 @{
     Layout = "PointOfSale/Public/_Layout";
     Csp.UnsafeEval();
-    var customTipPercentages = Model.CustomTipPercentages;
 }
 @section PageHeadContent {
     <link href="~/pos/cart.css" asp-append-version="true" rel="stylesheet" />
@@ -15,6 +14,7 @@
 @section PageFootContent {
     <script>const srvModel = @Safe.Json(Model);</script>
     <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
+    <script src="~/pos/common.js" asp-append-version="true"></script>
     <script src="~/pos/cart.js" asp-append-version="true"></script>
 }
 
@@ -121,12 +121,14 @@
                     <tbody id="CartItems">
                         <tr v-for="item in cart" :key="item.id">
                             <td class="align-middle fw-semibold">{{ item.title }}</td>
-                            <td class="align-middle text-end">
-                                <input class="form-control form-control-sm w-75px" type="number" step="1" name="count" placeholder="Qty" :max="item.inventory" v-model="item.count">
+                            <td class="align-middle">
+                                <input class="form-control form-control-sm w-75px pull-right" type="number" step="1" name="count" placeholder="Qty" :max="item.inventory" v-model="item.count">
                             </td>
                             <td class="align-middle text-end">{{ item.price }}</td>
                             <td>
-                                <button type="button" v-on:click="removeFromCart(item.id)" class="btn btn-link p-2"><i class="fa fa-trash text-muted"></i></button>
+                                <button type="button" v-on:click="removeFromCart(item.id)" class="btn btn-link p-2">
+                                    <vc:icon symbol="remove" />
+                                </button>
                             </td>
                         </tr>
                     </tbody>
@@ -136,7 +138,9 @@
                             <div class="input-group">
                                 <span class="input-group-text"><i class="fa fa-percent fa-fw"></i></span>
                                 <input class="js-cart-discount form-control" type="number" min="0" step="@Model.Step" value="{discount}" name="discount" placeholder="Discount in %" id="CartDiscount">
-                                <a class="js-cart-discount-remove btn btn-danger" href="#"><i class="fa fa-times"></i></a>
+                                <a class="js-cart-discount-remove btn btn-danger" href="#">
+                                    <vc:icon symbol="close" />
+                                </a>
                             </div>
                         </th>
                     </tr>
@@ -147,41 +151,39 @@
                         <tr>
                             <th colspan="5" class="border-0">
                                 <div class="input-group mb-2">
-                                    <span class="input-group-text"><i class="fa fa-money fa-fw"></i></span>
                                     <input
-                                        class="js-cart-tip form-control form-control-lg"
+                                        v-model="tip"
+                                        class="form-control"
                                         type="number"
                                         min="0"
                                         step="@Model.Step"
-                                        value="{tip}"
-                                        name="tip"
-                                        placeholder="Tip in @(Model.CurrencyInfo.CurrencySymbol ?? Model.CurrencyCode)" />
-                                    <a class="js-cart-tip-remove btn btn-lg btn-danger" href="#"><i class="fa fa-times"></i></a>
+                                        name="tip" />
+                                    <span class="input-group-text">@(Model.CurrencyInfo.CurrencySymbol ?? Model.CurrencyCode)</span>
+                                    <a class="btn btn-danger" href="#">
+                                        <vc:icon symbol="close" />
+                                    </a>
                                 </div>
-                                <div class="row mb-1">
-                                    @if (customTipPercentages is {Length: > 0 })
-                                    {
-                                        @foreach (var percentage in customTipPercentages)
-                                        {
-                                            <div class="col">
-                                                <a class="js-cart-tip-btn btn btn-lg btn-light w-100 border mb-2" href="#" data-tip="@percentage">@percentage%</a>
-                                            </div>
-                                        }
-                                    }
-
+                                <div class="btcpay-pills d-flex flex-wrap align-items-center justify-content-center gap-2" v-if="customTipPercentages">
+                                    <button
+                                        v-for="percentage in customTipPercentages"
+                                        type="button"
+                                        class="btcpay-pill"
+                                        :class="{ active: tipPercent == percentage }"
+                                        :id="`Tip-${percentage}`"
+                                        v-on:click.prevent="tipPercentage(percentage)">
+                                        {{ percentage }}%
+                                    </button>
                                 </div>
                             </th>
                         </tr>
                     </template>
                     <tr>
                         <th colspan="1" class="pb-4 h4">Total</th>
-                        <th colspan="4" class="pb-4 h4 text-end">
-                            <span class="js-cart-total" id="CartTotal">{total}</span>
-                        </th>
+                        <th colspan="4" class="pb-4 h4 text-end" id="CartTotal">{{ total }}</th>
                     </tr>
                     </thead>
                 </table>
-                <button id="js-cart-confirm" data-bs-toggle="modal" data-bs-target="#cartModal" class="btn btn-primary btn-lg mx-2 mb-3 p-3" disabled="disabled" type="submit">
+                <button id="js-cart-confirm" data-bs-toggle="modal" data-bs-target="#cartModal" class="btn btn-primary btn-lg mx-2 mb-3 p-3" :disabled="cartCount === 0" type="submit">
                     Confirm
                 </button>
             </div>

@@ -1,6 +1,4 @@
 document.addEventListener("DOMContentLoaded",function () {
-    console.log(srvModel)
-
     function storageKey(name) {
         return `${srvModel.appId}-${srvModel.currencyCode}-${name}`;
     }
@@ -41,10 +39,9 @@ document.addEventListener("DOMContentLoaded",function () {
     
     new Vue({
         el: '#app',
+        mixins: [posCommon],
         data () {
             return {
-                ...srvModel,
-                payButtonLoading: false,
                 displayCategory: '*',
                 searchTerm: null,
                 cart: loadState('cart'),
@@ -73,17 +70,6 @@ document.addEventListener("DOMContentLoaded",function () {
             }
         },
         methods: {
-            handleFormSubmit() {
-                this.payButtonLoading = true;
-            },
-            getLocale(currency) {
-                switch (currency) {
-                    case 'USD': return 'en-US';
-                    case 'EUR': return 'de-DE';
-                    case 'JPY': return 'ja-JP';
-                    default: return navigator.language;
-                }
-            },
             forEachItem(callback) {
                 this.$refs.posItems.querySelectorAll('.posItem').forEach(callback)
             },

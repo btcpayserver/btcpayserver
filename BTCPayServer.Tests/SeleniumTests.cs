@@ -2189,7 +2189,6 @@ namespace BTCPayServer.Tests
             Assert.Contains("App successfully created", s.FindAlertMessage().Text);
             s.Driver.FindElement(By.CssSelector("label[for='DefaultView_Cart']")).Click();
             s.Driver.FindElement(By.Id("Currency")).SendKeys("EUR");
-            s.Driver.FindElement(By.Id("ShowCustomAmount")).Click();
             s.Driver.FindElement(By.Id("SaveSettings")).Click();
             Assert.Contains("App updated", s.FindAlertMessage().Text);
             s.Driver.FindElement(By.Id("ViewApp")).Click();
@@ -2213,21 +2212,16 @@ namespace BTCPayServer.Tests
             Thread.Sleep(250);
             Assert.Equal(2, s.Driver.FindElements(By.CssSelector("#CartItems tr")).Count);
             Assert.Equal("2,00 €", s.Driver.FindElement(By.Id("CartTotal")).Text);
-            
-            // Custom amount
-            s.Driver.FindElement(By.Id("CartCustomAmount")).SendKeys("1.5");
-            s.Driver.FindElement(By.Id("CartTotal")).Click();
-            Assert.Equal("3,50 €", s.Driver.FindElement(By.Id("CartTotal")).Text);
             s.Driver.FindElement(By.Id("js-cart-confirm")).Click();
             
             // Pay
-            Assert.Equal("3,50 €", s.Driver.FindElement(By.Id("CartSummaryTotal")).Text);
+            Assert.Equal("2,00 €", s.Driver.FindElement(By.Id("CartSummaryTotal")).Text);
             s.Driver.FindElement(By.Id("js-cart-pay")).Click();
             
             s.Driver.WaitUntilAvailable(By.Id("Checkout-v2"));
             s.Driver.FindElement(By.Id("DetailsToggle")).Click();
             s.Driver.WaitForElement(By.Id("PaymentDetails-TotalFiat"));
-            Assert.Contains("3,50 €", s.Driver.FindElement(By.Id("PaymentDetails-TotalFiat")).Text);
+            Assert.Contains("2,00 €", s.Driver.FindElement(By.Id("PaymentDetails-TotalFiat")).Text);
         }
 
         [Fact]

@@ -549,7 +549,7 @@ namespace BTCPayServer.Controllers
                 }
                 else if(item.PullPayment?.Id is not null)
                 {
-                    payoutSourceLink = Url.Action("ViewPullPayment", "UIPullPaymentController", new { pullPaymentId = item.PullPayment?.Id });
+                    payoutSourceLink = Url.Action("ViewPullPayment", "UIPullPayment", new { pullPaymentId = item.PullPayment?.Id });
                 }
                 var m = new PayoutsModel.PayoutModel
                 {

@@ -392,20 +392,6 @@ namespace BTCPayServer
             return controller.View("PostRedirect", redirectVm);
         }
 
-        public static string ToSql<TEntity>(this IQueryable<TEntity> query) where TEntity : class
-        {
-            var enumerator = query.Provider.Execute<IEnumerable<TEntity>>(query.Expression).GetEnumerator();
-            var relationalCommandCache = enumerator.Private("_relationalCommandCache");
-            var selectExpression = relationalCommandCache.Private<Microsoft.EntityFrameworkCore.Query.SqlExpressions.SelectExpression>("_selectExpression");
-            var factory = relationalCommandCache.Private<Microsoft.EntityFrameworkCore.Query.IQuerySqlGeneratorFactory>("_querySqlGeneratorFactory");
-
-            var sqlGenerator = factory.Create();
-            var command = sqlGenerator.GetCommand(selectExpression);
-
-            string sql = command.CommandText;
-            return sql;
-        }
-
         public static BTCPayNetworkProvider ConfigureNetworkProvider(this IConfiguration configuration, Logs logs)
         {
             var _networkType = DefaultConfiguration.GetNetworkType(configuration);

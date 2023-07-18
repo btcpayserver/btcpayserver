@@ -12,7 +12,6 @@ using BTCPayServer.Logging;
 using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Payments;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -30,16 +29,13 @@ namespace BTCPayServer.Services.Invoices
             NBitcoin.JsonConverters.Serializer.RegisterFrontConverters(DefaultSerializerSettings);
         }
 
-        public Logs Logs { get; }
-
         private readonly ApplicationDbContextFactory _applicationDbContextFactory;
         private readonly EventAggregator _eventAggregator;
         private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
 
         public InvoiceRepository(ApplicationDbContextFactory contextFactory,
-            BTCPayNetworkProvider networks, EventAggregator eventAggregator, Logs logs)
+            BTCPayNetworkProvider networks, EventAggregator eventAggregator)
         {
-            Logs = logs;
             _applicationDbContextFactory = contextFactory;
             _btcPayNetworkProvider = networks;
             _eventAggregator = eventAggregator;

@@ -834,7 +834,8 @@ namespace BTCPayServer.HostedServices
         {
             return amount switch
             {
-                null when destination.Amount is null => ("Amount is not specified in destination or payout request", null),
+                null when destination.Amount is null && ppCurrency is null => ("Amount is not specified in destination or payout request", null),
+                null when destination.Amount is null => (null, null),
                 null when destination.Amount != null => (null,destination.Amount),
                 not null when destination.Amount is null => (null,amount),
                 not null when destination.Amount != null && amount != destination.Amount &&

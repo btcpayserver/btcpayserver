@@ -322,7 +322,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 return this.CreateValidationError(ModelState);
             }
             
-            var amtError = ClaimRequest.IsPayoutAmountOk(destination.destination, request.Amount);
+            var amtError = ClaimRequest.IsPayoutAmountOk(destination.destination, request.Amount, paymentMethodId.CryptoCode, ppBlob.Currency);
             if (amtError.error is not null)
             {
                 ModelState.AddModelError(nameof(request.Amount), amtError.error );

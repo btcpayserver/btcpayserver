@@ -1,6 +1,6 @@
 ﻿@model BTCPayServer.Models.StoreViewModels.CreateStoreViewModel
 @{
-    Layout = Model.IsFirstStore ? "_LayoutSimple" : "_Layout";
+    Layout = Model.IsFirstStore ? "_LayoutWizard" : "_Layout";
     ViewData.SetActivePage(StoreNavPages.Create, Model.IsFirstStore ? "Create your first store" : "Create a new store");
 }
 
@@ -21,15 +21,22 @@
 
 @if (Model.IsFirstStore)
 {
-    <style>
-        #FirstStore { max-width: 27rem; margin: 0 auto; text-align: center; }
-        #FirstStore .main-logo { height: 4rem; width: 18rem; }
-        #FirstStore .main-logo.main-logo-btcpay { height: 4.5rem; width: 2.5rem; }
-        #FirstStore .main-logo-btcpay .main-logo-btcpay--large { display: none; }
-        #FirstStore .form-control, #FirstStore .form-select { width: 100%; }
-        #FirstStore .form-text { font-size: var(--btcpay-font-size-s); }
-        #FirstStore .form-group:last-of-type { text-align: center; }
-    </style>
+    @section Navbar {
+        <a asp-route-skipWizard="true" class="cancel" id="SkipWizard">
+            <vc:icon symbol="close" />
+        </a>
+    }
+    @section PageHeadContent {
+        <style>
+            #FirstStore { max-width: 27rem; margin: 0 auto; text-align: center; }
+            #FirstStore .main-logo { height: 4rem; width: 18rem; }
+            #FirstStore .main-logo.main-logo-btcpay { height: 4.5rem; width: 2.5rem; }
+            #FirstStore .main-logo-btcpay .main-logo-btcpay--large { display: none; }
+            #FirstStore .form-control, #FirstStore .form-select { width: 100%; }
+            #FirstStore .form-text { font-size: var(--btcpay-font-size-s); }
+            #FirstStore .form-group:last-of-type { text-align: center; }
+        </style>
+    }
     <div id="FirstStore">
         <a asp-controller="UIHome" asp-action="Index" tabindex="-1" class="d-inline-block mb-4">
             <vc:main-logo />

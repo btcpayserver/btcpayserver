@@ -39,12 +39,12 @@ namespace BTCPayServer.Controllers
 
         [HttpGet("create")]
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanModifyStoreSettingsUnscoped)]
-        public async Task<IActionResult> CreateStore()
+        public async Task<IActionResult> CreateStore(bool skipWizard)
         {
             var stores = await _repo.GetStoresByUserId(GetUserId());
             var vm = new CreateStoreViewModel
             {
-                IsFirstStore = !stores.Any(),
+                IsFirstStore = !(stores.Any() || skipWizard),
                 DefaultCurrency = StoreBlob.StandardDefaultCurrency,
                 Exchanges = GetExchangesSelectList(null)
             };

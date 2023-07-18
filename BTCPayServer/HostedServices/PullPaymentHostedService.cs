@@ -389,7 +389,7 @@ namespace BTCPayServer.HostedServices
         {
             try
             {
-                using var ctx = _dbContextFactory.CreateContext();
+                await using var ctx = _dbContextFactory.CreateContext();
                 var payout = await ctx.Payouts.Include(p => p.PullPaymentData).Where(p => p.Id == req.PayoutId)
                     .FirstOrDefaultAsync();
                 if (payout is null)
@@ -596,7 +596,8 @@ namespace BTCPayServer.HostedServices
                 var payoutBlob = new PayoutBlob()
                 {
                     Amount = claimed,
-                    Destination = req.ClaimRequest.Destination.ToString()
+                    Destination = req.ClaimRequest.Destination.ToString(),
+                    Metadata = req.ClaimRequest.Metadata,
                 };
                 payout.SetBlob(payoutBlob, _jsonSerializerSettings);
                 await ctx.Payouts.AddAsync(payout);
@@ -887,5 +888,6 @@ namespace BTCPayServer.HostedServices
         public IClaimDestination Destination { get; set; }
         public string StoreId { get; set; }
         public bool? PreApprove { get; set; }
+        public JObject Metadata { get; set; }
     }
 }

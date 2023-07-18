@@ -1,4 +1,5 @@
 #if ALTCOINS
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using BTCPayServer.Common;
@@ -39,7 +40,7 @@ namespace BTCPayServer
             //precision 0: 10 = 0.00000010
             //precision 2: 10 = 0.00001000
             //precision 8: 10 = 10
-            var money = cryptoInfoDue is null ? (decimal?)null : cryptoInfoDue.Value / decimal.Parse("1".PadRight(1 + 8 - Divisibility, '0'));
+            var money = cryptoInfoDue / (decimal)Math.Pow(10, 8 - Divisibility);
             var builder = base.GenerateBIP21(cryptoInfoAddress, money);
             builder.QueryParams.Add("assetid", AssetId.ToString());
             return builder;

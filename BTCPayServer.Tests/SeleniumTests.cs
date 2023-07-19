@@ -2189,39 +2189,63 @@ namespace BTCPayServer.Tests
             Assert.Contains("App successfully created", s.FindAlertMessage().Text);
             s.Driver.FindElement(By.CssSelector("label[for='DefaultView_Cart']")).Click();
             s.Driver.FindElement(By.Id("Currency")).SendKeys("EUR");
+            s.Driver.FindElement(By.Id("CustomTipPercentages")).Clear();
+            s.Driver.FindElement(By.Id("CustomTipPercentages")).SendKeys("10,21");
             s.Driver.FindElement(By.Id("SaveSettings")).Click();
             Assert.Contains("App updated", s.FindAlertMessage().Text);
             s.Driver.FindElement(By.Id("ViewApp")).Click();
             var windows = s.Driver.WindowHandles;
             Assert.Equal(2, windows.Count);
             s.Driver.SwitchTo().Window(windows[1]);
-            s.Driver.WaitForElement(By.Id("CartItems"));
+            s.Driver.WaitForElement(By.Id("PosItems"));
+            s.Driver.ElementDoesNotExist(By.Id("CartBadge"));
             Assert.Empty(s.Driver.FindElements(By.CssSelector("#CartItems tr")));
-            Assert.Equal("0,00 €", s.Driver.FindElement(By.Id("CartTotal")).Text);
             
             // Select and clear
-            s.Driver.FindElement(By.CssSelector(".card.js-add-cart:nth-child(1)")).Click();
-            Assert.Single(s.Driver.FindElements(By.CssSelector("#CartItems tr")));
-            Assert.Empty(s.Driver.FindElements(By.CssSelector("#CartItems tr")));
+            s.Driver.FindElement(By.CssSelector(".posItem:nth-child(1) .btn-primary")).Click();
+            s.Driver.FindElement(By.Id("CartToggle")).Click();
             Thread.Sleep(250);
+            Assert.Single(s.Driver.FindElements(By.CssSelector("#CartItems tr")));
+            Assert.Equal("1", s.Driver.FindElement(By.Id("CartBadge")).Text);
+            s.Driver.FindElement(By.Id("CartClear")).Click();
+            Thread.Sleep(250);
+            Assert.Empty(s.Driver.FindElements(By.CssSelector("#CartItems tr")));
+            s.Driver.ElementDoesNotExist(By.Id("CartBadge"));
             
             // Select items
-            s.Driver.FindElement(By.CssSelector(".card.js-add-cart:nth-child(2)")).Click();
+            s.Driver.FindElement(By.CssSelector(".posItem:nth-child(2) .btn-primary")).Click();
             Thread.Sleep(250);
-            s.Driver.FindElement(By.CssSelector(".card.js-add-cart:nth-child(1)")).Click();
+            Assert.Equal("1", s.Driver.FindElement(By.Id("CartBadge")).Text);
+            s.Driver.FindElement(By.CssSelector(".posItem:nth-child(1) .btn-primary")).Click();
+            Thread.Sleep(250);
+            Assert.Equal("2", s.Driver.FindElement(By.Id("CartBadge")).Text);
+            s.Driver.FindElement(By.CssSelector(".posItem:nth-child(2) .btn-primary")).Click();
+            Thread.Sleep(250);
+            Assert.Equal("3", s.Driver.FindElement(By.Id("CartBadge")).Text);
+            
+            s.Driver.FindElement(By.Id("CartToggle")).Click();
             Thread.Sleep(250);
             Assert.Equal(2, s.Driver.FindElements(By.CssSelector("#CartItems tr")).Count);
-            Assert.Equal("2,00 €", s.Driver.FindElement(By.Id("CartTotal")).Text);
-            s.Driver.FindElement(By.Id("CartSubmit")).Click();
+            Assert.Equal("3,00 €", s.Driver.FindElement(By.Id("CartTotal")).Text);
+            
+            // Discount: 10%
+            s.Driver.ElementDoesNotExist(By.Id("CartDiscount"));
+            s.Driver.FindElement(By.Id("Discount")).SendKeys("10");
+            Assert.Contains("10% = 0,30 €", s.Driver.FindElement(By.Id("CartDiscount")).Text);
+            Assert.Equal("2,70 €", s.Driver.FindElement(By.Id("CartTotal")).Text);
+            
+            // Tip: 10%
+            s.Driver.ElementDoesNotExist(By.Id("CartTip"));
+            s.Driver.FindElement(By.Id("Tip-10")).Click();
+            Assert.Contains("10% = 0,27 €", s.Driver.FindElement(By.Id("CartTip")).Text);
+            Assert.Equal("2,97 €", s.Driver.FindElement(By.Id("CartTotal")).Text);
             
             // Pay
-            Assert.Equal("2,00 €", s.Driver.FindElement(By.Id("CartSummaryTotal")).Text);
-            s.Driver.FindElement(By.Id("js-cart-pay")).Click();
-            
+            s.Driver.FindElement(By.Id("CartSubmit")).Click();
             s.Driver.WaitUntilAvailable(By.Id("Checkout-v2"));
             s.Driver.FindElement(By.Id("DetailsToggle")).Click();
             s.Driver.WaitForElement(By.Id("PaymentDetails-TotalFiat"));
-            Assert.Contains("2,00 €", s.Driver.FindElement(By.Id("PaymentDetails-TotalFiat")).Text);
+            Assert.Contains("2,97 €", s.Driver.FindElement(By.Id("PaymentDetails-TotalFiat")).Text);
         }
 
         [Fact]

@@ -41,7 +41,8 @@ header .cart-toggle-btn {
 }
 
 #SearchTerm {
-    
+    max-width: 47em;
+    margin: 0 auto;
 }
 
 #cart {
@@ -59,25 +60,4 @@ header .cart-toggle-btn {
 .card-img-top {
     max-height: 210px;
     object-fit: scale-down;
-}
-
-.cart-item-image {
-    width: 50px;
-    height: 50px;
-    object-fit: scale-down;
-}
-
-.js-cart-tip-btn:focus {
-    background-color: #dee2e6;
-}
-
-.js-cart-item-minus .fa,
-.js-cart-item-plus .fa {
-    background: #fff;
-    border-radius: 50%;
-    width: 17px;
-    height: 17px;
-    display: inline-flex;
-    justify-content: center;
-    align-items: center;
 }

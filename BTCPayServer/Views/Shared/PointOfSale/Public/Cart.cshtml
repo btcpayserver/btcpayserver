@@ -23,7 +23,7 @@
         <header class="sticky-top bg-body d-flex flex-column py-3 pt-lg-4 gap-3">
             <div class="d-flex align-items-center justify-content-center gap-3 pe-5 position-relative">
                 <h1 class="mb-0">@(string.IsNullOrEmpty(Model.Title) ? Model.StoreName : Model.Title)</h1>
-                <button class="cart-toggle-btn" type="button" data-bs-toggle="offcanvas" data-bs-target="#cart" aria-controls="cart" :disabled="cartCount === 0">
+                <button id="CartToggle" class="cart-toggle-btn" type="button" data-bs-toggle="offcanvas" data-bs-target="#cart" aria-controls="cart" :disabled="cartCount === 0">
                     <vc:icon symbol="pos-cart" />
                     <span id="CartBadge" class="badge rounded-pill bg-danger p-1 ms-1" v-text="cartCount" v-if="cartCount !== 0"></span>
                 </button>
@@ -42,7 +42,7 @@
             {
                 <div class="lead">@Safe.Raw(Model.Description)</div>
             }
-            <div ref="posItems" class="row row-cols row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+            <div ref="posItems" class="row row-cols row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4" id="PosItems">
                 @for (var index = 0; index < Model.Items.Length; index++)
                 {
                     var item = Model.Items[index];
@@ -121,7 +121,7 @@
         <div class="public-page-wrap pt-3 pt-lg-4 container-xl">
             <div class="offcanvas-header py-0 d-flex align-items-center justify-content-center gap-3 pe-5 position-relative">
                 <h1 class="mb-0" id="cartLabel">Cart</h1>
-                <button type="button" class="cart-toggle-btn" data-bs-dismiss="offcanvas" aria-label="Close">
+                <button id="CartClose" type="button" class="cart-toggle-btn" data-bs-dismiss="offcanvas" aria-label="Close">
                     <vc:icon symbol="close" />
                 </button>
             </div>
@@ -153,7 +153,7 @@
                         <th class="align-middle" :class="{ 'py-4': !enableTips, 'pt-4': enableTips }">Discount</th>
                         <th class="align-middle" :class="{ 'py-4': !enableTips, 'pt-4': enableTips }" colspan="3">
                             <div class="input-group input-group-sm w-125px pull-right">
-                                <input class="form-control" type="number" name="discount" min="0" step="1" max="100" id="CartDiscount" v-model.number="discountPercent">
+                                <input class="form-control" type="number" name="discount" min="0" step="1" max="100" id="Discount" v-model.number="discountPercent">
                                 <span class="input-group-text">%</span>
                             </div>
                         </th>
@@ -214,7 +214,7 @@
                             <form method="post" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" v-on:submit="handleFormSubmit">
                                 <input type="hidden" name="amount" :value="totalNumeric">
                                 <input type="hidden" name="tip" :value="tipNumeric">
-                                <input type="hidden" name="discount" :value="discountNumeric">
+                                <input type="hidden" name="discount" :value="discountPercentNumeric">
                                 <input type="hidden" name="posdata" :value="posdata">
                                 <button id="CartSubmit" class="btn btn-primary btn-lg w-100" type="submit">
                                     <div v-if="payButtonLoading" class="spinner-border spinner-border-sm" id="pay-button-spinner" role="status">
@@ -223,14 +223,14 @@
                                     <template v-else>@Model.CustomButtonText</template>
                                 </button>
                             </form>
-                            <button type="reset" v-on:click="clearCart" class="btn btn-outline-secondary w-100 mt-4" data-bs-dismiss="offcanvas">
+                            <button id="CartClear" type="reset" v-on:click="clearCart" class="btn btn-outline-secondary w-100 mt-4" data-bs-dismiss="offcanvas">
                                 Empty cart
                             </button>
                         </td>
                     </tr>
                     </tfoot>
                 </table>
-                <p v-else class="text-muted text-center my-0">There are no items in your cart yet.</p>
+                <p id="CartItems" v-else class="text-muted text-center my-0">There are no items in your cart yet.</p>
             </div>
         </div>
     </aside>

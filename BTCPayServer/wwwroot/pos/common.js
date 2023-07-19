@@ -13,33 +13,34 @@ const posCommon = {
     computed: {
         amountNumeric () {
             const value = parseFloat(this.amount)
-            return isNaN(value) ? 0.0 : value.toFixed(this.currencyInfo.divisibility)
+            return isNaN(value) ? 0.0 : parseFloat(value.toFixed(this.currencyInfo.divisibility))
         },
         discountPercentNumeric () {
             const value = parseFloat(this.discountPercent)
-            return isNaN(value) ? 0.0 : value.toFixed(this.currencyInfo.divisibility)
+            return isNaN(value) ? 0.0 : parseFloat(value.toFixed(this.currencyInfo.divisibility))
         },
         discountNumeric () {
             return this.amountNumeric && this.discountPercentNumeric
-                ? (this.amountNumeric * (this.discountPercentNumeric / 100)).toFixed(this.currencyInfo.divisibility)
+                ? parseFloat((this.amountNumeric * (this.discountPercentNumeric / 100)).toFixed(this.currencyInfo.divisibility))
                 : 0.0;
         },
         amountMinusDiscountNumeric () {
-            return (this.amountNumeric - this.discountNumeric).toFixed(this.currencyInfo.divisibility)
+            return parseFloat((this.amountNumeric - this.discountNumeric).toFixed(this.currencyInfo.divisibility))
         },
         tipNumeric () {
             if (this.tipPercent) {
-                return (this.amountMinusDiscountNumeric * (this.tipPercent / 100)).toFixed(this.currencyInfo.divisibility)
+                return parseFloat((this.amountMinusDiscountNumeric * (this.tipPercent / 100)).toFixed(this.currencyInfo.divisibility))
             } else {
                 const value = parseFloat(this.tip)
-                return isNaN(value) ? 0.0 : value.toFixed(this.currencyInfo.divisibility)
+                return isNaN(value) ? 0.0 : parseFloat(value.toFixed(this.currencyInfo.divisibility))
             }
         },
         total () {
+            console.log(this.amountNumeric, this.discountNumeric, this.tipNumeric, this.amountNumeric - this.discountNumeric + this.tipNumeric)
             return this.amountNumeric - this.discountNumeric + this.tipNumeric
         },
         totalNumeric () {
-            return parseFloat(this.total).toFixed(this.currencyInfo.divisibility)
+            return parseFloat(parseFloat(this.total).toFixed(this.currencyInfo.divisibility))
         },
         calculation () {
             if (!this.tipNumeric && !this.discountNumeric) return null

@@ -49,7 +49,7 @@ document.addEventListener("DOMContentLoaded",function () {
                 return this.cart.reduce((res, item) => res + item.count, 0);
             },
             amountNumeric () {
-                return this.cart.reduce((res, item) => res + item.price * item.count, 0);
+                return parseFloat(this.cart.reduce((res, item) => res + item.price * item.count, 0).toFixed(this.currencyInfo.divisibility))
             },
             posdata () {
                 const data = {

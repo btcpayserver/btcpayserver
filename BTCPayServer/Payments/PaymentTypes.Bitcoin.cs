@@ -67,7 +67,7 @@ namespace BTCPayServer.Payments
         }
 
         public override string GetPaymentLink(BTCPayNetworkBase network, InvoiceEntity invoice, IPaymentMethodDetails paymentMethodDetails,
-            Money cryptoInfoDue, string serverUri)
+            decimal cryptoInfoDue, string serverUri)
         {
             if (!paymentMethodDetails.Activated)
             {
@@ -105,7 +105,7 @@ namespace BTCPayServer.Payments
         {
             cryptoInfo.PaymentUrls = new InvoiceCryptoInfo.InvoicePaymentUrls()
             {
-                BIP21 = GetPaymentLink(details.Network, invoice, details.GetPaymentMethodDetails(), cryptoInfo.Due, serverUrl),
+                BIP21 = GetPaymentLink(details.Network, invoice, details.GetPaymentMethodDetails(), cryptoInfo.GetDue().Value, serverUrl),
             };
         }
     }

@@ -12,7 +12,6 @@ using BTCPayServer.Logging;
 using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Payments;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -30,16 +29,13 @@ namespace BTCPayServer.Services.Invoices
             NBitcoin.JsonConverters.Serializer.RegisterFrontConverters(DefaultSerializerSettings);
         }
 
-        public Logs Logs { get; }
-
         private readonly ApplicationDbContextFactory _applicationDbContextFactory;
         private readonly EventAggregator _eventAggregator;
         private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
 
         public InvoiceRepository(ApplicationDbContextFactory contextFactory,
-            BTCPayNetworkProvider networks, EventAggregator eventAggregator, Logs logs)
+            BTCPayNetworkProvider networks, EventAggregator eventAggregator)
         {
-            Logs = logs;
             _applicationDbContextFactory = contextFactory;
             _btcPayNetworkProvider = networks;
             _eventAggregator = eventAggregator;
@@ -54,14 +50,20 @@ namespace BTCPayServer.Services.Invoices
                 .FirstOrDefaultAsync();
         }
 
-        public InvoiceEntity CreateNewInvoice()
+        public InvoiceEntity CreateNewInvoice(string storeId)
         {
             return new InvoiceEntity()
             {
+                Id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(16)),
+                StoreId = storeId,
                 Networks = _btcPayNetworkProvider,
                 Version = InvoiceEntity.Lastest_Version,
-                InvoiceTime = DateTimeOffset.UtcNow,
-                Metadata = new InvoiceMetadata()
+                // Truncating was an unintended side effect of previous code. Might want to remove that one day 
+                InvoiceTime = DateTimeOffset.UtcNow.TruncateMilliSeconds(),
+                Metadata = new InvoiceMetadata(),
+#pragma warning disable CS0618
+                Payments = new List<PaymentEntity>()
+#pragma warning restore CS0618
             };
         }
 
@@ -173,21 +175,14 @@ namespace BTCPayServer.Services.Invoices
             await ctx.SaveChangesAsync();
         }
 
-        public async Task<InvoiceEntity> CreateInvoiceAsync(string storeId, InvoiceEntity invoice, string[] additionalSearchTerms = null)
+        public async Task CreateInvoiceAsync(InvoiceEntity invoice, string[] additionalSearchTerms = null)
         {
             var textSearch = new HashSet<string>();
-            invoice = Clone(invoice);
-            invoice.Networks = _btcPayNetworkProvider;
-            invoice.Id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(16));
-#pragma warning disable CS0618
-            invoice.Payments = new List<PaymentEntity>();
-#pragma warning restore CS0618
-            invoice.StoreId = storeId;
             using (var context = _applicationDbContextFactory.CreateContext())
             {
                 var invoiceData = new Data.InvoiceData()
                 {
-                    StoreDataId = storeId,
+                    StoreDataId = invoice.StoreId,
                     Id = invoice.Id,
                     Created = invoice.InvoiceTime,
                     OrderId = invoice.Metadata.OrderId,
@@ -245,16 +240,6 @@ namespace BTCPayServer.Services.Invoices
 
                 await context.SaveChangesAsync().ConfigureAwait(false);
             }
-
-
-            return invoice;
-        }
-
-        private InvoiceEntity Clone(InvoiceEntity invoice)
-        {
-            var temp = new InvoiceData();
-            temp.SetBlob(invoice);
-            return temp.GetBlob(_btcPayNetworkProvider);
         }
 
         public async Task AddInvoiceLogs(string invoiceId, InvoiceLogs logs)
@@ -617,6 +602,7 @@ namespace BTCPayServer.Services.Invoices
                 entity.Metadata.BuyerEmail = entity.RefundMail;
             }
             entity.Archived = invoice.Archived;
+            entity.UpdateTotals();
             return entity;
         }
 
@@ -828,9 +814,8 @@ namespace BTCPayServer.Services.Invoices
                              {
                                  var paymentMethodContribution = new InvoiceStatistics.Contribution();
                                  paymentMethodContribution.PaymentMethodId = pay.GetPaymentMethodId();
-                                 paymentMethodContribution.Value = pay.GetCryptoPaymentData().GetValue() - pay.NetworkFee;
-                                 var rate = p.GetPaymentMethod(paymentMethodContribution.PaymentMethodId).Rate;
-                                 paymentMethodContribution.CurrencyValue = rate * paymentMethodContribution.Value;
+                                 paymentMethodContribution.CurrencyValue = pay.InvoicePaidAmount.Net;
+                                 paymentMethodContribution.Value = pay.PaidAmount.Net;
                                  return paymentMethodContribution;
                              })
                              .ToArray();

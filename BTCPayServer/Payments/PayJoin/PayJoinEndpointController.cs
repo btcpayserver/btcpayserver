@@ -302,7 +302,7 @@ namespace BTCPayServer.Payments.PayJoin
                     var paymentDetails = paymentMethod?.GetPaymentMethodDetails() as Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod;
                     if (paymentMethod is null || paymentDetails is null || !paymentDetails.PayjoinEnabled)
                         continue;
-                    due = paymentMethod.Calculate().TotalDue - output.Value;
+                    due = Money.Coins(paymentMethod.Calculate().TotalDue) - output.Value;
                     if (due > Money.Zero)
                     {
                         break;

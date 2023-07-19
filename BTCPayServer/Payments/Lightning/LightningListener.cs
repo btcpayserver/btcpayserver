@@ -200,7 +200,7 @@ namespace BTCPayServer.Payments.Lightning
                 if (inv.Name == InvoiceEvent.ReceivedPayment && inv.Invoice.Status == InvoiceStatusLegacy.New && inv.Invoice.ExceptionStatus == InvoiceExceptionStatus.PaidPartial)
                 {
                     var pm = inv.Invoice.GetPaymentMethods().First();
-                    if (pm.Calculate().Due.GetValue(pm.Network as BTCPayNetwork) > 0m)
+                    if (pm.Calculate().Due > 0m)
                     {
                         await CreateNewLNInvoiceForBTCPayInvoice(inv.Invoice);
                     }

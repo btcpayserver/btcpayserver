@@ -5522,7 +5522,7 @@ fieldset:disabled .btn {
   --btcpay-modal-margin: 0.5rem;
   --btcpay-modal-color: var(--btcpay-body-text);
   --btcpay-modal-bg: var(--btcpay-bg-tile);
-  --btcpay-modal-border-color: var(--btcpay-border-color-translucent);
+  --btcpay-modal-border-color: var(--btcpay-border-color);
   --btcpay-modal-border-width: var(--btcpay-border-width);
   --btcpay-modal-border-radius: var(--btcpay-border-radius-lg);
   --btcpay-modal-box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
@@ -5557,7 +5557,7 @@ fieldset:disabled .btn {
 }
 
 .modal.fade .modal-dialog {
-  transition: transform 0.3s cubic-bezier(0.175, 0.855, 0.32, 1.275);
+  transition: transform var(--btcpay-transition-duration-default) cubic-bezier(0.175, 0.855, 0.32, 1.275);
   transform: translate(0, -0.5rem);
 }
 
@@ -5604,7 +5604,7 @@ fieldset:disabled .btn {
 
 .modal-backdrop {
   --btcpay-backdrop-zindex: 1050;
-  --btcpay-backdrop-bg: var(--btcpay-black);
+  --btcpay-backdrop-bg: var(--btcpay-bg-tile);
   --btcpay-backdrop-opacity: 0.85;
   position: fixed;
   top: 0;
@@ -6353,16 +6353,16 @@ fieldset:disabled .btn {
 
 .offcanvas-sm, .offcanvas-md, .offcanvas-lg, .offcanvas-xl, .offcanvas-xxl, .offcanvas {
   --btcpay-offcanvas-zindex: 1045;
-  --btcpay-offcanvas-width: 100vw;
+  --btcpay-offcanvas-width: 400px;
   --btcpay-offcanvas-height: auto;
   --btcpay-offcanvas-padding-x: 0;
   --btcpay-offcanvas-padding-y: 0.5rem;
-  --btcpay-offcanvas-color: var(--btcpay-body-text);
-  --btcpay-offcanvas-bg: var(--btcpay-black);
-  --btcpay-offcanvas-border-width: 0;
-  --btcpay-offcanvas-border-color: var(--btcpay-border-color-translucent);
+  --btcpay-offcanvas-color: var(--btcpay-body-color);
+  --btcpay-offcanvas-bg: var(--btcpay-bg-tile);
+  --btcpay-offcanvas-border-width: var(--btcpay-border-width);
+  --btcpay-offcanvas-border-color: var(--btcpay-border-color);
   --btcpay-offcanvas-box-shadow: none;
-  --btcpay-offcanvas-transition: transform 0.3s ease-in-out;
+  --btcpay-offcanvas-transition: transform var(--btcpay-transition-duration-default) ease-in-out;
   --btcpay-offcanvas-title-line-height: 1.6;
 }
 
@@ -6791,7 +6791,7 @@ fieldset:disabled .btn {
   z-index: 1040;
   width: 100vw;
   height: 100vh;
-  background-color: var(--btcpay-black);
+  background-color: var(--btcpay-bg-tile);
 }
 
 .offcanvas-backdrop.fade {
@@ -6799,7 +6799,7 @@ fieldset:disabled .btn {
 }
 
 .offcanvas-backdrop.show {
-  opacity: 1;
+  opacity: 0.85;
 }
 
 .offcanvas-header {
@@ -12189,7 +12189,7 @@ html {
 
 a,
 .btn-link {
-  transition-duration: 0.2s;
+  transition-duration: var(--btcpay-transition-duration-fast);
   transition-property: background, color;
 }
 

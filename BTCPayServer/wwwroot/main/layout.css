@@ -495,13 +495,9 @@
         transform: none;
     }
 
-    .offcanvas-backdrop {
+    #mainMenu .offcanvas-backdrop {
         top: var(--mobile-header-height);
         transition-duration: var(--btcpay-transition-duration-fast);
-    }
-
-    .offcanvas-backdrop.show {
-        opacity: 0.8;
     }
 
     #StoreSelector {
@@ -648,7 +644,7 @@
     }
     
     #mainMenuToggle,
-    .offcanvas-backdrop {
+    #mainMenu .offcanvas-backdrop {
         display: none !important;
     }
 

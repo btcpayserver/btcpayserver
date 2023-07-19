@@ -37,7 +37,7 @@
                             {
                                 @if (item.PriceType != ViewPointOfSaleViewModel.ItemPriceType.Topup)
                                 {
-                                    <form method="post" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" data-buy autocomplete="off">
+                                    <form method="post" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" autocomplete="off">
                                         <input type="hidden" name="choiceKey" value="@item.Id" />
                                         @{PayFormInputContent(buttonText, item.PriceType, item.Price.Value, item.Price.Value);}
                                     </form>
@@ -74,7 +74,7 @@
                 <div class="card h-100 px-0">
                     @{CardBody("Custom Amount", "Create invoice to pay custom amount");}
                     <div class="card-footer bg-transparent border-0 pb-3">
-                        <form method="post" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" data-buy>
+                        <form method="post" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false">
                             @{PayFormInputContent(Model.CustomButtonText, ViewPointOfSaleViewModel.ItemPriceType.Minimum);}
                         </form>
                     </div>

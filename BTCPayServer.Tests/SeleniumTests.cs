@@ -2212,7 +2212,7 @@ namespace BTCPayServer.Tests
             Thread.Sleep(250);
             Assert.Equal(2, s.Driver.FindElements(By.CssSelector("#CartItems tr")).Count);
             Assert.Equal("2,00 €", s.Driver.FindElement(By.Id("CartTotal")).Text);
-            s.Driver.FindElement(By.Id("js-cart-confirm")).Click();
+            s.Driver.FindElement(By.Id("CartSubmit")).Click();
             
             // Pay
             Assert.Equal("2,00 €", s.Driver.FindElement(By.Id("CartSummaryTotal")).Text);

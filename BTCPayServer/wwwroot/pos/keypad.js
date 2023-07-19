@@ -27,24 +27,6 @@ document.addEventListener("DOMContentLoaded",function () {
                     case 'tip':
                         return 'tip';
                 }
-            },
-            calculation () {
-                if (!this.tipNumeric && !this.discountNumeric) return null
-                let calc = this.formatCurrency(this.amountNumeric, true)
-                if (this.discountNumeric > 0) calc += ` - ${this.formatCurrency(this.discountNumeric, true)} (${this.discountPercent}%)`
-                if (this.tipNumeric > 0) calc += ` + ${this.formatCurrency(this.tipNumeric, true)}`
-                if (this.tipPercent) calc += ` (${this.tipPercent}%)`
-                return calc
-            },
-            posdata () {
-                const data = {
-                    subTotal: this.amountNumeric,
-                    total: this.totalNumeric
-                }
-                if (this.tipNumeric > 0) data.tip = this.tipNumeric
-                if (this.discountNumeric > 0) data.discountAmount = this.discountNumeric
-                if (this.discountPercentNumeric > 0) data.discountPercentage = this.discountPercentNumeric
-                return JSON.stringify(data)
             }
         },
         watch: {
@@ -106,7 +88,14 @@ document.addEventListener("DOMContentLoaded",function () {
             keyPressed (key) {
                 this[this.keypadTarget] = this.applyKeyToValue(key, this[this.keypadTarget]);
             }
-        }
+        },
+        created() {
+            /** We need to unset state in case user clicks the browser back button */
+            window.addEventListener('pagehide', this.unsetPayButtonLoading)
+        },
+        destroyed() {
+            window.removeEventListener('pagehide', this.unsetPayButtonLoading)
+        },
     });
 });
 

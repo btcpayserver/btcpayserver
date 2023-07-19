@@ -19,7 +19,6 @@ document.addEventListener("DOMContentLoaded",function () {
             const matchedItem = srvModel.items.find(item => item.id === cart[i].id);
             if (!matchedItem){
                 cart.splice(i, 1);
-                continue;
             } else {
                 if (matchedItem.inventory != null && matchedItem.inventory <= 0){
                     //item is out of stock
@@ -27,12 +26,10 @@ document.addEventListener("DOMContentLoaded",function () {
                 } else if (matchedItem.inventory != null && matchedItem.inventory < cart[i].count){
                     //not enough stock for original cart amount, reduce to available stock
                     cart[i].count = matchedItem.inventory;
+                    //update its stock
+                    cart[i].inventory = matchedItem.inventory;
                 }
-                //update its stock
-                cart[i].inventory = matchedItem.inventory;
             }
-            // Delete the disabled flag if any
-            delete(cart[i].disabled);
         }
         return cart;
     }
@@ -50,6 +47,20 @@ document.addEventListener("DOMContentLoaded",function () {
         computed: {
             cartCount() {
                 return this.cart.reduce((res, item) => res + item.count, 0);
+            },
+            amountNumeric () {
+                return this.cart.reduce((res, item) => res + item.price * item.count, 0);
+            },
+            posdata () {
+                const data = {
+                    cart: this.cart,
+                    subTotal: this.amountNumeric,
+                    total: this.totalNumeric
+                }
+                if (this.tipNumeric > 0) data.tip = this.tipNumeric
+                if (this.discountNumeric > 0) data.discountAmount = this.discountNumeric
+                if (this.discountPercentNumeric > 0) data.discountPercentage = this.discountPercentNumeric
+                return JSON.stringify(data)
             }
         },
         watch: {
@@ -67,19 +78,37 @@ document.addEventListener("DOMContentLoaded",function () {
                     const included = category === "*" || categories.includes(category);
                     item.classList[included ? 'remove' : 'add']("d-none");
                 })
+            },
+            cart: {
+                handler(newCart) {
+                    saveState('cart', newCart);
+                },
+                deep: true
             }
         },
         methods: {
             forEachItem(callback) {
                 this.$refs.posItems.querySelectorAll('.posItem').forEach(callback)
             },
+            inStock(index) {
+                const item = this.items[index];
+                const itemInCart = this.cart.find(lineItem => lineItem.id === item.id);
+                
+                return item.inventory == null || item.inventory > (itemInCart ? itemInCart.count : 0);
+            },
             addToCart(index) {
                 const item = this.items[index];
                 let itemInCart = this.cart.find(lineItem => lineItem.id === item.id);
 
                 // Add new item because it doesn't exist yet
-                if (!itemInCart && (item.inventory == null || item.inventory <= 1)) {
-                    itemInCart = { ...item, count: 0 }
+                if (!itemInCart && (item.inventory == null || item.inventory >= 1)) {
+                    itemInCart = {
+                        id: item.id,
+                        title: item.title,
+                        price: item.price,
+                        inventory: item.inventory,
+                        count: 0
+                    }
                     this.cart.push(itemInCart);
                 }
                 
@@ -88,14 +117,23 @@ document.addEventListener("DOMContentLoaded",function () {
                 if (item.inventory != null && item.inventory <= itemInCart.count) return false;
 
                 itemInCart.count += 1;
-                saveState('cart', this.cart);
                 return true;
             },
             removeFromCart(id) {
                 const index = this.cart.findIndex(lineItem => lineItem.id === id);
                 this.cart.splice(index, 1);
-                saveState('cart', this.cart);
+            },
+            clearCart() {
+                this.cart = [];
             }
-        }
+        },
+        mounted() {
+            window.addEventListener('pagehide', () => {
+                if (this.payButtonLoading) {
+                    this.unsetPayButtonLoading();
+                    localStorage.removeItem(storageKey('cart'));
+                }
+            })
+        },
     });
 });

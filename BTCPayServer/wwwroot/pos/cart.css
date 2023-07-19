@@ -32,8 +32,21 @@ header .cart-toggle-btn {
     color: var(--btcpay-header-link);
 }
 
-.cart-toggle-btn:hover svg {
+.cart-toggle-btn:disabled svg {
+    color: var(--btcpay-body-text-muted);
+}
+
+.cart-toggle-btn:not(:disabled):hover svg {
     color: var(--btcpay-header-link-accent);
+}
+
+#SearchTerm {
+    
+}
+
+#cart {
+    width: 100vw;
+    border-left: 0;
 }
 
 #CartBadge {
@@ -43,16 +56,7 @@ header .cart-toggle-btn {
     min-width: 1.75em;
 }
 
-.modal-content {
-    border-radius: 0.5rem;
-}
-.modal-header {
-    border-top-left-radius: 0.4rem;
-    border-top-right-radius: 0.4rem;
-}
-
 .card-img-top {
-    width: 100%;
     max-height: 210px;
     object-fit: scale-down;
 }

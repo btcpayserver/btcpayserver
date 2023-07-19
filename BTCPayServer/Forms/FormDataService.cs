@@ -151,11 +151,32 @@ public class FormDataService
 
     public CreateInvoiceRequest GenerateInvoiceParametersFromForm(Form form)
     {
-        var amt = GetValue(form, $"{InvoiceParameterPrefix}amount");
+        var amtRaw = GetValue(form, $"{InvoiceParameterPrefix}amount");
+        var amt = string.IsNullOrEmpty(amtRaw) ? (decimal?) null : decimal.Parse(amtRaw, CultureInfo.InvariantCulture);
+        var adjustmentAmount = 0m;
+        foreach (var adjustmentField in form.GetAllFields().Where(f => f.FullName.StartsWith($"{InvoiceParameterPrefix}amount_adjustment")))
+        {
+            if (!decimal.TryParse(GetValue(form, adjustmentField.Field), out var adjustment))
+            {
+                continue;
+            }
+
+            adjustmentAmount += adjustment;
+        }
+
+        if (amt is null && adjustmentAmount > 0)
+        {
+            amt = adjustmentAmount;
+        }
+        else if(amt is not null)
+        {
+            amt += adjustmentAmount;
+            amt = Math.Max(0, amt!.Value);
+        }
         return new CreateInvoiceRequest
         {
             Currency = GetValue(form, $"{InvoiceParameterPrefix}currency"),
-            Amount = string.IsNullOrEmpty(amt) ? null : decimal.Parse(amt, CultureInfo.InvariantCulture),
+            Amount = amt,
             Metadata = GetValues(form),
         };
     }

@@ -1,5 +1,6 @@
 ﻿@model BTCPayServer.Models.StoreViewModels.CreateStoreViewModel
 @{
+    Layout = Model.IsFirstStore ? "_LayoutWizard" : "_Layout";
     ViewData.SetActivePage(StoreNavPages.Create, Model.IsFirstStore ? "Create your first store" : "Create a new store");
 }
 
@@ -18,41 +19,48 @@
 	</script>
 }
 
-<partial name="_StatusMessage" />
-
 @if (Model.IsFirstStore)
 {
-    <h2>@ViewData["Title"]</h2>
-    <p class="lead text-secondary">To start accepting payments, set up a store.</p>
+    @section Navbar {
+        <a asp-route-skipWizard="true" class="cancel" id="SkipWizard">
+            <vc:icon symbol="close" />
+        </a>
+    }
+    @section PageHeadContent {
+        <style>
+            #FirstStore { max-width: 27rem; margin: 0 auto; text-align: center; }
+            #FirstStore .main-logo { height: 4rem; width: 18rem; }
+            #FirstStore .main-logo.main-logo-btcpay { height: 4.5rem; width: 2.5rem; }
+            #FirstStore .main-logo-btcpay .main-logo-btcpay--large { display: none; }
+            #FirstStore .form-control, #FirstStore .form-select { width: 100%; }
+            #FirstStore .form-text { font-size: var(--btcpay-font-size-s); }
+            #FirstStore .form-group:last-of-type { text-align: center; }
+        </style>
+    }
+    <div id="FirstStore">
+        <a asp-controller="UIHome" asp-action="Index" tabindex="-1" class="d-inline-block mb-4">
+            <vc:main-logo />
+        </a>
+
+        <h1 class="h2 mb-3">@ViewData["Title"]</h1>
+        <p class="lead text-secondary">Create a store to begin accepting payments.</p>
+
+        <div class="text-start">
+            <partial name="_StatusMessage"/>
+            <partial name="_CreateStoreForm" model="Model" />
+        </div>
+    </div>
 }
 else
 {
     <h2 class="mt-1 mb-4">@ViewData["Title"]</h2>
-}
-<div class="row">
-    <div class="col-xl-8 col-xxl-constrain">
-        <form asp-action="CreateStore">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="Name" class="form-label" data-required></label>
-                <input asp-for="Name" class="form-control w-300px" required />
-                <span asp-validation-for="Name" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="DefaultCurrency" class="form-label" data-required></label>
-                <input asp-for="DefaultCurrency" class="form-control w-300px" currency-selection />
-                <span asp-validation-for="DefaultCurrency" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="PreferredExchange" class="form-label" data-required></label>
-                <select asp-for="PreferredExchange" asp-items="Model.Exchanges" class="form-select w-300px"></select>
-                <div class="form-text mt-2 only-for-js">The recommended price source gets chosen based on the default currency.</div>
-                <span asp-validation-for="PreferredExchange" class="text-danger"></span>
-            </div>
-
-            <div class="form-group mt-4">
-                <input type="submit" value="Create" class="btn btn-primary" id="Create" />
-            </div>
-        </form>
+    <div class="row">
+        <div class="col-xl-8 col-xxl-constrain">
+            <partial name="_CreateStoreForm" model="Model" />
+        </div>
     </div>
-</div>
+}
+
+
+
+

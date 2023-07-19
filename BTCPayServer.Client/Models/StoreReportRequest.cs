@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using BTCPayServer.JsonConverters;
 using Newtonsoft.Json;
@@ -34,6 +35,11 @@ public class StoreReportResponse
     public DateTimeOffset From { get; set; }
     public DateTimeOffset To { get; set; }
     public List<ChartDefinition> Charts { get; set; }
+
+    public int GetIndex(string fieldName)
+    {
+        return Fields.ToList().FindIndex(f => f.Name == fieldName);
+    }
 }
 
 public class ChartDefinition

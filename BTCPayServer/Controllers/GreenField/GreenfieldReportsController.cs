@@ -42,6 +42,7 @@ public class GreenfieldReportsController : Controller
 
     [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
     [HttpPost("~/api/v1/stores/{storeId}/reports")]
+    [NonAction] // Disabling this endpoint as we still need to figure out the request/response model
     public async Task<IActionResult> StoreReports(string storeId, [FromBody] StoreReportRequest? vm = null, CancellationToken cancellationToken = default)
     {
         vm ??= new StoreReportRequest();

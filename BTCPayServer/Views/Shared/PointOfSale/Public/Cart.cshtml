@@ -66,8 +66,8 @@
                         : item.BuyButtonText;
                     buttonText = buttonText.Replace("{0}", formatted).Replace("{Price}", formatted);
                     
-                    <div class="col posItem" data-index="@index" data-search="@Safe.Raw(item.Title) @Safe.Raw(item.Description)" data-categories="@(new JArray(item.Categories).ToString())">
-                        <div class="card h-100 px-0">
+                    <div class="col posItem" :class="{ 'posItem--inStock': inStock(@index) }" data-index="@index" data-search="@Safe.Raw(item.Title) @Safe.Raw(item.Description)" data-categories="@(new JArray(item.Categories).ToString())">
+                        <div class="card h-100 px-0" v-on:click="addToCart(@index)" >
                             @if (!string.IsNullOrWhiteSpace(item.Image))
                             {
                                 <img class="card-img-top" src="@item.Image" alt="@Safe.Raw(item.Title)" asp-append-version="true">
@@ -85,7 +85,7 @@
                                     }
                                     @if (item.Inventory.HasValue)
                                     {
-                                        <span class="badge text-bg-warning">
+                                        <span class="badge text-bg-warning" v-text="inventoryText(@index)">
                                             @(item.Inventory > 0 ? $"{item.Inventory} left" : "Sold out")
                                         </span>
                                     }
@@ -98,10 +98,11 @@
                             @if (inStock)
                             {
                                 <div class="card-footer bg-transparent border-0 pt-0 pb-3">
-                                    <button type="button" class="btn btn-primary w-100" v-on:click="addToCart(@index)" :disabled="!inStock(@index)">
+                                    <button type="button" class="btn btn-primary w-100" :disabled="!inStock(@index)">
                                         @Safe.Raw(buttonText)
                                     </button>                            
                                 </div>
+                                <div class="posItem-added"><vc:icon symbol="checkmark" /></div>
                             }    
                         </div>
                     </div>

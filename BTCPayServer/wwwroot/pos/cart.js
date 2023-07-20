@@ -34,6 +34,8 @@ document.addEventListener("DOMContentLoaded",function () {
         return cart;
     }
     
+    const POS_ITEM_ADDED_CLASS = 'posItem--added';
+    
     new Vue({
         el: '#PosCart',
         mixins: [posCommon],
@@ -98,17 +100,27 @@ document.addEventListener("DOMContentLoaded",function () {
                 this.$refs.posItems.querySelectorAll('.posItem').forEach(callback)
             },
             inStock(index) {
-                const item = this.items[index];
-                const itemInCart = this.cart.find(lineItem => lineItem.id === item.id);
+                const item = this.items[index]
+                const itemInCart = this.cart.find(lineItem => lineItem.id === item.id)
                 
-                return item.inventory == null || item.inventory > (itemInCart ? itemInCart.count : 0);
+                return item.inventory == null || item.inventory > (itemInCart ? itemInCart.count : 0)
+            },
+            inventoryText(index) {
+                const item = this.items[index]
+                if (item.inventory == null) return null
+
+                const itemInCart = this.cart.find(lineItem => lineItem.id === item.id)
+                const left = item.inventory - (itemInCart ? itemInCart.count : 0)
+                return left > 0 ? `${item.inventory} left` : 'Sold out'
             },
             addToCart(index) {
+                if (!this.inStock(index)) return false;
+                
                 const item = this.items[index];
                 let itemInCart = this.cart.find(lineItem => lineItem.id === item.id);
 
                 // Add new item because it doesn't exist yet
-                if (!itemInCart && (item.inventory == null || item.inventory >= 1)) {
+                if (!itemInCart) {
                     itemInCart = {
                         id: item.id,
                         title: item.title,
@@ -118,12 +130,13 @@ document.addEventListener("DOMContentLoaded",function () {
                     }
                     this.cart.push(itemInCart);
                 }
-                
-                // no inventory cases
-                if (!itemInCart) return false;
-                if (item.inventory != null && item.inventory <= itemInCart.count) return false;
 
                 itemInCart.count += 1;
+                
+                // Animate
+                const $posItem = this.$refs.posItems.querySelectorAll('.posItem')[index];
+                if(!$posItem.classList.contains(POS_ITEM_ADDED_CLASS)) $posItem.classList.add(POS_ITEM_ADDED_CLASS);
+                
                 return true;
             },
             removeFromCart(id) {
@@ -135,12 +148,19 @@ document.addEventListener("DOMContentLoaded",function () {
             }
         },
         mounted() {
-            this.$cart = new bootstrap.Offcanvas(this.$refs.cart)
+            this.$cart = new bootstrap.Offcanvas(this.$refs.cart, {backdrop: false})
             window.addEventListener('pagehide', () => {
                 if (this.payButtonLoading) {
                     this.unsetPayButtonLoading();
                     localStorage.removeItem(storageKey('cart'));
                 }
+            })
+            this.forEachItem(item => {
+                item.addEventListener('transitionend', () => {
+                    if (item.classList.contains(POS_ITEM_ADDED_CLASS)) {
+                        item.classList.remove(POS_ITEM_ADDED_CLASS);
+                    }
+                });
             })
         },
     });

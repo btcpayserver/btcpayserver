@@ -62,7 +62,7 @@
 	<article v-for="chart in srv.charts" class="mb-5">
         <h3>{{ chart.name }}</h3>
         <div class="table-responsive">
-		    <table class="table table-hover w-auto">
+		    <table class="table table-bordered table-hover w-auto">
                 <thead class="sticky-top bg-body">
 				    <tr>
 					    <th v-for="group in chart.groups">{{ group }}</th>

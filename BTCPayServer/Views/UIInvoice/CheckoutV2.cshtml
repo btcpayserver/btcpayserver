@@ -32,6 +32,14 @@
     {
         <link rel="preload" href="@Model.PaymentSoundUrl" as="audio" />
     }
+    @if (!string.IsNullOrEmpty(Model.NfcReadSoundUrl))
+    {
+        <link rel="preload" href="@Model.NfcReadSoundUrl" as="audio" />
+    }
+    @if (!string.IsNullOrEmpty(Model.ErrorSoundUrl))
+    {
+        <link rel="preload" href="@Model.ErrorSoundUrl" as="audio" />
+    }
 </head>
 <body class="min-vh-100">
     <div id="Checkout-v2" class="public-page-wrap" v-cloak>

@@ -159,7 +159,7 @@ Vue.component("lnurl-withdraw-checkout", {
                 
                 await ndef.scan({ signal: this.readerAbortController.signal })
 
-                ndef.onreadingerror = this.reportNfcError
+                ndef.onreadingerror = () => this.reportNfcError('Could not read NFC tag')
 
                 ndef.onreading = async ({ message }) => {
                     const record = message.records[0]
@@ -180,7 +180,7 @@ Vue.component("lnurl-withdraw-checkout", {
                                 await this.sendData(data)
                                 break;
                             case 'nfc:error':
-                                this.reportNfcError()
+                                this.reportNfcError('Could not read NFC tag')
                                 break;
                         }
                     });
@@ -189,13 +189,15 @@ Vue.component("lnurl-withdraw-checkout", {
                 // we came here, so the user must have allowed NFC access
                 this.permissionGranted = true;
             } catch (error) {
-                this.errorMessage = `NFC scan failed: ${error}`;
+                this.reportNfcError(`NFC scan failed: ${error}`);
             }
         },
         async sendData (lnurl) {
             this.submitting = true;
             this.successMessage = null;
             this.errorMessage = null;
+            
+            if (this.isV2) this.$root.playSound('nfcRead');
             
             // Post LNURL-Withdraw data to server
             const body = JSON.stringify({ lnurl, invoiceId: this.model.invoiceId, amount: this.amount })
@@ -208,15 +210,16 @@ Vue.component("lnurl-withdraw-checkout", {
                 if (response.ok) {
                     this.successMessage = result;
                 } else {
-                    this.errorMessage = result;
+                    this.reportNfcError(error);
                 }
             } catch (error) {
-                this.errorMessage = error;
+                this.reportNfcError(error);
             }
             this.submitting = false;
         },
-        reportNfcError() {
-            this.errorMessage = 'Could not read NFC tag';    
+        reportNfcError(message) {
+            this.errorMessage = message;
+            if (this.isV2) this.$root.playSound('error');
         }
     }
 });

@@ -960,6 +960,8 @@ namespace BTCPayServer.Controllers
                 model.PaymentSoundUrl = string.IsNullOrEmpty(storeBlob.SoundFileId)
                     ? string.Concat(Request.GetAbsoluteRootUri().ToString(), "checkout-v2/payment.mp3")
                     : await _fileService.GetFileUrl(Request.GetAbsoluteRootUri(), storeBlob.SoundFileId);
+                model.ErrorSoundUrl = string.Concat(Request.GetAbsoluteRootUri().ToString(), "checkout-v2/error.mp3");
+                model.NfcReadSoundUrl = string.Concat(Request.GetAbsoluteRootUri().ToString(), "checkout-v2/nfcread.mp3");
             }
             
             var expiration = TimeSpan.FromSeconds(model.ExpirationSeconds);

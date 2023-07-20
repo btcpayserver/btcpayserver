@@ -16,6 +16,7 @@ using BTCPayServer.Data;
 using BTCPayServer.Filters;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Models;
+using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Models.PaymentRequestViewModels;
 using BTCPayServer.Payments;
@@ -1089,8 +1090,9 @@ namespace BTCPayServer.Controllers
             }
             model.Search = fs;
             model.SearchText = fs.TextSearch;
-            
-            InvoiceQuery invoiceQuery = GetInvoiceQuery(fs, timezoneOffset);
+
+            var apps = await _appService.GetAllApps(GetUserId(), false, storeId);
+            InvoiceQuery invoiceQuery = GetInvoiceQuery(fs, apps, timezoneOffset);
             invoiceQuery.StoreId = storeIds.ToArray();
             invoiceQuery.Take = model.Count;
             invoiceQuery.Skip = model.Skip;
@@ -1099,14 +1101,6 @@ namespace BTCPayServer.Controllers
             var list = await _InvoiceRepository.GetInvoices(invoiceQuery);
 
             // Apps
-            var apps = await _appService.GetAllApps(GetUserId(), false, storeId);
-            var appTags = fs.GetFilterArray("appid")?.Select(AppService.GetAppInternalTag);
-            if (appTags != null)
-            {
-                list = list.Where(inv => inv.Version < InvoiceEntity.InternalTagSupport_Version ||
-                                inv.InternalTags.Any(it => appTags.Contains(it))).ToArray();
-            }
-
             model.Apps = apps.Select(a => new InvoiceAppModel
             {
                 Id = a.Id,
@@ -1136,11 +1130,21 @@ namespace BTCPayServer.Controllers
             return View(model);
         }
 
-        private InvoiceQuery GetInvoiceQuery(SearchString fs, int timezoneOffset = 0)
+        private InvoiceQuery GetInvoiceQuery(SearchString fs, ListAppsViewModel.ListAppViewModel[] apps, int timezoneOffset = 0)
         {
+            var textSearch = fs.TextSearch;
+            if (fs.GetFilterArray("appid") is { } appIds)
+            {
+                var appsById = apps.ToDictionary(a => a.Id);
+                var searchTexts = appIds.Select(a => appsById.TryGet(a)).Where(a => a != null)
+                    .Select(a => AppService.GetAppSearchTerm(a.AppType, a.Id))
+                    .ToList();
+                searchTexts.Add(fs.TextSearch);
+                textSearch = string.Join(' ', searchTexts.Where(t => !string.IsNullOrEmpty(t)).ToList());
+            }
             return new InvoiceQuery
             {
-                TextSearch = fs.TextSearch,
+                TextSearch = textSearch,
                 UserId = GetUserId(),
                 Unusual = fs.GetFilterBool("unusual"),
                 IncludeArchived = fs.GetFilterBool("includearchived") ?? false,
@@ -1172,7 +1176,8 @@ namespace BTCPayServer.Controllers
                     storeIds.Add(i);
             }
 
-            InvoiceQuery invoiceQuery = GetInvoiceQuery(fs, timezoneOffset);
+            var apps = await _appService.GetAllApps(GetUserId(), false, storeId);
+            InvoiceQuery invoiceQuery = GetInvoiceQuery(fs, apps, timezoneOffset);
             invoiceQuery.StoreId = storeIds.ToArray();
             invoiceQuery.Skip = 0;
             invoiceQuery.Take = int.MaxValue;

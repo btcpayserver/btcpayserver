@@ -297,7 +297,6 @@ namespace BTCPayServer
             var createInvoice = new CreateInvoiceRequest()
             {
                 Amount =  item?.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Topup? null:  item?.Price,
-                
                 Currency = currencyCode,
                 Checkout = new InvoiceDataBase.CheckoutOptions()
                 {
@@ -307,18 +306,17 @@ namespace BTCPayServer
                                                        HttpContext.Request.GetAbsoluteUri($"/apps/{app.Id}/pos"),
                         _ => null
                     }
-                }
+                },
+                AdditionalSearchTerms = new[] { AppService.GetAppSearchTerm(app) }
             };
 
-            var invoiceMetadata = new InvoiceMetadata();
-            invoiceMetadata.OrderId = AppService.GetAppOrderId(app);
+            var invoiceMetadata = new InvoiceMetadata { OrderId = AppService.GetRandomOrderId() };
             if (item != null)
             {
                 invoiceMetadata.ItemCode = item.Id;
                 invoiceMetadata.ItemDesc = item.Description;
             }
             createInvoice.Metadata = invoiceMetadata.ToJObject();
-
 
             return await GetLNURLRequest(
                 cryptoCode,

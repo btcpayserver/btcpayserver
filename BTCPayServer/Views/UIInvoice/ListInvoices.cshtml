@@ -8,7 +8,7 @@
     ViewData.SetActivePage(InvoiceNavPages.Index, "Invoices");
     var statusFilterCount = CountArrayFilter("status") + CountArrayFilter("exceptionstatus") + (HasBooleanFilter("includearchived") ? 1 : 0) + (HasBooleanFilter("unusual") ? 1 : 0);
     var hasDateFilter = HasArrayFilter("startdate") || HasArrayFilter("enddate");
-    var appFilterCount = Model.Apps.Count(app => HasArrayFilter("orderid", app.AppOrderId));
+    var appFilterCount = Model.Apps.Count(app => HasArrayFilter("appid", app.Id));
 }
 
 @functions
@@ -140,7 +140,7 @@
                 })
                 .on("click", ".invoice-row", function (e) {
                     const $invoiceRow = $(e.currentTarget);
-                    if (!$(e.target).is("a,.badge,.selector")) {
+                    if ($(e.target).is("td")) {
                         $invoiceRow.find(".selector").trigger("click");
                     }
                 });
@@ -279,7 +279,7 @@
             <div class="dropdown-menu" aria-labelledby="AppOptionsToggle">
                 @foreach (var app in Model.Apps)
                 {
-                    <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("orderid", app.AppOrderId)" class="dropdown-item @(HasArrayFilter("orderid", app.AppOrderId) ? "custom-active" : "")">@app.AppName</a>
+                    <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("appid", app.Id)" class="dropdown-item @(HasArrayFilter("appid", app.Id) ? "custom-active" : "")">@app.AppName</a>
                 }
             </div>
         </div> 
@@ -379,16 +379,7 @@
                             </td>
                             <td>@invoice.Date.ToBrowserDate()</td>
                             <td>
-                                <div class="text-truncate" style="max-width:120px;" data-bs-toggle="tooltip" title="@invoice.OrderId">
-                                    @if (invoice.RedirectUrl != string.Empty)
-                                    {
-                                        <a href="@invoice.RedirectUrl" rel="noreferrer noopener">@invoice.OrderId</a>
-                                    }
-                                    else
-                                    {
-                                        @invoice.OrderId
-                                    }
-                                </div>
+                                <vc:truncate-center text="@invoice.OrderId" link="@invoice.RedirectUrl" classes="truncate-center-id" />
                             </td>
                             <td class="text-break">@invoice.InvoiceId</td>
                             <td>

@@ -3748,7 +3748,7 @@ namespace BTCPayServer.Tests
                 Assert.Single(await adminClient.GetStoreOnChainAutomatedPayoutProcessors(admin.StoreId, "BTC"));
             Assert.Equal(0.5m, settings.Threshold);
             
-            //create a payout that should not be processed straight away
+            //create a payout that should not be processed straight away due to threshold
             
             beforeHookTcs = new TaskCompletionSource();
             afterHookTcs = new TaskCompletionSource();

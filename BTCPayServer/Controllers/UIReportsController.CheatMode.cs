@@ -89,6 +89,14 @@ public partial class UIReportsController
             return GenerateDecimal(-5.0m, 5.0m, 8);
         if (f.Type == "datetime")
             return DateTimeOffset.UtcNow - TimeSpan.FromHours(rand.Next(0, 24 * 30 * 6)) - TimeSpan.FromMinutes(rand.Next(0, 60));
+        if (f.Name == "Item")
+            return TakeOne("green-tea", "black-tea", "oolong-tea", "coca-cola");
+        if (f.Name == "State")
+            return TakeOne("Settled", "Processing");
+        if (f.Name == "AppId")
+            return TakeOne("AppA", "AppB");
+        if (f.Name == "Quantity")
+            return TakeOne(1, 2, 3, 4, 5);
         if (f.Name == "Currency")
             return rand.NextSingle() > 0.2 ? "USD" : TakeOne("JPY", "EUR", "CHF");
         if (f.Name == "CurrencyAmount")

@@ -121,7 +121,7 @@ namespace BTCPayServer.Services.Reporting
                     new ()
                     {
                         Name = "Summary by items",
-                        Groups = { "AppId", "State", "Item" },
+                        Groups = { "AppId", "Currency", "State", "Item" },
                         Aggregates = { "Quantity", "CurrencyAmount" },
                         Totals = { "State" }
                     }

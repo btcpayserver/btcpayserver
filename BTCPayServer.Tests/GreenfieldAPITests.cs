@@ -17,6 +17,7 @@ using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.PayoutProcessors;
 using BTCPayServer.PayoutProcessors.OnChain;
+using BTCPayServer.Plugins;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Custodian.Client.MockCustodian;
 using BTCPayServer.Services.Notifications;
@@ -3669,9 +3670,12 @@ namespace BTCPayServer.Tests
                 Assert.Single(payouts.Where(data => data.State == PayoutState.InProgress));
             });
 
-            var txid = await tester.ExplorerNode.SendToAddressAsync(BitcoinAddress.Create((await adminClient.GetOnChainWalletReceiveAddress(admin.StoreId, "BTC", true)).Address,
-                tester.ExplorerClient.Network.NBitcoinNetwork), Money.Coins(0.01m) + fee);
-            await tester.WaitForEvent<NewOnChainTransactionEvent>(null, correctEvent: ev => ev.NewTransactionEvent.TransactionData.TransactionHash == txid);
+            uint256 txid = null;
+            await tester.WaitForEvent<NewOnChainTransactionEvent>(async () =>
+            {
+                txid  = await tester.ExplorerNode.SendToAddressAsync(BitcoinAddress.Create((await adminClient.GetOnChainWalletReceiveAddress(admin.StoreId, "BTC", true)).Address,
+                    tester.ExplorerClient.Network.NBitcoinNetwork), Money.Coins(0.01m) + fee);
+            }, correctEvent: ev => ev.NewTransactionEvent.TransactionData.TransactionHash == txid);
             await tester.PayTester.GetService<PayoutProcessorService>().Restart(new PayoutProcessorService.PayoutProcessorQuery(admin.StoreId, "BTC"));
             await TestUtils.EventuallyAsync(async () =>
             {
@@ -3679,6 +3683,122 @@ namespace BTCPayServer.Tests
                 payouts = await adminClient.GetStorePayouts(admin.StoreId);
                 Assert.Empty(payouts.Where(data => data.State != PayoutState.InProgress));
             });
+
+            // settings that were added later
+            var settings =
+                Assert.Single(await adminClient.GetStoreOnChainAutomatedPayoutProcessors(admin.StoreId, "BTC"));
+            Assert.False( settings.ProcessNewPayoutsInstantly);
+            Assert.Equal(0m, settings.Threshold);
+            
+            //let's use the ProcessNewPayoutsInstantly so that it will trigger instantly
+            
+            settings.IntervalSeconds = TimeSpan.FromDays(1);
+            settings.ProcessNewPayoutsInstantly = true;
+            
+            await tester.WaitForEvent<NewOnChainTransactionEvent>(async () =>
+            {
+                txid  = await tester.ExplorerNode.SendToAddressAsync(BitcoinAddress.Create((await adminClient.GetOnChainWalletReceiveAddress(admin.StoreId, "BTC", true)).Address,
+                    tester.ExplorerClient.Network.NBitcoinNetwork), Money.Coins(1m) + fee);
+            }, correctEvent: ev => ev.NewTransactionEvent.TransactionData.TransactionHash == txid);
+
+            await adminClient.UpdateStoreOnChainAutomatedPayoutProcessors(admin.StoreId, "BTC", settings);
+            settings =
+                Assert.Single(await adminClient.GetStoreOnChainAutomatedPayoutProcessors(admin.StoreId, "BTC"));
+            Assert.True( settings.ProcessNewPayoutsInstantly);
+
+            var pluginHookService = tester.PayTester.GetService<IPluginHookService>();
+            var beforeHookTcs = new TaskCompletionSource();
+            var afterHookTcs = new TaskCompletionSource();
+            pluginHookService.ActionInvoked += (sender, tuple) =>
+            {
+                switch (tuple.hook)
+                {
+                    case "before-automated-payout-processing":
+                        beforeHookTcs.TrySetResult();
+                        break;
+                    case "after-automated-payout-processing":
+                        afterHookTcs.TrySetResult();
+                        break;
+                }
+            };
+            var payoutThatShouldBeProcessedStraightAway = await adminClient.CreatePayout(admin.StoreId, new CreatePayoutThroughStoreRequest()
+            {
+                PullPaymentId = pullPayment.Id,
+                Amount = 0.5m,
+                Approved = true,
+                PaymentMethod = "BTC",
+                Destination = (await adminClient.GetOnChainWalletReceiveAddress(admin.StoreId, "BTC", true)).Address,
+            });
+            await beforeHookTcs.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            await afterHookTcs.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            payouts = await adminClient.GetStorePayouts(admin.StoreId);
+            Assert.Single(payouts.Where(data => data.State == PayoutState.InProgress && data.Id == payoutThatShouldBeProcessedStraightAway.Id));
+            
+            beforeHookTcs = new TaskCompletionSource();
+            afterHookTcs = new TaskCompletionSource();
+            //let's test the threshold limiter
+            settings.Threshold = 0.5m;
+            await adminClient.UpdateStoreOnChainAutomatedPayoutProcessors(admin.StoreId, "BTC", settings);
+            
+            //quick test: when updating processor, it processes instantly
+            await beforeHookTcs.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            await afterHookTcs.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            
+            settings =
+                Assert.Single(await adminClient.GetStoreOnChainAutomatedPayoutProcessors(admin.StoreId, "BTC"));
+            Assert.Equal(0.5m, settings.Threshold);
+            
+            //create a payout that should not be processed straight away due to threshold
+            
+            beforeHookTcs = new TaskCompletionSource();
+            afterHookTcs = new TaskCompletionSource();
+            var payoutThatShouldNotBeProcessedStraightAway = await adminClient.CreatePayout(admin.StoreId, new CreatePayoutThroughStoreRequest()
+            {
+                Amount = 0.1m,
+                Approved = true,
+                PaymentMethod = "BTC",
+                Destination = (await adminClient.GetOnChainWalletReceiveAddress(admin.StoreId, "BTC", true)).Address,
+            });
+            
+            await beforeHookTcs.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            await afterHookTcs.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            
+            payouts = await adminClient.GetStorePayouts(admin.StoreId);
+            Assert.Single(payouts.Where(data => data.State == PayoutState.AwaitingPayment && data.Id == payoutThatShouldNotBeProcessedStraightAway.Id));
+            
+            beforeHookTcs = new TaskCompletionSource();
+            afterHookTcs = new TaskCompletionSource();
+            var payoutThatShouldNotBeProcessedStraightAway2 = await adminClient.CreatePayout(admin.StoreId, new CreatePayoutThroughStoreRequest()
+            {
+                Amount = 0.3m,
+                Approved = true,
+                PaymentMethod = "BTC",
+                Destination = (await adminClient.GetOnChainWalletReceiveAddress(admin.StoreId, "BTC", true)).Address,
+            });
+            
+            await beforeHookTcs.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            await afterHookTcs.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            
+            payouts = await adminClient.GetStorePayouts(admin.StoreId);
+            Assert.Equal(2, payouts.Count(data => data.State == PayoutState.AwaitingPayment &&
+                                                  (data.Id == payoutThatShouldNotBeProcessedStraightAway.Id || data.Id == payoutThatShouldNotBeProcessedStraightAway2.Id)));
+            
+            beforeHookTcs = new TaskCompletionSource();
+            afterHookTcs = new TaskCompletionSource();
+            var payoutThatShouldNotBeProcessedStraightAway3 = await adminClient.CreatePayout(admin.StoreId, new CreatePayoutThroughStoreRequest()
+            {
+                Amount = 0.3m,
+                Approved = true,
+                PaymentMethod = "BTC",
+                Destination = (await adminClient.GetOnChainWalletReceiveAddress(admin.StoreId, "BTC", true)).Address,
+            });
+
+            await beforeHookTcs.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            await afterHookTcs.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            
+            payouts = await adminClient.GetStorePayouts(admin.StoreId);
+            Assert.Empty(payouts.Where(data => data.State != PayoutState.InProgress));
+
         }
 
         [Fact(Timeout = 60 * 2 * 1000)]

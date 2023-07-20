@@ -277,6 +277,18 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                 };
             }
 
+            if (bolt11PaymentRequest.ExpiryDate < DateTimeOffset.Now)
+            {
+                payoutData.State = PayoutState.Cancelled;
+                return new ResultVM
+                {
+                    PayoutId = payoutData.Id,
+                    Result = PayResult.Error,
+                    Message = $"The BOLT11 invoice expiry date ({bolt11PaymentRequest.ExpiryDate}) has expired",
+                    Destination = payoutBlob.Destination
+                };
+            }
+
             var proofBlob = new PayoutLightningBlob() { PaymentHash = bolt11PaymentRequest.PaymentHash.ToString() };
             try
             {

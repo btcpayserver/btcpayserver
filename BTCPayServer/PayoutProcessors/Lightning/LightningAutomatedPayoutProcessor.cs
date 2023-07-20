@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -14,16 +15,15 @@ using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Stores;
-using LNURL;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using NBitcoin;
 using PayoutData = BTCPayServer.Data.PayoutData;
 using PayoutProcessorData = BTCPayServer.Data.PayoutProcessorData;
 
 namespace BTCPayServer.PayoutProcessors.Lightning;
 
-public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<AutomatedPayoutBlob>
+public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<LightningAutomatedPayoutBlob>
 {
     private readonly BTCPayNetworkJsonSerializerSettings _btcPayNetworkJsonSerializerSettings;
     private readonly LightningClientFactoryService _lightningClientFactoryService;
@@ -31,6 +31,7 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Au
     private readonly IOptions<LightningNetworkOptions> _options;
     private readonly LightningLikePayoutHandler _payoutHandler;
     private readonly BTCPayNetwork _network;
+    private readonly ConcurrentDictionary<string, int> _failedPayoutCounter = new();
 
     public LightningAutomatedPayoutProcessor(
         BTCPayNetworkJsonSerializerSettings btcPayNetworkJsonSerializerSettings,
@@ -38,11 +39,13 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Au
         IEnumerable<IPayoutHandler> payoutHandlers,
         UserService userService,
         ILoggerFactory logger, IOptions<LightningNetworkOptions> options,
-        StoreRepository storeRepository, PayoutProcessorData payoutProcesserSettings,
-        ApplicationDbContextFactory applicationDbContextFactory, PullPaymentHostedService pullPaymentHostedService, BTCPayNetworkProvider btcPayNetworkProvider,
-        IPluginHookService pluginHookService) :
-        base(logger, storeRepository, payoutProcesserSettings, applicationDbContextFactory, pullPaymentHostedService,
-            btcPayNetworkProvider, pluginHookService)
+        StoreRepository storeRepository, PayoutProcessorData payoutProcessorSettings,
+        ApplicationDbContextFactory applicationDbContextFactory, 
+        BTCPayNetworkProvider btcPayNetworkProvider,
+        IPluginHookService pluginHookService,
+        EventAggregator eventAggregator) :
+        base(logger, storeRepository, payoutProcessorSettings, applicationDbContextFactory,
+            btcPayNetworkProvider, pluginHookService, eventAggregator)
     {
         _btcPayNetworkJsonSerializerSettings = btcPayNetworkJsonSerializerSettings;
         _lightningClientFactoryService = lightningClientFactoryService;
@@ -50,15 +53,16 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Au
         _options = options;
         _payoutHandler = (LightningLikePayoutHandler)payoutHandlers.FindPayoutHandler(PaymentMethodId);
 
-        _network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(_PayoutProcesserSettings.GetPaymentMethodId().CryptoCode);
+        _network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(PayoutProcessorSettings.GetPaymentMethodId().CryptoCode);
     }
 
     protected override async Task Process(ISupportedPaymentMethod paymentMethod, List<PayoutData> payouts)
     {
+        var processorBlob = GetBlob(PayoutProcessorSettings);
         var lightningSupportedPaymentMethod = (LightningSupportedPaymentMethod)paymentMethod;
         if (lightningSupportedPaymentMethod.IsInternalNode &&
-            !(await Task.WhenAll((await _storeRepository.GetStoreUsers(_PayoutProcesserSettings.StoreId))
-                .Where(user => user.StoreRole.ToPermissionSet( _PayoutProcesserSettings.StoreId).Contains(Policies.CanModifyStoreSettings, _PayoutProcesserSettings.StoreId)).Select(user => user.Id)
+            !(await Task.WhenAll((await _storeRepository.GetStoreUsers(PayoutProcessorSettings.StoreId))
+                .Where(user => user.StoreRole.ToPermissionSet( PayoutProcessorSettings.StoreId).Contains(Policies.CanModifyStoreSettings, PayoutProcessorSettings.StoreId)).Select(user => user.Id)
                 .Select(s => _userService.IsAdminUser(s)))).Any(b => b))
         {
             return;
@@ -70,6 +74,7 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Au
         foreach (var payoutData in payouts)
         {
             var blob = payoutData.GetBlob(_btcPayNetworkJsonSerializerSettings);
+            var failed = false;
             var claim = await _payoutHandler.ParseClaimDestination(PaymentMethodId, blob.Destination, CancellationToken);
             try
             {
@@ -83,17 +88,40 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Au
                         {
                             continue;
                         }
-                        await TrypayBolt(client, blob, payoutData,
+                        failed = await TrypayBolt(client, blob, payoutData,
                             lnurlResult.Item1);
                         break;
                     case BoltInvoiceClaimDestination item1:
-                        await TrypayBolt(client, blob, payoutData, item1.PaymentRequest);
+                        failed = await TrypayBolt(client, blob, payoutData, item1.PaymentRequest);
                         break;
                 }
             }
             catch (Exception e)
             {
                 Logs.PayServer.LogError(e, $"Could not process payout {payoutData.Id}");
+                failed = true;
+            }
+
+            if (failed && processorBlob.CancelPayoutAfterFailures is not null)
+            {
+                if (!_failedPayoutCounter.TryGetValue(payoutData.Id, out int counter))
+                {
+                    counter = 0;
+                }
+                counter++;
+                if(counter >= processorBlob.CancelPayoutAfterFailures)
+                {
+                    payoutData.State = PayoutState.Cancelled;
+                    Logs.PayServer.LogError($"Payout {payoutData.Id} has failed {counter} times, cancelling it");
+                }
+                else
+                {
+                    _failedPayoutCounter.AddOrReplace(payoutData.Id, counter);
+                }
+            }
+            if (payoutData.State == PayoutState.Cancelled)
+            {
+                _failedPayoutCounter.TryRemove(payoutData.Id, out _);
             }
         }
     }

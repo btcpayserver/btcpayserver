@@ -5,6 +5,7 @@
     ViewData["NavPartialName"] = "../UIStores/_Nav";
     Layout = "../Shared/_NavLayout.cshtml";
     ViewData.SetActivePage(StoreNavPages.PayoutProcessors, "On-Chain Payout Processor", Context.GetStoreData().Id);
+    var cryptoCode = Context.GetRouteValue("cryptocode")?.ToString();
 }
 <div class="row">
     <div class="col-xl-8 col-xxl-constrain">
@@ -17,6 +18,11 @@
             <div asp-validation-summary="All" class="text-danger"></div>
         }
         <form method="post">
+            <div class="form-check">
+                <input asp-for="ProcessNewPayoutsInstantly" type="checkbox" class="form-check-input" />
+                <label asp-for="ProcessNewPayoutsInstantly" class="form-check-label">Process approved payouts instantly</label>
+                <span asp-validation-for="ProcessNewPayoutsInstantly" class="text-danger"></span>
+            </div>
             <div class="form-group">
                 <label asp-for="IntervalMinutes" class="form-label" data-required>Interval</label>
                 <div class="input-group">
@@ -24,7 +30,7 @@
                     <span class="input-group-text">minutes</span>
                     <span asp-validation-for="IntervalMinutes" class="text-danger"></span>
                 </div>
-            </div> 
+            </div>
             <div class="form-group">
                 <label asp-for="FeeTargetBlock" class="form-label" data-required>Fee block target</label>
                 <div class="input-group">
@@ -32,6 +38,15 @@
                     <span class="input-group-text">blocks</span>
                     <span asp-validation-for="FeeTargetBlock" class="text-danger"></span>
                 </div>
+            </div>
+            <div class="form-group">
+                <label asp-for="Threshold" class="form-label" data-required>Threshold</label>
+                <div class="input-group">
+                    <input asp-for="Threshold" class="form-control" min="0" inputmode="numeric" style="max-width:10ch;">
+                    <span class="input-group-text">@cryptoCode</span>
+                    <span asp-validation-for="FeeTargetBlock" class="text-danger"></span>
+                </div>
+                <div class="form-text">Only process payouts when this payout sum is reached.</div>
             </div>
             <button name="command" type="submit" class="btn btn-primary mt-2" value="Save" id="Save">Save</button>
         </form>

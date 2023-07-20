@@ -89,15 +89,7 @@ namespace BTCPayServer.Plugins.Crowdfund
                 .GroupBy(entity => entity.Metadata.ItemCode)
                 .Select(entities =>
                 {
-                    var total = entities
-                        .Sum(entity => entity.GetPayments(true)
-                            .Sum(pay =>
-                            {
-                                var paymentMethodId = pay.GetPaymentMethodId();
-                                var value = pay.GetCryptoPaymentData().GetValue() - pay.NetworkFee;
-                                var rate = entity.GetPaymentMethod(paymentMethodId).Rate;
-                                return rate * value;
-                            }));
+                    var total = entities.Sum(entity => entity.PaidAmount.Net);
                     var itemCode = entities.Key;
                     var perk = perks.FirstOrDefault(p => p.Id == itemCode);
                     return new ItemStats
@@ -167,13 +159,7 @@ namespace BTCPayServer.Plugins.Crowdfund
                                      !string.IsNullOrEmpty(entity.Metadata.ItemCode))
                     .GroupBy(entity => entity.Metadata.ItemCode)
                     .ToDictionary(entities => entities.Key, entities =>
-                        entities.Sum(entity => entity.GetPayments(true).Sum(pay =>
-                        {
-                            var paymentMethodId = pay.GetPaymentMethodId();
-                            var value = pay.GetCryptoPaymentData().GetValue() - pay.NetworkFee;
-                            var rate = entity.GetPaymentMethod(paymentMethodId).Rate;
-                            return rate * value;
-                        })));
+                        entities.Sum(entity => entity.PaidAmount.Net));
             }
 
             var perks = AppService.Parse( settings.PerksTemplate, false);

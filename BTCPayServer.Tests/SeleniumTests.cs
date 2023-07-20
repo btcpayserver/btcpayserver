@@ -57,10 +57,11 @@ namespace BTCPayServer.Tests
             using var s = CreateSeleniumTester();
             await s.StartAsync();
             s.RegisterNewUser(true);
-            s.Driver.FindElement(By.Id("Nav-ServerSettings")).Click();
+            s.GoToHome();
+            s.GoToServer();
             s.Driver.AssertNoError();
             s.ClickOnAllSectionLinks();
-            s.Driver.FindElement(By.Id("Nav-ServerSettings")).Click();
+            s.GoToServer();
             s.Driver.FindElement(By.LinkText("Services")).Click();
 
             TestLogs.LogInformation("Let's check if we can access the logs");
@@ -247,7 +248,8 @@ namespace BTCPayServer.Tests
             s.Server.ActivateLightning();
             await s.StartAsync();
             s.RegisterNewUser(true);
-            s.Driver.FindElement(By.Id("Nav-ServerSettings")).Click();
+            s.GoToHome();
+            s.GoToServer();
             s.Driver.AssertNoError();
             s.Driver.FindElement(By.LinkText("Services")).Click();
 
@@ -314,6 +316,7 @@ namespace BTCPayServer.Tests
             await s.StartAsync();
             //Register & Log Out
             var email = s.RegisterNewUser();
+            s.GoToHome();
             s.Logout();
             s.Driver.AssertNoError();
             Assert.Contains("/login", s.Driver.Url);
@@ -349,6 +352,7 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("Password")).SendKeys("abc???");
             s.Driver.FindElement(By.Id("LoginButton")).Click();
 
+            s.GoToHome();
             s.GoToProfile();
             s.ClickOnAllSectionLinks();
 
@@ -356,6 +360,7 @@ namespace BTCPayServer.Tests
             s.Logout();
             s.GoToRegister();
             s.RegisterNewUser(true);
+            s.GoToHome();
             s.GoToServer(ServerNavPages.Users);
             s.Driver.FindElement(By.Id("CreateUser")).Click();
 
@@ -378,6 +383,7 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("LoginButton")).Click();
 
             // We should be logged in now
+            s.GoToHome();
             s.Driver.FindElement(By.Id("mainNav"));
 
             //let's test delete user quickly while we're at it 
@@ -642,7 +648,7 @@ namespace BTCPayServer.Tests
             // verify redirected to create store page
             Assert.EndsWith("/stores/create", s.Driver.Url);
             Assert.Contains("Create your first store", s.Driver.PageSource);
-            Assert.Contains("To start accepting payments, set up a store.", s.Driver.PageSource);
+            Assert.Contains("Create a store to begin accepting payments", s.Driver.PageSource);
             Assert.False(s.Driver.PageSource.Contains("id=\"StoreSelectorDropdown\""), "Store selector dropdown should not be present");
 
             (_, string storeId) = s.CreateNewStore();
@@ -2583,6 +2589,7 @@ namespace BTCPayServer.Tests
             using var s = CreateSeleniumTester();
             await s.StartAsync();
             var user = s.RegisterNewUser();
+            s.GoToHome();
             s.GoToProfile(ManageNavPages.LoginCodes);
             var code = s.Driver.FindElement(By.Id("logincode")).GetAttribute("value");
             s.Driver.FindElement(By.Id("regeneratecode")).Click();
@@ -2594,13 +2601,11 @@ namespace BTCPayServer.Tests
             s.Driver.SetAttribute("LoginCode", "value", "bad code");
             s.Driver.InvokeJSFunction("logincode-form", "submit");
 
-
             s.Driver.SetAttribute("LoginCode", "value", code);
             s.Driver.InvokeJSFunction("logincode-form", "submit");
-            s.GoToProfile();
+            s.GoToHome();
             Assert.Contains(user, s.Driver.PageSource);
         }
-
 
         // For god know why, selenium have problems clicking on the save button, resulting in ultimate hacks
         // to make it works.
@@ -2620,7 +2625,6 @@ retry:
             }
         }
 
-
         [Fact]
         [Trait("Selenium", "Selenium")]
         public async Task CanUseLNURLAuth()
@@ -2628,6 +2632,7 @@ retry:
             using var s = CreateSeleniumTester();
             await s.StartAsync();
             var user = s.RegisterNewUser(true);
+            s.GoToHome();
             s.GoToProfile(ManageNavPages.TwoFactorAuthentication);
             s.Driver.FindElement(By.Name("Name")).SendKeys("ln wallet");
             s.Driver.FindElement(By.Name("type"))
@@ -2676,7 +2681,8 @@ retry:
         {
             using var s = CreateSeleniumTester(newDb: true);
             await s.StartAsync();
-            var user = s.RegisterNewUser(true);
+            s.RegisterNewUser(true);
+            s.GoToHome();
             s.GoToServer(ServerNavPages.Roles);
             var existingServerRoles = s.Driver.FindElement(By.CssSelector("table")).FindElements(By.CssSelector("tr"));
             Assert.Equal(3, existingServerRoles.Count);

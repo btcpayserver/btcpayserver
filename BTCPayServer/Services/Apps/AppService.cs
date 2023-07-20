@@ -183,18 +183,11 @@ namespace BTCPayServer.Services.Apps
                     }
                 }
                 else
-                {
-                    var fiatPrice = e.GetPayments(true).Sum(pay =>
-                    {
-                        var paymentMethodId = pay.GetPaymentMethodId();
-                        var value = pay.GetCryptoPaymentData().GetValue() - pay.NetworkFee;
-                        var rate = e.GetPaymentMethod(paymentMethodId).Rate;
-                        return rate * value;
-                    });
+                {;
                     res.Add(new InvoiceStatsItem
                     {
                         ItemCode = e.Metadata.ItemCode,
-                        FiatPrice = fiatPrice,
+                        FiatPrice = e.PaidAmount.Net,
                         Date = e.InvoiceTime.Date
                     });
                 }

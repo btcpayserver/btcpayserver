@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Payments.Lightning;
@@ -28,7 +29,7 @@ namespace BTCPayServer.Payments
         }
 
         public override string GetPaymentLink(BTCPayNetworkBase network, InvoiceEntity invoice, IPaymentMethodDetails paymentMethodDetails,
-            Money cryptoInfoDue, string serverUri)
+            decimal cryptoInfoDue, string serverUri)
         {
             if (!paymentMethodDetails.Activated)
             {
@@ -74,7 +75,7 @@ namespace BTCPayServer.Payments
             {
                 AdditionalData = new Dictionary<string, JToken>()
                 {
-                    {"LNURLP", JToken.FromObject(GetPaymentLink(details.Network, invoice, details.GetPaymentMethodDetails(), invoiceCryptoInfo.Due,
+                    {"LNURLP", JToken.FromObject(GetPaymentLink(details.Network, invoice, details.GetPaymentMethodDetails(), invoiceCryptoInfo.GetDue().Value,
                         serverUrl))}
                 }
             };

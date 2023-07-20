@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Events;
 using BTCPayServer.Logging;
+using BTCPayServer.Payments;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Notifications;
 using BTCPayServer.Services.Notifications.Blobs;
@@ -83,31 +84,13 @@ namespace BTCPayServer.HostedServices
                 if (invoice.ExceptionStatus == InvoiceExceptionStatus.PaidPartial)
                     context.Events.Add(new InvoiceEvent(invoice, InvoiceEvent.ExpiredPaidPartial) { PaidPartial = paidPartial });
             }
-            var allPaymentMethods = invoice.GetPaymentMethods();
-            var paymentMethod = GetNearestClearedPayment(allPaymentMethods, out var accounting);
-            if (allPaymentMethods.Any() && paymentMethod == null)
-                return;
-            if (accounting is null && invoice.Price is 0m)
-            {
-                accounting = new PaymentMethodAccounting()
-                {
-                    Due = Money.Zero,
-                    Paid = Money.Zero,
-                    CryptoPaid = Money.Zero,
-                    DueUncapped = Money.Zero,
-                    NetworkFee = Money.Zero,
-                    TotalDue = Money.Zero,
-                    TxCount = 0,
-                    TxRequired = 0,
-                    MinimumTotalDue = Money.Zero,
-                    NetworkFeeAlreadyPaid = Money.Zero
-                };
-            }
+
+            var hasPayment = invoice.GetPayments(true).Any();
             if (invoice.Status == InvoiceStatusLegacy.New || invoice.Status == InvoiceStatusLegacy.Expired)
             {
                 var isPaid = invoice.IsUnsetTopUp() ?
-                    accounting.Paid > Money.Zero :
-                    accounting.Paid >= accounting.MinimumTotalDue;
+                    hasPayment :
+                    !invoice.IsUnderPaid;
                 if (isPaid)
                 {
                     if (invoice.Status == InvoiceStatusLegacy.New)
@@ -117,13 +100,15 @@ namespace BTCPayServer.HostedServices
                         if (invoice.IsUnsetTopUp())
                         {
                             invoice.ExceptionStatus = InvoiceExceptionStatus.None;
-                            invoice.Price = (accounting.Paid - accounting.NetworkFeeAlreadyPaid).ToDecimal(MoneyUnit.BTC) * paymentMethod.Rate;
-                            accounting = paymentMethod.Calculate();
+                            // We know there is at least one payment because hasPayment is true
+                            var payment = invoice.GetPayments(true).First();
+                            invoice.Price = payment.InvoicePaidAmount.Net;
+                            invoice.UpdateTotals();
                             context.BlobUpdated();
                         }
                         else
                         {
-                            invoice.ExceptionStatus = accounting.Paid > accounting.TotalDue ? InvoiceExceptionStatus.PaidOver : InvoiceExceptionStatus.None;
+                            invoice.ExceptionStatus = invoice.IsOverPaid ? InvoiceExceptionStatus.PaidOver : InvoiceExceptionStatus.None;
                         }
                         context.MarkDirty();
                     }
@@ -135,7 +120,7 @@ namespace BTCPayServer.HostedServices
                     }
                 }
 
-                if (accounting.Paid < accounting.MinimumTotalDue && invoice.GetPayments(true).Count != 0 && invoice.ExceptionStatus != InvoiceExceptionStatus.PaidPartial)
+                if (hasPayment && invoice.IsUnderPaid && invoice.ExceptionStatus != InvoiceExceptionStatus.PaidPartial)
                 {
                     invoice.ExceptionStatus = InvoiceExceptionStatus.PaidPartial;
                     context.MarkDirty();
@@ -145,43 +130,43 @@ namespace BTCPayServer.HostedServices
             // Just make sure RBF did not cancelled a payment
             if (invoice.Status == InvoiceStatusLegacy.Paid)
             {
-                if (accounting.MinimumTotalDue <= accounting.Paid && accounting.Paid <= accounting.TotalDue && invoice.ExceptionStatus == InvoiceExceptionStatus.PaidOver)
+                if (!invoice.IsUnderPaid && !invoice.IsOverPaid && invoice.ExceptionStatus == InvoiceExceptionStatus.PaidOver)
                 {
                     invoice.ExceptionStatus = InvoiceExceptionStatus.None;
                     context.MarkDirty();
                 }
 
-                if (accounting.Paid > accounting.TotalDue && invoice.ExceptionStatus != InvoiceExceptionStatus.PaidOver)
+                if (invoice.IsOverPaid && invoice.ExceptionStatus != InvoiceExceptionStatus.PaidOver)
                 {
                     invoice.ExceptionStatus = InvoiceExceptionStatus.PaidOver;
                     context.MarkDirty();
                 }
 
-                if (accounting.Paid < accounting.MinimumTotalDue)
+                if (invoice.IsUnderPaid)
                 {
                     invoice.Status = InvoiceStatusLegacy.New;
-                    invoice.ExceptionStatus = accounting.Paid == Money.Zero ? InvoiceExceptionStatus.None : InvoiceExceptionStatus.PaidPartial;
+                    invoice.ExceptionStatus = hasPayment ? InvoiceExceptionStatus.PaidPartial : InvoiceExceptionStatus.None;
                     context.MarkDirty();
                 }
             }
 
             if (invoice.Status == InvoiceStatusLegacy.Paid)
             {
-                var confirmedAccounting =
-                    paymentMethod?.Calculate(p => p.GetCryptoPaymentData().PaymentConfirmed(p, invoice.SpeedPolicy)) ??
-                    accounting;
+                var unconfPayments = invoice.GetPayments(true).Where(p => !p.GetCryptoPaymentData().PaymentConfirmed(p, invoice.SpeedPolicy)).ToList();
+                var unconfirmedPaid = unconfPayments.Select(p => p.InvoicePaidAmount.Net).Sum();
+                var minimumDue = invoice.MinimumNetDue + unconfirmedPaid;
 
                 if (// Is after the monitoring deadline
                    (invoice.MonitoringExpiration < DateTimeOffset.UtcNow)
                    &&
                    // And not enough amount confirmed
-                   (confirmedAccounting.Paid < accounting.MinimumTotalDue))
+                   (minimumDue > 0.0m))
                 {
                     context.Events.Add(new InvoiceEvent(invoice, InvoiceEvent.FailedToConfirm));
                     invoice.Status = InvoiceStatusLegacy.Invalid;
                     context.MarkDirty();
                 }
-                else if (confirmedAccounting.Paid >= accounting.MinimumTotalDue)
+                else if (minimumDue <= 0.0m)
                 {
                     invoice.Status = InvoiceStatusLegacy.Confirmed;
                     context.Events.Add(new InvoiceEvent(invoice, InvoiceEvent.Confirmed));
@@ -191,9 +176,11 @@ namespace BTCPayServer.HostedServices
 
             if (invoice.Status == InvoiceStatusLegacy.Confirmed)
             {
-                var completedAccounting = paymentMethod?.Calculate(p => p.GetCryptoPaymentData().PaymentCompleted(p)) ??
-                                          accounting;
-                if (completedAccounting.Paid >= accounting.MinimumTotalDue)
+                var unconfPayments = invoice.GetPayments(true).Where(p => !p.GetCryptoPaymentData().PaymentCompleted(p)).ToList();
+                var unconfirmedPaid = unconfPayments.Select(p => p.InvoicePaidAmount.Net).Sum();
+                var minimumDue = invoice.MinimumNetDue + unconfirmedPaid;
+
+                if (minimumDue <= 0.0m)
                 {
                     context.Events.Add(new InvoiceEvent(invoice, InvoiceEvent.Completed));
                     invoice.Status = InvoiceStatusLegacy.Complete;
@@ -201,25 +188,6 @@ namespace BTCPayServer.HostedServices
                 }
             }
 
-        }
-
-        public static PaymentMethod GetNearestClearedPayment(PaymentMethodDictionary allPaymentMethods, out PaymentMethodAccounting accounting)
-        {
-            PaymentMethod result = null;
-            accounting = null;
-            decimal nearestToZero = 0.0m;
-            foreach (var paymentMethod in allPaymentMethods)
-            {
-                var currentAccounting = paymentMethod.Calculate();
-                var distanceFromZero = Math.Abs(currentAccounting.DueUncapped.ToDecimal(MoneyUnit.BTC));
-                if (result == null || distanceFromZero < nearestToZero)
-                {
-                    result = paymentMethod;
-                    nearestToZero = distanceFromZero;
-                    accounting = currentAccounting;
-                }
-            }
-            return result;
         }
 
         private void Watch(string invoiceId)
@@ -380,7 +348,7 @@ namespace BTCPayServer.HostedServices
                         if ((onChainPaymentData.ConfirmationCount < network.MaxTrackedConfirmation && payment.Accounted)
                             && (onChainPaymentData.Legacy || invoice.MonitoringExpiration < DateTimeOffset.UtcNow))
                         {
-                            var client = _explorerClientProvider.GetExplorerClient(payment.GetCryptoCode());
+                            var client = _explorerClientProvider.GetExplorerClient(payment.Currency);
                             var transactionResult = client is null ? null : await client.GetTransactionAsync(onChainPaymentData.Outpoint.Hash);
                             var confirmationCount = transactionResult?.Confirmations ?? 0;
                             onChainPaymentData.ConfirmationCount = confirmationCount;

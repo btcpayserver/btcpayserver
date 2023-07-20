@@ -114,16 +114,16 @@ namespace BTCPayServer.Services.Altcoins.Zcash.Services
         private async Task ReceivedPayment(InvoiceEntity invoice, PaymentEntity payment)
         {
             _logger.LogInformation(
-                $"Invoice {invoice.Id} received payment {payment.GetCryptoPaymentData().GetValue()} {payment.GetCryptoCode()} {payment.GetCryptoPaymentData().GetPaymentId()}");
+                $"Invoice {invoice.Id} received payment {payment.GetCryptoPaymentData().GetValue()} {payment.Currency} {payment.GetCryptoPaymentData().GetPaymentId()}");
             var paymentData = (ZcashLikePaymentData)payment.GetCryptoPaymentData();
             var paymentMethod = invoice.GetPaymentMethod(payment.Network, ZcashPaymentType.Instance);
             if (paymentMethod != null &&
                 paymentMethod.GetPaymentMethodDetails() is ZcashLikeOnChainPaymentMethodDetails Zcash &&
                 Zcash.Activated && 
                 Zcash.GetPaymentDestination() == paymentData.GetDestination() &&
-                paymentMethod.Calculate().Due > Money.Zero)
+                paymentMethod.Calculate().Due > 0.0m)
             {
-                var walletClient = _ZcashRpcProvider.WalletRpcClients[payment.GetCryptoCode()];
+                var walletClient = _ZcashRpcProvider.WalletRpcClients[payment.Currency];
 
                 var address = await walletClient.SendCommandAsync<CreateAddressRequest, CreateAddressResponse>(
                     "create_address",

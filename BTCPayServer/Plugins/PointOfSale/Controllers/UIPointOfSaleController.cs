@@ -280,7 +280,28 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                         return RedirectToAction(nameof(ViewPointOfSale), new { appId, viewType });
                     }
 
+                    var amtField = form.GetFieldByFullName($"{FormDataService.InvoiceParameterPrefix}amount");
+                    if (amtField is null && price.HasValue)
+                    {
+                        form.Fields.Add(new Field
+                        {
+                            Name = $"{FormDataService.InvoiceParameterPrefix}amount",
+                            Type = "hidden",
+                            Value = price.ToString(),
+                            Constant = true
+                        });
+                    }
+                    else
+                    {
+                        amtField.Value = price?.ToString();
+                    }
                     formResponseJObject = FormDataService.GetValues(form);
+                    
+                    var invoiceRequest = FormDataService.GenerateInvoiceParametersFromForm(form);
+                    if (invoiceRequest.Amount is not null)
+                    {
+                        price = invoiceRequest.Amount.Value;
+                    }
                     break;
             }
             try

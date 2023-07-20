@@ -1761,7 +1761,7 @@ namespace BTCPayServer.Tests
                 var parsedJson = await GetExport(user);
                 Assert.Equal(3, parsedJson.Length);
 
-                var invoiceDueAfterFirstPayment = (3 * networkFee).ToDecimal(MoneyUnit.BTC) * invoice.Rate;
+                var invoiceDueAfterFirstPayment = 3 * networkFee.ToDecimal(MoneyUnit.BTC) * invoice.Rate;
                 var pay1str = parsedJson[0].ToString();
                 Assert.Contains("\"InvoiceItemDesc\": \"Some \\\", description\"", pay1str);
                 Assert.Equal(invoiceDueAfterFirstPayment, GetFieldValue(pay1str, "InvoiceDue"));

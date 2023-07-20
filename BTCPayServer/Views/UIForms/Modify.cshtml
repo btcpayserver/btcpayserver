@@ -30,6 +30,11 @@
 }
 
 @section PageFootContent {
+    <datalist id="special-field-names">
+        <option value="invoice_amount">Determine the generated invoice amount</option>
+        <option value="invoice_currency">Determine the generated invoice currency</option>
+        <option value="invoice_amount_adjustment">Adjusts the generated invoice amount — use as a prefix to have multiple adjustment fields</option>
+    </datalist>
     <template id="form-template-email">
         @FormDataService.StaticFormEmail
     </template>
@@ -50,8 +55,11 @@
             </div>
             <div class="form-group">
                 <label for="field-editor-field-name" class="form-label" data-required>Name</label>
-                <input id="field-editor-field-name" class="form-control" required v-model="field.name" />
-                <div class="form-text">The name of the field in the invoice's metadata</div>
+                <input id="field-editor-field-name" class="form-control" list="special-field-names" required v-model="field.name" />
+                <div class="form-text">The name of the field in the invoice's metadata.</div>
+                <div class="form-text text-info" v-if="field.name === 'invoice_currency'">The configured name means the value of this field will determine the invoice currency for public forms.</div>
+                <div class="form-text text-info" v-if="field.name === 'invoice_amount'">The configured name means the value of this field will determine the invoice amount for public forms.</div>
+                <div class="form-text text-info" v-if="field.name && field.name.startsWith('invoice_amount_adjustment')">The configured name means the value of this field will adjust the invoice amount for public forms and the point of sale app.</div>
             </div>
             <div class="form-group" v-if="field.type === 'select'">
                 <h5 class="mt-2">Options</h5>
@@ -62,11 +70,11 @@
                         </button>
                         <div class="field flex-grow-1">
                             <label :for="`field-option-value-${index}`" class="form-label">Value</label>
-                            <input :for="`field-option-value-${index}`" class="form-control" v-model.lazy="option.value" />
+                            <input :id="`field-option-value-${index}`" class="form-control" v-model.lazy="option.value" />
                         </div>
                         <div class="field flex-grow-1">
                             <label :for="`field-option-text-${index}`" class="form-label">Text</label>
-                            <input :for="`field-option-text-${index}`" class="form-control" v-model="option.text" />
+                            <input :id="`field-option-text-${index}`" class="form-control" v-model="option.text" />
                         </div>
                         <button type="button" class="btn b-0 control remove" v-on:click="removeOption($event, index)">
                             <vc:icon symbol="trash" />
@@ -78,20 +86,53 @@
                     Add Option
                 </button>
             </div>
-            <div class="form-group" v-if="field.type !== 'fieldset'">
+            <div class="form-group" v-if="field.type !== 'fieldset' && field.type !== 'mirror'">
                 <label for="field-editor-field-value" class="form-label">Default Value</label>
                 <input id="field-editor-field-value" class="form-control" v-model="field.value" />
             </div>
-            <div class="form-group" v-if="field.type !== 'fieldset'">
+            <div class="form-group" v-if="field.type === 'mirror'">
+                <label for="field-editor-field-mirror" class="form-label">Field to mirror</label>
+                <select id="field-editor-field-mirror" class="form-select" v-model="field.value">
+                    <option v-for="option in $root.allFields" v-if="option.name && option.name !== field.name" :key="option.name" :value="option.name" :selected="option.name === field.value" v-text="option.label || option.name"></option>
+                </select>
+                <div class="form-text">The chosen field's selected value will be copied to this field upon submission.</div>
+            </div>
+            <div class="form-group" v-if="field.type === 'mirror'">
+                <h5 class="mt-2">Value Mapper</h5>
+                <div class="form-text">The values being mirrored from another field will be mapped to another value if configured.</div>
+                <div class="options">
+                    <div v-if="field.valuemap" v-for="(v, k, index) in field.valuemap" :key="k" class="d-flex align-items-start gap-2 pt-3">
+                        <div class="field flex-grow-1">
+                            <label :for="`field-valuemap-value-${index}`" class="form-label">Original Value</label>
+                            <select v-if="mirroredField && mirroredField.type === 'select'" :id="`field-valuemap-value-${index}`" class="form-select" v-on:change="updateValueMap(k, $event.target.value, v)">
+                                <option v-for="option in mirroredField.options" v-if="option.text && option.value" :key="option.value" :value="option.value" :selected="k === option.value" v-text="`${option.value} (${option.text})`"></option>
+                            </select>
+                            <input v-else :id="`field-valuemap-value-${index}`" class="form-control" placeholder="Value to match" :value="k" v-on:change="updateValueMap(k, $event.target.value, v)" />
+                        </div>
+                        <div class="field flex-grow-1">
+                            <label :for="`field-valuemap-mapped-${index}`" class="form-label">Mapped Value</label>
+                            <input :id="`field-valuemap-mapped-${index}`" class="form-control" placeholder="Value to set" :value="v" v-on:change="updateValueMap(k, k, $event.target.value)" />
+                        </div>
+                        <button type="button" class="btn b-0 control remove" v-on:click="removeValueMap($event, k)">
+                            <vc:icon symbol="trash" />
+                        </button>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-link px-1 py-2 gap-1 add fw-semibold d-inline-flex align-items-center" v-on:click.stop="addValueMap($event)">
+                    <vc:icon symbol="new" />
+                    Add mapped value
+                </button>
+            </div>
+            <div class="form-group" v-if="field.type !== 'fieldset' && field.type !== 'mirror'">
                 <label for="field-editor-field-helpText" class="form-label">Helper Text</label>
                 <input id="field-editor-field-helpText" class="form-control" v-model="field.helpText" />
                 <div class="form-text">Additional text to provide an explanation for the field</div>
             </div>
-            <div class="form-group form-check" v-if="field.type !== 'fieldset'">
+            <div class="form-group form-check" v-if="field.type !== 'fieldset' && field.type !== 'mirror'">
                 <input id="field-editor-field-required" type="checkbox" class="form-check-input" v-model="field.required" />
                 <label for="field-editor-field-required" class="form-check-label">Required Field</label>
             </div>
-            <div class="form-group form-check" v-if="field.type !== 'fieldset' && field.type !== 'select'">
+            <div class="form-group form-check" v-if="field.type !== 'fieldset' && field.type !== 'select' && field.type !== 'mirror'">
                 <input id="field-editor-field-constant" type="checkbox" class="form-check-input" v-model="field.constant" />
                 <label for="field-editor-field-constant" class="form-check-label">Constant</label>
                 <div class="form-text">The user will not be able to change the field's value</div>
@@ -143,6 +184,12 @@
             <div v-if="helpText" :id="`HelpText-${name}`" class="form-text" v-sanitize="helpText"></div>
         </div>
     </template>
+    <template id="field-type-mirror">
+        <div class="form-group mb-0">
+            <label class="form-label" v-text="label" v-if="label"></label>
+            <div class="form-text">Mirror of {{value}}</div>
+        </div>
+    </template>
     <template id="field-type-fieldset">
         <fieldset>
             <legend class="h5 mt-1 mb-2" v-text="label"></legend>
@@ -157,84 +204,84 @@
     <partial name="_ValidationScriptsPartial" />
 }
 
-<form method="post" asp-action="Modify" asp-route-id="@formId" asp-route-storeId="@storeId">
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="d-flex align-items-center justify-content-between mb-3">
-                <h3 class="mb-0">
-                    <span>@ViewData["Title"]</span>
-                    <a href="https://docs.btcpayserver.org/Forms" target="_blank" rel="noreferrer noopener" title="More information...">
-                        <vc:icon symbol="info" />
-                    </a>
-                </h3>
-                <div class="d-flex gap-3 mt-3 mt-sm-0">
-                    <button type="submit" class="btn btn-primary order-sm-1" id="SaveButton">Save</button>
-                    @if (!isNew)
-                    {
-                        <a class="btn btn-secondary" asp-action="ViewPublicForm" asp-route-formId="@formId" id="ViewForm">View</a>
-                    }
+    <form method="post" asp-action="Modify" asp-route-id="@formId" asp-route-storeId="@storeId">
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h3 class="mb-0">
+                        <span>@ViewData["Title"]</span>
+                        <a href="https://docs.btcpayserver.org/Forms" target="_blank" rel="noreferrer noopener" title="More information...">
+                            <vc:icon symbol="info" />
+                        </a>
+                    </h3>
+                    <div class="d-flex gap-3 mt-3 mt-sm-0">
+                        <button type="submit" class="btn btn-primary order-sm-1" id="SaveButton">Save</button>
+                        @if (!isNew)
+                        {
+                            <a class="btn btn-secondary" asp-action="ViewPublicForm" asp-route-formId="@formId" id="ViewForm">View</a>
+                        }
+                    </div>
                 </div>
-            </div>
-            <div asp-validation-summary="All" class="text-danger"></div>
-            <div class="form-group" style="max-width: 27rem;">
-                <label asp-for="Name" class="form-label" data-required></label>
-                <input asp-for="Name" class="form-control" required />
-                <span asp-validation-for="Name" class="text-danger"></span>
-            </div>
-            <div class="d-flex align-items-center mb-4 gap-3">
-                <input asp-for="Public" type="checkbox" class="btcpay-toggle" />
-                <div>
-                    <label asp-for="Public"></label>
-                    <div class="form-text">
-                        Standalone mode, which can be used to generate invoices
-                        independent of payment requests or apps.
+                <div asp-validation-summary="All" class="text-danger"></div>
+                <div class="form-group" style="max-width: 27rem;">
+                    <label asp-for="Name" class="form-label" data-required></label>
+                    <input asp-for="Name" class="form-control" required />
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+                <div class="d-flex align-items-center mb-4 gap-3">
+                    <input asp-for="Public" type="checkbox" class="btcpay-toggle" />
+                    <div>
+                        <label asp-for="Public"></label>
+                        <div class="form-text">
+                            Standalone mode, which can be used to generate invoices
+                            independent of payment requests or apps.
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-    
-    <div id="FormEditor">
-        <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-3">
-            <ul class="nav nav-pills gap-4" id="form-editor-tab" role="tablist">
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="EditorTabButton" data-bs-toggle="pill" data-bs-target="#EditorTabPane" type="button" role="tab" aria-controls="EditorTabPane" aria-selected="true">Editor</button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="CodeTabButton" data-bs-toggle="pill" data-bs-target="#CodeTabPane" type="button" role="tab" aria-controls="CodeTabPane" aria-selected="false">Code</button>
-                </li>
-            </ul>
-            <div class="d-flex align-items-center gap-2 mb-1">
-                <span class="fw-semibold">Templates</span>
-                <button type="button" class="btn btn-link p-0 fw-semibold" v-on:click="applyTemplate('email')" id="ApplyEmailTemplate">Email</button>
-                <button type="button" class="btn btn-link p-0 fw-semibold" v-on:click="applyTemplate('address')" id="ApplyAddressTemplate">Address</button>
-            </div>
-        </div>
-        <div class="tab-content">
-            <div class="tab-pane fade show active" id="EditorTabPane" role="tabpanel" aria-labelledby="EditorTabButton" tabindex="0">
-                <div class="row align-items-start">
-                    <div class="col-lg-7 mb-4 mb-lg-0">
-                        <fields-editor :path="[]"
-                                       :fields="fields"
-                                       :selected-field="selectedField"
-                                       v-on:add-field="addField"
-                                       v-on:sort-fields="sortFields"
-                                       v-on:select-field="selectField"
-                                       v-on:remove-field="removeField"
-                                       class="bg-tile pb-2 rounded" />
-                    </div>
-                    <div class="col-lg-5">
-                        <field-editor :field="selectedField" class="bg-tile p-4 rounded" />
-                    </div>
+
+        <div id="FormEditor">
+            <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-3">
+                <ul class="nav nav-pills gap-4" id="form-editor-tab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="EditorTabButton" data-bs-toggle="pill" data-bs-target="#EditorTabPane" type="button" role="tab" aria-controls="EditorTabPane" aria-selected="true">Editor</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="CodeTabButton" data-bs-toggle="pill" data-bs-target="#CodeTabPane" type="button" role="tab" aria-controls="CodeTabPane" aria-selected="false">Code</button>
+                    </li>
+                </ul>
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <span class="fw-semibold">Templates</span>
+                    <button type="button" class="btn btn-link p-0 fw-semibold" v-on:click="applyTemplate('email')" id="ApplyEmailTemplate">Email</button>
+                    <button type="button" class="btn btn-link p-0 fw-semibold" v-on:click="applyTemplate('address')" id="ApplyAddressTemplate">Address</button>
                 </div>
             </div>
-            <div class="tab-pane fade" id="CodeTabPane" role="tabpanel" aria-labelledby="CodeTabButton" tabindex="0">
-                <div class="d-flex align-items-center justify-content-between gap-3">
-                    <label asp-for="FormConfig" class="form-label" data-required>Form JSON</label>
+            <div class="tab-content">
+                <div class="tab-pane fade show active" id="EditorTabPane" role="tabpanel" aria-labelledby="EditorTabButton" tabindex="0">
+                    <div class="row align-items-start">
+                        <div class="col-lg-7 mb-4 mb-lg-0">
+                            <fields-editor :path="[]"
+                                           :fields="fields"
+                                           :selected-field="selectedField"
+                                           v-on:add-field="addField"
+                                           v-on:sort-fields="sortFields"
+                                           v-on:select-field="selectField"
+                                           v-on:remove-field="removeField"
+                                           class="bg-tile pb-2 rounded" />
+                        </div>
+                        <div class="col-lg-5">
+                            <field-editor :field="selectedField" class="bg-tile p-4 rounded" />
+                        </div>
+                    </div>
                 </div>
-                <textarea asp-for="FormConfig" class="form-control font-monospace" style="font-size:.85rem" rows="21" cols="21" v-model="configJSON" v-on:change="updateFromJSON"></textarea>
-                <span asp-validation-for="FormConfig" class="text-danger"></span>
+                <div class="tab-pane fade" id="CodeTabPane" role="tabpanel" aria-labelledby="CodeTabButton" tabindex="0">
+                    <div class="d-flex align-items-center justify-content-between gap-3">
+                        <label asp-for="FormConfig" class="form-label" data-required>Form JSON</label>
+                    </div>
+                    <textarea asp-for="FormConfig" class="form-control font-monospace" style="font-size:.85rem" rows="21" cols="21" v-model="configJSON" v-on:change="updateFromJSON"></textarea>
+                    <span asp-validation-for="FormConfig" class="text-danger"></span>
+                </div>
             </div>
         </div>
-    </div>
-</form>
+    </form>

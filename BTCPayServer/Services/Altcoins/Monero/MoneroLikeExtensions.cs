@@ -1,6 +1,8 @@
 #if ALTCOINS
 using System;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Services;
 using BTCPayServer.Configuration;
@@ -19,6 +21,19 @@ namespace BTCPayServer.Services.Altcoins.Monero
         {
             serviceCollection.AddSingleton(provider =>
                 provider.ConfigureMoneroLikeConfiguration());
+            serviceCollection.AddHttpClient("XMRclient")
+                .ConfigurePrimaryHttpMessageHandler(provider =>
+                {
+                    var configuration = provider.GetRequiredService<MoneroLikeConfiguration>();
+                    if(!configuration.MoneroLikeConfigurationItems.TryGetValue("XMR", out var xmrConfig) || xmrConfig.Username is null || xmrConfig.Password is null){
+                        return new HttpClientHandler();
+                    }
+                    return new HttpClientHandler
+                    {
+                        Credentials = new NetworkCredential(xmrConfig.Username, xmrConfig.Password),
+                        PreAuthenticate = true
+                    };
+                });
             serviceCollection.AddSingleton<MoneroRPCProvider>();
             serviceCollection.AddHostedService<MoneroLikeSummaryUpdaterHostedService>();
             serviceCollection.AddHostedService<MoneroListener>();
@@ -55,6 +70,12 @@ namespace BTCPayServer.Services.Altcoins.Monero
                 var walletDaemonWalletDirectory =
                     configuration.GetOrDefault<string>(
                         $"{moneroLikeSpecificBtcPayNetwork.CryptoCode}_wallet_daemon_walletdir", null);
+                var daemonUsername =
+                    configuration.GetOrDefault<string>(
+                        $"{moneroLikeSpecificBtcPayNetwork.CryptoCode}_daemon_username", null);
+                var daemonPassword =
+                    configuration.GetOrDefault<string>(
+                        $"{moneroLikeSpecificBtcPayNetwork.CryptoCode}_daemon_password", null);
                 if (daemonUri == null || walletDaemonUri == null)
                 {
                     throw new ConfigException($"{moneroLikeSpecificBtcPayNetwork.CryptoCode} is misconfigured");
@@ -63,6 +84,8 @@ namespace BTCPayServer.Services.Altcoins.Monero
                 result.MoneroLikeConfigurationItems.Add(moneroLikeSpecificBtcPayNetwork.CryptoCode, new MoneroLikeConfigurationItem()
                 {
                     DaemonRpcUri = daemonUri,
+                    Username = daemonUsername,
+                    Password = daemonPassword,
                     InternalWalletRpcUri = walletDaemonUri,
                     WalletDirectory = walletDaemonWalletDirectory
                 });

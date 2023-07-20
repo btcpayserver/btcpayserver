@@ -51,7 +51,7 @@ namespace BTCPayServer.Services.Invoices
             {
                 Version = 1,
 #pragma warning disable CS0618
-                CryptoCode = network.CryptoCode,
+                Currency = network.CryptoCode,
 #pragma warning restore CS0618
                 ReceivedTime = date.UtcDateTime,
                 Accounted = accounted,

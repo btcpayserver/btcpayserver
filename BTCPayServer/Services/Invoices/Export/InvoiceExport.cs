@@ -64,23 +64,19 @@ namespace BTCPayServer.Services.Invoices.Export
             {
                 foreach (var payment in payments)
                 {
-                    var cryptoCode = payment.GetPaymentMethodId().CryptoCode;
                     var pdata = payment.GetCryptoPaymentData();
-
-                    var pmethod = invoice.GetPaymentMethod(payment.GetPaymentMethodId());
-                    var paidAfterNetworkFees = pdata.GetValue() - payment.NetworkFee;
-                    invoiceDue -= paidAfterNetworkFees * pmethod.Rate;
+                    invoiceDue -= payment.InvoicePaidAmount.Net;
 
                     var target = new ExportInvoiceHolder
                     {
                         ReceivedDate = payment.ReceivedTime.UtcDateTime,
                         PaymentId = pdata.GetPaymentId(),
-                        CryptoCode = cryptoCode,
-                        ConversionRate = pmethod.Rate,
+                        CryptoCode = payment.Currency,
+                        ConversionRate = payment.Rate,
                         PaymentType = payment.GetPaymentMethodId().PaymentType.ToPrettyString(),
                         Destination = pdata.GetDestination(),
-                        Paid = pdata.GetValue().ToString(CultureInfo.InvariantCulture),
-                        PaidCurrency = Math.Round(pdata.GetValue() * pmethod.Rate, currency.NumberDecimalDigits).ToString(CultureInfo.InvariantCulture),
+                        Paid = payment.PaidAmount.Gross.ToString(CultureInfo.InvariantCulture),
+                        PaidCurrency = Math.Round(payment.InvoicePaidAmount.Gross, currency.NumberDecimalDigits).ToString(CultureInfo.InvariantCulture),
                         // Adding NetworkFee because Paid doesn't take into account network fees
                         // so if fee is 10000 satoshis, customer can essentially send infinite number of tx
                         // and merchant effectivelly would receive 0 BTC, invoice won't be paid

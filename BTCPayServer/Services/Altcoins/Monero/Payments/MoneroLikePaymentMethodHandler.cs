@@ -93,7 +93,7 @@ namespace BTCPayServer.Services.Altcoins.Monero.Payments
             {
                 var cryptoInfo = invoiceResponse.CryptoInfo.First(o => o.GetpaymentMethodId() == paymentMethodId);
                 model.InvoiceBitcoinUrl = MoneroPaymentType.Instance.GetPaymentLink(network, null,
-                    new MoneroLikeOnChainPaymentMethodDetails() {DepositAddress = cryptoInfo.Address}, cryptoInfo.Due,
+                    new MoneroLikeOnChainPaymentMethodDetails() {DepositAddress = cryptoInfo.Address}, cryptoInfo.GetDue().Value,
                     null);
                 model.InvoiceBitcoinUrlQR = model.InvoiceBitcoinUrl;
             }

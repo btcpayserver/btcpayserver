@@ -205,7 +205,10 @@ public class UIFormsController : Controller
 
         var request = _formDataService.GenerateInvoiceParametersFromForm(form);
         var inv = await invoiceController.CreateInvoiceCoreRaw(request, store, Request.GetAbsoluteRoot());
-
+        if (inv.Price == 0 && inv.Type == InvoiceType.Standard && inv.ReceiptOptions?.Enabled is not false)
+        {
+            return RedirectToAction("InvoiceReceipt", "UIInvoice", new { invoiceId = inv.Id });
+        }
         return RedirectToAction("Checkout", "UIInvoice", new { invoiceId = inv.Id });
     }
 }

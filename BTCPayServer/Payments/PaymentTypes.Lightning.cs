@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers.Greenfield;
 using BTCPayServer.Payments.Lightning;
@@ -52,7 +53,7 @@ namespace BTCPayServer.Payments
         }
 
         public override string GetPaymentLink(BTCPayNetworkBase network, InvoiceEntity invoice, IPaymentMethodDetails paymentMethodDetails,
-            Money cryptoInfoDue, string serverUri)
+            decimal cryptoInfoDue, string serverUri)
         {
             if (!paymentMethodDetails.Activated)
             {
@@ -92,7 +93,7 @@ namespace BTCPayServer.Payments
         {
             invoiceCryptoInfo.PaymentUrls = new InvoiceCryptoInfo.InvoicePaymentUrls()
             {
-                BOLT11 = GetPaymentLink(details.Network, invoice, details.GetPaymentMethodDetails(), invoiceCryptoInfo.Due,
+                BOLT11 = GetPaymentLink(details.Network, invoice, details.GetPaymentMethodDetails(), invoiceCryptoInfo.GetDue().Value,
                     serverUrl)
             };
         }

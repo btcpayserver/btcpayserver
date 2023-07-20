@@ -123,110 +123,117 @@
                 </button>
             </div>
             <div class="offcanvas-body py-0">
-                <table class="table table-borderless mt-0 mb-0 mx-auto" style="max-width:34rem" v-if="cartCount !== 0">
-                    <thead>
-                    <tr>
-                        <th>Product</th>
-                        <th class="text-end">Quantity</th>
-                        <th class="text-end">Price</th>
-                    </tr>
-                    </thead>
-                    <tbody id="CartItems">
-                    <tr v-for="item in cart" :key="item.id">
-                        <td class="align-middle fw-semibold">{{ item.title }}</td>
-                        <td class="align-middle">
-                            <div class="input-group input-group-sm w-125px pull-right">
-                                <input class="form-control" type="number" name="count" placeholder="Qty" min="1" step="1" :max="item.inventory" v-model.number="item.count">
-                                <button type="button" v-on:click="removeFromCart(item.id)" class="btn btn-outline-secondary">
-                                    <vc:icon symbol="remove" />
-                                </button>
-                            </div>
-                        </td>
-                        <td class="align-middle text-end">{{ formatCurrency(item.price , true) }}</td>
-                    </tr>
-                    </tbody>
-                    <tbody v-if="showDiscount || enableTips">
-                    <tr v-if="showDiscount">
-                        <th class="align-middle" :class="{ 'py-4': !enableTips, 'pt-4': enableTips }">Discount</th>
-                        <th class="align-middle" :class="{ 'py-4': !enableTips, 'pt-4': enableTips }" colspan="3">
-                            <div class="input-group input-group-sm w-125px pull-right">
-                                <input class="form-control" type="number" name="discount" min="0" step="1" max="100" id="Discount" v-model.number="discountPercent">
-                                <span class="input-group-text">%</span>
-                            </div>
-                        </th>
-                    </tr>
-                    <tr v-if="enableTips">
-                        <th class="align-middle" :class="{ 'py-4': !showDiscount, 'pb-4': showDiscount }">Tip</th>
-                        <th class="align-middle" :class="{ 'py-4': !showDiscount, 'pb-4': showDiscount }" colspan="3">
-                            <div class="btcpay-pills d-flex flex-wrap align-items-center justify-content-end gap-2" v-if="customTipPercentages">
-                                <div class="btcpay-pill d-flex align-items-center px-3" id="Tip-Custom" :class="{ active: !tipPercent && tip }" v-on:click.prevent="tipPercent = null">
-                                    <input
-                                        v-model.number="tip"
-                                        class="form-control w-50px d-block bg-transparent border-0 p-0 me-1 fw-semibold"
-                                        style="height:1.5em;min-height:auto;"
-                                        type="number"
-                                        min="0"
-                                        step="@Model.Step"
-                                        name="tip" />
-                                    <span>@(Model.CurrencyInfo.CurrencySymbol ?? Model.CurrencyCode)</span>
+                
+                <form method="post" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" v-on:submit="handleFormSubmit" v-if="cartCount !== 0">
+                    <input type="hidden" name="amount" :value="totalNumeric">
+                    <input type="hidden" name="tip" :value="tipNumeric">
+                    <input type="hidden" name="discount" :value="discountPercentNumeric">
+                    <input type="hidden" name="posdata" :value="posdata">
+                    <table class="table table-borderless mt-0 mb-0 mx-auto" style="max-width:34rem">
+                        <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th class="text-end">Quantity</th>
+                            <th class="text-end">Price</th>
+                        </tr>
+                        </thead>
+                        <tbody id="CartItems">
+                        <tr v-for="item in cart" :key="item.id">
+                            <td class="align-middle fw-semibold">{{ item.title }}</td>
+                            <td class="align-middle">
+                                <div class="d-flex align-items-center gap-2 justify-content-end">
+                                    <span class="badge text-bg-warning" v-if="item.inventory">
+                                        {{ item.inventory > 0 ? `${item.inventory} left` : "Sold out" }}
+                                    </span>
+                                    <div class="input-group input-group-sm w-125px">
+                                        <input class="form-control" type="number" placeholder="Qty" min="1" step="1" :max="item.inventory" v-model.number="item.count">
+                                        <button type="button" v-on:click="removeFromCart(item.id)" class="btn btn-outline-secondary">
+                                            <vc:icon symbol="remove" />
+                                        </button>
+                                    </div>
                                 </div>
-                                <button
-                                    v-for="percentage in customTipPercentages"
-                                    type="button"
-                                    class="btcpay-pill px-3"
-                                    :class="{ active: tipPercent == percentage }"
-                                    :id="`Tip-${percentage}`"
-                                    v-on:click.prevent="tipPercentage(percentage)">
-                                    {{ percentage }}%
-                                </button>
-                            </div>
-                        </th>
-                    </tr>
-                    </tbody>
-                    <tfoot class="table-group-divider">
-                    <tr>
-                        <td colspan="1" class="pt-4 align-middle">Subtotal</td>
-                        <td colspan="2" class="pt-4 align-middle text-end" id="CartAmount">{{ formatCurrency(amountNumeric, true) }}</td>
-                    </tr>
-                    <tr v-if="discountNumeric">
-                        <td colspan="1" class="align-middle">Discount</td>
-                        <td colspan="2" class="align-middle text-end" id="CartDiscount">
-                            <span v-if="discountPercent">{{discountPercent}}% =</span>
-                            {{ formatCurrency(discountNumeric, true) }}
-                        </td>
-                    </tr>
-                    <tr v-if="tipNumeric">
-                        <td colspan="1" class="align-middle">Tip</td>
-                        <td colspan="2" class="align-middle text-end" id="CartTip">
-                            <span v-if="tipPercent">{{tipPercent}}% =</span>
-                            {{ formatCurrency(tipNumeric, true) }}
-                        </td>
-                    </tr>
-                    <tr>
-                        <td colspan="1" class="align-middle h5 border-0">Total</td>
-                        <td colspan="2" class="align-middle h5 border-0 text-end" id="CartTotal">{{ formatCurrency(totalNumeric, true) }}</td>
-                    </tr>
-                    <tr>
-                        <td colspan="3" class="pt-4">
-                            <form method="post" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" v-on:submit="handleFormSubmit">
-                                <input type="hidden" name="amount" :value="totalNumeric">
-                                <input type="hidden" name="tip" :value="tipNumeric">
-                                <input type="hidden" name="discount" :value="discountPercentNumeric">
-                                <input type="hidden" name="posdata" :value="posdata">
+                            </td>
+                            <td class="align-middle text-end">
+                                {{ formatCurrency(item.price, true) }}
+                            </td>
+                        </tr>
+                        </tbody>
+                        <tbody v-if="showDiscount || enableTips">
+                        <tr v-if="showDiscount">
+                            <th class="align-middle" :class="{ 'py-4': !enableTips, 'pt-4': enableTips }">Discount</th>
+                            <th class="align-middle" :class="{ 'py-4': !enableTips, 'pt-4': enableTips }" colspan="3">
+                                <div class="input-group input-group-sm w-125px pull-right">
+                                    <input class="form-control" type="number" min="0" step="1" max="100" id="Discount" v-model.number="discountPercent">
+                                    <span class="input-group-text">%</span>
+                                </div>
+                            </th>
+                        </tr>
+                        <tr v-if="enableTips">
+                            <th class="align-middle" :class="{ 'py-4': !showDiscount, 'pb-4': showDiscount }">Tip</th>
+                            <th class="align-middle" :class="{ 'py-4': !showDiscount, 'pb-4': showDiscount }" colspan="3">
+                                <div class="btcpay-pills d-flex flex-wrap align-items-center justify-content-end gap-2" v-if="customTipPercentages">
+                                    <div class="btcpay-pill d-flex align-items-center px-3" id="Tip-Custom" :class="{ active: !tipPercent && tip }" v-on:click.prevent="tipPercent = null">
+                                        <input
+                                            v-model.number="tip"
+                                            class="form-control w-50px d-block bg-transparent border-0 p-0 me-1 fw-semibold"
+                                            style="height:1.5em;min-height:auto;"
+                                            type="number"
+                                            min="0"
+                                            step="@Model.Step" />
+                                        <span>@(Model.CurrencyInfo.CurrencySymbol ?? Model.CurrencyCode)</span>
+                                    </div>
+                                    <button
+                                        v-for="percentage in customTipPercentages"
+                                        type="button"
+                                        class="btcpay-pill px-3"
+                                        :class="{ active: tipPercent == percentage }"
+                                        :id="`Tip-${percentage}`"
+                                        v-on:click.prevent="tipPercentage(percentage)">
+                                        {{ percentage }}%
+                                    </button>
+                                </div>
+                            </th>
+                        </tr>
+                        </tbody>
+                        <tfoot class="table-group-divider">
+                        <tr>
+                            <td colspan="1" class="pt-4 align-middle">Subtotal</td>
+                            <td colspan="2" class="pt-4 align-middle text-end" id="CartAmount">{{ formatCurrency(amountNumeric, true) }}</td>
+                        </tr>
+                        <tr v-if="discountNumeric">
+                            <td colspan="1" class="align-middle">Discount</td>
+                            <td colspan="2" class="align-middle text-end" id="CartDiscount">
+                                <span v-if="discountPercent">{{discountPercent}}% =</span>
+                                {{ formatCurrency(discountNumeric, true) }}
+                            </td>
+                        </tr>
+                        <tr v-if="tipNumeric">
+                            <td colspan="1" class="align-middle">Tip</td>
+                            <td colspan="2" class="align-middle text-end" id="CartTip">
+                                <span v-if="tipPercent">{{tipPercent}}% =</span>
+                                {{ formatCurrency(tipNumeric, true) }}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="1" class="align-middle h5 border-0">Total</td>
+                            <td colspan="2" class="align-middle h5 border-0 text-end" id="CartTotal">{{ formatCurrency(totalNumeric, true) }}</td>
+                        </tr>
+                        <tr>
+                            <td colspan="3" class="pt-4">
                                 <button id="CartSubmit" class="btn btn-primary btn-lg w-100" type="submit">
                                     <div v-if="payButtonLoading" class="spinner-border spinner-border-sm" id="pay-button-spinner" role="status">
                                         <span class="sr-only">Loading...</span>
                                     </div>
                                     <template v-else>Pay</template>
                                 </button>
-                            </form>
-                            <button id="CartClear" type="reset" v-on:click="clearCart" class="btn btn-outline-secondary w-100 mt-4">
-                                Empty cart
-                            </button>
-                        </td>
-                    </tr>
-                    </tfoot>
-                </table>
+                                <button id="CartClear" type="reset" v-on:click="clearCart" class="btn btn-outline-secondary w-100 mt-4">
+                                    Empty cart
+                                </button>
+                            </td>
+                        </tr>
+                        </tfoot>
+                    </table>
+                </form>
                 <p id="CartItems" v-else class="text-muted text-center my-0">There are no items in your cart yet.</p>
             </div>
         </div>

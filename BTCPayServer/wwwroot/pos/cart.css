@@ -1,5 +1,14 @@
-#app .public-page-wrap {
+#PosCart {
+    --sidebar-width: 420px;
+}
+
+#PosCart .public-page-wrap {
     padding: 0 var(--btcpay-space-m) var(--btcpay-space-l);
+}
+
+#PosCart .offcanvas-backdrop {
+    top: var(--mobile-header-height);
+    transition-duration: var(--btcpay-transition-duration-fast);
 }
 
 .cart-toggle-btn {
@@ -26,7 +35,7 @@ header .cart-toggle-btn {
     --icon-size: calc(1.34375rem + 1.125vw);
 }
 
-.cart-toggle-btn svg {
+.cart-toggle-btn .icon-pos-cart {
     width: var(--icon-size);
     height: var(--icon-size);
     color: var(--btcpay-header-link);
@@ -46,12 +55,23 @@ header .cart-toggle-btn {
 }
 
 #cart {
-    width: 100vw;
-    border-left: 0;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    z-index: 1045;
+    height: 100vh;
+    overflow-y: auto;
+    color: var(--btcpay-body-text);
+    background-color: var(--btcpay-bg-tile);
 }
 
 #cart .icon-remove {
     --btn-icon-size: 2.5em;
+}
+
+#cart .input-group.input-group-sm {
+    width: 110px;
 }
 
 #CartBadge {
@@ -96,4 +116,34 @@ header .cart-toggle-btn {
 }
 .posItem--added .posItem-added {
     opacity: .8;
+}
+
+@media (max-width: 991px) {
+    #cart {
+        left: 0;
+        transform: translateX(100%);
+        transition: transform var(--btcpay-transition-duration-fast) ease-in-out;
+    }
+    #cart.show {
+        transform: none;
+    }
+}
+@media (min-width: 992px) {
+    #content {
+        margin-right: var(--sidebar-width);
+    }
+    #cart {
+        width: var(--sidebar-width);
+        border-left: 1px solid var(--btcpay-body-border-light);
+    }
+    #cart h1 {
+        font-size: 1.5rem;
+        margin-top: .725rem;
+    }
+    #CartClose {
+        display: none;
+    }
+    #CartToggle {
+        pointer-events: none;
+    }
 }

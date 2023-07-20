@@ -2203,8 +2203,6 @@ namespace BTCPayServer.Tests
             
             // Select and clear
             s.Driver.FindElement(By.CssSelector(".posItem:nth-child(1) .btn-primary")).Click();
-            s.Driver.FindElement(By.Id("CartToggle")).Click();
-            Thread.Sleep(250);
             Assert.Single(s.Driver.FindElements(By.CssSelector("#CartItems tr")));
             Assert.Equal("1", s.Driver.FindElement(By.Id("CartBadge")).Text);
             s.Driver.FindElement(By.Id("CartClear")).Click();
@@ -2222,9 +2220,6 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.CssSelector(".posItem:nth-child(2) .btn-primary")).Click();
             Thread.Sleep(250);
             Assert.Equal("3", s.Driver.FindElement(By.Id("CartBadge")).Text);
-            
-            s.Driver.FindElement(By.Id("CartToggle")).Click();
-            Thread.Sleep(250);
             Assert.Equal(2, s.Driver.FindElements(By.CssSelector("#CartItems tr")).Count);
             Assert.Equal("3,00 €", s.Driver.FindElement(By.Id("CartTotal")).Text);
             

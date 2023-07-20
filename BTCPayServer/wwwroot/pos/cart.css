@@ -50,6 +50,10 @@ header .cart-toggle-btn {
     border-left: 0;
 }
 
+#cart .icon-remove {
+    --btn-icon-size: 2.5em;
+}
+
 #CartBadge {
     position: absolute;
     top: 0;

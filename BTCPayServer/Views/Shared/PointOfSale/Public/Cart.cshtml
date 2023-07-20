@@ -146,7 +146,7 @@
                                     </span>
                                     <div class="input-group input-group-sm w-125px">
                                         <input class="form-control" type="number" placeholder="Qty" min="1" step="1" :max="item.inventory" v-model.number="item.count">
-                                        <button type="button" v-on:click="removeFromCart(item.id)" class="btn btn-outline-secondary">
+                                        <button type="button" v-on:click="removeFromCart(item.id)" class="btn btn-outline-secondary p-1">
                                             <vc:icon symbol="remove" />
                                         </button>
                                     </div>

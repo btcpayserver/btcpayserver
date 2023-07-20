@@ -19,36 +19,7 @@
     }
 }
 @section PageHeadContent {
-    <style>
-        /* This hides unwanted metadata such as url, date, etc from appearing on a printed page. */
-        @@media print {
-            @@page {
-                margin-top: .25em;
-                margin-bottom: .25em;
-            }
-            .card {
-                page-break-inside: avoid;
-                break-inside: avoid;
-            }
-        }
-        
-        .posItems {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(256px, 1fr));
-            grid-gap: 1.5rem;
-        }
-        .card { 
-            page-break-inside: avoid;
-        }
-
-        .qr-code {
-            width: 100%;
-            min-width: auto !important;
-            min-height: auto !important;
-            border-bottom-right-radius: var(--btcpay-card-inner-border-radius);
-            border-bottom-left-radius: var(--btcpay-card-inner-border-radius);
-        }
-    </style>
+    <link href="~/pos/print.css" asp-append-version="true" rel="stylesheet" />
 }
 
 @if (supported is null)
@@ -71,7 +42,7 @@ else
         <a asp-route-viewType="static" class="alert-link">Regular version</a>
     </div>
 }
-<div class="public-page-wrap container-xl">
+<div id="PosPrint" class="public-page-wrap container-xl">
     <partial name="_StatusMessage" />
     <partial name="_StoreHeader" model="(string.IsNullOrEmpty(Model.Title) ? Model.StoreName : Model.Title, Model.LogoFileId)" />
     @if (!string.IsNullOrEmpty(Model.Description))

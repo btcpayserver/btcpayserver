@@ -17,10 +17,19 @@
     <script src="~/pos/common.js" asp-append-version="true"></script>
     <script src="~/pos/cart.js" asp-append-version="true"></script>
 }
+@functions {
+    private string GetItemPriceFormatted(ViewPointOfSaleViewModel.Item item)
+    {
+        if (item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Topup) return "any amount";
+        if (item.Price == 0) return "free";
+        var formatted = DisplayFormatter.Currency(item.Price ?? 0, Model.CurrencyCode, DisplayFormatter.CurrencyFormat.Symbol);
+        return item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Minimum ? $"{formatted} minimum" : formatted;
+    }
+}
 
-<div id="app">
+<div id="PosCart">
     <div class="public-page-wrap container-xl">
-        <header class="sticky-top bg-body d-flex flex-column py-3 pt-lg-4 gap-3">
+        <header class="sticky-top bg-body d-flex flex-column pb-3 pb-lg-4 gap-3">
             <div class="d-flex align-items-center justify-content-center gap-3 pe-5 position-relative">
                 <h1 class="mb-0">@(string.IsNullOrEmpty(Model.Title) ? Model.StoreName : Model.Title)</h1>
                 <button id="CartToggle" class="cart-toggle-btn" type="button" data-bs-toggle="offcanvas" data-bs-target="#cart" aria-controls="cart" :disabled="cartCount === 0">
@@ -50,62 +59,50 @@
                     {
                         continue;
                     }
-                    var image = item.Image;
-                    var description = item.Description;
-                    var formatted = DisplayFormatter.Currency(item.Price ?? 0, Model.CurrencyCode, DisplayFormatter.CurrencyFormat.Symbol);
-                    var inStock = !item.Inventory.HasValue || item.Inventory > 0;
-                    <div class="col posItem" data-index="@index" data-search="@Safe.Raw(item.Title) @Safe.Raw(description)" data-categories="@(new JArray(item.Categories).ToString())">
+                    var formatted = GetItemPriceFormatted(item);
+                    var inStock = item.Inventory is null or > 0;
+                    var buttonText = string.IsNullOrEmpty(item.BuyButtonText)
+                        ? item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Topup ? Model.CustomButtonText : Model.ButtonText
+                        : item.BuyButtonText;
+                    buttonText = buttonText.Replace("{0}", formatted).Replace("{Price}", formatted);
+                    
+                    <div class="col posItem" data-index="@index" data-search="@Safe.Raw(item.Title) @Safe.Raw(item.Description)" data-categories="@(new JArray(item.Categories).ToString())">
                         <div class="card h-100 px-0">
-                            @if (!string.IsNullOrWhiteSpace(image))
+                            @if (!string.IsNullOrWhiteSpace(item.Image))
                             {
-                                <img class="card-img-top" src="@image" alt="@Safe.Raw(item.Title)" asp-append-version="true">
+                                <img class="card-img-top" src="@item.Image" alt="@Safe.Raw(item.Title)" asp-append-version="true">
                             }
                             <div class="card-body p-3 d-flex flex-column gap-2">
                                 <h5 class="card-title m-0">@Safe.Raw(item.Title)</h5>
                                 <div class="d-flex gap-2 align-items-center">
-                                    <span class="fw-semibold">
-                                        @switch (item.PriceType)
-                                        {
-                                            case ViewPointOfSaleViewModel.ItemPriceType.Topup:
-                                                <span>Any amount</span>
-                                                break;
-                                            case ViewPointOfSaleViewModel.ItemPriceType.Minimum:
-                                                <span>@formatted minimum</span>
-                                                break;
-                                            case ViewPointOfSaleViewModel.ItemPriceType.Fixed:
-                                                @formatted
-                                                break;
-                                            default:
-                                                throw new ArgumentOutOfRangeException();
-                                        }
-                                    </span>
+                                    @if (item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Topup || item.Price == 0)
+                                    {
+                                        <span class="fw-semibold badge text-bg-info">@Safe.Raw(char.ToUpper(formatted[0]) + formatted[1..])</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="fw-semibold">@Safe.Raw(formatted)</span>
+                                    }
                                     @if (item.Inventory.HasValue)
                                     {
-                                        <span class="badge text-bg-light">
+                                        <span class="badge text-bg-warning">
                                             @(item.Inventory > 0 ? $"{item.Inventory} left" : "Sold out")
                                         </span>
                                     }
                                 </div>
-                                @if (!string.IsNullOrWhiteSpace(description))
+                                @if (!string.IsNullOrWhiteSpace(item.Description))
                                 {
-                                    <p class="card-text">@Safe.Raw(description)</p>
+                                    <p class="card-text">@Safe.Raw(item.Description)</p>
                                 }
                             </div>
-                            <div class="card-footer bg-transparent border-0 pt-0 pb-3">
-                                @if (inStock)
-                                {
+                            @if (inStock)
+                            {
+                                <div class="card-footer bg-transparent border-0 pt-0 pb-3">
                                     <button type="button" class="btn btn-primary w-100" v-on:click="addToCart(@index)" :disabled="!inStock(@index)">
-                                        @{
-                                            var buttonText = string.IsNullOrEmpty(item.BuyButtonText) ? item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Topup ? Model.CustomButtonText : Model.ButtonText : item.BuyButtonText;
-                                            if (item.PriceType != ViewPointOfSaleViewModel.ItemPriceType.Topup)
-                                            {
-                                                buttonText = buttonText.Replace("{0}", formatted)?.Replace("{Price}", formatted);
-                                            }
-                                        }
                                         @Safe.Raw(buttonText)
-                                    </button>
-                                }                                
-                            </div>
+                                    </button>                            
+                                </div>
+                            }    
                         </div>
                     </div>
                 }
@@ -118,7 +115,7 @@
         </footer>
     </div>
     <aside id="cart" class="offcanvas offcanvas-end" tabindex="-1" aria-labelledby="cartLabel">
-        <div class="public-page-wrap pt-3 pt-lg-4 container-xl">
+        <div class="public-page-wrap container-xl">
             <div class="offcanvas-header py-0 d-flex align-items-center justify-content-center gap-3 pe-5 position-relative">
                 <h1 class="mb-0" id="cartLabel">Cart</h1>
                 <button id="CartClose" type="button" class="cart-toggle-btn" data-bs-dismiss="offcanvas" aria-label="Close">
@@ -220,7 +217,7 @@
                                     <div v-if="payButtonLoading" class="spinner-border spinner-border-sm" id="pay-button-spinner" role="status">
                                         <span class="sr-only">Loading...</span>
                                     </div>
-                                    <template v-else>@Model.CustomButtonText</template>
+                                    <template v-else>Pay</template>
                                 </button>
                             </form>
                             <button id="CartClear" type="reset" v-on:click="clearCart" class="btn btn-outline-secondary w-100 mt-4" data-bs-dismiss="offcanvas">

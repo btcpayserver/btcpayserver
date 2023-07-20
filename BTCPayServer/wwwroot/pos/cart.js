@@ -35,7 +35,7 @@ document.addEventListener("DOMContentLoaded",function () {
     }
     
     new Vue({
-        el: '#app',
+        el: '#PosCart',
         mixins: [posCommon],
         data () {
             return {

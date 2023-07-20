@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded",function () {
     const displayFontSize = 64;
     new Vue({
-        el: '#app',
+        el: '#PosKeypad',
         mixins: [posCommon],
         data () {
             return {

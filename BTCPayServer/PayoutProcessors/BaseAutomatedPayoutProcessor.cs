@@ -135,7 +135,9 @@ public abstract class BaseAutomatedPayoutProcessor<T> : BaseAsyncService where T
         _timerCTs??= new CancellationTokenSource();
         try
         {
-            await Task.Delay(blob.Interval, CancellationTokenSource.CreateLinkedTokenSource(CancellationToken, _timerCTs.Token).Token);
+            var cts= CancellationTokenSource.CreateLinkedTokenSource(CancellationToken, _timerCTs.Token);
+            await Task.Delay(blob.Interval, cts.Token);
+            cts.Dispose();
         }
         catch (TaskCanceledException)
         {

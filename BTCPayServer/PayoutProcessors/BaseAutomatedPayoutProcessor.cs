@@ -145,10 +145,15 @@ public abstract class BaseAutomatedPayoutProcessor<T> : BaseAsyncService where T
     private CancellationTokenSource _timerCTs;
     private IEventAggregatorSubscription _subscription;
 
+    private readonly object _intervalLock = new object();
+
     public void SkipInterval()
     {
-        _timerCTs ??= new CancellationTokenSource();
-        _timerCTs?.Cancel();
+        lock (_intervalLock)
+        {
+            _timerCTs ??= new CancellationTokenSource();
+            _timerCTs?.Cancel();
+        }
     }
     
 

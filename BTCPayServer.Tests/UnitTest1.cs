@@ -3032,8 +3032,8 @@ namespace BTCPayServer.Tests
             Assert.Contains(report.Data, d => d[balanceIndex].Value<decimal>() == 1.0m);
 
             // Items sold
-            report = await GetReport(acc, new() { ViewName = "Items sold" });
-            var itemIndex = report.GetIndex("Item");
+            report = await GetReport(acc, new() { ViewName = "Products sold" });
+            var itemIndex = report.GetIndex("Product");
             var countIndex = report.GetIndex("Quantity");
             var itemsCount = report.Data.GroupBy(d => d[itemIndex].Value<string>())
                 .ToDictionary(d => d.Key, r => r.Sum(d => d[countIndex].Value<int>()));

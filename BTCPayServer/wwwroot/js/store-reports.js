@@ -110,8 +110,15 @@ document.addEventListener("DOMContentLoaded", () => {
         fetchStoreReports();
     });
 
-    const to = new Date();
-    const from = new Date(to.getTime() - 1000 * 60 * 60 * 24 * 30);
+    let to = new Date();
+    let from = new Date(to.getTime() - 1000 * 60 * 60 * 24 * 30);
+    var urlParams = new URLSearchParams(new URL(window.location).search);
+    if (urlParams.has("from")) {
+        from = new Date(parseInt(urlParams.get("from")) * 1000);
+    }
+    if (urlParams.has("to")) {
+        to = new Date(parseInt(urlParams.get("to")) * 1000);
+    }
     srv.request = srv.request || {};
     srv.request.timePeriod = srv.request.timePeriod || {};
     srv.request.timePeriod.to = moment(to).unix();
@@ -168,7 +175,12 @@ async function fetchStoreReports() {
     srv.dataUpdated();
 
     // Dates from API are UTC, convert them to local time
-    modifyFields(srv.result.fields, srv.result.data, 'datetime', a => moment(a).format())
+    modifyFields(srv.result.fields, srv.result.data, 'datetime', a => moment(a).format());
+    var urlParams = new URLSearchParams(new URL(window.location).search);
+    urlParams.set("viewName", srv.request.viewName);
+    urlParams.set("from", srv.request.timePeriod.from);
+    urlParams.set("to", srv.request.timePeriod.to);
+    history.replaceState(null, null, "?" + urlParams.toString());
     updateUIDateRange();
 
     srv.charts = [];
@@ -180,33 +192,6 @@ async function fetchStoreReports() {
     }
 
     app.srv = srv;
-}
-
-function getRandomValue(arr) {
-    return arr[Math.floor(Math.random() * arr.length)];
-}
-
-function getRandomNumber(min, max) {
-    return Math.random() * (max - min) + min;
-}
-
-function generateRandomRows(numRows) {
-    const regions = ["Russia", "France", "Japan", "Portugal"];
-    const cryptos = ["BTC", "LTC", "DASH", "DOGE"];
-    const paymentTypes = ["On-Chain", "Off-Chain"];
-    const rows = [];
-
-    for (let i = 0; i < numRows; i++) {
-        const region = getRandomValue(regions);
-        const crypto = getRandomValue(cryptos);
-        const paymentType = getRandomValue(paymentTypes);
-        const amount = getRandomNumber(10, 5000);
-        const cryptoAmount = getRandomNumber(0.1, 2.5);
-        const row = [region, crypto, paymentType, amount, cryptoAmount];
-        rows.push(row);
-    }
-
-    return rows;
 }
 
 function getInvoiceUrl(value) {

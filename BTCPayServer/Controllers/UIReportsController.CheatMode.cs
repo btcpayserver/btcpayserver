@@ -89,7 +89,7 @@ public partial class UIReportsController
             return GenerateDecimal(-5.0m, 5.0m, 8);
         if (f.Type == "datetime")
             return DateTimeOffset.UtcNow - TimeSpan.FromHours(rand.Next(0, 24 * 30 * 6)) - TimeSpan.FromMinutes(rand.Next(0, 60));
-        if (f.Name == "Item")
+        if (f.Name == "Product")
             return TakeOne("green-tea", "black-tea", "oolong-tea", "coca-cola");
         if (f.Name == "State")
             return TakeOne("Settled", "Processing");

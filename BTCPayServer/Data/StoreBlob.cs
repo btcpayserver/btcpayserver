@@ -240,7 +240,7 @@ namespace BTCPayServer.Data
         
         [DefaultValue(true)]
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
-        public bool PlaySoundOnPayment { get; set; } = true;
+        public bool PlaySoundOnPayment { get; set; } = false;
 
         public string SoundFileId { get; set; }
 

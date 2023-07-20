@@ -42,11 +42,12 @@ document.addEventListener("DOMContentLoaded",function () {
                 displayCategory: '*',
                 searchTerm: null,
                 cart: loadState('cart'),
+                $cart: null
             }
         },
         computed: {
             cartCount() {
-                return this.cart.reduce((res, item) => res + item.count, 0);
+                return this.cart.reduce((res, item) => res + item.count, 0)
             },
             amountNumeric () {
                 return parseFloat(this.cart.reduce((res, item) => res + item.price * item.count, 0).toFixed(this.currencyInfo.divisibility))
@@ -67,26 +68,32 @@ document.addEventListener("DOMContentLoaded",function () {
             searchTerm(term) {
                 const t = term.toLowerCase();
                 this.forEachItem(item => {
-                    const terms = item.dataset.search.toLowerCase();
-                    const included = terms.indexOf(t) !== -1;
-                    item.classList[included ? 'remove' : 'add']("d-none");
+                    const terms = item.dataset.search.toLowerCase()
+                    const included = terms.indexOf(t) !== -1
+                    item.classList[included ? 'remove' : 'add']("d-none")
                 })
             },
             displayCategory(category) {
                 this.forEachItem(item => {
-                    const categories = JSON.parse(item.dataset.categories);
-                    const included = category === "*" || categories.includes(category);
-                    item.classList[included ? 'remove' : 'add']("d-none");
+                    const categories = JSON.parse(item.dataset.categories)
+                    const included = category === "*" || categories.includes(category)
+                    item.classList[included ? 'remove' : 'add']("d-none")
                 })
             },
             cart: {
                 handler(newCart) {
-                    saveState('cart', newCart);
+                    saveState('cart', newCart)
+                    if (!newCart || newCart.length === 0) {
+                        this.$cart.hide()
+                    }
                 },
                 deep: true
             }
         },
         methods: {
+            toggleCart() {
+                this.$cart.toggle()
+            },
             forEachItem(callback) {
                 this.$refs.posItems.querySelectorAll('.posItem').forEach(callback)
             },
@@ -128,6 +135,7 @@ document.addEventListener("DOMContentLoaded",function () {
             }
         },
         mounted() {
+            this.$cart = new bootstrap.Offcanvas(this.$refs.cart)
             window.addEventListener('pagehide', () => {
                 if (this.payButtonLoading) {
                     this.unsetPayButtonLoading();

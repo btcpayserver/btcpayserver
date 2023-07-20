@@ -32,7 +32,7 @@
         <header class="sticky-top bg-body d-flex flex-column pb-3 pb-lg-4 gap-3">
             <div class="d-flex align-items-center justify-content-center gap-3 pe-5 position-relative">
                 <h1 class="mb-0">@(string.IsNullOrEmpty(Model.Title) ? Model.StoreName : Model.Title)</h1>
-                <button id="CartToggle" class="cart-toggle-btn" type="button" data-bs-toggle="offcanvas" data-bs-target="#cart" aria-controls="cart" :disabled="cartCount === 0">
+                <button id="CartToggle" class="cart-toggle-btn" type="button" v-on:click="toggleCart" aria-controls="cart" :disabled="cartCount === 0">
                     <vc:icon symbol="pos-cart" />
                     <span id="CartBadge" class="badge rounded-pill bg-danger p-1 ms-1" v-text="cartCount" v-if="cartCount !== 0"></span>
                 </button>
@@ -114,11 +114,11 @@
             </a>
         </footer>
     </div>
-    <aside id="cart" class="offcanvas offcanvas-end" tabindex="-1" aria-labelledby="cartLabel">
+    <aside id="cart" ref="cart" class="offcanvas offcanvas-end" tabindex="-1" aria-labelledby="cartLabel">
         <div class="public-page-wrap container-xl">
             <div class="offcanvas-header py-0 d-flex align-items-center justify-content-center gap-3 pe-5 position-relative">
                 <h1 class="mb-0" id="cartLabel">Cart</h1>
-                <button id="CartClose" type="button" class="cart-toggle-btn" data-bs-dismiss="offcanvas" aria-label="Close">
+                <button id="CartClose" type="button" class="cart-toggle-btn" v-on:click="toggleCart" aria-controls="cart" aria-label="Close">
                     <vc:icon symbol="close" />
                 </button>
             </div>
@@ -220,7 +220,7 @@
                                     <template v-else>Pay</template>
                                 </button>
                             </form>
-                            <button id="CartClear" type="reset" v-on:click="clearCart" class="btn btn-outline-secondary w-100 mt-4" data-bs-dismiss="offcanvas">
+                            <button id="CartClear" type="reset" v-on:click="clearCart" class="btn btn-outline-secondary w-100 mt-4">
                                 Empty cart
                             </button>
                         </td>

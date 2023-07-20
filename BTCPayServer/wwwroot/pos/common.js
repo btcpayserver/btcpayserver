@@ -36,7 +36,6 @@ const posCommon = {
             }
         },
         total () {
-            console.log(this.amountNumeric, this.discountNumeric, this.tipNumeric, this.amountNumeric - this.discountNumeric + this.tipNumeric)
             return this.amountNumeric - this.discountNumeric + this.tipNumeric
         },
         totalNumeric () {

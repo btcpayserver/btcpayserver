@@ -28,8 +28,8 @@
 }
 
 <div id="PosCart">
-    <div class="public-page-wrap container-xl">
-        <header class="sticky-top bg-body d-flex flex-column pb-3 pb-lg-4 gap-3">
+    <div class="public-page-wrap container-xl pt-0">
+        <header class="sticky-top bg-body d-flex flex-column py-3 pt-lg-4 gap-3">
             <div class="d-flex align-items-center justify-content-center gap-3 pe-5 position-relative">
                 <h1 class="mb-0">@(string.IsNullOrEmpty(Model.Title) ? Model.StoreName : Model.Title)</h1>
                 <button id="CartToggle" class="cart-toggle-btn" type="button" v-on:click="toggleCart" aria-controls="cart" :disabled="cartCount === 0">
@@ -115,15 +115,14 @@
         </footer>
     </div>
     <aside id="cart" ref="cart" class="offcanvas offcanvas-end" tabindex="-1" aria-labelledby="cartLabel">
-        <div class="public-page-wrap container-xl">
-            <div class="offcanvas-header py-0 d-flex align-items-center justify-content-center gap-3 pe-5 position-relative">
+        <div class="public-page-wrap container-xl pt-0">
+            <div class="offcanvas-header py-3 pt-lg-4 d-flex align-items-center justify-content-center gap-3 pe-5 position-relative">
                 <h1 class="mb-0" id="cartLabel">Cart</h1>
                 <button id="CartClose" type="button" class="cart-toggle-btn" v-on:click="toggleCart" aria-controls="cart" aria-label="Close">
                     <vc:icon symbol="close" />
                 </button>
             </div>
             <div class="offcanvas-body py-0">
-                
                 <form method="post" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" v-on:submit="handleFormSubmit" v-if="cartCount !== 0">
                     <input type="hidden" name="amount" :value="totalNumeric">
                     <input type="hidden" name="tip" :value="tipNumeric">

@@ -122,7 +122,7 @@
                     <input asp-for="PlaySoundOnPayment" type="checkbox" class="form-check-input" data-bs-toggle="collapse" data-bs-target="#PlaySoundOnPaymentOptions" aria-expanded="@Model.PlaySoundOnPayment" aria-controls="PlaySoundOnPaymentOptions" />
                     <label asp-for="PlaySoundOnPayment" class="form-check-label"></label>
                     <div class="collapse @(Model.PlaySoundOnPayment ? "show" : "")" id="PlaySoundOnPaymentOptions">
-                        <div class="form-group mb-0 pt-2 pb-3">
+                        <div class="form-group mb-0 py-3">
                             <div class="d-flex align-items-center justify-content-between gap-2">
                                 <label asp-for="SoundFile" class="form-label"></label>
                                 @if (!string.IsNullOrEmpty(Model.SoundFileId))

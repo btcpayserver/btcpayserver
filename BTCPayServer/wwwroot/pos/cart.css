@@ -32,7 +32,7 @@
 }
 
 header .cart-toggle-btn {
-    --icon-size: calc(1.34375rem + 1.125vw);
+    --icon-size: 32px;
 }
 
 .cart-toggle-btn .icon-pos-cart {
@@ -67,7 +67,7 @@ header .cart-toggle-btn {
 }
 
 #cart .icon-remove {
-    --btn-icon-size: 2.5em;
+    --btn-icon-size: 2.25em;
 }
 
 #cart .input-group.input-group-sm {
@@ -77,7 +77,7 @@ header .cart-toggle-btn {
 #CartBadge {
     position: absolute;
     top: 0;
-    right: -.25em;
+    right: 0;
     min-width: 1.75em;
 }
 

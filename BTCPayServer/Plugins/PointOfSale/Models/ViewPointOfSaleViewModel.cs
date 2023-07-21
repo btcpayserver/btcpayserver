@@ -93,7 +93,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Models
                               .ToList();
             if (groups.Count == 0)
                 return;
-            groups.Insert(0, new KeyValuePair<string, string>("All items", "*"));
+            groups.Insert(0, new KeyValuePair<string, string>("All", "*"));
             AllCategories = new SelectList(groups, "Value", "Key", "*");
         }
 

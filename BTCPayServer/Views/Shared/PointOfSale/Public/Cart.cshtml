@@ -38,7 +38,7 @@
                         <span id="CartBadge" class="badge rounded-pill bg-danger p-1 ms-1" v-text="cartCount" v-if="cartCount !== 0"></span>
                     </button>
                 </div>
-                <input id="SearchTerm" class="form-control" placeholder="Search…" v-model="searchTerm">
+                <input id="SearchTerm" class="form-control rounded-pill" placeholder="Search…" v-model="searchTerm">
                 <div v-if="allCategories" class="btcpay-pills d-flex flex-wrap align-items-center justify-content-center gap-3">
                     <template v-for="cat in allCategories">
                         <input :id="`Category-${cat.value}`" type="radio" name="category" autocomplete="off" v-model="displayCategory" :value="cat.value">

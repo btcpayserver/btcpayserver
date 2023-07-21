@@ -1,3 +1,4 @@
+#nullable  enable
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,12 +9,9 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Payments;
-using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using NBitcoin.Protocol;
 using PayoutData = BTCPayServer.Data.PayoutData;
 using PayoutProcessorData = BTCPayServer.Data.PayoutProcessorData;
 
@@ -35,7 +33,7 @@ public class AutomatedPayoutConstants
         }
     }
 }
-public abstract class BaseAutomatedPayoutProcessor<T> : BaseAsyncService where T : AutomatedPayoutBlob
+public abstract class BaseAutomatedPayoutProcessor<T> : BaseAsyncService where T : AutomatedPayoutBlob, new()
 {
     protected readonly StoreRepository _storeRepository;
     protected readonly PayoutProcessorData PayoutProcessorSettings;
@@ -73,7 +71,7 @@ public abstract class BaseAutomatedPayoutProcessor<T> : BaseAsyncService where T
 
     public override Task StopAsync(CancellationToken cancellationToken)
     {
-        _subscription.Dispose();
+        _subscription?.Dispose();
         return base.StopAsync(cancellationToken);
     }
 
@@ -93,9 +91,8 @@ public abstract class BaseAutomatedPayoutProcessor<T> : BaseAsyncService where T
 
     private async Task Act()
     {
-        _timerCTs = null;
         var store = await _storeRepository.FindStore(PayoutProcessorSettings.StoreId);
-        var paymentMethod = store?.GetEnabledPaymentMethods(_btcPayNetworkProvider)?.FirstOrDefault(
+        var paymentMethod = store?.GetEnabledPaymentMethods(_btcPayNetworkProvider).FirstOrDefault(
             method =>
                 method.PaymentId == PaymentMethodId);
 
@@ -131,21 +128,18 @@ public abstract class BaseAutomatedPayoutProcessor<T> : BaseAsyncService where T
             blob.Interval = TimeSpan.FromMinutes(AutomatedPayoutConstants.MinIntervalMinutes);
         if (blob.Interval > TimeSpan.FromMinutes(AutomatedPayoutConstants.MaxIntervalMinutes))
             blob.Interval = TimeSpan.FromMinutes(AutomatedPayoutConstants.MaxIntervalMinutes);
-        
-        _timerCTs??= new CancellationTokenSource();
         try
         {
-            var cts= CancellationTokenSource.CreateLinkedTokenSource(CancellationToken, _timerCTs.Token);
+            using var cts = CancellationTokenSource.CreateLinkedTokenSource(CancellationToken, _timerCTs.Token);
             await Task.Delay(blob.Interval, cts.Token);
-            cts.Dispose();
         }
         catch (TaskCanceledException)
         {
         }
     }
 
-    private CancellationTokenSource _timerCTs;
-    private IEventAggregatorSubscription _subscription;
+    private CancellationTokenSource _timerCTs = new CancellationTokenSource();
+    private IEventAggregatorSubscription? _subscription;
 
     private readonly object _intervalLock = new object();
 
@@ -153,14 +147,13 @@ public abstract class BaseAutomatedPayoutProcessor<T> : BaseAsyncService where T
     {
         lock (_intervalLock)
         {
-            _timerCTs ??= new CancellationTokenSource();
-            _timerCTs?.Cancel();
+            _timerCTs.Cancel();
+            _timerCTs = new CancellationTokenSource();
         }
     }
-    
 
     public static T GetBlob(PayoutProcessorData payoutProcesserSettings)
     {
-        return payoutProcesserSettings.HasTypedBlob<T>().GetBlob();
+        return payoutProcesserSettings.HasTypedBlob<T>().GetBlob() ?? new T();
     }
 }

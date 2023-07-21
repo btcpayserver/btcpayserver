@@ -3,12 +3,16 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 using BTCPayServer.Abstractions.Extensions;
+using BTCPayServer.Client.Models;
+using BTCPayServer.Controllers.Greenfield;
 using BTCPayServer.Data;
 using BTCPayServer.Models;
 using BTCPayServer.Plugins.PayButton.Models;
+using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Routing;
 using NicolasDorier.RateLimits;
 
 namespace BTCPayServer.Controllers
@@ -16,14 +20,17 @@ namespace BTCPayServer.Controllers
     public class UIPublicController : Controller
     {
         public UIPublicController(UIInvoiceController invoiceController,
-            StoreRepository storeRepository)
+            StoreRepository storeRepository,
+            LinkGenerator linkGenerator)
         {
             _InvoiceController = invoiceController;
             _StoreRepository = storeRepository;
+            _linkGenerator = linkGenerator;
         }
 
         private readonly UIInvoiceController _InvoiceController;
         private readonly StoreRepository _StoreRepository;
+        private readonly LinkGenerator _linkGenerator;
 
         [HttpGet]
         [IgnoreAntiforgeryToken]
@@ -57,21 +64,31 @@ namespace BTCPayServer.Controllers
             if (!ModelState.IsValid)
                 return View();
 
-            DataWrapper<InvoiceResponse> invoice = null;
+            InvoiceEntity invoice = null;
             try
             {
-                invoice = await _InvoiceController.CreateInvoiceCore(new BitpayCreateInvoiceRequest()
+                invoice = await _InvoiceController.CreateInvoiceCoreRaw(new CreateInvoiceRequest()
                 {
-                    Price = model.Price,
+                    Amount = model.Price,
                     Currency = model.Currency,
-                    ItemDesc = model.CheckoutDesc,
-                    OrderId = model.OrderId,
-                    NotificationEmail = model.NotifyEmail,
-                    NotificationURL = model.ServerIpn,
-                    RedirectURL = model.BrowserRedirect,
-                    FullNotifications = true,
-                    DefaultPaymentMethod = model.DefaultPaymentMethod
-                }, store, HttpContext.Request.GetAbsoluteRoot(), cancellationToken: cancellationToken);
+                    Metadata = new InvoiceMetadata()
+                    {
+                        ItemDesc = model.CheckoutDesc,
+                        OrderId = model.OrderId
+                    }.ToJObject(),
+                    Checkout = new ()
+                    {
+                        RedirectURL = model.BrowserRedirect ?? store?.StoreWebsite,
+                        DefaultPaymentMethod = model.DefaultPaymentMethod
+                    }
+                }, store, HttpContext.Request.GetAbsoluteRoot(),
+                entityManipulator: (entity) =>
+                {
+                    entity.NotificationEmail = model.NotifyEmail;
+                    entity.NotificationURLTemplate = model.ServerIpn;
+                    entity.FullNotifications = true;
+                },
+                cancellationToken: cancellationToken);
             }
             catch (BitpayHttpException e)
             {
@@ -84,26 +101,25 @@ namespace BTCPayServer.Controllers
                 return View();
             }
 
+            var url = GreenfieldInvoiceController.ToModel(invoice, _linkGenerator, HttpContext.Request).CheckoutLink;
+            if (!string.IsNullOrEmpty(model.CheckoutQueryString))
+            {
+                var additionalParamValues = HttpUtility.ParseQueryString(model.CheckoutQueryString);
+                var uriBuilder = new UriBuilder(url);
+                var paramValues = HttpUtility.ParseQueryString(uriBuilder.Query);
+                paramValues.Add(additionalParamValues);
+                uriBuilder.Query = paramValues.ToString()!;
+                url = uriBuilder.Uri.AbsoluteUri;
+            }
             if (model.JsonResponse)
             {
                 return Json(new
                 {
-                    InvoiceId = invoice.Data.Id,
-                    InvoiceUrl = invoice.Data.Url
+                    InvoiceId = invoice.Id,
+                    InvoiceUrl = url
                 });
             }
-
-            if (string.IsNullOrEmpty(model.CheckoutQueryString))
-            {
-                return Redirect(invoice.Data.Url);
-            }
-
-            var additionalParamValues = HttpUtility.ParseQueryString(model.CheckoutQueryString);
-            var uriBuilder = new UriBuilder(invoice.Data.Url);
-            var paramValues = HttpUtility.ParseQueryString(uriBuilder.Query);
-            paramValues.Add(additionalParamValues);
-            uriBuilder.Query = paramValues.ToString();
-            return Redirect(uriBuilder.Uri.AbsoluteUri);
+            return Redirect(url);
         }
     }
 }

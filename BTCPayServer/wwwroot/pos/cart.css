@@ -139,10 +139,7 @@ header .cart-toggle-btn {
         width: var(--sidebar-width);
         border-left: 1px solid var(--btcpay-body-border-light);
     }
-    #CartClose {
+    .cart-toggle-btn {
         display: none;
-    }
-    #CartToggle {
-        pointer-events: none;
     }
 }

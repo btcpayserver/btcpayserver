@@ -264,7 +264,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             PaymentMethodId pmi, CancellationToken cancellationToken)
         {
             var boltAmount = bolt11PaymentRequest.MinimumAmount.ToDecimal(LightMoneyUnit.BTC);
-            if (boltAmount != payoutBlob.CryptoAmount && boltAmount > payoutBlob.CryptoAmount)
+            if (boltAmount > payoutBlob.CryptoAmount)
             {
 
                 payoutData.State = PayoutState.Cancelled;

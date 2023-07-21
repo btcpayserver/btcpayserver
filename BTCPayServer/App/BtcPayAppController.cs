@@ -43,11 +43,16 @@ public class BtcPayAppController : Controller
             return Unauthorized();
         }
 
-        var store = await _storeRepository.FindStore(res.StoreId, res.UserId);
-        if (store is null)
+        StoreData? store = null;
+        if (res.StoreId is not null)
         {
-            return NotFound();
+            store = await _storeRepository.FindStore(res.StoreId, res.UserId);
+            if (store is null)
+            {
+                return NotFound();
+            }
         }
+        
 
         var key = new APIKeyData()
         {
@@ -60,7 +65,7 @@ public class BtcPayAppController : Controller
         await _apiKeyRepository.CreateKey(key);
 
 
-        var onchain = store.GetDerivationSchemeSettings(_btcPayNetworkProvider, "BTC");
+        var onchain = store?.GetDerivationSchemeSettings(_btcPayNetworkProvider, "BTC");
         string? onchainSeed = null;
         if (onchain is not null)
         {
@@ -71,7 +76,7 @@ public class BtcPayAppController : Controller
         return Ok(new PairSuccessResult()
         {
             Key = key.Id,
-            StoreId = store.Id,
+            StoreId = store?.Id,
             UserId = res.UserId,
             ExistingWallet =
                 onchain?.AccountDerivation?.GetExtPubKeys()?.FirstOrDefault()

@@ -1280,32 +1280,40 @@ namespace BTCPayServer.Controllers
 
             try
             {
-                var result = await CreateInvoiceCore(new BitpayCreateInvoiceRequest
+                var result = await CreateInvoiceCoreRaw(new CreateInvoiceRequest()
                 {
-                    Price = model.Amount,
+                    Amount = model.Amount,
                     Currency = model.Currency,
-                    PosData = model.PosData,
-                    OrderId = model.OrderId,
-                    NotificationURL = model.NotificationUrl,
-                    ItemDesc = model.ItemDesc,
-                    FullNotifications = true,
-                    BuyerEmail = model.BuyerEmail,
-                    SupportedTransactionCurrencies = model.SupportedTransactionCurrencies?.ToDictionary(s => s, s => new InvoiceSupportedTransactionCurrency
+                    Metadata = new InvoiceMetadata()
                     {
-                        Enabled = true
-                    }),
-                    DefaultPaymentMethod = model.DefaultPaymentMethod,
-                    NotificationEmail = model.NotificationEmail,
-                    ExtendedNotifications = model.NotificationEmail != null,
-                    RequiresRefundEmail = model.RequiresRefundEmail == RequiresRefundEmail.InheritFromStore
-                        ? storeBlob.RequiresRefundEmail
-                        : model.RequiresRefundEmail == RequiresRefundEmail.On,
-                }, store, HttpContext.Request.GetAbsoluteRoot(), cancellationToken: cancellationToken);
+                        PosDataLegacy = model.PosData,
+                        OrderId = model.OrderId,
+                        ItemDesc = model.ItemDesc,
+                        BuyerEmail = model.BuyerEmail,
+                    }.ToJObject(),
+                    Checkout = new ()
+                    {
+                        RedirectURL = store.StoreWebsite,
+                        DefaultPaymentMethod = model.DefaultPaymentMethod,
+                        RequiresRefundEmail = model.RequiresRefundEmail == RequiresRefundEmail.InheritFromStore
+                            ? storeBlob.RequiresRefundEmail
+                            : model.RequiresRefundEmail == RequiresRefundEmail.On,
+                        PaymentMethods = model.SupportedTransactionCurrencies?.ToArray()
+                    },
+                }, store, HttpContext.Request.GetAbsoluteRoot(),
+                    entityManipulator: (entity) =>
+                    {
+                        entity.NotificationURLTemplate = model.NotificationUrl;
+                        entity.FullNotifications = true;
+                        entity.NotificationEmail = model.NotificationEmail;
+                        entity.ExtendedNotifications = model.NotificationEmail != null;
+                    },
+                    cancellationToken: cancellationToken);
 
-                TempData[WellKnownTempData.SuccessMessage] = $"Invoice {result.Data.Id} just created!";
-                CreatedInvoiceId = result.Data.Id;
+                TempData[WellKnownTempData.SuccessMessage] = $"Invoice {result.Id} just created!";
+                CreatedInvoiceId = result.Id;
 
-                return RedirectToAction(nameof(Invoice), new { storeId = result.Data.StoreId, invoiceId = result.Data.Id });
+                return RedirectToAction(nameof(Invoice), new { storeId = result.StoreId, invoiceId = result.Id });
             }
             catch (BitpayHttpException ex)
             {

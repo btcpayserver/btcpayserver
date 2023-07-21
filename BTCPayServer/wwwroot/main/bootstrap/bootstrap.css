@@ -4861,7 +4861,7 @@ fieldset:disabled .btn {
 .badge {
   --btcpay-badge-padding-x: 0.75em;
   --btcpay-badge-padding-y: 0.5em;
-  --btcpay-badge-font-size: 0.75em;
+  --btcpay-badge-font-size: var(--btcpay-font-size-s);
   --btcpay-badge-font-weight: var(--btcpay-font-weight-semibold);
   --btcpay-badge-color: var(--btcpay-white);
   --btcpay-badge-border-radius: var(--btcpay-border-radius);

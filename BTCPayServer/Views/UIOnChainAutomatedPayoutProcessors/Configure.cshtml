@@ -26,7 +26,7 @@
             <div class="form-group">
                 <label asp-for="IntervalMinutes" class="form-label" data-required>Interval</label>
                 <div class="input-group">
-                    <input asp-for="IntervalMinutes" class="form-control" inputmode="numeric" style="max-width:10ch;">
+                    <input asp-for="IntervalMinutes" class="form-control" inputmode="numeric" style="max-width:12ch;">
                     <span class="input-group-text">minutes</span>
                     <span asp-validation-for="IntervalMinutes" class="text-danger"></span>
                 </div>
@@ -34,7 +34,7 @@
             <div class="form-group">
                 <label asp-for="FeeTargetBlock" class="form-label" data-required>Fee block target</label>
                 <div class="input-group">
-                    <input asp-for="FeeTargetBlock" class="form-control" min="1" inputmode="numeric" style="max-width:10ch;">
+                    <input asp-for="FeeTargetBlock" class="form-control" min="1" inputmode="numeric" style="max-width:12ch;">
                     <span class="input-group-text">blocks</span>
                     <span asp-validation-for="FeeTargetBlock" class="text-danger"></span>
                 </div>
@@ -42,7 +42,7 @@
             <div class="form-group">
                 <label asp-for="Threshold" class="form-label" data-required>Threshold</label>
                 <div class="input-group">
-                    <input asp-for="Threshold" class="form-control" min="0" inputmode="numeric" style="max-width:10ch;">
+                    <input asp-for="Threshold" class="form-control" min="0" inputmode="numeric" style="max-width:12ch;">
                     <span class="input-group-text">@cryptoCode</span>
                     <span asp-validation-for="FeeTargetBlock" class="text-danger"></span>
                 </div>

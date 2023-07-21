@@ -140,7 +140,7 @@
                                     <span class="badge text-bg-warning" v-if="item.inventory">
                                         {{ item.inventory > 0 ? `${item.inventory} left` : "Sold out" }}
                                     </span>
-                                    <div class="input-group input-group-sm">
+                                    <div class="input-group input-group-sm w-125px">
                                         <input class="form-control" type="number" placeholder="Qty" min="1" step="1" :max="item.inventory" v-model.number="item.count">
                                         <button type="button" v-on:click="removeFromCart(item.id)" class="btn btn-outline-secondary p-1">
                                             <vc:icon symbol="remove" />
@@ -157,7 +157,7 @@
                         <tr v-if="showDiscount">
                             <th class="align-middle" :class="{ 'py-4': !enableTips, 'pt-4': enableTips }">Discount</th>
                             <th class="align-middle" :class="{ 'py-4': !enableTips, 'pt-4': enableTips }" colspan="3">
-                                <div class="input-group input-group-sm pull-right">
+                                <div class="input-group input-group-sm w-125px pull-right">
                                     <input class="form-control" type="number" min="0" step="1" max="100" id="Discount" v-model.number="discountPercent">
                                     <span class="input-group-text">%</span>
                                 </div>

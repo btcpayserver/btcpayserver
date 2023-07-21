@@ -70,10 +70,6 @@ header .cart-toggle-btn {
     --btn-icon-size: 2.25em;
 }
 
-#cart .input-group.input-group-sm {
-    width: 110px;
-}
-
 #CartBadge {
     position: absolute;
     top: 0;

@@ -845,7 +845,7 @@ namespace BTCPayServer.HostedServices
                     ($"Amount is implied in both destination ({destination.Amount}) and payout request ({amount}), but the payout request amount is less than the destination amount",null),
                 not null when destination.Amount != null && amount != destination.Amount &&
                               destination.IsExplicitAmountMinimum &&
-                              payoutCurrency != "BTC" && ppCurrency != "SATS" &&
+                              !(payoutCurrency == "BTC" && ppCurrency == "SATS") &&
                               amount < destination.Amount =>
                     ($"Amount is implied in both destination ({destination.Amount}) and payout request ({amount}), but the payout request amount is less than the destination amount",null),
                 not null when destination.Amount != null && amount != destination.Amount &&

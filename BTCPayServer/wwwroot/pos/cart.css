@@ -66,8 +66,12 @@ header .cart-toggle-btn {
     background-color: var(--btcpay-bg-tile);
 }
 
-#cart .icon-remove {
-    --btn-icon-size: 2.25em;
+#cart .quantity .btn {
+    width: 2rem;
+    height: 2rem;
+}
+#cart .quantity .btn .icon{
+    --btn-icon-size: .75rem;
 }
 
 #CartBadge {

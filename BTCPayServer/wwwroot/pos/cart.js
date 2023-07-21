@@ -147,6 +147,14 @@ document.addEventListener("DOMContentLoaded",function () {
                 const index = this.cart.findIndex(lineItem => lineItem.id === id);
                 this.cart.splice(index, 1);
             },
+            updateQuantity(id, count) {
+                const itemInCart = this.cart.find(lineItem => lineItem.id === id);
+                const applyable = (count < 0 && itemInCart.count + count > 0) ||
+                    (count > 0 && (itemInCart.inventory == null || itemInCart.count + count <= itemInCart.inventory));
+                if (applyable) {
+                    itemInCart.count += count;
+                }
+            },
             clearCart() {
                 this.cart = [];
             }

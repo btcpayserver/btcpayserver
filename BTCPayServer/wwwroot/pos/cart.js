@@ -49,7 +49,7 @@ document.addEventListener("DOMContentLoaded",function () {
         },
         computed: {
             cartCount() {
-                return this.cart.reduce((res, item) => res + item.count, 0)
+                return this.cart.reduce((res, item) => res + (parseInt(item.count) || 0), 0)
             },
             amountNumeric () {
                 return parseFloat(this.cart.reduce((res, item) => res + item.price * item.count, 0).toFixed(this.currencyInfo.divisibility))
@@ -84,6 +84,10 @@ document.addEventListener("DOMContentLoaded",function () {
             },
             cart: {
                 handler(newCart) {
+                    newCart.forEach(item => {
+                        if (!item.count) item.count = 1
+                        if (item.inventory && item.inventory < item.count) item.count = item.inventory
+                    })
                     saveState('cart', newCart)
                     if (!newCart || newCart.length === 0) {
                         this.$cart.hide()

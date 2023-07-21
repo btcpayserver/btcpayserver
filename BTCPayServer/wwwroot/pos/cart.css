@@ -3,7 +3,7 @@
 }
 
 #PosCart .public-page-wrap {
-    padding: 0 var(--btcpay-space-m) var(--btcpay-space-l);
+    padding: 0 0 var(--btcpay-space-l);
 }
 
 #PosCart .offcanvas-backdrop {
@@ -122,6 +122,9 @@ header .cart-toggle-btn {
     }
     #cart.show {
         transform: none;
+    }
+    #CartClose {
+        color: var(--btcpay-body-text);
     }
 }
 @media (min-width: 992px) {

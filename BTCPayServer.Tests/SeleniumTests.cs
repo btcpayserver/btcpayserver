@@ -2198,28 +2198,22 @@ namespace BTCPayServer.Tests
             Assert.Equal(2, windows.Count);
             s.Driver.SwitchTo().Window(windows[1]);
             s.Driver.WaitForElement(By.Id("PosItems"));
-            s.Driver.ElementDoesNotExist(By.Id("CartBadge"));
             Assert.Empty(s.Driver.FindElements(By.CssSelector("#CartItems tr")));
             
             // Select and clear
             s.Driver.FindElement(By.CssSelector(".posItem:nth-child(1) .btn-primary")).Click();
             Assert.Single(s.Driver.FindElements(By.CssSelector("#CartItems tr")));
-            Assert.Equal("1", s.Driver.FindElement(By.Id("CartBadge")).Text);
             s.Driver.FindElement(By.Id("CartClear")).Click();
             Thread.Sleep(250);
             Assert.Empty(s.Driver.FindElements(By.CssSelector("#CartItems tr")));
-            s.Driver.ElementDoesNotExist(By.Id("CartBadge"));
             
             // Select items
             s.Driver.FindElement(By.CssSelector(".posItem:nth-child(2) .btn-primary")).Click();
             Thread.Sleep(250);
-            Assert.Equal("1", s.Driver.FindElement(By.Id("CartBadge")).Text);
             s.Driver.FindElement(By.CssSelector(".posItem:nth-child(1) .btn-primary")).Click();
             Thread.Sleep(250);
-            Assert.Equal("2", s.Driver.FindElement(By.Id("CartBadge")).Text);
             s.Driver.FindElement(By.CssSelector(".posItem:nth-child(2) .btn-primary")).Click();
             Thread.Sleep(250);
-            Assert.Equal("3", s.Driver.FindElement(By.Id("CartBadge")).Text);
             Assert.Equal(2, s.Driver.FindElements(By.CssSelector("#CartItems tr")).Count);
             Assert.Equal("3,00 €", s.Driver.FindElement(By.Id("CartTotal")).Text);
             

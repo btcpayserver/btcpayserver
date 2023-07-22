@@ -23,8 +23,7 @@
                     {
                         <th class="w-150px">@key</th>
                     }
-                    <td style="white-space:pre-wrap">
-                        @if (IsValidURL(str))
+                    <td style="white-space:pre-wrap">@* Explicitely remove whitespace at front here *@@if (IsValidURL(str))
                         {
                             <a href="@str" target="_blank" rel="noreferrer noopener">@str</a>
                         }

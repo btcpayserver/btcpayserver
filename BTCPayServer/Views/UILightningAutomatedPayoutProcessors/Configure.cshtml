@@ -26,7 +26,7 @@
             <div class="form-group">
                 <label asp-for="IntervalMinutes" class="form-label" data-required>Interval</label>
                 <div class="input-group">
-                    <input asp-for="IntervalMinutes" class="form-control" inputmode="numeric" style="max-width:10ch;">
+                    <input asp-for="IntervalMinutes" class="form-control" inputmode="numeric" style="max-width:12ch;">
                     <span class="input-group-text">minutes</span>
                     <span asp-validation-for="IntervalMinutes" class="text-danger"></span>
                 </div>
@@ -34,7 +34,7 @@
             <div class="form-group">
                 <label asp-for="CancelPayoutAfterFailures" class="form-label">Max Payout Failure Attempts</label>
                 <div class="input-group">
-                    <input asp-for="CancelPayoutAfterFailures" min="1" class="form-control" inputmode="numeric" style="max-width:10ch;">
+                    <input asp-for="CancelPayoutAfterFailures" min="1" class="form-control" inputmode="numeric" style="max-width:12ch;">
                     <span class="input-group-text">attempts</span>
                     <span asp-validation-for="IntervalMinutes" class="text-danger"></span>
                 </div>

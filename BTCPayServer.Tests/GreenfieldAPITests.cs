@@ -3557,7 +3557,7 @@ namespace BTCPayServer.Tests
                     (await adminClient.GetStorePayouts(admin.StoreId, false)).Single(data => data.Id == payout.Id);
                 Assert.Equal(PayoutState.Completed, payoutC.State);
             });
-            
+
             payout = await adminClient.CreatePayout(admin.StoreId,
                 new CreatePayoutThroughStoreRequest()
                 {
@@ -3585,8 +3585,18 @@ namespace BTCPayServer.Tests
                 source = "apitest",
                 sourceLink = "https://chocolate.com"
             }).ToString());
-
             
+            customerInvoice = await tester.CustomerLightningD.CreateInvoice(LightMoney.FromUnit(10, LightMoneyUnit.Satoshi),
+                Guid.NewGuid().ToString(), TimeSpan.FromDays(40));
+            var payout2 = await adminClient.CreatePayout(admin.StoreId,
+                new CreatePayoutThroughStoreRequest()
+                {
+                    Approved = true,
+                    Amount = new Money(100, MoneyUnit.Satoshi).ToDecimal(MoneyUnit.BTC),
+                    PaymentMethod = "BTC_LightningNetwork",
+                    Destination = customerInvoice.BOLT11
+                });
+            Assert.Equal(payout2.Amount, new Money(100, MoneyUnit.Satoshi).ToDecimal(MoneyUnit.BTC));
         }
 
         [Fact(Timeout = 60 * 2 * 1000)]

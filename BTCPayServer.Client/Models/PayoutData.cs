@@ -31,5 +31,6 @@ namespace BTCPayServer.Client.Models
         public PayoutState State { get; set; }
         public int Revision { get; set; }
         public JObject PaymentProof { get; set; }
+        public JObject Metadata { get; set; }
     }
 }

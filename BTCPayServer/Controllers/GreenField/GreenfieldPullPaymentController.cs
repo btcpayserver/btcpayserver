@@ -19,6 +19,7 @@ using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json.Linq;
 using MarkPayoutRequest = BTCPayServer.HostedServices.MarkPayoutRequest;
 
 namespace BTCPayServer.Controllers.Greenfield
@@ -284,7 +285,8 @@ namespace BTCPayServer.Controllers.Greenfield
                 Amount = blob.Amount,
                 PaymentMethodAmount = blob.CryptoAmount,
                 Revision = blob.Revision,
-                State = p.State
+                State = p.State,
+                Metadata = blob.Metadata?? new JObject(),
             };
             model.Destination = blob.Destination;
             model.PaymentMethod = p.PaymentMethodId;
@@ -334,7 +336,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 Destination = destination.destination,
                 PullPaymentId = pullPaymentId,
                 Value = request.Amount,
-                PaymentMethodId = paymentMethodId,
+                PaymentMethodId = paymentMethodId
             });
 
             return HandleClaimResult(result);
@@ -406,7 +408,8 @@ namespace BTCPayServer.Controllers.Greenfield
                 PreApprove = request.Approved,
                 Value = request.Amount,
                 PaymentMethodId = paymentMethodId,
-                StoreId = storeId
+                StoreId = storeId,
+                Metadata = request.Metadata
             });
             return HandleClaimResult(result);
         }

@@ -1152,7 +1152,8 @@ namespace BTCPayServer.Tests
                 Approved = false,
                 PaymentMethod = "BTC",
                 Amount = 0.0001m,
-                Destination = address.ToString()
+                Destination = address.ToString(),
+                
             });
             await AssertAPIError("invalid-state", async () =>
             {
@@ -3545,6 +3546,7 @@ namespace BTCPayServer.Tests
                     PaymentMethod = "BTC_LightningNetwork",
                     Destination = customerInvoice.BOLT11
                 });
+            Assert.Equal(payout.Metadata.ToString(), new JObject().ToString()); //empty
             Assert.Empty(await adminClient.GetStoreLightningAutomatedPayoutProcessors(admin.StoreId, "BTC_LightningNetwork"));
             await adminClient.UpdateStoreLightningAutomatedPayoutProcessors(admin.StoreId, "BTC_LightningNetwork",
                 new LightningAutomatedPayoutSettings() { IntervalSeconds = TimeSpan.FromSeconds(600) });
@@ -3555,8 +3557,34 @@ namespace BTCPayServer.Tests
                     (await adminClient.GetStorePayouts(admin.StoreId, false)).Single(data => data.Id == payout.Id);
                 Assert.Equal(PayoutState.Completed, payoutC.State);
             });
+
+            payout = await adminClient.CreatePayout(admin.StoreId,
+                new CreatePayoutThroughStoreRequest()
+                {
+                    Approved = true,
+                    PaymentMethod = "BTC",
+                    Destination = (await tester.ExplorerNode.GetNewAddressAsync()).ToString(),
+                    Amount = 0.0001m,
+                    Metadata = JObject.FromObject(new
+                    {
+                        source ="apitest",
+                        sourceLink = "https://chocolate.com"
+                    })
+                });
+            Assert.Equal(payout.Metadata.ToString(), JObject.FromObject(new
+            {
+                source = "apitest",
+                sourceLink = "https://chocolate.com"
+            }).ToString());
             
+            payout =
+                (await adminClient.GetStorePayouts(admin.StoreId, false)).Single(data => data.Id == payout.Id);
             
+            Assert.Equal(payout.Metadata.ToString(), JObject.FromObject(new
+            {
+                source = "apitest",
+                sourceLink = "https://chocolate.com"
+            }).ToString());
             
             customerInvoice = await tester.CustomerLightningD.CreateInvoice(LightMoney.FromUnit(10, LightMoneyUnit.Satoshi),
                 Guid.NewGuid().ToString(), TimeSpan.FromDays(40));
@@ -3568,7 +3596,7 @@ namespace BTCPayServer.Tests
                     PaymentMethod = "BTC_LightningNetwork",
                     Destination = customerInvoice.BOLT11
                 });
-            Assert.Equal(payout2.Amount, new Money(100, MoneyUnit.Satoshi).ToDecimal(MoneyUnit.BTC)) ;
+            Assert.Equal(payout2.Amount, new Money(100, MoneyUnit.Satoshi).ToDecimal(MoneyUnit.BTC));
         }
 
         [Fact(Timeout = 60 * 2 * 1000)]

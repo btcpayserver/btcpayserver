@@ -196,7 +196,14 @@
                                 <span>@pp.Date.ToBrowserDate()</span>
                             </td>
                             <td class="mw-100">
-                                <span>@pp.PullPaymentName</span>
+                                @if (pp.SourceLink is not null && pp.Source is not null)
+                                {
+                                    <a href="@pp.SourceLink" rel="noreferrer noopener">@pp.Source</a>
+                                }
+                                else if (pp.Source is not null)
+                                {
+                                    <span>@pp.Source</span>
+                                }
                             </td>
                             <td title="@pp.Destination">
                                 <span class="text-break">@pp.Destination</span>

@@ -20,6 +20,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json.Linq;
 using MarkPayoutRequest = BTCPayServer.HostedServices.MarkPayoutRequest;
 using PayoutData = BTCPayServer.Data.PayoutData;
 using PullPaymentData = BTCPayServer.Data.PullPaymentData;
@@ -529,10 +530,32 @@ namespace BTCPayServer.Controllers
             {
                 var ppBlob = item.PullPayment?.GetBlob();
                 var payoutBlob = item.Payout.GetBlob(_jsonSerializerSettings);
+                string payoutSource;
+                if (payoutBlob.Metadata?.TryGetValue("source", StringComparison.InvariantCultureIgnoreCase,
+                        out var source) is true)
+                {
+                    payoutSource = source.Value<string>();
+                }
+                else
+                {
+                    payoutSource = ppBlob?.Name ?? item.PullPayment?.Id;
+                }
+
+                string payoutSourceLink = null;
+                if (payoutBlob.Metadata?.TryGetValue("sourceLink", StringComparison.InvariantCultureIgnoreCase,
+                        out var sourceLink) is true)
+                {
+                    payoutSourceLink = sourceLink.Value<string>();
+                }
+                else if(item.PullPayment?.Id is not null)
+                {
+                    payoutSourceLink = Url.Action("ViewPullPayment", "UIPullPayment", new { pullPaymentId = item.PullPayment?.Id });
+                }
                 var m = new PayoutsModel.PayoutModel
                 {
                     PullPaymentId = item.PullPayment?.Id,
-                    PullPaymentName = ppBlob?.Name ?? item.PullPayment?.Id,
+                    Source = payoutSource,
+                    SourceLink = payoutSourceLink,
                     Date = item.Payout.Date,
                     PayoutId = item.Payout.Id,
                     Amount = _displayFormatter.Currency(payoutBlob.Amount, ppBlob?.Currency ?? PaymentMethodId.Parse(item.Payout.PaymentMethodId).CryptoCode),

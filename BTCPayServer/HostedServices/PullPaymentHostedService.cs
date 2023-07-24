@@ -597,7 +597,8 @@ namespace BTCPayServer.HostedServices
                 var payoutBlob = new PayoutBlob()
                 {
                     Amount = claimed,
-                    Destination = req.ClaimRequest.Destination.ToString()
+                    Destination = req.ClaimRequest.Destination.ToString(),
+                    Metadata = req.ClaimRequest.Metadata?? new JObject(),
                 };
                 payout.SetBlob(payoutBlob, _jsonSerializerSettings);
                 await ctx.Payouts.AddAsync(payout);
@@ -915,6 +916,7 @@ namespace BTCPayServer.HostedServices
         public IClaimDestination Destination { get; set; }
         public string StoreId { get; set; }
         public bool? PreApprove { get; set; }
+        public JObject Metadata { get; set; }
     }
 
     public record PayoutEvent(PayoutEvent.PayoutEventType Type,PayoutData Payout)

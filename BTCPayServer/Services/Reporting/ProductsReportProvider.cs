@@ -78,8 +78,8 @@ public class ProductsReportProvider : ReportProvider
                 }
                 else
                 {
-                    var posData = i.Metadata.PosData?.ToObject<PosAppData>();
-                    if (posData.Cart is { } cart)
+                    var posData = i.Metadata?.PosData?.ToObject<PosAppData>();
+                    if (posData?.Cart is { } cart)
                     {
                         foreach (var item in cart)
                         {

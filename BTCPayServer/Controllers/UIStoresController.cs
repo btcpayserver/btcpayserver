@@ -392,6 +392,7 @@ namespace BTCPayServer.Controllers
 
             vm.UseClassicCheckout = storeBlob.CheckoutType == Client.Models.CheckoutType.V1;
             vm.CelebratePayment = storeBlob.CelebratePayment;
+            vm.PlaySoundOnPayment = storeBlob.PlaySoundOnPayment;
             vm.OnChainWithLnInvoiceFallback = storeBlob.OnChainWithLnInvoiceFallback;
             vm.ShowPayInWalletButton = storeBlob.ShowPayInWalletButton;
             vm.ShowStoreHeader = storeBlob.ShowStoreHeader;
@@ -401,6 +402,7 @@ namespace BTCPayServer.Controllers
             vm.RedirectAutomatically = storeBlob.RedirectAutomatically;
             vm.CustomCSS = storeBlob.CustomCSS;
             vm.CustomLogo = storeBlob.CustomLogo;
+            vm.SoundFileId = storeBlob.SoundFileId;
             vm.HtmlTitle = storeBlob.HtmlTitle;
             vm.DisplayExpirationTimer = (int)storeBlob.DisplayExpirationTimer.TotalMinutes;
             vm.ReceiptOptions = CheckoutAppearanceViewModel.ReceiptOptionsViewModel.Create(storeBlob.ReceiptOptions);
@@ -450,7 +452,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost("{storeId}/checkout")]
-        public async Task<IActionResult> CheckoutAppearance(CheckoutAppearanceViewModel model)
+        public async Task<IActionResult> CheckoutAppearance(CheckoutAppearanceViewModel model, [FromForm] bool RemoveSoundFile = false)
         {
             bool needUpdate = false;
             var blob = CurrentStore.GetStoreBlob();
@@ -474,6 +476,57 @@ namespace BTCPayServer.Controllers
                             $"{methodCriterion.PaymentMethod}: Invalid format. Make sure to enter a valid amount and currency code. Examples: '5 USD', '0.001 BTC'", this);
                     }
                 }
+            }
+            
+            var userId = GetUserId();
+            if (userId is null)
+                return NotFound();
+
+            if (model.SoundFile != null)
+            {
+                if (model.SoundFile.Length > 1_000_000)
+                {
+                    ModelState.AddModelError(nameof(model.SoundFile), "The uploaded sound file should be less than 1MB");
+                }
+                else if (!model.SoundFile.ContentType.StartsWith("audio/", StringComparison.InvariantCulture))
+                {
+                    ModelState.AddModelError(nameof(model.SoundFile), "The uploaded sound file needs to be an audio file");
+                }
+                else
+                {
+                    var formFile = await model.SoundFile.Bufferize();
+                    if (!FileTypeDetector.IsAudio(formFile.Buffer, formFile.FileName))
+                    {
+                        ModelState.AddModelError(nameof(model.SoundFile), "The uploaded sound file needs to be an audio file");
+                    }
+                    else
+                    {
+                        model.SoundFile = formFile;
+                        // delete existing file
+                        if (!string.IsNullOrEmpty(blob.SoundFileId))
+                        {
+                            await _fileService.RemoveFile(blob.SoundFileId, userId);
+                        }
+
+                        // add new file
+                        try
+                        {
+                            var storedFile = await _fileService.AddFile(model.SoundFile, userId);
+                            blob.SoundFileId = storedFile.Id;
+                            needUpdate = true;
+                        }
+                        catch (Exception e)
+                        {
+                            ModelState.AddModelError(nameof(model.SoundFile), $"Could not save sound: {e.Message}");
+                        }
+                    }
+                }
+            }
+            else if (RemoveSoundFile && !string.IsNullOrEmpty(blob.SoundFileId))
+            {
+                await _fileService.RemoveFile(blob.SoundFileId, userId);
+                blob.SoundFileId = null;
+                needUpdate = true;
             }
 
             if (!ModelState.IsValid)
@@ -516,6 +569,7 @@ namespace BTCPayServer.Controllers
             blob.ShowStoreHeader = model.ShowStoreHeader;
             blob.CheckoutType = model.UseClassicCheckout ? Client.Models.CheckoutType.V1 : Client.Models.CheckoutType.V2;
             blob.CelebratePayment = model.CelebratePayment;
+            blob.PlaySoundOnPayment = model.PlaySoundOnPayment;
             blob.OnChainWithLnInvoiceFallback = model.OnChainWithLnInvoiceFallback;
             blob.LightningAmountInSatoshi = model.LightningAmountInSatoshi;
             blob.RequiresRefundEmail = model.RequiresRefundEmail;
@@ -674,28 +728,27 @@ namespace BTCPayServer.Controllers
             {
                 if (model.LogoFile.Length > 1_000_000)
                 {
-                    TempData[WellKnownTempData.ErrorMessage] = "The uploaded logo file should be less than 1MB";
+                    ModelState.AddModelError(nameof(model.LogoFile), "The uploaded logo file should be less than 1MB");
                 }
                 else if (!model.LogoFile.ContentType.StartsWith("image/", StringComparison.InvariantCulture))
                 {
-                    TempData[WellKnownTempData.ErrorMessage] = "The uploaded logo file needs to be an image";
+                    ModelState.AddModelError(nameof(model.LogoFile), "The uploaded logo file needs to be an image");
                 }
                 else
                 {
                     var formFile = await model.LogoFile.Bufferize();
                     if (!FileTypeDetector.IsPicture(formFile.Buffer, formFile.FileName))
                     {
-                        TempData[WellKnownTempData.ErrorMessage] = "The uploaded logo file needs to be an image";
+                        ModelState.AddModelError(nameof(model.LogoFile), "The uploaded logo file needs to be an image");
                     }
                     else
                     {
                         model.LogoFile = formFile;
-                        // delete existing image
+                        // delete existing file
                         if (!string.IsNullOrEmpty(blob.LogoFileId))
                         {
                             await _fileService.RemoveFile(blob.LogoFileId, userId);
                         }
-
                         // add new image
                         try
                         {
@@ -704,7 +757,7 @@ namespace BTCPayServer.Controllers
                         }
                         catch (Exception e)
                         {
-                            TempData[WellKnownTempData.ErrorMessage] = $"Could not save logo: {e.Message}";
+                            ModelState.AddModelError(nameof(model.LogoFile), $"Could not save logo: {e.Message}");
                         }
                     }
                 }
@@ -720,25 +773,24 @@ namespace BTCPayServer.Controllers
             {
                 if (model.CssFile.Length > 1_000_000)
                 {
-                    TempData[WellKnownTempData.ErrorMessage] = "The uploaded file should be less than 1MB";
+                    ModelState.AddModelError(nameof(model.CssFile), "The uploaded file should be less than 1MB");
                 }
                 else if (!model.CssFile.ContentType.Equals("text/css", StringComparison.InvariantCulture))
                 {
-                    TempData[WellKnownTempData.ErrorMessage] = "The uploaded file needs to be a CSS file";
+                    ModelState.AddModelError(nameof(model.CssFile), "The uploaded file needs to be a CSS file");
                 }
                 else if (!model.CssFile.FileName.EndsWith(".css", StringComparison.OrdinalIgnoreCase))
                 {
-                    TempData[WellKnownTempData.ErrorMessage] = "The uploaded file needs to be a CSS file";
+                    ModelState.AddModelError(nameof(model.CssFile), "The uploaded file needs to be a CSS file");
                 }
                 else
                 {
-                    // delete existing CSS file
+                    // delete existing file
                     if (!string.IsNullOrEmpty(blob.CssFileId))
                     {
                         await _fileService.RemoveFile(blob.CssFileId, userId);
                     }
-
-                    // add new CSS file
+                    // add new file
                     try
                     {
                         var storedFile = await _fileService.AddFile(model.CssFile, userId);
@@ -746,7 +798,7 @@ namespace BTCPayServer.Controllers
                     }
                     catch (Exception e)
                     {
-                        TempData[WellKnownTempData.ErrorMessage] = $"Could not save CSS file: {e.Message}";
+                        ModelState.AddModelError(nameof(model.CssFile), $"Could not save CSS file: {e.Message}");
                     }
                 }
             }

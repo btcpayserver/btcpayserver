@@ -659,7 +659,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
-        public void CanDetectImage()
+        public void CanDetectFileType()
         {
             Assert.True(FileTypeDetector.IsPicture(new byte[] { 0x42, 0x4D }, "test.bmp"));
             Assert.False(FileTypeDetector.IsPicture(new byte[] { 0x42, 0x4D }, ".bmp"));
@@ -672,6 +672,15 @@ namespace BTCPayServer.Tests
             Assert.False(FileTypeDetector.IsPicture(new byte[] { 0x3C, 0x73, 0x76, 0x67 }, "test.jpg"));
             Assert.False(FileTypeDetector.IsPicture(new byte[] { 0xFF }, "e.jpg"));
             Assert.False(FileTypeDetector.IsPicture(new byte[] { }, "empty.jpg"));
+
+            Assert.False(FileTypeDetector.IsPicture(new byte[] { 0x49, 0x44, 0x33, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x23 }, "music.mp3"));
+            Assert.True(FileTypeDetector.IsAudio(new byte[] { 0x49, 0x44, 0x33, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x23 }, "music.mp3"));
+            Assert.True(FileTypeDetector.IsAudio(new byte[] { 0x52, 0x49, 0x46, 0x46, 0x24, 0x9A, 0x08, 0x00, 0x57, 0x41 }, "music.wav"));
+            Assert.True(FileTypeDetector.IsAudio(new byte[] { 0xFF, 0xF1, 0x50, 0x80, 0x1C, 0x3F, 0xFC, 0xDA, 0x00, 0x4C }, "music.aac"));
+            Assert.True(FileTypeDetector.IsAudio(new byte[] { 0x66, 0x4C, 0x61, 0x43, 0x00, 0x00, 0x00, 0x22, 0x04, 0x80 }, "music.flac"));
+            Assert.True(FileTypeDetector.IsAudio(new byte[] { 0x4F, 0x67, 0x67, 0x53, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00 }, "music.ogg"));
+            Assert.True(FileTypeDetector.IsAudio(new byte[] { 0x1A, 0x45, 0xDF, 0xA3, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00 }, "music.weba"));
+            Assert.True(FileTypeDetector.IsAudio(new byte[] { 0xFF, 0xF3, 0xE4, 0x64, 0x00, 0x20, 0xAD, 0xBD, 0x04, 0x00 }, "music.mp3"));
         }
 
         [Fact]

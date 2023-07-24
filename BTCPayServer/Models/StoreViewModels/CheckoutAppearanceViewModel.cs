@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using BTCPayServer.Services;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Newtonsoft.Json.Linq;
 
@@ -44,6 +45,9 @@ namespace BTCPayServer.Models.StoreViewModels
         [Display(Name = "Celebrate payment with confetti")]
         public bool CelebratePayment { get; set; }
 
+        [Display(Name = "Enable sounds on checkout page")]
+        public bool PlaySoundOnPayment { get; set; }
+
         [Display(Name = "Requires a refund email")]
         public bool RequiresRefundEmail { get; set; }
 
@@ -61,8 +65,13 @@ namespace BTCPayServer.Models.StoreViewModels
 
         [Display(Name = "Link to a custom CSS stylesheet")]
         public string CustomCSS { get; set; }
+        
         [Display(Name = "Link to a custom logo")]
         public string CustomLogo { get; set; }
+
+        [Display(Name = "Custom sound file for successful payment")]
+        public IFormFile SoundFile { get; set; }
+        public string SoundFileId { get; set; }
 
         [Display(Name = "Custom HTML title to display on Checkout page")]
         public string HtmlTitle { get; set; }

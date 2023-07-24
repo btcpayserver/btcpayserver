@@ -237,6 +237,12 @@ namespace BTCPayServer.Data
         [DefaultValue(true)]
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
         public bool CelebratePayment { get; set; } = true;
+        
+        [DefaultValue(true)]
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
+        public bool PlaySoundOnPayment { get; set; } = false;
+
+        public string SoundFileId { get; set; }
 
         public IPaymentFilter GetExcludedPaymentMethods()
         {

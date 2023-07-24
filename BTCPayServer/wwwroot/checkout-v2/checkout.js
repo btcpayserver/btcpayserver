@@ -116,7 +116,10 @@ function initApp() {
                 paymentMethodId: null,
                 endData: null,
                 isModal: srvModel.isModal,
-                pollTimeoutID: null
+                pollTimeoutID: null,
+                paymentSound: null,
+                nfcReadSound: null,
+                errorSound: null,
             }
         },
         computed: {
@@ -236,6 +239,11 @@ function initApp() {
             if (this.isProcessing) {
                 this.listenForConfirmations();
             }
+            if (this.srvModel.paymentSoundUrl) {
+                this.prepareSound(this.srvModel.paymentSoundUrl).then(sound => this.paymentSound = sound);
+                this.prepareSound(this.srvModel.nfcReadSoundUrl).then(sound => this.nfcReadSound = sound);
+                this.prepareSound(this.srvModel.errorSoundUrl).then(sound => this.errorSound = sound);
+            }
             updateLanguageSelect();
             window.parent.postMessage('loaded', '*');
         },
@@ -338,7 +346,23 @@ function initApp() {
             replaceNewlines (value) {
                 return value ? value.replace(/\n/ig, '<br>') : '';
             },
+            playSound (soundName) {
+                // sound
+                const sound = this[soundName + 'Sound'];
+                if (sound && !sound.playing) {
+                    const { audioContext, audioBuffer } = sound;
+                    const source = audioContext.createBufferSource();
+                    source.onended = () => { sound.playing = false; };
+                    source.buffer = audioBuffer;
+                    source.connect(audioContext.destination);
+                    source.start();
+                    sound.playing = true;
+                }
+            },
             async celebratePayment (duration) {
+                // sound
+                this.playSound('payment')
+                // confetti
                 const $confettiEl = document.getElementById('confetti')
                 if (window.confetti && $confettiEl && !$confettiEl.dataset.running) {
                     $confettiEl.dataset.running = true;
@@ -351,6 +375,14 @@ function initApp() {
                     });
                     delete $confettiEl.dataset.running;
                 }
+            },
+            async prepareSound (url) {
+                const audioContext = new AudioContext();
+                const response = await fetch(url)
+                if (!response.ok) return console.error(`Could not load payment sound, HTTP error ${response.status}`);
+                const arrayBuffer = await response.arrayBuffer();
+                const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+                return { audioContext, audioBuffer, playing: false };
             }
         }
     });

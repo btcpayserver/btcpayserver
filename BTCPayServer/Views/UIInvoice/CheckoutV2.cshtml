@@ -1,6 +1,7 @@
 @using BTCPayServer.Services
 @using BTCPayServer.Abstractions.Contracts
 @using Microsoft.AspNetCore.Mvc.TagHelpers
+@using Microsoft.EntityFrameworkCore.Diagnostics
 @inject LanguageService LangService
 @inject BTCPayServerEnvironment Env
 @inject IEnumerable<IUIExtension> UiExtensions 
@@ -27,6 +28,18 @@
     <meta name="robots" content="noindex,nofollow">
     <link href="~/checkout-v2/checkout.css" asp-append-version="true" rel="stylesheet" />
     <partial name="LayoutHeadStoreBranding" model="@(Model.BrandColor, Model.CssFileId, "", "")" />
+    @if (!string.IsNullOrEmpty(Model.PaymentSoundUrl))
+    {
+        <link rel="preload" href="@Model.PaymentSoundUrl" as="audio" />
+    }
+    @if (!string.IsNullOrEmpty(Model.NfcReadSoundUrl))
+    {
+        <link rel="preload" href="@Model.NfcReadSoundUrl" as="audio" />
+    }
+    @if (!string.IsNullOrEmpty(Model.ErrorSoundUrl))
+    {
+        <link rel="preload" href="@Model.ErrorSoundUrl" as="audio" />
+    }
 </head>
 <body class="min-vh-100">
     <div id="Checkout-v2" class="public-page-wrap" v-cloak>

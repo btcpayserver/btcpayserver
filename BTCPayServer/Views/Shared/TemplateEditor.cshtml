@@ -100,7 +100,7 @@
                         <span class="text-danger" v-pre>@error.ErrorMessage</span>
                     }
                 }
-                <div class="bg-light card">
+                <div class="bg-tile card">
                     <div class="card-body " v-bind:class="{ 'card-deck': config.length > 0}">
                         <div v-if="!config || config.length === 0" class="col-12 text-center">
                             No items.<br />
@@ -108,7 +108,7 @@
                                 Add your first item
                             </button>
                         </div>
-                        <div v-else v-for="(item, index) of config" class="card my-2 card-wrapper template-item me-0 ms-0" v-bind:key="item.id">
+                        <div v-else v-for="(item, index) of config" class="card my-2 template-item me-0 ms-0" v-bind:key="item.id">
                             <div class="card-img-top border-bottom" v-bind:style="getImage(item)"></div>
                             <div class="card-body">
                                 <h6 class="card-title" v-html="item.title"></h6>

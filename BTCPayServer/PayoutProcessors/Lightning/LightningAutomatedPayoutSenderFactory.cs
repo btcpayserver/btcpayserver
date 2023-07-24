@@ -17,6 +17,7 @@ public class LightningAutomatedPayoutSenderFactory : IPayoutProcessorFactory
     private readonly IServiceProvider _serviceProvider;
     private readonly LinkGenerator _linkGenerator;
 
+    
     public LightningAutomatedPayoutSenderFactory(BTCPayNetworkProvider btcPayNetworkProvider, IServiceProvider serviceProvider, LinkGenerator linkGenerator)
     {
         _btcPayNetworkProvider = btcPayNetworkProvider;

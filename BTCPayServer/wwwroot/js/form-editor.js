@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const $config = document.getElementById('FormConfig')
     let config = parseConfig($config.value) || {}
     
-    const specialFieldTypeOptions = ['fieldset', 'textarea', 'select']
+    const specialFieldTypeOptions = ['fieldset', 'textarea', 'select', 'mirror']
     const inputFieldTypeOptions = ['text', 'number', 'password', 'email', 'url', 'tel', 'date', 'hidden']
     const fieldTypeOptions = inputFieldTypeOptions.concat(specialFieldTypeOptions)
 
@@ -57,11 +57,17 @@ document.addEventListener('DOMContentLoaded', () => {
             options: Array
         }
     })
+    const FieldTypeMirror = Vue.extend({
+        mixins: [fieldTypeBase],
+        name: 'field-type-mirror',
+        template: '#field-type-mirror'
+    })
     
     const components = {
         FieldTypeInput,
         FieldTypeSelect,
-        FieldTypeTextarea
+        FieldTypeTextarea,
+        FieldTypeMirror
     }
 
     // register fields-editor and field-type-fieldset globally in order to use them recursively
@@ -100,6 +106,12 @@ document.addEventListener('DOMContentLoaded', () => {
             path: Array,
             field: fieldProps
         },
+        computed: {
+            mirroredField() {
+                return this.field.type === 'mirror' &&
+                    this.$root.allFields.find(f => f.name === this.field.value)
+            }
+        },
         methods: {
             getFieldComponent,
             addOption (event) {
@@ -114,7 +126,21 @@ document.addEventListener('DOMContentLoaded', () => {
             sortOptions (event) {
                 const { newIndex, oldIndex } = event
                 this.field.options.splice(newIndex, 0, this.field.options.splice(oldIndex, 1)[0])
-            }
+            },
+            addValueMap (event) {
+                if (!this.field.valuemap) this.$set(this.field, 'valuemap', {})
+                const index = Object.keys(this.field.valuemap).length + 1;
+                this.$set(this.field.valuemap, `valuemap_${index}`, '')
+            },
+            updateValueMap(oldK, newK, newV) {
+                if (oldK !== newK) {
+                    Vue.delete(this.field.valuemap, oldK);
+                }
+                Vue.set(this.field.valuemap, newK, newV);
+            },
+            removeValueMap(event, k) {
+                Vue.delete(this.field.valuemap, k);
+            },
         }
     })
 
@@ -131,6 +157,18 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         },
         computed: {
+            allFields() {
+                const getFields = (fields, path) => {
+                    let result = [];
+                    for (const field of fields) {
+                        result.push(field)
+                        if (field.fields && field.fields.length > 0)
+                            result= result.concat(getFields(field.fields, path + field.name));
+                    }
+                    return result;
+                }
+                return getFields(this.fields, "")
+            },
             fields() {
                 return this.config.fields || []
             },

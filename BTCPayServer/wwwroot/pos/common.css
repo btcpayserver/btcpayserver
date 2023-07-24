@@ -1,0 +1,8 @@
+.lead {
+    max-width: 36em;
+    text-align: center;
+    margin: 0 auto 2.5rem;
+}
+.lead :last-child {
+    margin-bottom: 0;
+}

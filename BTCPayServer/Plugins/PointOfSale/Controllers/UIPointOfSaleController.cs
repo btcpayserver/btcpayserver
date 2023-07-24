@@ -12,6 +12,7 @@ using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Form;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
@@ -35,6 +36,7 @@ using NBitcoin.DataEncoders;
 using NBitpayClient;
 using Newtonsoft.Json.Linq;
 using NicolasDorier.RateLimits;
+using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Plugins.PointOfSale.Controllers
 {
@@ -278,35 +280,63 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                         return RedirectToAction(nameof(ViewPointOfSale), new { appId, viewType });
                     }
 
+                    var amtField = form.GetFieldByFullName($"{FormDataService.InvoiceParameterPrefix}amount");
+                    if (amtField is null && price.HasValue)
+                    {
+                        form.Fields.Add(new Field
+                        {
+                            Name = $"{FormDataService.InvoiceParameterPrefix}amount",
+                            Type = "hidden",
+                            Value = price.ToString(),
+                            Constant = true
+                        });
+                    }
+                    else
+                    {
+                        amtField.Value = price?.ToString();
+                    }
                     formResponseJObject = FormDataService.GetValues(form);
+                    
+                    var invoiceRequest = FormDataService.GenerateInvoiceParametersFromForm(form);
+                    if (invoiceRequest.Amount is not null)
+                    {
+                        price = invoiceRequest.Amount.Value;
+                    }
                     break;
             }
             try
             {
-                var invoice = await _invoiceController.CreateInvoiceCore(new BitpayCreateInvoiceRequest
+                var invoice = await _invoiceController.CreateInvoiceCoreRaw(new CreateInvoiceRequest
                 {
-                    ItemCode = choice?.Id,
-                    ItemDesc = title,
+                    Amount = price,
                     Currency = settings.Currency,
-                    Price = price,
-                    BuyerEmail = email,
-                    OrderId = orderId ?? AppService.GetAppOrderId(app),
-                    NotificationURL =
-                            string.IsNullOrEmpty(notificationUrl) ? settings.NotificationUrl : notificationUrl,
-                    RedirectURL = !string.IsNullOrEmpty(redirectUrl) ? redirectUrl
-                        : !string.IsNullOrEmpty(settings.RedirectUrl) ? settings.RedirectUrl
-                        : Request.GetAbsoluteUri(Url.Action(nameof(ViewPointOfSale), "UIPointOfSale", new { appId, viewType })),
-                    FullNotifications = true,
-                    ExtendedNotifications = true,
-                    RedirectAutomatically = settings.RedirectAutomatically,
-                    SupportedTransactionCurrencies = paymentMethods,
-                    RequiresRefundEmail = requiresRefundEmail == RequiresRefundEmail.InheritFromStore
-                        ? storeBlob.RequiresRefundEmail
-                        : requiresRefundEmail == RequiresRefundEmail.On,
+                    Metadata = new InvoiceMetadata()
+                    {
+                        ItemCode = choice?.Id,
+                        ItemDesc = title,
+                        BuyerEmail = email,
+                        OrderId = orderId ?? AppService.GetRandomOrderId()
+                    }.ToJObject(),
+                    Checkout = new InvoiceDataBase.CheckoutOptions()
+                    {
+                        RedirectAutomatically = settings.RedirectAutomatically,
+                        RedirectURL = !string.IsNullOrEmpty(redirectUrl) ? redirectUrl
+                            : !string.IsNullOrEmpty(settings.RedirectUrl) ? settings.RedirectUrl
+                            : Request.GetAbsoluteUri(Url.Action(nameof(ViewPointOfSale), "UIPointOfSale", new { appId, viewType })),
+                        RequiresRefundEmail = requiresRefundEmail == RequiresRefundEmail.InheritFromStore
+                            ? storeBlob.RequiresRefundEmail
+                            : requiresRefundEmail == RequiresRefundEmail.On,
+                        PaymentMethods = paymentMethods?.Where(p => p.Value.Enabled).Select(p => p.Key).ToArray()
+                    },
+                    AdditionalSearchTerms = new [] { AppService.GetAppSearchTerm(app) }
                 }, store, HttpContext.Request.GetAbsoluteRoot(),
                     new List<string> { AppService.GetAppInternalTag(appId) },
                     cancellationToken, entity =>
                     {
+                        entity.NotificationURLTemplate =
+                            string.IsNullOrEmpty(notificationUrl) ? settings.NotificationUrl : notificationUrl;
+                        entity.FullNotifications = true;
+                        entity.ExtendedNotifications = true;
                         entity.Metadata.OrderUrl = Request.GetDisplayUrl();
                         entity.Metadata.PosData = jposData;
                         var receiptData = new JObject();
@@ -359,9 +389,9 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                     });
                 if (price is 0 && storeBlob.ReceiptOptions?.Enabled is true)
                 {
-                    return RedirectToAction(nameof(UIInvoiceController.InvoiceReceipt), "UIInvoice", new { invoiceId = invoice.Data.Id });
+                    return RedirectToAction(nameof(UIInvoiceController.InvoiceReceipt), "UIInvoice", new { invoiceId = invoice.Id });
                 }
-                return RedirectToAction(nameof(UIInvoiceController.Checkout), "UIInvoice", new { invoiceId = invoice.Data.Id });
+                return RedirectToAction(nameof(UIInvoiceController.Checkout), "UIInvoice", new { invoiceId = invoice.Id });
             }
             catch (BitpayHttpException e)
             {
@@ -516,7 +546,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 Description = settings.Description,
                 NotificationUrl = settings.NotificationUrl,
                 RedirectUrl = settings.RedirectUrl,
-                SearchTerm = app.TagAllInvoices ? $"storeid:{app.StoreDataId}" : $"orderid:{AppService.GetAppOrderId(app)}",
+                SearchTerm = app.TagAllInvoices ? $"storeid:{app.StoreDataId}" : $"appid:{app.Id}",
                 RedirectAutomatically = settings.RedirectAutomatically.HasValue ? settings.RedirectAutomatically.Value ? "true" : "false" : "",
                 FormId = settings.FormId
             };

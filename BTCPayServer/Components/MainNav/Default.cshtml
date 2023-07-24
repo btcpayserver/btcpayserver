@@ -131,6 +131,12 @@
                                             <span>Invoices</span>
                                         </a>
                                     </li>
+									<li class="nav-item" permission="@Policies.CanViewInvoices">
+										<a asp-area="" asp-controller="UIReports" asp-action="StoreReports" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.IsActivePage(StoreNavPages.Reporting)" id="SectionNav-Reporting">
+											<vc:icon symbol="invoice" />
+											<span>Reporting</span>
+										</a>
+									</li>
                                     <li class="nav-item" permission="@Policies.CanModifyStoreSettings">
                                         <a asp-area="" asp-controller="UIPaymentRequest" asp-action="GetPaymentRequests" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.IsActiveCategory(typeof(PaymentRequestsNavPages))" id="StoreNav-PaymentRequests">
                                             <vc:icon symbol="payment-requests"/>

@@ -1,4 +1,5 @@
 #nullable enable
+using System.Collections.Generic;
 using System.Linq;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
@@ -41,6 +42,14 @@ namespace BTCPayServer
                 .GetSupportedPaymentMethods(networkProvider)
                 .OfType<DerivationSchemeSettings>()
                 .FirstOrDefault(p => p.PaymentId.PaymentType == Payments.PaymentTypes.BTCLike && p.PaymentId.CryptoCode == cryptoCode);
+            return paymentMethod;
+        }
+        public static IEnumerable<DerivationSchemeSettings> GetDerivationSchemeSettings(this StoreData store, BTCPayNetworkProvider networkProvider)
+        {
+            var paymentMethod = store
+                .GetSupportedPaymentMethods(networkProvider)
+                .OfType<DerivationSchemeSettings>()
+                .Where(p => p.PaymentId.PaymentType == Payments.PaymentTypes.BTCLike);
             return paymentMethod;
         }
     }

@@ -57,10 +57,11 @@ namespace BTCPayServer.Tests
             using var s = CreateSeleniumTester();
             await s.StartAsync();
             s.RegisterNewUser(true);
-            s.Driver.FindElement(By.Id("Nav-ServerSettings")).Click();
+            s.GoToHome();
+            s.GoToServer();
             s.Driver.AssertNoError();
             s.ClickOnAllSectionLinks();
-            s.Driver.FindElement(By.Id("Nav-ServerSettings")).Click();
+            s.GoToServer();
             s.Driver.FindElement(By.LinkText("Services")).Click();
 
             TestLogs.LogInformation("Let's check if we can access the logs");
@@ -247,7 +248,8 @@ namespace BTCPayServer.Tests
             s.Server.ActivateLightning();
             await s.StartAsync();
             s.RegisterNewUser(true);
-            s.Driver.FindElement(By.Id("Nav-ServerSettings")).Click();
+            s.GoToHome();
+            s.GoToServer();
             s.Driver.AssertNoError();
             s.Driver.FindElement(By.LinkText("Services")).Click();
 
@@ -314,6 +316,7 @@ namespace BTCPayServer.Tests
             await s.StartAsync();
             //Register & Log Out
             var email = s.RegisterNewUser();
+            s.GoToHome();
             s.Logout();
             s.Driver.AssertNoError();
             Assert.Contains("/login", s.Driver.Url);
@@ -349,6 +352,7 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("Password")).SendKeys("abc???");
             s.Driver.FindElement(By.Id("LoginButton")).Click();
 
+            s.GoToHome();
             s.GoToProfile();
             s.ClickOnAllSectionLinks();
 
@@ -356,6 +360,7 @@ namespace BTCPayServer.Tests
             s.Logout();
             s.GoToRegister();
             s.RegisterNewUser(true);
+            s.GoToHome();
             s.GoToServer(ServerNavPages.Users);
             s.Driver.FindElement(By.Id("CreateUser")).Click();
 
@@ -378,6 +383,7 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("LoginButton")).Click();
 
             // We should be logged in now
+            s.GoToHome();
             s.Driver.FindElement(By.Id("mainNav"));
 
             //let's test delete user quickly while we're at it 
@@ -642,7 +648,7 @@ namespace BTCPayServer.Tests
             // verify redirected to create store page
             Assert.EndsWith("/stores/create", s.Driver.Url);
             Assert.Contains("Create your first store", s.Driver.PageSource);
-            Assert.Contains("To start accepting payments, set up a store.", s.Driver.PageSource);
+            Assert.Contains("Create a store to begin accepting payments", s.Driver.PageSource);
             Assert.False(s.Driver.PageSource.Contains("id=\"StoreSelectorDropdown\""), "Store selector dropdown should not be present");
 
             (_, string storeId) = s.CreateNewStore();
@@ -982,14 +988,14 @@ namespace BTCPayServer.Tests
             Assert.True(s.Driver.PageSource.Contains("Tea shop"), "Unable to create PoS");
             Assert.True(s.Driver.PageSource.Contains("Cart"), "PoS not showing correct default view");
             Assert.True(s.Driver.PageSource.Contains("Take my money"), "PoS not showing correct default view");
-            Assert.Equal(5, s.Driver.FindElements(By.CssSelector(".card-deck .card:not(.d-none)")).Count);
+            Assert.Equal(5, s.Driver.FindElements(By.CssSelector(".posItem:not(.d-none)")).Count);
 
             var drinks = s.Driver.FindElement(By.CssSelector("label[for='Category-Drinks']"));
             Assert.Equal("Drinks", drinks.Text);
             drinks.Click();
-            Assert.Single(s.Driver.FindElements(By.CssSelector(".card-deck .card:not(.d-none)")));
+            Assert.Single(s.Driver.FindElements(By.CssSelector(".posItem:not(.d-none)")));
             s.Driver.FindElement(By.CssSelector("label[for='Category-*']")).Click();
-            Assert.Equal(5, s.Driver.FindElements(By.CssSelector(".card-deck .card:not(.d-none)")).Count);
+            Assert.Equal(5, s.Driver.FindElements(By.CssSelector(".posItem:not(.d-none)")).Count);
 
             s.Driver.Url = posBaseUrl + "/static";
             Assert.False(s.Driver.PageSource.Contains("Cart"), "Static PoS not showing correct view");
@@ -2183,47 +2189,52 @@ namespace BTCPayServer.Tests
             Assert.Contains("App successfully created", s.FindAlertMessage().Text);
             s.Driver.FindElement(By.CssSelector("label[for='DefaultView_Cart']")).Click();
             s.Driver.FindElement(By.Id("Currency")).SendKeys("EUR");
-            s.Driver.FindElement(By.Id("ShowCustomAmount")).Click();
+            s.Driver.FindElement(By.Id("CustomTipPercentages")).Clear();
+            s.Driver.FindElement(By.Id("CustomTipPercentages")).SendKeys("10,21");
             s.Driver.FindElement(By.Id("SaveSettings")).Click();
             Assert.Contains("App updated", s.FindAlertMessage().Text);
             s.Driver.FindElement(By.Id("ViewApp")).Click();
             var windows = s.Driver.WindowHandles;
             Assert.Equal(2, windows.Count);
             s.Driver.SwitchTo().Window(windows[1]);
-            s.Driver.WaitForElement(By.Id("js-cart-list"));
-            Assert.Empty(s.Driver.FindElements(By.CssSelector("#js-cart-list tbody tr")));
-            Assert.Equal("0,00 €", s.Driver.FindElement(By.Id("CartTotal")).Text);
-            Assert.False(s.Driver.FindElement(By.Id("CartClear")).Displayed);
+            s.Driver.WaitForElement(By.Id("PosItems"));
+            Assert.Empty(s.Driver.FindElements(By.CssSelector("#CartItems tr")));
             
             // Select and clear
-            s.Driver.FindElement(By.CssSelector(".card.js-add-cart:nth-child(1)")).Click();
-            Assert.Single(s.Driver.FindElements(By.CssSelector("#js-cart-list tbody tr")));
+            s.Driver.FindElement(By.CssSelector(".posItem:nth-child(1) .btn-primary")).Click();
+            Assert.Single(s.Driver.FindElements(By.CssSelector("#CartItems tr")));
             s.Driver.FindElement(By.Id("CartClear")).Click();
-            Assert.Empty(s.Driver.FindElements(By.CssSelector("#js-cart-list tbody tr")));
             Thread.Sleep(250);
+            Assert.Empty(s.Driver.FindElements(By.CssSelector("#CartItems tr")));
             
             // Select items
-            s.Driver.FindElement(By.CssSelector(".card.js-add-cart:nth-child(2)")).Click();
+            s.Driver.FindElement(By.CssSelector(".posItem:nth-child(2) .btn-primary")).Click();
             Thread.Sleep(250);
-            s.Driver.FindElement(By.CssSelector(".card.js-add-cart:nth-child(1)")).Click();
+            s.Driver.FindElement(By.CssSelector(".posItem:nth-child(1) .btn-primary")).Click();
             Thread.Sleep(250);
-            Assert.Equal(2, s.Driver.FindElements(By.CssSelector("#js-cart-list tbody tr")).Count);
-            Assert.Equal("2,00 €", s.Driver.FindElement(By.Id("CartTotal")).Text);
+            s.Driver.FindElement(By.CssSelector(".posItem:nth-child(2) .btn-primary")).Click();
+            Thread.Sleep(250);
+            Assert.Equal(2, s.Driver.FindElements(By.CssSelector("#CartItems tr")).Count);
+            Assert.Equal("3,00 €", s.Driver.FindElement(By.Id("CartTotal")).Text);
             
-            // Custom amount
-            s.Driver.FindElement(By.Id("CartCustomAmount")).SendKeys("1.5");
-            s.Driver.FindElement(By.Id("CartTotal")).Click();
-            Assert.Equal("3,50 €", s.Driver.FindElement(By.Id("CartTotal")).Text);
-            s.Driver.FindElement(By.Id("js-cart-confirm")).Click();
+            // Discount: 10%
+            s.Driver.ElementDoesNotExist(By.Id("CartDiscount"));
+            s.Driver.FindElement(By.Id("Discount")).SendKeys("10");
+            Assert.Contains("10% = 0,30 €", s.Driver.FindElement(By.Id("CartDiscount")).Text);
+            Assert.Equal("2,70 €", s.Driver.FindElement(By.Id("CartTotal")).Text);
+            
+            // Tip: 10%
+            s.Driver.ElementDoesNotExist(By.Id("CartTip"));
+            s.Driver.FindElement(By.Id("Tip-10")).Click();
+            Assert.Contains("10% = 0,27 €", s.Driver.FindElement(By.Id("CartTip")).Text);
+            Assert.Equal("2,97 €", s.Driver.FindElement(By.Id("CartTotal")).Text);
             
             // Pay
-            Assert.Equal("3,50 €", s.Driver.FindElement(By.Id("CartSummaryTotal")).Text);
-            s.Driver.FindElement(By.Id("js-cart-pay")).Click();
-            
+            s.Driver.FindElement(By.Id("CartSubmit")).Click();
             s.Driver.WaitUntilAvailable(By.Id("Checkout-v2"));
             s.Driver.FindElement(By.Id("DetailsToggle")).Click();
             s.Driver.WaitForElement(By.Id("PaymentDetails-TotalFiat"));
-            Assert.Contains("3,50 €", s.Driver.FindElement(By.Id("PaymentDetails-TotalFiat")).Text);
+            Assert.Contains("2,97 €", s.Driver.FindElement(By.Id("PaymentDetails-TotalFiat")).Text);
         }
 
         [Fact]
@@ -2583,6 +2594,7 @@ namespace BTCPayServer.Tests
             using var s = CreateSeleniumTester();
             await s.StartAsync();
             var user = s.RegisterNewUser();
+            s.GoToHome();
             s.GoToProfile(ManageNavPages.LoginCodes);
             var code = s.Driver.FindElement(By.Id("logincode")).GetAttribute("value");
             s.Driver.FindElement(By.Id("regeneratecode")).Click();
@@ -2594,13 +2606,11 @@ namespace BTCPayServer.Tests
             s.Driver.SetAttribute("LoginCode", "value", "bad code");
             s.Driver.InvokeJSFunction("logincode-form", "submit");
 
-
             s.Driver.SetAttribute("LoginCode", "value", code);
             s.Driver.InvokeJSFunction("logincode-form", "submit");
-            s.GoToProfile();
+            s.GoToHome();
             Assert.Contains(user, s.Driver.PageSource);
         }
-
 
         // For god know why, selenium have problems clicking on the save button, resulting in ultimate hacks
         // to make it works.
@@ -2620,7 +2630,6 @@ retry:
             }
         }
 
-
         [Fact]
         [Trait("Selenium", "Selenium")]
         public async Task CanUseLNURLAuth()
@@ -2628,6 +2637,7 @@ retry:
             using var s = CreateSeleniumTester();
             await s.StartAsync();
             var user = s.RegisterNewUser(true);
+            s.GoToHome();
             s.GoToProfile(ManageNavPages.TwoFactorAuthentication);
             s.Driver.FindElement(By.Name("Name")).SendKeys("ln wallet");
             s.Driver.FindElement(By.Name("type"))
@@ -2676,7 +2686,8 @@ retry:
         {
             using var s = CreateSeleniumTester(newDb: true);
             await s.StartAsync();
-            var user = s.RegisterNewUser(true);
+            s.RegisterNewUser(true);
+            s.GoToHome();
             s.GoToServer(ServerNavPages.Roles);
             var existingServerRoles = s.Driver.FindElement(By.CssSelector("table")).FindElements(By.CssSelector("tr"));
             Assert.Equal(3, existingServerRoles.Count);

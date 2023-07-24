@@ -255,6 +255,14 @@ h2 svg.icon.icon-info {
     .toasted-container {
         display: none !important;
     }
+    .truncate-center a,
+    .truncate-center button,
+    .truncate-center-truncated {
+        display: none;
+    }
+    .card {
+        page-break-inside: avoid;
+    }
     #markStatusDropdownMenuButton {
         border: 0;
         background: transparent;
@@ -650,6 +658,7 @@ input:checked + label.btcpay-list-select-item {
 /* Public pages */
 .public-page-wrap {
     display: flex;
+    flex-direction: column;
     gap: 1.5rem;
     margin: 0 auto;
     padding: var(--btcpay-space-l) var(--btcpay-space-m);
@@ -1007,14 +1016,6 @@ input.ts-wrapper.form-control:not(.ts-hidden-accessible,.ts-inline) {
     }
     
     .truncate-center-text {
-        display: none;
-    }
-}
-
-@media print {
-    .truncate-center a,
-    .truncate-center button,
-    .truncate-center-truncated {
         display: none;
     }
 }

@@ -396,20 +396,13 @@
     background: var(--btcpay-nav-bg-active);
 }
 
-/* Sticky Header: The <div class="sticky-header-setup"></div> needs to be included once
-   before the first sticky-header on the page. The sticky-header has a padding-top so
-   that it does not scroll underneath the fixed header on mobile. The sticky-header-setup
-   negates that padding with a negative margin, so that everything fits in the end. */
-.sticky-header-setup {
-    margin-top: calc(var(--content-padding-top) * -1);
-}
-
 .sticky-header {
     position: -webkit-sticky;
     position: sticky;
     top: 0;
-    z-index: 1020;
+    z-index: 1021;
     background: var(--btcpay-body-bg);
+    margin-top: calc(var(--content-padding-top) * -1);
     /* pull it out of the content padding and adjust its inner padding to make up for that space */
     margin-left: calc(var(--content-padding-horizontal) * -1);
     margin-right: calc(var(--content-padding-horizontal) * -1);
@@ -502,13 +495,9 @@
         transform: none;
     }
 
-    .offcanvas-backdrop {
+    #mainMenu .offcanvas-backdrop {
         top: var(--mobile-header-height);
         transition-duration: var(--btcpay-transition-duration-fast);
-    }
-
-    .offcanvas-backdrop.show {
-        opacity: 0.8;
     }
 
     #StoreSelector {
@@ -655,7 +644,7 @@
     }
     
     #mainMenuToggle,
-    .offcanvas-backdrop {
+    #mainMenu .offcanvas-backdrop {
         display: none !important;
     }
 
@@ -675,6 +664,11 @@
     #mainContent > section {
         margin: 0;
         max-width: none;
+    }
+
+    #mainContent > section .w-100-fixed {
+        /* constrains the content to respect the maximum width and enable responsive tables */
+        width: calc(100vw - var(--sidebar-width) - var(--content-padding-horizontal) * 2);
     }
 
     #SectionNav .nav {

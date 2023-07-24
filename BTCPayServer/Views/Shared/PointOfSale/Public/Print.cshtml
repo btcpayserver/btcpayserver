@@ -19,15 +19,7 @@
     }
 }
 @section PageHeadContent {
-    <style>
-        /* This hides unwanted metadata such as url, date, etc from appearing on a printed page. */
-        @@media print {
-            @@page {
-                margin-top: 0;
-                margin-bottom: 0;
-            }
-        }
-    </style>
+    <link href="~/pos/print.css" asp-append-version="true" rel="stylesheet" />
 }
 
 @if (supported is null)
@@ -50,14 +42,14 @@ else
         <a asp-route-viewType="static" class="alert-link">Regular version</a>
     </div>
 }
-<div class="container public-page-wrap flex-column">
+<div id="PosPrint" class="public-page-wrap container-xl">
     <partial name="_StatusMessage" />
     <partial name="_StoreHeader" model="(string.IsNullOrEmpty(Model.Title) ? Model.StoreName : Model.Title, Model.LogoFileId)" />
     @if (!string.IsNullOrEmpty(Model.Description))
     {
         <div class="lead text-center">@Safe.Raw(Model.Description)</div>
     }
-    <main class="flex-grow-1 justify-content-center align-self-center mx-auto py-3">
+    <main>
         @if (supported is not null)
         {
             if (Model.ShowCustomAmount)
@@ -75,37 +67,45 @@ else
             }
         }
 
-        <div class="card-deck mx-auto">
+        <div class="posItems">
             @for (var x = 0; x < Model.Items.Length; x++)
             {
                 var item = Model.Items[x];
-                <div class="card" data-id="@x">
-                    <div class="card-body my-auto">
-                        <h4 class="card-title text-center">@Safe.Raw(item.Title)</h4>
-                        @if (!string.IsNullOrEmpty(item.Description))
-                        {
-                            <p class="card-title text-center">@Safe.Raw(item.Description)</p>
-                        }
-                        <div class="w-100 mb-3 fs-5 text-center">
-                            @{
-                                var formatted = DisplayFormatter.Currency(item.Price ?? 0, Model.CurrencyCode, DisplayFormatter.CurrencyFormat.Symbol);
-                            }
-                            @switch (item.PriceType)
+                var formatted = DisplayFormatter.Currency(item.Price ?? 0, Model.CurrencyCode, DisplayFormatter.CurrencyFormat.Symbol);
+                <div class="d-flex flex-wrap">
+                    <div class="card px-0" data-id="@x">
+                        <div class="card-body p-3 d-flex flex-column gap-2">
+                            <h5 class="card-title m-0">@Safe.Raw(item.Title)</h5>
+                            <div class="d-flex gap-2 align-items-center">
+                                <span class="fw-semibold">
+                                    @switch (item.PriceType)
+                                    {
+                                        case ViewPointOfSaleViewModel.ItemPriceType.Topup:
+                                            <span>Any amount</span>
+                                            break;
+                                        case ViewPointOfSaleViewModel.ItemPriceType.Minimum:
+                                            <span>@formatted minimum</span>
+                                            break;
+                                        case ViewPointOfSaleViewModel.ItemPriceType.Fixed:
+                                            @formatted
+                                            break;
+                                        default:
+                                            throw new ArgumentOutOfRangeException();
+                                    }
+                                </span>
+                                @if (item.Inventory.HasValue)
+                                {
+                                    <span class="badge text-bg-light">
+                                        @(item.Inventory > 0 ? $"{item.Inventory} left" : "Sold out")
+                                    </span>
+                                }
+                            </div>
+                            @if (!string.IsNullOrWhiteSpace(item.Description))
                             {
-                                case ViewPointOfSaleViewModel.ItemPriceType.Topup:
-                                    <span>Any amount</span>
-                                    break;
-                                case ViewPointOfSaleViewModel.ItemPriceType.Minimum:
-                                    <span>@formatted minimum</span>
-                                    break;
-                                case ViewPointOfSaleViewModel.ItemPriceType.Fixed:
-                                    @formatted
-                                    break;
-                                default:
-                                    throw new ArgumentOutOfRangeException();
+                                <p class="card-text">@Safe.Raw(item.Description)</p>
                             }
                         </div>
-                        @if (!item.Inventory.HasValue || item.Inventory.Value > 0)
+                        @if (item.Inventory is null or > 0)
                         {
                             if (supported != null)
                             {
@@ -116,7 +116,7 @@ else
                                     ItemCode = item.Id
                                 }, Context.Request.Scheme, Context.Request.Host.ToString()));
                                 var lnUrl = LNURL.EncodeUri(lnurlEndpoint, "payRequest", supported.UseBech32Scheme);
-                                <a href="@lnUrl" rel="noreferrer noopener" class="d-block mx-auto text-center">
+                                <a href="@lnUrl" rel="noreferrer noopener" class="card-img-bottom">
                                     <vc:qr-code data="@lnUrl.ToString().ToUpperInvariant()" />
                                 </a>
                             }
@@ -126,7 +126,7 @@ else
             }
         </div>
     </main>
-    <footer class="store-footer">
+    <footer class="store-footer d-print-none">
         <a class="store-powered-by" href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">
             Powered by <partial name="_StoreFooterLogo" />
         </a>

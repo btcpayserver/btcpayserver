@@ -3,12 +3,17 @@
 	var isInvalid = ViewContext.ModelState[Model.Name]?.ValidationState is Microsoft.AspNetCore.Mvc.ModelBinding.ModelValidationState.Invalid;
 	var errors = isInvalid ? ViewContext.ModelState[Model.Name].Errors : null;
 }
+@if (Model.Type == "hidden")
+{
+    <input id="@Model.Name" type="@Model.Type" name="@Model.Name" value="@Model.Value" />
+    return;
+}
 <div class="form-group">
     <label class="form-label" for="@Model.Name"@(Model.Required ? " data-required" : "")>
         @Safe.Raw(Model.Label)
     </label>
     <input id="@Model.Name" type="@Model.Type" class="form-control @(errors is null ? "" : "is-invalid")"
-           name="@Model.Name" value="@Model.Value" data-val="true"
+           name="@Model.Name" value="@Model.Value" data-val="true" readonly="@Model.Constant"
            @if (!string.IsNullOrEmpty(Model.HelpText))
            {
                @Safe.Raw($" aria-describedby=\"HelpText-{Model.Name}\"")

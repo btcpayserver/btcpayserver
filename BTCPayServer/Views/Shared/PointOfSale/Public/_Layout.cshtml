@@ -3,8 +3,9 @@
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @using Newtonsoft.Json.Linq
 @using System.IO
+@using BTCPayServer.Services
 @inject IWebHostEnvironment WebHostEnvironment
-@inject BTCPayServer.Services.BTCPayServerEnvironment Env
+@inject BTCPayServerEnvironment Env
 @model BTCPayServer.Plugins.PointOfSale.Models.ViewPointOfSaleViewModel
 @{
     ViewData["Title"] = string.IsNullOrEmpty(Model.Title) ? Model.StoreName : Model.Title;
@@ -38,19 +39,7 @@
     <link rel="apple-touch-icon" href="~/img/icons/icon-512x512.png">
     <link rel="apple-touch-startup-image" href="~/img/splash.png">
     <link rel="manifest" href="@(await GetDynamicManifest(ViewData["Title"]!.ToString()))">
-    <style>
-        .lead :last-child {
-            margin-bottom: 0;
-        }
-        .card-deck {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            grid-gap: 1.5rem;
-        }
-        .card { 
-            page-break-inside: avoid;
-        }
-    </style>
+    <link href="~/pos/common.css" asp-append-version="true" rel="stylesheet" />
     @await RenderSectionAsync("PageHeadContent", false)
 </head>
 <body class="min-vh-100">

@@ -183,18 +183,11 @@ namespace BTCPayServer.Services.Apps
                     }
                 }
                 else
-                {
-                    var fiatPrice = e.GetPayments(true).Sum(pay =>
-                    {
-                        var paymentMethodId = pay.GetPaymentMethodId();
-                        var value = pay.GetCryptoPaymentData().GetValue() - pay.NetworkFee;
-                        var rate = e.GetPaymentMethod(paymentMethodId).Rate;
-                        return rate * value;
-                    });
+                {;
                     res.Add(new InvoiceStatsItem
                     {
                         ItemCode = e.Metadata.ItemCode,
-                        FiatPrice = fiatPrice,
+                        FiatPrice = e.PaidAmount.Net,
                         Date = e.InvoiceTime.Date
                     });
                 }
@@ -202,8 +195,8 @@ namespace BTCPayServer.Services.Apps
             };
         }
 
-        public static string GetAppOrderId(AppData app) => GetAppOrderId(app.AppType, app.Id);
-        public static string GetAppOrderId(string appType, string appId) =>
+        public static string GetAppSearchTerm(AppData app) => GetAppSearchTerm(app.AppType, app.Id);
+        public static string GetAppSearchTerm(string appType, string appId) =>
             appType switch
             {
                 CrowdfundAppType.AppType => $"crowdfund-app_{appId}",
@@ -216,13 +209,18 @@ namespace BTCPayServer.Services.Apps
         {
             return invoice.GetInternalTags("APP#");
         }
+        
+        public static string GetRandomOrderId(int length = 16)
+        {
+            return Encoders.Base58.EncodeData(RandomUtils.GetBytes(length));
+        }
 
         public static async Task<InvoiceEntity[]> GetInvoicesForApp(InvoiceRepository invoiceRepository, AppData appData, DateTimeOffset? startDate = null, string[]? status = null)
         {
             var invoices = await invoiceRepository.GetInvoices(new InvoiceQuery
             {
                 StoreId = new[] { appData.StoreDataId },
-                OrderId = appData.TagAllInvoices ? null : new[] { GetAppOrderId(appData) },
+                TextSearch = appData.TagAllInvoices ? null : GetAppSearchTerm(appData),
                 Status = status ?? new[]{
                     InvoiceState.ToString(InvoiceStatusLegacy.New),
                     InvoiceState.ToString(InvoiceStatusLegacy.Paid),

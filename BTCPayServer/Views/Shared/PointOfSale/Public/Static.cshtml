@@ -1,93 +1,107 @@
 @using BTCPayServer.Plugins.PointOfSale.Models
 @using BTCPayServer.Services
+@using Microsoft.AspNetCore.Mvc.TagHelpers
 @model BTCPayServer.Plugins.PointOfSale.Models.ViewPointOfSaleViewModel
 @inject DisplayFormatter DisplayFormatter
 @{
     Layout = "PointOfSale/Public/_Layout";
-    var anyInventoryItems = Model.Items.Any(item => item.Inventory.HasValue);
+}
+@functions {
+    private string GetItemPriceFormatted(ViewPointOfSaleViewModel.Item item)
+    {
+        if (item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Topup) return "any amount";
+        if (item.Price == 0) return "free";
+        var formatted = DisplayFormatter.Currency(item.Price ?? 0, Model.CurrencyCode, DisplayFormatter.CurrencyFormat.Symbol);
+        return item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Minimum ? $"{formatted} minimum" : formatted;
+    }
 }
 
-<style>
-    .card:only-of-type {
-        max-width: 320px;
-        margin: auto !important;
-    }
-</style>
-
-<div class="container public-page-wrap flex-column">
-    <partial name="_StatusMessage" />
+<div id="PosStatic" class="public-page-wrap container-xl">
     <partial name="_StoreHeader" model="(string.IsNullOrEmpty(Model.Title) ? Model.StoreName : Model.Title, Model.LogoFileId)" />
-    @if (!string.IsNullOrEmpty(Model.Description))
-    {
-        <div class="lead text-center">@Safe.Raw(Model.Description)</div>
-    }
-    <main class="flex-grow-1 justify-content-center align-self-center text-center mx-auto py-3">
-        <div class="card-deck mx-auto">
+    <main>
+        <partial name="_StatusMessage" />
+        @if (!string.IsNullOrEmpty(Model.Description))
+        {
+            <div class="lead">@Safe.Raw(Model.Description)</div>
+        }
+        <div class="row row-cols row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4" id="PosItems">
             @for (var x = 0; x < Model.Items.Length; x++)
             {
                 var item = Model.Items[x];
-                var formatted = DisplayFormatter.Currency(item.Price ?? 0, Model.CurrencyCode, DisplayFormatter.CurrencyFormat.Symbol);
-                var buttonText = string.IsNullOrEmpty(item.BuyButtonText) ? item.PriceType != ViewPointOfSaleViewModel.ItemPriceType.Fixed ? Model.CustomButtonText : Model.ButtonText : item.BuyButtonText;
+                var formatted = GetItemPriceFormatted(item);
+                var inStock = item.Inventory is null or > 0;
+                var buttonText = string.IsNullOrEmpty(item.BuyButtonText)
+                    ? item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Topup ? Model.CustomButtonText : Model.ButtonText
+                    : item.BuyButtonText;
                 buttonText = buttonText.Replace("{0}", formatted).Replace("{Price}", formatted);
 
-                <div class="card px-0" data-id="@x">
-                    @if (!string.IsNullOrWhiteSpace(item.Image))
-                    {
-                        <img class="card-img-top" src="@item.Image" alt="@Safe.Raw(item.Title)" asp-append-version="true">
-                    }
-                    @{CardBody(item.Title, item.Description);}
-                    <div class="card-footer bg-transparent border-0 pb-3">
-                        @if (!item.Inventory.HasValue || item.Inventory.Value > 0)
+                <div class="col">
+                    <div class="card h-100 px-0" data-id="@x">
+                        @if (!string.IsNullOrWhiteSpace(item.Image))
                         {
-                            @if (item.PriceType != ViewPointOfSaleViewModel.ItemPriceType.Topup)
-                            {
-                                <form method="post" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" data-buy autocomplete="off">
-                                    <input type="hidden" name="choiceKey" value="@item.Id" />
-                                    @{PayFormInputContent(item.BuyButtonText ?? Model.CustomButtonText, item.PriceType, item.Price.Value, item.Price.Value);}
-                                </form>
-                            }
-                            else
-                            {
-                                <form method="post" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false">
-                                    <input type="hidden" name="requiresRefundEmail" value="@Model.RequiresRefundEmail.ToString()" />
-                                    <button type="submit" name="choiceKey" class="js-add-cart btn btn-primary" value="@item.Id">
-                                        @Safe.Raw(buttonText)
-                                    </button>
-                                </form>
-                            }
+                            <img class="card-img-top" src="@item.Image" alt="@Safe.Raw(item.Title)" asp-append-version="true">
                         }
-                        @if (item.Inventory.HasValue)
-                        {
-                            <div class="w-100 pt-2 text-center text-muted">
-                                @if (item.Inventory > 0)
+                        <div class="card-body p-3 d-flex flex-column gap-2">
+                            <h5 class="card-title m-0">@Safe.Raw(item.Title)</h5>
+                            <div class="d-flex gap-2 align-items-center">
+                                @if (item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Topup || item.Price == 0)
                                 {
-                                    <span>@item.Inventory left</span>
+                                    <span class="fw-semibold badge text-bg-info">@Safe.Raw(char.ToUpper(formatted[0]) + formatted[1..])</span>
                                 }
                                 else
                                 {
-                                    <span>Sold out</span>
+                                    <span class="fw-semibold">@Safe.Raw(formatted)</span>
+                                }
+                                @if (item.Inventory.HasValue)
+                                {
+                                    <span class="badge text-bg-warning">
+                                        @(item.Inventory > 0 ? $"{item.Inventory} left" : "Sold out")
+                                    </span>
                                 }
                             </div>
-                        }
-                        else if (anyInventoryItems)
-                        {
-                            <div class="w-100 pt-2">&nbsp;</div>
-                        }
+                            @if (!string.IsNullOrWhiteSpace(item.Description))
+                            {
+                                <p class="card-text">@Safe.Raw(item.Description)</p>
+                            }
+                        </div>
+                        <div class="card-footer bg-transparent border-0 pt-0 pb-3">
+                            @if (inStock)
+                            {
+                                <form method="post" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" autocomplete="off">
+                                    <input type="hidden" name="requiresRefundEmail" value="@Model.RequiresRefundEmail.ToString()" />
+                                    <input type="hidden" name="choiceKey" value="@item.Id" />
+                                    @if (item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Minimum)
+                                    {
+                                        <div class="input-group mb-2">
+                                            <span class="input-group-text">@Model.CurrencySymbol</span>
+                                            <input class="form-control" type="number" min="@(item.Price ?? 0)" step="@Model.Step" name="amount" placeholder="Amount" value="@item.Price" required>
+                                        </div>
+                                    }
+                                    <button class="btn btn-primary w-100" type="submit">@Safe.Raw(buttonText)</button>
+                                </form>
+                            }
+                        </div>
                     </div>
                 </div>
             }
             @if (Model.ShowCustomAmount)
             {
-                <div class="card px-0">
-                    @{CardBody("Custom Amount", "Create invoice to pay custom amount");}
-                    <div class="card-footer bg-transparent border-0 pb-3">
-                        <form method="post" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" data-buy>
-                            @{PayFormInputContent(Model.CustomButtonText, ViewPointOfSaleViewModel.ItemPriceType.Minimum);}
-                        </form>
-                        @if (anyInventoryItems)
-                        {
-                            <div class="w-100 pt-2">&nbsp;</div>
-                        }
+                <div class="col">
+                    <div class="card h-100 px-0">
+                        <div class="card-body p-3 d-flex flex-column gap-2">
+                            <h5 class="card-title">Custom Amount</h5>
+                            <p class="card-text">Create invoice to pay custom amount</p>
+                        </div>
+                        <div class="card-footer bg-transparent border-0 pb-3">
+                            <form method="post" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" autocomplete="off">
+                                <input type="hidden" name="requiresRefundEmail" value="@Model.RequiresRefundEmail.ToString()" />
+                                <div class="input-group mb-2">
+                                    <span class="input-group-text">@Model.CurrencySymbol</span>
+                                    <input class="form-control" type="number" min="0" step="@Model.Step" name="amount" placeholder="Amount" required>
+                                </div>
+                                <button class="btn btn-primary w-100" type="submit">@Safe.Raw(Model.CustomButtonText ?? Model.ButtonText)</button>
+                            </form>
+                        </div>
                     </div>
                 </div>
             }
@@ -99,36 +113,3 @@
         </a>
     </footer>
 </div>
-
-@functions {
-    private void PayFormInputContent(string buttonText,ViewPointOfSaleViewModel.ItemPriceType itemPriceType, decimal? minPriceValue = null, decimal? priceValue = null)
-    {
-        if (itemPriceType == ViewPointOfSaleViewModel.ItemPriceType.Fixed && priceValue == 0)
-        {
-            <div class="input-group">
-                <input class="form-control" type="text" readonly value="Free"/>
-                <button class="btn btn-primary text-nowrap" type="submit">@buttonText</button>
-            </div>
-        }
-        else
-        {
-            <div class="input-group">
-                <span class="input-group-text">@Model.CurrencySymbol</span>
-                <input type="hidden" name="requiresRefundEmail" value="@Model.RequiresRefundEmail.ToString()" />
-                <input class="form-control" type="number" min="@(minPriceValue ?? 0)" step="@Model.Step" name="amount" placeholder="Amount" value="@priceValue" readonly="@(itemPriceType == ViewPointOfSaleViewModel.ItemPriceType.Fixed)">
-                <button class="btn btn-primary text-nowrap" type="submit">@buttonText</button>
-            </div>
-        }
-    }
-
-    private void CardBody(string title, string description)
-    {
-        <div class="card-body my-auto pb-0">
-            <h5 class="card-title">@Safe.Raw(title)</h5>
-            @if (!string.IsNullOrWhiteSpace(description))
-            {
-                <p class="card-text">@Safe.Raw(description)</p>
-            }
-        </div>
-    }
-}

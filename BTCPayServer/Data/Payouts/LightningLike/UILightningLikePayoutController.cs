@@ -295,7 +295,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                 var result = await lightningClient.Pay(bolt11PaymentRequest.ToString(),
                     new PayInvoiceParams()
                     {
-                        Amount = new LightMoney((decimal)payoutBlob.CryptoAmount, LightMoneyUnit.BTC)
+                        Amount = payoutBlob.CryptoAmount == bolt11PaymentRequest.MinimumAmount.ToDecimal(LightMoneyUnit.BTC)? null: new LightMoney((decimal)payoutBlob.CryptoAmount, LightMoneyUnit.BTC)
                     }, cancellationToken);
                 string message = null;
                 if (result.Result == PayResult.Ok)

@@ -40,6 +40,7 @@ namespace BTCPayServer.Tests
     public class TestAccount
     {
         readonly ServerTester parent;
+        public string LNAddress;
 
         public TestAccount(ServerTester parent)
         {
@@ -242,7 +243,7 @@ namespace BTCPayServer.Tests
                 policies.LockSubscription = false;
                 await account.Register(RegisterDetails);
             }
-
+            TestLogs.LogInformation($"UserId: {account.RegisteredUserId} Password: {Password}");
             UserId = account.RegisteredUserId;
             Email = RegisterDetails.Email;
             IsAdmin = account.RegisteredAdmin;
@@ -309,8 +310,9 @@ namespace BTCPayServer.Tests
                 Assert.False(true, storeController.ModelState.FirstOrDefault().Value.Errors[0].ErrorMessage);
         }
 
-        public async Task<Coin> ReceiveUTXO(Money value, BTCPayNetwork network)
+        public async Task<Coin> ReceiveUTXO(Money value, BTCPayNetwork network = null)
         {
+            network ??= SupportedNetwork;
             var cashCow = parent.ExplorerNode;
             var btcPayWallet = parent.PayTester.GetService<BTCPayWalletProvider>().GetWallet(network);
             var address = (await btcPayWallet.ReserveAddressAsync(this.DerivationScheme)).Address;
@@ -552,6 +554,95 @@ retry:
         {
             var repo = this.parent.PayTester.GetService<StoreRepository>();
             await repo.AddStoreUser(StoreId, userId, StoreRoleId.Owner);
+        }
+
+        public async Task<uint256> PayOnChain(string invoiceId)
+        {
+            var cryptoCode = "BTC";
+            var client = await CreateClient();
+            var methods = await client.GetInvoicePaymentMethods(StoreId, invoiceId);
+            var method = methods.First(m => m.PaymentMethod == cryptoCode);
+            var address = method.Destination;
+            var tx = await client.CreateOnChainTransaction(StoreId, cryptoCode, new CreateOnChainTransactionRequest()
+            {
+                Destinations = new List<CreateOnChainTransactionRequest.CreateOnChainTransactionRequestDestination>()
+                {
+                 new ()
+                 {
+                     Destination = address,
+                     Amount = method.Due
+                 }
+                },
+                FeeRate = new FeeRate(1.0m)
+            });
+            await WaitInvoicePaid(invoiceId);
+            return tx.TransactionHash;
+        }
+
+        public async Task PayOnBOLT11(string invoiceId)
+        {
+            var cryptoCode = "BTC";
+            var client = await CreateClient();
+            var methods = await client.GetInvoicePaymentMethods(StoreId, invoiceId);
+            var method = methods.First(m => m.PaymentMethod == $"{cryptoCode}-LightningNetwork");
+            var bolt11 = method.Destination;
+            TestLogs.LogInformation("PAYING");
+            await parent.CustomerLightningD.Pay(bolt11);
+            TestLogs.LogInformation("PAID");
+            await WaitInvoicePaid(invoiceId);
+        }
+
+        public async Task PayOnLNUrl(string invoiceId)
+        {
+            var cryptoCode = "BTC";
+            var network = SupportedNetwork.NBitcoinNetwork;
+            var client = await CreateClient();
+            var methods = await client.GetInvoicePaymentMethods(StoreId, invoiceId);
+            var method = methods.First(m => m.PaymentMethod == $"{cryptoCode}-LNURLPAY");
+            var lnurL = LNURL.LNURL.Parse(method.PaymentLink, out var tag);
+            var http = new HttpClient();
+            var payreq = (LNURL.LNURLPayRequest)await LNURL.LNURL.FetchInformation(lnurL, tag, http);
+            var resp = await payreq.SendRequest(payreq.MinSendable, network, http);
+            var bolt11 = resp.Pr;
+            await parent.CustomerLightningD.Pay(bolt11);
+            await WaitInvoicePaid(invoiceId);
+        }
+
+        public Task WaitInvoicePaid(string invoiceId)
+        {
+            return TestUtils.EventuallyAsync(async () =>
+            {
+                var client = await CreateClient();
+                var invoice = await client.GetInvoice(StoreId, invoiceId);
+                if (invoice.Status == InvoiceStatus.Settled)
+                    return;
+                Assert.Equal(InvoiceStatus.Processing, invoice.Status);
+            });
+        }
+
+        public async Task PayOnLNAddress(string lnAddrUser = null)
+        {
+            lnAddrUser ??= LNAddress;
+            var network = SupportedNetwork.NBitcoinNetwork;
+            var payReqStr = await (await parent.PayTester.HttpClient.GetAsync($".well-known/lnurlp/{lnAddrUser}")).Content.ReadAsStringAsync();
+            var payreq = JsonConvert.DeserializeObject<LNURL.LNURLPayRequest>(payReqStr);
+            var resp = await payreq.SendRequest(payreq.MinSendable, network, parent.PayTester.HttpClient);
+            var bolt11 = resp.Pr;
+            await parent.CustomerLightningD.Pay(bolt11);
+        }
+
+        public async Task<string> CreateLNAddress()
+        {
+            var lnAddrUser = Guid.NewGuid().ToString();
+            var ctx = parent.PayTester.GetService<ApplicationDbContextFactory>().CreateContext();
+            ctx.LightningAddresses.Add(new()
+            {
+                StoreDataId = StoreId,
+                Username = lnAddrUser
+            });
+            await ctx.SaveChangesAsync();
+            LNAddress = lnAddrUser;
+            return lnAddrUser;
         }
     }
 }

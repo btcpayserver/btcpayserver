@@ -22,6 +22,7 @@ using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.Reporting;
 using BTCPayServer.Services.Wallets;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -132,6 +133,14 @@ namespace BTCPayServer
             {
                 return value;
             }
+        }
+
+        public static IServiceCollection AddReportProvider<T>(this IServiceCollection services)
+    where T : ReportProvider
+        {
+            services.AddSingleton<T>();
+            services.AddSingleton<ReportProvider, T>();
+            return services;
         }
 
         public static IServiceCollection AddScheduledTask<T>(this IServiceCollection services, TimeSpan every)

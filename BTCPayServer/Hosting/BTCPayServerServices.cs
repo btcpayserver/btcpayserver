@@ -65,6 +65,7 @@ using NBXplorer.DerivationStrategy;
 using Newtonsoft.Json;
 using NicolasDorier.RateLimits;
 using Serilog;
+using BTCPayServer.Services.Reporting;
 #if ALTCOINS
 using BTCPayServer.Services.Altcoins.Monero;
 using BTCPayServer.Services.Altcoins.Zcash;
@@ -325,6 +326,7 @@ namespace BTCPayServer.Hosting
 
             services.TryAddSingleton<LightningConfigurationProvider>();
             services.TryAddSingleton<LanguageService>();
+            services.TryAddSingleton<ReportService>();
             services.TryAddSingleton<NBXplorerDashboard>();
             services.AddSingleton<ISyncSummaryProvider, NBXSyncSummaryProvider>();
             services.TryAddSingleton<StoreRepository>();
@@ -353,6 +355,10 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<IHostedService, StoreEmailRuleProcessorSender>();
             services.AddSingleton<IHostedService, PeriodicTaskLauncherHostedService>();
             services.AddScheduledTask<CleanupWebhookDeliveriesTask>(TimeSpan.FromHours(6.0));
+
+            services.AddReportProvider<PaymentsReportProvider>();
+            services.AddReportProvider<OnChainWalletReportProvider>();
+            services.AddReportProvider<ProductsReportProvider>();
 
             services.AddHttpClient(WebhookSender.OnionNamedClient)
                 .ConfigurePrimaryHttpMessageHandler<Socks5HttpClientHandler>();

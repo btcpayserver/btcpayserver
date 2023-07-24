@@ -12,13 +12,11 @@ public class PermissionTagHelper : TagHelper
 {
     private readonly IAuthorizationService _authorizationService;
     private readonly IHttpContextAccessor _httpContextAccessor;
-    private readonly ILogger<PermissionTagHelper> _logger;
 
-    public PermissionTagHelper(IAuthorizationService authorizationService, IHttpContextAccessor httpContextAccessor, ILogger<PermissionTagHelper> logger)
+    public PermissionTagHelper(IAuthorizationService authorizationService, IHttpContextAccessor httpContextAccessor)
     {
         _authorizationService = authorizationService;
         _httpContextAccessor = httpContextAccessor;
-        _logger = logger;
     }
 
     public string Permission { get; set; }

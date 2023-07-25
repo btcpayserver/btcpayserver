@@ -53,7 +53,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
         private static LightningAutomatedPayoutSettings ToModel(PayoutProcessorData data)
         {
-            var blob = data.HasTypedBlob<LightningAutomatedPayoutBlob>().GetBlob();
+            var blob = data.HasTypedBlob<LightningAutomatedPayoutBlob>().GetBlob() ?? new LightningAutomatedPayoutBlob();
             return new LightningAutomatedPayoutSettings()
             {
                 PaymentMethod = data.PaymentMethod,

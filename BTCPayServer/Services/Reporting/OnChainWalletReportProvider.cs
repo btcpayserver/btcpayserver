@@ -106,13 +106,13 @@ public class OnChainWalletReportProvider : ReportProvider
             }
             var objects = await WalletRepository.GetWalletObjects(new GetWalletObjectsQuery()
             {
-                Ids = queryContext.Data.Select(d => (string)d[2]).ToArray(),
+                Ids = queryContext.Data.Select(d => (string)d[2]!).ToArray(),
                 WalletId = walletId,
                 Type = "tx"
             });
             foreach (var row in queryContext.Data)
             {
-                if (!objects.TryGetValue(new WalletObjectId(walletId, "tx", (string)row[2]), out var txObject))
+                if (!objects.TryGetValue(new WalletObjectId(walletId, "tx", (string)row[2]!), out var txObject))
                     continue;
                 var invoiceId = txObject.GetLinks().Where(t => t.type == "invoice").Select(t => t.id).FirstOrDefault();
                 row[3] = invoiceId;

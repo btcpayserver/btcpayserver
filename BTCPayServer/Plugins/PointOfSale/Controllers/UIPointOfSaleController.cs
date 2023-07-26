@@ -147,12 +147,17 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                                                         CancellationToken cancellationToken = default)
         {
             var app = await _appService.GetApp(appId, PointOfSaleAppType.AppType);
-            if (string.IsNullOrEmpty(choiceKey) && amount <= 0)
-            {
+
+            // not allowing negative tips or discounts
+            if (tip < 0 || discount < 0)
                 return RedirectToAction(nameof(ViewPointOfSale), new { appId });
-            }
+
+            if (string.IsNullOrEmpty(choiceKey) && amount <= 0)
+                return RedirectToAction(nameof(ViewPointOfSale), new { appId });
+
             if (app == null)
                 return NotFound();
+            
             var settings = app.GetSettings<PointOfSaleSettings>();
             settings.DefaultView = settings.EnableShoppingCart ? PosViewType.Cart : settings.DefaultView;
             var currentView = viewType ?? settings.DefaultView;

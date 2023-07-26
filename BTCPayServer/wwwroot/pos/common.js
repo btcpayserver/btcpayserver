@@ -31,6 +31,9 @@ const posCommon = {
             if (this.tipPercent) {
                 return parseFloat((this.amountMinusDiscountNumeric * (this.tipPercent / 100)).toFixed(this.currencyInfo.divisibility))
             } else {
+                if (this.tip < 0) {
+                    this.tip = 0
+                }
                 const value = parseFloat(this.tip)
                 return isNaN(value) ? 0.0 : parseFloat(value.toFixed(this.currencyInfo.divisibility))
             }
@@ -64,6 +67,7 @@ const posCommon = {
         discountPercent (val) {
             const value = parseFloat(val)
             if (isNaN(value)) this.discountPercent = null
+            else if (value < 0) this.discountPercent = '0'
             else if (value > 100) this.discountPercent = '100'
             else this.discountPercent = value.toString()
         },

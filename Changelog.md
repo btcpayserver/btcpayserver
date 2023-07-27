@@ -8,7 +8,7 @@
 * POS Cart redesign (#5109 #5171) @dennisreimann @dstrukt
 * Add product categories to POS apps (#5088 #5078) @NicolasDorier
 * Checkout v2: Play sound when invoice is paid (#5085 #5113) @dennisreimann @webwworthy
-
+* Add support for ExchangeRateHost and FreeCurrencyRates rate providers (#5166) @Kukks
 
 
 ### Bug fixes
@@ -27,6 +27,7 @@
 * Invoice lists: Show icons for payment methods (#5084 #5137) @dennisreimann
 * Apps: Add direct file upload in item editor (#5086 #5140) @dennisreimann
 * Add OpenSats supporters logo (#5202) @Kukks @Pavlenex
+* Add recommended rate providers for UGX and RSD (#5166) @Kukks
 
 ## 1.10.3
 

@@ -1,5 +1,33 @@
 # Changelog
 
+## 1.11.0
+
+### New Features
+
+* Complete overhaul of Invoice Reporting (#5095 #5155) @NicolasDorier
+* POS Cart redesign (#5109 #5171) @dennisreimann @dstrukt
+* Add product categories to POS apps (#5088 #5078) @NicolasDorier
+* Checkout v2: Play sound when invoice is paid (#5085 #5113) @dennisreimann @webwworthy
+
+
+
+### Bug fixes
+
+* Support NFC on modal (#4251 #5033) @Kukks @dennisreimann
+* Fixed setting of minimum or custom price for LNURL POS items (#5170 #5172) @Kukks
+* Preventing entering of negative tips and discounts in POS (#5192 #5198) @rockstardev
+* Fixing display of amount paid on Receipt page (#5195 #5197) @rockstardev
+* Form invoice amount adjusters, useful for shipping and other addon amounts to the invoice (#5087 #5158) @Kukks @dennisreimann
+
+
+### Improvements
+
+* Improved Payment Requests List View (#3872 #5065) @TChukwuleta
+* Improve create first store view (#5008 #5181) @dennisreimann
+* Invoice lists: Show icons for payment methods (#5084 #5137) @dennisreimann
+* Apps: Add direct file upload in item editor (#5086 #5140) @dennisreimann
+* Add OpenSats supporters logo (#5202) @Kukks @Pavlenex
+
 ## 1.10.3
 
 ### New Features

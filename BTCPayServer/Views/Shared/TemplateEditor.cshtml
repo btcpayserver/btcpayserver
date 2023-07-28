@@ -234,7 +234,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 this.setEditingItem(null, { id: '', title: '', price: 0, image: '', description: '', categories: [], priceType: 'Fixed', inventory: null, disabled: false });
             },
             editItem(index) {
-                this.setEditingItem(index, Object.assign({}, this.config[index]));
+                this.setEditingItem(index, Object.assign({ id: '', title: '', price: 0, image: '', description: '', categories: [], priceType: 'Fixed', inventory: null, disabled: false }, this.config[index]));
             },
             saveItem() {
                 // set id from title if not set

@@ -52,7 +52,7 @@ document.addEventListener("DOMContentLoaded",function () {
                 return this.cart.reduce((res, item) => res + (parseInt(item.count) || 0), 0)
             },
             amountNumeric () {
-                return parseFloat(this.cart.reduce((res, item) => res + item.price * item.count, 0).toFixed(this.currencyInfo.divisibility))
+                return parseFloat(this.cart.reduce((res, item) => res + (item.price||0) * item.count, 0).toFixed(this.currencyInfo.divisibility))
             },
             posdata () {
                 const data = {

@@ -56,10 +56,7 @@
                     @for (var index = 0; index < Model.Items.Length; index++)
                     {
                         var item = Model.Items[index];
-                        if (item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Topup)
-                        {
-                            continue;
-                        }
+                        
                         var formatted = GetItemPriceFormatted(item);
                         var inStock = item.Inventory is null or > 0;
                         var buttonText = string.IsNullOrEmpty(item.BuyButtonText)
@@ -159,7 +156,7 @@
                                     </div>
                                 </td>
                                 <td class="align-middle text-end">
-                                    {{ formatCurrency(item.price, true) }}
+                                    {{ formatCurrency(item.price||0, true) }}
                                 </td>
                             </tr>
                             </tbody>

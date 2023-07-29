@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.11.1
+
+## Bug fixes
+
+* Language Select box cut off on checkout (#5210) @dstrukt
+* POS Cart view malformed when special characters are in items (#5203 #5211) @Kukks
+* Errors creating invoice from public form were not shown in the UI (#5208 #5211) @Kukks
+* Cart view doesn't show item when the amount field is custom (#5204 #5211) @Kukks
+* Can't save the item when adding a new category in POS (#5205 #5211) @Kukks
+
 ## 1.11.0
 
 ### New Features

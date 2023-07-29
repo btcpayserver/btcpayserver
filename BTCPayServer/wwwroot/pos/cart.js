@@ -70,7 +70,7 @@ document.addEventListener("DOMContentLoaded",function () {
             searchTerm(term) {
                 const t = term.toLowerCase();
                 this.forEachItem(item => {
-                    const terms = item.dataset.search.toLowerCase()
+                    const terms = decodeURIComponent(item.dataset.search.toLowerCase());
                     const included = terms.indexOf(t) !== -1
                     item.classList[included ? 'remove' : 'add']("d-none")
                 })

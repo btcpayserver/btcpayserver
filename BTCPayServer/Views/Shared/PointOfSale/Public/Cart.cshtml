@@ -1,6 +1,8 @@
 @using BTCPayServer.Plugins.PointOfSale.Models
 @using BTCPayServer.Services
 @using Newtonsoft.Json.Linq;
+@using BTCPayServer.Abstractions.TagHelpers
+@using Microsoft.AspNetCore.Mvc.TagHelpers
 @inject DisplayFormatter DisplayFormatter
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model BTCPayServer.Plugins.PointOfSale.Models.ViewPointOfSaleViewModel
@@ -63,15 +65,15 @@
                             ? item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Topup ? Model.CustomButtonText : Model.ButtonText
                             : item.BuyButtonText;
                         buttonText = buttonText.Replace("{0}", formatted).Replace("{Price}", formatted);
-        
-                        <div class="col posItem" :class="{ 'posItem--inStock': inStock(@index) }" data-index="@index" data-search="@Safe.Raw(item.Title) @Safe.Raw(item.Description)" data-categories="@(new JArray(item.Categories).ToString())">
+                        var categories = new JArray(item.Categories ?? Array.Empty<string>());
+                        <div class="col posItem" :class="{ 'posItem--inStock': inStock(@index) }" data-index="@index" data-search="@Safe.RawEncode(item.Title + " " + item.Description)"  data-categories="@Safe.Json(categories)">
                             <div class="card h-100 px-0" v-on:click="addToCart(@index)">
                                 @if (!string.IsNullOrWhiteSpace(item.Image))
                                 {
-                                    <img class="card-img-top" src="@item.Image" alt="@Safe.Raw(item.Title)" asp-append-version="true">
+                                    <img class="card-img-top" src="@item.Image" alt="@item.Title" asp-append-version="true">
                                 }
                                 <div class="card-body p-3 d-flex flex-column gap-2">
-                                    <h5 class="card-title m-0">@Safe.Raw(item.Title)</h5>
+                                    <h5 class="card-title m-0">@Safe.RawEncode(item.Title)</h5>
                                     <div class="d-flex gap-2 align-items-center">
                                         @if (item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Topup || item.Price == 0)
                                         {
@@ -90,14 +92,14 @@
                                     </div>
                                     @if (!string.IsNullOrWhiteSpace(item.Description))
                                     {
-                                        <p class="card-text">@Safe.Raw(item.Description)</p>
+                                        <p class="card-text">@Safe.RawEncode(item.Description)</p>
                                     }
                                 </div>
                                 @if (inStock)
                                 {
                                     <div class="card-footer bg-transparent border-0 pt-0 pb-3">
                                         <button type="button" class="btn btn-primary w-100" :disabled="!inStock(@index)">
-                                            @Safe.Raw(buttonText)
+                                            @Safe.RawEncode(buttonText)
                                         </button>
                                     </div>
                                     <div class="posItem-added"><vc:icon symbol="checkmark" /></div>

@@ -16,7 +16,7 @@ namespace BTCPayServer
                 DefaultRateRules = new[]
                 {
                     "BTG_X = BTG_BTC * BTC_X",
-                    "BTG_BTC = exmo(BTG_BTC)",
+                    "BTG_BTC = gate(BTG_BTC)",
                 },
                 CryptoImagePath = "imlegacy/btg.svg",
                 LightningImagePath = "imlegacy/btg-lightning.svg",

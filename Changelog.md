@@ -1,5 +1,44 @@
 # Changelog
 
+## 1.11.1
+
+## Bug fixes
+
+* Language Select box cut off on checkout (#5210) @dstrukt
+* POS Cart view malformed when special characters are in items (#5203 #5211) @Kukks
+* Errors creating invoice from public form were not shown in the UI (#5208 #5211) @Kukks
+* Cart view doesn't show item when the amount field is custom (#5204 #5211) @Kukks
+* Can't save the item when adding a new category in POS (#5205 #5211) @Kukks
+
+## 1.11.0
+
+### New Features
+
+* Complete overhaul of Invoice Reporting (#5095 #5155) @NicolasDorier
+* POS Cart redesign (#5109 #5171) @dennisreimann @dstrukt
+* Add product categories to POS apps (#5088 #5078) @NicolasDorier
+* Checkout v2: Play sound when invoice is paid (#5085 #5113) @dennisreimann @webwworthy
+* Add support for ExchangeRateHost and FreeCurrencyRates rate providers (#5166) @Kukks
+
+
+### Bug fixes
+
+* Support NFC on modal (#4251 #5033) @Kukks @dennisreimann
+* Fixed setting of minimum or custom price for LNURL POS items (#5170 #5172) @Kukks
+* Preventing entering of negative tips and discounts in POS (#5192 #5198) @rockstardev
+* Fixing display of amount paid on Receipt page (#5195 #5197) @rockstardev
+* Form invoice amount adjusters, useful for shipping and other addon amounts to the invoice (#5087 #5158) @Kukks @dennisreimann
+
+
+### Improvements
+
+* Improved Payment Requests List View (#3872 #5065) @TChukwuleta
+* Improve create first store view (#5008 #5181) @dennisreimann
+* Invoice lists: Show icons for payment methods (#5084 #5137) @dennisreimann
+* Apps: Add direct file upload in item editor (#5086 #5140) @dennisreimann
+* Add OpenSats supporters logo (#5202) @Kukks @Pavlenex
+* Add recommended rate providers for UGX and RSD (#5166) @Kukks
+
 ## 1.10.3
 
 ### New Features

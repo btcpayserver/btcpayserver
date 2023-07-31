@@ -199,21 +199,15 @@ namespace BTCPayServer.Controllers
                 ModelState.AddModelError(nameof(vm.Destination), destination.error ?? "Invalid destination with selected payment method");
                 return await ViewPullPayment(pullPaymentId);
             }
-
-            if (vm.ClaimedAmount == 0)
+            
+            var amtError = ClaimRequest.IsPayoutAmountOk(destination.destination, vm.ClaimedAmount == 0? null: vm.ClaimedAmount, paymentMethodId.CryptoCode, ppBlob.Currency);
+            if (amtError.error is not null)
             {
-                ModelState.AddModelError(nameof(vm.ClaimedAmount), "Amount is required");
+                ModelState.AddModelError(nameof(vm.ClaimedAmount), amtError.error );
             }
-            else
+            else if (amtError.amount is not null)
             {
-                var amount = ppBlob.Currency == "SATS" ? new Money(vm.ClaimedAmount, MoneyUnit.Satoshi).ToUnit(MoneyUnit.BTC) : vm.ClaimedAmount;
-                if (destination.destination.Amount != null && amount != destination.destination.Amount)
-                {
-                    var implied = _displayFormatter.Currency(destination.destination.Amount.Value, paymentMethodId.CryptoCode, DisplayFormatter.CurrencyFormat.Symbol);
-                    var provided = _displayFormatter.Currency(vm.ClaimedAmount, ppBlob.Currency, DisplayFormatter.CurrencyFormat.Symbol);
-                    ModelState.AddModelError(nameof(vm.ClaimedAmount),
-                        $"Amount implied in destination ({implied}) does not match the payout amount provided ({provided}).");
-                }
+                vm.ClaimedAmount = amtError.amount.Value;
             }
 
             if (!ModelState.IsValid)

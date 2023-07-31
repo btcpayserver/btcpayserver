@@ -904,6 +904,10 @@
                             "approved": {
                                 "type": "boolean",
                                 "description": "Whether to approve this payout automatically upon creation"
+                            },
+                            "metadata": {
+                                "type": "object",
+                                "description": "Additional metadata to store with the payout"
                             }
                         }
                     }
@@ -1012,6 +1016,32 @@
                     },
                     "paymentProof": {
                         "$ref": "#/components/schemas/PayoutPaymentProof"
+                    },
+                    "metadata": {
+                        "type": "object",
+                        "additionalProperties": true,
+                        "description": "Additional information around the payout that can be supplied. The mentioned properties are all optional and you can introduce any json format you wish.",
+                        "example": {
+                            "source": "Payout created through the API"
+                        },
+                        "anyOf": [
+                            {
+                                "title": "General information",
+                                "properties": {
+                                    "source": {
+                                        "type": "string",
+                                        "nullable": true,
+                                        "description": "The source of the payout creation. Shown on the payout list page."
+                                    },
+                                    "sourceLink": {
+                                        "type": "string",
+                                        "format": "url",
+                                        "nullable": true,
+                                        "description": "A link to the source of the payout creation. Shown on the payout list page."
+                                    }
+                                }
+                            }
+                        ]
                     }
                 }
             },

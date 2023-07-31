@@ -153,7 +153,7 @@ const initLabelManagers = () => {
 
 document.addEventListener("DOMContentLoaded", () => {
     // sticky header
-    const stickyHeader = document.querySelector('.sticky-header-setup + .sticky-header');
+    const stickyHeader = document.querySelector('#mainContent > section > .sticky-header');
     if (stickyHeader) {
         document.documentElement.style.scrollPaddingTop = `calc(${stickyHeader.offsetHeight}px + var(--btcpay-space-m))`;
     }

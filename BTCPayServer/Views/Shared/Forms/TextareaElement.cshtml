@@ -5,7 +5,7 @@
 }
 <div class="form-group">
     <label class="form-label" for="@Model.Name"@(Model.Required ? " data-required" : "")>
-        @Model.Label
+        @Safe.Raw(Model.Label)
     </label>
     <textarea id="@Model.Name" class="form-control @(errors is null ? "" : "is-invalid")"
            name="@Model.Name" data-val="true"

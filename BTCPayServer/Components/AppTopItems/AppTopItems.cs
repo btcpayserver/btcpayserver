@@ -24,7 +24,7 @@ public class AppTopItems : ViewComponent
     public async Task<IViewComponentResult> InvokeAsync(string appId, string appType)
     {
         var type = _appService.GetAppType(appType);
-        if (type is not IHasItemStatsAppType salesAppType || type is not AppBaseType appBaseType)
+        if (type is not (IHasItemStatsAppType and AppBaseType appBaseType))
             return new HtmlContentViewComponentResult(new StringHtmlContent(string.Empty));
 
         var vm = new AppTopItemsViewModel

@@ -296,7 +296,7 @@ namespace BTCPayServer
 
             var createInvoice = new CreateInvoiceRequest()
             {
-                Amount = item?.Price.Value,
+                Amount =  item?.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Topup? null:  item?.Price,
                 Currency = currencyCode,
                 Checkout = new InvoiceDataBase.CheckoutOptions()
                 {
@@ -306,18 +306,17 @@ namespace BTCPayServer
                                                        HttpContext.Request.GetAbsoluteUri($"/apps/{app.Id}/pos"),
                         _ => null
                     }
-                }
+                },
+                AdditionalSearchTerms = new[] { AppService.GetAppSearchTerm(app) }
             };
 
-            var invoiceMetadata = new InvoiceMetadata();
-            invoiceMetadata.OrderId = AppService.GetAppOrderId(app);
+            var invoiceMetadata = new InvoiceMetadata { OrderId = AppService.GetRandomOrderId() };
             if (item != null)
             {
                 invoiceMetadata.ItemCode = item.Id;
                 invoiceMetadata.ItemDesc = item.Description;
             }
             createInvoice.Metadata = invoiceMetadata.ToJObject();
-
 
             return await GetLNURLRequest(
                 cryptoCode,
@@ -547,7 +546,7 @@ namespace BTCPayServer
             lnurlRequest.Metadata = JsonConvert.SerializeObject(lnUrlMetadata.Select(kv => new[] { kv.Key, kv.Value }));
             if (i.Type != InvoiceType.TopUp)
             {
-                lnurlRequest.MinSendable = new LightMoney(pm.Calculate().Due.ToDecimal(MoneyUnit.Satoshi), LightMoneyUnit.Satoshi);
+                lnurlRequest.MinSendable = LightMoney.Coins(pm.Calculate().Due);
                 if (!allowOverpay)
                     lnurlRequest.MaxSendable = lnurlRequest.MinSendable;
             }

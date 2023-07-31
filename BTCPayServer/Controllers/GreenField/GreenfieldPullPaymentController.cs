@@ -19,6 +19,7 @@ using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json.Linq;
 using MarkPayoutRequest = BTCPayServer.HostedServices.MarkPayoutRequest;
 
 namespace BTCPayServer.Controllers.Greenfield
@@ -284,7 +285,8 @@ namespace BTCPayServer.Controllers.Greenfield
                 Amount = blob.Amount,
                 PaymentMethodAmount = blob.CryptoAmount,
                 Revision = blob.Revision,
-                State = p.State
+                State = p.State,
+                Metadata = blob.Metadata?? new JObject(),
             };
             model.Destination = blob.Destination;
             model.PaymentMethod = p.PaymentMethodId;
@@ -321,27 +323,20 @@ namespace BTCPayServer.Controllers.Greenfield
                 ModelState.AddModelError(nameof(request.Destination), destination.error ?? "The destination is invalid for the payment specified");
                 return this.CreateValidationError(ModelState);
             }
-
-            if (request.Amount is null && destination.destination.Amount != null)
+            
+            var amtError = ClaimRequest.IsPayoutAmountOk(destination.destination, request.Amount, paymentMethodId.CryptoCode, ppBlob.Currency);
+            if (amtError.error is not null)
             {
-                request.Amount = destination.destination.Amount;
-            }
-            else if (request.Amount != null && destination.destination.Amount != null && request.Amount != destination.destination.Amount)
-            {
-                ModelState.AddModelError(nameof(request.Amount), $"Amount is implied in destination ({destination.destination.Amount}) that does not match the payout amount provided {request.Amount})");
+                ModelState.AddModelError(nameof(request.Amount), amtError.error );
                 return this.CreateValidationError(ModelState);
             }
-            if (request.Amount is { } v && (v < ppBlob.MinimumClaim || v == 0.0m))
-            {
-                ModelState.AddModelError(nameof(request.Amount), $"Amount too small (should be at least {ppBlob.MinimumClaim})");
-                return this.CreateValidationError(ModelState);
-            }
+            request.Amount = amtError.amount;
             var result = await _pullPaymentService.Claim(new ClaimRequest()
             {
                 Destination = destination.destination,
                 PullPaymentId = pullPaymentId,
                 Value = request.Amount,
-                PaymentMethodId = paymentMethodId,
+                PaymentMethodId = paymentMethodId
             });
 
             return HandleClaimResult(result);
@@ -393,15 +388,13 @@ namespace BTCPayServer.Controllers.Greenfield
                 return this.CreateValidationError(ModelState);
             }
 
-            if (request.Amount is null && destination.destination.Amount != null)
+            var amtError = ClaimRequest.IsPayoutAmountOk(destination.destination, request.Amount);
+            if (amtError.error is not null)
             {
-                request.Amount = destination.destination.Amount;
-            }
-            else if (request.Amount != null && destination.destination.Amount != null && request.Amount != destination.destination.Amount)
-            {
-                ModelState.AddModelError(nameof(request.Amount), $"Amount is implied in destination ({destination.destination.Amount}) that does not match the payout amount provided {request.Amount})");
+                ModelState.AddModelError(nameof(request.Amount), amtError.error );
                 return this.CreateValidationError(ModelState);
             }
+            request.Amount = amtError.amount;
             if (request.Amount is { } v && (v < ppBlob?.MinimumClaim || v == 0.0m))
             {
                 var minimumClaim = ppBlob?.MinimumClaim is decimal val ? val : 0.0m;
@@ -415,7 +408,8 @@ namespace BTCPayServer.Controllers.Greenfield
                 PreApprove = request.Approved,
                 Value = request.Amount,
                 PaymentMethodId = paymentMethodId,
-                StoreId = storeId
+                StoreId = storeId,
+                Metadata = request.Metadata
             });
             return HandleClaimResult(result);
         }

@@ -303,7 +303,7 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
                     bip21.Add(newUri.Uri.ToString());
                     break;
                 case AddressClaimDestination addressClaimDestination:
-                    var bip21New = network.GenerateBIP21(addressClaimDestination.Address.ToString(), new Money(blob.CryptoAmount.Value, MoneyUnit.BTC));
+                    var bip21New = network.GenerateBIP21(addressClaimDestination.Address.ToString(), blob.CryptoAmount.Value);
                     bip21New.QueryParams.Add("payout", payout.Id);
                     bip21.Add(bip21New.ToString());
                     break;

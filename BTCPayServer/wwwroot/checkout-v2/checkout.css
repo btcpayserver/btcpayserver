@@ -8,7 +8,6 @@ body {
     overflow-x: hidden;
 }
 .public-page-wrap {
-    flex-direction: column;
     max-width: var(--wrap-max-width);
 }
 main {
@@ -141,6 +140,9 @@ section dl > div dd {
     height: 3rem;
     margin: .5rem auto 1.5rem;
 }
+#result #sound {
+    display: none;
+}
 #result #confetti {
     position: absolute;
     left: 50%;
@@ -156,7 +158,7 @@ section dl > div dd {
     color: var(--btcpay-body-text-muted);
 }
 #DefaultLang {
-    width: calc(var(--text-width, 110px) + 3rem);
+    width: calc(var(--text-width, 110px) + 3.5rem);
     color: var(--btcpay-body-text-muted);
     background-color: var(--btcpay-body-bg);
     box-shadow: none;

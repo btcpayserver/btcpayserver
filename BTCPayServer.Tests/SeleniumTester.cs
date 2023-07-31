@@ -393,6 +393,10 @@ namespace BTCPayServer.Tests
         public void GoToHome()
         {
             Driver.Navigate().GoToUrl(ServerUri);
+            if (Driver.PageSource.Contains("id=\"SkipWizard\""))
+            {
+                Driver.FindElement(By.Id("SkipWizard")).Click();
+            }
         }
 
         public void Logout()

@@ -203,9 +203,25 @@ public class UIFormsController : Controller
         if (store is null)
             return NotFound();
 
+        try
+        {
+
         var request = _formDataService.GenerateInvoiceParametersFromForm(form);
         var inv = await invoiceController.CreateInvoiceCoreRaw(request, store, Request.GetAbsoluteRoot());
-
+        if (inv.Price == 0 && inv.Type == InvoiceType.Standard && inv.ReceiptOptions?.Enabled is not false)
+        {
+            return RedirectToAction("InvoiceReceipt", "UIInvoice", new { invoiceId = inv.Id });
+        }
         return RedirectToAction("Checkout", "UIInvoice", new { invoiceId = inv.Id });
+        }
+        catch (Exception e)
+        {
+            TempData.SetStatusMessageModel(new StatusMessageModel()
+            {
+                Severity = StatusMessageModel.StatusSeverity.Error,
+                Message = "Could not generate invoice: "+ e.Message
+            });
+            return await GetFormView(formData, form);
+        }
     }
 }

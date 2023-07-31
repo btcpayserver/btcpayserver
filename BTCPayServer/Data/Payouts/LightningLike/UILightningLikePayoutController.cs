@@ -264,7 +264,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             PaymentMethodId pmi, CancellationToken cancellationToken)
         {
             var boltAmount = bolt11PaymentRequest.MinimumAmount.ToDecimal(LightMoneyUnit.BTC);
-            if (boltAmount != payoutBlob.CryptoAmount)
+            if (boltAmount > payoutBlob.CryptoAmount)
             {
 
                 payoutData.State = PayoutState.Cancelled;
@@ -277,15 +277,26 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                 };
             }
 
+            if (bolt11PaymentRequest.ExpiryDate < DateTimeOffset.Now)
+            {
+                payoutData.State = PayoutState.Cancelled;
+                return new ResultVM
+                {
+                    PayoutId = payoutData.Id,
+                    Result = PayResult.Error,
+                    Message = $"The BOLT11 invoice expiry date ({bolt11PaymentRequest.ExpiryDate}) has expired",
+                    Destination = payoutBlob.Destination
+                };
+            }
+
             var proofBlob = new PayoutLightningBlob() { PaymentHash = bolt11PaymentRequest.PaymentHash.ToString() };
             try
             {
                 var result = await lightningClient.Pay(bolt11PaymentRequest.ToString(),
                     new PayInvoiceParams()
                     {
-                        Amount = bolt11PaymentRequest.MinimumAmount == LightMoney.Zero
-                            ? new LightMoney((decimal)payoutBlob.CryptoAmount, LightMoneyUnit.BTC)
-                            : null
+                        // CLN does not support explicit amount param if it is the same as the invoice amount
+                        Amount = payoutBlob.CryptoAmount == bolt11PaymentRequest.MinimumAmount.ToDecimal(LightMoneyUnit.BTC)? null: new LightMoney((decimal)payoutBlob.CryptoAmount, LightMoneyUnit.BTC)
                     }, cancellationToken);
                 string message = null;
                 if (result.Result == PayResult.Ok)

@@ -199,7 +199,9 @@ namespace BTCPayServer.Data
             { "GTQ", "bitpay" },
             { "COP", "yadio" },
             { "JPY", "bitbank" },
-            { "TRY", "btcturk" }
+            { "TRY", "btcturk" },
+            { "UGX", "exchangeratehost"},
+            { "RSD", "bitpay"}
         };
 
         public string GetRecommendedExchange() =>
@@ -235,6 +237,12 @@ namespace BTCPayServer.Data
         [DefaultValue(true)]
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
         public bool CelebratePayment { get; set; } = true;
+        
+        [DefaultValue(false)]
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
+        public bool PlaySoundOnPayment { get; set; } = false;
+
+        public string SoundFileId { get; set; }
 
         public IPaymentFilter GetExcludedPaymentMethods()
         {

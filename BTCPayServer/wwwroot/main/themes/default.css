@@ -414,7 +414,7 @@
   --btcpay-light-rgb: 233, 236, 239;
 
   --btcpay-dark: var(--btcpay-neutral-800);
-  --btcpay-dark-accent: var(--btcpay-black);
+  --btcpay-dark-accent: var(--btcpay-neutral-900);
   --btcpay-dark-text: var(--btcpay-neutral-200);
   --btcpay-dark-text-hover: var(--btcpay-neutral-200);
   --btcpay-dark-text-active: var(--btcpay-neutral-200);

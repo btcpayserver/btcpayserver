@@ -22,6 +22,7 @@ using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.Reporting;
 using BTCPayServer.Services.Wallets;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -30,6 +31,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBitcoin.Payment;
+using NBitpayClient;
 using NBXplorer.Models;
 using Newtonsoft.Json;
 using InvoiceCryptoInfo = BTCPayServer.Services.Invoices.InvoiceCryptoInfo;
@@ -38,6 +40,15 @@ namespace BTCPayServer
 {
     public static class Extensions
     {
+        public static DateTimeOffset TruncateMilliSeconds(this DateTimeOffset dt) => new (dt.Year, dt.Month, dt.Day, dt.Hour, dt.Minute, dt.Second, 0, dt.Offset);
+        public static decimal? GetDue(this InvoiceCryptoInfo invoiceCryptoInfo)
+        {
+            if (invoiceCryptoInfo is null)
+                return null;
+            if (decimal.TryParse(invoiceCryptoInfo.Due, NumberStyles.Any, CultureInfo.InvariantCulture, out var v))
+                return v;
+            return null;
+        }
         public static Task<BufferizedFormFile> Bufferize(this IFormFile formFile)
         {
             return BufferizedFormFile.Bufferize(formFile);
@@ -122,6 +133,14 @@ namespace BTCPayServer
             {
                 return value;
             }
+        }
+
+        public static IServiceCollection AddReportProvider<T>(this IServiceCollection services)
+    where T : ReportProvider
+        {
+            services.AddSingleton<T>();
+            services.AddSingleton<ReportProvider, T>();
+            return services;
         }
 
         public static IServiceCollection AddScheduledTask<T>(this IServiceCollection services, TimeSpan every)
@@ -380,20 +399,6 @@ namespace BTCPayServer
                 }
             };
             return controller.View("PostRedirect", redirectVm);
-        }
-
-        public static string ToSql<TEntity>(this IQueryable<TEntity> query) where TEntity : class
-        {
-            var enumerator = query.Provider.Execute<IEnumerable<TEntity>>(query.Expression).GetEnumerator();
-            var relationalCommandCache = enumerator.Private("_relationalCommandCache");
-            var selectExpression = relationalCommandCache.Private<Microsoft.EntityFrameworkCore.Query.SqlExpressions.SelectExpression>("_selectExpression");
-            var factory = relationalCommandCache.Private<Microsoft.EntityFrameworkCore.Query.IQuerySqlGeneratorFactory>("_querySqlGeneratorFactory");
-
-            var sqlGenerator = factory.Create();
-            var command = sqlGenerator.GetCommand(selectExpression);
-
-            string sql = command.CommandText;
-            return sql;
         }
 
         public static BTCPayNetworkProvider ConfigureNetworkProvider(this IConfiguration configuration, Logs logs)

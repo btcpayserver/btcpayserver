@@ -55,7 +55,7 @@ namespace BTCPayServer.Controllers
                         return Ok(new
                         {
                             Txid = txid,
-                            AmountRemaining = (paymentMethod.Calculate().Due - amount).ToUnit(MoneyUnit.BTC),
+                            AmountRemaining = paymentMethod.Calculate().Due - amount.ToDecimal(MoneyUnit.BTC),
                             SuccessMessage = $"Created transaction {txid}"
                         });
 
@@ -70,11 +70,11 @@ namespace BTCPayServer.Controllers
                         {
                             var bolt11 = BOLT11PaymentRequest.Parse(destination, network);
                             var paymentHash = bolt11.PaymentHash?.ToString();
-                            var paid = new Money(response.Details.TotalAmount.ToUnit(LightMoneyUnit.Satoshi), MoneyUnit.Satoshi);
+                            var paid = response.Details.TotalAmount.ToDecimal(LightMoneyUnit.BTC);
                             return Ok(new
                             {
                                 Txid = paymentHash,
-                                AmountRemaining = (paymentMethod.Calculate().TotalDue - paid).ToUnit(MoneyUnit.BTC),
+                                AmountRemaining = paymentMethod.Calculate().TotalDue - paid,
                                 SuccessMessage = $"Sent payment {paymentHash}"
                             });
                         }

@@ -14,6 +14,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 [assembly: InternalsVisibleTo("BTCPayServer.Tests")]
+
 namespace BTCPayServer
 {
     class Program

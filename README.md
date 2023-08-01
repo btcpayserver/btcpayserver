@@ -95,7 +95,7 @@
 * Enhanced privacy & security
 * Self-hosted
 * SegWit support
-* Lightning Network support (LND, c-lightning, Eclair, and Ptarmigan)
+* Lightning Network support (LND, Core Lightning (CLN), Eclair)
 * Tor support
 * Share your instance with friends (multi-tenant)
 * Invoice management and Payment requests

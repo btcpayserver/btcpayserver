@@ -41,23 +41,11 @@ namespace BTCPayServer.Storage
                     Directory.CreateDirectory(datadirs.Value.TempDir);
                 }
 
-                var tmpdirInfo = Directory.Exists(datadirs.Value.TempStorageDir)
-                    ? new DirectoryInfo(datadirs.Value.TempStorageDir)
-                    : Directory.CreateDirectory(datadirs.Value.TempStorageDir);
-
                 builder.UseStaticFiles(new StaticFileOptions
                 {
                     ServeUnknownFileTypes = true,
                     RequestPath = new PathString($"/{FileSystemFileProviderService.LocalStorageDirectoryName}"),
                     FileProvider = new PhysicalFileProvider(dirInfo.FullName),
-                    OnPrepareResponse = HandleStaticFileResponse()
-                });
-                builder.UseStaticFiles(new StaticFileOptions
-                {
-                    ServeUnknownFileTypes = true,
-                    RequestPath = new PathString($"/{FileSystemFileProviderService.LocalStorageDirectoryName}tmp"),
-                    FileProvider = new TemporaryLocalFileProvider(tmpdirInfo, dirInfo,
-                        builder.ApplicationServices.GetService<StoredFileRepository>()),
                     OnPrepareResponse = HandleStaticFileResponse()
                 });
             }
@@ -71,10 +59,7 @@ namespace BTCPayServer.Storage
         {
             return context =>
             {
-                if (context.Context.Request.Query.ContainsKey("download"))
-                {
-                    context.Context.Response.Headers["Content-Disposition"] = "attachment";
-                }
+                context.Context.Response.Headers["Content-Disposition"] = context.Context.Request.Query.ContainsKey("download")? "attachment" : "inline";
                 context.Context.Response.Headers["Content-Security-Policy"] = "script-src ;";
                 context.Context.Response.Headers["X-Content-Type-Options"] = "nosniff";
             };

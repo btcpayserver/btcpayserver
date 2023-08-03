@@ -62,7 +62,7 @@ namespace BTCPayServer.Storage.Services.Providers.FileSystemStorage
             var fullPath = Path.Combine(_datadirs.Value.TempStorageDir, name);
             if (!File.Exists(fullPath))
             {
-                File.Create(fullPath).Dispose();
+                await File.Create(fullPath).DisposeAsync();
             }
 
             await File.WriteAllTextAsync(Path.Combine(_datadirs.Value.TempStorageDir, name), JsonConvert.SerializeObject(localFileDescriptor));

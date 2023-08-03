@@ -1,8 +1,6 @@
 @using BTCPayServer.Plugins.PointOfSale.Models
 @using BTCPayServer.Services
-@using Newtonsoft.Json.Linq;
-@using BTCPayServer.Abstractions.TagHelpers
-@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using Newtonsoft.Json.Linq
 @inject DisplayFormatter DisplayFormatter
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model BTCPayServer.Plugins.PointOfSale.Models.ViewPointOfSaleViewModel
@@ -65,8 +63,8 @@
                             ? item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Topup ? Model.CustomButtonText : Model.ButtonText
                             : item.BuyButtonText;
                         buttonText = buttonText.Replace("{0}", formatted).Replace("{Price}", formatted);
-                        var categories = new JArray(item.Categories ?? Array.Empty<string>());
-                        <div class="col posItem" :class="{ 'posItem--inStock': inStock(@index) }" data-index="@index" data-search="@Safe.RawEncode(item.Title + " " + item.Description)"  data-categories="@Safe.Json(categories)">
+                        var categories = new JArray(item.Categories ?? new object[] { });
+                        <div class="col posItem" :class="{ 'posItem--inStock': inStock(@index) }" data-index="@index" data-search="@Safe.RawEncode(item.Title + " " + item.Description)" data-categories='@Safe.Json(categories)'>
                             <div class="card h-100 px-0" v-on:click="addToCart(@index)">
                                 @if (!string.IsNullOrWhiteSpace(item.Image))
                                 {

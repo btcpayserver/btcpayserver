@@ -2859,7 +2859,7 @@ namespace BTCPayServer.Tests
             using var tester = CreateServerTester();
             await tester.StartAsync();
             var user = tester.NewAccount();
-            user.GrantAccess();
+            await user.GrantAccessAsync();
             var controller = tester.PayTester.GetController<UIServerController>(user.UserId, user.StoreId);
 
             var fileSystemStorageConfiguration = Assert.IsType<FileSystemStorageConfiguration>(Assert
@@ -2873,7 +2873,6 @@ namespace BTCPayServer.Tests
             Assert.Equal(nameof(StorageProvider), shouldBeRedirectingToLocalStorageConfigPage.ActionName);
             Assert.Equal(StorageProvider.FileSystem,
                 shouldBeRedirectingToLocalStorageConfigPage.RouteValues["provider"]);
-
 
             await CanUploadRemoveFiles(controller);
         }
@@ -2906,7 +2905,7 @@ namespace BTCPayServer.Tests
 
             //create a temporary link to file
             var tmpLinkGenerate = Assert.IsType<RedirectToActionResult>(await controller.CreateTemporaryFileUrl(fileId,
-                new UIServerController.CreateTemporaryFileUrlViewModel()
+                new UIServerController.CreateTemporaryFileUrlViewModel
                 {
                     IsDownload = true,
                     TimeAmount = 1,

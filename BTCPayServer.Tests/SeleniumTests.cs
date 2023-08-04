@@ -2064,7 +2064,6 @@ namespace BTCPayServer.Tests
             using var s = CreateSeleniumTester();
             s.Server.ActivateLightning();
             await s.StartAsync();
-
             await s.Server.EnsureChannelsSetup();
 
             s.RegisterNewUser(true);
@@ -2101,7 +2100,6 @@ namespace BTCPayServer.Tests
             using var s = CreateSeleniumTester();
             s.Server.ActivateLightning();
             await s.StartAsync();
-
             await s.Server.EnsureChannelsSetup();
 
             s.RegisterNewUser(true);
@@ -2176,7 +2174,6 @@ namespace BTCPayServer.Tests
             using var s = CreateSeleniumTester();
             s.Server.ActivateLightning();
             await s.StartAsync();
-
             await s.Server.EnsureChannelsSetup();
 
             s.RegisterNewUser(true);
@@ -2199,6 +2196,7 @@ namespace BTCPayServer.Tests
             s.Driver.SwitchTo().Window(windows[1]);
             s.Driver.WaitForElement(By.Id("PosItems"));
             Assert.Empty(s.Driver.FindElements(By.CssSelector("#CartItems tr")));
+            var posUrl = s.Driver.Url;
             
             // Select and clear
             s.Driver.FindElement(By.CssSelector(".posItem:nth-child(1) .btn-primary")).Click();
@@ -2207,34 +2205,81 @@ namespace BTCPayServer.Tests
             Thread.Sleep(250);
             Assert.Empty(s.Driver.FindElements(By.CssSelector("#CartItems tr")));
             
-            // Select items
-            s.Driver.FindElement(By.CssSelector(".posItem:nth-child(2) .btn-primary")).Click();
-            Thread.Sleep(250);
+            // Select simple items
             s.Driver.FindElement(By.CssSelector(".posItem:nth-child(1) .btn-primary")).Click();
+            Thread.Sleep(250);
+            Assert.Single(s.Driver.FindElements(By.CssSelector("#CartItems tr")));
+            s.Driver.FindElement(By.CssSelector(".posItem:nth-child(2) .btn-primary")).Click();
             Thread.Sleep(250);
             s.Driver.FindElement(By.CssSelector(".posItem:nth-child(2) .btn-primary")).Click();
             Thread.Sleep(250);
             Assert.Equal(2, s.Driver.FindElements(By.CssSelector("#CartItems tr")).Count);
             Assert.Equal("3,00 €", s.Driver.FindElement(By.Id("CartTotal")).Text);
             
+            // Select item with inventory - two of it
+            Assert.Equal("5 left", s.Driver.FindElement(By.CssSelector(".posItem:nth-child(3) .badge.inventory")).Text);
+            s.Driver.FindElement(By.CssSelector(".posItem:nth-child(3) .btn-primary")).Click();
+            Thread.Sleep(250);
+            s.Driver.FindElement(By.CssSelector(".posItem:nth-child(3) .btn-primary")).Click();
+            Thread.Sleep(250);
+            Assert.Equal(3, s.Driver.FindElements(By.CssSelector("#CartItems tr")).Count);
+            Assert.Equal("5,40 €", s.Driver.FindElement(By.Id("CartTotal")).Text);
+            
+            // Select items with minimum amount
+            s.Driver.FindElement(By.CssSelector(".posItem:nth-child(5) .btn-primary")).Click();
+            Thread.Sleep(250);
+            Assert.Equal(4, s.Driver.FindElements(By.CssSelector("#CartItems tr")).Count);
+            Assert.Equal("7,20 €", s.Driver.FindElement(By.Id("CartTotal")).Text);
+            
+            // Select items with adjusted minimum amount
+            s.Driver.FindElement(By.CssSelector(".posItem:nth-child(5) input[name='amount']")).Clear();
+            s.Driver.FindElement(By.CssSelector(".posItem:nth-child(5) input[name='amount']")).SendKeys("2.3");
+            s.Driver.FindElement(By.CssSelector(".posItem:nth-child(5) .btn-primary")).Click();
+            Thread.Sleep(250);
+            Assert.Equal(5, s.Driver.FindElements(By.CssSelector("#CartItems tr")).Count);
+            Assert.Equal("9,50 €", s.Driver.FindElement(By.Id("CartTotal")).Text);
+            
+            // Select items with custom amount
+            s.Driver.FindElement(By.CssSelector(".posItem:nth-child(6) input[name='amount']")).Clear();
+            s.Driver.FindElement(By.CssSelector(".posItem:nth-child(6) input[name='amount']")).SendKeys(".2");
+            s.Driver.FindElement(By.CssSelector(".posItem:nth-child(6) .btn-primary")).Click();
+            Thread.Sleep(250);
+            Assert.Equal(6, s.Driver.FindElements(By.CssSelector("#CartItems tr")).Count);
+            Assert.Equal("9,70 €", s.Driver.FindElement(By.Id("CartTotal")).Text);
+            
+            // Select items with another custom amount
+            s.Driver.FindElement(By.CssSelector(".posItem:nth-child(6) input[name='amount']")).Clear();
+            s.Driver.FindElement(By.CssSelector(".posItem:nth-child(6) input[name='amount']")).SendKeys(".3");
+            s.Driver.FindElement(By.CssSelector(".posItem:nth-child(6) .btn-primary")).Click();
+            Thread.Sleep(250);
+            Assert.Equal(7, s.Driver.FindElements(By.CssSelector("#CartItems tr")).Count);
+            Assert.Equal("10,00 €", s.Driver.FindElement(By.Id("CartTotal")).Text);
+            
             // Discount: 10%
             s.Driver.ElementDoesNotExist(By.Id("CartDiscount"));
             s.Driver.FindElement(By.Id("Discount")).SendKeys("10");
-            Assert.Contains("10% = 0,30 €", s.Driver.FindElement(By.Id("CartDiscount")).Text);
-            Assert.Equal("2,70 €", s.Driver.FindElement(By.Id("CartTotal")).Text);
+            Assert.Contains("10% = 1,00 €", s.Driver.FindElement(By.Id("CartDiscount")).Text);
+            Assert.Equal("9,00 €", s.Driver.FindElement(By.Id("CartTotal")).Text);
             
             // Tip: 10%
             s.Driver.ElementDoesNotExist(By.Id("CartTip"));
             s.Driver.FindElement(By.Id("Tip-10")).Click();
-            Assert.Contains("10% = 0,27 €", s.Driver.FindElement(By.Id("CartTip")).Text);
-            Assert.Equal("2,97 €", s.Driver.FindElement(By.Id("CartTotal")).Text);
+            Assert.Contains("10% = 0,90 €", s.Driver.FindElement(By.Id("CartTip")).Text);
+            Assert.Equal("9,90 €", s.Driver.FindElement(By.Id("CartTotal")).Text);
             
-            // Pay
+            // Check values on checkout page
             s.Driver.FindElement(By.Id("CartSubmit")).Click();
             s.Driver.WaitUntilAvailable(By.Id("Checkout-v2"));
             s.Driver.FindElement(By.Id("DetailsToggle")).Click();
             s.Driver.WaitForElement(By.Id("PaymentDetails-TotalFiat"));
-            Assert.Contains("2,97 €", s.Driver.FindElement(By.Id("PaymentDetails-TotalFiat")).Text);
+            Assert.Contains("9,90 €", s.Driver.FindElement(By.Id("PaymentDetails-TotalFiat")).Text);
+
+            // Pay
+            s.PayInvoice();
+            
+            // Check inventory got updated and is now 3 instead of 5
+            s.Driver.Navigate().GoToUrl(posUrl);
+            Assert.Equal("3 left", s.Driver.FindElement(By.CssSelector(".posItem:nth-child(3) .badge.inventory")).Text);
         }
 
         [Fact]

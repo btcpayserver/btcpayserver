@@ -160,10 +160,8 @@ document.addEventListener("DOMContentLoaded",function () {
             }
         },
         mounted() {
-            const self =this;
-            nextTick(() => {
-                self.$cart = new bootstrap.Offcanvas("#cart", {backdrop: false})
-            })
+            this.$cart = new bootstrap.Offcanvas(this.$refs.cart, { backdrop: false })
+
             window.addEventListener('pagehide', () => {
                 if (this.payButtonLoading) {
                     this.unsetPayButtonLoading();

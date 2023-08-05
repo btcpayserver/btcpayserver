@@ -292,7 +292,7 @@ retry:
         [Fact]
         public async Task CanGetRateCryptoCurrenciesByDefault()
         {
-            string[] brokenShitcoins = { };
+            string[] brokenShitcoins = { "BTG", "BTX" };
             var provider = new BTCPayNetworkProvider(ChainName.Mainnet);
             var factory = FastTests.CreateBTCPayRateFactory();
             var fetcher = new RateFetcher(factory);
@@ -306,9 +306,13 @@ retry:
             foreach ((CurrencyPair key, Task<RateResult> value) in result)
             {
                 var rateResult = await value;
-                TestLogs.LogInformation($"Testing {key}");
-                if (brokenShitcoins.Contains(key.ToString()))
+                if (brokenShitcoins.Contains(key.Left))
+                {
+                    TestLogs.LogInformation($"Skipping {key} because it is marked as broken");
                     continue;
+                }
+                    
+                TestLogs.LogInformation($"Testing {key}");
                 Assert.True(rateResult.BidAsk != null, $"Impossible to get the rate {rateResult.EvaluatedRule}");
             }
 
@@ -325,9 +329,12 @@ retry:
                 foreach ((CurrencyPair key, Task<RateResult> value) in result)
                 {
                     var rateResult = await value;
-                    TestLogs.LogInformation($"Testing {key} when default currency is {k.Key}");
-                    if (brokenShitcoins.Contains(key.ToString()))
+                    if (brokenShitcoins.Contains(key.Left))
+                    {
+                        TestLogs.LogInformation($"Skipping {key} because it is marked as broken");
                         continue;
+                    }
+                    TestLogs.LogInformation($"Testing {key} when default currency is {k.Key}");
                     Assert.True(rateResult.BidAsk != null, $"Impossible to get the rate {rateResult.EvaluatedRule}");
                 }
             }

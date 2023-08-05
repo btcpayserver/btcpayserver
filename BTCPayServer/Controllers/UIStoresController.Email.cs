@@ -10,6 +10,7 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Models.ServerViewModels;
 using BTCPayServer.Services.Mails;
+using BTCPayServer.Validation;
 using Microsoft.AspNetCore.Mvc;
 using MimeKit;
 
@@ -75,33 +76,22 @@ namespace BTCPayServer.Controllers
             if (command.StartsWith("test", StringComparison.InvariantCultureIgnoreCase))
             {
                 var rule = vm.Rules[index];
-                if (string.IsNullOrEmpty(rule.Subject) || string.IsNullOrEmpty(rule.Body) || string.IsNullOrEmpty(rule.To))
+                try
                 {
-                    TempData.SetStatusMessageModel(new StatusMessageModel
-                    {
-                        Severity = StatusMessageModel.StatusSeverity.Warning,
-                        Message = "Please fill all required fields before testing"
-                    });
-                }
-                else
-                {
-                    try
-                    {
-                        var emailSettings = blob.EmailSettings;
-                        using var client = await emailSettings.CreateSmtpClient();
-                        var message = emailSettings.CreateMailMessage(MailboxAddress.Parse(rule.To), "(test) " + rule.Subject, rule.Body, true);
-                        await client.SendAsync(message);
-                        await client.DisconnectAsync(true);
-                        TempData[WellKnownTempData.SuccessMessage] = $"Rule email saved and sent to {rule.To}. Please verify you received it.";
+                    var emailSettings = blob.EmailSettings;
+                    using var client = await emailSettings.CreateSmtpClient();
+                    var message = emailSettings.CreateMailMessage(MailboxAddress.Parse(rule.To), "(test) " + rule.Subject, rule.Body, true);
+                    await client.SendAsync(message);
+                    await client.DisconnectAsync(true);
+                    TempData[WellKnownTempData.SuccessMessage] = $"Rule email saved and sent to {rule.To}. Please verify you received it.";
 
-                        blob.EmailRules = vm.Rules;
-                        store.SetStoreBlob(blob);
-                        await _Repo.UpdateStore(store);
-                    }
-                    catch (Exception ex)
-                    {
-                        TempData[WellKnownTempData.ErrorMessage] = "Error: " + ex.Message;
-                    }
+                    blob.EmailRules = vm.Rules;
+                    store.SetStoreBlob(blob);
+                    await _Repo.UpdateStore(store);
+                }
+                catch (Exception ex)
+                {
+                    TempData[WellKnownTempData.ErrorMessage] = "Error: " + ex.Message;
                 }
             }
             else
@@ -128,10 +118,18 @@ namespace BTCPayServer.Controllers
         {
             [Required]
             public WebhookEventType Trigger { get; set; }
+            
             public bool CustomerEmail { get; set; }
+            
+            [Required]
+            [MailboxAddress]
             public string To { get; set; }
-            public string Body { get; set; }
+            
+            [Required]
             public string Subject { get; set; }
+            
+            [Required]
+            public string Body { get; set; }
         }
 
         [HttpGet("{storeId}/email-settings")]

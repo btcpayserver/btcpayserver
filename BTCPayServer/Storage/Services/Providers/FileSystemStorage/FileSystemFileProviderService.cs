@@ -52,7 +52,7 @@ namespace BTCPayServer.Storage.Services.Providers.FileSystemStorage
             BlobUrlAccess access = BlobUrlAccess.Read)
         {
 
-            var localFileDescriptor = new TemporaryLocalFileDescriptor
+            var localFileDescriptor = new TemporaryLocalFileDescriptor()
             {
                 Expiry = expiry,
                 FileId = storedFile.Id,
@@ -60,11 +60,9 @@ namespace BTCPayServer.Storage.Services.Providers.FileSystemStorage
             };
             var name = Guid.NewGuid().ToString();
             var fullPath = Path.Combine(_datadirs.Value.TempStorageDir, name);
-            var fileInfo = new FileInfo(fullPath);
-            if (!fileInfo.Exists)
+            if (!File.Exists(fullPath))
             {
-                fileInfo.Directory?.Create();
-                await File.Create(fileInfo.FullName).DisposeAsync();
+                await File.Create(fullPath).DisposeAsync();
             }
 
             await File.WriteAllTextAsync(Path.Combine(_datadirs.Value.TempStorageDir, name), JsonConvert.SerializeObject(localFileDescriptor));

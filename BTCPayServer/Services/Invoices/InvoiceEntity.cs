@@ -439,7 +439,7 @@ namespace BTCPayServer.Services.Invoices
             set;
         }
         /// <summary>
-        /// Minumum due to consider the invoice paid (can be negative if overpaid)
+        /// Minimum due to consider the invoice paid (can be negative if overpaid)
         /// </summary>
         [JsonIgnore]
         public decimal MinimumNetDue { get; set; }

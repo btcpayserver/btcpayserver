@@ -623,7 +623,6 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 return View("PointOfSale/UpdatePointOfSale", vm);
             }
 
-            var storeBlob = GetCurrentStore().GetStoreBlob();
             var settings = new PointOfSaleSettings
             {
                 Title = vm.Title,
@@ -642,11 +641,10 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 RedirectUrl = vm.RedirectUrl,
                 Description = vm.Description,
                 EmbeddedCSS = vm.EmbeddedCSS,
-                RedirectAutomatically =
-                    string.IsNullOrEmpty(vm.RedirectAutomatically) ? null : bool.Parse(vm.RedirectAutomatically)
+                RedirectAutomatically = string.IsNullOrEmpty(vm.RedirectAutomatically) ? null : bool.Parse(vm.RedirectAutomatically),
+                FormId = vm.FormId
             };
 
-            settings.FormId = vm.FormId;
             app.Name = vm.AppName;
             app.SetSettings(settings);
             await _appService.UpdateOrCreateApp(app);

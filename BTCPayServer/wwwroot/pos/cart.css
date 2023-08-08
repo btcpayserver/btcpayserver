@@ -87,6 +87,7 @@ header .cart-toggle-btn {
 }
 
 .posItem {
+    display: none;
     position: relative;
 }
 .posItem.posItem--inStock {
@@ -116,6 +117,15 @@ header .cart-toggle-btn {
 }
 .posItem--added .posItem-added {
     opacity: .8;
+}
+.posItem--displayed {
+    display: flex;
+}
+.posItem--first {
+    margin-left: auto;
+}
+.posItem--last {
+    margin-right: auto;
 }
 
 @media (max-width: 991px) {

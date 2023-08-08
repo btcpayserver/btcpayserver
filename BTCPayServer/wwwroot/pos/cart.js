@@ -68,18 +68,13 @@ document.addEventListener("DOMContentLoaded",function () {
         },
         watch: {
             searchTerm(term) {
-                const t = term.toLowerCase();
                 this.forEachItem(item => {
-                    const terms = decodeURIComponent(item.dataset.search.toLowerCase());
-                    const included = terms.indexOf(t) !== -1
-                    item.classList[included ? 'remove' : 'add']("d-none")
+                    item.classList[this.displayItem(item) ? 'remove' : 'add']("d-none")
                 })
             },
             displayCategory(category) {
                 this.forEachItem(item => {
-                    const categories = JSON.parse(item.dataset.categories)
-                    const included = category === "*" || categories.includes(category)
-                    item.classList[included ? 'remove' : 'add']("d-none")
+                    item.classList[this.displayItem(item) ? 'remove' : 'add']("d-none")
                 })
             },
             cart: {
@@ -166,6 +161,13 @@ document.addEventListener("DOMContentLoaded",function () {
             },
             clearCart() {
                 this.cart = [];
+            },
+            displayItem(item) {
+                const inSearch = !this.searchTerm || 
+                    decodeURIComponent(item.dataset.search ? item.dataset.search.toLowerCase() : '').indexOf(this.searchTerm.toLowerCase()) !== -1
+                const inCategories = this.displayCategory === "*" ||
+                    JSON.parse(item.dataset.categories).includes(this.displayCategory)
+                return inSearch && inCategories
             }
         },
         mounted() {

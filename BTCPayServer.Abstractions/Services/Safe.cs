@@ -22,6 +22,7 @@ namespace BTCPayServer.Abstractions.Services
         {
             return _htmlHelper.Raw(_htmlSanitizer.Sanitize(value));
         }
+        
         public IHtmlContent RawEncode(string value)
         {
             return _htmlHelper.Raw(HttpUtility.HtmlEncode(_htmlSanitizer.Sanitize(value)));

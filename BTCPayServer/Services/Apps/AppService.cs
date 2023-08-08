@@ -402,6 +402,32 @@ namespace BTCPayServer.Services.Apps
             }
         }
 #nullable enable
+        public static bool TryParsePosCartItems(JObject? posData, [MaybeNullWhen(false)] out Dictionary<string, int> cartItems)
+        {
+            cartItems = null;
+            if (posData is null)
+                return false;
+            if (!posData.TryGetValue("cart", out var cartObject))
+                return false;
+            if (cartObject is null)
+                return false;
+            
+            cartItems = new();
+            foreach (var o in cartObject.OfType<JObject>())
+            {
+                var id = o.GetValue("id", StringComparison.InvariantCulture)?.ToString();
+                if (id != null)
+                {
+                    var countStr = o.GetValue("count", StringComparison.InvariantCulture)?.ToString() ?? string.Empty;
+                    if (int.TryParse(countStr, out var count))
+                    {
+                        cartItems.TryAdd(id, count);
+                    }
+                }
+            }
+            return true;
+        }
+        
         public static bool TryParsePosCartItems(JObject? posData, [MaybeNullWhen(false)] out List<PosCartItem> cartItems)
         {
             cartItems = null;

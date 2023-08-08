@@ -642,7 +642,17 @@ namespace BTCPayServer.Tests
                 vmpos.CustomButtonText = "Nicolas Sexy Hair";
                 vmpos.CustomTipText = "Wanna tip?";
                 vmpos.CustomTipPercentages = "15,18,20";
-                vmpos.Template = "[ { \"id\": \"apple\", \"price\": 5, \"priceType\": \"Fixed\", \"title\": \"good apple\" }, { \"id\": \"orange\", \"title\": \"orange\", \"price\": 10, \"priceType\": \"Fixed\" }, { \"id\": \"donation\", \"title\": \"donation\", \"price\": 1.02, \"priceType\": \"Minimum\" } ]";
+                vmpos.Template = @"
+apple:
+  price: 5.0
+  title: good apple
+orange:
+  price: 10.0
+donation:
+  price: 1.02
+  custom: true
+";
+                vmpos.Template = AppService.SerializeTemplate(MigrationStartupTask.ParsePOSYML(vmpos.Template));
                 Assert.IsType<RedirectToActionResult>(pos.UpdatePointOfSale(app.Id, vmpos).Result);
                 vmpos = await pos.UpdatePointOfSale(app.Id).AssertViewModelAsync<UpdatePointOfSaleViewModel>();
                 Assert.Equal("hello", vmpos.Title);

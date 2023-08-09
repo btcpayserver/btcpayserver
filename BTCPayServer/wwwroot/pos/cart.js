@@ -68,19 +68,10 @@ document.addEventListener("DOMContentLoaded",function () {
         },
         watch: {
             searchTerm(term) {
-                const t = term.toLowerCase();
-                this.forEachItem(item => {
-                    const terms = decodeURIComponent(item.dataset.search.toLowerCase());
-                    const included = terms.indexOf(t) !== -1
-                    item.classList[included ? 'remove' : 'add']("d-none")
-                })
+                this.updateDisplay()
             },
             displayCategory(category) {
-                this.forEachItem(item => {
-                    const categories = JSON.parse(item.dataset.categories)
-                    const included = category === "*" || categories.includes(category)
-                    item.classList[included ? 'remove' : 'add']("d-none")
-                })
+                this.updateDisplay()
             },
             cart: {
                 handler(newCart) {
@@ -166,6 +157,27 @@ document.addEventListener("DOMContentLoaded",function () {
             },
             clearCart() {
                 this.cart = [];
+            },
+            displayItem(item) {
+                const inSearch = !this.searchTerm || 
+                    decodeURIComponent(item.dataset.search ? item.dataset.search.toLowerCase() : '')
+                        .indexOf(this.searchTerm.toLowerCase()) !== -1
+                const inCategories = this.displayCategory === "*" ||
+                    (item.dataset.categories ? JSON.parse(item.dataset.categories) : [])
+                        .includes(this.displayCategory)
+                return inSearch && inCategories
+            },
+            updateDisplay() {
+                this.forEachItem(item => {
+                    item.classList[this.displayItem(item) ? 'add' : 'remove']('posItem--displayed')
+                    item.classList.remove('posItem--first')
+                    item.classList.remove('posItem--last')
+                })
+                const $displayed = this.$refs.posItems.querySelectorAll('.posItem.posItem--displayed')
+                if ($displayed.length > 0) {
+                    $displayed[0].classList.add('posItem--first')
+                    $displayed[$displayed.length - 1].classList.add('posItem--last')
+                }
             }
         },
         mounted() {
@@ -184,6 +196,7 @@ document.addEventListener("DOMContentLoaded",function () {
                     }
                 });
             })
+            this.updateDisplay()
         },
     });
 });

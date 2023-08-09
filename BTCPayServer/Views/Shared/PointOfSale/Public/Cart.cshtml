@@ -64,14 +64,14 @@
                             : item.BuyButtonText;
                         buttonText = buttonText.Replace("{0}", formatted).Replace("{Price}", formatted);
                         var categories = new JArray(item.Categories ?? new object[] { });
-                        <div class="col posItem" :class="{ 'posItem--inStock': inStock(@index) }" data-index="@index" data-search="@Safe.RawEncode(item.Title + " " + item.Description)" data-categories='@Safe.Json(categories)'>
+                        <div class="col posItem posItem--displayed" :class="{ 'posItem--inStock': inStock(@index) }" data-index="@index" data-search="@Safe.RawEncode(item.Title + " " + item.Description)" data-categories='@Safe.Json(categories)'>
                             <div class="card h-100 px-0" v-on:click="addToCart(@index)">
                                 @if (!string.IsNullOrWhiteSpace(item.Image))
                                 {
                                     <img class="card-img-top" src="@item.Image" alt="@item.Title" asp-append-version="true">
                                 }
                                 <div class="card-body p-3 d-flex flex-column gap-2">
-                                    <h5 class="card-title m-0">@Safe.RawEncode(item.Title)</h5>
+                                    <h5 class="card-title m-0">@Safe.Raw(item.Title)</h5>
                                     <div class="d-flex gap-2 align-items-center">
                                         @if (item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Topup || item.Price == 0)
                                         {
@@ -90,7 +90,7 @@
                                     </div>
                                     @if (!string.IsNullOrWhiteSpace(item.Description))
                                     {
-                                        <p class="card-text">@Safe.RawEncode(item.Description)</p>
+                                        <p class="card-text">@Safe.Raw(item.Description)</p>
                                     }
                                 </div>
                                 @if (inStock)
@@ -104,7 +104,7 @@
                                             </div>
                                         }
                                         <button type="button" class="btn btn-primary w-100" :disabled="!inStock(@index)">
-                                            @Safe.RawEncode(buttonText)
+                                            @Safe.Raw(buttonText)
                                         </button>
                                     </form>
                                     <div class="posItem-added"><vc:icon symbol="checkmark" /></div>

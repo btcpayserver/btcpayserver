@@ -121,7 +121,17 @@ document.addEventListener("DOMContentLoaded",function () {
                 if (!this.inStock(index)) return false;
                 
                 const item = this.items[index];
-                let itemInCart = this.cart.find(lineItem => lineItem.id === item.id);
+                const $posItem = this.$refs.posItems.querySelectorAll('.posItem')[index];
+                
+                // Check if price is needed
+                const isFixedPrice = item.priceType.toLowerCase() === 'fixed';
+                if (!isFixedPrice) {
+                    const $amount = $posItem.querySelector('input[name="amount"]');
+                    if (!$amount.reportValidity()) return false;
+                    item.price = parseFloat($amount.value);
+                }
+                
+                let itemInCart = this.cart.find(lineItem => lineItem.id === item.id && lineItem.price === item.price);
 
                 // Add new item because it doesn't exist yet
                 if (!itemInCart) {
@@ -138,7 +148,6 @@ document.addEventListener("DOMContentLoaded",function () {
                 itemInCart.count += 1;
                 
                 // Animate
-                const $posItem = this.$refs.posItems.querySelectorAll('.posItem')[index];
                 if(!$posItem.classList.contains(POS_ITEM_ADDED_CLASS)) $posItem.classList.add(POS_ITEM_ADDED_CLASS);
                 
                 return true;

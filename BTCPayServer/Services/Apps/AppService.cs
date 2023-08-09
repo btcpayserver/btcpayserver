@@ -411,7 +411,6 @@ namespace BTCPayServer.Services.Apps
                 return false;
             if (cartObject is null)
                 return false;
-
             cartItems = new();
             foreach (var o in cartObject.OfType<JObject>())
             {
@@ -423,6 +422,29 @@ namespace BTCPayServer.Services.Apps
                     {
                         cartItems.TryAdd(id, count);
                     }
+                }
+            }
+            return true;
+        }
+        
+        public static bool TryParsePosCartItems(JObject? posData, [MaybeNullWhen(false)] out List<PosCartItem> cartItems)
+        {
+            cartItems = null;
+            if (posData is null)
+                return false;
+            if (!posData.TryGetValue("cart", out var cartObject))
+                return false;
+
+            cartItems = new List<PosCartItem>();
+            foreach (var o in cartObject.OfType<JObject>())
+            {
+                var id = o.GetValue("id", StringComparison.InvariantCulture)?.ToString();
+                if (id == null) continue;
+                var countStr = o.GetValue("count", StringComparison.InvariantCulture)?.ToString() ?? string.Empty;
+                var price = o.GetValue("price")?.Value<decimal>() ?? 0m;
+                if (int.TryParse(countStr, out var count))
+                {
+                    cartItems.Add(new PosCartItem { Id = id, Count = count, Price = price });
                 }
             }
             return true;
@@ -447,6 +469,13 @@ namespace BTCPayServer.Services.Apps
             return await appType?.ViewLink(app)!;
         }
 #nullable restore
+    }
+
+    public class PosCartItem
+    {
+        public string Id { get; set; }
+        public int Count { get; set; }
+        public decimal Price { get; set; }
     }
 
     public class ItemStats

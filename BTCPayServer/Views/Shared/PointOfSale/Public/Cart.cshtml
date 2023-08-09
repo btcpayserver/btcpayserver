@@ -83,7 +83,7 @@
                                         }
                                         @if (item.Inventory.HasValue)
                                         {
-                                            <span class="badge text-bg-warning" v-text="inventoryText(@index)">
+                                            <span class="badge text-bg-warning inventory" v-text="inventoryText(@index)">
                                                 @(item.Inventory > 0 ? $"{item.Inventory} left" : "Sold out")
                                             </span>
                                         }
@@ -95,11 +95,18 @@
                                 </div>
                                 @if (inStock)
                                 {
-                                    <div class="card-footer bg-transparent border-0 pt-0 pb-3">
+                                    <form class="card-footer bg-transparent border-0 pt-0 pb-3">
+                                        @if (item.PriceType != ViewPointOfSaleViewModel.ItemPriceType.Fixed)
+                                        {
+                                            <div class="input-group mb-2">
+                                                <span class="input-group-text">@Model.CurrencySymbol</span>
+                                                <input class="form-control" type="number" min="@(item.Price ?? 0)" step="@Model.Step" name="amount" placeholder="Amount" value="@item.Price" required v-on:click.stop>
+                                            </div>
+                                        }
                                         <button type="button" class="btn btn-primary w-100" :disabled="!inStock(@index)">
                                             @Safe.RawEncode(buttonText)
                                         </button>
-                                    </div>
+                                    </form>
                                     <div class="posItem-added"><vc:icon symbol="checkmark" /></div>
                                 }
                             </div>
@@ -141,7 +148,7 @@
                                 </td>
                                 <td class="align-middle">
                                     <div class="d-flex align-items-center gap-2 justify-content-end quantity">
-                                        <span class="badge text-bg-warning" v-if="item.inventory">
+                                        <span class="badge text-bg-warning inventory" v-if="item.inventory">
                                             {{ item.inventory > 0 ? `${item.inventory} left` : "Sold out" }}
                                         </span>
                                         <div class="d-flex align-items-center gap-2">

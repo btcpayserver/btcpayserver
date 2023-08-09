@@ -55,14 +55,11 @@ document.addEventListener("DOMContentLoaded",function () {
                 return parseFloat(this.cart.reduce((res, item) => res + (item.price||0) * item.count, 0).toFixed(this.currencyInfo.divisibility))
             },
             posdata () {
-                const data = {
-                    cart: this.cart,
-                    subTotal: this.amountNumeric,
-                    total: this.totalNumeric
-                }
-                if (this.tipNumeric > 0) data.tip = this.tipNumeric
+                const data = { cart: this.cart, subTotal: this.amountNumeric }
                 if (this.discountNumeric > 0) data.discountAmount = this.discountNumeric
                 if (this.discountPercentNumeric > 0) data.discountPercentage = this.discountPercentNumeric
+                if (this.tipNumeric > 0) data.tip = this.tipNumeric
+                data.total = this.totalNumeric
                 return JSON.stringify(data)
             }
         },

@@ -347,9 +347,10 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                         var receiptData = new JObject();
                         if (choice is not null)
                         {
-                            receiptData = JObject.FromObject(new Dictionary<string, string>()
+                            receiptData = JObject.FromObject(new Dictionary<string, string>
                                 {
-                                    {"Title", choice.Title}, {"Description", choice.Description},
+                                    {"Title", choice.Title},
+                                    {"Description", choice.Description},
                                 });
                         }
                         else if (jposData is not null)
@@ -370,21 +371,21 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                                     var totalPrice = _displayFormatter.Currency(cartItem.Price * cartItem.Count, settings.Currency, DisplayFormatter.CurrencyFormat.Symbol);
                                     var ident = selectedChoice.Title ?? selectedChoice.Id;
                                     var key = selectedChoice.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Fixed ? ident : $"{ident} ({singlePrice})";
-                                    cartData.Add(key, $"{singlePrice} x {cartItem.Count} = {totalPrice}");
+                                    cartData.Add(key, $"{cartItem.Count} x {singlePrice} = {totalPrice}");
                                 }
                                 receiptData.Add("Cart", cartData);
                             }
-
+                            receiptData.Add("Subtotal", _displayFormatter.Currency(appPosData.Subtotal, settings.Currency, DisplayFormatter.CurrencyFormat.Symbol));
                             if (appPosData.DiscountAmount > 0)
                             {
-                                receiptData.Add("Discount",
-                                    $"{_displayFormatter.Currency(appPosData.DiscountAmount, settings.Currency, DisplayFormatter.CurrencyFormat.Symbol)} {(appPosData.DiscountPercentage > 0 ? $"({appPosData.DiscountPercentage}%)" : string.Empty)}");
+                                var discountFormatted = _displayFormatter.Currency(appPosData.DiscountAmount, settings.Currency, DisplayFormatter.CurrencyFormat.Symbol);
+                                receiptData.Add("Discount", appPosData.DiscountPercentage > 0 ? $"{appPosData.DiscountPercentage}% = {discountFormatted}" : discountFormatted);
                             }
-
                             if (appPosData.Tip > 0)
                             {
                                 receiptData.Add("Tip", _displayFormatter.Currency(appPosData.Tip, settings.Currency, DisplayFormatter.CurrencyFormat.Symbol));
                             }
+                            receiptData.Add("Total", _displayFormatter.Currency(appPosData.Total, settings.Currency, DisplayFormatter.CurrencyFormat.Symbol));
                         }
                         entity.Metadata.SetAdditionalData("receiptData", receiptData);
 

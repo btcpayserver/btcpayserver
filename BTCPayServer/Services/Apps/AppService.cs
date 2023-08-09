@@ -411,7 +411,6 @@ namespace BTCPayServer.Services.Apps
                 return false;
             if (cartObject is null)
                 return false;
-            
             cartItems = new();
             foreach (var o in cartObject.OfType<JObject>())
             {

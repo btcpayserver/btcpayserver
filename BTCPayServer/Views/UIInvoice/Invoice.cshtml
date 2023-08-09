@@ -473,7 +473,19 @@
                     </table>
                 </div>
             }
-            @if (Model.AdditionalData.Any())
+            @if (Model.ReceiptData != null && Model.ReceiptData.Any())
+            {
+                <div>
+                    <h3 class="mb-3">
+                        <span>Receipt Information</span>
+                        <a href="https://docs.btcpayserver.org/Development/InvoiceMetadata/" target="_blank" rel="noreferrer noopener">
+                            <vc:icon symbol="info" />
+                        </a>
+                    </h3>
+                    <partial name="PosData" model="(Model.ReceiptData, 1)" />
+                </div>
+            }
+            @if (Model.AdditionalData != null && Model.AdditionalData.Any())
             {
                 <div>
                     <h3 class="mb-3">

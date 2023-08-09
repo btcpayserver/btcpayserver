@@ -1,17 +1,14 @@
-@using Microsoft.AspNetCore.Mvc.TagHelpers
 @model (Dictionary<string, object> Items, int Level)
 
 @functions {
-
     private bool IsValidURL(string source)
     {
         return Uri.TryCreate(source, UriKind.Absolute, out var uriResult) &&
                (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
     }
-
 }
 
-@if (Model.Items.Count > 0)
+@if (Model.Items.Any())
 {
     <table class="table my-0" v-pre>
         @foreach (var (key, value) in Model.Items)
@@ -21,7 +18,7 @@
                 {
                     if (!string.IsNullOrEmpty(key))
                     {
-                        <th class="w-150px">@key</th>
+                        <th class="w-225px">@key</th>
                     }
                     <td style="white-space:pre-wrap">@* Explicitely remove whitespace at front here *@@if (IsValidURL(str))
                         {
@@ -33,7 +30,7 @@
                         }
                     </td>
                 }
-                else if (value is Dictionary<string, object> {Count: > 0 } subItems)
+                else if (value is Dictionary<string, object> { Count: > 0 } subItems)
                 {
                     <td colspan="2">
                         @{
@@ -60,13 +57,13 @@
                         }
                         @foreach (var item in valueArray)
                         {
-                            @if (item is Dictionary<string, object> {Count: > 0 } subItems2)
+                            @if (item is Dictionary<string, object> { Count: > 0 } subItems2)
                             {
                                 <partial name="PosData" model="@((subItems2, Model.Level + 1))" />
                             }
                             else
                             {
-                                <partial name="PosData" model="@((new Dictionary<string, object>() {{"", item}}, Model.Level + 1))" />
+                                <partial name="PosData" model="@((new Dictionary<string, object> {{"", item}}, Model.Level + 1))" />
                             }
                         }
                     </td>

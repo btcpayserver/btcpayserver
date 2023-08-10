@@ -662,54 +662,52 @@ namespace BTCPayServer.Services.Invoices
 
             if (queryObject.OrderId is { Length: > 0 })
             {
-                var statusSet = queryObject.OrderId.ToHashSet().ToArray();
-                query = query.Where(i => statusSet.Contains(i.OrderId));
+                var orderIdSet = queryObject.OrderId.ToHashSet().ToArray();
+                query = query.Where(i => orderIdSet.Contains(i.OrderId));
             }
             if (queryObject.ItemCode is { Length: > 0 })
             {
-                var statusSet = queryObject.ItemCode.ToHashSet().ToArray();
-                query = query.Where(i => statusSet.Contains(i.ItemCode));
+                var itemCodeSet = queryObject.ItemCode.ToHashSet().ToArray();
+                query = query.Where(i => itemCodeSet.Contains(i.ItemCode));
             }
 
-            if (queryObject.Status is { Length: > 0 })
+            var statusSet = queryObject.Status is { Length: > 0 }
+                ? queryObject.Status.Select(s => s.ToLowerInvariant()).ToHashSet()
+                : new HashSet<string>();
+            var exceptionStatusSet = queryObject.ExceptionStatus is { Length: > 0 }
+                ? queryObject.ExceptionStatus.Select(NormalizeExceptionStatus).ToHashSet()
+                : new HashSet<string>();
+
+            // We make sure here that the old filters still work
+            if (statusSet.Contains("paid"))
+                statusSet.Add("processing");
+            if (statusSet.Contains("processing"))
+                statusSet.Add("paid");
+            if (statusSet.Contains("confirmed"))
             {
-                var statusSet = queryObject.Status.Select(s => s.ToLowerInvariant()).ToHashSet();
-                // We make sure here that the old filters still work
-                foreach (var status in queryObject.Status)
-                {
-                    if (status == "paid")
-                        statusSet.Add("processing");
-                    if (status == "processing")
-                        statusSet.Add("paid");
-                    if (status == "confirmed")
-                    {
-                        statusSet.Add("complete");
-                        statusSet.Add("settled");
-                    }
-                    if (status == "settled")
-                    {
-                        statusSet.Add("complete");
-                        statusSet.Add("confirmed");
-                    }
-                    if (status == "complete")
-                    {
-                        statusSet.Add("settled");
-                        statusSet.Add("confirmed");
-                    }
-                }
-                query = query.Where(i => statusSet.Contains(i.Status));
+                statusSet.Add("complete");
+                statusSet.Add("settled");
+            }
+            if (statusSet.Contains("settled"))
+            {
+                statusSet.Add("complete");
+                statusSet.Add("confirmed");
+            }
+            if (statusSet.Contains("complete"))
+            {
+                statusSet.Add("settled");
+                statusSet.Add("confirmed");
+            }
+
+            if (statusSet.Any() || exceptionStatusSet.Any())
+            {
+                query = query.Where(i => statusSet.Contains(i.Status) || exceptionStatusSet.Contains(i.ExceptionStatus));
             }
 
             if (queryObject.Unusual != null)
             {
-                var unused = queryObject.Unusual.Value;
-                query = query.Where(i => unused == (i.Status == "invalid" || !string.IsNullOrEmpty(i.ExceptionStatus)));
-            }
-
-            if (queryObject.ExceptionStatus is { Length: > 0 })
-            {
-                var exceptionStatusSet = queryObject.ExceptionStatus.Select(NormalizeExceptionStatus).ToHashSet().ToArray();
-                query = query.Where(i => exceptionStatusSet.Contains(i.ExceptionStatus));
+                var unusual = queryObject.Unusual.Value;
+                query = query.Where(i => unusual == (i.Status == "invalid" || !string.IsNullOrEmpty(i.ExceptionStatus)));
             }
 
             query = query.OrderByDescending(q => q.Created);

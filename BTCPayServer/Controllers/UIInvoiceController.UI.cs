@@ -123,6 +123,7 @@ namespace BTCPayServer.Controllers
             var additionalData = metaData
                 .Where(dict => !InvoiceAdditionalDataExclude.Contains(dict.Key))
                 .ToDictionary(dict => dict.Key, dict => dict.Value);
+            
             var model = new InvoiceDetailsModel
             {
                 StoreId = store.Id,
@@ -149,7 +150,6 @@ namespace BTCPayServer.Controllers
                 StatusException = invoice.ExceptionStatus,
                 Events = invoice.Events,
                 Metadata = metaData,
-                AdditionalData = additionalData,
                 Archived = invoice.Archived,
                 CanRefund = invoiceState.CanRefund(),
                 Refunds = invoice.Refunds,
@@ -166,6 +166,13 @@ namespace BTCPayServer.Controllers
             model.CryptoPayments = details.CryptoPayments;
             model.Payments = details.Payments;
             model.Overpaid = details.Overpaid;
+            
+            if (additionalData.ContainsKey("receiptData"))
+            {
+                model.ReceiptData = (Dictionary<string, object>)additionalData["receiptData"];
+                additionalData.Remove("receiptData");
+            }
+            model.AdditionalData = additionalData;
 
             return View(model);
         }

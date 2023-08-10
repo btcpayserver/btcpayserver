@@ -3,9 +3,6 @@
 @using BTCPayServer.Client.Models
 @using BTCPayServer.Components.QRCode
 @using BTCPayServer.Services
-@using Microsoft.AspNetCore.Mvc.TagHelpers
-@using BTCPayServer.Abstractions.TagHelpers
-@using BTCPayServer.Payments
 @inject BTCPayServerEnvironment Env
 @inject DisplayFormatter DisplayFormatter
 @{
@@ -84,25 +81,7 @@
                                 {
                                     <div class="d-flex flex-column">
                                         <dd class="text-muted mb-0 fw-semibold">Order ID</dd>
-                                        <dt class="fs-5 mb-0 text-break fw-semibold">
-                                            @if (!string.IsNullOrEmpty(Model.OrderUrl))
-                                            {
-                                                <a href="@Model.OrderUrl" rel="noreferrer noopener" target="_blank">
-                                                    @if (string.IsNullOrEmpty(Model.OrderId))
-                                                    {
-                                                        <span>View Order</span>
-                                                    }
-                                                    else
-                                                    {
-                                                        @Model.OrderId
-                                                    }
-                                                </a>
-                                            }
-                                            else
-                                            {
-                                                <span>@Model.OrderId</span>
-                                            }
-                                        </dt>
+                                        <dt class="fs-5 mb-0 text-break fw-semibold">@Model.OrderId</dt>
                                     </div>
                                 }
                             </dl>
@@ -115,6 +94,15 @@
                     }
                     else if (isSettled)
                     {
+                        if (Model.AdditionalData?.Any() is true)
+                        {
+                            <div id="AdditionalData" class="bg-tile p-3 p-sm-4 rounded">
+                                <h2 class="h4 mb-3">Additional Data</h2>
+                                <div class="table-responsive my-0">
+                                    <partial name="PosData" model="(Model.AdditionalData, 1)"/>
+                                </div>
+                            </div>
+                        }
                         if (Model.Payments?.Any() is true)
                         {
                             <div id="PaymentDetails" class="bg-tile p-3 p-sm-4 rounded">
@@ -178,15 +166,10 @@
                                 </div>
                             </div>
                         }
-                        if (Model.AdditionalData?.Any() is true)
-                        {
-                            <div id="AdditionalData" class="bg-tile p-3 p-sm-4 rounded">
-                                <h2 class="h4 mb-3">Additional Data</h2>
-                                <div class="table-responsive my-0">
-                                    <partial name="PosData" model="(Model.AdditionalData, 1)"/>
-                                </div>
-                            </div>
-                        }
+                    }
+                    @if (!string.IsNullOrEmpty(Model.OrderUrl))
+                    {
+                        <a href="@Model.OrderUrl" class="btn btn-secondary rounded-pill mx-auto mt-3" rel="noreferrer noopener" target="_blank">Return to @(string.IsNullOrEmpty(Model.StoreName) ? "store" : Model.StoreName)</a>
                     }
                 </div>
             </div>

@@ -620,8 +620,8 @@ namespace BTCPayServer.Services.Invoices
             {
                 if (queryObject.InvoiceId.Length > 1)
                 {
-                    var statusSet = queryObject.InvoiceId.ToHashSet().ToArray();
-                    query = query.Where(i => statusSet.Contains(i.Id));
+                    var idSet = queryObject.InvoiceId.ToHashSet().ToArray();
+                    query = query.Where(i => idSet.Contains(i.Id));
                 }
                 else
                 {
@@ -673,9 +673,9 @@ namespace BTCPayServer.Services.Invoices
 
             if (queryObject.Status is { Length: > 0 })
             {
-                var statusSet = queryObject.Status.ToHashSet();
+                var statusSet = queryObject.Status.Select(s => s.ToLowerInvariant()).ToHashSet();
                 // We make sure here that the old filters still work
-                foreach (var status in queryObject.Status.Select(s => s.ToLowerInvariant()))
+                foreach (var status in queryObject.Status)
                 {
                     if (status == "paid")
                         statusSet.Add("processing");
@@ -708,7 +708,7 @@ namespace BTCPayServer.Services.Invoices
 
             if (queryObject.ExceptionStatus is { Length: > 0 })
             {
-                var exceptionStatusSet = queryObject.ExceptionStatus.Select(s => NormalizeExceptionStatus(s)).ToHashSet().ToArray();
+                var exceptionStatusSet = queryObject.ExceptionStatus.Select(NormalizeExceptionStatus).ToHashSet().ToArray();
                 query = query.Where(i => exceptionStatusSet.Contains(i.ExceptionStatus));
             }
 
@@ -719,6 +719,7 @@ namespace BTCPayServer.Services.Invoices
 
             if (queryObject.Take != null)
                 query = query.Take(queryObject.Take.Value);
+            
             return query;
         }
         public Task<InvoiceEntity[]> GetInvoices(InvoiceQuery queryObject)

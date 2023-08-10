@@ -251,15 +251,16 @@
             }
         </button>
         <div class="dropdown-menu" aria-labelledby="StatusOptionsToggle">
-            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("status", "invalid")" class="dropdown-item @(HasArrayFilter("status", "invalid") ? "custom-active" : "")">Invalid</a>
-            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("status", "processing")" class="dropdown-item @(HasArrayFilter("status", "processing") ? "custom-active" : "")">Processing</a>
             <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("status", "settled")" class="dropdown-item @(HasArrayFilter("status", "settled") ? "custom-active" : "")">Settled</a>
+            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("status", "processing")" class="dropdown-item @(HasArrayFilter("status", "processing") ? "custom-active" : "")">Processing</a>
+            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("status", "expired")" class="dropdown-item @(HasArrayFilter("status", "expired") ? "custom-active" : "")">Expired</a>
+            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("status", "invalid")" class="dropdown-item @(HasArrayFilter("status", "invalid") ? "custom-active" : "")">Invalid</a>
             <hr class="dropdown-divider">
             <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("exceptionstatus", "paidLate")" class="dropdown-item @(HasArrayFilter("exceptionstatus", "paidLate") ? "custom-active" : "")">Settled Late</a>
             <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("exceptionstatus", "paidPartial")" class="dropdown-item @(HasArrayFilter("exceptionstatus", "paidPartial") ? "custom-active" : "")">Settled Partial</a>
             <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("exceptionstatus", "paidOver")" class="dropdown-item @(HasArrayFilter("exceptionstatus", "paidOver") ? "custom-active" : "")">Settled Over</a>
-            <hr class="dropdown-divider">
             <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("unusual", "true")" class="dropdown-item @(HasBooleanFilter("unusual") ? "custom-active" : "")">Unusual</a>
+            <hr class="dropdown-divider">
             <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("includearchived", "true")" class="dropdown-item @(HasBooleanFilter("includearchived") ? "custom-active" : "")" id="StatusOptionsIncludeArchived">Archived</a>
         </div>
     </div>

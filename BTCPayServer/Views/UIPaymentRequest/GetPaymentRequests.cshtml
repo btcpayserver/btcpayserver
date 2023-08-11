@@ -98,7 +98,7 @@
             {
                 <tr>
                     <td>
-                        <a asp-action="ViewPaymentRequest" asp-route-storeId="@item.StoreId" asp-route-payReqId="@item.Id" id="PaymentRequest-@item.Id">@item.Title</a>
+                        <a asp-action="ViewPaymentRequest" asp-route-payReqId="@item.Id" id="PaymentRequest-@item.Id">@item.Title</a>
                     </td>
                     <td>
                         @(item.ExpiryDate?.ToBrowserDate() ?? new HtmlString("<span class=\"text-muted\">No Expiry</span>"))

@@ -6,3 +6,55 @@
 .lead :last-child {
     margin-bottom: 0;
 }
+.posItem {
+    display: none;
+    position: relative;
+}
+.posItem.posItem--inStock {
+    cursor: pointer;
+}
+.posItem-added {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--btcpay-success);
+    color: var(--btcpay-success-text);
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    bottom: 0;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--btcpay-transition-duration-default) ease-in-out;
+}
+.posItem-added .icon {
+    width: 2rem;
+    height: 2rem;
+}
+.posItem--added {
+    pointer-events: none;
+}
+.posItem--added .posItem-added {
+    opacity: .8;
+}
+.posItem--displayed {
+    display: flex;
+}
+.posItem--first {
+    margin-left: auto;
+}
+.posItem--last {
+    margin-right: auto;
+}
+.posItem .card {
+    width: 100%;
+}
+.posItem .card .card-body {
+    flex-grow: 0;
+}
+.posItem .card .card-img-top {
+    max-height: 210px;
+    object-fit: scale-down;
+    margin-bottom: auto;
+}

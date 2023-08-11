@@ -35,7 +35,7 @@
                     : item.BuyButtonText;
                 buttonText = buttonText.Replace("{0}", formatted).Replace("{Price}", formatted);
 
-                <div class="col">
+                <div class="col posItem posItem--displayed">
                     <div class="card h-100 px-0" data-id="@x">
                         @if (!string.IsNullOrWhiteSpace(item.Image))
                         {

@@ -6,7 +6,7 @@ namespace BTCPayApp.CommonServer
     public interface IBTCPayAppServerClient
     {
         Task OnTransactionDetected(string txid);
-        void NewBlock(string block);
+        Task NewBlock(string block);
     }
     
     public interface IBTCPayAppServerHub

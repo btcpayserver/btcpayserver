@@ -151,7 +151,16 @@ namespace BTCPayServer.Payments.Bitcoin
                         {
                             case NBXplorer.Models.NewBlockEvent evt:
                                 await UpdatePaymentStates(wallet);
-                                _Aggregator.Publish(new Events.NewBlockEvent() { CryptoCode = evt.CryptoCode });
+                                _Aggregator.Publish(new Events.NewBlockEvent()
+                                    {
+                                        CryptoCode = wallet.Network.CryptoCode,
+                                        Confirmations = evt.Confirmations,
+                                        Hash = evt.Hash,
+                                        Height = evt.Height,
+                                        EventId = evt.EventId,
+                                        PreviousBlockHash = evt.PreviousBlockHash
+                                    }
+                                );
                                 break;
                             case NBXplorer.Models.NewTransactionEvent evt:
                                 if (evt.DerivationStrategy != null)

@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable enable
+using System;
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
@@ -6,6 +7,7 @@ using System.Threading.Tasks;
 using BTCPayApp.CommonServer;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Data;
+using BTCPayServer.Services.Wallets;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
@@ -26,7 +28,7 @@ public class BTCPayAppState : IHostedService
     private readonly BTCPayNetworkProvider _networkProvider;
     private readonly EventAggregator _eventAggregator;
     private CompositeDisposable? _compositeDisposable;
-    private ExplorerClient _explorerClient;
+    public ExplorerClient ExplorerClient { get; private set; }
     private DerivationSchemeParser _derivationSchemeParser;
     private readonly ConcurrentDictionary<string, TrackedSource> _connectionScheme = new();
 
@@ -46,7 +48,7 @@ public class BTCPayAppState : IHostedService
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        _explorerClient = _explorerClientProvider.GetExplorerClient("BTC");
+        ExplorerClient = _explorerClientProvider.GetExplorerClient("BTC");
         _derivationSchemeParser = new DerivationSchemeParser(_networkProvider.BTC);
         _compositeDisposable = new();
         _compositeDisposable.Add(
@@ -67,7 +69,7 @@ public class BTCPayAppState : IHostedService
             .ForEach(connectionId =>
             {
                 _hubContext.Clients.Client(connectionId)
-                    .OnTransactionDetected(obj.TransactionData.TransactionHash.ToString());
+                    .TransactionDetected(obj.TransactionData.TransactionHash.ToString());
             });
     }
 
@@ -84,13 +86,19 @@ public class BTCPayAppState : IHostedService
         return Task.CompletedTask;
     }
 
+    public TrackedSource? GetConnectionState(string connectionId)
+    {
+        _connectionScheme.TryGetValue(connectionId, out var res);
+        return res;
+    }
+
     public async Task Handshake(string contextConnectionId, AppHandshake handshake)
     {
         try
         {
             var ts =
                 TrackedSource.Create(_derivationSchemeParser.Parse(handshake.DerivationScheme));
-            await _explorerClient.TrackAsync(ts);
+            await ExplorerClient.TrackAsync(ts);
             _connectionScheme.AddOrReplace(contextConnectionId, ts);
         }
         catch (Exception e)
@@ -110,11 +118,13 @@ public class BTCPayAppState : IHostedService
 public class BTCPayAppHub : Hub<IBTCPayAppServerClient>, IBTCPayAppServerHub
 {
     private readonly BTCPayAppState _appState;
+    private readonly BTCPayWallet _wallet;
 
 
-    public BTCPayAppHub(BTCPayAppState appState)
+    public BTCPayAppHub(BTCPayAppState appState, BTCPayWalletProvider walletProvider)
     {
         _appState = appState;
+        _wallet = walletProvider.GetWallet("BTC");
     }
 
 
@@ -122,7 +132,7 @@ public class BTCPayAppHub : Hub<IBTCPayAppServerClient>, IBTCPayAppServerHub
     {
     }
 
-    public override Task OnDisconnectedAsync(Exception exception)
+    public override Task OnDisconnectedAsync(Exception? exception)
     {
         _appState.RemoveConnection(Context.ConnectionId);
         return base.OnDisconnectedAsync(exception);
@@ -131,5 +141,20 @@ public class BTCPayAppHub : Hub<IBTCPayAppServerClient>, IBTCPayAppServerHub
     public Task Handshake(AppHandshake handshake)
     {
         return _appState.Handshake(Context.ConnectionId, handshake);
+    }
+
+    public async Task GetTransactions()
+    {
+       var deriv =  _appState.GetConnectionState(Context.ConnectionId);
+        if(deriv is null)
+            throw new InvalidOperationException("Handshake not done");
+        var txs = await _appState.ExplorerClient.GetTransactionsAsync(deriv);
+        if (txs is null)
+        {
+            throw new InvalidOperationException("NBXplorer failed to get transactions");
+        }
+
+        
+
     }
 }

@@ -121,9 +121,9 @@ namespace BTCPayServer.Payments.Lightning
 
         public async Task<NodeInfo[]> GetNodeInfo(LightningSupportedPaymentMethod supportedPaymentMethod, BTCPayNetwork network, InvoiceLogs invoiceLogs, bool? preferOnion = null, bool throws = false)
         {
-            if (!_Dashboard.IsFullySynched(network.CryptoCode, out var summary))
-                throw new PaymentMethodUnavailableException("Full node not available");
-            
+            var synced = _Dashboard.IsFullySynched(network.CryptoCode, out var summary);
+            if (supportedPaymentMethod.IsInternalNode && !synced)
+                throw new PaymentMethodUnavailableException("Full node not available");;
             try
             {
                 using var cts = new CancellationTokenSource(LightningTimeout);
@@ -156,13 +156,13 @@ namespace BTCPayServer.Payments.Lightning
                 var nodeInfo = preferOnion != null && info.NodeInfoList.Any(i => i.IsTor == preferOnion)
                     ? info.NodeInfoList.Where(i => i.IsTor == preferOnion.Value).ToArray()
                     : info.NodeInfoList.Select(i => i).ToArray();
-                
+
                 var blocksGap = summary.Status.ChainHeight - info.BlockHeight;
                 if (blocksGap > 10 && !(isLndHub && info.BlockHeight == 0))
                 {
-                    throw new PaymentMethodUnavailableException($"The lightning node is not synched ({blocksGap} blocks left)");
+                    throw new PaymentMethodUnavailableException(
+                        $"The lightning node is not synched ({blocksGap} blocks left)");
                 }
-
                 return nodeInfo;
             }
             catch (Exception e) when (!throws)

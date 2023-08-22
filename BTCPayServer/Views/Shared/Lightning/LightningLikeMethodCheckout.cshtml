@@ -28,7 +28,7 @@
                 </div>
             </div>
             <div class="payment__details__instruction__open-wallet" v-if="srvModel.invoiceBitcoinUrl && srvModel.showPayInWalletButton">
-                <a class="payment__details__instruction__open-wallet__btn action-button" target="_top" v-bind:href="srvModel.invoiceBitcoinUrl">
+                <a class="payment__details__instruction__open-wallet__btn action-button" v-bind:href="srvModel.invoiceBitcoinUrl">
                     <span>{{$t("Open in wallet")}}</span>
                 </a>
             </div>

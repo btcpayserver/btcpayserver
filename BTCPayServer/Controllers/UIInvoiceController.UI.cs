@@ -234,18 +234,14 @@ namespace BTCPayServer.Controllers
 
                     string txId = paymentData.GetPaymentId();
                     string? link = GetTransactionLink(paymentMethodId, txId);
-                    var paymentMethod = i.GetPaymentMethod(paymentMethodId);
-                    var amount = paymentData.GetValue();
-                    var rate = paymentMethod.Rate;
-                    var paid = (amount - paymentEntity.NetworkFee) * rate;
 
                     return new ViewPaymentRequestViewModel.PaymentRequestInvoicePayment
                     {
-                        Amount = amount,
-                        Paid = paid,
+                        Amount = paymentEntity.PaidAmount.Gross,
+                        Paid = paymentEntity.InvoicePaidAmount.Net,
                         ReceivedDate = paymentEntity.ReceivedTime.DateTime,
-                        PaidFormatted = _displayFormatter.Currency(paid, i.Currency, DisplayFormatter.CurrencyFormat.Symbol),
-                        RateFormatted = _displayFormatter.Currency(rate, i.Currency, DisplayFormatter.CurrencyFormat.Symbol),
+                        PaidFormatted = _displayFormatter.Currency(paymentEntity.InvoicePaidAmount.Net, i.Currency, DisplayFormatter.CurrencyFormat.Symbol),
+                        RateFormatted = _displayFormatter.Currency(paymentEntity.Rate, i.Currency, DisplayFormatter.CurrencyFormat.Symbol),
                         PaymentMethod = paymentMethodId.ToPrettyString(),
                         Link = link,
                         Id = txId,
@@ -257,7 +253,7 @@ namespace BTCPayServer.Controllers
                 .Where(payment => payment != null)
                 .ToList();
 
-            vm.Amount = payments.Sum(p => p!.Paid);
+            vm.Amount = i.PaidAmount.Net;
             vm.Payments = receipt.ShowPayments is false ? null : payments;
             vm.AdditionalData = PosDataParser.ParsePosData(receiptData);
 

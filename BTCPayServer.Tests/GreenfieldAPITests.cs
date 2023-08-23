@@ -3212,6 +3212,9 @@ namespace BTCPayServer.Tests
             });
             var transaction = await client.GetOnChainWalletTransaction(walletId.StoreId, walletId.CryptoCode, txdata.TransactionHash.ToString());
 
+            // Check skip doesn't crash
+            await client.ShowOnChainWalletTransactions(walletId.StoreId, walletId.CryptoCode, skip: 1);
+
             Assert.Equal(transaction.TransactionHash, txdata.TransactionHash);
             Assert.Equal(String.Empty, transaction.Comment);
 #pragma warning disable CS0612 // Type or member is obsolete

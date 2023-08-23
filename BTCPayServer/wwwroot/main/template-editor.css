@@ -9,8 +9,7 @@
 }
 
 #template-editor-app .card-img-top {
-    min-height: 247px; 
-    background-repeat: no-repeat; 
-    background-size:contain; 
-    background-position: top;
+    max-height: 210px;
+    object-fit: scale-down;
+    margin-bottom: auto;
 }

@@ -101,7 +101,7 @@
                     }
                 }
                 <div class="bg-tile card">
-                    <div class="card-body " v-bind:class="{ 'card-deck': config.length > 0}">
+                    <div class="card-body " v-bind:class="{ 'card-deck': config.length > 0 }">
                         <div v-if="!config || config.length === 0" class="col-12 text-center">
                             No items.<br />
                             <button type="button" class="btn btn-link" v-on:click="addItem()" id="btn-add-first">
@@ -109,9 +109,19 @@
                             </button>
                         </div>
                         <div v-else v-for="(item, index) of config" class="card my-2 template-item me-0 ms-0" v-bind:key="item.id">
-                            <div class="card-img-top border-bottom" v-bind:style="getImage(item)"></div>
-                            <div class="card-body">
-                                <h6 class="card-title" v-html="item.title"></h6>
+                            <img class="card-img-top" :src="getImage(item)" :alt="item.title" :style="(item.image ? null : { opacity: 0.5 })">
+                            <div class="card-body p-3 d-flex flex-column flex-grow-0 gap-2">
+                                <h5 class="card-title m-0" v-html="item.title"></h5>
+                                <div class="d-flex gap-2 align-items-center">
+                                    <span class="fw-semibold badge text-bg-info" v-if="item.priceType === 'Topup' || item.price == 0">{{ item.priceType === 'Topup' ? 'Any amount' : 'Free' }}</span>
+                                    <span class="fw-semibold" v-else>{{ item.price }} @Model.currency{{ item.priceType === 'Minimum' ? ' minimum' : '' }}</span>
+                                    <span class="badge text-bg-warning" v-if="item.inventory">
+                                        {{ item.inventory > 0 ? `${item.inventory} left` : 'Sold out' }}
+                                    </span>
+                                </div>
+                                <p class="card-text" v-if="item.description">{{ item.description }}</p>
+                            </div>
+                            <div class="card-footer bg-transparent border-0 pt-0 pb-3">
                                 <div class="gap-3 d-flex">
                                     <button type="button" class="btn btn-primary" v-on:click="editItem(index)">Edit</button>
                                     <button type="button" class="btn btn-danger" v-on:click="removeItem(index)">
@@ -221,11 +231,7 @@ document.addEventListener("DOMContentLoaded", () => {
             },
             getImage(item) {
                 const image = item.image || "~/img/img-placeholder.svg";
-                const url = image.startsWith("~") ? image.replace('~', window.location.pathname.substring(0, image.indexOf('/apps'))) : image;
-                return {
-                    "background-image" : "url('" + url +"')",
-                    "opacity": item.image? 1: 0.5
-                }
+                return image.startsWith("~") ? image.replace('~', window.location.pathname.substring(0, image.indexOf('/apps'))) : image
             },
             removeItem(index) {
                 this.config.splice(index, 1);

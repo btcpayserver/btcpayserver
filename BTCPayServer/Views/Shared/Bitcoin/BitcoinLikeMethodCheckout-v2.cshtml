@@ -24,7 +24,7 @@
                 <label v-t="'lightning'"></label>
             </div>
         </div>
-        <a v-if="model.invoiceBitcoinUrl && model.showPayInWalletButton" class="btn btn-primary rounded-pill w-100 mt-4" target="_top" id="PayInWallet"
+        <a v-if="model.invoiceBitcoinUrl && model.showPayInWalletButton" class="btn btn-primary rounded-pill w-100 mt-4" id="PayInWallet"
            :href="model.invoiceBitcoinUrl" :title="$t(hasPayjoin ? 'BIP21 payment link with PayJoin support' : 'BIP21 payment link')" v-t="'pay_in_wallet'"></a>
         @await Component.InvokeAsync("UiExtensionPoint", new {location = "checkout-v2-bitcoin-post-content", model = Model})
     </div>

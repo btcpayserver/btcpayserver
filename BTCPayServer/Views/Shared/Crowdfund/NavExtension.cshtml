@@ -27,5 +27,10 @@
                 <span>@app.AppName</span>
             </a>
         </li>
+        <li class="nav-item nav-item-sub" not-permission="@Policies.CanModifyStoreSettings">
+            <a asp-area="" asp-controller="UICrowdfund" asp-action="ViewCrowdfund" asp-route-appId="@app.Id" class="nav-link">
+                <span>@app.AppName</span>
+            </a>
+        </li>
     }
 }

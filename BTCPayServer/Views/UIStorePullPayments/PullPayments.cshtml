@@ -71,7 +71,7 @@
         {
             <a id="@state-view"
                asp-action="PullPayments"
-               asp-route-storeId="@Context.GetRouteValue("storeId")"
+               asp-route-storeId="@storeId"
                asp-route-pullPaymentState="@state"
                class="nav-link @(state == Model.ActiveState ? "active" : "")" role="tab">@state</a>
         }
@@ -127,7 +127,7 @@
                 <td>
                     <a asp-action="EditPullPayment"
                        asp-controller="UIPullPayment"
-                       asp-route-storeId="@Context.GetRouteValue("storeId")"
+                       asp-route-storeId="@storeId"
                        asp-route-pullPaymentId="@pp.Id">
                         @pp.Name
                     </a>
@@ -146,16 +146,16 @@
                 <td class="text-end">
                     <a class="pp-payout"
                        asp-action="Payouts"
-                       asp-route-storeId="@Context.GetRouteValue("storeId")"
+                       asp-route-storeId="@storeId"
                        asp-route-pullPaymentId="@pp.Id">
                         Payouts
                     </a>
                     @if (!pp.Archived)
                     {
-                        <span permission="@Policies.CanModifyStoreSettings"> - </span>
+                        <span permission="@Policies.CanArchivePullPayments"> - </span>
                         <a asp-action="ArchivePullPayment"
-                           permission="@Policies.CanModifyStoreSettings"
-                           asp-route-storeId="@Context.GetRouteValue("storeId")"
+                           permission="@Policies.CanArchivePullPayments"
+                           asp-route-storeId="@storeId"
                            asp-route-pullPaymentId="@pp.Id"
                            data-bs-toggle="modal"
                            data-bs-target="#ConfirmModal"

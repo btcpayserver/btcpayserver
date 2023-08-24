@@ -6,7 +6,8 @@
 @using ExchangeSharp
 @model BTCPayServer.Models.WalletViewModels.PullPaymentsModel
 @{
-    ViewData.SetActivePage(StoreNavPages.PullPayments, "Pull Payments", Context.GetStoreData().Id);
+    var storeId = Context.GetStoreData().Id;
+    ViewData.SetActivePage(StoreNavPages.PullPayments, "Pull Payments", storeId);
     var nextStartDateSortOrder = (string)ViewData["NextStartSortOrder"];
     string startDateSortOrder = null;
     switch (nextStartDateSortOrder)
@@ -45,7 +46,7 @@
             <vc:icon symbol="info" />
         </a>
     </h2>
-    <a permission="@Policies.CanModifyStoreSettings" asp-action="NewPullPayment" asp-route-storeId="@Context.GetRouteValue("storeId")" class="btn btn-primary" role="button" id="NewPullPayment">
+    <a permission="@Policies.CanCreateNonApprovedPullPayments" asp-action="NewPullPayment" asp-route-storeId="@storeId" class="btn btn-primary" role="button" id="NewPullPayment">
         <span class="fa fa-plus"></span> Create Pull Payment
     </a>
 </div>

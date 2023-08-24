@@ -39,6 +39,7 @@ namespace BTCPayServer.Controllers
         private readonly PullPaymentHostedService _pullPaymentService;
         private readonly ApplicationDbContextFactory _dbContextFactory;
         private readonly BTCPayNetworkJsonSerializerSettings _jsonSerializerSettings;
+        private readonly IAuthorizationService _authorizationService;
 
         public StoreData CurrentStore
         {
@@ -54,7 +55,8 @@ namespace BTCPayServer.Controllers
             DisplayFormatter displayFormatter,
             PullPaymentHostedService pullPaymentHostedService,
             ApplicationDbContextFactory dbContextFactory,
-            BTCPayNetworkJsonSerializerSettings jsonSerializerSettings)
+            BTCPayNetworkJsonSerializerSettings jsonSerializerSettings,
+            IAuthorizationService authorizationService)
         {
             _btcPayNetworkProvider = btcPayNetworkProvider;
             _payoutHandlers = payoutHandlers;
@@ -63,10 +65,11 @@ namespace BTCPayServer.Controllers
             _pullPaymentService = pullPaymentHostedService;
             _dbContextFactory = dbContextFactory;
             _jsonSerializerSettings = jsonSerializerSettings;
+            _authorizationService = authorizationService;
         }
 
         [HttpGet("stores/{storeId}/pull-payments/new")]
-        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+        [Authorize(Policy = Policies.CanCreateNonApprovedPullPayments, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> NewPullPayment(string storeId)
         {
             if (CurrentStore is null)
@@ -95,7 +98,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost("stores/{storeId}/pull-payments/new")]
-        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+        [Authorize(Policy = Policies.CanCreateNonApprovedPullPayments, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> NewPullPayment(string storeId, NewPullPaymentModel model)
         {
             if (CurrentStore is null)
@@ -135,6 +138,11 @@ namespace BTCPayServer.Controllers
             }
             if (!ModelState.IsValid)
                 return View(model);
+            if (model.AutoApproveClaims)
+            {
+                model.AutoApproveClaims = (await
+                    _authorizationService.AuthorizeAsync(User, storeId, Policies.CanCreatePullPayments)).Succeeded;
+            }
             await _pullPaymentService.CreatePullPayment(new HostedServices.CreatePullPayment()
             {
                 Name = model.Name,

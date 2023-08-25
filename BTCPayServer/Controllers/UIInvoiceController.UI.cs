@@ -1388,7 +1388,7 @@ namespace BTCPayServer.Controllers
         public class PosDataParser
         {
             public static Dictionary<string, object> ParsePosData(JToken? posData)
-            {
+            { 
                 var result = new Dictionary<string, object>();
                 if (posData is JObject jobj)
                 {

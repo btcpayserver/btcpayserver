@@ -46,7 +46,7 @@
                                 <div class="input-group">
                                     @if (Model.LnurlEndpoint is not null)
                                     {
-                                        <button type="button" class="input-group-prepend btn btn-outline-secondary" id="lnurlwithdraw-button" data-bs-toggle="modal" data-bs-target="#scan-qr-modal">
+                                        <button type="button" class="input-group-prepend btn btn-outline-secondary" id="lnurlwithdraw-button">
                                             <span class="fa fa-qrcode  fa-2x" title="LNURL-Withdraw"></span>
                                         </button>
                                     }
@@ -105,6 +105,10 @@
                                 <button type="button" class="btn btn-link fw-semibold d-none d-lg-inline-block d-print-none border-0 p-0 ms-4 only-for-js" id="copyLink">
                                     Copy Link
                                 </button>
+                                 <button type="button" class="btn btn-link fw-semibold d-inline-block d-print-none border-0 p-0 ms-4 only-for-js" page-qr>
+                                                                <span class="fa fa-qrcode"></span> Show QR
+                                                            </button>
+                                
                             </div>
                             @if (!string.IsNullOrEmpty(Model.ResetIn))
                             {
@@ -204,8 +208,22 @@
             </a>
         </footer>
     </div>
-    <partial name="LayoutFoot" />
-  @if (Model.LnurlEndpoint is not null)
+<partial name="LayoutFoot" />
+<script src="~/vendor/vue-qrcode/vue-qrcode.min.js" asp-append-version="true"></script>
+<script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
+<partial name="ShowQR" />
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        window.qrApp = initQRShow({});
+        delegate('click', 'button[page-qr]', event => {
+            qrApp.title = "Pull Payment QR";
+            qrApp.note = "Scan this QR code to open this page on your mobile device.";
+            qrApp.showData(window.location.href);
+        });
+});
+
+</script>
+@if (Model.LnurlEndpoint is not null)
   {
       var lnurlUri = LNURL.LNURL.EncodeUri(Model.LnurlEndpoint, "withdrawRequest", false).ToString();
       var lnurlBech32 = LNURL.LNURL.EncodeUri(Model.LnurlEndpoint, "withdrawRequest", true).ToString();
@@ -214,17 +232,22 @@
       {
           note += "<br/><span class='fw-bold'>Please note that this pull payment does not automatically send out funds, and so will process payment after LNURL-withdraw flow is completed.</span>";
       }
-      <script src="~/vendor/vue-qrcode/vue-qrcode.min.js" asp-append-version="true"></script>
-      <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
-      <partial name="ShowQR"/>
+      
+      
       <script>
         document.addEventListener("DOMContentLoaded", () => {
             const modes = {
                 uri: { title: "URI", fragments: [@Safe.Json(lnurlUri)], showData: true, href: @Safe.Json(lnurlUri) },
                 bech32: { title: "Bech32", fragments: [@Safe.Json(lnurlBech32)], showData: true, href: @Safe.Json(lnurlBech32) }
             };
-            initQRShow({ title: "LNURL Withdraw", note: @Safe.Json(note), modes })
-    });
+            
+            delegate('click', '#lnurlwithdraw-button', event => {
+                qrApp.title = "LNURL Withdraw";
+                qrApp.modes = modes;
+                qrApp.note= @Safe.Json(note)
+                qrApp.show();
+            });
+        });
     </script>
   }
 <script>

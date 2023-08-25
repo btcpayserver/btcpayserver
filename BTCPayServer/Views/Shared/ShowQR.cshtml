@@ -107,6 +107,9 @@ function initQRShow(data) {
  			showData(data) {
                 this.modes = { default: { title: 'Default', fragments: [data] } };
                 
+                this.show();
+            },
+            show(){
                 $(`#${this.modalId}`).modal("show");
             }
  		}

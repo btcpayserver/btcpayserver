@@ -714,6 +714,7 @@ namespace BTCPayServer
                     try
                     {
                         var expiry = i.ExpirationTime.ToUniversalTime() - DateTimeOffset.UtcNow;
+                        HttpContext.Items.Add(nameof(invoiceId), invoiceId);
                         var description = (await _pluginHookService.ApplyFilter("modify-lnurlp-description", lnurlPayRequest.Metadata)) as string;
                         if (description is null)
                             return NotFound();

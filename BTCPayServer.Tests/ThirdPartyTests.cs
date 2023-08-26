@@ -292,6 +292,7 @@ retry:
         [Fact]
         public async Task CanGetRateCryptoCurrenciesByDefault()
         {
+            using var cts = new CancellationTokenSource(30_000);
             string[] brokenShitcoins = { "BTG", "BTX" };
             var provider = new BTCPayNetworkProvider(ChainName.Mainnet);
             var factory = FastTests.CreateBTCPayRateFactory();
@@ -302,7 +303,7 @@ retry:
                     .ToHashSet();
 
             var rules = new StoreBlob().GetDefaultRateRules(provider);
-            var result = fetcher.FetchRates(pairs, rules, default);
+            var result = fetcher.FetchRates(pairs, rules, cts.Token);
             foreach ((CurrencyPair key, Task<RateResult> value) in result)
             {
                 var rateResult = await value;
@@ -325,7 +326,7 @@ retry:
                     provider.GetAll()
                         .Select(c => new CurrencyPair(c.CryptoCode, k.Key))
                         .ToHashSet();
-                result = fetcher.FetchRates(pairs, rules, default);
+                result = fetcher.FetchRates(pairs, rules, cts.Token);
                 foreach ((CurrencyPair key, Task<RateResult> value) in result)
                 {
                     var rateResult = await value;

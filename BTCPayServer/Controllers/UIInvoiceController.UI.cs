@@ -172,6 +172,20 @@ namespace BTCPayServer.Controllers
                 model.ReceiptData = (Dictionary<string, object>)additionalData["receiptData"];
                 additionalData.Remove("receiptData");
             }
+            
+            if (additionalData.ContainsKey("posData") && additionalData["posData"] is string posData)
+            {
+                // overwrite with parsed JSON if possible
+                try
+                {
+                    additionalData["posData"] = PosDataParser.ParsePosData(JObject.Parse(posData));
+                }
+                catch (Exception)
+                {
+                    additionalData["posData"] = posData;
+                }
+            }
+            
             model.AdditionalData = additionalData;
 
             return View(model);

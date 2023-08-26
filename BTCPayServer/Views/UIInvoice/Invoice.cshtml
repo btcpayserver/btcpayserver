@@ -1,6 +1,4 @@
-@using Microsoft.AspNetCore.Mvc.TagHelpers
 @using BTCPayServer.Client
-@using BTCPayServer.Abstractions.TagHelpers
 @model InvoiceDetailsModel
 @{
     ViewData["Title"] = $"Invoice {Model.Id}";
@@ -21,6 +19,15 @@
             display: flex;
             flex-wrap: wrap;
             gap: var(--btcpay-space-xl) var(--btcpay-space-xxl);
+        }
+
+        .invoice-information > div {
+            max-width: 540px;
+        }
+
+        .invoice-information > div table th {
+            width: 200px;
+            font-weight: var(--btcpay-font-weight-semibold);
         }
     </style>
 }
@@ -229,19 +236,19 @@
             <h3 class="mb-3">General Information</h3>
             <table class="table mb-0">
                 <tr>
-                    <th class="fw-semibold">Store</th>
+                    <th>Store</th>
                     <td>
                         <a href="@Model.StoreLink" rel="noreferrer noopener">@Model.StoreName</a>
                     </td>
                 </tr>
                 <tr>
-                    <th class="fw-semibold">Invoice Id</th>
+                    <th>Invoice Id</th>
                     <td>@Model.Id</td>
                 </tr>
                 @if (!string.IsNullOrEmpty(Model.TypedMetadata.OrderId))
                 {
                     <tr>
-                        <th class="fw-semibold">Order Id</th>
+                        <th>Order Id</th>
                         <td>
                             @if (!string.IsNullOrEmpty(Model.TypedMetadata.OrderUrl))
                             {
@@ -266,14 +273,14 @@
                 @if (Model.TypedMetadata.PaymentRequestId is not null)
                 {
                     <tr>
-                        <th class="fw-semibold">Payment Request Id</th>
+                        <th>Payment Request Id</th>
                         <td>
                             <a href="@Model.PaymentRequestLink" rel="noreferrer noopener">@Model.TypedMetadata.PaymentRequestId</a>
                         </td>
                     </tr>
                 }
                 <tr>
-                    <th class="fw-semibold">State</th>
+                    <th>State</th>
                     <td>
                         @if (Model.CanMarkStatus)
                         {
@@ -304,29 +311,29 @@
                     </td>
                 </tr>
                 <tr>
-                    <th class="fw-semibold">Created Date</th>
+                    <th>Created Date</th>
                     <td>@Model.CreatedDate.ToBrowserDate()</td>
                 </tr>
                 <tr>
-                    <th class="fw-semibold">Expiration Date</th>
+                    <th>Expiration Date</th>
                     <td>@Model.ExpirationDate.ToBrowserDate()</td>
                 </tr>
                 <tr>
-                    <th class="fw-semibold">Monitoring Date</th>
+                    <th>Monitoring Date</th>
                     <td>@Model.MonitoringDate.ToBrowserDate()</td>
                 </tr>
                 <tr>
-                    <th class="fw-semibold">Transaction Speed</th>
+                    <th>Transaction Speed</th>
                     <td>@Model.TransactionSpeed</td>
                 </tr>
                 <tr>
-                    <th class="fw-semibold">Total Fiat Due</th>
+                    <th>Total Fiat Due</th>
                     <td><span data-sensitive>@Model.Fiat</span></td>
                 </tr>
                 @if (!string.IsNullOrEmpty(Model.RefundEmail))
                 {
                     <tr>
-                        <th class="fw-semibold">Refund Email</th>
+                        <th>Refund Email</th>
                         <td>
                             <a href="mailto:@Model.RefundEmail">@Model.RefundEmail</a>
                         </td>
@@ -335,14 +342,14 @@
                 @if (!string.IsNullOrEmpty(Model.NotificationUrl))
                 {
                     <tr>
-                        <th class="fw-semibold">Notification Url</th>
+                        <th>Notification Url</th>
                         <td>@Model.NotificationUrl</td>
                     </tr>
                 }
                 @if (!string.IsNullOrEmpty(Model.RedirectUrl))
                 {
                     <tr>
-                        <th class="fw-semibold">Redirect Url</th>
+                        <th>Redirect Url</th>
                         <td>
                             <a href="@Model.RedirectUrl" rel="noreferrer noopener">@Model.RedirectUrl</a>
                         </td>
@@ -366,21 +373,21 @@
                         @if (!string.IsNullOrEmpty(Model.TypedMetadata.ItemCode))
                         {
                             <tr>
-                                <th class="fw-semibold">Item code</th>
+                                <th>Item code</th>
                                 <td>@Model.TypedMetadata.ItemCode</td>
                             </tr>
                         }
                         @if (!string.IsNullOrEmpty(Model.TypedMetadata.ItemDesc))
                         {
                             <tr>
-                                <th class="fw-semibold">Item Description</th>
+                                <th>Item Description</th>
                                 <td>@Model.TypedMetadata.ItemDesc</td>
                             </tr>
                         }
                         @if (Model.TaxIncluded is not null)
                         {
                             <tr>
-                                <th class="fw-semibold">Tax Included</th>
+                                <th>Tax Included</th>
                                 <td>@Model.TaxIncluded</td>
                             </tr>
                         }
@@ -408,14 +415,14 @@
                         @if (Model.TypedMetadata.BuyerName is not null)
                         {
                             <tr>
-                                <th class="fw-semibold">Name</th>
+                                <th>Name</th>
                                 <td>@Model.TypedMetadata.BuyerName</td>
                             </tr>
                         }
                         @if (Model.TypedMetadata.BuyerEmail is not null)
                         {
                             <tr>
-                                <th class="fw-semibold">Email</th>
+                                <th>Email</th>
                                 <td>
                                     <a href="mailto:@Model.TypedMetadata.BuyerEmail">@Model.TypedMetadata.BuyerEmail</a>
                                 </td>
@@ -424,49 +431,49 @@
                         @if (Model.TypedMetadata.BuyerPhone is not null)
                         {
                             <tr>
-                                <th class="fw-semibold">Phone</th>
+                                <th>Phone</th>
                                 <td>@Model.TypedMetadata.BuyerPhone</td>
                             </tr>
                         }
                         @if (Model.TypedMetadata.BuyerAddress1 is not null)
                         {
                             <tr>
-                                <th class="fw-semibold">Address 1</th>
+                                <th>Address 1</th>
                                 <td>@Model.TypedMetadata.BuyerAddress1</td>
                             </tr>
                         }
                         @if (Model.TypedMetadata.BuyerAddress2 is not null)
                         {
                             <tr>
-                                <th class="fw-semibold">Address 2</th>
+                                <th>Address 2</th>
                                 <td>@Model.TypedMetadata.BuyerAddress2</td>
                             </tr>
                         }
                         @if (Model.TypedMetadata.BuyerCity is not null)
                         {
                             <tr>
-                                <th class="fw-semibold">City</th>
+                                <th>City</th>
                                 <td>@Model.TypedMetadata.BuyerCity</td>
                             </tr>
                         }
                         @if (Model.TypedMetadata.BuyerState is not null)
                         {
                             <tr>
-                                <th class="fw-semibold">State</th>
+                                <th>State</th>
                                 <td>@Model.TypedMetadata.BuyerState</td>
                             </tr>
                         }
                         @if (Model.TypedMetadata.BuyerCountry is not null)
                         {
                             <tr>
-                                <th class="fw-semibold">Country</th>
+                                <th>Country</th>
                                 <td>@Model.TypedMetadata.BuyerCountry</td>
                             </tr>
                         }
                         @if (Model.TypedMetadata.BuyerZip is not null)
                         {
                             <tr>
-                                <th class="fw-semibold">Zip</th>
+                                <th>Zip</th>
                                 <td>@Model.TypedMetadata.BuyerZip</td>
                             </tr>
                         }

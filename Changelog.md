@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.11.3
+
+### Bug fixes
+
+* Fix LNDHub connection strings parsing @Kukks
+* Paying through LNDHub with an explicit amount wouldn't send the right amount @Kukks
+* The `Open with wallet` deep link in the checkout page wasn't working properly on some browsers.
+* POS: Fix alignment of items in static view (#5271) @dennisreimann
+* Only show LNAddress section if the user has the permission @Kukks
+* Fix crash on /wallets/transactions with non zero skip parameter (#5183) @NicolasDorier
+* Do not block payments on LN while syncing if it is not internal node (#5269) @Kukks
+* Fix LN payout manual payments UI crashing when payouts are not tied to pull payment
+
+### Improvements
+
+* If the PoSData property is a stringified JSON, presents it nicely in invoice details (#5275) @dennisreimann
+* POS: Unify item display in editor (#5266 #5272) @dennisreimann
+* remove store ID from view request url (#5256) @dstrukt
+
 ## 1.11.2
 
 ## Bug fixes

@@ -24,6 +24,7 @@
 			$("#UseClassicCheckout").prop('checked', false);
 			$("#CheckoutV2Settings").addClass('show');
 			$("#ClassicCheckoutSettings").removeClass('show');
+			$("#CheckNFC").removeClass('d-none');
 			$("#PlaySoundOnPayment").prop('checked', true);
 			$("#ShowPayInWalletButton").prop('checked', false);
 			$("#ShowStoreHeader").prop('checked', false);
@@ -32,10 +33,34 @@
 			$("#UseClassicCheckout").prop('checked', false);
 			$("#CheckoutV2Settings").addClass('show');
 			$("#ClassicCheckoutSettings").removeClass('show');
+			$("#CheckNFC").addClass('d-none');
 			$("#PlaySoundOnPayment").prop('checked', false);
 			$("#ShowPayInWalletButton").prop('checked', true);
 			$("#ShowStoreHeader").prop('checked', true);
 		});
+        
+		delegate('click', '#CheckNFC button', async e => {
+            const elementResponse = document.querySelector("#CheckNFC p");
+            elementResponse.classList.remove("text-danger", "text-success");
+			if ("NDEFReader" in window) {
+                const ndef = new NDEFReader();
+                try {
+                    await ndef.scan();
+                    elementResponse.innerHTML = "NFC access granted.";
+                    elementResponse.classList.add("text-success");
+                    return true;
+                } catch (error) {
+                    elementResponse.classList.add("text-danger");
+                    elementResponse.innerHTML = "NFC access is required. Please allow it in your browser settings.";
+                }
+            } else {
+                elementResponse.innerHTML = "Web NFC is not supported by this browser.";
+                elementResponse.classList.add("text-danger");
+            }
+        });
+        
+        
+        
     </script>
 }
 
@@ -99,6 +124,11 @@
 				</div>
 			</h3>
             
+            
+                <div id="CheckNFC" class="mb-4 d-none">
+                    <button type="button" class="btn btn-link p-0">Check if NFC is supported and enabled on this device.</button>
+                    <p> </p>
+                </div>
             <div class="d-flex align-items-center mb-4">
 				<input asp-for="UseClassicCheckout" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target=".checkout-settings" aria-expanded="@(Model.UseClassicCheckout)" aria-controls="CheckoutV2Settings" />
 				<label asp-for="UseClassicCheckout" class="form-label mb-0"></label>

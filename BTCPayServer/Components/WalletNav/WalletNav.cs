@@ -49,32 +49,34 @@ namespace BTCPayServer.Components.WalletNav
             var store = ViewContext.HttpContext.GetStoreData();
             var network = _networkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
             var wallet = _walletProvider.GetWallet(network);
-            var derivation = store.GetDerivationSchemeSettings(_networkProvider, walletId.CryptoCode);
             var defaultCurrency = store.GetStoreBlob().DefaultCurrency;
-            var balance = (await wallet.GetBalance(derivation?.AccountDerivation)) switch
+            var derivation = store.GetDerivationSchemeSettings(_networkProvider, walletId.CryptoCode);
+            var balance = await wallet.GetBalance(derivation?.AccountDerivation) switch
             {
                 { Available: null, Total: var total } => total,
                 { Available: var available } => available
             };
-
-            decimal? balanceDefaultCurrency = null;
-            if (defaultCurrency != network.CryptoCode)
-            {
-                var rate = (await _rateProvider.GetRatesAsync(default)).FirstOrDefault(pair => pair.CurrencyPair.Right == defaultCurrency && pair.CurrencyPair.Left == network.CryptoCode);
-
-                if (rate != null)
-                    balanceDefaultCurrency = balance.GetValue() * rate.BidAsk.Bid;
-            }
 
             var vm = new WalletNavViewModel
             {
                 WalletId = walletId,
                 Network = network,
                 Balance = balance.ShowMoney(network),
-                BalanceDefaultCurrency = balanceDefaultCurrency,
                 DefaultCurrency = defaultCurrency,
                 Label = derivation?.Label ?? $"{store.StoreName} {walletId.CryptoCode} Wallet"
             };
+
+            if (defaultCurrency != network.CryptoCode)
+            {
+                var rates = await _rateProvider.GetRatesAsync(default);
+                var rate = rates.FirstOrDefault(pair => pair.CurrencyPair.Right == defaultCurrency &&
+                                                        pair.CurrencyPair.Left == network.CryptoCode);
+                if (rate != null)
+                {
+                    var currencyData = _currencies.GetCurrencyData(defaultCurrency, false);
+                    vm.BalanceDefaultCurrency = (balance.GetValue() * rate.BidAsk.Bid).ShowMoney(currencyData.Divisibility);
+                }
+            }
 
             return View(vm);
         }

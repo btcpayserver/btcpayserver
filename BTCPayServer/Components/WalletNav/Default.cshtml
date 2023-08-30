@@ -10,12 +10,11 @@
     <a asp-controller="UIWallets" asp-action="WalletTransactions" asp-route-walletId="@Model.WalletId" class="unobtrusive-link">
         <h2 class="mb-1">@Model.Label</h2>
         <div class="text-muted fw-semibold" data-sensitive>
-            @DisplayFormatter.Currency(Model.Balance, @Model.Network.CryptoCode)
-            @if (Model.BalanceDefaultCurrency != null)
+            @DisplayFormatter.Currency(Model.Balance, Model.Network.CryptoCode)
+            @if (!string.IsNullOrEmpty(Model.BalanceDefaultCurrency))
             {
-                <span>(@DisplayFormatter.Currency(Model.BalanceDefaultCurrency.Value, Model.DefaultCurrency))</span>
+                <span>(@DisplayFormatter.Currency(Model.BalanceDefaultCurrency, Model.DefaultCurrency))</span>
             }
-
         </div>
     </a>
     <div class="d-flex gap-3 mt-3 mt-sm-0" permission="@Policies.CanModifyStoreSettings">

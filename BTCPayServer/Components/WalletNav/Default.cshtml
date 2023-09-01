@@ -1,15 +1,20 @@
+@using BTCPayServer.Services;
 @using BTCPayServer.Views.Stores
 @using BTCPayServer.Client
 @using BTCPayServer.Views.Wallets
 @using BTCPayServer.Abstractions.Extensions
-
+@inject DisplayFormatter DisplayFormatter
 @model BTCPayServer.Components.WalletNav.WalletNavViewModel
 
 <div class="d-sm-flex align-items-center justify-content-between">
     <a asp-controller="UIWallets" asp-action="WalletTransactions" asp-route-walletId="@Model.WalletId" class="unobtrusive-link">
         <h2 class="mb-1">@Model.Label</h2>
         <div class="text-muted fw-semibold" data-sensitive>
-            @Model.Balance @Model.Network.CryptoCode
+            @DisplayFormatter.Currency(Model.Balance, Model.Network.CryptoCode)
+            @if (!string.IsNullOrEmpty(Model.BalanceDefaultCurrency))
+            {
+                <span>(@DisplayFormatter.Currency(Model.BalanceDefaultCurrency, Model.DefaultCurrency))</span>
+            }
         </div>
     </a>
     <div class="d-flex gap-3 mt-3 mt-sm-0" permission="@Policies.CanModifyStoreSettings">

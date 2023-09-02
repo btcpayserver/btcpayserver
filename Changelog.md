@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.11.4
+
+Minor update recommended for deployment stacks which were using MySQL/SQLite backend in the past such as Raspiblitz, Umbrel, Embassy OS.
+
+We fix a migration to postgres error that has been introduced a few versions ago.
+
+### New feature
+
+* Display wallet balance in default currency in the on-chain wallet navigation (#5281) @vbouzon
+
+### Bug fixes
+
+* Fix: Error on the MigrationStartupTask (#5233) @NicolasDorier
+* Fix: The "Open in wallet" button in the checkout page was not working properly on some browsers (#5284) @dennisreimann
+
 ## 1.11.3
 
 ### Bug fixes

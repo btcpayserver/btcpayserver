@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
@@ -402,52 +403,41 @@ namespace BTCPayServer.Services.Apps
             }
         }
 #nullable enable
-        public static bool TryParsePosCartItems(JObject? posData, [MaybeNullWhen(false)] out Dictionary<string, int> cartItems)
-        {
-            cartItems = null;
-            if (posData is null)
-                return false;
-            if (!posData.TryGetValue("cart", out var cartObject))
-                return false;
-            if (cartObject is null)
-                return false;
-            cartItems = new();
-            foreach (var o in cartObject.OfType<JObject>())
-            {
-                var id = o.GetValue("id", StringComparison.InvariantCulture)?.ToString();
-                if (id != null)
-                {
-                    var countStr = o.GetValue("count", StringComparison.InvariantCulture)?.ToString() ?? string.Empty;
-                    if (int.TryParse(countStr, out var count))
-                    {
-                        cartItems.TryAdd(id, count);
-                    }
-                }
-            }
-            return true;
-        }
         
         public static bool TryParsePosCartItems(JObject? posData, [MaybeNullWhen(false)] out List<PosCartItem> cartItems)
         {
             cartItems = null;
             if (posData is null)
                 return false;
-            if (!posData.TryGetValue("cart", out var cartObject))
+            if (!posData.TryGetValue("cart", out var cartObject) || cartObject is null)
                 return false;
-
-            cartItems = new List<PosCartItem>();
-            foreach (var o in cartObject.OfType<JObject>())
+            try
             {
-                var id = o.GetValue("id", StringComparison.InvariantCulture)?.ToString();
-                if (id == null) continue;
-                var countStr = o.GetValue("count", StringComparison.InvariantCulture)?.ToString() ?? string.Empty;
-                var price = o.GetValue("price")?.Value<decimal>() ?? 0m;
-                if (int.TryParse(countStr, out var count))
+                cartItems = new List<PosCartItem>();
+                foreach (var o in cartObject.OfType<JObject>())
                 {
-                    cartItems.Add(new PosCartItem { Id = id, Count = count, Price = price });
+                    var id = o.GetValue("id", StringComparison.InvariantCulture)?.ToString();
+                    if (id == null)
+                        continue;
+                    var countStr = o.GetValue("count", StringComparison.InvariantCulture)?.ToString() ?? string.Empty;
+                    var price = o.GetValue("price") switch
+                    {
+                        JValue v => v.Value<decimal>(),
+                        // Don't crash on legacy format
+                        JObject v2 => v2["value"]?.Value<decimal>() ?? 0m,
+                        _ => 0m
+                    };
+                    if (int.TryParse(countStr, out var count))
+                    {
+                        cartItems.Add(new PosCartItem { Id = id, Count = count, Price = price });
+                    }
                 }
+                return true;
             }
-            return true;
+            catch (FormatException)
+            {
+                return false;
+            }
         }
 
         public async Task SetDefaultSettings(AppData appData, string defaultCurrency)

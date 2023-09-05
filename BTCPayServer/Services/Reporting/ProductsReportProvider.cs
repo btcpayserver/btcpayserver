@@ -12,7 +12,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Internal;
 using Newtonsoft.Json;
-using Org.BouncyCastle.Crypto.Signers;
 
 namespace BTCPayServer.Services.Reporting;
 
@@ -78,10 +77,9 @@ public class ProductsReportProvider : ReportProvider
                 }
                 else
                 {
-                    var posData = i.Metadata?.PosData?.ToObject<PosAppData>();
-                    if (posData?.Cart is { } cart)
+                    if (AppService.TryParsePosCartItems(i.Metadata?.PosData, out var items))
                     {
-                        foreach (var item in cart)
+                        foreach (var item in items)
                         {
                             var copy = values.ToList();
                             copy.Add(item.Id);

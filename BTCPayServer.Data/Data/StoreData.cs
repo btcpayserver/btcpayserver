@@ -48,6 +48,7 @@ namespace BTCPayServer.Data
         public IEnumerable<StoreSettingData> Settings { get; set; }
         public IEnumerable<FormData> Forms { get; set; }
         public IEnumerable<StoreRole> StoreRoles { get; set; }
+        public bool Archived { get; set; }
 
         internal static void OnModelCreating(ModelBuilder builder, DatabaseFacade databaseFacade)
         {

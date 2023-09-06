@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Net.Http;
 using System.Threading;
@@ -16,8 +15,6 @@ using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.PayoutProcessors;
-using BTCPayServer.PayoutProcessors.OnChain;
-using BTCPayServer.Plugins;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Custodian.Client.MockCustodian;
 using BTCPayServer.Services.Notifications;
@@ -25,7 +22,6 @@ using BTCPayServer.Services.Notifications.Blobs;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Hosting;
 using NBitcoin;
 using NBitpayClient;
 using Newtonsoft.Json;
@@ -1272,7 +1268,7 @@ namespace BTCPayServer.Tests
             using var tester = CreateServerTester();
             await tester.StartAsync();
             var user = tester.NewAccount();
-            user.GrantAccess();
+            await user.GrantAccessAsync();
             await user.MakeAdmin();
             var client = await user.CreateClient(Policies.Unrestricted);
 
@@ -1351,6 +1347,13 @@ namespace BTCPayServer.Tests
             }
             tester.DeleteStore = false;
             Assert.Empty(await client.GetStores());
+            
+            // Archive
+            var archivableStore = await client.CreateStore(new CreateStoreRequest { Name = "Archivable" });
+            Assert.False(archivableStore.Archived);
+            archivableStore = await client.UpdateStore(archivableStore.Id, new UpdateStoreRequest { Name = "Archived", Archived = true });
+            Assert.Equal("Archived", archivableStore.Name);
+            Assert.True(archivableStore.Archived);
         }
 
         private async Task<GreenfieldValidationException> AssertValidationError(string[] fields, Func<Task> act)

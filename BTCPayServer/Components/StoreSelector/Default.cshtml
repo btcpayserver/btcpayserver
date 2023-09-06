@@ -1,8 +1,9 @@
-@using Microsoft.AspNetCore.Mvc.TagHelpers
 @using BTCPayServer.Abstractions.Extensions
 @using BTCPayServer.Abstractions.Contracts
 @using BTCPayServer.Client
+@using BTCPayServer.Components.MainLogo
 @using BTCPayServer.Services
+@using BTCPayServer.Views.Stores
 @inject BTCPayServerEnvironment Env
 @inject IFileService FileService
 @model BTCPayServer.Components.StoreSelector.StoreSelectorViewModel
@@ -34,7 +35,7 @@ else
     <a asp-controller="UIStores" asp-action="Dashboard" permission="@Policies.CanModifyStoreSettings" asp-route-storeId="@Model.CurrentStoreId" id="StoreSelectorHome" class="navbar-brand py-2">@{await LogoContent();}</a>
     <a asp-controller="UIInvoice" asp-action="ListInvoices" not-permission="@Policies.CanModifyStoreSettings" asp-route-storeId="@Model.CurrentStoreId" id="StoreSelectorHome" class="navbar-brand py-2">@{await LogoContent();}</a>
 }
-@if (Model.Options.Any())
+@if (Model.Options.Any() || Model.ArchivedCount > 0)
 {
     <div id="StoreSelector">
         <div id="StoreSelectorDropdown" class="dropdown only-for-js">
@@ -64,8 +65,16 @@ else
                         }
                     </li>
                 }
-                <li><hr class="dropdown-divider"></li>
-                <li><a asp-controller="UIUserStores" asp-action="CreateStore" class="dropdown-item" id="StoreSelectorCreate">Create Store</a></li>
+                @if (Model.Options.Any())
+                {
+                    <li><hr class="dropdown-divider"></li>
+                }
+                <li><a asp-controller="UIUserStores" asp-action="CreateStore" class="dropdown-item @ViewData.IsActivePage(StoreNavPages.Create)" id="StoreSelectorCreate">Create Store</a></li>
+                @if (Model.ArchivedCount > 0)
+                {
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a asp-controller="UIUserStores" asp-action="ListStores" asp-route-archived="true" class="dropdown-item @ViewData.IsActivePage(StoreNavPages.Index)" id="StoreSelectorArchived">@Model.ArchivedCount Archived Store@(Model.ArchivedCount == 1 ? "" : "s")</a></li>
+                }
             </ul>
         </div>
     </div>

@@ -454,6 +454,11 @@
                         "default": 0.0,
                         "description": "Consider an invoice fully paid, even if the payment is missing 'x' % of the full amount."
                     },
+                    "archived": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "If true, the store does not appear in the stores list by default."
+                    },
                     "anyoneCanCreateInvoice": {
                         "type": "boolean",
                         "default": false,

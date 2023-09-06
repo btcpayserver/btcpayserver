@@ -39,6 +39,8 @@ namespace BTCPayServer.Models.StoreViewModels
 
         public bool CanDelete { get; set; }
 
+        public bool Archived { get; set; }
+
         [Display(Name = "Allow anyone to create invoice")]
         public bool AnyoneCanCreateInvoice { get; set; }
 

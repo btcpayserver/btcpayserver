@@ -809,6 +809,27 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("ConfirmContinue")).Click();
             s.GoToUrl(storeUrl);
             Assert.Contains("ReturnUrl", s.Driver.Url);
+            
+            // Archive store
+            (storeName, storeId) = s.CreateNewStore();
+            
+            s.Driver.FindElement(By.Id("StoreSelectorToggle")).Click();
+            Assert.Contains(storeName, s.Driver.FindElement(By.Id("StoreSelectorMenu")).Text);
+            s.Driver.FindElement(By.Id($"StoreSelectorMenuItem-{storeId}")).Click();
+            s.GoToStore();
+            s.Driver.FindElement(By.Id("btn-archive-toggle")).Click();
+            Assert.Contains("The store has been archived and will no longer appear in the stores list by default.", s.FindAlertMessage().Text);
+            
+            s.Driver.FindElement(By.Id("StoreSelectorToggle")).Click();
+            Assert.DoesNotContain(storeName, s.Driver.FindElement(By.Id("StoreSelectorMenu")).Text);
+            Assert.Contains("1 Archived Store", s.Driver.FindElement(By.Id("StoreSelectorMenu")).Text);
+            s.Driver.FindElement(By.Id("StoreSelectorArchived")).Click();
+            
+            var storeLink = s.Driver.FindElement(By.Id($"Store-{storeId}"));
+            Assert.Contains(storeName, storeLink.Text);
+            storeLink.Click();
+            s.Driver.FindElement(By.Id("btn-archive-toggle")).Click();
+            Assert.Contains("The store has been unarchived and will appear in the stores list by default again.", s.FindAlertMessage().Text);
         }
 
         [Fact(Timeout = TestTimeout)]

@@ -24,7 +24,6 @@ using BTCPayServer.Rating;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
-using BTCPayServer.Services.Invoices.Export;
 using BTCPayServer.Services.Rates;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -1180,42 +1179,6 @@ namespace BTCPayServer.Controllers
                 StartDate = fs.GetFilterDate("startdate", timezoneOffset),
                 EndDate = fs.GetFilterDate("enddate", timezoneOffset)
             };
-        }
-
-        [HttpGet]
-        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanViewInvoices)]
-        [BitpayAPIConstraint(false)]
-        public async Task<IActionResult> Export(string format, string? storeId = null, string? searchTerm = null, int timezoneOffset = 0)
-        {
-            var model = new InvoiceExport(_CurrencyNameTable);
-            var fs = new SearchString(searchTerm);
-            var storeIds = new HashSet<string>();
-            if (storeId is not null)
-            {
-                storeIds.Add(storeId);
-            }
-            if (fs.GetFilterArray("storeid") is { } l)
-            {
-                foreach (var i in l)
-                    storeIds.Add(i);
-            }
-
-            var apps = await _appService.GetAllApps(GetUserId(), false, storeId);
-            InvoiceQuery invoiceQuery = GetInvoiceQuery(fs, apps, timezoneOffset);
-            invoiceQuery.StoreId = storeIds.ToArray();
-            invoiceQuery.Skip = 0;
-            invoiceQuery.Take = int.MaxValue;
-            var invoices = await _InvoiceRepository.GetInvoices(invoiceQuery);
-            var res = model.Process(invoices, format);
-
-            var cd = new ContentDisposition
-            {
-                FileName = $"btcpay-export-{DateTime.UtcNow.ToString("yyyyMMdd-HHmmss", CultureInfo.InvariantCulture)}.{format}",
-                Inline = true
-            };
-            Response.Headers.Add("Content-Disposition", cd.ToString());
-            Response.Headers.Add("X-Content-Type-Options", "nosniff");
-            return Content(res, "application/" + format);
         }
 
         private SelectList GetPaymentMethodsSelectList()

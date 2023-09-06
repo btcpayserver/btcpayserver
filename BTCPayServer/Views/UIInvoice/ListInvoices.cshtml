@@ -1,10 +1,13 @@
 @using BTCPayServer.Client
 @using BTCPayServer.Client.Models
 @using BTCPayServer.Services
+
 @inject DisplayFormatter DisplayFormatter
+@inject ReportService ReportService
 @inject PaymentMethodHandlerDictionary PaymentMethodHandlerDictionary
 @model InvoicesModel
 @{
+    var reportNames = ReportService.ReportProviders.Select(p => p.Value.Name).OrderBy(c => c).ToArray();
     ViewData.SetActivePage(InvoiceNavPages.Index, "Invoices");
     var statusFilterCount = CountArrayFilter("status") + CountArrayFilter("exceptionstatus") + (HasBooleanFilter("includearchived") ? 1 : 0) + (HasBooleanFilter("unusual") ? 1 : 0);
     var hasDateFilter = HasArrayFilter("startdate") || HasArrayFilter("enddate");
@@ -116,9 +119,6 @@
 
         document.addEventListener("DOMContentLoaded", function () {
             var timezoneOffset = new Date().getTimezoneOffset();
-            $(".export-link, a.dropdown-item").each(function () {
-                this.href = this.href.replace("timezoneoffset=0", "timezoneoffset=" + timezoneOffset);
-            });
 
             $("#invoices")
                 .on("click", ".invoice-row .invoice-details-toggle", function (e) {
@@ -335,16 +335,18 @@
                     {
                         <button type="submit" asp-action="MassAction" class="dropdown-item" name="command" value="unarchive" id="ActionsDropdownUnarchive">Unarchive</button>
                     }
-				    <button id="BumpFee" type="submit" permission="@Policies.CanModifyStoreSettings" class="dropdown-item" name="command" value="cpfp">Bump fee</button>
+                    <button id="BumpFee" type="submit" permission="@Policies.CanModifyStoreSettings" class="dropdown-item" name="command" value="cpfp">Bump fee</button>
                 </div>
             </div>
             <div class="dropdown d-inline-flex align-items-center gap-3">
                 <button class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret order-xxl-1" type="button" id="ExportDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    Export
+                    Reports
                 </button>
                 <div class="dropdown-menu" aria-labelledby="ExportDropdownToggle">
-                    <a asp-action="Export" asp-route-timezoneoffset="0" asp-route-format="csv" asp-route-storeId="@Model.StoreId" asp-route-searchTerm="@Model.SearchTerm" class="dropdown-item export-link" target="_blank">CSV</a>
-                    <a asp-action="Export" asp-route-timezoneoffset="0" asp-route-format="json" asp-route-storeId="@Model.StoreId" asp-route-searchTerm="@Model.SearchTerm" class="dropdown-item export-link" target="_blank">JSON</a>
+                    @foreach (var report in reportNames)
+                    {
+                        <a asp-controller="UIReports" asp-action="StoreReports" asp-route-viewName="@report" asp-route-storeId="@Model.StoreId" class="dropdown-item export-link">@report</a>
+                    }
                 </div>
                 <a href="https://docs.btcpayserver.org/Accounting/" target="_blank" rel="noreferrer noopener" title="More information...">
                     <vc:icon symbol="info" />

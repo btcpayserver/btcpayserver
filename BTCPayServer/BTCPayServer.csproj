@@ -54,13 +54,13 @@
     <PackageReference Include="Fido2" Version="2.0.2" />
     <PackageReference Include="Fido2.AspNet" Version="2.0.2" />
     <PackageReference Include="HtmlSanitizer" Version="5.0.372" />
-    <PackageReference Include="LNURL" Version="0.0.30" />
+    <PackageReference Include="LNURL" Version="0.0.31" />
     <PackageReference Include="MailKit" Version="3.3.0" />
     <PackageReference Include="BTCPayServer.NETCore.Plugins.Mvc" Version="1.4.4" />
     <PackageReference Include="QRCoder" Version="1.4.3" />
     <PackageReference Include="System.IO.Pipelines" Version="6.0.3" />
     <PackageReference Include="NBitpayClient" Version="1.0.0.39" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="NicolasDorier.CommandLine" Version="2.0.0" />
     <PackageReference Include="NicolasDorier.CommandLine.Configuration" Version="2.0.0" />
     <PackageReference Include="NicolasDorier.RateLimits" Version="1.2.3" />

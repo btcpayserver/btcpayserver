@@ -770,6 +770,12 @@
                         "type": "string",
                         "example": "PointOfSale",
                         "description": "Type of the app which was created"
+                    },
+                    "archived": {
+                        "type": "boolean",
+                        "description": "If true, the app does not appear in the apps list by default.",
+                        "default": false,
+                        "nullable": true
                     }
                 }
             },

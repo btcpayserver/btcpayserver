@@ -10,7 +10,6 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
-using BTCPayServer.Models;
 using BTCPayServer.Plugins.Crowdfund.Models;
 using BTCPayServer.Plugins.PointOfSale.Models;
 using BTCPayServer.Services.Apps;
@@ -237,6 +236,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                 StoreName = app.StoreData?.StoreName,
                 StoreDefaultCurrency = await GetStoreDefaultCurrentIfEmpty(app.StoreDataId, settings.TargetCurrency),
                 AppName = app.Name,
+                Archived = app.Archived,
                 Enabled = settings.Enabled,
                 EnforceTargetAmount = settings.EnforceTargetAmount,
                 StartDate = settings.StartDate,
@@ -346,6 +346,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
             }
 
             app.Name = vm.AppName;
+            app.Archived = vm.Archived;
             var newSettings = new CrowdfundSettings
             {
                 Title = vm.Title,

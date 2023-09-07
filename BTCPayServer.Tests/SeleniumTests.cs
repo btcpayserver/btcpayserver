@@ -999,6 +999,7 @@ namespace BTCPayServer.Tests
 
             s.Driver.FindElement(By.Id("SaveSettings")).Click();
             Assert.Contains("App updated", s.FindAlertMessage().Text);
+            var appId = s.Driver.Url.Split('/')[4];
 
             s.Driver.FindElement(By.Id("ViewApp")).Click();
             var windows = s.Driver.WindowHandles;
@@ -1067,6 +1068,24 @@ namespace BTCPayServer.Tests
             // We are only if explicitly going to /
             s.GoToUrl("/");
             Assert.Contains("Tea shop", s.Driver.PageSource);
+            
+            // Archive
+            Assert.True(s.Driver.ElementDoesNotExist(By.Id("Nav-ArchivedApps")));
+            s.Driver.SwitchTo().Window(windows[0]);
+            s.Driver.FindElement(By.Id("btn-archive-toggle")).Click();
+            Assert.Contains("The app has been archived and will no longer appear in the apps list by default.", s.FindAlertMessage().Text);
+            
+            Assert.True(s.Driver.ElementDoesNotExist(By.Id("ViewApp")));
+            Assert.Contains("1 Archived App", s.Driver.FindElement(By.Id("Nav-ArchivedApps")).Text);
+            s.Driver.Navigate().GoToUrl(posBaseUrl);
+            Assert.Contains("Page not found", s.Driver.Title, StringComparison.OrdinalIgnoreCase);
+            s.Driver.Navigate().Back(); 
+            s.Driver.FindElement(By.Id("Nav-ArchivedApps")).Click();
+            
+            // Unarchive
+            s.Driver.FindElement(By.Id($"App-{appId}")).Click();
+            s.Driver.FindElement(By.Id("btn-archive-toggle")).Click();
+            Assert.Contains("The app has been unarchived and will appear in the apps list by default again.", s.FindAlertMessage().Text);
         }
 
         [Fact(Timeout = TestTimeout)]
@@ -1100,17 +1119,37 @@ namespace BTCPayServer.Tests
             s.Driver.ExecuteJavaScript("document.getElementById('EndDate').value = ''");
             s.Driver.FindElement(By.Id("SaveSettings")).Click();
             Assert.Contains("App updated", s.FindAlertMessage().Text);
+            var appId = s.Driver.Url.Split('/')[4];
 
             s.Driver.FindElement(By.Id("ViewApp")).Click();
             var windows = s.Driver.WindowHandles;
             Assert.Equal(2, windows.Count);
             s.Driver.SwitchTo().Window(windows[1]);
+            var cfUrl = s.Driver.Url;
 
             Assert.Equal("Currently active!",
                 s.Driver.FindElement(By.CssSelector("[data-test='time-state']")).Text);
 
             s.Driver.Close();
             s.Driver.SwitchTo().Window(windows[0]);
+            
+            // Archive
+            Assert.True(s.Driver.ElementDoesNotExist(By.Id("Nav-ArchivedApps")));
+            s.Driver.SwitchTo().Window(windows[0]);
+            s.Driver.FindElement(By.Id("btn-archive-toggle")).Click();
+            Assert.Contains("The app has been archived and will no longer appear in the apps list by default.", s.FindAlertMessage().Text);
+            
+            Assert.True(s.Driver.ElementDoesNotExist(By.Id("ViewApp")));
+            Assert.Contains("1 Archived App", s.Driver.FindElement(By.Id("Nav-ArchivedApps")).Text);
+            s.Driver.Navigate().GoToUrl(cfUrl);
+            Assert.Contains("Page not found", s.Driver.Title, StringComparison.OrdinalIgnoreCase);
+            s.Driver.Navigate().Back(); 
+            s.Driver.FindElement(By.Id("Nav-ArchivedApps")).Click();
+            
+            // Unarchive
+            s.Driver.FindElement(By.Id($"App-{appId}")).Click();
+            s.Driver.FindElement(By.Id("btn-archive-toggle")).Click();
+            Assert.Contains("The app has been unarchived and will appear in the apps list by default again.", s.FindAlertMessage().Text);
         }
 
         [Fact(Timeout = TestTimeout)]

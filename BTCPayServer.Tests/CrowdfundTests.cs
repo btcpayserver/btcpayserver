@@ -54,13 +54,33 @@ namespace BTCPayServer.Tests
                 Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps2.ListApps(user2.StoreId).Result).Model);
             Assert.Single(appList.Apps);
             Assert.Empty(appList2.Apps);
-            Assert.Equal("test", appList.Apps[0].AppName);
-            Assert.Equal(apps.CreatedAppId, appList.Apps[0].Id);
-            Assert.True(appList.Apps[0].Role.ToPermissionSet(appList.Apps[0].StoreId).Contains(Policies.CanModifyStoreSettings, appList.Apps[0].StoreId));
-            Assert.Equal(user.StoreId, appList.Apps[0].StoreId);
-            Assert.IsType<NotFoundResult>(apps2.DeleteApp(appList.Apps[0].Id));
-            Assert.IsType<ViewResult>(apps.DeleteApp(appList.Apps[0].Id));
-            var redirectToAction = Assert.IsType<RedirectToActionResult>(apps.DeleteAppPost(appList.Apps[0].Id).Result);
+            Assert.Equal("test", app.AppName);
+            Assert.Equal(apps.CreatedAppId, app.Id);
+            Assert.True(app.Role.ToPermissionSet(app.StoreId).Contains(Policies.CanModifyStoreSettings, app.StoreId));
+            Assert.Equal(user.StoreId, app.StoreId);
+            // Archive
+            redirect = Assert.IsType<RedirectResult>(apps.ToggleArchive(app.Id).Result);
+            Assert.EndsWith("/settings/crowdfund", redirect.Url);
+            appList = Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps.ListApps(user.StoreId).Result).Model);
+            Assert.Empty(appList.Apps);
+            appList = Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps.ListApps(user.StoreId, archived: true).Result).Model);
+            app = appList.Apps[0];
+            Assert.True(app.Archived);
+            Assert.IsType<NotFoundResult>(await crowdfund.ViewCrowdfund(app.Id));
+            // Unarchive
+            redirect = Assert.IsType<RedirectResult>(apps.ToggleArchive(app.Id).Result);
+            Assert.EndsWith("/settings/crowdfund", redirect.Url);
+            appList = Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps.ListApps(user.StoreId).Result).Model);
+            app = appList.Apps[0];
+            Assert.False(app.Archived);
+            var crowdfundViewModel = await crowdfund.UpdateCrowdfund(app.Id).AssertViewModelAsync<UpdateCrowdfundViewModel>();
+            crowdfundViewModel.Enabled = true;
+            Assert.IsType<RedirectToActionResult>(crowdfund.UpdateCrowdfund(app.Id, crowdfundViewModel, "save").Result);
+            Assert.IsType<ViewResult>(await crowdfund.ViewCrowdfund(app.Id));
+            // Delete
+            Assert.IsType<NotFoundResult>(apps2.DeleteApp(app.Id));
+            Assert.IsType<ViewResult>(apps.DeleteApp(app.Id));
+            var redirectToAction = Assert.IsType<RedirectToActionResult>(apps.DeleteAppPost(app.Id).Result);
             Assert.Equal(nameof(UIStoresController.Dashboard), redirectToAction.ActionName);
             appList = await apps.ListApps(user.StoreId).AssertViewModelAsync<ListAppsViewModel>();
             Assert.Empty(appList.Apps);

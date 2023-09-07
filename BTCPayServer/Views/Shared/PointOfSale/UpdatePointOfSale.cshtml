@@ -18,13 +18,21 @@
         <h2 class="mb-0">@ViewData["Title"]</h2>
         <div class="d-flex gap-3 mt-3 mt-sm-0">
             <button type="submit" class="btn btn-primary order-sm-1" id="SaveSettings">Save</button>
-            <a class="btn btn-secondary" asp-action="ViewPointOfSale" asp-route-appId="@Model.Id" id="ViewApp" target="_blank">View</a>
+            @if (Model.Archived)
+            {
+                <button type="submit" class="btn btn-outline-secondary" name="Archived" value="False">Unarchive</button>
+            }
+            else
+            {
+                <a class="btn btn-secondary" asp-controller="UIPointOfSale" asp-action="ViewPointOfSale" asp-route-appId="@Model.Id" id="ViewApp" target="_blank">View</a>
+            }
         </div>
     </div>
 
     <partial name="_StatusMessage" />
 
     <input type="hidden" asp-for="StoreId" />
+    <input type="hidden" asp-for="Archived" />
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
     <div class="row">
@@ -266,7 +274,19 @@
 
 <div class="d-flex gap-3 mt-3">
     <a class="btn btn-secondary" asp-action="ListInvoices" asp-controller="UIInvoice" asp-route-storeId="@Model.StoreId" asp-route-searchterm="@Model.SearchTerm">Invoices</a>
-  <a id="DeleteApp" class="btn btn-outline-danger" asp-controller="UIApps" asp-action="DeleteApp" asp-route-appId="@Model.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The app <strong>@Html.Encode(Model.AppName)</strong> and its settings will be permanently deleted." data-confirm-input="DELETE">Delete this app</a>
+    <form method="post" asp-controller="UIApps" asp-action="ToggleArchive" asp-route-appId="@Model.Id">
+        <button type="submit" class="btn btn-outline-secondary" id="btn-archive-toggle">
+            @if (Model.Archived)
+            {
+                <span class="text-nowrap">Unarchive this app</span>
+            }
+            else
+            {
+                <span class="text-nowrap" data-bs-toggle="tooltip" title="Archive this app so that it does not appear in the apps list by default">Archive this app</span>
+            }
+        </button>
+    </form>
+    <a id="DeleteApp" class="btn btn-outline-danger" asp-controller="UIApps" asp-action="DeleteApp" asp-route-appId="@Model.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The app <strong>@Html.Encode(Model.AppName)</strong> and its settings will be permanently deleted." data-confirm-input="DELETE">Delete this app</a>
 </div>
 
 <partial name="_Confirm" model="@(new ConfirmModel("Delete app", "This app will be removed from this store.", "Delete"))" />

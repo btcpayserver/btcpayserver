@@ -297,6 +297,7 @@ namespace BTCPayServer.Tests
             Assert.Equal(user.StoreId, app.StoreId);
             Assert.Equal("PointOfSale", app.AppType);
             Assert.Equal("test app title", app.Title);
+            Assert.False(app.Archived);
 
             // Make sure we return a 404 if we try to get an app that doesn't exist
             await AssertHttpError(404, async () =>
@@ -320,17 +321,20 @@ namespace BTCPayServer.Tests
                 new CreatePointOfSaleAppRequest()
                 {
                     AppName = "new app name",
-                    Title = "new app title"
+                    Title = "new app title",
+                    Archived = true
                 }
             );
             // Test generic GET app endpoint first
             retrievedApp = await client.GetApp(app.Id);
             Assert.Equal("new app name", retrievedApp.Name);
+            Assert.True(retrievedApp.Archived);
 
             // Test the POS-specific endpoint also
             var retrievedPosApp = await client.GetPosApp(app.Id);
             Assert.Equal("new app name", retrievedPosApp.Name);
             Assert.Equal("new app title", retrievedPosApp.Title);
+            Assert.True(retrievedPosApp.Archived);
 
             // Make sure we return a 404 if we try to delete an app that doesn't exist
             await AssertHttpError(404, async () =>
@@ -462,6 +466,7 @@ namespace BTCPayServer.Tests
             Assert.Equal("test app from API", app.Name);
             Assert.Equal(user.StoreId, app.StoreId);
             Assert.Equal("Crowdfund", app.AppType);
+            Assert.False(app.Archived);
 
             // Make sure we return a 404 if we try to get an app that doesn't exist
             await AssertHttpError(404, async () =>
@@ -478,11 +483,13 @@ namespace BTCPayServer.Tests
             Assert.Equal(app.Name, retrievedApp.Name);
             Assert.Equal(app.StoreId, retrievedApp.StoreId);
             Assert.Equal(app.AppType, retrievedApp.AppType);
+            Assert.False(retrievedApp.Archived);
 
             // Test the crowdfund-specific endpoint also
-            var retrievedPosApp = await client.GetCrowdfundApp(app.Id);
-            Assert.Equal(app.Name, retrievedPosApp.Name);
-            Assert.Equal(app.Title, retrievedPosApp.Title);
+            var retrievedCfApp = await client.GetCrowdfundApp(app.Id);
+            Assert.Equal(app.Name, retrievedCfApp.Name);
+            Assert.Equal(app.Title, retrievedCfApp.Title);
+            Assert.False(retrievedCfApp.Archived);
 
             // Make sure we return a 404 if we try to delete an app that doesn't exist
             await AssertHttpError(404, async () =>
@@ -532,10 +539,12 @@ namespace BTCPayServer.Tests
             Assert.Equal(posApp.Name, apps[0].Name);
             Assert.Equal(posApp.StoreId, apps[0].StoreId);
             Assert.Equal(posApp.AppType, apps[0].AppType);
+            Assert.False(apps[0].Archived);
 
             Assert.Equal(crowdfundApp.Name, apps[1].Name);
             Assert.Equal(crowdfundApp.StoreId, apps[1].StoreId);
             Assert.Equal(crowdfundApp.AppType, apps[1].AppType);
+            Assert.False(apps[1].Archived);
 
             // Get all apps for all store now
             apps = await client.GetAllApps();
@@ -545,15 +554,17 @@ namespace BTCPayServer.Tests
             Assert.Equal(posApp.Name, apps[0].Name);
             Assert.Equal(posApp.StoreId, apps[0].StoreId);
             Assert.Equal(posApp.AppType, apps[0].AppType);
+            Assert.False(apps[0].Archived);
 
             Assert.Equal(crowdfundApp.Name, apps[1].Name);
             Assert.Equal(crowdfundApp.StoreId, apps[1].StoreId);
             Assert.Equal(crowdfundApp.AppType, apps[1].AppType);
+            Assert.False(apps[1].Archived);
 
             Assert.Equal(newApp.Name, apps[2].Name);
             Assert.Equal(newApp.StoreId, apps[2].StoreId);
             Assert.Equal(newApp.AppType, apps[2].AppType);
-
+            Assert.False(apps[2].Archived);
         }
 
         [Fact(Timeout = TestTimeout)]

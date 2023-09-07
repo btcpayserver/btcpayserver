@@ -28,7 +28,6 @@ using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
@@ -537,6 +536,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 StoreId = app.StoreDataId,
                 StoreName = app.StoreData?.StoreName,
                 StoreDefaultCurrency = await GetStoreDefaultCurrentIfEmpty(app.StoreDataId, settings.Currency),
+                Archived = app.Archived,
                 AppName = app.Name,
                 Title = settings.Title,
                 DefaultView = settings.DefaultView,
@@ -647,6 +647,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             };
 
             app.Name = vm.AppName;
+            app.Archived = vm.Archived;
             app.SetSettings(settings);
             await _appService.UpdateOrCreateApp(app);
             TempData[WellKnownTempData.SuccessMessage] = "App updated";

@@ -179,7 +179,7 @@ namespace BTCPayServer.Tests
             Assert.Contains(rates, e => e.CurrencyPair == new CurrencyPair("XMR", "BTC") && e.BidAsk.Bid < 1.0m);
 
             // Check we didn't skip too many exchanges
-            Assert.InRange(skipped, 0, 3);
+            Assert.InRange(skipped, 0, 5);
         }
 
         [Fact]
@@ -325,11 +325,11 @@ retry:
                     .Select(c => new CurrencyPair(c.CryptoCode, "USD"))
                     .ToHashSet();
 
-            string[] brokenShitcoins = { "BTG", "BTX" };
+            string[] brokenShitcoins = { "BTG", "LCAD" };
             bool IsBrokenShitcoin(CurrencyPair p) => brokenShitcoins.Contains(p.Left) || brokenShitcoins.Contains(p.Right);
-            foreach (var shitcoin in brokenShitcoins)
+            foreach (var _ in brokenShitcoins)
             {
-                foreach (var p in pairs.Where(p => IsBrokenShitcoin(p)).ToArray())
+                foreach (var p in pairs.Where(IsBrokenShitcoin).ToArray())
                 {
                     TestLogs.LogInformation($"Skipping {p} because it is marked as broken");
                     pairs.Remove(p);

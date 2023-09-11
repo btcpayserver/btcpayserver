@@ -1,8 +1,10 @@
 using System.Threading.Tasks;
+using BTCPayServer.Client;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.Hosting;
 using BTCPayServer.Models.AppViewModels;
+using BTCPayServer.Plugins.Crowdfund.Models;
 using BTCPayServer.Plugins.PointOfSale;
 using BTCPayServer.Plugins.PointOfSale.Controllers;
 using BTCPayServer.Plugins.PointOfSale.Models;
@@ -123,12 +125,14 @@ donation:
   price: 1.02
   custom: true
 ";
+            vmpos.Currency = "EUR";
             vmpos.Template = AppService.SerializeTemplate(MigrationStartupTask.ParsePOSYML(vmpos.Template));
             Assert.IsType<RedirectToActionResult>(pos.UpdatePointOfSale(app.Id, vmpos).Result);
             await pos.UpdatePointOfSale(app.Id).AssertViewModelAsync<UpdatePointOfSaleViewModel>();
             var publicApps = user.GetController<UIPointOfSaleController>();
             var vmview = await publicApps.ViewPointOfSale(app.Id, PosViewType.Cart).AssertViewModelAsync<ViewPointOfSaleViewModel>();
 
+            Assert.Equal("EUR", vmview.CurrencyCode);
             // apple shouldn't be available since we it's set to "disabled: true" above
             Assert.Equal(2, vmview.Items.Length);
             Assert.Equal("orange", vmview.Items[0].Title);
@@ -139,6 +143,41 @@ donation:
             // apple is not found
             Assert.IsType<NotFoundResult>(publicApps
                 .ViewPointOfSale(app.Id, PosViewType.Cart, 0, choiceKey: "apple").Result);
+            
+            // List
+            appList = Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps.ListApps(user.StoreId).Result).Model);
+            app = appList.Apps[0];
+            apps = user.GetController<UIAppsController>();
+            appData = new AppData { Id = app.Id, StoreDataId = app.StoreId, Name = app.AppName, AppType = appType, Settings = "{\"currency\":\"EUR\"}" };
+            apps.HttpContext.SetAppData(appData);
+            pos.HttpContext.SetAppData(appData);
+            Assert.Single(appList.Apps);
+            Assert.Equal("test", app.AppName);
+            Assert.True(app.Role.ToPermissionSet(appList.Apps[0].StoreId).Contains(Policies.CanModifyStoreSettings, app.StoreId));
+            Assert.Equal(user.StoreId, app.StoreId);
+            Assert.False(app.Archived);
+            // Archive
+            redirect = Assert.IsType<RedirectResult>(apps.ToggleArchive(app.Id).Result);
+            Assert.EndsWith("/settings/pos", redirect.Url);
+            appList = Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps.ListApps(user.StoreId).Result).Model);
+            Assert.Empty(appList.Apps);
+            appList = Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps.ListApps(user.StoreId, archived: true).Result).Model);
+            app = appList.Apps[0];
+            Assert.True(app.Archived);
+            Assert.IsType<NotFoundResult>(await publicApps.ViewPointOfSale(app.Id, PosViewType.Static));
+            // Unarchive
+            redirect = Assert.IsType<RedirectResult>(apps.ToggleArchive(app.Id).Result);
+            Assert.EndsWith("/settings/pos", redirect.Url);
+            appList = Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps.ListApps(user.StoreId).Result).Model);
+            app = appList.Apps[0];
+            Assert.False(app.Archived);
+            Assert.IsType<ViewResult>(await publicApps.ViewPointOfSale(app.Id, PosViewType.Static));
+            // Delete
+            Assert.IsType<ViewResult>(apps.DeleteApp(app.Id));
+            var redirectToAction = Assert.IsType<RedirectToActionResult>(apps.DeleteAppPost(app.Id).Result);
+            Assert.Equal(nameof(UIStoresController.Dashboard), redirectToAction.ActionName);
+            appList = await apps.ListApps(user.StoreId).AssertViewModelAsync<ListAppsViewModel>();
+            Assert.Empty(appList.Apps);
         }
     }
 }

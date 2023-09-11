@@ -68,13 +68,17 @@ namespace BTCPayServer.Components.MainNav
                 vm.LightningNodes = lightningNodes;
 
                 // Apps
-                var apps = await _appService.GetAllApps(UserId, false, store.Id);
-                vm.Apps = apps.Select(a => new StoreApp
-                {
-                    Id = a.Id,
-                    AppName = a.AppName,
-                    AppType = a.AppType
-                }).ToList();
+                var apps = await _appService.GetAllApps(UserId, false, store.Id, true);
+                vm.Apps = apps
+                    .Where(a => !a.Archived)
+                    .Select(a => new StoreApp
+                    {
+                        Id = a.Id,
+                        AppName = a.AppName,
+                        AppType = a.AppType
+                    }).ToList();
+
+                vm.ArchivedAppsCount = apps.Count(a => a.Archived);
 
                 if (PoliciesSettings.Experimental)
                 {

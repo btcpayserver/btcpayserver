@@ -4,6 +4,7 @@ namespace BTCPayServer.Views.Stores
 {
     public enum StoreNavPages
     {
+        Index,
         Create,
         Dashboard,
         General,

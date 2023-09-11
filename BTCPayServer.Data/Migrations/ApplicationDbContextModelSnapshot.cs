@@ -79,6 +79,9 @@ namespace BTCPayServer.Migrations
                     b.Property<string>("AppType")
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("Archived")
+                        .HasColumnType("INTEGER");
+
                     b.Property<DateTimeOffset>("Created")
                         .HasColumnType("TEXT");
 
@@ -750,6 +753,9 @@ namespace BTCPayServer.Migrations
                 {
                     b.Property<string>("Id")
                         .HasColumnType("TEXT");
+
+                    b.Property<bool>("Archived")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("DefaultCrypto")
                         .HasColumnType("TEXT");

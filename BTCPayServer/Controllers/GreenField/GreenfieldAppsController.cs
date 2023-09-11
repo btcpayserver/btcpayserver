@@ -66,7 +66,8 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 StoreDataId = storeId,
                 Name = request.AppName,
-                AppType = CrowdfundAppType.AppType
+                AppType = CrowdfundAppType.AppType,
+                Archived = request.Archived ?? false
             };
 
             appData.SetSettings(ToCrowdfundSettings(request));
@@ -97,7 +98,8 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 StoreDataId = storeId,
                 Name = request.AppName,
-                AppType = PointOfSaleAppType.AppType
+                AppType = PointOfSaleAppType.AppType,
+                Archived = request.Archived ?? false
             };
 
             appData.SetSettings(ToPointOfSaleSettings(request));
@@ -111,7 +113,7 @@ namespace BTCPayServer.Controllers.Greenfield
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> UpdatePointOfSaleApp(string appId, CreatePointOfSaleAppRequest request)
         {
-            var app = await _appService.GetApp(appId, PointOfSaleAppType.AppType);
+            var app = await _appService.GetApp(appId, PointOfSaleAppType.AppType, includeArchived: true);
             if (app == null)
             {
                 return AppNotFound();
@@ -129,6 +131,10 @@ namespace BTCPayServer.Controllers.Greenfield
             }
 
             app.Name = request.AppName;
+            if (request.Archived != null)
+            {
+                app.Archived = request.Archived.Value;
+            }
             app.SetSettings(ToPointOfSaleSettings(request));
 
             await _appService.UpdateOrCreateApp(app);
@@ -153,7 +159,7 @@ namespace BTCPayServer.Controllers.Greenfield
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> GetAllApps()
         {
-            var apps = await _appService.GetAllApps(_userManager.GetUserId(User));
+            var apps = await _appService.GetAllApps(_userManager.GetUserId(User), includeArchived: true);
 
             return Ok(apps.Select(ToModel).ToArray());
         }
@@ -162,7 +168,7 @@ namespace BTCPayServer.Controllers.Greenfield
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> GetAllApps(string storeId)
         {
-            var apps = await _appService.GetAllApps(_userManager.GetUserId(User), allowNoUser: false, storeId);
+            var apps = await _appService.GetAllApps(_userManager.GetUserId(User), false, storeId, true);
 
             return Ok(apps.Select(ToModel).ToArray());
         }
@@ -171,7 +177,7 @@ namespace BTCPayServer.Controllers.Greenfield
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> GetApp(string appId)
         {
-            var app = await _appService.GetApp(appId, null);
+            var app = await _appService.GetApp(appId, null, includeArchived: true);
             if (app == null)
             {
                 return AppNotFound();
@@ -184,7 +190,7 @@ namespace BTCPayServer.Controllers.Greenfield
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> GetPosApp(string appId)
         {
-            var app = await _appService.GetApp(appId, PointOfSaleAppType.AppType);
+            var app = await _appService.GetApp(appId, PointOfSaleAppType.AppType, includeArchived: true);
             if (app == null)
             {
                 return AppNotFound();
@@ -197,7 +203,7 @@ namespace BTCPayServer.Controllers.Greenfield
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> GetCrowdfundApp(string appId)
         {
-            var app = await _appService.GetApp(appId, CrowdfundAppType.AppType);
+            var app = await _appService.GetApp(appId, CrowdfundAppType.AppType, includeArchived: true);
             if (app == null)
             {
                 return AppNotFound();
@@ -209,7 +215,7 @@ namespace BTCPayServer.Controllers.Greenfield
         [HttpDelete("~/api/v1/apps/{appId}")]
         public async Task<IActionResult> DeleteApp(string appId)
         {
-            var app = await _appService.GetApp(appId, null);
+            var app = await _appService.GetApp(appId, null, includeArchived: true);
             if (app == null)
             {
                 return AppNotFound();
@@ -293,6 +299,7 @@ namespace BTCPayServer.Controllers.Greenfield
             return new AppDataBase
             {
                 Id = appData.Id,
+                Archived = appData.Archived,
                 AppType = appData.AppType,
                 Name = appData.Name,
                 StoreId = appData.StoreDataId,
@@ -305,6 +312,7 @@ namespace BTCPayServer.Controllers.Greenfield
             return new AppDataBase
             {
                 Id = appData.Id,
+                Archived = appData.Archived,
                 AppType = appData.AppType,
                 Name = appData.AppName,
                 StoreId = appData.StoreId,
@@ -319,6 +327,7 @@ namespace BTCPayServer.Controllers.Greenfield
             return new PointOfSaleAppData
             {
                 Id = appData.Id,
+                Archived = appData.Archived,
                 AppType = appData.AppType,
                 Name = appData.Name,
                 StoreId = appData.StoreDataId,
@@ -387,6 +396,7 @@ namespace BTCPayServer.Controllers.Greenfield
             return new CrowdfundAppData
             {
                 Id = appData.Id,
+                Archived = appData.Archived,
                 AppType = appData.AppType,
                 Name = appData.Name,
                 StoreId = appData.StoreDataId,

@@ -33,6 +33,7 @@ namespace BTCPayServer.Controllers.Greenfield
             _storeRepository = storeRepository;
             _userManager = userManager;
         }
+        
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores")]
         public Task<ActionResult<IEnumerable<Client.Models.StoreData>>> GetStores()
@@ -112,7 +113,7 @@ namespace BTCPayServer.Controllers.Greenfield
             return Ok(FromModel(store));
         }
 
-        internal static Client.Models.StoreData FromModel(Data.StoreData data)
+        internal static Client.Models.StoreData FromModel(StoreData data)
         {
             var storeBlob = data.GetStoreBlob();
             return new Client.Models.StoreData
@@ -120,6 +121,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 Id = data.Id,
                 Name = data.StoreName,
                 Website = data.StoreWebsite,
+                Archived = data.Archived,
                 SupportUrl = storeBlob.StoreSupportUrl,
                 SpeedPolicy = data.SpeedPolicy,
                 DefaultPaymentMethod = data.GetDefaultPaymentId()?.ToStringNormalized(),
@@ -166,6 +168,7 @@ namespace BTCPayServer.Controllers.Greenfield
             var blob = model.GetStoreBlob();
             model.StoreName = restModel.Name;
             model.StoreWebsite = restModel.Website;
+            model.Archived = restModel.Archived;
             model.SpeedPolicy = restModel.SpeedPolicy;
             model.SetDefaultPaymentId(defaultPaymentMethod);
             //we do not include the default payment method in this model and instead opt to set it in the stores/storeid/payment-methods endpoints

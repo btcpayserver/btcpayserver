@@ -37,19 +37,6 @@
                         <a
                             asp-action="ListApps"
                             asp-route-storeId="@Context.GetStoreData().Id"
-                            asp-route-sortOrder="@(storeNameSortOrder ?? "asc")"
-                            asp-route-sortOrderColumn="StoreName"
-                            class="text-nowrap"
-                            title="@(storeNameSortOrder == "desc" ? sortByDesc : sortByAsc)"
-                        >
-                            Store
-                            <span class="fa @(storeNameSortOrder == "asc" ? "fa-sort-alpha-desc" : storeNameSortOrder == "desc" ? "fa-sort-alpha-asc" : "fa-sort")" />
-                        </a>
-                    </th>
-                    <th>
-                        <a
-                            asp-action="ListApps"
-                            asp-route-storeId="@Context.GetStoreData().Id"
                             asp-route-sortOrder="@(appNameSortOrder ?? "asc")"
                             asp-route-sortOrderColumn="AppName"
                             class="text-nowrap"
@@ -72,21 +59,36 @@
                             <span class="fa @(appTypeSortOrder == "asc" ? "fa-sort-alpha-desc" : appTypeSortOrder == "desc" ? "fa-sort-alpha-asc" : "fa-sort")" />
                         </a>
                     </th>
-                    <th style="text-align:right">Actions</th>
+                    <th>
+                        <a
+                            asp-action="ListApps"
+                            asp-route-storeId="@Context.GetStoreData().Id"
+                            asp-route-sortOrder="@(storeNameSortOrder ?? "asc")"
+                            asp-route-sortOrderColumn="StoreName"
+                            class="text-nowrap"
+                            title="@(storeNameSortOrder == "desc" ? sortByDesc : sortByAsc)"
+                        >
+                            Store
+                            <span class="fa @(storeNameSortOrder == "asc" ? "fa-sort-alpha-desc" : storeNameSortOrder == "desc" ? "fa-sort-alpha-asc" : "fa-sort")" />
+                        </a>
+                    </th>
                 </tr>
                 </thead>
                 <tbody>
                 @foreach (var app in Model.Apps)
                 {
+                    var appType = AppService.GetAppType(app.AppType)!;
+                    var appData = new AppData { Id = app.Id, StoreDataId = app.StoreId, Name = app.AppName, AppType = app.AppType };
+                    var url = await appType.ConfigureLink(appData);
                     <tr>
                         <td>
-                            <span permission="@Policies.CanModifyStoreSettings">
-                                <a asp-controller="UIStores" asp-action="GeneralSettings" asp-route-storeId="@app.StoreId">@app.StoreName</a>
-                            </span>
-
-                            <span not-permission="@Policies.CanModifyStoreSettings">@app.StoreName</span>
+                            <a href="@url" permission="@Policies.CanModifyStoreSettings" id="App-@app.Id">@app.AppName</a>
+                            <span not-permission="@Policies.CanModifyStoreSettings">@app.AppName</span>
+                            @if (app.Archived)
+                            {
+                                <span class="badge bg-info ms-2">archived</span>
+                            }
                         </td>
-                        <td>@app.AppName</td>
                         <td>
                             @AppService.GetAvailableAppTypes()[app.AppType]
                             @{
@@ -98,14 +100,11 @@
                                 <span>@viewStyle</span>
                             }
                         </td>
-                        <td class="text-end" permission="@Policies.CanModifyStoreSettings">
-                           
-                                <a asp-action="@app.UpdateAction" asp-controller="UIApps" asp-route-appId="@app.Id" asp-route-storeId="@app.StoreId">Settings</a>
-                                <span> - </span>
-                            
-					        <a asp-action="DeleteApp" asp-route-appId="@app.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The app <strong>@Html.Encode(app.AppName)</strong> and its settings will be permanently deleted from your store <strong>@Html.Encode(app.StoreName)</strong>." data-confirm-input="DELETE">Delete</a>
-                        </td>
-                        <td class="text-end" no-permission="@Policies.CanModifyStoreSettings">
+                        <td>
+                            <span permission="@Policies.CanModifyStoreSettings">
+                                <a asp-controller="UIStores" asp-action="GeneralSettings" asp-route-storeId="@app.StoreId">@app.StoreName</a>
+                            </span>
+                            <span not-permission="@Policies.CanModifyStoreSettings">@app.StoreName</span>
                         </td>
                     </tr>
                 }

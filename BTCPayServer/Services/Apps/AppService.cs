@@ -244,7 +244,15 @@ namespace BTCPayServer.Services.Apps
             return await ctx.SaveChangesAsync() == 1;
         }
 
-        public async Task<ListAppsViewModel.ListAppViewModel[]> GetAllApps(string? userId, bool allowNoUser = false, string? storeId = null)
+        public async Task<bool> SetArchived(AppData appData, bool archived)
+        {
+            await using var ctx = _ContextFactory.CreateContext();
+            appData.Archived = archived;
+            ctx.Entry(appData).State = EntityState.Modified;
+            return await ctx.SaveChangesAsync() == 1;
+        }
+
+        public async Task<ListAppsViewModel.ListAppViewModel[]> GetAllApps(string? userId, bool allowNoUser = false, string? storeId = null, bool includeArchived = false)
         {
             await using var ctx = _ContextFactory.CreateContext();
             var listApps = (await ctx.UserStore
@@ -254,6 +262,7 @@ namespace BTCPayServer.Services.Apps
                 .Include(store => store.StoreRole)
                 .Include(store => store.StoreData)
                 .Join(ctx.Apps, us => us.StoreDataId, app => app.StoreDataId, (us, app) => new { us, app })
+                .Where(b => !b.app.Archived || b.app.Archived == includeArchived)
                 .OrderBy(b => b.app.Created)
                 .ToArrayAsync()).Select(arg => new ListAppsViewModel.ListAppViewModel
             {
@@ -264,6 +273,7 @@ namespace BTCPayServer.Services.Apps
                 AppType = arg.app.AppType,
                 Id = arg.app.Id,
                 Created = arg.app.Created,
+                Archived = arg.app.Archived,
                 App = arg.app
             }).ToArray();
 
@@ -300,11 +310,12 @@ namespace BTCPayServer.Services.Apps
             return style;
         }
 
-        public async Task<List<AppData>> GetApps(string[] appIds, bool includeStore = false)
+        public async Task<List<AppData>> GetApps(string[] appIds, bool includeStore = false, bool includeArchived = false)
         {
             await using var ctx = _ContextFactory.CreateContext();
             var query = ctx.Apps
-                .Where(app => appIds.Contains(app.Id));
+                .Where(app => appIds.Contains(app.Id))
+                .Where(app => !app.Archived || app.Archived == includeArchived);
             if (includeStore)
             {
                 query = query.Include(data => data.StoreData);
@@ -320,13 +331,12 @@ namespace BTCPayServer.Services.Apps
             return await query.ToListAsync();
         }
 
-        public async Task<AppData?> GetApp(string appId, string? appType, bool includeStore = false)
+        public async Task<AppData?> GetApp(string appId, string? appType, bool includeStore = false, bool includeArchived = false)
         {
             await using var ctx = _ContextFactory.CreateContext();
             var query = ctx.Apps
-                .Where(us => us.Id == appId &&
-                             (appType == null || us.AppType == appType));
-
+                .Where(us => us.Id == appId && (appType == null || us.AppType == appType))
+                .Where(app => !app.Archived || app.Archived == includeArchived);
             if (includeStore)
             {
                 query = query.Include(data => data.StoreData);
@@ -338,7 +348,6 @@ namespace BTCPayServer.Services.Apps
         {
             return _storeRepository.FindStore(app.StoreDataId);
         }
-        
 
         public static string SerializeTemplate(ViewPointOfSaleViewModel.Item[] items)
         {

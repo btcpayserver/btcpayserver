@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using BTCPayServer.Data;
 using BTCPayServer.Models.StoreViewModels;
-using BTCPayServer.Services.Apps;
 
 namespace BTCPayServer.Components.MainNav
 {
@@ -13,6 +12,7 @@ namespace BTCPayServer.Components.MainNav
         public List<StoreApp> Apps { get; set; }
         public CustodianAccountData[] CustodianAccounts { get; set; }
         public bool AltcoinsBuild { get; set; }
+        public int ArchivedAppsCount { get; set; }
     }
 
     public class StoreApp

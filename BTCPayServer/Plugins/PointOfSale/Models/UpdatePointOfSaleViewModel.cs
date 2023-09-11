@@ -99,5 +99,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Models
 
         [Display(Name = "Request customer data on checkout")]
         public string FormId { get; set; }
+
+        public bool Archived { get; set; }
     }
 }

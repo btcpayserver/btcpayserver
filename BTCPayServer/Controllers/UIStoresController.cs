@@ -680,6 +680,7 @@ namespace BTCPayServer.Controllers
                 InvoiceExpiration = (int)storeBlob.InvoiceExpiration.TotalMinutes,
                 DefaultCurrency = storeBlob.DefaultCurrency,
                 BOLT11Expiration = (long)storeBlob.RefundBOLT11Expiration.TotalDays,
+                Archived = store.Archived,
                 CanDelete = _Repo.CanDeleteStores()
             };
 
@@ -820,6 +821,23 @@ namespace BTCPayServer.Controllers
 
                 TempData[WellKnownTempData.SuccessMessage] = "Store successfully updated";
             }
+
+            return RedirectToAction(nameof(GeneralSettings), new
+            {
+                storeId = CurrentStore.Id
+            });
+        }
+
+        [HttpPost("{storeId}/archive")]
+        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanModifyStoreSettings)]
+        public async Task<IActionResult> ToggleArchive(string storeId)
+        {
+            CurrentStore.Archived = !CurrentStore.Archived;
+            await _Repo.UpdateStore(CurrentStore);
+
+            TempData[WellKnownTempData.SuccessMessage] = CurrentStore.Archived
+                ? "The store has been archived and will no longer appear in the stores list by default."
+                : "The store has been unarchived and will appear in the stores list by default again.";
 
             return RedirectToAction(nameof(GeneralSettings), new
             {

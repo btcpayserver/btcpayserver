@@ -805,7 +805,7 @@ a.store-powered-by:hover .logo-brand-dark {
 }
 
 .ts-wrapper.form-control:not(.ts-inline) .ts-control {
-    padding: .5rem !important;
+    padding: .5rem 1rem !important;
     border-radius: var(--btcpay-border-radius) !important;
 }
 
@@ -814,12 +814,16 @@ a.store-powered-by:hover .logo-brand-dark {
     box-shadow: 0 0 0 1px var(--btcpay-form-border-focus) inset;
 }
 
+.ts-wrapper.form-control,
+.ts-wrapper.form-control .ts-control {
+    min-height: auto !important;
+}
+
 .ts-wrapper.form-control.ts-inline,
 .ts-wrapper.form-control.ts-inline .ts-control {
     padding: 0 !important;
     border: none !important;
     box-shadow: none !important;
-    min-height: auto !important;
     background: transparent !important;
 }
 

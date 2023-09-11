@@ -39,6 +39,12 @@
                     <span>Copy Tor URL</span>
                 </button>
             }
+			@if (User.Identity.IsAuthenticated)
+			{
+				<div class="blazor-status">
+					<span class="blazor-status__img btcpay-status"></span> <span class="blazor-status__text"></span>
+				</div>
+			}
         </div>
         @if (User.Identity.IsAuthenticated)
         {

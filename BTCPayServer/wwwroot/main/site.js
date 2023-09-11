@@ -338,4 +338,71 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
+// Initialize Blazor
+if (window.Blazor) {
+    class BlazorReconnectionHandler {
+        reconnecting = false;
+        async onConnectionDown(options, _error) {
+            if (this.reconnecting)
+                return;
+            this.setBlazorStatus('Disconnected');
+            this.reconnecting = true;
+            console.warn("Blazor hub conneciton down");
+            await this.reconnect();
+        }
+        async reconnect() {
+            let delays = [500, 1000, 2000, 4000, 8000, 16000, 20000];
+            let i = 0;
+            const lastDelay = delays.length - 1;
+            while (true) {
+                await this.delay(delays[i]);
+                try {
+                    console.log("Retrying to reconnect to Blazor hub...");
+                    if (await Blazor.reconnect())
+                        break;
+                    this.setBlazorStatus('Disconnected', 'Disconnected', 'Broken circuit, please refresh the page');
+                    console.warn("Error while reconnecting to Blazor hub. (Broken circuit)");
+                }
+                catch (err) {
+                    this.setBlazorStatus('Disconnected', 'Disconnected', err);
+                    console.warn("Error while reconnecting to Blazor hub (" + err + ")");
+                }
+                i++;
+                if (i > lastDelay)
+                    i = lastDelay;
+            }
+        }
+        onConnectionUp() {
+            this.reconnecting = false;
+            console.log("Blazor hub connection up again");
+            this.setBlazorStatus('Connected');
+        }
 
+        setBlazorStatus(status, text, tooltip) {
+            const logoElements = document.querySelectorAll('.blazor-status .blazor-status__img');
+            logoElements.forEach(element => {
+                element.classList.remove('btcpay-status--enabled');
+                element.classList.remove('btcpay-status--pending');
+                element.classList.add('btcpay-status--' + (status === 'Connected' ? 'enabled' : "disabled"));
+                if (tooltip) {
+                    element.setAttribute('title', tooltip);
+                }
+            });
+
+            const textElements = document.querySelectorAll('.blazor-status .blazor-status__text');
+            textElements.forEach(element => {
+                element.textContent = text ?? status;
+            });
+        }
+        delay(durationMilliseconds) {
+            return new Promise(resolve => setTimeout(resolve, durationMilliseconds));
+        }
+
+    }
+
+    const handler = new BlazorReconnectionHandler();
+    handler.setBlazorStatus('Connected');
+    Blazor.start({
+        reconnectionHandler: handler
+    });
+}

@@ -4,23 +4,21 @@ if (!window.appSales) {
             const id = `AppSales-${model.id}`;
             const appId = model.id;
             const period = model.period;
-            const baseUrl = model.url;
+            const baseUrl = model.dataUrl;
             const data = model;
 
             const render = (data, period) => {
                 const series = data.series.map(s => s.salesCount);
-                const labels = data.series.map((s, i) => period === model.period ? s.label : (i % 5 === 0 ? s.label : ''));
+                const labels = data.series.map((s, i) => period === 'Month' ? (i % 5 === 0 ? s.label : '') : s.label);
                 const min = Math.min(...series);
                 const max = Math.max(...series);
                 const low = min === max ? 0 : Math.max(min - ((max - min) / 5), 0);
-
                 document.querySelectorAll(`#${id} .sales-count`).innerText = data.salesCount;
-
                 new Chartist.Bar(`#${id} .ct-chart`, {
                     labels,
                     series: [series]
                 }, {
-                    low,
+                    low
                 });
             };
 

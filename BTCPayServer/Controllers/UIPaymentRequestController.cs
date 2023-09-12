@@ -333,7 +333,7 @@ namespace BTCPayServer.Controllers
             try
             {
                 var store = await _storeRepository.FindStore(result.StoreId);
-                var prData = await _PaymentRequestRepository.FindPaymentRequest(result.Id, null);
+                var prData = await _PaymentRequestRepository.FindPaymentRequest(result.Id, null, cancellationToken);
                 var newInvoice = await _InvoiceController.CreatePaymentRequestInvoice(prData, amount, result.AmountDue, store, Request, cancellationToken);
                 if (redirectToInvoice)
                 {

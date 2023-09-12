@@ -1606,7 +1606,7 @@ namespace BTCPayServer.Tests
             using var tester = CreateServerTester();
             await tester.StartAsync();
             var user = tester.NewAccount();
-            user.GrantAccess();
+            await user.GrantAccessAsync();
             await user.MakeAdmin();
             var client = await user.CreateClient(Policies.Unrestricted);
             var viewOnly = await user.CreateClient(Policies.CanViewPaymentRequests);
@@ -1688,11 +1688,18 @@ namespace BTCPayServer.Tests
                         BitcoinAddress.Create(invoice.BitcoinAddress, tester.ExplorerNode.Network), invoice.BtcDue);
                 });
                 await TestUtils.EventuallyAsync(async () =>
-                 {
-                     Assert.Equal(Invoice.STATUS_PAID, user.BitPay.GetInvoice(invoiceId).Status);
-                     if (!partialPayment)
-                         Assert.Equal(PaymentRequestData.PaymentRequestStatus.Completed, (await client.GetPaymentRequest(user.StoreId, paymentTestPaymentRequest.Id)).Status);
-                 });
+                {
+                    Assert.Equal(Invoice.STATUS_PAID, (await user.BitPay.GetInvoiceAsync(invoiceId)).Status);
+                    if (!partialPayment)
+                        Assert.Equal(PaymentRequestData.PaymentRequestStatus.Processing, (await client.GetPaymentRequest(user.StoreId, paymentTestPaymentRequest.Id)).Status);
+                });
+                await tester.ExplorerNode.GenerateAsync(1);
+                await TestUtils.EventuallyAsync(async () =>
+                {
+                    Assert.Equal(Invoice.STATUS_CONFIRMED, (await user.BitPay.GetInvoiceAsync(invoiceId)).Status);
+                    if (!partialPayment)
+                        Assert.Equal(PaymentRequestData.PaymentRequestStatus.Completed, (await client.GetPaymentRequest(user.StoreId, paymentTestPaymentRequest.Id)).Status);
+                });
             }
             await Pay(invoiceId);
 

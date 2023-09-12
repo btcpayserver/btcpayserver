@@ -935,6 +935,14 @@ namespace BTCPayServer.Services.Invoices
                 Status == InvoiceStatusLegacy.Invalid;
         }
 
+        public bool IsSettled()
+        {
+            return Status == InvoiceStatusLegacy.Confirmed ||
+                   Status == InvoiceStatusLegacy.Complete ||
+                   (Status == InvoiceStatusLegacy.Expired &&
+                    ExceptionStatus is InvoiceExceptionStatus.PaidLate or InvoiceExceptionStatus.PaidOver);
+        }
+
         public override int GetHashCode()
         {
             return HashCode.Combine(Status, ExceptionStatus);
@@ -970,7 +978,7 @@ namespace BTCPayServer.Services.Invoices
         }
         public override string ToString()
         {
-            return Status.ToModernStatus().ToString() + (ExceptionStatus == InvoiceExceptionStatus.None ? string.Empty : $" ({ToString(ExceptionStatus)})");
+            return Status.ToModernStatus() + (ExceptionStatus == InvoiceExceptionStatus.None ? string.Empty : $" ({ToString(ExceptionStatus)})");
         }
     }
 

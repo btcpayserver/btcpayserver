@@ -102,30 +102,30 @@ a.unobtrusive-link {
 }
 
 /* Badges */
-.badge-pending,
-.badge-new {
+.badge-new,
+.badge-pending {
     background: #d4edda;
     color: #000;
 }
-
 .badge-expired {
     background: #eee;
     color: #000;
 }
-
 .badge-invalid {
-    background: #c94a47;
-    color: #fff;
+    background: var(--btcpay-danger);
+    color: var(--btcpay-danger-text);
 }
-
+.badge-unusual {
+    background: var(--btcpay-warning);
+    color: var(--btcpay-warning-text);
+}
 .badge-processing {
-    background: #f1c332;
-    color: #000;
+    background: var(--btcpay-info);
+    color: var(--btcpay-info-text);
 }
-
 .badge-settled {
-    background: #329f80;
-    color: #fff;
+    background: var(--btcpay-success);
+    color: var(--btcpay-success-text);
 }
 
 /* Info icons in main headline */

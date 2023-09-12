@@ -7,7 +7,7 @@ namespace BTCPayServer.Client.Models
     public class PaymentRequestData : PaymentRequestBaseData
     {
         [JsonConverter(typeof(StringEnumConverter))]
-        public PaymentRequestData.PaymentRequestStatus Status { get; set; }
+        public PaymentRequestStatus Status { get; set; }
         [JsonConverter(typeof(NBitcoin.JsonConverters.DateTimeToUnixTimeConverter))]
         public DateTimeOffset CreatedTime { get; set; }
         public string Id { get; set; }
@@ -16,7 +16,8 @@ namespace BTCPayServer.Client.Models
         {
             Pending = 0,
             Completed = 1,
-            Expired = 2
+            Expired = 2,
+            Processing = 3
         }
     }
 }

@@ -1065,7 +1065,8 @@ input.ts-wrapper.form-control:not(.ts-hidden-accessible,.ts-inline) {
     color: var(--btcpay-success) !important;
 }
 
-.blazor-status {
-    display: inline-block;
+.blazor-status .btn-close .icon {
+    width: .75rem;
+    height: .75rem;
 }
 

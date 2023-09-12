@@ -340,14 +340,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // Initialize Blazor
 if (window.Blazor) {
+    let isUnloading = false;
+    window.addEventListener("beforeunload", () => { isUnloading = true; });
     class BlazorReconnectionHandler {
         reconnecting = false;
         async onConnectionDown(options, _error) {
             if (this.reconnecting)
                 return;
-            this.setBlazorStatus('Disconnected');
+            this.setBlazorStatus(false);
             this.reconnecting = true;
-            console.warn("Blazor hub conneciton down");
+            console.warn('Blazor hub connection lost');
             await this.reconnect();
         }
         async reconnect() {
@@ -357,15 +359,14 @@ if (window.Blazor) {
             while (true) {
                 await this.delay(delays[i]);
                 try {
-                    console.log("Retrying to reconnect to Blazor hub...");
                     if (await Blazor.reconnect())
                         break;
-                    this.setBlazorStatus('Disconnected', 'Disconnected', 'Broken circuit, please refresh the page');
-                    console.warn("Error while reconnecting to Blazor hub. (Broken circuit)");
+                    this.setBlazorStatus(false, 'Please refresh the page.');
+                    console.warn('Error while reconnecting to Blazor hub (Broken circuit)');
                 }
                 catch (err) {
-                    this.setBlazorStatus('Disconnected', 'Disconnected', err);
-                    console.warn("Error while reconnecting to Blazor hub (" + err + ")");
+                    this.setBlazorStatus(false, err);
+                    console.warn(`Error while reconnecting to Blazor hub (${err})`);
                 }
                 i++;
                 if (i > lastDelay)
@@ -374,34 +375,35 @@ if (window.Blazor) {
         }
         onConnectionUp() {
             this.reconnecting = false;
-            console.log("Blazor hub connection up again");
-            this.setBlazorStatus('Connected');
+            console.debug('Blazor hub connected');
+            this.setBlazorStatus(true);
         }
 
-        setBlazorStatus(status, text, tooltip) {
-            const logoElements = document.querySelectorAll('.blazor-status .blazor-status__img');
-            logoElements.forEach(element => {
-                element.classList.remove('btcpay-status--enabled');
-                element.classList.remove('btcpay-status--pending');
-                element.classList.add('btcpay-status--' + (status === 'Connected' ? 'enabled' : "disabled"));
-                if (tooltip) {
-                    element.setAttribute('title', tooltip);
+        setBlazorStatus(isConnected, text) {
+            document.querySelectorAll('.blazor-status').forEach($status => {
+                const $state = $status.querySelector('.blazor-status__state');
+                const $title = $status.querySelector('.blazor-status__title');
+                const $body = $status.querySelector('.blazor-status__body');
+                $state.classList.remove('btcpay-status--enabled');
+                $state.classList.remove('btcpay-status--disabled');
+                $state.classList.remove('btcpay-status--pending');
+                $state.classList.add('btcpay-status--' + (isConnected ? 'enabled' : 'disabled'));
+                $title.textContent = `Backend ${isConnected ? 'connected' : 'disconnected'}`;
+                $body.textContent = text || '';
+                $body.classList.toggle('d-none', !text);
+                if (!isConnected && !isUnloading) {
+                    const toast = new bootstrap.Toast($status, { autohide: false });
+                    toast.show();
                 }
-            });
-
-            const textElements = document.querySelectorAll('.blazor-status .blazor-status__text');
-            textElements.forEach(element => {
-                element.textContent = text ?? status;
             });
         }
         delay(durationMilliseconds) {
             return new Promise(resolve => setTimeout(resolve, durationMilliseconds));
         }
-
     }
 
     const handler = new BlazorReconnectionHandler();
-    handler.setBlazorStatus('Connected');
+    handler.setBlazorStatus(true);
     Blazor.start({
         reconnectionHandler: handler
     });

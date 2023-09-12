@@ -13,7 +13,7 @@
 			<label for="test-payment-amount" class="control-label form-label">Fake a {{cryptoCode}} payment for testing</label>
             <div class="d-flex gap-2 mb-2">
                 <div class="input-group">
-					<input id="test-payment-amount" name="Amount" type="number" :step="isSats ? '1' : '0.00000001'" min="0" class="form-control" placeholder="Amount" v-model="amountRemaining" :disabled="paying || paymentMethodId === 'BTC_LightningLike'" />
+					<input id="test-payment-amount" name="Amount" type="number" :step="isSats ? '1' : '0.00000001'" min="0" class="form-control" placeholder="Amount" v-model="amount" :readonly="paying || paymentMethodId === 'BTC_LightningLike'" />
                     <div id="test-payment-crypto-code" class="input-group-addon input-group-text" v-text="cryptoCode"></div>
                 </div>
 				<button class="btn btn-secondary flex-shrink-0 px-3 w-100px" type="submit" :disabled="paying" id="FakePayment">Pay</button>
@@ -78,6 +78,12 @@
             },
             isSats () {
                 return this.cryptoCode === 'sats';
+            },
+            amount () {
+                const amount = this.isSats && this.amountRemaining < 1
+                    ? this.amountRemaining * 100000000
+                    : this.amountRemaining;
+                return amount < 0 ? 0 : amount;
             }
         },
         methods: {

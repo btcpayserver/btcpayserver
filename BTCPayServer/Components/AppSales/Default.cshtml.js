@@ -1,8 +1,7 @@
 if (!window.appSales) {
-    window.appSales =
-    {
-        dataLoaded: function (model) {
-            const id = "AppSales-" + model.id;
+    window.appSales = {
+        dataLoaded (model) {
+            const id = `AppSales-${model.id}`;
             const appId = model.id;
             const period = model.period;
             const baseUrl = model.url;

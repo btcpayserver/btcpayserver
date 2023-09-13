@@ -338,4 +338,88 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
+// Initialize Blazor
+if (window.Blazor) {
+    let isUnloading = false;
+    window.addEventListener("beforeunload", () => { isUnloading = true; });
+    class BlazorReconnectionHandler {
+        reconnecting = false;
+        async onConnectionDown(options, _error) {
+            if (this.reconnecting)
+                return;
+            this.setBlazorStatus(false);
+            this.reconnecting = true;
+            console.warn('Blazor hub connection lost');
+            await this.reconnect();
+        }
+        async reconnect() {
+            let delays = [500, 1000, 2000, 4000, 8000, 16000, 20000];
+            let i = 0;
+            const lastDelay = delays.length - 1;
+            while (true) {
+                await this.delay(delays[i]);
+                try {
+                    if (await Blazor.reconnect())
+                        break;
 
+                    var refresh = document.createElement('span');
+                    refresh.appendChild(document.createTextNode('Please '));
+                    var refreshLink = document.createElement('a');
+                    refreshLink.href = "#";
+                    refreshLink.textContent = "refresh";
+                    refreshLink.addEventListener('click', (event) => { event.preventDefault(); window.location.reload(); });
+                    refresh.appendChild(refreshLink);
+                    refresh.appendChild(document.createTextNode(' the page.'));
+
+                    this.setBlazorStatus(false, refresh);
+                    console.warn('Error while reconnecting to Blazor hub (Broken circuit)');
+                }
+                catch (err) {
+                    this.setBlazorStatus(false, err + '. Reconnecting...');
+                    console.warn(`Error while reconnecting to Blazor hub (${err})`);
+                }
+                i++;
+                if (i > lastDelay)
+                    i = lastDelay;
+            }
+        }
+        onConnectionUp() {
+            this.reconnecting = false;
+            console.debug('Blazor hub connected');
+            this.setBlazorStatus(true);
+        }
+
+        setBlazorStatus(isConnected, text) {
+            document.querySelectorAll('.blazor-status').forEach($status => {
+                const $state = $status.querySelector('.blazor-status__state');
+                const $title = $status.querySelector('.blazor-status__title');
+                const $body = $status.querySelector('.blazor-status__body');
+                $state.classList.remove('btcpay-status--enabled');
+                $state.classList.remove('btcpay-status--disabled');
+                $state.classList.add('btcpay-status--' + (isConnected ? 'enabled' : 'disabled'));
+                $title.textContent = `Backend ${isConnected ? 'connected' : 'disconnected'}`;
+                if (text instanceof Node) {
+                    $body.innerHTML = '';
+                    $body.appendChild(text);
+                } else
+                    $body.textContent = text || '';
+
+                $body.classList.toggle('d-none', !text);
+                if (!isConnected && !isUnloading) {
+                    const toast = new bootstrap.Toast($status, { autohide: false });
+                    if (!toast.isShown())
+                        toast.show();
+                }
+            });
+        }
+        delay(durationMilliseconds) {
+            return new Promise(resolve => setTimeout(resolve, durationMilliseconds));
+        }
+    }
+
+    const handler = new BlazorReconnectionHandler();
+    handler.setBlazorStatus(true);
+    Blazor.start({
+        reconnectionHandler: handler
+    });
+}

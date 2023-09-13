@@ -244,6 +244,7 @@
             delegate('click', '#lnurlwithdraw-button', event => {
                 qrApp.title = "LNURL Withdraw";
                 qrApp.modes = modes;
+                qrApp.mode = "bech32";
                 qrApp.note= @Safe.Json(note)
                 qrApp.show();
             });

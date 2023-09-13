@@ -38,6 +38,7 @@ using OpenQA.Selenium.Support.Extensions;
 using OpenQA.Selenium.Support.UI;
 using Xunit;
 using Xunit.Abstractions;
+using Xunit.Sdk;
 
 namespace BTCPayServer.Tests
 {
@@ -1821,6 +1822,7 @@ namespace BTCPayServer.Tests
             TestUtils.Eventually(() =>
             {
                 s.Driver.Navigate().Refresh();
+                s.Driver.WaitWalletTransactionsLoaded();
                 Assert.Contains("transaction-label", s.Driver.PageSource);
                 var labels = s.Driver.FindElements(By.CssSelector("#WalletTransactionsList tr:first-child div.transaction-label"));
                 Assert.Equal(2, labels.Count);
@@ -2023,6 +2025,20 @@ namespace BTCPayServer.Tests
             s.FindAlertMessage(StatusMessageModel.StatusSeverity.Success);
             s.Driver.FindElement(By.LinkText("View")).Click();
             s.Driver.FindElement(By.CssSelector("#lnurlwithdraw-button")).Click();
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                try
+                {
+
+                    s.Driver.WaitForElement(By.Id("qr-code-data-input"));
+                }
+                catch (NoSuchElementException e)
+                {
+                    await Task.Delay(200);
+                    throw new XunitException("wrapper");
+                }
+
+            });
             var lnurl = new Uri(LNURL.LNURL.Parse(s.Driver.FindElement(By.Id("qr-code-data-input")).GetAttribute("value"), out _).ToString().Replace("https", "http"));
             s.Driver.FindElement(By.CssSelector("button[data-bs-dismiss='modal']")).Click();
             var info = Assert.IsType<LNURLWithdrawRequest>(await LNURL.LNURL.FetchInformation(lnurl, s.Server.PayTester.HttpClient));

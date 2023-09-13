@@ -738,6 +738,12 @@ namespace BTCPayServer.Services.Invoices
             var data = await query.ToArrayAsync(cancellationToken).ConfigureAwait(false);
             return data.Select(ToEntity).ToArray();
         }
+        
+        public async Task<int> GetInvoiceCount(InvoiceQuery queryObject)
+        {
+            await using var context = _applicationDbContextFactory.CreateContext();
+            return await GetInvoiceQuery(context, queryObject).CountAsync();
+        }
 
         private string NormalizeExceptionStatus(string status)
         {

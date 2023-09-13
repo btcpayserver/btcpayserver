@@ -361,11 +361,21 @@ if (window.Blazor) {
                 try {
                     if (await Blazor.reconnect())
                         break;
-                    this.setBlazorStatus(false, 'Please refresh the page.');
+
+                    var refresh = document.createElement('span');
+                    refresh.appendChild(document.createTextNode('Please '));
+                    var refreshLink = document.createElement('a');
+                    refreshLink.href = "#";
+                    refreshLink.textContent = "refresh";
+                    refreshLink.addEventListener('click', (event) => { event.preventDefault(); window.location.reload(); });
+                    refresh.appendChild(refreshLink);
+                    refresh.appendChild(document.createTextNode(' the page.'));
+
+                    this.setBlazorStatus(false, refresh);
                     console.warn('Error while reconnecting to Blazor hub (Broken circuit)');
                 }
                 catch (err) {
-                    this.setBlazorStatus(false, err);
+                    this.setBlazorStatus(false, err + '. Reconnecting...');
                     console.warn(`Error while reconnecting to Blazor hub (${err})`);
                 }
                 i++;
@@ -386,14 +396,19 @@ if (window.Blazor) {
                 const $body = $status.querySelector('.blazor-status__body');
                 $state.classList.remove('btcpay-status--enabled');
                 $state.classList.remove('btcpay-status--disabled');
-                $state.classList.remove('btcpay-status--pending');
                 $state.classList.add('btcpay-status--' + (isConnected ? 'enabled' : 'disabled'));
                 $title.textContent = `Backend ${isConnected ? 'connected' : 'disconnected'}`;
-                $body.textContent = text || '';
+                if (text instanceof Node) {
+                    $body.innerHTML = '';
+                    $body.appendChild(text);
+                } else
+                    $body.textContent = text || '';
+
                 $body.classList.toggle('d-none', !text);
                 if (!isConnected && !isUnloading) {
                     const toast = new bootstrap.Toast($status, { autohide: false });
-                    toast.show();
+                    if (!toast.isShown())
+                        toast.show();
                 }
             });
         }

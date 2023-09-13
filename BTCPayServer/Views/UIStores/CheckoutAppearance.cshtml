@@ -40,27 +40,21 @@
 		});
         
 		delegate('click', '#CheckNFC button', async e => {
-            const elementResponse = document.querySelector("#CheckNFC p");
-            elementResponse.classList.remove("text-danger", "text-success");
-			if ("NDEFReader" in window) {
+			if ('NDEFReader' in window) {
                 const ndef = new NDEFReader();
                 try {
                     await ndef.scan();
-                    elementResponse.innerHTML = "NFC access granted.";
-                    elementResponse.classList.add("text-success");
-                    return true;
+                    e.target.classList = 'btn btn-outline-success';
+                    e.target.innerText = 'NFC access granted';
                 } catch (error) {
-                    elementResponse.classList.add("text-danger");
-                    elementResponse.innerHTML = "NFC access is required. Please allow it in your browser settings.";
+                    e.target.classList = 'btn btn-outline-warning';
+                    e.target.innerText = 'Please allow NFC access in your browser settings';
                 }
             } else {
-                elementResponse.innerHTML = "Web NFC is not supported by this browser.";
-                elementResponse.classList.add("text-danger");
+                e.target.classList = 'btn btn-outline-danger';
+                e.target.innerText = 'NFC is not supported by this browser';
             }
         });
-        
-        
-        
     </script>
 }
 
@@ -123,18 +117,14 @@
 					</div>
 				</div>
 			</h3>
-            
-            
-                <div id="CheckNFC" class="mb-4 d-none">
-                    <button type="button" class="btn btn-link p-0">Check if NFC is supported and enabled on this device.</button>
-                    <p> </p>
-                </div>
             <div class="d-flex align-items-center mb-4">
 				<input asp-for="UseClassicCheckout" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target=".checkout-settings" aria-expanded="@(Model.UseClassicCheckout)" aria-controls="CheckoutV2Settings" />
 				<label asp-for="UseClassicCheckout" class="form-label mb-0"></label>
                 <span asp-validation-for="UseClassicCheckout" class="text-danger"></span>
             </div>
-
+            <div id="CheckNFC" class="form-group d-none">
+                <button type="button" class="btn btn-outline-secondary">Check if NFC is supported and enabled on this device</button>
+            </div>
 			<div class="checkout-settings collapse @(Model.UseClassicCheckout ? "" : "show")" id="CheckoutV2Settings">
                 <div class="form-group">
                     <label asp-for="DisplayExpirationTimer" class="form-label"></label>

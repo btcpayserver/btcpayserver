@@ -359,6 +359,7 @@ namespace BTCPayServer.Hosting
             services.AddReportProvider<PaymentsReportProvider>();
             services.AddReportProvider<OnChainWalletReportProvider>();
             services.AddReportProvider<ProductsReportProvider>();
+            services.AddReportProvider<PayoutsReportProvider>();
 
             services.AddHttpClient(WebhookSender.OnionNamedClient)
                 .ConfigurePrimaryHttpMessageHandler<Socks5HttpClientHandler>();

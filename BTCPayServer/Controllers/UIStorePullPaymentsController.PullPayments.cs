@@ -538,7 +538,8 @@ namespace BTCPayServer.Controllers
             {
                 var ppBlob = item.PullPayment?.GetBlob();
                 var payoutBlob = item.Payout.GetBlob(_jsonSerializerSettings);
-                string payoutSource;
+                item.Payout.PullPaymentData = item.PullPayment;
+                string payoutSource = item.Payout.GetPayoutSource(_jsonSerializerSettings);
                 if (payoutBlob.Metadata?.TryGetValue("source", StringComparison.InvariantCultureIgnoreCase,
                         out var source) is true)
                 {

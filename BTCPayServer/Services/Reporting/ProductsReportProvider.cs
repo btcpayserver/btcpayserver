@@ -1,18 +1,10 @@
-using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using BTCPayServer.Data;
 using BTCPayServer.Rating;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
-using Dapper;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Internal;
-using Newtonsoft.Json;
-
 namespace BTCPayServer.Services.Reporting;
 
 public class ProductsReportProvider : ReportProvider

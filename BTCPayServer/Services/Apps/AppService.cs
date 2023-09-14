@@ -160,12 +160,10 @@ namespace BTCPayServer.Services.Apps
         {
             return (res, e) =>
             {
-                if (e.Metadata.PosData != null)
+                // flatten single items from POS data
+                var data = e.Metadata.PosData?.ToObject<PosAppData>();
+                if (data is { Cart.Length: > 0 })
                 {
-                    // flatten single items from POS data
-                    var data = e.Metadata.PosData.ToObject<PosAppData>();
-                    if (data is not { Cart.Length: > 0 })
-                        return res;
                     foreach (var lineItem in data.Cart)
                     {
                         var item = items.FirstOrDefault(p => p.Id == lineItem.Id);
@@ -184,10 +182,10 @@ namespace BTCPayServer.Services.Apps
                     }
                 }
                 else
-                {;
+                {
                     res.Add(new InvoiceStatsItem
                     {
-                        ItemCode = e.Metadata.ItemCode,
+                        ItemCode = e.Metadata.ItemCode ?? typeof(PosViewType).DisplayName(PosViewType.Light.ToString()),
                         FiatPrice = e.PaidAmount.Net,
                         Date = e.InvoiceTime.Date
                     });

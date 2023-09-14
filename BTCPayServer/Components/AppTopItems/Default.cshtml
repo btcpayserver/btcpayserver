@@ -27,8 +27,8 @@
 			const response = await fetch(url);
 			if (response.ok) {
 				document.getElementById(`AppTopItems-${appId}`).outerHTML = await response.text();
-				const data = document.querySelector(`#AppSales-${appId} template`);
-				if (data) window.appSales.dataLoaded(JSON.parse(data.innerHTML));
+				const data = document.querySelector(`#AppTopItems-${appId} template`);
+				if (data) window.appTopItems.dataLoaded(JSON.parse(data.innerHTML));
 			}
 		})();
 	    </script>

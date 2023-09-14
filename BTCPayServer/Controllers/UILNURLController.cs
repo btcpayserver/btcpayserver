@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
-using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
@@ -18,9 +17,9 @@ using BTCPayServer.Data.Payouts.LightningLike;
 using BTCPayServer.Events;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Lightning;
-using BTCPayServer.Logging;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
+using BTCPayServer.Plugins;
 using BTCPayServer.Plugins.Crowdfund;
 using BTCPayServer.Plugins.PointOfSale;
 using BTCPayServer.Plugins.PointOfSale.Models;
@@ -32,7 +31,6 @@ using BTCPayServer.Services.Stores;
 using LNURL;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using NBitcoin;
@@ -368,41 +366,56 @@ namespace BTCPayServer
         [IgnoreAntiforgeryToken]
         public async Task<IActionResult> ResolveLightningAddress(string username)
         {
+            if (string.IsNullOrEmpty(username))
+                return NotFound("Unknown username");
+            
+            LNURLPayRequest lnurlRequest = null;
+            
+            // Check core and fall back to lookup Lightning Address via plugins
             var lightningAddressSettings = await _lightningAddressService.ResolveByAddress(username);
-            if (lightningAddressSettings is null || username is null)
-                return NotFound("Unknown username");
-
-            var store = await _storeRepository.FindStore(lightningAddressSettings.StoreDataId);
-            var cryptoCode = "BTC";
-            if (store is null)
-                return NotFound("Unknown username");
-            if (GetLNUrlPaymentMethodId(cryptoCode, store, out var lnUrlMethod) is null)
-                return NotFound("LNUrl not available for store");
-
-            var blob = lightningAddressSettings.GetBlob();
-
-            var lnurlRequest = new LNURLPayRequest()
+            if (lightningAddressSettings is null)
             {
-                Tag = "payRequest",
-                MinSendable = blob?.Min is decimal min ? new LightMoney(min, LightMoneyUnit.Satoshi) : null,
-                MaxSendable = blob?.Max is decimal max ? new LightMoney(max, LightMoneyUnit.Satoshi) : null,
-                CommentAllowed = lnUrlMethod.LUD12Enabled ? 2000 : 0
-            };
+                var resolver = (LightningAddressResolver)await _pluginHookService.ApplyFilter("resolve-lnurlp-request-for-lightning-address",
+                    new LightningAddressResolver(username));
+
+                lnurlRequest = resolver.LNURLPayRequest;
+                if (lnurlRequest is null)
+                    return NotFound("Unknown username");
+            }
+            else
+            {
+                var store = await _storeRepository.FindStore(lightningAddressSettings.StoreDataId);
+                if (store is null)
+                    return NotFound("Unknown username");
+            
+                var cryptoCode = "BTC";
+                if (GetLNUrlPaymentMethodId(cryptoCode, store, out var lnUrlMethod) is null)
+                    return NotFound("LNURL not available for store");
+
+                var blob = lightningAddressSettings.GetBlob();
+                lnurlRequest = new LNURLPayRequest
+                {
+                    Tag = "payRequest",
+                    MinSendable = blob?.Min is decimal min ? new LightMoney(min, LightMoneyUnit.Satoshi) : null,
+                    MaxSendable = blob?.Max is decimal max ? new LightMoney(max, LightMoneyUnit.Satoshi) : null,
+                    CommentAllowed = lnUrlMethod.LUD12Enabled ? 2000 : 0
+                };
+
+                var lnUrlMetadata = new Dictionary<string, string>
+                {
+                    ["text/identifier"] = $"{username}@{Request.Host}"
+                };
+                SetLNUrlDescriptionMetadata(lnUrlMetadata, store, store.GetStoreBlob(), null);
+                lnurlRequest.Metadata =
+                    JsonConvert.SerializeObject(lnUrlMetadata.Select(kv => new[] { kv.Key, kv.Value }));
+
+                lnurlRequest.Callback = new Uri(_linkGenerator.GetUriByAction(
+                    action: nameof(GetLNURLForLightningAddress),
+                    controller: "UILNURL",
+                    values: new { cryptoCode, username }, Request.Scheme, Request.Host, Request.PathBase));
+            }
+
             NormalizeSendable(lnurlRequest);
-
-            var lnUrlMetadata = new Dictionary<string, string>()
-            {
-                ["text/identifier"] = $"{username}@{Request.Host}"
-            };
-            SetLNUrlDescriptionMetadata(lnUrlMetadata, store, store.GetStoreBlob(), null);
-            lnurlRequest.Metadata =
-                JsonConvert.SerializeObject(lnUrlMetadata.Select(kv => new[] { kv.Key, kv.Value }));
-
-            lnurlRequest.Callback = new Uri(_linkGenerator.GetUriByAction(
-                        action: nameof(GetLNURLForLightningAddress),
-                        controller: "UILNURL",
-                        values: new { cryptoCode, username }, Request.Scheme, Request.Host, Request.PathBase));
-
             lnurlRequest = await _pluginHookService.ApplyFilter("modify-lnurlp-request", lnurlRequest) as LNURLPayRequest;
             return Ok(lnurlRequest);
         }
@@ -417,21 +430,23 @@ namespace BTCPayServer
                 return NotFound("Unknown username");
             var blob = lightningAddressSettings.GetBlob();
             var store = await _storeRepository.FindStore(lightningAddressSettings.StoreDataId);
+            if (store is null)
+                return NotFound("Unknown username");
             var result = await GetLNURLRequest(
                cryptoCode,
                store,
                store.GetStoreBlob(),
-               new CreateInvoiceRequest()
+               new CreateInvoiceRequest
                {
                    Currency = blob?.CurrencyCode,
                    Metadata = blob?.InvoiceMetadata
                },
-               new LNURLPayRequest()
+               new LNURLPayRequest
                {
                    MinSendable = blob?.Min is decimal min ? new LightMoney(min, LightMoneyUnit.Satoshi) : null,
                    MaxSendable = blob?.Max is decimal max ? new LightMoney(max, LightMoneyUnit.Satoshi) : null,
                },
-               new Dictionary<string, string>()
+               new Dictionary<string, string>
                {
                    { "text/identifier", $"{username}@{Request.Host}" }
                });

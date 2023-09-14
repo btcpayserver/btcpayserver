@@ -48,7 +48,7 @@ public class LightningAddressService
     {
         return await _memoryCache.GetOrCreateAsync(GetKey(username), async entry =>
         {
-            var result = await Get(new LightningAddressQuery() { Usernames = new[] { username } });
+            var result = await Get(new LightningAddressQuery { Usernames = new[] { username } });
             return result.FirstOrDefault();
         });
     }
@@ -62,7 +62,7 @@ public class LightningAddressService
     {
         data.Username = NormalizeUsername(data.Username);
         await using var context = _applicationDbContextFactory.CreateContext();
-        var result = (await GetCore(context, new LightningAddressQuery() { Usernames = new[] { data.Username } }))
+        var result = (await GetCore(context, new LightningAddressQuery { Usernames = new[] { data.Username } }))
             .FirstOrDefault();
         if (result is not null)
         {
@@ -84,7 +84,7 @@ public class LightningAddressService
     {
         username = NormalizeUsername(username);
         await using var context = _applicationDbContextFactory.CreateContext();
-        var x = (await GetCore(context, new LightningAddressQuery() { Usernames = new[] { username } })).FirstOrDefault();
+        var x = (await GetCore(context, new LightningAddressQuery { Usernames = new[] { username } })).FirstOrDefault();
         if (x is null)
             return true;
         if (storeId is not null && x.StoreDataId != storeId)
@@ -100,7 +100,7 @@ public class LightningAddressService
 
     public async Task Set(LightningAddressData data, ApplicationDbContext context)
     {
-        var result = (await GetCore(context, new LightningAddressQuery() { Usernames = new[] { data.Username } }))
+        var result = (await GetCore(context, new LightningAddressQuery { Usernames = new[] { data.Username } }))
             .FirstOrDefault();
         if (result is not null)
         {

@@ -376,7 +376,7 @@ namespace BTCPayServer
             if (lightningAddressSettings is null)
             {
                 var resolver = (LightningAddressResolver)await _pluginHookService.ApplyFilter("resolve-lnurlp-request-for-lightning-address",
-                    new LightningAddressResolver(HttpContext, username));
+                    new LightningAddressResolver(username));
 
                 lnurlRequest = resolver.LNURLPayRequest;
                 if (lnurlRequest is null)

@@ -33,7 +33,7 @@
 		<div class="dropdown-menu text-center" id="NotificationsDropdown" aria-labelledby="NotificationsHandle">
 			<div class="d-flex gap-3 align-items-center justify-content-between py-3 px-4 border-bottom border-light">
 				<h5 class="m-0">Notifications</h5>
-				<a class="btn btn-link p-0" @onclick="MarkAllAsSeen">Mark all as seen</a>
+				<a class="btn btn-link p-0" @onclick="MarkAllAsSeen" id="NotificationsMarkAllAsSeen">Mark all as seen</a>
 			</div>
 			<div id="NotificationsList" v-pre>
 				@foreach (var n in Last5)

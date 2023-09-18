@@ -422,9 +422,7 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<INotificationHandler, PayoutNotification.Handler>();
             services.AddSingleton<INotificationHandler, ExternalPayoutTransactionNotification.Handler>();
             services.AddSingleton<IHostedService, DbMigrationsHostedService>();
-#if DEBUG
-            services.AddSingleton<INotificationHandler, JunkNotification.Handler>();
-#endif    
+
             services.TryAddSingleton<ExplorerClientProvider>();
             services.AddSingleton<IExplorerClientProvider, ExplorerClientProvider>(x =>
                 x.GetRequiredService<ExplorerClientProvider>());

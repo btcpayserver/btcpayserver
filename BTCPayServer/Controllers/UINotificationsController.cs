@@ -23,85 +23,17 @@ namespace BTCPayServer.Controllers
     [Route("notifications/{action:lowercase=Index}")]
     public class UINotificationsController : Controller
     {
-        private readonly BTCPayServerEnvironment _env;
-        private readonly NotificationSender _notificationSender;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly NotificationManager _notificationManager;
-        private readonly EventAggregator _eventAggregator;
 
-        public UINotificationsController(BTCPayServerEnvironment env,
-            NotificationSender notificationSender,
+        public UINotificationsController(
             UserManager<ApplicationUser> userManager,
-            NotificationManager notificationManager,
-            EventAggregator eventAggregator)
+            NotificationManager notificationManager)
         {
-            _env = env;
-            _notificationSender = notificationSender;
             _userManager = userManager;
             _notificationManager = notificationManager;
-            _eventAggregator = eventAggregator;
         }
 
-        [HttpGet]
-        public IActionResult GetNotificationDropdownUI(string returnUrl)
-        {
-            return ViewComponent("Notifications", new { appearance = "Dropdown", returnUrl });
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> SubscribeUpdates(CancellationToken cancellationToken)
-        {
-            if (!HttpContext.WebSockets.IsWebSocketRequest)
-            {
-                return BadRequest();
-            }
-
-            var websocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
-            var userId = _userManager.GetUserId(User);
-            var websocketHelper = new WebSocketHelper(websocket);
-            IEventAggregatorSubscription subscription = null;
-            try
-            {
-                subscription = _eventAggregator.SubscribeAsync<UserNotificationsUpdatedEvent>(async evt =>
-                {
-                    if (evt.UserId == userId)
-                    {
-                        await websocketHelper.Send("update");
-                    }
-                });
-
-                await websocketHelper.NextMessageAsync(cancellationToken);
-            }
-            catch (OperationCanceledException)
-            {
-                // ignored
-            }
-            catch (WebSocketException)
-            {
-
-            }
-            finally
-            {
-                subscription?.Dispose();
-                await websocketHelper.DisposeAsync(CancellationToken.None);
-            }
-
-            return new EmptyResult();
-        }
-#if DEBUG
-        [HttpGet]
-        public async Task<IActionResult> GenerateJunk(int x = 100, bool admin = true)
-        {
-            for (int i = 0; i < x; i++)
-            {
-                await _notificationSender.SendNotification(
-                    admin ? (NotificationScope)new AdminScope() : new UserScope(_userManager.GetUserId(User)),
-                    new JunkNotification());
-            }
-
-            return RedirectToAction("Index");
-        }
-#endif
         [HttpGet]
         public async Task<IActionResult> Index(int skip = 0, int count = 50, int timezoneOffset = 0)
         {

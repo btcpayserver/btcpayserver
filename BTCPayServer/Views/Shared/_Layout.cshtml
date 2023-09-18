@@ -35,7 +35,7 @@
         <vc:store-selector />
         @if (_signInManager.IsSignedIn(User))
         {
-            <vc:notifications appearance="Dropdown" return-url="@notificationsReturnUrl" />
+			<component type="typeof(BTCPayServer.Blazor.NotificationsDropDown)" render-mode="ServerPrerendered" />
         }
     </div>
     <vc:main-nav />
@@ -84,27 +84,6 @@
 				var tmpl = document.getElementById("badUrl");
 				mainContent.prepend(tmpl.content.cloneNode(true));
 			}
-            if ('WebSocket' in window && window.WebSocket.CLOSING === 2) {
-                const { host, protocol } = window.location;
-                var wsUri = "@_linkGenerator.GetPathByAction("SubscribeUpdates", "UINotifications", pathBase: Context.Request.PathBase)";
-				wsUri = (protocol === "https:" ? "wss:" : "ws:") + "//" + host + wsUri;
-                const newDataEndpoint = "@_linkGenerator.GetPathByAction("GetNotificationDropdownUI", "UINotifications", pathBase: Context.Request.PathBase, values: new { returnUrl = notificationsReturnUrl })";
-                try {
-                    socket = new WebSocket(wsUri);
-                    socket.onmessage = e => {
-                        if (e.data === "ping") return;
-                        $.get(newDataEndpoint, data => {
-                            $("#Notifications").replaceWith($(data));
-                        });
-                    };
-                    socket.onerror = e => {
-                        console.error("Error while connecting to websocket for notifications (callback)", e);
-                    };
-                }
-                catch (e) {
-                    console.error("Error while connecting to websocket for notifications", e);
-                }
-            }
         </script>
     }
 </main>

@@ -23,6 +23,7 @@ namespace BTCPayServer.PaymentRequest
     {
         private readonly UIPaymentRequestController _PaymentRequestController;
         public const string InvoiceCreated = "InvoiceCreated";
+        public const string InvoiceConfirmed = "InvoiceConfirmed";
         public const string PaymentReceived = "PaymentReceived";
         public const string InfoUpdated = "InfoUpdated";
         public const string InvoiceError = "InvoiceError";
@@ -128,9 +129,13 @@ namespace BTCPayServer.PaymentRequest
         private async Task CheckingPendingPayments(CancellationToken cancellationToken)
         {
             Logs.PayServer.LogInformation("Starting payment request expiration watcher");
-            var items = await _PaymentRequestRepository.FindPaymentRequests(new PaymentRequestQuery()
+            var items = await _PaymentRequestRepository.FindPaymentRequests(new PaymentRequestQuery
             {
-                Status = new[] { Client.Models.PaymentRequestData.PaymentRequestStatus.Pending }
+                Status = new[]
+                {
+                    PaymentRequestData.PaymentRequestStatus.Pending,
+                    PaymentRequestData.PaymentRequestStatus.Processing
+                }
             }, cancellationToken);
             Logs.PayServer.LogInformation($"{items.Length} pending payment requests being checked since last run");
             await Task.WhenAll(items.Select(i => _PaymentRequestService.UpdatePaymentRequestStateIfNeeded(i))
@@ -157,7 +162,7 @@ namespace BTCPayServer.PaymentRequest
             {
                 foreach (var paymentId in PaymentRequestRepository.GetPaymentIdsFromInternalTags(invoiceEvent.Invoice))
                 {
-                    if (invoiceEvent.Name == InvoiceEvent.ReceivedPayment || invoiceEvent.Name == InvoiceEvent.MarkedCompleted || invoiceEvent.Name == InvoiceEvent.MarkedInvalid)
+                    if (invoiceEvent.Name is InvoiceEvent.ReceivedPayment or InvoiceEvent.MarkedCompleted or InvoiceEvent.MarkedInvalid)
                     {
                         await _PaymentRequestService.UpdatePaymentRequestStateIfNeeded(paymentId);
                         var data = invoiceEvent.Payment?.GetCryptoPaymentData();
@@ -168,9 +173,18 @@ namespace BTCPayServer.PaymentRequest
                                 {
                                     data.GetValue(),
                                     invoiceEvent.Payment.Currency,
-                                    invoiceEvent.Payment.GetPaymentMethodId()?.PaymentType?.ToString()
+                                    invoiceEvent.Payment.GetPaymentMethodId()?.PaymentType.ToString()
                                 }, cancellationToken);
                         }
+                    }
+                    else if (invoiceEvent.Name is InvoiceEvent.Completed or InvoiceEvent.Confirmed)
+                    {
+                        await _PaymentRequestService.UpdatePaymentRequestStateIfNeeded(paymentId);
+                        await _HubContext.Clients.Group(paymentId).SendCoreAsync(PaymentRequestHub.InvoiceConfirmed,
+                            new object[]
+                            {
+                                invoiceEvent.InvoiceId
+                            }, cancellationToken);
                     }
 
                     await InfoUpdated(paymentId);
@@ -181,10 +195,11 @@ namespace BTCPayServer.PaymentRequest
                 await _PaymentRequestService.UpdatePaymentRequestStateIfNeeded(updated.PaymentRequestId);
                 await InfoUpdated(updated.PaymentRequestId);
 
+                var isPending = updated.Data.Status is
+                    PaymentRequestData.PaymentRequestStatus.Pending or
+                    PaymentRequestData.PaymentRequestStatus.Processing;
                 var expiry = updated.Data.GetBlob().ExpiryDate;
-                if (updated.Data.Status ==
-                    PaymentRequestData.PaymentRequestStatus.Pending &&
-                    expiry.HasValue)
+                if (isPending && expiry.HasValue)
                 {
                     QueueExpiryTask(
                         updated.PaymentRequestId,

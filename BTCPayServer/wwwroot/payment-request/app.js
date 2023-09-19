@@ -95,24 +95,19 @@ document.addEventListener("DOMContentLoaded",function (ev) {
                 }
             },
             statusClass: function (state) {
-                var [, status,, exceptionStatus] = state.match(/(\w*)\s?(\((\w*)\))?/) || [];
+                const [, status,, exceptionStatus] = state.match(/(\w*)\s?(\((\w*)\))?/) || [];
                 switch (status) {
-                    case "Settled":
-                    case "Processing":
-                        return "success";
                     case "Expired":
                         switch (exceptionStatus) {
                             case "paidLate":
                             case "paidPartial":
                             case "paidOver":
-                                return "warning";
+                                return "unusual";
                             default:
-                                return "danger";
+                                return "expired";
                         }
-                    case "Invalid":
-                        return "danger";
                     default:
-                        return "warning";
+                        return status.toLowerCase();
                 }
             }
         },
@@ -164,7 +159,6 @@ document.addEventListener("DOMContentLoaded",function (ev) {
                 Vue.toasted.success(title, Object.assign({}, toastOptions), { icon });
             });
             eventAggregator.$on("info-updated", function (model) {
-                console.warn("UPDATED", self.srvModel, arguments);
                 self.srvModel = model;
             });
             eventAggregator.$on("connection-pending", function () {

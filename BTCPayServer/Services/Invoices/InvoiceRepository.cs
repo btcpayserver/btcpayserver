@@ -786,9 +786,12 @@ namespace BTCPayServer.Services.Invoices
                 .Where(p => p.Currency.Equals(currency, StringComparison.OrdinalIgnoreCase))
                 .SelectMany(p =>
                 {
-                    var contribution = new InvoiceStatistics.Contribution();
-                    contribution.PaymentMethodId = new PaymentMethodId(p.Currency, PaymentTypes.BTCLike);
-                    contribution.CurrencyValue = p.Price;
+                    var contribution = new InvoiceStatistics.Contribution
+                    {
+                        PaymentMethodId = new PaymentMethodId(p.Currency, PaymentTypes.BTCLike),
+                        CurrencyValue = p.Price,
+                        States = new [] { p.GetInvoiceState() }
+                    };
                     contribution.Value = contribution.CurrencyValue;
 
                     // For hardcap, we count newly created invoices as part of the contributions
@@ -815,18 +818,22 @@ namespace BTCPayServer.Services.Invoices
                     return payments
                              .Select(pay =>
                              {
-                                 var paymentMethodContribution = new InvoiceStatistics.Contribution();
-                                 paymentMethodContribution.PaymentMethodId = pay.GetPaymentMethodId();
-                                 paymentMethodContribution.CurrencyValue = pay.InvoicePaidAmount.Net;
-                                 paymentMethodContribution.Value = pay.PaidAmount.Net;
+                                 var paymentMethodContribution = new InvoiceStatistics.Contribution
+                                 {
+                                     PaymentMethodId = pay.GetPaymentMethodId(),
+                                     CurrencyValue = pay.InvoicePaidAmount.Net,
+                                     Value = pay.PaidAmount.Net,
+                                     States = new [] { pay.InvoiceEntity.GetInvoiceState() }
+                                 };
                                  return paymentMethodContribution;
                              })
                              .ToArray();
                 })
                 .GroupBy(p => p.PaymentMethodId)
-                .ToDictionary(p => p.Key, p => new InvoiceStatistics.Contribution()
+                .ToDictionary(p => p.Key, p => new InvoiceStatistics.Contribution
                 {
                     PaymentMethodId = p.Key,
+                    States = p.SelectMany(v => v.States),
                     Value = p.Select(v => v.Value).Sum(),
                     CurrencyValue = p.Select(v => v.CurrencyValue).Sum()
                 });
@@ -913,6 +920,7 @@ namespace BTCPayServer.Services.Invoices
         public class Contribution
         {
             public PaymentMethodId PaymentMethodId { get; set; }
+            public IEnumerable<InvoiceState> States { get; set; }
             public decimal Value { get; set; }
             public decimal CurrencyValue { get; set; }
         }

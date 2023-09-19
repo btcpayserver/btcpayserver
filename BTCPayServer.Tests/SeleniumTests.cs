@@ -1992,10 +1992,7 @@ namespace BTCPayServer.Tests
                 Assert.Contains(bolt, s.Driver.PageSource);
             }
 
-
-
             //auto-approve pull payments
-
             s.GoToStore(StoreNavPages.PullPayments);
             s.Driver.FindElement(By.Id("NewPullPayment")).Click();
             s.Driver.FindElement(By.Id("Name")).SendKeys("PP1");
@@ -2025,20 +2022,8 @@ namespace BTCPayServer.Tests
             s.FindAlertMessage(StatusMessageModel.StatusSeverity.Success);
             s.Driver.FindElement(By.LinkText("View")).Click();
             s.Driver.FindElement(By.CssSelector("#lnurlwithdraw-button")).Click();
-            await TestUtils.EventuallyAsync(async () =>
-            {
-                try
-                {
-
-                    s.Driver.WaitForElement(By.Id("qr-code-data-input"));
-                }
-                catch (NoSuchElementException e)
-                {
-                    await Task.Delay(200);
-                    throw new XunitException("wrapper");
-                }
-
-            });
+            s.Driver.WaitForElement(By.Id("qr-code-data-input"));
+            
             var lnurl = new Uri(LNURL.LNURL.Parse(s.Driver.FindElement(By.Id("qr-code-data-input")).GetAttribute("value"), out _).ToString().Replace("https", "http"));
             s.Driver.FindElement(By.CssSelector("button[data-bs-dismiss='modal']")).Click();
             var info = Assert.IsType<LNURLWithdrawRequest>(await LNURL.LNURL.FetchInformation(lnurl, s.Server.PayTester.HttpClient));

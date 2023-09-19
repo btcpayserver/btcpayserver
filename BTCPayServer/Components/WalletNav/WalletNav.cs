@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
@@ -28,20 +29,20 @@ namespace BTCPayServer.Components.WalletNav
         private readonly UIWalletsController _walletsController;
         private readonly CurrencyNameTable _currencies;
         private readonly BTCPayNetworkProvider _networkProvider;
-        private readonly IRateProvider _rateProvider;
+        private readonly RateFetcher _rateFetcher;
 
         public WalletNav(
             BTCPayWalletProvider walletProvider,
             BTCPayNetworkProvider networkProvider,
             UIWalletsController walletsController,
             CurrencyNameTable currencies,
-            IRateProvider rateProvider)
+            RateFetcher rateFetcher)
         {
             _walletProvider = walletProvider;
             _networkProvider = networkProvider;
             _walletsController = walletsController;
             _currencies = currencies;
-            _rateProvider = rateProvider;
+            _rateFetcher = rateFetcher;
         }
 
         public async Task<IViewComponentResult> InvokeAsync(WalletId walletId)
@@ -68,13 +69,12 @@ namespace BTCPayServer.Components.WalletNav
 
             if (defaultCurrency != network.CryptoCode)
             {
-                var rates = await _rateProvider.GetRatesAsync(default);
-                var rate = rates.FirstOrDefault(pair => pair.CurrencyPair.Right == defaultCurrency &&
-                                                        pair.CurrencyPair.Left == network.CryptoCode);
-                if (rate != null)
+                var rule = store.GetStoreBlob().GetRateRules(_networkProvider)?.GetRuleFor(new Rating.CurrencyPair(network.CryptoCode, defaultCurrency));
+                var bid = rule is null ? null : (await _rateFetcher.FetchRate(rule, HttpContext.RequestAborted)).BidAsk?.Bid;
+                if (bid is decimal b)
                 {
-                    var currencyData = _currencies.GetCurrencyData(defaultCurrency, false);
-                    vm.BalanceDefaultCurrency = (balance.GetValue() * rate.BidAsk.Bid).ShowMoney(currencyData.Divisibility);
+                    var currencyData = _currencies.GetCurrencyData(defaultCurrency, true);
+                    vm.BalanceDefaultCurrency = (balance.GetValue() * b).ShowMoney(currencyData.Divisibility);
                 }
             }
 

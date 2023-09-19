@@ -563,6 +563,18 @@ namespace BTCPayServer.Services
                 await RemoveWalletObjectLink(labelObjId, id);
             }
         }
+        
+        public async Task<bool> RemoveWalletLabels(WalletId id, params string[] labels)
+        {
+            ArgumentNullException.ThrowIfNull(id);
+            var count = 0;
+            foreach (var l in labels.Select(l => l.Trim()))
+            {
+                var labelObjId = new WalletObjectId(id, WalletObjectData.Types.Label, l);
+                count += await RemoveWalletObjects(labelObjId) ? 1 : 0;
+            }
+            return count > 0;
+        }
 
         public async Task SetWalletObject(WalletObjectId id, JObject? data)
         {

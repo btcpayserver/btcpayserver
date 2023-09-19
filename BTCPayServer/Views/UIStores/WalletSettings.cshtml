@@ -16,7 +16,6 @@
     <script src="~/vendor/vue-qrcode/vue-qrcode.min.js" asp-append-version="true"></script>
     <script src="~/vendor/ur-registry/urlib.min.js" asp-append-version="true"></script>
     <script src="~/vendor/vue-qrcode-reader/VueQrcodeReader.umd.min.js" asp-append-version="true"></script>
-
     <link href="~/vendor/vue-qrcode-reader/vue-qrcode-reader.css" rel="stylesheet" asp-append-version="true"/>
 }
 
@@ -200,6 +199,11 @@
                 </div>
                 <button type="submit" class="btn btn-primary mt-2" id="SavePaymentSettings">Save Payment Settings</button>
             </form>
+            
+            <h3 class="mt-5">Labels</h3>
+            <p>
+                <a asp-controller="UIWallets" asp-action="WalletLabels" asp-route-walletId="@Model.WalletId">Manage labels</a>
+            </p>
         </div>
     </div>
 </div>

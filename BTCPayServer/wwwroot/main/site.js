@@ -33,7 +33,7 @@ async function initLabelManager (elementId) {
             : '--label-bg:var(--btcpay-neutral-300);--label-fg:var(--btcpay-neutral-800)'
 
     if (element) {
-        const { fetchUrl, updateUrl, walletId, walletObjectType, walletObjectId, labels,selectElement } = element.dataset;
+        const { fetchUrl, updateUrl, walletId, walletObjectType, walletObjectId, labels, selectElement } = element.dataset;
         const commonCallId = `walletLabels-${walletId}`;
         if (!window[commonCallId]) {
             window[commonCallId] = fetch(fetchUrl, {
@@ -44,7 +44,6 @@ async function initLabelManager (elementId) {
                 },
             }).then(res => res.json());
         }
-        const selectElementI = document.getElementById(selectElement);
         const items = element.value.split(',').filter(x => !!x);
         const options = await window[commonCallId].then(labels => {
             const newItems = items.filter(item => !labels.find(label => label.label === item));
@@ -92,7 +91,8 @@ async function initLabelManager (elementId) {
                 }));
             },
             async onChange (values) {
-                if(selectElementI){
+                const selectElementI = selectElement ? document.getElementById(selectElement) : null;
+                if (selectElementI){
                     while (selectElementI.options.length > 0) {
                         selectElementI.remove(0);
                     }

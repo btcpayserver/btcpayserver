@@ -1381,9 +1381,9 @@ namespace BTCPayServer.Controllers
             return Ok();
         }
 
-        [HttpGet("{walletId}/labels")]
+        [HttpGet("{walletId}/labels.json")]
         [IgnoreAntiforgeryToken]
-        public async Task<IActionResult> GetLabels(
+        public async Task<IActionResult> LabelsJson(
             [ModelBinder(typeof(WalletIdModelBinder))] WalletId walletId,
             bool excludeTypes,
             string? type = null,
@@ -1397,12 +1397,60 @@ namespace BTCPayServer.Controllers
                 : await WalletRepository.GetWalletLabels(walletObjectId);
             return Ok(labels
                 .Where(l => !excludeTypes || !WalletObjectData.Types.AllTypes.Contains(l.Label))
-                .Select(tuple => new
+                .Select(tuple => new WalletLabelModel
                 {
-                    label = tuple.Label,
-                    color = tuple.Color,
-                    textColor = ColorPalette.Default.TextColor(tuple.Color)
+                    Label = tuple.Label,
+                    Color = tuple.Color,
+                    TextColor = ColorPalette.Default.TextColor(tuple.Color)
                 }));
+        }
+
+        [HttpGet("{walletId}/labels")]
+        public async Task<IActionResult> WalletLabels(
+            [ModelBinder(typeof(WalletIdModelBinder))]
+            WalletId walletId)
+        {
+            if (walletId.StoreId == null)
+                return NotFound();
+
+            var labels = await WalletRepository.GetWalletLabels(walletId);
+
+            var vm = new WalletLabelsModel
+            {
+                WalletId = walletId,
+                Labels = labels
+                    .Where(l => !WalletObjectData.Types.AllTypes.Contains(l.Label))
+                    .Select(tuple => new WalletLabelModel
+                    {
+                        Label = tuple.Label,
+                        Color = tuple.Color,
+                        TextColor = ColorPalette.Default.TextColor(tuple.Color)
+                    })
+            };
+
+            return View(vm);
+        }
+
+        [HttpPost("{walletId}/labels/{id}/remove")]
+        public async Task<IActionResult> RemoveWalletLabel(
+            [ModelBinder(typeof(WalletIdModelBinder))]
+            WalletId walletId, string id)
+        {
+            if (walletId.StoreId == null)
+                return NotFound();
+
+            var labels = new[] { id };
+            ;
+            if (await WalletRepository.RemoveWalletLabels(walletId, labels))
+            {
+                TempData[WellKnownTempData.SuccessMessage] = "The label has been successfully removed.";
+            }
+            else
+            {
+                TempData[WellKnownTempData.ErrorMessage] = "The label could not be removed.";
+            }
+
+            return RedirectToAction(nameof(WalletLabels), new { walletId });
         }
 
         private string GetImage(PaymentMethodId paymentMethodId, BTCPayNetwork network)

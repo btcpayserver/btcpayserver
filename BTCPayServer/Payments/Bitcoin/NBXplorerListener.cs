@@ -5,6 +5,8 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer;
+using BTCPayServer.Client.Models;
+using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Logging;
@@ -414,6 +416,15 @@ namespace BTCPayServer.Payments.Bitcoin
             if (invoice == null)
                 return null;
             var paymentMethod = invoice.GetPaymentMethod(wallet.Network, PaymentTypes.BTCLike);
+            var bitcoinPaymentMethod = (Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod)paymentMethod.GetPaymentMethodDetails();
+            if (bitcoinPaymentMethod.NetworkFeeMode == NetworkFeeMode.MultiplePaymentsOnly &&
+                bitcoinPaymentMethod.NextNetworkFee == Money.Zero)
+            {
+                bitcoinPaymentMethod.NextNetworkFee = bitcoinPaymentMethod.NetworkFeeRate.GetFee(100); // assume price for 100 bytes
+                paymentMethod.SetPaymentMethodDetails(bitcoinPaymentMethod);
+                await this._InvoiceRepository.UpdateInvoicePaymentMethod(invoice.Id, paymentMethod);
+                invoice = await _InvoiceRepository.GetInvoice(invoice.Id);
+            }
             wallet.InvalidateCache(strategy);
             _Aggregator.Publish(new InvoiceEvent(invoice, InvoiceEvent.ReceivedPayment) { Payment = payment });
             return invoice;

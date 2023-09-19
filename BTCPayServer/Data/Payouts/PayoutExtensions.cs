@@ -33,6 +33,22 @@ namespace BTCPayServer.Data
             return PaymentMethodId.TryParse(data.PaymentMethodId, out var paymentMethodId) ? paymentMethodId : null;
         }
 
+        public static string GetPayoutSource(this PayoutData data, BTCPayNetworkJsonSerializerSettings jsonSerializerSettings)
+        {
+            var ppBlob = data.PullPaymentData?.GetBlob();
+            var payoutBlob = data.GetBlob(jsonSerializerSettings);
+            string payoutSource;
+            if (payoutBlob.Metadata?.TryGetValue("source", StringComparison.InvariantCultureIgnoreCase,
+                    out var source) is true)
+            {
+                return source.Value<string>();
+            }
+            else
+            {
+                return ppBlob?.Name ?? data.PullPaymentDataId;
+            }
+        }
+
         public static PayoutBlob GetBlob(this PayoutData data, BTCPayNetworkJsonSerializerSettings serializers)
         {
             var result =  JsonConvert.DeserializeObject<PayoutBlob>(Encoding.UTF8.GetString(data.Blob), serializers.GetSerializer(data.GetPaymentMethodId().CryptoCode));

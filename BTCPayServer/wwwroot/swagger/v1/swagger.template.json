@@ -115,6 +115,24 @@
         ],
         "format": "minutes",
         "description": "A span of times in minutes"
+      },
+      "PaymentMethodId": {
+        "type": "string",
+        "description": "`\"BTC\"` is the equivalent of `\"BTC-OnChain\"`   \n`\"BTC-LightningLike\"`: Any supported LN-based payment method (Lightning or LNURL)   \n`\"BTC-LightningNetwork\"`: Lightning   \n`\"BTC-LNURLPAY\"`: LNURL   \n   \nNote: Separator can be either `-` or `_`.",
+        "x-enumNames": [
+          "BTC",
+          "BTC-OnChain",
+          "BTC-LightningLike",
+          "BTC-LightningNetwork",
+          "BTC-LNURLPAY"
+        ],
+        "enum": [
+          "BTC",
+          "BTC-OnChain",
+          "BTC-LightningLike",
+          "BTC-LightningNetwork",
+          "BTC-LNURLPAY"
+        ]
       }
     },
     "securitySchemes": {

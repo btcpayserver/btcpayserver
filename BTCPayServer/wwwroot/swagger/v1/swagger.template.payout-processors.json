@@ -600,8 +600,7 @@
                 "additionalProperties": false,
                 "properties": {
                     "paymentMethod": {
-                        "description": "payment method of the payout processor",
-                        "type": "string"
+                        "$ref": "#/components/schemas/PaymentMethodId"
                     },
                     "intervalSeconds": {
                         "description": "How often should the processor run",
@@ -659,8 +658,7 @@
                 "additionalProperties": false,
                 "properties": {
                     "paymentMethod": {
-                        "description": "payment method of the payout processor",
-                        "type": "string"
+                        "$ref": "#/components/schemas/PaymentMethodId"
                     },
                     "feeTargetBlock": {
                         "type": "number",

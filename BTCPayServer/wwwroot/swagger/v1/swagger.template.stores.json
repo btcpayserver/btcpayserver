@@ -367,8 +367,11 @@
                 "type": "object",
                 "properties": {
                     "paymentMethod": {
-                        "type": "string",
-                        "description": "The payment method (e.g., \"BTC\" or \"BTC_LightningLike\")",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/PaymentMethodId"
+                            }
+                        ],
                         "nullable": false
                     },
                     "currencyCode": {
@@ -541,9 +544,7 @@
                         "description": "If true, payment methods are enabled individually upon user interaction in the invoice"
                     },
                     "defaultPaymentMethod": {
-                        "type": "string",
-                        "example": "BTC",
-                        "description": "The default payment method to load when displaying an invoice. It can be in the format of `BTC_LightningNetwork` to specify Lightning to be the default or `BTC_OnChain`/ `BTC` for on-chain to be the default. "
+                        "$ref": "#/components/schemas/PaymentMethodId"
                     },
                     "paymentMethodCriteria": {
                         "type": "array",

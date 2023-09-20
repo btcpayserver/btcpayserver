@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client.Models;
+using BTCPayServer.Services;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.HostedServices;
@@ -17,7 +18,6 @@ using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Rating;
 using BTCPayServer.Security;
 using BTCPayServer.Security.Greenfield;
-using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.PaymentRequests;
@@ -55,6 +55,7 @@ namespace BTCPayServer.Controllers
         private readonly InvoiceActivator _invoiceActivator;
         private readonly LinkGenerator _linkGenerator;
         private readonly IAuthorizationService _authorizationService;
+        private readonly TransactionLinkProviders _transactionLinkProviders;
         private readonly AppService _appService;
         private readonly IFileService _fileService;
 
@@ -82,7 +83,8 @@ namespace BTCPayServer.Controllers
             LinkGenerator linkGenerator,
             AppService appService,
             IFileService fileService,
-            IAuthorizationService authorizationService)
+            IAuthorizationService authorizationService,
+            TransactionLinkProviders transactionLinkProviders)
         {
             _displayFormatter = displayFormatter;
             _CurrencyNameTable = currencyNameTable ?? throw new ArgumentNullException(nameof(currencyNameTable));
@@ -103,6 +105,7 @@ namespace BTCPayServer.Controllers
             _invoiceActivator = invoiceActivator;
             _linkGenerator = linkGenerator;
             _authorizationService = authorizationService;
+            _transactionLinkProviders = transactionLinkProviders;
             _fileService = fileService;
             _appService = appService;
         }

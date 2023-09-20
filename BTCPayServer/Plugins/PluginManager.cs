@@ -9,6 +9,7 @@ using System.Linq;
 using System.Reflection;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Configuration;
+using BTCPayServer.Logging;
 using McMaster.NETCore.Plugins;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -17,6 +18,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
+using NBXplorer;
 
 namespace BTCPayServer.Plugins
 {
@@ -50,7 +52,7 @@ namespace BTCPayServer.Plugins
             return false;
         }
         public static IMvcBuilder AddPlugins(this IMvcBuilder mvcBuilder, IServiceCollection serviceCollection,
-            IConfiguration config, ILoggerFactory loggerFactory)
+            IConfiguration config, ILoggerFactory loggerFactory, ServiceProvider bootstrapServiceProvider)
         {
             var logger = loggerFactory.CreateLogger(typeof(PluginManager));
             var pluginsFolder = new DataDirectories().Configure(config).PluginDir;
@@ -173,7 +175,8 @@ namespace BTCPayServer.Plugins
                 {
                     logger.LogInformation(
                         $"Adding and executing plugin {plugin.Identifier} - {plugin.Version}");
-                    plugin.Execute(serviceCollection);
+                    var pluginServiceCollection = new PluginServiceCollection(serviceCollection, bootstrapServiceProvider);
+                    plugin.Execute(pluginServiceCollection);
                     serviceCollection.AddSingleton(plugin);
                 }
                 catch (Exception e)

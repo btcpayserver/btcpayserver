@@ -10,6 +10,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Extensions;
+using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
@@ -18,9 +19,12 @@ using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Hosting;
 using BTCPayServer.JsonConverters;
+using BTCPayServer.Logging;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Payments.Lightning;
+using BTCPayServer.Plugins;
+using BTCPayServer.Plugins.Bitcoin;
 using BTCPayServer.Rating;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
@@ -410,7 +414,7 @@ namespace BTCPayServer.Tests
         public void CanCalculateDust()
         {
             var entity = new InvoiceEntity() { Currency = "USD" };
-            entity.Networks = new BTCPayNetworkProvider(ChainName.Regtest);
+            entity.Networks = CreateNetworkProvider(ChainName.Regtest);
 #pragma warning disable CS0618
             entity.Payments = new System.Collections.Generic.List<PaymentEntity>();
             entity.SetPaymentMethod(new PaymentMethod()
@@ -456,7 +460,7 @@ namespace BTCPayServer.Tests
         [Fact]
         public void CanCalculateCryptoDue()
         {
-            var networkProvider = new BTCPayNetworkProvider(ChainName.Regtest);
+            var networkProvider = CreateNetworkProvider(ChainName.Regtest);
             var entity = new InvoiceEntity() { Currency = "USD" };
             entity.Networks = networkProvider;
 #pragma warning disable CS0618
@@ -644,7 +648,7 @@ namespace BTCPayServer.Tests
         [Fact]
         public void CanAcceptInvoiceWithTolerance()
         {
-            var networkProvider = new BTCPayNetworkProvider(ChainName.Regtest);
+            var networkProvider = CreateNetworkProvider(ChainName.Regtest);
             var paymentMethodHandlerDictionary = new PaymentMethodHandlerDictionary(new IPaymentMethodHandler[]
             {
                 new BitcoinLikePaymentHandler(null, networkProvider, null, null, null, null),
@@ -764,7 +768,7 @@ namespace BTCPayServer.Tests
         [Fact]
         public async Task CanEnumerateTorServices()
         {
-            var tor = new TorServices(new BTCPayNetworkProvider(ChainName.Regtest),
+            var tor = new TorServices(CreateNetworkProvider(ChainName.Regtest),
                 new OptionsWrapper<BTCPayServerOptions>(new BTCPayServerOptions()
                 {
                     TorrcFile = TestUtils.GetTestDataFullPath("Tor/torrc")
@@ -776,7 +780,7 @@ namespace BTCPayServer.Tests
             Assert.Single(tor.Services.Where(t => t.ServiceType == TorServiceType.RPC));
             Assert.True(tor.Services.Count(t => t.ServiceType == TorServiceType.Other) > 1);
 
-            tor = new TorServices(new BTCPayNetworkProvider(ChainName.Regtest),
+            tor = new TorServices(CreateNetworkProvider(ChainName.Regtest),
                 new OptionsWrapper<BTCPayServerOptions>(new BTCPayServerOptions()
                 {
                     TorrcFile = null,
@@ -813,7 +817,7 @@ namespace BTCPayServer.Tests
         [Fact]
         public void CanParseDerivationSchemes()
         {
-            var networkProvider = new BTCPayNetworkProvider(ChainName.Regtest);
+            var networkProvider = CreateNetworkProvider(ChainName.Regtest);
             var parser = new DerivationSchemeParser(networkProvider.BTC);
 
             // xpub
@@ -839,7 +843,7 @@ namespace BTCPayServer.Tests
             Assert.Equal(expected, inner.ToString());
 
             // Output Descriptor
-            networkProvider = new BTCPayNetworkProvider(ChainName.Mainnet);
+            networkProvider = CreateNetworkProvider(ChainName.Mainnet);
             parser = new DerivationSchemeParser(networkProvider.BTC);
             var od = "wpkh([8bafd160/49h/0h/0h]xpub661MyMwAqRbcGVBsTGeNZN6QGVHmMHLdSA4FteGsRrEriu4pnVZMZWnruFFFXkMnyoBjyHndD3Qwcfz4MPzBUxjSevweNFQx7SAYZATtcDw/0/*)#9x4vkw48";
             (strategyBase, rootedKeyPath) = parser.ParseOutputDescriptor(od);
@@ -881,8 +885,8 @@ namespace BTCPayServer.Tests
         [Fact]
         public void ParseDerivationSchemeSettings()
         {
-            var testnet = new BTCPayNetworkProvider(ChainName.Testnet).GetNetwork<BTCPayNetwork>("BTC");
-            var mainnet = new BTCPayNetworkProvider(ChainName.Mainnet).GetNetwork<BTCPayNetwork>("BTC");
+            var testnet = CreateNetworkProvider(ChainName.Testnet).GetNetwork<BTCPayNetwork>("BTC");
+            var mainnet = CreateNetworkProvider(ChainName.Mainnet).GetNetwork<BTCPayNetwork>("BTC");
             var root = new Mnemonic(
                     "usage fever hen zero slide mammal silent heavy donate budget pulse say brain thank sausage brand craft about save attract muffin advance illegal cabbage")
                 .DeriveExtKey();
@@ -1246,7 +1250,7 @@ namespace BTCPayServer.Tests
         [Fact]
         public void HasCurrencyDataForNetworks()
         {
-            var btcPayNetworkProvider = new BTCPayNetworkProvider(ChainName.Regtest);
+            var btcPayNetworkProvider = CreateNetworkProvider(ChainName.Regtest);
             foreach (var network in btcPayNetworkProvider.GetAll())
             {
                 var cd = CurrencyNameTable.Instance.GetCurrencyData(network.CryptoCode, false);
@@ -1825,8 +1829,7 @@ namespace BTCPayServer.Tests
                         new KeyValuePair<string, string>("chains", "usdt")}
                 })
             });
-
-            var networkProvider = config.ConfigureNetworkProvider(BTCPayLogs);
+            var networkProvider = CreateNetworkProvider(config);
             Assert.NotNull(networkProvider.GetNetwork("LBTC"));
             Assert.NotNull(networkProvider.GetNetwork("USDT"));
         }
@@ -1834,9 +1837,9 @@ namespace BTCPayServer.Tests
         [Trait("Altcoins", "Altcoins")]
         public void CanParseDerivationScheme()
         {
-            var testnetNetworkProvider = new BTCPayNetworkProvider(ChainName.Testnet);
-            var regtestNetworkProvider = new BTCPayNetworkProvider(ChainName.Regtest);
-            var mainnetNetworkProvider = new BTCPayNetworkProvider(ChainName.Mainnet);
+            var testnetNetworkProvider = CreateNetworkProvider(ChainName.Testnet);
+            var regtestNetworkProvider = CreateNetworkProvider(ChainName.Regtest);
+            var mainnetNetworkProvider = CreateNetworkProvider(ChainName.Mainnet);
             var testnetParser = new DerivationSchemeParser(testnetNetworkProvider.GetNetwork<BTCPayNetwork>("BTC"));
             var mainnetParser = new DerivationSchemeParser(mainnetNetworkProvider.GetNetwork<BTCPayNetwork>("BTC"));
             NBXplorer.DerivationStrategy.DerivationStrategyBase result;
@@ -2002,7 +2005,7 @@ namespace BTCPayServer.Tests
         {
 #pragma warning disable CS0618
             var dummy = new Key().PubKey.GetAddress(ScriptPubKeyType.Legacy, Network.RegTest).ToString();
-            var networkProvider = new BTCPayNetworkProvider(ChainName.Regtest);
+            var networkProvider = CreateNetworkProvider(ChainName.Regtest);
             var networkBTC = networkProvider.GetNetwork("BTC");
             var networkLTC = networkProvider.GetNetwork("LTC");
             InvoiceEntity invoiceEntity = new InvoiceEntity();
@@ -2119,7 +2122,7 @@ namespace BTCPayServer.Tests
             {
                 ["derivationStrategy"] = "tpubDDLQZ1WMdy5YJAJWmRNoTJ3uQkavEPXCXnmD4eAuo9BKbzFUBbJmVHys5M3ku4Qw1C165wGpVWH55gZpHjdsCyntwNzhmCAzGejSL6rzbyf"
             };
-            var scheme = DerivationSchemeSettings.Parse("tpubDDLQZ1WMdy5YJAJWmRNoTJ3uQkavEPXCXnmD4eAuo9BKbzFUBbJmVHys5M3ku4Qw1C165wGpVWH55gZpHjdsCyntwNzhmCAzGejSL6rzbyf", new BTCPayNetworkProvider(ChainName.Regtest).BTC);
+            var scheme = DerivationSchemeSettings.Parse("tpubDDLQZ1WMdy5YJAJWmRNoTJ3uQkavEPXCXnmD4eAuo9BKbzFUBbJmVHys5M3ku4Qw1C165wGpVWH55gZpHjdsCyntwNzhmCAzGejSL6rzbyf", CreateNetworkProvider(ChainName.Regtest).BTC);
 
             scheme.Source = "ManualDerivationScheme";
             scheme.AccountOriginal = "tpubDDLQZ1WMdy5YJAJWmRNoTJ3uQkavEPXCXnmD4eAuo9BKbzFUBbJmVHys5M3ku4Qw1C165wGpVWH55gZpHjdsCyntwNzhmCAzGejSL6rzbyf";
@@ -2139,7 +2142,7 @@ namespace BTCPayServer.Tests
             .Select(o =>
             {
                 var entity = JsonConvert.DeserializeObject<InvoiceEntity>(o.ToString());
-                entity.Networks = new BTCPayNetworkProvider(ChainName.Regtest);
+                entity.Networks = CreateNetworkProvider(ChainName.Regtest);
                 return entity.DerivationStrategies.ToString();
             })
             .ToHashSet();

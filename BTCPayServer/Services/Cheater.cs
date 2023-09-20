@@ -42,8 +42,8 @@ namespace BTCPayServer.Services
             {
                 var lbtcrpc = GetCashCow(liquid.CryptoCode);
                 await lbtcrpc.SendCommandAsync("rescanblockchain");
-                var elements = _prov.NetworkProviders.GetAll().OfType<ElementsBTCPayNetwork>();
-                foreach (ElementsBTCPayNetwork element in elements)
+                var elements = _prov.NetworkProviders.GetAll().OfType<Plugins.Altcoins.ElementsBTCPayNetwork>();
+                foreach (Plugins.Altcoins.ElementsBTCPayNetwork element in elements)
                 {
                     try
                     {

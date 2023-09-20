@@ -5,6 +5,7 @@ using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Services;
 using BTCPayServer.Configuration;
 using BTCPayServer.Payments;
+using BTCPayServer.Plugins.Altcoins;
 using BTCPayServer.Services.Altcoins.Zcash.Configuration;
 using BTCPayServer.Services.Altcoins.Zcash.Payments;
 using BTCPayServer.Services.Altcoins.Zcash.Services;
@@ -36,11 +37,7 @@ namespace BTCPayServer.Services.Altcoins.Zcash
             var btcPayNetworkProvider = serviceProvider.GetService<BTCPayNetworkProvider>();
             var result = new ZcashLikeConfiguration();
 
-            var supportedChains = configuration.GetOrDefault<string>("chains", string.Empty)
-                .Split(',', StringSplitOptions.RemoveEmptyEntries)
-                .Select(t => t.ToUpperInvariant());
-
-            var supportedNetworks = btcPayNetworkProvider.Filter(supportedChains.ToArray()).GetAll()
+            var supportedNetworks = btcPayNetworkProvider.GetAll()
                 .OfType<ZcashLikeSpecificBtcPayNetwork>();
 
             foreach (var ZcashLikeSpecificBtcPayNetwork in supportedNetworks)

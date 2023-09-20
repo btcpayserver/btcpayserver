@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Events;
 using BTCPayServer.Payments;
+using BTCPayServer.Plugins.Altcoins;
 using BTCPayServer.Services.Altcoins.Monero.Configuration;
 using BTCPayServer.Services.Altcoins.Monero.Payments;
 using BTCPayServer.Services.Altcoins.Monero.RPC;

@@ -14,6 +14,7 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Models.WalletViewModels;
+using BTCPayServer.Payments;
 using BTCPayServer.Payments.PayJoin;
 using BTCPayServer.Payments.PayJoin.Sender;
 using BTCPayServer.Services;
@@ -54,6 +55,7 @@ namespace BTCPayServer.Controllers.Greenfield
         private readonly WalletReceiveService _walletReceiveService;
         private readonly IFeeProviderFactory _feeProviderFactory;
         private readonly UTXOLocker _utxoLocker;
+        private readonly TransactionLinkProviders _transactionLinkProviders;
 
         public GreenfieldStoreOnChainWalletsController(
             IAuthorizationService authorizationService,
@@ -69,7 +71,8 @@ namespace BTCPayServer.Controllers.Greenfield
             EventAggregator eventAggregator,
             WalletReceiveService walletReceiveService,
             IFeeProviderFactory feeProviderFactory,
-            UTXOLocker utxoLocker
+            UTXOLocker utxoLocker,
+            TransactionLinkProviders transactionLinkProviders
         )
         {
             _authorizationService = authorizationService;
@@ -86,6 +89,7 @@ namespace BTCPayServer.Controllers.Greenfield
             _walletReceiveService = walletReceiveService;
             _feeProviderFactory = feeProviderFactory;
             _utxoLocker = utxoLocker;
+            _transactionLinkProviders = transactionLinkProviders;
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -312,6 +316,7 @@ namespace BTCPayServer.Controllers.Greenfield
             var utxos = await wallet.GetUnspentCoins(derivationScheme.AccountDerivation);
             var walletTransactionsInfoAsync = await _walletRepository.GetWalletTransactionsInfo(walletId,
                 utxos.SelectMany(GetWalletObjectsQuery.Get).Distinct().ToArray());
+            var pmi = new PaymentMethodId(cryptoCode, PaymentTypes.BTCLike);
             return Ok(utxos.Select(coin =>
                 {
                     walletTransactionsInfoAsync.TryGetValue(coin.OutPoint.Hash.ToString(), out var info1);
@@ -327,8 +332,7 @@ namespace BTCPayServer.Controllers.Greenfield
 #pragma warning disable CS0612 // Type or member is obsolete
                         Labels = info?.LegacyLabels ?? new Dictionary<string, LabelData>(),
 #pragma warning restore CS0612 // Type or member is obsolete
-                        Link = string.Format(CultureInfo.InvariantCulture, network.BlockExplorerLink,
-                            coin.OutPoint.Hash.ToString()),
+                        Link = _transactionLinkProviders.GetTransactionLink(pmi, coin.OutPoint.ToString()),
                         Timestamp = coin.Timestamp,
                         KeyPath = coin.KeyPath,
                         Confirmations = coin.Confirmations,

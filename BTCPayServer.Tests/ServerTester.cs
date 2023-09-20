@@ -5,11 +5,14 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
+using BTCPayServer.Hosting;
 using BTCPayServer.Lightning;
 using BTCPayServer.Lightning.CLightning;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Tests.Lnd;
 using BTCPayServer.Tests.Logging;
+using Microsoft.Extensions.Configuration.Memory;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBitcoin.RPC;
@@ -26,7 +29,7 @@ namespace BTCPayServer.Tests
         public ILoggerProvider LoggerProvider { get; }
 
         internal ILog TestLogs;
-        public ServerTester(string scope, bool newDb, ILog testLogs, ILoggerProvider loggerProvider)
+        public ServerTester(string scope, bool newDb, ILog testLogs, ILoggerProvider loggerProvider, BTCPayNetworkProvider networkProvider)
         {
             LoggerProvider = loggerProvider;
             this.TestLogs = testLogs;
@@ -36,7 +39,7 @@ namespace BTCPayServer.Tests
             if (!Directory.Exists(_Directory))
                 Directory.CreateDirectory(_Directory);
 
-            NetworkProvider = new BTCPayNetworkProvider(ChainName.Regtest);
+            NetworkProvider = networkProvider;
             ExplorerNode = new RPCClient(RPCCredentialString.Parse(GetEnvironment("TESTS_BTCRPCCONNECTION", "server=http://127.0.0.1:43782;ceiwHEbqWI83:DwubwWsoo3")), NetworkProvider.GetNetwork<BTCPayNetwork>("BTC").NBitcoinNetwork);
             ExplorerNode.ScanRPCCapabilities();
 

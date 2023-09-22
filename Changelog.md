@@ -4,7 +4,7 @@
 
 ### New feature
 
-* Add payouts report (#5320) @Kukks
+* Reporting: Add payouts (#5320) @Kukks
 * Wallet: Delete custom labels (#5324, #5237) @dennisreimann
 * Dashboard: Show revenue data for keypad (#5317) @dennisreimann
 * Dashboard: Show the number of paid invoices in the last 7 days (#5316, #5300) @dennisreimann

@@ -164,6 +164,11 @@ namespace BTCPayServer.Plugins
 
             foreach (var plugin in plugins)
             {
+                if (plugin.Identifier == "BTCPayServer.Plugins.Prism" && plugin.Version <= new Version("1.1.18"))
+                {
+                    logger.LogWarning("Please update your prism plugin, this version is incompatible");
+                    continue;
+                }
                 try
                 {
                     logger.LogInformation(

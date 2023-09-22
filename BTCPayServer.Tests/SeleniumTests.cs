@@ -2065,7 +2065,7 @@ namespace BTCPayServer.Tests
                 new LightMoney(0.0000001m, LightMoneyUnit.BTC),
                 $"LNurl w payout test {DateTime.UtcNow.Ticks}",
                 TimeSpan.FromHours(1), CancellationToken.None));
-            var response = await info.SendRequest(bolt2.BOLT11, s.Server.PayTester.HttpClient);
+            var response = await info.SendRequest(bolt2.BOLT11, s.Server.PayTester.HttpClient, null,null);
             await TestUtils.EventuallyAsync(async () =>
             {
                 s.Driver.Navigate().Refresh();
@@ -2100,7 +2100,7 @@ namespace BTCPayServer.Tests
                 new LightMoney(0.0000001m, LightMoneyUnit.BTC),
                 $"LNurl w payout test {DateTime.UtcNow.Ticks}",
                 TimeSpan.FromHours(1), CancellationToken.None));
-            response = await info.SendRequest(bolt2.BOLT11, s.Server.PayTester.HttpClient);
+            response = await info.SendRequest(bolt2.BOLT11, s.Server.PayTester.HttpClient, null,null);
             TestUtils.Eventually(() =>
             {
                 s.Driver.Navigate().Refresh();
@@ -2135,7 +2135,7 @@ namespace BTCPayServer.Tests
                 amount,
                 $"LNurl w payout test {DateTime.UtcNow.Ticks}",
                 TimeSpan.FromHours(1), CancellationToken.None));
-            response = await info.SendRequest(bolt2.BOLT11, s.Server.PayTester.HttpClient);
+            response = await info.SendRequest(bolt2.BOLT11, s.Server.PayTester.HttpClient, null,null);
             await TestUtils.EventuallyAsync(async () =>
             {
                 s.Driver.Navigate().Refresh();

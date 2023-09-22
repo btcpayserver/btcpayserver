@@ -216,7 +216,7 @@
         for (let element of document.getElementsByClassName("revert-default")) {
             element.addEventListener("click", function (){
             const defaultLink = element.getAttribute("data-default-link");
-            element.parentElement.querySelector('input').value = defaultLink;
+            element.parentElement.querySelector('input.block-explorer-link').value = defaultLink;
             });
         }
         for (let element of document.getElementsByClassName("collapse-on-js")){

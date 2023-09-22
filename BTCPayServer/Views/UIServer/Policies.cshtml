@@ -200,7 +200,7 @@
                     <label asp-for="BlockExplorerLinks[i].Link" class="form-label">@network.DisplayName (@network.CryptoCode)</label>
                     <input type="hidden" asp-for="BlockExplorerLinks[i].CryptoCode" value="@network.CryptoCode"/>
                     <div class="input-group">
-                        <input type="text" class="form-control" asp-for="BlockExplorerLinks[i].Link" value="@linkValue" rel="noreferrer noopener" />
+                        <input type="text" class="form-control block-explorer-link" asp-for="BlockExplorerLinks[i].Link" value="@linkValue" rel="noreferrer noopener" />
 						<button type="button" class="btn btn-secondary only-for-js revert-default" title="Revert to default" data-default-link="@network.BlockExplorerLinkDefault">
                             <span class="fa fa-refresh"></span>
                         </button>

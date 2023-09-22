@@ -331,7 +331,7 @@ retry:
                     .Select(c => new CurrencyPair(c.CryptoCode, "USD"))
                     .ToHashSet();
 
-            string[] brokenShitcoins = {};
+            string[] brokenShitcoins = { "BTX" };
             bool IsBrokenShitcoin(CurrencyPair p) => brokenShitcoins.Contains(p.Left) || brokenShitcoins.Contains(p.Right);
             foreach (var _ in brokenShitcoins)
             {

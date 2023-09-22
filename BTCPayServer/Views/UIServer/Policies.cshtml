@@ -200,8 +200,8 @@
                     <label asp-for="BlockExplorerLinks[i].Link" class="form-label">@network.DisplayName (@network.CryptoCode)</label>
                     <input type="hidden" asp-for="BlockExplorerLinks[i].CryptoCode" value="@network.CryptoCode"/>
                     <div class="input-group">
-                        <input type="text" class="form-control" asp-for="BlockExplorerLinks[i].Link" value="@linkValue" rel="noreferrer noopener" data-default-link="@network.BlockExplorerLinkDefault"/>
-                        <button type="button" class="btn btn-secondary only-for-js" title="Revert to default">
+                        <input type="text" class="form-control" asp-for="BlockExplorerLinks[i].Link" value="@linkValue" rel="noreferrer noopener" />
+						<button type="button" class="btn btn-secondary only-for-js revert-default" title="Revert to default" data-default-link="@network.BlockExplorerLinkDefault">
                             <span class="fa fa-refresh"></span>
                         </button>
                     </div>
@@ -215,7 +215,8 @@
     <script>
         for (let element of document.getElementsByClassName("revert-default")) {
             element.addEventListener("click", function (){
-              element.parentElement.previousElementSibling.value = element.parentElement.previousElementSibling.getAttribute("data-default-link")
+            const defaultLink = element.getAttribute("data-default-link");
+            element.parentElement.querySelector('input').value = defaultLink;
             });
         }
         for (let element of document.getElementsByClassName("collapse-on-js")){

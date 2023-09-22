@@ -11,7 +11,7 @@
 * Login: Add Remember Me button (#5307, #5302) @dennisreimann
 * Archive stores and apps (#5296) @dennisreimann
 * New permission: Can archive pull payment (#5274) @Kukks
-* Add Show QR (LNURL-Withdraw) code in view pull payment view (#5274) @Kukks
+* Pull Payment: Show QR code for LNURL-Withdraw (#5274) @Kukks
 
 ### Bug fixes
 

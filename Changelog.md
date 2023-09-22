@@ -1,5 +1,32 @@
 # Changelog
 
+## 1.11.5
+
+### New feature
+
+* Reporting: Add payouts (#5320) @Kukks
+* Wallet: Delete custom labels (#5324, #5237) @dennisreimann
+* Dashboard: Show revenue data for keypad (#5317) @dennisreimann
+* Dashboard: Show the number of paid invoices in the last 7 days (#5316, #5300) @dennisreimann
+* Login: Add Remember Me button (#5307, #5302) @dennisreimann
+* Archive stores and apps (#5296) @dennisreimann
+* New permission: Can archive pull payment (#5274) @Kukks
+* Pull Payment: Show QR code for LNURL-Withdraw (#5274) @Kukks
+
+### Bug fixes
+
+* Fix: Transient error 500 when accessing the wallet page (#5326, #5328) @NicolasDorier
+* Fix: Revert to default block explorer button wasn't working (#5340) @NicolasDorier
+* Payment Request: Reflect processing status for on-chain payments (#5309, #5297) @dennisreimann
+* NFC: Fix error display (#5305) @dennisreimann
+
+### Improvements
+
+* Email Rules: Add default texts and document placeholders (#5314) @dennisreimann
+* UI: The on-chain addresses should only be truncated on the middle (#5313, #5311) @dennisreimann
+* Store settings: Allow configuring NFC permission beforehand (#5319) @Kukks
+* Remove legacy export (#5293) @NicolasDorier
+
 ## 1.11.4
 
 Minor update recommended for deployment stacks which were using MySQL/SQLite backend in the past such as Raspiblitz, Umbrel, Embassy OS.

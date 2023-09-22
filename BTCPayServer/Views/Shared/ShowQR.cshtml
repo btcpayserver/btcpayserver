@@ -25,7 +25,7 @@
                             <vc:icon symbol="copy" />
                         </button>
                     </div>
-                    <p v-if="note" v-html="note" class="text-muted mt-3"></p>
+                    <div v-if="note" v-html="note" class="text-muted mt-3" id="scan-qr-modal-note"></div>
                 </div>
                 <div class="mb-4 text-center" v-if="continueCallback">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" v-on:click="continueCallback()">{{ continueTitle || 'Continue' }}</button>
@@ -34,6 +34,9 @@
         </div>
     </div>
 </div>
+<style>
+    #scan-qr-modal-note :last-child { margin-bottom: 0; }
+</style>
 <script>
 function initQRShow(data) {
  	return new Vue({
@@ -106,7 +109,10 @@ function initQRShow(data) {
  			},
  			showData(data) {
                 this.modes = { default: { title: 'Default', fragments: [data] } };
-                
+                this.mode = "default";
+                this.show();
+            },
+            show(){
                 $(`#${this.modalId}`).modal("show");
             }
  		}

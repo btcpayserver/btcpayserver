@@ -186,7 +186,6 @@
             }
 
             <h4>Block Explorers</h4>
-
             @for (var i = 0; i < networks.Count(); i++)
             {
                 var network = networks.ElementAt(i);
@@ -194,17 +193,17 @@
                 var linkValue = existingOverride?.Link ?? network.BlockExplorerLinkDefault;
                 if (Model.BlockExplorerLinks.Count < i + 1)
                 {
-                    Model.BlockExplorerLinks.Add(new PoliciesSettings.BlockExplorerOverrideItem() {CryptoCode = network.CryptoCode, Link = network.BlockExplorerLinkDefault});
+                    Model.BlockExplorerLinks.Add(new PoliciesSettings.BlockExplorerOverrideItem { CryptoCode = network.CryptoCode, Link = network.BlockExplorerLinkDefault });
                 }
-                <div class="form-group">
-                    <label asp-for="BlockExplorerLinks[i].Link" class="form-label">@network.DisplayName (@network.CryptoCode)</label>
-                    <input type="hidden" asp-for="BlockExplorerLinks[i].CryptoCode" value="@network.CryptoCode"/>
-                    <div class="input-group">
-                        <input type="text" class="form-control" asp-for="BlockExplorerLinks[i].Link" value="@linkValue" rel="noreferrer noopener" data-default-link="@network.BlockExplorerLinkDefault"/>
-                        <button type="button" class="btn btn-secondary only-for-js" title="Revert to default">
-                            <span class="fa fa-refresh"></span>
+                <div class="form-group" data-default="@network.BlockExplorerLinkDefault">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                        <label asp-for="BlockExplorerLinks[i].Link" class="form-label">@network.DisplayName (@network.CryptoCode)</label>
+                        <button type="button" class="btn btn-link p-0 only-for-js revert-default" title="Revert to default">
+                            Set to default
                         </button>
                     </div>
+                    <input type="hidden" asp-for="BlockExplorerLinks[i].CryptoCode" value="@network.CryptoCode" />
+                    <input type="text" class="form-control block-explorer-link" asp-for="BlockExplorerLinks[i].Link" value="@linkValue" rel="noreferrer noopener" />
                 </div>
             }
         </form>
@@ -213,11 +212,10 @@
 
 @section PageFootContent {
     <script>
-        for (let element of document.getElementsByClassName("revert-default")) {
-            element.addEventListener("click", function (){
-              element.parentElement.previousElementSibling.value = element.parentElement.previousElementSibling.getAttribute("data-default-link")
-            });
-        }
+        delegate('click', '.revert-default', e => {
+            const $row = e.target.closest('[data-default]');
+            $row.querySelector('input.block-explorer-link').value = $row.dataset.default;
+        })
         for (let element of document.getElementsByClassName("collapse-on-js")){
             if (element.classList.contains("show")){
                 element.classList.remove("show");

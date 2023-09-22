@@ -243,7 +243,7 @@
                 "security": [
                     {
                         "API_Key": [
-                            "btcpay.store.canmanagepullpayments"
+                            "btcpay.store.canarchivepullpayments"
                         ],
                         "Basic": []
                     }
@@ -455,7 +455,7 @@
                 }
             ],
             "post": {
-                "summary": "Create Payout ",
+                "summary": "Create Payout",
                 "description": "Create a new payout",
                 "operationId": "Payouts_CreatePayoutThroughStore",
                 "requestBody": {
@@ -883,9 +883,7 @@
                         "description": "The amount of the payout in the currency of the pull payment (eg. USD)."
                     },
                     "paymentMethod": {
-                        "type": "string",
-                        "example": "BTC",
-                        "description": "The payment method of the payout"
+                        "$ref": "#/components/schemas/PaymentMethodId"
                     }
                 }
             },
@@ -995,9 +993,7 @@
                         "description": "The amount of the payout in the currency of the pull payment (eg. USD)."
                     },
                     "paymentMethod": {
-                        "type": "string",
-                        "example": "BTC",
-                        "description": "The payment method of the payout (e.g., \"BTC\" or \"BTC_LightningLike\""
+                        "$ref": "#/components/schemas/PaymentMethodId"
                     },
                     "cryptoCode": {
                         "type": "string",

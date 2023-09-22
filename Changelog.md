@@ -17,7 +17,7 @@
 
 * Fix: Transient error 500 when accessing the wallet page (#5326, #5328) @NicolasDorier
 * Fix: Revert to default block explorer button wasn't working (#5340) @NicolasDorier
-* Fix: Payment request doesn't have a concept of processing status, goes immediately to settled for on-chain payments (#5309, #5297) @dennisreimann
+* Payment Request: Reflect processing status for on-chain payments (#5309, #5297) @dennisreimann
 * NFC: Fix error display (#5305) @dennisreimann
 
 ### Improvements

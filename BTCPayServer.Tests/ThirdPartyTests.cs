@@ -298,6 +298,7 @@ retry:
             var fetcher = new RateFetcher(factory);
             var provider = new BTCPayNetworkProvider(ChainName.Mainnet);
             var b = new StoreBlob();
+            string[] temporarilyBroken = { "UGX" };
             foreach (var k in StoreBlob.RecommendedExchanges)
             {
                 b.DefaultCurrency = k.Key;
@@ -306,6 +307,11 @@ retry:
                 var result = fetcher.FetchRates(pairs, rules, default);
                 foreach ((CurrencyPair key, Task<RateResult> value) in result)
                 {
+                    if (temporarilyBroken.Contains(k.Key))
+                    {
+                        TestLogs.LogInformation($"Skipping {key} because it is marked as temporarily broken");
+                        continue;
+                    }
                     var rateResult = await value;
                     TestLogs.LogInformation($"Testing {key} when default currency is {k.Key}");
                     Assert.True(rateResult.BidAsk != null, $"Impossible to get the rate {rateResult.EvaluatedRule}");
@@ -325,7 +331,7 @@ retry:
                     .Select(c => new CurrencyPair(c.CryptoCode, "USD"))
                     .ToHashSet();
 
-            string[] brokenShitcoins = { "BTG", "LCAD" };
+            string[] brokenShitcoins = { "BTG", "BTX" };
             bool IsBrokenShitcoin(CurrencyPair p) => brokenShitcoins.Contains(p.Left) || brokenShitcoins.Contains(p.Right);
             foreach (var _ in brokenShitcoins)
             {

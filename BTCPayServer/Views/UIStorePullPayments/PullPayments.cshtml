@@ -71,7 +71,7 @@
         {
             <a id="@state-view"
                asp-action="PullPayments"
-               asp-route-storeId="@Context.GetRouteValue("storeId")"
+               asp-route-storeId="@storeId"
                asp-route-pullPaymentState="@state"
                class="nav-link @(state == Model.ActiveState ? "active" : "")" role="tab">@state</a>
         }
@@ -100,8 +100,9 @@
             }
         </script>
     }
-    <table class="table table-hover table-responsive-lg">
-        <thead class="thead-inverse">
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead class="thead-inverse">
             <tr>
                 <th scope="col">
                     <a asp-action="PullPayments"
@@ -118,63 +119,63 @@
                 <th scope="col">Refunded</th>
                 <th scope="col" class="text-end">Actions</th>
             </tr>
-        </thead>
-        <tbody>
-        @foreach (var pp in Model.PullPayments)
-        {
-            <tr>
-                <td>@pp.StartDate.ToBrowserDate()</td>
-                <td>
-                    <a asp-action="EditPullPayment"
-                       asp-controller="UIPullPayment"
-                       asp-route-storeId="@Context.GetRouteValue("storeId")"
-                       asp-route-pullPaymentId="@pp.Id">
-                        @pp.Name
-                    </a>
-                </td>
-                <td>@pp.AutoApproveClaims</td>
-                <td class="align-middle">
-                    <div class="progress ppProgress" data-pp="@pp.Id" data-bs-toggle="tooltip" data-bs-html="true">
-                        <div class="progress-bar" role="progressbar" aria-valuenow="@pp.Progress.CompletedPercent"
-                             aria-valuemin="0" aria-valuemax="100" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width:@(pp.Progress.CompletedPercent)%;">
-                        </div>
-                        <div class="progress-bar" role="progressbar" aria-valuenow="@pp.Progress.AwaitingPercent"
-                             aria-valuemin="0" aria-valuemax="100" style="background-color:orange; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width:@(pp.Progress.AwaitingPercent)%;">
-                        </div>
-                    </div>
-                </td>
-                <td class="text-end">
-                    <a class="pp-payout"
-                       asp-action="Payouts"
-                       asp-route-storeId="@Context.GetRouteValue("storeId")"
-                       asp-route-pullPaymentId="@pp.Id">
-                        Payouts
-                    </a>
-                    @if (!pp.Archived)
-                    {
-                        <span permission="@Policies.CanModifyStoreSettings"> - </span>
-                        <a asp-action="ArchivePullPayment"
-                           permission="@Policies.CanModifyStoreSettings"
-                           asp-route-storeId="@Context.GetRouteValue("storeId")"
-                           asp-route-pullPaymentId="@pp.Id"
-                           data-bs-toggle="modal"
-                           data-bs-target="#ConfirmModal"
-                           data-description="Do you really want to archive the pull payment <strong>@Html.Encode(pp.Name)</strong>?">
-                            Archive
+            </thead>
+            <tbody>
+            @foreach (var pp in Model.PullPayments)
+            {
+                <tr>
+                    <td>@pp.StartDate.ToBrowserDate()</td>
+                    <td>
+                        <a asp-action="EditPullPayment"
+                           asp-controller="UIPullPayment"
+                           asp-route-storeId="@storeId"
+                           asp-route-pullPaymentId="@pp.Id">
+                            @pp.Name
                         </a>
-                    }
-                    <span> - </span>
-                    <a asp-action="ViewPullPayment"
-                       asp-controller="UIPullPayment"
-                       asp-route-pullPaymentId="@pp.Id">
-                        View
-                    </a>
-                </td>
-            </tr>
-        }
-        </tbody>
-    </table>
-
+                    </td>
+                    <td>@pp.AutoApproveClaims</td>
+                    <td class="align-middle">
+                        <div class="progress ppProgress" data-pp="@pp.Id" data-bs-toggle="tooltip" data-bs-html="true">
+                            <div class="progress-bar" role="progressbar" aria-valuenow="@pp.Progress.CompletedPercent"
+                                 aria-valuemin="0" aria-valuemax="100" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width:@(pp.Progress.CompletedPercent)%;">
+                            </div>
+                            <div class="progress-bar" role="progressbar" aria-valuenow="@pp.Progress.AwaitingPercent"
+                                 aria-valuemin="0" aria-valuemax="100" style="background-color:orange; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width:@(pp.Progress.AwaitingPercent)%;">
+                            </div>
+                        </div>
+                    </td>
+                    <td class="text-end">
+                        <a class="pp-payout"
+                           asp-action="Payouts"
+                           asp-route-storeId="@storeId"
+                           asp-route-pullPaymentId="@pp.Id">
+                            Payouts
+                        </a>
+                        @if (!pp.Archived)
+                        {
+                            <span permission="@Policies.CanArchivePullPayments"> - </span>
+                            <a asp-action="ArchivePullPayment"
+                               permission="@Policies.CanArchivePullPayments"
+                               asp-route-storeId="@storeId"
+                               asp-route-pullPaymentId="@pp.Id"
+                               data-bs-toggle="modal"
+                               data-bs-target="#ConfirmModal"
+                               data-description="Do you really want to archive the pull payment <strong>@Html.Encode(pp.Name)</strong>?">
+                                Archive
+                            </a>
+                        }
+                        <span> - </span>
+                        <a asp-action="ViewPullPayment"
+                           asp-controller="UIPullPayment"
+                           asp-route-pullPaymentId="@pp.Id">
+                            View
+                        </a>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
     <vc:pager view-model="Model" />
 
     <partial name="_Confirm" model="@(new ConfirmModel("Archive pull payment", "Do you really want to archive the pull payment?", "Archive"))" />

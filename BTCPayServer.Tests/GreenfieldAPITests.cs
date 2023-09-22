@@ -885,7 +885,7 @@ namespace BTCPayServer.Tests
 
             TestLogs.LogInformation("Can't archive without knowing the walletId");
             var ex = await AssertAPIError("missing-permission", async () => await client.ArchivePullPayment("lol", result.Id));
-            Assert.Equal("btcpay.store.canmanagepullpayments", ((GreenfieldPermissionAPIError)ex.APIError).MissingPermission);
+            Assert.Equal("btcpay.store.canarchivepullpayments", ((GreenfieldPermissionAPIError)ex.APIError).MissingPermission);
             TestLogs.LogInformation("Can't archive without permission");
             await AssertAPIError("unauthenticated", async () => await unauthenticated.ArchivePullPayment(storeId, result.Id));
             await client.ArchivePullPayment(storeId, result.Id);

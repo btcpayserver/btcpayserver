@@ -780,7 +780,11 @@
                                 "nullable": false
                             },
                             "paymentMethod": {
-                                "type": "string",
+                                "allOf": [
+                                    {
+                                        "$ref": "#/components/schemas/PaymentMethodId"
+                                    }
+                                ],
                                 "description": "What payment method was used for this payment",
                                 "nullable": false
                             },

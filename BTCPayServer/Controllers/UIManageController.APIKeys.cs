@@ -544,6 +544,8 @@ namespace BTCPayServer.Controllers
                     {$"{Policies.CanViewPaymentRequests}:", ("View your payment requests", "Allows viewing the selected stores' payment requests.")},
                     {Policies.CanManagePullPayments, ("Manage your pull payments", "Allows viewing, modifying, deleting and creating pull payments on all your stores.")},
                     {$"{Policies.CanManagePullPayments}:", ("Manage selected stores' pull payments", "Allows viewing, modifying, deleting and creating pull payments on the selected stores.")},
+                    {Policies.CanArchivePullPayments, ("Archive your pull payments", "Allows deleting pull payments on all your stores.")},
+                    {$"{Policies.CanArchivePullPayments}:", ("Archive selected stores' pull payments", "Allows deleting pull payments on the selected stores.")},
                     {Policies.CanCreatePullPayments, ("Create pull payments", "Allows creating pull payments on all your stores.")},
                     {$"{Policies.CanCreatePullPayments}:", ("Create pull payments in selected stores", "Allows creating pull payments on the selected stores.")},
                     {Policies.CanCreateNonApprovedPullPayments, ("Create non-approved pull payments", "Allows creating pull payments without automatic approval on all your stores.")},

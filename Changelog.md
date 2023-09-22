@@ -24,7 +24,7 @@
 
 * Email Rules: Add default texts and document placeholders (#5314) @dennisreimann
 * UI: The on-chain addresses should only be truncated on the middle (#5313, #5311) @dennisreimann
-* Allow configuring nfc permission beforehand (#5319) @Kukks
+* Store settings: Allow configuring NFC permission beforehand (#5319) @Kukks
 * Remove legacy export (#5293) @NicolasDorier
 
 ## 1.11.4

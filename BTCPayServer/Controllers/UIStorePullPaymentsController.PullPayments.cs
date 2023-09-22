@@ -256,7 +256,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("stores/{storeId}/pull-payments/{pullPaymentId}/archive")]
-        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+        [Authorize(Policy = Policies.CanArchivePullPayments, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public IActionResult ArchivePullPayment(string storeId,
             string pullPaymentId)
         {
@@ -265,11 +265,11 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost("stores/{storeId}/pull-payments/{pullPaymentId}/archive")]
-        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+        [Authorize(Policy = Policies.CanArchivePullPayments, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> ArchivePullPaymentPost(string storeId,
             string pullPaymentId)
         {
-            await _pullPaymentService.Cancel(new HostedServices.PullPaymentHostedService.CancelRequest(pullPaymentId));
+            await _pullPaymentService.Cancel(new PullPaymentHostedService.CancelRequest(pullPaymentId));
             TempData.SetStatusMessageModel(new StatusMessageModel()
             {
                 Message = "Pull payment archived",

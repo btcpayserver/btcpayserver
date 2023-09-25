@@ -20,6 +20,9 @@ public class PosAppData
     [JsonProperty(PropertyName = "discountAmount")]
     public decimal DiscountAmount { get; set; }
 
+    [JsonProperty(PropertyName = "tipPercentage")]
+    public decimal TipPercentage { get; set; }
+
     [JsonProperty(PropertyName = "tip")]
     public decimal Tip { get; set; }
 

@@ -391,10 +391,16 @@ if (window.Blazor) {
                 $title.textContent = isConnected ? 'Connection established' : 'Connection interrupted';
                 $body.innerHTML = isConnected ? '' : 'Please <a href="">refresh the page</a>.'; // use empty link on purpose
                 $body.classList.toggle('d-none', isConnected);
-                if (!isConnected && !isUnloading) {
+                if (!isUnloading) {
                     const toast = new bootstrap.Toast($status, { autohide: false });
-                    if (!toast.isShown())
-                        toast.show();
+                    if (isConnected) {
+                        if (toast.isShown())
+                            toast.hide();
+                    }
+                    else {
+                        if (!toast.isShown())
+                            toast.show();
+                    }
                 }
             });
         }

@@ -197,7 +197,7 @@ namespace BTCPayServer.Data
             { "GBP", "kraken" },
             { "CHF", "kraken" },
             { "GTQ", "bitpay" },
-            { "COP", "yadio" },
+            { "COP", "exchangeratehost" },
             { "JPY", "bitbank" },
             { "TRY", "btcturk" },
             { "UGX", "exchangeratehost"},

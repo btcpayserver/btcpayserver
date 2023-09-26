@@ -1892,8 +1892,6 @@ namespace BTCPayServer.Tests
             });
             s.GoToHome();
             //offline/external payout test
-            s.Driver.WaitForElement(By.Id("NotificationsHandle")).Click();
-            s.Driver.FindElement(By.Id("NotificationsMarkAllAsSeen")).Click();
 
             var newStore = s.CreateNewStore();
             s.GenerateWallet("BTC", "", true, true);

@@ -125,12 +125,11 @@ namespace BTCPayServer.Controllers
         {
             var exchanges = _rateFactory.RateProviderFactory
                 .AvailableRateProviders
-                .Where(r => !string.IsNullOrWhiteSpace(r.Name))
                 .OrderBy(s => s.Id, StringComparer.OrdinalIgnoreCase)
                 .ToList();
-            exchanges.Insert(0, new AvailableRateProvider(null, "Recommended", ""));
+            exchanges.Insert(0, new (null, "Recommended", ""));
             var chosen = exchanges.FirstOrDefault(f => f.Id == selected) ?? exchanges.First();
-            return new SelectList(exchanges, nameof(chosen.Id), nameof(chosen.Name), chosen.Id);
+            return new SelectList(exchanges, nameof(chosen.Id), nameof(chosen.DisplayName), chosen.Id);
         }
     }
 }

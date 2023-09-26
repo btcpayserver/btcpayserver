@@ -1,21 +1,8 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace BTCPayServer.Rating
+#nullable enable
+namespace BTCPayServer.Rating;
+public enum RateSource
 {
-    public class RateSourceInfo
-    {
-        public RateSourceInfo(string id, string displayName, string url)
-        {
-            Id = id;
-            DisplayName = displayName;
-            Url = url;
-        }
-        public string Id { get; set; }
-        public string DisplayName { get; set; }
-        public string Url { get; set; }
-    }
+    Coingecko,
+    Direct
 }
+public record RateSourceInfo(string Id, string DisplayName, string Url, RateSource Source = RateSource.Direct);

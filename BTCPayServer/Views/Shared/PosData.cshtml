@@ -10,19 +10,23 @@
 
 @if (Model.Items.Any())
 {
+    var hasCart = Model.Items.ContainsKey("Cart");
     <table class="table my-0" v-pre>
-        @if (Model.Items.ContainsKey("Cart"))
+        @if (hasCart || (Model.Items.ContainsKey("Subtotal") && Model.Items.ContainsKey("Total")))
         {
-            <tbody>
-                @foreach (var (key, value) in (Dictionary <string, object>)Model.Items["Cart"])
+            @if (hasCart)
+            {
+                <tbody>
+                @foreach (var (key, value) in (Dictionary<string, object>)Model.Items["Cart"])
                 {
                     <tr>
                         <th>@key</th>
                         <td class="text-end">@value</td>
                     </tr>
                 }
-            </tbody>
-            <tfoot style="border-top-width:3px">
+                </tbody>
+            }
+            <tfoot style="border-top-width:@(hasCart ? "3px" : "0")">
                 @if (Model.Items.ContainsKey("Subtotal"))
                 {
                     <tr>

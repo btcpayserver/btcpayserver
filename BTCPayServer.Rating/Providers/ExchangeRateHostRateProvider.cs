@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading;
@@ -11,7 +11,7 @@ namespace BTCPayServer.Services.Rates;
 
 public class ExchangeRateHostRateProvider : IRateProvider
 {
-    public RateSourceInfo RateSourceInfo => new("exchangeratehost", "Yadio", "https://api.exchangerate.host/latest?base=BTC");
+    public RateSourceInfo RateSourceInfo => new("exchangeratehost", "Exchangerate.host", "https://api.exchangerate.host/latest?base=BTC");
     private readonly HttpClient _httpClient;
     public ExchangeRateHostRateProvider(HttpClient httpClient)
     {

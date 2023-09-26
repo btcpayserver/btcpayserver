@@ -85,14 +85,13 @@ namespace BTCPayServer.Services.Rates
                     bgFetcher.RefreshRate = TimeSpan.FromMinutes(1.0);
                     bgFetcher.ValidatyTime = TimeSpan.FromMinutes(5.0);
                     Providers.Add(supportedExchange.Id, bgFetcher);
-                    var rsi = coingecko.RateSourceInfo;
-                    AvailableRateProviders.Add(new(rsi.Id, rsi.DisplayName, rsi.Url, RateSource.Coingecko));
+                    AvailableRateProviders.Add(coingecko.RateSourceInfo);
                 }
             }
             AvailableRateProviders.Sort((a, b) => StringComparer.Ordinal.Compare(a.DisplayName, b.DisplayName));
         }
 
-        public List<AvailableRateProvider> AvailableRateProviders { get; } = new List<AvailableRateProvider>();
+        public List<RateSourceInfo> AvailableRateProviders { get; } = new List<RateSourceInfo>();
 
         public async Task<QueryRateResult> QueryRates(string exchangeName, CancellationToken cancellationToken)
         {

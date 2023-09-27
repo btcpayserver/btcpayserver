@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.11.6
+
+An update is recommended if you share your server with many users. Your server could crash (Error HTTP 500) if you have a high number of users.
+
+### Bug fixes
+
+* Fix: After a while, a busy server would send error HTTP 500 (#5354) @NicolasDorier
+* Fix: Exchangerate.host falsly appear as Yadio in the UI (#5347) @NicolasDorier
+
+### Improvements
+
+* Improve receipt info display (#5350) @dennisreimann
+* Recommend Yadio for ARS currency rate (#5347) @NicolasDorier
+* Recommend exchangeratehost for COP currency rate @NicolasDorier
+* Hide 'Connection established' when connection to server come back (#5352) @NicolasDorier
+
 ## 1.11.5
 
 ### New feature

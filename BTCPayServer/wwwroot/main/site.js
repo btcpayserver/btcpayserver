@@ -342,58 +342,72 @@ document.addEventListener("DOMContentLoaded", () => {
 if (window.Blazor) {
     let isUnloading = false;
     window.addEventListener("beforeunload", () => { isUnloading = true; });
+    let brokenConnection = {
+        isConnected: false,
+        titleContent: 'Connection broken',
+        innerHTML: 'Please <a href="">refresh the page</a>.'
+    };
+    let interruptedConnection = {
+        isConnected: false,
+        titleContent: 'Connection interrupted',
+        innerHTML: 'Attempt to reestablish the connection in a few seconds...'
+    };
+    let successfulConnection = {
+        isConnected: true,
+        titleContent: 'Connection established',
+        innerHTML: '' // use empty link on purpose
+    };
     class BlazorReconnectionHandler {
         reconnecting = false;
         async onConnectionDown(options, _error) {
             if (this.reconnecting)
                 return;
-            this.setBlazorStatus(false);
+            this.setBlazorStatus(interruptedConnection);
             this.reconnecting = true;
             console.debug('Blazor hub connection lost');
             await this.reconnect();
         }
+
         async reconnect() {
-            let delays = [500, 1000, 2000, 4000, 8000, 16000, 20000];
+            let delays = [500, 1000, 2000, 4000, 8000, 16000, 20000, 40000];
             let i = 0;
             const lastDelay = delays.length - 1;
-            while (true) {
+            while (i < delays.length) {
                 await this.delay(delays[i]);
                 try {
                     if (await Blazor.reconnect())
-                        break;
-
-                    this.setBlazorStatus(false);
+                        return;
                     console.warn('Error while reconnecting to Blazor hub (Broken circuit)');
+                    break;
                 }
                 catch (err) {
-                    this.setBlazorStatus(false);
+                    this.setBlazorStatus(interruptedConnection);
                     console.warn(`Error while reconnecting to Blazor hub (${err})`);
                 }
                 i++;
-                if (i > lastDelay)
-                    i = lastDelay;
             }
+            this.setBlazorStatus(brokenConnection);
         }
         onConnectionUp() {
             this.reconnecting = false;
             console.debug('Blazor hub connected');
-            this.setBlazorStatus(true);
+            this.setBlazorStatus(successfulConnection);
         }
 
-        setBlazorStatus(isConnected) {
+        setBlazorStatus(content) {
             document.querySelectorAll('.blazor-status').forEach($status => {
                 const $state = $status.querySelector('.blazor-status__state');
                 const $title = $status.querySelector('.blazor-status__title');
                 const $body = $status.querySelector('.blazor-status__body');
                 $state.classList.remove('btcpay-status--enabled');
                 $state.classList.remove('btcpay-status--disabled');
-                $state.classList.add('btcpay-status--' + (isConnected ? 'enabled' : 'disabled'));
-                $title.textContent = isConnected ? 'Connection established' : 'Connection interrupted';
-                $body.innerHTML = isConnected ? '' : 'Please <a href="">refresh the page</a>.'; // use empty link on purpose
-                $body.classList.toggle('d-none', isConnected);
+                $state.classList.add(content.isConnected ? 'btcpay-status--enabled' : 'btcpay-status--disabled');
+                $title.textContent = content.titleContent;
+                $body.innerHTML = content.innerHTML;
+                $body.classList.toggle('d-none', content.isConnected);
                 if (!isUnloading) {
                     const toast = new bootstrap.Toast($status, { autohide: false });
-                    if (isConnected) {
+                    if (content.isConnected) {
                         if (toast.isShown())
                             toast.hide();
                     }
@@ -410,7 +424,7 @@ if (window.Blazor) {
     }
 
     const handler = new BlazorReconnectionHandler();
-    handler.setBlazorStatus(true);
+    handler.setBlazorStatus(successfulConnection);
     Blazor.start({
         reconnectionHandler: handler
     });

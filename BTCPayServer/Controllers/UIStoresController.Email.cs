@@ -62,6 +62,14 @@ namespace BTCPayServer.Controllers
 
                 return View(vm);
             }
+
+            for (var i = 0; index < vm.Rules.Count; index++)
+            {
+                var rule = vm.Rules[i];
+                if (!rule.CustomerEmail && string.IsNullOrEmpty(rule.To))
+                    ModelState.AddModelError($"{nameof(vm.Rules)}[{i}].{nameof(rule.To)}", "Either recipient or \"Send the email to the buyer\" is required");
+            }
+            
             if (!ModelState.IsValid)
             {
                 return View(vm);
@@ -121,7 +129,6 @@ namespace BTCPayServer.Controllers
             
             public bool CustomerEmail { get; set; }
             
-            [Required]
             [MailboxAddress]
             public string To { get; set; }
             

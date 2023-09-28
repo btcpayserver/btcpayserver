@@ -72,10 +72,13 @@
                             }
                         </td>
                     }
-                    else if (payment.Overpaid != null)
+                    else if (invoice.Overpaid)
                     {
                         <td class="text-nowrap text-end">
-                            <span data-sensitive class="text-warning">@payment.Overpaid</span>
+                            @if (payment.Overpaid != null)
+                            {
+                                <span data-sensitive class="text-warning">@payment.Overpaid</span>
+                            }
                         </td>
                     }
                     <td class="text-nowrap text-end">

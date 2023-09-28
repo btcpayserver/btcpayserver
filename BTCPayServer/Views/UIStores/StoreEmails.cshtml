@@ -60,7 +60,7 @@
                             <div class="form-text">Choose what event sends the email.</div>
                         </div>
                         <div class="form-group">
-                            <label asp-for="Rules[index].To" class="form-label" data-required>Recipients</label>
+                            <label asp-for="Rules[index].To" class="form-label">Recipients</label>
                             <input type="text" asp-for="Rules[index].To" class="form-control email-rule-to" />
                             <span asp-validation-for="Rules[index].To" class="text-danger"></span>
                             <div class="form-text">Who to send the email to. For multiple emails, separate with a comma.</div>

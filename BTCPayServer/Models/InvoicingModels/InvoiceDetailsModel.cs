@@ -124,7 +124,7 @@ namespace BTCPayServer.Models.InvoicingModels
         }
         public InvoiceMetadata TypedMetadata { get; set; }
         public DateTimeOffset MonitoringDate { get; internal set; }
-        public List<Data.InvoiceEventData> Events { get; internal set; }
+        public List<InvoiceEventData> Events { get; internal set; }
         public string NotificationEmail { get; internal set; }
         public Dictionary<string, object> Metadata { get; set; }
         public Dictionary<string, object> ReceiptData { get; set; }
@@ -133,11 +133,9 @@ namespace BTCPayServer.Models.InvoicingModels
         public bool Archived { get; set; }
         public bool CanRefund { get; set; }
         public bool ShowCheckout { get; set; }
-        public bool CanMarkSettled { get; set; }
-        public bool CanMarkInvalid { get; set; }
-        public bool CanMarkStatus => CanMarkSettled || CanMarkInvalid;
         public List<RefundData> Refunds { get; set; }
         public bool ShowReceipt { get; set; }
-        public bool Overpaid { get; set; } = false;
+        public bool Overpaid { get; set; }
+        public bool HasRefund { get; set; }
     }
 }

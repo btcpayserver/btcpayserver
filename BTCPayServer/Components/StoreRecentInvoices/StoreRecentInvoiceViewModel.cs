@@ -12,7 +12,6 @@ public class StoreRecentInvoiceViewModel
     public string Currency { get; set; }
     public InvoiceState Status { get; set; }
     public DateTimeOffset Date { get; set; }
-
     public InvoiceDetailsModel Details { get; set; }
     public bool HasRefund { get; set; }
 }

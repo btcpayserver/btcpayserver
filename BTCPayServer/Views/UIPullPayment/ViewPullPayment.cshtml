@@ -30,6 +30,7 @@
     <partial name="LayoutHead" />
     <partial name="LayoutHeadStoreBranding" model="@(Model.BrandColor, Model.CssFileId, Model.CustomCSSLink, Model.EmbeddedCSS)" />
     <link href="~/vendor/bootstrap-vue/bootstrap-vue.min.css" asp-append-version="true"  rel="stylesheet" />
+    <link href="~/vendor/vue-qrcode-reader/vue-qrcode-reader.css" rel="stylesheet" asp-append-version="true"/>
     <style>
         .no-marker > ul { list-style-type: none; }
     </style>
@@ -46,7 +47,7 @@
                                 <div class="input-group">
                                     @if (Model.LnurlEndpoint is not null)
                                     {
-                                        <button type="button" class="btn btn-secondary" id="lnurlwithdraw-button">
+                                        <button type="button" class="btn btn-secondary only-for-js" id="lnurlwithdraw-button">
                                             <span class="fa fa-qrcode fa-2x" title="LNURL-Withdraw"></span>
                                         </button>
                                     }
@@ -56,13 +57,15 @@
                                         <input type="hidden" asp-for="SelectedPaymentMethod">
                                         <span class="input-group-text">@Model.PaymentMethods.First().ToPrettyString()</span>
                                     }
-                                    else
+                                    else if (!Model.BitcoinOnly)
                                     {
                                         <select class="form-select w-auto" asp-for="SelectedPaymentMethod" asp-items="Model.PaymentMethods.Select(id => new SelectListItem(id.ToPrettyString(), id.ToString()))"></select>
                                     }
+                                    <button type="button" class="btn btn-secondary only-for-js" data-bs-toggle="modal" data-bs-target="#scanModal" title="Scan destination with camera" id="scandestination-button">
+                                        <i class="fa fa-camera"></i>
+                                    </button>
                                 </div>
                             </div>
-
                             <div class="col-12 mb-3 col-sm-6 mb-sm-0 col-lg-3">
                                 <div class="input-group">
                                     <input type="number" inputmode="decimal" class="form-control form-control-lg text-end hide-number-spin" asp-for="ClaimedAmount" max="@Model.AmountDue" min="@Model.MinimumClaim" step="any" placeholder="Amount" required>
@@ -92,22 +95,21 @@
                             {
                                 <h2 class="h4 mb-3">@Model.Title</h2>
                             }
-                            <div class="d-flex align-items-center">
+                            <div class="d-flex align-items-center gap-2">
                                 <span class="text-muted text-nowrap">Start Date</span>
-                                &nbsp;
                                 <span class="text-nowrap">@Model.StartDate.ToString("g")</span>
                             </div>
-                            <div class="d-flex align-items-center">
+                            <div class="d-flex align-items-center gap-2">
                                 <span class="text-muted text-nowrap">Last Updated</span>
-                                &nbsp;
                                 <span class="text-nowrap">@Model.LastRefreshed.ToString("g")</span>
-                                <button type="button" class="btn btn-link fw-semibold d-none d-lg-inline-block d-print-none border-0 p-0 ms-4 only-for-js" id="copyLink">
+                            </div>
+                            <div class="d-flex align-items-center only-for-js gap-3 my-3">
+                                <button type="button" class="btn btn-link fw-semibold d-print-none p-0" id="copyLink">
                                     Copy Link
                                 </button>
-                                 <button type="button" class="btn btn-link fw-semibold d-inline-block d-print-none border-0 p-0 ms-4 only-for-js" page-qr>
-                                                                <span class="fa fa-qrcode"></span> Show QR
-                                                            </button>
-                                
+                                <button type="button" class="btn btn-link fw-semibold d-print-none p-0" page-qr>
+                                    <span class="fa fa-qrcode"></span> Show QR
+                                </button>
                             </div>
                             @if (!string.IsNullOrEmpty(Model.ResetIn))
                             {
@@ -207,10 +209,13 @@
             </a>
         </footer>
     </div>
-    <partial name="LayoutFoot" />
-    <script src="~/vendor/vue-qrcode/vue-qrcode.min.js" asp-append-version="true"></script>
-    <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
     <partial name="ShowQR" />
+    <partial name="CameraScanner"/>
+    <partial name="LayoutFoot" />
+    <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/vue-qrcode/vue-qrcode.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/vue-qrcode-reader/VueQrcodeReader.umd.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/ur-registry/urlib.min.js" asp-append-version="true"></script>
     <script>
         document.addEventListener("DOMContentLoaded", () => {
             window.qrApp = initQRShow({});
@@ -219,6 +224,12 @@
                 qrApp.note = "Scan this QR code to open this page on your mobile device.";
                 qrApp.showData(window.location.href);
             });
+                   
+            delegate('click', '#copyLink', window.copyUrlToClipboard);
+            
+            initCameraScanningApp("Scan address/ payment link", data => {
+               document.getElementById("Destination").value = data;
+           }, "scanModal");
         });
     </script>
     @if (Model.LnurlEndpoint is not null)
@@ -246,11 +257,6 @@
               });
           </script>
     }
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            document.getElementById("copyLink").addEventListener("click", window.copyUrlToClipboard);
-        });
-    </script>
     <vc:ui-extension-point location="pullpayment-foot"  model="@Model"></vc:ui-extension-point>
 </body>
 </html>

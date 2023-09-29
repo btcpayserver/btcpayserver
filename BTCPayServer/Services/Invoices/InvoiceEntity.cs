@@ -386,7 +386,7 @@ namespace BTCPayServer.Services.Invoices
         }
         public void UpdateTotals()
         {
-            Rates = new Dictionary<string, decimal>();
+            Rates = new Dictionary<string, decimal>(StringComparer.InvariantCultureIgnoreCase);
             foreach (var p in GetPaymentMethods())
             {
                 Rates.TryAdd(p.Currency, p.Rate);

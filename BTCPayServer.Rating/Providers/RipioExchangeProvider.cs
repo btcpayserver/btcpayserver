@@ -13,7 +13,7 @@ namespace BTCPayServer.Services.Rates
 {
     public class RipioExchangeProvider : IRateProvider
     {
-        public RateSourceInfo RateSourceInfo => new("ripio", "Ripio", "https://api.exchange.ripio.com/api/v1/rate/all/");
+        public RateSourceInfo RateSourceInfo => new("ripio", "Ripio", "https://api.ripiotrade.co/v4/public/tickers");
         private readonly HttpClient _httpClient;
         public RipioExchangeProvider(HttpClient httpClient)
         {
@@ -21,9 +21,9 @@ namespace BTCPayServer.Services.Rates
         }
         public async Task<PairRate[]> GetRatesAsync(CancellationToken cancellationToken)
         {
-            var response = await _httpClient.GetAsync("https://api.exchange.ripio.com/api/v1/rate/all/", cancellationToken);
+            var response = await _httpClient.GetAsync("https://api.ripiotrade.co/v4/public/tickers", cancellationToken);
             response.EnsureSuccessStatusCode();
-            var jarray = (JArray)(await response.Content.ReadAsAsync<JArray>(cancellationToken));
+            var jarray = (JArray)(await response.Content.ReadAsAsync<JObject>(cancellationToken))["data"];
             return jarray
                 .Children<JObject>()
                 .Select(jobj => ParsePair(jobj))

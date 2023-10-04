@@ -9,6 +9,7 @@ namespace BTCPayServer.Services
 {
     public class Cheater : IHostedService
     {
+        private readonly ExplorerClientProvider _prov;
         private readonly InvoiceRepository _invoiceRepository;
         public RPCClient CashCow { get; set; }
 
@@ -17,7 +18,13 @@ namespace BTCPayServer.Services
             InvoiceRepository invoiceRepository)
         {
             CashCow = prov.GetExplorerClient("BTC")?.RPCClient;
+            _prov = prov;
             _invoiceRepository = invoiceRepository;
+        }
+
+        public RPCClient GetCashCow(string cryptoCode)
+        {
+            return  _prov.GetExplorerClient(cryptoCode)?.RPCClient;
         }
 
         public async Task UpdateInvoiceExpiry(string invoiceId, TimeSpan seconds)

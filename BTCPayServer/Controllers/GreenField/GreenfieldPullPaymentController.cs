@@ -442,7 +442,7 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
         [HttpDelete("~/api/v1/stores/{storeId}/pull-payments/{pullPaymentId}")]
-        [Authorize(Policy = Policies.CanManagePullPayments, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [Authorize(Policy = Policies.CanArchivePullPayments, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> ArchivePullPayment(string storeId, string pullPaymentId)
         {
             using var ctx = _dbContextFactory.CreateContext();

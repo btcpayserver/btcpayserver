@@ -1,0 +1,52 @@
+﻿@using BTCPayServer.Abstractions.Models
+@model WalletLabelsModel
+@{
+    var walletId = Context.GetRouteValue("walletId").ToString();
+    Layout = "../Shared/_NavLayout.cshtml";
+    ViewData.SetActivePage(WalletsNavPages.Settings, "Wallet Labels", walletId);
+}
+
+@section PageFootContent {
+    <script>
+        delegate('click', '.btn-delete', event => { event.preventDefault() })
+    </script>
+}
+
+<h3>@ViewData["Title"]</h3>
+
+@if (Model.Labels.Any())
+{
+    <table class="table table-hover table-responsive-md">
+        <thead>
+        <tr>
+            <th>Label</th>
+            <th class="text-end">Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var label in Model.Labels)
+        {
+            <tr>
+                <td>
+                    <div class="transaction-label" style="--label-bg:@label.Color;--label-fg:@label.TextColor">
+                        <span>@label.Label</span>
+                    </div>
+                </td>
+                <td class="text-end">
+                    <form method="post" asp-action="RemoveWalletLabel" asp-route-walletId="@Model.WalletId" asp-route-id="@label.Label">
+                        <button class="btn btn-link btn-delete p-0" type="submit" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The label <strong>@Html.Encode(label.Label)</strong> will be removed from this wallet and its associated transactions." data-confirm-input="DELETE">Remove</button>
+                    </form>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+    <partial name="_Confirm" model="@(new ConfirmModel("Remove label", "This label will be removed from this wallet and its associated transactions.", "Remove"))" />
+}
+else
+{
+    <p class="text-secondary mt-3">
+        There are no custom labels yet. You can create custom labels by assigning them to your <a asp-action="WalletTransactions" asp-route-walletId="@walletId">transactions</a>.
+    </p>
+}
+

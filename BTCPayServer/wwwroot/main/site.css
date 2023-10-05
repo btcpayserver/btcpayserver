@@ -102,30 +102,30 @@ a.unobtrusive-link {
 }
 
 /* Badges */
-.badge-pending,
-.badge-new {
+.badge-new,
+.badge-pending {
     background: #d4edda;
     color: #000;
 }
-
 .badge-expired {
     background: #eee;
     color: #000;
 }
-
 .badge-invalid {
-    background: #c94a47;
-    color: #fff;
+    background: var(--btcpay-danger);
+    color: var(--btcpay-danger-text);
 }
-
+.badge-unusual {
+    background: var(--btcpay-warning);
+    color: var(--btcpay-warning-text);
+}
 .badge-processing {
-    background: #f1c332;
-    color: #000;
+    background: var(--btcpay-info);
+    color: var(--btcpay-info-text);
 }
-
 .badge-settled {
-    background: #329f80;
-    color: #fff;
+    background: var(--btcpay-success);
+    color: var(--btcpay-success-text);
 }
 
 /* Info icons in main headline */
@@ -805,7 +805,7 @@ a.store-powered-by:hover .logo-brand-dark {
 }
 
 .ts-wrapper.form-control:not(.ts-inline) .ts-control {
-    padding: .5rem !important;
+    padding: .5rem 1rem !important;
     border-radius: var(--btcpay-border-radius) !important;
 }
 
@@ -814,12 +814,16 @@ a.store-powered-by:hover .logo-brand-dark {
     box-shadow: 0 0 0 1px var(--btcpay-form-border-focus) inset;
 }
 
+.ts-wrapper.form-control,
+.ts-wrapper.form-control .ts-control {
+    min-height: auto !important;
+}
+
 .ts-wrapper.form-control.ts-inline,
 .ts-wrapper.form-control.ts-inline .ts-control {
     padding: 0 !important;
     border: none !important;
     box-shadow: none !important;
-    min-height: auto !important;
     background: transparent !important;
 }
 
@@ -1064,3 +1068,9 @@ input.ts-wrapper.form-control:not(.ts-hidden-accessible,.ts-inline) {
 .btn[data-clipboard-confirming] {
     color: var(--btcpay-success) !important;
 }
+
+.blazor-status .btn-close .icon {
+    width: .75rem;
+    height: .75rem;
+}
+

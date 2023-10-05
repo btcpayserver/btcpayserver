@@ -214,7 +214,8 @@ namespace BTCPayServer.Hosting
                     var typeMapping = t.EntityTypeMappings.Single();
                     var query = (IQueryable<object>)otherContext.GetType().GetMethod("Set", new Type[0])!.MakeGenericMethod(typeMapping.EntityType.ClrType).Invoke(otherContext, null)!;
                     if (t.Name == "WebhookDeliveries" ||
-                        t.Name == "InvoiceWebhookDeliveries")
+                        t.Name == "InvoiceWebhookDeliveries" ||
+                        t.Name == "StoreRoles")
                         continue;
                     Logger.LogInformation($"Migrating table: " + t.Name);
                     List<PropertyInfo> datetimeProperties = new List<PropertyInfo>();

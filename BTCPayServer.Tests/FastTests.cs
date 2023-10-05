@@ -23,6 +23,7 @@ using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Rating;
 using BTCPayServer.Services;
+using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Labels;
 using BTCPayServer.Services.Rates;
@@ -346,6 +347,65 @@ namespace BTCPayServer.Tests
             Assert.True(Torrc.TryParse(input, out torrc));
             Assert.Equal(expected, torrc.ToString());
         }
+
+        [Fact]
+        public void CanParseCartItems()
+        {
+            Assert.True(AppService.TryParsePosCartItems(new JObject()
+            {
+                {"cart", new JArray()
+                {
+                    new JObject()
+                    {
+                        { "id", "ddd"},
+                        {"price", 4},
+                        {"count", 1}
+                    }
+                }}
+            }, out var items));
+            Assert.Equal("ddd", items[0].Id);
+            Assert.Equal(1, items[0].Count);
+            Assert.Equal(4, items[0].Price);
+
+            // Using legacy parsing
+            Assert.True(AppService.TryParsePosCartItems(new JObject()
+            {
+                {"cart", new JArray()
+                {
+                    new JObject()
+                    {
+                        { "id", "ddd"},
+                        {"price", new JObject()
+                            {
+                                { "value", 8.49m }
+                            }
+                        },
+                        {"count", 1}
+                    }
+                }}
+            }, out items));
+            Assert.Equal("ddd", items[0].Id);
+            Assert.Equal(1, items[0].Count);
+            Assert.Equal(8.49m, items[0].Price);
+
+            Assert.False(AppService.TryParsePosCartItems(new JObject()
+            {
+                {"cart", new JArray()
+                {
+                    new JObject()
+                    {
+                        { "id", "ddd"},
+                        {"price", new JObject()
+                            {
+                                { "value", "nocrahs" }
+                            }
+                        },
+                        {"count", 1}
+                    }
+                }}
+            }, out items));
+        }
+
         [Fact]
         public void CanCalculateDust()
         {

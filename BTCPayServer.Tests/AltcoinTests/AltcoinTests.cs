@@ -663,7 +663,7 @@ donation:
                 Assert.Equal(3, vmview.Items.Length);
                 Assert.Equal("good apple", vmview.Items[0].Title);
                 Assert.Equal("orange", vmview.Items[1].Title);
-                Assert.Equal(10.0m, vmview.Items[1].Price.Value);
+                Assert.Equal(10.0m, vmview.Items[1].Price);
                 Assert.Equal("{0} Purchase", vmview.ButtonText);
                 Assert.Equal("Nicolas Sexy Hair", vmview.CustomButtonText);
                 Assert.Equal("Wanna tip?", vmview.CustomTipText);
@@ -680,7 +680,7 @@ donation:
                 Assert.IsType<RedirectToActionResult>(publicApps
                     .ViewPointOfSale(app.Id, PosViewType.Cart, 0, choiceKey: "apple").Result);
 
-                invoices = user.BitPay.GetInvoices();
+                invoices = await user.BitPay.GetInvoicesAsync();
                 var appleInvoice = invoices.SingleOrDefault(invoice => invoice.ItemCode.Equals("apple"));
                 Assert.NotNull(appleInvoice);
                 Assert.Equal("good apple", appleInvoice.ItemDesc);
@@ -689,7 +689,7 @@ donation:
                 var action = Assert.IsType<RedirectToActionResult>(publicApps
                     .ViewPointOfSale(app.Id, PosViewType.Cart, 6.6m, choiceKey: "donation").Result);
                 Assert.Equal(nameof(UIInvoiceController.Checkout), action.ActionName);
-                invoices = user.BitPay.GetInvoices();
+                invoices = await user.BitPay.GetInvoicesAsync();
                 var donationInvoice = invoices.Single(i => i.Price == 6.6m);
                 Assert.NotNull(donationInvoice);
                 Assert.Equal("CAD", donationInvoice.Currency);

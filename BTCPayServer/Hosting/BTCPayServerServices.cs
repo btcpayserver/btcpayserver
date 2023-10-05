@@ -359,6 +359,7 @@ namespace BTCPayServer.Hosting
             services.AddReportProvider<PaymentsReportProvider>();
             services.AddReportProvider<OnChainWalletReportProvider>();
             services.AddReportProvider<ProductsReportProvider>();
+            services.AddReportProvider<PayoutsReportProvider>();
 
             services.AddHttpClient(WebhookSender.OnionNamedClient)
                 .ConfigurePrimaryHttpMessageHandler<Socks5HttpClientHandler>();
@@ -422,9 +423,7 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<INotificationHandler, PayoutNotification.Handler>();
             services.AddSingleton<INotificationHandler, ExternalPayoutTransactionNotification.Handler>();
             services.AddSingleton<IHostedService, DbMigrationsHostedService>();
-#if DEBUG
-            services.AddSingleton<INotificationHandler, JunkNotification.Handler>();
-#endif    
+
             services.TryAddSingleton<ExplorerClientProvider>();
             services.AddSingleton<IExplorerClientProvider, ExplorerClientProvider>(x =>
                 x.GetRequiredService<ExplorerClientProvider>());

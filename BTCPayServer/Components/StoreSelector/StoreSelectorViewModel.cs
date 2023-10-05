@@ -8,6 +8,7 @@ namespace BTCPayServer.Components.StoreSelector
         public string CurrentStoreId { get; set; }
         public string CurrentStoreLogoFileId { get; set; }
         public string CurrentDisplayName { get; set; }
+        public int ArchivedCount { get; set; }
     }
 
     public class StoreSelectorOption

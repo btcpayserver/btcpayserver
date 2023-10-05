@@ -1,4 +1,5 @@
 @using BTCPayServer.Abstractions.Extensions
+@using BTCPayServer.Client
 @using BTCPayServer.Views.Stores
 @model BTCPayServer.Models.WalletViewModels.NewPullPaymentModel
 @{
@@ -42,7 +43,7 @@
                     <span asp-validation-for="Currency" class="text-danger"></span>
                 </div>
 
-                <div class="form-group col-12">
+                <div class="form-group col-12" permission="@Policies.CanCreatePullPayments">
                     <div class="form-check ">
                         <input asp-for="AutoApproveClaims" type="checkbox" class="form-check-input"/>
                         <label asp-for="AutoApproveClaims" class="form-check-label"></label>

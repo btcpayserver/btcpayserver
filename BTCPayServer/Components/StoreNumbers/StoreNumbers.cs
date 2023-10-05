@@ -6,6 +6,7 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Components.StoreRecentTransactions;
 using BTCPayServer.Data;
 using BTCPayServer.Services;
+using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
 using Dapper;
@@ -21,22 +22,16 @@ public class StoreNumbers : ViewComponent
 {
     private readonly StoreRepository _storeRepo;
     private readonly ApplicationDbContextFactory _dbContextFactory;
-    private readonly BTCPayWalletProvider _walletProvider;
-    private readonly NBXplorerConnectionFactory _nbxConnectionFactory;
-    private readonly BTCPayNetworkProvider _networkProvider;
+    private readonly InvoiceRepository _invoiceRepository;
 
     public StoreNumbers(
         StoreRepository storeRepo,
         ApplicationDbContextFactory dbContextFactory,
-        BTCPayNetworkProvider networkProvider,
-        BTCPayWalletProvider walletProvider,
-        NBXplorerConnectionFactory nbxConnectionFactory)
+        InvoiceRepository invoiceRepository)
     {
         _storeRepo = storeRepo;
-        _walletProvider = walletProvider;
-        _nbxConnectionFactory = nbxConnectionFactory;
-        _networkProvider = networkProvider;
         _dbContextFactory = dbContextFactory;
+        _invoiceRepository = invoiceRepository;
     }
 
     public async Task<IViewComponentResult> InvokeAsync(StoreNumbersViewModel vm)
@@ -52,27 +47,16 @@ public class StoreNumbers : ViewComponent
             return View(vm);
 
         await using var ctx = _dbContextFactory.CreateContext();
-        var payoutsCount = await ctx.Payouts
+        var offset = DateTimeOffset.Now.AddDays(-vm.TimeframeDays).ToUniversalTime();
+        
+        vm.PaidInvoices = await _invoiceRepository.GetInvoiceCount(
+            new InvoiceQuery { StoreId = new [] { vm.Store.Id }, StartDate = offset, Status = new [] { "paid", "confirmed" } });
+        vm.PayoutsPending = await ctx.Payouts
             .Where(p => p.PullPaymentData.StoreId == vm.Store.Id && !p.PullPaymentData.Archived && p.State == PayoutState.AwaitingApproval)
             .CountAsync();
-        var refundsCount = await ctx.Invoices
-            .Where(i => i.StoreData.Id == vm.Store.Id && !i.Archived && i.CurrentRefundId != null)
+        vm.RefundsIssued = await ctx.Invoices
+            .Where(i => i.StoreData.Id == vm.Store.Id && !i.Archived && i.CurrentRefundId != null && i.Created >= offset)
             .CountAsync();
-
-        var derivation = vm.Store.GetDerivationSchemeSettings(_networkProvider, vm.CryptoCode);
-        int? transactionsCount = null;
-        if (derivation != null && _nbxConnectionFactory.Available)
-        {
-            await using var conn = await _nbxConnectionFactory.OpenConnection();
-            var wid = NBXplorer.Client.DBUtils.nbxv1_get_wallet_id(derivation.Network.CryptoCode, derivation.AccountDerivation.ToString());
-            var afterDate = DateTimeOffset.UtcNow - TimeSpan.FromDays(vm.TransactionDays);
-            var count = await conn.ExecuteScalarAsync<long>("SELECT COUNT(*) FROM wallets_history WHERE code=@code AND wallet_id=@wid AND seen_at > @afterDate", new { code = derivation.Network.CryptoCode, wid, afterDate });
-            transactionsCount = (int)count;
-        }
-
-        vm.PayoutsPending = payoutsCount;
-        vm.Transactions = transactionsCount;
-        vm.RefundsIssued = refundsCount;
 
         return View(vm);
     }

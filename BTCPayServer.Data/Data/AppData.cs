@@ -14,6 +14,7 @@ namespace BTCPayServer.Data
         public DateTimeOffset Created { get; set; }
         public bool TagAllInvoices { get; set; }
         public string Settings { get; set; }
+        public bool Archived { get; set; }
 
         internal static void OnModelCreating(ModelBuilder builder)
         {

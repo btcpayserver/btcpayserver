@@ -33,7 +33,7 @@ async function initLabelManager (elementId) {
             : '--label-bg:var(--btcpay-neutral-300);--label-fg:var(--btcpay-neutral-800)'
 
     if (element) {
-        const { fetchUrl, updateUrl, walletId, walletObjectType, walletObjectId, labels,selectElement } = element.dataset;
+        const { fetchUrl, updateUrl, walletId, walletObjectType, walletObjectId, labels, selectElement } = element.dataset;
         const commonCallId = `walletLabels-${walletId}`;
         if (!window[commonCallId]) {
             window[commonCallId] = fetch(fetchUrl, {
@@ -44,7 +44,6 @@ async function initLabelManager (elementId) {
                 },
             }).then(res => res.json());
         }
-        const selectElementI = document.getElementById(selectElement);
         const items = element.value.split(',').filter(x => !!x);
         const options = await window[commonCallId].then(labels => {
             const newItems = items.filter(item => !labels.find(label => label.label === item));
@@ -92,7 +91,8 @@ async function initLabelManager (elementId) {
                 }));
             },
             async onChange (values) {
-                if(selectElementI){
+                const selectElementI = selectElement ? document.getElementById(selectElement) : null;
+                if (selectElementI){
                     while (selectElementI.options.length > 0) {
                         selectElementI.remove(0);
                     }
@@ -338,4 +338,94 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
+// Initialize Blazor
+if (window.Blazor) {
+    let isUnloading = false;
+    window.addEventListener("beforeunload", () => { isUnloading = true; });
+    let brokenConnection = {
+        isConnected: false,
+        titleContent: 'Connection broken',
+        innerHTML: 'Please <a href="">refresh the page</a>.'
+    };
+    let interruptedConnection = {
+        isConnected: false,
+        titleContent: 'Connection interrupted',
+        innerHTML: 'Attempt to reestablish the connection in a few seconds...'
+    };
+    let successfulConnection = {
+        isConnected: true,
+        titleContent: 'Connection established',
+        innerHTML: '' // use empty link on purpose
+    };
+    class BlazorReconnectionHandler {
+        reconnecting = false;
+        async onConnectionDown(options, _error) {
+            if (this.reconnecting)
+                return;
+            this.setBlazorStatus(interruptedConnection);
+            this.reconnecting = true;
+            console.debug('Blazor hub connection lost');
+            await this.reconnect();
+        }
 
+        async reconnect() {
+            let delays = [500, 1000, 2000, 4000, 8000, 16000, 20000, 40000];
+            let i = 0;
+            const lastDelay = delays.length - 1;
+            while (i < delays.length) {
+                await this.delay(delays[i]);
+                try {
+                    if (await Blazor.reconnect())
+                        return;
+                    console.warn('Error while reconnecting to Blazor hub (Broken circuit)');
+                    break;
+                }
+                catch (err) {
+                    this.setBlazorStatus(interruptedConnection);
+                    console.warn(`Error while reconnecting to Blazor hub (${err})`);
+                }
+                i++;
+            }
+            this.setBlazorStatus(brokenConnection);
+        }
+        onConnectionUp() {
+            this.reconnecting = false;
+            console.debug('Blazor hub connected');
+            this.setBlazorStatus(successfulConnection);
+        }
+
+        setBlazorStatus(content) {
+            document.querySelectorAll('.blazor-status').forEach($status => {
+                const $state = $status.querySelector('.blazor-status__state');
+                const $title = $status.querySelector('.blazor-status__title');
+                const $body = $status.querySelector('.blazor-status__body');
+                $state.classList.remove('btcpay-status--enabled');
+                $state.classList.remove('btcpay-status--disabled');
+                $state.classList.add(content.isConnected ? 'btcpay-status--enabled' : 'btcpay-status--disabled');
+                $title.textContent = content.titleContent;
+                $body.innerHTML = content.innerHTML;
+                $body.classList.toggle('d-none', content.isConnected);
+                if (!isUnloading) {
+                    const toast = new bootstrap.Toast($status, { autohide: false });
+                    if (content.isConnected) {
+                        if (toast.isShown())
+                            toast.hide();
+                    }
+                    else {
+                        if (!toast.isShown())
+                            toast.show();
+                    }
+                }
+            });
+        }
+        delay(durationMilliseconds) {
+            return new Promise(resolve => setTimeout(resolve, durationMilliseconds));
+        }
+    }
+
+    const handler = new BlazorReconnectionHandler();
+    handler.setBlazorStatus(successfulConnection);
+    Blazor.start({
+        reconnectionHandler: handler
+    });
+}

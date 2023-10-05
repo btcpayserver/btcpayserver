@@ -25,6 +25,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Rewrite;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -56,7 +57,6 @@ namespace BTCPayServer.Hosting
         }
         public ILoggerFactory LoggerFactory { get; }
         public Logs Logs { get; }
-
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMemoryCache();
@@ -145,6 +145,8 @@ namespace BTCPayServer.Hosting
             .AddRazorRuntimeCompilation()
             .AddPlugins(services, Configuration, LoggerFactory)
             .AddControllersAsServices();
+
+            services.AddServerSideBlazor();
 
             LowercaseTransformer.Register(services);
             ValidateControllerNameTransformer.Register(services);
@@ -248,6 +250,13 @@ namespace BTCPayServer.Hosting
                 rateLimits.SetZone($"zone={ZoneLimits.ForgotPassword} rate=5r/d burst=5 nodelay");
             }
 
+            // HACK: blazor server js hard code some path, making it works only on root path. This fix it.
+            // Workaround this bug https://github.com/dotnet/aspnetcore/issues/43191
+            var rewriteOptions = new RewriteOptions();
+            rewriteOptions.AddRewrite("_blazor/(negotiate|initializers|disconnect)$", "/_blazor/$1", skipRemainingRules: true);
+            rewriteOptions.AddRewrite("_blazor$", "/_blazor", skipRemainingRules: true);
+            app.UseRewriter(rewriteOptions);
+
             app.UseHeadersOverride();
             var forwardingOptions = new ForwardedHeadersOptions()
             {
@@ -264,15 +273,18 @@ namespace BTCPayServer.Hosting
             app.UseRouting();
             app.UseCors();
 
+
+            // HACK: Make blazor js available on: ~/_blazorfiles/_framework/blazor.server.js
+            // Workaround this bug https://github.com/dotnet/aspnetcore/issues/19578
+            app.UseStaticFiles(new StaticFileOptions()
+            {
+                RequestPath = "/_blazorfiles",
+                FileProvider = new ManifestEmbeddedFileProvider(typeof(ComponentServiceCollectionExtensions).Assembly),
+                OnPrepareResponse = LongCache
+            });
             app.UseStaticFiles(new StaticFileOptions
             {
-                OnPrepareResponse = ctx =>
-                {
-                    // Cache static assets for one year, set asp-append-version="true" on references to update on change.
-                    // https://andrewlock.net/adding-cache-control-headers-to-static-files-in-asp-net-core/
-                    const int durationInSeconds = 60 * 60 * 24 * 365;
-                    ctx.Context.Response.Headers[HeaderNames.CacheControl] = "public,max-age=" + durationInSeconds;
-                }
+                OnPrepareResponse = LongCache
             });
 
             // The framework during publish automatically publish the js files into
@@ -300,15 +312,25 @@ namespace BTCPayServer.Hosting
                 HttpOnly = Microsoft.AspNetCore.CookiePolicy.HttpOnlyPolicy.Always,
                 Secure = Microsoft.AspNetCore.Http.CookieSecurePolicy.SameAsRequest
             });
+
             app.UseEndpoints(endpoints =>
             {
                 AppHub.Register(endpoints);
                 PaymentRequestHub.Register(endpoints);
+                endpoints.MapBlazorHub().RequireAuthorization();
                 endpoints.MapRazorPages();
                 endpoints.MapControllers();
                 endpoints.MapControllerRoute("default", "{controller:validate=UIHome}/{action:lowercase=Index}/{id?}");
             });
             app.UsePlugins();
+        }
+
+        private static void LongCache(Microsoft.AspNetCore.StaticFiles.StaticFileResponseContext ctx)
+        {
+            // Cache static assets for one year, set asp-append-version="true" on references to update on change.
+            // https://andrewlock.net/adding-cache-control-headers-to-static-files-in-asp-net-core/
+            const int durationInSeconds = 60 * 60 * 24 * 365;
+            ctx.Context.Response.Headers[HeaderNames.CacheControl] = "public,max-age=" + durationInSeconds;
         }
 
         private static Action<Microsoft.AspNetCore.StaticFiles.StaticFileResponseContext> NewMethod()

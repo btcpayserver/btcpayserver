@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -50,45 +51,47 @@ namespace BTCPayServer.HostedServices
                         }
                     }).Where(tuple => tuple.Data != null && tuple.Items.Any(item =>
                                           item.Inventory.HasValue &&
-                                          updateAppInventory.Items.ContainsKey(item.Id)));
-                foreach (var valueTuple in apps)
+                                          updateAppInventory.Items.FirstOrDefault(i => i.Id == item.Id) != null));
+                foreach (var app in apps)
                 {
-                    foreach (var item1 in valueTuple.Items.Where(item =>
-                        updateAppInventory.Items.ContainsKey(item.Id)))
+                    foreach (var cartItem in updateAppInventory.Items)
                     {
+                        var item = app.Items.FirstOrDefault(item => item.Id == cartItem.Id);
+                        if (item == null) continue;
+                        
                         if (updateAppInventory.Deduct)
                         {
-                            item1.Inventory -= updateAppInventory.Items[item1.Id];
+                            item.Inventory -= cartItem.Count;
                         }
                         else
                         {
-                            item1.Inventory += updateAppInventory.Items[item1.Id];
+                            item.Inventory += cartItem.Count;
                         }
                     }
 
-                    switch (valueTuple.Data.AppType)
+                    switch (app.Data.AppType)
                     {
                         case PointOfSaleAppType.AppType:
-                            ((PointOfSaleSettings)valueTuple.Settings).Template =
-                                AppService.SerializeTemplate(valueTuple.Items);
+                            ((PointOfSaleSettings)app.Settings).Template =
+                                AppService.SerializeTemplate(app.Items);
                             break;
                         case CrowdfundAppType.AppType:
-                            ((CrowdfundSettings)valueTuple.Settings).PerksTemplate =
-                                AppService.SerializeTemplate(valueTuple.Items);
+                            ((CrowdfundSettings)app.Settings).PerksTemplate =
+                                AppService.SerializeTemplate(app.Items);
                             break;
                         default:
                             throw new InvalidOperationException();
                     }
 
-                    valueTuple.Data.SetSettings(valueTuple.Settings);
-                    await _appService.UpdateOrCreateApp(valueTuple.Data);
+                    app.Data.SetSettings(app.Settings);
+                    await _appService.UpdateOrCreateApp(app.Data);
                 }
 
 
             }
             else if (evt is InvoiceEvent invoiceEvent)
             {
-                Dictionary<string, int> cartItems = null;
+                List<PosCartItem> cartItems = null;
                 bool deduct;
                 switch (invoiceEvent.Name)
                 {
@@ -104,8 +107,8 @@ namespace BTCPayServer.HostedServices
                         return;
                 }
 
-                if ((!string.IsNullOrEmpty(invoiceEvent.Invoice.Metadata.ItemCode) ||
-                     AppService.TryParsePosCartItems(invoiceEvent.Invoice.Metadata.PosData, out cartItems)))
+                if (!string.IsNullOrEmpty(invoiceEvent.Invoice.Metadata.ItemCode) ||
+                    AppService.TryParsePosCartItems(invoiceEvent.Invoice.Metadata.PosData, out cartItems))
                 {
                     var appIds = AppService.GetAppInternalTags(invoiceEvent.Invoice);
 
@@ -114,13 +117,18 @@ namespace BTCPayServer.HostedServices
                         return;
                     }
 
-                    var items = cartItems ?? new Dictionary<string, int>();
+                    var items = cartItems?.ToList() ?? new List<PosCartItem>();
                     if (!string.IsNullOrEmpty(invoiceEvent.Invoice.Metadata.ItemCode))
                     {
-                        items.TryAdd(invoiceEvent.Invoice.Metadata.ItemCode, 1);
+                        items.Add(new PosCartItem
+                        {
+                            Id = invoiceEvent.Invoice.Metadata.ItemCode,
+                            Count = 1,
+                            Price = invoiceEvent.Invoice.Price
+                        });
                     }
 
-                    _eventAggregator.Publish(new UpdateAppInventory()
+                    _eventAggregator.Publish(new UpdateAppInventory
                     {
                         Deduct = deduct,
                         Items = items,
@@ -134,7 +142,7 @@ namespace BTCPayServer.HostedServices
         public class UpdateAppInventory
         {
             public string[] AppId { get; set; }
-            public Dictionary<string, int> Items { get; set; }
+            public List<PosCartItem> Items { get; set; }
             public bool Deduct { get; set; }
 
             public override string ToString()

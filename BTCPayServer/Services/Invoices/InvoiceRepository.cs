@@ -620,8 +620,8 @@ namespace BTCPayServer.Services.Invoices
             {
                 if (queryObject.InvoiceId.Length > 1)
                 {
-                    var statusSet = queryObject.InvoiceId.ToHashSet().ToArray();
-                    query = query.Where(i => statusSet.Contains(i.Id));
+                    var idSet = queryObject.InvoiceId.ToHashSet().ToArray();
+                    query = query.Where(i => idSet.Contains(i.Id));
                 }
                 else
                 {
@@ -662,54 +662,52 @@ namespace BTCPayServer.Services.Invoices
 
             if (queryObject.OrderId is { Length: > 0 })
             {
-                var statusSet = queryObject.OrderId.ToHashSet().ToArray();
-                query = query.Where(i => statusSet.Contains(i.OrderId));
+                var orderIdSet = queryObject.OrderId.ToHashSet().ToArray();
+                query = query.Where(i => orderIdSet.Contains(i.OrderId));
             }
             if (queryObject.ItemCode is { Length: > 0 })
             {
-                var statusSet = queryObject.ItemCode.ToHashSet().ToArray();
-                query = query.Where(i => statusSet.Contains(i.ItemCode));
+                var itemCodeSet = queryObject.ItemCode.ToHashSet().ToArray();
+                query = query.Where(i => itemCodeSet.Contains(i.ItemCode));
             }
 
-            if (queryObject.Status is { Length: > 0 })
+            var statusSet = queryObject.Status is { Length: > 0 }
+                ? queryObject.Status.Select(s => s.ToLowerInvariant()).ToHashSet()
+                : new HashSet<string>();
+            var exceptionStatusSet = queryObject.ExceptionStatus is { Length: > 0 }
+                ? queryObject.ExceptionStatus.Select(NormalizeExceptionStatus).ToHashSet()
+                : new HashSet<string>();
+
+            // We make sure here that the old filters still work
+            if (statusSet.Contains("paid"))
+                statusSet.Add("processing");
+            if (statusSet.Contains("processing"))
+                statusSet.Add("paid");
+            if (statusSet.Contains("confirmed"))
             {
-                var statusSet = queryObject.Status.ToHashSet();
-                // We make sure here that the old filters still work
-                foreach (var status in queryObject.Status.Select(s => s.ToLowerInvariant()))
-                {
-                    if (status == "paid")
-                        statusSet.Add("processing");
-                    if (status == "processing")
-                        statusSet.Add("paid");
-                    if (status == "confirmed")
-                    {
-                        statusSet.Add("complete");
-                        statusSet.Add("settled");
-                    }
-                    if (status == "settled")
-                    {
-                        statusSet.Add("complete");
-                        statusSet.Add("confirmed");
-                    }
-                    if (status == "complete")
-                    {
-                        statusSet.Add("settled");
-                        statusSet.Add("confirmed");
-                    }
-                }
-                query = query.Where(i => statusSet.Contains(i.Status));
+                statusSet.Add("complete");
+                statusSet.Add("settled");
+            }
+            if (statusSet.Contains("settled"))
+            {
+                statusSet.Add("complete");
+                statusSet.Add("confirmed");
+            }
+            if (statusSet.Contains("complete"))
+            {
+                statusSet.Add("settled");
+                statusSet.Add("confirmed");
+            }
+
+            if (statusSet.Any() || exceptionStatusSet.Any())
+            {
+                query = query.Where(i => statusSet.Contains(i.Status) || exceptionStatusSet.Contains(i.ExceptionStatus));
             }
 
             if (queryObject.Unusual != null)
             {
-                var unused = queryObject.Unusual.Value;
-                query = query.Where(i => unused == (i.Status == "invalid" || !string.IsNullOrEmpty(i.ExceptionStatus)));
-            }
-
-            if (queryObject.ExceptionStatus is { Length: > 0 })
-            {
-                var exceptionStatusSet = queryObject.ExceptionStatus.Select(s => NormalizeExceptionStatus(s)).ToHashSet().ToArray();
-                query = query.Where(i => exceptionStatusSet.Contains(i.ExceptionStatus));
+                var unusual = queryObject.Unusual.Value;
+                query = query.Where(i => unusual == (i.Status == "invalid" || !string.IsNullOrEmpty(i.ExceptionStatus)));
             }
 
             query = query.OrderByDescending(q => q.Created);
@@ -719,6 +717,7 @@ namespace BTCPayServer.Services.Invoices
 
             if (queryObject.Take != null)
                 query = query.Take(queryObject.Take.Value);
+            
             return query;
         }
         public Task<InvoiceEntity[]> GetInvoices(InvoiceQuery queryObject)
@@ -738,6 +737,12 @@ namespace BTCPayServer.Services.Invoices
                 query = query.Include(o => o.Refunds).ThenInclude(refundData => refundData.PullPaymentData);
             var data = await query.ToArrayAsync(cancellationToken).ConfigureAwait(false);
             return data.Select(ToEntity).ToArray();
+        }
+        
+        public async Task<int> GetInvoiceCount(InvoiceQuery queryObject)
+        {
+            await using var context = _applicationDbContextFactory.CreateContext();
+            return await GetInvoiceQuery(context, queryObject).CountAsync();
         }
 
         private string NormalizeExceptionStatus(string status)
@@ -781,9 +786,12 @@ namespace BTCPayServer.Services.Invoices
                 .Where(p => p.Currency.Equals(currency, StringComparison.OrdinalIgnoreCase))
                 .SelectMany(p =>
                 {
-                    var contribution = new InvoiceStatistics.Contribution();
-                    contribution.PaymentMethodId = new PaymentMethodId(p.Currency, PaymentTypes.BTCLike);
-                    contribution.CurrencyValue = p.Price;
+                    var contribution = new InvoiceStatistics.Contribution
+                    {
+                        PaymentMethodId = new PaymentMethodId(p.Currency, PaymentTypes.BTCLike),
+                        CurrencyValue = p.Price,
+                        States = new [] { p.GetInvoiceState() }
+                    };
                     contribution.Value = contribution.CurrencyValue;
 
                     // For hardcap, we count newly created invoices as part of the contributions
@@ -810,18 +818,22 @@ namespace BTCPayServer.Services.Invoices
                     return payments
                              .Select(pay =>
                              {
-                                 var paymentMethodContribution = new InvoiceStatistics.Contribution();
-                                 paymentMethodContribution.PaymentMethodId = pay.GetPaymentMethodId();
-                                 paymentMethodContribution.CurrencyValue = pay.InvoicePaidAmount.Net;
-                                 paymentMethodContribution.Value = pay.PaidAmount.Net;
+                                 var paymentMethodContribution = new InvoiceStatistics.Contribution
+                                 {
+                                     PaymentMethodId = pay.GetPaymentMethodId(),
+                                     CurrencyValue = pay.InvoicePaidAmount.Net,
+                                     Value = pay.PaidAmount.Net,
+                                     States = new [] { pay.InvoiceEntity.GetInvoiceState() }
+                                 };
                                  return paymentMethodContribution;
                              })
                              .ToArray();
                 })
                 .GroupBy(p => p.PaymentMethodId)
-                .ToDictionary(p => p.Key, p => new InvoiceStatistics.Contribution()
+                .ToDictionary(p => p.Key, p => new InvoiceStatistics.Contribution
                 {
                     PaymentMethodId = p.Key,
+                    States = p.SelectMany(v => v.States),
                     Value = p.Select(v => v.Value).Sum(),
                     CurrencyValue = p.Select(v => v.CurrencyValue).Sum()
                 });
@@ -908,6 +920,7 @@ namespace BTCPayServer.Services.Invoices
         public class Contribution
         {
             public PaymentMethodId PaymentMethodId { get; set; }
+            public IEnumerable<InvoiceState> States { get; set; }
             public decimal Value { get; set; }
             public decimal CurrencyValue { get; set; }
         }

@@ -1075,8 +1075,11 @@
                 "type": "object",
                 "properties": {
                     "paymentMethod": {
-                        "type": "string",
-                        "description": "The payment method (cryptocode + network) of the withdrawal.",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/PaymentMethodId"
+                            }
+                        ],
                         "nullable": false
                     },
                     "qty": {

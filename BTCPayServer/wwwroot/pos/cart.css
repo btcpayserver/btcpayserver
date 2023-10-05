@@ -81,43 +81,6 @@ header .cart-toggle-btn {
     min-width: 1.75em;
 }
 
-.card-img-top {
-    max-height: 210px;
-    object-fit: scale-down;
-}
-
-.posItem {
-    position: relative;
-}
-.posItem.posItem--inStock {
-    cursor: pointer;
-}
-.posItem-added {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--btcpay-success);
-    color: var(--btcpay-success-text);
-    position: absolute;
-    top: 0;
-    right: 0;
-    left: 0;
-    bottom: 0;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity var(--btcpay-transition-duration-default) ease-in-out;
-}
-.posItem-added .icon {
-    width: 2rem;
-    height: 2rem;
-}
-.posItem--added {
-    pointer-events: none;
-}
-.posItem--added .posItem-added {
-    opacity: .8;
-}
-
 @media (max-width: 991px) {
     #cart {
         left: 0;

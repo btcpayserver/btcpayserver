@@ -48,3 +48,19 @@
         }
     </div>
 </footer>
+@if (User.Identity.IsAuthenticated)
+{
+    <div id="StatusUpdates" class="toast-container">
+        <div id="BlazorStatus" class="toast blazor-status" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <span class="blazor-status__state btcpay-status"></span>
+                <h6 class="blazor-status__title ms-2 mb-0 me-auto"></h6>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close">
+                    <vc:icon symbol="close" />
+                </button>
+            </div>
+            <div class="toast-body blazor-status__body text-secondary pt-0"></div>
+        </div>
+    </div>
+
+}

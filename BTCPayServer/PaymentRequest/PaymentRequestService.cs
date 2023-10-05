@@ -10,7 +10,6 @@ using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.PaymentRequests;
 using BTCPayServer.Services.Rates;
-using Microsoft.AspNetCore.SignalR;
 using PaymentRequestData = BTCPayServer.Data.PaymentRequestData;
 
 namespace BTCPayServer.PaymentRequest
@@ -27,7 +26,6 @@ namespace BTCPayServer.PaymentRequest
             PaymentRequestRepository paymentRequestRepository,
             BTCPayNetworkProvider btcPayNetworkProvider,
             InvoiceRepository invoiceRepository,
-            AppService appService,
             DisplayFormatter displayFormatter,
             CurrencyNameTable currencies)
         {
@@ -62,10 +60,19 @@ namespace BTCPayServer.PaymentRequest
             {
                 var invoices = await _PaymentRequestRepository.GetInvoicesForPaymentRequest(pr.Id);
                 var contributions = _invoiceRepository.GetContributionsByPaymentMethodId(blob.Currency, invoices, true);
+                var allSettled = contributions.All(i => i.Value.States.All(s => s.IsSettled()));
+                var isPaid = contributions.TotalCurrency >= blob.Amount;
 
-                currentStatus = contributions.TotalCurrency >= blob.Amount
-                    ? Client.Models.PaymentRequestData.PaymentRequestStatus.Completed
-                    : Client.Models.PaymentRequestData.PaymentRequestStatus.Pending;
+                if (isPaid)
+                {
+                    currentStatus = allSettled
+                        ? Client.Models.PaymentRequestData.PaymentRequestStatus.Completed
+                        : Client.Models.PaymentRequestData.PaymentRequestStatus.Processing;
+                }
+                else
+                {
+                    currentStatus = Client.Models.PaymentRequestData.PaymentRequestStatus.Pending;
+                }
             }
 
             if (currentStatus != pr.Status)
@@ -86,12 +93,11 @@ namespace BTCPayServer.PaymentRequest
             var blob = pr.GetBlob();
 
             var invoices = await _PaymentRequestRepository.GetInvoicesForPaymentRequest(id);
-
             var paymentStats = _invoiceRepository.GetContributionsByPaymentMethodId(blob.Currency, invoices, true);
             var amountDue = blob.Amount - paymentStats.TotalCurrency;
             var pendingInvoice = invoices.OrderByDescending(entity => entity.InvoiceTime)
                 .FirstOrDefault(entity => entity.Status == InvoiceStatusLegacy.New);
-
+            
             return new ViewPaymentRequestViewModel(pr)
             {
                 Archived = pr.Archived,

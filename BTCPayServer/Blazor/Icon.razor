@@ -1,0 +1,22 @@
+@using BTCPayServer.Abstractions.Extensions;
+@using BTCPayServer.Configuration;
+@using Microsoft.AspNetCore.Hosting;
+@using Microsoft.AspNetCore.Mvc.Routing;
+@using Microsoft.AspNetCore.Mvc.ViewFeatures;
+@using Microsoft.AspNetCore.Mvc;
+@inject IFileVersionProvider FileVersionProvider
+@inject BTCPayServerOptions BTCPayServerOptions
+
+<svg role="img" class="icon icon-@Symbol">
+	<use href="@GetPathTo(Symbol)"></use>
+</svg>
+@code {
+	public string GetPathTo(string symbol)
+	{
+		var versioned = FileVersionProvider.AddFileVersionToPath(default, "img/icon-sprite.svg");
+        var rootPath = (BTCPayServerOptions.RootPath ?? "/").WithTrailingSlash();
+		return $"{rootPath}{versioned}#{Symbol}";
+	}
+	[Parameter]
+	public string Symbol { get; set; }
+}

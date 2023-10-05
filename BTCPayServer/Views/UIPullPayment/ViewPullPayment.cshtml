@@ -46,8 +46,8 @@
                                 <div class="input-group">
                                     @if (Model.LnurlEndpoint is not null)
                                     {
-                                        <button type="button" class="input-group-prepend btn btn-outline-secondary" id="lnurlwithdraw-button" data-bs-toggle="modal" data-bs-target="#scan-qr-modal">
-                                            <span class="fa fa-qrcode  fa-2x" title="LNURL-Withdraw"></span>
+                                        <button type="button" class="btn btn-secondary" id="lnurlwithdraw-button">
+                                            <span class="fa fa-qrcode fa-2x" title="LNURL-Withdraw"></span>
                                         </button>
                                     }
                                     <input class="form-control form-control-lg font-monospace" asp-for="Destination" placeholder="Enter destination to claim funds" required style="font-size:.9rem;height:42px;">
@@ -77,7 +77,6 @@
                 </div>
             </nav>
         }
-
         <main class="flex-grow-1 py-4">
             <div class="container">
                 <partial name="_StatusMessage" model="@(new ViewDataDictionary(ViewData){ { "Margin", "mb-4" } })" />
@@ -105,6 +104,10 @@
                                 <button type="button" class="btn btn-link fw-semibold d-none d-lg-inline-block d-print-none border-0 p-0 ms-4 only-for-js" id="copyLink">
                                     Copy Link
                                 </button>
+                                 <button type="button" class="btn btn-link fw-semibold d-inline-block d-print-none border-0 p-0 ms-4 only-for-js" page-qr>
+                                                                <span class="fa fa-qrcode"></span> Show QR
+                                                            </button>
+                                
                             </div>
                             @if (!string.IsNullOrEmpty(Model.ResetIn))
                             {
@@ -205,33 +208,49 @@
         </footer>
     </div>
     <partial name="LayoutFoot" />
-  @if (Model.LnurlEndpoint is not null)
-  {
-      var lnurlUri = LNURL.LNURL.EncodeUri(Model.LnurlEndpoint, "withdrawRequest", false).ToString();
-      var lnurlBech32 = LNURL.LNURL.EncodeUri(Model.LnurlEndpoint, "withdrawRequest", true).ToString();
-      var note = "You can scan or open this link with a <a href='https://github.com/fiatjaf/lnurl-rfc#lnurl-documents' target='_blank' rel='noreferrer noopener'>LNURL-Withdraw</a> enabled wallet.";
-      if (!Model.AutoApprove)
-      {
-          note += "<br/><span class='fw-bold'>Please note that this pull payment does not automatically send out funds, and so will process payment after LNURL-withdraw flow is completed.</span>";
-      }
-      <script src="~/vendor/vue-qrcode/vue-qrcode.min.js" asp-append-version="true"></script>
-      <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
-      <partial name="ShowQR"/>
-      <script>
+    <script src="~/vendor/vue-qrcode/vue-qrcode.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
+    <partial name="ShowQR" />
+    <script>
         document.addEventListener("DOMContentLoaded", () => {
-            const modes = {
-                uri: { title: "URI", fragments: [@Safe.Json(lnurlUri)], showData: true, href: @Safe.Json(lnurlUri) },
-                bech32: { title: "Bech32", fragments: [@Safe.Json(lnurlBech32)], showData: true, href: @Safe.Json(lnurlBech32) }
-            };
-            initQRShow({ title: "LNURL Withdraw", note: @Safe.Json(note), modes })
-    });
+            window.qrApp = initQRShow({});
+            delegate('click', 'button[page-qr]', event => {
+                qrApp.title = "Pull Payment QR";
+                qrApp.note = "Scan this QR code to open this page on your mobile device.";
+                qrApp.showData(window.location.href);
+            });
+        });
     </script>
-  }
-<script>
+    @if (Model.LnurlEndpoint is not null)
+    {
+          var lnurlUri = LNURL.LNURL.EncodeUri(Model.LnurlEndpoint, "withdrawRequest", false).ToString();
+          var lnurlBech32 = LNURL.LNURL.EncodeUri(Model.LnurlEndpoint, "withdrawRequest", true).ToString();
+          var note = "<p>You can scan or open this link with a <a href='https://github.com/fiatjaf/lnurl-rfc#lnurl-documents' target='_blank' rel='noreferrer noopener'>LNURL-Withdraw</a> enabled wallet.</p>";
+          if (!Model.AutoApprove)
+          {
+              note += "<p class='fw-semibold'>Please note that this pull payment does not automatically send out funds, but will process the payment after the LNURL-withdraw flow is completed.</p>";
+          }
+          <script>
+              document.addEventListener("DOMContentLoaded", () => {
+                  const modes = {
+                      uri: { title: "URI", fragments: [@Safe.Json(lnurlUri)], showData: true, href: @Safe.Json(lnurlUri) },
+                      bech32: { title: "Bech32", fragments: [@Safe.Json(lnurlBech32)], showData: true, href: @Safe.Json(lnurlBech32) }
+                  };
+                  delegate('click', '#lnurlwithdraw-button', () => {
+                      qrApp.title = "LNURL Withdraw";
+                      qrApp.modes = modes;
+                      qrApp.mode = "bech32";
+                      qrApp.note = @Safe.Json(note);
+                      qrApp.show();
+                  });
+              });
+          </script>
+    }
+    <script>
         document.addEventListener("DOMContentLoaded", () => {
             document.getElementById("copyLink").addEventListener("click", window.copyUrlToClipboard);
         });
-</script>
-<vc:ui-extension-point location="pullpayment-foot"  model="@Model"></vc:ui-extension-point>
+    </script>
+    <vc:ui-extension-point location="pullpayment-foot"  model="@Model"></vc:ui-extension-point>
 </body>
 </html>

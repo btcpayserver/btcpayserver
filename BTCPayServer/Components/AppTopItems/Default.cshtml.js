@@ -1,8 +1,7 @@
 if (!window.appTopItems) {
-    window.appTopItems =
-    {
-        dataLoaded: function (model) {
-            const id = "AppTopItems-" + model.id;
+    window.appTopItems = {
+        dataLoaded (model) {
+            const id = `AppTopItems-${model.id}`;
             const series = model.salesCount;
             new Chartist.Bar(`#${id} .ct-chart`, { series }, {
                 distributeSeries: true,

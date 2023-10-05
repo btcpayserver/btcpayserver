@@ -1,9 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using BTCPayServer.Models.AppViewModels;
-using BTCPayServer.Payments;
 using BTCPayServer.Plugins.PointOfSale.Models;
 using BTCPayServer.Services.Rates;
 
@@ -60,8 +57,6 @@ namespace BTCPayServer.Plugins.Crowdfund.Models
             public DateTime? LastResetDate { get; set; }
             public DateTime? NextResetDate { get; set; }
         }
-
-
 
         public bool Started => !StartDate.HasValue || DateTime.UtcNow > StartDate;
 

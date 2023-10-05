@@ -14,7 +14,7 @@ namespace BTCPayServer.Services.Rates
 {
     public class BitcoinJungleRateProvider : IRateProvider
     {
-        public RateSourceInfo RateSourceInfo => new("bitcoinjungle", "BitcoinJungle", "https://orders.bitcoinjungle.app/ticker");
+        public RateSourceInfo RateSourceInfo => new("bitcoinjungle", "BitcoinJungle", "https://price.bitcoinjungle.app/ticker");
         private readonly HttpClient _httpClient;
         public BitcoinJungleRateProvider(HttpClient httpClient)
         {
@@ -23,7 +23,7 @@ namespace BTCPayServer.Services.Rates
 
         public async Task<PairRate[]> GetRatesAsync(CancellationToken cancellationToken)
         {
-            var response = await _httpClient.GetAsync("https://orders.bitcoinjungle.app/ticker", cancellationToken);
+            var response = await _httpClient.GetAsync("https://price.bitcoinjungle.app/ticker", cancellationToken);
             response.EnsureSuccessStatusCode();
             var jobj = await response.Content.ReadAsAsync<JObject>(cancellationToken);
             var list = new List<PairRate>();

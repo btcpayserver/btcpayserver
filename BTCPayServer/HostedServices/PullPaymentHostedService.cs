@@ -157,6 +157,8 @@ namespace BTCPayServer.HostedServices
             public bool IncludeArchived { get; set; }
             public bool IncludeStoreData { get; set; }
             public bool IncludePullPaymentData { get; set; }
+            public DateTimeOffset? From { get; set; }
+            public DateTimeOffset? To { get; set; }
         }
 
         public async Task<List<PayoutData>> GetPayouts(PayoutQuery payoutQuery)
@@ -217,6 +219,14 @@ namespace BTCPayServer.HostedServices
                     data.PullPaymentData == null || !data.PullPaymentData.Archived);
             }
 
+            if (payoutQuery.From is not null)
+            {
+                query = query.Where(data => data.Date >= payoutQuery.From);
+            }
+            if (payoutQuery.To is not null)
+            {
+                query = query.Where(data => data.Date <= payoutQuery.To);
+            }
             return await query.ToListAsync(cancellationToken);
         }
 

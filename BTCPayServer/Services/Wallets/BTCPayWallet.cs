@@ -252,7 +252,7 @@ namespace BTCPayServer.Services.Wallets
                     {
                         wallet_id = NBXplorer.Client.DBUtils.nbxv1_get_wallet_id(Network.CryptoCode, derivationStrategyBase.ToString()),
                         code = Network.CryptoCode,
-                        count = count,
+                        count = count == int.MaxValue ? null : count,
                         skip = skip,
                         interval = interval is TimeSpan t ? t : TimeSpan.FromDays(365 * 1000)
                     },

@@ -210,7 +210,7 @@ Vue.component("lnurl-withdraw-checkout", {
                 if (response.ok) {
                     this.successMessage = result;
                 } else {
-                    this.reportNfcError(error);
+                    this.reportNfcError(result);
                 }
             } catch (error) {
                 this.reportNfcError(error);

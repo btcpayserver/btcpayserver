@@ -24,7 +24,6 @@ using BTCPayServer.Rating;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
-using BTCPayServer.Services.Invoices.Export;
 using BTCPayServer.Services.Rates;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -123,6 +122,7 @@ namespace BTCPayServer.Controllers
             var additionalData = metaData
                 .Where(dict => !InvoiceAdditionalDataExclude.Contains(dict.Key))
                 .ToDictionary(dict => dict.Key, dict => dict.Value);
+            
             var model = new InvoiceDetailsModel
             {
                 StoreId = store.Id,
@@ -149,7 +149,6 @@ namespace BTCPayServer.Controllers
                 StatusException = invoice.ExceptionStatus,
                 Events = invoice.Events,
                 Metadata = metaData,
-                AdditionalData = additionalData,
                 Archived = invoice.Archived,
                 CanRefund = invoiceState.CanRefund(),
                 Refunds = invoice.Refunds,
@@ -166,6 +165,27 @@ namespace BTCPayServer.Controllers
             model.CryptoPayments = details.CryptoPayments;
             model.Payments = details.Payments;
             model.Overpaid = details.Overpaid;
+            
+            if (additionalData.ContainsKey("receiptData"))
+            {
+                model.ReceiptData = (Dictionary<string, object>)additionalData["receiptData"];
+                additionalData.Remove("receiptData");
+            }
+            
+            if (additionalData.ContainsKey("posData") && additionalData["posData"] is string posData)
+            {
+                // overwrite with parsed JSON if possible
+                try
+                {
+                    additionalData["posData"] = PosDataParser.ParsePosData(JObject.Parse(posData));
+                }
+                catch (Exception)
+                {
+                    additionalData["posData"] = posData;
+                }
+            }
+            
+            model.AdditionalData = additionalData;
 
             return View(model);
         }
@@ -227,18 +247,14 @@ namespace BTCPayServer.Controllers
 
                     string txId = paymentData.GetPaymentId();
                     string? link = GetTransactionLink(paymentMethodId, txId);
-                    var paymentMethod = i.GetPaymentMethod(paymentMethodId);
-                    var amount = paymentData.GetValue();
-                    var rate = paymentMethod.Rate;
-                    var paid = (amount - paymentEntity.NetworkFee) * rate;
 
                     return new ViewPaymentRequestViewModel.PaymentRequestInvoicePayment
                     {
-                        Amount = amount,
-                        Paid = paid,
+                        Amount = paymentEntity.PaidAmount.Gross,
+                        Paid = paymentEntity.InvoicePaidAmount.Net,
                         ReceivedDate = paymentEntity.ReceivedTime.DateTime,
-                        PaidFormatted = _displayFormatter.Currency(paid, i.Currency, DisplayFormatter.CurrencyFormat.Symbol),
-                        RateFormatted = _displayFormatter.Currency(rate, i.Currency, DisplayFormatter.CurrencyFormat.Symbol),
+                        PaidFormatted = _displayFormatter.Currency(paymentEntity.InvoicePaidAmount.Net, i.Currency, DisplayFormatter.CurrencyFormat.Symbol),
+                        RateFormatted = _displayFormatter.Currency(paymentEntity.Rate, i.Currency, DisplayFormatter.CurrencyFormat.Symbol),
                         PaymentMethod = paymentMethodId.ToPrettyString(),
                         Link = link,
                         Id = txId,
@@ -250,7 +266,7 @@ namespace BTCPayServer.Controllers
                 .Where(payment => payment != null)
                 .ToList();
 
-            vm.Amount = payments.Sum(p => p!.Paid);
+            vm.Amount = i.PaidAmount.Net;
             vm.Payments = receipt.ShowPayments is false ? null : payments;
             vm.AdditionalData = PosDataParser.ParsePosData(receiptData);
 
@@ -1163,42 +1179,6 @@ namespace BTCPayServer.Controllers
                 StartDate = fs.GetFilterDate("startdate", timezoneOffset),
                 EndDate = fs.GetFilterDate("enddate", timezoneOffset)
             };
-        }
-
-        [HttpGet]
-        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanViewInvoices)]
-        [BitpayAPIConstraint(false)]
-        public async Task<IActionResult> Export(string format, string? storeId = null, string? searchTerm = null, int timezoneOffset = 0)
-        {
-            var model = new InvoiceExport(_CurrencyNameTable);
-            var fs = new SearchString(searchTerm);
-            var storeIds = new HashSet<string>();
-            if (storeId is not null)
-            {
-                storeIds.Add(storeId);
-            }
-            if (fs.GetFilterArray("storeid") is { } l)
-            {
-                foreach (var i in l)
-                    storeIds.Add(i);
-            }
-
-            var apps = await _appService.GetAllApps(GetUserId(), false, storeId);
-            InvoiceQuery invoiceQuery = GetInvoiceQuery(fs, apps, timezoneOffset);
-            invoiceQuery.StoreId = storeIds.ToArray();
-            invoiceQuery.Skip = 0;
-            invoiceQuery.Take = int.MaxValue;
-            var invoices = await _InvoiceRepository.GetInvoices(invoiceQuery);
-            var res = model.Process(invoices, format);
-
-            var cd = new ContentDisposition
-            {
-                FileName = $"btcpay-export-{DateTime.UtcNow.ToString("yyyyMMdd-HHmmss", CultureInfo.InvariantCulture)}.{format}",
-                Inline = true
-            };
-            Response.Headers.Add("Content-Disposition", cd.ToString());
-            Response.Headers.Add("X-Content-Type-Options", "nosniff");
-            return Content(res, "application/" + format);
         }
 
         private SelectList GetPaymentMethodsSelectList()

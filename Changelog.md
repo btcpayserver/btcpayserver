@@ -1,5 +1,99 @@
 # Changelog
 
+## 1.11.6
+
+An update is recommended if you share your server with many users. Your server could crash (Error HTTP 500) if you have a high number of users.
+
+### Bug fixes
+
+* Fix: After a while, a busy server would send error HTTP 500 (#5354) @NicolasDorier
+* Fix: Exchangerate.host falsly appear as Yadio in the UI (#5347) @NicolasDorier
+
+### Improvements
+
+* Improve receipt info display (#5350) @dennisreimann
+* Recommend Yadio for ARS currency rate (#5347) @NicolasDorier
+* Recommend exchangeratehost for COP currency rate @NicolasDorier
+* Hide 'Connection established' when connection to server come back (#5352) @NicolasDorier
+
+## 1.11.5
+
+### New feature
+
+* Reporting: Add payouts (#5320) @Kukks
+* Wallet: Delete custom labels (#5324, #5237) @dennisreimann
+* Dashboard: Show revenue data for keypad (#5317) @dennisreimann
+* Dashboard: Show the number of paid invoices in the last 7 days (#5316, #5300) @dennisreimann
+* Login: Add Remember Me button (#5307, #5302) @dennisreimann
+* Archive stores and apps (#5296) @dennisreimann
+* New permission: Can archive pull payment (#5274) @Kukks
+* Pull Payment: Show QR code for LNURL-Withdraw (#5274) @Kukks
+
+### Bug fixes
+
+* Fix: Transient error 500 when accessing the wallet page (#5326, #5328) @NicolasDorier
+* Fix: Revert to default block explorer button wasn't working (#5340) @NicolasDorier
+* Payment Request: Reflect processing status for on-chain payments (#5309, #5297) @dennisreimann
+* NFC: Fix error display (#5305) @dennisreimann
+
+### Improvements
+
+* Email Rules: Add default texts and document placeholders (#5314) @dennisreimann
+* UI: The on-chain addresses should only be truncated on the middle (#5313, #5311) @dennisreimann
+* Store settings: Allow configuring NFC permission beforehand (#5319) @Kukks
+* Remove legacy export (#5293) @NicolasDorier
+
+## 1.11.4
+
+Minor update recommended for deployment stacks which were using MySQL/SQLite backend in the past such as Raspiblitz, Umbrel, Embassy OS.
+
+We fix a migration to postgres error that has been introduced a few versions ago.
+
+### New feature
+
+* Display wallet balance in default currency in the on-chain wallet navigation (#5281) @vbouzon
+
+### Bug fixes
+
+* Fix: Error on the MigrationStartupTask (#5233) @NicolasDorier
+* Fix: The "Open in wallet" button in the checkout page was not working properly on some browsers (#5284) @dennisreimann
+
+## 1.11.3
+
+### Bug fixes
+
+* Fix LNDHub connection strings parsing @Kukks
+* Paying through LNDHub with an explicit amount wouldn't send the right amount @Kukks
+* The `Open with wallet` deep link in the checkout page wasn't working properly on some browsers.
+* POS: Fix alignment of items in static view (#5271) @dennisreimann
+* Only show LNAddress section if the user has the permission @Kukks
+* Fix crash on /wallets/transactions with non zero skip parameter (#5183) @NicolasDorier
+* Do not block payments on LN while syncing if it is not internal node (#5269) @Kukks
+* Fix LN payout manual payments UI crashing when payouts are not tied to pull payment
+
+### Improvements
+
+* If the PoSData property is a stringified JSON, presents it nicely in invoice details (#5275) @dennisreimann
+* POS: Unify item display in editor (#5266 #5272) @dennisreimann
+* remove store ID from view request url (#5256) @dstrukt
+
+## 1.11.2
+
+## Bug fixes
+
+* Language Select box cut off on checkout (#5210) @evanc-ole
+* POS: Multiple fixes (#5228 #5241 #5252) @dennisreimann
+* Greenfield: Fix invoice lookup by capitalized status (#5245) @dennisreimann
+* Fix temporary file downloads for local storage option @Kukks
+
+### Improvements
+
+* POS: Handle flexible price items in cart view (#5238) @dennisreimann
+* POS: Combine search term and category selector (#5241) @dennisreimann
+* Email Rules: Improve validation (#5234) @dennisreimann
+* Receipt improvements (#5239) @dennisreimann
+* Improve invoices status filter (#5248 #5251) @dennisreimann
+
 ## 1.11.1
 
 ## Bug fixes
@@ -134,9 +228,9 @@ This data, generally used for debugging integrations, will be regularly purged. 
 * Crowdfund: Fix redirect URL fallback (#4943) @dennisreimann
 * Greenfield: Apply store default payment method on invoice creation (#4947) @dennisreimann
 * POS: Fix Firefox issues (#4950) @r0ckstardev
-* Fix viewing arrays in the invoice details when set in metadata (#4954) @Kukks 
+* Fix viewing arrays in the invoice details when set in metadata (#4954) @Kukks
 * Do not crash checkout when attempting LNURL checkout through non-secure page (#4964) @Kukks
-* NFC: Handle HTTP-related exceptions (#4965) @dennisreimann 
+* NFC: Handle HTTP-related exceptions (#4965) @dennisreimann
 
 ### Improvements
 

@@ -72,7 +72,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
 
             return (await dbContext.Payouts
                     .Include(data => data.PullPaymentData)
-                    .ThenInclude(data => data.StoreData)
+                    .Include(data => data.StoreData)
                     .ThenInclude(data => data.UserStores)
                     .ThenInclude(data => data.StoreRole)
                     .Where(data =>
@@ -82,11 +82,11 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                     .ToListAsync())
                 .Where(payout =>
                 {
-                    if (approvedStores.TryGetValue(payout.PullPaymentData.StoreId, out var value))
+                    if (approvedStores.TryGetValue(payout.StoreDataId, out var value))
                         return value;
-                    value = payout.PullPaymentData.StoreData.UserStores
+                    value = payout.StoreData.UserStores
                         .Any(store => store.ApplicationUserId == userId && store.StoreRole.Permissions.Contains(Policies.CanModifyStoreSettings));
-                    approvedStores.Add(payout.PullPaymentData.StoreId, value);
+                    approvedStores.Add(payout.StoreDataId, value);
                     return value;
                 }).ToList();
         }
@@ -125,7 +125,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
 
             await using var ctx = _applicationDbContextFactory.CreateContext();
 
-            var payouts = (await GetPayouts(ctx, pmi, payoutIds)).GroupBy(data => data.PullPaymentData.StoreId);
+            var payouts = (await GetPayouts(ctx, pmi, payoutIds)).GroupBy(data => data.StoreDataId);
             var results = new List<ResultVM>();
             var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(pmi.CryptoCode);
 
@@ -134,7 +134,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             var authorizedForInternalNode = (await _authorizationService.AuthorizeAsync(User, null, new PolicyRequirement(Policies.CanModifyServerSettings))).Succeeded;
             foreach (var payoutDatas in payouts)
             {
-                var store = payoutDatas.First().PullPaymentData.StoreData;
+                var store = payoutDatas.First().StoreData;
 
                 var lightningSupportedPaymentMethod = store.GetSupportedPaymentMethods(_btcPayNetworkProvider)
                     .OfType<LightningSupportedPaymentMethod>()

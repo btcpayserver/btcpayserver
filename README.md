@@ -95,7 +95,7 @@
 * Enhanced privacy & security
 * Self-hosted
 * SegWit support
-* Lightning Network support (LND, c-lightning, Eclair, and Ptarmigan)
+* Lightning Network support (LND, Core Lightning (CLN), Eclair)
 * Tor support
 * Share your instance with friends (multi-tenant)
 * Invoice management and Payment requests
@@ -123,7 +123,7 @@ If you're a developer looking to help, but you're not sure where to begin, check
 
 Contributors looking to do something a bit more challenging, before opening a pull request, please join [our community chat](https://chat.btcpayserver.org/) or [start a GitHub discussion](https://github.com/btcpayserver/btcpayserver/discussions) to get early feedback, discuss the best ways to tackle the problem, and ensure there is no work duplication.
 
-There are many other ways to get involved with the project. Check our [contribution guidelines](https://docs.btcpayserver.org/Contribute/). To get the big-picture of the project development, visit our [evolving roadmap](https://github.com/orgs/btcpayserver/projects/9). We organize different types of community calls several times a month. [Subscribe to our calendar](https://github.com/btcpayserver/organization#calendar) and feel free to join our calls to discuss development, design, documentation, and more.
+There are many other ways to get involved with the project. Check our [contribution guidelines](https://docs.btcpayserver.org/Contribute/). To get the big-picture of the project development, visit our [evolving roadmap](https://github.com/orgs/btcpayserver/projects/16).
 
 ## 🧑‍💻 Developing
 

@@ -16,7 +16,7 @@
         <Platforms>AnyCPU</Platforms>
     </PropertyGroup>
   <PropertyGroup>
-    <Version Condition=" '$(Version)' == '' ">1.7.2</Version>
+    <Version Condition=" '$(Version)' == '' ">1.7.3</Version>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
@@ -32,7 +32,7 @@
     <ItemGroup>
       <PackageReference Include="BTCPayServer.Lightning.Common" Version="1.3.21" />
       <PackageReference Include="NBitcoin" Version="7.0.24" />
-      <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+      <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     </ItemGroup>
   <ItemGroup>
     <None Include="icon.png" Pack="true" PackagePath="\" />

@@ -10,25 +10,21 @@
 	Layout = null;
     string StatusClass(InvoiceState state)
     {
-        switch (state.Status.ToModernStatus())
+        var status = state.Status.ToModernStatus();
+        switch (status)
         {
-            case InvoiceStatus.Settled:
-            case InvoiceStatus.Processing:
-                return "success";
             case InvoiceStatus.Expired:
                 switch (state.ExceptionStatus)
                 {
                     case InvoiceExceptionStatus.PaidLate:
                     case InvoiceExceptionStatus.PaidPartial:
                     case InvoiceExceptionStatus.PaidOver:
-                        return "warning";
+                        return "unusual";
                     default:
-                        return "danger";
+                        return "expired";
                 }
-            case InvoiceStatus.Invalid:
-                return "danger";
             default:
-                return "warning";
+                return status.ToString().ToLowerInvariant();
         }
     }
 }
@@ -131,7 +127,7 @@
                             else
                             {
                                 <div class="h2 text-md-end">
-                                    <span class="badge @if (Model.Status == "Settled") { @("bg-primary") } else if (Model.Status == "Expired") { @("bg-danger") } else { @("bg-info") }" data-test="status">
+                                    <span class="badge badge-@Model.Status.ToLowerInvariant()" data-test="status" style="font-size:.75em">
                                         @Model.Status
                                         @if (Model.Archived)
                                         {
@@ -186,7 +182,7 @@
                         </template>
                         <template v-else>
                             <div class="h2 text-md-end">
-                                <span class="badge" :class="{ 'bg-primary': srvModel.status === 'Settled', 'bg-danger': srvModel.status === 'Expired', 'bg-info': (srvModel.status !== 'Settled' && srvModel.status !== 'Expired') }" data-test="status">
+                                <span class="badge" :class="`badge-${srvModel.status.toLowerCase()}`" data-test="status" style="font-size:.75em">
                                     {{srvModel.status}}
                                     <span v-if="srvModel.archived">(archived)</span>
                                 </span>
@@ -262,18 +258,18 @@
                                                 </tr>
                                                 </thead>
                                                 <tbody>
-                                                <tr class="table-borderless table-light">
+                                                <tr class="table-borderless">
                                                     <td>@invoice.Id</td>
                                                     <td>@invoice.ExpiryDate.ToString("g")</td>
                                                     <td class="text-end">@invoice.AmountFormatted</td>
                                                     <td class="text-end"></td>
                                                     <td class="text-end text-print-default">
-                                                        <span class="badge bg-@StatusClass(invoice.State)">@invoice.StateFormatted</span>
+                                                        <span class="badge badge-@StatusClass(invoice.State)">@invoice.StateFormatted</span>
                                                     </td>
                                                 </tr>
                                                 @if (invoice.Payments != null && invoice.Payments.Any())
                                                 {
-                                                    <tr class="table-borderless table-light">
+                                                    <tr class="table-borderless">
                                                         <th class="fw-normal text-secondary">Destination</th>
                                                         <th class="fw-normal text-secondary">Received</th>
                                                         <th class="fw-normal text-secondary text-end">Paid</th>
@@ -282,14 +278,14 @@
                                                     </tr>
                                                     @foreach (var payment in invoice.Payments)
                                                     {
-                                                        <tr class="table-borderless table-light">
+                                                        <tr class="table-borderless">
                                                             <td class="text-break"><code>@payment.Destination</code></td>
                                                             <td>@payment.ReceivedDate.ToString("g")</td>
                                                             <td class="text-end">@payment.PaidFormatted</td>
                                                             <td class="text-end">@payment.RateFormatted</td>
                                                             <td class="text-end text-nowrap">@payment.Amount @payment.PaymentMethod</td>
                                                         </tr>
-                                                        <tr class="table-borderless table-light">
+                                                        <tr class="table-borderless">
                                                             <td class="fw-normal" colspan="5">
                                                                 <span class="text-secondary">Transaction Id:</span> 
                                                                 @if (!string.IsNullOrEmpty(payment.Link))
@@ -326,17 +322,17 @@
                                         </tr>
                                         </thead>
                                         <tbody>
-                                        <tr class="table-borderless table-light">
+                                        <tr class="table-borderless">
                                             <td>{{invoice.id}}</td>
                                             <td v-text="formatDate(invoice.expiryDate)"></td>
                                             <td class="text-end">{{invoice.amountFormatted}}</td>
                                             <td class="text-end"></td>
                                             <td class="text-end text-print-default">
-                                                <span class="badge" :class="`bg-${statusClass(invoice.stateFormatted)}`">{{invoice.stateFormatted}}</span>
+                                                <span class="badge" :class="`badge-${statusClass(invoice.stateFormatted)}`">{{invoice.stateFormatted}}</span>
                                             </td>
                                         </tr>
                                         <template v-if="invoice.payments && invoice.payments.length > 0">
-                                            <tr class="table-borderless table-light">
+                                            <tr class="table-borderless">
                                                 <th class="fw-normal text-secondary">Destination</th>
                                                 <th class="fw-normal text-secondary">Received</th>
                                                 <th class="fw-normal text-secondary text-end">Paid</th>
@@ -344,14 +340,14 @@
                                                 <th class="fw-normal text-secondary text-end">Payment</th>
                                             </tr>
                                             <template v-for="payment of invoice.payments">
-                                                <tr class="table-borderless table-light">
+                                                <tr class="table-borderless">
                                                     <td class="text-break"><code>{{payment.destination}}</code></td>
                                                     <td v-text="formatDate(payment.receivedDate)"></td>
                                                     <td class="text-end">{{payment.paidFormatted}}</td>
                                                     <td class="text-end">{{payment.rateFormatted}}</td>
                                                     <td class="text-end text-nowrap">{{payment.amount.noExponents()}} {{payment.paymentMethod}}</td>
                                                 </tr>
-                                                <tr class="table-borderless table-light">
+                                                <tr class="table-borderless">
                                                     <td class="fw-normal" colspan="5">
                                                         <span class="text-secondary">Transaction Id:</span> 
                                                         <a v-if="payment.link" :href="payment.link" class="text-print-default" target="_blank" rel="noreferrer noopener">{{payment.id}}</a>

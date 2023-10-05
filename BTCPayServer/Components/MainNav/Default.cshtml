@@ -6,7 +6,10 @@
 @using BTCPayServer.Views.Wallets
 @using BTCPayServer.Abstractions.Extensions
 @using BTCPayServer.Client
+@using BTCPayServer.Components.ThemeSwitch
+@using BTCPayServer.Components.UIExtensionPoint
 @using BTCPayServer.Services
+@using BTCPayServer.Views.Apps
 @using BTCPayServer.Views.CustodianAccounts
 @inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContext;
 @inject BTCPayServerEnvironment Env
@@ -90,7 +93,7 @@
                                         
                                     </li>
                                 }
-                                 <vc:ui-extension-point location="store-wallets-nav" model="@Model"/>
+                                <vc:ui-extension-point location="store-wallets-nav" model="@Model"/>
                                 @if (PoliciesSettings.Experimental)
                                 {
                                     @foreach (var custodianAccount in Model.CustodianAccounts)
@@ -187,6 +190,14 @@
                                     <span>Manage Plugins</span>
                                 </a>
                             </li>
+                            @if (Model.Store != null && Model.ArchivedAppsCount > 0)
+                            {
+                                <li class="nav-item nav-item-sub" permission="@Policies.CanModifyStoreSettings">
+                                    <a asp-area="" asp-controller="UIApps" asp-action="ListApps" asp-route-storeId="@Model.Store.Id" asp-route-archived="true" class="nav-link @ViewData.IsActivePage(AppsNavPages.Index)" id="Nav-ArchivedApps">
+                                        @Model.ArchivedAppsCount Archived App@(Model.ArchivedAppsCount == 1 ? "" : "s")
+                                    </a>
+                                </li>
+                            }
                         </ul>
                     </div>
                 </div>

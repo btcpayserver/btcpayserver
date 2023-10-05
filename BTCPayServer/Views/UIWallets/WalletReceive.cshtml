@@ -70,12 +70,9 @@
                     </div>
                     <div class="input-group mt-3">
                         <div class="form-floating">
-                            <input id="PaymentLink" class="form-control-plaintext" readonly="readonly" value="@Model.PaymentLink">
+                            <vc:truncate-center text="@Model.PaymentLink" padding="15" elastic="true" classes="form-control-plaintext" id="PaymentLink" />
                             <label for="PaymentLink">Payment Link</label>
                         </div>
-                        <button type="button" class="btn btn-link" data-clipboard-target="#PaymentLink">
-                            <vc:icon symbol="copy" />
-                        </button>
                     </div>
                 </div>
                 <div class="tab-pane payment-box show active" id="address-tab" role="tabpanel">
@@ -85,12 +82,9 @@
                     </div>
                     <div class="input-group mt-3">
                         <div class="form-floating">
-                            <input id="Address" class="form-control-plaintext" readonly="readonly" value="@Model.Address">
+                            <vc:truncate-center text="@Model.Address" padding="15" elastic="true" classes="form-control-plaintext" id="Address" />
                             <label for="Address">Address</label>
                         </div>
-                        <button type="button" class="btn btn-link" data-clipboard-target="#Address">
-                            <vc:icon symbol="copy" />
-                        </button>
                     </div>
                 </div>
             </div>
@@ -105,7 +99,7 @@
                 </div>
             </div>
     
-            <div class="d-grid gap-3 mt-5">
+            <div class="d-grid gap-3 mt-4">
                 <button type="submit" name="command" value="generate-new-address" class="btn btn-primary w-100">Generate another address</button>
                 <button type="submit" name="command" value="unreserve-current-address" class="btn btn-secondary w-100">Unreserve this address</button>
             </div>

@@ -5,7 +5,7 @@
     @if (Model.Copy) classes += " truncate-center--copy";
     @if (Model.Elastic) classes += " truncate-center--elastic";
 }
-<span class="truncate-center @classes">
+<span class="truncate-center @classes"@(!string.IsNullOrEmpty(Model.Id) ? $"id={Model.Id}" : null) data-text=@Safe.Json(Model.Text)>
     @if (Model.IsVue)
     {
         <span class="truncate-center-truncated" data-bs-toggle="tooltip" :title=@Safe.Json(Model.Text)>

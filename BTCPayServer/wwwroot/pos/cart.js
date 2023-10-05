@@ -55,32 +55,20 @@ document.addEventListener("DOMContentLoaded",function () {
                 return parseFloat(this.cart.reduce((res, item) => res + (item.price||0) * item.count, 0).toFixed(this.currencyInfo.divisibility))
             },
             posdata () {
-                const data = {
-                    cart: this.cart,
-                    subTotal: this.amountNumeric,
-                    total: this.totalNumeric
-                }
-                if (this.tipNumeric > 0) data.tip = this.tipNumeric
+                const data = { cart: this.cart, subTotal: this.amountNumeric }
                 if (this.discountNumeric > 0) data.discountAmount = this.discountNumeric
                 if (this.discountPercentNumeric > 0) data.discountPercentage = this.discountPercentNumeric
+                if (this.tipNumeric > 0) data.tip = this.tipNumeric
+                data.total = this.totalNumeric
                 return JSON.stringify(data)
             }
         },
         watch: {
             searchTerm(term) {
-                const t = term.toLowerCase();
-                this.forEachItem(item => {
-                    const terms = decodeURIComponent(item.dataset.search.toLowerCase());
-                    const included = terms.indexOf(t) !== -1
-                    item.classList[included ? 'remove' : 'add']("d-none")
-                })
+                this.updateDisplay()
             },
             displayCategory(category) {
-                this.forEachItem(item => {
-                    const categories = JSON.parse(item.dataset.categories)
-                    const included = category === "*" || categories.includes(category)
-                    item.classList[included ? 'remove' : 'add']("d-none")
-                })
+                this.updateDisplay()
             },
             cart: {
                 handler(newCart) {
@@ -121,7 +109,17 @@ document.addEventListener("DOMContentLoaded",function () {
                 if (!this.inStock(index)) return false;
                 
                 const item = this.items[index];
-                let itemInCart = this.cart.find(lineItem => lineItem.id === item.id);
+                const $posItem = this.$refs.posItems.querySelectorAll('.posItem')[index];
+                
+                // Check if price is needed
+                const isFixedPrice = item.priceType.toLowerCase() === 'fixed';
+                if (!isFixedPrice) {
+                    const $amount = $posItem.querySelector('input[name="amount"]');
+                    if (!$amount.reportValidity()) return false;
+                    item.price = parseFloat($amount.value);
+                }
+                
+                let itemInCart = this.cart.find(lineItem => lineItem.id === item.id && lineItem.price === item.price);
 
                 // Add new item because it doesn't exist yet
                 if (!itemInCart) {
@@ -138,7 +136,6 @@ document.addEventListener("DOMContentLoaded",function () {
                 itemInCart.count += 1;
                 
                 // Animate
-                const $posItem = this.$refs.posItems.querySelectorAll('.posItem')[index];
                 if(!$posItem.classList.contains(POS_ITEM_ADDED_CLASS)) $posItem.classList.add(POS_ITEM_ADDED_CLASS);
                 
                 return true;
@@ -157,13 +154,32 @@ document.addEventListener("DOMContentLoaded",function () {
             },
             clearCart() {
                 this.cart = [];
+            },
+            displayItem(item) {
+                const inSearch = !this.searchTerm || 
+                    decodeURIComponent(item.dataset.search ? item.dataset.search.toLowerCase() : '')
+                        .indexOf(this.searchTerm.toLowerCase()) !== -1
+                const inCategories = this.displayCategory === "*" ||
+                    (item.dataset.categories ? JSON.parse(item.dataset.categories) : [])
+                        .includes(this.displayCategory)
+                return inSearch && inCategories
+            },
+            updateDisplay() {
+                this.forEachItem(item => {
+                    item.classList[this.displayItem(item) ? 'add' : 'remove']('posItem--displayed')
+                    item.classList.remove('posItem--first')
+                    item.classList.remove('posItem--last')
+                })
+                const $displayed = this.$refs.posItems.querySelectorAll('.posItem.posItem--displayed')
+                if ($displayed.length > 0) {
+                    $displayed[0].classList.add('posItem--first')
+                    $displayed[$displayed.length - 1].classList.add('posItem--last')
+                }
             }
         },
         mounted() {
-            const self =this;
-            nextTick(() => {
-                self.$cart = new bootstrap.Offcanvas("#cart", {backdrop: false})
-            })
+            this.$cart = new bootstrap.Offcanvas(this.$refs.cart, { backdrop: false })
+
             window.addEventListener('pagehide', () => {
                 if (this.payButtonLoading) {
                     this.unsetPayButtonLoading();
@@ -177,6 +193,7 @@ document.addEventListener("DOMContentLoaded",function () {
                     }
                 });
             })
+            this.updateDisplay()
         },
     });
 });

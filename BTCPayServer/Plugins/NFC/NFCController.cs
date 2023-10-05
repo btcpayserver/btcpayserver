@@ -184,7 +184,7 @@ namespace BTCPayServer.Plugins.NFC
 
             try
             {
-                var result = await info.SendRequest(bolt11, httpClient);
+                var result = await info.SendRequest(bolt11, httpClient, null, null);
                 if (!string.IsNullOrEmpty(result.Status) && result.Status.Equals("ok", StringComparison.InvariantCultureIgnoreCase))
                 {
                     return Ok(result.Reason);

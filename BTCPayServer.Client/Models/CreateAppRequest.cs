@@ -37,6 +37,7 @@ namespace BTCPayServer.Client.Models
         public string RedirectUrl { get; set; } = null;
         public bool? RedirectAutomatically { get; set; } = null;
         public bool? RequiresRefundEmail { get; set; } = null;
+        public bool? Archived { get; set; } = null;
         public string FormId { get; set; } = null;
         public string EmbeddedCSS { get; set; } = null;
         public CheckoutType? CheckoutType { get; set; } = null;
@@ -78,6 +79,7 @@ namespace BTCPayServer.Client.Models
         public bool? DisplayPerksValue { get; set; } = null;
         public bool? DisplayPerksRanking { get; set; } = null;
         public bool? SortPerksByPopularity { get; set; } = null;
+        public bool? Archived { get; set; } = null;
         public string[] Sounds { get; set; } = null;
         public string[] AnimationColors { get; set; } = null;
     }

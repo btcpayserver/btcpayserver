@@ -15,7 +15,7 @@ namespace BTCPayServer.Components.TruncateCenter;
 /// <returns>HTML with truncated string</returns>
 public class TruncateCenter : ViewComponent
 {
-    public IViewComponentResult Invoke(string text, string link = null, string classes = null, int padding = 7, bool copy = true, bool elastic = false, bool isVue = false)
+    public IViewComponentResult Invoke(string text, string link = null, string classes = null, int padding = 7, bool copy = true, bool elastic = false, bool isVue = false, string id = null)
     {
         if (string.IsNullOrEmpty(text))
             return new HtmlContentViewComponentResult(new StringHtmlContent(string.Empty));
@@ -27,7 +27,8 @@ public class TruncateCenter : ViewComponent
             IsVue = isVue,
             Copy = copy,
             Text = text,
-            Link = link
+            Link = link,
+            Id = id
         };
         if (!isVue && text.Length > 2 * padding)
         {

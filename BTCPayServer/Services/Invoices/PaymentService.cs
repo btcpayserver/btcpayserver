@@ -59,16 +59,6 @@ namespace BTCPayServer.Services.Invoices
                 Network = network
             };
             entity.SetCryptoPaymentData(paymentData);
-            //TODO: abstract
-            if (paymentMethodDetails is Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod bitcoinPaymentMethod &&
-                bitcoinPaymentMethod.NetworkFeeMode == NetworkFeeMode.MultiplePaymentsOnly &&
-                bitcoinPaymentMethod.NextNetworkFee == Money.Zero)
-            {
-                bitcoinPaymentMethod.NextNetworkFee = bitcoinPaymentMethod.NetworkFeeRate.GetFee(100); // assume price for 100 bytes
-                paymentMethod.SetPaymentMethodDetails(bitcoinPaymentMethod);
-                invoiceEntity.SetPaymentMethod(paymentMethod);
-                invoice.SetBlob(invoiceEntity);
-            }
             PaymentData data = new PaymentData
             {
                 Id = paymentData.GetPaymentId(),

@@ -119,6 +119,9 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
                     Status = "Pending";
                     IsPending = true;
                     break;
+                case Client.Models.PaymentRequestData.PaymentRequestStatus.Processing:
+                    Status = "Processing";
+                    break;
                 case Client.Models.PaymentRequestData.PaymentRequestStatus.Completed:
                     Status = "Settled";
                     break;

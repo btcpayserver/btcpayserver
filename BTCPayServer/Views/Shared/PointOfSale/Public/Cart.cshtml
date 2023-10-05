@@ -1,8 +1,6 @@
 @using BTCPayServer.Plugins.PointOfSale.Models
 @using BTCPayServer.Services
-@using Newtonsoft.Json.Linq;
-@using BTCPayServer.Abstractions.TagHelpers
-@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using Newtonsoft.Json.Linq
 @inject DisplayFormatter DisplayFormatter
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model BTCPayServer.Plugins.PointOfSale.Models.ViewPointOfSaleViewModel
@@ -65,15 +63,15 @@
                             ? item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Topup ? Model.CustomButtonText : Model.ButtonText
                             : item.BuyButtonText;
                         buttonText = buttonText.Replace("{0}", formatted).Replace("{Price}", formatted);
-                        var categories = new JArray(item.Categories ?? Array.Empty<string>());
-                        <div class="col posItem" :class="{ 'posItem--inStock': inStock(@index) }" data-index="@index" data-search="@Safe.RawEncode(item.Title + " " + item.Description)"  data-categories="@Safe.Json(categories)">
+                        var categories = new JArray(item.Categories ?? new object[] { });
+                        <div class="col posItem posItem--displayed" :class="{ 'posItem--inStock': inStock(@index) }" data-index="@index" data-search="@Safe.RawEncode(item.Title + " " + item.Description)" data-categories='@Safe.Json(categories)'>
                             <div class="card h-100 px-0" v-on:click="addToCart(@index)">
                                 @if (!string.IsNullOrWhiteSpace(item.Image))
                                 {
                                     <img class="card-img-top" src="@item.Image" alt="@item.Title" asp-append-version="true">
                                 }
-                                <div class="card-body p-3 d-flex flex-column gap-2">
-                                    <h5 class="card-title m-0">@Safe.RawEncode(item.Title)</h5>
+                                <div class="card-body p-3 d-flex flex-column gap-2 mb-auto">
+                                    <h5 class="card-title m-0">@Safe.Raw(item.Title)</h5>
                                     <div class="d-flex gap-2 align-items-center">
                                         @if (item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Topup || item.Price == 0)
                                         {
@@ -85,23 +83,30 @@
                                         }
                                         @if (item.Inventory.HasValue)
                                         {
-                                            <span class="badge text-bg-warning" v-text="inventoryText(@index)">
+                                            <span class="badge text-bg-warning inventory" v-text="inventoryText(@index)">
                                                 @(item.Inventory > 0 ? $"{item.Inventory} left" : "Sold out")
                                             </span>
                                         }
                                     </div>
                                     @if (!string.IsNullOrWhiteSpace(item.Description))
                                     {
-                                        <p class="card-text">@Safe.RawEncode(item.Description)</p>
+                                        <p class="card-text">@Safe.Raw(item.Description)</p>
                                     }
                                 </div>
                                 @if (inStock)
                                 {
-                                    <div class="card-footer bg-transparent border-0 pt-0 pb-3">
+                                    <form class="card-footer bg-transparent border-0 pt-0 pb-3">
+                                        @if (item.PriceType != ViewPointOfSaleViewModel.ItemPriceType.Fixed)
+                                        {
+                                            <div class="input-group mb-2">
+                                                <span class="input-group-text">@Model.CurrencySymbol</span>
+                                                <input class="form-control" type="number" min="@(item.Price ?? 0)" step="@Model.Step" name="amount" placeholder="Amount" value="@item.Price" required v-on:click.stop>
+                                            </div>
+                                        }
                                         <button type="button" class="btn btn-primary w-100" :disabled="!inStock(@index)">
-                                            @Safe.RawEncode(buttonText)
+                                            @Safe.Raw(buttonText)
                                         </button>
-                                    </div>
+                                    </form>
                                     <div class="posItem-added"><vc:icon symbol="checkmark" /></div>
                                 }
                             </div>
@@ -143,7 +148,7 @@
                                 </td>
                                 <td class="align-middle">
                                     <div class="d-flex align-items-center gap-2 justify-content-end quantity">
-                                        <span class="badge text-bg-warning" v-if="item.inventory">
+                                        <span class="badge text-bg-warning inventory" v-if="item.inventory">
                                             {{ item.inventory > 0 ? `${item.inventory} left` : "Sold out" }}
                                         </span>
                                         <div class="d-flex align-items-center gap-2">

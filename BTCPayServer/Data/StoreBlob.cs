@@ -197,11 +197,11 @@ namespace BTCPayServer.Data
             { "GBP", "kraken" },
             { "CHF", "kraken" },
             { "GTQ", "bitpay" },
-            { "COP", "exchangeratehost" },
+            { "COP", "yadio" },
             { "ARS", "yadio" },
             { "JPY", "bitbank" },
             { "TRY", "btcturk" },
-            { "UGX", "exchangeratehost"},
+            { "UGX", "yadio"},
             { "RSD", "bitpay"}
         };
 

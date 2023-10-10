@@ -159,6 +159,13 @@ public class PaymentsReportProvider : ReportProvider
             {
                 cryptoAmount = LightMoney.MilliSatoshis(v).ToDecimal(LightMoneyUnit.BTC);
             }
+#if ALTCOINS
+            //assetmoney is an object
+            else  if (data.SelectToken("$.value") is JObject valueObject && valueObject.SelectToken("$.value")?.Value<long>() is long amountObj)
+            {
+                cryptoAmount = Money.Satoshis(amountObj).ToDecimal(MoneyUnit.BTC);
+            }
+#endif
             else if (data.SelectToken("$.value")?.Value<long>() is long amount)
             {
                 cryptoAmount = Money.Satoshis(amount).ToDecimal(MoneyUnit.BTC);

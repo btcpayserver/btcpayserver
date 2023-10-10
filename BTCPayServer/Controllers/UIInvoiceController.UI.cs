@@ -165,6 +165,8 @@ namespace BTCPayServer.Controllers
             model.CryptoPayments = details.CryptoPayments;
             model.Payments = details.Payments;
             model.Overpaid = details.Overpaid;
+            model.StillDue = details.StillDue;
+            model.HasRates = details.HasRates;
             
             if (additionalData.ContainsKey("receiptData"))
             {
@@ -565,37 +567,42 @@ namespace BTCPayServer.Controllers
         private InvoiceDetailsModel InvoicePopulatePayments(InvoiceEntity invoice)
         {
             var overpaid = false;
+            var stillDue = false;
+            var hasRates = false;
             var model = new InvoiceDetailsModel
             {
                 Archived = invoice.Archived,
                 Payments = invoice.GetPayments(false),
-                Overpaid = true,
                 CryptoPayments = invoice.GetPaymentMethods().Select(
                     data =>
                     {
                         var accounting = data.Calculate();
                         var paymentMethodId = data.GetId();
+                        var hasPayment = accounting.CryptoPaid > 0;
                         var overpaidAmount = accounting.OverpaidHelper;
-
-                        if (overpaidAmount > 0)
-                        {
-                            overpaid = true;
-                        }
+                        var rate = ExchangeRate(data.GetId().CryptoCode, data);
+                        
+                        if (rate is not null) hasRates = true;
+                        if (hasPayment && overpaidAmount > 0) overpaid = true;
+                        if (hasPayment && accounting.Due > 0) stillDue = true;
 
                         return new InvoiceDetailsModel.CryptoPayment
                         {
+                            Rate = rate,
+                            PaymentMethodRaw = data,
                             PaymentMethodId = paymentMethodId,
                             PaymentMethod = paymentMethodId.ToPrettyString(),
-                            Due = _displayFormatter.Currency(accounting.Due, paymentMethodId.CryptoCode),
-                            Paid = _displayFormatter.Currency(accounting.CryptoPaid, paymentMethodId.CryptoCode),
-                            Overpaid = _displayFormatter.Currency(overpaidAmount, paymentMethodId.CryptoCode),
-                            Address = data.GetPaymentMethodDetails().GetPaymentDestination(),
-                            Rate = ExchangeRate(data.GetId().CryptoCode, data),
-                            PaymentMethodRaw = data
+                            TotalDue = _displayFormatter.Currency(accounting.TotalDue, paymentMethodId.CryptoCode),
+                            Due = hasPayment ? _displayFormatter.Currency(accounting.Due, paymentMethodId.CryptoCode) : null,
+                            Paid = hasPayment ? _displayFormatter.Currency(accounting.CryptoPaid, paymentMethodId.CryptoCode) : null,
+                            Overpaid = hasPayment ? _displayFormatter.Currency(overpaidAmount, paymentMethodId.CryptoCode) : null,
+                            Address = data.GetPaymentMethodDetails().GetPaymentDestination()
                         };
-                    }).ToList()
+                    }).ToList(),
+                Overpaid = overpaid,
+                StillDue = stillDue,
+                HasRates = hasRates
             };
-            model.Overpaid = overpaid;
 
             return model;
         }

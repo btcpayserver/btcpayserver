@@ -96,8 +96,7 @@ public class OnChainWalletReportProvider : ReportProvider
                 var date = (DateTimeOffset)r.seen_at;
                 if (date > queryContext.To)
                     continue;
-                var values = queryContext.AddData();
-                values.Add((DateTimeOffset)date);
+                
 #if ALTCOINS
                 if (settings.Network is ElementsBTCPayNetwork elementsBTCPayNetwork)
                 {
@@ -115,6 +114,8 @@ public class OnChainWalletReportProvider : ReportProvider
                     }
                 }
 #endif
+                var values = queryContext.AddData();
+                values.Add((DateTimeOffset)date);
                 values.Add(settings.Network.CryptoCode);
                 values.Add((string)r.tx_id);
                 values.Add(null);

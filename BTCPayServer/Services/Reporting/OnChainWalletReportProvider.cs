@@ -78,7 +78,7 @@ public class OnChainWalletReportProvider : ReportProvider
             var walletId = new WalletId(store.Id, settings.Network.CryptoCode);
             var command = new CommandDefinition(
             commandText:
-            "SELECT r.tx_id, r.seen_at, t.blk_id, t.blk_height, r.balance_change " +
+            "SELECT r.tx_id, r.seen_at, t.blk_id, t.blk_height, r.balance_change, r.asset_id " +
             "FROM get_wallets_recent(@wallet_id, @code, @interval, NULL, NULL) r " +
             "JOIN txs t USING (code, tx_id) " +
             "ORDER BY r.seen_at",
@@ -98,6 +98,23 @@ public class OnChainWalletReportProvider : ReportProvider
                     continue;
                 var values = queryContext.AddData();
                 values.Add((DateTimeOffset)date);
+#if ALTCOINS
+                if (settings.Network is ElementsBTCPayNetwork elementsBTCPayNetwork)
+                {
+                    var assetId = (string?)r.asset_id;
+                    // if this is an asset scheme, check if the asset id is the same as the network asset id
+                    if (elementsBTCPayNetwork.CryptoCode != elementsBTCPayNetwork.NetworkCryptoCode &&
+                        assetId is not null && assetId != elementsBTCPayNetwork.AssetId?.ToString())
+                    {
+                        continue;
+                    }
+                    else if (elementsBTCPayNetwork.CryptoCode == elementsBTCPayNetwork.NetworkCryptoCode &&
+                             !(assetId is null || assetId == elementsBTCPayNetwork.AssetId?.ToString()))
+                    {
+                        continue;
+                    }
+                }
+#endif
                 values.Add(settings.Network.CryptoCode);
                 values.Add((string)r.tx_id);
                 values.Add(null);

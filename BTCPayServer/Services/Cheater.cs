@@ -1,8 +1,10 @@
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Services.Invoices;
 using Microsoft.Extensions.Hosting;
+using NBitcoin;
 using NBitcoin.RPC;
 
 namespace BTCPayServer.Services
@@ -32,10 +34,27 @@ namespace BTCPayServer.Services
             await _invoiceRepository.UpdateInvoiceExpiry(invoiceId, seconds);
         }
 
-        Task IHostedService.StartAsync(CancellationToken cancellationToken)
+        async Task IHostedService.StartAsync(CancellationToken cancellationToken)
         {
             _ = CashCow?.ScanRPCCapabilitiesAsync(cancellationToken);
-            return Task.CompletedTask;
+#if ALTCOINS
+            var liquid = _prov.GetNetwork("LBTC");
+            if (liquid is not null)
+            {
+                var lbtcrpc = GetCashCow(liquid.CryptoCode);
+                await lbtcrpc.SendCommandAsync("rescanblockchain");
+                var elements = _prov.NetworkProviders.GetAll().OfType<ElementsBTCPayNetwork>();
+                foreach (ElementsBTCPayNetwork element in elements)
+                {
+                    if (element.AssetId is null)
+                    {
+                        var issueAssetResult = await lbtcrpc.SendCommandAsync("issueasset", 100000, 0);
+                        element.AssetId = uint256.Parse(issueAssetResult.Result["asset"].ToString());
+                    }
+                }
+            }
+            
+#endif
         }
 
         Task IHostedService.StopAsync(CancellationToken cancellationToken)

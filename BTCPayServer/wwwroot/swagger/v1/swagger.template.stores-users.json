@@ -133,7 +133,7 @@
                         }
                     },
                     {
-                        "name": "userId",
+                        "name": "idOrEmail",
                         "in": "path",
                         "required": true,
                         "description": "The user's id or email",

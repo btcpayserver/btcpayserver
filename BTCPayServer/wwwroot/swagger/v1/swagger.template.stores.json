@@ -477,8 +477,12 @@
                     },
                     "receipt": {
                         "nullable": true,
-                        "$ref": "#/components/schemas/ReceiptOptions",
-                        "description": "Additional settings to customize the public receipt"
+                        "description": "Additional settings to customize the public receipt",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ReceiptOptions"
+                            }
+                        ]
                     },
                     "lightningAmountInSatoshi": {
                         "type": "boolean",

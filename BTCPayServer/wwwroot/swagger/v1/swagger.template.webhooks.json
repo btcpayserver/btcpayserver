@@ -790,7 +790,11 @@
                             },
                             "payment": {
                                 "description": "Details about the payment",
-                                "$ref": "#/components/schemas/Payment"
+                                "allOf": [
+                                    {
+                                        "$ref": "#/components/schemas/Payment"
+                                    }
+                                ]
                             }
                         }
                     }

@@ -1107,7 +1107,7 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("Title")).SendKeys("Kukkstarter");
             s.Driver.FindElement(By.CssSelector("div.note-editable.card-block")).SendKeys("1BTC = 1BTC");
             s.Driver.FindElement(By.Id("TargetCurrency")).Clear();
-            s.Driver.FindElement(By.Id("TargetCurrency")).SendKeys("JPY");
+            s.Driver.FindElement(By.Id("TargetCurrency")).SendKeys("EUR");
             s.Driver.FindElement(By.Id("TargetAmount")).SendKeys("700");
 
             // test wrong dates
@@ -1122,7 +1122,8 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("SaveSettings")).Click();
             Assert.Contains("App updated", s.FindAlertMessage().Text);
             var appId = s.Driver.Url.Split('/')[4];
-
+            
+            // CHeck public page
             s.Driver.FindElement(By.Id("ViewApp")).Click();
             var windows = s.Driver.WindowHandles;
             Assert.Equal(2, windows.Count);
@@ -1132,6 +1133,26 @@ namespace BTCPayServer.Tests
             Assert.Equal("Currently active!",
                 s.Driver.FindElement(By.CssSelector("[data-test='time-state']")).Text);
 
+            // Contribute
+            s.Driver.FindElement(By.Id("crowdfund-body-header-cta")).Click();
+            Thread.Sleep(1000);
+            s.Driver.WaitUntilAvailable(By.Name("btcpay"));
+
+            var frameElement = s.Driver.FindElement(By.Name("btcpay"));
+            Assert.True(frameElement.Displayed);
+            var iframe = s.Driver.SwitchTo().Frame(frameElement);
+            iframe.WaitUntilAvailable(By.Id("Checkout-v2"));
+
+            IWebElement closebutton = null;
+            TestUtils.Eventually(() =>
+            {
+                closebutton = iframe.FindElement(By.Id("close"));
+                Assert.True(closebutton.Displayed);
+            });
+            closebutton.Click();
+            s.Driver.AssertElementNotFound(By.Name("btcpay"));
+            
+            // Back to admin view
             s.Driver.Close();
             s.Driver.SwitchTo().Window(windows[0]);
             

@@ -59,7 +59,7 @@
         <h5>On-Chain Payments</h5>
         <div class="invoice-payments table-responsive mt-0">
             <table class="table table-hover mb-0">
-                <thead class="thead-inverse">
+                <thead>
                 <tr>
                     <th class="w-75px">Crypto</th>
                     <th class="w-100px">Index</th>
@@ -75,7 +75,7 @@
                         </th>
                     }
                     <th class="text-end">Confirmations</th>
-                    <th class="w-150px text-end">Amount</th>
+                    <th class="w-150px text-end">Paid</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -96,7 +96,7 @@
                         }
                         <td class="text-end">@payment.Confirmations</td>
                         <td class="payment-value text-end text-nowrap">
-                            <span data-sensitive>@DisplayFormatter.Currency(payment.CryptoPaymentData.GetValue(), payment.Crypto)</span>
+                            <span data-sensitive class="text-success">@DisplayFormatter.Currency(payment.CryptoPaymentData.GetValue(), payment.Crypto)</span>
                             @if (!string.IsNullOrEmpty(payment.AdditionalInformation))
                             {
                                 <div>(@payment.AdditionalInformation)</div>

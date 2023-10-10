@@ -76,7 +76,7 @@ hr.primary {
 
 @media (min-width: 1400px) {
     .col-xxl-constrain {
-        max-width: 800px;
+        max-width: 984px;
     }
 }
 

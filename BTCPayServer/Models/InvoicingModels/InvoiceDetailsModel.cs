@@ -41,6 +41,7 @@ namespace BTCPayServer.Models.InvoicingModels
         public class CryptoPayment
         {
             public string PaymentMethod { get; set; }
+            public string TotalDue { get; set; }
             public string Due { get; set; }
             public string Paid { get; set; }
             public string Address { get; internal set; }
@@ -137,5 +138,7 @@ namespace BTCPayServer.Models.InvoicingModels
         public bool ShowReceipt { get; set; }
         public bool Overpaid { get; set; }
         public bool HasRefund { get; set; }
+        public bool StillDue { get; set; }
+        public bool HasRates { get; set; }
     }
 }

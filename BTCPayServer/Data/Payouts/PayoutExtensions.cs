@@ -37,16 +37,9 @@ namespace BTCPayServer.Data
         {
             var ppBlob = data.PullPaymentData?.GetBlob();
             var payoutBlob = data.GetBlob(jsonSerializerSettings);
-            string payoutSource;
-            if (payoutBlob.Metadata?.TryGetValue("source", StringComparison.InvariantCultureIgnoreCase,
-                    out var source) is true)
-            {
-                return source.Value<string>();
-            }
-            else
-            {
-                return ppBlob?.Name ?? data.PullPaymentDataId;
-            }
+            return payoutBlob.Metadata?.TryGetValue("source", StringComparison.InvariantCultureIgnoreCase, out var source) is true
+                ? source.Value<string>()
+                : ppBlob?.Name ?? data.PullPaymentDataId;
         }
 
         public static PayoutBlob GetBlob(this PayoutData data, BTCPayNetworkJsonSerializerSettings serializers)

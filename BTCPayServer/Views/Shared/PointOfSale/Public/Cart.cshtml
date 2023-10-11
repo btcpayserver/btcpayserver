@@ -39,11 +39,13 @@
                     </button>
                 </div>
                 <input id="SearchTerm" class="form-control rounded-pill" placeholder="Search…" v-model="searchTerm">
-                <div v-if="allCategories" class="btcpay-pills d-flex flex-wrap align-items-center justify-content-center gap-3">
-                    <template v-for="cat in allCategories">
-                        <input :id="`Category-${cat.value}`" type="radio" name="category" autocomplete="off" v-model="displayCategory" :value="cat.value">
-                        <label :for="`Category-${cat.value}`" class="btcpay-pill">{{ cat.text }}</label>
-                    </template>
+                <div id="Categories" ref="categories" v-if="allCategories" :class="{ 'scrollable': categoriesScrollable }">
+                    <nav class="btcpay-pills d-flex align-items-center gap-3" ref="categoriesNav">
+                        <template v-for="cat in allCategories">
+                            <input :id="`Category-${cat.value}`" type="radio" name="category" autocomplete="off" v-model="displayCategory" :value="cat.value">
+                            <label :for="`Category-${cat.value}`" class="btcpay-pill text-nowrap">{{ cat.text }}</label>
+                        </template>
+                    </nav>
                 </div>
             </header>
             <main>

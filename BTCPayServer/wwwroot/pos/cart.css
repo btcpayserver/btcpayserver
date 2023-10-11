@@ -17,6 +17,48 @@
     transition-duration: var(--btcpay-transition-duration-fast);
 }
 
+#Categories nav {
+    justify-content: center;
+}
+#Categories.scrollable {
+    --scroll-bar-spacing: var(--btcpay-space-m);
+    --scroll-indicator-spacing: var(--btcpay-space-m);
+    position: relative;
+    margin-bottom: calc(var(--scroll-bar-spacing) * -1);
+}
+#Categories.scrollable nav {
+    justify-content: start;
+    overflow: auto visible;
+    -webkit-overflow-scrolling: touch;
+    margin-left: calc(var(--scroll-indicator-spacing) * -1);
+    margin-right: calc(var(--scroll-indicator-spacing) * -1);
+    padding: 0 var(--scroll-indicator-spacing) var(--scroll-bar-spacing);
+}
+
+#Categories.scrollable nav::-webkit-scrollbar {
+    display: none;
+}
+
+/* Horizontal scroll indicators */
+#Categories.scrollable:before,
+#Categories.scrollable:after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: var(--btcpay-space-m);
+}
+
+#Categories.scrollable:before {
+    background-image: linear-gradient(to right, var(--btcpay-body-bg), rgba(var(--btcpay-body-bg-rgb), 0));
+    left: calc(var(--scroll-indicator-spacing) * -1);
+}
+
+#Categories.scrollable:after {
+    background-image: linear-gradient(to left, var(--btcpay-body-bg), rgba(var(--btcpay-body-bg-rgb), 0));
+    right: calc(var(--scroll-indicator-spacing) * -1);
+}
+
 .cart-toggle-btn {
     --button-width: 40px;
     --button-height: 40px;

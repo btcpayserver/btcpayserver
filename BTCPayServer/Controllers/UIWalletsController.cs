@@ -383,10 +383,18 @@ namespace BTCPayServer.Controllers
         private async Task SendFreeMoney(Cheater cheater, WalletId walletId, DerivationSchemeSettings paymentMethod)
         {
             var c = this.ExplorerClientProvider.GetExplorerClient(walletId.CryptoCode);
+            var cashCow = cheater.GetCashCow(walletId.CryptoCode);
+#if ALTCOINS
+            if (walletId.CryptoCode == "LBTC")
+            {
+                await cashCow.SendCommandAsync("rescanblockchain");
+            }
+#endif
             var addresses = Enumerable.Range(0, 200).Select(_ => c.GetUnusedAsync(paymentMethod.AccountDerivation, DerivationFeature.Deposit, reserve: true)).ToArray();
+            
             await Task.WhenAll(addresses);
-            await cheater.CashCow.GenerateAsync(addresses.Length / 8);
-            var b = cheater.CashCow.PrepareBatch();
+            await cashCow.GenerateAsync(addresses.Length / 8);
+            var b = cashCow.PrepareBatch();
             Random r = new Random();
             List<Task<uint256>> sending = new List<Task<uint256>>();
             foreach (var a in addresses)
@@ -394,7 +402,7 @@ namespace BTCPayServer.Controllers
                 sending.Add(b.SendToAddressAsync((await a).Address, Money.Coins(0.1m) + Money.Satoshis(r.Next(0, 90_000_000))));
             }
             await b.SendBatchAsync();
-            await cheater.CashCow.GenerateAsync(1);
+            await cashCow.GenerateAsync(1);
 
             var factory = ServiceProvider.GetRequiredService<NBXplorerConnectionFactory>();
 

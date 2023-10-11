@@ -129,7 +129,16 @@ document.addEventListener("DOMContentLoaded", () => {
     updateUIDateRange();
     app = new Vue({
         el: '#app',
-        data() { return { srv } }
+        data() { return { srv } },
+        methods: {
+            titleCase(str) {
+                const result = str.replace(/([A-Z])/g, " $1");
+                return result.charAt(0).toUpperCase() + result.slice(1);
+            },
+            displayValue(val) {
+                return val && typeof (val) === "object" && val.d ? new Decimal(val.v).toFixed(val.d) : val;
+            }
+        }
     });
     fetchStoreReports();
 });
@@ -141,11 +150,14 @@ function updateUIDateRange() {
 
 // This function modify all the fields of a given type
 function modifyFields(fields, data, type, action) {
-    var fieldIndices = fields.map((f, i) => ({ i: i, type: f.type })).filter(f => f.type == type).map(f => f.i);
+    const fieldIndices = fields
+        .map((f, i) => ({ i: i, type: f.type }))
+        .filter(f => f.type === type)
+        .map(f => f.i);
     if (fieldIndices.length === 0)
         return;
-    for (var i = 0; i < data.length; i++) {
-        for (var f = 0; f < fieldIndices.length; f++) {
+    for (let i = 0; i < data.length; i++) {
+        for (let f = 0; f < fieldIndices.length; f++) {
             data[i][fieldIndices[f]] = action(data[i][fieldIndices[f]]);
         }
     }

@@ -19,6 +19,7 @@ public class OnChainWalletReportProvider : ReportProvider
     public OnChainWalletReportProvider(
         NBXplorerConnectionFactory NbxplorerConnectionFactory,
         StoreRepository storeRepository,
+        DisplayFormatter displayFormatter,
         BTCPayNetworkProvider networkProvider,
         WalletRepository walletRepository)
     {
@@ -26,43 +27,45 @@ public class OnChainWalletReportProvider : ReportProvider
         StoreRepository = storeRepository;
         NetworkProvider = networkProvider;
         WalletRepository = walletRepository;
+        _displayFormatter = displayFormatter;
     }
-    public NBXplorerConnectionFactory NbxplorerConnectionFactory { get; }
-    public StoreRepository StoreRepository { get; }
-    public BTCPayNetworkProvider NetworkProvider { get; }
-    public WalletRepository WalletRepository { get; }
+
+    private readonly DisplayFormatter _displayFormatter;
+    private NBXplorerConnectionFactory NbxplorerConnectionFactory { get; }
+    private StoreRepository StoreRepository { get; }
+    private BTCPayNetworkProvider NetworkProvider { get; }
+    private WalletRepository WalletRepository { get; }
     public override string Name => "On-Chain Wallets";
     ViewDefinition CreateViewDefinition()
     {
-        return
-            new()
+        return new()
+        {
+            Fields =
             {
-                Fields =
+                new ("Date", "datetime"),
+                new ("Crypto", "string"),
+                // For proper rendering of explorer links, Crypto should always be before tx_id
+                new ("TransactionId", "tx_id"),
+                new ("InvoiceId", "invoice_id"),
+                new ("Confirmed", "boolean"),
+                new ("BalanceChange", "amount")
+            },
+            Charts =
+            {
+                new ()
                 {
-                        new ("Date", "datetime"),
-                        new ("Crypto", "string"),
-                        // For proper rendering of explorer links, Crypto should always be before tx_id
-                        new ("TransactionId", "tx_id"),
-                        new ("InvoiceId", "invoice_id"),
-                        new ("Confirmed", "boolean"),
-                        new ("BalanceChange", "decimal")
-                },
-                Charts =
-                {
-                    new ()
-                    {
-                        Name = "Group by Crypto",
-                        Totals = { "Crypto" },
-                        Groups = { "Crypto", "Confirmed" },
-                        Aggregates = { "BalanceChange" }
-                    }
+                    Name = "Group by Crypto",
+                    Totals = { "Crypto" },
+                    Groups = { "Crypto", "Confirmed" },
+                    Aggregates = { "BalanceChange" }
                 }
-            };
+            }
+        };
     }
 
     public override bool IsAvailable()
     {
-        return this.NbxplorerConnectionFactory.Available;
+        return NbxplorerConnectionFactory.Available;
     }
 
     public override async Task Query(QueryContext queryContext, CancellationToken cancellation)
@@ -79,14 +82,15 @@ public class OnChainWalletReportProvider : ReportProvider
             var command = new CommandDefinition(
             commandText:
             "SELECT r.tx_id, r.seen_at, t.blk_id, t.blk_height, r.balance_change " +
-            "FROM get_wallets_recent(@wallet_id, @code, @interval, NULL, NULL) r " +
+            "FROM get_wallets_recent(@wallet_id, @code, @asset_id, @interval, NULL, NULL) r " +
             "JOIN txs t USING (code, tx_id) " +
             "ORDER BY r.seen_at",
             parameters: new
             {
+                asset_id = GetAssetId(settings.Network),
                 wallet_id = NBXplorer.Client.DBUtils.nbxv1_get_wallet_id(settings.Network.CryptoCode, settings.AccountDerivation.ToString()),
                 code = settings.Network.CryptoCode,
-                interval = interval
+                interval
             },
             cancellationToken: cancellation);
 
@@ -97,14 +101,15 @@ public class OnChainWalletReportProvider : ReportProvider
                 if (date > queryContext.To)
                     continue;
                 var values = queryContext.AddData();
-                values.Add((DateTimeOffset)date);
+                var balanceChange = Money.Satoshis((long)r.balance_change).ToDecimal(MoneyUnit.BTC);
+                values.Add(date);
                 values.Add(settings.Network.CryptoCode);
                 values.Add((string)r.tx_id);
                 values.Add(null);
                 values.Add((long?)r.blk_height is not null);
-                values.Add(Money.Satoshis((long)r.balance_change).ToDecimal(MoneyUnit.BTC));
+                values.Add(new FormattedAmount(balanceChange, settings.Network.Divisibility).ToJObject());
             }
-            var objects = await WalletRepository.GetWalletObjects(new GetWalletObjectsQuery()
+            var objects = await WalletRepository.GetWalletObjects(new GetWalletObjectsQuery
             {
                 Ids = queryContext.Data.Select(d => (string)d[2]!).ToArray(),
                 WalletId = walletId,
@@ -118,5 +123,18 @@ public class OnChainWalletReportProvider : ReportProvider
                 row[3] = invoiceId;
             }
         }
+    }
+
+    private string? GetAssetId(BTCPayNetwork network)
+    {
+#if ALTCOINS
+        if (network is ElementsBTCPayNetwork elNetwork)
+        {
+            if (elNetwork.CryptoCode == elNetwork.NetworkCryptoCode)
+                return "";
+            return elNetwork.AssetId.ToString();
+        }
+#endif
+        return null;
     }
 }

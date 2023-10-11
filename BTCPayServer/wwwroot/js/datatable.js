@@ -1,11 +1,11 @@
 (function () {
     // Given sorted data, build a tabular data of given groups and aggregates.
     function groupBy(groupIndices, aggregatesIndices, data) {
-        var summaryRows = [];
-        var summaryRow = null;
-        for (var i = 0; i < data.length; i++) {
+        const summaryRows = [];
+        let summaryRow = null;
+        for (let i = 0; i < data.length; i++) {
             if (summaryRow) {
-                for (var gi = 0; gi < groupIndices.length; gi++) {
+                for (let gi = 0; gi < groupIndices.length; gi++) {
                     if (summaryRow[gi] !== data[i][groupIndices[gi]]) {
                         summaryRows.push(summaryRow);
                         summaryRow = null;
@@ -15,16 +15,28 @@
             }
             if (!summaryRow) {
                 summaryRow = new Array(groupIndices.length + aggregatesIndices.length);
-                for (var gi = 0; gi < groupIndices.length; gi++) {
+                for (let gi = 0; gi < groupIndices.length; gi++) {
                     summaryRow[gi] = data[i][groupIndices[gi]];
                 }
-                summaryRow.fill(0, groupIndices.length);
+                summaryRow.fill(new Decimal(0), groupIndices.length);
             }
-            for (var ai = 0; ai < aggregatesIndices.length; ai++) {
-                var v = data[i][aggregatesIndices[ai]];
+            for (let ai = 0; ai < aggregatesIndices.length; ai++) {
+                const v = data[i][aggregatesIndices[ai]];
                 // TODO: support other aggregate functions
-                if (v)
-                    summaryRow[groupIndices.length + ai] += v;
+                if (typeof (v) === 'object' && v.v) {
+                    // Amount in the format of `{ v: "1.0000001", d: 8 }`, where v is decimal string and `d` is divisibility
+                    const val = new Decimal(v.v)
+                    const agg = summaryRow[groupIndices.length + ai];
+                    const aggVal = typeof(agg) === 'object' && agg.v ? new Decimal(agg.v) : agg;
+                    const res = aggVal.plus(val);
+                    summaryRow[groupIndices.length + ai] = Object.assign({}, v, {
+                        v: res,
+                        d: v.d
+                    });
+                } else {
+                    const val = new Decimal(v);
+                    summaryRow[groupIndices.length + ai] = summaryRow[groupIndices.length + ai].plus(val);
+                }
             }
         }
         if (summaryRow) {
@@ -36,15 +48,12 @@
     // Sort tabular data by the column indices
     function byColumns(columnIndices) {
         return (a, b) => {
-            for (var i = 0; i < columnIndices.length; i++) {
-                var fieldIndex = columnIndices[i];
+            for (let i = 0; i < columnIndices.length; i++) {
+                const fieldIndex = columnIndices[i];
                 if (!a[fieldIndex]) return 1;
                 if (!b[fieldIndex]) return -1;
-
-                if (a[fieldIndex] < b[fieldIndex])
-                    return -1;
-                if (a[fieldIndex] > b[fieldIndex])
-                    return 1;
+                if (a[fieldIndex] < b[fieldIndex]) return -1;
+                if (a[fieldIndex] > b[fieldIndex]) return 1;
             }
             return 0;
         }
@@ -53,23 +62,22 @@
     // Build a representation of the HTML table's data 'rows' from the tree of nodes.
     function buildRows(node, rows) {
         if (node.children.length === 0 && node.level !== 0) {
-            var row =
+            const row =
             {
                 values: node.values,
                 groups: [],
                 isTotal: node.isTotal,
                 rLevel: node.rLevel
             };
-            // Round the nuber to 8 decimal to avoid weird decimal outputs
-            for (var i = 0; i < row.values.length; i++) {
-                if (typeof row.values[i] === 'number')
-                    row.values[i] = new Number(row.values[i].toFixed(8));
+            for (let i = 0; i < row.values.length; i++) {
+                if (typeof row.values[i] === 'number') {
+                    row.values[i] = new Decimal(row.values[i]);
+                }
             }
             if (!node.isTotal)
                 row.groups.push({ name: node.groups[node.groups.length - 1], rowCount: node.leafCount })
-            var parent = node.parent;
-            var n = node;
-            while (parent && parent.level != 0 && parent.children[0] === n) {
+            let parent = node.parent, n = node;
+            while (parent && parent.level !== 0 && parent.children[0] === n) {
                 row.groups.push({ name: parent.groups[parent.groups.length - 1], rowCount: parent.leafCount })
                 n = parent;
                 parent = parent.parent;
@@ -77,7 +85,7 @@
             row.groups.reverse();
             rows.push(row);
         }
-        for (var i = 0; i < node.children.length; i++) {
+        for (let i = 0; i < node.children.length; i++) {
             buildRows(node.children[i], rows);
         }
     }
@@ -90,12 +98,12 @@
             node.leafCount++;
             return;
         }
-        for (var i = 0; i < node.children.length; i++) {
+        for (let i = 0; i < node.children.length; i++) {
             visitTree(node.children[i]);
             node.leafCount += node.children[i].leafCount;
         }
         // Remove total if there is only one child outside of the total
-        if (node.children.length == 2 && node.children[0].isTotal) {
+        if (node.children.length === 2 && node.children[0].isTotal) {
             node.children.shift();
             node.leafCount--;
         }
@@ -114,12 +122,12 @@
                 isTotal: true
             });
         }
-        for (var i = 0; i < groupLevels[level].length; i++) {
-            var foundFirst = false;
-            var groupData = groupLevels[level][i];
-            var gotoNextRow = false;
-            var stop = false;
-            for (var gi = 0; gi < parent.groups.length; gi++) {
+        for (let i = 0; i < groupLevels[level].length; i++) {
+            let foundFirst = false;
+            let groupData = groupLevels[level][i];
+            let gotoNextRow = false;
+            let stop = false;
+            for (let gi = 0; gi < parent.groups.length; gi++) {
                 if (parent.groups[gi] !== groupData[gi]) {
                     if (foundFirst) {
                         stop = true;
@@ -135,7 +143,7 @@
                 break;
             if (gotoNextRow)
                 continue;
-            var node =
+            const node =
             {
                 parent: parent,
                 groups: groupData.slice(0, level),
@@ -179,7 +187,6 @@
         var groupIndices = summaryDefinition.groups.map(g => fields.findIndex((a) => a === g)).filter(g => g !== -1);
         var aggregatesIndices = summaryDefinition.aggregates.map(g => fields.findIndex((a) => a === g)).filter(g => g !== -1);
         aggregatesIndices = aggregatesIndices.filter(g => g !== -1);
-
         // Filter rows
         rows = applyFilters(rows, fields, summaryDefinition.filters);
 
@@ -189,7 +196,6 @@
         // Group data represent tabular data of all the groups and aggregates given the data.
         // [Region, Crypto, PaymentType]
         var groupRows = groupBy(groupIndices, aggregatesIndices, rows);
-
 
         // There will be several level of aggregation
         // For example, if you have 3 groups: [Region, Crypto, PaymentType] then you have 4 group data.
@@ -238,10 +244,8 @@
             // rlevel is the reverse. It starts from the highest level and goes down to 0
             rLevel: groupLevels.length
         };
-
-
         // Which levels will have a total row
-        var totalLevels = [];
+        let totalLevels = [];
         if (summaryDefinition.totals) {
             totalLevels = summaryDefinition.totals.map(g => summaryDefinition.groups.findIndex((a) => a === g) + 1).filter(a => a !== 0);
         }
@@ -251,10 +255,9 @@
         // Add a leafCount property to each node, it is the number of leaf below each nodes.
         visitTree(root);
 
-        // Create a representation that can easily be binded to VueJS
+        // Create a representation that can easily be bound to VueJS
         var rows = [];
         buildRows(root, rows);
-
         return {
             groups: summaryDefinition.groups,
             aggregates: summaryDefinition.aggregates,

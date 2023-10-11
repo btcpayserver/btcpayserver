@@ -386,11 +386,11 @@ namespace BTCPayServer.Tests
                 var newBolt11 = newInvoice.CryptoInfo.First(o => o.PaymentUrls.BOLT11 != null).PaymentUrls.BOLT11;
                 var oldBolt11 = invoice.CryptoInfo.First(o => o.PaymentUrls.BOLT11 != null).PaymentUrls.BOLT11;
                 Assert.NotEqual(newBolt11, oldBolt11);
-                Assert.Equal(newInvoice.BtcDue.GetValue(),
+                Assert.Equal(newInvoice.BtcDue.ToDecimal(MoneyUnit.BTC),
                     BOLT11PaymentRequest.Parse(newBolt11, Network.RegTest).MinimumAmount.ToDecimal(LightMoneyUnit.BTC));
             }, 40000);
 
-            TestLogs.LogInformation($"Paying invoice {newInvoice.Id} remaining due amount {newInvoice.BtcDue.GetValue()} via lightning");
+            TestLogs.LogInformation($"Paying invoice {newInvoice.Id} remaining due amount {newInvoice.BtcDue.GetValue((BTCPayNetwork) tester.DefaultNetwork)} via lightning");
             var evt = await tester.WaitForEvent<InvoiceDataChangedEvent>(async () =>
             {
                 await tester.SendLightningPaymentAsync(newInvoice);
@@ -2886,7 +2886,7 @@ namespace BTCPayServer.Tests
             var balanceIndex = report.GetIndex("BalanceChange");
             Assert.Equal(2, report.Data.Count);
             Assert.Equal(64, report.Data[0][txIdIndex].Value<string>().Length);
-            Assert.Contains(report.Data, d => d[balanceIndex].Value<decimal>() == 1.0m);
+            Assert.Contains(report.Data, d => d[balanceIndex]["v"].Value<decimal>() == 1.0m);
 
             // Items sold
             report = await GetReport(acc, new() { ViewName = "Products sold" });

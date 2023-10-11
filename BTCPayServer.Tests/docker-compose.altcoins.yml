@@ -99,7 +99,7 @@ services:
       custom:
 
   nbxplorer:
-    image: nicolasdorier/nbxplorer:2.3.63
+    image: nicolasdorier/nbxplorer:2.3.66
     restart: unless-stopped
     ports:
       - "32838:32838"
@@ -307,7 +307,7 @@ services:
         - "torrcdir:/usr/local/etc/tor"
         - "tor_servicesdir:/var/lib/tor/hidden_services"
   monerod:
-        image: btcpayserver/monero:0.17.0.0-amd64
+        image: btcpayserver/monero:0.18.2.2-5
         restart: unless-stopped
         container_name: xmr_monerod
         entrypoint: sleep 999999
@@ -317,7 +317,7 @@ services:
         ports:
             - "18081:18081"
   monero_wallet:
-      image: btcpayserver/monero:0.17.0.0-amd64
+      image: btcpayserver/monero:0.18.2.2-5
       restart: unless-stopped
       container_name: xmr_wallet_rpc
       entrypoint: monero-wallet-rpc --testnet --rpc-bind-ip=0.0.0.0 --disable-rpc-login --confirm-external-bind --rpc-bind-port=18082 --non-interactive --trusted-daemon  --daemon-address=monerod:18081 --wallet-file=/wallet/wallet.keys --password-file=/wallet/password --tx-notify="/bin/sh ./scripts/notifier.sh -k -X GET https://host.docker.internal:14142/monerolikedaemoncallback/tx?cryptoCode=xmr&hash=%s"
@@ -349,7 +349,7 @@ services:
   elementsd-liquid:
       restart: always
       container_name: btcpayserver_elementsd_liquid
-      image: btcpayserver/elements:0.21.0.1
+      image: btcpayserver/elements:0.21.0.2-4
       environment:
           ELEMENTS_CHAIN: elementsregtest
           ELEMENTS_EXTRA_ARGS: |
@@ -364,11 +364,9 @@ services:
               whitelist=0.0.0.0/0
               rpcallowip=0.0.0.0/0
               validatepegin=0
-              initialfreecoins=210000000000000
+              initialfreecoins=2100000000000000
               con_dyna_deploy_signal=1
-              con_dyna_deploy_start=0
-              con_nminerconfirmationwindow=1
-              con_nrulechangeactivationthreshold=1
+              con_dyna_deploy_start=10
       expose:
           - "19332"
           - "19444"

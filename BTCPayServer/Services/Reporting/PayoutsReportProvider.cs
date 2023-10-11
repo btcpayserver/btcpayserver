@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,13 +9,18 @@ using BTCPayServer.Payments;
 
 namespace BTCPayServer.Services.Reporting;
 
-public class PayoutsReportProvider:ReportProvider
+public class PayoutsReportProvider : ReportProvider
 {
     private readonly PullPaymentHostedService _pullPaymentHostedService;
     private readonly BTCPayNetworkJsonSerializerSettings _btcPayNetworkJsonSerializerSettings;
+    private readonly DisplayFormatter _displayFormatter;
 
-    public PayoutsReportProvider(PullPaymentHostedService pullPaymentHostedService, BTCPayNetworkJsonSerializerSettings btcPayNetworkJsonSerializerSettings)
+    public PayoutsReportProvider(
+        PullPaymentHostedService pullPaymentHostedService,
+        DisplayFormatter displayFormatter,
+        BTCPayNetworkJsonSerializerSettings btcPayNetworkJsonSerializerSettings)
     {
+        _displayFormatter = displayFormatter;
         _pullPaymentHostedService = pullPaymentHostedService;
         _btcPayNetworkJsonSerializerSettings = btcPayNetworkJsonSerializerSettings;
     }
@@ -51,32 +56,32 @@ public class PayoutsReportProvider:ReportProvider
             }
             else
                 continue;
-            data.Add(paymentType.CryptoCode);
-            data.Add(blob.CryptoAmount);
+
             var ppBlob = payout.PullPaymentData?.GetBlob();
-            data.Add(ppBlob?.Currency??paymentType.CryptoCode);
-            data.Add(blob.Amount);
+            var currency = ppBlob?.Currency ?? paymentType.CryptoCode;
+            data.Add(paymentType.CryptoCode);
+            data.Add(blob.CryptoAmount.HasValue ? _displayFormatter.ToFormattedAmount(blob.CryptoAmount.Value, paymentType.CryptoCode) : null);
+            data.Add(currency);
+            data.Add(_displayFormatter.ToFormattedAmount(blob.Amount, currency));
             data.Add(blob.Destination);
             queryContext.Data.Add(data);
         }
-        
-        
     }
 
     private ViewDefinition CreateDefinition()
     {
-        return new ViewDefinition()
+        return new ViewDefinition
         {
-            Fields = new List<StoreReportResponse.Field>()
+            Fields = new List<StoreReportResponse.Field>
             {
                 new("Date", "datetime"),
                 new("Source", "string"),
                 new("State", "string"),
                 new("PaymentType", "string"),
                 new("Crypto", "string"),
-                new("CryptoAmount", "decimal"),
+                new("CryptoAmount", "amount"),
                 new("Currency", "string"),
-                new("CurrencyAmount", "decimal"),
+                new("CurrencyAmount", "amount"),
                 new("Destination", "string")
             },
             Charts =
@@ -88,14 +93,16 @@ public class PayoutsReportProvider:ReportProvider
                     Totals = { "Crypto" },
                     HasGrandTotal = false,
                     Aggregates = { "CryptoAmount" }
-                },new ()
+                },
+                new ()
                 {
                     Name = "Aggregated amount",
                     Groups = { "Currency", "State" },
                     Totals = { "CurrencyAmount" },
                     HasGrandTotal = false,
                     Aggregates = { "CurrencyAmount" }
-                },new ()
+                },
+                new ()
                 {
                     Name = "Aggregated amount by Source",
                     Groups = { "Currency", "State", "Source" },

@@ -1,14 +1,17 @@
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Services.Invoices;
 using Microsoft.Extensions.Hosting;
+using NBitcoin;
 using NBitcoin.RPC;
 
 namespace BTCPayServer.Services
 {
     public class Cheater : IHostedService
     {
+        private readonly ExplorerClientProvider _prov;
         private readonly InvoiceRepository _invoiceRepository;
         public RPCClient CashCow { get; set; }
 
@@ -17,7 +20,13 @@ namespace BTCPayServer.Services
             InvoiceRepository invoiceRepository)
         {
             CashCow = prov.GetExplorerClient("BTC")?.RPCClient;
+            _prov = prov;
             _invoiceRepository = invoiceRepository;
+        }
+
+        public RPCClient GetCashCow(string cryptoCode)
+        {
+            return _prov.GetExplorerClient(cryptoCode)?.RPCClient;
         }
 
         public async Task UpdateInvoiceExpiry(string invoiceId, TimeSpan seconds)
@@ -25,10 +34,33 @@ namespace BTCPayServer.Services
             await _invoiceRepository.UpdateInvoiceExpiry(invoiceId, seconds);
         }
 
-        Task IHostedService.StartAsync(CancellationToken cancellationToken)
+        async Task IHostedService.StartAsync(CancellationToken cancellationToken)
         {
             _ = CashCow?.ScanRPCCapabilitiesAsync(cancellationToken);
-            return Task.CompletedTask;
+#if ALTCOINS
+            var liquid = _prov.GetNetwork("LBTC");
+            if (liquid is not null)
+            {
+                var lbtcrpc = GetCashCow(liquid.CryptoCode);
+                await lbtcrpc.SendCommandAsync("rescanblockchain");
+                var elements = _prov.NetworkProviders.GetAll().OfType<ElementsBTCPayNetwork>();
+                foreach (ElementsBTCPayNetwork element in elements)
+                {
+                    try
+                    {
+                        if (element.AssetId is null)
+                        {
+                            var issueAssetResult = await lbtcrpc.SendCommandAsync("issueasset", 100000, 0);
+                            element.AssetId = uint256.Parse(issueAssetResult.Result["asset"].ToString());
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                    }
+                }
+            }
+
+#endif
         }
 
         Task IHostedService.StopAsync(CancellationToken cancellationToken)

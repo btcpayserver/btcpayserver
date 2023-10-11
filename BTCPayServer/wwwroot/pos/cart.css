@@ -3,7 +3,13 @@
 }
 
 #PosCart .public-page-wrap {
-    padding: 0 0 var(--btcpay-space-l);
+    padding-top: 0;
+}
+@media (max-width: 400px) {
+    #PosCart .public-page-wrap {
+        padding-left: var(--btcpay-space-s);
+        padding-right: var(--btcpay-space-s);
+    }
 }
 
 #PosCart .offcanvas-backdrop {

@@ -26,7 +26,7 @@ namespace BTCPayServer.Services
 
         public RPCClient GetCashCow(string cryptoCode)
         {
-            return  _prov.GetExplorerClient(cryptoCode)?.RPCClient;
+            return _prov.GetExplorerClient(cryptoCode)?.RPCClient;
         }
 
         public async Task UpdateInvoiceExpiry(string invoiceId, TimeSpan seconds)
@@ -46,14 +46,20 @@ namespace BTCPayServer.Services
                 var elements = _prov.NetworkProviders.GetAll().OfType<ElementsBTCPayNetwork>();
                 foreach (ElementsBTCPayNetwork element in elements)
                 {
-                    if (element.AssetId is null)
+                    try
                     {
-                        var issueAssetResult = await lbtcrpc.SendCommandAsync("issueasset", 100000, 0);
-                        element.AssetId = uint256.Parse(issueAssetResult.Result["asset"].ToString());
+                        if (element.AssetId is null)
+                        {
+                            var issueAssetResult = await lbtcrpc.SendCommandAsync("issueasset", 100000, 0);
+                            element.AssetId = uint256.Parse(issueAssetResult.Result["asset"].ToString());
+                        }
+                    }
+                    catch (Exception e)
+                    {
                     }
                 }
             }
-            
+
 #endif
         }
 

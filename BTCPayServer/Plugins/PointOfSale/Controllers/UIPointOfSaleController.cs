@@ -277,7 +277,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
 
                     formResponseJObject = TryParseJObject(formResponse) ?? new JObject();
                     var form = Form.Parse(formData.Config);
-                    form.SetValues(formResponseJObject);
+                    FormDataService.SetValues(form, formResponseJObject);
                     if (!FormDataService.Validate(form, ModelState))
                     {
                         //someone tried to bypass validation

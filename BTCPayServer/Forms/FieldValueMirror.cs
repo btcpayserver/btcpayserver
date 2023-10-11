@@ -31,4 +31,9 @@ public class FieldValueMirror : IFormComponentProvider
 
         return rawValue;
     }
+
+    public void SetValue(Field field, JToken value)
+    {
+        //ignored
+    }
 }

@@ -19,7 +19,7 @@ namespace BTCPayServer
                     "USDT_X = USDT_BTC * BTC_X",
                     "USDT_BTC = bitfinex(UST_BTC)",
                 },
-                AssetId = new uint256("ce091c998b83c78bb71a632313ba3760f1763d9cfcffae02258ffa9865a37bd2"),
+                AssetId =  NetworkType == ChainName.Regtest? null: new uint256("ce091c998b83c78bb71a632313ba3760f1763d9cfcffae02258ffa9865a37bd2"),
                 DisplayName = "Liquid Tether",
                 BlockExplorerLink = NetworkType == ChainName.Mainnet ? "https://liquid.network/tx/{0}" : "https://liquid.network/testnet/tx/{0}",
                 NBXplorerNetwork = nbxplorerNetwork,
@@ -42,7 +42,7 @@ namespace BTCPayServer
                     "ETB_BTC = bitpay(ETB_BTC)"
                 },
                 Divisibility = 2,
-                AssetId = new uint256("aa775044c32a7df391902b3659f46dfe004ccb2644ce2ddc7dba31e889391caf"),
+                AssetId = NetworkType == ChainName.Regtest? null:  new uint256("aa775044c32a7df391902b3659f46dfe004ccb2644ce2ddc7dba31e889391caf"),
                 DisplayName = "Ethiopian Birr",
                 BlockExplorerLink = NetworkType == ChainName.Mainnet ? "https://liquid.network/tx/{0}" : "https://liquid.network/testnet/tx/{0}",
                 NBXplorerNetwork = nbxplorerNetwork,
@@ -65,7 +65,7 @@ namespace BTCPayServer
                     "LCAD_BTC = bylls(CAD_BTC)",
                     "CAD_BTC = LCAD_BTC"
                 },
-                AssetId = new uint256("0e99c1a6da379d1f4151fb9df90449d40d0608f6cb33a5bcbfc8c265f42bab0a"),
+                AssetId =  NetworkType == ChainName.Regtest? null: new uint256("0e99c1a6da379d1f4151fb9df90449d40d0608f6cb33a5bcbfc8c265f42bab0a"),
                 DisplayName = "Liquid CAD",
                 BlockExplorerLink = NetworkType == ChainName.Mainnet ? "https://liquid.network/tx/{0}" : "https://liquid.network/testnet/tx/{0}",
                 NBXplorerNetwork = nbxplorerNetwork,

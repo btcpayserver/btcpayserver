@@ -52,11 +52,12 @@ namespace BTCPayServer.Tests
             {
                 tester.ActivateLBTC();
                 await tester.StartAsync();
+                
+                //https://github.com/ElementsProject/elements/issues/956
+                await tester.LBTCExplorerNode.SendCommandAsync("rescanblockchain");
                 var user = tester.NewAccount();
-                user.GrantAccess();
-                user.RegisterDerivationScheme("LBTC");
-                user.RegisterDerivationScheme("USDT");
-                user.RegisterDerivationScheme("ETB");
+                await user.GrantAccessAsync();
+               
                 await tester.LBTCExplorerNode.GenerateAsync(4);
                 //no tether on our regtest, lets create it and set it
                 var tether = tester.NetworkProvider.GetNetwork<ElementsBTCPayNetwork>("USDT");
@@ -75,6 +76,10 @@ namespace BTCPayServer.Tests
                     .AssetId = etb.AssetId;
 
 
+                user.RegisterDerivationScheme("LBTC");
+                user.RegisterDerivationScheme("USDT");
+                user.RegisterDerivationScheme("ETB");
+                
                 //test: register 2 assets on the same elements network and make sure paying an invoice on one does not affect the other in any way
                 var invoice = await user.BitPay.CreateInvoiceAsync(new Invoice(0.1m, "BTC"));
                 Assert.Equal(3, invoice.SupportedTransactionCurrencies.Count);
@@ -82,7 +87,7 @@ namespace BTCPayServer.Tests
                 //1 lbtc = 1 btc
                 Assert.Equal(1, ci.Rate);
                 var star = await tester.LBTCExplorerNode.SendCommandAsync("sendtoaddress", ci.Address, ci.Due, "", "", false, true,
-                    1, "UNSET", lbtc.AssetId);
+                    1, "UNSET",false, lbtc.AssetId.ToString());
 
                 TestUtils.Eventually(() =>
                 {
@@ -95,8 +100,7 @@ namespace BTCPayServer.Tests
 
                 ci = invoice.CryptoInfo.Single(info => info.CryptoCode.Equals("USDT"));
                 Assert.Equal(3, invoice.SupportedTransactionCurrencies.Count);
-                star = await tester.LBTCExplorerNode.SendCommandAsync("sendtoaddress", ci.Address, ci.Due, "", "", false, true,
-                    1, "UNSET", tether.AssetId);
+                star =  tester.LBTCExplorerNode.SendCommand("sendtoaddress", ci.Address, decimal.Parse(ci.Due), "x", "z", false, true, 1, "unset", false, tether.AssetId.ToString());
 
                 TestUtils.Eventually(() =>
                 {

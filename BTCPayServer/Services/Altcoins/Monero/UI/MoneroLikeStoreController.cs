@@ -55,21 +55,26 @@ namespace BTCPayServer.Services.Altcoins.Monero.UI
         [HttpGet()]
         public async Task<IActionResult> GetStoreMoneroLikePaymentMethods()
         {
-            var monero = StoreData.GetSupportedPaymentMethods(_BtcPayNetworkProvider)
+            return View(await GetVM(StoreData));
+        }
+[NonAction]
+        public async Task<MoneroLikePaymentMethodListViewModel> GetVM(StoreData storeData)
+        {
+            var monero = storeData.GetSupportedPaymentMethods(_BtcPayNetworkProvider)
                 .OfType<MoneroSupportedPaymentMethod>();
 
-            var excludeFilters = StoreData.GetStoreBlob().GetExcludedPaymentMethods();
+            var excludeFilters = storeData.GetStoreBlob().GetExcludedPaymentMethods();
 
             var accountsList = _MoneroLikeConfiguration.MoneroLikeConfigurationItems.ToDictionary(pair => pair.Key,
                 pair => GetAccounts(pair.Key));
 
             await Task.WhenAll(accountsList.Values);
-            return View(new MoneroLikePaymentMethodListViewModel()
+            return new MoneroLikePaymentMethodListViewModel()
             {
                 Items = _MoneroLikeConfiguration.MoneroLikeConfigurationItems.Select(pair =>
                     GetMoneroLikePaymentMethodViewModel(monero, pair.Key, excludeFilters,
                         accountsList[pair.Key].Result))
-            });
+            };
         }
 
         private Task<GetAccountsResponse> GetAccounts(string cryptoCode)

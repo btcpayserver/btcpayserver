@@ -166,12 +166,12 @@ public class PaymentsReportProvider : ReportProvider
             {
                 continue;
             }
-            values.Add(DisplayFormatter.Info(cryptoAmount, paymentType.CryptoCode).ToJObject());
-            values.Add(networkFee is > 0 ? DisplayFormatter.Info(networkFee.Value, paymentType.CryptoCode).ToJObject() : null);
+            values.Add(DisplayFormatter.ToFormattedAmount(cryptoAmount, paymentType.CryptoCode));
+            values.Add(networkFee is > 0 ? DisplayFormatter.ToFormattedAmount(networkFee.Value, paymentType.CryptoCode) : null);
             values.Add(invoiceBlob.SelectToken("$.cryptoData.BTC_LNURLPAY.paymentMethod.ConsumedLightningAddress", false)?.Value<string>());
             values.Add(currency);
-            values.Add(rate is null ? null : DisplayFormatter.Info(rate.Value * cryptoAmount, currency ?? "USD").ToJObject()); // Currency amount
-            values.Add(rate is null ? null : DisplayFormatter.Info(rate.Value, currency ?? "USD").ToJObject());
+            values.Add(rate is null ? null : DisplayFormatter.ToFormattedAmount(rate.Value * cryptoAmount, currency ?? "USD")); // Currency amount
+            values.Add(rate is null ? null : DisplayFormatter.ToFormattedAmount(rate.Value, currency ?? "USD"));
 
             queryContext.Data.Add(values);
         }

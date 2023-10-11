@@ -106,7 +106,7 @@ public class OnChainWalletReportProvider : ReportProvider
                 values.Add((string)r.tx_id);
                 values.Add(null);
                 values.Add((long?)r.blk_height is not null);
-                values.Add(_displayFormatter.Info(balanceChange, "BTC").ToJObject());
+                values.Add(new FormattedAmount(balanceChange, settings.Network.Divisibility).ToJObject());
             }
             var objects = await WalletRepository.GetWalletObjects(new GetWalletObjectsQuery
             {

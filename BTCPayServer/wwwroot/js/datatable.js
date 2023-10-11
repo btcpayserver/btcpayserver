@@ -23,14 +23,15 @@
             for (let ai = 0; ai < aggregatesIndices.length; ai++) {
                 const v = data[i][aggregatesIndices[ai]];
                 // TODO: support other aggregate functions
-                if (typeof(v) === 'object' && v.amountString) {
-                    const val = new Decimal(v.amountString)
+                if (typeof (v) === 'object' && v.v) {
+                    // Amount in the format of `{ v: "1.0000001", d: 8 }`, where v is decimal string and `d` is divisibility
+                    const val = new Decimal(v.v)
                     const agg = summaryRow[groupIndices.length + ai];
-                    const aggVal = typeof(agg) === 'object' && agg.amountString ? new Decimal(agg.amountString) : agg;
+                    const aggVal = typeof(agg) === 'object' && agg.v ? new Decimal(agg.v) : agg;
                     const res = aggVal.plus(val);
                     summaryRow[groupIndices.length + ai] = Object.assign({}, v, {
-                        amountString: res.toFixed(v.divisibility),
-                        amount: res
+                        v: res,
+                        d: v.d
                     });
                 } else {
                     const val = new Decimal(v);

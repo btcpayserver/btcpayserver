@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -60,9 +60,9 @@ public class PayoutsReportProvider : ReportProvider
             var ppBlob = payout.PullPaymentData?.GetBlob();
             var currency = ppBlob?.Currency ?? paymentType.CryptoCode;
             data.Add(paymentType.CryptoCode);
-            data.Add(blob.CryptoAmount.HasValue ? _displayFormatter.Info(blob.CryptoAmount.Value, paymentType.CryptoCode).ToJObject() : null);
+            data.Add(blob.CryptoAmount.HasValue ? _displayFormatter.ToFormattedAmount(blob.CryptoAmount.Value, paymentType.CryptoCode) : null);
             data.Add(currency);
-            data.Add(_displayFormatter.Info(blob.Amount, currency).ToJObject());
+            data.Add(_displayFormatter.ToFormattedAmount(blob.Amount, currency));
             data.Add(blob.Destination);
             queryContext.Data.Add(data);
         }

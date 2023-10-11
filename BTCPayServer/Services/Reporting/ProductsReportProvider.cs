@@ -91,7 +91,7 @@ public class ProductsReportProvider : ReportProvider
         {
             var amount = (decimal)r[^2];
             var currency = (string)r[^1] ?? "USD";
-            r[^2] = _displayFormatter.Info(amount, currency).ToJObject();
+            r[^2] = _displayFormatter.ToFormattedAmount(amount, currency);
         }
     }
 

@@ -2886,7 +2886,7 @@ namespace BTCPayServer.Tests
             var balanceIndex = report.GetIndex("BalanceChange");
             Assert.Equal(2, report.Data.Count);
             Assert.Equal(64, report.Data[0][txIdIndex].Value<string>().Length);
-            Assert.Contains(report.Data, d => d[balanceIndex].Value<decimal>() == 1.0m);
+            Assert.Contains(report.Data, d => d[balanceIndex]["amount"].Value<decimal>() == 1.0m);
 
             // Items sold
             report = await GetReport(acc, new() { ViewName = "Products sold" });

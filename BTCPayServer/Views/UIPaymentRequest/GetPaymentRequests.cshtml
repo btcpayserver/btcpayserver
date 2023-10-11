@@ -50,7 +50,7 @@
 
 <partial name="_StatusMessage" />
 
-<form asp-action="GetPaymentRequests" method="get" class="d-flex flex-wrap flex-sm-nowrap align-items-center gap-3 mb-4 col-lg-9 col-xl-8 col-xxl-6">
+<form asp-action="GetPaymentRequests" method="get" class="d-flex flex-wrap flex-sm-nowrap align-items-center gap-3 mb-4 col-xxl-8">
     <input type="hidden" asp-for="Count" />
     <input type="hidden" asp-for="TimezoneOffset" />
     <input asp-for="SearchTerm" type="hidden" value="@Model.Search.WithoutSearchText()"/>

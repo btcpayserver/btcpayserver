@@ -263,17 +263,6 @@ h2 svg.icon.icon-info {
     .card {
         page-break-inside: avoid;
     }
-    #markStatusDropdownMenuButton {
-        border: 0;
-        background: transparent;
-        padding: 0 !important;
-        color: inherit;
-        font-weight:  var(--btcpay-font-weight-normal);
-        font-size: var(--btcpay-body-font-size);
-    }
-    #markStatusDropdownMenuButton::after {
-        content: none;
-    }
 }
 
 /* Richtext editor */

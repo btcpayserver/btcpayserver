@@ -556,24 +556,24 @@ namespace BTCPayServer.Tests
             s.AddDerivationScheme();
             s.GoToInvoices();
             s.CreateInvoice();
-            s.Driver.FindElement(By.Id("markStatusDropdownMenuButton")).Click();
-            s.Driver.FindElements(By.ClassName("changeInvoiceState"))[0].Click();
+            s.Driver.FindElement(By.CssSelector("[data-invoice-state-badge] .dropdown-toggle")).Click();
+            s.Driver.FindElements(By.CssSelector("[data-invoice-state-badge] .dropdown-menu button"))[0].Click();
             TestUtils.Eventually(() => Assert.Contains("Invalid (marked)", s.Driver.PageSource));
             s.Driver.Navigate().Refresh();
 
-            s.Driver.FindElement(By.Id("markStatusDropdownMenuButton")).Click();
-            s.Driver.FindElements(By.ClassName("changeInvoiceState"))[0].Click();
+            s.Driver.FindElement(By.CssSelector("[data-invoice-state-badge] .dropdown-toggle")).Click();
+            s.Driver.FindElements(By.CssSelector("[data-invoice-state-badge] .dropdown-menu button"))[0].Click();
             TestUtils.Eventually(() => Assert.Contains("Settled (marked)", s.Driver.PageSource));
 
             s.Driver.Navigate().Refresh();
 
-            s.Driver.FindElement(By.Id("markStatusDropdownMenuButton")).Click();
-            s.Driver.FindElements(By.ClassName("changeInvoiceState"))[0].Click();
+            s.Driver.FindElement(By.CssSelector("[data-invoice-state-badge] .dropdown-toggle")).Click();
+            s.Driver.FindElements(By.CssSelector("[data-invoice-state-badge] .dropdown-menu button"))[0].Click();
             TestUtils.Eventually(() => Assert.Contains("Invalid (marked)", s.Driver.PageSource));
             s.Driver.Navigate().Refresh();
 
-            s.Driver.FindElement(By.Id("markStatusDropdownMenuButton")).Click();
-            s.Driver.FindElements(By.ClassName("changeInvoiceState"))[0].Click();
+            s.Driver.FindElement(By.CssSelector("[data-invoice-state-badge] .dropdown-toggle")).Click();
+            s.Driver.FindElements(By.CssSelector("[data-invoice-state-badge] .dropdown-menu button"))[0].Click();
             TestUtils.Eventually(() => Assert.Contains("Settled (marked)", s.Driver.PageSource));
         }
 

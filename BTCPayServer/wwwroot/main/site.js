@@ -1,3 +1,5 @@
+const baseUrl = Object.values(document.scripts).find(s => s.src.includes('/main/site.js')).src.split('/main/site.js').shift();
+
 const flatpickrInstances = [];
 
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DateTimeFormat/DateTimeFormat
@@ -267,6 +269,23 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
     });
+    
+    // Invoice Status
+    delegate('click', '[data-invoice-state-badge] [data-invoice-id][data-new-state]', async e => {
+        const $button = e.target
+        const $badge = $button.closest('[data-invoice-state-badge]')
+        const { invoiceId, newState } = $button.dataset
+
+        $badge.classList.add('pe-none'); // disable further interaction
+        const response = await fetch(`${baseUrl}/invoices/${invoiceId}/changestate/${newState}`, { method: 'POST' })
+        if (response.ok) {
+            const { statusString } = await response.json()
+            $badge.outerHTML = `<div class="badge badge-${newState}" data-invoice-state-badge="${invoiceId}">${statusString}</div>`
+        } else {
+            $badge.classList.remove('pe-none');
+            alert("Invoice state update failed");
+        }
+    })
     
     // Time Format
     delegate('click', '.switch-time-format', switchTimeFormat);

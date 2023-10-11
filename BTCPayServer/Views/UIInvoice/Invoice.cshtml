@@ -34,30 +34,6 @@
 
 @section PageFootContent {
     <script>
-        const alertClasses = { "Settled (marked)": 'success', "Invalid (marked)": 'danger' }
-
-        function changeInvoiceState(invoiceId, newState) {
-            console.log(invoiceId, newState)
-            const toggleButton = $("#markStatusDropdownMenuButton");
-            toggleButton.attr("disabled", "disabled");
-
-            $.post(`${invoiceId}/changestate/${newState}`)
-                .done(({ statusString }) => {
-                    const alertClass = alertClasses[statusString];
-                    toggleButton.replaceWith(`<span class="fs-6 fw-normal badge bg-${alertClass}">${statusString} <span class="fa fa-check"></span></span>`);
-                })
-                .fail(function () {
-                    toggleButton.removeAttr("disabled");
-                    alert("Invoice state update failed");
-                });
-        }
-
-        delegate('click', '[data-change-invoice-status-button]', e => {
-            const button = e.target.closest('[data-change-invoice-status-button]')
-            const { id, status } = button.dataset
-            changeInvoiceState(id, status)
-        })
-
         const handleRefundResponse = async response => {
             const modalBody = document.querySelector('#RefundModal .modal-body')
             if (response.ok && response.redirected) {
@@ -282,32 +258,8 @@
                 <tr>
                     <th>State</th>
                     <td>
-                        @if (Model.CanMarkStatus)
-                        {
-                            <div class="dropdown changeInvoiceStateToggle">
-                                <button class="btn btn-secondary btn-sm dropdown-toggle py-1 px-2" type="button" id="markStatusDropdownMenuButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                    @Model.State
-                                </button>
-                                <div class="dropdown-menu" aria-labelledby="markStatusDropdownMenuButton">
-                                    @if (Model.CanMarkInvalid)
-                                    {
-                                        <button type="button" class="dropdown-item lh-base changeInvoiceState" data-id="@Model.Id" data-status="invalid" data-change-invoice-status-button>
-                                            Mark as invalid
-                                        </button>
-                                    }
-                                    @if (Model.CanMarkSettled)
-                                    {
-                                        <button type="button" class="dropdown-item lh-base changeInvoiceState" href="#" data-id="@Model.Id" data-status="settled" data-change-invoice-status-button>
-                                            Mark as settled
-                                        </button>
-                                    }
-                                </div>
-                            </div>
-                        }
-                        else
-                        {
-                            @Model.State
-                        }
+                        <vc:invoice-status invoice-id="@Model.Id" state="Model.State" payments="Model.Payments"
+                           is-archived="Model.Archived" has-refund="Model.HasRefund" />
                     </td>
                 </tr>
                 <tr>

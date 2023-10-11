@@ -52,41 +52,8 @@
                         <a asp-controller="UIInvoice" asp-action="Invoice" asp-route-invoiceId="@invoice.InvoiceId" class="text-break">@invoice.InvoiceId</a>
                     </td>
                     <td>
-                        <div class="d-flex align-items-center gap-2">
-                            @if (invoice.Details.Archived)
-                            {
-                                <span class="badge bg-warning">archived</span>
-                            }
-                            <span class="badge badge-@invoice.Status.Status.ToModernStatus().ToString().ToLower()">
-                                @invoice.Status.Status.ToModernStatus().ToString()
-                                @if (invoice.Status.ExceptionStatus != InvoiceExceptionStatus.None)
-                                {
-                                    @($"({invoice.Status.ExceptionStatus.ToString()})")
-                                }
-                            </span>
-                            @foreach (var paymentMethodId in invoice.Details.Payments.Select(payment => payment.GetPaymentMethodId()).Distinct())
-                            {
-                                var image = PaymentMethodHandlerDictionary[paymentMethodId]?.GetCryptoImage(paymentMethodId);
-                                var badge = paymentMethodId.PaymentType.GetBadge();
-                                if (!string.IsNullOrEmpty(image) || !string.IsNullOrEmpty(badge))
-                                {
-                                    <span class="d-inline-flex align-items-center gap-1">
-                                        @if (!string.IsNullOrEmpty(image))
-                                        {
-                                            <img src="@Context.Request.GetRelativePathOrAbsolute(image)" alt="@paymentMethodId.PaymentType.ToString()" style="height:1.5em" />
-                                        }
-                                        @if (!string.IsNullOrEmpty(badge))
-                                        {
-                                            @badge
-                                        }
-                                    </span>
-                                }
-                            }
-                            @if (invoice.HasRefund)
-                            {
-                                <span class="badge bg-warning">Refund</span>
-                            }
-                        </div>
+                        <vc:invoice-status state="invoice.Status" payments="invoice.Details.Payments" invoice-id="@invoice.InvoiceId"
+                           is-archived="invoice.Details.Archived" has-refund="invoice.HasRefund" />
                     </td>
                     <td class="text-end">
                         <span data-sensitive>@DisplayFormatter.Currency(invoice.Amount, invoice.Currency)</span>

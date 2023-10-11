@@ -978,7 +978,15 @@ namespace BTCPayServer.Services.Invoices
         }
         public override string ToString()
         {
-            return Status.ToModernStatus() + (ExceptionStatus == InvoiceExceptionStatus.None ? string.Empty : $" ({ToString(ExceptionStatus)})");
+            return Status.ToModernStatus() + ExceptionStatus switch
+            {
+                InvoiceExceptionStatus.PaidOver => " (paid over)",
+                InvoiceExceptionStatus.PaidLate => " (paid late)",
+                InvoiceExceptionStatus.PaidPartial => " (paid partial)",
+                InvoiceExceptionStatus.Marked => " (marked)",
+                InvoiceExceptionStatus.Invalid => " (invalid)",
+                _ => ""
+            };
         }
     }
 

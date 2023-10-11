@@ -150,15 +150,14 @@ namespace BTCPayServer.Controllers
                 Events = invoice.Events,
                 Metadata = metaData,
                 Archived = invoice.Archived,
+                HasRefund = invoice.Refunds.Any(),
                 CanRefund = invoiceState.CanRefund(),
                 Refunds = invoice.Refunds,
                 ShowCheckout = invoice.Status == InvoiceStatusLegacy.New,
                 ShowReceipt = invoice.Status.ToModernStatus() == InvoiceStatus.Settled && (invoice.ReceiptOptions?.Enabled ?? receipt.Enabled is true),
                 Deliveries = (await _InvoiceRepository.GetWebhookDeliveries(invoiceId))
                                     .Select(c => new Models.StoreViewModels.DeliveryViewModel(c))
-                                    .ToList(),
-                CanMarkInvalid = invoiceState.CanMarkInvalid(),
-                CanMarkSettled = invoiceState.CanMarkComplete(),
+                                    .ToList()
             };
 
             var details = InvoicePopulatePayments(invoice);
@@ -1154,7 +1153,7 @@ namespace BTCPayServer.Controllers
                     CanMarkInvalid = state.CanMarkInvalid(),
                     CanMarkSettled = state.CanMarkComplete(),
                     Details = InvoicePopulatePayments(invoice),
-                    HasRefund = invoice.Refunds.Any(data => !data.PullPaymentData.Archived)
+                    HasRefund = invoice.Refunds.Any()
                 });
             }
             return View(model);

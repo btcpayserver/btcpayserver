@@ -30,13 +30,13 @@
         <h5>Off-Chain Payments</h5>
         <div class="invoice-payments table-responsive mt-0">
             <table class="table table-hover mb-0">
-                <thead class="thead-inverse">
+                <thead>
                     <tr>
                         <th class="w-75px">Crypto</th>
                         <th class="w-100px">Type</th>
                         <th class="w-175px">Destination</th>
                         <th class="text-nowrap">Payment Proof</th>
-                        <th class="w-150px text-end">Amount</th>
+                        <th class="w-150px text-end">Paid</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -52,7 +52,7 @@
                                 <vc:truncate-center text="@payment.PaymentProof" classes="truncate-center-id" />
                             </td>
                             <td class="payment-value text-end text-nowrap">
-                                <span data-sensitive>@payment.Amount</span>
+                                <span data-sensitive class="text-success">@payment.Amount</span>
                             </td>
                         </tr>
                     }

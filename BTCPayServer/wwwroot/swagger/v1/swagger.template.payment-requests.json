@@ -301,6 +301,7 @@
                         "schema": { "type": "string" }
                     }
                 ],
+                "operationId": "PaymentRequests_Pay",
                 "description": "Create a new invoice for the payment request, or reuse an existing one",
                 "requestBody": {
                     "description": "Invoice creation request",

@@ -695,7 +695,6 @@
             },
             "TransactionStatus": {
                 "type": "string",
-                "description": "",
                 "x-enumNames": [
                     "Unconfirmed",
                     "Confirmed"
@@ -758,8 +757,12 @@
                         "allOf": [ {"$ref": "#/components/schemas/UnixTimestamp"}]
                     },
                     "status": {
-                        "$ref": "#/components/schemas/TransactionStatus",
-                        "description": "The status for this transaction"
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/TransactionStatus"
+                            }
+                        ],
+                        "description": "The status of this transaction"
                     },
                     "labels": {
                         "description": "Labels linked to this transaction",

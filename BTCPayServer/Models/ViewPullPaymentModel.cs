@@ -22,6 +22,7 @@ namespace BTCPayServer.Models
             StoreId = data.StoreId;
             var blob = data.GetBlob();
             PaymentMethods = blob.SupportedPaymentMethods;
+            BitcoinOnly = blob.SupportedPaymentMethods.All(p => p.CryptoCode == "BTC");
             SelectedPaymentMethod = PaymentMethods.First().ToString();
             Archived = data.Archived;
             AutoApprove = blob.AutoApproveClaims;
@@ -65,6 +66,8 @@ namespace BTCPayServer.Models
                 ResetIn = resetIn.TimeString();
             }
         }
+
+        public bool BitcoinOnly { get; set; }
 
         public string StoreId { get; set; }
 

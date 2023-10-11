@@ -327,7 +327,7 @@
                     <td>@Model.TransactionSpeed</td>
                 </tr>
                 <tr>
-                    <th>Total Fiat Due</th>
+                    <th>Total Amount Due</th>
                     <td><span data-sensitive>@Model.Fiat</span></td>
                 </tr>
                 @if (!string.IsNullOrEmpty(Model.RefundEmail))
@@ -506,7 +506,8 @@
             }
         </div>
     </div>
-
+    <div class="row">
+    <div class="col-xxl-constrain">
     <h3 class="mb-3">Invoice Summary</h3>
     <partial name="ListInvoicesPaymentsPartial" model="(Model, true)" />
 
@@ -638,20 +639,22 @@
         <h3 class="mb-0">Events</h3>
         <table class="table table-hover mt-3 mb-4">
             <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Message</th>
-                </tr>
+            <tr>
+                <th>Date</th>
+                <th>Message</th>
+            </tr>
             </thead>
             <tbody>
-                @foreach (var evt in Model.Events)
-                {
-                    <tr class="text-@evt.GetCssClass()">
-                        <td>@evt.Timestamp.ToBrowserDate()</td>
-                        <td>@evt.Message</td>
-                    </tr>
-                }
+            @foreach (var evt in Model.Events)
+            {
+                <tr class="text-@evt.GetCssClass()">
+                    <td>@evt.Timestamp.ToBrowserDate()</td>
+                    <td>@evt.Message</td>
+                </tr>
+            }
             </tbody>
         </table>
     </section>
+    </div>
+    </div>
 </div>

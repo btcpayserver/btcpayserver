@@ -1,31 +1,27 @@
 using System;
-using System.Collections.Generic;
-using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Lightning;
-using BTCPayServer.Lightning.LND;
 using BTCPayServer.Payments;
 using BTCPayServer.Rating;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using Dapper;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Internal;
 using NBitcoin;
-using NBitpayClient;
 using Newtonsoft.Json.Linq;
-using static BTCPayServer.HostedServices.PullPaymentHostedService.PayoutApproval;
 
 namespace BTCPayServer.Services.Reporting;
 
 public class PaymentsReportProvider : ReportProvider
 {
+    private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
 
-    public PaymentsReportProvider(ApplicationDbContextFactory dbContextFactory, CurrencyNameTable currencyNameTable)
+    public PaymentsReportProvider(ApplicationDbContextFactory dbContextFactory, CurrencyNameTable currencyNameTable, BTCPayNetworkProvider btcPayNetworkProvider)
     {
+        _btcPayNetworkProvider = btcPayNetworkProvider;
         DbContextFactory = dbContextFactory;
         CurrencyNameTable = currencyNameTable;
     }
@@ -145,30 +141,50 @@ public class PaymentsReportProvider : ReportProvider
             values.Add((string)r.payment_id);
             var invoiceBlob = JObject.Parse((string)r.invoice_blob);
             var paymentBlob = JObject.Parse((string)r.payment_blob);
-
-
-            var data = JObject.Parse(paymentBlob.SelectToken("$.cryptoPaymentData")?.Value<string>()!);
-            var conf = data.SelectToken("$.confirmationCount")?.Value<int>();
-            values.Add(conf is int o ? o > 0 :
-                       paymentType.PaymentType != PaymentTypes.BTCLike ? true : null);
-            values.Add(data.SelectToken("$.address")?.Value<string>());
-            values.Add(paymentType.CryptoCode);
-
+            var pd = new PaymentData()
+            {
+                Blob2 = r.payment_blob, Accounted = true, Type = paymentType.ToStringNormalized()
+            };
+            var paymentEntity = pd.GetBlob(_btcPayNetworkProvider);
+            
             decimal cryptoAmount;
-            if (data.SelectToken("$.amount")?.Value<long>() is long v)
+            if (paymentEntity is not null)
             {
-                cryptoAmount = LightMoney.MilliSatoshis(v).ToDecimal(LightMoneyUnit.BTC);
-            }
-            else if (data.SelectToken("$.value")?.Value<long>() is long amount)
-            {
-                cryptoAmount = Money.Satoshis(amount).ToDecimal(MoneyUnit.BTC);
+               var  paymentData = paymentEntity.GetCryptoPaymentData();
+              
+               values.Add(paymentData.PaymentConfirmed(paymentEntity, SpeedPolicy.MediumSpeed));
+               values.Add(paymentData.GetDestination());
+               values.Add(paymentType.CryptoCode);
+
+               cryptoAmount = paymentData.GetValue();
+               values.Add(cryptoAmount);
+               values.Add(paymentEntity.NetworkFee);
             }
             else
             {
-                continue;
+                var data = JObject.Parse(paymentBlob.SelectToken("$.cryptoPaymentData")?.Value<string>()!);
+                var conf = data.SelectToken("$.confirmationCount")?.Value<int>();
+                values.Add(conf is int o ? o > 0 :
+                    paymentType.PaymentType != PaymentTypes.BTCLike ? true : null);
+                values.Add(data.SelectToken("$.address")?.Value<string>());
+                values.Add(paymentType.CryptoCode);
+
+                if (data.SelectToken("$.amount")?.Value<long>() is long v)
+                {
+                    cryptoAmount = LightMoney.MilliSatoshis(v).ToDecimal(LightMoneyUnit.BTC);
+                }
+                else if (data.SelectToken("$.value")?.Value<long>() is long amount)
+                {
+                    cryptoAmount = Money.Satoshis(amount).ToDecimal(MoneyUnit.BTC);
+                }
+                else
+                {
+                    continue;
+                }
+                values.Add(cryptoAmount);
+                values.Add(paymentBlob.SelectToken("$.networkFee", false)?.Value<decimal>());
             }
-            values.Add(cryptoAmount);
-            values.Add(paymentBlob.SelectToken("$.networkFee", false)?.Value<decimal>());
+            
             values.Add(invoiceBlob.SelectToken("$.cryptoData.BTC_LNURLPAY.paymentMethod.ConsumedLightningAddress", false)?.Value<string>());
             var currency = invoiceBlob.SelectToken("$.currency")?.Value<string>();
             values.Add(currency);

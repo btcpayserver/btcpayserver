@@ -88,8 +88,8 @@
                         <button type="button" class="btn btn-link p-0 fa fa-clock-o switch-time-format only-for-js" title="Switch date format"></button>
                     </div>
                 </th>
-                <th>Price</th>
                 <th>Status</th>
+                <th class="text-end">Amount</th>
                 <th class="text-end">Actions</th>
             </tr>
         </thead>
@@ -104,16 +104,16 @@
                         @(item.ExpiryDate?.ToBrowserDate() ?? new HtmlString("<span class=\"text-muted\">No Expiry</span>"))
                     </td>
                     <td>
-                        <span data-sensitive>@item.AmountFormatted</span>
-                    </td>
-                    <td>
                         <span class="badge badge-@item.Status.ToLower() status-badge">@item.Status</span>
+                    </td>
+                    <td class="text-end">
+                        <span data-sensitive>@item.AmountFormatted</span>
                     </td>
                     <td class="text-end">
                         <div class="d-inline-flex align-items-center gap-3">
                             <a asp-action="EditPaymentRequest" asp-route-storeId="@item.StoreId" asp-route-payReqId="@item.Id" id="Edit-@item.Id">Edit</a>
                             <div class="dropdown">
-                                <button class="btn btn-link dropdown-toggle p-0 dropdown-toggle-no-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="ToggleActions-@item.Id">
+                                <button class="btn btn-link dropdown-toggle p-0 dropdown-toggle-no-caret text-body" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="ToggleActions-@item.Id">
                                     <i class="fa fa-ellipsis-h"></i>
                                 </button>
                                 <ul class="dropdown-menu" aria-labelledby="actionDropdown">

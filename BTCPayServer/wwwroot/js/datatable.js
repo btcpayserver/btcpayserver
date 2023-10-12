@@ -25,14 +25,17 @@
                 // TODO: support other aggregate functions
                 if (typeof (v) === 'object' && v.v) {
                     // Amount in the format of `{ v: "1.0000001", d: 8 }`, where v is decimal string and `d` is divisibility
-                    const val = new Decimal(v.v)
                     const agg = summaryRow[groupIndices.length + ai];
-                    const aggVal = typeof(agg) === 'object' && agg.v ? new Decimal(agg.v) : agg;
-                    const res = aggVal.plus(val);
-                    summaryRow[groupIndices.length + ai] = Object.assign({}, v, {
-                        v: res,
-                        d: v.d
-                    });
+                    let d = v.d;
+                    let val = new Decimal(v.v);
+                    if (typeof (agg) === 'object' && agg.v) {
+                        d = Math.max(d, agg.d);
+                        val = agg.v.plus(val);
+                    }
+                    summaryRow[groupIndices.length + ai] = {
+                        v: val,
+                        d: d
+                    };
                 } else {
                     const val = new Decimal(v);
                     summaryRow[groupIndices.length + ai] = summaryRow[groupIndices.length + ai].plus(val);

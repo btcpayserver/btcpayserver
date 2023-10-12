@@ -127,10 +127,14 @@ public class PaymentsReportProvider : ReportProvider
             values.Add((DateTime)r.created);
             values.Add((string)r.invoice_id);
             values.Add((string)r.order_id);
+            bool isLightning = false;
             if (PaymentMethodId.TryParse((string)r.payment_type, out var paymentType))
             {
                 if (paymentType.PaymentType == PaymentTypes.LightningLike || paymentType.PaymentType == PaymentTypes.LNURLPay)
+                {
+                    isLightning = true;
                     values.Add("Lightning");
+                }
                 else if (paymentType.PaymentType == PaymentTypes.BTCLike)
                     values.Add("On-Chain");
                 else
@@ -139,66 +143,57 @@ public class PaymentsReportProvider : ReportProvider
             else
                 continue;
             values.Add((string)r.payment_id);
-            var invoiceBlob = JObject.Parse((string)r.invoice_blob);
-            var paymentBlob = JObject.Parse((string)r.payment_blob);
+            //var invoiceBlob = JObject.Parse((string)r.invoice_blob);
+            //var paymentBlob = JObject.Parse((string)r.payment_blob);
 
             var pd = new PaymentData()
             {
-                Blob2 = r.payment_blob, Accounted = true, Type = paymentType.ToStringNormalized()
+                Blob2 = r.payment_blob,
+                Accounted = true,
+                Type = paymentType.ToStringNormalized()
             };
             var paymentEntity = pd.GetBlob(_btcPayNetworkProvider);
-            
-            decimal cryptoAmount;
-            decimal? networkFee;
-            if (paymentEntity is not null)
-            {
-               var  paymentData = paymentEntity.GetCryptoPaymentData();
-              
-               values.Add(paymentData.PaymentConfirmed(paymentEntity, SpeedPolicy.MediumSpeed));
-               values.Add(paymentData.GetDestination());
-               values.Add(paymentType.CryptoCode);
+            var paymentData = paymentEntity?.GetCryptoPaymentData();
+            if (paymentData is null)
+                continue;
 
-               cryptoAmount = paymentData.GetValue();
-               networkFee = paymentEntity.NetworkFee;
+            Data.InvoiceData invoiceData = new()
+            {
+                Blob2 = r.invoice_blob
+            };
+            var invoiceBlob = invoiceData.GetBlob(_btcPayNetworkProvider);
+            invoiceBlob.UpdateTotals();
+
+            values.Add(paymentData.PaymentConfirmed(paymentEntity, SpeedPolicy.MediumSpeed));
+            values.Add(paymentData.GetDestination());
+            values.Add(paymentType.CryptoCode);
+
+            var cryptoAmount = paymentData.GetValue();
+
+            var divisibility = 8;
+            if (_btcPayNetworkProvider.TryGetNetwork<BTCPayNetwork>(paymentType.CryptoCode, out var network))
+            {
+                divisibility = network.Divisibility;
+            }
+            if (isLightning)
+                divisibility += 3;
+            values.Add(new FormattedAmount(cryptoAmount, divisibility).ToJObject());
+            values.Add(paymentEntity.NetworkFee);
+            var consumerdLightningAddress = (invoiceBlob.GetPaymentMethod(new PaymentMethodId("BTC", PaymentTypes.LNURLPay))?
+                .GetPaymentMethodDetails() as LNURLPayPaymentMethodDetails)?
+                .ConsumedLightningAddress;
+            values.Add(consumerdLightningAddress);
+            values.Add(invoiceBlob.Currency);
+            if (invoiceBlob.Rates.TryGetValue(paymentType.CryptoCode, out var rate))
+            {
+                values.Add(DisplayFormatter.ToFormattedAmount(rate * cryptoAmount, invoiceBlob.Currency ?? "USD")); // Currency amount
+                values.Add(DisplayFormatter.ToFormattedAmount(rate, invoiceBlob.Currency ?? "USD"));
             }
             else
             {
-                var data = JObject.Parse(paymentBlob.SelectToken("$.cryptoPaymentData")?.Value<string>()!);
-                var conf = data.SelectToken("$.confirmationCount")?.Value<int>();
-                values.Add(conf is int o ? o > 0 :
-                    paymentType.PaymentType != PaymentTypes.BTCLike ? true : null);
-                values.Add(data.SelectToken("$.address")?.Value<string>());
-                values.Add(paymentType.CryptoCode);
-
-                if (data.SelectToken("$.amount")?.Value<long>() is long v)
-                {
-                    cryptoAmount = LightMoney.MilliSatoshis(v).ToDecimal(LightMoneyUnit.BTC);
-                }
-#if ALTCOINS
-                //assetmoney is an object
-                else  if (data.SelectToken("$.value") is JObject valueObject && valueObject.SelectToken("$.value")?.Value<long>() is long amountObj)
-                {
-                    cryptoAmount = Money.Satoshis(amountObj).ToDecimal(MoneyUnit.BTC);
-                }
-#endif
-                else if (data.SelectToken("$.value")?.Value<long>() is long amount)
-                {
-                    cryptoAmount = Money.Satoshis(amount).ToDecimal(MoneyUnit.BTC);
-                }
-                else
-                {
-                    continue;
-                }
-                networkFee = paymentBlob.SelectToken("$.networkFee", false)?.Value<decimal>();
+                values.Add(null);
+                values.Add(null);
             }
-            var currency = invoiceBlob.SelectToken("$.currency")?.Value<string>();
-            var rate = invoiceBlob.SelectToken($"$.cryptoData.{paymentType}.rate")?.Value<decimal>();
-            values.Add(DisplayFormatter.ToFormattedAmount(cryptoAmount, paymentType.CryptoCode));
-            values.Add(networkFee is > 0 ? DisplayFormatter.ToFormattedAmount(networkFee.Value, paymentType.CryptoCode) : null);
-            values.Add(invoiceBlob.SelectToken("$.cryptoData.BTC_LNURLPAY.paymentMethod.ConsumedLightningAddress", false)?.Value<string>());
-            values.Add(currency);
-            values.Add(rate is null ? null : DisplayFormatter.ToFormattedAmount(rate.Value * cryptoAmount, currency ?? "USD")); // Currency amount
-            values.Add(rate is null ? null : DisplayFormatter.ToFormattedAmount(rate.Value, currency ?? "USD"));
 
             queryContext.Data.Add(values);
         }

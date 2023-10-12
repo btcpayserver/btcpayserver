@@ -1,5 +1,29 @@
 # Changelog
 
+## 1.11.7
+
+### New feature
+
+* Pull Payment: Add QR scanner for destination and infer payment method (#5358) @dennisreimann
+* Greenfield: allow delete user by email too (#5372) @Kukks
+
+### Bug fixes
+
+* The payments report wasn't properly Liquid assets and some altcoins (#5388, #5371) @Kukks
+* Switching currencies in the checkout page may have inversed `Amount Due` and `Recommended Fee` (#5390) @dennisreimann
+* Reporting now properly format decimals with lots of decimals (#5363) @dennisreimann
+* Fix several swagger error and warnings (#5380) @ai-oleynikov
+* Fix poloniex and Ripio rate provider (#5365) @Kukks
+* Removed unused argoneum and Exchangerate.host rate provider (#5365) @Kukks
+* Fix: If a store was accepting USDt, invoices wouldn't be processed properly. @Kukks
+* Email rules, Recipients required even if "send mail to buyer" (#5345 #5357) @dennisreimann
+
+### Improvements
+
+* Invoice: Improve payment details page (#5362) @dennisreimann
+* Crowdfund: Improve no perks case (#5378 #5376) @dennisreimann
+* Switched recommended exchanges for COP and UGX to yadio @Kukks
+
 ## 1.11.6
 
 An update is recommended if you share your server with many users. Your server could crash (Error HTTP 500) if you have a high number of users.

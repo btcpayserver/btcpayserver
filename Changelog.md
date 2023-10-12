@@ -5,16 +5,16 @@
 ### New feature
 
 * Pull Payment: Add QR scanner for destination and infer payment method (#5358) @dennisreimann
-* Greenfield: allow delete user by email too (#5372) @Kukks
+* Greenfield: Allow deleting user by email (#5372) @Kukks
 
 ### Bug fixes
 
-* The payments report wasn't properly Liquid assets and some altcoins (#5388, #5371) @Kukks
+* The payments report wasn't properly accounting for Liquid assets and some altcoins (#5388 #5371) @Kukks
 * Switching currencies in the checkout page may have inversed `Amount Due` and `Recommended Fee` (#5390) @dennisreimann
-* Reporting now properly format decimals with lots of decimals (#5363) @dennisreimann
-* Fix several swagger error and warnings (#5380) @ai-oleynikov
-* Fix poloniex and Ripio rate provider (#5365) @Kukks
-* Removed unused argoneum and Exchangerate.host rate provider (#5365) @Kukks
+* Reporting now properly formats decimals (#5363) @dennisreimann
+* API docs: Fix several errors and warnings (#5380) @ai-oleynikov
+* Fix Poloniex and Ripio rate provider (#5365) @Kukks
+* Removed unused Argoneum and Exchangerate.host rate provider (#5365) @Kukks
 * Fix: If a store was accepting USDt, invoices wouldn't be processed properly. @Kukks
 * Email rules, Recipients required even if "send mail to buyer" (#5345 #5357) @dennisreimann
 

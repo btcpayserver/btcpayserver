@@ -115,13 +115,10 @@ a.unobtrusive-link {
     background: var(--btcpay-danger);
     color: var(--btcpay-danger-text);
 }
-.badge-unusual {
+.badge-unusual,
+.badge-processing {
     background: var(--btcpay-warning);
     color: var(--btcpay-warning-text);
-}
-.badge-processing {
-    background: var(--btcpay-info);
-    color: var(--btcpay-info-text);
 }
 .badge-settled {
     background: var(--btcpay-success);

@@ -355,6 +355,46 @@ document.addEventListener("DOMContentLoaded", () => {
             window.localStorage.setItem(COLLAPSED_KEY, JSON.stringify(collapsed))
         })
     }
+    
+    // Mass Action Tables
+    const updateSelectedCount = ($table) => {
+        const selectedCount = document.querySelectorAll('.mass-action-select:checked').length;
+        const $selectedCount = $table.querySelector('.mass-action-selected-count');
+        if ($selectedCount) $selectedCount.innerText = selectedCount;
+        if (selectedCount === 0) {
+            $table.removeAttribute('data-selected');
+        } else {
+            $table.setAttribute('data-selected', selectedCount.toString());
+        }
+    }
+
+    delegate('click', '.mass-action .mass-action-select-all', e => {
+        const $table = e.target.closest('.mass-action');
+        const { checked } = e.target;
+        $table.querySelectorAll('.mass-action-select,.mass-action-select-all').forEach($checkbox => {
+            $checkbox.checked = checked;
+        });
+        updateSelectedCount($table);
+    });
+
+    delegate('change', '.mass-action .mass-action-select', e => {
+        const $table = e.target.closest('.mass-action');
+        const selectedCount = $table.querySelectorAll('.mass-action-select:checked').length;
+        if (selectedCount === 0) {
+            $table.querySelectorAll('.mass-action-select-all').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+        }
+        updateSelectedCount($table);
+    });
+
+    delegate('click', '.mass-action .mass-action-row', e => {
+        const $target = e.target
+        if ($target.matches('td,time,span[data-sensitive]')) {
+            const $row = $target.closest('.mass-action-row');
+            $row.querySelector('.mass-action-select').click();
+        }
+    });
 });
 
 // Initialize Blazor

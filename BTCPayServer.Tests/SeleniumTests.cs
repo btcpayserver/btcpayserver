@@ -196,7 +196,6 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("StoreNav-PaymentRequests")).Click();
             s.Driver.FindElement(By.Id("CreatePaymentRequest")).Click();
             Assert.Equal(4, new SelectElement(s.Driver.FindElement(By.Id("FormId"))).Options.Count);
-
         }
 
         [Fact(Timeout = TestTimeout)]
@@ -216,8 +215,7 @@ namespace BTCPayServer.Tests
                 s.GoToInvoices(s.StoreId);
             }
             // Let's CPFP from the invoices page
-            s.Driver.SetCheckbox(By.Id("selectAllCheckbox"), true);
-            s.Driver.FindElement(By.Id("ActionsDropdownToggle")).Click();
+            s.Driver.SetCheckbox(By.CssSelector(".mass-action-select-all"), true);
             s.Driver.FindElement(By.Id("BumpFee")).Click();
             s.Driver.FindElement(By.Id("BroadcastTransaction")).Click();
             s.FindAlertMessage();
@@ -225,16 +223,14 @@ namespace BTCPayServer.Tests
 
             // CPFP again should fail because all invoices got bumped
             s.GoToInvoices();
-            s.Driver.SetCheckbox(By.Id("selectAllCheckbox"), true);
-            s.Driver.FindElement(By.Id("ActionsDropdownToggle")).Click();
+            s.Driver.SetCheckbox(By.CssSelector(".mass-action-select-all"), true);
             s.Driver.FindElement(By.Id("BumpFee")).Click();
             Assert.Contains($"/stores/{s.StoreId}/invoices", s.Driver.Url);
             Assert.Contains("any UTXO available", s.FindAlertMessage(StatusMessageModel.StatusSeverity.Error).Text);
 
             // But we should be able to bump from the wallet's page
             s.GoToWallet(navPages: WalletsNavPages.Transactions);
-            s.Driver.SetCheckbox(By.Id("selectAllCheckbox"), true);
-            s.Driver.FindElement(By.Id("ActionsDropdownToggle")).Click();
+            s.Driver.SetCheckbox(By.CssSelector(".mass-action-select-all"), true);
             s.Driver.FindElement(By.Id("BumpFee")).Click();
             s.Driver.FindElement(By.Id("BroadcastTransaction")).Click();
             Assert.Contains($"/wallets/{s.WalletId}", s.Driver.Url);
@@ -730,9 +726,8 @@ namespace BTCPayServer.Tests
             Assert.Contains(invoiceId, s.Driver.PageSource);
 
             // archive via list
-            s.Driver.FindElement(By.CssSelector($".selector[value=\"{invoiceId}\"]")).Click();
-            s.Driver.FindElement(By.Id("ActionsDropdownToggle")).Click();
-            s.Driver.FindElement(By.Id("ActionsDropdownArchive")).Click();
+            s.Driver.FindElement(By.CssSelector($".mass-action-select[value=\"{invoiceId}\"]")).Click();
+            s.Driver.FindElement(By.Id("ArchiveSelected")).Click();
             Assert.Contains("1 invoice archived", s.FindAlertMessage().Text);
             Assert.DoesNotContain(invoiceId, s.Driver.PageSource);
 
@@ -740,9 +735,8 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("StatusOptionsToggle")).Click();
             s.Driver.FindElement(By.Id("StatusOptionsIncludeArchived")).Click();
             Assert.Contains(invoiceId, s.Driver.PageSource);
-            s.Driver.FindElement(By.CssSelector($".selector[value=\"{invoiceId}\"]")).Click();
-            s.Driver.FindElement(By.Id("ActionsDropdownToggle")).Click();
-            s.Driver.FindElement(By.Id("ActionsDropdownUnarchive")).Click();
+            s.Driver.FindElement(By.CssSelector($".mass-action-select[value=\"{invoiceId}\"]")).Click();
+            s.Driver.FindElement(By.Id("UnarchiveSelected")).Click();
             Assert.Contains("1 invoice unarchived", s.FindAlertMessage().Text);
             Assert.Contains(invoiceId, s.Driver.PageSource);
 
@@ -1699,11 +1693,6 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("CancelWizard")).Click();
             Assert.Equal(settingsUri.ToString(), s.Driver.Url);
 
-            // Transactions list contains export and action, ensure functions are present.
-            s.Driver.FindElement(By.Id($"StoreNav-Wallet{cryptoCode}")).Click();
-            s.Driver.FindElement(By.Id("ActionsDropdownToggle")).Click();
-            s.Driver.FindElement(By.Id("BumpFee"));
-
             // JSON export
             s.Driver.FindElement(By.Id("ExportDropdownToggle")).Click();
             s.Driver.FindElement(By.Id("ExportJSON")).Click();
@@ -1859,8 +1848,7 @@ namespace BTCPayServer.Tests
             payouts[0].Click();
 
             Assert.NotEmpty(s.Driver.FindElements(By.ClassName("payout")));
-            s.Driver.FindElement(By.Id($"{PayoutState.AwaitingApproval}-selectAllCheckbox")).Click();
-            s.Driver.FindElement(By.Id($"{PayoutState.AwaitingApproval}-actions")).Click();
+            s.Driver.FindElement(By.ClassName("mass-action-select-all")).Click();
             s.Driver.FindElement(By.Id($"{PayoutState.AwaitingApproval}-approve-pay")).Click();
 
             s.Driver.FindElement(By.Id("SignTransaction")).Click();
@@ -1935,8 +1923,7 @@ namespace BTCPayServer.Tests
             Assert.Contains(PayoutState.AwaitingApproval.GetStateString(), s.Driver.PageSource);
             s.GoToStore(s.StoreId, StoreNavPages.Payouts);
             s.Driver.FindElement(By.Id($"{PayoutState.AwaitingApproval}-view")).Click();
-            s.Driver.FindElement(By.Id($"{PayoutState.AwaitingApproval}-selectAllCheckbox")).Click();
-            s.Driver.FindElement(By.Id($"{PayoutState.AwaitingApproval}-actions")).Click();
+            s.Driver.FindElement(By.ClassName("mass-action-select-all")).Click();
             s.Driver.FindElement(By.Id($"{PayoutState.AwaitingApproval}-approve")).Click();
             s.FindAlertMessage();
             var tx = await s.Server.ExplorerNode.SendToAddressAsync(address, Money.FromUnit(0.001m, MoneyUnit.BTC));
@@ -1945,8 +1932,7 @@ namespace BTCPayServer.Tests
 
             s.Driver.FindElement(By.Id($"{PayoutState.AwaitingPayment}-view")).Click();
             Assert.Contains(PayoutState.AwaitingPayment.GetStateString(), s.Driver.PageSource);
-            s.Driver.FindElement(By.Id($"{PayoutState.AwaitingPayment}-selectAllCheckbox")).Click();
-            s.Driver.FindElement(By.Id($"{PayoutState.AwaitingPayment}-actions")).Click();
+            s.Driver.FindElement(By.ClassName("mass-action-select-all")).Click();
             s.Driver.FindElement(By.Id($"{PayoutState.AwaitingPayment}-mark-paid")).Click();
             s.FindAlertMessage();
 
@@ -2006,8 +1992,7 @@ namespace BTCPayServer.Tests
             s.GoToStore(newStore.storeId, StoreNavPages.Payouts);
             s.Driver.FindElement(By.Id($"{new PaymentMethodId("BTC", PaymentTypes.LightningLike)}-view")).Click();
             s.Driver.FindElement(By.Id($"{PayoutState.AwaitingApproval}-view")).Click();
-            s.Driver.FindElement(By.Id($"{PayoutState.AwaitingApproval}-selectAllCheckbox")).Click();
-            s.Driver.FindElement(By.Id($"{PayoutState.AwaitingApproval}-actions")).Click();
+            s.Driver.FindElement(By.ClassName("mass-action-select-all")).Click();
             s.Driver.FindElement(By.Id($"{PayoutState.AwaitingApproval}-approve-pay")).Click();
             Assert.Contains(bolt, s.Driver.PageSource);
             Assert.Contains($"{payoutAmount.ToString()} BTC", s.Driver.PageSource);
@@ -2023,8 +2008,7 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.Id($"{PayoutState.AwaitingPayment}-view")).Click();
                 Assert.Contains(bolt, s.Driver.PageSource);
 
-                s.Driver.FindElement(By.Id($"{PayoutState.AwaitingPayment}-selectAllCheckbox")).Click();
-                s.Driver.FindElement(By.Id($"{PayoutState.AwaitingPayment}-actions")).Click();
+                s.Driver.FindElement(By.ClassName("mass-action-select-all")).Click();
                 s.Driver.FindElement(By.Id($"{PayoutState.AwaitingPayment}-mark-paid")).Click();
                 s.Driver.FindElement(By.Id($"{new PaymentMethodId("BTC", PaymentTypes.LightningLike)}-view")).Click();
 
@@ -2553,8 +2537,7 @@ namespace BTCPayServer.Tests
             payouts[0].Click();
             s.Driver.FindElement(By.Id("BTC_LightningLike-view")).Click();
             Assert.NotEmpty(s.Driver.FindElements(By.ClassName("payout")));
-            s.Driver.FindElement(By.Id($"{PayoutState.AwaitingApproval}-selectAllCheckbox")).Click();
-            s.Driver.FindElement(By.Id($"{PayoutState.AwaitingApproval}-actions")).Click();
+            s.Driver.FindElement(By.ClassName("mass-action-select-all")).Click();
             s.Driver.FindElement(By.Id($"{PayoutState.AwaitingApproval}-approve-pay")).Click();
 
             Assert.Contains(lnurl, s.Driver.PageSource);

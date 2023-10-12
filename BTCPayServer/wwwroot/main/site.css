@@ -154,11 +154,7 @@ h2 svg.icon.icon-info {
     cursor: pointer;
     padding: 0;
 }
-@media (min-width: 1400px) {
-    #MassAction {
-        margin-top: -4rem;
-    }
-}
+
 /* Prevent layout from breaking on hyperlinks with very long URLs as the visible text */
 .invoice-details a {
     word-break: break-word;
@@ -1058,5 +1054,37 @@ input.ts-wrapper.form-control:not(.ts-hidden-accessible,.ts-inline) {
 .blazor-status .btn-close .icon {
     width: .75rem;
     height: .75rem;
+}
+
+/* Tables */
+.date-col {
+    min-width: 8rem;
+}
+.amount-col {
+    text-align: right;
+    white-space: nowrap;
+}
+
+/* Mass Actions */
+.mass-action > .mass-action-actions,
+.mass-action[data-selected] > .mass-action-head {
+    display: none;
+}
+.mass-action[data-selected] > .mass-action-actions {
+    display: table-header-group;
+    border-top-width: 0;
+}
+.mass-action > .mass-action-actions button {
+    display: inline-flex;
+    align-items: center;
+    height: 1.4rem;
+    padding: 0;
+    font-weight: var(--btcpay-font-weight-semibold);
+}
+.mass-action > .mass-action-actions button .icon {
+    --btn-icon-size: 1.75rem;
+}
+.mass-action .mass-action-select-col {
+    width: 2rem;
 }
 

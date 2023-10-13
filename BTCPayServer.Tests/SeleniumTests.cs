@@ -1371,7 +1371,7 @@ namespace BTCPayServer.Tests
             TestLogs.LogInformation("Let's try to update one of them");
             s.Driver.FindElement(By.LinkText("Modify")).Click();
 
-            using FakeServer server = new FakeServer();
+            using var server = new FakeServer();
             await server.Start();
             s.Driver.FindElement(By.Name("PayloadUrl")).Clear();
             s.Driver.FindElement(By.Name("PayloadUrl")).SendKeys(server.ServerUri.AbsoluteUri);
@@ -1413,7 +1413,7 @@ namespace BTCPayServer.Tests
             server.Done();
 
             TestLogs.LogInformation("Let's make a failed event");
-            s.CreateInvoice();
+            var invoiceId = s.CreateInvoice();
             request = await server.GetNextRequest();
             request.Response.StatusCode = 404;
             server.Done();
@@ -1438,7 +1438,7 @@ namespace BTCPayServer.Tests
             CanBrowseContent(s);
 
             s.GoToInvoices();
-            s.Driver.FindElement(By.LinkText("Details")).Click();
+            s.Driver.FindElement(By.LinkText(invoiceId)).Click();
             CanBrowseContent(s);
             var element = s.Driver.FindElement(By.ClassName("redeliver"));
             element.Click();
@@ -1691,8 +1691,14 @@ namespace BTCPayServer.Tests
             // no previous page in the wizard, hence no back button
             Assert.True(s.Driver.ElementDoesNotExist(By.Id("GoBack")));
             s.Driver.FindElement(By.Id("CancelWizard")).Click();
-            Assert.Equal(settingsUri.ToString(), s.Driver.Url);
-
+            Assert.Equal(settingsUri.ToString(), s.Driver.Url); 
+            
+            // Transactions list contains export, ensure functions are present.
+            s.Driver.FindElement(By.Id($"StoreNav-Wallet{cryptoCode}")).Click();
+            
+            s.Driver.FindElement(By.ClassName("mass-action-select-all")).Click();
+            s.Driver.FindElement(By.Id("BumpFee"));
+            
             // JSON export
             s.Driver.FindElement(By.Id("ExportDropdownToggle")).Click();
             s.Driver.FindElement(By.Id("ExportJSON")).Click();

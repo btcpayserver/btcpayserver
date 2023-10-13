@@ -103,18 +103,15 @@
                                 "properties": {
                                     "email": {
                                         "type": "string",
-                                        "description": "The email of the new user",
-                                        "nullable": false
+                                        "description": "The email of the new user"
                                     },
                                     "password": {
-                                        "type": "string",
-                                        "description": "The password of the new user (if no password is set, an email will be sent to the user requiring him to set the password)",
-                                        "nullable": true
+                                        "type": ["string", "null"],
+                                        "description": "The password of the new user (if no password is set, an email will be sent to the user requiring him to set the password)"
                                     },
                                     "isAdministrator": {
-                                        "type": "boolean",
+                                        "type": ["boolean", "null"],
                                         "description": "Make this user administrator (only if you have the `unrestricted` permission of a server administrator)",
-                                        "nullable": true,
                                         "default": false
                                     }
                                 }
@@ -311,13 +308,11 @@
                 "properties": {
                     "id": {
                         "type": "string",
-                        "description": "The id of the user",
-                        "nullable": false
+                        "description": "The id of the user"
                     },
                     "email": {
                         "type": "string",
-                        "description": "The email of the user",
-                        "nullable": false
+                        "description": "The email of the user"
                     },
                     "emailConfirmed": {
                         "type": "boolean",
@@ -328,7 +323,7 @@
                         "description": "True if the email requires email confirmation to log in"
                     },
                     "created": {
-                        "nullable": true,
+                        "type": ["number", "null"],
                         "description": "The creation date of the user as a unix timestamp. Null if created before v1.0.5.6",
                         "allOf": [
                             {
@@ -338,7 +333,6 @@
                     },
                     "roles": {
                         "type": "array",
-                        "nullable": false,
                         "items": {
                             "type": "string"
                         },

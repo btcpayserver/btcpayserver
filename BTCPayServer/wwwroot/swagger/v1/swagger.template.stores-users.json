@@ -199,13 +199,11 @@
                         "properties": {
                             "userId": {
                                 "type": "string",
-                                "description": "The id of the user",
-                                "nullable": false
+                                "description": "The id of the user"
                             },
                             "role": {
                                 "type": "string",
-                                "description": "The role of the user. Default roles are `Owner` and `Guest`",
-                                "nullable": false
+                                "description": "The role of the user. Default roles are `Owner` and `Guest`"
                             }
                         }
                     }

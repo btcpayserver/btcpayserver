@@ -1,5 +1,5 @@
 {
-  "openapi": "3.0.0",
+  "openapi": "3.1.0",
   "info": {
     "title": "BTCPay Greenfield API",
     "version": "v1",
@@ -30,12 +30,10 @@
           "properties": {
             "path": {
               "type": "string",
-              "nullable": false,
               "description": "The json path of the property which failed validation"
             },
             "message": {
               "type": "string",
-              "nullable": false,
               "description": "User friendly error message about the validation"
             }
           }
@@ -47,12 +45,10 @@
         "properties": {
           "code": {
             "type": "string",
-            "nullable": false,
             "description": "An error code describing the error"
           },
           "message": {
             "type": "string",
-            "nullable": false,
             "description": "User friendly error message about the error"
           }
         }
@@ -60,7 +56,7 @@
       "UnixTimestamp": {
         "type": "number",
         "format": "int32",
-        "example": 1592312018,
+        "examples": [1592312018],
         "description": "A unix timestamp in seconds"
       },
       "SpeedPolicy": {
@@ -80,9 +76,8 @@
         ]
       },
       "CheckoutType": {
-        "type": "string",
+        "type": ["string", "null"],
         "description": "`\"V1\"`: The original checkout form   \n`\"V2\"`: The new experimental checkout form",
-        "nullable": true,
         "default": "V1",
         "x-enumNames": [
           "V1",
@@ -96,7 +91,7 @@
       "TimeSpan": {
         "type": "number",
         "format": "int32",
-        "example": 90
+        "examples": [90]
       },
       "TimeSpanSeconds": {
         "allOf": [

@@ -67,13 +67,11 @@
                                         "properties": {
                                             "name": {
                                                 "type": "string",
-                                                "description": "The permission id",
-                                                "nullable": false
+                                                "description": "The permission id"
                                             },
                                             "included": {
                                                 "type": "array",
                                                 "description": "Permissions included in this array are also granted by this permission",
-                                                "nullable": false,
                                                 "items": {
                                                     "type": "string"
                                                 }
@@ -118,13 +116,11 @@
                                         "properties": {
                                             "code": {
                                                 "type": "string",
-                                                "description": "The language code",
-                                                "nullable": false
+                                                "description": "The language code"
                                             },
                                             "currentLanguage": {
                                                 "type": "string",
-                                                "description": "The language name",
-                                                "nullable": false
+                                                "description": "The language name"
                                             }
                                         }
                                     }

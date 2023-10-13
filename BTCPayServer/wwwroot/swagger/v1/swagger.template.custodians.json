@@ -778,73 +778,70 @@
                 "properties": {
                     "code": {
                         "type": "string",
-                        "description": "The unique code of the custodian.",
-                        "nullable": false
+                        "description": "The unique code of the custodian."
                     },
                     "label": {
                         "type": "string",
-                        "description": "The name of the custodian.",
-                        "nullable": false
+                        "description": "The name of the custodian."
                     },
                     "depositablePaymentMethods": {
                         "type": "array",
                         "items": {
                           "type": "string"
                         },
-                        "description": "A list of payment methods (crypto code + network) you can deposit to the custodian.",
-                        "nullable": false
+                        "description": "A list of payment methods (crypto code + network) you can deposit to the custodian."
                     },
                     "withdrawablePaymentMethods": {
                         "type": "array",
                         "items": {
                           "type": "string"
                         },
-                        "description": "A list of payment methods (crypto code + network) you can withdraw from the custodian.",
-                        "nullable": false
+                        "description": "A list of payment methods (crypto code + network) you can withdraw from the custodian."
                     },
                     "tradableAssetPairs": {
-                        "type": "array",
+                        "type": ["array", "null"],
                         "description": "A list of tradable asset pair objects, or NULL if the custodian cannot trades/convert assets.",
-                        "nullable": true,
                         "items": {
                             "$ref": "#/components/schemas/AssetPairData"
                         }
                     }
                 },
-                "example": {
-                    "code": "kraken",
-                    "name": "Kraken",
-                    "tradableAssetPairs": {
-                        "BTC/USD": {
-                            "assetBought": "BTC",
-                            "assetSold": "USD",
-                            "minimumTradeQty": 0.001
+                "examples": [
+                    {
+                        "code": "kraken",
+                        "name": "Kraken",
+                        "tradableAssetPairs": {
+                            "BTC/USD": {
+                                "assetBought": "BTC",
+                                "assetSold": "USD",
+                                "minimumTradeQty": 0.001
+                            },
+                            "BTC/EUR": {
+                                "assetBought": "BTC",
+                                "assetSold": "EUR",
+                                "minimumTradeQty": 0.001
+                            },
+                            "LTC/USD": {
+                                "assetBought": "LTC",
+                                "assetSold": "USD",
+                                "minimumTradeQty": 0.05
+                            },
+                            "LTC/EUR": {
+                                "assetBought": "LTC",
+                                "assetSold": "EUR",
+                                "minimumTradeQty": 0.05
+                            }
                         },
-                        "BTC/EUR": {
-                            "assetBought": "BTC",
-                            "assetSold": "EUR",
-                            "minimumTradeQty": 0.001
-                        },
-                        "LTC/USD": {
-                            "assetBought": "LTC",
-                            "assetSold": "USD",
-                            "minimumTradeQty": 0.05
-                        },
-                        "LTC/EUR": {
-                            "assetBought": "LTC",
-                            "assetSold": "EUR",
-                            "minimumTradeQty": 0.05
-                        }
-                    },
-                    "withdrawablePaymentMethods": [
-                        "BTC-OnChain",
-                        "LTC-OnChain"
-                    ],
-                    "depositablePaymentMethods": [
-                        "BTC-OnChain",
-                        "LTC-OnChain"
-                    ]
-                }
+                        "withdrawablePaymentMethods": [
+                            "BTC-OnChain",
+                            "LTC-OnChain"
+                        ],
+                        "depositablePaymentMethods": [
+                            "BTC-OnChain",
+                            "LTC-OnChain"
+                        ]
+                    }
+                ]
             },
             "CustodianAccountData": {
                 "type": "object",
@@ -867,42 +864,42 @@
                         "description": "The name of the custodian account."
                     },
                     "assetBalances": {
-                        "type": "array",
-                        "nullable": true,
+                        "type": ["array", "null"],
                         "description": "A real-time loaded list of all assets (fiat and crypto) on this custodian and the quantity held in the account. Assets with qty 0 can be omitted.",
                         "items": {
                             "$ref": "#/components/schemas/AssetBalanceData"
                         }
                     },
                     "config": {
-                        "type": "object",
-                        "nullable": true,
+                        "type": ["object", "null"],
                         "description": "The configuration of this custodian account. Specific contents depend on the custodian and your access permissions."
                     }
                 },
-                "example": {
-                    "accountId": "xxxxxxxxxxxxxxx",
-                    "storeId": "xxxxxxxxxxxxxx",
-                    "custodianCode": "kraken",
-                    "name": "My Kraken Account",
-                    "assetBalances": [
-                        {
-                            "asset": "BTC",
-                            "qty": "1.23456"
-                        },
-                        {
-                            "asset": "USD",
-                            "qty": "123456.78"
+                "examples": [
+                    {
+                        "accountId": "xxxxxxxxxxxxxxx",
+                        "storeId": "xxxxxxxxxxxxxx",
+                        "custodianCode": "kraken",
+                        "name": "My Kraken Account",
+                        "assetBalances": [
+                            {
+                                "asset": "BTC",
+                                "qty": "1.23456"
+                            },
+                            {
+                                "asset": "USD",
+                                "qty": "123456.78"
+                            }
+                        ],
+                        "config": {
+                            "WithdrawToAddressNamePerPaymentMethod": {
+                                "BTC-OnChain": "My Ledger Nano"
+                            },
+                            "ApiKey": "xxx",
+                            "PrivateKey": "xxx"
                         }
-                    ],
-                    "config": {
-                        "WithdrawToAddressNamePerPaymentMethod": {
-                            "BTC-OnChain": "My Ledger Nano"
-                        },
-                        "ApiKey": "xxx",
-                        "PrivateKey": "xxx"
                     }
-                }
+                ]
             },
             "CreateCustodianAccountRequest": {
                 "type": "object",
@@ -925,70 +922,67 @@
                         "description": "The name of the custodian account."
                     },
                     "config": {
-                        "type": "object",
-                        "nullable": true,
+                        "type": ["object", "null"],
                         "description": "The configuration of this custodian account. Specific contents depend on the custodian and your access permissions."
                     }
                 },
-                "example": {
-                    "accountId": "xxxxxxxxxxxxxxx",
-                    "storeId": "xxxxxxxxxxxxxx",
-                    "custodianCode": "kraken",
-                    "name": "My Kraken Account",
-                    "config": {
-                        "WithdrawToAddressNamePerPaymentMethod": {
-                            "BTC-OnChain": "My Ledger Nano"
-                        },
-                        "ApiKey": "xxx",
-                        "PrivateKey": "xxx"
+                "examples": [
+                    {
+                        "accountId": "xxxxxxxxxxxxxxx",
+                        "storeId": "xxxxxxxxxxxxxx",
+                        "custodianCode": "kraken",
+                        "name": "My Kraken Account",
+                        "config": {
+                            "WithdrawToAddressNamePerPaymentMethod": {
+                                "BTC-OnChain": "My Ledger Nano"
+                            },
+                            "ApiKey": "xxx",
+                            "PrivateKey": "xxx"
+                        }
                     }
-                }
+                ]
             },
             "QuoteResultData": {
                 "type": "object",
                 "properties": {
                     "fromAsset": {
                         "type": "string",
-                        "description": "The asset to trade.",
-                        "nullable": false
+                        "description": "The asset to trade."
                     },
                     "toAsset": {
                         "type": "string",
-                        "description": "The asset you want.",
-                        "nullable": false
+                        "description": "The asset you want."
                     },
                     "bid": {
                         "type": "string",
                         "format": "decimal",
-                        "description": "The bid price.",
-                        "nullable": false
+                        "description": "The bid price."
                     },
                     "ask": {
                         "type": "string",
                         "format": "decimal",
-                        "description": "The ask price",
-                        "nullable": false
+                        "description": "The ask price"
                     }
                 },
-                "example": {
-                    "fromAsset": "USD",
-                    "toAsset": "BTC",
-                    "bid": "30000.12",
-                    "ask": "30002.24"
-                }
+                "examples": [
+                    {
+                        "fromAsset": "USD",
+                        "toAsset": "BTC",
+                        "bid": "30000.12",
+                        "ask": "30002.24"
+                    }
+                ]
             },
             "TradeRequestData": {
                 "type": "object",
                 "properties": {
                     "fromAsset": {
                         "type": "string",
-                        "description": "The asset to trade.",
-                        "nullable": false
+                        "description": "The asset to trade."
                     },
                     "toAsset": {
                         "type": "string",
-                        "description": "The asset you want.",
-                        "nullable": false
+                        "description": "The asset you want."
                     },
                     "qty": {
                         "oneOf": [
@@ -996,22 +990,23 @@
                                 "type": "string",
                                 "format": "decimal",
                                 "description": "The qty of fromAsset to convert into toAsset.",
-                                "example": "1.50"
+                                "examples": ["1.50"]
                             },
                             {
                                 "type": "string",
                                 "description": "The percent of fromAsset to convert into toAsset. The value must end with \"%\" to be considered a percentage.",
-                                "example": "50%"
+                                "examples": ["50%"]
                             }
-                        ],
-                        "nullable": false
+                        ]
                     }
                 },
-                "example": {
-                    "fromAsset": "USD",
-                    "toAsset": "BTC",
-                    "qty": "50%"
-                }
+                "examples": [
+                    {
+                        "fromAsset": "USD",
+                        "toAsset": "BTC",
+                        "qty": "50%"
+                    }
+                ]
             },
             "TradeResultData": {
                 "type": "object",
@@ -1032,50 +1027,49 @@
                         }
                     },
                     "tradeId": {
-                        "type": "string",
-                        "description": "The unique ID of the trade used by the exchange. This ID can be used to get the details of this trade at a later time.",
-                        "nullable": true
+                        "type": ["string", "null"],
+                        "description": "The unique ID of the trade used by the exchange. This ID can be used to get the details of this trade at a later time."
                     },
                     "accountId": {
                         "type": "string",
-                        "description": "The unique ID of the custodian account used.",
-                        "nullable": false
+                        "description": "The unique ID of the custodian account used."
                     },
                     "custodianCode": {
                         "type": "string",
-                        "description": "The code of the custodian used.",
-                        "nullable": false
+                        "description": "The code of the custodian used."
                     }
                 },
-                "example": {
-                    "fromAsset": "USD",
-                    "toAsset": "BTC",
-                    "ledgerEntries": [
-                        {
-                            "asset": "BTC",
-                            "qty": "1.23456",
-                            "type": "Trade"
-                        },
-                        {
-                            "asset": "USD",
-                            "qty": "-61728",
-                            "type": "Trade"
-                        },
-                        {
-                            "asset": "BTC",
-                            "qty": "-0.00123456",
-                            "type": "Fee"
-                        },
-                        {
-                            "asset": "KFEE",
-                            "qty": "-123.456",
-                            "type": "Fee"
-                        }
-                    ],
-                    "tradeId": "XXXX-XXXX-XXXX-XXXX",
-                    "accountId": "xxxxxxxxxxxxxx",
-                    "custodianCode": "kraken"
-                }
+                "examples": [
+                    {
+                        "fromAsset": "USD",
+                        "toAsset": "BTC",
+                        "ledgerEntries": [
+                            {
+                                "asset": "BTC",
+                                "qty": "1.23456",
+                                "type": "Trade"
+                            },
+                            {
+                                "asset": "USD",
+                                "qty": "-61728",
+                                "type": "Trade"
+                            },
+                            {
+                                "asset": "BTC",
+                                "qty": "-0.00123456",
+                                "type": "Fee"
+                            },
+                            {
+                                "asset": "KFEE",
+                                "qty": "-123.456",
+                                "type": "Fee"
+                            }
+                        ],
+                        "tradeId": "XXXX-XXXX-XXXX-XXXX",
+                        "accountId": "xxxxxxxxxxxxxx",
+                        "custodianCode": "kraken"
+                    }
+                ]
             },
             "WithdrawalRequestData": {
                 "type": "object",
@@ -1085,8 +1079,7 @@
                             {
                                 "$ref": "#/components/schemas/PaymentMethodId"
                             }
-                        ],
-                        "nullable": false
+                        ]
                     },
                     "qty": {
                         "oneOf": [
@@ -1102,10 +1095,12 @@
                         ]
                     }
                 },
-                "example": {
-                    "paymentMethod": "BTC-OnChain",
-                    "qty": "0.123456"
-                }
+                "examples": [
+                    {
+                        "paymentMethod": "BTC-OnChain",
+                        "qty": "0.123456"
+                    }
+                ]
             },
             "WithdrawalResultData": {
                 "type": "object",
@@ -1126,58 +1121,54 @@
                         }
                     },
                     "withdrawalId": {
-                        "type": "string",
-                        "description": "The unique ID of the withdrawal used by the exchange.",
-                        "nullable": true
+                        "type": ["string", "null"],
+                        "description": "The unique ID of the withdrawal used by the exchange."
                     },
                     "accountId": {
                         "type": "string",
-                        "description": "The unique ID of the custodian account used.",
-                        "nullable": false
+                        "description": "The unique ID of the custodian account used."
                     },
                     "custodianCode": {
                         "type": "string",
-                        "description": "The code of the custodian used.",
-                        "nullable": false
+                        "description": "The code of the custodian used."
                     },
                     "status": {
                         "type": "string",
-                        "description": "The status of the withdrawal: 'Queued', 'Complete', 'Failed' or 'Unknown'.",
-                        "nullable": false
+                        "description": "The status of the withdrawal: 'Queued', 'Complete', 'Failed' or 'Unknown'."
                     },
                     "transactionId": {
-                        "type": "string",
-                        "description": "The transaction ID on the blockchain once the withdrawal has been executed.",
-                        "nullable": true
+                        "type": ["string", "null"],
+                        "description": "The transaction ID on the blockchain once the withdrawal has been executed."
                     },
                     "targetAddress": {
-                        "type": "string",
-                        "description": "The address where the funds were sent to once the withdrawal has been executed.",
-                        "nullable": true
+                        "type": ["string", "null"],
+                        "description": "The address where the funds were sent to once the withdrawal has been executed."
                     }
                 },
-                "example": {
-                    "asset": "BTC",
-                    "paymentMethod": "BTC-OnChain",
-                    "ledgerEntries": [
-                        {
-                            "asset": "BTC",
-                            "qty": "-0.123456",
-                            "type": "Withdrawal"
-                        },
-                        {
-                            "asset": "BTC",
-                            "qty": "-0.005",
-                            "type": "Fee"
-                        }
-                    ],
-                    "withdrawalId": "XXXX-XXXX-XXXX-XXXX",
-                    "accountId": "xxxxxxxxxxxxxxx",
-                    "custodianCode": "kraken",
-                    "status": "Complete",
-                    "transactionId": "xxxxxxxxxxxxxxx",
-                    "targetAddress": "bc1qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                }
+                "examples": [
+                    {
+                        "asset": "BTC",
+                        "paymentMethod": "BTC-OnChain",
+                        "ledgerEntries": [
+                            {
+                                "asset": "BTC",
+                                "qty": "-0.123456",
+                                "type": "Withdrawal"
+                            },
+                            {
+                                "asset": "BTC",
+                                "qty": "-0.005",
+                                "type": "Fee"
+                            }
+                        ],
+                        "withdrawalId": "XXXX-XXXX-XXXX-XXXX",
+                        "accountId": "xxxxxxxxxxxxxxx",
+                        "custodianCode": "kraken",
+                        "status": "Complete",
+                        "transactionId": "xxxxxxxxxxxxxxx",
+                        "targetAddress": "bc1qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                    }
+                ]
             },
             "WithdrawalSimulationResultData": {
                 "type": "object",
@@ -1199,49 +1190,47 @@
                     },
                     "accountId": {
                         "type": "string",
-                        "description": "The unique ID of the custodian account used.",
-                        "nullable": false
+                        "description": "The unique ID of the custodian account used."
                     },
                     "custodianCode": {
                         "type": "string",
-                        "description": "The code of the custodian used.",
-                        "nullable": false
+                        "description": "The code of the custodian used."
                     },
                     "minQty": {
-                        "type": "string",
+                        "type": ["string", "null"],
                         "format": "decimal",
-                        "description": "The minimum amount to withdraw",
-                        "nullable": true
+                        "description": "The minimum amount to withdraw"
                     },
                     "maxQty": {
-                        "type": "string",
+                        "type": ["string", "null"],
                         "format": "decimal",
-                        "description": "The maximum amount to withdraw",
-                        "nullable": true
+                        "description": "The maximum amount to withdraw"
                     }
                 },
-                "example": {
-                    "asset": "BTC",
-                    "paymentMethod": "BTC-OnChain",
-                    "ledgerEntries": [
-                        {
-                            "asset": "BTC",
-                            "qty": "-0.123456",
-                            "type": "Withdrawal"
-                        },
-                        {
-                            "asset": "BTC",
-                            "qty": "-0.005",
-                            "type": "Fee"
-                        }
-                    ],
-                    "withdrawalId": "XXXX-XXXX-XXXX-XXXX",
-                    "accountId": "xxxxxxxxxxxxxxx",
-                    "custodianCode": "kraken",
-                    "status": "Complete",
-                    "transactionId": "xxxxxxxxxxxxxxx",
-                    "targetAddress": "bc1qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                }
+                "examples": [
+                    {
+                        "asset": "BTC",
+                        "paymentMethod": "BTC-OnChain",
+                        "ledgerEntries": [
+                            {
+                                "asset": "BTC",
+                                "qty": "-0.123456",
+                                "type": "Withdrawal"
+                            },
+                            {
+                                "asset": "BTC",
+                                "qty": "-0.005",
+                                "type": "Fee"
+                            }
+                        ],
+                        "withdrawalId": "XXXX-XXXX-XXXX-XXXX",
+                        "accountId": "xxxxxxxxxxxxxxx",
+                        "custodianCode": "kraken",
+                        "status": "Complete",
+                        "transactionId": "xxxxxxxxxxxxxxx",
+                        "targetAddress": "bc1qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                    }
+                ]
             },
             "LedgerEntryData": {
                 "type": "object",
@@ -1249,26 +1238,25 @@
                 "properties": {
                     "asset": {
                         "type": "string",
-                        "description": "An asset.",
-                        "nullable": false
+                        "description": "An asset."
                     },
                     "qty": {
                         "type": "string",
                         "format": "decimal",
-                        "description": "The quantity changed of the asset. Can be positive or negative.",
-                        "nullable": false
+                        "description": "The quantity changed of the asset. Can be positive or negative."
                     },
                     "type": {
                         "type": "string",
-                        "description": "Trade, Fee or Withdrawal",
-                        "nullable": false
+                        "description": "Trade, Fee or Withdrawal"
                     }
                 },
-                "example": {
-                    "asset": "BTC",
-                    "qty": "1.23456",
-                    "type": "Trade"
-                }
+                "examples": [
+                    {
+                        "asset": "BTC",
+                        "qty": "1.23456",
+                        "type": "Trade"
+                    }
+                ]
             },
             "AssetBalanceData": {
                 "type": "object",
@@ -1276,20 +1264,20 @@
                 "properties": {
                     "asset": {
                         "type": "string",
-                        "description": "An asset.",
-                        "nullable": false
+                        "description": "An asset."
                     },
                     "qty": {
                         "type": "string",
                         "format": "decimal",
-                        "description": "The quantity changed of the asset. Can be positive or negative.",
-                        "nullable": false
+                        "description": "The quantity changed of the asset. Can be positive or negative."
                     }
                 },
-                "example": {
-                    "asset": "BTC",
-                    "qty": "1.23456"
-                }
+                "examples": [
+                    {
+                        "asset": "BTC",
+                        "qty": "1.23456"
+                    }
+                ]
             },
             "AssetPairData": {
                 "type": "object",
@@ -1297,20 +1285,20 @@
                 "properties": {
                     "pair": {
                         "type": "string",
-                        "description": "The name of the asset pair.",
-                        "nullable": false
+                        "description": "The name of the asset pair."
                     },
                     "minimumTradeQty": {
                         "type": "number",
-                        "description": "The smallest amount we can buy or sell.",
-                        "nullable": false
+                        "description": "The smallest amount we can buy or sell."
                     }
                 },
-                "example": {
-                    "assetBought": "BTC",
-                    "assetSold": "USD",
-                    "minimumTradeQty": 0.0001
-                }
+                "examples": [
+                    {
+                        "assetBought": "BTC",
+                        "assetSold": "USD",
+                        "minimumTradeQty": 0.0001
+                    }
+                ]
             }
         }
     },

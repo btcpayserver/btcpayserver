@@ -63,59 +63,52 @@
                                 "type": "object",
                                 "properties": {
                                     "name": {
-                                        "type": "string",
-                                        "description": "The name of the pull payment",
-                                        "nullable": true
+                                        "type": ["string", "null"],
+                                        "description": "The name of the pull payment"
                                     },
                                     "description": {
-                                        "type": "string",
-                                        "description": "The description of the pull payment",
-                                        "nullable": true
+                                        "type": ["string", "null"],
+                                        "description": "The description of the pull payment"
                                     },
                                     "amount": {
                                         "type": "string",
                                         "format": "decimal",
-                                        "example": "0.1",
+                                        "examples": ["0.1"],
                                         "description": "The amount in `currency` of this pull payment as a decimal string"
                                     },
                                     "currency": {
                                         "type": "string",
-                                        "example": "BTC",
+                                        "examples": ["BTC"],
                                         "description": "The currency of the amount."
                                     },
                                     "period": {
-                                        "type": "integer",
+                                        "type": ["integer", "null"],
                                         "format": "decimal",
-                                        "example": 604800,
-                                        "nullable": true,
+                                        "examples": [604800],
                                         "description": "The length of each period in seconds."
                                     },
                                     "BOLT11Expiration": {
-                                        "type": "string",
-                                        "example": 30,
+                                        "type": ["string", "null"],
+                                        "examples": [30],
                                         "default": 30,
-                                        "nullable": true,
                                         "description": "If lightning is activated, do not accept BOLT11 invoices with expiration less than … days"
                                     },
                                     "autoApproveClaims": {
-                                        "type": "boolean",
-                                        "example": false,
+                                        "type": ["boolean", "null"],
+                                        "examples": [false],
                                         "default": false,
-                                        "nullable": true,
                                         "description": "Any payouts created for this pull payment will skip the approval phase upon creation"
                                     },
                                     "startsAt": {
-                                        "type": "integer",
+                                        "type": ["integer", "null"],
                                         "format": "unix timestamp in seconds",
-                                        "example": 1592312018,
-                                        "nullable": true,
+                                        "examples": [1592312018],
                                         "description": "When this pull payment is effective. Already started if null or unspecified."
                                     },
                                     "expiresAt": {
-                                        "type": "integer",
+                                        "type": ["integer", "null"],
                                         "format": "unix timestamp in seconds",
-                                        "example": 1593129600,
-                                        "nullable": true,
+                                        "examples": [1593129600],
                                         "description": "When this pull payment expires. Never expires if null or unspecified."
                                     },
                                     "paymentMethods": {
@@ -123,7 +116,7 @@
                                         "description": "The list of supported payment methods supported by this pull payment. Available options can be queried from the `StorePaymentMethods_GetStorePaymentMethods` endpoint",
                                         "items": {
                                             "type": "string",
-                                            "example": "BTC"
+                                            "examples": ["BTC"]
                                         }
                                     }
                                 }
@@ -622,9 +615,8 @@
                                         "description": "The revision number of the payout being modified"
                                     },
                                     "rateRule": {
-                                        "type": "string",
-                                        "nullable": true,
-                                        "example": "kraken(BTC_USD)",
+                                        "type": ["string", "null"],
+                                        "examples": ["kraken(BTC_USD)"],
                                         "description": "The rate rule to calculate the rate of the payout. This can also be a fixed decimal. (if null or unspecified, will use the same rate setting as the store's settings)"
                                     }
                                 }
@@ -873,13 +865,13 @@
                 "properties": {
                     "destination": {
                         "type": "string",
-                        "example": "1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2",
+                        "examples": ["1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2"],
                         "description": "The destination of the payout (can be an address or a BIP21 url)"
                     },
                     "amount": {
                         "type": "string",
                         "format": "decimal",
-                        "example": "10399.18",
+                        "examples": ["10399.18"],
                         "description": "The amount of the payout in the currency of the pull payment (eg. USD)."
                     },
                     "paymentMethod": {
@@ -925,9 +917,8 @@
                     {
                         "properties": {
                             "link": {
-                                "type": "string",
+                                "type": ["string", "null"],
                                 "format": "url",
-                                "nullable": true,
                                 "description": "A link to the proof of payout payment."
                             }
                         }
@@ -935,8 +926,7 @@
                     {
                         "properties": {
                             "id": {
-                                "type": "string",
-                                "nullable": true,
+                                "type": ["string", "null"],
                                 "description": "A unique identifier to the proof of payout payment."
                             }
                         }
@@ -945,7 +935,7 @@
             },
             "PayoutState": {
                 "type": "string",
-                "example": "AwaitingPayment",
+                "examples": ["AwaitingPayment"],
                 "description": "The state of the payout (`AwaitingApproval`, `AwaitingPayment`, `InProgress`, `Completed`, `Cancelled`)",
                 "x-enumNames": [
                     "AwaitingApproval",
@@ -983,13 +973,13 @@
                     },
                     "destination": {
                         "type": "string",
-                        "example": "1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2",
+                        "examples": ["1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2"],
                         "description": "The destination of the payout (can be an address or a BIP21 url)"
                     },
                     "amount": {
                         "type": "string",
                         "format": "decimal",
-                        "example": "10399.18",
+                        "examples": ["10399.18"],
                         "description": "The amount of the payout in the currency of the pull payment (eg. USD)."
                     },
                     "paymentMethod": {
@@ -997,14 +987,13 @@
                     },
                     "cryptoCode": {
                         "type": "string",
-                        "example": "BTC",
+                        "examples": ["BTC"],
                         "description": "Crypto code of the payment method of the payout (e.g., \"BTC\" or \"LTC\")"
                     },
                     "paymentMethodAmount": {
-                        "type": "string",
+                        "type": ["string", "null"],
                         "format": "decimal",
-                        "nullable": true,
-                        "example": "1.12300000",
+                        "examples": ["1.12300000"],
                         "description": "The amount of the payout in the currency of the payment method (eg. BTC). This is only available from the `AwaitingPayment` state."
                     },
                     "state": {
@@ -1017,22 +1006,22 @@
                         "type": "object",
                         "additionalProperties": true,
                         "description": "Additional information around the payout that can be supplied. The mentioned properties are all optional and you can introduce any json format you wish.",
-                        "example": {
-                            "source": "Payout created through the API"
-                        },
+                        "examples": [
+                            {
+                                "source": "Payout created through the API"
+                            }
+                        ],
                         "anyOf": [
                             {
                                 "title": "General information",
                                 "properties": {
                                     "source": {
-                                        "type": "string",
-                                        "nullable": true,
+                                        "type": ["string", "null"],
                                         "description": "The source of the payout creation. Shown on the payout list page."
                                     },
                                     "sourceLink": {
-                                        "type": "string",
+                                        "type": ["string", "null"],
                                         "format": "url",
-                                        "nullable": true,
                                         "description": "A link to the source of the payout creation. Shown on the payout list page."
                                     }
                                 }
@@ -1058,31 +1047,29 @@
                     },
                     "currency": {
                         "type": "string",
-                        "example": "BTC",
+                        "examples": ["BTC"],
                         "description": "The currency of the pull payment's amount"
                     },
                     "amount": {
                         "type": "string",
                         "format": "decimal",
-                        "example": "1.12000000",
+                        "examples": ["1.12000000"],
                         "description": "The amount in the currency of this pull payment as a decimal string"
                     },
                     "period": {
-                        "type": "integer",
-                        "example": 604800,
-                        "nullable": true,
+                        "type": ["integer", "null"],
+                        "examples": [604800],
                         "description": "The length of each period in seconds"
                     },
                     "BOLT11Expiration": {
                         "type": "string",
-                        "example": 30,
+                        "examples": [30],
                         "description": "If lightning is activated, do not accept BOLT11 invoices with expiration less than … days"
                     },
                     "autoApproveClaims": {
-                        "type": "boolean",
-                        "example": false,
+                        "type": ["boolean", "null"],
+                        "examples": [false],
                         "default": false,
-                        "nullable": true,
                         "description": "Any payouts created for this pull payment will skip the approval phase upon creation"
                     },
                     "archived": {
@@ -1101,12 +1088,12 @@
                     "lnurlBech32": {
                         "type": "string",
                         "description": "Bech32 representation of LNURL",
-                        "example": "lightning:lnurl1dp68gup69uhnzv3h9cczuvpwxyarzdp3xsez7sj5gvh42j2vfe24ynp0wa5hg6rywfshwtmswqhngvntdd6x6uzvx4jrvu2kvvur23n8v46rwjpexcc45563fn53w7"
+                        "examples": ["lightning:lnurl1dp68gup69uhnzv3h9cczuvpwxyarzdp3xsez7sj5gvh42j2vfe24ynp0wa5hg6rywfshwtmswqhngvntdd6x6uzvx4jrvu2kvvur23n8v46rwjpexcc45563fn53w7"]
                     },
                     "lnurlUri": {
                         "type": "string",
                         "description": "URI representation of LNURL",
-                        "example": "lnurlw://example.com/BTC/UILNURL/withdraw/pp/42kktmpL5d6qVc85Fget7H961ZSQ"
+                        "examples": ["lnurlw://example.com/BTC/UILNURL/withdraw/pp/42kktmpL5d6qVc85Fget7H961ZSQ"]
                     }
                 }
             }

@@ -133,8 +133,7 @@
                         "style": "form",
                         "explode": true,
                         "schema": {
-                            "type": "array",
-                            "nullable": true,
+                            "type": ["array", "null"],
                             "items": {
                                 "type": "string"
                             }
@@ -226,12 +225,11 @@
                 "properties": {
                     "currencyPair": {
                         "type": "string",
-                        "example": "BTC_USD",
+                        "examples": ["BTC_USD"],
                         "description": "Currency pair in the format of `BTC_USD`"
                     },
                     "errors": {
-                        "type": "array",
-                        "nullable": true,
+                        "type": ["array", "null"],
                         "items": {
                             "type": "string"
                         },
@@ -240,7 +238,7 @@
                     "rate": {
                         "type": "string",
                         "format": "decimal",
-                        "example": "64392.23",
+                        "examples": ["64392.23"],
                         "description": "the rate fetched based on the currency pair"
                     }
                 }

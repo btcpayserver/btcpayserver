@@ -650,8 +650,7 @@
                         "required": false,
                         "description": "Limit to pending invoices only",
                         "schema": {
-                            "type": "boolean",
-                            "nullable": true,
+                            "type": ["boolean", "null"],
                             "default": false
                         }
                     },
@@ -661,8 +660,7 @@
                         "required": false,
                         "description": "The index of an invoice that will be used as the start of the list",
                         "schema": {
-                            "type": "number",
-                            "nullable": true,
+                            "type": ["number", "null"],
                             "default": 0
                         }
                     }
@@ -824,8 +822,7 @@
                         "required": false,
                         "description": "Also include pending payments",
                         "schema": {
-                            "type": "boolean",
-                            "nullable": true,
+                            "type": ["boolean", "null"],
                             "default": false
                         }
                     },
@@ -835,8 +832,7 @@
                         "required": false,
                         "description": "The index of an invoice that will be used as the start of the list",
                         "schema": {
-                            "type": "number",
-                            "nullable": true,
+                            "type": ["number", "null"],
                             "default": 0
                         }
                     }

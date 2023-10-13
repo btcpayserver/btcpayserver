@@ -223,7 +223,7 @@ namespace BTCPayServer.Controllers
 
             var blob = custodianAccount.GetBlob();
             var configForm = await custodian.GetConfigForm(blob, HttpContext.RequestAborted);
-            configForm.SetValues(blob);
+            _formDataService.SetValues(configForm, blob);
 
             var vm = new EditCustodianAccountViewModel();
             vm.CustodianAccount = custodianAccount;
@@ -280,14 +280,14 @@ namespace BTCPayServer.Controllers
             // First, we restore the previous form based on the previous blob that was
             // stored in config
             var form = await custodian.GetConfigForm(b, HttpContext.RequestAborted);
-            form.SetValues(b);
+            _formDataService.SetValues(form, b);
             // Then we apply new values overriding the previous blob from the Form params
             form.ApplyValuesFromForm(Request.Form);
             // We extract the new resulting blob, and request what is the next form based on it
             b = _formDataService.GetValues(form);
             form = await custodian.GetConfigForm(_formDataService.GetValues(form), HttpContext.RequestAborted);
             // We set all the values to this blob, and validate the form
-            form.SetValues(b);
+            _formDataService.SetValues(form, b);
             _formDataService.Validate(form, ModelState);
             return form;
         }
@@ -600,7 +600,7 @@ namespace BTCPayServer.Controllers
                     catch (BadConfigException e)
                     {
                         Form configForm = await custodian.GetConfigForm(config);
-                        configForm.SetValues(config);
+                        _formDataService.SetValues(configForm, config);
                         string[] badConfigFields = new string[e.BadConfigKeys.Length];
                         int i = 0;
                         foreach (var oneField in configForm.GetAllFields())

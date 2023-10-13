@@ -105,31 +105,7 @@ public class Form
         }
     }
 
-    public void SetValues(JObject values)
-    {
-        var fields = GetAllFields().ToDictionary(k => k.FullName, k => k.Field);
-        SetValues(fields, new List<string>(), values);
-    }
-
-    private void SetValues(Dictionary<string, Field> fields, List<string> path, JObject values)
-    {
-        foreach (var prop in values.Properties())
-        {
-            List<string> propPath = new List<string>(path.Count + 1);
-            propPath.AddRange(path);
-            propPath.Add(prop.Name);
-            if (prop.Value.Type == JTokenType.Object)
-            {
-                SetValues(fields, propPath, (JObject)prop.Value);
-            }
-            else if (prop.Value.Type == JTokenType.String)
-            {
-                var fullName = string.Join('_', propPath.Where(s => !string.IsNullOrEmpty(s)));
-                if (fields.TryGetValue(fullName, out var f) && !f.Constant)
-                    f.Value = prop.Value.Value<string>();
-            }
-        }
-    }
+    
 
 
 }

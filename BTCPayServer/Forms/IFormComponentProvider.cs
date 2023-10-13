@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using BTCPayServer.Abstractions.Form;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Forms;
 
@@ -10,6 +11,7 @@ public interface IFormComponentProvider
     void Validate(Form form, Field field);
     void Register(Dictionary<string, IFormComponentProvider> typeToComponentProvider);
     string GetValue(Form form, Field field);
+    void SetValue(Field field, JToken value);
 }
 
 public abstract class FormComponentProviderBase : IFormComponentProvider
@@ -19,6 +21,11 @@ public abstract class FormComponentProviderBase : IFormComponentProvider
     public virtual string GetValue(Form form, Field field)
     {
         return field.Value;
+    }
+
+    public void SetValue(Field field, JToken value)
+    {
+        field.Value = value.ToString();
     }
 
     public abstract void Validate(Form form, Field field);

@@ -11,6 +11,7 @@ using Xunit.Abstractions;
 
 namespace BTCPayServer.Tests;
 
+[Collection(nameof(NonParallelizableCollectionDefinition))]
 [Trait("Integration", "Integration")]
 public class FormTests : UnitTestBase
 {

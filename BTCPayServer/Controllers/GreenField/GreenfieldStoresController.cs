@@ -153,13 +153,18 @@ namespace BTCPayServer.Controllers.Greenfield
                 LightningDescriptionTemplate = storeBlob.LightningDescriptionTemplate,
                 PaymentTolerance = storeBlob.PaymentTolerance,
                 PayJoinEnabled = storeBlob.PayJoinEnabled,
-                PaymentMethodCriteria = storeBlob.PaymentMethodCriteria?.Where(criteria => criteria.Value is not null)?.Select(criteria => new PaymentMethodCriteriaData()
+                AutoDetectLanguage = storeBlob.AutoDetectLanguage,
+                ShowPayInWalletButton = storeBlob.ShowPayInWalletButton,
+                ShowStoreHeader = storeBlob.ShowStoreHeader,
+                CelebratePayment = storeBlob.CelebratePayment,
+                PlaySoundOnPayment = storeBlob.PlaySoundOnPayment,
+                PaymentMethodCriteria = storeBlob.PaymentMethodCriteria?.Where(criteria => criteria.Value is not null).Select(criteria => new PaymentMethodCriteriaData
                 {
                     Above = criteria.Above,
                     Amount = criteria.Value.Value,
                     CurrencyCode = criteria.Value.Currency,
                     PaymentMethod = criteria.PaymentMethod.ToStringNormalized()
-                })?.ToList() ?? new List<PaymentMethodCriteriaData>()
+                }).ToList() ?? new List<PaymentMethodCriteriaData>()
             };
         }
 
@@ -201,11 +206,21 @@ namespace BTCPayServer.Controllers.Greenfield
             blob.LightningDescriptionTemplate = restModel.LightningDescriptionTemplate;
             blob.PaymentTolerance = restModel.PaymentTolerance;
             blob.PayJoinEnabled = restModel.PayJoinEnabled;
+            if (restModel.AutoDetectLanguage.HasValue)
+                blob.AutoDetectLanguage = restModel.AutoDetectLanguage.Value;
+            if (restModel.ShowPayInWalletButton.HasValue)
+                blob.ShowPayInWalletButton = restModel.ShowPayInWalletButton.Value;
+            if (restModel.ShowStoreHeader.HasValue)
+                blob.ShowStoreHeader = restModel.ShowStoreHeader.Value;
+            if (restModel.CelebratePayment.HasValue)
+                blob.CelebratePayment = restModel.CelebratePayment.Value;
+            if (restModel.PlaySoundOnPayment.HasValue)
+                blob.PlaySoundOnPayment = restModel.PlaySoundOnPayment.Value;
             blob.PaymentMethodCriteria = restModel.PaymentMethodCriteria?.Select(criteria =>
-                new PaymentMethodCriteria()
+                new PaymentMethodCriteria
                 {
                     Above = criteria.Above,
-                    Value = new CurrencyValue()
+                    Value = new CurrencyValue
                     {
                         Currency = criteria.CurrencyCode,
                         Value = criteria.Amount

@@ -6,6 +6,7 @@
 
 * Pull Payment: Add QR scanner for destination and infer payment method (#5358) @dennisreimann
 * Greenfield: Allow deleting user by email (#5372) @Kukks
+* Greenfield: Add missing checkout (V2) settings (#5406, #5403) @dennisreimann
 
 ### Bug fixes
 
@@ -17,12 +18,15 @@
 * Removed unused Argoneum and Exchangerate.host rate provider (#5365) @Kukks
 * Fix: If a store was accepting USDt, invoices wouldn't be processed properly. @Kukks
 * Email rules, Recipients required even if "send mail to buyer" (#5345 #5357) @dennisreimann
+* Fix: BTCPayServer.HostedServices.BitpayIPNSender fail to send notifications on some locale (Fix #5361) @AdilElFarissi
 
 ### Improvements
 
 * Invoice: Improve payment details page (#5362) @dennisreimann
 * Crowdfund: Improve no perks case (#5378 #5376) @dennisreimann
 * Switched recommended exchanges for COP and UGX to yadio @Kukks
+* Forms: Make zip code a required field in predefined address form (#5405) @dennisreimann
+* Adjust swagger doc to latest change in Greenfield API @ndeet
 
 ## 1.11.6
 

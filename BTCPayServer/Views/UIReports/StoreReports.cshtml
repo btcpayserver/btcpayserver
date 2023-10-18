@@ -90,7 +90,7 @@
             <table class="table table-hover w-auto">
                 <thead class="sticky-top bg-body">
                 <tr>
-                    <th v-for="field in srv.result.fields">
+                    <th v-for="field in srv.result.fields" :class="{ 'text-end': ['integer', 'decimal', 'amount'].includes(field.type) }">
                         <a class="text-nowrap sort-column"
                            href="#"
                            :data-field="field.name"

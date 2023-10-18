@@ -136,7 +136,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 return result.charAt(0).toUpperCase() + result.slice(1);
             },
             displayValue(val) {
-                return val && typeof (val) === "object" && val.d ? new Decimal(val.v).toFixed(val.d) : val;
+                return val && typeof val === "object" && typeof val.d === "number" ? new Decimal(val.v).toFixed(val.d) : val;
             }
         }
     });

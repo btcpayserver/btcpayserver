@@ -1260,6 +1260,19 @@ namespace BTCPayServer.Controllers
             model.CheckoutType = storeBlob.CheckoutType;
             model.AvailablePaymentMethods = GetPaymentMethodsSelectList();
 
+            JObject? metadataObj = null;
+            if (!string.IsNullOrEmpty(model.Metadata))
+            {
+                try
+                {
+                    metadataObj = JObject.Parse(model.Metadata);
+                }
+                catch (Exception e)
+                {
+                    ModelState.AddModelError(nameof(model.Metadata), "Metadata was not valid JSON");
+                }
+            }
+            
             if (!ModelState.IsValid)
             {
                 return View(model);
@@ -1278,17 +1291,31 @@ namespace BTCPayServer.Controllers
 
             try
             {
+                var metadata = metadataObj is null ? new InvoiceMetadata() : InvoiceMetadata.FromJObject(metadataObj);
+                if (!string.IsNullOrEmpty(model.OrderId))
+                {
+                    metadata.OrderId = model.OrderId;
+                }
+
+                if (!string.IsNullOrEmpty(model.ItemDesc))
+                {
+                    metadata.ItemDesc = model.ItemDesc;
+                }
+
+                if (!string.IsNullOrEmpty(model.BuyerEmail))
+                {
+                    metadata.BuyerEmail = model.BuyerEmail;
+                }
+
+                if (!string.IsNullOrEmpty(model.OrderId))
+                {
+                    metadata.OrderId = model.OrderId;
+                }
                 var result = await CreateInvoiceCoreRaw(new CreateInvoiceRequest()
                 {
                     Amount = model.Amount,
                     Currency = model.Currency,
-                    Metadata = new InvoiceMetadata()
-                    {
-                        PosDataLegacy = model.PosData,
-                        OrderId = model.OrderId,
-                        ItemDesc = model.ItemDesc,
-                        BuyerEmail = model.BuyerEmail,
-                    }.ToJObject(),
+                    Metadata = metadata.ToJObject(),
                     Checkout = new ()
                     {
                         RedirectURL = store.StoreWebsite,

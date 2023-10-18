@@ -111,13 +111,11 @@ namespace BTCPayServer.HostedServices
             var btcCryptoInfo = dto.CryptoInfo.FirstOrDefault(c => c.GetpaymentMethodId() == new PaymentMethodId("BTC", Payments.PaymentTypes.BTCLike) && !string.IsNullOrEmpty(c.Address));
             if (btcCryptoInfo != null)
             {
-#pragma warning disable CS0618
-                notification.Data.Rate = dto.Rate;
+                notification.Data.Rate = btcCryptoInfo.Rate;
                 notification.Data.Url = dto.Url;
-                notification.Data.BTCDue = dto.BTCDue;
-                notification.Data.BTCPaid = dto.BTCPaid;
-                notification.Data.BTCPrice = dto.BTCPrice;
-#pragma warning restore CS0618
+                notification.Data.BTCDue = btcCryptoInfo.Due;
+                notification.Data.BTCPaid = btcCryptoInfo.Paid;
+                notification.Data.BTCPrice = btcCryptoInfo.Price;
             }
 
             if (sendMail &&

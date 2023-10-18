@@ -87,7 +87,8 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
 
         [Display(Name = "Custom CSS Code")]
         public string EmbeddedCSS { get; set; }
-        [Display(Name = "Allow payee to create invoices in their own denomination")]
+        
+        [Display(Name = "Allow payee to create invoices with custom amounts")]
         public bool AllowCustomPaymentAmounts { get; set; }
 
         public Dictionary<string, object> FormResponse { get; set; }
@@ -151,6 +152,7 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
         public string CssFileId { get; set; }
         public string BrandColor { get; set; }
         public string StoreName { get; set; }
+        public string StoreWebsite { get; set; }
         public string EmbeddedCSS { get; set; }
         public string CustomCSSLink { get; set; }
 

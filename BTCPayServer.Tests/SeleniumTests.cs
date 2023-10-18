@@ -1195,8 +1195,7 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("ViewPaymentRequest")).Click();
             var viewUrl = s.Driver.Url;
 
-            Assert.Equal("Amount due", s.Driver.FindElement(By.CssSelector("[data-test='amount-due-title']")).Text);
-            Assert.Equal("Pay Invoice", s.Driver.FindElement(By.CssSelector("[data-test='pay-button']")).Text.Trim());
+            Assert.Equal("Pay Invoice", s.Driver.FindElement(By.Id("PayInvoice")).Text.Trim());
 
             // expire
             s.GoToUrl(editUrl);
@@ -1219,12 +1218,28 @@ namespace BTCPayServer.Tests
             Assert.True(s.Driver.FindElement(By.Id("Currency")).Enabled);
 
             s.GoToUrl(viewUrl);
-            s.Driver.AssertElementNotFound(By.CssSelector("[data-test='status']"));
-            Assert.Equal("Pay Invoice", s.Driver.FindElement(By.CssSelector("[data-test='pay-button']")).Text.Trim());
+            Assert.Equal("Pay Invoice", s.Driver.FindElement(By.Id("PayInvoice")).Text.Trim());
 
-            // test invoice creation, click with JS, because the button is inside a sticky header
-            s.Driver.ExecuteJavaScript("document.querySelector('[data-test=\"pay-button\"]').click()");
-            s.Driver.WaitUntilAvailable(By.Id("Checkout-v2"));
+            // test invoice creation
+            s.Driver.FindElement(By.Id("PayInvoice")).Click();
+            TestUtils.Eventually(() =>
+            {
+                s.Driver.WaitUntilAvailable(By.Name("btcpay"));
+
+                var frameElement = s.Driver.FindElement(By.Name("btcpay"));
+                Assert.True(frameElement.Displayed);
+                var iframe = s.Driver.SwitchTo().Frame(frameElement);
+                iframe.WaitUntilAvailable(By.Id("Checkout-v2"));
+
+                IWebElement closebutton = null;
+                TestUtils.Eventually(() =>
+                {
+                    closebutton = iframe.FindElement(By.Id("close"));
+                    Assert.True(closebutton.Displayed);
+                });
+                closebutton.Click();
+                s.Driver.AssertElementNotFound(By.Name("btcpay"));
+            });
 
             // amount and currency should not be editable, because invoice exists
             s.GoToUrl(editUrl);
@@ -1248,32 +1263,44 @@ namespace BTCPayServer.Tests
             
             // payment
             s.GoToUrl(viewUrl);
-            s.Driver.ExecuteJavaScript("document.querySelector('[data-test=\"pay-button\"]').click()");
-
-            // Pay full amount
-            s.PayInvoice();
-
-            // Processing
+            s.Driver.FindElement(By.Id("PayInvoice")).Click();
             TestUtils.Eventually(() =>
             {
-                var processingSection = s.Driver.WaitForElement(By.Id("processing"));
-                Assert.True(processingSection.Displayed);
-                Assert.Contains("Payment Received", processingSection.Text);
-                Assert.Contains("Your payment has been received and is now processing", processingSection.Text);
-            });
+                s.Driver.WaitUntilAvailable(By.Name("btcpay"));
+
+                var frameElement = s.Driver.FindElement(By.Name("btcpay"));
+                Assert.True(frameElement.Displayed);
+                var iframe = s.Driver.SwitchTo().Frame(frameElement);
+                iframe.WaitUntilAvailable(By.Id("Checkout-v2"));
+
+                // Pay full amount
+                s.PayInvoice();
+
+                // Processing
+                TestUtils.Eventually(() =>
+                {
+                    var processingSection = s.Driver.WaitForElement(By.Id("processing"));
+                    Assert.True(processingSection.Displayed);
+                    Assert.Contains("Payment Received", processingSection.Text);
+                    Assert.Contains("Your payment has been received and is now processing", processingSection.Text);
+                });
             
-            s.GoToUrl(viewUrl);
-            Assert.Equal("Processing", s.Driver.WaitForElement(By.CssSelector("[data-test='status']")).Text);
-            s.Driver.Navigate().Back();
+                s.Driver.SwitchTo().Window(s.Driver.WindowHandles[0]);
+                Assert.Equal("Processing", s.Driver.WaitForElement(By.CssSelector("[data-test='status']")).Text);
+                s.Driver.SwitchTo().Frame(frameElement);
                 
-            // Mine
-            s.MineBlockOnInvoiceCheckout();
-            TestUtils.Eventually(() =>
-            {
-                Assert.Contains("Mined 1 block",
-                    s.Driver.WaitForElement(By.Id("CheatSuccessMessage")).Text);
+                // Mine
+                s.MineBlockOnInvoiceCheckout();
+                TestUtils.Eventually(() =>
+                {
+                    Assert.Contains("Mined 1 block",
+                        s.Driver.WaitForElement(By.Id("CheatSuccessMessage")).Text);
+                });
+                
+                s.Driver.FindElement(By.Id("close")).Click();
+                s.Driver.AssertElementNotFound(By.Name("btcpay"));
             });
-            s.GoToUrl(viewUrl);
+
             Assert.Equal("Settled", s.Driver.WaitForElement(By.CssSelector("[data-test='status']")).Text);
         }
 

@@ -205,6 +205,7 @@ namespace BTCPayServer.Controllers
 
             var storeBlob = store.GetStoreBlob();
             vm.StoreName = store.StoreName;
+            vm.StoreWebsite = store.StoreWebsite;
             vm.BrandColor = storeBlob.BrandColor;
             vm.LogoFileId = storeBlob.LogoFileId;
             vm.CssFileId = storeBlob.CssFileId;

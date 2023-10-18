@@ -25,6 +25,7 @@ public partial class UIReportsController : Controller
         ApplicationDbContextFactory dbContextFactory,
         GreenfieldReportsController api,
         ReportService reportService,
+        DisplayFormatter displayFormatter,
         BTCPayServerEnvironment env)
     {
         Api = api;
@@ -32,8 +33,10 @@ public partial class UIReportsController : Controller
         Env = env;
         DBContextFactory = dbContextFactory;
         NetworkProvider = networkProvider;
+        DisplayFormatter = displayFormatter;
     }
     private BTCPayNetworkProvider NetworkProvider { get; }
+    private DisplayFormatter DisplayFormatter { get; }
     public GreenfieldReportsController Api { get; }
     public ReportService ReportService { get; }
     public BTCPayServerEnvironment Env { get; }

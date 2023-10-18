@@ -135,13 +135,15 @@ document.addEventListener("DOMContentLoaded", () => {
                 const result = str.replace(/([A-Z])/g, " $1");
                 return result.charAt(0).toUpperCase() + result.slice(1);
             },
-            displayValue(val) {
-                return val && typeof (val) === "object" && val.d ? new Decimal(val.v).toFixed(val.d) : val;
-            }
+            displayValue
         }
     });
     fetchStoreReports();
 });
+
+function displayValue(val) {
+    return val && typeof val === "object" && typeof val.d === "number" ? new Decimal(val.v).toFixed(val.d) : val;
+}
 
 function updateUIDateRange() {
     document.getElementById("toDate")._flatpickr.setDate(moment.unix(srv.request.timePeriod.to).toDate());
@@ -167,6 +169,7 @@ function downloadCSV() {
     const data = clone(origData);
 
     // Convert ISO8601 dates to YYYY-MM-DD HH:mm:ss so the CSV easily integrate with Excel
+    modifyFields(srv.result.fields, data, 'amount', displayValue)
     modifyFields(srv.result.fields, data, 'datetime', v => moment(v).format('YYYY-MM-DD hh:mm:ss'));
     const csv = Papa.unparse({ fields: srv.result.fields.map(f => f.name), data });
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });

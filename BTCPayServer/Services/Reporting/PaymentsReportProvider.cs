@@ -3,15 +3,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
-using BTCPayServer.Lightning;
 using BTCPayServer.Payments;
-using BTCPayServer.Rating;
-using BTCPayServer.Services.Invoices;
-using BTCPayServer.Services.Rates;
 using Dapper;
 using Microsoft.EntityFrameworkCore;
-using NBitcoin;
-using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Services.Reporting;
 

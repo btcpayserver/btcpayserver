@@ -1,5 +1,5 @@
 using System.Web;
-using Ganss.XSS;
+using Ganss.Xss;
 using Microsoft.AspNetCore.Html;
 using Microsoft.AspNetCore.Mvc.Rendering;
 

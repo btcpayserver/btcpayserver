@@ -54,7 +54,7 @@ namespace BTCPayServer.Services
                             element.AssetId = uint256.Parse(issueAssetResult.Result["asset"].ToString());
                         }
                     }
-                    catch (Exception e)
+                    catch (Exception)
                     {
                     }
                 }

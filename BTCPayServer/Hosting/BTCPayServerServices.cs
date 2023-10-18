@@ -283,10 +283,10 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<IPluginHookService, PluginHookService>(provider => provider.GetService<PluginHookService>());
             services.TryAddTransient<Safe>();
             services.TryAddTransient<DisplayFormatter>();
-            services.TryAddSingleton<Ganss.XSS.HtmlSanitizer>(o =>
+            services.TryAddSingleton<Ganss.Xss.HtmlSanitizer>(o =>
             {
 
-                var htmlSanitizer = new Ganss.XSS.HtmlSanitizer();
+                var htmlSanitizer = new Ganss.Xss.HtmlSanitizer();
 
 
                 htmlSanitizer.RemovingAtRule += (sender, args) =>
@@ -309,7 +309,7 @@ namespace BTCPayServer.Hosting
                 {
                     if (args.Tag.TagName.Equals("img", StringComparison.InvariantCultureIgnoreCase) &&
                         args.Attribute.Name.Equals("src", StringComparison.InvariantCultureIgnoreCase) &&
-                        args.Reason == Ganss.XSS.RemoveReason.NotAllowedUrlValue)
+                        args.Reason == Ganss.Xss.RemoveReason.NotAllowedUrlValue)
                     {
                         args.Cancel = true;
                     }

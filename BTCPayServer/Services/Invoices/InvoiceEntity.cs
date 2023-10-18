@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Globalization;
 using System.Linq;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client.Models;
@@ -591,14 +592,14 @@ namespace BTCPayServer.Services.Invoices
                 cryptoInfo.CryptoCode = cryptoCode;
                 cryptoInfo.PaymentType = info.GetId().PaymentType.ToString();
                 cryptoInfo.Rate = info.Rate;
-                cryptoInfo.Price = subtotalPrice.ToString();
+                cryptoInfo.Price = subtotalPrice.ToString(CultureInfo.InvariantCulture);
 
-                cryptoInfo.Due = accounting.Due.ToString();
-                cryptoInfo.Paid = accounting.Paid.ToString();
-                cryptoInfo.TotalDue = accounting.TotalDue.ToString();
-                cryptoInfo.NetworkFee = accounting.NetworkFee.ToString();
+                cryptoInfo.Due = accounting.Due.ToString(CultureInfo.InvariantCulture);
+                cryptoInfo.Paid = accounting.Paid.ToString(CultureInfo.InvariantCulture);
+                cryptoInfo.TotalDue = accounting.TotalDue.ToString(CultureInfo.InvariantCulture);
+                cryptoInfo.NetworkFee = accounting.NetworkFee.ToString(CultureInfo.InvariantCulture);
                 cryptoInfo.TxCount = accounting.TxCount;
-                cryptoInfo.CryptoPaid = accounting.CryptoPaid.ToString();
+                cryptoInfo.CryptoPaid = accounting.CryptoPaid.ToString(CultureInfo.InvariantCulture);
 
                 cryptoInfo.Address = address;
 

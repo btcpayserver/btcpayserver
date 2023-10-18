@@ -43,9 +43,9 @@ public class FormDataService
             Field.Create("Address Line 1", "buyerAddress1", null, true, null),
             Field.Create("Address Line 2", "buyerAddress2", null, false, null),
             Field.Create("City", "buyerCity", null, true, null),
-            Field.Create("Postcode", "buyerZip", null, false, null),
+            Field.Create("Postcode", "buyerZip", null, true, null),
             Field.Create("State", "buyerState", null, false, null),
-            new SelectField()
+            new SelectField
             {
                 Name = "buyerCountry",
                 Label = "Country",

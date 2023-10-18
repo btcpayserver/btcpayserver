@@ -73,6 +73,17 @@ namespace BTCPayServer.Client.Models
 
         public bool PayJoinEnabled { get; set; }
 
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public bool? AutoDetectLanguage { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public bool? ShowPayInWalletButton { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public bool? ShowStoreHeader { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public bool? CelebratePayment { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public bool? PlaySoundOnPayment { get; set; }
+
         public InvoiceData.ReceiptOptions Receipt { get; set; }
 
 

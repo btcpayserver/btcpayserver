@@ -66,6 +66,10 @@ public partial class UIReportsController
             decimal randomValue = ((decimal)rand.NextDouble() * range) + from;
             return decimal.Round(randomValue, precision);
         }
+
+        var fiatCurrency = rand.NextSingle() > 0.2 ? "USD" : TakeOne("JPY", "EUR", "CHF");
+        var cryptoCurrency = rand.NextSingle() > 0.2 ? "BTC" : TakeOne("LTC", "DOGE", "DASH");
+        
         if (f.Type == "invoice_id")
             return Encoders.Base58.EncodeData(GenerateBytes(20));
         if (f.Type == "boolean")
@@ -80,9 +84,9 @@ public partial class UIReportsController
         if (f.Name == "Address")
             return Encoders.Bech32("bc1").Encode(0, GenerateBytes(20));
         if (f.Name == "Crypto")
-            return rand.NextSingle() > 0.2 ? "BTC" : TakeOne("LTC", "DOGE", "DASH");
+            return cryptoCurrency;
         if (f.Name == "CryptoAmount")
-            return GenerateDecimal(0.1m, 5m, 8);
+            return DisplayFormatter.ToFormattedAmount(GenerateDecimal(0.1m, 5m, 8), cryptoCurrency);
         if (f.Name == "LightningAddress")
             return TakeOne("satoshi", "satosan", "satoichi") + "@bitcoin.org";
         if (f.Name == "BalanceChange")
@@ -98,24 +102,30 @@ public partial class UIReportsController
         if (f.Name == "Quantity")
             return TakeOne(1, 2, 3, 4, 5);
         if (f.Name == "Currency")
-            return rand.NextSingle() > 0.2 ? "USD" : TakeOne("JPY", "EUR", "CHF");
+            return fiatCurrency;
         if (f.Name == "CurrencyAmount")
-            return row[fi - 1] switch
+        {
+            var curr = row[fi - 1]?.ToString();
+            var value = curr switch
             {
                 "USD" or "EUR" or "CHF" => GenerateDecimal(100.0m, 10_000m, 2),
                 "JPY" => GenerateDecimal(10_000m, 1000_0000, 0),
                 _ => GenerateDecimal(100.0m, 10_000m, 2)
             };
+            return DisplayFormatter.ToFormattedAmount(value, curr);
+        }
         if (f.Type == "tx_id")
             return Encoders.Hex.EncodeData(GenerateBytes(32));
         if (f.Name == "Rate")
         {
-            return row[fi - 1] switch
+            var curr = row[fi - 1]?.ToString();
+            var value = curr switch
             {
                 "USD" or "EUR" or "CHF" => GenerateDecimal(30_000m, 60_000, 2),
                 "JPY" => GenerateDecimal(400_0000m, 1000_0000m, 0),
                 _ => GenerateDecimal(30_000m, 60_000, 2)
             };
+            return DisplayFormatter.ToFormattedAmount(value, curr);
         }
         return null;
     }

@@ -1307,10 +1307,6 @@ namespace BTCPayServer.Controllers
                     metadata.BuyerEmail = model.BuyerEmail;
                 }
 
-                if (!string.IsNullOrEmpty(model.OrderId))
-                {
-                    metadata.OrderId = model.OrderId;
-                }
                 var result = await CreateInvoiceCoreRaw(new CreateInvoiceRequest()
                 {
                     Amount = model.Amount,

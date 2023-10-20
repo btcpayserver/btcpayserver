@@ -68,7 +68,7 @@
         <h3>{{ chart.name }}</h3>
         <div class="table-responsive" v-if="chart.rows.length || chart.hasGrandTotal">
             <table class="table table-hover w-auto">
-                <thead class="sticky-top bg-body">
+                <thead class="bg-body">
 				    <tr>
 					    <th v-for="group in chart.groups">{{ titleCase(group) }}</th>
 					    <th v-for="agg in chart.aggregates" class="text-end">{{ titleCase(agg) }}</th>

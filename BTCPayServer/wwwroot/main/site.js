@@ -157,7 +157,14 @@ document.addEventListener("DOMContentLoaded", () => {
     // sticky header
     const stickyHeader = document.querySelector('#mainContent > section > .sticky-header');
     if (stickyHeader) {
-        document.documentElement.style.scrollPaddingTop = `calc(${stickyHeader.offsetHeight}px + var(--btcpay-space-m))`;
+        const setStickyHeaderHeight = () => {
+            document.documentElement.style.setProperty('--sticky-header-height', `${stickyHeader.offsetHeight}px`)
+        }
+        window.addEventListener('resize', e => {
+            debounce('resize', setStickyHeaderHeight, 50)
+        });
+        setStickyHeaderHeight();
+        
     }
     
     // initialize timezone offset value if field is present in page

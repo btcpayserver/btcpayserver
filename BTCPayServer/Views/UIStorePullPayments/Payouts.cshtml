@@ -146,16 +146,18 @@
             }
         </div>
     </nav>
-
     @if (Model.Payouts.Any())
     {
         <div class="table-responsive">
             <table class="table table-hover mass-action">
                 <thead class="mass-action-head">
                     <tr>
-                        <th class="only-for-js mass-action-select-col" permission="@Policies.CanModifyStoreSettings">
-                            <input type="checkbox" class="form-check-input mass-action-select-all" data-payout-state="@Model.PayoutState.ToString()" />
-                        </th>
+                        @if (stateActions.Any())
+                        {
+                            <th class="only-for-js mass-action-select-col" permission="@Policies.CanModifyStoreSettings">
+                                <input type="checkbox" class="form-check-input mass-action-select-all" data-payout-state="@Model.PayoutState.ToString()" />
+                            </th>
+                        }
                         <th class="date-col">
                             <div class="d-flex align-items-center gap-1">
                                 Date
@@ -171,39 +173,42 @@
                         }
                     </tr>
                 </thead>
-                @if (Model.Payouts.Any() && stateActions.Any())
+                @if (stateActions.Any())
                 {
                     <thead class="mass-action-actions" permission="@Policies.CanModifyStoreSettings">
-                        <tr>
-                            <th class="mass-action-select-col only-for-js">
-                                <input type="checkbox" class="form-check-input mass-action-select-all" />
-                            </th>
-                            <th colspan="5">
-                                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
-                                    <div>
-                                        <strong class="mass-action-selected-count">0</strong>
-                                        selected
-                                    </div>
-                                    <div class="d-inline-flex align-items-center gap-3">
-                                        @foreach (var action in stateActions)
-                                        {
-                                            <button type="submit" id="@Model.PayoutState-@action.Action" name="Command" class="btn btn-link" value="@Model.PayoutState-@action.Action">@action.Text</button>
-                                        }
-                                    </div>
+                    <tr>
+                        <th class="mass-action-select-col only-for-js">
+                            <input type="checkbox" class="form-check-input mass-action-select-all" />
+                        </th>
+                        <th colspan="5">
+                            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                                <div>
+                                    <strong class="mass-action-selected-count">0</strong>
+                                    selected
                                 </div>
-                            </th>
-                        </tr>
+                                <div class="d-inline-flex align-items-center gap-3">
+                                    @foreach (var action in stateActions)
+                                    {
+                                        <button type="submit" id="@Model.PayoutState-@action.Action" name="Command" class="btn btn-link" value="@Model.PayoutState-@action.Action">@action.Text</button>
+                                    }
+                                </div>
+                            </div>
+                        </th>
+                    </tr>
                     </thead>
                 }
                 <tbody>
-                    @for (int i = 0; i < Model.Payouts.Count; i++)
+                    @for (var i = 0; i < Model.Payouts.Count; i++)
                     {
                         var pp = Model.Payouts[i];
                         <tr class="payout mass-action-row">
-                            <td class="only-for-js mass-action-select-col" permission="@Policies.CanModifyStoreSettings">
-                                <input type="checkbox" class="selection-item-@Model.PayoutState.ToString() form-check-input mass-action-select" asp-for="Payouts[i].Selected" />
-                                <input type="hidden" asp-for="Payouts[i].PayoutId" />
-                            </td>
+                            @if (stateActions.Any())
+                            {
+                                <td class="only-for-js mass-action-select-col" permission="@Policies.CanModifyStoreSettings">
+                                    <input type="checkbox" class="selection-item-@Model.PayoutState.ToString() form-check-input mass-action-select" asp-for="Payouts[i].Selected" />
+                                    <input type="hidden" asp-for="Payouts[i].PayoutId" />
+                                </td>
+                            }
                             <td class="date-col">
                                 @pp.Date.ToBrowserDate()
                             </td>

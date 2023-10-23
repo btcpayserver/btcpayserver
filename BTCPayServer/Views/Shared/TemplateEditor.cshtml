@@ -1,5 +1,15 @@
 @model (string templateId, string template, string title, string currency)
 
+<template id="item-editor-upload">
+    <div class="form-group">
+        <div class="d-flex align-items-center gap-2">
+            <input type="file" class="form-control" ref="input" v-on:change="fileChanged">
+            <button class="btn btn-primary" type="button" v-on:click="upload" :disabled="disabled">Upload</button>
+        </div>
+        <div v-if="error" class="form-text text-danger" v-text="error"></div>
+    </div>
+</template>
+
 <template id="item-editor">
     <div>
         <div id="item-form" class="item" v-show="!!editingItem">
@@ -38,13 +48,9 @@
                 </div>
             </div>
             <div class="form-group">
-                <label for="EditorImage" class="form-label">Image Url</label>
+                <label for="EditorImageUrl" class="form-label">Image Url</label>
                 <input id="EditorImageUrl" class="form-control mb-2" v-model="editingItem && editingItem.image" ref="txtImage" />
-                <div class="d-flex align-items-center gap-2">
-                    <input id="EditorImage" type="file" class="form-control" ref="editorImage" v-on:change="uploadFileChanged">
-                    <button class="btn btn-primary" type="button" id="EditorUploadButton" v-on:click="uploadFile" :disabled="uploadDisabled">Upload</button>
-                </div>
-                <span v-if="uploadError" v-text="uploadError" class="text-danger"></span>
+                <item-editor-upload upload-url=@Safe.Json(Url.Action("FileUpload", "UIApps", new { appId = Context.GetRouteValue("appId") })) v-on:uploaded="url => editingItem.image = url" />
             </div>
             <div class="form-group">
                 <label for="EditorDescription" class="form-label">Description</label>
@@ -162,7 +168,4 @@
 <script src="~/vendor/vue-sanitize-directive/vue-sanitize-directive.umd.min.js" asp-append-version="true"></script>
 <script src="~/vendor/vue-sortable/sortable.min.js" asp-append-version="true"></script>
 <script src="~/vendor/vue-sortable/vue-sortable.js" asp-append-version="true"></script>
-<script>
-    var fileUploadUrl = @Safe.Json(Url.Action("FileUpload", "UIApps", new { appId = Context.GetRouteValue("appId") }));
-</script>
 <script src="~/js/template-editor.js" asp-append-version="true"></script>

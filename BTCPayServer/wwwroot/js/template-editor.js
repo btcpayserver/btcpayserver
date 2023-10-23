@@ -28,28 +28,62 @@ document.addEventListener('DOMContentLoaded', () => {
             ...itemProps
         }
     })
-    
-    Vue.component('items-editor', {
-        template: '#items-editor',
-        components: {
-            Item
-        },
+
+    const ItemEditorUpload = Vue.component('item-editor-upload', {
+        template: '#item-editor-upload',
         props: {
-            items: Array,
-            selectedItem: itemProps
+            uploadUrl: {
+                type: String,
+                required: true
+            }
+        },
+        data () {
+            return {
+                error: null,
+                disabled: true
+            }
         },
         methods: {
-            getImage(item) {
-                const image = item.image || '~/img/img-placeholder.svg';
-                return image.startsWith('~') ? image.replace('~', window.location.pathname.substring(0, image.indexOf('/apps'))) : image
+            fileChanged () {
+                this.disabled = !this.$refs.input || this.$refs.input.files.length === 0;
+            },
+            reportError(error) {
+                this.error = error;
+                this.$refs.input.classList.add('is-invalid');
+                this.$emit('error', error);
+            },
+            async upload() {
+                const file = this.$refs.input.files[0];
+                if (!file) return this.reportError('No file selected');
+                this.error = null;
+                this.$refs.input.classList.remove('is-invalid');
+                const formData = new FormData();
+                formData.append('file', file);
+                try {
+                    const response = await fetch(this.uploadUrl, { method: 'POST', body: formData });
+                    if (response.ok) {
+                        const { error, fileUrl } = await response.json();
+                        if (error) {
+                            this.reportError(error)
+                        } else {
+                            this.$refs.input.value = null;
+                            this.disabled = true;
+                            this.$emit('uploaded', fileUrl);
+                        }
+                    }
+                } catch (e) {
+                    console.error(e);
+                    this.reportError('Upload failed');
+                }
             }
         }
     })
 
-    Vue.component('item-editor', {
+    const ItemEditor = Vue.component('item-editor', {
         template: '#item-editor',
         components: {
-            Item
+            Item,
+            ItemEditorUpload
         },
         props: {
             item: itemProps
@@ -58,8 +92,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return {
                 errors: [],
                 editingItem: null,
-                uploadError: null,
-                uploadDisabled: true,
                 categoriesSelect: null,
                 customPriceOptions: [
                     { text: 'Fixed', value: 'Fixed' },
@@ -125,33 +157,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     const value = this.editingItem[prop];
                     Vue.set(this.$parent.selectedItem, prop, value);
                 })
+                // remove empty/non-existing props on item
+                Object.keys(this.item).forEach(prop => {
+                    const value = this.editingItem[prop];
+                    if (typeof value === 'undefined' || value === null) {
+                        Vue.delete(this.$parent.selectedItem, prop);
+                    }
+                })
                 // update categories
                 this.categoriesSelect.clearOptions();
                 this.categoriesSelect.addOptions(this.allCategories.map(value => ({ value, text: value })));
-            },
-            uploadFileChanged () {
-                this.uploadDisabled = !this.$refs.editorImage || this.$refs.editorImage.files.length === 0;
-            },
-            async uploadFile() {
-                const file = this.$refs.editorImage.files[0];
-                if (!file) return this.uploadError = 'No file selected';
-                this.uploadError = null;
-                const formData = new FormData();
-                formData.append('file', file);
-                try {
-                    const response = await fetch(fileUploadUrl, { method: 'POST', body: formData });
-                    if (response.ok) {
-                        const { error, fileUrl } = await response.json();
-                        if (error) return this.uploadError = error;
-                        this.editingItem.image = fileUrl;
-                        this.$refs.editorImage.value = null;
-                        this.uploadDisabled = true;
-                        return;
-                    }
-                } catch (e) {
-                    console.error(e);
-                }
-                this.uploadError = 'Upload failed';
             }
         },
         watch: {
@@ -184,12 +199,33 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     })
 
+    const ItemsEditor = Vue.component('items-editor', {
+        template: '#items-editor',
+        components: {
+            Item
+        },
+        props: {
+            items: Array,
+            selectedItem: itemProps
+        },
+        methods: {
+            getImage(item) {
+                const image = item.image || '~/img/img-placeholder.svg';
+                return image.startsWith('~') ? image.replace('~', window.location.pathname.substring(0, image.indexOf('/apps'))) : image
+            }
+        }
+    })
+
     Vue.use(vSortable)
     Vue.use(VueSanitizeDirective.default)
 
     new Vue({
         el: '#TemplateEditor',
         name: 'template-editor',
+        components: {
+            ItemsEditor,
+            ItemEditor
+        },
         data () {
             return {
                 items,
@@ -215,8 +251,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 this.selectedItem = null
             },
             addItem(event) {
-                const index = this.items.length + 1
-                const length = this.items.push({ id: '', title: '', price: 0, image: '', description: '', categories: [], priceType: 'Fixed', inventory: null, disabled: false })
+                const length = this.items.push({
+                    id: '',
+                    title: '',
+                    priceType: 'Fixed',
+                    price: 0,
+                    image: '',
+                    description: '',
+                    categories: [],
+                    inventory: null,
+                    disabled: false
+                })
                 this.selectedItem = this.items[length - 1]
             },
             selectItem(event, index) {

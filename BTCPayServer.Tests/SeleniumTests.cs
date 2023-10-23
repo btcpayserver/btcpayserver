@@ -1301,6 +1301,7 @@ namespace BTCPayServer.Tests
                 s.Driver.AssertElementNotFound(By.Name("btcpay"));
             });
 
+            s.Driver.SwitchTo().Window(s.Driver.WindowHandles[0]);
             Assert.Equal("Settled", s.Driver.WaitForElement(By.CssSelector("[data-test='status']")).Text);
         }
 

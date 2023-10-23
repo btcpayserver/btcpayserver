@@ -24,7 +24,7 @@
   "tx_count": "{{count}} Transaktionen",
   "qr_text": "Scannen Sie den QR-Code oder tippen Sie auf die Adresse, um sie zu kopieren.",
   "address": "{{paymentMethod}} Adresse",
-  "lightning": "Lightning.",
+  "lightning": "Lightning",
   "payment_link": "Zahlungslink",
   "invoice_paid": "Rechnung bezahlt",
   "invoice_expired": "Rechnung abgelaufen.",

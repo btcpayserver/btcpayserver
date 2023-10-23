@@ -1,4 +1,4 @@
- <Project Sdk="Microsoft.NET.Sdk.Web">
+﻿ <Project Sdk="Microsoft.NET.Sdk.Web">
   <Import Project="../Build/Version.csproj" Condition="Exists('../Build/Version.csproj')" />
   <Import Project="../Build/Common.csproj" />
 
@@ -22,6 +22,9 @@
     <EmbeddedResource Remove="wwwroot\vendor\jquery-nice-select\**" />
     <None Remove="Build\**" />
     <None Remove="wwwroot\vendor\jquery-nice-select\**" />
+    <Content Update="Views\UIPullPayment\SetupBoltcard.cshtml">
+      <Pack>$(IncludeRazorContentInPack)</Pack>
+    </Content>
     <Content Update="Views\UIStorePullPayments\NewPullPayment.cshtml">
       <Pack>false</Pack>
     </Content>
@@ -46,6 +49,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="BTCPayServer.NTag424" Version="1.0.16" />
     <PackageReference Include="YamlDotNet" Version="8.0.0" />
     <PackageReference Include="BIP78.Sender" Version="0.2.2" />
     <PackageReference Include="BTCPayServer.Hwi" Version="2.0.2" />
@@ -138,6 +142,7 @@
 	<ItemGroup>
     <Watch Include="Views\**\*.*"></Watch>
     <Watch Remove="Views\UIAccount\CheatPermissions.cshtml" />
+    <Watch Remove="Views\UIPullPayment\SetupBoltcard.cshtml" />
     <Watch Remove="Views\UIReports\StoreReports.cshtml" />
     <Content Update="Views\UIApps\_ViewImports.cshtml">
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>

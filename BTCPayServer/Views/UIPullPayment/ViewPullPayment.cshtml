@@ -31,7 +31,9 @@
     <link href="~/vendor/bootstrap-vue/bootstrap-vue.min.css" asp-append-version="true" rel="stylesheet"/>
     <link href="~/vendor/vue-qrcode-reader/vue-qrcode-reader.css" rel="stylesheet" asp-append-version="true"/>
     <style>
-        .no-marker > ul { list-style-type: none; }
+        .no-marker > ul {
+            list-style-type: none;
+        }
     </style>
 </head>
 <body class="min-vh-100">
@@ -156,34 +158,34 @@
                                 <div class="table-responsive">
                                     <table class="table my-0">
                                         <thead>
-                                        <tr class="table-borderless">
-                                            <th class="fw-normal text-secondary" scope="col">Destination</th>
-                                            <th class="fw-normal text-secondary" scope="col">Method</th>
-                                            <th class="fw-normal text-secondary text-end text-nowrap">Amount requested</th>
-                                            <th class="fw-normal text-secondary text-end">Status</th>
-                                        </tr>
+                                            <tr class="table-borderless">
+                                                <th class="fw-normal text-secondary" scope="col">Destination</th>
+                                                <th class="fw-normal text-secondary" scope="col">Method</th>
+                                                <th class="fw-normal text-secondary text-end text-nowrap">Amount requested</th>
+                                                <th class="fw-normal text-secondary text-end">Status</th>
+                                            </tr>
                                         </thead>
                                         <tbody>
-                                        @foreach (var invoice in Model.Payouts)
-                                        {
-                                            <tr>
-                                                <td class="text-break">
-                                                    @invoice.Destination
-                                                </td>
-                                                <td class="text-nowrap">@invoice.PaymentMethod.ToPrettyString()</td>
-                                                <td class="text-end text-nowrap">@invoice.AmountFormatted</td>
-                                                <td class="text-end text-nowrap">
-                                                    @if (!string.IsNullOrEmpty(invoice.Link))
-                                                    {
-                                                        <a class="transaction-link text-white badge @StatusTextClass(invoice.Status.ToString())" href="@invoice.Link" rel="noreferrer noopener">@invoice.Status.GetStateString()</a>
-                                                    }
-                                                    else
-                                                    {
-                                                        <span class="text-white badge @StatusTextClass(invoice.Status.ToString())">@invoice.Status.GetStateString()</span>
-                                                    }
-                                                </td>
-                                            </tr>
-                                        }
+                                            @foreach (var invoice in Model.Payouts)
+                                            {
+                                                <tr>
+                                                    <td class="text-break">
+                                                        @invoice.Destination
+                                                    </td>
+                                                    <td class="text-nowrap">@invoice.PaymentMethod.ToPrettyString()</td>
+                                                    <td class="text-end text-nowrap">@invoice.AmountFormatted</td>
+                                                    <td class="text-end text-nowrap">
+                                                        @if (!string.IsNullOrEmpty(invoice.Link))
+                                                        {
+                                                            <a class="transaction-link text-white badge @StatusTextClass(invoice.Status.ToString())" href="@invoice.Link" rel="noreferrer noopener">@invoice.Status.GetStateString()</a>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="text-white badge @StatusTextClass(invoice.Status.ToString())">@invoice.Status.GetStateString()</span>
+                                                        }
+                                                    </td>
+                                                </tr>
+                                            }
                                         </tbody>
                                     </table>
                                 </div>
@@ -203,13 +205,22 @@
                     Edit pull payment
                 </a>
             </p>
+            <p>
+                <a asp-action="SetupBoltcard" asp-controller="UIPullPayment" asp-route-pullPaymentId="@Model.Id" asp-route-command="configure-boltcard">
+					Setup Boltcard
+                </a>
+                <span>&nbsp;|&nbsp;</span>
+                <a asp-action="SetupBoltcard" asp-controller="UIPullPayment" asp-route-pullPaymentId="@Model.Id" asp-route-command="reset-boltcard">
+                    Reset Boltcard
+                </a>
+            </p>
             <a class="store-powered-by" href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">
                 Powered by <partial name="_StoreFooterLogo" />
             </a>
         </footer>
     </div>
     <partial name="ShowQR" />
-    <partial name="CameraScanner"/>
+    <partial name="CameraScanner" />
     <partial name="LayoutFoot" />
     <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
     <script src="~/vendor/vue-qrcode/vue-qrcode.min.js" asp-append-version="true"></script>
@@ -223,39 +234,39 @@
                 qrApp.note = "Scan this QR code to open this page on your mobile device.";
                 qrApp.showData(window.location.href);
             });
-                   
+
             delegate('click', '#copyLink', window.copyUrlToClipboard);
-            
+
             initCameraScanningApp("Scan address/ payment link", data => {
-               document.getElementById("Destination").value = data;
-           }, "scanModal");
+                document.getElementById("Destination").value = data;
+            }, "scanModal");
         });
     </script>
     @if (Model.LnurlEndpoint is not null)
     {
-          var lnurlUri = LNURL.LNURL.EncodeUri(Model.LnurlEndpoint, "withdrawRequest", false).ToString();
-          var lnurlBech32 = LNURL.LNURL.EncodeUri(Model.LnurlEndpoint, "withdrawRequest", true).ToString();
-          var note = "<p>You can scan or open this link with a <a href='https://github.com/fiatjaf/lnurl-rfc#lnurl-documents' target='_blank' rel='noreferrer noopener'>LNURL-Withdraw</a> enabled wallet.</p>";
-          if (!Model.AutoApprove)
-          {
-              note += "<p class='fw-semibold'>Please note that this pull payment does not automatically send out funds, but will process the payment after the LNURL-withdraw flow is completed.</p>";
-          }
-          <script>
-              document.addEventListener("DOMContentLoaded", () => {
-                  const modes = {
-                      uri: { title: "URI", fragments: [@Safe.Json(lnurlUri)], showData: true, href: @Safe.Json(lnurlUri) },
-                      bech32: { title: "Bech32", fragments: [@Safe.Json(lnurlBech32)], showData: true, href: @Safe.Json(lnurlBech32) }
-                  };
-                  delegate('click', '#lnurlwithdraw-button', () => {
-                      qrApp.title = "LNURL Withdraw";
-                      qrApp.modes = modes;
-                      qrApp.mode = "bech32";
-                      qrApp.note = @Safe.Json(note);
-                      qrApp.show();
-                  });
-              });
-          </script>
+        var lnurlUri = LNURL.LNURL.EncodeUri(Model.LnurlEndpoint, "withdrawRequest", false).ToString();
+        var lnurlBech32 = LNURL.LNURL.EncodeUri(Model.LnurlEndpoint, "withdrawRequest", true).ToString();
+        var note = "<p>You can scan or open this link with a <a href='https://github.com/fiatjaf/lnurl-rfc#lnurl-documents' target='_blank' rel='noreferrer noopener'>LNURL-Withdraw</a> enabled wallet.</p>";
+        if (!Model.AutoApprove)
+        {
+            note += "<p class='fw-semibold'>Please note that this pull payment does not automatically send out funds, but will process the payment after the LNURL-withdraw flow is completed.</p>";
+        }
+        <script>
+            document.addEventListener("DOMContentLoaded", () => {
+                const modes = {
+                    uri: { title: "URI", fragments: [@Safe.Json(lnurlUri)], showData: true, href: @Safe.Json(lnurlUri) },
+                    bech32: { title: "Bech32", fragments: [@Safe.Json(lnurlBech32)], showData: true, href: @Safe.Json(lnurlBech32) }
+                };
+                delegate('click', '#lnurlwithdraw-button', () => {
+                    qrApp.title = "LNURL Withdraw";
+                    qrApp.modes = modes;
+                    qrApp.mode = "bech32";
+                    qrApp.note = @Safe.Json(note);
+                    qrApp.show();
+                });
+            });
+        </script>
     }
-    <vc:ui-extension-point location="pullpayment-foot"  model="@Model"></vc:ui-extension-point>
+    <vc:ui-extension-point location="pullpayment-foot" model="@Model"></vc:ui-extension-point>
 </body>
 </html>

@@ -23,6 +23,7 @@ using BTCPayServer.Fido2.Models;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Hosting;
 using BTCPayServer.Lightning;
+using BTCPayServer.Lightning.Charge;
 using BTCPayServer.Models;
 using BTCPayServer.Models.AccountViewModels;
 using BTCPayServer.Models.AppViewModels;
@@ -68,6 +69,7 @@ using Newtonsoft.Json.Schema;
 using Xunit;
 using Xunit.Abstractions;
 using Xunit.Sdk;
+using CreateInvoiceRequest = BTCPayServer.Client.Models.CreateInvoiceRequest;
 using RatesViewModel = BTCPayServer.Models.StoreViewModels.RatesViewModel;
 
 namespace BTCPayServer.Tests
@@ -2392,8 +2394,12 @@ namespace BTCPayServer.Tests
             var url = lnMethod.GetExternalLightningUrl();
             var kv = LightningConnectionStringHelper.ExtractValues(url, out var connType);
             Assert.Equal(LightningConnectionType.Charge,connType);
-            Assert.Equal("pass", kv["password"]);
-            Assert.Equal("usr", kv["username"]);
+            var client = Assert.IsType<ChargeClient>(tester.PayTester.GetService<LightningClientFactoryService>()
+                .Create(url, tester.NetworkProvider.GetNetwork<BTCPayNetwork>("BTC")));
+            var auth = Assert.IsType<ChargeAuthentication.UserPasswordAuthentication>(client.ChargeAuthentication);
+            
+            Assert.Equal("pass", auth.NetworkCredential.Password);
+            Assert.Equal("usr", auth.NetworkCredential.UserName);
 
             // Test if lightning connection strings get migrated to internal
             store.DerivationStrategies = new JObject()

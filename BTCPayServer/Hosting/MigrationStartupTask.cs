@@ -1,12 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
-using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
@@ -27,12 +25,10 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using NBitcoin;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using PeterO.Cbor;
 using YamlDotNet.RepresentationModel;
-using YamlDotNet.Serialization;
 using LightningAddressData = BTCPayServer.Data.LightningAddressData;
 using Serializer = NBXplorer.Serializer;
 
@@ -1058,11 +1054,12 @@ retry:
             await using var ctx = _DBContextFactory.CreateContext();
             foreach (var store in await ctx.Stores.AsQueryable().ToArrayAsync())
             {
-                foreach (var method in store.GetSupportedPaymentMethods(_NetworkProvider).OfType<LightningSupportedPaymentMethod>())
+                foreach (var method in store.GetSupportedPaymentMethods(_NetworkProvider)
+                             .OfType<LightningSupportedPaymentMethod>())
                 {
-                    
                     var lightning = method.GetExternalLightningUrl();
-
+                    if (lightning is null)
+                        continue;
                     var client = _lightningClientFactoryService.Create(lightning,
                         _NetworkProvider.GetNetwork<BTCPayNetwork>(method.PaymentId.CryptoCode));
                     if (client?.ToString() != lightning)

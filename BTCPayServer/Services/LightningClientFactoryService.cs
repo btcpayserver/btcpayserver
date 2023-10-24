@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -14,8 +13,6 @@ namespace BTCPayServer.Services
         private readonly IEnumerable<Func<HttpClient, ILightningConnectionStringHandler>>
             _lightningConnectionStringHandlers;
 
-        private readonly ConcurrentDictionary<string, LightningClientFactory> _factories = new();
-
         public LightningClientFactoryService(IHttpClientFactory httpClientFactory,
             IEnumerable<Func<HttpClient, ILightningConnectionStringHandler>> lightningConnectionStringHandlers)
         {
@@ -25,14 +22,10 @@ namespace BTCPayServer.Services
 
         private LightningClientFactory GetFactory(string namedClient, BTCPayNetwork network)
         {
-            var key = $"{network.CryptoCode}:{namedClient}";
-            return _factories.GetOrAdd(key, s =>
-            {
-                var httpClient = _httpClientFactory.CreateClient(s);
-                return new LightningClientFactory(_lightningConnectionStringHandlers
-                    .Select(handler => handler(httpClient))
-                    .ToArray(), network.NBitcoinNetwork);
-            });
+            var httpClient = _httpClientFactory.CreateClient(namedClient);
+            return new LightningClientFactory(_lightningConnectionStringHandlers
+                .Select(handler => handler(httpClient))
+                .ToArray(), network.NBitcoinNetwork);
         }
 
         public static string OnionNamedClient { get; set; } = "lightning.onion";

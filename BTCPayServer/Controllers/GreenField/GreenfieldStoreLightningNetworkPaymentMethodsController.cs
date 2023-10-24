@@ -1,4 +1,5 @@
 #nullable enable
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -37,17 +38,19 @@ namespace BTCPayServer.Controllers.Greenfield
         private readonly StoreRepository _storeRepository;
         private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
         private readonly IAuthorizationService _authorizationService;
+        private readonly LightningClientFactoryService _lightningClientFactoryService;
 
         public GreenfieldStoreLightningNetworkPaymentMethodsController(
             StoreRepository storeRepository,
             BTCPayNetworkProvider btcPayNetworkProvider,
             IAuthorizationService authorizationService,
-            ISettingsRepository settingsRepository,
+            LightningClientFactoryService lightningClientFactoryService,
             PoliciesSettings policiesSettings)
         {
             _storeRepository = storeRepository;
             _btcPayNetworkProvider = btcPayNetworkProvider;
             _authorizationService = authorizationService;
+            _lightningClientFactoryService = lightningClientFactoryService;
             PoliciesSettings = policiesSettings;
         }
 
@@ -155,21 +158,26 @@ namespace BTCPayServer.Controllers.Greenfield
                 }
                 else
                 {
-                    if (!LightningConnectionString.TryParse(request.ConnectionString, false,
-                        out var connectionString, out var error))
+                    ILightningClient? lightningClient;
+                    try
                     {
-                        ModelState.AddModelError(nameof(request.ConnectionString), $"Invalid URL ({error})");
+                        var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
+                        lightningClient = _lightningClientFactoryService.Create(request.ConnectionString, network);
+                    }
+                    catch (Exception e)
+                    {
+                        ModelState.AddModelError(nameof(request.ConnectionString), $"Invalid URL ({e.Message})");
                         return this.CreateValidationError(ModelState);
                     }
 
-                    if (connectionString.ConnectionType == LightningConnectionType.LndGRPC)
-                    {
-                        ModelState.AddModelError(nameof(request.ConnectionString),
-                            $"BTCPay does not support gRPC connections");
-                        return this.CreateValidationError(ModelState);
-                    }
+                    // if (connectionString.ConnectionType == LightningConnectionType.LndGRPC)
+                    // {
+                    //     ModelState.AddModelError(nameof(request.ConnectionString),
+                    //         $"BTCPay does not support gRPC connections");
+                    //     return this.CreateValidationError(ModelState);
+                    // }
 
-                    if (!await CanManageServer() && !connectionString.IsSafe())
+                    if (!await CanManageServer() && !lightningClient.IsSafe())
                     {
                         ModelState.AddModelError(nameof(request.ConnectionString),
                             $"You do not have 'btcpay.server.canmodifyserversettings' rights, so the connection string should not contain 'cookiefilepath', 'macaroondirectorypath', 'macaroonfilepath', and should not point to a local ip or to a dns name ending with '.internal', '.local', '.lan' or '.'.");
@@ -180,7 +188,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     {
                         CryptoCode = paymentMethodId.CryptoCode
                     };
-                    paymentMethod.SetLightningUrl(connectionString);
+                    paymentMethod.SetLightningUrl(lightningClient);
                 }
             }
             store.SetSupportedPaymentMethod(paymentMethodId, paymentMethod);

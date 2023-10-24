@@ -475,7 +475,7 @@ namespace BTCPayServer.Tests
             await ProcessLightningPayment(LightningConnectionType.LndREST);
         }
 
-        async Task ProcessLightningPayment(LightningConnectionType type)
+        async Task ProcessLightningPayment(string type)
         {
             // For easier debugging and testing
             // LightningLikePaymentHandler.LIGHTNING_TIMEOUT = int.MaxValue;
@@ -2390,9 +2390,10 @@ namespace BTCPayServer.Tests
             Assert.NotNull(lnMethod.GetExternalLightningUrl());
 
             var url = lnMethod.GetExternalLightningUrl();
-            Assert.Equal(LightningConnectionType.Charge, url.ConnectionType);
-            Assert.Equal("pass", url.Password);
-            Assert.Equal("usr", url.Username);
+            var kv = LightningConnectionStringHelper.ExtractValues(url, out var connType);
+            Assert.Equal(LightningConnectionType.Charge,connType);
+            Assert.Equal("pass", kv["password"]);
+            Assert.Equal("usr", kv["username"]);
 
             // Test if lightning connection strings get migrated to internal
             store.DerivationStrategies = new JObject()

@@ -50,6 +50,7 @@ namespace BTCPayServer.Hosting
         private readonly BTCPayNetworkJsonSerializerSettings _btcPayNetworkJsonSerializerSettings;
         private readonly LightningAddressService _lightningAddressService;
         private readonly ILogger<MigrationStartupTask> _logger;
+        private readonly LightningClientFactoryService _lightningClientFactoryService;
         private readonly UserManager<ApplicationUser> _userManager;
 
         public IOptions<LightningNetworkOptions> LightningOptions { get; }
@@ -65,7 +66,8 @@ namespace BTCPayServer.Hosting
             IEnumerable<IPayoutHandler> payoutHandlers,
             BTCPayNetworkJsonSerializerSettings btcPayNetworkJsonSerializerSettings,
             LightningAddressService lightningAddressService,
-            ILogger<MigrationStartupTask> logger)
+            ILogger<MigrationStartupTask> logger,
+            LightningClientFactoryService lightningClientFactoryService)
         {
             _DBContextFactory = dbContextFactory;
             _StoreRepository = storeRepository;
@@ -76,6 +78,7 @@ namespace BTCPayServer.Hosting
             _btcPayNetworkJsonSerializerSettings = btcPayNetworkJsonSerializerSettings;
             _lightningAddressService = lightningAddressService;
             _logger = logger;
+            _lightningClientFactoryService = lightningClientFactoryService;
             _userManager = userManager;
             LightningOptions = lightningOptions;
         }
@@ -1052,15 +1055,19 @@ retry:
 
         private async Task DeprecatedLightningConnectionStringCheck()
         {
-            using var ctx = _DBContextFactory.CreateContext();
+            await using var ctx = _DBContextFactory.CreateContext();
             foreach (var store in await ctx.Stores.AsQueryable().ToArrayAsync())
             {
-                foreach (var method in store.GetSupportedPaymentMethods(_NetworkProvider).OfType<Payments.Lightning.LightningSupportedPaymentMethod>())
+                foreach (var method in store.GetSupportedPaymentMethods(_NetworkProvider).OfType<LightningSupportedPaymentMethod>())
                 {
+                    
                     var lightning = method.GetExternalLightningUrl();
-                    if (lightning?.IsLegacy is true)
+
+                    var client = _lightningClientFactoryService.Create(lightning,
+                        _NetworkProvider.GetNetwork<BTCPayNetwork>(method.PaymentId.CryptoCode));
+                    if (client?.ToString() != lightning)
                     {
-                        method.SetLightningUrl(lightning);
+                        method.SetLightningUrl(client);
                         store.SetSupportedPaymentMethod(method);
                     }
                 }

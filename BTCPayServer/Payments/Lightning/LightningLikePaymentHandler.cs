@@ -175,17 +175,7 @@ namespace BTCPayServer.Payments.Lightning
 
         public ILightningClient CreateLightningClient(LightningSupportedPaymentMethod supportedPaymentMethod, BTCPayNetwork network)
         {
-            var external = supportedPaymentMethod.GetExternalLightningUrl();
-            if (external != null)
-            {
-                return _lightningClientFactory.Create(external, network);
-            }
-            else
-            {
-                if (!Options.Value.InternalLightningByCryptoCode.TryGetValue(network.CryptoCode, out var connectionString))
-                    throw new PaymentMethodUnavailableException("No internal node configured");
-                return _lightningClientFactory.Create(connectionString, network);
-            }
+            return supportedPaymentMethod.CreateLightningClient(network, Options.Value, _lightningClientFactory);
         }
 
         public async Task TestConnection(NodeInfo nodeInfo, CancellationToken cancellation)

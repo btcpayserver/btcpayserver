@@ -488,7 +488,7 @@ namespace BTCPayServer.Tests
         }
 
         public List<WebhookInvoiceEvent> WebhookEvents { get; set; } = new List<WebhookInvoiceEvent>();
-        public TEvent AssertHasWebhookEvent<TEvent>(WebhookEventType eventType, Action<TEvent> assert) where TEvent : class
+        public TEvent AssertHasWebhookEvent<TEvent>(string eventType, Action<TEvent> assert) where TEvent : class
         {
             int retry = 0;
 retry:

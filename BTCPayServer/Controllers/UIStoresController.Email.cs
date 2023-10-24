@@ -125,7 +125,7 @@ namespace BTCPayServer.Controllers
         public class StoreEmailRule
         {
             [Required]
-            public WebhookEventType Trigger { get; set; }
+            public string Trigger { get; set; }
             
             public bool CustomerEmail { get; set; }
             

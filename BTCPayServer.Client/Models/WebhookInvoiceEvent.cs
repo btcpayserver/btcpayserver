@@ -1,17 +1,40 @@
+using System;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Client.Models
 {
+    public class WebhookPayoutEvent:WebhookEvent
+    {
+        public WebhookPayoutEvent()
+        {
+        }
+
+        public WebhookPayoutEvent(string evtType)
+        {
+            if(!evtType.ToString().StartsWith("payout", StringComparison.InvariantCultureIgnoreCase))
+                throw new ArgumentException("Invalid event type", nameof(evtType));
+            Type = evtType;
+        }
+
+        [JsonProperty(Order = 1)] public string StoreId { get; set; }
+        [JsonProperty(Order = 2)] public string PayoutId { get; set; }
+        [JsonProperty(Order = 3)] public string PullPaymentId { get; set; }
+        [JsonProperty(Order = 4)] [JsonConverter(typeof(StringEnumConverter))]public PayoutState PayoutState { get; set; }
+    }
+    
     public class WebhookInvoiceEvent : WebhookEvent
     {
         public WebhookInvoiceEvent()
         {
         }
 
-        public WebhookInvoiceEvent(WebhookEventType evtType)
-        {
-            this.Type = evtType;
+        public WebhookInvoiceEvent(string evtType)
+        { 
+            if(!evtType.StartsWith("invoice", StringComparison.InvariantCultureIgnoreCase))
+                throw new ArgumentException("Invalid event type", nameof(evtType));
+            Type = evtType;
         }
 
         [JsonProperty(Order = 1)] public string StoreId { get; set; }
@@ -21,11 +44,7 @@ namespace BTCPayServer.Client.Models
 
     public class WebhookInvoiceSettledEvent : WebhookInvoiceEvent
     {
-        public WebhookInvoiceSettledEvent()
-        {
-        }
-
-        public WebhookInvoiceSettledEvent(WebhookEventType evtType) : base(evtType)
+        public WebhookInvoiceSettledEvent() : base(WebhookEventType.InvoiceSettled)
         {
         }
 
@@ -34,11 +53,7 @@ namespace BTCPayServer.Client.Models
 
     public class WebhookInvoiceInvalidEvent : WebhookInvoiceEvent
     {
-        public WebhookInvoiceInvalidEvent()
-        {
-        }
-
-        public WebhookInvoiceInvalidEvent(WebhookEventType evtType) : base(evtType)
+        public WebhookInvoiceInvalidEvent():base(WebhookEventType.InvoiceInvalid)
         {
         }
 
@@ -47,11 +62,7 @@ namespace BTCPayServer.Client.Models
 
     public class WebhookInvoiceProcessingEvent : WebhookInvoiceEvent
     {
-        public WebhookInvoiceProcessingEvent()
-        {
-        }
-
-        public WebhookInvoiceProcessingEvent(WebhookEventType evtType) : base(evtType)
+        public WebhookInvoiceProcessingEvent():base(WebhookEventType.InvoiceProcessing)
         {
         }
 
@@ -60,11 +71,11 @@ namespace BTCPayServer.Client.Models
 
     public class WebhookInvoiceReceivedPaymentEvent : WebhookInvoiceEvent
     {
-        public WebhookInvoiceReceivedPaymentEvent()
+        public WebhookInvoiceReceivedPaymentEvent() : base(WebhookEventType.InvoiceReceivedPayment)
         {
         }
 
-        public WebhookInvoiceReceivedPaymentEvent(WebhookEventType evtType) : base(evtType)
+        public WebhookInvoiceReceivedPaymentEvent(string type):base(type)
         {
         }
 
@@ -76,22 +87,16 @@ namespace BTCPayServer.Client.Models
 
     public class WebhookInvoicePaymentSettledEvent : WebhookInvoiceReceivedPaymentEvent
     {
-        public WebhookInvoicePaymentSettledEvent()
-        {
-        }
 
-        public WebhookInvoicePaymentSettledEvent(WebhookEventType evtType) : base(evtType)
+        public WebhookInvoicePaymentSettledEvent() : base(WebhookEventType.InvoicePaymentSettled)
         {
         }
     }
 
     public class WebhookInvoiceExpiredEvent : WebhookInvoiceEvent
     {
-        public WebhookInvoiceExpiredEvent()
-        {
-        }
 
-        public WebhookInvoiceExpiredEvent(WebhookEventType evtType) : base(evtType)
+        public WebhookInvoiceExpiredEvent() : base(WebhookEventType.InvoiceExpired)
         {
         }
 

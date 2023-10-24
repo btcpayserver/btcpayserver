@@ -18,6 +18,7 @@ using BTCPayServer.Data;
 using BTCPayServer.Data.Payouts.LightningLike;
 using BTCPayServer.Forms;
 using BTCPayServer.HostedServices;
+using BTCPayServer.HostedServices.Webhooks;
 using BTCPayServer.Lightning;
 using BTCPayServer.Lightning.Charge;
 using BTCPayServer.Lightning.CLightning;
@@ -381,27 +382,14 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<IHostedService, Services.NBXplorerConnectionFactory>(o => o.GetRequiredService<Services.NBXplorerConnectionFactory>());
             services.AddSingleton<HostedServices.CheckConfigurationHostedService>();
             services.AddSingleton<IHostedService, HostedServices.CheckConfigurationHostedService>(o => o.GetRequiredService<CheckConfigurationHostedService>());
-            services.AddSingleton<HostedServices.WebhookSender>();
-            services.AddSingleton<IHostedService, WebhookSender>(o => o.GetRequiredService<WebhookSender>());
             services.AddSingleton<IHostedService, StoreEmailRuleProcessorSender>();
             services.AddSingleton<IHostedService, PeriodicTaskLauncherHostedService>();
-            services.AddScheduledTask<CleanupWebhookDeliveriesTask>(TimeSpan.FromHours(6.0));
 
             services.AddReportProvider<PaymentsReportProvider>();
             services.AddReportProvider<OnChainWalletReportProvider>();
             services.AddReportProvider<ProductsReportProvider>();
             services.AddReportProvider<PayoutsReportProvider>();
-
-            services.AddHttpClient(WebhookSender.OnionNamedClient)
-                .ConfigurePrimaryHttpMessageHandler<Socks5HttpClientHandler>();
-            services.AddHttpClient(WebhookSender.LoopbackNamedClient)
-                .ConfigurePrimaryHttpMessageHandler(_ => new HttpClientHandler
-                {
-                    ServerCertificateCustomValidationCallback =
-                        HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
-                });
-
-
+            services.AddWebhooks();
             services.AddSingleton<BitcoinLikePayoutHandler>();
             services.AddSingleton<IPayoutHandler>(provider => provider.GetRequiredService<BitcoinLikePayoutHandler>());
             services.AddSingleton<IPayoutHandler>(provider => provider.GetRequiredService<LightningLikePayoutHandler>());

@@ -1,5 +1,7 @@
 @using BTCPayServer.Client.Models
+@using BTCPayServer.HostedServices.Webhooks
 @model BTCPayServer.Controllers.UIStoresController.StoreEmailRuleViewModel
+@inject WebhookSender WebhookSender
 
 @{
     Layout = "../Shared/_NavLayout.cshtml";
@@ -54,7 +56,7 @@
                                     </button>
                                 </div>
                             </div>
-                            <select asp-for="Rules[index].Trigger" asp-items="@Html.GetEnumSelectList<WebhookEventType>()" class="form-select email-rule-trigger" required></select>
+                            <select asp-for="Rules[index].Trigger" asp-items="@WebhookSender.GetSupportedWebhookTypes().Select(s => new SelectListItem(s.Value,s.Key))" class="form-select email-rule-trigger" required></select>
                             <span asp-validation-for="Rules[index].Trigger" class="text-danger"></span>
                             <div class="form-text">Choose what event sends the email.</div>
                         </div>

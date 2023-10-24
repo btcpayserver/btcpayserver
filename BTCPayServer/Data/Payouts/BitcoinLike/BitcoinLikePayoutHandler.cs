@@ -37,6 +37,7 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
     private readonly ApplicationDbContextFactory _dbContextFactory;
     private readonly NotificationSender _notificationSender;
     private readonly Logs Logs;
+    private readonly EventAggregator _eventAggregator;
 
     public WalletRepository WalletRepository { get; }
 
@@ -46,7 +47,7 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
         BTCPayNetworkJsonSerializerSettings jsonSerializerSettings,
         ApplicationDbContextFactory dbContextFactory,
         NotificationSender notificationSender,
-        Logs logs)
+        Logs logs, EventAggregator eventAggregator)
     {
         _btcPayNetworkProvider = btcPayNetworkProvider;
         WalletRepository = walletRepository;
@@ -55,6 +56,7 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
         _dbContextFactory = dbContextFactory;
         _notificationSender = notificationSender;
         this.Logs = logs;
+        _eventAggregator = eventAggregator;
     }
 
 
@@ -327,7 +329,7 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
                 .Include(p => p.PullPaymentData)
                 .Where(p => p.State == PayoutState.InProgress)
                 .ToListAsync();
-
+            List<PayoutData> updatedPayouts = new List<PayoutData>();
             foreach (var payout in payouts)
             {
                 var proof = ParseProof(payout) as PayoutTransactionOnChainBlob;
@@ -348,6 +350,7 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
                     {
                         payout.State = PayoutState.Completed;
                         proof.TransactionId = tx.TransactionHash;
+                        updatedPayouts.Add(payout);
                         break;
                     }
                     else
@@ -362,6 +365,7 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
                         {
                             payout.State = PayoutState.InProgress;
                             proof.TransactionId = tx.TransactionHash;
+                            updatedPayouts.Add(payout);
                             continue;
                         }
                     }
@@ -374,6 +378,10 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
 
                 if (proof.Candidates.Count == 0)
                 {
+                    if (payout.State != PayoutState.AwaitingPayment)
+                    {
+                        updatedPayouts.Add(payout);
+                    }
                     payout.State = PayoutState.AwaitingPayment;
                 }
                 else if (proof.TransactionId is null)
@@ -387,6 +395,10 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
             }
 
             await ctx.SaveChangesAsync();
+            foreach (PayoutData payoutData in updatedPayouts)
+            {
+                _eventAggregator.Publish(new PayoutEvent(PayoutEvent.PayoutEventType.Updated,payoutData));
+            }
         }
         catch (Exception ex)
         {
@@ -464,9 +476,8 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
 
             proof.TransactionId ??= txId;
             SetProofBlob(payout, proof);
-
-
             await ctx.SaveChangesAsync();
+            _eventAggregator.Publish(new PayoutEvent(PayoutEvent.PayoutEventType.Updated,payout));
         }
         catch (Exception ex)
         {

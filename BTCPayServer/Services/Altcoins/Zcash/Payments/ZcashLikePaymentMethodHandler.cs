@@ -66,7 +66,6 @@ namespace BTCPayServer.Services.Altcoins.Zcash.Payments
         public override object PreparePayment(ZcashSupportedPaymentMethod supportedPaymentMethod, StoreData store,
             BTCPayNetworkBase network)
         {
-
             var walletClient = _ZcashRpcProvider.WalletRpcClients[supportedPaymentMethod.CryptoCode];
             var daemonClient = _ZcashRpcProvider.DaemonRpcClients[supportedPaymentMethod.CryptoCode];
             return new Prepare()

@@ -83,6 +83,8 @@ namespace BTCPayServer.Payments
                 return CryptoCode;
             if ((CryptoCode == "YEC" || CryptoCode == "ZEC") && PaymentType == PaymentTypes.ZcashLike)
                 return CryptoCode;
+            if (CryptoCode == "XCH" && PaymentType == PaymentTypes.ChiaLike)
+                return CryptoCode;
 #endif
             return $"{CryptoCode}-{PaymentType.ToStringNormalized()}";
         }

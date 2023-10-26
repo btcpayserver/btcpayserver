@@ -13,6 +13,7 @@ namespace BTCPayServer.Services.Rates
     public class ExchangeSharpRateProvider<T> : IRateProvider where T : ExchangeAPI
     {
         readonly HttpClient _httpClient;
+
         public ExchangeSharpRateProvider(HttpClient httpClient)
         {
             ArgumentNullException.ThrowIfNull(httpClient);
@@ -27,11 +28,14 @@ namespace BTCPayServer.Services.Rates
             exchangeAPI.RequestMaker = new HttpClientRequestMaker(exchangeAPI, _httpClient, cancellationToken);
             var rates = await exchangeAPI.GetTickersAsync();
 
+
             var exchangeRateTasks = rates
-                .Where(t => t.Value.Ask != 0m && t.Value.Bid != 0m)
+                // .Where(t => t.Value.Ask != 0m && t.Value.Bid != 0m)
                 .Select(t => CreateExchangeRate(exchangeAPI, t));
 
             var exchangeRates = await Task.WhenAll(exchangeRateTasks);
+
+            Console.WriteLine(exchangeRates);
 
             return exchangeRates
                 .Where(t => t != null)
@@ -45,6 +49,8 @@ namespace BTCPayServer.Services.Rates
 
         private async Task<PairRate> CreateExchangeRate(T exchangeAPI, KeyValuePair<string, ExchangeTicker> ticker)
         {
+            Console.WriteLine(ticker.Key);
+            Console.WriteLine(ticker.Value);
             if (notFoundSymbols.TryGetValue(ticker.Key, out _))
                 return null;
             try
@@ -63,6 +69,7 @@ namespace BTCPayServer.Services.Rates
                         return null;
                     }
                 }
+
                 return new PairRate(pair, new BidAsk(ticker.Value.Bid, ticker.Value.Ask));
             }
             catch (ArgumentException)

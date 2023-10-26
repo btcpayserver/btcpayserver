@@ -56,6 +56,7 @@ namespace BTCPayServer
             InitViacoin();
             InitMonero();
             InitZcash();
+            InitChia();
             // InitArgoneum();//their rate source is down 9/15/20.
             // InitMonetaryUnit(); Not supported from Bittrex from 11/23/2022, dead shitcoin
 

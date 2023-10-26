@@ -63,7 +63,6 @@ namespace BTCPayServer.Services.Altcoins.Chia.Payments
             BTCPayNetworkBase network)
         {
             var walletClient = _ChiaRpcProvider.WalletRpcClients[supportedPaymentMethod.CryptoCode];
-            var fullNodeClient = _ChiaRpcProvider.FullNodeRpcClients[supportedPaymentMethod.CryptoCode];
             return new Prepare()
             {
                 ReserveAddress = s =>

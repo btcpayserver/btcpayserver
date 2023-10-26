@@ -139,7 +139,7 @@ namespace BTCPayServer.Services.Altcoins.Chia.Services
                     new GetTransactionsRequest() { WalletId = datas.Key }));
 
             await Task.WhenAll(tasks.Values);
-            
+
             var transactionProcessingTasks = new List<Task>();
 
             var updatedPaymentEntities = new BlockingCollection<(PaymentEntity Payment, InvoiceEntity invoice)>();
@@ -175,7 +175,9 @@ namespace BTCPayServer.Services.Altcoins.Chia.Services
                         invoice = newMatch.Invoice;
                     }
 
-                    var confirmations = _ChiaRpcProvider.Summaries[cryptoCode].CurrentHeight - transaction.ConfirmedAtHeight;
+                    var confirmations =
+                        Math.Max(_ChiaRpcProvider.Summaries[cryptoCode].WalletHeight - transaction.ConfirmedAtHeight,
+                            0);
 
                     return HandlePaymentData(cryptoCode, transaction.ToAddress, transaction.Amount,
                         transaction.TransactionId,
@@ -268,7 +270,7 @@ namespace BTCPayServer.Services.Altcoins.Chia.Services
 
                 var address = await walletClient.SendCommandAsync<GetNextAddressRequest, GetNextAddressResponse>(
                     "get_next_address",
-                    new GetNextAddressRequest() { WalletId = Chia.WalletId, NewAddress = true});
+                    new GetNextAddressRequest() { WalletId = Chia.WalletId, NewAddress = true });
                 Chia.DepositAddress = address.Address;
                 await _invoiceRepository.NewPaymentDetails(invoice.Id, Chia, payment.Network);
                 _eventAggregator.Publish(

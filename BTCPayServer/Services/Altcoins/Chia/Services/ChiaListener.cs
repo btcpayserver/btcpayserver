@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
@@ -206,7 +207,8 @@ namespace BTCPayServer.Services.Altcoins.Chia.Services
                         invoice = newMatch.Invoice;
                     }
 
-                    var confirmations = _ChiaRpcProvider.Summaries[cryptoCode].CurrentHeight - transaction.ConfirmedAtHeight;
+                    var confirmations = Math.Max(_ChiaRpcProvider.Summaries[cryptoCode].WalletHeight -
+                                                 transaction.ConfirmedAtHeight, 0);
 
                     return HandlePaymentData(cryptoCode, transaction.ToAddress, transaction.Amount,
                         transaction.TransactionId,

@@ -131,9 +131,10 @@ document.addEventListener("DOMContentLoaded", () => {
         el: '#app',
         data() { return { srv } },
         methods: {
-            titleCase(str) {
+            titleCase(str, shorten) {
                 const result = str.replace(/([A-Z])/g, " $1");
-                return result.charAt(0).toUpperCase() + result.slice(1);
+                const title = result.charAt(0).toUpperCase() + result.slice(1)
+                return shorten && title.endsWith(' Amount') ? 'Amount' : title;
             },
             displayValue
         }

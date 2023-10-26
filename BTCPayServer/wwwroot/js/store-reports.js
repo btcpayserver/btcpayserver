@@ -131,6 +131,9 @@ document.addEventListener("DOMContentLoaded", () => {
         el: '#app',
         data() { return { srv } },
         methods: {
+            hasChartData(chart) {
+                return chart.rows.length || chart.hasGrandTotal;
+            },
             titleCase(str, shorten) {
                 const result = str.replace(/([A-Z])/g, " $1");
                 const title = result.charAt(0).toUpperCase() + result.slice(1)

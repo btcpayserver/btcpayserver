@@ -16,7 +16,11 @@
 {
     @* Set a height for the responsive table container to make it work with the fixed table headers.
        Details described here: thttps://uxdesign.cc/position-stuck-96c9f55d9526 *@
-    <style>#app .table-responsive { max-height: 80vh; }</style>
+    <style>
+        #app .table-responsive { max-height: 80vh; }
+        #app #charts { gap: var(--btcpay-space-l) var(--btcpay-space-xxl); }
+        #app #charts article { flex: 1 1 450px; }
+    </style>
 }
 
 <div class="sticky-header">
@@ -57,30 +61,32 @@
 </div>
 
 <div id="app" v-cloak class="w-100-fixed">
-	<article v-for="chart in srv.charts" v-if="chart.rows.length || chart.hasGrandTotal" class="mb-5">
-        <h3>{{ chart.name }}</h3>
-        <div class="table-responsive">
-            <table class="table table-hover w-auto">
-                <thead class="sticky-top bg-body">
-				    <tr>
-					    <th v-for="group in chart.groups">{{ titleCase(group, true) }}</th>
-					    <th v-for="agg in chart.aggregates" class="text-end">{{ titleCase(agg, true) }}</th>
-				    </tr>
-			    </thead>
-			    <tbody>
-				    <tr v-for="row in chart.rows">
-					    <td v-for="group in row.groups" :rowspan="group.rowCount">{{ group.name }}</td>
-					    <td v-if="row.isTotal" :colspan="row.rLevel">Total</td>
-					    <td v-for="value in row.values" class="text-end">{{ displayValue(value) }}</td>
-				    </tr>
+    <div v-if="srv.charts && srv.charts.some(hasChartData)" id="charts"  class="d-flex flex-wrap mb-5">
+        <article v-for="chart in srv.charts" v-if="hasChartData(chart)">
+            <h3>{{ chart.name }}</h3>
+            <div class="table-responsive">
+                <table class="table table-hover w-auto">
+                    <thead class="sticky-top bg-body">
+                    <tr>
+                        <th v-for="group in chart.groups">{{ titleCase(group, true) }}</th>
+                        <th v-for="agg in chart.aggregates" class="text-end">{{ titleCase(agg, true) }}</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr v-for="row in chart.rows">
+                        <td v-for="group in row.groups" :rowspan="group.rowCount">{{ group.name }}</td>
+                        <td v-if="row.isTotal" :colspan="row.rLevel">Total</td>
+                        <td v-for="value in row.values" class="text-end">{{ displayValue(value) }}</td>
+                    </tr>
                     <tr v-if="chart.hasGrandTotal">
                         <td :colspan="chart.groups.length">Grand Total</td>
                         <td v-for="value in chart.grandTotalValues" class="text-end">{{ displayValue(value) }}</td>
                     </tr>
-			    </tbody>
-		    </table>
-        </div>
-	</article>
+                    </tbody>
+                </table>
+            </div>
+        </article>
+    </div>
     <article v-if="srv.result.data">
         <h3 id="raw-data">Raw data</h3>
         <div class="table-responsive" v-if="srv.result.data.length">

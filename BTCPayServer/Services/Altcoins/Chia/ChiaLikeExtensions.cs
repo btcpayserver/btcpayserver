@@ -23,6 +23,7 @@ namespace BTCPayServer.Services.Altcoins.Chia
             serviceCollection.AddSingleton(provider =>
                 provider.ConfigureChiaLikeConfiguration());
             serviceCollection.AddSingleton<ChiaRPCProvider>();
+            serviceCollection.AddSingleton<ChiaLikePaymentHandler>();
             serviceCollection.AddHostedService<ChiaLikeSummaryUpdaterHostedService>();
             serviceCollection.AddHostedService<ChiaListener>();
             serviceCollection.AddHostedService<ChiaLikeTransactionUpdaterHostedService>();

@@ -52,7 +52,7 @@ namespace BTCPayServer.Services.Altcoins.Chia.Payments
         public override string GetPaymentLink(BTCPayNetworkBase network, InvoiceEntity invoice, IPaymentMethodDetails paymentMethodDetails, decimal cryptoInfoDue, string serverUri)
         {
             return paymentMethodDetails.Activated
-                ? $"{paymentMethodDetails.GetPaymentDestination()}"
+                ? $"chia:{paymentMethodDetails.GetPaymentDestination()}?amount={cryptoInfoDue}"
                 : string.Empty;
         }
 

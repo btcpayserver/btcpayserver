@@ -87,11 +87,13 @@ namespace BTCPayServer.Services.Altcoins.Chia.Payments
             if (model.Activated)
             {
                 var cryptoInfo = invoiceResponse.CryptoInfo.First(o => o.GetpaymentMethodId() == paymentMethodId);
+                // Enable when Chia has a standard for payment links
                 model.InvoiceBitcoinUrl = ChiaPaymentType.Instance.GetPaymentLink(network, null,
                     new ChiaLikeOnChainPaymentMethodDetails() { DepositAddress = cryptoInfo.Address },
                     cryptoInfo.GetDue().Value,
                     null);
-                model.InvoiceBitcoinUrlQR = "";
+                // model.InvoiceBitcoinUrl = cryptoInfo.Address;
+                model.InvoiceBitcoinUrlQR = model.InvoiceBitcoinUrl;
             }
             else
             {

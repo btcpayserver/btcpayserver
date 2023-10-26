@@ -34,14 +34,21 @@ namespace BTCPayServer.Common.Altcoins.Chia.RPC
 
             var base64 = new StringBuilder(streamReader.ReadToEnd())
                 .Replace("-----BEGIN RSA PRIVATE KEY-----", string.Empty)
+                .Replace("-----BEGIN PRIVATE KEY-----", string.Empty)
                 .Replace("-----END RSA PRIVATE KEY-----", string.Empty)
+                .Replace("-----END PRIVATE KEY-----", string.Empty)
                 .Replace(Environment.NewLine, string.Empty)
                 .ToString();
             
-            Console.WriteLine(base64);
-
             using var rsa = RSA.Create();
-            rsa.ImportRSAPrivateKey(Convert.FromBase64String(base64), out _);
+            try
+            {
+                rsa.ImportPkcs8PrivateKey(Convert.FromBase64String(base64), out _);
+            }
+            catch
+            {
+                rsa.ImportRSAPrivateKey(Convert.FromBase64String(base64), out _);
+            }
 
             using var certWithKey = cert.CopyWithPrivateKey(rsa);
             var ephemeralCert = new X509Certificate2(certWithKey.Export(X509ContentType.Pkcs12));

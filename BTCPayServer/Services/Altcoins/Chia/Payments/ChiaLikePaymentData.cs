@@ -1,7 +1,7 @@
 #if ALTCOINS
 using BTCPayServer.Client.Models;
+using BTCPayServer.Common.Altcoins.Chia.Utils;
 using BTCPayServer.Payments;
-using BTCPayServer.Services.Altcoins.Chia.Utils;
 using BTCPayServer.Services.Invoices;
 
 namespace BTCPayServer.Services.Altcoins.Chia.Payments
@@ -10,8 +10,6 @@ namespace BTCPayServer.Services.Altcoins.Chia.Payments
     {
         public ulong Amount { get; set; }
         public string Address { get; set; }
-        public long SubaddressIndex { get; set; }
-        public long SubaccountIndex { get; set; }
         public long BlockHeight { get; set; }
         public long ConfirmationCount { get; set; }
         public string TransactionId { get; set; }
@@ -20,7 +18,7 @@ namespace BTCPayServer.Services.Altcoins.Chia.Payments
 
         public string GetPaymentId()
         {
-            return $"{TransactionId}#{SubaccountIndex}#{SubaddressIndex}";
+            return $"{TransactionId}";
         }
 
         public string[] GetSearchTerms()
@@ -45,11 +43,11 @@ namespace BTCPayServer.Services.Altcoins.Chia.Payments
                 case SpeedPolicy.HighSpeed:
                     return ConfirmationCount >= 0;
                 case SpeedPolicy.MediumSpeed:
-                    return ConfirmationCount >= 1;
+                    return ConfirmationCount >= 10;
                 case SpeedPolicy.LowMediumSpeed:
-                    return ConfirmationCount >= 2;
+                    return ConfirmationCount >= 20;
                 case SpeedPolicy.LowSpeed:
-                    return ConfirmationCount >= 6;
+                    return ConfirmationCount >= 30;
                 default:
                     return false;
             }

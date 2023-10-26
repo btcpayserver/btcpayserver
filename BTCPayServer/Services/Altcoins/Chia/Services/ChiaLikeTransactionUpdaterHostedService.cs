@@ -4,12 +4,10 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
-using System.Threading.Tasks.Dataflow;
-using BTCPayServer.Common.Altcoins.Chia.RPC;
 using BTCPayServer.Common.Altcoins.Chia.RPC.Models;
 using BTCPayServer.Events;
+using BTCPayServer.Logging;
 using BTCPayServer.Payments;
 using BTCPayServer.Services.Altcoins.Chia.Configuration;
 using BTCPayServer.Services.Altcoins.Chia.Payments;
@@ -18,112 +16,83 @@ using BTCPayServer.Services.Invoices;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using NBXplorer;
 
 namespace BTCPayServer.Services.Altcoins.Chia.Services
 {
-    public class ChiaListener : IHostedService
+    public class ChiaLikeTransactionUpdaterHostedService : IHostedService
     {
-        private readonly InvoiceRepository _invoiceRepository;
-        private readonly EventAggregator _eventAggregator;
         private readonly ChiaRPCProvider _ChiaRpcProvider;
         private readonly ChiaLikeConfiguration _ChiaLikeConfiguration;
+        private readonly InvoiceRepository _invoiceRepository;
+        private readonly EventAggregator _eventAggregator;
         private readonly BTCPayNetworkProvider _networkProvider;
-        private readonly ILogger<ChiaListener> _logger;
         private readonly PaymentService _paymentService;
-        private readonly CompositeDisposable leases = new CompositeDisposable();
-        private readonly Channel<Func<Task>> _requests = Channel.CreateUnbounded<Func<Task>>();
+        private readonly ILogger<ChiaLikeTransactionUpdaterHostedService> _logger;
         private CancellationTokenSource _Cts;
 
-        public ChiaListener(InvoiceRepository invoiceRepository,
+        public ChiaLikeTransactionUpdaterHostedService(ChiaRPCProvider ChiaRpcProvider,
+            ChiaLikeConfiguration ChiaLikeConfiguration, ILogger<ChiaLikeTransactionUpdaterHostedService> logger,
+            InvoiceRepository invoiceRepository,
             EventAggregator eventAggregator,
-            ChiaRPCProvider ChiaRpcProvider,
-            ChiaLikeConfiguration ChiaLikeConfiguration,
             BTCPayNetworkProvider networkProvider,
-            ILogger<ChiaListener> logger,
-            PaymentService paymentService)
+            PaymentService paymentService
+        )
         {
-            _invoiceRepository = invoiceRepository;
-            _eventAggregator = eventAggregator;
             _ChiaRpcProvider = ChiaRpcProvider;
             _ChiaLikeConfiguration = ChiaLikeConfiguration;
-            _networkProvider = networkProvider;
             _logger = logger;
+            _invoiceRepository = invoiceRepository;
+            _eventAggregator = eventAggregator;
+            _networkProvider = networkProvider;
             _paymentService = paymentService;
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            if (!_ChiaLikeConfiguration.ChiaLikeConfigurationItems.Any())
+            _Cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            foreach (var ChiaLikeConfigurationItem in _ChiaLikeConfiguration.ChiaLikeConfigurationItems)
             {
-                return Task.CompletedTask;
+                _ = StartLoop(_Cts.Token, ChiaLikeConfigurationItem.Key);
             }
 
-            _Cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-
-            leases.Add(_eventAggregator.Subscribe<ChiaRPCProvider.ChiaDaemonStateChange>(e =>
-            {
-                if (_ChiaRpcProvider.IsAvailable(e.CryptoCode))
-                {
-                    _logger.LogInformation($"{e.CryptoCode} just became available");
-                    _ = UpdateAnyPendingChiaLikePayment(e.CryptoCode);
-                }
-                else
-                {
-                    _logger.LogInformation($"{e.CryptoCode} just became unavailable");
-                }
-            }));
-            using var cts = new CancellationTokenSource(5000);
-
-            _ = WorkThroughQueue(_Cts.Token);
             return Task.CompletedTask;
         }
 
-        private async Task WorkThroughQueue(CancellationToken token)
+        private async Task StartLoop(CancellationToken cancellation, string cryptoCode)
         {
-            while (await _requests.Reader.WaitToReadAsync(token) && _requests.Reader.TryRead(out var action))
+            _logger.LogInformation($"Starting listening Chia-like transactions ({cryptoCode})");
+            try
             {
-                token.ThrowIfCancellationRequested();
-                try
+                while (!cancellation.IsCancellationRequested)
                 {
-                    await action.Invoke();
-                }
-                catch (Exception e)
-                {
-                    _logger.LogError($"error with action item {e}");
+                    try
+                    {
+                        await UpdateAnyPendingChiaLikePayment(cryptoCode);
+                        if (_ChiaRpcProvider.IsAvailable(cryptoCode))
+                        {
+                            await Task.Delay(TimeSpan.FromSeconds(10), cancellation);
+                        }
+                        else
+                        {
+                            await Task.Delay(TimeSpan.FromSeconds(30), cancellation);
+                        }
+                    }
+                    catch (Exception ex) when (!cancellation.IsCancellationRequested)
+                    {
+                        _logger.LogError(ex, $"Unhandled exception in transaction updater ({cryptoCode})");
+                        await Task.Delay(TimeSpan.FromSeconds(10), cancellation);
+                    }
                 }
             }
+            catch when (cancellation.IsCancellationRequested) { }
         }
 
-        private async Task ReceivedPayment(InvoiceEntity invoice, PaymentEntity payment)
+        public Task StopAsync(CancellationToken cancellationToken)
         {
-            _logger.LogInformation(
-                $"Invoice {invoice.Id} received payment {payment.GetCryptoPaymentData().GetValue()} {payment.Currency} {payment.GetCryptoPaymentData().GetPaymentId()}");
-            var paymentData = (ChiaLikePaymentData)payment.GetCryptoPaymentData();
-            var paymentMethod = invoice.GetPaymentMethod(payment.Network, ChiaPaymentType.Instance);
-            if (paymentMethod != null &&
-                paymentMethod.GetPaymentMethodDetails() is ChiaLikeOnChainPaymentMethodDetails Chia &&
-                Chia.Activated &&
-                Chia.GetPaymentDestination() == paymentData.GetDestination() &&
-                paymentMethod.Calculate().Due > 0.0m)
-            {
-                var walletClient = _ChiaRpcProvider.WalletRpcClients[payment.Currency];
-
-                // TODO Why does it need another address?
-                var address = await walletClient.SendCommandAsync<GetNextAddressRequest, GetNextAddressResponse>(
-                    "get_next_address",
-                    new GetNextAddressRequest() { WalletId = Chia.WalletId });
-                Chia.DepositAddress = address.Address;
-                await _invoiceRepository.NewPaymentDetails(invoice.Id, Chia, payment.Network);
-                _eventAggregator.Publish(
-                    new InvoiceNewPaymentDetailsEvent(invoice.Id, Chia, payment.GetPaymentMethodId()));
-                paymentMethod.SetPaymentMethodDetails(Chia);
-                invoice.SetPaymentMethod(paymentMethod);
-            }
-
-            _eventAggregator.Publish(
-                new InvoiceEvent(invoice, InvoiceEvent.ReceivedPayment) { Payment = payment });
+            _Cts?.Cancel();
+            return Task.CompletedTask;
         }
+
 
         private async Task UpdatePaymentStates(string cryptoCode, InvoiceEntity[] invoices)
         {
@@ -170,7 +139,7 @@ namespace BTCPayServer.Services.Altcoins.Chia.Services
                     new GetTransactionsRequest() { WalletId = datas.Key }));
 
             await Task.WhenAll(tasks.Values);
-
+            
             var transactionProcessingTasks = new List<Task>();
 
             var updatedPaymentEntities = new BlockingCollection<(PaymentEntity Payment, InvoiceEntity invoice)>();
@@ -227,20 +196,6 @@ namespace BTCPayServer.Services.Altcoins.Chia.Services
             }
         }
 
-
-        public Task StopAsync(CancellationToken cancellationToken)
-        {
-            leases.Dispose();
-            _Cts?.Cancel();
-            return Task.CompletedTask;
-        }
-
-        private async Task OnNewBlock(string cryptoCode)
-        {
-            await UpdateAnyPendingChiaLikePayment(cryptoCode);
-            _eventAggregator.Publish(new NewBlockEvent() { CryptoCode = cryptoCode });
-        }
-
         private async Task HandlePaymentData(string cryptoCode, string address, ulong totalAmount,
             string txId, long confirmations, long blockHeight, InvoiceEntity invoice,
             BlockingCollection<(PaymentEntity Payment, InvoiceEntity invoice)> paymentsToUpdate)
@@ -293,6 +248,37 @@ namespace BTCPayServer.Services.Altcoins.Chia.Services
         {
             return invoice.GetPayments(false)
                 .Where(p => p.GetPaymentMethodId() == new PaymentMethodId(cryptoCode, ChiaPaymentType.Instance));
+        }
+
+
+        private async Task ReceivedPayment(InvoiceEntity invoice, PaymentEntity payment)
+        {
+            _logger.LogInformation(
+                $"Invoice {invoice.Id} received payment {payment.GetCryptoPaymentData().GetValue()} {payment.Currency} {payment.GetCryptoPaymentData().GetPaymentId()}");
+            var paymentData = (ChiaLikePaymentData)payment.GetCryptoPaymentData();
+            var paymentMethod = invoice.GetPaymentMethod(payment.Network, ChiaPaymentType.Instance);
+            // TODO Why is this triggered if the full sum has been paid?
+            if (paymentMethod != null &&
+                paymentMethod.GetPaymentMethodDetails() is ChiaLikeOnChainPaymentMethodDetails Chia &&
+                Chia.Activated &&
+                Chia.GetPaymentDestination() == paymentData.GetDestination() &&
+                paymentMethod.Calculate().Due > 0.0m)
+            {
+                var walletClient = _ChiaRpcProvider.WalletRpcClients[payment.Currency];
+
+                var address = await walletClient.SendCommandAsync<GetNextAddressRequest, GetNextAddressResponse>(
+                    "get_next_address",
+                    new GetNextAddressRequest() { WalletId = Chia.WalletId, NewAddress = true});
+                Chia.DepositAddress = address.Address;
+                await _invoiceRepository.NewPaymentDetails(invoice.Id, Chia, payment.Network);
+                _eventAggregator.Publish(
+                    new InvoiceNewPaymentDetailsEvent(invoice.Id, Chia, payment.GetPaymentMethodId()));
+                paymentMethod.SetPaymentMethodDetails(Chia);
+                invoice.SetPaymentMethod(paymentMethod);
+            }
+
+            _eventAggregator.Publish(
+                new InvoiceEvent(invoice, InvoiceEvent.ReceivedPayment) { Payment = payment });
         }
     }
 }

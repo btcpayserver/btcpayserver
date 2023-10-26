@@ -25,10 +25,12 @@ namespace BTCPayServer.Services.Altcoins.Chia
             serviceCollection.AddSingleton<ChiaRPCProvider>();
             serviceCollection.AddHostedService<ChiaLikeSummaryUpdaterHostedService>();
             serviceCollection.AddHostedService<ChiaListener>();
+            serviceCollection.AddHostedService<ChiaLikeTransactionUpdaterHostedService>();
             serviceCollection.AddSingleton<ChiaLikePaymentMethodHandler>();
             serviceCollection.AddSingleton<IPaymentMethodHandler>(provider =>
                 provider.GetService<ChiaLikePaymentMethodHandler>());
             serviceCollection.AddSingleton<IUIExtension>(new UIExtension("Chia/StoreNavChiaExtension", "store-nav"));
+            serviceCollection.AddSingleton<IUIExtension>(new UIExtension("Chia/StoreWalletsNavChiaExtension",  "store-wallets-nav"));
             serviceCollection.AddSingleton<ISyncSummaryProvider, ChiaSyncSummaryProvider>();
 
             return serviceCollection;
@@ -62,7 +64,6 @@ namespace BTCPayServer.Services.Altcoins.Chia
                 result.ChiaLikeConfigurationItems.Add(ChiaLikeSpecificBtcPayNetwork.CryptoCode,
                     new ChiaLikeConfigurationItem()
                     {
-                        DaemonEndpoint = config.GetEndpoint("daemon"),
                         FullNodeEndpoint = config.GetEndpoint("full_node"),
                         WalletEndpoint = config.GetEndpoint("wallet"),
                     });

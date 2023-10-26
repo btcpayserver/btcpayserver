@@ -1,11 +1,10 @@
+using System.Collections.Generic;
 using Newtonsoft.Json;
 
-namespace BTCPayServer.Services.Altcoins.Chia.RPC.Models
+namespace BTCPayServer.Common.Altcoins.Chia.RPC.Models
 {
     public class GetFeeEstimateResponse
     {
-        [JsonProperty("fee")] public long Fee { get; set; }
-        [JsonProperty("status")] public string Status { get; set; }
-        [JsonProperty("untrusted")] public bool Untrusted { get; set; }
+        [JsonProperty("estimates")] public List<ulong> Estimates { get; set; }
     }
 }

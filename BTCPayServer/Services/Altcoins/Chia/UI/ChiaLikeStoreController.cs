@@ -11,6 +11,7 @@ using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
+using BTCPayServer.Common.Altcoins.Chia.RPC.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
 using BTCPayServer.Models;
@@ -18,7 +19,6 @@ using BTCPayServer.Payments;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Altcoins.Chia.Configuration;
 using BTCPayServer.Services.Altcoins.Chia.Payments;
-using BTCPayServer.Services.Altcoins.Chia.RPC.Models;
 using BTCPayServer.Services.Altcoins.Chia.Services;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
@@ -55,21 +55,26 @@ namespace BTCPayServer.Services.Altcoins.Chia.UI
         [HttpGet()]
         public async Task<IActionResult> GetStoreChiaLikePaymentMethods()
         {
-            var Chia = StoreData.GetSupportedPaymentMethods(_BtcPayNetworkProvider)
+            return View(await GetVM(StoreData));
+        }
+
+        public async Task<ChiaLikePaymentMethodListViewModel> GetVM(StoreData storeData)
+        {
+            var chia = storeData.GetSupportedPaymentMethods(_BtcPayNetworkProvider)
                 .OfType<ChiaSupportedPaymentMethod>();
 
-            var excludeFilters = StoreData.GetStoreBlob().GetExcludedPaymentMethods();
+            var excludeFilters = storeData.GetStoreBlob().GetExcludedPaymentMethods();
 
             var accountsList = _ChiaLikeConfiguration.ChiaLikeConfigurationItems.ToDictionary(pair => pair.Key,
                 pair => GetWallets(pair.Key));
 
             await Task.WhenAll(accountsList.Values);
-            return View(new ChiaLikePaymentMethodListViewModel()
+            return new ChiaLikePaymentMethodListViewModel()
             {
                 Items = _ChiaLikeConfiguration.ChiaLikeConfigurationItems.Select(pair =>
-                    GetChiaLikePaymentMethodViewModel(Chia, pair.Key, excludeFilters,
+                    GetChiaLikePaymentMethodViewModel(chia, pair.Key, excludeFilters,
                         accountsList[pair.Key].Result))
-            });
+            };
         }
 
         private Task<GetWalletsResponse> GetWallets(string cryptoCode)
@@ -78,12 +83,18 @@ namespace BTCPayServer.Services.Altcoins.Chia.UI
             {
                 if (_ChiaRpcProvider.Summaries.TryGetValue(cryptoCode, out var summary) && summary.WalletAvailable)
                 {
-                    return _ChiaRpcProvider.WalletRpcClients[cryptoCode]
-                        .SendCommandAsync<GetWalletsRequest, GetWalletsResponse>("get_wallets",
-                            new GetWalletsRequest { Type = 0 });
+                    return Task.FromResult<GetWalletsResponse>(new GetWalletsResponse()
+                    {
+                        Wallets = new List<GetWalletsResponse.WalletEntry>() { new() { Id = 1 } }
+                    });
+                    // return _ChiaRpcProvider.WalletRpcClients[cryptoCode]
+                    //     .SendCommandAsync<GetWalletsRequest, GetWalletsResponse>("get_wallets",
+                    //         new GetWalletsRequest { Type = 0 });
                 }
             }
-            catch { }
+            catch
+            {
+            }
 
             return Task.FromResult<GetWalletsResponse>(null);
         }
@@ -259,7 +270,8 @@ namespace BTCPayServer.Services.Altcoins.Chia.UI
                 WalletId = viewModel.WalletId, CryptoCode = viewModel.CryptoCode
             });
 
-            blob.SetExcluded(new PaymentMethodId(viewModel.CryptoCode, ChiaPaymentType.Instance), !viewModel.Enabled);
+            blob.SetExcluded(new PaymentMethodId(viewModel.CryptoCode, ChiaPaymentType.Instance),
+                !viewModel.Enabled);
             storeData.SetStoreBlob(blob);
             await _StoreRepository.UpdateStore(storeData);
             return RedirectToAction("GetStoreChiaLikePaymentMethods",

@@ -42,7 +42,6 @@ namespace BTCPayServer.Services.Altcoins.Chia.RPC
                     JsonConvert.SerializeObject(data, jsonSerializer),
                     Encoding.UTF8, "application/json")
             };
-            Console.WriteLine(method);
 
             var rawResult = await _httpClient.SendAsync(httpRequest, cts);
             var rawJson = await rawResult.Content.ReadAsStringAsync();

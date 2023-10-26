@@ -1,0 +1,34 @@
+@using BTCPayServer.Services.Altcoins.Chia.Configuration
+@using BTCPayServer.Services.Altcoins.Chia.UI
+@using BTCPayServer.Abstractions.Contracts
+@inject SignInManager<ApplicationUser> SignInManager;
+@inject ChiaLikeConfiguration ChiaLikeConfiguration;
+@inject IScopeProvider ScopeProvider
+@inject UIChiaLikeStoreController UIChiaLikeStore;
+@{
+    var storeId = ScopeProvider.GetCurrentStoreId();
+
+}
+@if (SignInManager.IsSignedIn(User) && User.IsInRole(Roles.ServerAdmin) && ChiaLikeConfiguration.ChiaLikeConfigurationItems.Any())
+{
+    var store = Context.GetStoreData();
+    var result = await UIChiaLikeStore.GetVM(store);
+
+    foreach (var item in result.Items)
+    {
+        
+        var isActive = !string.IsNullOrEmpty(storeId) && ViewContext.RouteData.Values.TryGetValue("Controller", out var controller) && controller is not null &&
+                       nameof(UIChiaLikeStoreController).StartsWith(controller.ToString() ?? string.Empty, StringComparison.InvariantCultureIgnoreCase) &&
+                       ViewContext.RouteData.Values.TryGetValue("cryptoCode", out var cryptoCode) && cryptoCode is not null && cryptoCode.ToString() == item.CryptoCode;
+        <li class="nav-item">
+            <a class="nav-link @(isActive? "active" : "")"
+               asp-route-cryptoCode="@item.CryptoCode"
+               asp-route-storeId="@storeId"
+               asp-action="GetStoreChiaLikePaymentMethod"
+               asp-controller="UIChiaLikeStore">
+                <span class="me-2 btcpay-status btcpay-status--@(item.Enabled ? "enabled" : "pending")"></span>
+                <span>@item.CryptoCode Wallet</span>
+            </a>
+        </li>
+    }
+}

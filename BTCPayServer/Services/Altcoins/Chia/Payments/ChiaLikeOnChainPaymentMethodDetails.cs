@@ -17,7 +17,7 @@ namespace BTCPayServer.Services.Altcoins.Chia.Payments
 
         public decimal GetNextNetworkFee()
         {
-            return NextNetworkFee;
+            return 0.0m; // The fee is added separately by the user, so it should not be added to the requested sum
         }
 
         public decimal GetFeeRate()
@@ -27,7 +27,6 @@ namespace BTCPayServer.Services.Altcoins.Chia.Payments
         public bool Activated { get; set; } = true;
         public int WalletId { get; set; }
         public string DepositAddress { get; set; }
-        public decimal NextNetworkFee { get; set; }
     }
 }
 #endif

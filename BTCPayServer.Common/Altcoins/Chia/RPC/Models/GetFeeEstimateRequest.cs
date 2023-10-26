@@ -1,9 +1,11 @@
+using System.Collections.Generic;
 using Newtonsoft.Json;
 
-namespace BTCPayServer.Services.Altcoins.Chia.RPC.Models
+namespace BTCPayServer.Common.Altcoins.Chia.RPC.Models
 {
     public class GetFeeEstimateRequest
     {
-        [JsonProperty("grace_blocks")] public int? GraceBlocks { get; set; }
+        [JsonProperty("spend_type")] public string SpendType { get; set; }
+        [JsonProperty("target_times")] public List<int> TargetTimes { get; set; }
     }
 }

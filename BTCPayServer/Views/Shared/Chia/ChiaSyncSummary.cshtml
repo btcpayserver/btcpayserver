@@ -8,7 +8,7 @@
     {
         @if (summary.Value != null)
         {
-            var status = summary.Value.DaemonAvailable
+            var status = summary.Value.FullNodeAvailable
                 ? summary.Value.Synced ? "enabled" : "pending"
                 : "disabled";
             <h5 class="d-flex align-items-center fw-semibold">
@@ -16,7 +16,7 @@
                 @summary.Key
             </h5>
             <ul>
-                <li>Node available: @summary.Value.DaemonAvailable</li>
+                <li>Node available: @summary.Value.FullNodeAvailable</li>
                 <li>Wallet available: @summary.Value.WalletAvailable</li>
                 <li>Last updated: @summary.Value.UpdatedAt</li>
                 <li>Synced: @summary.Value.Synced (@summary.Value.CurrentHeight / @summary.Value.TargetHeight)</li>

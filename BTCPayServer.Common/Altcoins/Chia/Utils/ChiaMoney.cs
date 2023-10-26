@@ -1,6 +1,6 @@
 using System.Globalization;
 
-namespace BTCPayServer.Services.Altcoins.Chia.Utils
+namespace BTCPayServer.Common.Altcoins.Chia.Utils
 {
     public class ChiaMoney
     {
@@ -12,9 +12,9 @@ namespace BTCPayServer.Services.Altcoins.Chia.Utils
             return decimal.Parse(amt, CultureInfo.InvariantCulture);
         }
 
-        public static long Convert(decimal Chia)
+        public static long Convert(decimal chia)
         {
-            return System.Convert.ToInt64(Chia * 1000000000000);
+            return System.Convert.ToInt64(chia * 1_000_000_000_000);
         }
     }
 }

@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using Newtonsoft.Json;
 
-namespace BTCPayServer.Services.Altcoins.Chia.RPC.Models
+namespace BTCPayServer.Common.Altcoins.Chia.RPC.Models
 {
     public partial class GetBlockchainStateResponse
     {

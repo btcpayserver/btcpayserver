@@ -6,9 +6,9 @@ using System.Globalization;
 using System.Net.Http;
 using System.Threading.Tasks;
 using BTCPayServer.Common.Altcoins.Chia.RPC;
+using BTCPayServer.Common.Altcoins.Chia.RPC.Models;
 using BTCPayServer.Services.Altcoins.Chia.Configuration;
 using BTCPayServer.Services.Altcoins.Chia.RPC;
-using BTCPayServer.Services.Altcoins.Chia.RPC.Models;
 using NBitcoin;
 
 namespace BTCPayServer.Services.Altcoins.Chia.Services
@@ -17,7 +17,6 @@ namespace BTCPayServer.Services.Altcoins.Chia.Services
     {
         private readonly ChiaLikeConfiguration _ChiaLikeConfiguration;
         private readonly EventAggregator _eventAggregator;
-        public ImmutableDictionary<string, WebSocketRpcClient> DaemonRpcClients;
         public ImmutableDictionary<string, JsonRpcClient> FullNodeRpcClients;
         public ImmutableDictionary<string, JsonRpcClient> WalletRpcClients;
 
@@ -30,10 +29,7 @@ namespace BTCPayServer.Services.Altcoins.Chia.Services
         {
             _ChiaLikeConfiguration = ChiaLikeConfiguration;
             _eventAggregator = eventAggregator;
-            DaemonRpcClients =
-                _ChiaLikeConfiguration.ChiaLikeConfigurationItems.ToImmutableDictionary(pair => pair.Key,
-                    pair => new WebSocketRpcClient(pair.Value.DaemonEndpoint));
-
+   
             FullNodeRpcClients =
                 _ChiaLikeConfiguration.ChiaLikeConfigurationItems.ToImmutableDictionary(pair => pair.Key,
                     pair => new JsonRpcClient(pair.Value.FullNodeEndpoint.Uri, pair.Value.FullNodeEndpoint.CertPath,
@@ -77,12 +73,12 @@ namespace BTCPayServer.Services.Altcoins.Chia.Services
                 summary.TargetHeight = summary.TargetHeight == 0 ? summary.CurrentHeight : summary.TargetHeight;
                 summary.Synced = daemonResult.BlockchainState.Sync.Synced;
                 summary.UpdatedAt = DateTime.Now;
-                summary.DaemonAvailable = true;
+                summary.FullNodeAvailable = true;
             }
             catch (Exception e)
             {
                 Console.WriteLine(e.Message);
-                summary.DaemonAvailable = false;
+                summary.FullNodeAvailable = false;
             }
 
             try
@@ -124,13 +120,13 @@ namespace BTCPayServer.Services.Altcoins.Chia.Services
             public long WalletHeight { get; set; }
             public long TargetHeight { get; set; }
             public DateTime UpdatedAt { get; set; }
-            public bool DaemonAvailable { get; set; }
+            public bool FullNodeAvailable { get; set; }
             public bool WalletAvailable { get; set; }
 
             public override String ToString()
             {
                 return String.Format(CultureInfo.InvariantCulture, "{0} {1} {2} {3} {4} {5}", Synced, CurrentHeight,
-                    TargetHeight, WalletHeight, DaemonAvailable, WalletAvailable);
+                    TargetHeight, WalletHeight, FullNodeAvailable, WalletAvailable);
             }
         }
     }

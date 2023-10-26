@@ -14,7 +14,6 @@ namespace BTCPayServer.Services.Altcoins.Chia.Configuration
 
     public class ChiaLikeConfigurationItem
     {
-        public EndpointInfo DaemonEndpoint { get; set; }
         public EndpointInfo FullNodeEndpoint { get; set; }
         public EndpointInfo WalletEndpoint { get; set; }
     }

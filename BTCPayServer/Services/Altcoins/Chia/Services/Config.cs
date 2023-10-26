@@ -3,11 +3,12 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.IO;
+using BTCPayServer.Common.Altcoins.Chia.RPC;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using YamlDotNet.Serialization;
 
-namespace BTCPayServer.Common.Altcoins.Chia.RPC
+namespace BTCPayServer.Services.Altcoins.Chia.Services
 {
     /// <summary>
     /// Represents a chia config yaml file and its contents. 

@@ -15,7 +15,7 @@ namespace BTCPayServer
                 DefaultRateRules = new[]
                 {
                     "XCH_X = XCH_USD * USD_X",
-                    "XCH_USD = 23"
+                    "XCH_USD = xt(XCH_USDT)"
                 },
                 CryptoImagePath = "/imlegacy/chia.png",
                 UriScheme = "chia"

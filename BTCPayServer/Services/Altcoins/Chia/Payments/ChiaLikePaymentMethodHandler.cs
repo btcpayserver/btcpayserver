@@ -4,15 +4,15 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Common.Altcoins.Chia.RPC.Models;
+using BTCPayServer.Common.Altcoins.Chia.Utils;
 using BTCPayServer.Data;
 using BTCPayServer.Logging;
 using BTCPayServer.Models;
 using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Rating;
-using BTCPayServer.Services.Altcoins.Chia.RPC.Models;
 using BTCPayServer.Services.Altcoins.Chia.Services;
-using BTCPayServer.Services.Altcoins.Chia.Utils;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using NBitcoin;
@@ -49,14 +49,10 @@ namespace BTCPayServer.Services.Altcoins.Chia.Payments
             var invoice = paymentMethod.ParentEntity;
             if (!(preparePaymentObject is Prepare ChiaPrepare))
                 throw new ArgumentException();
-            var feeRatePerKb = await ChiaPrepare.GetFeeRate;
             var address = await ChiaPrepare.ReserveAddress(invoice.Id);
-            Console.WriteLine(address.Address);
 
-            var feeRatePerByte = feeRatePerKb.Fee / 1024;
             return new ChiaLikeOnChainPaymentMethodDetails()
             {
-                NextNetworkFee = ChiaMoney.Convert(feeRatePerByte * 100),
                 WalletId = supportedPaymentMethod.WalletId,
                 DepositAddress = address.Address,
                 Activated = true
@@ -70,21 +66,14 @@ namespace BTCPayServer.Services.Altcoins.Chia.Payments
             var fullNodeClient = _ChiaRpcProvider.FullNodeRpcClients[supportedPaymentMethod.CryptoCode];
             return new Prepare()
             {
-                GetFeeRate =
-                    fullNodeClient.SendCommandAsync<GetFeeEstimateRequest, GetFeeEstimateResponse>("get_fee_estimate",
-                        new GetFeeEstimateRequest()),
                 ReserveAddress = s =>
                     walletClient.SendCommandAsync<GetNextAddressRequest, GetNextAddressResponse>("get_next_address",
-                        new GetNextAddressRequest()
-                        {
-                            WalletId = supportedPaymentMethod.WalletId, NewAddress = true
-                        })
+                        new GetNextAddressRequest() { WalletId = supportedPaymentMethod.WalletId, NewAddress = true })
             };
         }
 
         class Prepare
         {
-            public Task<GetFeeEstimateResponse> GetFeeRate;
             public Func<string, Task<GetNextAddressResponse>> ReserveAddress;
         }
 
@@ -102,7 +91,7 @@ namespace BTCPayServer.Services.Altcoins.Chia.Payments
                     new ChiaLikeOnChainPaymentMethodDetails() { DepositAddress = cryptoInfo.Address },
                     cryptoInfo.GetDue().Value,
                     null);
-                model.InvoiceBitcoinUrlQR = model.InvoiceBitcoinUrl;
+                model.InvoiceBitcoinUrlQR = "";
             }
             else
             {

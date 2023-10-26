@@ -37,6 +37,8 @@ namespace BTCPayServer.Common.Altcoins.Chia.RPC
                 .Replace("-----END RSA PRIVATE KEY-----", string.Empty)
                 .Replace(Environment.NewLine, string.Empty)
                 .ToString();
+            
+            Console.WriteLine(base64);
 
             using var rsa = RSA.Create();
             rsa.ImportRSAPrivateKey(Convert.FromBase64String(base64), out _);

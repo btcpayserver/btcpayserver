@@ -73,10 +73,21 @@
                     </tr>
                     </thead>
                     <tbody>
-                    <tr v-for="row in chart.rows">
-                        <td v-for="group in row.groups" :rowspan="group.rowCount">{{ group.name }}</td>
+                    <tr v-for="(row, rowIndex) in chart.rows">
+                        <td v-for="(group, groupIndex) in row.groups" :rowspan="group.rowCount">
+                            <template v-if="group.name === true"><span class="text-success"><vc:icon symbol="checkmark" /></span></template>
+                            <template v-else-if="group.name === false"><span class="text-danger"><vc:icon symbol="cross" /></span></template>
+                            <template v-else-if="['Settled', 'Processing', 'Invalid', 'Expired', 'New', 'Pending'].includes(group.name)">
+                                <span class="badge" :class="`badge-${group.name.toLowerCase()}`">{{ displayValue(group.name) }}</span>
+                            </template>
+                            <template v-else>{{ displayValue(group.name) }}</template>
+                        </td>
                         <td v-if="row.isTotal" :colspan="row.rLevel">Total</td>
-                        <td v-for="value in row.values" class="text-end">{{ displayValue(value) }}</td>
+                        <td v-for="(value, columnIndex) in row.values" class="text-end">
+                            <template v-if="chart.aggregates[columnIndex] === 'BalanceChange' && (value >= 0 || typeof value === 'object' && value.d >= 0)"><span class="text-success">{{ displayValue(value) }}</span></template>
+                            <template v-else-if="chart.aggregates[columnIndex] === 'BalanceChange' && (value < 0 || typeof value === 'object' && value.d < 0)"><span class="text-danger">{{ displayValue(value) }}</span></template>
+                            <template v-else>{{ displayValue(value) }}</template>
+                        </td>
                     </tr>
                     <tr v-if="chart.hasGrandTotal">
                         <td :colspan="chart.groups.length">Grand Total</td>
@@ -107,7 +118,10 @@
                 </thead>
                 <tbody>
                 <tr v-for="(row, index) in srv.result.data" :key="index">
-                    <td class="text-nowrap" v-for="(value, columnIndex) in row" :key="columnIndex" :class="{ 'text-end': ['integer', 'decimal', 'amount'].includes(srv.result.fields[columnIndex].type) }">
+                    <td v-for="(value, columnIndex) in row" :key="columnIndex" :class="{
+                        'text-end': ['integer', 'decimal', 'amount'].includes(srv.result.fields[columnIndex].type),
+                        'text-center': ['boolean'].includes(srv.result.fields[columnIndex].type),
+                        'text-nowrap': ['datetime'].includes(srv.result.fields[columnIndex].type) }">
                         <a :href="getInvoiceUrl(value)"
                            target="_blank"
                            v-if="srv.result.fields[columnIndex].type === 'invoice_id'">{{ displayValue(value) }}</a>
@@ -115,6 +129,23 @@
                            target="_blank"
                            rel="noreferrer noopener"
                            v-else-if="srv.result.fields[columnIndex].type === 'tx_id'">{{ displayValue(value) }}</a>
+                        <template v-else-if="srv.result.fields[columnIndex].type === 'datetime'">{{ displayDate(value) }}</template>
+                        <template v-else-if="srv.result.fields[columnIndex].type === 'boolean'">
+                            <template v-if="value"><span class="text-success"><vc:icon symbol="checkmark" /></span></template>
+                            <template v-else><span class="text-danger"><vc:icon symbol="cross" /></span></template>
+                        </template>
+                        <template v-else-if="['Address', 'PaymentId'].includes(srv.result.fields[columnIndex].name)">
+                            <vc:truncate-center text="value" is-vue="true" padding="15" classes="truncate-center-id" />
+                        </template>
+                        <template v-else-if="['BalanceChange'].includes(srv.result.fields[columnIndex].name) && (value >= 0 || typeof value === 'object' && value.d >= 0)">
+                            <span class="text-success">{{ displayValue(value) }}</span>
+                        </template>
+                        <template v-else-if="['BalanceChange'].includes(srv.result.fields[columnIndex].name) && (value < 0 || typeof value === 'object' && value.d < 0)">
+                            <span class="text-danger">{{ displayValue(value) }}</span>
+                        </template>
+                        <template v-else-if="['State'].includes(srv.result.fields[columnIndex].name)">
+                            <span class="badge" :class="`badge-${value.toLowerCase()}`">{{ displayValue(value) }}</span>
+                        </template>
                         <template v-else>{{ displayValue(value) }}</template>
                     </td>
                 </tr>

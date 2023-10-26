@@ -139,11 +139,19 @@ document.addEventListener("DOMContentLoaded", () => {
                 const title = result.charAt(0).toUpperCase() + result.slice(1)
                 return shorten && title.endsWith(' Amount') ? 'Amount' : title;
             },
-            displayValue
+            displayValue,
+            displayDate
         }
     });
     fetchStoreReports();
 });
+
+const dtFormatter = new Intl.DateTimeFormat('default', { dateStyle: 'short', timeStyle: 'short' });
+
+function displayDate(val) {
+    const date = new Date(val);
+    return dtFormatter.format(date);
+}
 
 function displayValue(val) {
     return val && typeof val === "object" && typeof val.d === "number" ? new Decimal(val.v).toFixed(val.d) : val;

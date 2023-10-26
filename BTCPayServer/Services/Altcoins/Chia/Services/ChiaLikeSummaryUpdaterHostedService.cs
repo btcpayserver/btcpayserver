@@ -44,20 +44,12 @@ namespace BTCPayServer.Services.Altcoins.Chia.Services
                     try
                     {
                         await _ChiaRpcProvider.UpdateSummary(cryptoCode);
-                        if (_ChiaRpcProvider.IsAvailable(cryptoCode))
-                        {
-                            await Task.Delay(TimeSpan.FromMinutes(1), cancellation);
-                        }
-                        else
-                        {
-                            await Task.Delay(TimeSpan.FromSeconds(10), cancellation);
-                        }
                     }
                     catch (Exception ex) when (!cancellation.IsCancellationRequested)
                     {
                         Logs.PayServer.LogError(ex, $"Unhandled exception in Summary updater ({cryptoCode})");
-                        await Task.Delay(TimeSpan.FromSeconds(10), cancellation);
                     }
+                    await Task.Delay(TimeSpan.FromSeconds(10), cancellation);
                 }
             }
             catch when (cancellation.IsCancellationRequested) { }

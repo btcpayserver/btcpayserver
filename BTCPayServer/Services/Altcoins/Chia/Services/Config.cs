@@ -66,7 +66,7 @@ namespace BTCPayServer.Services.Altcoins.Chia.Services
             else // all other endpoints are https direct connections
             {
                 builder.Scheme = "https";
-                builder.Host = "127.0.0.1";
+                builder.Host = Contents.self_hostname;
 
                 var d = (IDictionary<string, object>)Contents;
                 if (!d.ContainsKey(serviceName))

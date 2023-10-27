@@ -22,7 +22,7 @@ public class ProductsReportProvider : ReportProvider
     private InvoiceRepository InvoiceRepository { get; }
     private AppService Apps { get; }
 
-    public override string Name => "Products";
+    public override string Name => "Sales";
 
     public override async Task Query(QueryContext queryContext, CancellationToken cancellation)
     {

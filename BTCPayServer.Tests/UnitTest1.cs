@@ -139,9 +139,18 @@ namespace BTCPayServer.Tests
                 .IsType<JsonResult>(await tester.PayTester.GetController<UIHomeController>(acc.UserId, acc.StoreId)
                     .Swagger(tester.PayTester.GetService<IEnumerable<ISwaggerProvider>>())).Value.ToJson();
             JObject swagger = JObject.Parse(sresp);
-            var schema = JSchema.Parse(File.ReadAllText(TestUtils.GetTestDataFullPath("OpenAPI-Specification-schema.json")));
+            // https://www.newtonsoft.com/jsonschema/help/html/LoadingSchemas.htm
+            var schemaFilepath = TestUtils.GetTestDataFullPath("OpenAPI/2022-10-07.json");
+            var content = await File.ReadAllTextAsync(schemaFilepath);
+            var schema = JSchema.Parse(content, new JSchemaReaderSettings
+            {
+                Resolver = new JSchemaUrlResolver(),
+                BaseUri = new Uri(schemaFilepath)
+            });
+
             IList<ValidationError> errors;
             bool valid = swagger.IsValid(schema, out errors);
+
             //the schema is not fully compliant to the spec. We ARE allowed to have multiple security schemas.
             var matchedError = errors.Where(error =>
                 error.Path == "components.securitySchemes.Basic" && error.ErrorType == ErrorType.OneOf).ToList();
@@ -149,8 +158,6 @@ namespace BTCPayServer.Tests
             {
                 errors.Remove(validationError);
             }
-            valid = !errors.Any();
-
             Assert.Empty(errors);
             Assert.True(valid);
         }

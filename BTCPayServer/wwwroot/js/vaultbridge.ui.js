@@ -6,52 +6,50 @@ var vaultui = (function () {
     /**
     * @param {string} type
     * @param {string} txt
-    * @param {string} category
     * @param {string} id
     */
-    function VaultFeedback(type, txt, category, id) {
+    function VaultFeedback(type, txt, id) {
         var self = this;
         this.type = type;
         this.txt = txt;
-        this.category = category;
         this.id = id;
         /**
         * @param {string} str
         * @param {string} by
         */
         this.replace = function (str, by) {
-            return new VaultFeedback(self.type, self.txt.replace(str, by), self.category, self.id);
+            return new VaultFeedback(self.type, self.txt.replace(str, by), self.id);
         };
     }
 
     var VaultFeedbacks = {
-        vaultLoading: new VaultFeedback("?", "Checking BTCPay Server Vault is running...", "vault-feedback1", "vault-loading"),
-        vaultDenied: new VaultFeedback("failed", "The user declined access to the vault.", "vault-feedback1", "vault-denied"),
-        vaultGranted: new VaultFeedback("ok", "Access to vault granted by owner.", "vault-feedback1", "vault-granted"),
-        noVault: new VaultFeedback("failed", "BTCPay Server Vault does not seem to be running, you can download it on <a target=\"_blank\" href=\"https://github.com/btcpayserver/BTCPayServer.Vault/releases/latest\">Github</a>.", "vault-feedback1", "no-vault"),
-        noWebsockets: new VaultFeedback("failed", "Web sockets are not supported by the browser.", "vault-feedback1", "no-websocket"),
-        errorWebsockets: new VaultFeedback("failed", "Error of the websocket while connecting to the backend.", "vault-feedback1", "error-websocket"),
-        bridgeConnected: new VaultFeedback("ok", "BTCPayServer successfully connected to the vault.", "vault-feedback1", "bridge-connected"),
-        vaultNeedUpdate: new VaultFeedback("failed", "Your BTCPay Server Vault version is outdated. Please <a target=\"_blank\" href=\"https://github.com/btcpayserver/BTCPayServer.Vault/releases/latest\">download</a> the latest version.", "vault-feedback2", "vault-outdated"),
-        noDevice: new VaultFeedback("failed", "No device connected.", "vault-feedback2", "no-device"),
-        needInitialized: new VaultFeedback("failed", "The device has not been initialized.", "vault-feedback2", "need-initialized"),
-        fetchingDevice: new VaultFeedback("?", "Fetching device...", "vault-feedback2", "fetching-device"),
-        deviceFound: new VaultFeedback("ok", "Device found: {{0}}", "vault-feedback2", "device-selected"),
-        fetchingXpubs: new VaultFeedback("?", "Fetching public keys...", "vault-feedback3", "fetching-xpubs"),
-        askXpubs: new VaultFeedback("?", "Select your address type and account", "vault-feedback3", "fetching-xpubs"),
-        fetchedXpubs: new VaultFeedback("ok", "Public keys successfully fetched.", "vault-feedback3", "xpubs-fetched"),
-        unexpectedError: new VaultFeedback("failed", "An unexpected error happened. ({{0}})", "vault-feedback3", "unknown-error"),
-        invalidNetwork: new VaultFeedback("failed", "The device is targeting a different chain.", "vault-feedback3", "invalid-network"),
-        needPin: new VaultFeedback("?", "Enter the pin.", "vault-feedback3", "need-pin"),
-        incorrectPin: new VaultFeedback("failed", "Incorrect pin code.", "vault-feedback3", "incorrect-pin"),
-        invalidPasswordConfirmation: new VaultFeedback("failed", "Invalid password confirmation.", "vault-feedback3", "invalid-password-confirm"),
-        wrongWallet: new VaultFeedback("failed", "This device can't sign the transaction. (Wrong device, wrong passphrase or wrong device fingerprint in your wallet settings)", "vault-feedback3", "wrong-wallet"),
-        wrongKeyPath: new VaultFeedback("failed", "This device can't sign the transaction. (The wallet keypath in your wallet settings seems incorrect)", "vault-feedback3", "wrong-keypath"),
-        needPassphrase: new VaultFeedback("?", "Enter the passphrase.", "vault-feedback3", "need-passphrase"),
-        needPassphraseOnDevice: new VaultFeedback("?", "Please, enter the passphrase on the device.", "vault-feedback3", "need-passphrase-on-device"),
-        signingTransaction: new VaultFeedback("?", "Please review and confirm the transaction on your device...", "vault-feedback3", "ask-signing"),
-        reviewAddress: new VaultFeedback("?", "Sending... Please review the address on your device...", "vault-feedback3", "ask-signing"),
-        signingRejected: new VaultFeedback("failed", "The user refused to sign the transaction", "vault-feedback3", "user-reject"),
+        vaultLoading: new VaultFeedback("?", "Checking BTCPay Server Vault is running...", "vault-loading"),
+        vaultDenied: new VaultFeedback("failed", "The user declined access to the vault.", "vault-denied"),
+        vaultGranted: new VaultFeedback("ok", "Access to vault granted by owner.", "vault-granted"),
+        noVault: new VaultFeedback("failed", "BTCPay Server Vault does not seem to be running, you can download it on <a target=\"_blank\" href=\"https://github.com/btcpayserver/BTCPayServer.Vault/releases/latest\">Github</a>.", "no-vault"),
+        noWebsockets: new VaultFeedback("failed", "Web sockets are not supported by the browser.", "no-websocket"),
+        errorWebsockets: new VaultFeedback("failed", "Error of the websocket while connecting to the backend.", "error-websocket"),
+        bridgeConnected: new VaultFeedback("ok", "BTCPayServer successfully connected to the vault.", "bridge-connected"),
+        vaultNeedUpdate: new VaultFeedback("failed", "Your BTCPay Server Vault version is outdated. Please <a target=\"_blank\" href=\"https://github.com/btcpayserver/BTCPayServer.Vault/releases/latest\">download</a> the latest version.", "vault-outdated"),
+        noDevice: new VaultFeedback("failed", "No device connected.", "no-device"),
+        needInitialized: new VaultFeedback("failed", "The device has not been initialized.", "need-initialized"),
+        fetchingDevice: new VaultFeedback("?", "Fetching device...", "fetching-device"),
+        deviceFound: new VaultFeedback("ok", "Device found: {{0}}", "device-selected"),
+        fetchingXpubs: new VaultFeedback("?", "Fetching public keys...", "fetching-xpubs"),
+        askXpubs: new VaultFeedback("?", "Select your address type and account", "fetching-xpubs"),
+        fetchedXpubs: new VaultFeedback("ok", "Public keys successfully fetched.", "xpubs-fetched"),
+        unexpectedError: new VaultFeedback("failed", "An unexpected error happened. ({{0}})", "unknown-error"),
+        invalidNetwork: new VaultFeedback("failed", "The device is targeting a different chain.", "invalid-network"),
+        needPin: new VaultFeedback("?", "Enter the pin.", "need-pin"),
+        incorrectPin: new VaultFeedback("failed", "Incorrect pin code.", "incorrect-pin"),
+        invalidPasswordConfirmation: new VaultFeedback("failed", "Invalid password confirmation.", "invalid-password-confirm"),
+        wrongWallet: new VaultFeedback("failed", "This device can't sign the transaction. (Wrong device, wrong passphrase or wrong device fingerprint in your wallet settings)", "wrong-wallet"),
+        wrongKeyPath: new VaultFeedback("failed", "This device can't sign the transaction. (The wallet keypath in your wallet settings seems incorrect)", "wrong-keypath"),
+        needPassphrase: new VaultFeedback("?", "Enter the passphrase.", "need-passphrase"),
+        needPassphraseOnDevice: new VaultFeedback("?", "Please, enter the passphrase on the device.", "need-passphrase-on-device"),
+        signingTransaction: new VaultFeedback("?", "Please review and confirm the transaction on your device...", "ask-signing"),
+        reviewAddress: new VaultFeedback("?", "Sending... Please review the address on your device...", "ask-signing"),
+        signingRejected: new VaultFeedback("failed", "The user refused to sign the transaction", "user-reject"),
     };
 
     /**
@@ -83,11 +81,13 @@ var vaultui = (function () {
             button.show();
         }
 
+        this.currentFeedback = 1;
+
         /**
         * @param {VaultFeedback} feedback
         */
         function show(feedback) {
-            var icon = $(".vault-feedback." + feedback.category + " " + ".vault-feedback-icon");
+            var icon = $(".vault-feedback.vault-feedback" + self.currentFeedback + " " + ".vault-feedback-icon");
             icon.removeClass();
             icon.addClass("vault-feedback-icon mt-1 me-2");
             if (feedback.type == "?") {
@@ -100,8 +100,12 @@ var vaultui = (function () {
                 icon.addClass("fa fa-times-circle feedback-icon-failed");
                 showRetry();
             }
-            var content = $(".vault-feedback." + feedback.category + " " + ".vault-feedback-content");
+            var content = $(".vault-feedback.vault-feedback" + self.currentFeedback + " " + ".vault-feedback-content");
             content.html(feedback.txt);
+            if (feedback.type === 'ok')
+                self.currentFeedback++;
+            if (feedback.type === 'failed')
+                self.currentFeedback = 1;
         }
         function showError(json) {
             if (json.hasOwnProperty("error")) {
@@ -182,7 +186,7 @@ var vaultui = (function () {
             if (self.retryShowing) {
                 await self.waitRetryPushed();
             }
-            if (!self.bridge) {
+            if (!self.bridge || self.bridge.socket.readyState !== 1) {
                 $("#vault-dropdown").css("display", "none");
                 show(VaultFeedbacks.vaultLoading);
                 try {
@@ -208,6 +212,7 @@ var vaultui = (function () {
             }
             return true;
         };
+
         this.askForDisplayAddress = async function (rootedKeyPath) {
             if (!await self.ensureConnectedToBackend())
                 return false;
@@ -235,6 +240,7 @@ var vaultui = (function () {
             show(VaultFeedbacks.deviceFound.replace("{{0}}", json.model));
             return true;
         };
+
         this.askForXPubs = async function () {
             if (!await self.ensureConnectedToBackend())
                 return false;

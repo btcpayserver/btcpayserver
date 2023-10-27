@@ -41,7 +41,7 @@
     }
     @if (!string.IsNullOrEmpty(Model.Link))
     {
-        <a href="@Model.Link" rel="noreferrer noopener" target="_blank">
+        <a @(Model.IsVue ? ":" : "")href="@Model.Link" rel="noreferrer noopener" target="_blank">
             <vc:icon symbol="info" />
         </a>
     }

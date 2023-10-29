@@ -470,6 +470,18 @@
                                 "description": "Whether the option to enter a discount is shown",
                                 "example": false
                             },
+                            "showSearch": {
+                                "type": "boolean",
+                                "description": "Display the search bar",
+                                "example": false,
+                                "default": true
+                            },
+                            "showCategories": {
+                                "type": "boolean",
+                                "description": "Display the list of categories",
+                                "example": false,
+                                "default": true
+                            },
                             "enableTips": {
                                 "type": "boolean",
                                 "description": "Whether the option to enter a tip is shown",

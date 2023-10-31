@@ -311,6 +311,7 @@ namespace BTCPayServer.Controllers
             using (logs.Measure("Saving invoice"))
             {
                 await _InvoiceRepository.CreateInvoiceAsync(entity, additionalSearchTerms);
+                var links = new List<WalletObjectLinkData>();
                 foreach (var method in paymentMethods)
                 {
                     if (method.GetPaymentMethodDetails() is BitcoinLikeOnChainPaymentMethod bp)
@@ -323,18 +324,18 @@ namespace BTCPayServer.Controllers
                             ));
                         if (bp.GetDepositAddress(((BTCPayNetwork)method.Network).NBitcoinNetwork) is BitcoinAddress address)
                         {
-                            await _walletRepository.EnsureWalletObjectLink(
-                            new WalletObjectId(
-                                walletId,
-                                WalletObjectData.Types.Address,
-                                address.ToString()),
-                            new WalletObjectId(
-                                walletId,
-                                WalletObjectData.Types.Invoice,
-                                entity.Id));
+                            links.Add(WalletRepository.NewWalletObjectLinkData(new WalletObjectId(
+                                    walletId,
+                                    WalletObjectData.Types.Address,
+                                    address.ToString()),
+                                new WalletObjectId(
+                                    walletId,
+                                    WalletObjectData.Types.Invoice,
+                                    entity.Id)));
                         }
                     }
                 }
+                await _walletRepository.EnsureCreated(null,links);
             }
             _ = Task.Run(async () =>
             {

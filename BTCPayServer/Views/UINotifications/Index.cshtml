@@ -14,61 +14,75 @@
 @if (Model.Items.Count > 0)
 {
     <form method="post" asp-action="MassAction">
-        <div class="row button-row">
-            <div class="col-lg-6">
-                <span class="dropdown" style="display:none;" id="MassAction">
-                    <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        Actions
-                    </button>
-                    <div class="dropdown-menu">
-                        <button type="submit" class="dropdown-item" name="command" value="mark-seen"><i class="fa fa-eye"></i> Mark seen</button>
-                        <button type="submit" class="dropdown-item" name="command" value="mark-unseen"><i class="fa fa-eye-slash"></i> Mark unseen</button>
-                        <button type="submit" class="dropdown-item" name="command" value="delete"><i class="fa fa-trash-o"></i> Delete</button>
-                    </div>
-                </span>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-lg-12">
-                <table class="table table-hover table-responsive-md">
-                    <thead>
+        @if (Model.Items.Any())
+        {
+            <div class="table-responsive-md">
+                <table class="table table-hover mass-action">
+                    <thead class="mass-action-head">
                         <tr>
-                            <th style="width:30px" class="only-for-js">
-                                @if (Model.Items.Count > 0)
-                                {
-                                    <input name="selectedItems" id="selectAllCheckbox" type="checkbox" class="form-check-input" />
-                                }
+                            <th class="mass-action-select-col only-for-js">
+                                <input name="selectedItems" type="checkbox" class="form-check-input mass-action-select-all" />
                             </th>
-                            <th class="w-150px">
+                            <th class="date-col">
                                 <div class="d-flex align-items-center gap-1">
                                     Date
                                     <button type="button" class="btn btn-link p-0 fa fa-clock-o switch-time-format" title="Switch date format"></button>
                                 </div>
                             </th>
                             <th>Message</th>
-                            <th class="text-end">Actions</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <thead class="mass-action-actions">
+                        <tr>
+                            <th class="mass-action-select-col only-for-js">
+                                <input type="checkbox" class="form-check-input mass-action-select-all" />
+                            </th>
+                            <th colspan="6">
+                                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                                    <div>
+                                        <strong class="mass-action-selected-count">0</strong>
+                                        selected
+                                    </div>
+                                    <div class="d-inline-flex align-items-center gap-3">
+                                        <button type="submit" name="command" value="mark-seen" class="btn btn-link gap-1">
+                                            <i class="fa fa-eye"></i>
+                                            Mark seen
+                                        </button>
+                                        <button type="submit" name="command" value="mark-unseen" class="btn btn-link gap-1">
+                                            <i class="fa fa-eye-slash"></i>
+                                            Mark unseen
+                                        </button>
+                                        <button type="submit" name="command" value="delete" class="btn btn-link gap-1">
+                                            <i class="fa fa-trash-o"></i>
+                                            Delete
+                                        </button>
+                                    </div>
+                                </div>
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach (var item in Model.Items)
                         {
-                            <tr data-guid="@item.Id" class="notification-row @(item.Seen ? "seen" : "")">
-                                <td class="only-for-js">
-                                    <input name="selectedItems" type="checkbox" class="selector form-check-input" value="@item.Id" />
+                            <tr data-guid="@item.Id" class="notification-row mass-action-row @(item.Seen ? "seen" : "")">
+                                <td class="only-for-js mass-action-select-col">
+                                    <input name="selectedItems" type="checkbox" class="form-check-input mass-action-select" value="@item.Id" />
                                 </td>
-                                <td class="toggleRowCheckbox">@item.Created.ToBrowserDate()</td>
-                                <td class="toggleRowCheckbox">
+                                <td class="date-col">@item.Created.ToBrowserDate()</td>
+                                <td>
                                     @item.Body
                                 </td>
-                                <td class="text-end fw-normal">
-                                    @if (!String.IsNullOrEmpty(item.ActionLink))
-                                    {
-                                        <a href="@item.ActionLink" class="btn btn-link p-0" rel="noreferrer noopener">Details</a>
-                                        <span class="d-none d-md-inline-block"> - </span>
-                                    }
-                                    <button class="btn btn-link p-0 btn-toggle-seen" type="submit" name="command" value="flip-individual:@(item.Id)">
-                                        <span>Mark&nbsp;</span><span class="seen-text"></span>
-                                    </button>
+                                <td class="text-end">
+                                    <div class="d-inline-flex align-items-center gap-3">
+                                        <button class="btn btn-link p-0 btn-toggle-seen" type="submit" name="command" value="flip-individual:@(item.Id)">
+                                            <span>Mark</span>&nbsp;<span class="seen-text"></span>
+                                        </button>
+                                        @if (!string.IsNullOrEmpty(item.ActionLink))
+                                        {
+                                            <a href="@item.ActionLink" class="btn btn-link p-0" rel="noreferrer noopener">Details</a>
+                                        }
+                                    </div>
                                 </td>
                             </tr>
                         }
@@ -76,9 +90,8 @@
                 </table>
 
                 <vc:pager view-model="Model" />
-
             </div>
-        </div>
+        }
     </form>
 }
 else
@@ -113,19 +126,6 @@ else
 
 @section PageFootContent {
     <script type="text/javascript">
-        delegate('click', '#selectAllCheckbox', e => {
-            document.querySelectorAll('.notification-row .selector').forEach(checkbox => {
-                checkbox.checked = e.target.checked;
-            });
-            updateSelectors();
-        });
-
-        delegate('click', '.toggleRowCheckbox', e => {
-            const input = $(e.target).parents(".notification-row").find(".selector");
-            input.prop('checked', !input.prop("checked"));
-            updateSelectors();
-        })
-
         delegate('click', '.btn-toggle-seen', e => {
             const row = $(e.target).parents(".notification-row").toggleClass("loading");
             const guid = row.data("guid");
@@ -135,20 +135,5 @@ else
             });
             return false;
         })
-
-        document.addEventListener("DOMContentLoaded", function () {
-            $(".selector").change(updateSelectors);
-            updateSelectors();
-        });
-
-        function updateSelectors() {
-            var count = $(".selector:checked").length;
-            if (count > 0) {
-                $("#MassAction").children().eq(0).text("Batch Action (" + count + ")");
-                $("#MassAction").show();
-            } else {
-                $("#MassAction").hide();
-            }
-        }
     </script>
 }

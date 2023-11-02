@@ -5,28 +5,37 @@ document.addEventListener("DOMContentLoaded",function () {
         mixins: [posCommon],
         data () {
             return {
-                mode: 'amount',
+                mode: 'amounts',
                 fontSize: displayFontSize,
                 defaultFontSize: displayFontSize,
-                keys: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', 'del']
+                keys: ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0', '+'],
+                amounts: [null]
             }
         },
         computed: {
             modes () {
-                const modes = [{ title: 'Amount', type: 'amount' }]
+                const modes = [{ title: 'Amount', type: 'amounts' }]
                 if (this.showDiscount) modes.push({ title: 'Discount', type: 'discount' })
                 if (this.enableTips) modes.push({ title: 'Tip', type: 'tip'})
                 return modes
             },
             keypadTarget () {
                 switch (this.mode) {
-                    case 'amount':
-                        return 'amount';
+                    case 'amounts':
+                        return 'amounts';
                     case 'discount':
                         return 'discountPercent';
                     case 'tip':
                         return 'tip';
                 }
+            },
+            calculation () {
+                if (!this.tipNumeric && !(this.discountNumeric > 0 || this.discountPercentNumeric > 0) && this.amounts.length < 2) return null
+                let calc = this.amounts.map(amt => this.formatCurrency(amt, true)).join(' + ')
+                if (this.discountNumeric > 0 || this.discountPercentNumeric > 0) calc += ` - ${this.formatCurrency(this.discountNumeric, true)} (${this.discountPercent}%)`
+                if (this.tipNumeric > 0) calc += ` + ${this.formatCurrency(this.tipNumeric, true)}`
+                if (this.tipPercent) calc += ` (${this.tipPercent}%)`
+                return calc
             }
         },
         watch: {
@@ -46,47 +55,68 @@ document.addEventListener("DOMContentLoaded",function () {
                         this.fontSize = Math.min(this.fontSize * gamma, this.defaultFontSize);
                     }
                 });
+            },
+            amounts (values) {
+                this.amount = values.reduce((total, current) => total + parseFloat(current || '0'), 0);
             }
         },
         methods: {
-            getWidth (el) {
+            getWidth(el) {
                 const styles = window.getComputedStyle(el),
                     width = parseFloat(el.clientWidth),
                     padL = parseFloat(styles.paddingLeft),
                     padR = parseFloat(styles.paddingRight);
                 return width - padL - padR;
             },
-            clear () {
-                this.amount = this.tip = this.discount = this.tipPercent = this.discountPercent = null;
-                this.mode = 'amount';
+            clear() {
+                this.amounts = [null];
+                this.tip = this.discount = this.tipPercent = this.discountPercent = null;
+                this.mode = 'amounts';
             },
-            applyKeyToValue (key, value) {
-                if (!value) value = '';
-                if (key === 'del') {
-                    value = value.substring(0, value.length - 1);
-                    value = value === '' ? '0' : value;
-                } else if (key === '.') {
-                    // Only add decimal point if it doesn't exist yet
-                    if (value.indexOf('.') === -1) {
-                        value += key;
-                    }
-                } else { // Is a digit
-                    if (!value || value === '0') {
-                        value = '';
-                    }
-                    value += key;
-                    const { divisibility } = this.currencyInfo;
-                    const decimalIndex = value.indexOf('.')
-                    if (decimalIndex !== -1 && (value.length - decimalIndex - 1  > divisibility)) {
-                        value = value.replace('.', '');
-                        value = value.substr(0, value.length - divisibility) + '.' +
-                            value.substr(value.length - divisibility);
-                    }
-                }
-                return value;
+            applyKeyToValue(key, value, divisibility) {
+                if (!value || value === '0') value = '';
+                value = (value + key)
+                    .replace('.', '')
+                    .padStart(divisibility, '0')
+                    .replace(new RegExp(`(\\d*)(\\d{${divisibility}})`), '$1.$2');
+                return parseFloat(value).toFixed(divisibility);
             },
             keyPressed (key) {
-                this[this.keypadTarget] = this.applyKeyToValue(key, this[this.keypadTarget]);
+                if (this.keypadTarget === 'amounts') {
+                    const lastIndex = this.amounts.length - 1;
+                    const lastAmount = this.amounts[lastIndex];
+                    if (key === 'C') {
+                        if (!lastAmount && lastIndex === 0) {
+                            // clear completely
+                            this.clear();
+                        } else if (!lastAmount) {
+                            // remove latest value
+                            this.amounts.pop();
+                        } else {
+                            // clear latest value
+                            Vue.set(this.amounts, lastIndex, null);
+                        }
+                    } else if (key === '+' && parseFloat(lastAmount || '0')) {
+                        this.amounts.push(null);
+                    } else { // Is a digit
+                        const { divisibility } = this.currencyInfo;
+                        const value = this.applyKeyToValue(key, lastAmount, divisibility);
+                        Vue.set(this.amounts, lastIndex, value);
+                    }
+                } else {
+                    if (key === 'C') {
+                        this[this.keypadTarget] = null;
+                    } else {
+                        const divisibility = this.keypadTarget === 'tip' ? this.currencyInfo.divisibility : 0;
+                        this[this.keypadTarget] = this.applyKeyToValue(key, this[this.keypadTarget], divisibility);
+                    }
+                }
+            },
+            doubleClick (key) {
+                if (key === 'C') {
+                    // clear completely
+                    this.clear();
+                }
             }
         },
         created() {

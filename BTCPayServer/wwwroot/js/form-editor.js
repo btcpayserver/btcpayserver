@@ -120,7 +120,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 this.field.options.push({ value: `newOption${index}`, text: `New option ${index}` })
             },
             removeOption(event, index) {
-                console.log(this.field.options, index)
                 this.field.options.splice(index, 1)
             },
             sortOptions (event) {

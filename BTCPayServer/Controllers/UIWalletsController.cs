@@ -877,8 +877,7 @@ namespace BTCPayServer.Controllers
             try
             {
                 var uriBuilder = new NBitcoin.Payment.BitcoinUrlBuilder(bip21, network.NBitcoinNetwork);
-
-                vm.Outputs.Add(new WalletSendModel.TransactionOutput()
+                var output = new WalletSendModel.TransactionOutput
                 {
                     Amount = uriBuilder.Amount?.ToDecimal(MoneyUnit.BTC),
                     DestinationAddress = uriBuilder.Address?.ToString(),
@@ -886,15 +885,20 @@ namespace BTCPayServer.Controllers
                     PayoutId = uriBuilder.UnknownParameters.ContainsKey("payout")
                         ? uriBuilder.UnknownParameters["payout"]
                         : null
-                });
+                };
+                if (!string.IsNullOrEmpty(uriBuilder.Label))
+                {
+                    output.Labels = output.Labels.Append(uriBuilder.Label).ToArray();
+                }
+                vm.Outputs.Add(output);
                 address = uriBuilder.Address;
                 if (!string.IsNullOrEmpty(uriBuilder.Label) || !string.IsNullOrEmpty(uriBuilder.Message))
                 {
-                    TempData.SetStatusMessageModel(new StatusMessageModel()
+                    TempData.SetStatusMessageModel(new StatusMessageModel
                     {
                         Severity = StatusMessageModel.StatusSeverity.Info,
                         Html =
-                            $"Payment {(string.IsNullOrEmpty(uriBuilder.Label) ? string.Empty : $" to {uriBuilder.Label}")} {(string.IsNullOrEmpty(uriBuilder.Message) ? string.Empty : $" for {uriBuilder.Message}")}"
+                            $"Payment {(string.IsNullOrEmpty(uriBuilder.Label) ? string.Empty : $" to <strong>{uriBuilder.Label}</strong>")} {(string.IsNullOrEmpty(uriBuilder.Message) ? string.Empty : $" for <strong>{uriBuilder.Message}</strong>")}"
                     });
                 }
 
@@ -926,7 +930,7 @@ namespace BTCPayServer.Controllers
             if (address is not null)
             {
                 var addressLabels = await WalletRepository.GetWalletLabels(new WalletObjectId(walletId, WalletObjectData.Types.Address, address.ToString()));
-                vm.Outputs.Last().Labels = addressLabels.Select(tuple => tuple.Label).ToArray();
+                vm.Outputs.Last().Labels = vm.Outputs.Last().Labels.Concat(addressLabels.Select(tuple => tuple.Label)).ToArray();
             }
         }
 

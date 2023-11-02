@@ -50,9 +50,10 @@ namespace BTCPayServer.Controllers
                 if (network == null)
                     return NotFound();
                 var websocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
+                var vaultClient = new VaultClient(websocket);
                 var hwi = new Hwi.HwiClient(network.NBitcoinNetwork)
                 {
-                    Transport = new HwiWebSocketTransport(websocket)
+                    Transport = new VaultHWITransport(vaultClient)
                 };
                 Hwi.HwiDeviceClient device = null;
                 HwiEnumerateEntry deviceEntry = null;

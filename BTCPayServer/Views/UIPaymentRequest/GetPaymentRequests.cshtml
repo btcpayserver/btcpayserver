@@ -22,7 +22,6 @@
         Model.Search.ContainsFilter(key) && Model.Search.GetFilterBool(key) is true;
 }
 
-<div class="sticky-header-setup"></div>
 <div class="sticky-header d-sm-flex align-items-center justify-content-between">
     <h2 class="mb-0">
         @ViewData["Title"]
@@ -50,7 +49,7 @@
 
 <partial name="_StatusMessage" />
 
-<form asp-action="GetPaymentRequests" method="get" class="d-flex flex-wrap flex-sm-nowrap align-items-center gap-3 mb-4 col-lg-9 col-xl-8 col-xxl-6">
+<form asp-action="GetPaymentRequests" method="get" class="d-flex flex-wrap flex-sm-nowrap align-items-center gap-3 mb-4 col-xxl-8">
     <input type="hidden" asp-for="Count" />
     <input type="hidden" asp-for="TimezoneOffset" />
     <input asp-for="SearchTerm" type="hidden" value="@Model.Search.WithoutSearchText()"/>
@@ -78,57 +77,59 @@
 
 @if (Model.Items.Any())
 {
-    <table class="table table-hover table-responsive-md" id="tableId">
-        <thead>
-            <tr>
-                <th>Title</th>
-                <th class="w-150px">
-                    <div class="d-flex align-items-center gap-1">
-                        Expiry
-                        <button type="button" class="btn btn-link p-0 fa fa-clock-o switch-time-format only-for-js" title="Switch date format"></button>
-                    </div>
-                </th>
-                <th>Price</th>
-                <th>Status</th>
-                <th class="text-end">Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in Model.Items)
-            {
+    <div class="table-responsive-md">
+        <table class="table table-hover">
+            <thead>
                 <tr>
-                    <td>
-                        <a asp-action="ViewPaymentRequest" asp-route-payReqId="@item.Id" id="PaymentRequest-@item.Id">@item.Title</a>
-                    </td>
-                    <td>
-                        @(item.ExpiryDate?.ToBrowserDate() ?? new HtmlString("<span class=\"text-muted\">No Expiry</span>"))
-                    </td>
-                    <td>
-                        <span data-sensitive>@item.AmountFormatted</span>
-                    </td>
-                    <td>
-                        <span class="badge badge-@item.Status.ToLower() status-badge">@item.Status</span>
-                    </td>
-                    <td class="text-end">
-                        <div class="d-inline-flex align-items-center gap-3">
-                            <a asp-action="EditPaymentRequest" asp-route-storeId="@item.StoreId" asp-route-payReqId="@item.Id" id="Edit-@item.Id">Edit</a>
-                            <div class="dropdown">
-                                <button class="btn btn-link dropdown-toggle p-0 dropdown-toggle-no-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="ToggleActions-@item.Id">
-                                    <i class="fa fa-ellipsis-h"></i>
-                                </button>
-                                <ul class="dropdown-menu" aria-labelledby="actionDropdown">
-                                    <li><a class="dropdown-item" asp-controller="UIInvoice" asp-action="ListInvoices" asp-route-storeId="@item.StoreId" asp-route-searchterm="@($"orderid:{PaymentRequestRepository.GetOrderIdForPaymentRequest(item.Id)}")">Invoices</a></li>
-                                    <li><a class="dropdown-item" asp-action="ClonePaymentRequest" asp-route-storeId="@item.StoreId" asp-route-payReqId="@item.Id" id="Clone-@item.Id">Clone</a></li>
-                                    <li class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item" asp-action="TogglePaymentRequestArchival" asp-route-storeId="@item.StoreId" asp-route-payReqId="@item.Id" id="ToggleArchival-@item.Id">@(item.Archived ? "Unarchive" : "Archive")</a></li>
-                                </ul>
-                            </div>
+                    <th>Title</th>
+                    <th class="date-col">
+                        <div class="d-flex align-items-center gap-1">
+                            Expiry
+                            <button type="button" class="btn btn-link p-0 fa fa-clock-o switch-time-format only-for-js" title="Switch date format"></button>
                         </div>
-                    </td>
+                    </th>
+                    <th>Status</th>
+                    <th class="amount-col">Amount</th>
+                    <th></th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.Items)
+                {
+                    <tr class="mass-action-row">
+                        <td>
+                            <a asp-action="EditPaymentRequest" asp-route-storeId="@item.StoreId" asp-route-payReqId="@item.Id" id="Edit-@item.Id">@item.Title</a>
+                        </td>
+                        <td class="date-col">
+                            @(item.ExpiryDate?.ToBrowserDate() ?? new HtmlString("<span class=\"text-muted\">No Expiry</span>"))
+                        </td>
+                        <td>
+                            <span class="badge badge-@item.Status.ToLower() status-badge">@item.Status</span>
+                        </td>
+                        <td class="text-end">
+                            <span data-sensitive>@item.AmountFormatted</span>
+                        </td>
+                        <td class="text-end">
+                            <div class="d-inline-flex align-items-center gap-3">
+                                <a asp-action="ViewPaymentRequest" asp-route-payReqId="@item.Id" id="PaymentRequest-@item.Id">View</a>
+                                <div class="dropdown">
+                                    <button class="btn btn-link dropdown-toggle p-0 dropdown-toggle-no-caret text-body" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="ToggleActions-@item.Id">
+                                        <vc:icon symbol="dots" />   
+                                    </button>
+                                    <ul class="dropdown-menu" aria-labelledby="actionDropdown">
+                                        <li><a class="dropdown-item" asp-controller="UIInvoice" asp-action="ListInvoices" asp-route-storeId="@item.StoreId" asp-route-searchterm="@($"orderid:{PaymentRequestRepository.GetOrderIdForPaymentRequest(item.Id)}")">Invoices</a></li>
+                                        <li><a class="dropdown-item" asp-action="ClonePaymentRequest" asp-route-storeId="@item.StoreId" asp-route-payReqId="@item.Id" id="Clone-@item.Id">Clone</a></li>
+                                        <li class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item" asp-action="TogglePaymentRequestArchival" asp-route-storeId="@item.StoreId" asp-route-payReqId="@item.Id" id="ToggleArchival-@item.Id">@(item.Archived ? "Unarchive" : "Archive")</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 
     <vc:pager view-model="Model" />
 }

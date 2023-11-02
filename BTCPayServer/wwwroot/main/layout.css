@@ -9,6 +9,9 @@
     --mobile-header-height: 4rem;
     --desktop-header-height: 8rem;
     --sidebar-width: 280px;
+    --sticky-header-height: 0; /* gets dynamically set via JavaScript */
+
+    scroll-padding-top: calc(var(--sticky-header-height) + var(--btcpay-space-m));
 }
 
 /* Main Menu */

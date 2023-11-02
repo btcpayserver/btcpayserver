@@ -674,6 +674,9 @@ input:checked + label.btcpay-list-select-item {
         flex-direction: column;
         gap: var(--btcpay-space-m);
     }
+    .tile > :last-child {
+        margin-bottom: 0;
+    }
 }
 
 @media screen and (max-width: 400px) {

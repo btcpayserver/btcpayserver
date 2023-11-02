@@ -93,8 +93,10 @@
             </div>
         </div>
     </div>
-    <div id="products">
-        <partial name="TemplateEditor" model="@(nameof(Model.Template), Model.Template, "Products", Model.Currency ?? Model.StoreDefaultCurrency)" />
+    <div id="products" class="row">
+        <div class="col-xxl-constrain">
+            <partial name="TemplateEditor" model="@(nameof(Model.Template), Model.Template, "Products", Model.Currency ?? Model.StoreDefaultCurrency)" />
+        </div>
     </div>
     <div class="row mt-5">
         <div class="col-sm-10 col-md-9 col-xl-7 col-xxl-6">

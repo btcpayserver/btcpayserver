@@ -1,9 +1,3 @@
-.editor .card-img-top {
-    max-height: 210px;
-    object-fit: scale-down;
-    margin-bottom: auto;
-}
-
 .editor .nav-pills .nav-link {
     background: none;
     padding: 0;
@@ -20,6 +14,7 @@
 }
 
 .editor .list-group-item {
+    --image-size: 3rem;
     border: none;
     margin: 0;
     padding: var(--btcpay-space-m) var(--btcpay-space-m) var(--btcpay-space-m) var(--btcpay-space-s) !important;
@@ -28,6 +23,18 @@
 .editor .list-group-item + .list-group-item.active {
     margin: 0;
     border: 0;
+}
+
+.editor .list-group-item .img img {
+    width: var(--image-size);
+    height: var(--image-size);
+}
+
+.editor .list-group-item .img img {
+    max-width: var(--image-size);
+    max-height: var(--image-size);
+    object-fit: scale-down;
+    border-radius: var(--btcpay-border-radius);
 }
 
 .editor fieldset .list-group-item {

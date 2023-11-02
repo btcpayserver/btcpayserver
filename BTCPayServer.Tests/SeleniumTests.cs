@@ -983,13 +983,12 @@ namespace BTCPayServer.Tests
             Assert.Contains("App successfully created", s.FindAlertMessage().Text);
 
             s.Driver.FindElement(By.CssSelector("label[for='DefaultView_Cart']")).Click();
-            s.Driver.FindElement(By.CssSelector(".template-item:nth-of-type(1) .btn-primary")).Click();
+            s.Driver.FindElement(By.CssSelector(".template-item:nth-of-type(1)")).Click();
             s.Driver.FindElement(By.Id("BuyButtonText")).SendKeys("Take my money");
             s.Driver.FindElement(By.Id("EditorCategories-ts-control")).SendKeys("Drinks");
-            s.Driver.FindElement(By.Id("SaveItemChanges")).Click();
-            s.Driver.FindElement(By.Id("ToggleRawEditor")).Click();
+            s.Driver.FindElement(By.Id("ApplyItemChanges")).Click();
 
-            var template = s.Driver.FindElement(By.Id("Template")).GetAttribute("value");
+            var template = s.Driver.FindElement(By.Id("TemplateConfig")).GetAttribute("value");
             Assert.Contains("\"buyButtonText\": \"Take my money\"", template);
             Assert.Matches("\"categories\": \\[\n\\s+\"Drinks\"\n\\s+\\]", template);
 

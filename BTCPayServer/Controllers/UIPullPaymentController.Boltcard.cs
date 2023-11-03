@@ -1,5 +1,6 @@
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
+using BTCPayServer.Data;
 using BTCPayServer.Lightning;
 using BTCPayServer.Models;
 using BTCPayServer.NTag424;
@@ -51,6 +52,12 @@ namespace BTCPayServer.Controllers
         {
             if (!HttpContext.WebSockets.IsWebSocketRequest)
                 return NotFound();
+            var pp = await _pullPaymentHostedService.GetPullPayment(pullPaymentId, false);
+            if (pp is null)
+                return NotFound();
+            if (!_pullPaymentHostedService.SupportsLNURL(pp.GetBlob()))
+                return BadRequest();
+
             var boltcardUrl = Url.Action(nameof(UIBoltcardController.GetWithdrawRequest), "UIBoltcard");
             boltcardUrl = Request.GetAbsoluteUri(boltcardUrl);
             var websocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
@@ -164,7 +171,8 @@ next:
         private async Task<CardOrigin> GetCardOrigin(string pullPaymentId, Ntag424 ntag, IssuerKey issuerKey, CancellationToken cancellationToken)
         {
             CardOrigin cardOrigin;
-            var uri = await ntag.TryReadNDefURI(cancellationToken);
+            Uri uri = await ntag.TryReadNDefURI(cancellationToken);
+
             if (uri is null)
             {
                 cardOrigin = new CardOrigin.Blank();

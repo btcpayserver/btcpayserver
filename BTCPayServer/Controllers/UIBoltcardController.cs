@@ -42,7 +42,7 @@ public class UIBoltcardController : Controller
     public BTCPayServerEnvironment Env { get; }
 
     [AllowAnonymous]
-    [HttpGet("~/bc")]
+    [HttpGet("~/boltcard")]
     public async Task<IActionResult> GetWithdrawRequest([FromQuery] string? p, [FromQuery] string? c, [FromQuery] string? pr, [FromQuery] string? k1, CancellationToken cancellationToken)
     {
         if (p is null || c is null)

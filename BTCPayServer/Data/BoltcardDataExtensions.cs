@@ -1,21 +1,31 @@
 #nullable enable
+using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.NTag424;
 using Dapper;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin.DataEncoders;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace BTCPayServer;
 public static class BoltcardDataExtensions
 {
-    public static async Task<int> LinkBoltcardToPullPayment(this ApplicationDbContextFactory dbContextFactory, string pullPaymentId, IssuerKey issuerKey, byte[] uid)
+    public static async Task<int> LinkBoltcardToPullPayment(this ApplicationDbContextFactory dbContextFactory, string pullPaymentId, IssuerKey issuerKey, byte[] uid, OnExistingBehavior? onExisting = null)
     {
+        onExisting ??= OnExistingBehavior.UpdateVersion;
         using var ctx = dbContextFactory.CreateContext();
         var conn = ctx.Database.GetDbConnection();
+
+        string onConflict = onExisting switch
+        {
+            OnExistingBehavior.KeepVersion => "UPDATE SET ppid=excluded.ppid, version=boltcards.version",
+            OnExistingBehavior.UpdateVersion => "UPDATE SET ppid=excluded.ppid, version=excluded.version+1",
+            _ => throw new NotSupportedException()
+        };
         return await conn.QueryFirstOrDefaultAsync<int>(
-        "INSERT INTO boltcards(id, ppid) VALUES (@id, @ppid) ON CONFLICT (id) DO UPDATE SET ppid=excluded.ppid, version=excluded.version+1 RETURNING version", new
+        $"INSERT INTO boltcards(id, ppid) VALUES (@id, @ppid) ON CONFLICT (id) DO {onConflict} RETURNING version", new
         {
             id = GetId(issuerKey, uid),
             ppid = pullPaymentId

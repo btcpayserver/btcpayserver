@@ -2158,7 +2158,7 @@ namespace BTCPayServer.Tests
                 var piccData = new byte[] { 0xc7 }.Concat(uid).Concat(new byte[] { 1, 0, 0, 0, 0, 0, 0, 0 }).ToArray();
                 var p = keys.EncryptionKey.Encrypt(piccData);
                 var c = keys.AuthenticationKey.GetSunMac(uid, 1);
-                var boltcardUrl = new Uri(s.Server.PayTester.ServerUri.AbsoluteUri + $"bc?p={Encoders.Hex.EncodeData(p).ToStringUpperInvariant()}&c={Encoders.Hex.EncodeData(c).ToStringUpperInvariant()}");
+                var boltcardUrl = new Uri(s.Server.PayTester.ServerUri.AbsoluteUri + $"boltcard?p={Encoders.Hex.EncodeData(p).ToStringUpperInvariant()}&c={Encoders.Hex.EncodeData(c).ToStringUpperInvariant()}");
                 // p and c should work so long as no bolt11 has been submitted
                 info = (LNURLWithdrawRequest)await LNURL.LNURL.FetchInformation(boltcardUrl, s.Server.PayTester.HttpClient);
                 info = (LNURLWithdrawRequest)await LNURL.LNURL.FetchInformation(boltcardUrl, s.Server.PayTester.HttpClient);

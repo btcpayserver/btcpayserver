@@ -205,6 +205,8 @@
                     Edit pull payment
                 </a>
             </p>
+			@if (Model.LnurlEndpoint is not null)
+			{
             <p>
                 <a asp-action="SetupBoltcard" asp-controller="UIPullPayment" asp-route-pullPaymentId="@Model.Id" asp-route-command="configure-boltcard">
 					Setup Boltcard
@@ -214,6 +216,7 @@
                     Reset Boltcard
                 </a>
             </p>
+			}
             <a class="store-powered-by" href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">
                 Powered by <partial name="_StoreFooterLogo" />
             </a>

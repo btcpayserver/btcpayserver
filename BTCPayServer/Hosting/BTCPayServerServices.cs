@@ -355,6 +355,8 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<IHostedService, StoreEmailRuleProcessorSender>();
             services.AddSingleton<IHostedService, PeriodicTaskLauncherHostedService>();
             services.AddScheduledTask<CleanupWebhookDeliveriesTask>(TimeSpan.FromHours(6.0));
+            services.AddScheduledTask<GithubVersionFetcher>(TimeSpan.FromDays(1));
+            services.AddScheduledTask<PluginUpdateFetcher>(TimeSpan.FromDays(1));
 
             services.AddReportProvider<PaymentsReportProvider>();
             services.AddReportProvider<OnChainWalletReportProvider>();
@@ -415,9 +417,8 @@ namespace BTCPayServer.Hosting
             services.AddScoped<IAuthorizationHandler, CookieAuthorizationHandler>();
             services.AddScoped<IAuthorizationHandler, BitpayAuthorizationHandler>();
 
-            services.AddSingleton<IVersionFetcher, GithubVersionFetcher>();
-            services.AddSingleton<IHostedService, NewVersionCheckerHostedService>();
             services.AddSingleton<INotificationHandler, NewVersionNotification.Handler>();
+            services.AddSingleton<INotificationHandler, PluginUpdateNotification.Handler>();
 
             services.AddSingleton<INotificationHandler, InvoiceEventNotification.Handler>();
             services.AddSingleton<INotificationHandler, PayoutNotification.Handler>();

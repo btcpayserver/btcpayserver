@@ -331,10 +331,10 @@
     </div>
 </form>
 
-<div class="d-flex gap-3 mt-3">
+<div class="d-grid d-sm-flex flex-wrap gap-3 mt-3">
     <a class="btn btn-secondary" asp-action="ListInvoices" asp-controller="UIInvoice" asp-route-storeId="@Model.StoreId" asp-route-searchterm="@Model.SearchTerm">Invoices</a>
     <form method="post" asp-controller="UIApps" asp-action="ToggleArchive" asp-route-appId="@Model.AppId">
-        <button type="submit" class="btn btn-outline-secondary" id="btn-archive-toggle">
+        <button type="submit" class="w-100 btn btn-outline-secondary" id="btn-archive-toggle">
             @if (Model.Archived)
             {
                 <span class="text-nowrap">Unarchive this app</span>

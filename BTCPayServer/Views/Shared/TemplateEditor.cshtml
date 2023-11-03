@@ -76,7 +76,7 @@
             </div>
             <vc:ui-extension-point location="app-template-editor-item-detail" model="Model"></vc:ui-extension-point>
             <div class="text-danger mb-3" v-for="error of errors">{{error}}</div>
-            <button class="btn btn-primary" type="button" id="ApplyItemChanges" v-on:click="apply">Apply</button>
+            <button class="btn btn-primary d-none d-xl-inline-block" type="button" id="ApplyItemChanges" v-on:click="apply">Apply</button>
         </div>
         <div v-if="!editingItem">Select an item to edit</div>
     </div>
@@ -105,7 +105,7 @@
                     </div>
                 </div>
                 <button type="button" class="btn b-0 control remove" v-on:click="$emit('remove-item', $event, index)">
-                    <vc:icon symbol="trash" />
+                    <vc:icon symbol="remove" />
                 </button>
             </div>
         </div>
@@ -139,7 +139,7 @@
     <div class="tab-content">
         <div class="tab-pane fade show active" id="EditorTabPane" role="tabpanel" aria-labelledby="EditorTabButton" tabindex="0">
             <div class="row align-items-start">
-                <div class="col-lg-7 mb-4 mb-lg-0">
+                <div class="col-12 col-xl-7">
                     <items-editor :items="items"
                                   :selected-item="selectedItem"
                                   v-on:add-item="addItem"
@@ -149,8 +149,20 @@
                                   :class="{ 'pt-2': (!items || items.length === 0) }"
                                   class="bg-tile pb-2 rounded" />
                 </div>
-                <div class="col-lg-5">
-                    <item-editor :item="selectedItem" class="bg-tile p-4 rounded" />
+                <div class="col-xl-5 offcanvas-xl offcanvas-end" tabindex="-1" ref="editorOffcanvas">
+                    <div class="offcanvas-header p-3">
+                        <h5 class="offcanvas-title">Edit Item</h5>
+                        <button type="button" class="btn-close" aria-label="Close" v-on:click="hideOffcanvas">
+                            <vc:icon symbol="close" />
+                        </button>
+                    </div>
+                    <div class="offcanvas-body p-3 p-xl-0">
+                        <item-editor ref="itemEditor" :item="selectedItem" class="bg-tile w-100 p-xl-4 rounded" />
+                    </div>
+                    <div class="offcanvas-header p-3">
+                        <button class="btn btn-primary" type="button" v-on:click="() => { $refs.itemEditor.apply(); hideOffcanvas() }">Apply and close</button>
+                        <button class="btn btn-secondary" type="button" v-on:click="hideOffcanvas">Cancel</button>
+                    </div>
                 </div>
             </div>
         </div>

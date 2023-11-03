@@ -64,7 +64,7 @@
                             <input :id="`field-option-text-${index}`" class="form-control" v-model="option.text" />
                         </div>
                         <button type="button" class="btn b-0 control remove" v-on:click="removeOption($event, index)">
-                            <vc:icon symbol="trash" />
+                            <vc:icon symbol="remove" />
                         </button>
                     </div>
                 </div>
@@ -101,7 +101,7 @@
                             <input :id="`field-valuemap-mapped-${index}`" class="form-control" placeholder="Value to set" :value="v" v-on:change="updateValueMap(k, k, $event.target.value)" />
                         </div>
                         <button type="button" class="btn b-0 control remove" v-on:click="removeValueMap($event, k)">
-                            <vc:icon symbol="trash" />
+                            <vc:icon symbol="remove" />
                         </button>
                     </div>
                 </div>
@@ -138,7 +138,7 @@
                         <component :is="getFieldComponent(field.type)" v-bind="field" :path="path.concat(field.name)" :selected-field="selectedField" v-on="$listeners" />
                     </div>
                     <button type="button" class="btn b-0 control remove" v-on:click="$emit('remove-field', $event, path, index)">
-                        <vc:icon symbol="trash" />
+                        <vc:icon symbol="remove" />
                     </button>
                 </div>
             </div>
@@ -247,7 +247,7 @@
         <div class="tab-content">
             <div class="tab-pane fade show active" id="EditorTabPane" role="tabpanel" aria-labelledby="EditorTabButton" tabindex="0">
                 <div class="row align-items-start">
-                    <div class="col-lg-7 mb-4 mb-lg-0">
+                    <div class="col-12 col-xl-7">
                         <fields-editor :path="[]"
                                        :fields="fields"
                                        :selected-field="selectedField"
@@ -258,8 +258,16 @@
                                        :class="{ 'pt-2': (!fields || fields.length === 0) }"
                                        class="bg-tile pb-2 rounded" />
                     </div>
-                    <div class="col-lg-5">
-                        <field-editor :field="selectedField" class="bg-tile p-4 rounded" />
+                    <div class="col-xl-5 offcanvas-xl offcanvas-end" tabindex="-1" ref="editorOffcanvas">
+                        <div class="offcanvas-header p-3">
+                            <h5 class="offcanvas-title">Edit Field</h5>
+                            <button type="button" class="btn-close" aria-label="Close" v-on:click="hideOffcanvas">
+                                <vc:icon symbol="close" />
+                            </button>
+                        </div>
+                        <div class="offcanvas-body p-3 p-xl-0">
+                            <field-editor :field="selectedField" class="bg-tile w-100 p-xl-4 rounded" />
+                        </div>
                     </div>
                 </div>
             </div>

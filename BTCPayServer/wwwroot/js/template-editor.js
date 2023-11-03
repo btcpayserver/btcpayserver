@@ -229,7 +229,8 @@ document.addEventListener('DOMContentLoaded', () => {
         data () {
             return {
                 items,
-                selectedItem: null
+                selectedItem: null,
+                editorOffcanvas: null
             }
         },
         computed: {
@@ -263,9 +264,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     disabled: false
                 })
                 this.selectedItem = this.items[length - 1]
+                this.showOffcanvas()
             },
             selectItem(event, index) {
                 this.selectedItem = this.items[index]
+                this.showOffcanvas()
             },
             removeItem(event, index) {
                 this.items.splice(index, 1)
@@ -274,10 +277,18 @@ document.addEventListener('DOMContentLoaded', () => {
             sortItems(event) {
                 const { newIndex, oldIndex } = event
                 this.items.splice(newIndex, 0, this.items.splice(oldIndex, 1)[0])
+            },
+            showOffcanvas() {
+                if (window.getComputedStyle(this.$refs.editorOffcanvas).visibility === 'hidden')
+                    this.editorOffcanvas.show();
+            },
+            hideOffcanvas() {
+                this.editorOffcanvas.hide();
             }
         },
         mounted() {
             if (!this.items) this.items = []
+            this.editorOffcanvas = bootstrap.Offcanvas.getOrCreateInstance(this.$refs.editorOffcanvas);
         }
     })
 })

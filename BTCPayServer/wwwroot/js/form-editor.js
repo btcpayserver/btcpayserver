@@ -152,7 +152,8 @@ document.addEventListener('DOMContentLoaded', () => {
         data () {
             return {
                 config,
-                selectedField: null
+                selectedField: null,
+                editorOffcanvas: null
             }
         },
         computed: {
@@ -192,10 +193,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 const index = fields.length + 1
                 const length = fields.push({ type: 'text', name: `newField${index}`, label: `New field ${index}`, fields: [], options: [] })
                 this.selectedField = fields[length - 1]
+                this.showOffcanvas()
             },
             selectField(event, path, index) {
                 const fields = this.getFieldsForPath(path)
                 this.selectedField = fields[index]
+                this.showOffcanvas()
             },
             removeField(event, path, index) {
                 const fields = this.getFieldsForPath(path)
@@ -217,12 +220,20 @@ document.addEventListener('DOMContentLoaded', () => {
                     fields = field.fields
                 }
                 return fields
+            },
+            showOffcanvas() {
+                if (window.getComputedStyle(this.$refs.editorOffcanvas).visibility === 'hidden')
+                    this.editorOffcanvas.show();
+            },
+            hideOffcanvas() {
+                this.editorOffcanvas.hide();
             }
         },
         mounted () {
             if (!this.config.fields || this.config.fields.length === 0) {
                 this.addField(null,[])
             }
+            this.editorOffcanvas = bootstrap.Offcanvas.getOrCreateInstance(this.$refs.editorOffcanvas);
         }
     })
 })

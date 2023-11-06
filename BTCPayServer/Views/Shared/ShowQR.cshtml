@@ -19,9 +19,9 @@
                             <a class="btcpay-pill" :class="{ 'active': key === mode }" href="#" v-on:click="mode = key">{{item.title}}</a>
                         </li>
                     </ul>
-                    <div class="input-group input-group-sm mt-3" :data-clipboard="currentFragment" v-if="currentFragment && currentMode.showData">
-                        <input type="text" class="form-control" readonly="readonly" :value="currentFragment" id="qr-code-data-input">
-                        <button type="button" class="btn btn-outline-secondary px-3">
+                    <div class="input-group input-group-sm mt-3" v-if="currentFragment && currentMode.showData">
+                        <input type="text" class="form-control" readonly :value="currentFragment" id="qr-code-data-input">
+                        <button type="button" class="btn btn-outline-secondary px-3" data-clipboard-target="#qr-code-data-input">
                             <vc:icon symbol="copy" />
                         </button>
                     </div>
@@ -112,7 +112,7 @@ function initQRShow(data) {
                 this.mode = "default";
                 this.show();
             },
-            show(){
+            show() {
                 $(`#${this.modalId}`).modal("show");
             }
  		}

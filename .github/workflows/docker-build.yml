@@ -13,6 +13,10 @@ jobs:
                 include:
                     - dockerfile: amd64.Dockerfile
                       platform: linux/amd64
+                      tag: amd64
+                    - dockerfile: arm64v8.Dockerfile
+                      platform: linux/arm64/v8
+                      tag: arm64v8
 
         steps:
             - name: Checkout repository
@@ -43,4 +47,13 @@ jobs:
                   build-args: |
                       GIT_COMMIT=${{ github.sha }}
                       CONFIGURATION_NAME=Altcoins-Release
-                  tags: ghcr.io/${{ github.repository_owner }}/btcpayserver:latest
+                  tags: ghcr.io/${{ github.repository_owner }}/btcpayserver:latest-${{ matrix.tag }}
+            - name: Create and Push Docker Manifests
+              env:
+                  GHCR_REPO: ghcr.io/${{ github.repository_owner }}/btcpayserver
+              run: |
+                  # Create and annotate manifest list for the base image
+                  docker manifest create $GHCR_REPO:latest $GHCR_REPO:latest-amd64 $GHCR_REPO:latest-arm64v8
+                  docker manifest annotate $GHCR_REPO:latest $GHCR_REPO:latest-amd64 --os linux --arch amd64
+                  docker manifest annotate $GHCR_REPO:latest $GHCR_REPO:latest-arm64v8 --os linux --arch arm64 --variant v8
+                  docker manifest push $GHCR_REPO:latest

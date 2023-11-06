@@ -15,7 +15,7 @@
   "submitting_nfc": "Submitting NFC …",
   "invoice_id": "Invoice Number",
   "order_id": "Order Number",
-  "total_price": "Grand Total",
+  "total_price": "Total Price",
   "total_fiat": "Total Fiat",
   "exchange_rate": "Exchange Rate",
   "amount_paid": "Amount Paid",

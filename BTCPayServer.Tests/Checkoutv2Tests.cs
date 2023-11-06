@@ -190,7 +190,7 @@ namespace BTCPayServer.Tests
             // Details
             s.Driver.ToggleCollapse("PaymentDetails");
             var details = s.Driver.FindElement(By.CssSelector(".payment-details"));
-            Assert.Contains("Grand Total", details.Text);
+            Assert.Contains("Total Price", details.Text);
             Assert.Contains("Total Fiat", details.Text);
             Assert.Contains("Exchange Rate", details.Text);
             Assert.Contains("Amount Due", details.Text);

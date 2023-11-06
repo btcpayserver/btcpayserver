@@ -289,7 +289,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                 };
             }
 
-            var proofBlob = new PayoutLightningBlob() { PaymentHash = bolt11PaymentRequest.PaymentHash.ToString() };
+            var proofBlob = new PayoutLightningBlob { PaymentHash = bolt11PaymentRequest.PaymentHash.ToString() };
             try
             {
                 var result = await lightningClient.Pay(bolt11PaymentRequest.ToString(),
@@ -298,6 +298,8 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                         // CLN does not support explicit amount param if it is the same as the invoice amount
                         Amount = payoutBlob.CryptoAmount == bolt11PaymentRequest.MinimumAmount.ToDecimal(LightMoneyUnit.BTC)? null: new LightMoney((decimal)payoutBlob.CryptoAmount, LightMoneyUnit.BTC)
                     }, cancellationToken);
+                if (result == null) throw new NoPaymentResultException();
+                
                 string message = null;
                 if (result.Result == PayResult.Ok)
                 {
@@ -330,7 +332,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                     Message = message
                 };
             }
-            catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
+            catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException or NoPaymentResultException)
             {
                 // Timeout, potentially caused by hold invoices
                 // Payment will be saved as pending, the LightningPendingPayoutListener will handle settling/cancelling
@@ -346,7 +348,6 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                 };
             }
         }
-
 
         private async Task SetStoreContext()
         {
@@ -376,5 +377,9 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             public string Destination { get; set; }
             public decimal Amount { get; set; }
         }
+    }
+
+    public class NoPaymentResultException : Exception
+    {
     }
 }

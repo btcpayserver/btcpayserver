@@ -200,28 +200,6 @@ public class ChiaLikePaymentHandler
     {
         _logger.LogInformation(
             $"Invoice {invoice.Id} received payment {payment.GetCryptoPaymentData().GetValue()} {payment.Currency} {payment.GetCryptoPaymentData().GetPaymentId()}");
-        var paymentData = (ChiaLikePaymentData)payment.GetCryptoPaymentData();
-        var paymentMethod = invoice.GetPaymentMethod(payment.Network, ChiaPaymentType.Instance);
-        // TODO Why is this triggered if the full sum has been paid?
-        if (paymentMethod != null &&
-            paymentMethod.GetPaymentMethodDetails() is ChiaLikeOnChainPaymentMethodDetails Chia &&
-            Chia.Activated &&
-            Chia.GetPaymentDestination() == paymentData.GetDestination() &&
-            paymentMethod.Calculate().Due > 0.0m)
-        {
-            var walletClient = _ChiaRpcProvider.WalletRpcClients[payment.Currency];
-
-            var address = await walletClient.SendCommandAsync<GetNextAddressRequest, GetNextAddressResponse>(
-                "get_next_address",
-                new GetNextAddressRequest() { WalletId = Chia.WalletId, NewAddress = true });
-            Chia.DepositAddress = address.Address;
-            await _invoiceRepository.NewPaymentDetails(invoice.Id, Chia, payment.Network);
-            _eventAggregator.Publish(
-                new InvoiceNewPaymentDetailsEvent(invoice.Id, Chia, payment.GetPaymentMethodId()));
-            paymentMethod.SetPaymentMethodDetails(Chia);
-            invoice.SetPaymentMethod(paymentMethod);
-        }
-
         _eventAggregator.Publish(
             new InvoiceEvent(invoice, InvoiceEvent.ReceivedPayment) { Payment = payment });
     }

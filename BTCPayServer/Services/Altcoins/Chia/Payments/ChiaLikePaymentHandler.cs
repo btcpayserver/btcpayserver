@@ -90,7 +90,7 @@ public class ChiaLikePaymentHandler
         var tasks = accountToAddressQuery.ToDictionary(datas => datas.Key,
             datas => ChiaWalletRpcClient.SendCommandAsync<GetTransactionsRequest, GetTransactionsResponse>(
                 "get_transactions",
-                new GetTransactionsRequest() { WalletId = datas.Key }));
+                new GetTransactionsRequest() { WalletId = datas.Key, SortKey = "CONFIRMED_AT_HEIGHT", Reverse = true}));
 
         await Task.WhenAll(tasks.Values);
 

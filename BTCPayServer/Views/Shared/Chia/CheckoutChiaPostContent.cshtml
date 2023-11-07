@@ -1,16 +1,1 @@
-@using BTCPayServer.Services.Altcoins.Chia.Configuration
-@using BTCPayServer.Services.Altcoins.Chia.UI
-@using Microsoft.AspNetCore.Mvc.TagHelpers
-@using BTCPayServer.Abstractions.Contracts
-@inject SignInManager<ApplicationUser> SignInManager;
-@inject ChiaLikeConfiguration ChiaLikeConfiguration;
-@inject IScopeProvider ScopeProvider
-@{
-    var storeId = ScopeProvider.GetCurrentStoreId();
-    var isActive = !string.IsNullOrEmpty(storeId) && ViewContext.RouteData.Values.TryGetValue("Controller", out var controller) && controller is not null && 
-                   nameof(UIChiaLikeStoreController).StartsWith(controller.ToString() ?? string.Empty, StringComparison.InvariantCultureIgnoreCase);
-}
-@if (SignInManager.IsSignedIn(User) && User.IsInRole(Roles.ServerAdmin) && ChiaLikeConfiguration.ChiaLikeConfigurationItems.Any())
-{
-    <a class="nav-link @(isActive ? "active" : string.Empty)" asp-route-storeId="@storeId" asp-action="GetStoreChiaLikePaymentMethods" asp-controller="UIChiaLikeStore">Chia</a>
-}
+<chia-like-checkout :model="model"/>

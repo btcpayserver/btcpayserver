@@ -26,9 +26,11 @@ namespace BTCPayServer.Services.Altcoins.Chia.RPC
             _httpClient = new HttpClient(handler);
         }
 
-
-        public async Task<TResponse> SendCommandAsync<TRequest, TResponse>(string method, TRequest data,
-            CancellationToken cts = default(CancellationToken))
+        public async Task<TResponse> SendCommandAsync<TRequest, TResponse>(
+            string method,
+            TRequest data,
+            CancellationToken cts = default(CancellationToken)
+        )
         {
             var jsonSerializer = new JsonSerializerSettings
             {
@@ -40,12 +42,13 @@ namespace BTCPayServer.Services.Altcoins.Chia.RPC
                 RequestUri = new Uri(_address, method),
                 Content = new StringContent(
                     JsonConvert.SerializeObject(data, jsonSerializer),
-                    Encoding.UTF8, "application/json")
+                    Encoding.UTF8,
+                    "application/json"
+                )
             };
 
             var rawResult = await _httpClient.SendAsync(httpRequest, cts);
             var rawJson = await rawResult.Content.ReadAsStringAsync();
-
             rawResult.EnsureSuccessStatusCode();
             var response = JsonConvert.DeserializeObject<TResponse>(rawJson, jsonSerializer);
             return response;
@@ -65,29 +68,43 @@ namespace BTCPayServer.Services.Altcoins.Chia.RPC
 
         public class JsonRpcResultError
         {
-            [JsonProperty("code")] public int Code { get; set; }
-            [JsonProperty("message")] public string Message { get; set; }
-            [JsonProperty("data")] dynamic Data { get; set; }
+            [JsonProperty("code")]
+            public int Code { get; set; }
+
+            [JsonProperty("message")]
+            public string Message { get; set; }
+
+            [JsonProperty("data")]
+            dynamic Data { get; set; }
         }
 
         internal class JsonRpcResult<T>
         {
-            [JsonProperty("result")] public T Result { get; set; }
-            [JsonProperty("error")] public JsonRpcResultError Error { get; set; }
-            [JsonProperty("id")] public string Id { get; set; }
+            [JsonProperty("result")]
+            public T Result { get; set; }
+
+            [JsonProperty("error")]
+            public JsonRpcResultError Error { get; set; }
+
+            [JsonProperty("id")]
+            public string Id { get; set; }
         }
 
         internal class JsonRpcCommand<T>
         {
-            [JsonProperty("jsonRpc")] public string JsonRpc { get; set; } = "2.0";
-            [JsonProperty("id")] public string Id { get; set; } = Guid.NewGuid().ToString();
-            [JsonProperty("method")] public string Method { get; set; }
+            [JsonProperty("jsonRpc")]
+            public string JsonRpc { get; set; } = "2.0";
 
-            [JsonProperty("params")] public T Parameters { get; set; }
+            [JsonProperty("id")]
+            public string Id { get; set; } = Guid.NewGuid().ToString();
 
-            public JsonRpcCommand()
-            {
-            }
+            [JsonProperty("method")]
+            public string Method { get; set; }
+
+            [JsonProperty("params")]
+            public T Parameters { get; set; }
+
+            public JsonRpcCommand() { }
 
             public JsonRpcCommand(string method, T parameters)
             {
@@ -96,11 +113,15 @@ namespace BTCPayServer.Services.Altcoins.Chia.RPC
             }
         }
 
-        private static bool ValidateServerCertificate(object sender, X509Certificate? certificate, X509Chain? chain,
-            SslPolicyErrors sslPolicyErrors)
+        private static bool ValidateServerCertificate(
+            object sender,
+            X509Certificate? certificate,
+            X509Chain? chain,
+            SslPolicyErrors sslPolicyErrors
+        )
         {
-            return (sslPolicyErrors & SslPolicyErrors.RemoteCertificateNotAvailable) !=
-                   SslPolicyErrors.RemoteCertificateNotAvailable;
+            return (sslPolicyErrors & SslPolicyErrors.RemoteCertificateNotAvailable)
+                != SslPolicyErrors.RemoteCertificateNotAvailable;
         }
     }
 }

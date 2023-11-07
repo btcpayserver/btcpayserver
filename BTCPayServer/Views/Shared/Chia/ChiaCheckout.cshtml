@@ -1,0 +1,37 @@
+@using BTCPayServer.Abstractions.Extensions
+@using BTCPayServer.Abstractions.TagHelpers
+<template id="chia-checkout"><div v-if="hasGoby"><button class="btn btn-primary rounded-pill w-100 mt-4" type="button" v-on:click="transfer">Pay with Goby</button></div></template>
+<script>
+    Vue.component('chia-like-checkout', {
+        template: "#chia-checkout",
+        props: {
+            model: Object,
+        },
+        computed: {
+            hasGoby() {
+                const { chia } = window;
+                return Boolean(chia && chia.isGoby);
+            }
+        },
+        async mounted() {
+            if(this.hasGoby) {
+                await window.chia.request({ method: "connect" , "params": {eager: true}});
+            }
+        },
+        methods: {
+            async transfer() {
+                try {
+                    const params = {
+                        "to": this.model.btcAddress,
+                        "amount": this.model.btcDue * 10**12,
+                        "assetId": "",
+                    };
+                    await window.chia.request({ method: "transfer", params });
+                } catch (err) {
+                    console.log(err)
+                    // { code: 4001, message: 'User rejected the request.' }
+                }
+            }
+        }
+    });
+</script>

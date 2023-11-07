@@ -146,9 +146,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 return PaymentRequestNotFound();
             }
 
-            var updatedPr = pr.First();
-            updatedPr.Archived = true;
-            await _paymentRequestRepository.CreateOrUpdatePaymentRequest(updatedPr);
+            await _paymentRequestRepository.ArchivePaymentRequest(pr.First().Id);
             return Ok();
         }
 

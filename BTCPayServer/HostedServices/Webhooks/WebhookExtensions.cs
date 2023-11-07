@@ -35,6 +35,10 @@ public static class WebhookExtensions
         services.AddSingleton<PayoutWebhookProvider>();
         services.AddSingleton<IWebhookProvider>(o => o.GetRequiredService<PayoutWebhookProvider>());
         services.AddHostedService(o => o.GetRequiredService<PayoutWebhookProvider>());
+        
+        services.AddSingleton<PaymentRequestWebhookProvider>();
+        services.AddSingleton<IWebhookProvider>(o => o.GetRequiredService<PaymentRequestWebhookProvider>());
+        services.AddHostedService(o => o.GetRequiredService<PaymentRequestWebhookProvider>());
 
         services.AddSingleton<WebhookSender>();
         services.AddSingleton<IHostedService, WebhookSender>(o => o.GetRequiredService<WebhookSender>());

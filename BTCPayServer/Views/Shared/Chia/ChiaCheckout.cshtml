@@ -1,6 +1,19 @@
-@using BTCPayServer.Abstractions.Extensions
-@using BTCPayServer.Abstractions.TagHelpers
-<template id="chia-checkout"><div v-if="hasGoby"><button class="btn btn-primary rounded-pill w-100 mt-4" type="button" v-on:click="transfer">Pay with Goby</button></div></template>
+<template id="chia-checkout">
+    <div>
+        <div v-if="hasGoby">
+            <button class="btn btn-primary rounded-pill w-100 mt-4 flex items-center gap-1" type="button" v-on:click="transfer('goby')">
+                <img style="{height: 1.25rem; width: 1.25rem; border-radius: 9999px; margin-right: 8px}" v-bind:src="`${model.rootPath}checkout-v2/chia/goby-logo-white.svg`" />
+                Pay with Goby
+            </button>
+        </div>
+        <div v-if="hasHoogii">
+            <button class="btn btn-primary rounded-pill w-100 mt-4" type="button" v-on:click="transfer('hoogii')">
+                <img style="{height: 1.25rem; width: 1.25rem; border-radius: 9999px; margin-right: 8px}" v-bind:src="`${model.rootPath}checkout-v2/chia/hoogii.png`" />
+                Pay with Hoogii
+            </button>
+        </div>
+    </div>
+</template>
 <script>
     Vue.component('chia-like-checkout', {
         template: "#chia-checkout",
@@ -11,22 +24,25 @@
             hasGoby() {
                 const { chia } = window;
                 return Boolean(chia && chia.isGoby);
-            }
-        },
-        async mounted() {
-            if(this.hasGoby) {
-                await window.chia.request({ method: "connect" , "params": {eager: true}});
+            },
+            hasHoogii() {
+                const { chia } = window;
+                return Boolean(chia && chia.hoogii && chia.hoogii.isHoogii);
             }
         },
         methods: {
-            async transfer() {
+            async transfer(wallet) {
                 try {
                     const params = {
                         "to": this.model.btcAddress,
                         "amount": this.model.btcDue * 10**12,
                         "assetId": "",
                     };
-                    await window.chia.request({ method: "transfer", params });
+                    if (wallet === 'goby'){    
+                        await window.chia.request({ method: "transfer", params });
+                    } else if (wallet === 'hoogii') {
+                        await window.chia.hoogii.request({ method: "transfer", params });
+                    }
                 } catch (err) {
                     console.log(err)
                     // { code: 4001, message: 'User rejected the request.' }

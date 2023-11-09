@@ -93,8 +93,10 @@
             </div>
         </div>
     </div>
-    <div id="products">
-        <partial name="TemplateEditor" model="@(nameof(Model.Template), Model.Template, "Products", Model.Currency ?? Model.StoreDefaultCurrency)" />
+    <div id="products" class="row">
+        <div class="col-xxl-constrain">
+            <partial name="TemplateEditor" model="@(nameof(Model.Template), Model.Template, "Products", Model.Currency ?? Model.StoreDefaultCurrency)" />
+        </div>
     </div>
     <div class="row mt-5">
         <div class="col-sm-10 col-md-9 col-xl-7 col-xxl-6">
@@ -282,10 +284,10 @@
     </div>
 </form>
 
-<div class="d-flex gap-3 mt-3">
+<div class="d-grid d-sm-flex flex-wrap gap-3 mt-3">
     <a class="btn btn-secondary" asp-action="ListInvoices" asp-controller="UIInvoice" asp-route-storeId="@Model.StoreId" asp-route-searchterm="@Model.SearchTerm">Invoices</a>
     <form method="post" asp-controller="UIApps" asp-action="ToggleArchive" asp-route-appId="@Model.Id">
-        <button type="submit" class="btn btn-outline-secondary" id="btn-archive-toggle">
+        <button type="submit" class="w-100 btn btn-outline-secondary" id="btn-archive-toggle">
             @if (Model.Archived)
             {
                 <span class="text-nowrap">Unarchive this app</span>

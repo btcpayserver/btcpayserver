@@ -131,15 +131,27 @@ document.addEventListener("DOMContentLoaded", () => {
         el: '#app',
         data() { return { srv } },
         methods: {
-            titleCase(str) {
-                const result = str.replace(/([A-Z])/g, " $1");
-                return result.charAt(0).toUpperCase() + result.slice(1);
+            hasChartData(chart) {
+                return chart.rows.length || chart.hasGrandTotal;
             },
-            displayValue
+            titleCase(str, shorten) {
+                const result = str.replace(/([A-Z])/g, " $1");
+                const title = result.charAt(0).toUpperCase() + result.slice(1)
+                return shorten && title.endsWith(' Amount') ? 'Amount' : title;
+            },
+            displayValue,
+            displayDate
         }
     });
     fetchStoreReports();
 });
+
+const dtFormatter = new Intl.DateTimeFormat('default', { dateStyle: 'short', timeStyle: 'short' });
+
+function displayDate(val) {
+    const date = new Date(val);
+    return dtFormatter.format(date);
+}
 
 function displayValue(val) {
     return val && typeof val === "object" && typeof val.d === "number" ? new Decimal(val.v).toFixed(val.d) : val;

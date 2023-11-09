@@ -9,7 +9,15 @@
     @if (Model.IsVue)
     {
         <span class="truncate-center-truncated" data-bs-toggle="tooltip" :title=@Safe.Json(Model.Text)>
-            <span class="truncate-center-start" v-text=@Safe.Json(Model.Text)></span>
+            @if (Model.Elastic)
+            {
+                <span class="truncate-center-start" v-text=@Safe.Json(Model.Text)></span>
+            }
+            else
+            {
+                <span class="truncate-center-start" v-text=@Safe.Json($"{Model.Text}.slice(0, {Model.Padding})")></span>
+                <span>…</span>
+            }
             <span class="truncate-center-end" v-text=@Safe.Json($"{Model.Text}.slice(-{Model.Padding})")></span>
         </span>
         <span class="truncate-center-text" v-text=@Safe.Json(Model.Text)></span>
@@ -33,7 +41,7 @@
     }
     @if (!string.IsNullOrEmpty(Model.Link))
     {
-        <a href="@Model.Link" rel="noreferrer noopener" target="_blank">
+        <a @(Model.IsVue ? ":" : "")href="@Model.Link" rel="noreferrer noopener" target="_blank">
             <vc:icon symbol="info" />
         </a>
     }

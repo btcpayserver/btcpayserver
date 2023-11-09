@@ -27,7 +27,7 @@ public class OnChainWalletReportProvider : ReportProvider
     private StoreRepository StoreRepository { get; }
     private BTCPayNetworkProvider NetworkProvider { get; }
     private WalletRepository WalletRepository { get; }
-    public override string Name => "On-Chain Wallets";
+    public override string Name => "Wallets";
     ViewDefinition CreateViewDefinition()
     {
         return new()

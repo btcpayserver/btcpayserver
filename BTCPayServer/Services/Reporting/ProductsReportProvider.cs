@@ -22,7 +22,7 @@ public class ProductsReportProvider : ReportProvider
     private InvoiceRepository InvoiceRepository { get; }
     private AppService Apps { get; }
 
-    public override string Name => "Products sold";
+    public override string Name => "Sales";
 
     public override async Task Query(QueryContext queryContext, CancellationToken cancellation)
     {
@@ -114,7 +114,7 @@ public class ProductsReportProvider : ReportProvider
             {
                 new ()
                 {
-                    Name = "Summary by products",
+                    Name = "Summary",
                     Groups = { "AppId", "Currency", "State", "Product" },
                     Aggregates = { "Quantity", "CurrencyAmount" },
                     Totals = { "State" }

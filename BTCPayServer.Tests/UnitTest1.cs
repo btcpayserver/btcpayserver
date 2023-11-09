@@ -2881,7 +2881,7 @@ namespace BTCPayServer.Tests
             Assert.Single(paymentTypes["On-Chain"]);
 
             // 2 on-chain transactions: It received from the cashcow, then paid its own invoice
-            report = await GetReport(acc, new() { ViewName = "On-Chain Wallets" });
+            report = await GetReport(acc, new() { ViewName = "Wallets" });
             var txIdIndex = report.GetIndex("TransactionId");
             var balanceIndex = report.GetIndex("BalanceChange");
             Assert.Equal(2, report.Data.Count);
@@ -2889,7 +2889,7 @@ namespace BTCPayServer.Tests
             Assert.Contains(report.Data, d => d[balanceIndex]["v"].Value<decimal>() == 1.0m);
 
             // Items sold
-            report = await GetReport(acc, new() { ViewName = "Products sold" });
+            report = await GetReport(acc, new() { ViewName = "Sales" });
             var itemIndex = report.GetIndex("Product");
             var countIndex = report.GetIndex("Quantity");
             var itemsCount = report.Data.GroupBy(d => d[itemIndex].Value<string>())

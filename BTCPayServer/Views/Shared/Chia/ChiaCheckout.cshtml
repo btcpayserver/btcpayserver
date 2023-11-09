@@ -1,17 +1,24 @@
 <template id="chia-checkout">
     <div>
-        <div v-if="hasGoby">
-            <button class="btn btn-primary rounded-pill w-100 mt-4 flex items-center gap-1" type="button" v-on:click="transfer('goby')">
-                <img style="{height: 1.25rem; width: 1.25rem; border-radius: 9999px; margin-right: 8px}" v-bind:src="`${model.rootPath}checkout-v2/chia/goby-logo-white.svg`" />
-                Pay with Goby
-            </button>
+        <div v-if="transferPending" class="loading d-flex justify-content-center p-3">
+            <div class="spinner-border text-light" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
         </div>
-        <div v-if="hasHoogii">
-            <button class="btn btn-primary rounded-pill w-100 mt-4" type="button" v-on:click="transfer('hoogii')">
-                <img style="{height: 1.25rem; width: 1.25rem; border-radius: 9999px; margin-right: 8px}" v-bind:src="`${model.rootPath}checkout-v2/chia/hoogii.png`" />
-                Pay with Hoogii
-            </button>
-        </div>
+        <template v-else>
+            <div v-if="hasGoby">
+                <button class="btn btn-primary rounded-pill w-100 mt-4 flex items-center gap-1" type="button" v-on:click="transfer('goby')">
+                    <img style="{height: 1.25rem; width: 1.25rem; border-radius: 9999px; margin-right: 8px}" v-bind:src="`${model.rootPath}checkout-v2/chia/goby-logo-white.svg`" />
+                    Pay with Goby
+                </button>
+            </div>
+            <div v-if="hasHoogii">
+                <button class="btn btn-primary rounded-pill w-100 mt-4" type="button" v-on:click="transfer('hoogii')">
+                    <img style="{height: 1.25rem; width: 1.25rem; border-radius: 9999px; margin-right: 8px}" v-bind:src="`${model.rootPath}checkout-v2/chia/hoogii.png`" />
+                    Pay with Hoogii
+                </button>
+            </div>
+        </template>
     </div>
 </template>
 <script>
@@ -20,6 +27,7 @@
         props: {
             model: Object,
         },
+        data: () => ({transferPending: false}),
         computed: {
             hasGoby() {
                 const { chia } = window;
@@ -43,6 +51,7 @@
                     } else if (wallet === 'hoogii') {
                         await window.chia.hoogii.request({ method: "transfer", params });
                     }
+                    this.transferPending = true;
                 } catch (err) {
                     console.log(err)
                     // { code: 4001, message: 'User rejected the request.' }

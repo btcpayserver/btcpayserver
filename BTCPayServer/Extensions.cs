@@ -139,7 +139,7 @@ namespace BTCPayServer
     where T : ReportProvider
         {
             services.AddSingleton<T>();
-            services.AddSingleton<ReportProvider, T>();
+            services.AddSingleton<ReportProvider, T>(provider => provider.GetService<T>());
             return services;
         }
 

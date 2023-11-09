@@ -1,4 +1,5 @@
 #nullable enable
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
@@ -12,6 +13,11 @@ using BTCPayServer.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading;
+using BTCPayServer.Abstractions.Contracts;
+using BTCPayServer.Abstractions.Extensions;
+using BTCPayServer.Abstractions.Models;
+using BTCPayServer.Services.Reporting;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Controllers;
@@ -20,14 +26,17 @@ namespace BTCPayServer.Controllers;
 [AutoValidateAntiforgeryToken]
 public partial class UIReportsController : Controller
 {
+    private readonly IScopeProvider _scopeProvider;
+
     public UIReportsController(
         BTCPayNetworkProvider networkProvider,
         ApplicationDbContextFactory dbContextFactory,
         GreenfieldReportsController api,
         ReportService reportService,
         DisplayFormatter displayFormatter,
-        BTCPayServerEnvironment env)
+        BTCPayServerEnvironment env, IScopeProvider scopeProvider)
     {
+        _scopeProvider = scopeProvider;
         Api = api;
         ReportService = reportService;
         Env = env;
@@ -76,5 +85,96 @@ public partial class UIReportsController : Controller
                 .OrderBy(k => k).ToList()
         };
         return View(vm);
+    }
+    [HttpGet("reports/dynamic")]
+    [AcceptMediaTypeConstraint("text/html")]
+    [Authorize(Policy = Policies.CanModifyServerSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    public IActionResult DynamicReport(
+        string? reportName)
+    {
+
+        if(Request.Query.TryGetValue("viewName", out var vn) && vn.Count == 1)
+        {
+            if (ReportService.ReportProviders.TryGetValue(vn[0], out var report) && report is PostgresReportProvider)
+            {
+                return RedirectToAction(nameof(DynamicReport), new {reportName = vn[0]});
+            }
+        }
+        if (reportName is not null)
+        {
+            if (!ReportService.ReportProviders.TryGetValue(reportName, out var report))
+            {
+                return NotFound();
+            }
+
+            if (report is not PostgresReportProvider postgresReportProvider)
+            {
+                return NotFound();
+            }
+
+            return View(new DynamicReportViewModel()
+            {
+                Name = reportName,
+                Sql = postgresReportProvider.Setting.Sql,
+                AllowForNonAdmins = postgresReportProvider.Setting.AllowForNonAdmins
+            });
+        }
+
+        return View(new DynamicReportViewModel());
+
+    }  
+    [HttpPost("reports/dynamic")]
+    [AcceptMediaTypeConstraint("text/html")]
+    [Authorize(Policy = Policies.CanModifyServerSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    public async Task<IActionResult> DynamicReport(
+        string reportName, DynamicReportViewModel vm, string command)
+    {
+        ModelState.Clear();
+        if (command == "remove" && reportName is not null)
+        {
+            await ReportService.UpdateDynamicReport(reportName, null);
+            TempData[WellKnownTempData.SuccessMessage] = $"Report {reportName} removed";
+            return RedirectToAction(nameof(DynamicReport));
+        }
+        
+        string msg = null;
+        if(string.IsNullOrEmpty(vm.Sql))
+        {
+            ModelState.AddModelError(nameof(vm.Sql), "SQL is required");
+        }
+        else
+        {
+            try
+            {
+                var context = new QueryContext(_scopeProvider.GetCurrentStoreId(), DateTimeOffset.MinValue,
+                    DateTimeOffset.MaxValue);
+                await PostgresReportProvider.ExecuteQuery(DBContextFactory, context, vm.Sql, CancellationToken.None);   
+                msg = $"Fetched {context.Data.Count} rows with {context.ViewDefinition?.Fields.Count} columns";
+                TempData["Data"] = JsonConvert.SerializeObject(context);
+            }
+            catch (Exception e)
+            {
+                ModelState.AddModelError(nameof(vm.Sql), "Could not execute SQL: " + e.Message);
+            }
+        }
+        if(string.IsNullOrEmpty(vm.Name))
+        {
+            ModelState.AddModelError(nameof(vm.Name), "Name is required");
+        }
+        if (!ModelState.IsValid)
+        {
+            return View(vm);
+        }
+
+        await ReportService.UpdateDynamicReport(reportName??vm.Name, vm);
+        TempData.SetStatusMessageModel(new StatusMessageModel()
+        {
+            Severity = StatusMessageModel.StatusSeverity.Success,
+            Html = $"Report {reportName} {(reportName is null ? "created" : "updated")}{(msg is null? string.Empty: $"<br/>{msg})")}"
+        });
+        TempData[WellKnownTempData.SuccessMessage] = $"Report {reportName} {(reportName is null ? "created" : "updated")}";
+       
+        return RedirectToAction(nameof(DynamicReport) , new {reportName = reportName??vm.Name});
+        
     }
 }

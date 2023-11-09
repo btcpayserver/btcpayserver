@@ -1,0 +1,113 @@
+@using BTCPayServer.Abstractions.Extensions
+@using BTCPayServer.Security
+@using BTCPayServer.Services
+@using BTCPayServer.Services.Reporting
+@using BTCPayServer.Views.Stores
+@using BTCPayServer.Abstractions.Contracts
+@using Newtonsoft.Json
+@inject IScopeProvider ScopeProvider
+@inject ReportService ReportService
+@model BTCPayServer.Models.StoreReportsViewModels.DynamicReportViewModel
+@{
+    var storeId = ScopeProvider.GetCurrentStoreId();
+    var reportName = Context.Request.Query["reportName"].ToString();
+    reportName = string.IsNullOrEmpty(reportName) ? null : reportName;
+    var existingReports = ReportService.ReportProviders.Where(pair => pair.Value is PostgresReportProvider).Select(pair => pair.Key).ToList();
+    ViewData.SetActivePage(StoreNavPages.Reporting, reportName is null ? "Create dynamic report" : $"Edit {reportName} dynamic report", reportName);
+}
+
+
+<form method="post" asp-action="DynamicReport" asp-controller="UIReports" asp-route-reportName="reportName">
+    <div class="sticky-header-setup"></div>
+    <div class="sticky-header d-sm-flex align-items-center justify-content-between">
+        <h2 class="mb-0">@ViewData["Title"]</h2>
+        <div class="d-flex gap-3 mt-3 mt-sm-0">
+            @if (reportName is null)
+            {
+                <button type="submit" class="btn btn-primary" id="SaveButton">Create</button>
+            }
+            else
+            {
+                <button type="submit" class="btn btn-primary order-sm-1" id="SaveButton">Save</button>
+                <button name="command" value="remove" type="submit" class="btn btn-danger order-sm-1">Remove</button>
+                <a class="btn btn-secondary" asp-controller="UIReports" asp-action="StoreReports" asp-route-storeId="@storeId" asp-route-viewName="@reportName">View</a>
+            }
+            @if (existingReports.Count > 0)
+            {
+                <select onChange="window.location.href=this.value" class="form-select" name="selectedReport">
+                    <option selected="@(reportName is null)" value="@Url.Action("DynamicReport", "UIReports")">Create nw report</option>
+                    @foreach (var rep in existingReports)
+                    {
+                        <option selected="@(rep == reportName)" value="@Url.Action("DynamicReport", "UIReports", new {reportName = rep})">Edit @rep</option>
+                    }
+                </select>
+            }
+        </div>
+    </div>
+
+    <partial name="_StatusMessage" />
+
+    <div class="row">
+        <div class="col-xl-8 col-xxl-constrain">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            @if (reportName is null)
+            {
+                <div class="form-group">
+                    <label asp-for="Name" class="form-label" data-required></label>
+                    <input asp-for="Name" class="form-control" required />
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+            }
+            else
+            {
+                <input type="hidden" asp-for="Name" />
+            }
+            <div class="form-group form-check">
+                <input type="checkbox" class="form-check-input" asp-for="AllowForNonAdmins" />
+                <label asp-for="AllowForNonAdmins" class="form-check-label"></label>
+                <span asp-validation-for="AllowForNonAdmins" class="text-danger"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-xl-10 col-xxl-constrain">
+            <div class="form-group">
+                <label asp-for="Sql" class="form-label"></label>
+                <textarea asp-for="Sql" class="form-control"></textarea>
+                <span asp-validation-for="Sql" class="text-danger"></span>
+            </div>
+        </div>
+    </div>
+    @if (TempData.TryGetValue("Data", out var dataV) && dataV is string dataS)
+    {
+        var queryContext = JsonConvert.DeserializeObject<QueryContext>(dataS);
+        <div class="row">
+            <div class="col-12 table-responsive">
+                <table class="table">
+                    <thead>
+                    <tr>
+                        @foreach (var column in queryContext.ViewDefinition.Fields)
+                        {
+                            <th>@column.Name</th>
+                        }
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var row in queryContext.Data)
+                    {
+                        <tr>
+
+                            @foreach (var column in row)
+                            {
+                                <td>@column</td>
+                            }
+                        </tr>
+                    }
+                </table>
+            </div>
+        </div>
+        <table></table>
+    }
+
+</form>

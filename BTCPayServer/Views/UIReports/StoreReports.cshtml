@@ -4,6 +4,7 @@
 @using BTCPayServer.Views.Invoice;
 @using BTCPayServer.Views.Stores;
 @using BTCPayServer.Abstractions.Services;
+@using BTCPayServer.Client
 @using Microsoft.AspNetCore.Routing;
 @inject Safe Safe
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
@@ -34,7 +35,9 @@
         <div class="d-flex flex-wrap gap-3">
 	        <a cheat-mode="true" class="btn btn-outline-info text-nowrap" asp-action="StoreReports" asp-route-fakeData="true" asp-route-viewName="@Model.Request?.ViewName">Create fake date</a>
 	        <button id="exportCSV" class="btn btn-primary text-nowrap" type="button">Export</button>
-        </div>
+
+     		<a permission="@Policies.CanModifyServerSettings"  cheat-mode="true" class="btn btn-outline-info text-nowrap" asp-action="DynamicReport" asp-controller="UIReports" asp-route-reportName=""   asp-route-viewName="@Model.Request?.ViewName">Dynamic reports</a>
+   		</div>
     </div>
 </div>
 <div class="d-flex flex-column flex-sm-row align-items-center gap-3 mb-l">

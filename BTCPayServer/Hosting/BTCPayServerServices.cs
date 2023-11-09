@@ -327,6 +327,7 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<LightningConfigurationProvider>();
             services.TryAddSingleton<LanguageService>();
             services.TryAddSingleton<ReportService>();
+            services.AddHostedService(provider => provider.GetRequiredService<ReportService>());
             services.TryAddSingleton<NBXplorerDashboard>();
             services.AddSingleton<ISyncSummaryProvider, NBXSyncSummaryProvider>();
             services.TryAddSingleton<StoreRepository>();
@@ -360,6 +361,9 @@ namespace BTCPayServer.Hosting
             services.AddReportProvider<OnChainWalletReportProvider>();
             services.AddReportProvider<ProductsReportProvider>();
             services.AddReportProvider<PayoutsReportProvider>();
+            
+            
+            
 
             services.AddHttpClient(WebhookSender.OnionNamedClient)
                 .ConfigurePrimaryHttpMessageHandler<Socks5HttpClientHandler>();

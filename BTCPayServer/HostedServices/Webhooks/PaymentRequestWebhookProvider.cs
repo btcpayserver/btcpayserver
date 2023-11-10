@@ -62,9 +62,10 @@ public class PaymentRequestWebhookProvider : EventHostedServiceBase, IWebhookPro
     {
         return new Dictionary<string, string>()
         {
-            {WebhookEventType.PayoutCreated, "A payout has been created"},
-            {WebhookEventType.PayoutApproved, "A payout has been approved"},
-            {WebhookEventType.PayoutUpdated, "A payout was updated"}
+            {WebhookEventType.PaymentRequestCreated, "Payment Request Created"},
+            {WebhookEventType.PaymentRequestUpdated, "Payment Request Updated"},
+            {WebhookEventType.PaymentRequestArchived, "Payment Request Archived"},
+            {WebhookEventType.PaymentRequestStatusChanged, "Payment Request Status Changed"},
         };
     }
 

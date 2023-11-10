@@ -133,7 +133,7 @@
                         <template v-else-if="srv.result.fields[columnIndex].type === 'tx_id'">
                             <vc:truncate-center text="value" is-vue="true" padding="15" classes="truncate-center-id" link="getExplorerUrl(value, row[columnIndex-1])" />
                         </template>
-                        <template v-else-if="['Address', 'PaymentId'].includes(srv.result.fields[columnIndex].name)">
+                        <template v-else-if="value && ['Address', 'PaymentId'].includes(srv.result.fields[columnIndex].name)" >
                             <vc:truncate-center text="value" is-vue="true" padding="15" classes="truncate-center-id" />
                         </template>
                         <template v-else-if="srv.result.fields[columnIndex].type === 'datetime'">{{ displayDate(value) }}</template>

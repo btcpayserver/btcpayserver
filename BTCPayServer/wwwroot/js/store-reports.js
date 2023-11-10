@@ -149,6 +149,9 @@ document.addEventListener("DOMContentLoaded", () => {
 const dtFormatter = new Intl.DateTimeFormat('default', { dateStyle: 'short', timeStyle: 'short' });
 
 function displayDate(val) {
+    if(!val){
+        return val;
+    }
     const date = new Date(val);
     return dtFormatter.format(date);
 }
@@ -182,7 +185,7 @@ function downloadCSV() {
 
     // Convert ISO8601 dates to YYYY-MM-DD HH:mm:ss so the CSV easily integrate with Excel
     modifyFields(srv.result.fields, data, 'amount', displayValue)
-    modifyFields(srv.result.fields, data, 'datetime', v => moment(v).format('YYYY-MM-DD hh:mm:ss'));
+    modifyFields(srv.result.fields, data, 'datetime', v => v? moment(v).format('YYYY-MM-DD hh:mm:ss'): v);
     const csv = Papa.unparse({ fields: srv.result.fields.map(f => f.name), data });
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     saveAs(blob, "export.csv");
@@ -202,7 +205,7 @@ async function fetchStoreReports() {
     srv.dataUpdated();
 
     // Dates from API are UTC, convert them to local time
-    modifyFields(srv.result.fields, srv.result.data, 'datetime', a => moment(a).format());
+    modifyFields(srv.result.fields, srv.result.data, 'datetime', a => a? moment(a).format(): a);
     var urlParams = new URLSearchParams(new URL(window.location).search);
     urlParams.set("viewName", srv.request.viewName);
     urlParams.set("from", srv.request.timePeriod.from);

@@ -25,6 +25,7 @@ namespace BTCPayServer.TagHelpers
             // insert btc at the front
             output.PostElement.AppendHtml("<option value=\"BTC\">BTC - Bitcoin</option>");
             output.PostElement.AppendHtml("<option value=\"SATS\">SATS - Satoshi</option>");
+            output.PostElement.AppendHtml("<option value=\"XMR\">XMR - Monero</option>");
             // move most often used currencies up
             int pos = 0;
             InsertAt(currencies, "USD", pos++);

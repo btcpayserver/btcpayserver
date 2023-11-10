@@ -50,7 +50,7 @@ public class PaymentRequestWebhookProvider : EventHostedServiceBase, IWebhookPro
                 webhookEvent.OriginalDeliveryId = delivery.Id;
                 webhookEvent.IsRedelivery = false;
                 webhookEvent.Timestamp = delivery.Timestamp;
-                var context = new WebhookSender.WebhookDeliveryRequest(webhook.Id, webhookEvent, delivery, webhookBlob);
+                var context = new PaymentRequestWebhookDeliveryRequest(paymentRequestEvent,webhook.Id, webhookEvent, delivery, webhookBlob );
                 _webhookSender.EnqueueDelivery(context);
             }
         }

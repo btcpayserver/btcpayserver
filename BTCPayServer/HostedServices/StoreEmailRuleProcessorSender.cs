@@ -83,46 +83,32 @@ public class StoreEmailRuleProcessorSender : EventHostedServiceBase
                     var sender = await _emailSenderFactory.GetEmailSender(storeId);
                     foreach (UIStoresController.StoreEmailRule actionableRule in actionableRules)
                     {
-                        var recipients = (actionableRule.To?.Split(",", StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string>())
+                       
+
+                        var request = new SendEmailRequest()
+                        {
+                            Subject = actionableRule.Subject, Body = actionableRule.Body, Email = actionableRule.To
+                        };
+                        request = await webhookDeliveryRequest.Interpolate(request, actionableRule);
+                        
+                      
+                        var recipients = (request?.Email?.Split(",", StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string>())
                             .Select(o =>
                             {
                                 MailboxAddressValidator.TryParse(o, out var mb);
                                 return mb;
                             })
                             .Where(o => o != null)
-                            .ToList();
+                            .ToArray();
                         
-                        var  subject = actionableRule.Subject;
-                        var  body = actionableRule.Body;
-                        if (webhookDeliveryRequest is InvoiceWebhookDeliveryRequest invoiceWebhookDeliveryRequest)
-                        {
-                            if (actionableRule.CustomerEmail &&
-                                MailboxAddressValidator.TryParse(invoiceWebhookDeliveryRequest.Invoice.Metadata.BuyerEmail, out var bmb))
-                            {
-                                recipients.Add(bmb);
-                            }
-                            var i = GreenfieldInvoiceController.ToModel(invoiceWebhookDeliveryRequest.Invoice, _linkGenerator, null);
-                            subject = Interpolator(actionableRule.Subject, i);
-                            body = Interpolator(actionableRule.Body, i);
-                        }
-                        sender.SendEmail(recipients.ToArray(), null, null, subject, body);
+                        if(recipients.Length == 0)
+                            continue;
+                        
+                        sender.SendEmail(recipients.ToArray(), null, null, request.Subject, request.Body);
                     }
                 }
             }
         }
     }
 
-    private string Interpolator(string str, InvoiceData i)
-    {
-        //TODO: we should switch to https://dotnetfiddle.net/MoqJFk later
-        return str.Replace("{Invoice.Id}", i.Id)
-            .Replace("{Invoice.StoreId}", i.StoreId)
-            .Replace("{Invoice.Price}",
-                decimal.Round(i.Amount, _currencyNameTable.GetCurrencyData(i.Currency, true).Divisibility,
-                    MidpointRounding.ToEven).ToString(CultureInfo.InvariantCulture))
-            .Replace("{Invoice.Currency}", i.Currency)
-            .Replace("{Invoice.Status}", i.Status.ToString())
-            .Replace("{Invoice.AdditionalStatus}", i.AdditionalStatus.ToString())
-            .Replace("{Invoice.OrderId}", i.Metadata.ToObject<InvoiceMetadata>().OrderId);
-    }
 }

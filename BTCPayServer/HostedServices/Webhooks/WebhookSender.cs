@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
+using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.Services.Stores;
 using Microsoft.EntityFrameworkCore;
@@ -85,6 +86,12 @@ namespace BTCPayServer.HostedServices.Webhooks
                 WebhookEvent = webhookEvent;
                 Delivery = delivery;
                 WebhookBlob = webhookBlob;
+            }
+
+            public virtual Task<SendEmailRequest?> Interpolate(SendEmailRequest req,
+                UIStoresController.StoreEmailRule storeEmailRule)
+            {
+                return Task.FromResult(req)!;
             }
         }
 

@@ -12,17 +12,6 @@ using WebhookDeliveryData = BTCPayServer.Data.WebhookDeliveryData;
 
 namespace BTCPayServer.HostedServices.Webhooks;
 
-public class InvoiceWebhookDeliveryRequest : WebhookSender.WebhookDeliveryRequest
-{
-    public InvoiceEntity Invoice { get; }
-
-    public InvoiceWebhookDeliveryRequest(InvoiceEntity invoice, string webhookId, WebhookEvent webhookEvent,
-        WebhookDeliveryData delivery, WebhookBlob webhookBlob) : base(webhookId, webhookEvent, delivery, webhookBlob)
-    {
-        Invoice = invoice;
-    }
-}
-
 public class InvoiceWebhookProvider : EventHostedServiceBase, IWebhookProvider
 {
     private readonly WebhookSender _webhookSender;

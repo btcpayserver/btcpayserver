@@ -48,7 +48,7 @@ public class PayoutWebhookProvider : EventHostedServiceBase, IWebhookProvider
                 webhookEvent.OriginalDeliveryId = delivery.Id;
                 webhookEvent.IsRedelivery = false;
                 webhookEvent.Timestamp = delivery.Timestamp;
-                var context = new WebhookSender.WebhookDeliveryRequest(webhook.Id, webhookEvent, delivery, webhookBlob);
+                var context = new PayoutWebhookDeliveryRequest(payoutEvent,webhook.Id, webhookEvent, delivery, webhookBlob);
                 _webhookSender.EnqueueDelivery(context);
             }
         }

@@ -3,12 +3,13 @@
 }
 
 #PosCart .public-page-wrap {
+    --wrap-max-width: 1320px;
+    
     padding-top: 0;
 }
 @media (max-width: 400px) {
     #PosCart .public-page-wrap {
-        padding-left: var(--btcpay-space-s);
-        padding-right: var(--btcpay-space-s);
+        --wrap-padding-horizontal: var(--btcpay-space-s);
     }
 }
 

@@ -29,6 +29,7 @@
         @Safe.Raw($"<style>{Model.EmbeddedCSS}</style>")
     }
     <style>
+        #app { --wrap-max-width: 1320px; }
         #crowdfund-main-image {
             border-radius: var(--btcpay-border-radius);
             object-fit: cover;
@@ -57,7 +58,7 @@
     <canvas id="fireworks" class="d-none"></canvas>
 }
 
-<div class="public-page-wrap container" id="app" @(Model.SimpleDisplay ? "" : "v-cloak")>
+<div class="public-page-wrap" id="app" @(Model.SimpleDisplay ? "" : "v-cloak")>
     @if (!string.IsNullOrEmpty(Model.MainImageUrl))
     {
         <img v-if="srvModel.mainImageUrl" :src="srvModel.mainImageUrl" :alt="srvModel.title" id="crowdfund-main-image" asp-append-version="true"/>
@@ -260,7 +261,6 @@
             </div>
         </div>
     </noscript>
-    <div class="text-center text-muted mt-4" v-text="`Updated ${lastUpdated}`">Updated @Model.Info.LastUpdated</div>
     <b-modal title="Contribute" v-model="contributeModalOpen" size="lg" ok-only="true" ok-variant="secondary" ok-title="Close" ref="modalContribute">
         <contribute v-if="contributeModalOpen"
                     :target-currency="srvModel.targetCurrency"
@@ -271,6 +271,7 @@
         </contribute>
     </b-modal>
     <footer class="store-footer">
+        <p class="text-muted" v-text="`Updated ${lastUpdated}`">Updated @Model.Info.LastUpdated</p>
         <a class="store-powered-by" href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">
             Powered by <partial name="_StoreFooterLogo" />
         </a>

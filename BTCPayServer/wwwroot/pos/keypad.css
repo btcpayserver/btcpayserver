@@ -1,6 +1,5 @@
-.public-page-wrap {
-    max-width: 560px;
-    overflow: hidden;
+#PosKeypad {
+    --wrap-max-width: 575px;
 }
 
 /* modes */
@@ -66,9 +65,9 @@
     }
 }
 @media (max-width: 575px) {
-    .public-page-wrap {
-        padding-right: 0;
-        padding-left: 0;
+    #PosKeypad {
+        --wrap-padding-horizontal: 0;
+        overflow: hidden;
     }
     .keypad {
         margin-left: -1px;

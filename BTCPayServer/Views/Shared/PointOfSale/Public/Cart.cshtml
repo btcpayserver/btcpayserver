@@ -239,7 +239,7 @@
                             <td colspan="2" class="pt-4">
                                 <button id="CartSubmit" class="btn btn-primary btn-lg w-100" :disabled="payButtonLoading" type="submit">
                                     <div v-if="payButtonLoading" class="spinner-border spinner-border-sm" id="pay-button-spinner" role="status">
-                                        <span class="sr-only">Loading...</span>
+                                        <span class="visually-hidden">Loading...</span>
                                     </div>
                                     <template v-else>Pay</template>
                                 </button>

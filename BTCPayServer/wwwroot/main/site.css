@@ -85,10 +85,6 @@ a.unobtrusive-link {
     text-decoration: inherit;
 }
 
-.btn.btn-link:focus {
-    box-shadow: none;
-}
-
 [aria-expanded] > svg.icon-caret-down {
     flex-shrink: 0;
     width: 24px;

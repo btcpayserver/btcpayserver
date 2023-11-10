@@ -53,7 +53,7 @@
     </div>
     <button class="btn btn-lg btn-primary mx-3" type="submit" :disabled="payButtonLoading" id="pay-button">
         <div v-if="payButtonLoading" class="spinner-border spinner-border-sm" id="pay-button-spinner" role="status">
-            <span class="sr-only">Loading...</span>
+            <span class="visually-hidden">Loading...</span>
         </div>
         <template v-else>Charge</template>
     </button>

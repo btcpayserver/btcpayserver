@@ -21,6 +21,7 @@
         <option value="invoice_amount">Determine the generated invoice amount</option>
         <option value="invoice_currency">Determine the generated invoice currency</option>
         <option value="invoice_amount_adjustment">Adjusts the generated invoice amount — use as a prefix to have multiple adjustment fields</option>
+        <option value="invoice_amount_multiply_adjustment">Adjusts the generated invoice amount by multiplying with this value — use as a prefix to have multiple adjustment fields</option>
     </datalist>
     <template id="form-template-email">
         @FormDataService.StaticFormEmail
@@ -47,6 +48,7 @@
                 <div class="form-text text-info" v-if="field.name === 'invoice_currency'">The configured name means the value of this field will determine the invoice currency for public forms.</div>
                 <div class="form-text text-info" v-if="field.name === 'invoice_amount'">The configured name means the value of this field will determine the invoice amount for public forms.</div>
                 <div class="form-text text-info" v-if="field.name && field.name.startsWith('invoice_amount_adjustment')">The configured name means the value of this field will adjust the invoice amount for public forms and the point of sale app.</div>
+                <div class="form-text text-info" v-if="field.name && field.name.startsWith('invoice_amount_multiply_adjustment')">The configured name means the value of this field will adjust the invoice amount by multiplying it for public forms and the point of sale app.</div>
             </div>
             <div class="form-group" v-if="field.type === 'select'">
                 <h5 class="mt-2">Options</h5>

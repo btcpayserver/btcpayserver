@@ -983,6 +983,11 @@ input.ts-wrapper.form-control:not(.ts-hidden-accessible,.ts-inline) {
     text-overflow: ellipsis;
 }
 
+.truncate-center-end,
+.truncate-center-start {
+    white-space: nowrap;
+}
+
 .truncate-center-id {
     font-family: var(--btcpay-font-monospace);
     font-size: .875em;

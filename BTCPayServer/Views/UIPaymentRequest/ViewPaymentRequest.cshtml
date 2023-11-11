@@ -209,60 +209,12 @@
                 }
             
                 <section class="tile">
-                    <h2 class="h4 mb-0">Payment History</h2>
-                    <noscript>
-                        @if (Model.Invoices == null || !Model.Invoices.Any())
-                        {
-                            <p class="text-muted mt-3 mb-0">No payments have been made yet.</p>
-                        }
-                        else
-                        {
-                            @foreach (var invoice in Model.Invoices)
-                            {
-                                <div class="table-responsive">
-                                    <table class="invoice table table-borderless">
-                                        <thead>
-                                        <tr>
-                                            <th class="fw-normal text-secondary" scope="col">Invoice Id</th>
-                                            <th class="fw-normal text-secondary amount-col w-125px">Amount</th>
-                                            <th class="fw-normal text-secondary text-end">Status</th>
-                                        </tr>
-                                        </thead>
-                                        <tbody>
-                                        <tr>
-                                            <td><vc:truncate-center text="@invoice.Id" padding="7" classes="truncate-center-id" /></td>
-                                            <td class="amount-col">@invoice.AmountFormatted</td>
-                                            <td class="text-end text-print-default">
-                                                <span class="badge badge-@StatusClass(invoice.State)">@invoice.StateFormatted</span>
-                                            </td>
-                                        </tr>
-                                        @if (invoice.Payments != null && invoice.Payments.Any())
-                                        {
-                                            <tr>
-                                                <th class="fw-normal text-secondary">Transaction</th>
-                                                <th class="fw-normal text-secondary amount-col">Paid</th>
-                                                <th class="fw-normal text-secondary text-end">Payment</th>
-                                            </tr>
-                                            @foreach (var payment in invoice.Payments)
-                                            {
-                                                <tr>
-                                                    <td class="text-break"><vc:truncate-center text="@payment.Id" link="@payment.Link" padding="7" classes="truncate-center-id" /></td>
-                                                    <td class="amount-col">@payment.PaidFormatted</td>
-                                                    <td class="text-end text-nowrap">@payment.AmountFormatted @payment.PaymentMethod</td>
-                                                </tr>
-                                            }
-                                        }
-                                        </tbody>
-                                    </table>
-                                </div>
-                            }
-                        }
-                    </noscript>
+                    <h2 class="h4 mb-3">Payment History</h2>
                     <template v-if="!srvModel.invoices || srvModel.invoices.length == 0">
-                        <p class="text-muted mt-3 mb-0">No payments have been made yet.</p>
+                        <p class="text-muted mb-0">No payments have been made yet.</p>
                     </template>
                     <template v-else>
-                        <div class="table-responsive">
+                        <div class="table-responsive my-0">
                             <table v-for="invoice of srvModel.invoices" :key="invoice.id" class="invoice table table-borderless">
                                 <thead>
                                 <tr>
@@ -301,6 +253,54 @@
                             </table>
                         </div>
                     </template>
+                    <noscript>
+                        @if (Model.Invoices == null || !Model.Invoices.Any())
+                        {
+                            <p class="text-muted mb-0">No payments have been made yet.</p>
+                        }
+                        else
+                        {
+                            @foreach (var invoice in Model.Invoices)
+                            {
+                                <div class="table-responsive my-0">
+                                    <table class="invoice table table-borderless">
+                                        <thead>
+                                        <tr>
+                                            <th class="fw-normal text-secondary" scope="col">Invoice Id</th>
+                                            <th class="fw-normal text-secondary amount-col w-125px">Amount</th>
+                                            <th class="fw-normal text-secondary text-end">Status</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr>
+                                            <td><vc:truncate-center text="@invoice.Id" padding="7" classes="truncate-center-id" /></td>
+                                            <td class="amount-col">@invoice.AmountFormatted</td>
+                                            <td class="text-end text-print-default">
+                                                <span class="badge badge-@StatusClass(invoice.State)">@invoice.StateFormatted</span>
+                                            </td>
+                                        </tr>
+                                        @if (invoice.Payments != null && invoice.Payments.Any())
+                                        {
+                                            <tr>
+                                                <th class="fw-normal text-secondary">Transaction</th>
+                                                <th class="fw-normal text-secondary amount-col">Paid</th>
+                                                <th class="fw-normal text-secondary text-end">Payment</th>
+                                            </tr>
+                                            @foreach (var payment in invoice.Payments)
+                                            {
+                                                <tr>
+                                                    <td class="text-break"><vc:truncate-center text="@payment.Id" link="@payment.Link" padding="7" classes="truncate-center-id" /></td>
+                                                    <td class="amount-col">@payment.PaidFormatted</td>
+                                                    <td class="text-end text-nowrap">@payment.AmountFormatted @payment.PaymentMethod</td>
+                                                </tr>
+                                            }
+                                        }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                        }
+                    </noscript>
                 </section>
             </div>
         </main>

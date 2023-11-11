@@ -210,6 +210,7 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
         {
             public string PaymentMethod { get; set; }
             public decimal Amount { get; set; }
+            public string AmountFormatted { get; set; }
             public string RateFormatted { get; set; }
             public decimal Paid { get; set; }
             public string PaidFormatted { get; set; }

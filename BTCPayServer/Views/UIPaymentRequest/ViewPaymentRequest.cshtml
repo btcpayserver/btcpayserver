@@ -248,7 +248,7 @@
                                                 <tr>
                                                     <td class="text-break"><vc:truncate-center text="@payment.Id" link="@payment.Link" padding="7" classes="truncate-center-id" /></td>
                                                     <td class="amount-col">@payment.PaidFormatted</td>
-                                                    <td class="text-end text-nowrap">@payment.Amount @payment.PaymentMethod</td>
+                                                    <td class="text-end text-nowrap">@payment.AmountFormatted @payment.PaymentMethod</td>
                                                 </tr>
                                             }
                                         }
@@ -295,7 +295,7 @@
                                     <tr v-collapsible="showDetails(invoice.id)" v-for="payment of invoice.payments" :key="`invoice_payment_${payment.id}`">
                                         <td class="text-break"><vc:truncate-center is-vue="true" text="payment.id" link="payment.link" padding="7" classes="truncate-center-id" /></td>
                                         <td class="amount-col">{{payment.paidFormatted}}</td>
-                                        <td class="amount-col">{{payment.amount.noExponents()}} {{payment.paymentMethod}}</td>
+                                        <td class="amount-col">{{payment.amountFormatted}} {{payment.paymentMethod}}</td>
                                     </tr>
                                 </tbody>
                             </table>

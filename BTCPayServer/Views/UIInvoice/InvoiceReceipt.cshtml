@@ -122,7 +122,7 @@
                                             <tbody>
                                             <tr>
                                                 <td class="text-nowrap">@payment.ReceivedDate.ToBrowserDate()</td>
-                                                <td class="text-nowrap">@payment.Amount @payment.PaymentMethod</td>
+                                                <td class="text-nowrap">@payment.AmountFormatted @payment.PaymentMethod</td>
                                                 <td class="text-end text-nowrap">@payment.PaidFormatted</td>
                                                 <td class="text-end text-nowrap">@payment.RateFormatted</td>
                                             </tr>
@@ -156,7 +156,7 @@
                                     @foreach (var payment in Model.Payments)
                                     {
                                         <div class="mb-4">
-                                            <strong>@payment.PaidFormatted</strong> = @payment.Amount @payment.PaymentMethod, Rate: @payment.RateFormatted
+                                            <strong>@payment.PaidFormatted</strong> = @payment.AmountFormatted @payment.PaymentMethod, Rate: @payment.RateFormatted
                                             @if (!string.IsNullOrEmpty(payment.PaymentProof))
                                             {
                                                 <div>Proof: @payment.PaymentProof</div>

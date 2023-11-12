@@ -8,69 +8,70 @@
 <html lang="en" @(Env.IsDeveloping ? " data-devenv" : "")>
 <head>
     <partial name="LayoutHead" />
+    <partial name="LayoutHeadStoreBranding" model="@(Model.BrandColor, Model.CssFileId, "", "")" />
     <link href="~/main/qrcode.css" rel="stylesheet" asp-append-version="true" />
+    <style>#app { --wrap-max-width: 400px; }</style>
 </head>
-<body>
-    <div id="app" class="container">
-        <div class="row" style="height:100vh">
-            <div class="mx-auto my-auto" style="max-width:360px;">
-                <div class="card border-0">
-                    <div class="card-body p-4">
-                        <h1 class="h2 card-title text-center mt-3">@Model.StoreName</h1>
-                        <h2 class="h4 card-subtitle text-center text-secondary my-3">
-                            <span>@Model.CryptoCode</span>
-                            Lightning Node
-                        </h2>
-                        <h4 class="d-flex align-items-center justify-content-center gap-2">
-                            <span class="btcpay-status btcpay-status--@(Model.Available ? "enabled" : "disabled")" style="margin-top:.1rem;"></span>
-                            <span>
-                                @(Model.Available ? "Online" : "Unavailable")
-                            </span>
-                        </h4>
-                        @if (Model.Available)
+<body class="min-vh-100">
+    <div id="app" class="public-page-wrap">
+        <main class="flex-grow-1">
+            <div class="d-flex flex-column justify-content-center gap-4">
+                <partial name="_StoreHeader" model="(Model.StoreName, Model.LogoFileId)" />
+                <section class="tile">
+                    <h2 class="h4 card-subtitle text-center text-secondary mt-1 mb-3">
+                        <span>@Model.CryptoCode</span>
+                        Lightning Node
+                    </h2>
+                    <h4 class="d-flex align-items-center justify-content-center gap-2 my-4">
+                        <span class="btcpay-status btcpay-status--@(Model.Available ? "enabled" : "disabled")" style="margin-top:.1rem;"></span>
+                        @(Model.Available ? "Online" : "Unavailable")
+                    </h4>
+                    @if (Model.Available)
+                    {
+                        @if (Model.NodeInfo.Any())
                         {
-                            @if (Model.NodeInfo.Any())
+                            @if (Model.NodeInfo.Length > 1)
                             {
-                                @if (Model.NodeInfo.Length > 1)
-                                {
-                                    <ul class="nav nav-pills justify-content-center mt-4" id="nodeInfo-tab" role="tablist">
-                                        @for (var i = 0; i < Model.NodeInfo.Length; i++)
-                                        {
-                                            var nodeInfo = Model.NodeInfo[i];
-                                            <li class="nav-item" role="presentation">
-                                                <button class="nav-link w-100px @(i == 0 ? "active" : "")" id="nodeInfo-tab-@i" data-bs-toggle="pill" data-bs-target="#nodeInfo-@i" type="button" role="tab" aria-controls="nodeInfo-@i" aria-selected="true">@(nodeInfo.IsTor ? "Tor" : "Clearnet")</button>
-                                            </li>
-                                        }
-                                    </ul>
-                                }
-                                <div class="tab-content" id="nodeInfo-tabContent">
+                                <div class="nav btcpay-pills justify-content-center gap-3 my-4" id="nodeInfo-tab" role="tablist">
                                     @for (var i = 0; i < Model.NodeInfo.Length; i++)
                                     {
-                                        var nodeInfo = Model.NodeInfo[i].ToString();
-                                        <div class="tab-pane fade @(i == 0 ? "show active" : "")" id="nodeInfo-@i" role="tabpanel" aria-labelledby="nodeInfo-tab-@i">
-                                            <div class="qr-container my-4 w-100">
-                                                <img alt="@Model.CryptoCode" class="qr-icon" src="@Model.CryptoImage"/>
-                                                <vc:qr-code data="@nodeInfo"/>
-                                            </div>
-                                            <div class="input-group" data-clipboard="@nodeInfo">
-                                                <input type="text" class="form-control" readonly="readonly" value="@nodeInfo" id="nodeInfo-addr-@i"/>
-                                                <button type="button" class="btn btn-outline-secondary px-3">
-                                                    <vc:icon symbol="copy" />
-                                                </button>
-                                            </div>
-                                        </div>
+                                        var nodeInfo = Model.NodeInfo[i];
+                                        var title = nodeInfo.IsTor ? "Tor" : "Clearnet";
+                                        <button class="btcpay-pill w-125px @(i == 0 ? "active" : "")" id="nodeInfo-tab-@i" data-bs-toggle="pill" data-bs-target="#nodeInfo-@i" type="button" role="tab" aria-controls="nodeInfo-@i" aria-selected="true">@title</button>
                                     }
                                 </div>
                             }
-                            else
-                            {
-                                <p class="text-center mt-4">No public address available.</p>
-                            }
+                            <div class="tab-content" id="nodeInfo-tabContent">
+                                @for (var i = 0; i < Model.NodeInfo.Length; i++)
+                                {
+                                    var nodeInfo = Model.NodeInfo[i];
+                                    var title = nodeInfo.IsTor ? "Tor" : "Clearnet";
+                                    var value = nodeInfo.ToString();
+                                    <div class="tab-pane fade @(i == 0 ? "show active" : "")" id="nodeInfo-@i" role="tabpanel" aria-labelledby="nodeInfo-tab-@i">
+                                        <div class="payment-box">
+                                            <div class="qr-container">
+                                                <vc:qr-code data="@value" />
+                                                <img src="@Model.CryptoImage" alt="@Model.CryptoCode" class="qr-icon" />
+                                            </div>
+                                            <div class="input-group mt-3">
+                                                <div class="form-floating">
+                                                    <vc:truncate-center text="@value" padding="15" elastic="true" classes="form-control-plaintext" />
+                                                    <label>@title</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
                         }
-                    </div>
-                </div>
+                        else
+                        {
+                            <p class="text-center mt-4">No public address available.</p>
+                        }
+                    }
+                </section>
             </div>
-        </div>
+        </main>
     </div>
     <partial name="LayoutFoot" />
 </body>

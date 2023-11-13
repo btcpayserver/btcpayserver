@@ -253,10 +253,13 @@ h2 svg.icon.icon-info {
     .truncate-center a,
     .truncate-center button,
     .truncate-center-truncated {
-        display: none;
+        display: none !important;
     }
     .card {
         page-break-inside: avoid;
+    }
+    .actions-col {
+        display: none;
     }
 }
 
@@ -1099,6 +1102,9 @@ input.ts-wrapper.form-control:not(.ts-hidden-accessible,.ts-inline) {
 .amount-col {
     text-align: right;
     white-space: nowrap;
+}
+.actions-col {
+    text-align: right;
 }
 
 /* Mass Actions */

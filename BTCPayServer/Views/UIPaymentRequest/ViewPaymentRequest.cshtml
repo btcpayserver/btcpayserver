@@ -221,7 +221,7 @@
                                     <th class="fw-normal text-secondary" scope="col">Invoice Id</th>
                                     <th class="fw-normal text-secondary amount-col w-125px">Amount</th>
                                     <th class="fw-normal text-secondary text-end w-225px">Status</th>
-                                    <th class="w-50px"></th>
+                                    <th class="w-50px actions-col"></th>
                                 </tr>
                                 </thead>
                                 <tbody>
@@ -231,7 +231,7 @@
                                         <td class="align-middle text-end text-print-default">
                                             <span class="badge" :class="`badge-${statusClass(invoice.stateFormatted)}`">{{invoice.stateFormatted}}</span>
                                         </td>
-                                        <td class="align-middle text-end">
+                                        <td class="align-middle actions-col">
                                             <div class="d-inline-flex align-items-center gap-2">
                                                 <button class="accordion-button collapsed only-for-js ms-0 d-inline-block" type="button" :aria-controls="`invoice_details_${invoice.id}`" :aria-expanded="showDetails(invoice.id) ? 'true' : 'false'" v-if="invoice.payments && invoice.payments.length > 0" v-on:click="toggleDetails(invoice.id)">
                                                     <vc:icon symbol="caret-down" />

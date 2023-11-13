@@ -31,22 +31,28 @@
     <div id="content">
         <div class="public-page-wrap container-xl">
             <header class="sticky-top bg-body d-flex flex-column py-3 py-lg-4 gap-3">
-                <div class="d-flex align-items-center justify-content-center gap-3 pe-5 position-relative">
+                <div class="d-flex align-items-center justify-content-center gap-3 px-5 position-relative">
                     <h1 class="mb-0">@(string.IsNullOrEmpty(Model.Title) ? Model.StoreName : Model.Title)</h1>
                     <button id="CartToggle" class="cart-toggle-btn" type="button" v-on:click="toggleCart" aria-controls="cart" :disabled="cartCount === 0">
                         <vc:icon symbol="pos-cart" />
                         <span id="CartBadge" class="badge rounded-pill bg-danger p-1 ms-1" v-text="cartCount" v-if="cartCount !== 0"></span>
                     </button>
                 </div>
-                <input id="SearchTerm" class="form-control rounded-pill" placeholder="Search…" v-model="searchTerm">
-                <div id="Categories" ref="categories" v-if="allCategories" :class="{ 'scrollable': categoriesScrollable }">
-                    <nav class="btcpay-pills d-flex align-items-center gap-3" ref="categoriesNav">
-                        <template v-for="cat in allCategories">
-                            <input :id="`Category-${cat.value}`" type="radio" name="category" autocomplete="off" v-model="displayCategory" :value="cat.value">
-                            <label :for="`Category-${cat.value}`" class="btcpay-pill text-nowrap">{{ cat.text }}</label>
-                        </template>
-                    </nav>
-                </div>
+                @if (Model.ShowSearch)
+                {
+                    <input id="SearchTerm" class="form-control rounded-pill" placeholder="Search…" v-model="searchTerm" v-if="showSearch">
+                }
+                @if (Model.ShowCategories)
+                {
+                    <div id="Categories" ref="categories" v-if="showCategories && allCategories" class="btcpay-pills d-flex flex-wrap align-items-center justify-content-center gap-3" :class="{ 'scrollable': categoriesScrollable }">
+                        <nav class="btcpay-pills d-flex align-items-center gap-3" ref="categoriesNav">
+                            <template v-for="cat in allCategories">
+                                <input :id="`Category-${cat.value}`" type="radio" name="category" autocomplete="off" v-model="displayCategory" :value="cat.value">
+                                <label :for="`Category-${cat.value}`" class="btcpay-pill text-nowrap">{{ cat.text }}</label>
+                            </template>
+                        </nav>
+                    </div>
+                }
             </header>
             <main>
                 <partial name="_StatusMessage" />

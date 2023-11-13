@@ -113,6 +113,19 @@
                     <span asp-validation-for="FormId" class="text-danger"></span>
                 </div>
             </fieldset>
+            <fieldset id="cart-display" class="mt-2">
+                <legend class="h5 mb-3 fw-semibold">Cart</legend>
+                <div class="form-group d-flex align-items-center pt-2">
+                    <input asp-for="ShowSearch" type="checkbox" class="btcpay-toggle me-3" />
+                    <label asp-for="ShowSearch" class="form-label mb-0"></label>
+                    <span asp-validation-for="ShowSearch" class="text-danger"></span>
+                </div>
+                <div class="form-group d-flex align-items-center">
+                    <input asp-for="ShowCategories" type="checkbox" class="btcpay-toggle me-3" />
+                    <label asp-for="ShowCategories" class="form-label mb-0"></label>
+                    <span asp-validation-for="ShowCategories" class="text-danger"></span>
+                </div>
+            </fieldset>
             <fieldset id="tips" class="mt-2">
                 <legend class="h5 mb-3 fw-semibold">Tips</legend>
                 <div class="form-group d-flex align-items-center pt-2">

@@ -1036,20 +1036,20 @@ namespace BTCPayServer.Tests
             select.SelectByText("Point of", true);
             s.Driver.FindElement(By.Id("SaveButton")).Click();
             s.FindAlertMessage();
-
-            s.Logout();
-            s.GoToLogin();
-            s.LogIn(userId);
             // Make sure after login, we are not redirected to the PoS
+            s.Logout();
+            s.LogIn(userId);
             Assert.DoesNotContain("Tea shop", s.Driver.PageSource);
             var prevUrl = s.Driver.Url;
-
             // We are only if explicitly going to /
             s.GoToUrl("/");
             Assert.Contains("Tea shop", s.Driver.PageSource);
-            s.Driver.Navigate().GoToUrl(new Uri(prevUrl, UriKind.Absolute));
+            // Check redirect to canonical url
+            s.GoToUrl(posBaseUrl);
+            Assert.Equal("/", new Uri(s.Driver.Url, UriKind.Absolute).AbsolutePath);
 
             // Let's check with domain mapping as well.
+            s.Driver.Navigate().GoToUrl(new Uri(prevUrl, UriKind.Absolute));
             s.GoToServer(ServerNavPages.Policies);
             s.Driver.ScrollTo(By.Id("RootAppId"));
             select = new SelectElement(s.Driver.FindElement(By.Id("RootAppId")));
@@ -1062,19 +1062,20 @@ namespace BTCPayServer.Tests
             select.SelectByText("Point of", true);
             s.Driver.FindElement(By.Id("SaveButton")).Click();
             Assert.Contains("Policies updated successfully", s.FindAlertMessage().Text);
-
+            // Make sure after login, we are not redirected to the PoS
             s.Logout();
             s.LogIn(userId);
-            // Make sure after login, we are not redirected to the PoS
             Assert.DoesNotContain("Tea shop", s.Driver.PageSource);
-
             // We are only if explicitly going to /
             s.GoToUrl("/");
             Assert.Contains("Tea shop", s.Driver.PageSource);
+            // Check redirect to canonical url
+            s.GoToUrl(posBaseUrl);
+            Assert.Equal("/", new Uri(s.Driver.Url, UriKind.Absolute).AbsolutePath);
             
             // Archive
-            Assert.True(s.Driver.ElementDoesNotExist(By.Id("Nav-ArchivedApps")));
             s.Driver.SwitchTo().Window(windows[0]);
+            Assert.True(s.Driver.ElementDoesNotExist(By.Id("Nav-ArchivedApps")));
             s.Driver.FindElement(By.Id("btn-archive-toggle")).Click();
             Assert.Contains("The app has been archived and will no longer appear in the apps list by default.", s.FindAlertMessage().Text);
             

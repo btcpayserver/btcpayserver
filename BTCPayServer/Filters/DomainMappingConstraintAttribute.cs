@@ -28,17 +28,26 @@ namespace BTCPayServer.Filters
             var policies = context.RouteContext.HttpContext.RequestServices.GetService<PoliciesSettings>();
             var mapping = policies?.DomainToAppMapping;
             var hasDomainMapping = mapping is { Count: > 0 };
+            var matchingRootAppId = AppType == policies?.RootAppType && !string.IsNullOrEmpty(policies?.RootAppId) ? policies.RootAppId : null;
 
-            if (hasAppId && hasDomainMapping)
+            if (hasAppId)
             {
                 var appId = (string)context.RouteContext.RouteData.Values["appId"];
-                var matchedDomainMapping = mapping.FirstOrDefault(item => item.AppId == appId);
-
-                // App is accessed via path, redirect to canonical domain
                 var req = context.RouteContext.HttpContext.Request;
-                if (matchedDomainMapping != null && req.Method != "POST" && !req.HasFormContentType)
+                string redirectDomain = null;
+                if (hasDomainMapping)
                 {
-                    var uri = new UriBuilder(req.Scheme, matchedDomainMapping.Domain);
+                    redirectDomain = mapping.FirstOrDefault(item => item.AppId == appId)?.Domain;
+                }
+                else if (matchingRootAppId == appId)
+                {
+                    redirectDomain = req.Host.Host;
+                }
+                    
+                // App is accessed via path, redirect to canonical domain
+                if (!string.IsNullOrEmpty(redirectDomain) && req.Method != "POST" && !req.HasFormContentType)
+                {
+                    var uri = new UriBuilder(req.Scheme, redirectDomain);
                     if (req.Host.Port.HasValue)
                         uri.Port = req.Host.Port.Value;
                     context.RouteContext.HttpContext.Response.Redirect(uri.ToString());
@@ -65,9 +74,9 @@ namespace BTCPayServer.Filters
                 }
             }
 
-            if (AppType == policies.RootAppType && !hasAppId && !string.IsNullOrEmpty(policies.RootAppId))
+            if (!hasAppId && !string.IsNullOrEmpty(matchingRootAppId))
             {
-                context.RouteContext.RouteData.Values.Add("appId", policies.RootAppId);
+                context.RouteContext.RouteData.Values.Add("appId", matchingRootAppId);
                 return true;
             }
 

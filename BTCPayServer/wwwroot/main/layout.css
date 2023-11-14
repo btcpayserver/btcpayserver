@@ -9,6 +9,9 @@
     --mobile-header-height: 4rem;
     --desktop-header-height: 8rem;
     --sidebar-width: 280px;
+    --sticky-header-height: 0; /* gets dynamically set via JavaScript */
+
+    scroll-padding-top: calc(var(--sticky-header-height) + var(--btcpay-space-m));
 }
 
 /* Main Menu */
@@ -684,7 +687,7 @@
 
     #mainContent > section .w-100-fixed {
         /* constrains the content to respect the maximum width and enable responsive tables */
-        width: calc(100vw - var(--sidebar-width) - var(--content-padding-horizontal) * 2);
+        width: calc(100vw - var(--sidebar-width) - var(--btcpay-scrollbar-width) - var(--content-padding-horizontal) * 2);
     }
 
     #SectionNav .nav {

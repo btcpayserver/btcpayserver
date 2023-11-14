@@ -154,11 +154,7 @@ h2 svg.icon.icon-info {
     cursor: pointer;
     padding: 0;
 }
-@media (min-width: 1400px) {
-    #MassAction {
-        margin-top: -4rem;
-    }
-}
+
 /* Prevent layout from breaking on hyperlinks with very long URLs as the visible text */
 .invoice-details a {
     word-break: break-word;
@@ -1060,3 +1056,90 @@ input.ts-wrapper.form-control:not(.ts-hidden-accessible,.ts-inline) {
     height: .75rem;
 }
 
+/* Tables */
+.date-col {
+    min-width: 8rem;
+}
+.amount-col {
+    text-align: right;
+    white-space: nowrap;
+}
+
+/* Mass Actions */
+.mass-action-head,
+.mass-action-actions {
+    position: -webkit-sticky;
+    position: sticky;
+    top: var(--sticky-header-height);
+    z-index: 10;
+    background-color: var(--btcpay-body-bg);
+}
+.mass-action thead th::after {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-bottom: 1px solid;
+    border-color: inherit;
+    pointer-events: none;
+}
+.mass-action > .mass-action-actions,
+.mass-action[data-selected] > .mass-action-head {
+    display: none;
+}
+.mass-action[data-selected] > .mass-action-actions {
+    display: table-header-group;
+    border-top-width: 0;
+}
+.mass-action > .mass-action-actions button {
+    display: inline-flex;
+    align-items: center;
+    height: 1.4rem;
+    padding: 0;
+    font-weight: var(--btcpay-font-weight-semibold);
+}
+.mass-action > .mass-action-actions button .icon {
+    --btn-icon-size: 1.75rem;
+}
+.mass-action .mass-action-select-col {
+    width: 2rem;
+}
+
+/*
+ Responsive table adjustments: Reset sticky header height,
+ because it doesn't work in containers with overflow auto.
+*/
+.table-responsive{
+    --sticky-header-height: 0;
+}
+@media (max-width: 575.98px) {
+    .table-responsive-sm {
+        --sticky-header-height: 0;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .table-responsive-md {
+        --sticky-header-height: 0;
+    }
+}
+
+@media (max-width: 991.98px) {
+    .table-responsive-lg {
+        --sticky-header-height: 0;
+    }
+}
+
+@media (max-width: 1199.98px) {
+    .table-responsive-xl {
+        --sticky-header-height: 0;
+    }
+}
+
+@media (max-width: 1399.98px) {
+    .table-responsive-xxl {
+        --sticky-header-height: 0;
+    }
+}

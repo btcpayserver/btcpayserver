@@ -44,9 +44,8 @@ namespace BTCPayServer.Models.InvoicingModels
         {
             get; set;
         }
-
-        [DisplayName("POS Data")]
-        public string PosData
+        [DisplayName("Metadata")]
+        public string Metadata
         {
             get; set;
         }

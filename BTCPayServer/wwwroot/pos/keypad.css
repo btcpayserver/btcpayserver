@@ -27,9 +27,8 @@
     max-height: 6rem;
     color: var(--btcpay-body-text);
 }
-.keypad .btn[data-key="del"] svg {
-    --btn-icon-size: 2.25rem;
-    transform: rotate(180deg);
+.keypad .btn[data-key="+"] {
+    font-size: 2.25em;
 }
 .btcpay-pills label,
 .btn-secondary.rounded-pill {
@@ -55,15 +54,6 @@
 .keypad .btn:focus,
 .keypad .btn:active {
     z-index: 1;
-}
-
-.actions {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-.actions .btn {
-    flex:  1 1 50%;
 }
 
 #Calculation {

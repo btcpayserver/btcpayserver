@@ -38,6 +38,10 @@
         #crowdfund-body-description {
             font-size: 16px;
         }
+        .perk.card .card-img-top{
+            max-height: 210px;
+            object-fit: scale-down;
+        }
     </style>
     <vc:ui-extension-point location="crowdfund-head" model="@Model"></vc:ui-extension-point>
 </head>
@@ -394,7 +398,6 @@
     <script src="~/vendor/signalr/signalr.js" asp-append-version="true"></script>
     <script src="~/vendor/animejs/anime.min.js" asp-append-version="true"></script>
     <script src="~/crowdfund/app.js" asp-append-version="true"></script>
-    <script src="~/crowdfund/helpers/math.js" asp-append-version="true"></script>
     <script src="~/crowdfund/services/audioplayer.js" asp-append-version="true"></script>
     <script src="~/crowdfund/services/fireworks.js" asp-append-version="true"></script>
     <script src="~/crowdfund/services/listener.js" asp-append-version="true"></script>

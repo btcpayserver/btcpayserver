@@ -1,12 +1,12 @@
-@using Microsoft.AspNetCore.Mvc.TagHelpers
 @model BTCPayServer.Plugins.PointOfSale.Models.ViewPointOfSaleViewModel
 
 <form id="PosKeypad" method="post" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" v-on:submit="handleFormSubmit" class="d-flex flex-column gap-4 my-auto" v-cloak>
-    <input id="posdata" type="hidden" name="posdata" v-model="posdata">
+    <input type="hidden" name="posdata" v-model="posdata" id="posdata">
+    <input type="hidden" name="amount" v-model="totalNumeric">
     <div ref="display" class="d-flex flex-column align-items-center px-4 mb-auto">
         <div class="fw-semibold text-muted" id="Currency">{{currencyCode}}</div>
         <div class="fw-bold lh-sm" ref="amount" v-bind:style="{ fontSize: `${fontSize}px` }" id="Amount">{{ formatCurrency(total, false) }}</div>
-        <div class="text-muted text-center mt-2" id="Calculation" v-if="showDiscount || enableTips">{{ calculation }}</div>
+        <div class="text-muted text-center mt-2" id="Calculation">{{ calculation }}</div>
     </div>
     <div id="ModeTabs" class="tab-content mb-n2" v-if="showDiscount || enableTips">
         <div id="Mode-Discount" class="tab-pane fade px-2" :class="{ show: mode === 'discount', active: mode === 'discount' }" role="tabpanel" aria-labelledby="ModeTablist-Discount" v-if="showDiscount">
@@ -44,24 +44,17 @@
     </div>
     <div id="ModeTablist" class="nav btcpay-pills align-items-center justify-content-center mb-n2 pb-1" role="tablist" v-if="modes.length > 1">
         <template v-for="m in modes" :key="m.value">
-            <input :id="`ModeTablist-${m.type}`" name="mode" :value="m.type" type="radio" role="tab" data-bs-toggle="pill" :data-bs-target="`#Mode-${m.type}`" :disabled="m.type != 'amount' && amountNumeric == 0" :aria-controls="`Mode-${m.type}`" :aria-selected="mode === m.type" :checked="mode === m.type" v-on:click="mode = m.type">
+            <input :id="`ModeTablist-${m.type}`" name="mode" :value="m.type" type="radio" role="tab" data-bs-toggle="pill" :data-bs-target="`#Mode-${m.type}`" :disabled="m.type != 'amounts' && amountNumeric == 0" :aria-controls="`Mode-${m.type}`" :aria-selected="mode === m.type" :checked="mode === m.type" v-on:click="mode = m.type">
             <label :for="`ModeTablist-${m.type}`">{{ m.title }}</label>
         </template>
     </div>
     <div class="keypad">
-        <button v-for="k in keys" :key="k" v-on:click.prevent="keyPressed(k)" type="button" class="btn btn-secondary btn-lg" :data-key="k">
-            <template v-if="k === 'del'"><vc:icon symbol="caret-right"/></template>
-            <template v-else>{{ k }}</template>
-        </button>
+        <button v-for="k in keys" :key="k" :disabled="k === '+' && mode !== 'amounts'" v-on:click.prevent="keyPressed(k)" v-on:dblclick.prevent="doubleClick(k)" type="button" class="btn btn-secondary btn-lg" :data-key="k">{{ k }}</button>
     </div>
-    <div class="actions px-4 gap-4">
-        <button class="btn btn-lg btn-secondary" type="reset" v-on:click.prevent="clear">Clear</button>
-        <button class="btn btn-lg btn-primary" type="submit" :disabled="payButtonLoading" id="pay-button">
-            <div v-if="payButtonLoading" class="spinner-border spinner-border-sm" id="pay-button-spinner" role="status">
-                <span class="sr-only">Loading...</span>
-            </div>
-            <template v-else>Charge</template>
-        </button>
-    </div>
-    <input class="form-control" type="hidden" name="amount" v-model="totalNumeric">
+    <button class="btn btn-lg btn-primary mx-3" type="submit" :disabled="payButtonLoading" id="pay-button">
+        <div v-if="payButtonLoading" class="spinner-border spinner-border-sm" id="pay-button-spinner" role="status">
+            <span class="sr-only">Loading...</span>
+        </div>
+        <template v-else>Charge</template>
+    </button>
 </form>

@@ -1,353 +1,184 @@
 @model (string templateId, string template, string title, string currency)
 
-<div id="template-editor-app" v-cloak>
-    <div class="modal" id="product-modal" tabindex="-1" role="dialog" ref="productModal">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">{{editingItem && editingItem.id ? "Edit" : "Add"}} Item</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" ref="close">
-                        <vc:icon symbol="close" />
-                    </button>
+<template id="item-editor-upload">
+    <div class="form-group">
+        <div class="d-flex align-items-center gap-2">
+            <input type="file" class="form-control" ref="input" v-on:change="fileChanged">
+            <button class="btn btn-primary" type="button" v-on:click="upload" :disabled="disabled">Upload</button>
+        </div>
+        <div v-if="error" class="form-text text-danger" v-text="error"></div>
+    </div>
+</template>
+
+<template id="item-editor">
+    <div>
+        <div id="item-form" class="item" v-show="!!editingItem">
+            <div class="form-group">
+                <label for="EditorTitle" class="form-label" data-required>Title</label>
+                <input id="EditorTitle" required class="form-control mb-2" v-model="editingItem && editingItem.title" ref="inputTitle" />
+            </div>
+            <div class="form-group">
+                <label for="EditorId" class="form-label" data-required>ID</label>
+                <input id="EditorId" required class="form-control mb-2" v-model="editingItem && editingItem.id" ref="inputtId" />
+                <div class="form-text">Leave blank to generate ID from title.</div>
+            </div>
+            <div class="form-group row">
+                <div class="col-sm-6">
+                    <label for="EditorPrice" class="form-label">Price</label>
+                    <select id="EditorPrice" class="form-select" v-model="editingItem && editingItem.priceType">
+                        <option v-for="option in customPriceOptions" :value="option.value">{{option.text}}</option>
+                    </select>
                 </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <div class="text-danger mb-3" v-for="error of errors">{{error}}</div>
-                        <div class="form-group">
-                            <label for="EditorTitle" class="form-label" data-required>Title</label>
-                            <input id="EditorTitle" required pattern="[^\*#]+" class="form-control mb-2" v-model="editingItem && editingItem.title" autofocus ref="txtTitle" />
-                        </div>
-                        <div class="form-group row">
-                            <div class="col-sm-6">
-                                <label for="EditorPrice" class="form-label">Price</label>
-                                <select id="EditorPrice" class="form-select" v-model="editingItem && editingItem.priceType">
-                                    <option v-for="option in customPriceOptions" :value="option.value">{{option.text}}</option>
-                                </select>
-                            </div>
-                            <div class="col-sm-6" v-show="editingItem && editingItem.priceType !== 'Topup'">
-                                <label for="EditorAmount" class="form-label">&nbsp;</label>
-                                <div class="input-group mb-2">
-                                    <input class="form-control"
-                                           id="EditorAmount"
-                                           inputmode="decimal"
-                                           pattern="\d*"
-                                           step="any"
-                                           min="0"
-                                           type="number"
-                                           required
-                                           v-model="editingItem && editingItem.price"
-                                           ref="txtPrice"
-                                           aria-describedby="currency-addon" />
-                                    <span class="input-group-text" id="currency-addon" v-pre>@Model.currency</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="EditorImage" class="form-label">Image Url</label>
-                            <input id="EditorImageUrl" class="form-control mb-2" pattern="[^\*#]+" v-model="editingItem && editingItem.image" ref="txtImage" />
-                            <div class="d-flex align-items-center gap-2">
-                                <input id="EditorImage" type="file" class="form-control" ref="editorImage" v-on:change="uploadFileChanged">
-                                <button class="btn btn-primary" type="button" id="EditorUploadButton" v-on:click="uploadFile" :disabled="uploadDisabled">Upload</button>
-                            </div>
-                            <span v-if="uploadError" v-text="uploadError" class="text-danger"></span>
-                        </div>
-                        <div class="form-group">
-                            <label for="EditorDescription" class="form-label">Description</label>
-                            <textarea id="EditorDescription" rows="3" cols="40" class="form-control mb-2" v-model="editingItem && editingItem.description" ref="txtDescription"></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label for="EditorCategories" class="form-label">Categories</label>
-                            <input id="EditorCategories" class="form-control mb-2" autocomplete="off" ref="editorCategories" />
-                            <div class="form-text">Easily filter the different items using categories, used only in the product list with cart.</div>
-                        </div>
-                        <div class="form-group">
-                            <label for="EditorInventory" class="form-label">Inventory</label>
-                            <input id="EditorInventory" type="number" inputmode="numeric" min="0" step="1" class="form-control mb-2" v-model="editingItem && editingItem.inventory" ref="txtInventory" />
-                            <div class="form-text">Leave blank to not use this feature.</div>
-                        </div>
-                        <div class="form-group">
-                            <label for="EditorId" class="form-label">ID</label>
-                            <input id="EditorId" required pattern="[^\*#]+" class="form-control mb-2" v-model="editingItem && editingItem.id" ref="txtId" />
-                            <div class="form-text">Leave blank to generate ID from title.</div>
-                        </div>
-                        <div class="form-group">
-                            <label for="BuyButtonText" class="form-label">Buy Button Text</label>
-                            <input id="BuyButtonText" type="text" class="form-control mb-2" v-model="editingItem && editingItem.buyButtonText" ref="txtBuyButtonText" />
-                        </div>
-                        <div class="form-group d-flex align-items-center">
-                            <input type="checkbox" id="Disabled" class="btcpay-toggle me-3" v-model="editingItem && editingItem.disabled" />
-                            <label for="Disabled" class="form-label mb-0">Disabled</label>
-                        </div>
-                        <vc:ui-extension-point location="app-template-editor-item-detail" model="Model"></vc:ui-extension-point>
+                <div class="col-sm-6" v-show="editingItem && editingItem.priceType !== 'Topup'">
+                    <label for="EditorAmount" class="form-label">&nbsp;</label>
+                    <div class="input-group mb-2">
+                        <input class="form-control"
+                               id="EditorAmount"
+                               inputmode="decimal"
+                               pattern="\d*"
+                               step="any"
+                               min="0"
+                               type="number"
+                               required
+                               v-model="editingItem && editingItem.price"
+                               ref="inputPrice"
+                               aria-describedby="currency-addon" />
+                        <span class="input-group-text" id="currency-addon" v-pre>@Model.currency</span>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" v-on:click="saveItem()" id="SaveItemChanges">Save</button>
+            </div>
+            <div class="form-group">
+                <label for="EditorImageUrl" class="form-label">Image Url</label>
+                <input id="EditorImageUrl" class="form-control mb-2" v-model="editingItem && editingItem.image" ref="txtImage" />
+                <item-editor-upload upload-url=@Safe.Json(Url.Action("FileUpload", "UIApps", new { appId = Context.GetRouteValue("appId") })) v-on:uploaded="url => editingItem.image = url" />
+            </div>
+            <div class="form-group">
+                <label for="EditorDescription" class="form-label">Description</label>
+                <textarea id="EditorDescription" rows="3" cols="40" class="form-control" v-model="editingItem && editingItem.description"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="EditorCategories" class="form-label">Categories</label>
+                <input id="EditorCategories" class="form-control mb-2" autocomplete="off" ref="editorCategories" />
+                <div class="form-text">Easily filter the different items using categories, used only in the product list with cart.</div>
+            </div>
+            <div class="form-group">
+                <label for="EditorInventory" class="form-label">Inventory</label>
+                <input id="EditorInventory" type="number" inputmode="numeric" min="0" step="1" class="form-control mb-2" v-model="editingItem && editingItem.inventory" ref="inputInventory" />
+                <div class="form-text">Leave blank to not use this feature.</div>
+            </div>
+            <div class="form-group">
+                <label for="BuyButtonText" class="form-label">Buy Button Text</label>
+                <input id="BuyButtonText" type="text" class="form-control mb-2" v-model="editingItem && editingItem.buyButtonText" />
+            </div>
+            <div class="form-group d-flex align-items-center">
+                <input type="checkbox" id="Disabled" class="btcpay-toggle me-3" v-model="editingItem && editingItem.disabled" />
+                <label for="Disabled" class="form-label mb-0">Disabled</label>
+            </div>
+            <vc:ui-extension-point location="app-template-editor-item-detail" model="Model"></vc:ui-extension-point>
+            <div class="text-danger mb-3" v-for="error of errors">{{error}}</div>
+            <button class="btn btn-primary d-none d-xl-inline-block" type="button" id="ApplyItemChanges" v-on:click="apply">Apply</button>
+        </div>
+        <div v-if="!editingItem">Select an item to edit</div>
+    </div>
+</template>
+
+<template id="items-editor">
+    <div>
+        <div class="items list-group list-group-flush" v-sortable="{ handle: '.drag', onUpdate (event) { $emit('sort-items', event) } }">
+            <div v-for="(item, index) of items" class="d-inline-flex align-items-center gap-3 list-group-item" :key="item.id" :class="{ active: item === selectedItem }" v-on:click.stop="$emit('select-item', $event, index)">
+                <button type="button" class="btn b-0 control drag" :disabled="items.length === 1">
+                    <vc:icon symbol="drag" />
+                </button>
+                <div class="template-item d-flex align-items-start w-100 gap-3">
+                    <div class="img">
+                        <img :src="getImage(item)" :alt="item.title" :style="(item.image ? null : { opacity: 0.5 })">
+                    </div>
+                    <div class="d-flex flex-column gap-2">
+                        <h5 class="card-title m-0" v-html="item.title"></h5>
+                        <div class="d-flex gap-2 align-items-center">
+                            <span class="fw-semibold badge text-bg-info" v-if="item.priceType === 'Topup' || item.price == 0">{{ item.priceType === 'Topup' ? 'Any amount' : 'Free' }}</span>
+                            <span class="fw-semibold text-muted" v-else>{{ item.price }} @Model.currency{{ item.priceType === 'Minimum' ? ' minimum' : '' }}</span>
+                            <span class="badge text-bg-warning" v-if="item.inventory">
+                                {{ item.inventory > 0 ? `${item.inventory} left` : 'Sold out' }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" class="btn b-0 control remove" v-on:click="$emit('remove-item', $event, index)">
+                    <vc:icon symbol="remove" />
+                </button>
+            </div>
+        </div>
+        <button type="button" class="btn btn-link py-0 px-2 mt-2 mb-2 gap-1 add fw-semibold d-inline-flex align-items-center" v-on:click.stop="$emit('add-item', $event)">
+            <vc:icon symbol="new" />
+            Add Item
+        </button>
+    </div>
+</template>
+
+<div id="TemplateEditor" class="editor" v-cloak>
+    <h3 class="mt-5 mb-4" v-pre>@Model.title</h3>
+    @if (ViewContext.ViewData.ModelState.TryGetValue(Model.templateId, out var errors))
+    {
+        foreach (var error in errors.Errors)
+        {
+            <br />
+            <span class="text-danger" v-pre>@error.ErrorMessage</span>
+        }
+    }
+    <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-3">
+        <ul class="nav nav-pills gap-4" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="EditorTabButton" data-bs-toggle="pill" data-bs-target="#EditorTabPane" type="button" role="tab" aria-controls="EditorTabPane" aria-selected="true">Editor</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="CodeTabButton" data-bs-toggle="pill" data-bs-target="#CodeTabPane" type="button" role="tab" aria-controls="CodeTabPane" aria-selected="false">Code</button>
+            </li>
+        </ul>
+    </div>
+    <div class="tab-content">
+        <div class="tab-pane fade show active" id="EditorTabPane" role="tabpanel" aria-labelledby="EditorTabButton" tabindex="0">
+            <div class="row align-items-start">
+                <div class="col-12 col-xl-7">
+                    <items-editor :items="items"
+                                  :selected-item="selectedItem"
+                                  v-on:add-item="addItem"
+                                  v-on:sort-items="sortItems"
+                                  v-on:select-item="selectItem"
+                                  v-on:remove-item="removeItem"
+                                  :class="{ 'pt-2': (!items || items.length === 0) }"
+                                  class="bg-tile pb-2 rounded" />
+                </div>
+                <div class="col-xl-5 offcanvas-xl offcanvas-end" tabindex="-1" ref="editorOffcanvas">
+                    <div class="offcanvas-header p-3">
+                        <h5 class="offcanvas-title">Edit Item</h5>
+                        <button type="button" class="btn-close" aria-label="Close" v-on:click="hideOffcanvas">
+                            <vc:icon symbol="close" />
+                        </button>
+                    </div>
+                    <div class="offcanvas-body p-3 p-xl-0">
+                        <item-editor ref="itemEditor" :item="selectedItem" class="bg-tile w-100 p-xl-4 rounded" />
+                    </div>
+                    <div class="offcanvas-header p-3">
+                        <button class="btn btn-primary" type="button" v-on:click="() => { $refs.itemEditor.apply(); hideOffcanvas() }">Apply and close</button>
+                        <button class="btn btn-secondary" type="button" v-on:click="hideOffcanvas">Cancel</button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-    <div class="row">
-        <div class="col-xxl-constrain">
-            <div class="form-group mb-0">
-                <h3 class="mt-5 mb-4" v-pre>@Model.title</h3>
-                @if (ViewContext.ViewData.ModelState.TryGetValue(Model.templateId, out var errors))
-                {
-                    foreach (var error in errors.Errors)
-                    {
-                        <br />
-                        <span class="text-danger" v-pre>@error.ErrorMessage</span>
-                    }
-                }
-                <div class="bg-tile card">
-                    <div class="card-body " v-bind:class="{ 'card-deck': config.length > 0 }">
-                        <div v-if="!config || config.length === 0" class="col-12 text-center">
-                            No items.<br />
-                            <button type="button" class="btn btn-link" v-on:click="addItem()" id="btn-add-first">
-                                Add your first item
-                            </button>
-                        </div>
-                        <div v-else v-for="(item, index) of config" class="card my-2 template-item me-0 ms-0" v-bind:key="item.id">
-                            <img class="card-img-top" :src="getImage(item)" :alt="item.title" :style="(item.image ? null : { opacity: 0.5 })">
-                            <div class="card-body p-3 d-flex flex-column flex-grow-0 gap-2">
-                                <h5 class="card-title m-0" v-html="item.title"></h5>
-                                <div class="d-flex gap-2 align-items-center">
-                                    <span class="fw-semibold badge text-bg-info" v-if="item.priceType === 'Topup' || item.price == 0">{{ item.priceType === 'Topup' ? 'Any amount' : 'Free' }}</span>
-                                    <span class="fw-semibold" v-else>{{ item.price }} @Model.currency{{ item.priceType === 'Minimum' ? ' minimum' : '' }}</span>
-                                    <span class="badge text-bg-warning" v-if="item.inventory">
-                                        {{ item.inventory > 0 ? `${item.inventory} left` : 'Sold out' }}
-                                    </span>
-                                </div>
-                                <p class="card-text" v-if="item.description">{{ item.description }}</p>
-                            </div>
-                            <div class="card-footer bg-transparent border-0 pt-0 pb-3">
-                                <div class="gap-3 d-flex">
-                                    <button type="button" class="btn btn-primary" v-on:click="editItem(index)">Edit</button>
-                                    <button type="button" class="btn btn-danger" v-on:click="removeItem(index)">
-                                        <i class="fa fa-trash"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card-footer text-start p-3 gap-3 d-flex">
-                        <button type="button" class="btn btn-primary" v-on:click="addItem()" id="btn-add">
-                            <i class="fa fa-plus fa-fw"></i> Add
-                        </button>
-                        <button type="button" class="btn btn-secondary" id="ToggleRawEditor" data-bs-toggle="collapse" data-bs-target="#RawEditor" aria-expanded="false" aria-controls="RawEditor">
-                            Toggle raw editor
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="row collapse" id="RawEditor">
-        <div class="col-xxl-constrain">
-            <div class="form-group pt-3">
-                <label for="@Model.templateId" class="form-label">Template</label>
-                <textarea id="@Model.templateId" name="@Model.templateId" rows="10" cols="40" class="form-control" v-model="configJSON" v-on:change="updateFromJSON"></textarea>
-            </div>
+        <div class="tab-pane fade" id="CodeTabPane" role="tabpanel" aria-labelledby="CodeTabButton" tabindex="0">
+            <label for="TemplateConfig" class="form-label">Template JSON</label>
+            <textarea id="TemplateConfig" name="@Model.templateId" rows="21" cols="21" class="form-control font-monospace" style="font-size:.85rem" v-model="itemsJSON" v-on:change="updateFromJSON">@Model.template</textarea>
+            <span asp-validation-for="@Model.templateId" class="text-danger"></span>
         </div>
     </div>
 </div>
 
 <link href="~/vendor/tom-select/tom-select.bootstrap5.min.css" asp-append-version="true" rel="stylesheet">
+<link href="~/main/editor.css" rel="stylesheet" asp-append-version="true" />
 <script src="~/vendor/tom-select/tom-select.complete.min.js" asp-append-version="true"></script>
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-    const fileUploadUrl = @Safe.Json(Url.Action("FileUpload", "UIApps", new { appId = Context.GetRouteValue("appId") }));
-    const parseConfig = str => {
-        try {
-            return JSON.parse(str)
-        } catch (err) {
-            console.error('Error deserializing template config:', err)
-        }
-    }
-    const template = @Safe.Json(Model.template)
-    let config = parseConfig(template) || []
-    
-    new Vue({
-        el: '#template-editor-app',
-        data () {
-            return {
-                config,
-                errors: [],
-                editingIndex: null,
-                editingItem: null,
-                customPriceOptions: [
-                    { text: 'Fixed', value: "Fixed" },
-                    { text: 'Minimum', value: "Minimum" },
-                    { text: 'Custom', value: 'Topup' },
-                ],
-                categoriesSelect: null,
-                productModal: null,
-                uploadDisabled: true,
-                uploadError: null
-            }
-        },
-        mounted() {
-            // modal
-            const $modalEl = this.$refs.productModal;
-            $modalEl.addEventListener('hide.bs.modal', () => { this.setEditingItem(null, null); });
-            this.productModal = new bootstrap.Modal($modalEl, {})
-            
-            // categories
-            this.categoriesSelect = new TomSelect(this.$refs.editorCategories, {
-                persist: false,
-                createOnBlur: true,
-                create: true,
-                options: this.allCategories.map(value => ({ value, text: value })),
-            });          
-            this.categoriesSelect.on('change', () => {
-                const value = this.categoriesSelect.getValue();
-                this.editingItem.categories = Array.from(value.split(',').reduce((res,  item) => {
-                    const category = item.trim();
-                    if (category) res.add(category);
-                    return res;
-                }, new Set()));
-            });
-        },
-        beforeDestroy () {
-            this.categoriesSelect.destroy();
-        },
-        computed: {
-            allCategories() {
-                return Array.from(this.config.reduce((res,  item) => {
-                    (item.categories || []).forEach(category => { res.add(category); });
-                    return res;
-                }, new Set()));
-            },
-            configJSON() {
-                return JSON.stringify(this.config, null, 2)
-            }
-        },
-        methods: {
-            updateFromJSON(event) {
-                const config = parseConfig(event.target.value)
-                if (!config) return
-                this.config = config
-            },
-            getImage(item) {
-                const image = item.image || "~/img/img-placeholder.svg";
-                return image.startsWith("~") ? image.replace('~', window.location.pathname.substring(0, image.indexOf('/apps'))) : image
-            },
-            removeItem(index) {
-                this.config.splice(index, 1);
-            },
-            addItem() {
-                this.setEditingItem(null, { id: '', title: '', price: 0, image: '', description: '', categories: [], priceType: 'Fixed', inventory: null, disabled: false });
-            },
-            editItem(index) {
-                this.setEditingItem(index, Object.assign({ id: '', title: '', price: 0, image: '', description: '', categories: [], priceType: 'Fixed', inventory: null, disabled: false }, this.config[index]));
-            },
-            saveItem() {
-                // set id from title if not set
-                if (!this.editingItem.id) this.editingItem.id = this.editingItem.title.toLowerCase().trim();
-                // validate
-                if (!this.validate()) return;
-                // add or update
-                const idx = this.editingIndex === null ? this.config.length : this.editingIndex;
-                this.$set(this.config, idx, this.editingItem);
-                // update categories
-                this.categoriesSelect.clearOptions();
-                this.categoriesSelect.addOptions(this.allCategories.map(value => ({ value, text: value })));
-                // hide modal
-                this.productModal.hide();
-            },
-            validate () {
-                this.errors = [];
-                if (this.editingItem.id) {
-                    const matchedId = this.config.findIndex(x => x.id === this.editingItem.id);
-                    if (matchedId >= 0 && matchedId !== this.editingIndex)
-                        this.errors.push("You cannot have multiple items with the same id");
-                    if (this.editingItem.id.startsWith("- "))
-                        this.errors.push("Id cannot start with \"- \"");
-                    else if (this.editingItem.id.trim() === "")
-                        this.errors.push("Id is required");
-                }   
-                if (this.editingItem.description.indexOf("*") >= 0 || this.editingItem.description.indexOf("#") >= 0) {
-                    this.errors.push("Description cannot have * or #");
-                }
-                if (this.editingItem.description.startsWith("- ")){
-                    this.errors.push("Description cannot start with \"- \"");
-                }
-                if (!this.$refs.editorImage.checkValidity()) {
-                    this.errors.push("Image cannot have * or #");
-                }
-                if (this.editingItem.image.startsWith("- ")){
-                    this.errors.push("Image cannot start with \"- \"");
-                }
-                if (this.editingItem["priceType"] !== "Topup" && !this.$refs.txtPrice.checkValidity()) {
-                    this.errors.push("Price must be a valid number");
-                }
-                if (!this.$refs.txtTitle.checkValidity()) {
-                    this.errors.push("Title is required and cannot have * or #");
-                } else if (this.editingItem.title.startsWith("- ")){
-                    this.errors.push("Title cannot start with \"- \"");
-                } else if (!this.editingItem.title.trim()){
-                    this.errors.push("Title is required");
-                }                
-                if (!this.$refs.txtInventory.checkValidity()) {
-                    this.errors.push("Inventory must be blank or a a valid number (>=0)");
-                }
-                return this.errors.length === 0;
-            },
-            setEditingItem(index, item) {
-                this.errors = [];
-                this.editingIndex = index;
-                this.editingItem = item;
-                if (this.editingItem != null) {
-                    this.categoriesSelect.setValue(this.editingItem.categories);
-                    this.productModal.show();
-                }
-            },
-            uploadFileChanged () {
-                this.uploadDisabled = !this.$refs.editorImage || this.$refs.editorImage.files.length === 0;
-            },
-            async uploadFile() {
-                const file = this.$refs.editorImage.files[0];
-                if (!file) return this.uploadError = 'No file selected';
-                
-                this.uploadError = null;
-                const formData = new FormData(); 
-                formData.append('file', file);
-                try {
-                    const response = await fetch(fileUploadUrl, { method: 'POST', body: formData });
-                    if (response.ok) {
-                        const { error, fileUrl } = await response.json();
-                        if (error) return this.uploadError = error;
-                        
-                        this.editingItem.image = fileUrl;
-                        this.$refs.editorImage.value = null;
-                        this.uploadDisabled = true;
-                        return;
-                    }
-                } catch (e) { 
-                    console.error(e);
-                }
-                this.uploadError = 'Upload failed';
-            }
-        }
-    });
-});
-
-Number.prototype.noExponents = function(){
-    var data= String(this).split(/[eE]/);
-    if (data.length== 1) return data[0];
-
-    var  z= '', sign= this<0? '-':'',
-        str= data[0].replace('.', ''),
-        mag= Number(data[1])+ 1;
-
-    if(mag<0){
-        z= sign + '0.';
-        while(mag++) z += '0';
-        return z + str.replace(/^\-/,'');
-    }
-    mag -= str.length;
-    while(mag--) z += '0';
-    return str + z;
-};
-</script>
+<script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
+<script src="~/vendor/vue-sanitize-directive/vue-sanitize-directive.umd.min.js" asp-append-version="true"></script>
+<script src="~/vendor/vue-sortable/sortable.min.js" asp-append-version="true"></script>
+<script src="~/vendor/vue-sortable/vue-sortable.js" asp-append-version="true"></script>
+<script src="~/js/template-editor.js" asp-append-version="true"></script>

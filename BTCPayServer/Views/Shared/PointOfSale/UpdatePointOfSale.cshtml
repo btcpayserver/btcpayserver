@@ -12,8 +12,18 @@
     var checkoutFormOptions = await FormDataService.GetSelect(Model.StoreId, Model.FormId);
 }
 
+@section PageHeadContent {
+    <link href="~/vendor/highlightjs/default.min.css" rel="stylesheet" asp-append-version="true">
+    <link href="~/vendor/summernote/summernote-bs5.css" rel="stylesheet" asp-append-version="true" />
+}
+
+@section PageFootContent {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/vendor/summernote/summernote-bs5.js" asp-append-version="true"></script>
+    <script src="~/pos/admin.js" asp-append-version="true"></script>
+}
+
 <form method="post">
-    <div class="sticky-header-setup"></div>
     <div class="sticky-header d-sm-flex align-items-center justify-content-between">
         <h2 class="mb-0">@ViewData["Title"]</h2>
         <div class="d-flex gap-3 mt-3 mt-sm-0">
@@ -83,8 +93,10 @@
             </div>
         </div>
     </div>
-    <div id="products">
-        <partial name="TemplateEditor" model="@(nameof(Model.Template), Model.Template, "Products", Model.Currency ?? Model.StoreDefaultCurrency)" />
+    <div id="products" class="row">
+        <div class="col-xxl-constrain">
+            <partial name="TemplateEditor" model="@(nameof(Model.Template), Model.Template, "Products", Model.Currency ?? Model.StoreDefaultCurrency)" />
+        </div>
     </div>
     <div class="row mt-5">
         <div class="col-sm-10 col-md-9 col-xl-7 col-xxl-6">
@@ -99,6 +111,19 @@
                     <label asp-for="FormId" class="form-label"></label>
                     <select asp-for="FormId" class="form-select w-auto" asp-items="@checkoutFormOptions"></select>
                     <span asp-validation-for="FormId" class="text-danger"></span>
+                </div>
+            </fieldset>
+            <fieldset id="cart-display" class="mt-2">
+                <legend class="h5 mb-3 fw-semibold">Cart</legend>
+                <div class="form-group d-flex align-items-center pt-2">
+                    <input asp-for="ShowSearch" type="checkbox" class="btcpay-toggle me-3" />
+                    <label asp-for="ShowSearch" class="form-label mb-0"></label>
+                    <span asp-validation-for="ShowSearch" class="text-danger"></span>
+                </div>
+                <div class="form-group d-flex align-items-center">
+                    <input asp-for="ShowCategories" type="checkbox" class="btcpay-toggle me-3" />
+                    <label asp-for="ShowCategories" class="form-label mb-0"></label>
+                    <span asp-validation-for="ShowCategories" class="text-danger"></span>
                 </div>
             </fieldset>
             <fieldset id="tips" class="mt-2">
@@ -272,10 +297,10 @@
     </div>
 </form>
 
-<div class="d-flex gap-3 mt-3">
+<div class="d-grid d-sm-flex flex-wrap gap-3 mt-3">
     <a class="btn btn-secondary" asp-action="ListInvoices" asp-controller="UIInvoice" asp-route-storeId="@Model.StoreId" asp-route-searchterm="@Model.SearchTerm">Invoices</a>
     <form method="post" asp-controller="UIApps" asp-action="ToggleArchive" asp-route-appId="@Model.Id">
-        <button type="submit" class="btn btn-outline-secondary" id="btn-archive-toggle">
+        <button type="submit" class="w-100 btn btn-outline-secondary" id="btn-archive-toggle">
             @if (Model.Archived)
             {
                 <span class="text-nowrap">Unarchive this app</span>
@@ -290,125 +315,3 @@
 </div>
 
 <partial name="_Confirm" model="@(new ConfirmModel("Delete app", "This app will be removed from this store.", "Delete"))" />
-
-@section PageHeadContent {
-    <link href="~/vendor/highlightjs/default.min.css" rel="stylesheet" asp-append-version="true">
-    <link href="~/vendor/summernote/summernote-bs5.css" rel="stylesheet" asp-append-version="true" />
-    <link href="~/main/template-editor.css" rel="stylesheet" asp-append-version="true" />
-}
-
-@section PageFootContent {
-    <partial name="_ValidationScriptsPartial" />
-    <script id="template-product-item" type="text/template">
-        <div class="col-sm-4 col-md-3 mb-3">
-            <div class="card">
-                {image}
-                <div class="card-body">
-                    <h6 class="card-title">{title}</h6>
-                    <a href="#" class="js-product-edit btn btn-primary" data-bs-toggle="modal" data-bs-target="#product-modal">Edit</a>
-                    <a href="#" class="js-product-remove btn btn-danger"><i class="fa fa-trash"></i></a>
-                </div>
-            </div>
-        </div>
-    </script>
-    <script id="template-product-content" type="text/template">
-        <div class="mb-3">
-            <input class="js-product-id" type="hidden" name="id" value="{id}">
-            <input class="js-product-index" type="hidden" name="index" value="{index}">
-            <div class="form-group row">
-                <div class="col-sm-6">
-                    <label class="form-label" data-required>Title</label>
-                    <input type="text" class="js-product-title form-control mb-2" value="{title}" autofocus required />
-                </div>
-                <div class="col-sm-3">
-                    <label class="form-label" data-required>Price</label>
-                    <input class="js-product-price form-control mb-2"
-                           inputmode="decimal"
-                           pattern="\d*"
-                           type="number"
-                           value="{price}"
-                           required />
-                </div>
-                <div class="col-sm-3">
-                    <label class="form-label">Custom price</label>
-                    <select class="js-product-custom form-select">
-                        {custom}
-                    </select>
-                </div>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Image</label>
-                <input type="text" class="js-product-image form-control mb-2" value="{image}" />
-            </div>
-            <div class="form-group">
-                <label class="form-label">Description</label>
-                <textarea rows="3" cols="40" class="js-product-description form-control mb-2">{description}</textarea>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Inventory (leave blank to not use inventory feature)</label>
-                <input type="number" inputmode="numeric" step="1" class="js-product-inventory form-control mb-2" value="{inventory}" />
-            </div>
-            <div class="form-group d-flex align-items-center">
-                <input type="checkbox" class="btcpay-toggle me-2" value="{disabled}" />
-                <label class="form-label mb-0">Disabled</label>
-            </div>
-        </div>
-    </script>
-    <script>
-        const description = document.getElementById('description');
-        const products = document.getElementById('products');
-        const tips = document.getElementById('tips');
-        const discounts = document.getElementById('discounts');
-        const buttonPriceText = document.getElementById('button-price-text');
-        const customPayments = document.getElementById('custom-payments');
-        
-        function hide(el) {
-            el.setAttribute('hidden', true);
-        }
-        function show(el) {
-            el.removeAttribute('hidden');
-        }
-        function updateFormForDefaultView(type) {
-            switch (type) {
-                case 'Static':
-                case 'Print':
-                    hide(tips);
-                    hide(discounts);
-                    hide(buttonPriceText);
-                    show(description);
-                    show(products);
-                    show(customPayments);
-                    break;
-                case 'Cart':
-                    show(tips);
-                    show(products);
-                    show(discounts);
-                    show(description);
-                    show(buttonPriceText);
-                    hide(customPayments);
-                    break;
-                case 'Light':
-                    show(tips);
-                    show(discounts);
-                    hide(products);
-                    hide(description);
-                    hide(buttonPriceText);
-                    hide(customPayments);
-                    break;
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const defaultView = document.querySelector('input[name="DefaultView"]:checked'); 
-            if (defaultView) {
-                updateFormForDefaultView(defaultView.value);
-            }
-        });
-        
-        delegate('change', 'input[name="DefaultView"]', e => {
-            updateFormForDefaultView(e.target.value);
-        });
-    </script>
-    <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
-    <script src="~/vendor/summernote/summernote-bs5.js" asp-append-version="true"></script>
-}

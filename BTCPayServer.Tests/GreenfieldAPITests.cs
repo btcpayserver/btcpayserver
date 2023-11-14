@@ -1457,7 +1457,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanUseWebhooks()
         {
-            void AssertHook(FakeServer fakeServer, Client.Models.StoreWebhookData hook)
+            void AssertHook(FakeServer fakeServer, StoreWebhookData hook)
             {
                 Assert.True(hook.Enabled);
                 Assert.True(hook.AuthorizedEvents.Everything);

@@ -1,6 +1,39 @@
 .public-page-wrap {
     max-width: 560px;
     overflow: hidden;
+    position: relative;
+}
+
+#RecentTransactionsToggle {
+    position: absolute;
+    top: var(--btcpay-space-l);
+    left: var(--btcpay-space-m);
+    z-index: 1;
+}
+
+#RecentTransactionsToggle .icon {
+    --btn-icon-size: 2.25em;
+}
+
+#RecentTransactions .list-group {
+    margin: calc(var(--btcpay-modal-padding) * -1);
+    width: calc(100% + var(--btcpay-modal-padding) * 2);
+}
+
+#RecentTransactions .list-group-item {
+    background-color: transparent;
+}
+
+#RecentTransactions .list-group .badge-container {
+    flex: 0 0 5.125rem;
+    text-align: right;
+}
+
+@media (max-width: 359px) {
+    #RecentTransactions .list-group .badge-container {
+        flex-grow: 1;
+    }
+
 }
 
 /* modes */

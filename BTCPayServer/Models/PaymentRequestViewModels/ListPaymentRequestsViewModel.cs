@@ -72,7 +72,11 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
 
         [Display(Name = "Expiration Date")]
         public DateTime? ExpiryDate { get; set; }
-        [Required] public string Title { get; set; }
+        
+        [Required]
+        public string Title { get; set; }
+        
+        [Display(Name = "Memo")]
         public string Description { get; set; }
 
         [Display(Name = "Store")]

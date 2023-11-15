@@ -264,7 +264,7 @@
                     </li>
                     @if (!Theme.CustomTheme)
                     {
-                        <li class="py-1 px-3">
+                        <li class="py-1 px-3 allowClickPropagate">
                             <vc:theme-switch css-class="nav-link pb-0"/>
                         </li>
                     }
@@ -278,17 +278,29 @@
                         </script>
                     </li>
                     <li class="border-top py-1 px-3">
-                        <a asp-area="" asp-controller="UIManage" asp-action="Index" class="nav-link @ViewData.IsActiveCategory(typeof(ManageNavPages))" id="Nav-ManageAccount">
+                        <a asp-area="" asp-controller="UIManage" asp-action="Index" class="nav-link w-100 @ViewData.IsActiveCategory(typeof(ManageNavPages))" id="Nav-ManageAccount">
                             <span>Manage Account</span>
                         </a>
                     </li>
                     <li class="border-top py-1 px-3">
-                        <a asp-area="" asp-controller="UIAccount" asp-action="Logout" class="nav-link text-danger" id="Nav-Logout">
+                        <a asp-area="" asp-controller="UIAccount" asp-action="Logout" class="nav-link w-100 text-danger" id="Nav-Logout">
                             <span>Logout</span>
                         </a>
                     </li>
                 </ul>
             </li>
         </ul>
+        <script type="text/javascript">
+            (function () {
+                // Preventing dropdown from collapsing on clicks inside the dropdown menu that don't trigger links
+                var dropdownLinks = document.querySelectorAll(".dropdown-menu li:not(.allowClickPropagate)");
+
+                dropdownLinks.forEach(function (link) {
+                    link.addEventListener("click", function (event) {
+                        event.stopPropagation();
+                    });
+                });
+            })();
+        </script>
     }
 </nav>

@@ -77,7 +77,7 @@
                 </div>
                 <partial name="_StatusMessage" />
                 <section class="tile">
-                    <div class="d-flex flex-wrap gap-3 align-items-center justify-content-between mb-4">
+                    <div class="d-flex flex-wrap gap-3 align-items-center justify-content-between mb-2">
                         <h2 class="mb-0" v-text="srvModel.amountDue > 0 ? srvModel.amountDueFormatted : srvModel.amountCollectedFormatted">
                             @if (Model.AmountDue > 0)
                             {
@@ -88,21 +88,35 @@
                                 @Model.AmountCollectedFormatted
                             }
                         </h2>
-                        <span class="badge only-for-js" :class="`badge-${srvModel.status.toLowerCase()}`" data-test="status" style="font-size:.9rem">
+                        <span class="badge only-for-js" :class="`badge-${srvModel.status.toLowerCase()}`" data-test="status" style="font-size:.9rem" v-if="srvModel.status.toLowerCase() !== 'pending'">
                             {{srvModel.status}}
                             <span v-if="srvModel.archived">(archived)</span>
                         </span>
-                        <noscript>
-                            <span class="badge badge-@Model.Status.ToLowerInvariant()" data-test="status" style="font-size:.9rem">
-                                @Model.Status
-                                @if (Model.Archived)
-                                {
-                                    <span>(archived)</span>
-                                }
-                            </span>
-                        </noscript>
+                        @if (Model.Status.ToLowerInvariant() != "pending")
+                        {
+                            <noscript>
+                                <span class="badge badge-@Model.Status.ToLowerInvariant()" data-test="status" style="font-size:.9rem">
+                                    @Model.Status
+                                    @if (Model.Archived)
+                                    {
+                                        <span>(archived)</span>
+                                    }
+                                </span>
+                            </noscript>
+                        }
                     </div>
-                    <dl class="my-4" v-if="srvModel.amountCollected > 0 && srvModel.amountDue > 0">
+                    <p>
+                        @if (Model.IsPending && Model.ExpiryDate.HasValue)
+                        {
+                            <span class="text-muted">Due</span>
+                            <span>@Model.ExpiryDate.Value.ToBrowserDate(ViewsRazor.DateDisplayFormat.Relative)</span>
+                        }
+                        else
+                        {
+                            <span class="text-muted">No due date</span>
+                        }
+                    </p>
+                    <dl class="mt-n1 mb-4" v-if="srvModel.amountCollected > 0 && srvModel.amountDue > 0">
                         <div class="progress bg-light d-flex mb-3 d-print-none" style="height:5px">
                             <div class="progress-bar bg-primary" role="progressbar" style="width:@(Model.AmountCollected/Model.Amount*100)%" v-bind:style="{ width: (srvModel.amountCollected/srvModel.amount*100) + '%' }"></div>
                         </div>
@@ -118,14 +132,6 @@
                         </div>
                     </dl>
                     
-                    @if (Model.IsPending && Model.ExpiryDate.HasValue && !Model.Archived)
-                    {
-                        <p>
-                            <span class="text-muted">Due</span>
-                            <span>@Model.ExpiryDate.Value.ToBrowserDate(ViewsRazor.DateDisplayFormat.Relative)</span>
-                        </p>
-                    }
-                    
                     <div class="buttons mt-3">
                         <template v-if="srvModel.formId && srvModel.formId !== 'None' && !srvModel.formSubmitted">
                             <a asp-action="ViewPaymentRequestForm" asp-route-payReqId="@Model.Id" class="btn btn-primary btn-lg" data-test="form-button">
@@ -139,7 +145,7 @@
                                         <input type="number" class="form-control text-end hide-number-spin" v-model="customAmount" :readonly="!srvModel.allowCustomPaymentAmounts" :max="srvModel.amountDue" placeholder="Amount" step="any" required />
                                         <span class="input-group-text">{{currency}}</span>
                                     </div>
-                                    <button class="btn btn-primary w-100 d-flex align-items-center justify-content-center text-nowrap" v-bind:class="{ 'btn-disabled': loading }" :disabled="loading" type="submit" id="PayInvoice">
+                                    <button class="btn btn-primary btn-lg w-100 d-flex align-items-center justify-content-center text-nowrap" v-bind:class="{ 'btn-disabled': loading }" :disabled="loading" type="submit" id="PayInvoice">
                                         <div v-if="loading" class="spinner-grow spinner-grow-sm me-2" role="status">
                                             <span class="visually-hidden">Loading...</span>
                                         </div>
@@ -148,14 +154,14 @@
                                 </form>
                             </template>
                             <template v-else>
-                                <button class="btn btn-primary w-100 d-flex align-items-center justify-content-center text-nowrap" v-on:click="pay(null)" :disabled="loading" id="PayInvoice">
+                                <button class="btn btn-primary btn-lg w-100 d-flex align-items-center justify-content-center text-nowrap" v-on:click="pay(null)" :disabled="loading" id="PayInvoice">
                                     <div v-if="loading" class="spinner-grow spinner-grow-sm me-2" role="status">
                                         <span class="visually-hidden">Loading...</span>
                                     </div>
                                     <span>Pay Invoice</span>
                                 </button>
                                 @if (Model.AllowCustomPaymentAmounts) {
-                                    <button class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center text-nowrap" v-if="srvModel.anyPendingInvoice && !srvModel.pendingInvoiceHasPayments" v-on:click="cancelPayment()" :disabled="loading">
+                                    <button class="btn btn-outline-secondary btn-lg w-100 d-flex align-items-center justify-content-center text-nowrap" v-if="srvModel.anyPendingInvoice && !srvModel.pendingInvoiceHasPayments" v-on:click="cancelPayment()" :disabled="loading">
                                         <span v-if="loading" class="spinner-grow spinner-grow-sm me-2" role="status">
                                             <span class="visually-hidden">Loading...</span>
                                         </span>
@@ -164,12 +170,14 @@
                                 }
                             </template>
                         </template>
-                        <button type="button" class="btn btn-secondary only-for-js " v-on:click="window.print">
-                            Print
-                        </button>
-                        <button type="button" class="btn btn-secondary only-for-js" v-on:click="window.copyUrlToClipboard">
-                            Copy Link
-                        </button>
+                        <div class="d-flex flex-column flex-sm-row gap-3 align-items-center justify-content-between">
+                            <button type="button" class="btn btn-secondary only-for-js w-100" v-on:click="window.print">
+                                Print
+                            </button>
+                            <button type="button" class="btn btn-secondary only-for-js w-100" v-on:click="window.copyUrlToClipboard">
+                                Copy Link
+                            </button>
+                        </div>
                     </div>
                     <noscript>
                         @if (Model.IsPending && !Model.Archived)
@@ -181,18 +189,18 @@
                                         <input type="number" class="form-control text-end hide-number-spin" name="amount" value="@Model.AmountDue" @if (!Model.AllowCustomPaymentAmounts) { @("readonly") } max="@Model.AmountDue" step="any" placeholder="Amount" required />
                                         <span class="input-group-text">@Model.Currency.ToUpper()</span>
                                     </div>
-                                    <button class="btn btn-primary w-100 text-nowrap" type="submit" id="PayInvoice">Pay Invoice</button>
+                                    <button class="btn btn-primary btn-lg w-100 text-nowrap" type="submit" id="PayInvoice">Pay Invoice</button>
                                 </form>
                             }
                             else
                             {
-                                <a class="btn btn-primary w-100 text-nowrap" asp-action="PayPaymentRequest" asp-route-payReqId="@Model.Id" id="PayInvoice">
+                                <a class="btn btn-primary btn-lg w-100 text-nowrap" asp-action="PayPaymentRequest" asp-route-payReqId="@Model.Id" id="PayInvoice">
                                     Pay Invoice
                                 </a>
                                 if (Model.AnyPendingInvoice && !Model.PendingInvoiceHasPayments && Model.AllowCustomPaymentAmounts)
                                 {
                                     <form method="get" asp-action="CancelUnpaidPendingInvoice" asp-route-payReqId="@Model.Id" class="mt-2 d-print-none">
-                                        <button class="btn btn-outline-secondary w-100 text-nowrap" type="submit">Cancel Invoice</button>
+                                        <button class="btn btn-outline-secondary btn-lg w-100 text-nowrap" type="submit">Cancel Invoice</button>
                                     </form>
                                 }
                             }

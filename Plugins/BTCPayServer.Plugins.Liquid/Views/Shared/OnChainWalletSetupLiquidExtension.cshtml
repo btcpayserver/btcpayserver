@@ -1,0 +1,115 @@
+﻿@using BTCPayServer.Abstractions.TagHelpers
+@using BTCPayServer.Models.StoreViewModels
+@using BTCPayServer.Plugins.Liquid
+@using NBitcoin
+@using NBitcoin.Altcoins.Elements
+@model dynamic
+
+@if (Model is WalletSetupViewModel walletSetupViewModel && walletSetupViewModel.Network is ElementsBTCPayNetwork elementsBtcPayNetwork)
+{
+    if (walletSetupViewModel.Method == WalletSetupMethod.GenerateOptions)
+    {
+        <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById("GenerateWatchonlyLink").parentElement.remove();
+        });
+    </script>
+    }
+
+    if (!walletSetupViewModel.Confirmation && walletSetupViewModel.Method == WalletSetupMethod.ImportOptions)
+    {
+        <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll(".list-group-item:not(#ImportSeedLink)").forEach(e => e.parentElement.remove());
+        });
+    </script>
+    }
+    if (!walletSetupViewModel.Confirmation && walletSetupViewModel.Method is WalletSetupMethod.HotWallet or WalletSetupMethod.Seed)
+    {
+        var canUseRpcImport = ViewData["CanUseRPCImport"] is true;
+
+        if (!canUseRpcImport)
+        {
+            <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                    const warningDiv = document.createElement("div");
+                    warningDiv.className = 'alert alert-danger';
+                    warningDiv.innerHTML = 'Liquid requires the use of the RPC Import feature but you are not able to use it.';
+                    document.querySelector("h1").insertAdjacentElement("beforebegin", warningDiv);
+                    document.getElementById("Continue").disabled = true;
+                });
+            </script>
+        }
+        else
+        {
+            string masterBlindKey = null;
+            if (walletSetupViewModel.Method == WalletSetupMethod.HotWallet)
+            {
+                var seed = new Mnemonic(Wordlist.English);
+                var slip21 = Slip21Node.FromSeed(seed.DeriveSeed());
+                var slip77 = slip21.GetSlip77Node();
+                masterBlindKey = slip77.Key.ToHex();
+
+                 <script>
+                    document.addEventListener('DOMContentLoaded', () => {
+                        document.getElementById("Passphrase").parentElement.style.display = "none";
+                        document.getElementById("passphrase_conf").parentElement.style.display = "none";
+                        const mnemonicElement = document.createElement("div")
+                        mnemonicElement.innerHTML = "<input type='hidden' name='ExistingMnemonic' value='@seed'/>"
+                        document.getElementById("ScriptPubKeyType").parentElement.insertAdjacentElement("afterend",mnemonicElement);
+                        
+                        
+                    });
+                
+                </script>
+                
+            }
+            <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                  const cbImportRpc =  document.getElementById("ImportKeysToRPC");
+                  cbImportRpc.checked = true;
+                  cbImportRpc.readOnly = true;
+                  
+                  const cloned = cbImportRpc.cloneNode(true);
+                  cloned.disabled = true;
+                  cloned.name = "";
+                  cloned.id = "";
+                  cbImportRpc.insertAdjacentElement("beforebegin", cloned );
+                  cbImportRpc.style.display = "none";
+                  
+                  const cbisHotWallet = document.getElementById("SavePrivateKeys");
+                  if (cbisHotWallet){
+                    cbisHotWallet.checked = true;
+                    cbisHotWallet.readOnly = true;
+                    const cloned2 = cbisHotWallet.cloneNode(true);
+                    cloned2.disabled = true;
+                    cloned2.name = "";
+                    cloned2.id = "";
+                    cbisHotWallet.insertAdjacentElement("beforebegin", cloned2 );
+                    cbisHotWallet.style.display = "none";
+                  }
+                  
+                  const slip77Allowed = @Json.Serialize(masterBlindKey != null);
+                  const blindedOption = `<div class='form-group mt-4' ><label class='form-label'>Liquid Confidential Address Mode</label><select id='blindingtype' class='form-select'> <option selected value='default' >Default (BTCPay Server proprietary mode)</option><option value='unblinded' >Unblinded (no confidential addresses mode)</option> ${slip77Allowed? "<option value='slip77'>SLIP77 Mode (compatible with other liquid wallets)</option>": ""}</div>`;
+                                          document.getElementById("ImportKeysToRPC").parentElement.insertAdjacentHTML("afterend",blindedOption);
+                                          const blindAdditionalOption = "<input type='hidden' id='blindAdditionalOption'/>";
+                                          document.getElementById("ScriptPubKeyType").parentElement.insertAdjacentHTML("afterend", blindAdditionalOption);
+                                          
+                                          document.getElementById("blindingtype").addEventListener("change", (evt)=>{
+                                              if (evt.target.value == "default"){
+                                                  document.getElementById("blindAdditionalOption").value = "";
+                                                  document.getElementById("blindAdditionalOption").name = "";
+                                              }else if (evt.target.value == "unblinded"){
+                                                  document.getElementById("blindAdditionalOption").value = "true";
+                                                  document.getElementById("blindAdditionalOption").name = "AdditionalOptions[unblinded]";
+                                              }else if (evt.target.value == "slip77"){
+                                                  document.getElementById("blindAdditionalOption").value = "@masterBlindKey";
+                                                  document.getElementById("blindAdditionalOption").name = "AdditionalOptions[slip77]";
+                                              }
+                                          })
+                  
+                });
+            </script>
+        }
+    }
+}

@@ -95,7 +95,7 @@
         "BTCPAY_ALLOW-ADMIN-REGISTRATION": "true",
         "BTCPAY_DISABLE-REGISTRATION": "false",
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "BTCPAY_CHAINS": "btc,ltc,lbtc",
+        "BTCPAY_CHAINS": "btc,xmr",
         "BTCPAY_POSTGRES": "User ID=postgres;Include Error Detail=true;Host=127.0.0.1;Port=39372;Database=btcpayserver",
         "BTCPAY_SSHCONNECTION": "root@127.0.0.1:21622",
         "BTCPAY_SSHPASSWORD": "opD3i2282D",
@@ -105,7 +105,10 @@
         "BTCPAY_DOCKERDEPLOYMENT": "true",
         "BTCPAY_RECOMMENDED-PLUGINS": "",
         "BTCPAY_CHEATMODE": "true",
-        "BTCPAY_EXPLORERPOSTGRES": "User ID=postgres;Include Error Detail=true;Host=127.0.0.1;Port=39372;Database=nbxplorer"
+        "BTCPAY_EXPLORERPOSTGRES": "User ID=postgres;Include Error Detail=true;Host=127.0.0.1;Port=39372;Database=nbxplorer",
+        "BTCPAY_XMR_DAEMON_URI":"http://localhost:18081",
+        "BTCPAY_XMR_WALLET_DAEMON_URI":  "http://localhost:18082",
+        "BTCPAY_XMR_WALLET_DAEMON_WALLETDIR": "C:\\Git\\btcpayserver\\BTCPayServer.Tests\\monero_wallet"
       },
       "applicationUrl": "https://localhost:14142/"
     }

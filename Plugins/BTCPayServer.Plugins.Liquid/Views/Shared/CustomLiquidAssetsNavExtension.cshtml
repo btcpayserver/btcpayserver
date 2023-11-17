@@ -1,0 +1,7 @@
+@using BTCPayServer.Plugins.Liquid.Controllers
+@{
+    var isActive = ViewContext.RouteData.Values.TryGetValue("Controller", out var controller) &&  controller is not null && 
+                   nameof(CustomLiquidAssetsController).StartsWith(controller?.ToString(), StringComparison.InvariantCultureIgnoreCase);
+}
+
+<a class="nav-link @(isActive ? "active" : string.Empty)" asp-action="Assets" asp-controller="CustomLiquidAssets">Liquid Assets</a>

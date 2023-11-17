@@ -1,16 +1,11 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using BTCPayServer.Configuration;
 using BTCPayServer.Controllers;
 using BTCPayServer.Models.WalletViewModels;
-using BTCPayServer.Plugins.Altcoins;
+using BTCPayServer.Plugins.Liquid;
 using BTCPayServer.Services.Wallets;
-using BTCPayServer.Tests.Logging;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Configuration.Memory;
 using NBitcoin;
 using NBitcoin.Payment;
 using NBitpayClient;

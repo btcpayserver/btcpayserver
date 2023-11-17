@@ -70,6 +70,8 @@ namespace BTCPayServer.Hosting
             var networkType = DefaultConfiguration.GetNetworkType(conf);
             bootstrapServices.AddSingleton(logs);
             bootstrapServices.AddSingleton(loggerFactory);
+            
+            bootstrapServices.AddLogging();
             bootstrapServices.AddSingleton<IConfiguration>(conf);
             bootstrapServices.AddSingleton<SelectedChains>();
             bootstrapServices.AddSingleton<NBXplorerNetworkProvider>(new NBXplorerNetworkProvider(networkType));

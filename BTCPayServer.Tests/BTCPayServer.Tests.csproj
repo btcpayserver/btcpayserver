@@ -31,9 +31,6 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
   </ItemGroup>
-  <ItemGroup Condition="'$(Altcoins)' != 'true'">
-    <Compile Remove="AltcoinTests\**\*.cs"></Compile>
-  </ItemGroup>
   <ItemGroup>
     <None Update=".dockerignore">
       <DependentUpon>Dockerfile</DependentUpon>
@@ -52,6 +49,10 @@
   <ItemGroup>
     <ProjectReference Include="..\BTCPayServer.Rating\BTCPayServer.Rating.csproj" />
     <ProjectReference Include="..\BTCPayServer\BTCPayServer.csproj" />
+    <ProjectReference Include="..\Plugins\BTCPayServer.Plugins.Altcoins\BTCPayServer.Plugins.Altcoins.csproj" />
+    <ProjectReference Include="..\Plugins\BTCPayServer.Plugins.Liquid\BTCPayServer.Plugins.Liquid.csproj" />
+    <ProjectReference Include="..\Plugins\BTCPayServer.Plugins.Monero\BTCPayServer.Plugins.Monero.csproj" />
+    <ProjectReference Include="..\Plugins\BTCPayServer.Plugins.Zcash\BTCPayServer.Plugins.Zcash.csproj" />
   </ItemGroup>
 
 </Project>

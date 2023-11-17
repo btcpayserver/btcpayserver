@@ -1,0 +1,21 @@
+﻿<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="BTCPayServer: Altcoins-HTTPS" type="LaunchSettings" factoryName=".NET Launch Settings Profile">
+    <option name="LAUNCH_PROFILE_PROJECT_FILE_PATH" value="$PROJECT_DIR$/BTCPayServer/BTCPayServer.csproj" />
+    <option name="LAUNCH_PROFILE_TFM" value="net6.0" />
+    <option name="LAUNCH_PROFILE_NAME" value="Altcoins-HTTPS" />
+    <option name="USE_EXTERNAL_CONSOLE" value="0" />
+    <option name="USE_MONO" value="0" />
+    <option name="RUNTIME_ARGUMENTS" value="" />
+    <option name="GENERATE_APPLICATIONHOST_CONFIG" value="1" />
+    <option name="SHOW_IIS_EXPRESS_OUTPUT" value="0" />
+    <option name="SEND_DEBUG_REQUEST" value="1" />
+    <option name="ADDITIONAL_IIS_EXPRESS_ARGUMENTS" value="" />
+    <method v="2">
+      <option name="Build" />
+      <option name="Build" default="false" projectName="BTCPayServer.Plugins.Zcash" projectPath="$PROJECT_DIR$/Plugins/BTCPayServer.Plugins.Zcash/BTCPayServer.Plugins.Zcash.csproj" />
+      <option name="Build" default="false" projectName="BTCPayServer.Plugins.Monero" projectPath="$PROJECT_DIR$/Plugins/BTCPayServer.Plugins.Monero/BTCPayServer.Plugins.Monero.csproj" />
+      <option name="Build" default="false" projectName="BTCPayServer.Plugins.Liquid" projectPath="$PROJECT_DIR$/Plugins/BTCPayServer.Plugins.Liquid/BTCPayServer.Plugins.Liquid.csproj" />
+      <option name="Build" default="false" projectName="BTCPayServer.Plugins.Altcoins" projectPath="$PROJECT_DIR$/Plugins/BTCPayServer.Plugins.Altcoins/BTCPayServer.Plugins.Altcoins.csproj" />
+    </method>
+  </configuration>
+</component>

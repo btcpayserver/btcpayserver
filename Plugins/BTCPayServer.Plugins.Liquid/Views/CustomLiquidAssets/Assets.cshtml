@@ -1,0 +1,79 @@
+@inject ContentSecurityPolicies contentSecurityPolicies
+@using BTCPayServer.Security
+@using NBitcoin
+@model BTCPayServer.Plugins.Liquid.Models.CustomLiquidAssetsViewModel
+@{
+    Layout = "../Shared/_NavLayout.cshtml";
+    ViewData["NavPartialName"] = "../UIServer/_Nav";
+    ViewData["Title"] = "Custom Liquid Assets";
+    var nonce = RandomUtils.GetUInt256().ToString().Substring(0, 32);
+    contentSecurityPolicies.Add("script-src", $"'nonce-{nonce}'");
+}
+@if (Model.PendingChanges)
+{
+    <div class="alert alert-warning">There are saved changes to the custom liquid assets that have not yet been applied. Restart BTCPay Server to load these changes.</div>
+}
+
+<form class="form-group" asp-action="Assets" id="assetform">
+    <div class="list-group list-group-flush">
+        @if (!Model.Items.Any())
+        {
+            <p>No custom assets set up</p>
+        }
+        @for (var index = 0; index < Model.Items.Count; index++)
+        {
+            <div class="card mb-2">
+                <div class="card-body">
+                    <div class="form-group">
+                        <label asp-for="Items[index].CryptoCode" class="control-label"></label>
+                        <input asp-for="Items[index].CryptoCode" class="form-control"/>
+                        <span asp-validation-for="Items[index].CryptoCode" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Items[index].AssetId" class="control-label"></label>
+                        <input asp-for="Items[index].AssetId" class="form-control"/>
+                        <span asp-validation-for="Items[index].AssetId" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Items[index].Divisibility" class="control-label"></label>
+                        <input asp-for="Items[index].Divisibility" class="form-control"/>
+                        <span asp-validation-for="Items[index].Divisibility" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Items[index].DisplayName" class="control-label"></label>
+                        <input asp-for="Items[index].DisplayName" class="form-control"/>
+                        <span asp-validation-for="Items[index].DisplayName" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Items[index].CryptoImagePath" class="control-label"></label>
+                        <input asp-for="Items[index].CryptoImagePath" class="form-control"/>
+                        <span asp-validation-for="Items[index].CryptoImagePath" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button type="submit" title="Remove" name="command" value="@($"remove:{index}")"
+                            class="btn btn-danger">
+                        Remove
+                    </button>
+                </div>
+            </div>
+        }
+
+    </div>
+
+    <div>
+        <input type="hidden" name="import" id="import"/>
+        <button type="submit" name="command" value="add" class="btn btn-secondary">Add </button>
+        <button id="import-liquid-asset-from-registry" type="button"  class="btn btn-secondary">Import from Blockstream Asset Registry</button>
+        <button type="submit" class="btn btn-primary" name="command" value="Save">Save</button>
+    </div>
+    <script type="text/javascript" nonce="@nonce">
+        document.getElementById("import-liquid-asset-from-registry").addEventListener("click", function (){
+            var id = prompt("Enter the asset id");
+            if (id){
+                document.getElementById("import").value = id;
+                document.getElementById("assetform").submit();
+            }
+        });
+    </script>
+</form>

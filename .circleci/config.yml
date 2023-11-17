@@ -47,7 +47,6 @@ jobs:
             docker buildx create --use
             DOCKER_BUILDX_OPTS="--platform linux/amd64,linux/arm64,linux/arm/v7 --build-arg GIT_COMMIT=${GIT_COMMIT} --push"
             docker buildx build $DOCKER_BUILDX_OPTS -t $DOCKERHUB_REPO:$LATEST_TAG .
-            docker buildx build $DOCKER_BUILDX_OPTS -t $DOCKERHUB_REPO:$LATEST_TAG-altcoins --build-arg CONFIGURATION_NAME=Altcoins-Release .
 workflows:
   version: 2
   build_and_test:

@@ -259,13 +259,6 @@ namespace BTCPayServer.Tests
             Assert.Equal(id, id2);
             Assert.Equal("LTC_LightningLike", id.ToString());
             Assert.Equal("LTC-LightningNetwork", id.ToStringNormalized());
-#if ALTCOINS
-            id = PaymentMethodId.Parse("XMR");
-            id1 = PaymentMethodId.Parse("XMR-MoneroLike");
-            Assert.Equal(id, id1);
-            Assert.Equal("XMR_MoneroLike", id.ToString());
-            Assert.Equal("XMR", id.ToStringNormalized());
-#endif
         }
 
         [Fact]
@@ -495,7 +488,6 @@ namespace BTCPayServer.Tests
 
 #pragma warning restore CS0618
         }
-#if ALTCOINS
         [Fact]
         public void CanCalculateCryptoDue()
         {
@@ -661,7 +653,6 @@ namespace BTCPayServer.Tests
             Assert.Equal(accounting.Paid, accounting.TotalDue);
 #pragma warning restore CS0618
         }
-#endif
 
         [Fact]
         public void DeterministicUTXOSorter()
@@ -1997,7 +1988,7 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
                 new MemoryConfigurationProvider(new MemoryConfigurationSource()
                 {
                     InitialData = new[] {
-                        new KeyValuePair<string, string>("chains", "usdt")}
+                        new KeyValuePair<string, string>("chains", "lbtc")}
                 })
             });
             var networkProvider = CreateNetworkProvider(config);

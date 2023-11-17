@@ -829,10 +829,7 @@ namespace BTCPayServer.Controllers
                 Request.Host,
                 Request.PathBase) : null;
 
-            var isAltcoinsBuild = false;
-#if ALTCOINS
-            isAltcoinsBuild = true;
-#endif
+            var isAltcoinsBuild =  _NetworkProvider.GetAll().Count() > 1;;
 
             var orderId = invoice.Metadata.OrderId;
             var supportUrl = !string.IsNullOrEmpty(storeBlob.StoreSupportUrl)

@@ -172,6 +172,10 @@ namespace BTCPayServer.Tests
             var confBuilder = new DefaultConfiguration() { Logger = LoggerProvider.CreateLogger("Console") }.CreateConfigurationBuilder(new[] { "--datadir", _Directory, "--conf", confPath, "--disable-registration", DisableRegistration ? "true" : "false" });
 #if DEBUG
             confBuilder.AddJsonFile("appsettings.dev.json", true, false);
+            confBuilder.AddInMemoryCollection( new Dictionary<string, string>()
+            {
+                { "DEV_PLUGINS", Directory.GetCurrentDirectory() +"/../../../../Plugins"}
+            });
 #endif
             var conf = confBuilder.Build();
             _Host = new WebHostBuilder()

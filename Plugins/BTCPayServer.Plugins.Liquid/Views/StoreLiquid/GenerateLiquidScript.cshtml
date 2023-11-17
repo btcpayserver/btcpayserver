@@ -1,0 +1,65 @@
+
+@model BTCPayServer.Plugins.Liquid.Controllers.StoreLiquidController.GenerateLiquidImportScripts
+@{
+    Layout = "../Shared/_NavLayout.cshtml";
+    ViewData["NavPartialName"] = "../UIStores/_Nav";
+    ViewBag.MainTitle = "Store settings";
+    ViewData["title"] = "Liquid Import";
+}
+
+<h4>Liquid import</h4>
+<div class="row">
+    <div class="col-md-8">
+        <p>Generates commands to import your received liquid funds into an elements node</p>
+    </div>
+</div>
+@if (Model.Wallets.Any())
+{
+    <form class="row" asp-action="GenerateLiquidScript" method="post">
+        <ul class="list-group col-12">
+
+            <li class="list-group-item list-group-item-heading h3">Wallets</li>
+
+            @for (var index = 0; index < Model.Wallets.Length; index++)
+            {
+                var x = Model.Wallets[index];
+                <input type="hidden" asp-for="Wallets[index].CryptoCode"/>
+                <input type="hidden" asp-for="Wallets[index].KeyPresent"/>
+                <li class="list-group-item">
+                    <div class="d-flex justify-content-between">
+                        <span> @x.CryptoCode</span>
+                        @if (!x.KeyPresent)
+                        {
+                            <input type="text" class="form-control form-control-sm ms-4" asp-for="Wallets[index].ManualKey" placeholder="Xprv (root or account) or seed"/>
+                        }
+                        else
+                        {
+                            <span class="text-success"><span class="fa fa-check-circle"></span>Keys already available</span>
+                        }
+
+                    </div>
+                    
+                        <span asp-validation-for="Wallets[index].ManualKey" class="text-danger"></span>
+                </li>
+            }
+            @if (!Model.Wallets.All(vm => vm.KeyPresent))
+            {
+                <li class="list-group-item">
+                    <button type="submit" class="btn btn-primary">Continue</button>
+                </li>
+            }
+            <li class="list-group-item list-group-item-heading h3">Scripts (per chain)</li>
+            @foreach (var script in Model.Scripts)
+            {
+                <li class="list-group-item list-group-item-heading h4">@script.Key</li>
+                <li class="list-group-item">
+                    @if (string.IsNullOrEmpty(script.Value))
+                    {
+                        <span>Nothing to generate</span>
+                    }
+                    <pre>@Html.Raw(script.Value)</pre>
+                </li>
+            }
+        </ul>
+    </form>
+}

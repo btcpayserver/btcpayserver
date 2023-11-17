@@ -16,16 +16,8 @@ namespace BTCPayServer
                     return money.ToDecimal(MoneyUnit.BTC);
                 case MoneyBag mb:
                     return mb.Select(money => money.GetValue(network)).Sum();
-#if ALTCOINS
                 case AssetMoney assetMoney:
-                    if (network is BTCPayServer.Plugins.Altcoins.ElementsBTCPayNetwork elementsBTCPayNetwork)
-                    {
-                        return elementsBTCPayNetwork.AssetId == assetMoney.AssetId
-                            ? Convert(assetMoney.Quantity, elementsBTCPayNetwork.Divisibility)
-                            : 0;
-                    }
-                    throw new NotSupportedException("IMoney type not supported");
-#endif
+                    return network.GetValue(m);
                 default:
                     throw new NotSupportedException("IMoney type not supported");
             }
@@ -33,13 +25,10 @@ namespace BTCPayServer
 
         public static decimal Convert(long sats, int divisibility = 8)
         {
-            var negative = sats < 0;
-            var amt = sats.ToString(CultureInfo.InvariantCulture)
-                .Replace("-", "", StringComparison.InvariantCulture)
-                .PadLeft(divisibility, '0');
-            amt = amt.Length == divisibility ? $"0.{amt}" : amt.Insert(amt.Length - divisibility, ".");
-            return decimal.Parse($"{(negative ? "-" : string.Empty)}{amt}", CultureInfo.InvariantCulture);
+            decimal multiplier = (decimal)Math.Pow(10, -divisibility);
+            return sats * multiplier;
         }
+
         public static string ShowMoney(this IMoney money, BTCPayNetwork network)
         {
             return money.GetValue(network).ShowMoney(network.Divisibility);

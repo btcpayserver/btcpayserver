@@ -78,12 +78,6 @@ namespace BTCPayServer.Payments
         {
             if (PaymentType == PaymentTypes.BTCLike)
                 return CryptoCode;
-#if ALTCOINS
-            if (CryptoCode == "XMR" && PaymentType == PaymentTypes.MoneroLike)
-                return CryptoCode;
-            if ((CryptoCode == "YEC" || CryptoCode == "ZEC") && PaymentType == PaymentTypes.ZcashLike)
-                return CryptoCode;
-#endif
             return $"{CryptoCode}-{PaymentType.ToStringNormalized()}";
         }
 
@@ -102,15 +96,16 @@ namespace BTCPayServer.Payments
             str ??= "";
             paymentMethodId = null;
             var parts = str.Split(Separators, StringSplitOptions.RemoveEmptyEntries);
-            if (parts.Length == 0 || parts.Length > 2)
+            if (parts.Length is 0 or > 2)
                 return false;
             PaymentType type = PaymentTypes.BTCLike;
-#if ALTCOINS
-            if (parts[0].ToUpperInvariant() == "XMR")
-                type = PaymentTypes.MoneroLike;
-            if (parts[0].ToUpperInvariant() == "ZEC")
-                type = PaymentTypes.ZcashLike;
-#endif
+            if (parts.Length == 1)
+            {
+                if (parts[0].ToUpperInvariant() == "XMR")
+                    parts = new[] { parts[0], "monero" };
+                if (parts[0].ToUpperInvariant() == "ZEC" || parts[0].ToUpperInvariant() == "YEC")
+                    parts = new[] { parts[0], "zcash" };
+            }
             if (parts.Length == 2)
             {
                 if (!PaymentTypes.TryParse(parts[1], out type))

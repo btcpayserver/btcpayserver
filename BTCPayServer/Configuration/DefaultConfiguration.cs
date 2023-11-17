@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -11,7 +10,6 @@ using BTCPayServer.Plugins;
 using BTCPayServer.Plugins.Bitcoin;
 using CommandLine;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Configuration.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using NBitcoin;
 using NBXplorer;
@@ -167,10 +165,6 @@ namespace BTCPayServer.Configuration
             var services = new PluginServiceCollection(collection, Startup.CreateBootstrap(conf));
             var p1 = new BitcoinPlugin();
             p1.Execute(services);
-#if ALTCOINS
-            var p2 = new Plugins.Altcoins.AltcoinsPlugin();
-            p2.Execute(services);
-#endif
             services.AddSingleton(services.BootstrapServices.GetRequiredService<SelectedChains>());
             services.AddSingleton(services.BootstrapServices.GetRequiredService<NBXplorerNetworkProvider>());
             services.AddSingleton(services.BootstrapServices.GetRequiredService<Logs>());

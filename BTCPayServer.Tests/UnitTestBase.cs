@@ -8,6 +8,10 @@ using BTCPayServer.Hosting;
 using BTCPayServer.Logging;
 using BTCPayServer.Plugins.Bitcoin;
 using BTCPayServer.Plugins;
+using BTCPayServer.Plugins.Altcoins;
+using BTCPayServer.Plugins.Liquid;
+using BTCPayServer.Plugins.Monero;
+using BTCPayServer.Plugins.Zcash;
 using BTCPayServer.Tests.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using NBXplorer;
@@ -58,9 +62,10 @@ namespace BTCPayServer.Tests
             var bootstrap = Startup.CreateBootstrap(conf);
             var services = new PluginServiceCollection(new ServiceCollection(), bootstrap);
             var plugins = new List<BaseBTCPayServerPlugin>() { new BitcoinPlugin() };
-#if ALTCOINS
-            plugins.Add(new BTCPayServer.Plugins.Altcoins.AltcoinsPlugin());
-#endif
+            plugins.Add(new LiquidPlugin());
+            plugins.Add(new MoneroPlugin());
+            plugins.Add(new ZcashPlugin());
+            plugins.Add(new AltcoinsPlugin());
             foreach (var p in plugins)
             {
                 p.Execute(services);

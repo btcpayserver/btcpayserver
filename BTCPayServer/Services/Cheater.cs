@@ -6,7 +6,6 @@ using BTCPayServer.Services.Invoices;
 using Microsoft.Extensions.Hosting;
 using NBitcoin;
 using NBitcoin.RPC;
-
 namespace BTCPayServer.Services
 {
     public class Cheater : IHostedService
@@ -36,33 +35,9 @@ namespace BTCPayServer.Services
 
         async Task IHostedService.StartAsync(CancellationToken cancellationToken)
         {
-#if ALTCOINS
-            var liquid = _prov.GetNetwork("LBTC");
-            if (liquid is not null)
-            {
-                var lbtcrpc = GetCashCow(liquid.CryptoCode);
-                await lbtcrpc.SendCommandAsync("rescanblockchain");
-                var elements = _prov.NetworkProviders.GetAll().OfType<Plugins.Altcoins.ElementsBTCPayNetwork>();
-                foreach (Plugins.Altcoins.ElementsBTCPayNetwork element in elements)
-                {
-                    try
-                    {
-                        if (element.AssetId is null)
-                        {
-                            var issueAssetResult = await lbtcrpc.SendCommandAsync("issueasset", 100000, 0);
-                            element.AssetId = uint256.Parse(issueAssetResult.Result["asset"].ToString());
-                        }
-                    }
-                    catch (Exception)
-                    {
-                    }
-                }
-            }
-#else
-            if (CashCow is { } c)
-                await c.ScanRPCCapabilitiesAsync(cancellationToken);
-#endif
-        }
+			if (CashCow is { } c)
+				await c.ScanRPCCapabilitiesAsync(cancellationToken);
+		}
 
         Task IHostedService.StopAsync(CancellationToken cancellationToken)
         {

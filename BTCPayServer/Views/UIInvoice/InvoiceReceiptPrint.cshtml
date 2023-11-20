@@ -45,7 +45,7 @@ else
         @foreach (var payment in Model.Payments)
         {
             <p>&nbsp;</p>
-            <p class="text-center">@payment.Amount <span class="text-nowrap">@payment.PaymentMethod</span></p>
+            <p class="text-center">@payment.AmountFormatted <span class="text-nowrap">@payment.PaymentMethod</span></p>
             <p class="text-center">Rate: @payment.RateFormatted</p>
             <p class="text-center">= @payment.PaidFormatted</p>
         }

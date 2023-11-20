@@ -16,7 +16,8 @@ document.addEventListener("DOMContentLoaded",function (ev) {
                 active: true,
                 loading: false,
                 timeoutState: "",
-                customAmount: null
+                customAmount: null,
+                detailsShown: {}
             }
         },
         computed: {
@@ -109,6 +110,15 @@ document.addEventListener("DOMContentLoaded",function (ev) {
                     default:
                         return status.toLowerCase();
                 }
+            },
+            showDetails(invoiceId) {
+                return this.detailsShown[invoiceId] === true;
+            },
+            toggleDetails(invoiceId) {
+                if (this.detailsShown[invoiceId])
+                    Vue.delete(this.detailsShown, invoiceId);
+                else
+                    Vue.set(this.detailsShown, invoiceId, true);
             }
         },
         mounted: function () {

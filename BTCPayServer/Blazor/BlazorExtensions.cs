@@ -1,4 +1,3 @@
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.JSInterop;
 
 namespace BTCPayServer.Blazor

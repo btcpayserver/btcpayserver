@@ -155,7 +155,7 @@ const initLabelManagers = () => {
 
 document.addEventListener("DOMContentLoaded", () => {
     // sticky header
-    const stickyHeader = document.querySelector('#mainContent > section > .sticky-header');
+    const stickyHeader = document.querySelector('#mainContent > section .sticky-header');
     if (stickyHeader) {
         const setStickyHeaderHeight = () => {
             document.documentElement.style.setProperty('--sticky-header-height', `${stickyHeader.offsetHeight}px`)
@@ -164,7 +164,6 @@ document.addEventListener("DOMContentLoaded", () => {
             debounce('resize', setStickyHeaderHeight, 50)
         });
         setStickyHeaderHeight();
-        
     }
     
     // initialize timezone offset value if field is present in page

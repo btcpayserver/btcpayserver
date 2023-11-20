@@ -1,15 +1,12 @@
-@using BTCPayServer.Abstractions.Extensions
 @using BTCPayServer.Components.StoreSelector
 @using BTCPayServer.Components.MainNav
 @inject Microsoft.AspNetCore.Http.IHttpContextAccessor _context;
 @inject BTCPayServer.Services.BTCPayServerEnvironment _env
 @inject SignInManager<ApplicationUser> _signInManager
 @inject UserManager<ApplicationUser> _userManager
-@inject LinkGenerator _linkGenerator
 @inject BTCPayServer.Services.PoliciesSettings PoliciesSettings
 
 @{
-    var notificationsReturnUrl = Context.Request.GetCurrentPathWithQueryString();
     var notificationDisabled = PoliciesSettings.DisableInstantNotifications;
     if (!notificationDisabled)
     {

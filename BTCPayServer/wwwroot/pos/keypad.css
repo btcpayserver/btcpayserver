@@ -14,7 +14,9 @@
 #RecentTransactionsToggle .icon {
     --btn-icon-size: 2.25em;
 }
-
+#RecentTransactionsRefresh[disabled] .icon {
+    animation: 1.25s linear infinite spinner-border;
+}
 #RecentTransactions .list-group {
     margin: calc(var(--btcpay-modal-padding) * -1);
     width: calc(100% + var(--btcpay-modal-padding) * 2);
@@ -33,7 +35,6 @@
     #RecentTransactions .list-group .badge-container {
         flex-grow: 1;
     }
-
 }
 
 /* modes */

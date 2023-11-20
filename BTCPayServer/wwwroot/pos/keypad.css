@@ -54,6 +54,7 @@
     padding: 0;
     position: relative;
     border-radius: 0;
+    border-color: transparent !important;
     font-weight: var(--btcpay-font-weight-semibold);
     font-size: 24px;
     min-height: 3.5rem;
@@ -114,7 +115,6 @@
 }
 /* fix sticky hover effect on mobile browsers */
 @media (hover: none) {
-    .keypad .btn-secondary:hover,
     .actions .btn-secondary:hover {
         border-color: var(--btcpay-secondary-border-active) !important;
     }

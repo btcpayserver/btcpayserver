@@ -253,7 +253,7 @@ namespace BTCPayServer.Services.Apps
         public async Task<ListAppsViewModel.ListAppViewModel[]> GetAllApps(string? userId, bool allowNoUser = false, string? storeId = null, bool includeArchived = false)
         {
             await using var ctx = _ContextFactory.CreateContext();
-            var types = GetAvailableAppTypes().Select(at => at.Key);
+            var types = GetAvailableAppTypes().Select(at => at.Key).ToHashSet();
             var listApps = (await ctx.UserStore
                 .Where(us =>
                     (allowNoUser && string.IsNullOrEmpty(userId) || us.ApplicationUserId == userId) &&

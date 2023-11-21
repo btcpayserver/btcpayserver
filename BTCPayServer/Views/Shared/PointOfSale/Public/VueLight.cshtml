@@ -1,6 +1,6 @@
 @model BTCPayServer.Plugins.PointOfSale.Models.ViewPointOfSaleViewModel
 
-<form id="PosKeypad" method="post" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" v-on:submit="handleFormSubmit" class="d-flex flex-column gap-4 my-auto" v-cloak>
+<form id="app" method="post" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" v-on:submit="handleFormSubmit" class="d-flex flex-column gap-4 my-auto" v-cloak>
     <input type="hidden" name="posdata" v-model="posdata" id="posdata">
     <input type="hidden" name="amount" v-model="totalNumeric">
     <div ref="display" class="d-flex flex-column align-items-center px-4 mb-auto">

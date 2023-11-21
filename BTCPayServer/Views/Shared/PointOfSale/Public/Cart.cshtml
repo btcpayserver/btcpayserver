@@ -29,7 +29,7 @@
 
 <div id="PosCart">
     <div id="content">
-        <div class="public-page-wrap container-xl">
+        <div class="public-page-wrap">
             <header class="sticky-top bg-body d-flex flex-column py-3 py-lg-4 gap-3">
                 <div class="d-flex align-items-center justify-content-center gap-3 px-5 position-relative">
                     <h1 class="mb-0">@(string.IsNullOrEmpty(Model.Title) ? Model.StoreName : Model.Title)</h1>
@@ -130,7 +130,7 @@
         </div>
     </div>
     <aside id="cart" ref="cart" tabindex="-1" aria-labelledby="cartLabel">
-        <div class="public-page-wrap container-xl" v-cloak>
+        <div class="public-page-wrap" v-cloak>
             <header class="sticky-top bg-tile offcanvas-header py-3 py-lg-4 d-flex align-items-baseline justify-content-center gap-3 px-5 pe-lg-0">
                 <h1 class="mb-0" id="cartLabel">Cart</h1>
                 <button id="CartClear" type="reset" v-on:click="clearCart" class="btn btn-text text-primary p-1" v-if="cartCount > 0">

@@ -233,9 +233,6 @@ namespace BTCPayServer.Hosting
                     var rows = await query.ToListAsync();
                     foreach (var row in rows)
                     {
-                        // There is as circular deps between invoice and refund.
-                        if (row is InvoiceData id)
-                            id.CurrentRefundId = null;
                         foreach (var prop in datetimeProperties)
                         {
                             var v = (DateTime)prop.GetValue(row)!;
@@ -261,10 +258,6 @@ namespace BTCPayServer.Hosting
                     }
                     await postgresContext.SaveChangesAsync();
                     postgresContext.ChangeTracker.Clear();
-                }
-                foreach (var invoice in otherContext.Invoices.AsNoTracking().Where(i => i.CurrentRefundId != null))
-                {
-                    postgresContext.Entry(invoice).State = EntityState.Modified;
                 }
                 await postgresContext.SaveChangesAsync();
                 postgresContext.ChangeTracker.Clear();

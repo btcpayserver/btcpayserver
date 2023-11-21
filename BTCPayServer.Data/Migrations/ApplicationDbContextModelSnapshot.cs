@@ -287,9 +287,6 @@ namespace BTCPayServer.Migrations
                     b.Property<DateTimeOffset>("Created")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("CurrentRefundId")
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("CustomerEmail")
                         .HasColumnType("TEXT");
 
@@ -315,8 +312,6 @@ namespace BTCPayServer.Migrations
                     b.HasIndex("OrderId");
 
                     b.HasIndex("StoreDataId");
-
-                    b.HasIndex("Id", "CurrentRefundId");
 
                     b.ToTable("Invoices");
                 });
@@ -1250,12 +1245,6 @@ namespace BTCPayServer.Migrations
                         .WithMany("Invoices")
                         .HasForeignKey("StoreDataId")
                         .OnDelete(DeleteBehavior.Cascade);
-
-                    b.HasOne("BTCPayServer.Data.RefundData", "CurrentRefund")
-                        .WithMany()
-                        .HasForeignKey("Id", "CurrentRefundId");
-
-                    b.Navigation("CurrentRefund");
 
                     b.Navigation("StoreData");
                 });

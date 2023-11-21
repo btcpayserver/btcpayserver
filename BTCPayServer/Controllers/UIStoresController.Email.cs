@@ -19,20 +19,25 @@ namespace BTCPayServer.Controllers
     public partial class UIStoresController
     {
         [HttpGet("{storeId}/emails")]
-        public IActionResult StoreEmails(string storeId)
+        public async Task<IActionResult> StoreEmails(string storeId)
         {
             var store = HttpContext.GetStoreData();
             if (store == null)
                 return NotFound();
 
             var blob = store.GetStoreBlob();
-            var data = blob.EmailSettings;
-            if (data?.IsComplete() is not true)
+            var storeSetupComplete = blob.EmailSettings?.IsComplete() is true;
+            if (!storeSetupComplete)
             {
+                var emailSender = await _emailSenderFactory.GetEmailSender(store.Id) as StoreEmailSender;
+                var hasServerFallback = await IsSetupComplete(emailSender?.FallbackSender);
+                var message = hasServerFallback
+                    ? "Emails will be sent with the email settings of the server"
+                    : "You need to configure email settings before this feature works";
                 TempData.SetStatusMessageModel(new StatusMessageModel
                 {
-                    Severity = StatusMessageModel.StatusSeverity.Warning,
-                    Html = $"You need to configure email settings before this feature works. <a class='alert-link' href='{Url.Action("StoreEmailSettings", new { storeId })}'>Configure now</a>."
+                    Severity = hasServerFallback ? StatusMessageModel.StatusSeverity.Info : StatusMessageModel.StatusSeverity.Warning,
+                    Html = $"{message}. <a class='alert-link' href='{Url.Action("StoreEmailSettings", new { storeId })}'>Configure store email settings</a>."
                 });
             }
 
@@ -208,6 +213,11 @@ namespace BTCPayServer.Controllers
                 TempData[WellKnownTempData.SuccessMessage] = "Email settings modified";
                 return RedirectToAction(nameof(StoreEmailSettings), new { storeId });
             }
+        }
+
+        private static async Task<bool> IsSetupComplete(IEmailSender emailSender)
+        {
+            return emailSender is not null && (await emailSender.GetEmailSettings())?.IsComplete() == true;
         }
     }
 }

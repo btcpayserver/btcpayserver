@@ -1,5 +1,8 @@
 @using BTCPayServer.Lightning
+@using BTCPayServer.Services
 @model LightningSettingsViewModel
+@inject LightningClientFactoryService LightningClientFactoryService
+@inject BTCPayNetworkProvider NetworkProvider
 @{
     Layout = "../Shared/_NavLayout.cshtml";
     ViewData["NavPartialName"] = "../UILightning/_Nav";
@@ -15,12 +18,17 @@
                 @if (Model.LightningNodeType != LightningNodeType.Internal)
                 {
                     <span class="me-3" id="CustomNodeInfo">
-                        @if (LightningConnectionString.TryParse(Model.ConnectionString, out var cs))
+                        @try
                         {
-                            @typeof(LightningConnectionType).DisplayName(cs.ConnectionType.ToString())
-                            <span>(@cs.BaseUri.Host)</span>
+                            var client = LightningClientFactoryService.Create(Model.ConnectionString, NetworkProvider.GetNetwork<BTCPayNetwork>(Model.CryptoCode));
+                            client.GetDisplayName();
+                            var uri = client.GetServerUri();
+                            if (uri is not null)
+                            {
+                                <span>(@uri.Host)</span>
+                            }
                         }
-                        else
+                        catch (Exception e)
                         {
                             @Model.ConnectionString
                         }

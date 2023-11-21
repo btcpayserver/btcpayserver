@@ -19,6 +19,12 @@ using BTCPayServer.Data.Payouts.LightningLike;
 using BTCPayServer.Forms;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Lightning;
+using BTCPayServer.Lightning.Charge;
+using BTCPayServer.Lightning.CLightning;
+using BTCPayServer.Lightning.Eclair;
+using BTCPayServer.Lightning.LNbank;
+using BTCPayServer.Lightning.LND;
+using BTCPayServer.Lightning.LNDhub;
 using BTCPayServer.Logging;
 using BTCPayServer.PaymentRequest;
 using BTCPayServer.Payments;
@@ -122,9 +128,24 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<IHostedService>(provider => provider.GetRequiredService<TorServices>());
             services.AddSingleton<ISwaggerProvider, DefaultSwaggerProvider>();
             services.TryAddSingleton<SocketFactory>();
+            
+            services.AddSingleton<Func<HttpClient, ILightningConnectionStringHandler>>(client =>
+                new ChargeLightningConnectionStringHandler(client));
+            services.AddSingleton<Func<HttpClient, ILightningConnectionStringHandler>>(_ =>
+                new CLightningConnectionStringHandler());
+            services.AddSingleton<Func<HttpClient, ILightningConnectionStringHandler>>(client =>
+                new EclairConnectionStringHandler(client));
+            services.AddSingleton<Func<HttpClient, ILightningConnectionStringHandler>>(client =>
+                new LndConnectionStringHandler(client));
+            services.AddSingleton<Func<HttpClient, ILightningConnectionStringHandler>>(client =>
+                new LndHubConnectionStringHandler(client));
+            services.AddSingleton<Func<HttpClient, ILightningConnectionStringHandler>>(client =>
+                new LNbankConnectionStringHandler(client));
             services.TryAddSingleton<LightningClientFactoryService>();
             services.AddHttpClient(LightningClientFactoryService.OnionNamedClient)
                 .ConfigurePrimaryHttpMessageHandler<Socks5HttpClientHandler>();
+            
+            
             services.TryAddSingleton<InvoicePaymentNotification>();
             services.TryAddSingleton<BTCPayServerOptions>(o =>
                 o.GetRequiredService<IOptions<BTCPayServerOptions>>().Value);
@@ -211,16 +232,26 @@ namespace BTCPayServer.Hosting
                         }
                     }
                 });
-            services.AddOptions<LightningNetworkOptions>().Configure<BTCPayNetworkProvider>(
-                (options, btcPayNetworkProvider) =>
+            services.AddOptions<LightningNetworkOptions>().Configure<BTCPayNetworkProvider, LightningClientFactoryService>(
+                (options, btcPayNetworkProvider, lightningClientFactoryService) =>
                 {
                     foreach (var net in btcPayNetworkProvider.GetAll().OfType<BTCPayNetwork>())
                     {
                         var lightning = configuration.GetOrDefault<string>($"{net.CryptoCode}.lightning", string.Empty);
                         if (lightning.Length != 0)
                         {
-                            if (!LightningConnectionString.TryParse(lightning, true, out var connectionString,
-                                out var error))
+                            string error = null;
+                            ILightningClient lightningClient = null;
+                            try
+                            {
+                                lightningClient = lightningClientFactoryService.Create(lightning, net);
+                            }
+                            catch (Exception e)
+                            {
+                                error = e.Message;
+                            }
+                           
+                            if (error is not null)
                             {
                                 logs.Configuration.LogWarning($"Invalid setting {net.CryptoCode}.lightning, " +
                                                               Environment.NewLine +
@@ -241,12 +272,12 @@ namespace BTCPayServer.Hosting
                             }
                             else
                             {
-                                if (connectionString.IsLegacy)
+                                if (lightningClient.ToString() != lightning)
                                 {
                                     logs.Configuration.LogWarning(
-                                        $"Setting {net.CryptoCode}.lightning is a deprecated format, it will work now, but please replace it for future versions with '{connectionString.ToString()}'");
+                                        $"Setting {net.CryptoCode}.lightning is a deprecated format ({lightning}), it will work now, but please replace it for future versions with '{lightningClient.ToString()}'");
                                 }
-                                options.InternalLightningByCryptoCode.Add(net.CryptoCode, connectionString);
+                                options.InternalLightningByCryptoCode.Add(net.CryptoCode, lightningClient);
                             }
                         }
                     }

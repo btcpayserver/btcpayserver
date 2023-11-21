@@ -24,26 +24,23 @@ namespace BTCPayServer.Filters
 
         public bool Accept(ActionConstraintContext context)
         {
-            var hasAppId = context.RouteContext.RouteData.Values.ContainsKey("appId");
+            var req = context.RouteContext.HttpContext.Request;
             var policies = context.RouteContext.HttpContext.RequestServices.GetService<PoliciesSettings>();
-            var mapping = policies?.DomainToAppMapping;
-            var hasDomainMapping = mapping is { Count: > 0 };
-            var matchingRootAppId = AppType == policies?.RootAppType && !string.IsNullOrEmpty(policies?.RootAppId) ? policies.RootAppId : null;
-
-            if (hasAppId)
+            var mapping = policies?.DomainToAppMapping?.ToList() ?? new ();
+            if (policies?.RootAppId is { } rootAppId && policies?.RootAppType is { } rootAppType)
             {
-                var appId = (string)context.RouteContext.RouteData.Values["appId"];
-                var req = context.RouteContext.HttpContext.Request;
-                string redirectDomain = null;
-                if (hasDomainMapping)
+                mapping.Add(new()
                 {
-                    redirectDomain = mapping.FirstOrDefault(item => item.AppId == appId)?.Domain;
-                }
-                else if (matchingRootAppId == appId)
-                {
-                    redirectDomain = req.Host.Host;
-                }
-                    
+                    Domain = req.Host.Host,
+                    AppId = rootAppId,
+                    AppType = rootAppType
+                });
+            }
+
+            // If we have an appId, we can redirect to the canonical domain
+            if ((string)context.RouteContext.RouteData.Values["appId"] is string appId)
+            {
+                var redirectDomain = mapping.FirstOrDefault(item => item.AppId == appId)?.Domain;
                 // App is accessed via path, redirect to canonical domain
                 if (!string.IsNullOrEmpty(redirectDomain) && req.Method != "POST" && !req.HasFormContentType)
                 {
@@ -51,36 +48,22 @@ namespace BTCPayServer.Filters
                     if (req.Host.Port.HasValue)
                         uri.Port = req.Host.Port.Value;
                     context.RouteContext.HttpContext.Response.Redirect(uri.ToString());
-                    return true;
                 }
-            }
-
-            if (hasDomainMapping)
-            {
-                var matchedDomainMapping = mapping.FirstOrDefault(item =>
-                    item.Domain.Equals(context.RouteContext.HttpContext.Request.Host.Host,
-                        StringComparison.InvariantCultureIgnoreCase));
-                if (matchedDomainMapping != null)
-                {
-                    if (AppType is not { } appType)
-                        return false;
-                    if (appType != matchedDomainMapping.AppType)
-                        return false;
-                    if (!hasAppId)
-                    {
-                        context.RouteContext.RouteData.Values.Add("appId", matchedDomainMapping.AppId);
-                        return true;
-                    }
-                }
-            }
-
-            if (!hasAppId && !string.IsNullOrEmpty(matchingRootAppId))
-            {
-                context.RouteContext.RouteData.Values.Add("appId", matchingRootAppId);
                 return true;
             }
-
-            return hasAppId || AppType is null;
+            // If we don't have an appId, maybe the domain we are browsing is a domain of an app
+            else
+            {
+                var matchedDomainMapping = mapping.FirstOrDefault(item => item.Domain.Equals(req.Host.Host, StringComparison.InvariantCultureIgnoreCase));
+                if (matchedDomainMapping != null)
+                {
+                    if (AppType is not { } appType || appType != matchedDomainMapping.AppType)
+                        return false;
+                    context.RouteContext.RouteData.Values.Add("appId", matchedDomainMapping.AppId);
+                    return true;
+                }
+                return AppType is null; // We should never prevent to go on home page
+            }
         }
     }
 }

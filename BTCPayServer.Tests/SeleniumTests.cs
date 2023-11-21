@@ -111,6 +111,7 @@ namespace BTCPayServer.Tests
             // Payment Request
             s.Driver.FindElement(By.Id("StoreNav-PaymentRequests")).Click();
             s.Driver.FindElement(By.Id("CreatePaymentRequest")).Click();
+            Thread.Sleep(10000);
             s.Driver.FindElement(By.Id("Title")).SendKeys("Pay123");
             s.Driver.FindElement(By.Id("Amount")).SendKeys("700");
             new SelectElement(s.Driver.FindElement(By.Id("FormId"))).SelectByValue("Email");
@@ -461,6 +462,12 @@ namespace BTCPayServer.Tests
             using var s = CreateSeleniumTester();
             await s.StartAsync();
             s.RegisterNewUser(true);
+            s.CreateNewStore();
+            
+            // Store Emails without server fallback
+            s.GoToStore(StoreNavPages.Emails);
+            s.Driver.FindElement(By.Id("ConfigureEmailRules")).Click();
+            Assert.Contains("You need to configure email settings before this feature works", s.Driver.PageSource);
 
             // Server Emails
             s.Driver.Navigate().GoToUrl(s.Link("/server/emails"));
@@ -470,12 +477,11 @@ namespace BTCPayServer.Tests
                 s.FindAlertMessage();
             }
             CanSetupEmailCore(s);
-            s.CreateNewStore();
 
-            // Store Emails
+            // Store Emails with server fallback
             s.GoToStore(StoreNavPages.Emails);
             s.Driver.FindElement(By.Id("ConfigureEmailRules")).Click();
-            Assert.Contains("You need to configure email settings before this feature works", s.Driver.PageSource);
+            Assert.Contains("Emails will be sent with the email settings of the server", s.Driver.PageSource);
 
             s.GoToStore(StoreNavPages.Emails);
             CanSetupEmailCore(s);
@@ -485,6 +491,7 @@ namespace BTCPayServer.Tests
             Assert.Contains("There are no rules yet.", s.Driver.PageSource);
             Assert.DoesNotContain("id=\"SaveEmailRules\"", s.Driver.PageSource);
             Assert.DoesNotContain("You need to configure email settings before this feature works", s.Driver.PageSource);
+            Assert.DoesNotContain("Emails will be sent with the email settings of the server", s.Driver.PageSource);
 
             s.Driver.FindElement(By.Id("CreateEmailRule")).Click();
             var select = new SelectElement(s.Driver.FindElement(By.Id("Rules_0__Trigger")));

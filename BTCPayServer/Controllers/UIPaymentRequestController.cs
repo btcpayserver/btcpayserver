@@ -111,16 +111,17 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             }
             
-            var blob = store.GetStoreBlob();
+            var storeBlob = store.GetStoreBlob();
             var prInvoices = payReqId is null ? null : (await _PaymentRequestService.GetPaymentRequest(payReqId, GetUserId())).Invoices;
             var vm = new UpdatePaymentRequestViewModel(paymentRequest)
             {
                 StoreId = store.Id,
-                AmountAndCurrencyEditable = payReqId is null || !prInvoices.Any(),
-                HasEmailRules = blob.EmailRules.Any(rule => rule.Trigger.Contains("PaymentRequest", StringComparison.InvariantCultureIgnoreCase))
+                AmountAndCurrencyEditable = payReqId is null || !prInvoices.Any()
             };
 
-            vm.Currency ??= store.GetStoreBlob().DefaultCurrency;
+            vm.Currency ??= storeBlob.DefaultCurrency;
+            vm.HasEmailRules = storeBlob.EmailRules?.Any(rule =>
+                rule.Trigger.Contains("PaymentRequest", StringComparison.InvariantCultureIgnoreCase));
 
             return View(nameof(EditPaymentRequest), vm);
         }
@@ -158,9 +159,11 @@ namespace BTCPayServer.Controllers
 
             if (!ModelState.IsValid)
             {
+                var storeBlob = store.GetStoreBlob();
+                viewModel.HasEmailRules = storeBlob.EmailRules?.Any(rule =>
+                    rule.Trigger.Contains("PaymentRequest", StringComparison.InvariantCultureIgnoreCase));
                 return View(nameof(EditPaymentRequest), viewModel);
             }
-
 
             blob.Title = viewModel.Title;
             blob.Email = viewModel.Email;

@@ -84,6 +84,7 @@ namespace BTCPayServer.Abstractions.Contracts
                         .UseNpgsql(_options.Value.ConnectionString, o =>
                         {
                             o.EnableRetryOnFailure(10);
+                            o.SetPostgresVersion(12, 0);
                             if (!string.IsNullOrEmpty(_schemaPrefix))
                             {
                                 o.MigrationsHistoryTable(_schemaPrefix);

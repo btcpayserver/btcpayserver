@@ -660,12 +660,12 @@ input:checked + label.btcpay-list-select-item {
         min-height: 100dvh !important;
     }
     .tile {
-        --section-padding: 1.5rem;
-        --section-border-radius: var(--btcpay-border-radius-l);
+        --tile-padding: 1.5rem;
+        --tile-border-radius: var(--btcpay-border-radius-l);
 
-        padding: var(--section-padding);
+        padding: var(--tile-padding);
         background: var(--btcpay-bg-tile);
-        border-radius: var(--section-border-radius);
+        border-radius: var(--tile-border-radius);
         box-shadow: var(--btcpay-box-shadow-lg);
     }
     .tile .buttons {
@@ -683,8 +683,8 @@ input:checked + label.btcpay-list-select-item {
         --wrap-padding-horizontal: 0;
     }
     .tile {
-        --section-padding: 1rem;
-        --section-border-radius: none;
+        --tile-padding: 1rem;
+        --tile-border-radius: none;
     }
 }
 

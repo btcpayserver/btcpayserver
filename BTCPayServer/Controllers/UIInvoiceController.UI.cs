@@ -288,19 +288,19 @@ namespace BTCPayServer.Controllers
             await using var ctx = _dbContextFactory.CreateContext();
             ctx.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
             var invoice = await ctx.Invoices.Include(i => i.Payments)
-                                            .Include(i => i.CurrentRefund)
+                                            .Include(i => i.Refunds).ThenInclude(i => i.PullPaymentData)
                                             .Include(i => i.StoreData)
                                             .ThenInclude(data => data.UserStores)
-                                            .Include(i => i.CurrentRefund.PullPaymentData)
                                             .Where(i => i.Id == invoiceId)
                                             .FirstOrDefaultAsync(cancellationToken);
             if (invoice is null)
                 return NotFound();
-            if (invoice.CurrentRefund?.PullPaymentDataId is null && GetUserId() is null)
+            var currentRefund = invoice.Refunds.OrderByDescending(r => r.PullPaymentData.StartDate).FirstOrDefault();
+            if (currentRefund?.PullPaymentDataId is null && GetUserId() is null)
                 return NotFound();
             if (!invoice.GetInvoiceState().CanRefund())
                 return NotFound();
-            if (invoice.CurrentRefund?.PullPaymentDataId is string ppId && !invoice.CurrentRefund.PullPaymentData.Archived)
+            if (currentRefund?.PullPaymentDataId is string ppId && !currentRefund.PullPaymentData.Archived)
             {
                 // TODO: Having dedicated UI later on
                 return RedirectToAction(nameof(UIPullPaymentController.ViewPullPayment),
@@ -550,7 +550,7 @@ namespace BTCPayServer.Controllers
                 Html = "Refund successfully created!<br />Share the link to this page with a customer.<br />The customer needs to enter their address and claim the refund.<br />Once a customer claims the refund, you will get a notification and would need to approve and initiate it from your Store > Payouts.",
                 Severity = StatusMessageModel.StatusSeverity.Success
             });
-            (await ctx.Invoices.FindAsync(new[] { invoice.Id }, cancellationToken))!.CurrentRefundId = ppId;
+
             ctx.Refunds.Add(new RefundData
             {
                 InvoiceDataId = invoice.Id,

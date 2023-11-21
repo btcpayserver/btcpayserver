@@ -24,7 +24,7 @@ services:
       TESTS_AzureBlobStorageConnectionString: ${TESTS_AzureBlobStorageConnectionString:-none}
       TEST_MERCHANTLIGHTNINGD: "type=clightning;server=unix://etc/merchant_lightningd_datadir/lightning-rpc"
       TEST_CUSTOMERLIGHTNINGD: "type=clightning;server=unix://etc/customer_lightningd_datadir/lightning-rpc"
-      TEST_MERCHANTLND: "http://lnd:lnd@merchant_lnd:8080/"
+      TEST_MERCHANTLND: "http://merchant_lnd:8080/"
       TESTS_INCONTAINER: "true"
       TESTS_SSHCONNECTION: "root@sshd:22"
       TESTS_SSHPASSWORD: ""
@@ -99,7 +99,7 @@ services:
       custom:
 
   nbxplorer:
-    image: nicolasdorier/nbxplorer:2.3.66
+    image: nicolasdorier/nbxplorer:2.4.0
     restart: unless-stopped
     ports:
       - "32838:32838"
@@ -224,7 +224,7 @@ services:
       - "5432"
 
   merchant_lnd:
-    image: btcpayserver/lnd:v0.17.1-beta
+    image: btcpayserver/lnd:v0.17.2-beta
     restart: unless-stopped
     environment:
       LND_CHAIN: "btc"
@@ -259,7 +259,7 @@ services:
       - bitcoind
 
   customer_lnd:
-    image: btcpayserver/lnd:v0.17.1-beta
+    image: btcpayserver/lnd:v0.17.2-beta
     restart: unless-stopped
     environment:
       LND_CHAIN: "btc"

@@ -83,7 +83,7 @@
         "type": "string",
         "description": "`\"V1\"`: The original checkout form   \n`\"V2\"`: The new experimental checkout form",
         "nullable": true,
-        "default": "V1",
+        "default": "V2",
         "x-enumNames": [
           "V1",
           "V2"

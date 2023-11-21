@@ -55,7 +55,8 @@ public class StoreNumbers : ViewComponent
             .Where(p => p.PullPaymentData.StoreId == vm.Store.Id && !p.PullPaymentData.Archived && p.State == PayoutState.AwaitingApproval)
             .CountAsync();
         vm.RefundsIssued = await ctx.Invoices
-            .Where(i => i.StoreData.Id == vm.Store.Id && !i.Archived && i.CurrentRefundId != null && i.Created >= offset)
+            .Where(i => i.StoreData.Id == vm.Store.Id && !i.Archived && i.Created >= offset)
+            .SelectMany(i => i.Refunds)
             .CountAsync();
 
         return View(vm);

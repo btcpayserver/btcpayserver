@@ -156,7 +156,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 .FirstOrDefault(d => d.PaymentId == id);
             if (existing == null)
                 throw ErrorLightningNodeNotConfiguredForStore();
-            if (existing.GetExternalLightningUrl() is LightningConnectionString connectionString)
+            if (existing.GetExternalLightningUrl() is {} connectionString)
             {
                 return Task.FromResult(_lightningClientFactory.Create(connectionString, network));
             }
@@ -168,7 +168,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 {
                     throw ErrorShouldBeAdminForInternalNode();
                 }
-                return Task.FromResult(_lightningClientFactory.Create(internalLightningNode, network));
+                return Task.FromResult(internalLightningNode);
             }
             throw ErrorLightningNodeNotConfiguredForStore();
         }

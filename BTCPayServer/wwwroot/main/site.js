@@ -297,12 +297,11 @@ document.addEventListener("DOMContentLoaded", () => {
     delegate('click', '.switch-time-format', switchTimeFormat);
 
     // Theme Switch
-    delegate('click', '.btcpay-theme-switch', e => {
+    delegate('click', '.btcpay-theme-switch [data-theme]', e => {
         e.preventDefault()
-        const current = document.documentElement.getAttribute(THEME_ATTR) || COLOR_MODES[0]
-        const mode = current === COLOR_MODES[0] ? COLOR_MODES[1] : COLOR_MODES[0]
-        setColorMode(mode)
-        e.target.closest('.btcpay-theme-switch').blur()
+        const $btn = e.target.closest('.btcpay-theme-switch [data-theme]')
+        setColorMode($btn.dataset.theme)
+        $btn.blur()
     })
 
     // Sensitive Info

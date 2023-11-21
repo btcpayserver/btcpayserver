@@ -101,7 +101,7 @@ public class StoreLightningBalance : ViewComponent
         }
         if (existing.IsInternalNode && _lightningNetworkOptions.Value.InternalLightningByCryptoCode.TryGetValue(cryptoCode, out var internalLightningNode))
         {
-            return _lightningClientFactory.Create(internalLightningNode, network);
+            return internalLightningNode;
         }
 
         return null;

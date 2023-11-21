@@ -278,7 +278,7 @@ namespace BTCPayServer.Tests
 
         public bool IsAdmin { get; internal set; }
 
-        public void RegisterLightningNode(string cryptoCode, LightningConnectionType? connectionType = null, bool isMerchant = true)
+        public void RegisterLightningNode(string cryptoCode, string? connectionType = null, bool isMerchant = true)
         {
             RegisterLightningNodeAsync(cryptoCode, connectionType, isMerchant).GetAwaiter().GetResult();
         }
@@ -286,7 +286,7 @@ namespace BTCPayServer.Tests
         {
             return RegisterLightningNodeAsync(cryptoCode, null, isMerchant, storeId);
         }
-        public async Task RegisterLightningNodeAsync(string cryptoCode, LightningConnectionType? connectionType, bool isMerchant = true, string storeId = null)
+        public async Task RegisterLightningNodeAsync(string cryptoCode, string? connectionType, bool isMerchant = true, string storeId = null)
         {
             var storeController = GetController<UIStoresController>();
 

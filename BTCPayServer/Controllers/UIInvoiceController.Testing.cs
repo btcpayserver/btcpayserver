@@ -29,14 +29,17 @@ namespace BTCPayServer.Controllers
 
         [HttpPost("i/{invoiceId}/test-payment")]
         [CheatModeRoute]
-        public async Task<IActionResult> TestPayment(string invoiceId, FakePaymentRequest request, [FromServices] Cheater cheater)
+        public async Task<IActionResult> TestPayment(string invoiceId, FakePaymentRequest request, 
+            [FromServices] Cheater cheater, 
+            [FromServices] LightningClientFactoryService lightningClientFactoryService)
         {
             var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
             var store = await _StoreRepository.FindStore(invoice.StoreId);
             var isSats = request.CryptoCode.ToUpper(CultureInfo.InvariantCulture) == "SATS";
             var cryptoCode = isSats ? "BTC" : request.CryptoCode;
             var amount = new Money(request.Amount, isSats ? MoneyUnit.Satoshi : MoneyUnit.BTC);
-            var network = _NetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode).NBitcoinNetwork;
+            var btcpayNetwork = _NetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
+            var network = btcpayNetwork.NBitcoinNetwork;
             var paymentMethodId = new[] { store.GetDefaultPaymentId() }
                 .Concat(store.GetEnabledPaymentIds(_NetworkProvider))
                 .FirstOrDefault(p => p?.ToString() == request.PaymentMethodId);
@@ -61,8 +64,10 @@ namespace BTCPayServer.Controllers
 
                     case LightningPaymentType:
                         // requires the channels to be set up using the BTCPayServer.Tests/docker-lightning-channel-setup.sh script
-                        LightningConnectionString.TryParse(Environment.GetEnvironmentVariable("BTCPAY_BTCEXTERNALLNDREST"), false, out var lnConnection);
-                        var lnClient = LightningClientFactory.CreateClient(lnConnection, network);
+                        var lnClient = lightningClientFactoryService.Create(
+                            Environment.GetEnvironmentVariable("BTCPAY_BTCEXTERNALLNDREST"),
+                            btcpayNetwork);
+
                         var lnAmount = new LightMoney(amount.Satoshi, LightMoneyUnit.Satoshi);
                         var response = await lnClient.Pay(destination, new PayInvoiceParams { Amount = lnAmount });
 

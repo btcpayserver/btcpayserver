@@ -19,7 +19,7 @@ namespace BTCPayServer.Payments.Lightning
             {
                 if (!options.InternalLightningByCryptoCode.TryGetValue(network.CryptoCode, out var connectionString))
                     throw new PaymentMethodUnavailableException("No internal node configured");
-                return lightningClientFactory.Create(connectionString, network);
+                return connectionString;
             }
         }
     }

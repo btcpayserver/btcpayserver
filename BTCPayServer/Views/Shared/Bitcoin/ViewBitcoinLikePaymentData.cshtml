@@ -85,7 +85,7 @@
                         <td>@payment.Crypto</td>
                         <td>@(payment.CryptoPaymentData.KeyPath?.ToString()?? "Unknown")</td>
                         <td>
-                            <vc:truncate-center text="@payment.DepositAddress" classes="truncate-center-id" />
+                            <vc:truncate-center text="@payment.DepositAddress.ToString()" classes="truncate-center-id" />
                         </td>
                         <td>
                             <vc:truncate-center text="@payment.PaymentProof" link="@payment.TransactionLink" classes="truncate-center-id" />

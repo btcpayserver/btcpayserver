@@ -1,16 +1,30 @@
-const COLOR_MODES = ["light", "dark"];
-const THEME_ATTR = "data-btcpay-theme";
-const STORE_ATTR = "btcpay-theme";
-const systemColorMode = window.matchMedia("(prefers-color-scheme: dark)").matches ? COLOR_MODES[1] : COLOR_MODES[0];
-const userColorMode = window.localStorage.getItem(STORE_ATTR);
-const initialColorMode = COLOR_MODES.includes(userColorMode) ? userColorMode : systemColorMode;
+(function() {
+    const COLOR_MODES = ['light', 'dark'];
+    const THEME_ATTR = 'data-btcpay-theme';
+    const STORE_ATTR = 'btcpay-theme';
+    const mediaMatcher = window.matchMedia('(prefers-color-scheme: dark)');
 
-function setColorMode (mode) {
-    if (COLOR_MODES.includes(mode)) {
-        window.localStorage.setItem(STORE_ATTR, mode);
-        document.documentElement.setAttribute(THEME_ATTR, mode);
-        document.getElementById("DarkThemeLinkTag").setAttribute("rel", mode === "dark" ? "stylesheet" : null);
+    window.setColorMode = userMode => {
+        if (userMode === 'system') {
+            window.localStorage.removeItem(STORE_ATTR);
+            document.documentElement.removeAttribute(THEME_ATTR);
+        } else if (COLOR_MODES.includes(userMode)) {
+            window.localStorage.setItem(STORE_ATTR, userMode);
+            document.documentElement.setAttribute(THEME_ATTR, userMode);
+        }
+        const user = window.localStorage.getItem(STORE_ATTR);
+        const system = mediaMatcher.matches ? COLOR_MODES[1] : COLOR_MODES[0];
+        const mode = user || system;
+        
+        document.getElementById('DarkThemeLinkTag').setAttribute('rel', mode === 'dark' ? 'stylesheet' : null);
     }
-}
 
-setColorMode(initialColorMode);
+    // set initial mode
+    setColorMode(window.localStorage.getItem(STORE_ATTR));
+    
+    // listen for system mode changes
+    mediaMatcher.addEventListener('change', e => {
+        const userMode = window.localStorage.getItem(STORE_ATTR);
+        if (!userMode) setColorMode('system');
+    });
+})();

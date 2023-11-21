@@ -258,41 +258,37 @@
 }
 
 /* Theme Switch */
-#mainNav .btcpay-theme-switch {
-    width: 100%;
+.btcpay-theme-switch {
+    
+    display: inline-flex;
+    align-items: center;
     justify-content: space-between;
 }
 
-#mainNav .btcpay-theme-switch svg {
-    order: 1;
-    margin: 0 !important;
+.btcpay-theme-switch-label {
+    font-weight: var(--btcpay-font-weight-semibold);
 }
 
-#mainNav .btcpay-theme-switch span {
-    order: 0;
-    margin: 0;
-}
-
-.btcpay-theme-switch {
+.btcpay-theme-switch-themes {
     display: inline-flex;
+    gap: var(--btcpay-space-m);
     align-items: center;
+}
+
+.btcpay-theme-switch-themes button {
+    --icon-size: 1.25rem !important;
     background: none;
-    cursor: pointer;
+    padding: 0;
     border: 0;
+    color: var(--btcpay-body-text-muted);
 }
 
-.btcpay-theme-switch svg {
-    height: 1rem;
-    width: 1rem;
+.btcpay-theme-switch-themes button:hover {
+    color: var(--btcpay-body-link);
 }
 
-.btcpay-theme-switch svg ~ span {
-    margin-left: var(--btcpay-space-xs);
-}
-
-.btcpay-theme-switch path {
-    stroke-width: .5px;
-    fill: currentColor;
+.btcpay-theme-switch-themes button svg {
+    margin: 0 !important;
 }
 
 .btcpay-theme-switch:hover .btcpay-theme-switch-light,
@@ -300,32 +296,10 @@
     fill: currentColor;
 }
 
-.btcpay-theme-switch-dark {
-    stroke: currentColor;
-}
-
-:root[data-btcpay-theme="dark"] .btcpay-theme-switch-dark {
-    display: none;
-}
-
-@media (prefers-color-scheme: dark) {
-    :root:not([data-btcpay-theme="dark"]) .btcpay-theme-switch-dark {
-        display: inline-block;
-    }
-}
-
-.btcpay-theme-switch-light {
-    display: none;
-}
-
-:root[data-btcpay-theme="dark"] .btcpay-theme-switch-light {
-    display: inline-block;
-}
-
-@media (prefers-color-scheme: dark) {
-    :root:not([data-btcpay-theme="light"]) .btcpay-theme-switch-light {
-        display: inline-block;
-    }
+:root:not([data-btcpay-theme]) .btcpay-theme-switch [data-theme="system"],
+:root[data-btcpay-theme="light"] .btcpay-theme-switch [data-theme="light"],
+:root[data-btcpay-theme="dark"] .btcpay-theme-switch [data-theme="dark"] {
+    color: var(--btcpay-body-link);
 }
 
 /* Notifications */

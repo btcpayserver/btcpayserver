@@ -40,7 +40,7 @@ namespace BTCPayServer.Data
         public NetworkFeeMode NetworkFeeMode { get; set; }
 
         [JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
-        [DefaultValue(CheckoutType.V1)]
+        [DefaultValue(CheckoutType.V2)]
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
         public CheckoutType CheckoutType { get; set; }
         public bool RequiresRefundEmail { get; set; }

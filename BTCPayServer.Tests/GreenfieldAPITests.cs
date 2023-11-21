@@ -1284,15 +1284,18 @@ namespace BTCPayServer.Tests
             var client = await user.CreateClient(Policies.Unrestricted);
 
             //create store
-            var newStore = await client.CreateStore(new CreateStoreRequest() { Name = "A" });
+            var newStore = await client.CreateStore(new CreateStoreRequest { Name = "A" });
+            Assert.Equal("A", newStore.Name);
+            Assert.Equal(CheckoutType.V2, newStore.CheckoutType);
 
             //update store
             Assert.Empty(newStore.PaymentMethodCriteria);
             await client.GenerateOnChainWallet(newStore.Id, "BTC", new GenerateOnChainWalletRequest());
-            var updatedStore = await client.UpdateStore(newStore.Id, new UpdateStoreRequest()
+            var updatedStore = await client.UpdateStore(newStore.Id, new UpdateStoreRequest
             {
                 Name = "B",
-                PaymentMethodCriteria = new List<PaymentMethodCriteriaData>()
+                CheckoutType = CheckoutType.V1,
+                PaymentMethodCriteria = new List<PaymentMethodCriteriaData>
             {
                 new()
                 {
@@ -1304,6 +1307,7 @@ namespace BTCPayServer.Tests
              }
             });
             Assert.Equal("B", updatedStore.Name);
+            Assert.Equal(CheckoutType.V1, updatedStore.CheckoutType);
             var s = (await client.GetStore(newStore.Id));
             Assert.Equal("B", s.Name);
             var pmc = Assert.Single(s.PaymentMethodCriteria);

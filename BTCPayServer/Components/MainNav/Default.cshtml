@@ -249,7 +249,7 @@
                 </a>
             </li>
             <li class="nav-item dropup">
-                <a class="nav-link @ViewData.IsActiveCategory(typeof(ManageNavPages))" role="button" data-bs-toggle="dropdown" aria-expanded="false" id="Nav-Account">
+                <a class="nav-link @ViewData.IsActiveCategory(typeof(ManageNavPages))" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" id="Nav-Account">
                     <vc:icon symbol="account"/>
                     <span>Account</span>
                 </a>   
@@ -264,7 +264,7 @@
                     @if (!Theme.CustomTheme)
                     {
                         <li class="py-1 px-3">
-                            <vc:theme-switch css-class="nav-link pb-0"/>
+                            <vc:theme-switch css-class="w-100 pt-2"/>
                         </li>
                     }
                     <li class="py-1 px-3">

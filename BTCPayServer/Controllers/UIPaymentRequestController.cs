@@ -3,7 +3,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
-using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Form;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
@@ -11,7 +10,6 @@ using BTCPayServer.Data;
 using BTCPayServer.Filters;
 using BTCPayServer.Forms;
 using BTCPayServer.Forms.Models;
-using BTCPayServer.Models;
 using BTCPayServer.Models.PaymentRequestViewModels;
 using BTCPayServer.PaymentRequest;
 using BTCPayServer.Services;
@@ -22,7 +20,6 @@ using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json.Linq;
 using PaymentRequestData = BTCPayServer.Data.PaymentRequestData;
 using StoreData = BTCPayServer.Data.StoreData;
 
@@ -113,12 +110,14 @@ namespace BTCPayServer.Controllers
             {
                 return NotFound();
             }
-
+            
+            var blob = store.GetStoreBlob();
             var prInvoices = payReqId is null ? null : (await _PaymentRequestService.GetPaymentRequest(payReqId, GetUserId())).Invoices;
             var vm = new UpdatePaymentRequestViewModel(paymentRequest)
             {
                 StoreId = store.Id,
-                AmountAndCurrencyEditable = payReqId is null || !prInvoices.Any()
+                AmountAndCurrencyEditable = payReqId is null || !prInvoices.Any(),
+                HasEmailRules = blob.EmailRules.Any(rule => rule.Trigger.Contains("PaymentRequest", StringComparison.InvariantCultureIgnoreCase))
             };
 
             vm.Currency ??= store.GetStoreBlob().DefaultCurrency;

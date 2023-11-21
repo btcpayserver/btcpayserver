@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Globalization;
+using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
@@ -27,7 +28,7 @@ namespace BTCPayServer.Controllers
 
             var blob = store.GetStoreBlob();
             var storeSetupComplete = blob.EmailSettings?.IsComplete() is true;
-            if (!storeSetupComplete)
+            if (!storeSetupComplete && !TempData.HasStatusMessage())
             {
                 var emailSender = await _emailSenderFactory.GetEmailSender(store.Id) as StoreEmailSender;
                 var hasServerFallback = await IsSetupComplete(emailSender?.FallbackSender);
@@ -49,17 +50,17 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> StoreEmails(string storeId, StoreEmailRuleViewModel vm, string command)
         {
             vm.Rules ??= new List<StoreEmailRule>();
-            int index = 0;
+            int commandIndex = 0;
             var indSep = command.IndexOf(":", StringComparison.InvariantCultureIgnoreCase);
             if (indSep > 0)
             {
                 var item = command[(indSep + 1)..];
-                index = int.Parse(item, CultureInfo.InvariantCulture);
+                commandIndex = int.Parse(item, CultureInfo.InvariantCulture);
             }
 
             if (command.StartsWith("remove", StringComparison.InvariantCultureIgnoreCase))
             {
-                vm.Rules.RemoveAt(index);
+                vm.Rules.RemoveAt(commandIndex);
             }
             else if (command == "add")
             {
@@ -68,7 +69,7 @@ namespace BTCPayServer.Controllers
                 return View(vm);
             }
 
-            for (var i = 0; index < vm.Rules.Count; index++)
+            for (var i = 0; i < vm.Rules.Count; i++)
             {
                 var rule = vm.Rules[i];
                 if (!rule.CustomerEmail && string.IsNullOrEmpty(rule.To))
@@ -84,41 +85,50 @@ namespace BTCPayServer.Controllers
 
             if (store == null)
                 return NotFound();
+
+            string message = "";
+
+            // update rules
             var blob = store.GetStoreBlob();
+            blob.EmailRules = vm.Rules;
+            if (store.SetStoreBlob(blob))
+            {
+                await _Repo.UpdateStore(store);
+                message += "Store email rules saved. ";
+            }
 
             if (command.StartsWith("test", StringComparison.InvariantCultureIgnoreCase))
             {
-                var rule = vm.Rules[index];
                 try
                 {
-                    var emailSettings = blob.EmailSettings;
-                    using var client = await emailSettings.CreateSmtpClient();
-                    var message = emailSettings.CreateMailMessage(MailboxAddress.Parse(rule.To), "(test) " + rule.Subject, rule.Body, true);
-                    await client.SendAsync(message);
-                    await client.DisconnectAsync(true);
-                    TempData[WellKnownTempData.SuccessMessage] = $"Rule email saved and sent to {rule.To}. Please verify you received it.";
-
-                    blob.EmailRules = vm.Rules;
-                    store.SetStoreBlob(blob);
-                    await _Repo.UpdateStore(store);
+                    var rule = vm.Rules[commandIndex];
+                    var emailSender = await _emailSenderFactory.GetEmailSender(store.Id);
+                    if (await IsSetupComplete(emailSender))
+                    {
+                        emailSender.SendEmail(MailboxAddress.Parse(rule.To), $"({store.StoreName} test) {rule.Subject}", rule.Body);
+                        message += $"Test email sent to {rule.To} — please verify you received it.";
+                    }
+                    else
+                    {
+                        message += "Complete the email setup to send test emails.";
+                    }
                 }
                 catch (Exception ex)
                 {
-                    TempData[WellKnownTempData.ErrorMessage] = "Error: " + ex.Message;
+                    TempData[WellKnownTempData.ErrorMessage] = message + "Error sending test email: " + ex.Message;
+                    return RedirectToAction("StoreEmails", new { storeId });
                 }
             }
-            else
+
+            if (!string.IsNullOrEmpty(message))
             {
-                // UPDATE
-                blob.EmailRules = vm.Rules;
-                store.SetStoreBlob(blob);
-                await _Repo.UpdateStore(store);
                 TempData.SetStatusMessageModel(new StatusMessageModel
                 {
                     Severity = StatusMessageModel.StatusSeverity.Success,
-                    Message = "Store email rules saved"
+                    Message = message
                 });
             }
+
             return RedirectToAction("StoreEmails", new { storeId });
         }
 

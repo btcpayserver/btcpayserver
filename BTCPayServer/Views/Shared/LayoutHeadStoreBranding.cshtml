@@ -10,20 +10,30 @@
 }
 @if (!string.IsNullOrEmpty(Model.BrandColor))
 {
-    var brandColor = Model.BrandColor;
-    var accentColor = ColorPalette.Default.AdjustBrightness(brandColor, (float)-0.15);
-    var complement = ColorPalette.Default.TextColor(brandColor).ToLowerInvariant();
-    var complementColor = $"var(--btcpay-{(complement == "black" ? "black" : "white")})";
+    var brand = Model.BrandColor;
+    var brandColor = ColorPalette.Default.FromHtml(brand);
+    var brandRgbValues = $"{brandColor.R}, {brandColor.G}, {brandColor.B}";
+    var accent = ColorPalette.Default.AdjustBrightness(brand, (float)-0.15);
+    var complement = ColorPalette.Default.TextColor(brand);
+    var complementVar = $"var(--btcpay-{(complement == "black" ? "black" : "white")})";
     <style>
         :root {
-            --btcpay-primary: @brandColor;
-            --btcpay-primary-shadow: @brandColor;
-            --btcpay-primary-bg-hover: @accentColor;
-            --btcpay-primary-bg-active: @accentColor;
-            --btcpay-body-link-accent: @accentColor;
-            --btcpay-primary-text: @complementColor;
-            --btcpay-primary-text-hover: @complementColor;
-            --btcpay-primary-text-active: @complementColor;
+            --btcpay-primary: @brand;
+            --btcpay-primary-rgb: @brandRgbValues;
+            --btcpay-primary-shadow: @brand;
+            --btcpay-primary-bg-hover: @accent;
+            --btcpay-primary-bg-active: @accent;
+            --btcpay-body-link: @brand;
+            --btcpay-body-link-accent: @accent;
+            --btcpay-primary-text: @complementVar;
+            --btcpay-primary-text-hover: @complementVar;
+            --btcpay-primary-text-active: @complementVar;
+        }
+        a {
+            color: var(--btcpay-body-link);
+        }
+        a:hover {
+            color: var(--btcpay-body-link-accent);
         }
     </style>
 }

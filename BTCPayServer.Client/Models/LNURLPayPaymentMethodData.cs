@@ -16,11 +16,12 @@ namespace BTCPayServer.Client.Models
         {
         }
 
-        public LNURLPayPaymentMethodData(string cryptoCode, bool enabled, bool useBech32Scheme)
+        public LNURLPayPaymentMethodData(string cryptoCode, bool enabled, bool useBech32Scheme, bool lud12Enabled)
         {
             Enabled = enabled;
             CryptoCode = cryptoCode;
             UseBech32Scheme = useBech32Scheme;
+            LUD12Enabled = lud12Enabled;
         }
     }
 }

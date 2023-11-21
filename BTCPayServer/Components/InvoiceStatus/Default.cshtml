@@ -1,0 +1,67 @@
+@using BTCPayServer.Services.Invoices
+@using BTCPayServer.Abstractions.Extensions
+@model BTCPayServer.Components.InvoiceStatus.InvoiceStatusViewModel
+@inject PaymentMethodHandlerDictionary PaymentMethodHandlerDictionary
+
+@{
+    var state = Model.State.ToString();
+    var badgeClass = Model.State.Status.ToModernStatus().ToString().ToLower();
+    var canMark = !string.IsNullOrEmpty(Model.InvoiceId) && (Model.State.CanMarkComplete() || Model.State.CanMarkInvalid());
+}
+<div class="d-inline-flex align-items-center gap-2">
+    @if (Model.IsArchived)
+    {
+        <span class="badge bg-warning">archived</span>
+    }
+    <div class="badge badge-@badgeClass" data-invoice-state-badge="@Model.InvoiceId">
+        @if (canMark)
+        {
+            <span class="dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                @state
+            </span>
+            <div class="dropdown-menu">
+                @if (Model.State.CanMarkInvalid())
+                {
+                    <button type="button" class="dropdown-item lh-base" data-invoice-id="@Model.InvoiceId" data-new-state="invalid">
+                        Mark as invalid
+                    </button>
+                }
+                @if (Model.State.CanMarkComplete())
+                {
+                    <button type="button" class="dropdown-item lh-base" data-invoice-id="@Model.InvoiceId" data-new-state="settled">
+                        Mark as settled
+                    </button>
+                }
+            </div>
+        }
+        else
+        {
+            @state
+        }
+    </div>
+    @if (Model.Payments != null)
+    {
+        foreach (var paymentMethodId in Model.Payments.Select(payment => payment.GetPaymentMethodId()).Distinct())
+        {
+            var image = PaymentMethodHandlerDictionary[paymentMethodId]?.GetCryptoImage(paymentMethodId);
+            var badge = paymentMethodId.PaymentType.GetBadge();
+            if (!string.IsNullOrEmpty(image) || !string.IsNullOrEmpty(badge))
+            {
+                <span class="d-inline-flex align-items-center gap-1">
+                    @if (!string.IsNullOrEmpty(image))
+                    {
+                        <img src="@Context.Request.GetRelativePathOrAbsolute(image)" alt="@paymentMethodId.PaymentType.ToString()" style="height:1.5em" />
+                    }
+                    @if (!string.IsNullOrEmpty(badge))
+                    {
+                        @badge
+                    }
+                </span>
+            }
+        }
+    }
+    @if (Model.HasRefund)
+    {
+        <span class="badge bg-warning">Refund</span>
+    }
+</div>

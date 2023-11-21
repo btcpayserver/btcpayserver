@@ -793,7 +793,11 @@
                     "status": {
                         "nullable": false,
                         "description": "Mark an invoice as completed or invalid.",
-                        "$ref": "#/components/schemas/InvoiceStatusMark"
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/InvoiceStatusMark"
+                            }
+                        ]
                     }
                 }
             },
@@ -811,7 +815,7 @@
             },
             "InvoiceStatus": {
                 "type": "string",
-                "description": "",
+                "description": "The status of the invoice",
                 "x-enumNames": [
                     "New",
                     "Processing",
@@ -854,13 +858,21 @@
                     },
                     "checkout": {
                         "nullable": true,
-                        "$ref": "#/components/schemas/CheckoutOptions",
-                        "description": "Additional settings to customize the checkout flow"
+                        "description": "Additional settings to customize the checkout flow",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/CheckoutOptions"
+                            }
+                        ]
                     },
                     "receipt": {
                         "nullable": true,
-                        "$ref": "#/components/schemas/ReceiptOptions",
-                        "description": "Additional settings to customize the public receipt"
+                        "description": "Additional settings to customize the public receipt",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ReceiptOptions"
+                            }
+                        ]
                     }
                 }
             },
@@ -893,8 +905,7 @@
                                 "example": "USD"
                             },
                             "type": {
-                                "$ref": "#/components/schemas/InvoiceType",
-                                "description": "The type of invoice"
+                                "$ref": "#/components/schemas/InvoiceType"
                             },
                             "checkoutLink": {
                                 "type": "string",
@@ -925,12 +936,10 @@
                                 ]
                             },
                             "status": {
-                                "$ref": "#/components/schemas/InvoiceStatus",
-                                "description": "The status of the invoice"
+                                "$ref": "#/components/schemas/InvoiceStatus"
                             },
                             "additionalStatus": {
-                                "$ref": "#/components/schemas/InvoiceAdditionalStatus",
-                                "description": "a secondary status of the invoice"
+                                "$ref": "#/components/schemas/InvoiceAdditionalStatus"
                             },
                             "availableStatusesForManualMarking": {
                                 "type": "array",
@@ -1167,8 +1176,11 @@
                 "properties": {
                     "speedPolicy": {
                         "nullable": true,
-                        "$ref": "#/components/schemas/SpeedPolicy",
-                        "description": "This is a risk mitigation parameter for the merchant to configure how they want to fulfill orders depending on the number of block confirmations for the transaction made by the consumer on the selected cryptocurrency"
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/SpeedPolicy"
+                            }
+                        ]
                     },
                     "paymentMethods": {
                         "type": "array",
@@ -1239,11 +1251,8 @@
                         "description": "`\"V1\"`: The original checkout form   \n`\"V2\"`: The new experimental checkout form.   \nIf `null` or unspecified, the store's settings will be used.",
                         "nullable": true,
                         "default": null,
-                        "x-enumNames": [
-                            "V1",
-                            "V2"
-                        ],
                         "enum": [
+                            null,
                             "V1",
                             "V2"
                         ]
@@ -1398,8 +1407,7 @@
                         "description": "The fee paid for the payment"
                     },
                     "status": {
-                        "$ref": "#/components/schemas/PaymentStatus",
-                        "description": "The status of the payment"
+                        "$ref": "#/components/schemas/PaymentStatus"
                     },
                     "destination": {
                         "type": "string",
@@ -1409,7 +1417,7 @@
             },
             "PaymentStatus": {
                 "type": "string",
-                "description": "",
+                "description": "The status of the payment",
                 "x-enumNames": [
                     "Invalid",
                     "Processing",
@@ -1423,7 +1431,7 @@
             },
             "InvoiceType": {
                 "type": "string",
-                "description": "",
+                "description": "The type of the invoice",
                 "x-enumNames": [
                     "Standard",
                     "TopUp"

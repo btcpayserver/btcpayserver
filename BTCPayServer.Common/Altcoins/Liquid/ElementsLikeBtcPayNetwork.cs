@@ -19,7 +19,8 @@ namespace BTCPayServer
             NewTransactionEvent evtOutputs)
         {
             return evtOutputs.Outputs.Where(output =>
-                output.Value is AssetMoney assetMoney && assetMoney.AssetId == AssetId).Select(output =>
+                (output.Value is not AssetMoney && NetworkCryptoCode.Equals(evtOutputs.CryptoCode, StringComparison.InvariantCultureIgnoreCase)) || 
+                (output.Value is AssetMoney assetMoney && assetMoney.AssetId == AssetId)).Select(output =>
             {
                 var outpoint = new OutPoint(evtOutputs.TransactionData.TransactionHash, output.Index);
                 return (output, outpoint);

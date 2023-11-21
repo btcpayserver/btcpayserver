@@ -9,3 +9,9 @@ function delegate(eventType, selector, handler, root) {
         }
     })
 }
+
+const DEBOUNCE_TIMERS = {}
+function debounce(key, fn, delay = 250) {
+    clearTimeout(DEBOUNCE_TIMERS[key])
+    DEBOUNCE_TIMERS[key] = setTimeout(fn, delay)
+}

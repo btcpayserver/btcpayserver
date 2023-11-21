@@ -1,6 +1,7 @@
 @using BTCPayServer.Services.Wallets
+@using BTCPayServer.Payments
 @model BTCPayServer.Components.StoreWalletBalance.StoreWalletBalanceViewModel
-
+@inject BTCPayNetworkProvider NetworkProvider
 <div id="StoreWalletBalance-@Model.Store.Id" class="widget store-wallet-balance">
     <div class="d-flex gap-3 align-items-center justify-content-between mb-2">
         <h6>Wallet Balance</h6>
@@ -37,6 +38,12 @@
     @if (Model.Series != null)
     {
         <div class="ct-chart"></div>
+    }
+    else if (!Model.Store.GetSupportedPaymentMethods(NetworkProvider).Any(method => method.PaymentId.PaymentType == BitcoinPaymentType.Instance && method.PaymentId.CryptoCode == Model.CryptoCode))
+    {
+        <p>
+            We would like to show you a chart of your balance but you have not yet <a href="@Url.Action("SetupWallet", "UIStores", new {storeId = Model.Store.Id, cryptoCode = Model.CryptoCode})">configured a wallet</a>.
+        </p>
     }
     else
     {

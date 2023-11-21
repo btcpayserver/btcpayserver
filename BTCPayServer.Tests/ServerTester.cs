@@ -94,17 +94,18 @@ namespace BTCPayServer.Tests
         {
             ActivateLightning(LightningConnectionType.CLightning);
         }
-        public void ActivateLightning(LightningConnectionType internalNode)
+        public void ActivateLightning(string internalNode)
         {
             var btc = NetworkProvider.GetNetwork<BTCPayNetwork>("BTC").NBitcoinNetwork;
-            CustomerLightningD = LightningClientFactory.CreateClient(GetEnvironment("TEST_CUSTOMERLIGHTNINGD", "type=clightning;server=tcp://127.0.0.1:30992/"), btc);
-            MerchantLightningD = LightningClientFactory.CreateClient(GetEnvironment("TEST_MERCHANTLIGHTNINGD", "type=clightning;server=tcp://127.0.0.1:30993/"), btc);
+            var factory = new LightningClientFactory(btc);
+            CustomerLightningD = factory.Create(GetEnvironment("TEST_CUSTOMERLIGHTNINGD", "type=clightning;server=tcp://127.0.0.1:30992/"));
+            MerchantLightningD = factory.Create(GetEnvironment("TEST_MERCHANTLIGHTNINGD", "type=clightning;server=tcp://127.0.0.1:30993/"));
             MerchantCharge = new ChargeTester(this, "TEST_MERCHANTCHARGE", "type=charge;server=http://127.0.0.1:54938/;api-token=foiewnccewuify;allowinsecure=true", "merchant_lightningd", btc);
             MerchantLnd = new LndMockTester(this, "TEST_MERCHANTLND", "http://lnd:lnd@127.0.0.1:35531/", "merchant_lnd", btc);
             PayTester.UseLightning = true;
             PayTester.IntegratedLightning = GetLightningConnectionString(internalNode, true);
         }
-        public string GetLightningConnectionString(LightningConnectionType? connectionType, bool isMerchant)
+        public string GetLightningConnectionString(string? connectionType, bool isMerchant)
         {
             string connectionString = null;
             if (connectionType is null)

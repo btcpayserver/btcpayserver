@@ -219,7 +219,7 @@
                         "name": "idOrEmail",
                         "in": "path",
                         "required": true,
-                        "description": "The ID of the user to be deleted",
+                        "description": "The ID or email of the user to be deleted",
                         "schema": {
                             "type": "string"
                         }

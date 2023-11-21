@@ -23,6 +23,7 @@ using BTCPayServer.Fido2.Models;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Hosting;
 using BTCPayServer.Lightning;
+using BTCPayServer.Lightning.Charge;
 using BTCPayServer.Models;
 using BTCPayServer.Models.AccountViewModels;
 using BTCPayServer.Models.AppViewModels;
@@ -68,6 +69,7 @@ using Newtonsoft.Json.Schema;
 using Xunit;
 using Xunit.Abstractions;
 using Xunit.Sdk;
+using CreateInvoiceRequest = BTCPayServer.Client.Models.CreateInvoiceRequest;
 using RatesViewModel = BTCPayServer.Models.StoreViewModels.RatesViewModel;
 
 namespace BTCPayServer.Tests
@@ -269,7 +271,7 @@ namespace BTCPayServer.Tests
             }
             catch (Exception ex)
             {
-                var details = ex is EqualException ? (ex as EqualException).Actual : ex.Message;
+                var details = ex.Message;
                 TestLogs.LogInformation($"FAILED: {url} ({file}) {details}");
 
                 throw;
@@ -386,11 +388,11 @@ namespace BTCPayServer.Tests
                 var newBolt11 = newInvoice.CryptoInfo.First(o => o.PaymentUrls.BOLT11 != null).PaymentUrls.BOLT11;
                 var oldBolt11 = invoice.CryptoInfo.First(o => o.PaymentUrls.BOLT11 != null).PaymentUrls.BOLT11;
                 Assert.NotEqual(newBolt11, oldBolt11);
-                Assert.Equal(newInvoice.BtcDue.GetValue(),
+                Assert.Equal(newInvoice.BtcDue.ToDecimal(MoneyUnit.BTC),
                     BOLT11PaymentRequest.Parse(newBolt11, Network.RegTest).MinimumAmount.ToDecimal(LightMoneyUnit.BTC));
             }, 40000);
 
-            TestLogs.LogInformation($"Paying invoice {newInvoice.Id} remaining due amount {newInvoice.BtcDue.GetValue()} via lightning");
+            TestLogs.LogInformation($"Paying invoice {newInvoice.Id} remaining due amount {newInvoice.BtcDue.GetValue((BTCPayNetwork) tester.DefaultNetwork)} via lightning");
             var evt = await tester.WaitForEvent<InvoiceDataChangedEvent>(async () =>
             {
                 await tester.SendLightningPaymentAsync(newInvoice);
@@ -475,7 +477,7 @@ namespace BTCPayServer.Tests
             await ProcessLightningPayment(LightningConnectionType.LndREST);
         }
 
-        async Task ProcessLightningPayment(LightningConnectionType type)
+        async Task ProcessLightningPayment(string type)
         {
             // For easier debugging and testing
             // LightningLikePaymentHandler.LIGHTNING_TIMEOUT = int.MaxValue;
@@ -2390,9 +2392,14 @@ namespace BTCPayServer.Tests
             Assert.NotNull(lnMethod.GetExternalLightningUrl());
 
             var url = lnMethod.GetExternalLightningUrl();
-            Assert.Equal(LightningConnectionType.Charge, url.ConnectionType);
-            Assert.Equal("pass", url.Password);
-            Assert.Equal("usr", url.Username);
+            var kv = LightningConnectionStringHelper.ExtractValues(url, out var connType);
+            Assert.Equal(LightningConnectionType.Charge,connType);
+            var client = Assert.IsType<ChargeClient>(tester.PayTester.GetService<LightningClientFactoryService>()
+                .Create(url, tester.NetworkProvider.GetNetwork<BTCPayNetwork>("BTC")));
+            var auth = Assert.IsType<ChargeAuthentication.UserPasswordAuthentication>(client.ChargeAuthentication);
+            
+            Assert.Equal("pass", auth.NetworkCredential.Password);
+            Assert.Equal("usr", auth.NetworkCredential.UserName);
 
             // Test if lightning connection strings get migrated to internal
             store.DerivationStrategies = new JObject()
@@ -2881,15 +2888,15 @@ namespace BTCPayServer.Tests
             Assert.Single(paymentTypes["On-Chain"]);
 
             // 2 on-chain transactions: It received from the cashcow, then paid its own invoice
-            report = await GetReport(acc, new() { ViewName = "On-Chain Wallets" });
+            report = await GetReport(acc, new() { ViewName = "Wallets" });
             var txIdIndex = report.GetIndex("TransactionId");
             var balanceIndex = report.GetIndex("BalanceChange");
             Assert.Equal(2, report.Data.Count);
             Assert.Equal(64, report.Data[0][txIdIndex].Value<string>().Length);
-            Assert.Contains(report.Data, d => d[balanceIndex].Value<decimal>() == 1.0m);
+            Assert.Contains(report.Data, d => d[balanceIndex]["v"].Value<decimal>() == 1.0m);
 
             // Items sold
-            report = await GetReport(acc, new() { ViewName = "Products sold" });
+            report = await GetReport(acc, new() { ViewName = "Sales" });
             var itemIndex = report.GetIndex("Product");
             var countIndex = report.GetIndex("Quantity");
             var itemsCount = report.Data.GroupBy(d => d[itemIndex].Value<string>())

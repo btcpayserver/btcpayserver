@@ -72,7 +72,11 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
 
         [Display(Name = "Expiration Date")]
         public DateTime? ExpiryDate { get; set; }
-        [Required] public string Title { get; set; }
+        
+        [Required]
+        public string Title { get; set; }
+        
+        [Display(Name = "Memo")]
         public string Description { get; set; }
 
         [Display(Name = "Store")]
@@ -87,7 +91,8 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
 
         [Display(Name = "Custom CSS Code")]
         public string EmbeddedCSS { get; set; }
-        [Display(Name = "Allow payee to create invoices in their own denomination")]
+        
+        [Display(Name = "Allow payee to create invoices with custom amounts")]
         public bool AllowCustomPaymentAmounts { get; set; }
 
         public Dictionary<string, object> FormResponse { get; set; }
@@ -151,6 +156,7 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
         public string CssFileId { get; set; }
         public string BrandColor { get; set; }
         public string StoreName { get; set; }
+        public string StoreWebsite { get; set; }
         public string EmbeddedCSS { get; set; }
         public string CustomCSSLink { get; set; }
 
@@ -208,6 +214,7 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
         {
             public string PaymentMethod { get; set; }
             public decimal Amount { get; set; }
+            public string AmountFormatted { get; set; }
             public string RateFormatted { get; set; }
             public decimal Paid { get; set; }
             public string PaidFormatted { get; set; }

@@ -29,7 +29,7 @@ namespace BTCPayServer.Data
             if (index == -1)
                 return PaymentMethodId.Parse("BTC");
             /////////////////////////
-            return PaymentMethodId.Parse(addressInvoiceData.Address.Substring(index + 1));
+            return PaymentMethodId.TryParse(addressInvoiceData.Address.Substring(index + 1));
         }
 #pragma warning restore CS0618
     }

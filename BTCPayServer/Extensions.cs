@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -83,19 +84,42 @@ namespace BTCPayServer
             return endpoint != null;
         }
 
-        public static bool IsSafe(this LightningConnectionString connectionString)
+        public static Uri GetServerUri(this ILightningClient client)
         {
-            if (connectionString.CookieFilePath != null ||
-                connectionString.MacaroonDirectoryPath != null ||
-                connectionString.MacaroonFilePath != null)
+            var kv = LightningConnectionStringHelper.ExtractValues(client.ToString(), out var type);
+            
+            return !kv.TryGetValue("server", out var server) ? null : new Uri(server, UriKind.Absolute);
+        }
+
+        public static string GetDisplayName(this ILightningClient client)
+        {
+            LightningConnectionStringHelper.ExtractValues(client.ToString(), out var type);
+           
+            var field = typeof(LightningConnectionType).GetField(type, BindingFlags.Public | BindingFlags.Static);
+            if (field == null) return type;
+            DisplayAttribute attr = field.GetCustomAttribute<DisplayAttribute>();
+            return attr?.Name ?? type;
+
+        }
+
+        public static bool IsSafe(this ILightningClient connectionString)
+        {
+            var kv = LightningConnectionStringHelper.ExtractValues(connectionString.ToString(), out var type);
+            if (kv.TryGetValue("cookiefilepath", out var cookieFilePath)  ||
+                kv.TryGetValue("macaroondirectorypath", out var macaroonDirectoryPath)  ||
+                kv.TryGetValue("macaroonfilepath", out var macaroonFilePath) )
                 return false;
 
-            var uri = connectionString.BaseUri;
+            if (!kv.TryGetValue("server", out var server))
+            {
+                return true;
+            }
+            var uri = new Uri(server, UriKind.Absolute);
             if (uri.Scheme.Equals("unix", StringComparison.OrdinalIgnoreCase))
                 return false;
-            if (!NBitcoin.Utils.TryParseEndpoint(uri.DnsSafeHost, 80, out var endpoint))
+            if (!Utils.TryParseEndpoint(uri.DnsSafeHost, 80, out var endpoint))
                 return false;
-            return !Extensions.IsLocalNetwork(uri.DnsSafeHost);
+            return !IsLocalNetwork(uri.DnsSafeHost);
         }
 
         public static IQueryable<TEntity> Where<TEntity>(this Microsoft.EntityFrameworkCore.DbSet<TEntity> obj, System.Linq.Expressions.Expression<Func<TEntity, bool>> predicate) where TEntity : class

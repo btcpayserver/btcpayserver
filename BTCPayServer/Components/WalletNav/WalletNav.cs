@@ -74,7 +74,7 @@ namespace BTCPayServer.Components.WalletNav
                 if (bid is decimal b)
                 {
                     var currencyData = _currencies.GetCurrencyData(defaultCurrency, true);
-                    vm.BalanceDefaultCurrency = (balance.GetValue() * b).ShowMoney(currencyData.Divisibility);
+                    vm.BalanceDefaultCurrency = (balance.GetValue(network) * b).ShowMoney(currencyData.Divisibility);
                 }
             }
 

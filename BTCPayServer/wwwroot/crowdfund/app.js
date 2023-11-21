@@ -38,7 +38,7 @@ document.addEventListener("DOMContentLoaded",function (ev) {
                 if (e) {
                     e.preventDefault();
                 }
-                if(!this.active || this.loading){
+                if (!this.active || this.loading){
                     return;
                 }
                 
@@ -162,6 +162,9 @@ document.addEventListener("DOMContentLoaded",function (ev) {
                     result.push(currentPerk);
                 }
                 return result;
+            },
+            hasPerks() {
+                return this.srvModel.perks && this.srvModel.perks.length > 0;
             }
         },
         methods: {
@@ -214,6 +217,15 @@ document.addEventListener("DOMContentLoaded",function (ev) {
             },
             formatAmount: function(amount) {
                 return formatAmount(amount, this.srvModel.currencyData.divisibility)
+            },
+            contribute() {
+                if (!this.active || this.loading) return;
+                
+                if (this.hasPerks){
+                    this.contributeModalOpen = true
+                } else {
+                    eventAggregator.$emit("contribute", {amount: null, choiceKey: null});
+                }
             }
         },
         mounted: function () {

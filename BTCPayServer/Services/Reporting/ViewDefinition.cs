@@ -11,6 +11,6 @@ namespace BTCPayServer.Services.Reporting
             set;
         } = new List<StoreReportResponse.Field>();
 
-        public List<ChartDefinition> Charts { get; set; } = new List<ChartDefinition>();
+        public List<ChartDefinition> Charts { get; set; } = new ();
     }
 }

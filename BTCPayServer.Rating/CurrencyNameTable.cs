@@ -20,13 +20,13 @@ namespace BTCPayServer.Services.Rates
     }
     public class CurrencyNameTable
     {
-        public static CurrencyNameTable Instance = new CurrencyNameTable();
+        public static CurrencyNameTable Instance = new();
         public CurrencyNameTable()
         {
-            _Currencies = LoadCurrency().ToDictionary(k => k.Code);
+            _Currencies = LoadCurrency().ToDictionary(k => k.Code, StringComparer.InvariantCultureIgnoreCase);
         }
 
-        static readonly Dictionary<string, IFormatProvider> _CurrencyProviders = new Dictionary<string, IFormatProvider>();
+        static readonly Dictionary<string, IFormatProvider> _CurrencyProviders = new();
 
         public NumberFormatInfo GetNumberFormatInfo(string currency, bool useFallback)
         {

@@ -273,15 +273,6 @@ namespace BTCPayServer.Hosting
             app.UseRouting();
             app.UseCors();
 
-
-            // HACK: Make blazor js available on: ~/_blazorfiles/_framework/blazor.server.js
-            // Workaround this bug https://github.com/dotnet/aspnetcore/issues/19578
-            app.UseStaticFiles(new StaticFileOptions()
-            {
-                RequestPath = "/_blazorfiles",
-                FileProvider = new ManifestEmbeddedFileProvider(typeof(ComponentServiceCollectionExtensions).Assembly),
-                OnPrepareResponse = LongCache
-            });
             app.UseStaticFiles(new StaticFileOptions
             {
                 OnPrepareResponse = LongCache

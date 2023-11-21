@@ -383,10 +383,18 @@ namespace BTCPayServer.Controllers
         private async Task SendFreeMoney(Cheater cheater, WalletId walletId, DerivationSchemeSettings paymentMethod)
         {
             var c = this.ExplorerClientProvider.GetExplorerClient(walletId.CryptoCode);
+            var cashCow = cheater.GetCashCow(walletId.CryptoCode);
+#if ALTCOINS
+            if (walletId.CryptoCode == "LBTC")
+            {
+                await cashCow.SendCommandAsync("rescanblockchain");
+            }
+#endif
             var addresses = Enumerable.Range(0, 200).Select(_ => c.GetUnusedAsync(paymentMethod.AccountDerivation, DerivationFeature.Deposit, reserve: true)).ToArray();
+            
             await Task.WhenAll(addresses);
-            await cheater.CashCow.GenerateAsync(addresses.Length / 8);
-            var b = cheater.CashCow.PrepareBatch();
+            await cashCow.GenerateAsync(addresses.Length / 8);
+            var b = cashCow.PrepareBatch();
             Random r = new Random();
             List<Task<uint256>> sending = new List<Task<uint256>>();
             foreach (var a in addresses)
@@ -394,7 +402,7 @@ namespace BTCPayServer.Controllers
                 sending.Add(b.SendToAddressAsync((await a).Address, Money.Coins(0.1m) + Money.Satoshis(r.Next(0, 90_000_000))));
             }
             await b.SendBatchAsync();
-            await cheater.CashCow.GenerateAsync(1);
+            await cashCow.GenerateAsync(1);
 
             var factory = ServiceProvider.GetRequiredService<NBXplorerConnectionFactory>();
 
@@ -869,8 +877,7 @@ namespace BTCPayServer.Controllers
             try
             {
                 var uriBuilder = new NBitcoin.Payment.BitcoinUrlBuilder(bip21, network.NBitcoinNetwork);
-
-                vm.Outputs.Add(new WalletSendModel.TransactionOutput()
+                var output = new WalletSendModel.TransactionOutput
                 {
                     Amount = uriBuilder.Amount?.ToDecimal(MoneyUnit.BTC),
                     DestinationAddress = uriBuilder.Address?.ToString(),
@@ -878,15 +885,20 @@ namespace BTCPayServer.Controllers
                     PayoutId = uriBuilder.UnknownParameters.ContainsKey("payout")
                         ? uriBuilder.UnknownParameters["payout"]
                         : null
-                });
+                };
+                if (!string.IsNullOrEmpty(uriBuilder.Label))
+                {
+                    output.Labels = output.Labels.Append(uriBuilder.Label).ToArray();
+                }
+                vm.Outputs.Add(output);
                 address = uriBuilder.Address;
                 if (!string.IsNullOrEmpty(uriBuilder.Label) || !string.IsNullOrEmpty(uriBuilder.Message))
                 {
-                    TempData.SetStatusMessageModel(new StatusMessageModel()
+                    TempData.SetStatusMessageModel(new StatusMessageModel
                     {
                         Severity = StatusMessageModel.StatusSeverity.Info,
                         Html =
-                            $"Payment {(string.IsNullOrEmpty(uriBuilder.Label) ? string.Empty : $" to {uriBuilder.Label}")} {(string.IsNullOrEmpty(uriBuilder.Message) ? string.Empty : $" for {uriBuilder.Message}")}"
+                            $"Payment {(string.IsNullOrEmpty(uriBuilder.Label) ? string.Empty : $" to <strong>{uriBuilder.Label}</strong>")} {(string.IsNullOrEmpty(uriBuilder.Message) ? string.Empty : $" for <strong>{uriBuilder.Message}</strong>")}"
                     });
                 }
 
@@ -918,7 +930,7 @@ namespace BTCPayServer.Controllers
             if (address is not null)
             {
                 var addressLabels = await WalletRepository.GetWalletLabels(new WalletObjectId(walletId, WalletObjectData.Types.Address, address.ToString()));
-                vm.Outputs.Last().Labels = addressLabels.Select(tuple => tuple.Label).ToArray();
+                vm.Outputs.Last().Labels = vm.Outputs.Last().Labels.Concat(addressLabels.Select(tuple => tuple.Label)).ToArray();
             }
         }
 
@@ -1336,7 +1348,7 @@ namespace BTCPayServer.Controllers
             {
                 "csv" => "text/csv",
                 "json" => "application/json",
-                "bip329" => "text/jsonl", // https://stackoverflow.com/questions/59938644/what-is-the-mime-type-of-jsonl-files
+                "bip329" => "application/jsonl", // Ongoing discussion: https://github.com/wardi/jsonlines/issues/19
                 _ => throw new ArgumentOutOfRangeException(nameof(format), format, null)
             };
             var cd = new ContentDisposition

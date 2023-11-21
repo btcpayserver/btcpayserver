@@ -270,12 +270,14 @@ namespace BTCPayServer.Controllers.Greenfield
 
         private PointOfSaleSettings ToPointOfSaleSettings(CreatePointOfSaleAppRequest request)
         {
-            return new PointOfSaleSettings()
+            return new PointOfSaleSettings
             {
                 Title = request.Title,
                 DefaultView = (PosViewType)request.DefaultView,
                 ShowCustomAmount = request.ShowCustomAmount,
                 ShowDiscount = request.ShowDiscount,
+                ShowSearch = request.ShowSearch,
+                ShowCategories = request.ShowCategories,
                 EnableTips = request.EnableTips,
                 Currency = request.Currency,
                 Template = request.Template != null ? AppService.SerializeTemplate(AppService.Parse(request.Template)) : null,
@@ -336,6 +338,8 @@ namespace BTCPayServer.Controllers.Greenfield
                 DefaultView = settings.DefaultView.ToString(),
                 ShowCustomAmount = settings.ShowCustomAmount,
                 ShowDiscount = settings.ShowDiscount,
+                ShowSearch = settings.ShowSearch,
+                ShowCategories = settings.ShowCategories,
                 EnableTips = settings.EnableTips,
                 Currency = settings.Currency,
                 Items = JsonConvert.DeserializeObject(

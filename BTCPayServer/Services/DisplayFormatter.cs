@@ -2,6 +2,8 @@ using System;
 using System.Globalization;
 using BTCPayServer.Rating;
 using BTCPayServer.Services.Rates;
+using BTCPayServer.Services.Reporting;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Services;
 
@@ -18,7 +20,8 @@ public class DisplayFormatter
     {
         Code,
         Symbol,
-        CodeAndSymbol
+        CodeAndSymbol,
+        None
     }
 
     /// <summary>
@@ -43,6 +46,7 @@ public class DisplayFormatter
 
         return format switch
         {
+            CurrencyFormat.None => formatted.Replace(provider.CurrencySymbol, "").Trim(),
             CurrencyFormat.Code => $"{formatted.Replace(provider.CurrencySymbol, "").Trim()} {currency}",
             CurrencyFormat.Symbol => formatted,
             CurrencyFormat.CodeAndSymbol => $"{formatted} ({currency})",
@@ -53,5 +57,12 @@ public class DisplayFormatter
     public string Currency(string value, string currency, CurrencyFormat format = CurrencyFormat.Code)
     {
         return Currency(decimal.Parse(value, CultureInfo.InvariantCulture), currency, format);
+    }
+
+    public JObject ToFormattedAmount(decimal value, string currency)
+    {
+        var currencyData = _currencyNameTable.GetCurrencyData(currency, true);
+        var divisibility = currencyData.Divisibility;
+        return new FormattedAmount(value, divisibility).ToJObject();
     }
 }

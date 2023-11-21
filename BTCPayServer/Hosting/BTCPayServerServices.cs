@@ -19,6 +19,12 @@ using BTCPayServer.Data.Payouts.LightningLike;
 using BTCPayServer.Forms;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Lightning;
+using BTCPayServer.Lightning.Charge;
+using BTCPayServer.Lightning.CLightning;
+using BTCPayServer.Lightning.Eclair;
+using BTCPayServer.Lightning.LNbank;
+using BTCPayServer.Lightning.LND;
+using BTCPayServer.Lightning.LNDhub;
 using BTCPayServer.Logging;
 using BTCPayServer.PaymentRequest;
 using BTCPayServer.Payments;
@@ -122,9 +128,24 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<IHostedService>(provider => provider.GetRequiredService<TorServices>());
             services.AddSingleton<ISwaggerProvider, DefaultSwaggerProvider>();
             services.TryAddSingleton<SocketFactory>();
+            
+            services.AddSingleton<Func<HttpClient, ILightningConnectionStringHandler>>(client =>
+                new ChargeLightningConnectionStringHandler(client));
+            services.AddSingleton<Func<HttpClient, ILightningConnectionStringHandler>>(_ =>
+                new CLightningConnectionStringHandler());
+            services.AddSingleton<Func<HttpClient, ILightningConnectionStringHandler>>(client =>
+                new EclairConnectionStringHandler(client));
+            services.AddSingleton<Func<HttpClient, ILightningConnectionStringHandler>>(client =>
+                new LndConnectionStringHandler(client));
+            services.AddSingleton<Func<HttpClient, ILightningConnectionStringHandler>>(client =>
+                new LndHubConnectionStringHandler(client));
+            services.AddSingleton<Func<HttpClient, ILightningConnectionStringHandler>>(client =>
+                new LNbankConnectionStringHandler(client));
             services.TryAddSingleton<LightningClientFactoryService>();
             services.AddHttpClient(LightningClientFactoryService.OnionNamedClient)
                 .ConfigurePrimaryHttpMessageHandler<Socks5HttpClientHandler>();
+            
+            
             services.TryAddSingleton<InvoicePaymentNotification>();
             services.TryAddSingleton<BTCPayServerOptions>(o =>
                 o.GetRequiredService<IOptions<BTCPayServerOptions>>().Value);
@@ -211,16 +232,26 @@ namespace BTCPayServer.Hosting
                         }
                     }
                 });
-            services.AddOptions<LightningNetworkOptions>().Configure<BTCPayNetworkProvider>(
-                (options, btcPayNetworkProvider) =>
+            services.AddOptions<LightningNetworkOptions>().Configure<BTCPayNetworkProvider, LightningClientFactoryService>(
+                (options, btcPayNetworkProvider, lightningClientFactoryService) =>
                 {
                     foreach (var net in btcPayNetworkProvider.GetAll().OfType<BTCPayNetwork>())
                     {
                         var lightning = configuration.GetOrDefault<string>($"{net.CryptoCode}.lightning", string.Empty);
                         if (lightning.Length != 0)
                         {
-                            if (!LightningConnectionString.TryParse(lightning, true, out var connectionString,
-                                out var error))
+                            string error = null;
+                            ILightningClient lightningClient = null;
+                            try
+                            {
+                                lightningClient = lightningClientFactoryService.Create(lightning, net);
+                            }
+                            catch (Exception e)
+                            {
+                                error = e.Message;
+                            }
+                           
+                            if (error is not null)
                             {
                                 logs.Configuration.LogWarning($"Invalid setting {net.CryptoCode}.lightning, " +
                                                               Environment.NewLine +
@@ -241,12 +272,12 @@ namespace BTCPayServer.Hosting
                             }
                             else
                             {
-                                if (connectionString.IsLegacy)
+                                if (lightningClient.ToString() != lightning)
                                 {
                                     logs.Configuration.LogWarning(
-                                        $"Setting {net.CryptoCode}.lightning is a deprecated format, it will work now, but please replace it for future versions with '{connectionString.ToString()}'");
+                                        $"Setting {net.CryptoCode}.lightning is a deprecated format ({lightning}), it will work now, but please replace it for future versions with '{lightningClient.ToString()}'");
                                 }
-                                options.InternalLightningByCryptoCode.Add(net.CryptoCode, connectionString);
+                                options.InternalLightningByCryptoCode.Add(net.CryptoCode, lightningClient);
                             }
                         }
                     }
@@ -283,10 +314,10 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<IPluginHookService, PluginHookService>(provider => provider.GetService<PluginHookService>());
             services.TryAddTransient<Safe>();
             services.TryAddTransient<DisplayFormatter>();
-            services.TryAddSingleton<Ganss.XSS.HtmlSanitizer>(o =>
+            services.TryAddSingleton<Ganss.Xss.HtmlSanitizer>(o =>
             {
 
-                var htmlSanitizer = new Ganss.XSS.HtmlSanitizer();
+                var htmlSanitizer = new Ganss.Xss.HtmlSanitizer();
 
 
                 htmlSanitizer.RemovingAtRule += (sender, args) =>
@@ -309,7 +340,7 @@ namespace BTCPayServer.Hosting
                 {
                     if (args.Tag.TagName.Equals("img", StringComparison.InvariantCultureIgnoreCase) &&
                         args.Attribute.Name.Equals("src", StringComparison.InvariantCultureIgnoreCase) &&
-                        args.Reason == Ganss.XSS.RemoveReason.NotAllowedUrlValue)
+                        args.Reason == Ganss.Xss.RemoveReason.NotAllowedUrlValue)
                     {
                         args.Cancel = true;
                     }
@@ -505,7 +536,7 @@ namespace BTCPayServer.Hosting
             // We need to be careful to only add exchanges which OnGetTickers implementation make only 1 request
             services.AddRateProviderExchangeSharp<ExchangeBinanceAPI>(new("binance", "Binance", "https://api.binance.com/api/v1/ticker/24hr"));
             services.AddRateProviderExchangeSharp<ExchangeBittrexAPI>(new("bittrex", "Bittrex", "https://bittrex.com/api/v1.1/public/getmarketsummaries"));
-            services.AddRateProviderExchangeSharp<ExchangePoloniexAPI>(new("poloniex", "Poloniex", "https://poloniex.com/public?command=returnTicker"));
+            services.AddRateProviderExchangeSharp<ExchangePoloniexAPI>(new("poloniex", "Poloniex", " https://api.poloniex.com/markets/price"));
             services.AddRateProviderExchangeSharp<ExchangeNDAXAPI>(new("ndax", "NDAX", "https://ndax.io/api/returnTicker"));
 
             services.AddRateProviderExchangeSharp<ExchangeBitfinexAPI>(new("bitfinex", "Bitfinex", "https://api.bitfinex.com/v2/tickers?symbols=tBTCUSD,tLTCUSD,tLTCBTC,tETHUSD,tETHBTC,tETCBTC,tETCUSD,tRRTUSD,tRRTBTC,tZECUSD,tZECBTC,tXMRUSD,tXMRBTC,tDSHUSD,tDSHBTC,tBTCEUR,tBTCJPY,tXRPUSD,tXRPBTC,tIOTUSD,tIOTBTC,tIOTETH,tEOSUSD,tEOSBTC,tEOSETH,tSANUSD,tSANBTC,tSANETH,tOMGUSD,tOMGBTC,tOMGETH,tNEOUSD,tNEOBTC,tNEOETH,tETPUSD,tETPBTC,tETPETH,tQTMUSD,tQTMBTC,tQTMETH,tAVTUSD,tAVTBTC,tAVTETH,tEDOUSD,tEDOBTC,tEDOETH,tBTGUSD,tBTGBTC,tDATUSD,tDATBTC,tDATETH,tQSHUSD,tQSHBTC,tQSHETH,tYYWUSD,tYYWBTC,tYYWETH,tGNTUSD,tGNTBTC,tGNTETH,tSNTUSD,tSNTBTC,tSNTETH,tIOTEUR,tBATUSD,tBATBTC,tBATETH,tMNAUSD,tMNABTC,tMNAETH,tFUNUSD,tFUNBTC,tFUNETH,tZRXUSD,tZRXBTC,tZRXETH,tTNBUSD,tTNBBTC,tTNBETH,tSPKUSD,tSPKBTC,tSPKETH,tTRXUSD,tTRXBTC,tTRXETH,tRCNUSD,tRCNBTC,tRCNETH,tRLCUSD,tRLCBTC,tRLCETH,tAIDUSD,tAIDBTC,tAIDETH,tSNGUSD,tSNGBTC,tSNGETH,tREPUSD,tREPBTC,tREPETH,tELFUSD,tELFBTC,tELFETH,tNECUSD,tNECBTC,tNECETH,tBTCGBP,tETHEUR,tETHJPY,tETHGBP,tNEOEUR,tNEOJPY,tNEOGBP,tEOSEUR,tEOSJPY,tEOSGBP,tIOTJPY,tIOTGBP,tIOSUSD,tIOSBTC,tIOSETH,tAIOUSD,tAIOBTC,tAIOETH,tREQUSD,tREQBTC,tREQETH,tRDNUSD,tRDNBTC,tRDNETH,tLRCUSD,tLRCBTC,tLRCETH,tWAXUSD,tWAXBTC,tWAXETH,tDAIUSD,tDAIBTC,tDAIETH,tAGIUSD,tAGIBTC,tAGIETH,tBFTUSD,tBFTBTC,tBFTETH,tMTNUSD,tMTNBTC,tMTNETH,tODEUSD,tODEBTC,tODEETH,tANTUSD,tANTBTC,tANTETH,tDTHUSD,tDTHBTC,tDTHETH,tMITUSD,tMITBTC,tMITETH,tSTJUSD,tSTJBTC,tSTJETH,tXLMUSD,tXLMEUR,tXLMJPY,tXLMGBP,tXLMBTC,tXLMETH,tXVGUSD,tXVGEUR,tXVGJPY,tXVGGBP,tXVGBTC,tXVGETH,tBCIUSD,tBCIBTC,tMKRUSD,tMKRBTC,tMKRETH,tKNCUSD,tKNCBTC,tKNCETH,tPOAUSD,tPOABTC,tPOAETH,tEVTUSD,tLYMUSD,tLYMBTC,tLYMETH,tUTKUSD,tUTKBTC,tUTKETH,tVEEUSD,tVEEBTC,tVEEETH,tDADUSD,tDADBTC,tDADETH,tORSUSD,tORSBTC,tORSETH,tAUCUSD,tAUCBTC,tAUCETH,tPOYUSD,tPOYBTC,tPOYETH,tFSNUSD,tFSNBTC,tFSNETH,tCBTUSD,tCBTBTC,tCBTETH,tZCNUSD,tZCNBTC,tZCNETH,tSENUSD,tSENBTC,tSENETH,tNCAUSD,tNCABTC,tNCAETH,tCNDUSD,tCNDBTC,tCNDETH,tCTXUSD,tCTXBTC,tCTXETH,tPAIUSD,tPAIBTC,tSEEUSD,tSEEBTC,tSEEETH,tESSUSD,tESSBTC,tESSETH,tATMUSD,tATMBTC,tATMETH,tHOTUSD,tHOTBTC,tHOTETH,tDTAUSD,tDTABTC,tDTAETH,tIQXUSD,tIQXBTC,tIQXEOS,tWPRUSD,tWPRBTC,tWPRETH,tZILUSD,tZILBTC,tZILETH,tBNTUSD,tBNTBTC,tBNTETH,tABSUSD,tABSETH,tXRAUSD,tXRAETH,tMANUSD,tMANETH,tBBNUSD,tBBNETH,tNIOUSD,tNIOETH,tDGXUSD,tDGXETH,tVETUSD,tVETBTC,tVETETH,tUTNUSD,tUTNETH,tTKNUSD,tTKNETH,tGOTUSD,tGOTEUR,tGOTETH,tXTZUSD,tXTZBTC,tCNNUSD,tCNNETH,tBOXUSD,tBOXETH,tTRXEUR,tTRXGBP,tTRXJPY,tMGOUSD,tMGOETH,tRTEUSD,tRTEETH,tYGGUSD,tYGGETH,tMLNUSD,tMLNETH,tWTCUSD,tWTCETH,tCSXUSD,tCSXETH,tOMNUSD,tOMNBTC,tINTUSD,tINTETH,tDRNUSD,tDRNETH,tPNKUSD,tPNKETH,tDGBUSD,tDGBBTC,tBSVUSD,tBSVBTC,tBABUSD,tBABBTC,tWLOUSD,tWLOXLM,tVLDUSD,tVLDETH,tENJUSD,tENJETH,tONLUSD,tONLETH,tRBTUSD,tRBTBTC,tUSTUSD,tEUTEUR,tEUTUSD,tGSDUSD,tUDCUSD,tTSDUSD,tPAXUSD,tRIFUSD,tRIFBTC,tPASUSD,tPASETH,tVSYUSD,tVSYBTC,tZRXDAI,tMKRDAI,tOMGDAI,tBTTUSD,tBTTBTC,tBTCUST,tETHUST,tCLOUSD,tCLOBTC,tIMPUSD,tIMPETH,tLTCUST,tEOSUST,tBABUST,tSCRUSD,tSCRETH,tGNOUSD,tGNOETH,tGENUSD,tGENETH,tATOUSD,tATOBTC,tATOETH,tWBTUSD,tXCHUSD,tEUSUSD,tWBTETH,tXCHETH,tEUSETH,tLEOUSD,tLEOBTC,tLEOUST,tLEOEOS,tLEOETH,tASTUSD,tASTETH,tFOAUSD,tFOAETH,tUFRUSD,tUFRETH,tZBTUSD,tZBTUST,tOKBUSD,tUSKUSD,tGTXUSD,tKANUSD,tOKBUST,tOKBETH,tOKBBTC,tUSKUST,tUSKETH,tUSKBTC,tUSKEOS,tGTXUST,tKANUST,tAMPUSD,tALGUSD,tALGBTC,tALGUST,tBTCXCH,tSWMUSD,tSWMETH,tTRIUSD,tTRIETH,tLOOUSD,tLOOETH,tAMPUST,tDUSK:USD,tDUSK:BTC,tUOSUSD,tUOSBTC,tRRBUSD,tRRBUST,tDTXUSD,tDTXUST,tAMPBTC,tFTTUSD,tFTTUST,tPAXUST,tUDCUST,tTSDUST,tBTC:CNHT,tUST:CNHT,tCNH:CNHT,tCHZUSD,tCHZUST,tBTCF0:USTF0,tETHF0:USTF0"));
@@ -528,7 +559,6 @@ namespace BTCPayServer.Hosting
             services.AddRateProvider<BitcoinJungleRateProvider>();
             services.AddRateProvider<BtcTurkRateProvider>();
             services.AddRateProvider<FreeCurrencyRatesRateProvider>();
-            services.AddRateProvider<ExchangeRateHostRateProvider>();
 
             // Broken
             // Providers.Add("argoneum", new ArgoneumRateProvider(_httpClientFactory?.CreateClient("EXCHANGE_ARGONEUM")));

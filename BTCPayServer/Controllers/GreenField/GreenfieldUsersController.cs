@@ -216,12 +216,12 @@ namespace BTCPayServer.Controllers.Greenfield
             return CreatedAtAction(string.Empty, model);
         }
 
-        [HttpDelete("~/api/v1/users/{userId}")]
+        [HttpDelete("~/api/v1/users/{idOrEmail}")]
         [Authorize(Policy = Policies.CanModifyServerSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        public async Task<IActionResult> DeleteUser(string userId)
+        public async Task<IActionResult> DeleteUser(string idOrEmail)
         {
-            var user = await _userManager.FindByIdAsync(userId);
-            if (user == null)
+            var user = await _userManager.FindByIdOrEmail(idOrEmail);
+            if (user is null)
             {
                 return this.UserNotFound();
             }

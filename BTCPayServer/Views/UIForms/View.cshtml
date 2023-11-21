@@ -1,4 +1,3 @@
-@using Microsoft.AspNetCore.Mvc.TagHelpers
 @inject BTCPayServer.Services.BTCPayServerEnvironment Env
 @model BTCPayServer.Forms.Models.FormViewModel
 @{
@@ -11,9 +10,10 @@
     <partial name="LayoutHead" />
     <partial name="LayoutHeadStoreBranding" model="@(Model.BrandColor, Model.CssFileId, "", "")" />
     <meta name="robots" content="noindex,nofollow">
+    <style>#FormView { --wrap-max-width: 576px; }</style>
 </head>
 <body class="min-vh-100">
-    <div class="public-page-wrap">
+    <div id="FormView" class="public-page-wrap">
         <partial name="_StatusMessage" model="@(new ViewDataDictionary(ViewData) { { "Margin", "mb-4" } })" />
         @if (!string.IsNullOrEmpty(Model.StoreName) || !string.IsNullOrEmpty(Model.LogoFileId))
         {
@@ -23,14 +23,14 @@
         {
             <h1 class="h3 text-center mt-3">@ViewData["Title"]</h1>
         }
-        <main class="flex-grow-1 container" style="max-width:576px">
+        <main class="flex-grow-1">
             @if (!ViewContext.ModelState.IsValid)
             {
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             }
             <partial name="_FormTopMessages" model="@Model.Form" />
             <div class="d-flex flex-column justify-content-center gap-4">
-                <div class="bg-tile p-3 p-sm-4 rounded">
+                <div class="tile">
                     @if (string.IsNullOrEmpty(Model.AspAction))
                     {
                         <form method="post" novalidate="novalidate">

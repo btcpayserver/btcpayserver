@@ -8,7 +8,7 @@ namespace BTCPayServer
 {
     public static class MoneyExtensions
     {
-        public static decimal GetValue(this IMoney m, BTCPayNetwork network = null)
+        public static decimal GetValue(this IMoney m, BTCPayNetwork network)
         {
             switch (m)
             {

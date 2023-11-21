@@ -77,6 +77,8 @@ namespace BTCPayServer.Services.Apps
             DefaultView = PosViewType.Static;
             ShowCustomAmount = false;
             ShowDiscount = true;
+            ShowSearch = true;
+            ShowCategories = true;
             EnableTips = true;
             RequiresRefundEmail = RequiresRefundEmail.InheritFromStore;
         }
@@ -87,6 +89,8 @@ namespace BTCPayServer.Services.Apps
         public PosViewType DefaultView { get; set; }
         public bool ShowCustomAmount { get; set; }
         public bool ShowDiscount { get; set; }
+        public bool ShowSearch { get; set; } = true;
+        public bool ShowCategories { get; set; } = true;
         public bool EnableTips { get; set; }
         public RequiresRefundEmail RequiresRefundEmail { get; set; }
 

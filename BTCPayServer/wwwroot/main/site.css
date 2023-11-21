@@ -76,17 +76,13 @@ hr.primary {
 
 @media (min-width: 1400px) {
     .col-xxl-constrain {
-        max-width: 800px;
+        max-width: 984px;
     }
 }
 
 a.unobtrusive-link {
     color: inherit;
     text-decoration: inherit;
-}
-
-.btn.btn-link:focus {
-    box-shadow: none;
 }
 
 [aria-expanded] > svg.icon-caret-down {
@@ -115,13 +111,10 @@ a.unobtrusive-link {
     background: var(--btcpay-danger);
     color: var(--btcpay-danger-text);
 }
-.badge-unusual {
+.badge-unusual,
+.badge-processing {
     background: var(--btcpay-warning);
     color: var(--btcpay-warning-text);
-}
-.badge-processing {
-    background: var(--btcpay-info);
-    color: var(--btcpay-info-text);
 }
 .badge-settled {
     background: var(--btcpay-success);
@@ -157,11 +150,7 @@ h2 svg.icon.icon-info {
     cursor: pointer;
     padding: 0;
 }
-@media (min-width: 1400px) {
-    #MassAction {
-        margin-top: -4rem;
-    }
-}
+
 /* Prevent layout from breaking on hyperlinks with very long URLs as the visible text */
 .invoice-details a {
     word-break: break-word;
@@ -226,7 +215,8 @@ h2 svg.icon.icon-info {
 
 /* Print */
 @media print {
-    section {
+    section,
+    .tile {
         page-break-inside: avoid;
     }
     .table-responsive {
@@ -252,27 +242,20 @@ h2 svg.icon.icon-info {
     a {
         text-decoration: none !important;
     }
+    .buttons,
     .toasted-container {
         display: none !important;
     }
     .truncate-center a,
     .truncate-center button,
     .truncate-center-truncated {
-        display: none;
+        display: none !important;
     }
     .card {
         page-break-inside: avoid;
     }
-    #markStatusDropdownMenuButton {
-        border: 0;
-        background: transparent;
-        padding: 0 !important;
-        color: inherit;
-        font-weight:  var(--btcpay-font-weight-normal);
-        font-size: var(--btcpay-body-font-size);
-    }
-    #markStatusDropdownMenuButton::after {
-        content: none;
+    .actions-col {
+        display: none;
     }
 }
 
@@ -656,28 +639,56 @@ input:checked + label.btcpay-list-select-item {
 }
 
 /* Public pages */
-.public-page-wrap {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-    margin: 0 auto;
-    padding: var(--btcpay-space-l) var(--btcpay-space-m);
-}
-
-/* gradually try to set better but less supported values and units */
-.min-vh-100,
-.public-page-wrap {
-    min-height: -webkit-fill-available !important;
-    min-height: 100dvh !important;
-}
-
-@media (max-width: 400px) {
+@media screen {
     .public-page-wrap {
-        padding-left: 0;
-        padding-right: 0;
+        --wrap-max-width: none;
+        --wrap-padding-vertical: var(--btcpay-space-l);
+        --wrap-padding-horizontal: var(--btcpay-space-m);
+        
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        max-width: var(--wrap-max-width);
+        margin: 0 auto;
+        padding: var(--wrap-padding-vertical) var(--wrap-padding-horizontal);
+    }
+    
+    /* gradually try to set better but less supported values and units */
+    .min-vh-100,
+    .public-page-wrap {
+        min-height: -webkit-fill-available !important;
+        min-height: 100dvh !important;
+    }
+    .tile {
+        --tile-padding: 1.5rem;
+        --tile-border-radius: var(--btcpay-border-radius-l);
+
+        padding: var(--tile-padding);
+        background: var(--btcpay-bg-tile);
+        border-radius: var(--tile-border-radius);
+        box-shadow: var(--btcpay-box-shadow-lg);
+    }
+    .tile .buttons {
+        display: flex;
+        flex-direction: column;
+        gap: var(--btcpay-space-m);
+    }
+    .tile > :last-child {
+        margin-bottom: 0;
     }
 }
 
+@media screen and (max-width: 400px) {
+    .public-page-wrap {
+        --wrap-padding-horizontal: 0;
+    }
+    .tile {
+        --tile-padding: 1rem;
+        --tile-border-radius: none;
+    }
+}
+
+/* Store Header */
 .store-header {
     display: flex;
     flex-direction: column;
@@ -723,6 +734,7 @@ a.store-powered-by svg {
     height: 2rem;
     width: 4rem;
 }
+.store-footer a:hover,
 a.store-powered-by:hover {
     color: var(--btcpay-body-text-hover);
 }
@@ -970,6 +982,11 @@ input.ts-wrapper.form-control:not(.ts-hidden-accessible,.ts-inline) {
     text-overflow: ellipsis;
 }
 
+.truncate-center-end,
+.truncate-center-start {
+    white-space: nowrap;
+}
+
 .truncate-center-id {
     font-family: var(--btcpay-font-monospace);
     font-size: .875em;
@@ -1074,3 +1091,93 @@ input.ts-wrapper.form-control:not(.ts-hidden-accessible,.ts-inline) {
     height: .75rem;
 }
 
+/* Tables */
+.date-col {
+    min-width: 8rem;
+}
+.amount-col {
+    text-align: right;
+    white-space: nowrap;
+}
+.actions-col {
+    text-align: right;
+}
+
+/* Mass Actions */
+.mass-action-head,
+.mass-action-actions {
+    position: -webkit-sticky;
+    position: sticky;
+    top: var(--sticky-header-height);
+    z-index: 10;
+    background-color: var(--btcpay-body-bg);
+}
+.mass-action thead th::after {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-bottom: 1px solid;
+    border-color: inherit;
+    pointer-events: none;
+}
+.mass-action > .mass-action-actions,
+.mass-action[data-selected] > .mass-action-head {
+    display: none;
+}
+.mass-action[data-selected] > .mass-action-actions {
+    display: table-header-group;
+    border-top-width: 0;
+}
+.mass-action > .mass-action-actions button {
+    display: inline-flex;
+    align-items: center;
+    height: 1.4rem;
+    padding: 0;
+    font-weight: var(--btcpay-font-weight-semibold);
+}
+.mass-action > .mass-action-actions button .icon {
+    --btn-icon-size: 1.75rem;
+}
+.mass-action .mass-action-select-col {
+    width: 2rem;
+}
+
+/*
+ Responsive table adjustments: Reset sticky header height,
+ because it doesn't work in containers with overflow auto.
+*/
+.table-responsive{
+    --sticky-header-height: 0;
+}
+@media (max-width: 575.98px) {
+    .table-responsive-sm {
+        --sticky-header-height: 0;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .table-responsive-md {
+        --sticky-header-height: 0;
+    }
+}
+
+@media (max-width: 991.98px) {
+    .table-responsive-lg {
+        --sticky-header-height: 0;
+    }
+}
+
+@media (max-width: 1199.98px) {
+    .table-responsive-xl {
+        --sticky-header-height: 0;
+    }
+}
+
+@media (max-width: 1399.98px) {
+    .table-responsive-xxl {
+        --sticky-header-height: 0;
+    }
+}

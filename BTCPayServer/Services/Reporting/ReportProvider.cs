@@ -1,9 +1,6 @@
 #nullable enable
 using System.Threading.Tasks;
 using System.Threading;
-using BTCPayServer.Data;
-using System;
-using System.Linq;
 
 namespace BTCPayServer.Services.Reporting
 {

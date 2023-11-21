@@ -584,7 +584,7 @@ namespace BTCPayServer.Services.Invoices
             entity.RefundMail = invoice.CustomerEmail;
             if (invoice.AddressInvoices != null)
             {
-                entity.AvailableAddressHashes = invoice.AddressInvoices.Select(a => a.GetAddress() + a.GetPaymentMethodId().ToString()).ToHashSet();
+                entity.AvailableAddressHashes = invoice.AddressInvoices.Select(a => a.GetAddress() + a.GetPaymentMethodId()).ToHashSet();
             }
             if (invoice.Events != null)
             {

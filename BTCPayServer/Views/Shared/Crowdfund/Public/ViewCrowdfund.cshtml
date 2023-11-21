@@ -29,6 +29,7 @@
         @Safe.Raw($"<style>{Model.EmbeddedCSS}</style>")
     }
     <style>
+        #app { --wrap-max-width: 1320px; }
         #crowdfund-main-image {
             border-radius: var(--btcpay-border-radius);
             object-fit: cover;
@@ -37,6 +38,10 @@
         }
         #crowdfund-body-description {
             font-size: 16px;
+        }
+        .perk.card .card-img-top{
+            max-height: 210px;
+            object-fit: scale-down;
         }
     </style>
     <vc:ui-extension-point location="crowdfund-head" model="@Model"></vc:ui-extension-point>
@@ -53,7 +58,7 @@
     <canvas id="fireworks" class="d-none"></canvas>
 }
 
-<div class="public-page-wrap container" id="app" @(Model.SimpleDisplay ? "" : "v-cloak")>
+<div class="public-page-wrap" id="app" @(Model.SimpleDisplay ? "" : "v-cloak")>
     @if (!string.IsNullOrEmpty(Model.MainImageUrl))
     {
         <img v-if="srvModel.mainImageUrl" :src="srvModel.mainImageUrl" :alt="srvModel.title" id="crowdfund-main-image" asp-append-version="true"/>
@@ -211,11 +216,11 @@
     </div>
 
     <div class="text-center mb-4" id="crowdfund-body-header">
-        <button v-if="active" id="crowdfund-body-header-cta" class="btn btn-lg btn-primary py-2 px-5 only-for-js" v-on:click="contributeModalOpen = true">Contribute</button>
+        <button v-if="active" id="crowdfund-body-header-cta" class="btn btn-lg btn-primary py-2 px-5 only-for-js" v-on:click="contribute">Contribute</button>
     </div>
 
     <div class="row mt-4 justify-content-between gap-5">
-        <div class="col-lg-7 col-sm-12" id="crowdfund-body-description-container">
+        <div :class="{ 'col-lg-7 col-sm-12': hasPerks, 'col-12': !hasPerks }" id="crowdfund-body-description-container">
             <template v-if="srvModel.disqusEnabled && srvModel.disqusShortname">
                 <b-tabs>
                     <b-tab title="Details" active>
@@ -232,7 +237,7 @@
                 </div>
             </template>
         </div>
-        <div class="col-lg-4 col-sm-12" id="crowdfund-body-contribution-container">
+        <div class="col-lg-4 col-sm-12" id="crowdfund-body-contribution-container" v-if="hasPerks">
             <contribute :target-currency="srvModel.targetCurrency"
                         :loading="loading"
                         :display-perks-ranking="srvModel.displayPerksRanking"
@@ -256,7 +261,6 @@
             </div>
         </div>
     </noscript>
-    <div class="text-center text-muted mt-4" v-text="`Updated ${lastUpdated}`">Updated @Model.Info.LastUpdated</div>
     <b-modal title="Contribute" v-model="contributeModalOpen" size="lg" ok-only="true" ok-variant="secondary" ok-title="Close" ref="modalContribute">
         <contribute v-if="contributeModalOpen"
                     :target-currency="srvModel.targetCurrency"
@@ -266,8 +270,8 @@
                     :in-modal="true">
         </contribute>
     </b-modal>
-
     <footer class="store-footer">
+        <p class="text-muted" v-text="`Updated ${lastUpdated}`">Updated @Model.Info.LastUpdated</p>
         <a class="store-powered-by" href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">
             Powered by <partial name="_StoreFooterLogo" />
         </a>
@@ -395,7 +399,6 @@
     <script src="~/vendor/signalr/signalr.js" asp-append-version="true"></script>
     <script src="~/vendor/animejs/anime.min.js" asp-append-version="true"></script>
     <script src="~/crowdfund/app.js" asp-append-version="true"></script>
-    <script src="~/crowdfund/helpers/math.js" asp-append-version="true"></script>
     <script src="~/crowdfund/services/audioplayer.js" asp-append-version="true"></script>
     <script src="~/crowdfund/services/fireworks.js" asp-append-version="true"></script>
     <script src="~/crowdfund/services/listener.js" asp-append-version="true"></script>

@@ -75,7 +75,7 @@ public class StoreWalletBalance : ViewComponent
             if (derivation is not null)
             {
                 var balance = await wallet.GetBalance(derivation.AccountDerivation, cts.Token);
-                vm.Balance = balance.Available.GetValue();
+                vm.Balance = balance.Available.GetValue(derivation.Network);
             }
         }
 

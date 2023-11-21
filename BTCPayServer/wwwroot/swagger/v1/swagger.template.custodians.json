@@ -788,11 +788,17 @@
                     },
                     "depositablePaymentMethods": {
                         "type": "array",
+                        "items": {
+                          "type": "string"
+                        },
                         "description": "A list of payment methods (crypto code + network) you can deposit to the custodian.",
                         "nullable": false
                     },
                     "withdrawablePaymentMethods": {
                         "type": "array",
+                        "items": {
+                          "type": "string"
+                        },
                         "description": "A list of payment methods (crypto code + network) you can withdraw from the custodian.",
                         "nullable": false
                     },

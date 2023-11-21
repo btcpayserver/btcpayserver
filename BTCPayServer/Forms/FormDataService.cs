@@ -43,9 +43,9 @@ public class FormDataService
             Field.Create("Address Line 1", "buyerAddress1", null, true, null),
             Field.Create("Address Line 2", "buyerAddress2", null, false, null),
             Field.Create("City", "buyerCity", null, true, null),
-            Field.Create("Postcode", "buyerZip", null, false, null),
+            Field.Create("Postcode", "buyerZip", null, true, null),
             Field.Create("State", "buyerState", null, false, null),
-            new SelectField()
+            new SelectField
             {
                 Name = "buyerCountry",
                 Label = "Country",
@@ -217,5 +217,37 @@ public class FormDataService
             node[f.Field.Name] = GetValue(form, f.FullName);
         }
         return r;
+    }
+    
+    public void SetValues(Form form, JObject values)
+    {
+        
+        var fields = form.GetAllFields().ToDictionary(k => k.FullName, k => k.Field);
+        SetValues(fields, new List<string>(), values);
+    }
+
+    private void SetValues(Dictionary<string, Field> fields, List<string> path, JObject values)
+    {
+        foreach (var prop in values.Properties())
+        {
+            List<string> propPath = new List<string>(path.Count + 1);
+            propPath.AddRange(path);
+            propPath.Add(prop.Name);
+            if (prop.Value.Type == JTokenType.Object)
+            {
+                SetValues(fields, propPath, (JObject)prop.Value);
+            }
+            else if (prop.Value.Type == JTokenType.String)
+            {
+                var fullName = string.Join('_', propPath.Where(s => !string.IsNullOrEmpty(s)));
+                if (fields.TryGetValue(fullName, out var f) && !f.Constant)
+                {
+                    if (_formProviders.TypeToComponentProvider.TryGetValue(f.Type, out var formComponentProvider))
+                    {
+                        formComponentProvider.SetValue(f, prop.Value);
+                    }
+                }
+            }
+        }
     }
 }

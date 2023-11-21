@@ -19,7 +19,7 @@ namespace BTCPayServer.Rating
         public static CurrencyPair Parse(string str)
         {
             if (!TryParse(str, out var result))
-                throw new FormatException("Invalid currency pair");
+                throw new FormatException($"Invalid currency pair ({str})");
             return result;
         }
         public static bool TryParse(string str, out CurrencyPair value)

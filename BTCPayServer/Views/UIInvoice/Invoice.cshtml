@@ -34,30 +34,6 @@
 
 @section PageFootContent {
     <script>
-        const alertClasses = { "Settled (marked)": 'success', "Invalid (marked)": 'danger' }
-
-        function changeInvoiceState(invoiceId, newState) {
-            console.log(invoiceId, newState)
-            const toggleButton = $("#markStatusDropdownMenuButton");
-            toggleButton.attr("disabled", "disabled");
-
-            $.post(`${invoiceId}/changestate/${newState}`)
-                .done(({ statusString }) => {
-                    const alertClass = alertClasses[statusString];
-                    toggleButton.replaceWith(`<span class="fs-6 fw-normal badge bg-${alertClass}">${statusString} <span class="fa fa-check"></span></span>`);
-                })
-                .fail(function () {
-                    toggleButton.removeAttr("disabled");
-                    alert("Invoice state update failed");
-                });
-        }
-
-        delegate('click', '[data-change-invoice-status-button]', e => {
-            const button = e.target.closest('[data-change-invoice-status-button]')
-            const { id, status } = button.dataset
-            changeInvoiceState(id, status)
-        })
-
         const handleRefundResponse = async response => {
             const modalBody = document.querySelector('#RefundModal .modal-body')
             if (response.ok && response.redirected) {
@@ -193,7 +169,6 @@
     </div>
 }
 
-<div class="sticky-header-setup"></div>
 <div class="sticky-header d-flex flex-wrap gap-3 align-items-center justify-content-between">
     <h2 class="mb-0 text-break">@ViewData["Title"]</h2>
     <div class="d-flex flex-wrap gap-3 d-print-none">
@@ -282,32 +257,8 @@
                 <tr>
                     <th>State</th>
                     <td>
-                        @if (Model.CanMarkStatus)
-                        {
-                            <div class="dropdown changeInvoiceStateToggle">
-                                <button class="btn btn-secondary btn-sm dropdown-toggle py-1 px-2" type="button" id="markStatusDropdownMenuButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                    @Model.State
-                                </button>
-                                <div class="dropdown-menu" aria-labelledby="markStatusDropdownMenuButton">
-                                    @if (Model.CanMarkInvalid)
-                                    {
-                                        <button type="button" class="dropdown-item lh-base changeInvoiceState" data-id="@Model.Id" data-status="invalid" data-change-invoice-status-button>
-                                            Mark as invalid
-                                        </button>
-                                    }
-                                    @if (Model.CanMarkSettled)
-                                    {
-                                        <button type="button" class="dropdown-item lh-base changeInvoiceState" href="#" data-id="@Model.Id" data-status="settled" data-change-invoice-status-button>
-                                            Mark as settled
-                                        </button>
-                                    }
-                                </div>
-                            </div>
-                        }
-                        else
-                        {
-                            @Model.State
-                        }
+                        <vc:invoice-status invoice-id="@Model.Id" state="Model.State" payments="Model.Payments"
+                           is-archived="Model.Archived" has-refund="Model.HasRefund" />
                     </td>
                 </tr>
                 <tr>
@@ -327,7 +278,7 @@
                     <td>@Model.TransactionSpeed</td>
                 </tr>
                 <tr>
-                    <th>Total Fiat Due</th>
+                    <th>Total Amount Due</th>
                     <td><span data-sensitive>@Model.Fiat</span></td>
                 </tr>
                 @if (!string.IsNullOrEmpty(Model.RefundEmail))
@@ -506,7 +457,8 @@
             }
         </div>
     </div>
-
+    <div class="row">
+    <div class="col-xxl-constrain">
     <h3 class="mb-3">Invoice Summary</h3>
     <partial name="ListInvoicesPaymentsPartial" model="(Model, true)" />
 
@@ -638,20 +590,22 @@
         <h3 class="mb-0">Events</h3>
         <table class="table table-hover mt-3 mb-4">
             <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Message</th>
-                </tr>
+            <tr>
+                <th>Date</th>
+                <th>Message</th>
+            </tr>
             </thead>
             <tbody>
-                @foreach (var evt in Model.Events)
-                {
-                    <tr class="text-@evt.GetCssClass()">
-                        <td>@evt.Timestamp.ToBrowserDate()</td>
-                        <td>@evt.Message</td>
-                    </tr>
-                }
+            @foreach (var evt in Model.Events)
+            {
+                <tr class="text-@evt.GetCssClass()">
+                    <td>@evt.Timestamp.ToBrowserDate()</td>
+                    <td>@evt.Message</td>
+                </tr>
+            }
             </tbody>
         </table>
     </section>
+    </div>
+    </div>
 </div>

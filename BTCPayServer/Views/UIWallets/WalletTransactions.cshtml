@@ -1,3 +1,5 @@
+@using BTCPayServer.Client
+@using BTCPayServer.Components
 @model ListTransactionsViewModel
 
 @{
@@ -55,12 +57,6 @@
         const $dropdowns = document.getElementById('Dropdowns');
         const $indicator = document.getElementById('LoadingIndicator');
         
-        delegate('click', '#selectAllCheckbox', e => {
-            document.querySelectorAll(".selector").forEach(checkbox => {
-                checkbox.checked = e.target.checked;
-            });
-        });
-        
         delegate('click', '#GoToTop', () => {
             window.scrollTo({ top: 0, behavior: 'smooth' });
         });
@@ -108,7 +104,7 @@
             }
             
             $indicator.classList.add('d-none');
-            formatDateTimes(document.getElementById('switchTimeFormat').dataset.mode);
+            formatDateTimes(document.querySelector('#WalletTransactions .switch-time-format').dataset.mode);
             initLabelManagers();
         }
         
@@ -144,16 +140,6 @@
 }
 
 <div class="d-inline-flex align-items-center gap-3" id="Dropdowns">
-    <div class="dropdown ms-auto" id="Actions">
-        <button class="btn btn-secondary dropdown-toggle" type="button" id="ActionsDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-            Actions
-        </button>
-        <div class="dropdown-menu dropdown-menu-end" aria-labelledby="ActionsDropdownToggle">
-            <form id="WalletActions" method="post" asp-action="WalletActions" asp-route-walletId="@walletId">
-                <button id="BumpFee" name="command" type="submit" class="dropdown-item" value="cpfp">Bump fee (CPFP)</button>
-            </form>
-        </div>
-    </div>
     <div class="dropdown d-inline-flex align-items-center gap-3" id="Export">
         <button class="btn btn-secondary dropdown-toggle" type="button" id="ExportDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
             Export
@@ -168,23 +154,44 @@
 <div style="clear:both"></div>
 
 <div id="WalletTransactions" class="table-responsive-md">
-    <table class="table table-hover">
-        <thead class="thead-inverse">
-        <tr>
-            <th style="width:2rem;" class="only-for-js">
-                <input id="selectAllCheckbox" type="checkbox" class="form-check-input" />
-            </th>
-            <th class="w-150px">
-                <div class="d-flex align-items-center gap-1">
-                    Date
-                    <button type="button" class="btn btn-link p-0 fa fa-clock-o switch-time-format" title="Switch date format" id="switchTimeFormat"></button>
-                </div>
-            </th>
-            <th class="text-start">Label</th>
-            <th>Transaction Id</th>
-            <th class="text-end">Amount</th>
-            <th class="text-end" style="min-width:60px"></th>
-        </tr>
+    <table class="table table-hover mass-action">
+        <thead class="mass-action-head">
+            <tr>
+                <th class="only-for-js mass-action-select-col">
+                    <input type="checkbox" class="form-check-input mass-action-select-all" />
+                </th>
+                <th class="date-col">
+                    <div class="d-flex align-items-center gap-1">
+                        Date
+                        <button type="button" class="btn btn-link p-0 fa fa-clock-o switch-time-format only-for-js" title="Switch date format"></button>
+                    </div>
+                </th>
+                <th class="text-start">Label</th>
+                <th>Transaction Id</th>
+                <th class="amount-col">Amount</th>
+                <th></th>
+            </tr>
+        </thead>
+        <thead class="mass-action-actions">
+            <tr>
+                <th class="only-for-js mass-action-select-col">
+                    <input type="checkbox" class="form-check-input mass-action-select-all" />
+                </th>
+                <th colspan="5">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                        <div>
+                            <strong class="mass-action-selected-count">0</strong>
+                            selected
+                        </div>
+                        <form id="WalletActions" method="post" asp-action="WalletActions" asp-route-walletId="@walletId" permission="@Policies.CanModifyStoreSettings" class="d-inline-flex align-items-center gap-3">
+                            <button id="BumpFee" name="command" type="submit" value="cpfp" class="btn btn-link">
+                                <vc:icon symbol="send" />
+                                Bump fee
+                            </button>
+                        </form>
+                    </div>
+                </th>
+            </tr>
         </thead>
         <tbody id="WalletTransactionsList">
             <partial name="_WalletTransactionsList" model="Model" />

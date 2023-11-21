@@ -1,6 +1,5 @@
-.public-page-wrap {
-    max-width: 560px;
-    overflow: hidden;
+#PosKeypad {
+    --wrap-max-width: 575px;
 }
 
 /* modes */
@@ -27,9 +26,8 @@
     max-height: 6rem;
     color: var(--btcpay-body-text);
 }
-.keypad .btn[data-key="del"] svg {
-    --btn-icon-size: 2.25rem;
-    transform: rotate(180deg);
+.keypad .btn[data-key="+"] {
+    font-size: 2.25em;
 }
 .btcpay-pills label,
 .btn-secondary.rounded-pill {
@@ -57,15 +55,6 @@
     z-index: 1;
 }
 
-.actions {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-.actions .btn {
-    flex:  1 1 50%;
-}
-
 #Calculation {
     min-height: 1.5rem;
 }
@@ -76,9 +65,9 @@
     }
 }
 @media (max-width: 575px) {
-    .public-page-wrap {
-        padding-right: 0;
-        padding-left: 0;
+    #PosKeypad {
+        --wrap-padding-horizontal: 0;
+        overflow: hidden;
     }
     .keypad {
         margin-left: -1px;

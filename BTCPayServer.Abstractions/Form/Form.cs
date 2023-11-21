@@ -5,7 +5,6 @@ using System.Reflection;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Primitives;
 using Newtonsoft.Json.Linq;
-using Npgsql.Internal.TypeHandlers.GeometricHandlers;
 
 namespace BTCPayServer.Abstractions.Form;
 

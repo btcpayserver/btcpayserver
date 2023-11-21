@@ -173,7 +173,11 @@ namespace BTCPayServer.Hosting
                 return;
             {
                 var postgres = new NpgsqlConnectionStringBuilder(p);
-                using var postgresContext = new ApplicationDbContext(new DbContextOptionsBuilder<ApplicationDbContext>().UseNpgsql(p, o => o.CommandTimeout(60 * 60 * 10)).Options);
+                using var postgresContext = new ApplicationDbContext(new DbContextOptionsBuilder<ApplicationDbContext>().UseNpgsql(p, o =>
+                {
+                    o.CommandTimeout(60 * 60 * 10);
+                    o.SetPostgresVersion(12, 0);
+                }).Options);
                 string? state;
                 try
                 {
@@ -212,7 +216,7 @@ namespace BTCPayServer.Hosting
                 foreach (var t in postgresContext.Model.GetRelationalModel().Tables.OrderByTopology())
                 {
                     var typeMapping = t.EntityTypeMappings.Single();
-                    var query = (IQueryable<object>)otherContext.GetType().GetMethod("Set", new Type[0])!.MakeGenericMethod(typeMapping.EntityType.ClrType).Invoke(otherContext, null)!;
+                    var query = (IQueryable<object>)otherContext.GetType().GetMethod("Set", new Type[0])!.MakeGenericMethod(typeMapping.TypeBase.ClrType).Invoke(otherContext, null)!;
                     if (t.Name == "WebhookDeliveries" ||
                         t.Name == "InvoiceWebhookDeliveries" ||
                         t.Name == "StoreRoles")

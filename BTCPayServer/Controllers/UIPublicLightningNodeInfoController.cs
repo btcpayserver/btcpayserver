@@ -37,31 +37,32 @@ namespace BTCPayServer.Controllers
             if (store == null)
                 return NotFound();
 
+            var storeBlob = store.GetStoreBlob();
+            var vm = new ShowLightningNodeInfoViewModel
+            {
+                CryptoCode = cryptoCode,
+                StoreName = store.StoreName,
+                BrandColor = storeBlob.BrandColor,
+                LogoFileId = storeBlob.LogoFileId,
+                CssFileId = storeBlob.CssFileId
+            };
             try
             {
                 var paymentMethodDetails = GetExistingLightningSupportedPaymentMethod(cryptoCode, store);
                 var network = _BtcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
-                var nodeInfo =
-                    await _LightningLikePaymentHandler.GetNodeInfo(paymentMethodDetails, network, new InvoiceLogs(), throws: true);
+                var nodeInfo = await _LightningLikePaymentHandler.GetNodeInfo(paymentMethodDetails, network,
+                    new InvoiceLogs(), throws: true);
 
-                return View(new ShowLightningNodeInfoViewModel
-                {
-                    Available = true,
-                    NodeInfo = nodeInfo.Select(n => new ShowLightningNodeInfoViewModel.NodeData(n)).ToArray(),
-                    CryptoCode = cryptoCode,
-                    CryptoImage = GetImage(paymentMethodDetails.PaymentId, network),
-                    StoreName = store.StoreName
-                });
+                vm.Available = true;
+                vm.CryptoImage = GetImage(paymentMethodDetails.PaymentId, network);
+                vm.NodeInfo = nodeInfo.Select(n => new ShowLightningNodeInfoViewModel.NodeData(n)).ToArray();
             }
             catch (Exception)
             {
-                return View(new ShowLightningNodeInfoViewModel
-                {
-                    Available = false,
-                    CryptoCode = cryptoCode,
-                    StoreName = store.StoreName
-                });
+                // ignored
             }
+
+            return View(vm);
         }
 
         private LightningSupportedPaymentMethod GetExistingLightningSupportedPaymentMethod(string cryptoCode, StoreData store)
@@ -107,5 +108,8 @@ namespace BTCPayServer.Controllers
         public string CryptoCode { get; set; }
         public string CryptoImage { get; set; }
         public string StoreName { get; set; }
+        public string LogoFileId { get; set; }
+        public string CssFileId { get; set; }
+        public string BrandColor { get; set; }
     }
 }

@@ -1,8 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using BTCPayServer.Services;
-using BTCPayServer.Services.Apps;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ActionConstraints;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -26,10 +25,10 @@ namespace BTCPayServer.Filters
         {
             var req = context.RouteContext.HttpContext.Request;
             var policies = context.RouteContext.HttpContext.RequestServices.GetService<PoliciesSettings>();
-            var mapping = policies?.DomainToAppMapping?.ToList() ?? new ();
-            if (policies?.RootAppId is { } rootAppId && policies?.RootAppType is { } rootAppType)
+            var mapping = policies?.DomainToAppMapping?.ToList() ?? new List<PoliciesSettings.DomainToAppMappingItem>();
+            if (policies is { RootAppId: { } rootAppId, RootAppType: { } rootAppType })
             {
-                mapping.Add(new()
+                mapping.Add(new PoliciesSettings.DomainToAppMappingItem
                 {
                     Domain = req.Host.Host,
                     AppId = rootAppId,
@@ -51,19 +50,18 @@ namespace BTCPayServer.Filters
                 }
                 return true;
             }
+
             // If we don't have an appId, maybe the domain we are browsing is a domain of an app
-            else
+            var matchedDomainMapping = mapping.FirstOrDefault(item => item.Domain.Equals(req.Host.Host, StringComparison.InvariantCultureIgnoreCase));
+            if (matchedDomainMapping != null)
             {
-                var matchedDomainMapping = mapping.FirstOrDefault(item => item.Domain.Equals(req.Host.Host, StringComparison.InvariantCultureIgnoreCase));
-                if (matchedDomainMapping != null)
-                {
-                    if (AppType is not { } appType || appType != matchedDomainMapping.AppType)
-                        return false;
-                    context.RouteContext.RouteData.Values.Add("appId", matchedDomainMapping.AppId);
-                    return true;
-                }
-                return AppType is null; // We should never prevent to go on home page
+                if (AppType is null || AppType != matchedDomainMapping.AppType)
+                    return false;
+                context.RouteContext.RouteData.Values.Add("appId", matchedDomainMapping.AppId);
+                return true;
             }
+
+            return AppType is null; // We should never prevent to go on home page
         }
     }
 }

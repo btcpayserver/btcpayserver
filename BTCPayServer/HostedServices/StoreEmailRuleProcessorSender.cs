@@ -59,7 +59,8 @@ public class StoreEmailRuleProcessorSender : EventHostedServiceBase
             if (webhookDeliveryRequest.WebhookEvent is WebhookPayoutEvent payoutEvent)
             {
                 storeId = payoutEvent?.StoreId;
-            }else if (webhookDeliveryRequest.WebhookEvent is WebhookInvoiceEvent webhookInvoiceEvent)
+            }
+            else if (webhookDeliveryRequest.WebhookEvent is WebhookInvoiceEvent webhookInvoiceEvent)
             {
                 storeId = webhookInvoiceEvent?.StoreId;
             }

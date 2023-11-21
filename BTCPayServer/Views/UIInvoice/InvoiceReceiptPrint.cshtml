@@ -2,10 +2,6 @@
 @using BTCPayServer.Client.Models
 @using BTCPayServer.Components.QRCode
 @using BTCPayServer.Services
-@using Microsoft.AspNetCore.Mvc.TagHelpers
-@using BTCPayServer.Abstractions.TagHelpers
-@inject ThemeSettings Theme
-@inject BTCPayServerEnvironment Env
 @inject DisplayFormatter DisplayFormatter
 @{
     Layout = null;
@@ -22,8 +18,6 @@
     <title>@ViewData["Title"]</title>
     @* CSS *@
     <link href="~/main/bootstrap/bootstrap.css" asp-append-version="true" rel="stylesheet" />
-    <link href="~/vendor/font-awesome/css/font-awesome.css" asp-append-version="true" rel="stylesheet" />
-    <link href="~/vendor/flatpickr/flatpickr.css" asp-append-version="true" rel="stylesheet" />
     <link href="~/main/fonts/OpenSans.css" asp-append-version="true" rel="stylesheet" />
     <link href="~/main/layout.css" asp-append-version="true" rel="stylesheet" />
     <link href="~/main/site.css" asp-append-version="true" rel="stylesheet" />

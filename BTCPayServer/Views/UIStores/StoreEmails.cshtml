@@ -79,40 +79,43 @@
                             <label asp-for="Rules[index].Body" class="form-label" data-required></label>
                             <textarea asp-for="Rules[index].Body" class="form-control richtext email-rule-body" rows="4"></textarea>
                             <span asp-validation-for="Rules[index].Body" class="text-danger"></span>
-                            <div class="form-text  rounded bg-light p-2">
-                                <div class="w-100 d-flex gap-2 border-bottom border-black pb-2">
-                                    <div class="text-nowrap">Invoice placeholders:</div>
-                                    <div>
-                                        <code>{Invoice.Id}</code>,
-                                        <code>{Invoice.StoreId}</code>,
-                                        <code>{Invoice.Price}</code>,
-                                        <code>{Invoice.Currency}</code>,
-                                        <code>{Invoice.Status}</code>,
-                                        <code>{Invoice.AdditionalStatus}</code>,
-                                        <code>{Invoice.OrderId}</code>
-                                    </div>
-                                </div>
-                                       <div class="w-100 d-flex gap-2  border-bottom border-black pb-2">
-                                <div class="text-nowrap ">Payout placeholders:</div>
-                                <div>
-                                    <code>{Payout.Id}</code>,
-                                    <code>{Payout.PullPaymentId}</code>,
-                                    <code>{Payout.Destination}</code>,
-                                    <code>{Payout.State}</code>
-                                </div>
-                                </div>       <div class="w-100 d-flex gap-2">
-                                <div class="text-nowrap">Payment request placeholders:</div>
-                                <div>
-                                    <code>{PaymentRequest.Id}</code>,
-                                    <code>{PaymentRequest.Price}</code>,
-                                    <code>{PaymentRequest.Currency}</code>,
-                                    <code>{PaymentRequest.Title}</code>,
-                                    <code>{PaymentRequest.Description}</code>,
-                                    <code>{PaymentRequest.Status}</code>
-                                </div>
-                                </div>
+                            <div class="form-text rounded bg-light p-2">
+                                <table class="table table-sm caption-top m-0">
+                                    <caption class="text-muted p-0">Placeholders</caption>
+                                    <tr>
+                                        <th>Invoice</th>
+                                        <td>
+                                            <code>{Invoice.Id}</code>,
+                                            <code>{Invoice.StoreId}</code>,
+                                            <code>{Invoice.Price}</code>,
+                                            <code>{Invoice.Currency}</code>,
+                                            <code>{Invoice.Status}</code>,
+                                            <code>{Invoice.AdditionalStatus}</code>,
+                                            <code>{Invoice.OrderId}</code>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Request</th>
+                                        <td>
+                                            <code>{PaymentRequest.Id}</code>,
+                                            <code>{PaymentRequest.Price}</code>,
+                                            <code>{PaymentRequest.Currency}</code>,
+                                            <code>{PaymentRequest.Title}</code>,
+                                            <code>{PaymentRequest.Description}</code>,
+                                            <code>{PaymentRequest.Status}</code>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Payout</th>
+                                        <td>
+                                            <code>{Payout.Id}</code>,
+                                            <code>{Payout.PullPaymentId}</code>,
+                                            <code>{Payout.Destination}</code>,
+                                            <code>{Payout.State}</code>
+                                        </td>
+                                    </tr>
+                                </table>
                             </div>
-                            
                         </div>
                     </li>
                 }

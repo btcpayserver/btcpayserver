@@ -136,7 +136,7 @@
                             asp-route-pullPaymentId="@pp.Id">
                             @pp.Name
                         </a>
-                        <spam not-permission="@Policies.CanManagePullPayments"> @pp.Name</spam>
+                        <span not-permission="@Policies.CanManagePullPayments">@pp.Name</span>
                     </td>
                     <td>@pp.AutoApproveClaims</td>
                     <td class="align-middle">
@@ -152,7 +152,7 @@
                     <td class="actions-col">
                         <div class="d-inline-flex align-items-center gap-3">
                             <a asp-action="ViewPullPayment"
-                                permission="@Policies.CanViewPullPayments"
+                               permission="@Policies.CanViewPullPayments"
                                asp-controller="UIPullPayment"
                                asp-route-pullPaymentId="@pp.Id"
                                target="_blank">

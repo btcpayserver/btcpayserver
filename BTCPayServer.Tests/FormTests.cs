@@ -198,6 +198,65 @@ public class FormTests : UnitTestBase
         service.SetValues(form, new JObject { ["test"] = "hello" });
         obj = service.GetValues(form);
         Assert.Equal("hello", obj["test"].Value<string>());
+
+        var req = service.GenerateInvoiceParametersFromForm(form);
+        Assert.Null(req.Amount);
+        Assert.Null(req.Currency);
+        
+        form.Fields.Add(new Field
+        {
+            Name = $"{FormDataService.InvoiceParameterPrefix}amount",
+            Type = "number",
+            Value = "1"
+        });
+        req = service.GenerateInvoiceParametersFromForm(form);
+        Assert.Equal(1, req.Amount);
+        
+        form.Fields.Add(new Field
+        {
+            Name = $"{FormDataService.InvoiceParameterPrefix}amount_adjustment",
+            Type = "number",
+            Value = "1"
+        });
+        req = service.GenerateInvoiceParametersFromForm(form);
+        Assert.Equal(2, req.Amount);
+        form.Fields.Add(new Field
+        {
+            Name = $"{FormDataService.InvoiceParameterPrefix}amount_adjustment2",
+            Type = "number",
+            Value = "2"
+        });
+        form.Fields.Add(new Field
+        {
+            Name = $"{FormDataService.InvoiceParameterPrefix}currency",
+            Type = "text",
+            Value = "eur"
+        });
+        req = service.GenerateInvoiceParametersFromForm(form);
+        Assert.Equal("eur", req.Currency);
+        Assert.Equal(4, req.Amount);
+        
+
+        form.Fields.Add(new Field
+        {
+            Name = $"{FormDataService.InvoiceParameterPrefix}amount_multiply_adjustment",
+            Type = "number",
+            Value = "2"
+        });
+        
+        req = service.GenerateInvoiceParametersFromForm(form);
+        Assert.Equal(8, req.Amount);
+        
+        
+        form.Fields.Add(new Field
+        {
+            Name = $"{FormDataService.InvoiceParameterPrefix}amount_multiply_adjustment1",
+            Type = "number",
+            Value = "2"
+        });
+        
+        req = service.GenerateInvoiceParametersFromForm(form);
+        Assert.Equal(16, req.Amount);
     }
 
     private void Clear(Form form)

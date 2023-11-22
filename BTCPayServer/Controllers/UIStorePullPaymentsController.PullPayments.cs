@@ -28,7 +28,7 @@ using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Controllers
 {
-    [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    [Authorize(Policy = Policies.CanViewPullPayments, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     [AutoValidateAntiforgeryToken]
     public class UIStorePullPaymentsController : Controller
     {
@@ -278,7 +278,7 @@ namespace BTCPayServer.Controllers
             return RedirectToAction(nameof(PullPayments), new { storeId });
         }
 
-        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+        [Authorize(Policy = Policies.CanManagePayouts, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [HttpPost("stores/{storeId}/pull-payments/payouts")]
         [HttpPost("stores/{storeId}/pull-payments/{pullPaymentId}/payouts")]
         [HttpPost("stores/{storeId}/payouts")]
@@ -472,6 +472,7 @@ namespace BTCPayServer.Controllers
 
         [HttpGet("stores/{storeId}/pull-payments/{pullPaymentId}/payouts")]
         [HttpGet("stores/{storeId}/payouts")]
+        [Authorize(Policy = Policies.CanViewPayouts, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> Payouts(
             string storeId, string pullPaymentId, string paymentMethodId, PayoutState payoutState,
             int skip = 0, int count = 50)

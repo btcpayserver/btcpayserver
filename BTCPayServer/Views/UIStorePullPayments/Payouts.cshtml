@@ -73,9 +73,9 @@
         <div class="flex-fill">
             <p class="mb-3">
                 Payouts allow you to process pull payments, in the form of refunds, salary payouts, or withdrawals.
-                You can also
+                <span permission="@Policies.CanModifyStoreSettings">You can also
                 <a id="PayoutProcessors" asp-action="ConfigureStorePayoutProcessors" asp-controller="UIPayoutProcessors" asp-route-storeId="@storeId">configure payout processors</a>
-                to automate payouts.
+                to automate payouts.</span>
             </p>
             <a href="https://docs.btcpayserver.org/Payouts/" target="_blank" rel="noreferrer noopener">Learn More</a>
         </div>
@@ -93,7 +93,7 @@
     PaymentMethods = new[] { Model.PaymentMethodId }
 })).Any())
 {
-    <div class="alert alert-info mb-5" role="alert">
+    <div class="alert alert-info mb-5" role="alert" permission="@Policies.CanModifyStoreSettings">
         <strong>Pro tip:</strong> There are supported but unconfigured Payout Processors for this payout payment method.<br/>
         Payout Processors help automate payouts so that you do not need to manually handle them.
         <a class="alert-link p-0" asp-action="ConfigureStorePayoutProcessors" asp-controller="UIPayoutProcessors" asp-route-storeId="@storeId">Configure now</a>

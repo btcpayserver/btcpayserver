@@ -16,7 +16,7 @@ using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Controllers;
 
-[Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+[Authorize(Policy = Policies.CanViewReports, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
 [AutoValidateAntiforgeryToken]
 public partial class UIReportsController : Controller
 {
@@ -44,7 +44,7 @@ public partial class UIReportsController : Controller
 
     [HttpPost("stores/{storeId}/reports")]
     [AcceptMediaTypeConstraint("application/json")]
-    [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    [Authorize(Policy = Policies.CanViewReports, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     [IgnoreAntiforgeryToken]
     public async Task<IActionResult> StoreReportsJson(string storeId, [FromBody] StoreReportRequest? request = null, bool fakeData = false, CancellationToken cancellation = default)
     {
@@ -59,7 +59,7 @@ public partial class UIReportsController : Controller
 
     [HttpGet("stores/{storeId}/reports")]
     [AcceptMediaTypeConstraint("text/html")]
-    [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    [Authorize(Policy = Policies.CanViewReports, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public IActionResult StoreReports(
         string storeId,
         string ? viewName = null)

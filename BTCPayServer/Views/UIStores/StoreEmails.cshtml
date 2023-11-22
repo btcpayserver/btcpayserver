@@ -92,6 +92,7 @@
                                             <code>{Invoice.Status}</code>,
                                             <code>{Invoice.AdditionalStatus}</code>,
                                             <code>{Invoice.OrderId}</code>
+                                        	<code>{Invoice.Metadata}*</code>
                                         </td>
                                     </tr>
                                     <tr>
@@ -103,6 +104,7 @@
                                             <code>{PaymentRequest.Title}</code>,
                                             <code>{PaymentRequest.Description}</code>,
                                             <code>{PaymentRequest.Status}</code>
+                                        	<code>{PaymentRequest.FormResponse}*</code>
                                         </td>
                                     </tr>
                                     <tr>
@@ -112,8 +114,11 @@
                                             <code>{Payout.PullPaymentId}</code>,
                                             <code>{Payout.Destination}</code>,
                                             <code>{Payout.State}</code>
+                                        	<code>{Payout.Metadata}*</code>
                                         </td>
                                     </tr>
+                                    <tr><td colspan="2">* These fields are JSON objects. You can access properties within them using <a href="https://www.newtonsoft.com/json/help/html/SelectToken.htm#SelectTokenJSONPath" target="_blank">this syntax</a>. One example is <code>{Invoice.Metadata.itemCode}</code>
+</td></tr>
                                 </table>
                             </div>
                         </div>

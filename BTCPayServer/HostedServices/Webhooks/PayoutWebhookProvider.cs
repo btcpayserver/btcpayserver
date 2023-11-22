@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
+using BTCPayServer.Services;
 using Microsoft.Extensions.Logging;
 
 namespace BTCPayServer.HostedServices.Webhooks;
@@ -12,11 +13,13 @@ namespace BTCPayServer.HostedServices.Webhooks;
 public class PayoutWebhookProvider : EventHostedServiceBase, IWebhookProvider
 {
     private readonly WebhookSender _webhookSender;
+    private BTCPayNetworkJsonSerializerSettings _btcPayNetworkJsonSerializerSettings;
 
-    public PayoutWebhookProvider(WebhookSender webhookSender, EventAggregator eventAggregator, ILogger<PayoutWebhookProvider> logger) : base(
+    public PayoutWebhookProvider(WebhookSender webhookSender, EventAggregator eventAggregator, ILogger<PayoutWebhookProvider> logger, BTCPayNetworkJsonSerializerSettings btcPayNetworkJsonSerializerSettings) : base(
         eventAggregator, logger)
     {
         _webhookSender = webhookSender;
+        _btcPayNetworkJsonSerializerSettings = btcPayNetworkJsonSerializerSettings;
     }
 
     protected override void SubscribeToEvents()
@@ -48,7 +51,7 @@ public class PayoutWebhookProvider : EventHostedServiceBase, IWebhookProvider
                 webhookEvent.OriginalDeliveryId = delivery.Id;
                 webhookEvent.IsRedelivery = false;
                 webhookEvent.Timestamp = delivery.Timestamp;
-                var context = new PayoutWebhookDeliveryRequest(payoutEvent,webhook.Id, webhookEvent, delivery, webhookBlob);
+                var context = new PayoutWebhookDeliveryRequest(payoutEvent,webhook.Id, webhookEvent, delivery, webhookBlob, _btcPayNetworkJsonSerializerSettings);
                 _webhookSender.EnqueueDelivery(context);
             }
         }

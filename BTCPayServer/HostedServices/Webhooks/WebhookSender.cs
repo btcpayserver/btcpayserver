@@ -17,6 +17,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NBitcoin.DataEncoders;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.HostedServices.Webhooks
 {
@@ -92,6 +93,42 @@ namespace BTCPayServer.HostedServices.Webhooks
                 UIStoresController.StoreEmailRule storeEmailRule)
             {
                 return Task.FromResult(req)!;
+            }
+
+            protected  static  string InterpolateJsonField(string str, string fieldName, JObject obj)
+            {
+                fieldName += ".";
+                //find all instance of {fieldName*} instead str, then run obj.SelectToken(*) on it
+                while (true)
+                {
+            
+                    var start = str.IndexOf($"{{{fieldName}", StringComparison.InvariantCultureIgnoreCase)+ fieldName.Length + 2;
+                    if(start == -1)
+                        break;
+                    var end = str.IndexOf("}", start, StringComparison.InvariantCultureIgnoreCase);
+                    if(end == -1)
+                        break;
+                    var jsonpath = str.Substring(start, end - start);
+                    string result = string.Empty;
+                    try
+                    {
+                        if (string.IsNullOrEmpty(jsonpath))
+                        {
+                            result = obj.ToString();
+                        }
+                        else
+                        {
+                            var resultToken = obj.SelectToken(jsonpath);
+                            result = resultToken?.ToString();
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                    }
+                    str = str.Replace($"{{{fieldName}{jsonpath}}}", result);
+                }
+
+                return str;
             }
         }
 

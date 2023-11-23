@@ -135,7 +135,7 @@ namespace BTCPayServer.PaymentRequest
                                 Amount = paymentEntity.PaidAmount.Gross,
                                 Paid = paymentEntity.InvoicePaidAmount.Net,
                                 ReceivedDate = paymentEntity.ReceivedTime.DateTime,
-                                AmountFormatted = _displayFormatter.Currency(paymentEntity.PaidAmount.Gross, paymentEntity.PaidAmount.Currency, DisplayFormatter.CurrencyFormat.None),
+                                AmountFormatted = _displayFormatter.Currency(paymentEntity.PaidAmount.Gross, paymentEntity.PaidAmount.Currency),
                                 PaidFormatted = _displayFormatter.Currency(paymentEntity.InvoicePaidAmount.Net, blob.Currency, DisplayFormatter.CurrencyFormat.Symbol),
                                 RateFormatted = _displayFormatter.Currency(paymentEntity.Rate, blob.Currency, DisplayFormatter.CurrencyFormat.Symbol),
                                 PaymentMethod = paymentMethodId.ToPrettyString(),

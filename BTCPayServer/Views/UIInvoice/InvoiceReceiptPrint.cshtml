@@ -180,7 +180,7 @@
                                                 }
                                                 <tr>
                                                     <td class="fw-normal text-nowrap text-secondary">@(Model.Payments.Count == 1 ? "Paid" : "")</td>
-                                                    <td class="text-end">@payment.AmountFormatted @payment.PaymentMethod</td>
+                                                    <td class="text-end">@payment.AmountFormatted</td>
                                                 </tr>
                                                 <tr>
                                                     <td class="fw-normal text-nowrap text-secondary"></td>
@@ -190,7 +190,6 @@
                                                     <td class="fw-normal text-nowrap text-secondary">Rate</td>
                                                     <td class="text-end">@payment.RateFormatted</td>
                                                 </tr>
-
                                                 @if (!string.IsNullOrEmpty(payment.Destination))
                                                 {
                                                     <tr>

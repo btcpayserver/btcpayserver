@@ -121,7 +121,7 @@
                                         <tr>
                                             <td class="date-col">@payment.ReceivedDate.ToBrowserDate()</td>
                                             <td class="amount-col">@payment.PaidFormatted</td>
-                                            <td class="amount-col">@payment.AmountFormatted @payment.PaymentMethod</td>
+                                            <td class="amount-col">@payment.AmountFormatted</td>
                                         </tr>
                                         @if (!string.IsNullOrEmpty(payment.Destination))
                                         {

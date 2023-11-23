@@ -106,7 +106,8 @@
                     <tr>
                         <td colspan="2"><hr class="w-100 my-0"/></td>
                     </tr>
-                    @if (Model.AdditionalData?.Any() is true && (Model.AdditionalData.ContainsKey("Cart") || Model.AdditionalData.ContainsKey("Subtotal") || Model.AdditionalData.ContainsKey("Total")))
+                    @if (Model.AdditionalData?.Any() is true &&
+                        (Model.AdditionalData.ContainsKey("Cart") || Model.AdditionalData.ContainsKey("Discount") || Model.AdditionalData.ContainsKey("Tip")))
                     {
                         @if (Model.AdditionalData.ContainsKey("Cart"))
                         {

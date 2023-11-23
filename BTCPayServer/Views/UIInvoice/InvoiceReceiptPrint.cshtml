@@ -10,6 +10,8 @@
     var isFreeInvoice = (Model.Status == InvoiceStatus.New && Model.Amount == 0);
     var isSettled = Model.Status == InvoiceStatus.Settled;
 }
+<!DOCTYPE html>
+<html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -70,124 +72,138 @@
     </style>
 </head>
 
-<body style="margin:0; padding:0; background-color:#fff">
-    <center>
-        <div>
-            <partial name="_StatusMessage" model="@(new ViewDataDictionary(ViewData) { { "Margin", "mb-4" } })" />
-
-            <div class="justify-content-center">
-                <partial name="_StoreHeader" model="(Model.StoreName, Model.LogoFileId)" />
-                <div id="InvoiceSummary" class="bg-tile">
-                    @if (isProcessing)
-                    {
-                        <div class="lead text-center fw-semibold" id="invoice-processing">
-                            The invoice has detected a payment but is still waiting to be settled.
-                        </div>
-                    }
-                    else if (!isSettled)
-                    {
-                        <div class="lead text-center fw-semibold" id="invoice-unsettled">
-                            The invoice is not settled.
-                        </div>
-                    }
-                    else
-                    {
-                        <div id="PaymentDetails" class="bg-tile">
-                            <div class="table-responsive my-0">
-                                <table class="table table-borderless table-sm small my-0" style="max-width: 500px">
-                                    <thead>
-                                        <tr>
-                                            <th class="fw-normal text-secondary"></th>
-                                            <th class="fw-normal text-secondary"></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td class="fw-normal text-nowrap text-secondary">Paid</td>
-                                            <td>@DisplayFormatter.Currency(Model.Amount, Model.Currency, DisplayFormatter.CurrencyFormat.Symbol)</td>
-                                        </tr>
-                                        <tr>
-                                            <td class="fw-normal text-nowrap text-secondary">Date/Time</td>
-                                            <td>@Model.Timestamp.ToBrowserDate()</td>
-                                        </tr>
-                                        @if (!string.IsNullOrEmpty(Model.OrderId))
-                                        {
-                                            <tr>
-                                                <td class="fw-normal text-nowrap text-secondary">Order ID</td>
-                                                <td>@Model.OrderId</td>
-                                            </tr>
-                                        }
-
-                                        @if (Model.Payments?.Any() is true)
-                                        {
-                                            @for (int i = 0; i < Model.Payments.Count; i++)
-                                            {
-                                                var payment = Model.Payments[i];
-                                                <tr>
-                                                    <td colspan="2" class="fw-normal text-nowrap text-secondary">Payment @(i + 1)</td>
-
-                                                </tr>
-                                                <tr>
-                                                    <td class="fw-normal text-nowrap text-secondary">Received</td>
-                                                    <td>@payment.ReceivedDate.ToBrowserDate()</td>
-                                                </tr>
-                                                <tr>
-                                                    <td class="fw-normal text-nowrap text-secondary"></td>
-                                                    <td colspan="2">@payment.AmountFormatted @payment.PaymentMethod</td>
-                                                </tr>
-                                                <tr>
-                                                    <td class="fw-normal text-nowrap text-secondary"></td>
-                                                    <td colspan="2">@payment.PaidFormatted</td>
-                                                </tr>
-                                                <tr>
-                                                    <td class="fw-normal text-nowrap text-secondary">Rate</td>
-                                                    <td colspan="2">@payment.RateFormatted</td>
-                                                </tr>
-
-                                                @if (!string.IsNullOrEmpty(payment.Destination))
-                                                {
-                                                    <tr>
-                                                        <td class="fw-normal text-nowrap text-secondary">Destination</td>
-                                                        <td style="word-break:break-all">@payment.Destination</td>
-                                                    </tr>
-                                                }
-                                                @if (!string.IsNullOrEmpty(payment.PaymentProof))
-                                                {
-                                                    <tr>
-                                                        <td class="fw-normal text-nowrap text-secondary">Pay Proof</td>
-                                                        <td style="word-break:break-all">@payment.PaymentProof</td>
-                                                    </tr>
-                                                }
-                                            }
-                                        }
-                                    </tbody>
-                                    <tfoot>
-                                        <tr>
-                                            <th class="fw-normal text-secondary"></th>
-                                            <th class="fw-normal text-secondary"></th>
-                                        </tr>
-                                    </tfoot>
-                                </table>
-                            </div>
-                        </div>
-
-                        if (Model.ReceiptOptions.ShowQR is true)
-                        {
-                            <vc:qr-code style="width:" data="@Context.Request.GetCurrentUrl()" size="128"></vc:qr-code>
-                        }
-                    }
-                </div>
+<body class="m-0 p-0 bg-white">
+<center>
+    <partial name="_StoreHeader" model="(Model.StoreName, Model.LogoFileId)" />
+    <div id="InvoiceSummary" style="max-width:600px">
+        @if (isProcessing)
+        {
+            <div class="lead text-center fw-semibold" id="invoice-processing">
+                The invoice has detected a payment but is still waiting to be settled.
             </div>
-        </div>
-
-        <footer class="store-footer" style="padding: 0.5rem;">
-            <a class="store-powered-by" style="color: #000;" href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">
-                Powered by <partial name="_StoreFooterLogo" />
-            </a>
-        </footer>
-    </center>
+        }
+        else if (!isSettled)
+        {
+            <div class="lead text-center fw-semibold" id="invoice-unsettled">
+                The invoice is not settled.
+            </div>
+        }
+        else
+        {
+            <div id="PaymentDetails">
+                <div class="my-2 text-center small">
+                    @if (!string.IsNullOrEmpty(Model.OrderId))
+                    {
+                        <div>Order ID: @Model.OrderId</div>
+                    }
+                    @Model.Timestamp.ToBrowserDate()
+                </div>
+                <table class="table table-borderless table-sm small my-0">
+                    <tr>
+                        <td class="text-nowrap text-secondary">Total</td>
+                        <td class="text-end fw-semibold">@DisplayFormatter.Currency(Model.Amount, Model.Currency, DisplayFormatter.CurrencyFormat.Symbol)</td>
+                    </tr>
+                    <tr>
+                        <td colspan="2"><hr class="w-100 my-0"/></td>
+                    </tr>
+                    @if (Model.AdditionalData?.Any() is true &&
+                        (Model.AdditionalData.ContainsKey("Cart") || Model.AdditionalData.ContainsKey("Discount") || Model.AdditionalData.ContainsKey("Tip")))
+                    {
+                        @if (Model.AdditionalData.ContainsKey("Cart"))
+                        {
+                            @foreach (var (key, value) in (Dictionary<string, object>)Model.AdditionalData["Cart"])
+                            {
+                                <tr>
+                                    <td class="text-secondary">@key</td>
+                                    <td class="text-end">@value</td>
+                                </tr>
+                            }
+                        }
+                        @if (Model.AdditionalData.ContainsKey("Subtotal"))
+                        {
+                            <tr>
+                                <td class="text-secondary">Subtotal</td>
+                                <td class="text-end">@Model.AdditionalData["Subtotal"]</td>
+                            </tr>
+                        }
+                        @if (Model.AdditionalData.ContainsKey("Discount"))
+                        {
+                            <tr>
+                                <td class="text-secondary">Discount</td>
+                                <td class="text-end">@Model.AdditionalData["Discount"]</td>
+                            </tr>
+                        }
+                        @if (Model.AdditionalData.ContainsKey("Tip"))
+                        {
+                            <tr>
+                                <td class="text-secondary">Tip</td>
+                                <td class="text-end">@Model.AdditionalData["Tip"]</td>
+                            </tr>
+                        }
+                        <tr>
+                            <td colspan="2"><hr class="w-100 my-0"/></td>
+                        </tr>
+                    }
+                    @if (Model.Payments?.Any() is true)
+                    {
+                        @for (var i = 0; i < Model.Payments.Count; i++)
+                        {
+                            var payment = Model.Payments[i];
+                            @if (Model.Payments.Count > 1)
+                            {
+                                <tr>
+                                    <td colspan="2" class="text-nowrap text-secondary">Payment @(i + 1)</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-nowrap">Received</td>
+                                    <td>@payment.ReceivedDate.ToBrowserDate()</td>
+                                </tr>
+                            }
+                            <tr>
+                                <td class="text-nowrap text-secondary">@(Model.Payments.Count == 1 ? "Paid" : "")</td>
+                                <td class="text-end">@payment.AmountFormatted</td>
+                            </tr>
+                            <tr>
+                                <td colspan="2" class="text-end">@payment.PaidFormatted</td>
+                            </tr>
+                            <tr>
+                                <td class="text-nowrap text-secondary">Rate</td>
+                                <td class="text-end">@payment.RateFormatted</td>
+                            </tr>
+                            @if (!string.IsNullOrEmpty(payment.Destination))
+                            {
+                                <tr>
+                                    <td class="text-nowrap text-secondary">Destination</td>
+                                    <td class="text-break">@payment.Destination</td>
+                                </tr>
+                            }
+                            @if (!string.IsNullOrEmpty(payment.PaymentProof))
+                            {
+                                <tr>
+                                    <td class="text-nowrap text-secondary">Pay Proof</td>
+                                    <td class="text-break">@payment.PaymentProof</td>
+                                </tr>
+                            }
+                        }
+                        <tr>
+                            <td colspan="2"><hr class="w-100 my-0"/></td>
+                        </tr>
+                    }
+                </table>
+            </div>
+            if (Model.ReceiptOptions.ShowQR is true)
+            {
+                <vc:qr-code data="@Context.Request.GetCurrentUrl()" size="128" />
+            }
+        }
+    </div>
+    <div class="store-footer p-3">
+        <a class="store-powered-by" style="color:#000;">Powered by <partial name="_StoreFooterLogo" /></a>
+    </div>
+    <hr class="w-100 my-0 bg-none"/>
+</center>
 </body>
-
 <script>
     window.print();
 </script>
+</html>

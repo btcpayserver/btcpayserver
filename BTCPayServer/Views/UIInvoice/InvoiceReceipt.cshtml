@@ -31,7 +31,7 @@
         </script>
     }
     <style>
-        #InvoiceReceipt { --wrap-max-width: 720px; }
+        #InvoiceReceipt { --wrap-max-width: 768px; }
         #InvoiceSummary { gap: var(--btcpay-space-l); }
         #PaymentDetails table tbody tr:first-child td { padding-top: 1rem; }
         #PaymentDetails table tbody:not(:last-child) tr:last-child > th,td { padding-bottom: 1rem; }
@@ -86,7 +86,6 @@
                         </div>
                     }
                 </div>
-                </div>
                 
                 @if (isProcessing)
                 {
@@ -122,7 +121,7 @@
                                         <tr>
                                             <td class="date-col">@payment.ReceivedDate.ToBrowserDate()</td>
                                             <td class="amount-col">@payment.PaidFormatted</td>
-                                            <td class="amount-col">@payment.AmountFormatted @payment.PaymentMethod</td>
+                                            <td class="amount-col">@payment.AmountFormatted</td>
                                         </tr>
                                         @if (!string.IsNullOrEmpty(payment.Destination))
                                         {

@@ -163,6 +163,42 @@
                                             }
                                         }
                                     </tbody>
+                                    @if (Model.AdditionalData?.Any() is true && (Model.AdditionalData.ContainsKey("Cart") || Model.AdditionalData.ContainsKey("Subtotal")))
+                                    {
+                                        <tbody>
+                                            @if (Model.AdditionalData.ContainsKey("Cart"))
+                                            {
+                                                @foreach (var (key, value) in (Dictionary<string, object>)Model.AdditionalData["Cart"])
+                                                {
+                                                    <tr>
+                                                        <td class="fw-normal text-secondary">@key</td>
+                                                        <td class="text-end">@value</td>
+                                                    </tr>
+                                                }
+                                            }
+                                            @if (Model.AdditionalData.ContainsKey("Subtotal"))
+                                            {
+                                                <tr>
+                                                    <td class="fw-normal text-secondary">Subtotal</td>
+                                                    <td class="text-end">@Model.AdditionalData["Subtotal"]</td>
+                                                </tr>
+                                            }
+                                            @if (Model.AdditionalData.ContainsKey("Discount"))
+                                            {
+                                                <tr>
+                                                    <td class="fw-normal text-secondary">Discount</td>
+                                                    <td class="text-end">@Model.AdditionalData["Discount"]</td>
+                                                </tr>
+                                            }
+                                            @if (Model.AdditionalData.ContainsKey("Tip"))
+                                            {
+                                                <tr>
+                                                    <td class="fw-normal text-secondary">Tip</td>
+                                                    <td class="text-end">@Model.AdditionalData["Tip"]</td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    }
                                     <tfoot>
                                         <tr>
                                             <th class="fw-normal text-secondary"></th>

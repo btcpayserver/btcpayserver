@@ -179,7 +179,7 @@
                                                     </tr>
                                                 }
                                                 <tr>
-                                                    <td class="fw-normal text-nowrap text-secondary"></td>
+                                                    <td class="fw-normal text-nowrap text-secondary">@(Model.Payments.Count == 1 ? "Paid" : "")</td>
                                                     <td class="text-end">@payment.AmountFormatted @payment.PaymentMethod</td>
                                                 </tr>
                                                 <tr>
@@ -195,14 +195,14 @@
                                                 {
                                                     <tr>
                                                         <td class="fw-normal text-nowrap text-secondary">Destination</td>
-                                                        <td style="word-break:break-all">@payment.Destination</td>
+                                                        <td class="text-break">@payment.Destination</td>
                                                     </tr>
                                                 }
                                                 @if (!string.IsNullOrEmpty(payment.PaymentProof))
                                                 {
                                                     <tr>
                                                         <td class="fw-normal text-nowrap text-secondary">Pay Proof</td>
-                                                        <td style="word-break:break-all">@payment.PaymentProof</td>
+                                                        <td class="text-break">@payment.PaymentProof</td>
                                                     </tr>
                                                 }
                                             }

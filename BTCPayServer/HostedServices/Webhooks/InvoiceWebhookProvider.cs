@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers.Greenfield;
 using BTCPayServer.Data;
@@ -12,54 +10,15 @@ using WebhookDeliveryData = BTCPayServer.Data.WebhookDeliveryData;
 
 namespace BTCPayServer.HostedServices.Webhooks;
 
-public class InvoiceWebhookProvider : EventHostedServiceBase, IWebhookProvider
+public class InvoiceWebhookProvider : WebhookProvider<InvoiceEvent>
 {
-    private readonly WebhookSender _webhookSender;
-
     public InvoiceWebhookProvider(WebhookSender webhookSender, EventAggregator eventAggregator,
         ILogger<InvoiceWebhookProvider> logger) : base(
-        eventAggregator, logger)
+        eventAggregator, logger, webhookSender)
     {
-        _webhookSender = webhookSender;
     }
 
-    protected override void SubscribeToEvents()
-    {
-        Subscribe<InvoiceEvent>();
-        base.SubscribeToEvents();
-    }
-
-    protected override async Task ProcessEvent(object evt, CancellationToken cancellationToken)
-    {
-        if (evt is InvoiceEvent invoiceEvent)
-        {
-            var webhooks = await _webhookSender.GetWebhooks(invoiceEvent.Invoice.StoreId);
-            foreach (var webhook in webhooks)
-            {
-                var webhookBlob = webhook.GetBlob();
-                if (GetWebhookEvent(invoiceEvent) is not { } webhookEvent)
-                    continue;
-                if (!webhookBlob.ShouldDeliver(webhookEvent.Type))
-                    continue;
-                WebhookDeliveryData delivery = WebhookExtensions.NewWebhookDelivery(webhook.Id);
-                webhookEvent.InvoiceId = invoiceEvent.InvoiceId;
-                webhookEvent.StoreId = invoiceEvent.Invoice.StoreId;
-                webhookEvent.Metadata = invoiceEvent.Invoice.Metadata.ToJObject();
-                webhookEvent.DeliveryId = delivery.Id;
-                webhookEvent.WebhookId = webhook.Id;
-                webhookEvent.OriginalDeliveryId = delivery.Id;
-                webhookEvent.IsRedelivery = false;
-                webhookEvent.Timestamp = delivery.Timestamp;
-                var context = new InvoiceWebhookDeliveryRequest(invoiceEvent.Invoice, webhook.Id, webhookEvent,
-                    delivery, webhookBlob);
-                _webhookSender.EnqueueDelivery(context);
-            }
-        }
-
-        await base.ProcessEvent(evt, cancellationToken);
-    }
-
-    public Dictionary<string, string> GetSupportedWebhookTypes()
+    public override Dictionary<string, string> GetSupportedWebhookTypes()
     {
         return new Dictionary<string, string>()
         {
@@ -73,7 +32,28 @@ public class InvoiceWebhookProvider : EventHostedServiceBase, IWebhookProvider
         };
     }
 
-    public WebhookEvent CreateTestEvent(string type, object[] args)
+    public override WebhookSender.WebhookDeliveryRequest CreateDeliveryRequest(InvoiceEvent invoiceEvent,
+        WebhookData webhook)
+    {
+        var webhookEvent = GetWebhookEvent(invoiceEvent)!;
+        var webhookBlob = webhook?.GetBlob();
+        webhookEvent.InvoiceId = invoiceEvent.InvoiceId;
+        webhookEvent.StoreId = invoiceEvent.Invoice.StoreId;
+        webhookEvent.Metadata = invoiceEvent.Invoice.Metadata.ToJObject();
+        webhookEvent.WebhookId = webhook?.Id;
+        webhookEvent.IsRedelivery = false;
+        WebhookDeliveryData delivery = webhook is null? null: WebhookExtensions.NewWebhookDelivery(webhook.Id);
+        if (delivery is not null)
+        {
+            webhookEvent.DeliveryId = delivery.Id;
+            webhookEvent.OriginalDeliveryId = delivery.Id;
+            webhookEvent.Timestamp = delivery.Timestamp;
+        }
+        return new InvoiceWebhookDeliveryRequest(invoiceEvent.Invoice, webhook?.Id, webhookEvent,
+            delivery, webhookBlob);
+    }
+
+    public override WebhookEvent CreateTestEvent(string type, object[] args)
     {
         return new WebhookInvoiceEvent(type)
         {
@@ -81,7 +61,7 @@ public class InvoiceWebhookProvider : EventHostedServiceBase, IWebhookProvider
         };
     }
 
-    private static WebhookInvoiceEvent? GetWebhookEvent(InvoiceEvent invoiceEvent)
+    protected override WebhookInvoiceEvent? GetWebhookEvent(InvoiceEvent invoiceEvent)
     {
         var eventCode = invoiceEvent.EventCode;
         switch (eventCode)

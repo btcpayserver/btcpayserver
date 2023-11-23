@@ -5,7 +5,7 @@ using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Client.Models
 {
-    public class WebhookPayoutEvent:WebhookEvent
+    public class WebhookPayoutEvent:StoreWebhookEvent
     {
         public WebhookPayoutEvent()
         {
@@ -18,12 +18,11 @@ namespace BTCPayServer.Client.Models
             Type = evtType;
         }
 
-        [JsonProperty(Order = 1)] public string StoreId { get; set; }
         [JsonProperty(Order = 2)] public string PayoutId { get; set; }
         [JsonProperty(Order = 3)] public string PullPaymentId { get; set; }
         [JsonProperty(Order = 4)] [JsonConverter(typeof(StringEnumConverter))]public PayoutState PayoutState { get; set; }
     } 
-    public class WebhookPaymentRequestEvent:WebhookEvent
+    public class WebhookPaymentRequestEvent:StoreWebhookEvent
     {
         public WebhookPaymentRequestEvent()
         {
@@ -36,12 +35,17 @@ namespace BTCPayServer.Client.Models
             Type = evtType;
         }
 
-        [JsonProperty(Order = 1)] public string StoreId { get; set; }
         [JsonProperty(Order = 2)] public string PaymentRequestId { get; set; }
         [JsonProperty(Order = 3)] [JsonConverter(typeof(StringEnumConverter))]public PaymentRequestData.PaymentRequestStatus Status { get; set; }
     }
     
-    public class WebhookInvoiceEvent : WebhookEvent
+    public  abstract class StoreWebhookEvent:WebhookEvent
+    {
+
+        [JsonProperty(Order = 1)] public string StoreId { get; set; }
+    }
+    
+    public class WebhookInvoiceEvent : StoreWebhookEvent
     {
         public WebhookInvoiceEvent()
         {
@@ -54,7 +58,6 @@ namespace BTCPayServer.Client.Models
             Type = evtType;
         }
 
-        [JsonProperty(Order = 1)] public string StoreId { get; set; }
         [JsonProperty(Order = 2)] public string InvoiceId { get; set; }
         [JsonProperty(Order = 3)] public JObject Metadata { get; set; }
     }

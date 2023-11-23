@@ -1,22 +1,14 @@
 using System;
-using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers;
-using BTCPayServer.Controllers.Greenfield;
 using BTCPayServer.Data;
-using BTCPayServer.Events;
 using BTCPayServer.HostedServices.Webhooks;
-using BTCPayServer.Services;
-using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Mails;
-using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
-using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Logging;
-using InvoiceData = BTCPayServer.Client.Models.InvoiceData;
 
 namespace BTCPayServer.HostedServices;
 
@@ -24,20 +16,13 @@ public class StoreEmailRuleProcessorSender : EventHostedServiceBase
 {
     private readonly StoreRepository _storeRepository;
     private readonly EmailSenderFactory _emailSenderFactory;
-    private readonly LinkGenerator _linkGenerator;
-    private readonly CurrencyNameTable _currencyNameTable;
-
     public StoreEmailRuleProcessorSender(StoreRepository storeRepository, EventAggregator eventAggregator,
         ILogger<InvoiceEventSaverService> logger,
-        EmailSenderFactory emailSenderFactory,
-        LinkGenerator linkGenerator,
-        CurrencyNameTable currencyNameTable) : base(
+        EmailSenderFactory emailSenderFactory) : base(
         eventAggregator, logger)
     {
         _storeRepository = storeRepository;
         _emailSenderFactory = emailSenderFactory;
-        _linkGenerator = linkGenerator;
-        _currencyNameTable = currencyNameTable;
     }
 
     protected override void SubscribeToEvents()
@@ -55,21 +40,11 @@ public class StoreEmailRuleProcessorSender : EventHostedServiceBase
                 return;
             }
 
-            string storeId = null;
-            if (webhookDeliveryRequest.WebhookEvent is WebhookPayoutEvent payoutEvent)
-            {
-                storeId = payoutEvent?.StoreId;
-            }
-            else if (webhookDeliveryRequest.WebhookEvent is WebhookInvoiceEvent webhookInvoiceEvent)
-            {
-                storeId = webhookInvoiceEvent?.StoreId;
-            }
-
-            if (storeId is null)
+            if (webhookDeliveryRequest.WebhookEvent is not StoreWebhookEvent storeWebhookEvent || storeWebhookEvent.StoreId is null)
             {
                 return;
             }
-            var store = await _storeRepository.FindStore(storeId);
+            var store = await _storeRepository.FindStore(storeWebhookEvent.StoreId);
             if (store is null)
             {
                 return;
@@ -81,7 +56,7 @@ public class StoreEmailRuleProcessorSender : EventHostedServiceBase
                 var actionableRules = blob.EmailRules.Where(rule => rule.Trigger == type).ToList();
                 if (actionableRules.Any())
                 {
-                    var sender = await _emailSenderFactory.GetEmailSender(storeId);
+                    var sender = await _emailSenderFactory.GetEmailSender(storeWebhookEvent.StoreId);
                     foreach (UIStoresController.StoreEmailRule actionableRule in actionableRules)
                     {
                        

@@ -1,64 +1,20 @@
-﻿#nullable enable
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Services.PaymentRequests;
 using Microsoft.Extensions.Logging;
+using WebhookDeliveryData = BTCPayServer.Data.WebhookDeliveryData;
 
 namespace BTCPayServer.HostedServices.Webhooks;
 
-public class PaymentRequestWebhookProvider : EventHostedServiceBase, IWebhookProvider
+public class PaymentRequestWebhookProvider: WebhookProvider<PaymentRequestEvent>
 {
-    private readonly WebhookSender _webhookSender;
-
-    public PaymentRequestWebhookProvider(WebhookSender webhookSender, 
-        EventAggregator eventAggregator, 
-        ILogger<PaymentRequestWebhookProvider> logger) : base(
-        eventAggregator, logger)
+    public PaymentRequestWebhookProvider(EventAggregator eventAggregator, ILogger<PaymentRequestWebhookProvider> logger, WebhookSender webhookSender) : base(eventAggregator, logger, webhookSender)
     {
-        _webhookSender = webhookSender;
     }
 
-    protected override void SubscribeToEvents()
-    {
-        Subscribe<PaymentRequestEvent>();
-        base.SubscribeToEvents();
-    }
-
-    protected override async Task ProcessEvent(object evt, CancellationToken cancellationToken)
-    {
-        if (evt is PaymentRequestEvent paymentRequestEvent)
-        {
-            var webhooks = await _webhookSender.GetWebhooks(paymentRequestEvent.Data.StoreDataId);
-            foreach (var webhook in webhooks)
-            {
-                var webhookBlob = webhook.GetBlob();
-                if (GetWebhookEvent(paymentRequestEvent) is not { } webhookEvent)
-                    continue;
-                if (!webhookBlob.ShouldDeliver(webhookEvent.Type))
-                    continue;
-
-                Data.WebhookDeliveryData delivery = WebhookExtensions.NewWebhookDelivery(webhook.Id);
-                webhookEvent.StoreId = paymentRequestEvent.Data.StoreDataId;
-                webhookEvent.PaymentRequestId = paymentRequestEvent.Data.Id;
-                webhookEvent.Status = paymentRequestEvent.Data.Status;
-                webhookEvent.DeliveryId = delivery.Id;
-                webhookEvent.WebhookId = webhook.Id;
-                webhookEvent.OriginalDeliveryId = delivery.Id;
-                webhookEvent.IsRedelivery = false;
-                webhookEvent.Timestamp = delivery.Timestamp;
-                var context = new PaymentRequestWebhookDeliveryRequest(paymentRequestEvent,webhook.Id, webhookEvent, delivery, webhookBlob );
-                _webhookSender.EnqueueDelivery(context);
-            }
-        }
-
-        await base.ProcessEvent(evt, cancellationToken);
-    }
-
-    public Dictionary<string, string> GetSupportedWebhookTypes()
+    public override Dictionary<string, string> GetSupportedWebhookTypes()
     {
         return new Dictionary<string, string>()
         {
@@ -69,7 +25,7 @@ public class PaymentRequestWebhookProvider : EventHostedServiceBase, IWebhookPro
         };
     }
 
-    public WebhookEvent CreateTestEvent(string type, object[] args)
+    public override WebhookEvent CreateTestEvent(string type, object[] args)
     {
         return new WebhookPayoutEvent(type)
         {
@@ -78,9 +34,9 @@ public class PaymentRequestWebhookProvider : EventHostedServiceBase, IWebhookPro
         };
     }
 
-    private static WebhookPaymentRequestEvent? GetWebhookEvent(PaymentRequestEvent paymentRequestEvent)
+    protected override WebhookPaymentRequestEvent GetWebhookEvent(PaymentRequestEvent evt)
     {
-        return paymentRequestEvent.Type switch
+        return evt.Type switch
         {
             PaymentRequestEvent.Created => new WebhookPaymentRequestEvent(WebhookEventType.PaymentRequestCreated),
             PaymentRequestEvent.Updated => new WebhookPaymentRequestEvent(WebhookEventType.PaymentRequestUpdated),
@@ -88,5 +44,24 @@ public class PaymentRequestWebhookProvider : EventHostedServiceBase, IWebhookPro
             PaymentRequestEvent.StatusChanged => new WebhookPaymentRequestEvent(WebhookEventType.PaymentRequestStatusChanged),
             _ => null
         };
+    }
+
+    public override WebhookSender.WebhookDeliveryRequest CreateDeliveryRequest(PaymentRequestEvent paymentRequestEvent, WebhookData webhook)
+    {
+        var webhookBlob = webhook?.GetBlob();
+        var webhookEvent = GetWebhookEvent(paymentRequestEvent)!;
+        webhookEvent.StoreId = paymentRequestEvent.Data.StoreDataId;
+        webhookEvent.PaymentRequestId = paymentRequestEvent.Data.Id;
+        webhookEvent.Status = paymentRequestEvent.Data.Status;
+        webhookEvent.WebhookId = webhook?.Id;
+        webhookEvent.IsRedelivery = false;
+        WebhookDeliveryData delivery = webhook is null? null: WebhookExtensions.NewWebhookDelivery(webhook.Id);
+        if (delivery is not null)
+        {
+            webhookEvent.DeliveryId = delivery.Id;
+            webhookEvent.OriginalDeliveryId = delivery.Id;
+            webhookEvent.Timestamp = delivery.Timestamp;
+        }
+        return new PaymentRequestWebhookDeliveryRequest(paymentRequestEvent,webhook?.Id, webhookEvent, delivery, webhookBlob );
     }
 }

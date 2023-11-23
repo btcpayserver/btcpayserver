@@ -102,9 +102,10 @@ namespace BTCPayServer.HostedServices.Webhooks
                 while (true)
                 {
             
-                    var start = str.IndexOf($"{{{fieldName}", StringComparison.InvariantCultureIgnoreCase)+ fieldName.Length + 2;
+                    var start = str.IndexOf($"{{{fieldName}", StringComparison.InvariantCultureIgnoreCase);
                     if(start == -1)
                         break;
+                    start += fieldName.Length + 1;
                     var end = str.IndexOf("}", start, StringComparison.InvariantCultureIgnoreCase);
                     if(end == -1)
                         break;
@@ -208,7 +209,6 @@ namespace BTCPayServer.HostedServices.Webhooks
 
         public void EnqueueDelivery(WebhookDeliveryRequest context)
         {
-            _eventAggregator.Publish(context);
             _processingQueue.Enqueue(context.WebhookId, (cancellationToken) => Process(context, cancellationToken));
         }
         private async Task Process(WebhookDeliveryRequest ctx, CancellationToken cancellationToken)
@@ -335,9 +335,15 @@ namespace BTCPayServer.HostedServices.Webhooks
             await stopping;
         }
 
-        public async Task<WebhookData[]> GetWebhooks(string invoiceStoreId)
+        public async Task<WebhookData[]> GetWebhooks(string invoiceStoreId, string? webhookEventType)
         {
-            return await StoreRepository.GetWebhooks(invoiceStoreId);
+            return (await StoreRepository.GetWebhooks(invoiceStoreId)).Where(data => webhookEventType is null || data.GetBlob().ShouldDeliver(webhookEventType)).ToArray();
+        }
+
+        public async Task<UIStoresController.StoreEmailRule[]> GetEmailRules(string storeId,
+            string type)
+        {
+            return ( await StoreRepository.FindStore(storeId))?.GetStoreBlob().EmailRules?.Where(rule => rule.Trigger ==type).ToArray() ?? Array.Empty<UIStoresController.StoreEmailRule>();
         }
 
         public Dictionary<string, string> GetSupportedWebhookTypes()

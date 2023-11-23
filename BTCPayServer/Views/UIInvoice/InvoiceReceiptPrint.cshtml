@@ -170,18 +170,23 @@
                                 <td class="text-nowrap text-secondary">Rate</td>
                                 <td class="text-end">@payment.RateFormatted</td>
                             </tr>
+                            <tr>
+                                <td colspan="2"><hr class="w-100 my-0"/></td>
+                            </tr>
                             @if (!string.IsNullOrEmpty(payment.Destination))
                             {
                                 <tr>
-                                    <td class="text-nowrap text-secondary">Destination</td>
-                                    <td class="text-break">@payment.Destination</td>
+                                    <td class="text-break" colspan="2">
+                                            <span class="text-secondary">Destination:</span>&nbsp;@payment.Destination
+                                    </td>
                                 </tr>
                             }
                             @if (!string.IsNullOrEmpty(payment.PaymentProof))
                             {
                                 <tr>
-                                    <td class="text-nowrap text-secondary">Pay Proof</td>
-                                    <td class="text-break">@payment.PaymentProof</td>
+                                    <td class="text-break" colspan="2">
+                                        <span class="text-secondary">Pay&nbsp;Proof:</span>&nbsp;@payment.PaymentProof
+                                    </td>
                                 </tr>
                             }
                         }

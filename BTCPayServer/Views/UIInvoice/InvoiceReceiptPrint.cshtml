@@ -173,11 +173,11 @@
                                                     <tr>
                                                         <td colspan="2" class="fw-normal text-nowrap text-secondary">Payment @(i + 1)</td>
                                                     </tr>
+                                                    <tr>
+                                                        <td class="fw-normal text-nowrap text-secondary">Received</td>
+                                                        <td>@payment.ReceivedDate.ToBrowserDate()</td>
+                                                    </tr>
                                                 }
-                                                <tr>
-                                                    <td class="fw-normal text-nowrap text-secondary">Received</td>
-                                                    <td>@payment.ReceivedDate.ToBrowserDate()</td>
-                                                </tr>
                                                 <tr>
                                                     <td class="fw-normal text-nowrap text-secondary"></td>
                                                     <td class="text-end">@payment.AmountFormatted @payment.PaymentMethod</td>

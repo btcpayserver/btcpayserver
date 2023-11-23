@@ -104,7 +104,7 @@
                                     <tbody>
                                         <tr>
                                             <td class="fw-normal text-nowrap text-secondary">Paid</td>
-                                            <td>@DisplayFormatter.Currency(Model.Amount, Model.Currency, DisplayFormatter.CurrencyFormat.Symbol)</td>
+                                            <td class="text-end">@DisplayFormatter.Currency(Model.Amount, Model.Currency, DisplayFormatter.CurrencyFormat.Symbol)</td>
                                         </tr>
                                         <tr>
                                             <td class="fw-normal text-nowrap text-secondary">Date/Time</td>
@@ -135,15 +135,15 @@
                                                 </tr>
                                                 <tr>
                                                     <td class="fw-normal text-nowrap text-secondary"></td>
-                                                    <td>@payment.AmountFormatted @payment.PaymentMethod</td>
+                                                    <td class="text-end">@payment.AmountFormatted @payment.PaymentMethod</td>
                                                 </tr>
                                                 <tr>
                                                     <td class="fw-normal text-nowrap text-secondary"></td>
-                                                    <td>@payment.PaidFormatted</td>
+                                                    <td class="text-end">@payment.PaidFormatted</td>
                                                 </tr>
                                                 <tr>
                                                     <td class="fw-normal text-nowrap text-secondary">Rate</td>
-                                                    <td>@payment.RateFormatted</td>
+                                                    <td class="text-end">@payment.RateFormatted</td>
                                                 </tr>
 
                                                 @if (!string.IsNullOrEmpty(payment.Destination))

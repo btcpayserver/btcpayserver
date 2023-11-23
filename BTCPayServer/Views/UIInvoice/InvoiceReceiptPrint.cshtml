@@ -120,13 +120,15 @@
 
                                         @if (Model.Payments?.Any() is true)
                                         {
-                                            @for (int i = 0; i < Model.Payments.Count; i++)
+                                            @for (var i = 0; i < Model.Payments.Count; i++)
                                             {
                                                 var payment = Model.Payments[i];
-                                                <tr>
-                                                    <td colspan="2" class="fw-normal text-nowrap text-secondary">Payment @(i + 1)</td>
-
-                                                </tr>
+                                                @if (Model.Payments.Count > 1)
+                                                {
+                                                    <tr>
+                                                        <td colspan="2" class="fw-normal text-nowrap text-secondary">Payment @(i + 1)</td>
+                                                    </tr>
+                                                }
                                                 <tr>
                                                     <td class="fw-normal text-nowrap text-secondary">Received</td>
                                                     <td>@payment.ReceivedDate.ToBrowserDate()</td>

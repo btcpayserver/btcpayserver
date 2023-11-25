@@ -55,7 +55,7 @@ namespace BTCPayServer.Controllers
 
         [AllowAnonymous]
         [HttpGet("pull-payments/{pullPaymentId}")]
-        public async Task<IActionResult> ViewPullPayment(string pullPaymentId)
+        public async Task<IActionResult> ViewPullPayment(string pullPaymentId, [FromQuery] bool print = false)
         {
             using var ctx = _dbContextFactory.CreateContext();
             var pp = await ctx.PullPayments.FindAsync(pullPaymentId);
@@ -111,8 +111,9 @@ namespace BTCPayServer.Controllers
                 var url = Url.Action("GetLNURLForPullPayment", "UILNURL", new { cryptoCode = _networkProvider.DefaultNetwork.CryptoCode, pullPaymentId = vm.Id }, Request.Scheme, Request.Host.ToString());
                 vm.LnurlEndpoint = url != null ? new Uri(url) : null;
             }
-            
-            return View(nameof(ViewPullPayment), vm);
+
+
+            return View(print ? "ViewPullPaymentPrint" : "ViewPullPayment", vm);
         }
 
         [HttpGet("stores/{storeId}/pull-payments/edit/{pullPaymentId}")]

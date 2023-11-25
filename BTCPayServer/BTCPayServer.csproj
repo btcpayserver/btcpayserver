@@ -137,6 +137,7 @@
 	<ItemGroup>
     <Watch Include="Views\**\*.*"></Watch>
     <Watch Remove="Views\UIAccount\CheatPermissions.cshtml" />
+    <Watch Remove="Views\UIPullPayment\ViewPullPaymentPrint.cshtml" />
     <Watch Remove="Views\UIReports\StoreReports.cshtml" />
     <Content Update="Views\UIApps\_ViewImports.cshtml">
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>

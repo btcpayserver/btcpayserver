@@ -1,0 +1,138 @@
+@model BTCPayServer.Models.ViewPullPaymentModel
+@using BTCPayServer.Client
+@using BTCPayServer.Services
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using BTCPayServer.Abstractions.TagHelpers
+@inject BTCPayServer.Security.ContentSecurityPolicies Csp
+@inject BTCPayServerEnvironment Env
+@inject DisplayFormatter DisplayFormatter
+@using BTCPayServer.Components.QRCode
+@{
+    Layout = null;
+    ViewData["Title"] = Model.Title;
+    ViewData.SetBlazorAllowed(false);
+
+    string lnurl = null;
+    if (Model.LnurlEndpoint != null)
+    {
+        lnurl = LNURL.LNURL.EncodeBech32(new Uri(Url.Action("GetLNURLForPullPayment", "UILNURL", new { cryptoCode = "BTC", pullPaymentId = Model.Id }, Context.Request.Scheme, Context.Request.Host.ToString())));
+    }
+
+    var fullView = Url.Action("ViewPullPayment", "UIPullPayment", new { pullPaymentId = Model.Id }, Context.Request.Scheme, Context.Request.Host.ToString());
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="~/favicon.ico" type="image/x-icon">
+    <meta name="robots" content="noindex">
+    <title>@ViewData["Title"]</title>
+    @* CSS *@
+    <link href="~/main/bootstrap/bootstrap.css" asp-append-version="true" rel="stylesheet" />
+    <link href="~/main/fonts/OpenSans.css" asp-append-version="true" rel="stylesheet" />
+    <link href="~/main/layout.css" asp-append-version="true" rel="stylesheet" />
+    <link href="~/main/site.css" asp-append-version="true" rel="stylesheet" />
+    <link href="~/main/themes/default.css" asp-append-version="true" rel="stylesheet" />
+    <meta name="robots" content="noindex,nofollow">
+    <style>
+        h1 {
+            margin: 0;
+        }
+
+        .qr-code {
+            width: 128px;
+        }
+
+        /* change height as you like */
+        @@media print {
+            body {
+                width: 58mm;
+                margin: 0;
+                padding: 0;
+            }
+
+            .p-1 {
+                padding: 1mm !important;
+            }
+
+            .m-1 {
+                margin: 1mm !important;
+            }
+        }
+        /* this line is needed for fixing Chrome's bug */
+        @@page {
+            margin-left: 0px;
+            margin-right: 0px;
+            margin-top: 0px;
+            margin-bottom: 0px;
+        }
+    </style>
+</head>
+
+<body class="m-0 p-0 bg-white">
+    <center>
+        <partial name="_StoreHeader" model="(Model.Title, String.Empty)" />
+
+        <div id="InvoiceSummary" style="max-width:600px">
+            @if (!@Model.IsPending || Model.SelectedPaymentMethod != "BTC")
+            {
+                <div class="lead text-center fw-semibold" id="invoice-processing">
+                    This Pull Payment is not Printable
+                </div>
+            }
+            else
+            {
+                <div id="PaymentDetails">
+
+                    <hr class="w-100 my-0 bg-none" />
+
+                    <table class="table table-borderless table-sm small my-0">
+                        <tr>
+                            <td class="text-nowrap text-secondary">Amount</td>
+                            <td class="text-end fw-semibold">@DisplayFormatter.Currency(Model.Amount, Model.Currency, DisplayFormatter.CurrencyFormat.Symbol)</td>
+                        </tr>
+
+                        <tr>
+                            <td colspan="2">
+                                @if (lnurl != null)
+                                {
+                                    <div class="m-2 text-center">
+                                        <vc:qr-code data="@lnurl" size="178"></vc:qr-code>
+                                        <div>
+                                            @if (!string.IsNullOrEmpty(Model.Description))
+                                            {
+                                                <span>@Model.Description</span><br />
+                                            }
+                                            Scan with LNURLw compatible Bitcoin Wallet to redeem
+                                        </div>
+                                    </div>
+                                }
+                            </td>
+                        </tr>
+
+                    </table>
+
+                    <hr class="w-100 my-0 p-1 bg-none" />
+
+                    <div class="my-2 text-center small">
+                        <a href="@fullView">
+                            <vc:qr-code data="@fullView" size="128"></vc:qr-code>
+                        </a>
+                        <div>Scan to open this link in browser for the full redemption option list</div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <hr class="w-100 my-0 p-1 bg-none" />
+
+        <div class="store-footer p-2">
+            <a class="store-powered-by" style="color:#000;">Powered by <partial name="_StoreFooterLogo" /></a>
+        </div>
+    </center>
+</body>
+<script>
+    window.print();
+</script>
+</html>

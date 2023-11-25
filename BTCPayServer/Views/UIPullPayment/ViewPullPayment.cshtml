@@ -92,6 +92,11 @@
                 <div class="row">
                     <div class="col col-12 col-lg-6 mb-4">
                         <div class="bg-tile h-100 m-0 p-3 p-sm-5 rounded">
+                            @if (Model.LnurlEndpoint != null)
+                            {
+                                <a href="?print=true" class="float-end btn btn-secondary d-print-none fs-4" target="_blank">Print</a>
+                            }
+
                             @if (!string.IsNullOrWhiteSpace(Model.Title))
                             {
                                 <h2 class="h4 mb-3">@Model.Title</h2>

@@ -175,3 +175,10 @@ section dl > div dd {
 .payment-box .plugins > .payment {
     margin-top: var(--btcpay-space-l);
 }
+
+@media (max-width: 400px) {
+    /* Pull it up if there's no store header */
+    #Checkout-v2 > main.tile:first-child {
+        margin-top: calc(var(--wrap-padding-vertical) * -1);
+    }
+}

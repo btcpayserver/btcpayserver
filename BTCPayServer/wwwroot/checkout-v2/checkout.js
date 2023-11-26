@@ -441,6 +441,10 @@ function initApp() {
                 this.playSound('error');
                 this.$set(this.nfc, 'submitting', false);
                 this.$set(this.nfc, 'errorMessage', message);
+                const $nfc = document.getElementById('NFC');
+                if ($nfc) {
+                    $nfc.scrollIntoView({ block: 'end', inline: 'center', behavior: 'smooth' });
+                }
             }
         }
     });

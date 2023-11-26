@@ -74,21 +74,6 @@ section dl > div dd {
     word-break: break-word;
     max-width: 62.5%;
 }
-.toast-container {
-    position: fixed;
-    top: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: calc(var(--wrap-max-width) - 3rem);
-    min-width: 256px;
-    margin-top: var(--wrap-padding-vertical);
-    padding: 0 1rem;
-}
-.toast-container .toast {
-    --btcpay-toast-max-width: 100%;
-    --btcpay-bg-opacity: .95;
-    text-align: center;
-}
 .info {
     color: var(--btcpay-neutral-700);
     background-color: var(--btcpay-body-bg);

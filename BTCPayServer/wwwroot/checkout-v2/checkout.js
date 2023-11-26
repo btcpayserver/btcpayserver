@@ -101,10 +101,9 @@ function initApp() {
                     supported: 'NDEFReader' in window,
                     scanning: false,
                     submitting: false,
+                    errorMessage: null,
                     permissionGranted: false,
-                    readerAbortController: null,
-                    successMessage: null,
-                    errorMessage: null
+                    readerAbortController: null
                 }
             }
         },
@@ -432,13 +431,11 @@ function initApp() {
             },
             handleNFCData() { // child component reports it is handling the data
                 this.playSound('nfcRead');
-                this.$set(this.nfc, 'errorMessage', null);
-                this.$set(this.nfc, 'successMessage', null);
                 this.$set(this.nfc, 'submitting', true);
+                this.$set(this.nfc, 'errorMessage', null);
             },
-            handleNFCResult(message) { // child component reports result for handling the data
+            handleNFCResult() { // child component reports result for handling the data
                 this.$set(this.nfc, 'submitting', false);
-                this.$set(this.nfc, 'successMessage', message);
             },
             handleNFCError(message) { // internal or via child component reporting failure of handling the data
                 this.playSound('error');

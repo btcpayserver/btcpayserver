@@ -110,7 +110,10 @@
                     </div>
                 }
                 <component v-if="paymentMethodComponent" :is="paymentMethodComponent"
-                           :model="srvModel" :nfc-supported="nfc.supported" :nfc-scanning="nfc.scanning"
+                           :model="srvModel"
+                           :nfc-scanning="nfc.scanning"
+                           :nfc-supported="nfc.supported"
+                           :nfc-error-message="nfc.errorMessage"
                            v-on:start-nfc-scan="startNFCScan"
                            v-on:handle-nfc-data="handleNFCData"
                            v-on:handle-nfc-error="handleNFCError"
@@ -240,11 +243,6 @@
             </a>
             <select asp-for="DefaultLang" asp-items="@LangService.GetLanguageSelectListItems()" class="form-select" v-on:change="changeLanguage"></select>
         </footer>
-        <div class="toast-container">
-            <div class="toast fade align-items-center border-0" :class="{'text-bg-success': !!nfc.successMessage, 'text-bg-danger': !!nfc.errorMessage, 'show': (nfc.successMessage || nfc.errorMessage) }" role="alert" aria-live="assertive" aria-atomic="true">
-                <div class="toast-body text-break" v-text="nfc.successMessage || nfc.errorMessage"></div>
-            </div>
-        </div>
     </div>
     <noscript>
         <div class="p-5 text-center">

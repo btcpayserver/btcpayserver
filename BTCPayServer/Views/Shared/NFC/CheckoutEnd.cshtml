@@ -1,5 +1,6 @@
 <template id="lnurl-withdraw-template">
     <div v-if="display" class="mt-4">
+        <div v-if="nfcErrorMessage" class="alert alert-danger" v-text="nfcErrorMessage"></div>
         <template v-if="isV2">
             <button class="btn btn-secondary rounded-pill w-100" type="button" id="PayByNFC"
                     :disabled="nfcScanning || submitting" v-on:click="handleClick">{{btnText}}</button>
@@ -24,7 +25,8 @@ Vue.component("lnurl-withdraw-checkout", {
         model: Object,
         isV2: Boolean,
         nfcSupported: Boolean,
-        nfcScanning: Boolean
+        nfcScanning: Boolean,
+        nfcErrorMessage: String
     },
     computed: {
         display () {

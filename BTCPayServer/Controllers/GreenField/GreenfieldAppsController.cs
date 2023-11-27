@@ -291,8 +291,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 EmbeddedCSS = request.EmbeddedCSS,
                 RedirectAutomatically = request.RedirectAutomatically,
                 RequiresRefundEmail = BoolToRequiresRefundEmail(request.RequiresRefundEmail) ?? RequiresRefundEmail.InheritFromStore,
-                FormId = request.FormId,
-                CheckoutType = request.CheckoutType ?? CheckoutType.V1
+                FormId = request.FormId
             };
         }
 

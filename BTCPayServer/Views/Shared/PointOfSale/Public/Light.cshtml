@@ -24,6 +24,7 @@
         </noscript>
         <form method="post" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" class="only-for-js my-auto">
             <component type="typeof(BTCPayServer.Blazor.Keypad)" render-mode="ServerPrerendered"
+                       param-RecentTransactionsUrl="@Url.Action("RecentTransactions", "UIPointOfSale", new { appId = Model.AppId })"
                        param-CurrencyCode="Model.CurrencyCode"
                        param-CurrencyInfo="Model.CurrencyInfo"
                        param-IsDiscountEnabled="Model.ShowDiscount"

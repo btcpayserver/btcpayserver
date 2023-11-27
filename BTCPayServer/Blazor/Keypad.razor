@@ -1,7 +1,7 @@
-@using Newtonsoft.Json.Linq
 @using System.Text.RegularExpressions
 @using System.Globalization
 @using Newtonsoft.Json
+@using Newtonsoft.Json.Linq
 @inject IJSRuntime JS
 
 <div class="d-flex flex-column gap-4">
@@ -90,12 +90,67 @@
             <span>Charge</span>
         }
     </button>
+    @if (!string.IsNullOrEmpty(RecentTransactionsUrl))
+    {
+        <div class="modal" tabindex="-1" id="RecentTransactions" ref="RecentTransactions" data-bs-backdrop="static" data-url="@RecentTransactionsUrl">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Recent Transactions</h5>
+                        <button type="button" class="btn btn-link px-3 py-0" aria-label="Refresh" @onclick="@LoadRecentTransactions" disabled="@_recentTransactionsLoading" id="RecentTransactionsRefresh">
+                            <vc:icon symbol="refresh" />
+                            @if (_recentTransactionsLoading)
+                            {
+                                <span class="visually-hidden">Loading...</span>
+                            }
+                        </button>
+                        <button type="button" class="btn-close py-3" aria-label="Close" v-on:click="closeModal">
+                            <vc:icon symbol="close" />
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        @if (RecentTransactions?.Count > 0)
+                        {
+                            <div class="list-group list-group-flush">
+                                @foreach (var t in RecentTransactions)
+                                {
+                                    <a href="@t.Url" class="list-group-item list-group-item-action d-flex align-items-center gap-3 pe-1 py-3">
+                                        <div class="d-flex align-items-baseline justify-content-between flex-wrap flex-grow-1 gap-2">
+                                            <span class="flex-grow-1">@t.Date.ToBrowserDate()</span>
+                                            <span class="flex-grow-1 text-end">@t.Price</span>
+                                            <div class="badge-container">
+                                                <span class="badge badge-@t.Status.ToLowerInvariant()">@t.Status</span>
+                                            </div>
+                                        </div>
+                                        <vc:icon symbol="caret-right" />
+                                    </a>
+                                }
+                            </div>
+                        }
+                        else if (_recentTransactionsLoading)
+                        {
+                            <p class="text-muted my-0">Loading...</p>
+                        }
+                        else
+                        {
+                            <p class="text-muted my-0">No transactions, yet.</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+        <button type="button" class="btn btn-link p-1" data-bs-toggle="modal" data-bs-target="#RecentTransactions" id="RecentTransactionsToggle">
+            <vc:icon symbol="manage-plugins" />
+        </button>
+    }
 </div>
 
 @code {
 #nullable enable
 	[Parameter, EditorRequired]
 	public string CurrencyCode { get; set; }
+    [Parameter]
+    public string RecentTransactionsUrl { get; set; }
     [Parameter]
     public NumberFormatInfo? CurrencyInfo { get; set; }
     [Parameter]
@@ -108,6 +163,7 @@
     public EventCallback<MouseEventArgs> OnClickCallback { get; set; }
 
     private bool IsSubmitting { get; set; }
+    private List<RecentTransaction>? RecentTransactions { get; set; }
 
     const int DefaultFontSize = 64;
     static char[] Keys = { '1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0', '+' };
@@ -124,8 +180,9 @@
     private ElementReference _keypadAmount;
     private string? _currencySymbol;
     private int _currencyDivisibility;
-
+    private bool _recentTransactionsLoading;
     private InputMode Mode { get; set; } = InputMode.Amount;
+    private KeypadModel Model { get; set; } = new ();
 
     public class KeypadModel
     {
@@ -142,8 +199,6 @@
         _currencySymbol = CurrencyInfo?.CurrencySymbol ?? CurrencyCode;
         _currencyDivisibility = CurrencyInfo?.CurrencyDecimalDigits ?? 0;
     }
-
-    private KeypadModel Model { get; set; } = new ();
 
     private async Task KeyPress(char key)
     {
@@ -334,5 +389,23 @@
             : Math.Min(FontSize * gamma, DefaultFontSize));
 
         StateHasChanged();
+    }
+
+    private async Task LoadRecentTransactions()
+    {
+        _recentTransactionsLoading = true;
+        StateHasChanged();
+        RecentTransactions = null;
+        _recentTransactionsLoading = false;
+        StateHasChanged();
+    }
+
+    private class RecentTransaction
+    {
+        public string Id { get; set; }
+        public DateTimeOffset Date { get; set; }
+        public string Url { get; set; }
+        public string Price { get; set; }
+        public string Status { get; set; }
     }
 }

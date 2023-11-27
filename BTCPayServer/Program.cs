@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using BTCPayServer.Configuration;
 using BTCPayServer.Hosting;
 using BTCPayServer.Logging;
@@ -19,7 +20,7 @@ namespace BTCPayServer
 {
     class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
             if (args.Length > 0 && args[0] == "run")
                 args = args.Skip(1).ToArray(); // Hack to make dotnet watch work
@@ -74,14 +75,14 @@ namespace BTCPayServer
                     builder.UseContentRoot(Directory.GetCurrentDirectory());
                 }
                 host = builder.Build();
-                host.StartWithTasksAsync().GetAwaiter().GetResult();
+                await host.StartWithTasksAsync();
                 var urls = host.ServerFeatures.Get<IServerAddressesFeature>().Addresses;
                 foreach (var url in urls)
                 {
                     // Some tools such as dotnet watch parse this exact log to open the browser
                     logger.LogInformation("Now listening on: " + url);
                 }
-                host.WaitForShutdown();
+                await host.WaitForShutdownAsync();
             }
             catch (ConfigException ex)
             {
@@ -99,9 +100,8 @@ namespace BTCPayServer
                 processor.Dispose();
                 if (host == null)
                     logs.Configuration.LogError("Configuration error");
-                if (host != null)
-                    host.Dispose();
-                Serilog.Log.CloseAndFlush();
+                host?.Dispose();
+                await Serilog.Log.CloseAndFlushAsync();
                 loggerProvider.Dispose();
             }
         }

@@ -28,11 +28,11 @@ namespace BTCPayServer
             ServicePointManager.DefaultConnectionLimit = 100;
             IWebHost host = null;
             var processor = new ConsoleLoggerProcessor();
-            CustomConsoleLogProvider loggerProvider = new CustomConsoleLogProvider(processor);
+            var loggerProvider = new CustomConsoleLogProvider(processor);
             using var loggerFactory = new LoggerFactory();
             loggerFactory.AddProvider(loggerProvider);
             var logger = loggerFactory.CreateLogger("Configuration");
-            Logs logs = new Logs();
+            var logs = new Logs();
             logs.Configure(loggerFactory);
             IConfiguration conf = null;
             try
@@ -44,8 +44,6 @@ namespace BTCPayServer
                 confBuilder.AddJsonFile("appsettings.dev.json", true, false);
 #endif
                 conf = confBuilder.Build();
-                if (conf == null)
-                    return;
 
                 var builder = new WebHostBuilder()
                     .UseKestrel()

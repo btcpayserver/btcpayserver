@@ -1,4 +1,3 @@
-@using BTCPayServer.Lightning
 @using BTCPayServer.Client
 @using BTCPayServer.Services
 @model LightningViewModel
@@ -28,7 +27,7 @@
                         <span>(@uri.Host)</span>
                     }
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     @Model.ConnectionString
                 }

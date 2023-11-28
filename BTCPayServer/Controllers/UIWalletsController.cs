@@ -1473,7 +1473,7 @@ namespace BTCPayServer.Controllers
             return Request.GetRelativePathOrAbsolute(res);
         }
 
-        private string GetUserId() => _userManager.GetUserId(User);
+        private string GetUserId() => _userManager.GetUserId(User)!;
 
         private StoreData GetCurrentStore() => HttpContext.GetStoreData();
     }

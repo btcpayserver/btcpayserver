@@ -2710,7 +2710,7 @@ namespace BTCPayServer.Tests
                         callbacks.Add(request.Callback);
                         break;
                     default:
-                        Assert.False(true, "Should have matched");
+                        Assert.Fail("Should have matched");
                         break;
                 }
             }

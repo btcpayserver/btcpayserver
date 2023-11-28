@@ -27,8 +27,7 @@ namespace BTCPayServer.Security.Greenfield
             IOptionsMonitor<GreenfieldAuthenticationOptions> options,
             ILoggerFactory logger,
             UrlEncoder encoder,
-            ISystemClock clock,
-            UserManager<ApplicationUser> userManager) : base(options, logger, encoder, clock)
+            UserManager<ApplicationUser> userManager) : base(options, logger, encoder)
         {
             _apiKeyRepository = apiKeyRepository;
             _identityOptions = identityOptions;
@@ -45,7 +44,7 @@ namespace BTCPayServer.Security.Greenfield
             // the login page.
             // But this isn't what we want when we call the API programmatically, instead we want an error 401 with a json error message.
             // This hack modify a request's header to trick the CookieAuthenticationHandler to not do a redirection.
-            if (!Request.Headers.Accept.Any(s => s.StartsWith("text/html", StringComparison.OrdinalIgnoreCase)))
+            if (!Request.Headers.Accept.Any(s => s is string && s.StartsWith("text/html", StringComparison.OrdinalIgnoreCase)))
                 Request.Headers.XRequestedWith = new Microsoft.Extensions.Primitives.StringValues("XMLHttpRequest");
             return base.HandleChallengeAsync(properties);
         }

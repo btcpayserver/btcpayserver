@@ -98,7 +98,7 @@ retry:
                 }
                 Thread.Sleep(50);
             }
-            Assert.False(true, "Elements was found");
+            Assert.Fail("Elements was found");
         }
 
         public static void UntilJsIsReady(this WebDriverWait wait)

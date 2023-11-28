@@ -105,7 +105,7 @@ namespace BTCPayServer.Tests
             PayTester.UseLightning = true;
             PayTester.IntegratedLightning = GetLightningConnectionString(internalNode, true);
         }
-        public string GetLightningConnectionString(string? connectionType, bool isMerchant)
+        public string GetLightningConnectionString(string connectionType, bool isMerchant)
         {
             string connectionString = null;
             if (connectionType is null)

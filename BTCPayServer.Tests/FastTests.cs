@@ -131,7 +131,7 @@ namespace BTCPayServer.Tests
                 var tags = new HashSet<String>(g.Select(o => o.Tag));
                 if (tags.Count != 1)
                 {
-                    Assert.False(true, $"All docker images '{g.Key}' in docker-compose.yml and docker-compose.altcoins.yml should have the same tags. (Found {string.Join(',', tags)})");
+                    Assert.Fail($"All docker images '{g.Key}' in docker-compose.yml and docker-compose.altcoins.yml should have the same tags. (Found {string.Join(',', tags)})");
                 }
             }
         }
@@ -964,7 +964,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
-        public void CheckRatesProvider()
+        public async Task CheckRatesProvider()
         {
             var spy = new SpyRateProvider();
             RateRules.TryParse("X_X = bittrex(X_X);", out var rateRules);
@@ -976,23 +976,22 @@ namespace BTCPayServer.Tests
             var fetch = new BackgroundFetcherRateProvider(spy);
             fetch.DoNotAutoFetchIfExpired = true;
             factory.Providers.Add("bittrex", fetch);
-            var fetchedRate = fetcher.FetchRate(CurrencyPair.Parse("BTC_USD"), rateRules, default).GetAwaiter()
-                .GetResult();
+            var fetchedRate = await fetcher.FetchRate(CurrencyPair.Parse("BTC_USD"), rateRules, default);
             spy.AssertHit();
-            fetchedRate = fetcher.FetchRate(CurrencyPair.Parse("BTC_USD"), rateRules, default).GetAwaiter().GetResult();
+            fetchedRate = await fetcher.FetchRate(CurrencyPair.Parse("BTC_USD"), rateRules, default);
             spy.AssertNotHit();
-            fetch.UpdateIfNecessary(default).GetAwaiter().GetResult();
+            await fetch.UpdateIfNecessary(default);
             spy.AssertNotHit();
             fetch.RefreshRate = TimeSpan.FromSeconds(1.0);
             Thread.Sleep(1020);
-            fetchedRate = fetcher.FetchRate(CurrencyPair.Parse("BTC_USD"), rateRules, default).GetAwaiter().GetResult();
+            fetchedRate = await fetcher.FetchRate(CurrencyPair.Parse("BTC_USD"), rateRules, default);
             spy.AssertNotHit();
             fetch.ValidatyTime = TimeSpan.FromSeconds(1.0);
-            fetch.UpdateIfNecessary(default).GetAwaiter().GetResult();
+            await fetch.UpdateIfNecessary(default);
             spy.AssertHit();
-            fetch.GetRatesAsync(default).GetAwaiter().GetResult();
+            await fetch.GetRatesAsync(default);
             Thread.Sleep(1000);
-            Assert.Throws<InvalidOperationException>(() => fetch.GetRatesAsync(default).GetAwaiter().GetResult());
+            await Assert.ThrowsAsync<InvalidOperationException>(() => fetch.GetRatesAsync(default));
         }
 
         public static RateProviderFactory CreateBTCPayRateFactory()

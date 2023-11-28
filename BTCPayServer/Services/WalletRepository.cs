@@ -13,6 +13,7 @@ using NBitcoin;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Npgsql;
+using Org.BouncyCastle.Utilities;
 
 namespace BTCPayServer.Services
 {
@@ -392,7 +393,8 @@ namespace BTCPayServer.Services
             }
             else
             {
-                await ctx.BulkAddAsync( links, (NpgsqlConnection) connection);
+                var conn = ctx.Database.GetDbConnection();
+                await conn.ExecuteAsync("INSERT INTO \"WalletObjectLinks\" VALUES (@WalletId, @AType, @AId, @BType, @BId, @Data::JSONB) ON CONFLICT DO NOTHING", links);
             }
         }
 
@@ -686,7 +688,8 @@ namespace BTCPayServer.Services
             }
             else
             {
-                await ctx.BulkAddAsync(walletObjectDatas, (NpgsqlConnection) connection);
+                var conn = ctx.Database.GetDbConnection();
+                await conn.ExecuteAsync("INSERT INTO \"WalletObjects\" VALUES (@WalletId, @Type, @Id, @Data::JSONB) ON CONFLICT DO NOTHING", walletObjectDatas);
             }
         }
 

@@ -1,6 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Net.Http;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.Caching.Memory;
 using NBitcoin;
 
@@ -8,35 +10,36 @@ namespace BTCPayServer.Services.Fees;
 
 public class FeeProviderFactory : IFeeProviderFactory
 {
-    public FeeProviderFactory(ExplorerClientProvider explorerClients,IHttpClientFactory httpClientFactory, IMemoryCache memoryCache)
+    public FeeProviderFactory(
+    BTCPayServerEnvironment Environment,
+    ExplorerClientProvider ExplorerClients,
+    IHttpClientFactory HttpClientFactory,
+    IMemoryCache MemoryCache)
     {
-        ArgumentNullException.ThrowIfNull(explorerClients);
-        _explorerClients = explorerClients;
-        _httpClientFactory = httpClientFactory;
-        _memoryCache = memoryCache;
-        _staticFeeProvider = new StaticFeeProvider(new FeeRate(100L, 1));
+        _FeeProviders = new ();
+
+        // TODO: Pluginify this
+        foreach ((var network, var client) in ExplorerClients.GetAll())
+        {
+            List<IFeeProvider> providers = new List<IFeeProvider>();
+            if (network.IsBTC && Environment.NetworkType != ChainName.Regtest)
+            {
+                providers.Add(new MempoolSpaceFeeProvider(
+                    MemoryCache,
+                    $"MempoolSpaceFeeProvider-{network.CryptoCode}",
+                    HttpClientFactory,
+                    network is BTCPayNetwork n &&
+                    n.NBitcoinNetwork.ChainName == ChainName.Testnet));
+            }
+            providers.Add(new NBXplorerFeeProvider(client));
+            providers.Add(new StaticFeeProvider(new FeeRate(100L, 1)));
+            var fallback = new FallbackFeeProvider(providers.ToArray());
+            _FeeProviders.Add(network, fallback);
+        }
     }
-
-    private readonly ExplorerClientProvider _explorerClients;
-    private readonly IHttpClientFactory _httpClientFactory;
-    private readonly IMemoryCache _memoryCache;
-
-    private readonly ConcurrentDictionary<BTCPayNetworkBase, IFeeProvider> _cache = new();
-    private readonly StaticFeeProvider _staticFeeProvider;
-
-
+    private readonly Dictionary<BTCPayNetworkBase, IFeeProvider> _FeeProviders;
     public IFeeProvider CreateFeeProvider(BTCPayNetworkBase network)
     {
-        return _cache.GetOrAdd(network, @base =>
-        {
-            var nbxfeeProvider = new NBXplorerFeeProvider(_staticFeeProvider, _explorerClients.GetExplorerClient(@base));
-            if (network.IsBTC)
-            {
-                return new MempoolSpaceFeeProvider(_httpClientFactory, _memoryCache, nbxfeeProvider,
-                    network is BTCPayNetwork bnetwork &&
-                    bnetwork.NBitcoinNetwork.ChainName == ChainName.Testnet);
-            }
-            return nbxfeeProvider;
-        });
+        return _FeeProviders.TryGetValue(network, out var prov) ? prov : throw new NotSupportedException($"No fee provider for this network ({network.CryptoCode})");
     }
 }

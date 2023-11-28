@@ -1,3 +1,4 @@
+#nullable enable
 using System.Threading.Tasks;
 using NBitcoin;
 using NBXplorer;
@@ -5,18 +6,11 @@ using NBXplorer.Models;
 
 namespace BTCPayServer.Services.Fees
 {
-    public class NBXplorerFeeProvider : BaseFeeProvider
+    public class NBXplorerFeeProvider(ExplorerClient ExplorerClient) : IFeeProvider
     {
-        private readonly ExplorerClient _explorerClient;
-
-        public override async Task<FeeRate> GetFeeRate(int blockTarget = 20)
+        public async Task<FeeRate> GetFeeRateAsync(int blockTarget = 20)
         {
-                return (await _explorerClient.GetFeeRateAsync(blockTarget).ConfigureAwait(false)).FeeRate;
-        }
-
-        public NBXplorerFeeProvider(IFeeProvider fallback, ExplorerClient explorerClient) : base(fallback)
-        {
-            _explorerClient = explorerClient;
+                return (await ExplorerClient.GetFeeRateAsync(blockTarget).ConfigureAwait(false)).FeeRate;
         }
     }
 }

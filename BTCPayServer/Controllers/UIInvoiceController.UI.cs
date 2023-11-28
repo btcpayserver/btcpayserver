@@ -1266,7 +1266,7 @@ namespace BTCPayServer.Controllers
                 {
                     metadataObj = JObject.Parse(model.Metadata);
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     ModelState.AddModelError(nameof(model.Metadata), "Metadata was not valid JSON");
                 }

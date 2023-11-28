@@ -1,6 +1,4 @@
-@using BTCPayServer.Abstractions.Extensions
 @using Microsoft.AspNetCore.Hosting
-@using Microsoft.AspNetCore.Mvc.TagHelpers
 @using Newtonsoft.Json.Linq
 @using System.IO
 @using BTCPayServer.Services
@@ -34,10 +32,10 @@
 <html class="h-100" lang="en" @(Env.IsDeveloping ? " data-devenv" : "")>
 <head>
     <partial name="LayoutHead"/>
-    <partial name="LayoutHeadStoreBranding" model="@(Model.BrandColor, Model.CssFileId, Model.CustomCSSLink, Model.EmbeddedCSS)" />
+    <partial name="LayoutHeadStoreBranding" model="Model.StoreBranding" />
     <meta name="apple-mobile-web-app-capable" content="yes">
     <link rel="apple-touch-icon" href="~/img/icons/icon-512x512.png">
-    <link rel="apple-touch-startup-image" href="~/img/splash.png">
+    <link rel="apple-touch-startup-image" href="~/img/splash.png"><link rel="icon" href="~/favicon.ico">
     <link rel="manifest" href="@(await GetDynamicManifest(ViewData["Title"]!.ToString()))">
     <link href="~/pos/common.css" asp-append-version="true" rel="stylesheet" />
     @await RenderSectionAsync("PageHeadContent", false)

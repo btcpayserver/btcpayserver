@@ -83,8 +83,6 @@ namespace BTCPayServer.Controllers
 
             ViewPullPaymentModel vm = new(pp, DateTimeOffset.UtcNow)
             {
-                BrandColor = storeBlob.BrandColor,
-                CssFileId = storeBlob.CssFileId,
                 AmountCollected = totalPaid,
                 AmountDue = amountDue,
                 ClaimedAmount = amountDue,
@@ -105,6 +103,11 @@ namespace BTCPayServer.Controllers
                 }).ToList()
             };
             vm.IsPending &= vm.AmountDue > 0.0m;
+            vm.StoreBranding = new StoreBrandingViewModel(storeBlob)
+            {
+                EmbeddedCSS = blob.View.EmbeddedCSS,
+                CustomCSSLink = blob.View.CustomCSSLink
+            };
             
             if (_pullPaymentHostedService.SupportsLNURL(blob))
             {

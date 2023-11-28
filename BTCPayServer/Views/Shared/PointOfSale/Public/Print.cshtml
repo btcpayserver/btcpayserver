@@ -44,7 +44,7 @@ else
 }
 <div id="PosPrint" class="public-page-wrap">
     <partial name="_StatusMessage" />
-    <partial name="_StoreHeader" model="(string.IsNullOrEmpty(Model.Title) ? Model.StoreName : Model.Title, Model.LogoFileId)" />
+    <partial name="_StoreHeader" model="(string.IsNullOrEmpty(Model.Title) ? Model.StoreName : Model.Title, Model.StoreBranding)" />
     @if (!string.IsNullOrEmpty(Model.Description))
     {
         <div class="lead text-center">@Safe.Raw(Model.Description)</div>

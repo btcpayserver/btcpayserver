@@ -116,8 +116,6 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
             EmbeddedCSS = blob.EmbeddedCSS;
             CustomCSSLink = blob.CustomCSSLink;
             AllowCustomPaymentAmounts = blob.AllowCustomPaymentAmounts;
-            if (!string.IsNullOrEmpty(EmbeddedCSS))
-                EmbeddedCSS = $"<style>{EmbeddedCSS}</style>";
             switch (data.Status)
             {
                 case Client.Models.PaymentRequestData.PaymentRequestStatus.Pending:
@@ -137,7 +135,7 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
                     throw new ArgumentOutOfRangeException();
             }
         }
-
+        public StoreBrandingViewModel StoreBranding { get; set; }
         public bool AllowCustomPaymentAmounts { get; set; }
         public string Email { get; set; }
         public string Status { get; set; }
@@ -152,9 +150,6 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
         public DateTime? ExpiryDate { get; set; }
         public string Title { get; set; }
         public string Description { get; set; }
-        public string LogoFileId { get; set; }
-        public string CssFileId { get; set; }
-        public string BrandColor { get; set; }
         public string StoreName { get; set; }
         public string StoreWebsite { get; set; }
         public string EmbeddedCSS { get; set; }

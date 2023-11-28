@@ -91,7 +91,6 @@ namespace BTCPayServer.PaymentRequest
             }
 
             var blob = pr.GetBlob();
-
             var invoices = await _PaymentRequestRepository.GetInvoicesForPaymentRequest(id);
             var paymentStats = _invoiceRepository.GetContributionsByPaymentMethodId(blob.Currency, invoices, true);
             var amountDue = blob.Amount - paymentStats.TotalCurrency;

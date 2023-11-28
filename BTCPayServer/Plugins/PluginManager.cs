@@ -7,6 +7,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Configuration;
 using McMaster.NETCore.Plugins;
@@ -27,12 +28,16 @@ namespace BTCPayServer.Plugins
 
         public static bool IsExceptionByPlugin(Exception exception, [MaybeNullWhen(false)] out string pluginName)
         {
+            var fromAssembly = exception is TypeLoadException
+                ? Regex.Match(exception.Message, "from assembly '(.*?),").Groups[1].Value
+                : null;
+
             foreach (var assembly in _pluginAssemblies)
             {
                 var assemblyName = assembly.GetName().Name;
                 if (assemblyName is null)
                     continue;
-                // Comparison is case sensitive as it is theorically possible to have a different plugin
+                // Comparison is case sensitive as it is theoretically possible to have a different plugin
                 // with same name but different casing.
                 if (exception.Source is not null &&
                     assemblyName.Equals(exception.Source, StringComparison.Ordinal))
@@ -41,6 +46,12 @@ namespace BTCPayServer.Plugins
                     return true;
                 }
                 if (exception.Message.Contains(assemblyName, StringComparison.Ordinal))
+                {
+                    pluginName = assemblyName;
+                    return true;
+                }
+                // For TypeLoadException, check if it might come from areferenced assembly
+                if (!string.IsNullOrEmpty(fromAssembly) && assembly.GetReferencedAssemblies().Select(a => a.Name).Contains(fromAssembly))
                 {
                     pluginName = assemblyName;
                     return true;

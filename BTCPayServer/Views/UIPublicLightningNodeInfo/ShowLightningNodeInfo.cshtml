@@ -3,13 +3,13 @@
 @{
     Layout = null;
     ViewData["Title"] = $"{Model.StoreName} – {Model.CryptoCode} Lightning Node";
+    ViewData["StoreBranding"] = Model.StoreBranding;
 }
 <!DOCTYPE html>
 <html lang="en" @(Env.IsDeveloping ? " data-devenv" : "")>
 <head>
-    <partial name="LayoutHead" />
-    <partial name="LayoutHeadStoreBranding" model="Model.StoreBranding" />
-    <link href="~/main/qrcode.css" rel="stylesheet" asp-append-version="true" />
+    <partial name="LayoutHead"/>
+    <link href="~/main/qrcode.css" rel="stylesheet" asp-append-version="true"/>
     <style>#app { --wrap-max-width: 400px; }</style>
 </head>
 <body class="min-vh-100">

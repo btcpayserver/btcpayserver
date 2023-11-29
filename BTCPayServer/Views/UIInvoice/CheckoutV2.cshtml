@@ -9,6 +9,7 @@
 @{
 	Layout = null;
 	ViewData["Title"] = Model.HtmlTitle;
+    ViewData["StoreBranding"] = Model.StoreBranding;
 	Csp.UnsafeEval();
 	var hasPaymentPlugins = UiExtensions.Any(extension => extension.Location == "checkout-payment-method");
 	var displayedPaymentMethods = Model.AvailableCryptos.Where(c => c.Displayed).ToList();
@@ -25,7 +26,6 @@
     <partial name="LayoutHead"/>
     <meta name="robots" content="noindex,nofollow">
     <link href="~/checkout-v2/checkout.css" asp-append-version="true" rel="stylesheet" />
-    <partial name="LayoutHeadStoreBranding" model="Model.StoreBranding" />
     @if (!string.IsNullOrEmpty(Model.PaymentSoundUrl))
     {
         <link rel="preload" href="@Model.PaymentSoundUrl" as="audio" />

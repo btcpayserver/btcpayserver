@@ -6,6 +6,7 @@
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @{
 	ViewData["Title"] = Model.Title;
+    ViewData["StoreBranding"] = Model.StoreBranding;
 	Csp.UnsafeEval();
 	Layout = null;
     string StatusClass(InvoiceState state)
@@ -33,9 +34,8 @@
 <!DOCTYPE html>
 <html lang="en" @(Env.IsDeveloping ? " data-devenv" : "")>
 <head>
-    <partial name="LayoutHead" />
-    <partial name="LayoutHeadStoreBranding" model="Model.StoreBranding" />
-    <link href="~/vendor/bootstrap-vue/bootstrap-vue.min.css" asp-append-version="true"  rel="stylesheet" />
+    <partial name="LayoutHead"/>
+    <link href="~/vendor/bootstrap-vue/bootstrap-vue.min.css" asp-append-version="true" rel="stylesheet"/>
     <script>var srvModel = @Safe.Json(Model);</script>
     <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
     <script src="~/vendor/vue-toasted/vue-toasted.min.js" asp-append-version="true"></script>

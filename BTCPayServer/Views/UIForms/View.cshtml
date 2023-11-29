@@ -3,12 +3,12 @@
 @{
     Layout = null;
     ViewData["Title"] = Model.FormName;
+    ViewData["StoreBranding"] = Model.StoreBranding;
 }
 <!DOCTYPE html>
 <html lang="en" @(Env.IsDeveloping ? " data-devenv" : "")>
 <head>
     <partial name="LayoutHead" />
-    <partial name="LayoutHeadStoreBranding" model="Model.StoreBranding" />
     <meta name="robots" content="noindex,nofollow">
     <style>#FormView { --wrap-max-width: 576px; }</style>
 </head>

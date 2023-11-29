@@ -8,6 +8,7 @@
 @{
     Layout = null;
     ViewData["Title"] = $"Receipt from {Model.StoreName}";
+    ViewData["StoreBranding"] = Model.StoreBranding;
     var isProcessing = Model.Status == InvoiceStatus.Processing;
     var isFreeInvoice = (Model.Status == InvoiceStatus.New && Model.Amount == 0);
     var isSettled = Model.Status == InvoiceStatus.Settled;
@@ -15,8 +16,7 @@
 <!DOCTYPE html>
 <html lang="en" @(Env.IsDeveloping ? " data-devenv" : "")>
 <head>
-    <partial name="LayoutHead" />
-    <partial name="LayoutHeadStoreBranding" model="Model.StoreBranding" />
+    <partial name="LayoutHead"/>
     <meta name="robots" content="noindex,nofollow">
     @if (isProcessing)
     {

@@ -10,4 +10,7 @@
   <ItemGroup Condition="'$(Altcoins)' != 'true'">
     <Compile Remove="Altcoins\**\*.cs"></Compile>
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Altcoins\" />
+  </ItemGroup>
 </Project>

@@ -38,6 +38,7 @@
 
   <ItemGroup Condition="'$(Altcoins)' != 'true'">
     <Content Remove="Services\Altcoins\**\*" />
+    <Compile Remove="Plugins\Altcoins\**\*" />
     <Content Remove="Views\UIMoneroLikeStore\**\*" />
     <Content Remove="Views\UIZcashLikeStore\**\*" />
     <Content Remove="Views\Shared\Monero\**\*" />

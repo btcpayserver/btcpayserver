@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
+using NBitcoin;
 using OpenQA.Selenium;
 using Xunit;
 using Xunit.Sdk;

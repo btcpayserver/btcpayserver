@@ -3,6 +3,7 @@
 @using BTCPayServer.Payments.Bitcoin
 @using BTCPayServer.Services
 @inject DisplayFormatter DisplayFormatter
+@inject TransactionLinkProviders TransactionLinkProviders
 @model IEnumerable<BTCPayServer.Services.Invoices.PaymentEntity>
 @{
     PayjoinInformation payjoinInformation = null;
@@ -10,13 +11,14 @@
         .Where(entity => entity.GetPaymentMethodId()?.PaymentType == BitcoinPaymentType.Instance)
         .Select(payment =>
         {
+			var pmi = payment.GetPaymentMethodId();
             var m = new OnchainPaymentViewModel();
             var onChainPaymentData = payment.GetCryptoPaymentData() as BitcoinLikePaymentData;
             if (onChainPaymentData is null)
             {
                 return null;
             }
-            m.Crypto = payment.GetPaymentMethodId().CryptoCode;
+			m.Crypto = pmi.CryptoCode;
             m.DepositAddress = onChainPaymentData.GetDestination();
 
             var confirmationCount = onChainPaymentData.ConfirmationCount;
@@ -41,7 +43,7 @@
             }
             m.TransactionId = onChainPaymentData.Outpoint.Hash.ToString();
             m.ReceivedTime = payment.ReceivedTime;
-            m.TransactionLink = string.Format(CultureInfo.InvariantCulture, payment.Network.BlockExplorerLink, m.TransactionId);
+			m.TransactionLink = TransactionLinkProviders.GetTransactionLink(pmi, onChainPaymentData.Outpoint.ToString());
             m.Replaced = !payment.Accounted;
             m.CryptoPaymentData = onChainPaymentData;
             m.NetworkFee = payment.NetworkFee;

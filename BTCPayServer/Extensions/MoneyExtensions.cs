@@ -18,7 +18,7 @@ namespace BTCPayServer
                     return mb.Select(money => money.GetValue(network)).Sum();
 #if ALTCOINS
                 case AssetMoney assetMoney:
-                    if (network is ElementsBTCPayNetwork elementsBTCPayNetwork)
+                    if (network is BTCPayServer.Plugins.Altcoins.ElementsBTCPayNetwork elementsBTCPayNetwork)
                     {
                         return elementsBTCPayNetwork.AssetId == assetMoney.AssetId
                             ? Convert(assetMoney.Quantity, elementsBTCPayNetwork.Divisibility)

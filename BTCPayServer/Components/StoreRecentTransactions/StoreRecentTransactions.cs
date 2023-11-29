@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Data;
 using BTCPayServer.Models.StoreViewModels;
+using BTCPayServer.Payments;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Labels;
 using BTCPayServer.Services.Stores;
@@ -26,18 +27,22 @@ public class StoreRecentTransactions : ViewComponent
     private readonly BTCPayWalletProvider _walletProvider;
     private readonly WalletRepository _walletRepository;
     private readonly LabelService _labelService;
+    private readonly TransactionLinkProviders _transactionLinkProviders;
+
     public BTCPayNetworkProvider NetworkProvider { get; }
 
     public StoreRecentTransactions(
         BTCPayNetworkProvider networkProvider,
         BTCPayWalletProvider walletProvider,
         WalletRepository walletRepository,
-        LabelService labelService)
+        LabelService labelService,
+        TransactionLinkProviders transactionLinkProviders)
     {
         NetworkProvider = networkProvider;
         _walletProvider = walletProvider;
         _walletRepository = walletRepository;
         _labelService = labelService;
+        _transactionLinkProviders = transactionLinkProviders;
     }
 
     public async Task<IViewComponentResult> InvokeAsync(StoreRecentTransactionsViewModel vm)
@@ -60,7 +65,7 @@ public class StoreRecentTransactions : ViewComponent
             var wallet = _walletProvider.GetWallet(network);
             var allTransactions = await wallet.FetchTransactionHistory(derivationSettings.AccountDerivation, 0, 5, TimeSpan.FromDays(31.0), cancellationToken: this.HttpContext.RequestAborted);
             var walletTransactionsInfo = await _walletRepository.GetWalletTransactionsInfo(vm.WalletId, allTransactions.Select(t => t.TransactionId.ToString()).ToArray());
-
+            var pmi = new PaymentMethodId(vm.CryptoCode, PaymentTypes.BTCLike);
             transactions = allTransactions
                 .Select(tx =>
                 {
@@ -73,8 +78,7 @@ public class StoreRecentTransactions : ViewComponent
                         Balance = tx.BalanceChange.ShowMoney(network),
                         Currency = vm.CryptoCode,
                         IsConfirmed = tx.Confirmations != 0,
-                        Link = string.Format(CultureInfo.InvariantCulture, network.BlockExplorerLink,
-                            tx.TransactionId.ToString()),
+                        Link = _transactionLinkProviders.GetTransactionLink(pmi, tx.TransactionId.ToString()),
                         Timestamp = tx.SeenAt,
                         Labels = labels
                     };

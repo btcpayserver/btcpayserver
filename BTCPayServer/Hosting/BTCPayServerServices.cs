@@ -225,11 +225,6 @@ namespace BTCPayServer.Hosting
                             };
                         options.NBXplorerConnectionSettings.Add(setting);
                         options.ConnectionString = configuration.GetOrDefault<string>("explorer.postgres", null);
-                        var blockExplorerLink = configuration.GetOrDefault<string>("blockexplorerlink", null);
-                        if (!string.IsNullOrEmpty(blockExplorerLink))
-                        {
-                            btcPayNetwork.BlockExplorerLink = blockExplorerLink;
-                        }
                     }
                 });
             services.AddOptions<LightningNetworkOptions>().Configure<BTCPayNetworkProvider, LightningClientFactoryService>(
@@ -306,7 +301,7 @@ namespace BTCPayServer.Hosting
                         }
                     }
                 });
-            services.TryAddSingleton(o => configuration.ConfigureNetworkProvider(logs));
+            services.TryAddSingleton<BTCPayNetworkProvider>();
 
             services.TryAddSingleton<AppService>();
             services.AddTransient<PluginService>();
@@ -355,6 +350,7 @@ namespace BTCPayServer.Hosting
                 return htmlSanitizer;
             });
 
+            services.AddSingleton<TransactionLinkProviders>();
             services.TryAddSingleton<LightningConfigurationProvider>();
             services.TryAddSingleton<LanguageService>();
             services.TryAddSingleton<ReportService>();
@@ -426,7 +422,7 @@ namespace BTCPayServer.Hosting
 
             services.AddSingleton<NotificationManager>();
             services.AddScoped<NotificationSender>();
-
+            
             services.AddSingleton<IHostedService, NBXplorerWaiters>();
             services.AddSingleton<IHostedService, InvoiceEventSaverService>();
             services.AddSingleton<IHostedService, BitpayIPNSender>();
@@ -568,6 +564,15 @@ namespace BTCPayServer.Hosting
         public static void AddRateProvider<T>(this IServiceCollection services) where T : class, IRateProvider
         {
             services.AddSingleton<IRateProvider, T>();
+        }
+        public static IServiceCollection AddBTCPayNetwork(this IServiceCollection services, BTCPayNetworkBase network)
+        {
+            services.AddSingleton<BTCPayNetworkBase>(network);
+            return services;
+        }
+        public static void AddTransactionLinkProvider(this IServiceCollection services, PaymentMethodId paymentMethodId, TransactionLinkProvider provider)
+        {
+            services.AddSingleton<TransactionLinkProviders.Entry>(new TransactionLinkProviders.Entry(paymentMethodId, provider));
         }
         public static void AddRateProviderExchangeSharp<T>(this IServiceCollection services, RateSourceInfo rateInfo) where T : ExchangeAPI
         {

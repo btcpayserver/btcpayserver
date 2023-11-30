@@ -81,9 +81,6 @@ namespace BTCPayServer.HostedServices
 
     public class PluginUpdateFetcher : IPeriodicTask
     {
-        private readonly HttpClient _httpClient;
-        private readonly Uri _updateurl;
-
         public PluginUpdateFetcher(
             SettingsRepository settingsRepository,
             ILogger<PluginUpdateFetcher> logger, NotificationSender notificationSender, PluginService pluginService)

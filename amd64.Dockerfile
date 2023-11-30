@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:6.0.401-bullseye-slim AS builder
+FROM mcr.microsoft.com/dotnet/sdk:8.0.100-bookworm-slim AS builder
 ENV DOTNET_CLI_TELEMETRY_OPTOUT=1
 WORKDIR /source
 COPY nuget.config nuget.config
@@ -21,7 +21,7 @@ ARG CONFIGURATION_NAME=Release
 ARG GIT_COMMIT
 RUN cd BTCPayServer && dotnet publish -p:GitCommit=${GIT_COMMIT} --output /app/ --configuration ${CONFIGURATION_NAME}
 
-FROM mcr.microsoft.com/dotnet/aspnet:6.0.9-bullseye-slim
+FROM mcr.microsoft.com/dotnet/aspnet:8.0.0-bookworm-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends iproute2 openssh-client \
     && rm -rf /var/lib/apt/lists/* 

@@ -1,13 +1,10 @@
 @using BTCPayServer.Client
 @using BTCPayServer.Client.Models
 @using BTCPayServer.Services
-
+@using SetPasswordViewModel = BTCPayServer.Models.ManageViewModels.SetPasswordViewModel
 @inject DisplayFormatter DisplayFormatter
-@inject ReportService ReportService
-@inject PaymentMethodHandlerDictionary PaymentMethodHandlerDictionary
 @model InvoicesModel
 @{
-    var reportNames = ReportService.ReportProviders.Select(p => p.Value.Name).OrderBy(c => c).ToArray();
     ViewData.SetActivePage(InvoiceNavPages.Index, "Invoices");
     var statusFilterCount = CountArrayFilter("status") + CountArrayFilter("exceptionstatus") + (HasBooleanFilter("includearchived") ? 1 : 0) + (HasBooleanFilter("unusual") ? 1 : 0);
     var hasDateFilter = HasArrayFilter("startdate") || HasArrayFilter("enddate");
@@ -32,8 +29,11 @@
 @section PageHeadContent
 {
     <style>
+        .invoiceId-col {
+            min-width: 8rem;
+        }
         .invoice-details-row > td  {
-            padding: 1.5rem .5rem 0 2.65rem;
+            padding: 1.5rem 1rem 0 2.65rem;
         }
         .dropdown > .btn {
             min-width: 7rem;
@@ -54,11 +54,7 @@
 
     @* Custom Range Modal *@
     <script>
-        delegate('click', '#selectAllCheckbox', e => {
-            document.querySelectorAll(".selector").forEach(checkbox => {
-                checkbox.checked = e.target.checked;
-            });
-        });
+        const timezoneOffset = new Date().getTimezoneOffset();
 
         delegate('click', '.showInvoice', e => {
             e.preventDefault();
@@ -99,41 +95,11 @@
             var str = newDate.toLocaleDateString() + " " + newDate.toLocaleTimeString();
             return str;
         }
-
-        document.addEventListener("DOMContentLoaded", function () {
-            var timezoneOffset = new Date().getTimezoneOffset();
-
-            $("#invoices")
-                .on("click", ".invoice-row .invoice-details-toggle", function (e) {
-                    e.preventDefault();
-                    e.stopPropagation(true);
-
-                    const $btnToggle = $(e.currentTarget);
-                    const $invoiceRow = $btnToggle.parents(".invoice-row");
-                    const $detailsRow = $invoiceRow.next(".invoice-details-row");
-
-                    $detailsRow.toggle(0, function () {
-                        const $icon = $btnToggle.children().first();
-                        if ($(this).is(':visible')) {
-                            $icon.removeClass('fa-angle-double-down').addClass('fa-angle-double-up');
-                        } else {
-                            $icon.removeClass('fa-angle-double-up').addClass('fa-angle-double-down');
-                        }
-                    });
-                })
-                .on("click", ".invoice-row", function (e) {
-                    const $invoiceRow = $(e.currentTarget);
-                    if ($(e.target).is("td")) {
-                        $invoiceRow.find(".selector").trigger("click");
-                    }
-                });
-        });
     </script>
 }
 
 @Html.HiddenFor(a => a.Count)
 
-<div class="sticky-header-setup"></div>
 <div class="sticky-header d-sm-flex align-items-center justify-content-between">
     <h2 class="mb-0">
         @ViewData["Title"]
@@ -142,7 +108,6 @@
         </a>
     </h2>
     <a id="CreateNewInvoice" asp-action="CreateInvoice" asp-route-storeId="@Model.StoreId" asp-route-searchTerm="@Model.SearchTerm" class="btn btn-primary mt-3 mt-sm-0">
-        <span class="fa fa-plus"></span>
         Create Invoice
     </a>
 </div>
@@ -169,7 +134,6 @@
 </div>
 
 <partial name="_StatusMessage" />
-
 <partial name="InvoiceStatusChangePartial" />
 
 @* Custom Range Modal *@
@@ -305,97 +269,100 @@
 
 @if (Model.Invoices.Any())
 {
-    <form method="post" id="MassAction" asp-action="MassAction" class="">
-        <div class="d-inline-flex align-items-center pb-2 float-xxl-end mb-2 gap-3">
-            <input type="hidden" name="storeId" value="@Model.StoreId" />
-            <div class="dropdown order-xxl-1">
-                <button class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" id="ActionsDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    Actions
-                </button>
-                <div class="dropdown-menu dropdown-menu-xxl-end" aria-labelledby="ActionsDropdownToggle">
-                    <button type="submit" class="dropdown-item" name="command" value="archive" id="ActionsDropdownArchive">Archive</button>
-                    @if (HasBooleanFilter("includearchived"))
-                    {
-                        <button type="submit" asp-action="MassAction" class="dropdown-item" name="command" value="unarchive" id="ActionsDropdownUnarchive">Unarchive</button>
-                    }
-                    <button id="BumpFee" type="submit" permission="@Policies.CanModifyStoreSettings" class="dropdown-item" name="command" value="cpfp">Bump fee</button>
-                </div>
-            </div>
-            <div class="dropdown d-inline-flex align-items-center gap-3">
-                <button class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret order-xxl-1" type="button" id="ExportDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    Reports
-                </button>
-                <div class="dropdown-menu" aria-labelledby="ExportDropdownToggle">
-                    @foreach (var report in reportNames)
-                    {
-                        <a asp-controller="UIReports" asp-action="StoreReports" asp-route-viewName="@report" asp-route-storeId="@Model.StoreId" class="dropdown-item export-link">@report</a>
-                    }
-                </div>
-                <a href="https://docs.btcpayserver.org/Accounting/" target="_blank" rel="noreferrer noopener" title="More information...">
-                    <vc:icon symbol="info" />
-                </a>
-            </div>
-        </div>
-        <div style="clear:both"></div>
+    <form method="post" asp-action="MassAction">
+        <input type="hidden" name="storeId" value="@Model.StoreId" />
         <div class="table-responsive">
-            <table id="invoices" class="table table-hover">
-                <thead>
+            <table id="invoices" class="table table-hover mass-action">
+                <thead class="mass-action-head">
                     <tr>
-                        <th style="width:2rem;" class="only-for-js">
-                            <input id="selectAllCheckbox" type="checkbox" class="form-check-input" />
-                        <th class="w-150px">
+                        <th class="mass-action-select-col only-for-js">
+                            <input type="checkbox" class="form-check-input mass-action-select-all" />
+                        </th>
+                        <th class="date-col">
                             <div class="d-flex align-items-center gap-1">
                                 Date
                                 <button type="button" class="btn btn-link p-0 fa fa-clock-o switch-time-format only-for-js" title="Switch date format"></button>
                             </div>
                         </th>
-                        <th class="text-nowrap">Order Id</th>
                         <th class="text-nowrap">Invoice Id</th>
+                        <th class="text-nowrap">Order Id</th>
                         <th>Status</th>
-                        <th class="text-end">Amount</th>
-                        <th class="text-end">Actions</th>
+                        <th class="amount-col">Amount</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <thead class="mass-action-actions">
+                    <tr>
+                        <th class="mass-action-select-col only-for-js">
+                            <input type="checkbox" class="form-check-input mass-action-select-all" />
+                        </th>
+                        <th colspan="6">
+                            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                                <div>
+                                    <strong class="mass-action-selected-count">0</strong>
+                                    selected
+                                </div>
+                                <div class="d-inline-flex align-items-center gap-3">
+                                    <button type="submit" name="command" value="archive" id="ArchiveSelected" class="btn btn-link">
+                                        <vc:icon symbol="archive" />
+                                        Archive
+                                    </button>
+                                    @if (HasBooleanFilter("includearchived"))
+                                    {
+                                        <button type="submit" name="command" value="unarchive" id="UnarchiveSelected" class="btn btn-link">
+                                            <vc:icon symbol="archive" />
+                                            Unarchive
+                                        </button>
+                                    }
+                                    <button type="submit" name="command" value="cpfp" id="BumpFee" class="btn btn-link">
+                                        <vc:icon symbol="send" />
+                                        Bump fee
+                                    </button>
+                                </div>
+                            </div>
+                        </th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach (var invoice in Model.Invoices)
                     {
-                        <tr id="invoice_@invoice.InvoiceId" class="invoice-row">
-                            <td class="only-for-js">
-                                <input name="selectedItems" type="checkbox" class="selector form-check-input" value="@invoice.InvoiceId" />
+                        var detailsId = $"invoice_details_{invoice.InvoiceId}";
+                        <tr id="invoice_@invoice.InvoiceId" class="mass-action-row">
+                            <td class="only-for-js align-middle">
+                                <input name="selectedItems" type="checkbox" class="form-check-input mass-action-select" value="@invoice.InvoiceId" />
                             </td>
-                            <td>@invoice.Date.ToBrowserDate()</td>
-                            <td>
+                            <td class="align-middle date-col">@invoice.Date.ToBrowserDate()</td>
+                            <td class="text-break align-middle invoiceId-col">
+                                <a asp-action="Invoice" class="invoice-details-link" asp-route-invoiceId="@invoice.InvoiceId">@invoice.InvoiceId</a>
+                            </td>
+                            <td class="align-middle">
                                 <vc:truncate-center text="@invoice.OrderId" link="@invoice.RedirectUrl" classes="truncate-center-id" />
                             </td>
-                            <td class="text-break">@invoice.InvoiceId</td>
-                            <td>
-                                <vc:invoice-status state="invoice.Status" payments="invoice.Details.Payments" invoice-id="@invoice.InvoiceId"
-                                   is-archived="invoice.Details.Archived" has-refund="invoice.HasRefund" />
-                            </td>
-                            <td class="text-end text-nowrap">
-                                <span data-sensitive>@DisplayFormatter.Currency(invoice.Amount, invoice.Currency)</span>
-                            </td>
-                            <td class="text-end text-nowrap">
-                                @if (invoice.ShowCheckout)
-                                {
-                                    <span>
+                            <td class="align-middle">
+                                <div class="d-inline-flex align-items-center gap-2">
+                                    <vc:invoice-status state="invoice.Status" payments="invoice.Details.Payments" invoice-id="@invoice.InvoiceId"
+                                       is-archived="invoice.Details.Archived" has-refund="invoice.HasRefund" />
+                                    @if (invoice.ShowCheckout)
+                                    {
+                                        <span>&nbsp;</span>
                                         <a asp-action="Checkout" asp-route-invoiceId="@invoice.InvoiceId" class="invoice-checkout-link" id="invoice-checkout-@invoice.InvoiceId">Checkout</a>
                                         <a asp-action="Checkout" asp-route-invoiceId="@invoice.InvoiceId" class="showInvoice only-for-js" data-invoice-id="@invoice.InvoiceId">[^]</a>
-                                        @if (!invoice.CanMarkStatus)
-                                        {
-                                            <span>-</span>
-                                        }
-                                    </span>
-                                }
-                                &nbsp;
-                                <a asp-action="Invoice" class="invoice-details-link" asp-route-invoiceId="@invoice.InvoiceId">Details</a>
-                                <a class="only-for-js invoice-details-toggle" href="#">
-                                    <span title="Invoice Details Toggle" class="fa fa-1x fa-angle-double-down"></span>
-                                </a>
+                                    }
+                                </div>
+                            </td>
+                            <td class="align-middle amount-col">
+                                <span data-sensitive>@DisplayFormatter.Currency(invoice.Amount, invoice.Currency)</span>
+                            </td>
+                            <td class="align-middle text-end">
+                                <div class="d-inline-flex align-items-center gap-2">
+                                    <button class="accordion-button collapsed only-for-js ms-0 d-inline-block" type="button" data-bs-toggle="collapse" data-bs-target="#@detailsId" aria-expanded="false" aria-controls="@detailsId">
+                                        <vc:icon symbol="caret-down" />
+                                    </button>
+                                </div>
                             </td>
                         </tr>
-                        <tr id="invoice_details_@invoice.InvoiceId" class="invoice-details-row" style="display:none;">
-                            <td colspan="99" class="border-top-0">
+                        <tr id="@detailsId" class="invoice-details-row collapse">
+                            <td colspan="7" class="border-top-0">
                                 @* Leaving this as partial because it abstracts complexity of Invoice Payments *@
                                 <partial name="ListInvoicesPaymentsPartial" model="(invoice.Details, true)" />
                             </td>

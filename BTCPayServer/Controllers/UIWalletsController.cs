@@ -66,6 +66,7 @@ namespace BTCPayServer.Controllers
         private readonly DelayedTransactionBroadcaster _broadcaster;
         private readonly PayjoinClient _payjoinClient;
         private readonly LabelService _labelService;
+        private readonly TransactionLinkProviders _transactionLinkProviders;
         private readonly PullPaymentHostedService _pullPaymentHostedService;
         private readonly WalletHistogramService _walletHistogramService;
 
@@ -89,10 +90,12 @@ namespace BTCPayServer.Controllers
                                  PayjoinClient payjoinClient,
                                  IServiceProvider serviceProvider,
                                  PullPaymentHostedService pullPaymentHostedService,
-                                 LabelService labelService)
+                                 LabelService labelService,
+                                 TransactionLinkProviders transactionLinkProviders)
         {
             _currencyTable = currencyTable;
             _labelService = labelService;
+            _transactionLinkProviders = transactionLinkProviders;
             Repository = repo;
             WalletRepository = walletRepository;
             RateFetcher = rateProvider;
@@ -248,12 +251,12 @@ namespace BTCPayServer.Controllers
             }
             else
             {
+                var pmi = new PaymentMethodId(walletId.CryptoCode, PaymentTypes.BTCLike);
                 foreach (var tx in transactions)
                 {
                     var vm = new ListTransactionsViewModel.TransactionViewModel();
                     vm.Id = tx.TransactionId.ToString();
-                    vm.Link = string.Format(CultureInfo.InvariantCulture, paymentMethod.Network.BlockExplorerLink,
-                        vm.Id);
+                    vm.Link = _transactionLinkProviders.GetTransactionLink(pmi, vm.Id);
                     vm.Timestamp = tx.SeenAt;
                     vm.Positive = tx.BalanceChange.GetValue(wallet.Network) >= 0;
                     vm.Balance = tx.BalanceChange.ShowMoney(wallet.Network);
@@ -590,7 +593,7 @@ namespace BTCPayServer.Controllers
 
                 var utxos = await _walletProvider.GetWallet(network)
                     .GetUnspentCoins(schemeSettings.AccountDerivation, false, cancellation);
-
+                var pmi = new PaymentMethodId(vm.CryptoCode, PaymentTypes.BTCLike);
                 var walletTransactionsInfoAsync = await this.WalletRepository.GetWalletTransactionsInfo(walletId,
                     utxos.SelectMany(GetWalletObjectsQuery.Get).Distinct().ToArray());
                 vm.InputsAvailable = utxos.Select(coin =>
@@ -605,8 +608,7 @@ namespace BTCPayServer.Controllers
                         Amount = coin.Value.GetValue(network),
                         Comment = info?.Comment,
                         Labels = _labelService.CreateTransactionTagModels(info, Request),
-                        Link = string.Format(CultureInfo.InvariantCulture, network.BlockExplorerLink,
-                            coin.OutPoint.Hash.ToString()),
+                        Link = _transactionLinkProviders.GetTransactionLink(pmi, coin.OutPoint.ToString()),
                         Confirmations = coin.Confirmations
                     };
                 }).ToArray();
@@ -877,8 +879,7 @@ namespace BTCPayServer.Controllers
             try
             {
                 var uriBuilder = new NBitcoin.Payment.BitcoinUrlBuilder(bip21, network.NBitcoinNetwork);
-
-                vm.Outputs.Add(new WalletSendModel.TransactionOutput()
+                var output = new WalletSendModel.TransactionOutput
                 {
                     Amount = uriBuilder.Amount?.ToDecimal(MoneyUnit.BTC),
                     DestinationAddress = uriBuilder.Address?.ToString(),
@@ -886,15 +887,20 @@ namespace BTCPayServer.Controllers
                     PayoutId = uriBuilder.UnknownParameters.ContainsKey("payout")
                         ? uriBuilder.UnknownParameters["payout"]
                         : null
-                });
+                };
+                if (!string.IsNullOrEmpty(uriBuilder.Label))
+                {
+                    output.Labels = output.Labels.Append(uriBuilder.Label).ToArray();
+                }
+                vm.Outputs.Add(output);
                 address = uriBuilder.Address;
                 if (!string.IsNullOrEmpty(uriBuilder.Label) || !string.IsNullOrEmpty(uriBuilder.Message))
                 {
-                    TempData.SetStatusMessageModel(new StatusMessageModel()
+                    TempData.SetStatusMessageModel(new StatusMessageModel
                     {
                         Severity = StatusMessageModel.StatusSeverity.Info,
                         Html =
-                            $"Payment {(string.IsNullOrEmpty(uriBuilder.Label) ? string.Empty : $" to {uriBuilder.Label}")} {(string.IsNullOrEmpty(uriBuilder.Message) ? string.Empty : $" for {uriBuilder.Message}")}"
+                            $"Payment {(string.IsNullOrEmpty(uriBuilder.Label) ? string.Empty : $" to <strong>{uriBuilder.Label}</strong>")} {(string.IsNullOrEmpty(uriBuilder.Message) ? string.Empty : $" for <strong>{uriBuilder.Message}</strong>")}"
                     });
                 }
 
@@ -926,7 +932,7 @@ namespace BTCPayServer.Controllers
             if (address is not null)
             {
                 var addressLabels = await WalletRepository.GetWalletLabels(new WalletObjectId(walletId, WalletObjectData.Types.Address, address.ToString()));
-                vm.Outputs.Last().Labels = addressLabels.Select(tuple => tuple.Label).ToArray();
+                vm.Outputs.Last().Labels = vm.Outputs.Last().Labels.Concat(addressLabels.Select(tuple => tuple.Label)).ToArray();
             }
         }
 
@@ -1344,7 +1350,7 @@ namespace BTCPayServer.Controllers
             {
                 "csv" => "text/csv",
                 "json" => "application/json",
-                "bip329" => "text/jsonl", // https://stackoverflow.com/questions/59938644/what-is-the-mime-type-of-jsonl-files
+                "bip329" => "application/jsonl", // Ongoing discussion: https://github.com/wardi/jsonlines/issues/19
                 _ => throw new ArgumentOutOfRangeException(nameof(format), format, null)
             };
             var cd = new ContentDisposition
@@ -1469,7 +1475,7 @@ namespace BTCPayServer.Controllers
             return Request.GetRelativePathOrAbsolute(res);
         }
 
-        private string GetUserId() => _userManager.GetUserId(User);
+        private string GetUserId() => _userManager.GetUserId(User)!;
 
         private StoreData GetCurrentStore() => HttpContext.GetStoreData();
     }

@@ -70,7 +70,7 @@
                 ]
             }
         },
-        "/api/v1/stores/{storeId}/payment-methods/LNURL/{cryptoCode}": {
+        "/api/v1/stores/{storeId}/payment-methods/LNURLPay/{cryptoCode}": {
             "get": {
                 "tags": [
                     "Store Payment Methods (LNURL Pay)"

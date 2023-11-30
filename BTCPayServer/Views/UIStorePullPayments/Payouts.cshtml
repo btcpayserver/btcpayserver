@@ -27,14 +27,14 @@
     switch (Model.PayoutState)
     {
         case PayoutState.AwaitingApproval:
-            stateActions.Add(("approve", "Approve selected payouts"));
-            stateActions.Add(("approve-pay", "Approve & Send selected payouts"));
-            stateActions.Add(("cancel", "Cancel selected payouts"));
+            stateActions.Add(("approve", "Approve"));
+            stateActions.Add(("approve-pay", "Approve & Send"));
+            stateActions.Add(("cancel", "Cancel"));
             break;
         case PayoutState.AwaitingPayment:
-            stateActions.Add(("pay", "Send selected payouts"));
-            stateActions.Add(("cancel", "Cancel selected payouts"));
-            stateActions.Add(("mark-paid", "Mark selected payouts as already paid"));
+            stateActions.Add(("pay", "Send"));
+            stateActions.Add(("cancel", "Cancel"));
+            stateActions.Add(("mark-paid", "Mark as already paid"));
             break;
     }
 }
@@ -59,7 +59,6 @@
     </script>
 }
 
-<div class="sticky-header-setup"></div>
 <div class="sticky-header d-flex align-items-center justify-content-between">
     <h2 class="mb-0">
         @ViewData["Title"]
@@ -125,20 +124,7 @@
                 </li>
             }
         </ul>
-        @if (Model.Payouts.Any() && stateActions.Any())
-        {
-            <div class="dropdown ms-xl-auto mt-xl-0" permission="@Policies.CanModifyStoreSettings">
-                <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" id="@Model.PayoutState-actions">Actions</button>
-                <div class="dropdown-menu" aria-labelledby="@Model.PayoutState-actions">
-                    @foreach (var action in stateActions)
-                    {
-                        <button type="submit" id="@Model.PayoutState-@action.Action" name="Command" class="dropdown-item" role="button" value="@Model.PayoutState-@action.Action">@action.Text</button>
-                    }
-                </div>
-            </div>
-        }
     </div>
-
     <nav id="SectionNav" class="mb-3">
         <div class="nav">
             @foreach (var state in Model.PayoutStateCount)
@@ -159,43 +145,73 @@
             }
         </div>
     </nav>
-
     @if (Model.Payouts.Any())
     {
         <div class="table-responsive">
-            <table class="table table-hover">
-                <thead>
+            <table class="table table-hover mass-action">
+                <thead class="mass-action-head">
                     <tr>
-                        <th permission="@Policies.CanModifyStoreSettings">
-                            <input id="@Model.PayoutState-selectAllCheckbox" type="checkbox" class="form-check-input selectAll" data-payout-state="@Model.PayoutState.ToString()" />
+                        @if (stateActions.Any())
+                        {
+                            <th class="only-for-js mass-action-select-col" permission="@Policies.CanModifyStoreSettings">
+                                <input type="checkbox" class="form-check-input mass-action-select-all" data-payout-state="@Model.PayoutState.ToString()" />
+                            </th>
+                        }
+                        <th class="date-col">
+                            <div class="d-flex align-items-center gap-1">
+                                Date
+                                <button type="button" class="btn btn-link p-0 fa fa-clock-o switch-time-format only-for-js" title="Switch date format"></button>
+                            </div>
                         </th>
-                        <th style="min-width: 90px;" class="col-md-auto">
-                            Date
-                        </th>
-                        <th class="text-start">Source</th>
-                        <th class="text-start">Destination</th>
-                        <th class="text-end">Amount</th>
+                        <th>Source</th>
+                        <th>Destination</th>
+                        <th class="amount-col">Amount</th>
                         @if (Model.PayoutState != PayoutState.AwaitingApproval)
                         {
                             <th class="text-end">Transaction</th>
                         }
                     </tr>
                 </thead>
+                @if (stateActions.Any())
+                {
+                    <thead class="mass-action-actions" permission="@Policies.CanModifyStoreSettings">
+                    <tr>
+                        <th class="mass-action-select-col only-for-js">
+                            <input type="checkbox" class="form-check-input mass-action-select-all" />
+                        </th>
+                        <th colspan="5">
+                            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                                <div>
+                                    <strong class="mass-action-selected-count">0</strong>
+                                    selected
+                                </div>
+                                <div class="d-inline-flex align-items-center gap-3">
+                                    @foreach (var action in stateActions)
+                                    {
+                                        <button type="submit" id="@Model.PayoutState-@action.Action" name="Command" class="btn btn-link" value="@Model.PayoutState-@action.Action">@action.Text</button>
+                                    }
+                                </div>
+                            </div>
+                        </th>
+                    </tr>
+                    </thead>
+                }
                 <tbody>
-                    @for (int i = 0; i < Model.Payouts.Count; i++)
+                    @for (var i = 0; i < Model.Payouts.Count; i++)
                     {
                         var pp = Model.Payouts[i];
-                        <tr class="payout">
-                            <td permission="@Policies.CanModifyStoreSettings">
-                                <span>
-                                    <input type="checkbox" class="selection-item-@Model.PayoutState.ToString() form-check-input" asp-for="Payouts[i].Selected" />
+                        <tr class="payout mass-action-row">
+                            @if (stateActions.Any())
+                            {
+                                <td class="only-for-js mass-action-select-col align-middle" permission="@Policies.CanModifyStoreSettings">
+                                    <input type="checkbox" class="selection-item-@Model.PayoutState.ToString() form-check-input mass-action-select" asp-for="Payouts[i].Selected" />
                                     <input type="hidden" asp-for="Payouts[i].PayoutId" />
-                                </span>
+                                </td>
+                            }
+                            <td class="date-col align-middle">
+                                @pp.Date.ToBrowserDate()
                             </td>
-                            <td>
-                                <span>@pp.Date.ToBrowserDate()</span>
-                            </td>
-                            <td class="mw-100">
+                            <td class="align-middle">
                                 @if (pp.SourceLink is not null && pp.Source is not null)
                                 {
                                     <a href="@pp.SourceLink" rel="noreferrer noopener">@pp.Source</a>
@@ -205,16 +221,16 @@
                                     <span>@pp.Source</span>
                                 }
                             </td>
-                            <td title="@pp.Destination">
-                                <span class="text-break">@pp.Destination</span>
+                            <td class="align-middle">
+                                <vc:truncate-center text="@pp.Destination" classes="truncate-center-id" />
                             </td>
-                            <td class="text-end text-nowrap">
+                            <td class="amount-col align-middle">
                                 <span data-sensitive>@pp.Amount</span>
                             </td>
                             @if (Model.PayoutState != PayoutState.AwaitingApproval)
                             {
-                                <td class="text-end">
-                                    @if (!(pp.ProofLink is null))
+                                <td class="text-end align-middle">
+                                    @if (!string.IsNullOrEmpty(pp.ProofLink))
                                     {
                                         <a class="transaction-link" href="@pp.ProofLink" rel="noreferrer noopener">Link</a>
                                     }

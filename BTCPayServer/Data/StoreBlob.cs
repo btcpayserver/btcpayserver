@@ -40,7 +40,7 @@ namespace BTCPayServer.Data
         public NetworkFeeMode NetworkFeeMode { get; set; }
 
         [JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
-        [DefaultValue(CheckoutType.V1)]
+        [DefaultValue(CheckoutType.V2)]
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
         public CheckoutType CheckoutType { get; set; }
         public bool RequiresRefundEmail { get; set; }
@@ -241,7 +241,7 @@ namespace BTCPayServer.Data
         
         [DefaultValue(false)]
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
-        public bool PlaySoundOnPayment { get; set; } = false;
+        public bool PlaySoundOnPayment { get; set; }
 
         public string SoundFileId { get; set; }
 

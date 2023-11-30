@@ -20,6 +20,15 @@ namespace BTCPayServer.Abstractions.Extensions
             Relative
         }
 
+        public static void SetBlazorAllowed(this ViewDataDictionary viewData, bool allowed)
+        {
+            viewData["BlazorAllowed"] = allowed;
+        }
+        public static bool IsBlazorAllowed(this ViewDataDictionary viewData)
+        {
+            return viewData["BlazorAllowed"] is not false;
+        }
+
         public static void SetActivePage<T>(this ViewDataDictionary viewData, T activePage, string title = null, string activeId = null)
             where T : IConvertible
         {

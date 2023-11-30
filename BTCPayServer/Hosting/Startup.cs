@@ -33,8 +33,10 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Microsoft.Net.Http.Headers;
+using NBXplorer;
 using NicolasDorier.RateLimits;
 
 namespace BTCPayServer.Hosting
@@ -57,8 +59,29 @@ namespace BTCPayServer.Hosting
         }
         public ILoggerFactory LoggerFactory { get; }
         public Logs Logs { get; }
+
+        public static ServiceProvider CreateBootstrap(IConfiguration conf)
+        {
+            return CreateBootstrap(conf, new Logs(), new FuncLoggerFactory(n => NullLogger.Instance));
+        }
+        public static ServiceProvider CreateBootstrap(IConfiguration conf, Logs logs, ILoggerFactory loggerFactory)
+        {
+            ServiceCollection bootstrapServices = new ServiceCollection();
+            var networkType = DefaultConfiguration.GetNetworkType(conf);
+            bootstrapServices.AddSingleton(logs);
+            bootstrapServices.AddSingleton(loggerFactory);
+            bootstrapServices.AddSingleton<IConfiguration>(conf);
+            bootstrapServices.AddSingleton<SelectedChains>();
+            bootstrapServices.AddSingleton<NBXplorerNetworkProvider>(new NBXplorerNetworkProvider(networkType));
+            return bootstrapServices.BuildServiceProvider();
+        }
+
         public void ConfigureServices(IServiceCollection services)
         {
+            var bootstrapServiceProvider = CreateBootstrap(Configuration, Logs, LoggerFactory);
+            services.AddSingleton(bootstrapServiceProvider.GetRequiredService<SelectedChains>());
+            services.AddSingleton(bootstrapServiceProvider.GetRequiredService<NBXplorerNetworkProvider>());
+
             services.AddMemoryCache();
             services.AddDataProtection()
                 .SetApplicationName("BTCPay Server")
@@ -143,7 +166,7 @@ namespace BTCPayServer.Hosting
             })
             .AddNewtonsoftJson()
             .AddRazorRuntimeCompilation()
-            .AddPlugins(services, Configuration, LoggerFactory)
+            .AddPlugins(services, Configuration, LoggerFactory, bootstrapServiceProvider)
             .AddControllersAsServices();
 
             services.AddServerSideBlazor();
@@ -273,15 +296,6 @@ namespace BTCPayServer.Hosting
             app.UseRouting();
             app.UseCors();
 
-
-            // HACK: Make blazor js available on: ~/_blazorfiles/_framework/blazor.server.js
-            // Workaround this bug https://github.com/dotnet/aspnetcore/issues/19578
-            app.UseStaticFiles(new StaticFileOptions()
-            {
-                RequestPath = "/_blazorfiles",
-                FileProvider = new ManifestEmbeddedFileProvider(typeof(ComponentServiceCollectionExtensions).Assembly),
-                OnPrepareResponse = LongCache
-            });
             app.UseStaticFiles(new StaticFileOptions
             {
                 OnPrepareResponse = LongCache

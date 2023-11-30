@@ -228,13 +228,17 @@ namespace BTCPayServer.Controllers
             if (app is null || userId is null)
                 return NotFound();
 
+            if (!file.FileName.IsValidFileName())
+            {
+                return Json(new { error = "Invalid file name" });
+            }
             if (!file.ContentType.StartsWith("image/", StringComparison.InvariantCulture))
             {
                 return Json(new { error = "The file needs to be an image" });
             }
             if (file.Length > 500_000)
             {
-                return Json(new { error = "The image file size should be less than 0.5MB" });
+                return Json(new { error = "The file size should be less than 0.5MB" });
             }
             var formFile = await file.Bufferize();
             if (!FileTypeDetector.IsPicture(formFile.Buffer, formFile.FileName))

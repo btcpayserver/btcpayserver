@@ -7,8 +7,10 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Configuration;
+using BTCPayServer.Logging;
 using McMaster.NETCore.Plugins;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -17,6 +19,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
+using NBXplorer;
 
 namespace BTCPayServer.Plugins
 {
@@ -27,12 +30,16 @@ namespace BTCPayServer.Plugins
 
         public static bool IsExceptionByPlugin(Exception exception, [MaybeNullWhen(false)] out string pluginName)
         {
+            var fromAssembly = exception is TypeLoadException
+                ? Regex.Match(exception.Message, "from assembly '(.*?),").Groups[1].Value
+                : null;
+
             foreach (var assembly in _pluginAssemblies)
             {
                 var assemblyName = assembly.GetName().Name;
                 if (assemblyName is null)
                     continue;
-                // Comparison is case sensitive as it is theorically possible to have a different plugin
+                // Comparison is case sensitive as it is theoretically possible to have a different plugin
                 // with same name but different casing.
                 if (exception.Source is not null &&
                     assemblyName.Equals(exception.Source, StringComparison.Ordinal))
@@ -45,12 +52,18 @@ namespace BTCPayServer.Plugins
                     pluginName = assemblyName;
                     return true;
                 }
+                // For TypeLoadException, check if it might come from areferenced assembly
+                if (!string.IsNullOrEmpty(fromAssembly) && assembly.GetReferencedAssemblies().Select(a => a.Name).Contains(fromAssembly))
+                {
+                    pluginName = assemblyName;
+                    return true;
+                }
             }
             pluginName = null;
             return false;
         }
         public static IMvcBuilder AddPlugins(this IMvcBuilder mvcBuilder, IServiceCollection serviceCollection,
-            IConfiguration config, ILoggerFactory loggerFactory)
+            IConfiguration config, ILoggerFactory loggerFactory, ServiceProvider bootstrapServiceProvider)
         {
             var logger = loggerFactory.CreateLogger(typeof(PluginManager));
             var pluginsFolder = new DataDirectories().Configure(config).PluginDir;
@@ -173,7 +186,8 @@ namespace BTCPayServer.Plugins
                 {
                     logger.LogInformation(
                         $"Adding and executing plugin {plugin.Identifier} - {plugin.Version}");
-                    plugin.Execute(serviceCollection);
+                    var pluginServiceCollection = new PluginServiceCollection(serviceCollection, bootstrapServiceProvider);
+                    plugin.Execute(pluginServiceCollection);
                     serviceCollection.AddSingleton(plugin);
                 }
                 catch (Exception e)

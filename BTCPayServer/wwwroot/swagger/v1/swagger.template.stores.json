@@ -542,6 +542,31 @@
                         "default": false,
                         "description": "If true, payjoin will be proposed in the checkout page if possible. ([More information](https://docs.btcpayserver.org/Payjoin/))"
                     },
+                    "autoDetectLanguage": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "If true, the language on the checkout page will adapt to the language defined by the user's browser settings"
+                    },
+                    "showPayInWalletButton": {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "If true, the \"Pay in wallet\" button will be shown on the checkout page (Checkout V2)"
+                    },
+                    "showStoreHeader": {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "If true, the store header will be shown on the checkout page (Checkout V2)"
+                    },
+                    "celebratePayment": {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "If true, payments on the checkout page will be celebrated with confetti (Checkout V2)"
+                    },
+                    "playSoundOnPayment": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "If true, sounds on the checkout page will be enabled (Checkout V2)"
+                    },
                     "lazyPaymentMethods": {
                         "type": "boolean",
                         "default": false,

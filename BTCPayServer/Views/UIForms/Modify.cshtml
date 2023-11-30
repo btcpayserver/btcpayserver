@@ -12,21 +12,8 @@
     var storeId = Context.GetCurrentStoreId();
 }
 
-@section PageHeadCOntent {
-    <style>
-        #FormEditor .nav-link { background: none; padding: 0; font-weight: var(--btcpay-font-weight-semibold); font-size: 1.125rem; }
-        #FormEditor .nav-link.active { color: var(--btcpay-primary); }
-        #FormEditor .list-group-item:not(.active) { background: none; }
-        #FormEditor .list-group-item { border: none !important; margin-top: 0 !important; padding: var(--btcpay-space-m) var(--btcpay-space-m) var(--btcpay-space-m) var(--btcpay-space-s) !important; }
-        #FormEditor fieldset .list-group-item { padding: var(--btcpay-space-m) 0 var(--btcpay-space-m) !important; }
-        #FormEditor .control { color: var(--btcpay-body-text-muted); border: none !important; padding: 0 var(--btcpay-space-xs); }
-        #FormEditor .control.drag[disabled] { visibility: hidden; }
-        #FormEditor .control.drag:hover { color: var(--btcpay-primary); }
-        #FormEditor .control.remove:hover { color: var(--btcpay-danger); }
-        #FormEditor .field .form-group:last-child { margin-bottom: 0; }
-        #FormEditor .nested-fields { margin: 0 -3.1rem 0 -.5rem; }
-        #FormEditor .nested-fields .list-group-item { padding-right: 1rem !important; }
-    </style>
+@section PageHeadContent {
+    <link href="~/main/editor.css" rel="stylesheet" asp-append-version="true" />
 }
 
 @section PageFootContent {
@@ -77,7 +64,7 @@
                             <input :id="`field-option-text-${index}`" class="form-control" v-model="option.text" />
                         </div>
                         <button type="button" class="btn b-0 control remove" v-on:click="removeOption($event, index)">
-                            <vc:icon symbol="trash" />
+                            <vc:icon symbol="remove" />
                         </button>
                     </div>
                 </div>
@@ -114,7 +101,7 @@
                             <input :id="`field-valuemap-mapped-${index}`" class="form-control" placeholder="Value to set" :value="v" v-on:change="updateValueMap(k, k, $event.target.value)" />
                         </div>
                         <button type="button" class="btn b-0 control remove" v-on:click="removeValueMap($event, k)">
-                            <vc:icon symbol="trash" />
+                            <vc:icon symbol="remove" />
                         </button>
                     </div>
                 </div>
@@ -151,7 +138,7 @@
                         <component :is="getFieldComponent(field.type)" v-bind="field" :path="path.concat(field.name)" :selected-field="selectedField" v-on="$listeners" />
                     </div>
                     <button type="button" class="btn b-0 control remove" v-on:click="$emit('remove-field', $event, path, index)">
-                        <vc:icon symbol="trash" />
+                        <vc:icon symbol="remove" />
                     </button>
                 </div>
             </div>
@@ -204,84 +191,91 @@
     <partial name="_ValidationScriptsPartial" />
 }
 
-    <form method="post" asp-action="Modify" asp-route-id="@formId" asp-route-storeId="@storeId">
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="d-flex align-items-center justify-content-between mb-3">
-                    <h3 class="mb-0">
-                        <span>@ViewData["Title"]</span>
-                        <a href="https://docs.btcpayserver.org/Forms" target="_blank" rel="noreferrer noopener" title="More information...">
-                            <vc:icon symbol="info" />
-                        </a>
-                    </h3>
-                    <div class="d-flex gap-3 mt-3 mt-sm-0">
-                        <button type="submit" class="btn btn-primary order-sm-1" id="SaveButton">Save</button>
-                        @if (!isNew)
-                        {
-                            <a class="btn btn-secondary" asp-action="ViewPublicForm" asp-route-formId="@formId" id="ViewForm">View</a>
-                        }
-                    </div>
+<form method="post" asp-action="Modify" asp-route-id="@formId" asp-route-storeId="@storeId">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <h3 class="mb-0">
+                    <span>@ViewData["Title"]</span>
+                    <a href="https://docs.btcpayserver.org/Forms" target="_blank" rel="noreferrer noopener" title="More information...">
+                        <vc:icon symbol="info" />
+                    </a>
+                </h3>
+                <div class="d-flex gap-3 mt-3 mt-sm-0">
+                    <button type="submit" class="btn btn-primary order-sm-1" id="SaveButton">Save</button>
+                    @if (!isNew)
+                    {
+                        <a class="btn btn-secondary" asp-action="ViewPublicForm" asp-route-formId="@formId" id="ViewForm">View</a>
+                    }
                 </div>
-                <div asp-validation-summary="All" class="text-danger"></div>
-                <div class="form-group" style="max-width: 27rem;">
-                    <label asp-for="Name" class="form-label" data-required></label>
-                    <input asp-for="Name" class="form-control" required />
-                    <span asp-validation-for="Name" class="text-danger"></span>
-                </div>
-                <div class="d-flex align-items-center mb-4 gap-3">
-                    <input asp-for="Public" type="checkbox" class="btcpay-toggle" />
-                    <div>
-                        <label asp-for="Public"></label>
-                        <div class="form-text">
-                            Standalone mode, which can be used to generate invoices
-                            independent of payment requests or apps.
-                        </div>
+            </div>
+            <div asp-validation-summary="All" class="text-danger"></div>
+            <div class="form-group" style="max-width: 27rem;">
+                <label asp-for="Name" class="form-label" data-required></label>
+                <input asp-for="Name" class="form-control" required />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            <div class="d-flex align-items-center mb-4 gap-3">
+                <input asp-for="Public" type="checkbox" class="btcpay-toggle" />
+                <div>
+                    <label asp-for="Public"></label>
+                    <div class="form-text">
+                        Standalone mode, which can be used to generate invoices
+                        independent of payment requests or apps.
                     </div>
                 </div>
             </div>
         </div>
+    </div>
 
-        <div id="FormEditor">
-            <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-3">
-                <ul class="nav nav-pills gap-4" id="form-editor-tab" role="tablist">
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link active" id="EditorTabButton" data-bs-toggle="pill" data-bs-target="#EditorTabPane" type="button" role="tab" aria-controls="EditorTabPane" aria-selected="true">Editor</button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="CodeTabButton" data-bs-toggle="pill" data-bs-target="#CodeTabPane" type="button" role="tab" aria-controls="CodeTabPane" aria-selected="false">Code</button>
-                    </li>
-                </ul>
-                <div class="d-flex align-items-center gap-2 mb-1">
-                    <span class="fw-semibold">Templates</span>
-                    <button type="button" class="btn btn-link p-0 fw-semibold" v-on:click="applyTemplate('email')" id="ApplyEmailTemplate">Email</button>
-                    <button type="button" class="btn btn-link p-0 fw-semibold" v-on:click="applyTemplate('address')" id="ApplyAddressTemplate">Address</button>
-                </div>
-            </div>
-            <div class="tab-content">
-                <div class="tab-pane fade show active" id="EditorTabPane" role="tabpanel" aria-labelledby="EditorTabButton" tabindex="0">
-                    <div class="row align-items-start">
-                        <div class="col-lg-7 mb-4 mb-lg-0">
-                            <fields-editor :path="[]"
-                                           :fields="fields"
-                                           :selected-field="selectedField"
-                                           v-on:add-field="addField"
-                                           v-on:sort-fields="sortFields"
-                                           v-on:select-field="selectField"
-                                           v-on:remove-field="removeField"
-                                           class="bg-tile pb-2 rounded" />
-                        </div>
-                        <div class="col-lg-5">
-                            <field-editor :field="selectedField" class="bg-tile p-4 rounded" />
-                        </div>
-                    </div>
-                </div>
-                <div class="tab-pane fade" id="CodeTabPane" role="tabpanel" aria-labelledby="CodeTabButton" tabindex="0">
-                    <div class="d-flex align-items-center justify-content-between gap-3">
-                        <label asp-for="FormConfig" class="form-label" data-required>Form JSON</label>
-                    </div>
-                    <textarea asp-for="FormConfig" class="form-control font-monospace" style="font-size:.85rem" rows="21" cols="21" v-model="configJSON" v-on:change="updateFromJSON"></textarea>
-                    <span asp-validation-for="FormConfig" class="text-danger"></span>
-                </div>
+    <div id="FormEditor" class="editor">
+        <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-3">
+            <ul class="nav nav-pills gap-4" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="EditorTabButton" data-bs-toggle="pill" data-bs-target="#EditorTabPane" type="button" role="tab" aria-controls="EditorTabPane" aria-selected="true">Editor</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="CodeTabButton" data-bs-toggle="pill" data-bs-target="#CodeTabPane" type="button" role="tab" aria-controls="CodeTabPane" aria-selected="false">Code</button>
+                </li>
+            </ul>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="fw-semibold">Templates</span>
+                <button type="button" class="btn btn-link p-0 fw-semibold" v-on:click="applyTemplate('email')" id="ApplyEmailTemplate">Email</button>
+                <button type="button" class="btn btn-link p-0 fw-semibold" v-on:click="applyTemplate('address')" id="ApplyAddressTemplate">Address</button>
             </div>
         </div>
-    </form>
+        <div class="tab-content">
+            <div class="tab-pane fade show active" id="EditorTabPane" role="tabpanel" aria-labelledby="EditorTabButton" tabindex="0">
+                <div class="row align-items-start">
+                    <div class="col-12 col-xl-7">
+                        <fields-editor :path="[]"
+                                       :fields="fields"
+                                       :selected-field="selectedField"
+                                       v-on:add-field="addField"
+                                       v-on:sort-fields="sortFields"
+                                       v-on:select-field="selectField"
+                                       v-on:remove-field="removeField"
+                                       :class="{ 'pt-2': (!fields || fields.length === 0) }"
+                                       class="bg-tile pb-2 rounded" />
+                    </div>
+                    <div class="col-xl-5 offcanvas-xl offcanvas-end" tabindex="-1" ref="editorOffcanvas">
+                        <div class="offcanvas-header p-3">
+                            <h5 class="offcanvas-title">Edit Field</h5>
+                            <button type="button" class="btn-close" aria-label="Close" v-on:click="hideOffcanvas">
+                                <vc:icon symbol="close" />
+                            </button>
+                        </div>
+                        <div class="offcanvas-body p-3 p-xl-0">
+                            <field-editor :field="selectedField" class="bg-tile w-100 p-xl-4 rounded" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="CodeTabPane" role="tabpanel" aria-labelledby="CodeTabButton" tabindex="0">
+                <label asp-for="FormConfig" class="form-label" data-required>Form JSON</label>
+                <textarea asp-for="FormConfig" class="form-control font-monospace" style="font-size:.85rem" rows="21" cols="21" v-model="configJSON" v-on:change="updateFromJSON"></textarea>
+                <span asp-validation-for="FormConfig" class="text-danger"></span>
+            </div>
+        </div>
+    </div>
+</form>

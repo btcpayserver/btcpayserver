@@ -7,22 +7,23 @@
 @inject DisplayFormatter DisplayFormatter
 @model BTCPayServer.Models.ViewPullPaymentModel
 @{
-    ViewData["Title"] = Model.Title;
+	ViewData["Title"] = Model.Title;
 	Csp.UnsafeEval();
-    Layout = null;
-    string StatusTextClass(string status)
-    {
-        switch (status)
-        {
-            case "Completed":
-            case "In Progress":
-                return "bg-success";
-            case "Cancelled":
-                return "bg-danger";
-            default:
-                return "bg-warning";
-        }
-    }
+	Layout = null;
+	string StatusTextClass(string status)
+	{
+		switch (status)
+		{
+			case "Completed":
+			case "In Progress":
+				return "bg-success";
+			case "Cancelled":
+				return "bg-danger";
+			default:
+				return "bg-warning";
+		}
+	}
+	ViewData.SetBlazorAllowed(false);
 }
 <!DOCTYPE html>
 <html lang="en" @(Env.IsDeveloping ? " data-devenv" : "")>

@@ -57,15 +57,6 @@ namespace BTCPayServer.Payments
             return DerivationSchemeSettings.Parse(((JValue)value).Value<string>(), net);
         }
 
-        public override string GetTransactionLink(BTCPayNetworkBase network, string txId)
-        {
-            ArgumentNullException.ThrowIfNull(txId);
-            if (network?.BlockExplorerLink == null)
-                return null;
-            txId = txId.Split('-').First();
-            return string.Format(CultureInfo.InvariantCulture, network.BlockExplorerLink, txId);
-        }
-
         public override string GetPaymentLink(BTCPayNetworkBase network, InvoiceEntity invoice, IPaymentMethodDetails paymentMethodDetails,
             decimal cryptoInfoDue, string serverUri)
         {

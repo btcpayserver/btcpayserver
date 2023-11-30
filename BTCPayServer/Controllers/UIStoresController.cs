@@ -66,7 +66,8 @@ namespace BTCPayServer.Controllers
             IDataProtectionProvider dataProtector,
             IOptions<LightningNetworkOptions> lightningNetworkOptions,
             IOptions<ExternalServicesOptions> externalServiceOptions,
-            IHtmlHelper html)
+            IHtmlHelper html,
+            LightningClientFactoryService lightningClientFactoryService)
         {
             _RateFactory = rateFactory;
             _Repo = repo;
@@ -90,6 +91,7 @@ namespace BTCPayServer.Controllers
             _BtcpayServerOptions = btcpayServerOptions;
             _BTCPayEnv = btcpayEnv;
             _externalServiceOptions = externalServiceOptions;
+            _lightningClientFactoryService = lightningClientFactoryService;
             Html = html;
         }
 
@@ -112,6 +114,7 @@ namespace BTCPayServer.Controllers
         private readonly IFileService _fileService;
         private readonly EventAggregator _EventAggregator;
         private readonly IOptions<ExternalServicesOptions> _externalServiceOptions;
+        private readonly LightningClientFactoryService _lightningClientFactoryService;
 
         public string? GeneratedPairingCode { get; set; }
         public WebhookSender WebhookNotificationManager { get; }
@@ -635,7 +638,7 @@ namespace BTCPayServer.Controllers
                             WalletId = new WalletId(store.Id, paymentMethodId.CryptoCode),
                             Enabled = !excludeFilters.Match(paymentMethodId) && strategy != null,
 #if ALTCOINS
-                            Collapsed = network is ElementsBTCPayNetwork elementsBTCPayNetwork && elementsBTCPayNetwork.NetworkCryptoCode != elementsBTCPayNetwork.CryptoCode && string.IsNullOrEmpty(value)
+                            Collapsed = network is Plugins.Altcoins.ElementsBTCPayNetwork elementsBTCPayNetwork && elementsBTCPayNetwork.NetworkCryptoCode != elementsBTCPayNetwork.CryptoCode && string.IsNullOrEmpty(value)
 #endif
                         });
                         break;

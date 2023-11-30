@@ -44,14 +44,6 @@ const posCommon = {
         totalNumeric () {
             return parseFloat(parseFloat(this.total).toFixed(this.currencyInfo.divisibility))
         },
-        calculation () {
-            if (!this.tipNumeric && !this.discountNumeric) return null
-            let calc = this.formatCurrency(this.amountNumeric, true)
-            if (this.discountNumeric > 0) calc += ` - ${this.formatCurrency(this.discountNumeric, true)} (${this.discountPercent}%)`
-            if (this.tipNumeric > 0) calc += ` + ${this.formatCurrency(this.tipNumeric, true)}`
-            if (this.tipPercent) calc += ` (${this.tipPercent}%)`
-            return calc
-        },
         posdata () {
             const data = {
                 subTotal: this.amountNumeric,
@@ -92,9 +84,6 @@ const posCommon = {
             this.tipPercent = this.tipPercent !== percentage
                 ? percentage
                 : null;
-        },
-        unsetPayButtonLoading () {
-            this.payButtonLoading = false
         },
         formatCrypto (value, withSymbol) {
             const symbol = withSymbol ? ` ${this.currencySymbol || this.currencyCode}` : ''

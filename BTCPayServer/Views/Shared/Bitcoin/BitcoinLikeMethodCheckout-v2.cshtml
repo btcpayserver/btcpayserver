@@ -32,7 +32,7 @@
 
 <script>
     Vue.component('BitcoinLikeMethodCheckout', {
-        props: ["model"],
+        props: ['model', 'nfcSupported', 'nfcScanning', 'nfcErrorMessage'],
         template: "#bitcoin-method-checkout-template",
         components: {
             qrcode: VueQrcode

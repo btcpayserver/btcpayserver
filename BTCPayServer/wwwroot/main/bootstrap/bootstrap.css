@@ -12161,6 +12161,7 @@ fieldset:disabled .btn {
 
 *::-webkit-scrollbar {
   width: var(--btcpay-scrollbar-width);
+  height: var(--btcpay-scrollbar-width);
 }
 
 *::-webkit-scrollbar-track {

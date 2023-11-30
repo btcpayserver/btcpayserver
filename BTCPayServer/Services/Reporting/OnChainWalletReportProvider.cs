@@ -3,14 +3,9 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using BTCPayServer.Data;
 using BTCPayServer.Services.Stores;
-using BTCPayServer.Services.Wallets;
 using Dapper;
-using Microsoft.EntityFrameworkCore;
 using NBitcoin;
-using NBXplorer.DerivationStrategy;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace BTCPayServer.Services.Reporting;
 
@@ -19,7 +14,6 @@ public class OnChainWalletReportProvider : ReportProvider
     public OnChainWalletReportProvider(
         NBXplorerConnectionFactory NbxplorerConnectionFactory,
         StoreRepository storeRepository,
-        DisplayFormatter displayFormatter,
         BTCPayNetworkProvider networkProvider,
         WalletRepository walletRepository)
     {
@@ -27,15 +21,13 @@ public class OnChainWalletReportProvider : ReportProvider
         StoreRepository = storeRepository;
         NetworkProvider = networkProvider;
         WalletRepository = walletRepository;
-        _displayFormatter = displayFormatter;
     }
 
-    private readonly DisplayFormatter _displayFormatter;
     private NBXplorerConnectionFactory NbxplorerConnectionFactory { get; }
     private StoreRepository StoreRepository { get; }
     private BTCPayNetworkProvider NetworkProvider { get; }
     private WalletRepository WalletRepository { get; }
-    public override string Name => "On-Chain Wallets";
+    public override string Name => "Wallets";
     ViewDefinition CreateViewDefinition()
     {
         return new()
@@ -128,7 +120,7 @@ public class OnChainWalletReportProvider : ReportProvider
     private string? GetAssetId(BTCPayNetwork network)
     {
 #if ALTCOINS
-        if (network is ElementsBTCPayNetwork elNetwork)
+        if (network is Plugins.Altcoins.ElementsBTCPayNetwork elNetwork)
         {
             if (elNetwork.CryptoCode == elNetwork.NetworkCryptoCode)
                 return "";

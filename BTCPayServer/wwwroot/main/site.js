@@ -155,9 +155,15 @@ const initLabelManagers = () => {
 
 document.addEventListener("DOMContentLoaded", () => {
     // sticky header
-    const stickyHeader = document.querySelector('#mainContent > section > .sticky-header');
+    const stickyHeader = document.querySelector('#mainContent > section .sticky-header');
     if (stickyHeader) {
-        document.documentElement.style.scrollPaddingTop = `calc(${stickyHeader.offsetHeight}px + var(--btcpay-space-m))`;
+        const setStickyHeaderHeight = () => {
+            document.documentElement.style.setProperty('--sticky-header-height', `${stickyHeader.offsetHeight}px`)
+        }
+        window.addEventListener('resize', e => {
+            debounce('resize', setStickyHeaderHeight, 50)
+        });
+        setStickyHeaderHeight();
     }
     
     // initialize timezone offset value if field is present in page
@@ -291,12 +297,11 @@ document.addEventListener("DOMContentLoaded", () => {
     delegate('click', '.switch-time-format', switchTimeFormat);
 
     // Theme Switch
-    delegate('click', '.btcpay-theme-switch', e => {
+    delegate('click', '.btcpay-theme-switch [data-theme]', e => {
         e.preventDefault()
-        const current = document.documentElement.getAttribute(THEME_ATTR) || COLOR_MODES[0]
-        const mode = current === COLOR_MODES[0] ? COLOR_MODES[1] : COLOR_MODES[0]
-        setColorMode(mode)
-        e.target.closest('.btcpay-theme-switch').blur()
+        const $btn = e.target.closest('.btcpay-theme-switch [data-theme]')
+        setColorMode($btn.dataset.theme)
+        $btn.blur()
     })
 
     // Sensitive Info
@@ -355,6 +360,46 @@ document.addEventListener("DOMContentLoaded", () => {
             window.localStorage.setItem(COLLAPSED_KEY, JSON.stringify(collapsed))
         })
     }
+    
+    // Mass Action Tables
+    const updateSelectedCount = ($table) => {
+        const selectedCount = document.querySelectorAll('.mass-action-select:checked').length;
+        const $selectedCount = $table.querySelector('.mass-action-selected-count');
+        if ($selectedCount) $selectedCount.innerText = selectedCount;
+        if (selectedCount === 0) {
+            $table.removeAttribute('data-selected');
+        } else {
+            $table.setAttribute('data-selected', selectedCount.toString());
+        }
+    }
+
+    delegate('click', '.mass-action .mass-action-select-all', e => {
+        const $table = e.target.closest('.mass-action');
+        const { checked } = e.target;
+        $table.querySelectorAll('.mass-action-select,.mass-action-select-all').forEach($checkbox => {
+            $checkbox.checked = checked;
+        });
+        updateSelectedCount($table);
+    });
+
+    delegate('change', '.mass-action .mass-action-select', e => {
+        const $table = e.target.closest('.mass-action');
+        const selectedCount = $table.querySelectorAll('.mass-action-select:checked').length;
+        if (selectedCount === 0) {
+            $table.querySelectorAll('.mass-action-select-all').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+        }
+        updateSelectedCount($table);
+    });
+
+    delegate('click', '.mass-action .mass-action-row', e => {
+        const $target = e.target
+        if ($target.matches('td,time,span[data-sensitive]')) {
+            const $row = $target.closest('.mass-action-row');
+            $row.querySelector('.mass-action-select').click();
+        }
+    });
 });
 
 // Initialize Blazor
@@ -448,3 +493,25 @@ if (window.Blazor) {
         reconnectionHandler: handler
     });
 }
+
+String.prototype.noExponents= function(){
+    const data = String(this).split(/[eE]/);
+    if(data.length== 1) return data[0];
+
+    var  z= '', sign= this<0? '-':'',
+        str= data[0].replace('.', ''),
+        mag= Number(data[1])+ 1;
+
+    if(mag<0){
+        z= sign + '0.';
+        while(mag++) z += '0';
+        return z + str.replace(/^\-/,'');
+    }
+    mag -= str.length;
+    while(mag--) z += '0';
+    return str + z;
+}
+
+Number.prototype.noExponents= function(){
+    return  String(this).noExponents();
+};

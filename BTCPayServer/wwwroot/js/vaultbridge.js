@@ -7,8 +7,6 @@ var vault = (function () {
          * @type {WebSocket}
          */
         this.socket = websocket;
-        this.onerror = function (error) { };
-        this.onbackendmessage = function (json) { };
         this.close = function () { if (websocket) websocket.close(); };
         /**
         * @returns {Promise}
@@ -23,28 +21,37 @@ var vault = (function () {
                 if (event.data === "ping")
                     return;
                 var jsonObject = JSON.parse(event.data);
-                if (jsonObject.hasOwnProperty("params")) {
+                if (jsonObject.command == "sendRequest") {
                     var request = new XMLHttpRequest();
                     request.onreadystatechange = function () {
-                        if (request.readyState == 4 && request.status == 200) {
-                            if (self.socket.readyState == 1)
-                                self.socket.send(request.responseText);
-                            else
-                                self.onerror(vault.errors.socketError);
-                        }
-                        if (request.readyState == 4 && request.status == 0) {
-                            self.onerror(vault.errors.notRunning);
-                        }
-                        if (request.readyState == 4 && request.status == 401) {
-                            self.onerror(vault.errors.denied);
+                        if (request.readyState == 4) {
+                            if (request.status === 0) {
+                                self.socket.send("{\"error\": \"Failed to connect to uri\"}");
+                            }
+                            else if (self.socket.readyState == 1) {
+                                var body = null;
+                                if (request.responseText) {
+                                    var contentType = request.getResponseHeader('Content-Type') || 'text/plain';
+                                    if (contentType === 'text/plain')
+                                        body = request.responseText;
+                                    else
+                                        body = JSON.parse(request.responseText);
+                                }
+                                
+                                self.socket.send(JSON.stringify(
+                                    {
+                                        httpCode: request.status,
+                                        body: body
+                                    }));
+                            }
                         }
                     };
                     request.overrideMimeType("text/plain");
-                    request.open('POST', 'http://127.0.0.1:65092/hwi-bridge/v1');
-                    request.send(JSON.stringify(jsonObject));
+                    request.open('POST', jsonObject.uri);
+                    jsonObject.body = jsonObject.body || {};
+                    request.send(JSON.stringify(jsonObject.body));
                 }
                 else {
-                    self.onbackendmessage(jsonObject);
                     if (self.nextResolveBackendMessage)
                         self.nextResolveBackendMessage(jsonObject);
                 }

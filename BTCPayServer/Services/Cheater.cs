@@ -36,15 +36,14 @@ namespace BTCPayServer.Services
 
         async Task IHostedService.StartAsync(CancellationToken cancellationToken)
         {
-            _ = CashCow?.ScanRPCCapabilitiesAsync(cancellationToken);
 #if ALTCOINS
             var liquid = _prov.GetNetwork("LBTC");
             if (liquid is not null)
             {
                 var lbtcrpc = GetCashCow(liquid.CryptoCode);
                 await lbtcrpc.SendCommandAsync("rescanblockchain");
-                var elements = _prov.NetworkProviders.GetAll().OfType<ElementsBTCPayNetwork>();
-                foreach (ElementsBTCPayNetwork element in elements)
+                var elements = _prov.NetworkProviders.GetAll().OfType<Plugins.Altcoins.ElementsBTCPayNetwork>();
+                foreach (Plugins.Altcoins.ElementsBTCPayNetwork element in elements)
                 {
                     try
                     {
@@ -54,12 +53,14 @@ namespace BTCPayServer.Services
                             element.AssetId = uint256.Parse(issueAssetResult.Result["asset"].ToString());
                         }
                     }
-                    catch (Exception e)
+                    catch (Exception)
                     {
                     }
                 }
             }
-
+#else
+            if (CashCow is { } c)
+                await c.ScanRPCCapabilitiesAsync(cancellationToken);
 #endif
         }
 

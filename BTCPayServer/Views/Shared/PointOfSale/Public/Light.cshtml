@@ -13,7 +13,7 @@
     <script src="~/pos/common.js" asp-append-version="true"></script>
     <script src="~/pos/keypad.js" asp-append-version="true"></script>
 }
-<div class="public-page-wrap">
+<div id="PosKeypad" class="public-page-wrap">
     <partial name="_StatusMessage" />
     <partial name="_StoreHeader" model="(string.IsNullOrEmpty(Model.Title) ? Model.StoreName : Model.Title, Model.LogoFileId)" />
     @if (Context.Request.Query.ContainsKey("simple"))

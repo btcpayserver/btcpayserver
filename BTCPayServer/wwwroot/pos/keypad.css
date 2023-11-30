@@ -1,6 +1,40 @@
-.public-page-wrap {
-    max-width: 560px;
+#PosKeypad {
+    --wrap-max-width: 500px;
     overflow: hidden;
+    position: relative;
+}
+
+#RecentTransactionsToggle {
+    position: absolute;
+    top: var(--btcpay-space-l);
+    left: var(--btcpay-space-m);
+    z-index: 1;
+}
+
+#RecentTransactionsToggle .icon {
+    --btn-icon-size: 2.25em;
+}
+#RecentTransactionsRefresh[disabled] .icon {
+    animation: 1.25s linear infinite spinner-border;
+}
+#RecentTransactions .list-group {
+    margin: calc(var(--btcpay-modal-padding) * -1);
+    width: calc(100% + var(--btcpay-modal-padding) * 2);
+}
+
+#RecentTransactions .list-group-item {
+    background-color: transparent;
+}
+
+#RecentTransactions .list-group .badge-container {
+    flex: 0 0 5.125rem;
+    text-align: right;
+}
+
+@media (max-width: 359px) {
+    #RecentTransactions .list-group .badge-container {
+        flex-grow: 1;
+    }
 }
 
 /* modes */
@@ -20,6 +54,7 @@
     padding: 0;
     position: relative;
     border-radius: 0;
+    border-color: transparent !important;
     font-weight: var(--btcpay-font-weight-semibold);
     font-size: 24px;
     min-height: 3.5rem;
@@ -27,9 +62,8 @@
     max-height: 6rem;
     color: var(--btcpay-body-text);
 }
-.keypad .btn[data-key="del"] svg {
-    --btn-icon-size: 2.25rem;
-    transform: rotate(180deg);
+.keypad .btn[data-key="+"] {
+    font-size: 2.25em;
 }
 .btcpay-pills label,
 .btn-secondary.rounded-pill {
@@ -57,15 +91,6 @@
     z-index: 1;
 }
 
-.actions {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-.actions .btn {
-    flex:  1 1 50%;
-}
-
 #Calculation {
     min-height: 1.5rem;
 }
@@ -76,9 +101,9 @@
     }
 }
 @media (max-width: 575px) {
-    .public-page-wrap {
-        padding-right: 0;
-        padding-left: 0;
+    #PosKeypad {
+        --wrap-padding-horizontal: 0;
+        overflow: hidden;
     }
     .keypad {
         margin-left: -1px;
@@ -90,7 +115,6 @@
 }
 /* fix sticky hover effect on mobile browsers */
 @media (hover: none) {
-    .keypad .btn-secondary:hover,
     .actions .btn-secondary:hover {
         border-color: var(--btcpay-secondary-border-active) !important;
     }

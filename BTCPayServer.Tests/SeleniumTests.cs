@@ -938,8 +938,9 @@ namespace BTCPayServer.Tests
                     Policies.CanModifyServerSettings
              });
 
+            s.GoToUrl("/logout");
             await alice.MakeAdmin();
-            s.Logout();
+            
             s.GoToLogin();
             s.LogIn(alice.Email, alice.Password);
             s.GoToUrl($"/cheat/permissions/stores/{alice.StoreId}");

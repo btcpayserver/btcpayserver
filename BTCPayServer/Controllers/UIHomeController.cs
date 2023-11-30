@@ -200,7 +200,7 @@ namespace BTCPayServer.Controllers
         public static RedirectToActionResult RedirectToStore(string userId, StoreData store)
         {
             var perms = store.GetPermissionSet(userId);
-            if (perms.Contains(Policies.CanViewStoreSettings, store.Id))
+            if (perms.Contains(Policies.CanModifyStoreSettings, store.Id))
                 return new RedirectToActionResult("Dashboard", "UIStores", new {storeId = store.Id});
             if (perms.Contains(Policies.CanViewInvoices, store.Id))
                 return new RedirectToActionResult("ListInvoices", "UIInvoice", new { storeId = store.Id });

@@ -65,6 +65,8 @@ namespace BTCPayServer.Plugins.PointOfSale.Models
         public PosViewType ViewType { get; set; }
         public bool ShowCustomAmount { get; set; }
         public bool ShowDiscount { get; set; }
+        public bool ShowSearch { get; set; } = true;
+        public bool ShowCategories { get; set; } = true;
         public bool EnableTips { get; set; }
         public string Step { get; set; }
         public string Title { get; set; }

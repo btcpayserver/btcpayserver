@@ -30,9 +30,6 @@ namespace BTCPayServer.Data
         public List<PendingInvoiceData> PendingInvoices { get; set; }
         public List<InvoiceSearchData> InvoiceSearchData { get; set; }
         public List<RefundData> Refunds { get; set; }
-        public string CurrentRefundId { get; set; }
-        [ForeignKey("Id,CurrentRefundId")]
-        public RefundData CurrentRefund { get; set; }
 
 
         internal static void OnModelCreating(ModelBuilder builder, DatabaseFacade databaseFacade)
@@ -42,8 +39,6 @@ namespace BTCPayServer.Data
                 .WithMany(a => a.Invoices).OnDelete(DeleteBehavior.Cascade);
             builder.Entity<InvoiceData>().HasIndex(o => o.StoreDataId);
             builder.Entity<InvoiceData>().HasIndex(o => o.OrderId);
-            builder.Entity<InvoiceData>()
-                .HasOne(o => o.CurrentRefund);
             builder.Entity<InvoiceData>().HasIndex(o => o.Created);
 
             if (databaseFacade.IsNpgsql())

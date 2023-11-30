@@ -20,6 +20,7 @@ namespace BTCPayServer.PaymentRequest
         private readonly BTCPayNetworkProvider _BtcPayNetworkProvider;
         private readonly InvoiceRepository _invoiceRepository;
         private readonly CurrencyNameTable _currencies;
+        private readonly TransactionLinkProviders _transactionLinkProviders;
         private readonly DisplayFormatter _displayFormatter;
 
         public PaymentRequestService(
@@ -27,12 +28,14 @@ namespace BTCPayServer.PaymentRequest
             BTCPayNetworkProvider btcPayNetworkProvider,
             InvoiceRepository invoiceRepository,
             DisplayFormatter displayFormatter,
-            CurrencyNameTable currencies)
+            CurrencyNameTable currencies,
+            TransactionLinkProviders transactionLinkProviders)
         {
             _PaymentRequestRepository = paymentRequestRepository;
             _BtcPayNetworkProvider = btcPayNetworkProvider;
             _invoiceRepository = invoiceRepository;
             _currencies = currencies;
+            _transactionLinkProviders = transactionLinkProviders;
             _displayFormatter = displayFormatter;
         }
 
@@ -116,35 +119,7 @@ namespace BTCPayServer.PaymentRequest
                 Invoices = new ViewPaymentRequestViewModel.InvoiceList(invoices.Select(entity =>
                 {
                     var state = entity.GetInvoiceState();
-                    var payments = entity
-                        .GetPayments(true)
-                        .Select(paymentEntity =>
-                        {
-                            var paymentData = paymentEntity.GetCryptoPaymentData();
-                            var paymentMethodId = paymentEntity.GetPaymentMethodId();
-                            if (paymentData is null || paymentMethodId is null)
-                            {
-                                return null;
-                            }
-
-                            string txId = paymentData.GetPaymentId();
-                            string link = GetTransactionLink(paymentMethodId, txId);
-
-                            return new ViewPaymentRequestViewModel.PaymentRequestInvoicePayment
-                            {
-                                Amount = paymentEntity.PaidAmount.Gross,
-                                Paid = paymentEntity.InvoicePaidAmount.Net,
-                                ReceivedDate = paymentEntity.ReceivedTime.DateTime,
-                                PaidFormatted = _displayFormatter.Currency(paymentEntity.InvoicePaidAmount.Net, blob.Currency, DisplayFormatter.CurrencyFormat.Symbol),
-                                RateFormatted = _displayFormatter.Currency(paymentEntity.Rate, blob.Currency, DisplayFormatter.CurrencyFormat.Symbol),
-                                PaymentMethod = paymentMethodId.ToPrettyString(),
-                                Link = link,
-                                Id = txId,
-                                Destination = paymentData.GetDestination()
-                            };
-                        })
-                        .Where(payment => payment != null)
-                        .ToList();
+                    var payments = ViewPaymentRequestViewModel.PaymentRequestInvoicePayment.GetViewModels(entity, _displayFormatter, _transactionLinkProviders);
 
                     if (state.Status == InvoiceStatusLegacy.Invalid ||
                         state.Status == InvoiceStatusLegacy.Expired && !payments.Any())
@@ -164,14 +139,6 @@ namespace BTCPayServer.PaymentRequest
                 })
                 .Where(invoice => invoice != null))
             };
-        }
-
-        private string GetTransactionLink(PaymentMethodId paymentMethodId, string txId)
-        {
-            var network = _BtcPayNetworkProvider.GetNetwork(paymentMethodId.CryptoCode);
-            if (network == null)
-                return null;
-            return paymentMethodId.PaymentType.GetTransactionLink(network, txId);
         }
     }
 }

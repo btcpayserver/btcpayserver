@@ -185,7 +185,6 @@ namespace BTCPayServer.Controllers.Greenfield
             blob.NetworkFeeMode = restModel.NetworkFeeMode;
             blob.DefaultCurrency = restModel.DefaultCurrency;
             blob.RequiresRefundEmail = restModel.RequiresRefundEmail;
-            blob.CheckoutType = restModel.CheckoutType;
             blob.ReceiptOptions = InvoiceDataBase.ReceiptOptions.Merge(restModel.Receipt, null);
             blob.LightningAmountInSatoshi = restModel.LightningAmountInSatoshi;
             blob.LightningPrivateRouteHints = restModel.LightningPrivateRouteHints;
@@ -206,6 +205,8 @@ namespace BTCPayServer.Controllers.Greenfield
             blob.LightningDescriptionTemplate = restModel.LightningDescriptionTemplate;
             blob.PaymentTolerance = restModel.PaymentTolerance;
             blob.PayJoinEnabled = restModel.PayJoinEnabled;
+            if (restModel.CheckoutType.HasValue)
+                blob.CheckoutType = restModel.CheckoutType.Value;
             if (restModel.AutoDetectLanguage.HasValue)
                 blob.AutoDetectLanguage = restModel.AutoDetectLanguage.Value;
             if (restModel.ShowPayInWalletButton.HasValue)

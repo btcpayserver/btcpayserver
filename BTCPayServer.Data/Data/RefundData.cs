@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace BTCPayServer.Data
 {
@@ -12,7 +13,6 @@ namespace BTCPayServer.Data
         public string PullPaymentDataId { get; set; }
         public PullPaymentData PullPaymentData { get; set; }
         public InvoiceData InvoiceData { get; set; }
-
 
         internal static void OnModelCreating(ModelBuilder builder)
         {

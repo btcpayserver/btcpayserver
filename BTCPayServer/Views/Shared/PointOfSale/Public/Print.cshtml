@@ -42,7 +42,7 @@ else
         <a asp-route-viewType="static" class="alert-link">Regular version</a>
     </div>
 }
-<div id="PosPrint" class="public-page-wrap container-xl">
+<div id="PosPrint" class="public-page-wrap">
     <partial name="_StatusMessage" />
     <partial name="_StoreHeader" model="(string.IsNullOrEmpty(Model.Title) ? Model.StoreName : Model.Title, Model.LogoFileId)" />
     @if (!string.IsNullOrEmpty(Model.Description))

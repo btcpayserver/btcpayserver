@@ -1,6 +1,7 @@
 const description = document.getElementById('description');
 const products = document.getElementById('products');
 const tips = document.getElementById('tips');
+const cart = document.getElementById('cart-display');
 const discounts = document.getElementById('discounts');
 const buttonPriceText = document.getElementById('button-price-text');
 const customPayments = document.getElementById('custom-payments');
@@ -16,6 +17,7 @@ function updateFormForDefaultView(type) {
         case 'Static':
         case 'Print':
             hide(tips);
+            hide(cart);
             hide(discounts);
             hide(buttonPriceText);
             show(description);
@@ -23,6 +25,7 @@ function updateFormForDefaultView(type) {
             show(customPayments);
             break;
         case 'Cart':
+            show(cart);
             show(tips);
             show(products);
             show(discounts);
@@ -33,6 +36,7 @@ function updateFormForDefaultView(type) {
         case 'Light':
             show(tips);
             show(discounts);
+            hide(cart);
             hide(products);
             hide(description);
             hide(buttonPriceText);

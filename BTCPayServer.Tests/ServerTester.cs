@@ -5,11 +5,14 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
+using BTCPayServer.Hosting;
 using BTCPayServer.Lightning;
 using BTCPayServer.Lightning.CLightning;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Tests.Lnd;
 using BTCPayServer.Tests.Logging;
+using Microsoft.Extensions.Configuration.Memory;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBitcoin.RPC;
@@ -26,7 +29,7 @@ namespace BTCPayServer.Tests
         public ILoggerProvider LoggerProvider { get; }
 
         internal ILog TestLogs;
-        public ServerTester(string scope, bool newDb, ILog testLogs, ILoggerProvider loggerProvider)
+        public ServerTester(string scope, bool newDb, ILog testLogs, ILoggerProvider loggerProvider, BTCPayNetworkProvider networkProvider)
         {
             LoggerProvider = loggerProvider;
             this.TestLogs = testLogs;
@@ -36,7 +39,7 @@ namespace BTCPayServer.Tests
             if (!Directory.Exists(_Directory))
                 Directory.CreateDirectory(_Directory);
 
-            NetworkProvider = new BTCPayNetworkProvider(ChainName.Regtest);
+            NetworkProvider = networkProvider;
             ExplorerNode = new RPCClient(RPCCredentialString.Parse(GetEnvironment("TESTS_BTCRPCCONNECTION", "server=http://127.0.0.1:43782;ceiwHEbqWI83:DwubwWsoo3")), NetworkProvider.GetNetwork<BTCPayNetwork>("BTC").NBitcoinNetwork);
             ExplorerNode.ScanRPCCapabilities();
 
@@ -94,17 +97,18 @@ namespace BTCPayServer.Tests
         {
             ActivateLightning(LightningConnectionType.CLightning);
         }
-        public void ActivateLightning(LightningConnectionType internalNode)
+        public void ActivateLightning(string internalNode)
         {
             var btc = NetworkProvider.GetNetwork<BTCPayNetwork>("BTC").NBitcoinNetwork;
-            CustomerLightningD = LightningClientFactory.CreateClient(GetEnvironment("TEST_CUSTOMERLIGHTNINGD", "type=clightning;server=tcp://127.0.0.1:30992/"), btc);
-            MerchantLightningD = LightningClientFactory.CreateClient(GetEnvironment("TEST_MERCHANTLIGHTNINGD", "type=clightning;server=tcp://127.0.0.1:30993/"), btc);
+            var factory = new LightningClientFactory(btc);
+            CustomerLightningD = factory.Create(GetEnvironment("TEST_CUSTOMERLIGHTNINGD", "type=clightning;server=tcp://127.0.0.1:30992/"));
+            MerchantLightningD = factory.Create(GetEnvironment("TEST_MERCHANTLIGHTNINGD", "type=clightning;server=tcp://127.0.0.1:30993/"));
             MerchantCharge = new ChargeTester(this, "TEST_MERCHANTCHARGE", "type=charge;server=http://127.0.0.1:54938/;api-token=foiewnccewuify;allowinsecure=true", "merchant_lightningd", btc);
             MerchantLnd = new LndMockTester(this, "TEST_MERCHANTLND", "http://lnd:lnd@127.0.0.1:35531/", "merchant_lnd", btc);
             PayTester.UseLightning = true;
             PayTester.IntegratedLightning = GetLightningConnectionString(internalNode, true);
         }
-        public string GetLightningConnectionString(LightningConnectionType? connectionType, bool isMerchant)
+        public string GetLightningConnectionString(string connectionType, bool isMerchant)
         {
             string connectionString = null;
             if (connectionType is null)

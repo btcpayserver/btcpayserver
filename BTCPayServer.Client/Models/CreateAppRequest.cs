@@ -28,6 +28,8 @@ namespace BTCPayServer.Client.Models
         public PosViewType DefaultView { get; set; }
         public bool ShowCustomAmount { get; set; } = false;
         public bool ShowDiscount { get; set; } = true;
+        public bool ShowSearch { get; set; } = true;
+        public bool ShowCategories { get; set; } = true;
         public bool EnableTips { get; set; } = true;
         public string CustomAmountPayButtonText { get; set; } = null;
         public string FixedAmountPayButtonText { get; set; } = null;
@@ -40,7 +42,6 @@ namespace BTCPayServer.Client.Models
         public bool? Archived { get; set; } = null;
         public string FormId { get; set; } = null;
         public string EmbeddedCSS { get; set; } = null;
-        public CheckoutType? CheckoutType { get; set; } = null;
     }
 
     public enum CrowdfundResetEvery

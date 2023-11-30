@@ -1,3 +1,8 @@
+#PosPrint,
+#PosStatic {
+    --wrap-max-width: 1320px;
+}
+
 .lead {
     max-width: 36em;
     text-align: center;

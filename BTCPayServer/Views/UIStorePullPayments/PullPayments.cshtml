@@ -119,7 +119,7 @@
                 <th scope="col">Name</th>
                 <th scope="col">Automatically Approved</th>
                 <th scope="col">Refunded</th>
-                <th scope="col"></th>
+                <th scope="col" class="actions-col"></th>
             </tr>
             </thead>
             <tbody>
@@ -146,11 +146,12 @@
                             </div>
                         </div>
                     </td>
-                    <td class="text-end">
+                    <td class="actions-col">
                         <div class="d-inline-flex align-items-center gap-3">
                             <a asp-action="ViewPullPayment"
                                asp-controller="UIPullPayment"
-                               asp-route-pullPaymentId="@pp.Id">
+                               asp-route-pullPaymentId="@pp.Id"
+                               target="_blank">
                                 View
                             </a>
                             <a class="pp-payout"

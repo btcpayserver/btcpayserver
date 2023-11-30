@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Extensions;
-using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Services.Wallets;
 using Dapper;
@@ -13,6 +13,7 @@ using NBitcoin;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Npgsql;
+using Org.BouncyCastle.Utilities;
 
 namespace BTCPayServer.Services
 {
@@ -365,14 +366,43 @@ namespace BTCPayServer.Services
 
         public async Task EnsureWalletObjectLink(WalletObjectId a, WalletObjectId b, JObject? data = null)
         {
-            SortWalletObjectLinks(ref a, ref b);
+            await EnsureWalletObjectLink(NewWalletObjectLinkData(a, b, data));
+        }  
+        public async Task EnsureWalletObjectLink(WalletObjectLinkData l)
+        {
             await using var ctx = _ContextFactory.CreateContext();
-            await UpdateWalletObjectLink(a, b, data, ctx, true);
+            await UpdateWalletObjectLink(l, ctx, true);
+        }
+        private IEnumerable<WalletObjectData> ExtractObjectsFromLinks(IEnumerable<WalletObjectLinkData> links)
+        {
+            return links.SelectMany(data => new[]
+            {
+                new WalletObjectData() {WalletId = data.WalletId, Type = data.AType, Id = data.AId},
+                new WalletObjectData() {WalletId = data.WalletId, Type = data.BType, Id = data.BId}
+            }).Distinct();
+
+        }
+        private async Task EnsureWalletObjectLinks(ApplicationDbContext ctx, DbConnection connection, IEnumerable<WalletObjectLinkData> links)
+        {
+            if (!ctx.Database.IsNpgsql())
+            {
+                foreach (var link in links)
+                {
+                    await EnsureWalletObjectLink(link);
+                }
+            }
+            else
+            {
+                var conn = ctx.Database.GetDbConnection();
+                await conn.ExecuteAsync("INSERT INTO \"WalletObjectLinks\" VALUES (@WalletId, @AType, @AId, @BType, @BId, @Data::JSONB) ON CONFLICT DO NOTHING", links);
+            }
         }
 
-        private static async Task UpdateWalletObjectLink(WalletObjectId a, WalletObjectId b, JObject? data, ApplicationDbContext ctx, bool doNothingIfExists)
+        public static WalletObjectLinkData NewWalletObjectLinkData(WalletObjectId a, WalletObjectId b,
+            JObject? data = null)
         {
-            var l = new WalletObjectLinkData()
+            SortWalletObjectLinks(ref a, ref b);
+            return  new WalletObjectLinkData()
             {
                 WalletId = a.WalletId.ToString(),
                 AType = a.Type,
@@ -381,6 +411,10 @@ namespace BTCPayServer.Services
                 BId = b.Id,
                 Data = data?.ToString(Formatting.None)
             };
+        }
+
+        private static async Task UpdateWalletObjectLink(WalletObjectLinkData l, ApplicationDbContext ctx, bool doNothingIfExists)
+        {
             if (!ctx.Database.IsNpgsql())
             {
                 var e = ctx.WalletObjectLinks.Add(l);
@@ -424,7 +458,7 @@ namespace BTCPayServer.Services
             }
         }
 
-        private void SortWalletObjectLinks(ref WalletObjectId a, ref WalletObjectId b)
+        private static void SortWalletObjectLinks(ref WalletObjectId a, ref WalletObjectId b)
         {
             if (a.WalletId != b.WalletId)
                 throw new ArgumentException("It shouldn't be possible to set a link between different wallets");
@@ -433,13 +467,11 @@ namespace BTCPayServer.Services
             a = ab[0];
             b = ab[1];
         }
+
         public async Task SetWalletObjectLink(WalletObjectId a, WalletObjectId b, JObject? data = null)
         {
-            SortWalletObjectLinks(ref a, ref b);
-
-
             await using var ctx = _ContextFactory.CreateContext();
-            await UpdateWalletObjectLink(a, b, data, ctx, false);
+            await UpdateWalletObjectLink(NewWalletObjectLinkData(a, b, data), ctx, false);
         }
 
         public static int MaxCommentSize = 200;
@@ -454,7 +486,7 @@ namespace BTCPayServer.Services
         }
 
 
-        static WalletObjectData NewWalletObjectData(WalletObjectId id, JObject? data = null)
+        public static WalletObjectData NewWalletObjectData(WalletObjectId id, JObject? data = null)
         {
             return new WalletObjectData()
             {
@@ -487,16 +519,17 @@ namespace BTCPayServer.Services
         public async Task AddWalletObjectLabels(WalletObjectId id, params string[] labels)
         {
             ArgumentNullException.ThrowIfNull(id);
-            await EnsureWalletObject(id);
+            var objs = new List<WalletObjectData>();
+            var links = new List<WalletObjectLinkData>();
+            objs.Add(NewWalletObjectData(id));
             foreach (var l in labels.Select(l => l.Trim().Truncate(MaxLabelSize)))
             {
                 var labelObjId = new WalletObjectId(id.WalletId, WalletObjectData.Types.Label, l);
-                await EnsureWalletObject(labelObjId, new JObject()
-                {
-                    ["color"] = ColorPalette.Default.DeterministicColor(l)
-                });
-                await EnsureWalletObjectLink(labelObjId, id);
+                objs.Add(NewWalletObjectData(labelObjId,
+                    new JObject() {["color"] = ColorPalette.Default.DeterministicColor(l)}));
+                links.Add(NewWalletObjectLinkData(labelObjId, id));
             }
+            await EnsureCreated(objs, links);
         }
         public Task AddWalletTransactionAttachment(WalletId walletId, uint256 txId, Attachment attachment)
         {
@@ -509,27 +542,38 @@ namespace BTCPayServer.Services
             return AddWalletTransactionAttachment(walletId, txId.ToString(), attachments, WalletObjectData.Types.Tx);
         }
 
+        public async Task AddWalletTransactionAttachments((WalletId walletId, string txId,
+            IEnumerable<Attachment> attachments, string type)[] reqs)
+        {
+            
+            List<WalletObjectData> objs = new();
+            List<WalletObjectLinkData> links = new();
+            foreach ((WalletId walletId, string txId, IEnumerable<Attachment> attachments, string type) req in reqs)
+            {
+                var txObjId = new WalletObjectId(req.walletId, req.type, req.txId);
+                objs.Add(NewWalletObjectData(txObjId));
+                foreach (var attachment in req.attachments)
+                {
+                    var labelObjId = new WalletObjectId(req.walletId, WalletObjectData.Types.Label, attachment.Type);
+                    objs.Add(NewWalletObjectData(labelObjId,
+                        new JObject() {["color"] = ColorPalette.Default.DeterministicColor(attachment.Type)}));
+                    links.Add(NewWalletObjectLinkData(labelObjId, txObjId));
+                    if (attachment.Data is not null || attachment.Id.Length != 0)
+                    {
+                        var data = new WalletObjectId(req.walletId, attachment.Type, attachment.Id);
+                        objs.Add(NewWalletObjectData(data, attachment.Data));
+                        links.Add(NewWalletObjectLinkData(data, txObjId));
+                    }
+                }
+            }
+            await EnsureCreated(objs, links);
+        }
+
         public async Task AddWalletTransactionAttachment(WalletId walletId, string txId, IEnumerable<Attachment> attachments, string type)
         {
             ArgumentNullException.ThrowIfNull(walletId);
             ArgumentNullException.ThrowIfNull(txId);
-            var txObjId = new WalletObjectId(walletId, type, txId.ToString());
-            await EnsureWalletObject(txObjId);
-            foreach (var attachment in attachments)
-            {
-                var labelObjId = new WalletObjectId(walletId, WalletObjectData.Types.Label, attachment.Type);
-                await EnsureWalletObject(labelObjId, new JObject()
-                {
-                    ["color"] = ColorPalette.Default.DeterministicColor(attachment.Type)
-                });
-                await EnsureWalletObjectLink(labelObjId, txObjId);
-                if (attachment.Data is not null || attachment.Id.Length != 0)
-                {
-                    var data = new WalletObjectId(walletId, attachment.Type, attachment.Id);
-                    await EnsureWalletObject(data, attachment.Data);
-                    await EnsureWalletObjectLink(data, txObjId);
-                }
-            }
+            await AddWalletTransactionAttachments(new[] {(walletId, txId, attachments, type)});
         }
 
         public async Task<bool> RemoveWalletObjectLink(WalletObjectId a, WalletObjectId b)
@@ -606,15 +650,22 @@ namespace BTCPayServer.Services
             ArgumentNullException.ThrowIfNull(id);
             var wo = NewWalletObjectData(id, data);
             await using var ctx = _ContextFactory.CreateContext();
+            await EnsureWalletObject(wo, ctx);
+        }
+
+        private async Task EnsureWalletObject(WalletObjectData wo, ApplicationDbContext ctx)
+        {
+            ArgumentNullException.ThrowIfNull(wo);
             if (!ctx.Database.IsNpgsql())
             {
-                ctx.WalletObjects.Add(wo);
+                var entry = ctx.WalletObjects.Add(wo);
                 try
                 {
                     await ctx.SaveChangesAsync();
                 }
                 catch (DbUpdateException) // already exists
                 {
+                    entry.State = EntityState.Unchanged;
                 }
             }
             else
@@ -622,6 +673,38 @@ namespace BTCPayServer.Services
                 var connection = ctx.Database.GetDbConnection();
                 await connection.ExecuteAsync("INSERT INTO \"WalletObjects\" VALUES (@WalletId, @Type, @Id, @Data::JSONB) ON CONFLICT DO NOTHING", wo);
             }
+        }
+        private async Task EnsureWalletObjects(ApplicationDbContext ctx,DbConnection connection, IEnumerable<WalletObjectData> data)
+        {
+            var walletObjectDatas = data as WalletObjectData[] ?? data.ToArray();
+            if(!walletObjectDatas.Any())
+                return; 
+            if (!ctx.Database.IsNpgsql())
+            {
+                foreach(var d in walletObjectDatas)
+                {
+                    await EnsureWalletObject(d, ctx);
+                }
+            }
+            else
+            {
+                var conn = ctx.Database.GetDbConnection();
+                await conn.ExecuteAsync("INSERT INTO \"WalletObjects\" VALUES (@WalletId, @Type, @Id, @Data::JSONB) ON CONFLICT DO NOTHING", walletObjectDatas);
+            }
+        }
+
+        public async Task EnsureCreated(List<WalletObjectData>? walletObjects,
+            List<WalletObjectLinkData>? walletObjectLinks)
+        {
+            walletObjects ??= new List<WalletObjectData>();
+            walletObjectLinks ??= new List<WalletObjectLinkData>();
+            var objs = walletObjects.Concat(ExtractObjectsFromLinks(walletObjectLinks).Except(walletObjects)).ToArray();
+            await using var ctx = _ContextFactory.CreateContext();
+            await using var connection = ctx.Database.GetDbConnection();
+            await connection.OpenAsync();
+            await EnsureWalletObjects(ctx,connection, objs);
+            await EnsureWalletObjectLinks(ctx,connection, walletObjectLinks);
+            await connection.CloseAsync();
         }
 #nullable restore
     }

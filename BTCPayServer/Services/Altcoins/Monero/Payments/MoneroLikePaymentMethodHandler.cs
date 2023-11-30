@@ -9,6 +9,7 @@ using BTCPayServer.Logging;
 using BTCPayServer.Models;
 using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Payments;
+using BTCPayServer.Plugins.Altcoins;
 using BTCPayServer.Rating;
 using BTCPayServer.Services.Altcoins.Monero.RPC.Models;
 using BTCPayServer.Services.Altcoins.Monero.Services;

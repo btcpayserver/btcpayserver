@@ -24,7 +24,7 @@
 
 <script>
     Vue.component('LightningLikeMethodCheckout', {
-        props: ["model"],
+        props: ['model', 'nfcSupported', 'nfcScanning', 'nfcErrorMessage'],
         template: "#lightning-method-checkout-template",
         components: {
             qrcode: VueQrcode

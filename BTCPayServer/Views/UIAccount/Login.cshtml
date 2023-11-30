@@ -12,16 +12,16 @@
         <div asp-validation-summary="ModelOnly" class="text-danger"></div>
         <div class="form-group">
             <label asp-for="Email" class="form-label"></label>
-            <input asp-for="Email" class="form-control" required tabindex="1" autofocus/>
+            <input asp-for="Email" class="form-control" required autofocus/>
             <span asp-validation-for="Email" class="text-danger"></span>
         </div>
         <div class="form-group">
             <div class="d-flex justify-content-between">
                 <label asp-for="Password" class="form-label"></label>
-                <a asp-action="ForgotPassword" tabindex="5">Forgot password?</a>
+                <a asp-action="ForgotPassword" >Forgot password?</a>
             </div>
             <div class="input-group d-flex">
-                <input asp-for="Password" class="form-control" required tabindex="2"/>
+                <input asp-for="Password" class="form-control" required />
             </div>
             <span asp-validation-for="Password" class="text-danger"></span>
         </div>
@@ -32,8 +32,8 @@
         </div>
         <div class="form-group mt-4">
             <div class="btn-group w-100">
-                <button type="submit" class="btn btn-primary btn-lg w-100" id="LoginButton" tabindex="3"><span class="ps-3">Sign in</span></button>
-                <button type="button" class="btn btn-outline-primary btn-lg w-auto only-for-js" data-bs-toggle="modal" data-bs-target="#scanModal" title="Scan Login code with camera" tabindex="4"><i class="fa fa-camera"></i></button>
+                <button type="submit" class="btn btn-primary btn-lg w-100" id="LoginButton"><span class="ps-3">Sign in</span></button>
+                <button type="button" class="btn btn-outline-primary btn-lg w-auto only-for-js" data-bs-toggle="modal" data-bs-target="#scanModal" title="Scan Login code with camera"><i class="fa fa-camera"></i></button>
             </div>
         </div>
     </fieldset>
@@ -44,7 +44,7 @@
 @if (!PoliciesSettings.LockSubscription)
 {
     <p class="text-center mt-2 mb-0">
-        <a id="Register" style="font-size:1.15rem" asp-action="Register" asp-route-returnurl="@ViewData["ReturnUrl"]" tabindex="4">Create your account</a>
+        <a id="Register" style="font-size:1.15rem" asp-action="Register" asp-route-returnurl="@ViewData["ReturnUrl"]">Create your account</a>
     </p>
 }
 

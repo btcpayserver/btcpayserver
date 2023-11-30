@@ -80,7 +80,7 @@
 <script type="text/javascript">
     Vue.component('LightningLikeMethodCheckout',
         {
-            props: ["srvModel"],
+            props: ['srvModel', 'nfcSupported', 'nfcScanning', 'nfcErrorMessage'],
             template: "#lightning-method-checkout-template",
             components: {
                 qrcode: VueQrcode

@@ -515,7 +515,7 @@ namespace BTCPayServer.Controllers.Greenfield
             var ppId = await _pullPaymentService.CreatePullPayment(createPullPayment);
 
             await using var ctx = _dbContextFactory.CreateContext();
-            (await ctx.Invoices.FindAsync(new[] { invoice.Id }, cancellationToken))!.CurrentRefundId = ppId;
+
             ctx.Refunds.Add(new RefundData
             {
                 InvoiceDataId = invoice.Id,
@@ -524,7 +524,6 @@ namespace BTCPayServer.Controllers.Greenfield
             await ctx.SaveChangesAsync(cancellationToken);
 
             var pp = await _pullPaymentService.GetPullPayment(ppId, false);
-
             return this.Ok(CreatePullPaymentData(pp));
         }
 

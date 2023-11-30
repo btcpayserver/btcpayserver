@@ -3,7 +3,7 @@
 <style>
     #checkout-cheating form + form { margin-top: var(--btcpay-space-l); }
 </style>
-<main id="checkout-cheating" class="shadow-lg" v-cloak v-if="display">
+<main id="checkout-cheating" class="tile" v-cloak v-if="display">
     <section>
         <p id="CheatSuccessMessage" class="alert alert-success text-break" v-if="successMessage" v-text="successMessage"></p>
         <p id="CheatErrorMessage" class="alert alert-danger text-break" v-if="errorMessage" v-text="errorMessage"></p>

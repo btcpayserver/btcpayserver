@@ -22,8 +22,8 @@ using Newtonsoft.Json.Linq;
 namespace BTCPayServer.HostedServices.Webhooks
 {
     /// <summary>
-    /// This class send webhook notifications
-    /// It also make sure the events sent to a webhook are sent in order to the webhook
+    /// This class sends webhook notifications
+    /// It also makes sure the events sent to a webhook are sent in order to the webhook
     /// </summary>
     public class WebhookSender : IHostedService
     {
@@ -126,7 +126,6 @@ namespace BTCPayServer.HostedServices.Webhooks
             }
         }
 
-
         public async Task<string?> Redeliver(string deliveryId)
         {
             var deliveryRequest = await CreateRedeliveryRequest(deliveryId);
@@ -178,7 +177,7 @@ namespace BTCPayServer.HostedServices.Webhooks
             
             webhookEvent.DeliveryId = delivery.Id;
             webhookEvent.WebhookId = webhookId;
-            webhookEvent.OriginalDeliveryId = "__test__" + Guid.NewGuid().ToString() + "__test__";
+            webhookEvent.OriginalDeliveryId = "__test__" + Guid.NewGuid() + "__test__";
             webhookEvent.IsRedelivery = false;
             webhookEvent.Timestamp = delivery.Timestamp;
 
@@ -198,7 +197,6 @@ namespace BTCPayServer.HostedServices.Webhooks
             );
             return await SendDelivery(deliveryRequest, cancellationToken);
         }
-
 
         public void EnqueueDelivery(WebhookDeliveryRequest context)
         {
@@ -244,7 +242,6 @@ namespace BTCPayServer.HostedServices.Webhooks
                 _logger.LogError(ex, "Unexpected error when processing a webhook");
             }
         }
-
 
         public class DeliveryResult
         {

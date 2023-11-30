@@ -27,12 +27,10 @@ public abstract class WebhookProvider<T>(EventAggregator eventAggregator, ILogge
     {
         if (evt is T tEvt)
         {
-            if (GetWebhookEvent(tEvt) is not { } webhookEventX )
+            if (GetWebhookEvent(tEvt) is not { } webhookEvent)
                 return;
-            
-            
-            var webhooks = await webhookSender.GetWebhooks(webhookEventX.StoreId, webhookEventX.Type );
-            
+
+            var webhooks = await webhookSender.GetWebhooks(webhookEvent.StoreId, webhookEvent.Type);
             foreach (var webhook in webhooks)
             {
                 webhookSender.EnqueueDelivery(CreateDeliveryRequest(tEvt, webhook));

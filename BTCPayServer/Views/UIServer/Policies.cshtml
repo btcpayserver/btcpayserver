@@ -1,11 +1,12 @@
+@using BTCPayServer.Payments;
 @using BTCPayServer.Services
 @using BTCPayServer.Services.Mails;
 @model BTCPayServer.Services.PoliciesSettings
 @inject SettingsRepository _SettingsRepository
-@inject BTCPayNetworkProvider BTCPayNetworkProvider
+@inject TransactionLinkProviders TransactionLinkProviders
 @{
     ViewData.SetActivePage(ServerNavPages.Policies);
-    var networks = BTCPayNetworkProvider.GetAll().ToArray();
+    var linkProviders = TransactionLinkProviders.ToArray();
 }
 
 <h3 class="mb-4">@ViewData["Title"]</h3>
@@ -185,23 +186,28 @@
             }
 
             <h4>Block Explorers</h4>
-            @for (var i = 0; i < networks.Count(); i++)
+
+            @for (var lpi = 0; lpi < linkProviders.Length; lpi++)
             {
-                var network = networks.ElementAt(i);
-                var existingOverride = Model.BlockExplorerLinks?.SingleOrDefault(tuple => tuple.CryptoCode.Equals(network.CryptoCode, StringComparison.InvariantCultureIgnoreCase));
-                var linkValue = existingOverride?.Link ?? network.BlockExplorerLinkDefault;
-                if (Model.BlockExplorerLinks.Count < i + 1)
+                var pmi = linkProviders[lpi].Key;
+                var defaultLink = linkProviders[lpi].Value.BlockExplorerLinkDefault;
+                var existingOverride = Model.BlockExplorerLinks?.SingleOrDefault(tuple => PaymentMethodId.Parse(tuple.CryptoCode) == pmi);
+                if (existingOverride is null)
                 {
-                    Model.BlockExplorerLinks.Add(new PoliciesSettings.BlockExplorerOverrideItem { CryptoCode = network.CryptoCode, Link = network.BlockExplorerLinkDefault });
+                    existingOverride = new PoliciesSettings.BlockExplorerOverrideItem { CryptoCode = pmi.ToStringNormalized(), Link = null };
+                    Model.BlockExplorerLinks ??= new ();
+                    Model.BlockExplorerLinks.Add(existingOverride);
                 }
-                <div class="form-group" data-default="@network.BlockExplorerLinkDefault">
+                var i = Model.BlockExplorerLinks.IndexOf(existingOverride);
+                var linkValue = existingOverride.Link ?? defaultLink;
+                <div class="form-group" data-default="@defaultLink">
                     <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
-                        <label asp-for="BlockExplorerLinks[i].Link" class="form-label">@network.DisplayName (@network.CryptoCode)</label>
+                        <label asp-for="BlockExplorerLinks[i].Link" class="form-label">@pmi.ToPrettyString()</label>
                         <button type="button" class="btn btn-link p-0 only-for-js revert-default" title="Revert to default">
                             Set to default
                         </button>
                     </div>
-                    <input type="hidden" asp-for="BlockExplorerLinks[i].CryptoCode" value="@network.CryptoCode" />
+                    <input type="hidden" asp-for="BlockExplorerLinks[i].CryptoCode" value="@pmi.ToStringNormalized()" />
                     <input type="text" class="form-control block-explorer-link" asp-for="BlockExplorerLinks[i].Link" value="@linkValue" rel="noreferrer noopener" />
                 </div>
             }

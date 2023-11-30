@@ -11,11 +11,14 @@ using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Rating;
+using BTCPayServer.Services.Fees;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Storage.Models;
 using BTCPayServer.Storage.Services.Providers.AzureBlobStorage.Configuration;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileSystemGlobbing;
 using NBitcoin;
 using NBitpayClient;
@@ -73,6 +76,25 @@ namespace BTCPayServer.Tests
             await UnitTest1.CanUploadRemoveFiles(controller);
         }
 
+        [Fact]
+        public async Task CanQueryMempoolFeeProvider()
+        {
+            IServiceCollection collection = new ServiceCollection();
+            collection.AddMemoryCache();
+            collection.AddHttpClient();
+            var prov = collection.BuildServiceProvider();
+            foreach (var isTestnet in new[] { true, false })
+            {
+                var mempoolSpaceFeeProvider = new MempoolSpaceFeeProvider(
+                    prov.GetService<IMemoryCache>(),
+                    "test" + isTestnet,
+                    prov.GetService<IHttpClientFactory>(),
+                    isTestnet);
+                var rates = await mempoolSpaceFeeProvider.GetFeeRatesAsync();
+                Assert.NotEmpty(rates);
+                await mempoolSpaceFeeProvider.GetFeeRateAsync(20);
+            }
+        }
         [Fact]
         public async Task CanQueryDirectProviders()
         {
@@ -278,7 +300,7 @@ retry:
         [Fact()]
         public void CanSolveTheDogesRatesOnKraken()
         {
-            var provider = new BTCPayNetworkProvider(ChainName.Mainnet);
+            var provider = CreateNetworkProvider(ChainName.Mainnet);
             var factory = FastTests.CreateBTCPayRateFactory();
             var fetcher = new RateFetcher(factory);
 
@@ -296,7 +318,7 @@ retry:
         {
             var factory = FastTests.CreateBTCPayRateFactory();
             var fetcher = new RateFetcher(factory);
-            var provider = new BTCPayNetworkProvider(ChainName.Mainnet);
+            var provider = CreateNetworkProvider(ChainName.Mainnet);
             var b = new StoreBlob();
             string[] temporarilyBroken = { "COP", "UGX" };
             foreach (var k in StoreBlob.RecommendedExchanges)
@@ -329,7 +351,7 @@ retry:
         public async Task CanGetRateCryptoCurrenciesByDefault()
         {
             using var cts = new CancellationTokenSource(60_000);
-            var provider = new BTCPayNetworkProvider(ChainName.Mainnet);
+            var provider = CreateNetworkProvider(ChainName.Mainnet);
             var factory = FastTests.CreateBTCPayRateFactory();
             var fetcher = new RateFetcher(factory);
             var pairs =

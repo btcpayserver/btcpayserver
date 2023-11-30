@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Configuration;
 using BTCPayServer.Controllers;
 using BTCPayServer.Models.WalletViewModels;
+using BTCPayServer.Plugins.Altcoins;
 using BTCPayServer.Services.Wallets;
 using BTCPayServer.Tests.Logging;
 using Microsoft.AspNetCore.Mvc;

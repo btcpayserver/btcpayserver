@@ -1,11 +1,8 @@
 #nullable enable
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Logging;
@@ -13,12 +10,9 @@ using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
-using BTCPayServer.Services.Labels;
 using BTCPayServer.Services.PaymentRequests;
 using NBitcoin;
 using NBXplorer.DerivationStrategy;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.HostedServices
 {
@@ -68,15 +62,15 @@ namespace BTCPayServer.HostedServices
                                 })).Distinct().ToArray();
 
                         var objs = await _walletRepository.GetWalletObjects(new GetWalletObjectsQuery() { TypesIds = matchedObjects });
-
+                        var links  = new List<WalletObjectLinkData>(); 
                         foreach (var walletObjectDatas in objs.GroupBy(data => data.Key.WalletId))
                         {
                             var txWalletObject = new WalletObjectId(walletObjectDatas.Key,
                                 WalletObjectData.Types.Tx, txHash);
-                            await _walletRepository.EnsureWalletObject(txWalletObject);
                             foreach (var walletObjectData in walletObjectDatas)
                             {
-                                await _walletRepository.EnsureWalletObjectLink(txWalletObject, walletObjectData.Key);
+                                links.Add(
+                                    WalletRepository.NewWalletObjectLinkData(txWalletObject, walletObjectData.Key));
                                 //if the object is an address, we also link the labels to the tx
                                 if (walletObjectData.Value.Type == WalletObjectData.Types.Address)
                                 {
@@ -86,16 +80,17 @@ namespace BTCPayServer.HostedServices
                                             new WalletObjectId(walletObjectDatas.Key, data.Type, data.Id));
                                     foreach (var label in labels)
                                     {
-                                        await _walletRepository.EnsureWalletObjectLink(label, txWalletObject);
+                                        links.Add(WalletRepository.NewWalletObjectLinkData(label, txWalletObject));
                                         var attachments = neighbours.Where(data => data.Type == label.Id);
                                         foreach (var attachment in attachments)
                                         {
-                                            await _walletRepository.EnsureWalletObjectLink(new WalletObjectId(walletObjectDatas.Key, attachment.Type, attachment.Id), txWalletObject);
+                                            links.Add(WalletRepository.NewWalletObjectLinkData(new WalletObjectId(walletObjectDatas.Key, attachment.Type, attachment.Id), txWalletObject));
                                         }
                                     }
                                 }
                             }
                         }
+                        await _walletRepository.EnsureCreated(null,links);
 
                         break;
                     }

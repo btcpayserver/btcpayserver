@@ -184,11 +184,16 @@
     </div>
     <div v-if="showPaymentUI">
         <component v-if="srvModel.uiSettings && srvModel.uiSettings.checkoutBodyVueComponentName && srvModel.activated"
-                   v-bind:srv-model="srvModel"
-                   v-bind:is="srvModel.uiSettings.checkoutBodyVueComponentName">
-        </component>
+                   :is="srvModel.uiSettings.checkoutBodyVueComponentName"
+                   :srv-model="srvModel"
+                   :nfc-scanning="nfc.scanning"
+                   :nfc-supported="nfc.supported"
+                   :nfc-error-message="nfc.errorMessage"
+                   v-on:start-nfc-scan="startNFCScan"
+                   v-on:handle-nfc-data="handleNFCData"
+                   v-on:handle-nfc-error="handleNFCError"
+                   v-on:handle-nfc-result="handleNFCResult" />
     </div>
-
     <div class="bp-view" id="paid" v-bind:class="{ 'active': invoicePaid && !showEmailForm}">
         <div class="status-block">
             <div class="success-block">

@@ -9,6 +9,7 @@ using BTCPayServer.Logging;
 using BTCPayServer.Models;
 using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Payments;
+using BTCPayServer.Plugins.Altcoins;
 using BTCPayServer.Rating;
 using BTCPayServer.Services.Altcoins.Zcash.RPC.Models;
 using BTCPayServer.Services.Altcoins.Zcash.Services;

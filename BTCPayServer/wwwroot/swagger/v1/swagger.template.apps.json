@@ -903,9 +903,6 @@
                         "description": "Whether refund email is required when paying the invoice. Defaults to what is set in the store settings",
                         "nullable": true
                     },
-                    "checkoutType": {
-                        "$ref": "#/components/schemas/CheckoutType"
-                    },
                     "formId": {
                         "type": "string",
                         "description": "Form ID to request customer data",

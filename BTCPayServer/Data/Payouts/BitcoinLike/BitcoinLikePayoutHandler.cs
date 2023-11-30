@@ -38,6 +38,7 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
     private readonly NotificationSender _notificationSender;
     private readonly Logs Logs;
     private readonly EventAggregator _eventAggregator;
+    private readonly TransactionLinkProviders _transactionLinkProviders;
 
     public WalletRepository WalletRepository { get; }
 
@@ -47,7 +48,9 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
         BTCPayNetworkJsonSerializerSettings jsonSerializerSettings,
         ApplicationDbContextFactory dbContextFactory,
         NotificationSender notificationSender,
-        Logs logs, EventAggregator eventAggregator)
+        Logs logs,
+        EventAggregator eventAggregator,
+        TransactionLinkProviders transactionLinkProviders)
     {
         _btcPayNetworkProvider = btcPayNetworkProvider;
         WalletRepository = walletRepository;
@@ -57,6 +60,7 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
         _notificationSender = notificationSender;
         this.Logs = logs;
         _eventAggregator = eventAggregator;
+        _transactionLinkProviders = transactionLinkProviders;
     }
 
 
@@ -122,10 +126,9 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
 
             var res = raw.ToObject<PayoutTransactionOnChainBlob>(
                 JsonSerializer.Create(_jsonSerializerSettings.GetSerializer(paymentMethodId.CryptoCode)));
-            var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(paymentMethodId.CryptoCode);
             if (res == null)
                 return null;
-            res.LinkTemplate = network.BlockExplorerLink;
+            res.LinkTemplate = _transactionLinkProviders.GetBlockExplorerLink(paymentMethodId);
             return res;
         }
         return raw.ToObject<ManualPayoutProof>();

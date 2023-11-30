@@ -1,5 +1,40 @@
 #PosKeypad {
-    --wrap-max-width: 575px;
+    --wrap-max-width: 500px;
+    overflow: hidden;
+    position: relative;
+}
+
+#RecentTransactionsToggle {
+    position: absolute;
+    top: var(--btcpay-space-l);
+    left: var(--btcpay-space-m);
+    z-index: 1;
+}
+
+#RecentTransactionsToggle .icon {
+    --btn-icon-size: 2.25em;
+}
+#RecentTransactionsRefresh[disabled] .icon {
+    animation: 1.25s linear infinite spinner-border;
+}
+#RecentTransactions .list-group {
+    margin: calc(var(--btcpay-modal-padding) * -1);
+    width: calc(100% + var(--btcpay-modal-padding) * 2);
+}
+
+#RecentTransactions .list-group-item {
+    background-color: transparent;
+}
+
+#RecentTransactions .list-group .badge-container {
+    flex: 0 0 5.125rem;
+    text-align: right;
+}
+
+@media (max-width: 359px) {
+    #RecentTransactions .list-group .badge-container {
+        flex-grow: 1;
+    }
 }
 
 /* modes */
@@ -19,6 +54,7 @@
     padding: 0;
     position: relative;
     border-radius: 0;
+    border-color: transparent !important;
     font-weight: var(--btcpay-font-weight-semibold);
     font-size: 24px;
     min-height: 3.5rem;
@@ -79,7 +115,6 @@
 }
 /* fix sticky hover effect on mobile browsers */
 @media (hover: none) {
-    .keypad .btn-secondary:hover,
     .actions .btn-secondary:hover {
         border-color: var(--btcpay-secondary-border-active) !important;
     }

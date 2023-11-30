@@ -298,7 +298,7 @@ namespace BTCPayServer.Tests
             AddLightningNode(null, true);
         }
 
-        public void AddLightningNode(string? connectionType = null, bool test = true)
+        public void AddLightningNode(string connectionType = null, bool test = true)
         {
             var cryptoCode = "BTC";
             if (!Driver.PageSource.Contains("Connect to a Lightning node"))

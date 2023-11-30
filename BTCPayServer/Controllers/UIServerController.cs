@@ -20,6 +20,7 @@ using BTCPayServer.Hosting;
 using BTCPayServer.Logging;
 using BTCPayServer.Models;
 using BTCPayServer.Models.ServerViewModels;
+using BTCPayServer.Payments;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Mails;
@@ -68,6 +69,7 @@ namespace BTCPayServer.Controllers
         private readonly IEnumerable<IStorageProviderService> _StorageProviderServices;
         private readonly LinkGenerator _linkGenerator;
         private readonly EmailSenderFactory _emailSenderFactory;
+        private readonly TransactionLinkProviders _transactionLinkProviders;
 
         public UIServerController(
             UserManager<ApplicationUser> userManager,
@@ -91,7 +93,8 @@ namespace BTCPayServer.Controllers
             LinkGenerator linkGenerator,
             EmailSenderFactory emailSenderFactory,
             IHostApplicationLifetime applicationLifetime,
-            IHtmlHelper html
+            IHtmlHelper html,
+            TransactionLinkProviders transactionLinkProviders
         )
         {
             _policiesSettings = policiesSettings;
@@ -116,6 +119,7 @@ namespace BTCPayServer.Controllers
             _emailSenderFactory = emailSenderFactory;
             ApplicationLifetime = applicationLifetime;
             Html = html;
+            _transactionLinkProviders = transactionLinkProviders;
         }
 
         [Route("server/maintenance")]
@@ -328,8 +332,10 @@ namespace BTCPayServer.Controllers
                 settings.DomainToAppMapping.RemoveAt(index);
                 return View(settings);
             }
-
-            settings.BlockExplorerLinks = settings.BlockExplorerLinks.Where(tuple => btcPayNetworkProvider.GetNetwork(tuple.CryptoCode).BlockExplorerLinkDefault != tuple.Link).ToList();
+            settings.BlockExplorerLinks = settings.BlockExplorerLinks
+                                            .Where(tuple => _transactionLinkProviders.GetDefaultBlockExplorerLink(PaymentMethodId.Parse(tuple.CryptoCode)) != tuple.Link)
+                                            .Where(tuple => tuple.Link is not null)
+                                            .ToList();
 
             if (!ModelState.IsValid)
             {
@@ -362,7 +368,7 @@ namespace BTCPayServer.Controllers
             }
 
             await _SettingsRepository.UpdateSetting(settings);
-            BlockExplorerLinkStartupTask.SetLinkOnNetworks(settings.BlockExplorerLinks, btcPayNetworkProvider);
+            _ = _transactionLinkProviders.RefreshTransactionLinkTemplates();
             TempData[WellKnownTempData.SuccessMessage] = "Policies updated successfully";
             return RedirectToAction(nameof(Policies));
         }

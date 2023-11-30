@@ -79,7 +79,7 @@
 <script type="text/javascript">
     Vue.component('BitcoinLikeMethodCheckout',
         {
-            props: ["srvModel"],
+            props: ['srvModel', 'nfcSupported', 'nfcScanning', 'nfcErrorMessage'],
             template: "#bitcoin-method-checkout-template",
             components: {
                 qrcode: VueQrcode
@@ -107,7 +107,7 @@
     });
 
     Vue.component('BitcoinLikeMethodCheckoutHeader', {
-        props: ["srvModel"],
+        props: ['srvModel', 'nfcSupported', 'nfcScanning', 'nfcErrorMessage'],
         template: "#bitcoin-method-checkout-header-template",
         data: function() {
             return {

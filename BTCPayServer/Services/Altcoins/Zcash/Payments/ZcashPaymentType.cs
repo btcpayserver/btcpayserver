@@ -1,6 +1,7 @@
 #if ALTCOINS
 using System.Globalization;
 using BTCPayServer.Payments;
+using BTCPayServer.Plugins.Altcoins;
 using BTCPayServer.Services.Invoices;
 using NBitcoin;
 using Newtonsoft.Json;
@@ -42,11 +43,6 @@ namespace BTCPayServer.Services.Altcoins.Zcash.Payments
         public override ISupportedPaymentMethod DeserializeSupportedPaymentMethod(BTCPayNetworkBase network, JToken value)
         {
             return JsonConvert.DeserializeObject<ZcashSupportedPaymentMethod>(value.ToString());
-        }
-
-        public override string GetTransactionLink(BTCPayNetworkBase network, string txId)
-        {
-            return string.Format(CultureInfo.InvariantCulture, network.BlockExplorerLink, txId);
         }
 
         public override string GetPaymentLink(BTCPayNetworkBase network, InvoiceEntity invoice, IPaymentMethodDetails paymentMethodDetails, decimal cryptoInfoDue, string serverUri)

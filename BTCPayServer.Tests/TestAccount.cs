@@ -278,7 +278,7 @@ namespace BTCPayServer.Tests
 
         public bool IsAdmin { get; internal set; }
 
-        public void RegisterLightningNode(string cryptoCode, string? connectionType = null, bool isMerchant = true)
+        public void RegisterLightningNode(string cryptoCode, string connectionType = null, bool isMerchant = true)
         {
             RegisterLightningNodeAsync(cryptoCode, connectionType, isMerchant).GetAwaiter().GetResult();
         }
@@ -286,7 +286,7 @@ namespace BTCPayServer.Tests
         {
             return RegisterLightningNodeAsync(cryptoCode, null, isMerchant, storeId);
         }
-        public async Task RegisterLightningNodeAsync(string cryptoCode, string? connectionType, bool isMerchant = true, string storeId = null)
+        public async Task RegisterLightningNodeAsync(string cryptoCode, string connectionType, bool isMerchant = true, string storeId = null)
         {
             var storeController = GetController<UIStoresController>();
 
@@ -297,7 +297,7 @@ namespace BTCPayServer.Tests
             await storeController.SetupLightningNode(storeId ?? StoreId,
                 vm, "save", cryptoCode);
             if (storeController.ModelState.ErrorCount != 0)
-                Assert.False(true, storeController.ModelState.FirstOrDefault().Value.Errors[0].ErrorMessage);
+                Assert.Fail(storeController.ModelState.FirstOrDefault().Value.Errors[0].ErrorMessage);
         }
 
         public async Task RegisterInternalLightningNodeAsync(string cryptoCode, string storeId = null)
@@ -307,7 +307,7 @@ namespace BTCPayServer.Tests
             await storeController.SetupLightningNode(storeId ?? StoreId,
                 vm, "save", cryptoCode);
             if (storeController.ModelState.ErrorCount != 0)
-                Assert.False(true, storeController.ModelState.FirstOrDefault().Value.Errors[0].ErrorMessage);
+                Assert.Fail(storeController.ModelState.FirstOrDefault().Value.Errors[0].ErrorMessage);
         }
 
         public async Task<Coin> ReceiveUTXO(Money value, BTCPayNetwork network = null)
@@ -432,8 +432,7 @@ namespace BTCPayServer.Tests
                 if (!response.IsSuccessStatusCode)
                 {
                     var error = JObject.Parse(await response.Content.ReadAsStringAsync());
-                    Assert.True(false,
-                        $"Error: {error["errorCode"].Value<string>()}: {error["message"].Value<string>()}");
+                    Assert.Fail($"Error: {error["errorCode"].Value<string>()}: {error["message"].Value<string>()}");
                 }
             }
 
@@ -516,7 +515,7 @@ retry:
                 retry++;
                 goto retry;
             }
-            Assert.True(false, "No webhook event match the assertion");
+            Assert.Fail("No webhook event match the assertion");
             return null;
         }
         public async Task SetupWebhook()

@@ -5,6 +5,7 @@ using System.Linq;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Payments;
+using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Validation;
@@ -212,6 +213,44 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
 
         public class PaymentRequestInvoicePayment
         {
+            public static List<ViewPaymentRequestViewModel.PaymentRequestInvoicePayment>
+                GetViewModels(
+                InvoiceEntity invoice,
+                DisplayFormatter displayFormatter,
+                TransactionLinkProviders txLinkProvider)
+            {
+                return invoice
+                .GetPayments(true)
+                .Select(paymentEntity =>
+                {
+                    var paymentData = paymentEntity.GetCryptoPaymentData();
+                    var paymentMethodId = paymentEntity.GetPaymentMethodId();
+                    if (paymentData is null || paymentMethodId is null)
+                    {
+                        return null;
+                    }
+                    string txId = paymentData.GetPaymentId();
+                    string link = txLinkProvider.GetTransactionLink(paymentMethodId, txId);
+
+                    return new ViewPaymentRequestViewModel.PaymentRequestInvoicePayment
+                    {
+                        Amount = paymentEntity.PaidAmount.Gross,
+                        Paid = paymentEntity.InvoicePaidAmount.Net,
+                        ReceivedDate = paymentEntity.ReceivedTime.DateTime,
+                        AmountFormatted = displayFormatter.Currency(paymentEntity.PaidAmount.Gross, paymentEntity.PaidAmount.Currency, DisplayFormatter.CurrencyFormat.None),
+                        PaidFormatted = displayFormatter.Currency(paymentEntity.InvoicePaidAmount.Net, invoice.Currency, DisplayFormatter.CurrencyFormat.Symbol),
+                        RateFormatted = displayFormatter.Currency(paymentEntity.Rate, invoice.Currency, DisplayFormatter.CurrencyFormat.Symbol),
+                        PaymentMethod = paymentMethodId.ToPrettyString(),
+                        Link = link,
+                        Id = txId,
+                        Destination = paymentData.GetDestination(),
+                        PaymentProof = paymentData.GetPaymentProof(),
+                        PaymentType = paymentData.GetPaymentType()
+                    };
+                })
+                .Where(payment => payment != null)
+                .ToList();
+            }
             public string PaymentMethod { get; set; }
             public decimal Amount { get; set; }
             public string AmountFormatted { get; set; }

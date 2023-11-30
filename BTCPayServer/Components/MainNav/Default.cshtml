@@ -7,6 +7,7 @@
 @using BTCPayServer.Client
 @using BTCPayServer.Components.ThemeSwitch
 @using BTCPayServer.Components.UIExtensionPoint
+@using BTCPayServer.Plugins
 @using BTCPayServer.Services
 @using BTCPayServer.Views.Apps
 @using BTCPayServer.Views.CustodianAccounts
@@ -15,6 +16,7 @@
 @inject SignInManager<ApplicationUser> SignInManager
 @inject PoliciesSettings PoliciesSettings
 @inject ThemeSettings Theme
+@inject PluginService PluginService
 
 @model BTCPayServer.Components.MainNav.MainNavViewModel
 
@@ -185,7 +187,14 @@
                         <ul class="navbar-nav">
                             <li class="nav-item" permission="@Policies.CanModifyServerSettings">
                                 <a asp-area="" asp-controller="UIServer" asp-action="ListPlugins" class="nav-link @ViewData.IsActivePage(ServerNavPages.Plugins)" id="Nav-ManagePlugins">
-                                    <vc:icon symbol="manage-plugins"/>
+                                    @if (PluginService.GetDisabledPlugins().Any())
+                                    {
+                                        <span class="me-2 btcpay-status btcpay-status--disabled"></span>
+                                    }
+                                    else
+                                    {
+                                        <vc:icon symbol="manage-plugins" />
+                                    }
                                     <span>Manage Plugins</span>
                                 </a>
                             </li>

@@ -131,7 +131,7 @@ namespace BTCPayServer.Payments.Lightning
                 var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
                 cacheEntry.AbsoluteExpiration = GetExpiration(invoice);
                 return invoice;
-            });
+            })!;
         }
 
         private static DateTimeOffset GetExpiration(InvoiceEntity invoice)

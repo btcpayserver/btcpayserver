@@ -7,16 +7,11 @@ using Microsoft.Extensions.Logging;
 
 namespace BTCPayServer.HostedServices.Webhooks;
 
-public class PayoutWebhookProvider : WebhookProvider<PayoutEvent>
+public class PayoutWebhookProvider(EventAggregator eventAggregator, ILogger<PayoutWebhookProvider> logger,
+        WebhookSender webhookSender, BTCPayNetworkJsonSerializerSettings btcPayNetworkJsonSerializerSettings)
+    : WebhookProvider<PayoutEvent>(eventAggregator, logger, webhookSender)
 {
-    private readonly BTCPayNetworkJsonSerializerSettings _btcPayNetworkJsonSerializerSettings;
-
-    public PayoutWebhookProvider(EventAggregator eventAggregator, ILogger<PayoutWebhookProvider> logger, WebhookSender webhookSender, BTCPayNetworkJsonSerializerSettings btcPayNetworkJsonSerializerSettings) : base(eventAggregator, logger, webhookSender)
-    {
-        _btcPayNetworkJsonSerializerSettings = btcPayNetworkJsonSerializerSettings;
-    }
-    
-    public override WebhookSender.WebhookDeliveryRequest CreateDeliveryRequest(PayoutEvent payoutEvent, WebhookData? webhook)
+    protected override WebhookSender.WebhookDeliveryRequest CreateDeliveryRequest(PayoutEvent payoutEvent, WebhookData webhook)
     {
         var webhookBlob = webhook?.GetBlob();
 
@@ -27,14 +22,14 @@ public class PayoutWebhookProvider : WebhookProvider<PayoutEvent>
         webhookEvent.PullPaymentId = payoutEvent.Payout.PullPaymentDataId;
         webhookEvent.WebhookId = webhook?.Id;
         webhookEvent.IsRedelivery = false;
-        Data.WebhookDeliveryData? delivery = webhook is null? null:  WebhookExtensions.NewWebhookDelivery(webhook.Id);
+        Data.WebhookDeliveryData delivery = webhook is null? null:  WebhookExtensions.NewWebhookDelivery(webhook.Id);
         if (delivery is not null)
         {
             webhookEvent.DeliveryId = delivery.Id;
             webhookEvent.OriginalDeliveryId = delivery.Id;
             webhookEvent.Timestamp = delivery.Timestamp;
         }
-        return new PayoutWebhookDeliveryRequest(payoutEvent,webhook?.Id, webhookEvent, delivery, webhookBlob, _btcPayNetworkJsonSerializerSettings);
+        return new PayoutWebhookDeliveryRequest(payoutEvent,webhook?.Id, webhookEvent, delivery, webhookBlob, btcPayNetworkJsonSerializerSettings);
     }
 
     public override Dictionary<string, string> GetSupportedWebhookTypes()
@@ -47,7 +42,6 @@ public class PayoutWebhookProvider : WebhookProvider<PayoutEvent>
         };
     }
 
-
     public override WebhookEvent CreateTestEvent(string type, object[] args)
     {
         return new WebhookPayoutEvent(type)
@@ -57,7 +51,7 @@ public class PayoutWebhookProvider : WebhookProvider<PayoutEvent>
         };
     }
 
-    protected override WebhookPayoutEvent? GetWebhookEvent(PayoutEvent payoutEvent)
+    protected override WebhookPayoutEvent GetWebhookEvent(PayoutEvent payoutEvent)
     {
         return payoutEvent.Type switch
         {

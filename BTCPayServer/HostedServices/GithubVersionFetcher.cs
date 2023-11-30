@@ -48,7 +48,7 @@ namespace BTCPayServer.HostedServices
         private readonly BTCPayServerEnvironment _environment;
         private readonly NotificationSender _notificationSender;
 
-        public async Task<string> Fetch(CancellationToken cancellation)
+        public virtual async Task<string> Fetch(CancellationToken cancellation)
         {
             if (_updateurl == null)
                 return null;

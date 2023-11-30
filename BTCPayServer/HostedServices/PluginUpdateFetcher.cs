@@ -22,17 +22,8 @@ namespace BTCPayServer.HostedServices
     {
         private const string TYPE = "pluginupdate";
 
-        internal class Handler : NotificationHandler<PluginUpdateNotification>
+        internal class Handler(LinkGenerator linkGenerator, BTCPayServerOptions options) : NotificationHandler<PluginUpdateNotification>
         {
-            private readonly LinkGenerator _linkGenerator;
-            private readonly BTCPayServerOptions _options;
-
-            public Handler(LinkGenerator linkGenerator, BTCPayServerOptions options)
-            {
-                _linkGenerator = linkGenerator;
-                _options = options;
-            }
-
             public override string NotificationType => TYPE;
 
             public override (string identifier, string name)[] Meta
@@ -48,9 +39,9 @@ namespace BTCPayServer.HostedServices
                 vm.Identifier = notification.Identifier;
                 vm.Type = notification.NotificationType;
                 vm.Body = $"New {notification.Name} plugin version {notification.Version} released!";
-                vm.ActionLink = _linkGenerator.GetPathByAction(nameof(UIServerController.ListPlugins),
+                vm.ActionLink = linkGenerator.GetPathByAction(nameof(UIServerController.ListPlugins),
                     "UIServer",
-                    new {plugin = notification.PluginIdentifier}, _options.RootPath);
+                    new {plugin = notification.PluginIdentifier}, options.RootPath);
             }
         }
 
@@ -79,37 +70,19 @@ namespace BTCPayServer.HostedServices
         public Dictionary<string, Version> LastVersions { get; set; }
     }
 
-    public class PluginUpdateFetcher : IPeriodicTask
+    public class PluginUpdateFetcher(SettingsRepository settingsRepository, NotificationSender notificationSender, PluginService pluginService)
+        : IPeriodicTask
     {
-        private readonly HttpClient _httpClient;
-        private readonly Uri _updateurl;
-
-        public PluginUpdateFetcher(
-            SettingsRepository settingsRepository,
-            ILogger<PluginUpdateFetcher> logger, NotificationSender notificationSender, PluginService pluginService)
-        {
-            _settingsRepository = settingsRepository;
-            _logger = logger;
-            _notificationSender = notificationSender;
-            _pluginService = pluginService;
-        }
-
-        private readonly SettingsRepository _settingsRepository;
-        private readonly ILogger<PluginUpdateFetcher> _logger;
-        private readonly NotificationSender _notificationSender;
-        private readonly PluginService _pluginService;
-
-
         public async Task Do(CancellationToken cancellationToken)
         {
-            var dh = await _settingsRepository.GetSettingAsync<PluginVersionCheckerDataHolder>() ??
+            var dh = await settingsRepository.GetSettingAsync<PluginVersionCheckerDataHolder>() ??
                      new PluginVersionCheckerDataHolder();
             dh.LastVersions ??= new Dictionary<string, Version>();
-            var disabledPlugins = _pluginService.GetDisabledPlugins();
+            var disabledPlugins = pluginService.GetDisabledPlugins();
 
             var installedPlugins =
-                _pluginService.LoadedPlugins.ToDictionary(plugin => plugin.Identifier, plugin => plugin.Version);
-            var remotePlugins = await _pluginService.GetRemotePlugins();
+                pluginService.LoadedPlugins.ToDictionary(plugin => plugin.Identifier, plugin => plugin.Version);
+            var remotePlugins = await pluginService.GetRemotePlugins();
             var remotePluginsList = remotePlugins
                 .Where(pair => installedPlugins.ContainsKey(pair.Identifier) || disabledPlugins.Contains(pair.Name))
                 .ToDictionary(plugin => plugin.Identifier, plugin => plugin.Version);
@@ -131,10 +104,10 @@ namespace BTCPayServer.HostedServices
             foreach (string pluginUpdate in notify)
             {
                 var plugin = remotePlugins.First(p => p.Identifier == pluginUpdate);
-                await _notificationSender.SendNotification(new AdminScope(), new PluginUpdateNotification(plugin));
+                await notificationSender.SendNotification(new AdminScope(), new PluginUpdateNotification(plugin));
             }
 
-            await _settingsRepository.UpdateSetting(dh);
+            await settingsRepository.UpdateSetting(dh);
         }
     }
 }

@@ -73,21 +73,13 @@ namespace BTCPayServer.HostedServices.Webhooks
                 uri.IsLoopback ? LoopbackNamedClient : ClearnetNamedClient);
         }
 
-        public class WebhookDeliveryRequest
+        public class WebhookDeliveryRequest(string webhookId, WebhookEvent webhookEvent,
+            Data.WebhookDeliveryData delivery, WebhookBlob webhookBlob)
         {
-            public WebhookEvent WebhookEvent { get; }
-            public Data.WebhookDeliveryData Delivery { get; }
-            public WebhookBlob WebhookBlob { get; }
-            public string WebhookId { get; }
-
-            public WebhookDeliveryRequest(string webhookId, WebhookEvent webhookEvent,
-                Data.WebhookDeliveryData delivery, WebhookBlob webhookBlob)
-            {
-                WebhookId = webhookId;
-                WebhookEvent = webhookEvent;
-                Delivery = delivery;
-                WebhookBlob = webhookBlob;
-            }
+            public WebhookEvent WebhookEvent { get; } = webhookEvent;
+            public Data.WebhookDeliveryData Delivery { get; } = delivery;
+            public WebhookBlob WebhookBlob { get; } = webhookBlob;
+            public string WebhookId { get; } = webhookId;
 
             public virtual Task<SendEmailRequest?> Interpolate(SendEmailRequest req,
                 UIStoresController.StoreEmailRule storeEmailRule)
@@ -110,7 +102,7 @@ namespace BTCPayServer.HostedServices.Webhooks
                     if(end == -1)
                         break;
                     var jsonpath = str.Substring(start, end - start);
-                    string result = string.Empty;
+                    string? result = string.Empty;
                     try
                     {
                         if (string.IsNullOrEmpty(jsonpath))
@@ -119,13 +111,14 @@ namespace BTCPayServer.HostedServices.Webhooks
                         }
                         else
                         {
-                            var resultToken = obj.SelectToken(jsonpath);
-                            result = resultToken?.ToString();
+                            result = obj.SelectToken(jsonpath)?.ToString();
                         }
                     }
-                    catch (Exception e)
+                    catch (Exception)
                     {
+                        // ignored
                     }
+
                     str = str.Replace($"{{{fieldName}{jsonpath}}}", result);
                 }
 

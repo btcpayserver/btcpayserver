@@ -20,7 +20,7 @@ public class InvoiceWebhookDeliveryRequest : WebhookSender.WebhookDeliveryReques
         Invoice = invoice;
     }
 
-    public override async Task<SendEmailRequest> Interpolate(SendEmailRequest req,
+    public override Task<SendEmailRequest> Interpolate(SendEmailRequest req,
         UIStoresController.StoreEmailRule storeEmailRule)
     {
         if (storeEmailRule.CustomerEmail &&
@@ -32,7 +32,7 @@ public class InvoiceWebhookDeliveryRequest : WebhookSender.WebhookDeliveryReques
 
         req.Subject = Interpolate(req.Subject);
         req.Body = Interpolate(req.Body);
-        return req;
+        return Task.FromResult(req);
     }
 
     private string Interpolate(string str)

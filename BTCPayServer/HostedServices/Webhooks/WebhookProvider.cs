@@ -7,20 +7,15 @@ using Microsoft.Extensions.Logging;
 
 namespace BTCPayServer.HostedServices.Webhooks;
 
-public abstract class WebhookProvider<T>: EventHostedServiceBase, IWebhookProvider
+public abstract class WebhookProvider<T>(EventAggregator eventAggregator, ILogger logger, WebhookSender webhookSender)
+    : EventHostedServiceBase(eventAggregator, logger), IWebhookProvider
 {
-    private readonly WebhookSender _webhookSender;
     public abstract Dictionary<string, string> GetSupportedWebhookTypes();
 
-    public abstract WebhookSender.WebhookDeliveryRequest CreateDeliveryRequest(T evt, WebhookData? webhook);
+    protected abstract WebhookSender.WebhookDeliveryRequest CreateDeliveryRequest(T evt, WebhookData webhook);
 
     public abstract WebhookEvent CreateTestEvent(string type, params object[] args);
 
-    protected WebhookProvider(EventAggregator eventAggregator, ILogger logger, WebhookSender webhookSender) : base(eventAggregator, logger)
-    {
-        _webhookSender = webhookSender;
-    }
-    
     protected abstract StoreWebhookEvent GetWebhookEvent(T evt);
     
     protected override void SubscribeToEvents()
@@ -36,11 +31,11 @@ public abstract class WebhookProvider<T>: EventHostedServiceBase, IWebhookProvid
                 return;
             
             
-            var webhooks = await _webhookSender.GetWebhooks(webhookEventX.StoreId, webhookEventX.Type );
+            var webhooks = await webhookSender.GetWebhooks(webhookEventX.StoreId, webhookEventX.Type );
             
             foreach (var webhook in webhooks)
             {
-                _webhookSender.EnqueueDelivery(CreateDeliveryRequest(tEvt, webhook));
+                webhookSender.EnqueueDelivery(CreateDeliveryRequest(tEvt, webhook));
             }
 
             EventAggregator.Publish(CreateDeliveryRequest(tEvt, null));

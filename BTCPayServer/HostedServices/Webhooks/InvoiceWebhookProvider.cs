@@ -32,7 +32,7 @@ public class InvoiceWebhookProvider : WebhookProvider<InvoiceEvent>
         };
     }
 
-    public override WebhookSender.WebhookDeliveryRequest CreateDeliveryRequest(InvoiceEvent invoiceEvent,
+    protected override WebhookSender.WebhookDeliveryRequest CreateDeliveryRequest(InvoiceEvent invoiceEvent,
         WebhookData webhook)
     {
         var webhookEvent = GetWebhookEvent(invoiceEvent)!;
@@ -53,7 +53,7 @@ public class InvoiceWebhookProvider : WebhookProvider<InvoiceEvent>
             delivery, webhookBlob);
     }
 
-    public override WebhookEvent CreateTestEvent(string type, object[] args)
+    public override WebhookEvent CreateTestEvent(string type, params object[] args)
     {
         return new WebhookInvoiceEvent(type)
         {
@@ -61,7 +61,7 @@ public class InvoiceWebhookProvider : WebhookProvider<InvoiceEvent>
         };
     }
 
-    protected override WebhookInvoiceEvent? GetWebhookEvent(InvoiceEvent invoiceEvent)
+    protected override WebhookInvoiceEvent GetWebhookEvent(InvoiceEvent invoiceEvent)
     {
         var eventCode = invoiceEvent.EventCode;
         switch (eventCode)

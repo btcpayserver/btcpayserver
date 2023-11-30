@@ -140,13 +140,5 @@ namespace BTCPayServer.PaymentRequest
                 .Where(invoice => invoice != null))
             };
         }
-
-        private string GetTransactionLink(PaymentMethodId paymentMethodId, string txId)
-        {
-            var network = _btcPayNetworkProvider.GetNetwork(paymentMethodId.CryptoCode);
-            if (network == null)
-                return null;
-            return paymentMethodId.PaymentType.GetTransactionLink(network, txId);
-        }
     }
 }

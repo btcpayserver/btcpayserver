@@ -27,7 +27,6 @@ namespace BTCPayServer.PayoutProcessors.OnChain
         private readonly BTCPayWalletProvider _btcPayWalletProvider;
         private readonly BTCPayNetworkJsonSerializerSettings _btcPayNetworkJsonSerializerSettings;
         private readonly BitcoinLikePayoutHandler _bitcoinLikePayoutHandler;
-        private readonly EventAggregator _eventAggregator;
 
         public OnChainAutomatedPayoutProcessor(
             ApplicationDbContextFactory applicationDbContextFactory,
@@ -51,7 +50,6 @@ namespace BTCPayServer.PayoutProcessors.OnChain
             _btcPayWalletProvider = btcPayWalletProvider;
             _btcPayNetworkJsonSerializerSettings = btcPayNetworkJsonSerializerSettings;
             _bitcoinLikePayoutHandler = bitcoinLikePayoutHandler;
-            _eventAggregator = eventAggregator;
             WalletRepository = walletRepository;
             FeeProvider = feeProviderFactory.CreateFeeProvider(_btcPayNetworkProvider.GetNetwork(PaymentMethodId.CryptoCode));
         }

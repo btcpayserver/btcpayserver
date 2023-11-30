@@ -46,7 +46,7 @@ public class PaymentRequestWebhookProvider: WebhookProvider<PaymentRequestEvent>
         };
     }
 
-    public override WebhookSender.WebhookDeliveryRequest CreateDeliveryRequest(PaymentRequestEvent paymentRequestEvent, WebhookData webhook)
+    protected override WebhookSender.WebhookDeliveryRequest CreateDeliveryRequest(PaymentRequestEvent paymentRequestEvent, WebhookData webhook)
     {
         var webhookBlob = webhook?.GetBlob();
         var webhookEvent = GetWebhookEvent(paymentRequestEvent)!;

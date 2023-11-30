@@ -27,9 +27,9 @@ public class PaymentRequestWebhookProvider: WebhookProvider<PaymentRequestEvent>
 
     public override WebhookEvent CreateTestEvent(string type, object[] args)
     {
-        return new WebhookPayoutEvent(type)
+        var storeId = args[0].ToString();
+        return new WebhookPayoutEvent(type, storeId)
         {
-            StoreId = args[0].ToString(),
             PayoutId = "__test__" + Guid.NewGuid() + "__test__"
         };
     }
@@ -38,10 +38,10 @@ public class PaymentRequestWebhookProvider: WebhookProvider<PaymentRequestEvent>
     {
         return evt.Type switch
         {
-            PaymentRequestEvent.Created => new WebhookPaymentRequestEvent(WebhookEventType.PaymentRequestCreated),
-            PaymentRequestEvent.Updated => new WebhookPaymentRequestEvent(WebhookEventType.PaymentRequestUpdated),
-            PaymentRequestEvent.Archived => new WebhookPaymentRequestEvent(WebhookEventType.PaymentRequestArchived),
-            PaymentRequestEvent.StatusChanged => new WebhookPaymentRequestEvent(WebhookEventType.PaymentRequestStatusChanged),
+            PaymentRequestEvent.Created => new WebhookPaymentRequestEvent(WebhookEventType.PaymentRequestCreated, evt.Data.StoreDataId),
+            PaymentRequestEvent.Updated => new WebhookPaymentRequestEvent(WebhookEventType.PaymentRequestUpdated, evt.Data.StoreDataId),
+            PaymentRequestEvent.Archived => new WebhookPaymentRequestEvent(WebhookEventType.PaymentRequestArchived, evt.Data.StoreDataId),
+            PaymentRequestEvent.StatusChanged => new WebhookPaymentRequestEvent(WebhookEventType.PaymentRequestStatusChanged, evt.Data.StoreDataId),
             _ => null
         };
     }

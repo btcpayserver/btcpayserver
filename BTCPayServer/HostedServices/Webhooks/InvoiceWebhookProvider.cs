@@ -20,7 +20,7 @@ public class InvoiceWebhookProvider : WebhookProvider<InvoiceEvent>
 
     public override Dictionary<string, string> GetSupportedWebhookTypes()
     {
-        return new Dictionary<string, string>()
+        return new Dictionary<string, string>
         {
             {WebhookEventType.InvoiceCreated, "A new invoice has been created"},
             {WebhookEventType.InvoiceReceivedPayment, "A new payment has been received"},
@@ -55,49 +55,55 @@ public class InvoiceWebhookProvider : WebhookProvider<InvoiceEvent>
 
     public override WebhookEvent CreateTestEvent(string type, params object[] args)
     {
-        return new WebhookInvoiceEvent(type)
+        var storeId = args[0].ToString();
+        return new WebhookInvoiceEvent(type, storeId)
         {
-            StoreId = args[0].ToString(), InvoiceId = "__test__" + Guid.NewGuid() + "__test__"
+            InvoiceId = "__test__" + Guid.NewGuid() + "__test__"
         };
     }
 
     protected override WebhookInvoiceEvent GetWebhookEvent(InvoiceEvent invoiceEvent)
     {
         var eventCode = invoiceEvent.EventCode;
+        var storeId = invoiceEvent.Invoice.StoreId;
         switch (eventCode)
         {
-            case InvoiceEventCode.Completed:
-            case InvoiceEventCode.PaidAfterExpiration:
-                return null;
             case InvoiceEventCode.Confirmed:
             case InvoiceEventCode.MarkedCompleted:
-                return new WebhookInvoiceSettledEvent()
+                return new WebhookInvoiceSettledEvent(storeId)
                 {
                     ManuallyMarked = eventCode == InvoiceEventCode.MarkedCompleted
                 };
             case InvoiceEventCode.Created:
-                return new WebhookInvoiceEvent(WebhookEventType.InvoiceCreated);
+                return new WebhookInvoiceEvent(WebhookEventType.InvoiceCreated, storeId);
             case InvoiceEventCode.Expired:
-                return new WebhookInvoiceExpiredEvent() {PartiallyPaid = invoiceEvent.PaidPartial};
+                return new WebhookInvoiceExpiredEvent(storeId)
+                {
+                    PartiallyPaid = invoiceEvent.PaidPartial
+                };
             case InvoiceEventCode.FailedToConfirm:
             case InvoiceEventCode.MarkedInvalid:
-                return new WebhookInvoiceInvalidEvent() {ManuallyMarked = eventCode == InvoiceEventCode.MarkedInvalid};
-            case InvoiceEventCode.PaidInFull:
-                return new WebhookInvoiceProcessingEvent()
+                return new WebhookInvoiceInvalidEvent(storeId)
                 {
-                    OverPaid = invoiceEvent.Invoice.ExceptionStatus == InvoiceExceptionStatus.PaidOver,
+                    ManuallyMarked = eventCode == InvoiceEventCode.MarkedInvalid
+                };
+            case InvoiceEventCode.PaidInFull:
+                return new WebhookInvoiceProcessingEvent(storeId)
+                {
+                    OverPaid = invoiceEvent.Invoice.ExceptionStatus == InvoiceExceptionStatus.PaidOver
                 };
             case InvoiceEventCode.ReceivedPayment:
-                return new WebhookInvoiceReceivedPaymentEvent(WebhookEventType.InvoiceReceivedPayment)
+                return new WebhookInvoiceReceivedPaymentEvent(WebhookEventType.InvoiceReceivedPayment, storeId)
                 {
                     AfterExpiration =
                         invoiceEvent.Invoice.Status.ToModernStatus() == InvoiceStatus.Expired ||
                         invoiceEvent.Invoice.Status.ToModernStatus() == InvoiceStatus.Invalid,
                     PaymentMethod = invoiceEvent.Payment.GetPaymentMethodId().ToStringNormalized(),
-                    Payment = GreenfieldInvoiceController.ToPaymentModel(invoiceEvent.Invoice, invoiceEvent.Payment)
+                    Payment = GreenfieldInvoiceController.ToPaymentModel(invoiceEvent.Invoice, invoiceEvent.Payment),
+                    StoreId = invoiceEvent.Invoice.StoreId
                 };
             case InvoiceEventCode.PaymentSettled:
-                return new WebhookInvoiceReceivedPaymentEvent(WebhookEventType.InvoicePaymentSettled)
+                return new WebhookInvoiceReceivedPaymentEvent(WebhookEventType.InvoicePaymentSettled, storeId)
                 {
                     AfterExpiration =
                         invoiceEvent.Invoice.Status.ToModernStatus() == InvoiceStatus.Expired ||
@@ -105,6 +111,7 @@ public class InvoiceWebhookProvider : WebhookProvider<InvoiceEvent>
                     PaymentMethod = invoiceEvent.Payment.GetPaymentMethodId().ToStringNormalized(),
                     Payment = GreenfieldInvoiceController.ToPaymentModel(invoiceEvent.Invoice, invoiceEvent.Payment),
                     OverPaid = invoiceEvent.Invoice.ExceptionStatus == InvoiceExceptionStatus.PaidOver,
+                    StoreId = invoiceEvent.Invoice.StoreId
                 };
             default:
                 return null;

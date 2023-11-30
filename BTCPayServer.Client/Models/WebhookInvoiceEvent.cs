@@ -5,34 +5,28 @@ using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Client.Models
 {
-    public class WebhookPayoutEvent:StoreWebhookEvent
+    public class WebhookPayoutEvent : StoreWebhookEvent
     {
-        public WebhookPayoutEvent()
-        {
-        }
-
-        public WebhookPayoutEvent(string evtType)
+        public WebhookPayoutEvent(string evtType, string storeId)
         {
             if (!evtType.StartsWith("payout", StringComparison.InvariantCultureIgnoreCase))
                 throw new ArgumentException("Invalid event type", nameof(evtType));
             Type = evtType;
+            StoreId = storeId;
         }
 
         [JsonProperty(Order = 2)] public string PayoutId { get; set; }
         [JsonProperty(Order = 3)] public string PullPaymentId { get; set; }
         [JsonProperty(Order = 4)] [JsonConverter(typeof(StringEnumConverter))]public PayoutState PayoutState { get; set; }
     } 
-    public class WebhookPaymentRequestEvent:StoreWebhookEvent
+    public class WebhookPaymentRequestEvent : StoreWebhookEvent
     {
-        public WebhookPaymentRequestEvent()
-        {
-        }
-
-        public WebhookPaymentRequestEvent(string evtType)
+        public WebhookPaymentRequestEvent(string evtType, string storeId)
         {
             if (!evtType.StartsWith("paymentrequest", StringComparison.InvariantCultureIgnoreCase))
                 throw new ArgumentException("Invalid event type", nameof(evtType));
             Type = evtType;
+            StoreId = storeId;
         }
 
         [JsonProperty(Order = 2)] public string PaymentRequestId { get; set; }
@@ -50,11 +44,12 @@ namespace BTCPayServer.Client.Models
         {
         }
 
-        public WebhookInvoiceEvent(string evtType)
+        public WebhookInvoiceEvent(string evtType, string storeId)
         { 
             if (!evtType.StartsWith("invoice", StringComparison.InvariantCultureIgnoreCase))
                 throw new ArgumentException("Invalid event type", nameof(evtType));
             Type = evtType;
+            StoreId = storeId;
         }
 
         [JsonProperty(Order = 2)] public string InvoiceId { get; set; }
@@ -63,7 +58,7 @@ namespace BTCPayServer.Client.Models
 
     public class WebhookInvoiceSettledEvent : WebhookInvoiceEvent
     {
-        public WebhookInvoiceSettledEvent() : base(WebhookEventType.InvoiceSettled)
+        public WebhookInvoiceSettledEvent(string storeId) : base(WebhookEventType.InvoiceSettled, storeId)
         {
         }
 
@@ -72,7 +67,7 @@ namespace BTCPayServer.Client.Models
 
     public class WebhookInvoiceInvalidEvent : WebhookInvoiceEvent
     {
-        public WebhookInvoiceInvalidEvent() : base(WebhookEventType.InvoiceInvalid)
+        public WebhookInvoiceInvalidEvent(string storeId) : base(WebhookEventType.InvoiceInvalid, storeId)
         {
         }
 
@@ -81,7 +76,7 @@ namespace BTCPayServer.Client.Models
 
     public class WebhookInvoiceProcessingEvent : WebhookInvoiceEvent
     {
-        public WebhookInvoiceProcessingEvent() : base(WebhookEventType.InvoiceProcessing)
+        public WebhookInvoiceProcessingEvent(string storeId) : base(WebhookEventType.InvoiceProcessing, storeId)
         {
         }
 
@@ -90,11 +85,7 @@ namespace BTCPayServer.Client.Models
 
     public class WebhookInvoiceReceivedPaymentEvent : WebhookInvoiceEvent
     {
-        public WebhookInvoiceReceivedPaymentEvent() : base(WebhookEventType.InvoiceReceivedPayment)
-        {
-        }
-
-        public WebhookInvoiceReceivedPaymentEvent(string type) : base(type)
+        public WebhookInvoiceReceivedPaymentEvent(string type, string storeId) : base(type, storeId)
         {
         }
 
@@ -106,16 +97,14 @@ namespace BTCPayServer.Client.Models
 
     public class WebhookInvoicePaymentSettledEvent : WebhookInvoiceReceivedPaymentEvent
     {
-
-        public WebhookInvoicePaymentSettledEvent() : base(WebhookEventType.InvoicePaymentSettled)
+        public WebhookInvoicePaymentSettledEvent(string storeId) : base(WebhookEventType.InvoicePaymentSettled, storeId)
         {
         }
     }
 
     public class WebhookInvoiceExpiredEvent : WebhookInvoiceEvent
     {
-
-        public WebhookInvoiceExpiredEvent() : base(WebhookEventType.InvoiceExpired)
+        public WebhookInvoiceExpiredEvent(string storeId) : base(WebhookEventType.InvoiceExpired, storeId)
         {
         }
 

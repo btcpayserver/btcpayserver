@@ -44,9 +44,9 @@ public class PayoutWebhookProvider(EventAggregator eventAggregator, ILogger<Payo
 
     public override WebhookEvent CreateTestEvent(string type, object[] args)
     {
-        return new WebhookPayoutEvent(type)
+        var storeId = args[0].ToString();
+        return new WebhookPayoutEvent(type, storeId)
         {
-            StoreId = args[0].ToString(),
             PayoutId = "__test__" + Guid.NewGuid() + "__test__"
         };
     }
@@ -55,9 +55,9 @@ public class PayoutWebhookProvider(EventAggregator eventAggregator, ILogger<Payo
     {
         return payoutEvent.Type switch
         {
-            PayoutEvent.PayoutEventType.Created => new WebhookPayoutEvent(WebhookEventType.PayoutCreated),
-            PayoutEvent.PayoutEventType.Approved => new WebhookPayoutEvent(WebhookEventType.PayoutCreated),
-            PayoutEvent.PayoutEventType.Updated => new WebhookPayoutEvent(WebhookEventType.PayoutCreated),
+            PayoutEvent.PayoutEventType.Created => new WebhookPayoutEvent(WebhookEventType.PayoutCreated, payoutEvent.Payout.StoreDataId),
+            PayoutEvent.PayoutEventType.Approved => new WebhookPayoutEvent(WebhookEventType.PayoutApproved, payoutEvent.Payout.StoreDataId),
+            PayoutEvent.PayoutEventType.Updated => new WebhookPayoutEvent(WebhookEventType.PayoutUpdated, payoutEvent.Payout.StoreDataId),
             _ => null
         };
     }

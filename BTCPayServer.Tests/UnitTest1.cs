@@ -1299,7 +1299,7 @@ namespace BTCPayServer.Tests
             using var tester = CreateServerTester();
             await tester.StartAsync();
             var user = tester.NewAccount();
-            user.GrantAccess();
+            await user.GrantAccessAsync();
             user.RegisterDerivationScheme("BTC");
 
             var rng = new Random();
@@ -1333,8 +1333,6 @@ namespace BTCPayServer.Tests
             var btcmethod = (await client.GetInvoicePaymentMethods(user.StoreId, invoice.Id))[0];
             var paid = btcSent;
             var invoiceAddress = BitcoinAddress.Create(btcmethod.Destination, cashCow.Network);
-
-
             var btc = new PaymentMethodId("BTC", PaymentTypes.BTCLike);
             var networkFee = (await tester.PayTester.InvoiceRepository.GetInvoice(invoice.Id))
                             .GetPaymentMethods()[btc]
@@ -1346,9 +1344,7 @@ namespace BTCPayServer.Tests
                 networkFee = 0.0m;
             }
 
-            cashCow.SendToAddress(invoiceAddress, paid);
-
-
+            await cashCow.SendToAddressAsync(invoiceAddress, paid);
             await TestUtils.EventuallyAsync(async () =>
             {
                 try

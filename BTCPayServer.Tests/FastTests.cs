@@ -958,6 +958,40 @@ namespace BTCPayServer.Tests
             Assert.Equal("49'/0'/0'", specter.AccountKeySettings[0].AccountKeyPath.ToString());
             Assert.Equal("Specter", specter.Label);
             Assert.Null(error);
+            
+            //BSMS BIP129, Nunchuk
+
+            var bsms = @"BSMS 1.0
+wsh(sortedmulti(1,[5c9e228d/48'/0'/0'/2']xpub6EgGHjcvovyN3nK921zAGPfuB41cJXkYRdt3tLGmiMyvbgHpss4X1eRZwShbEBb1znz2e2bCkCED87QZpin3sSYKbmCzQ9Sc7LaV98ngdeX/**,[2b0e251e/48'/0'/0'/2']xpub6DrimHB8KUSkPvmJ8Pk8RE769EdDm2VEoZ8MBz76w9QupP8Py4wexs4Pa3aRB1LUEhc9GyY6ypDWEFFRCgqeDQePcyWQfjtmintrehq3JCL/**))
+/0/*,/1/*
+bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
+";
+            
+            Assert.True(DerivationSchemeSettings.TryParseFromWalletFile(bsms,
+                mainnet, out var nunchuk, out error));
+            
+            Assert.Equal(2,  nunchuk.AccountKeySettings.Length);
+            //check that the account key settings match those in bsms string
+            Assert.Equal("5c9e228d", nunchuk.AccountKeySettings[0].RootFingerprint.ToString());
+            Assert.Equal("48'/0'/0'/2'", nunchuk.AccountKeySettings[0].AccountKeyPath.ToString());
+Assert.Equal("2b0e251e", nunchuk.AccountKeySettings[1].RootFingerprint.ToString());
+            Assert.Equal("48'/0'/0'/2'", nunchuk.AccountKeySettings[1].AccountKeyPath.ToString());
+
+            var multsig = Assert.IsType < MultisigDerivationStrategy >
+                          (Assert.IsType<P2WSHDerivationStrategy>(nunchuk.AccountDerivation).Inner);
+            
+            Assert.True(multsig.LexicographicOrder);
+           Assert.Equal(1, multsig.RequiredSignatures);
+           
+           var deposit = new NBXplorer.KeyPathTemplates(null).GetKeyPathTemplate(DerivationFeature.Deposit);
+           var line =nunchuk.AccountDerivation.GetLineFor(deposit).Derive(0);
+               
+           Assert.Equal(BitcoinAddress.Create("bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku", Network.Main).ScriptPubKey, 
+               line.ScriptPubKey);
+            
+            Assert.Equal("BSMS", nunchuk.Source);
+            Assert.Null(error);
+            
 
             // Failure case
             Assert.False(DerivationSchemeSettings.TryParseFromWalletFile(

@@ -10,6 +10,7 @@ using BTCPayServer.Data;
 using BTCPayServer.Filters;
 using BTCPayServer.Forms;
 using BTCPayServer.Forms.Models;
+using BTCPayServer.Models;
 using BTCPayServer.Models.PaymentRequestViewModels;
 using BTCPayServer.PaymentRequest;
 using BTCPayServer.Services;

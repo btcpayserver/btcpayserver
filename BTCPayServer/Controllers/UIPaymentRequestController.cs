@@ -3,7 +3,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
-using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Form;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
@@ -11,7 +10,6 @@ using BTCPayServer.Data;
 using BTCPayServer.Filters;
 using BTCPayServer.Forms;
 using BTCPayServer.Forms.Models;
-using BTCPayServer.Models;
 using BTCPayServer.Models.PaymentRequestViewModels;
 using BTCPayServer.PaymentRequest;
 using BTCPayServer.Services;
@@ -22,7 +20,6 @@ using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json.Linq;
 using PaymentRequestData = BTCPayServer.Data.PaymentRequestData;
 using StoreData = BTCPayServer.Data.StoreData;
 
@@ -115,7 +112,8 @@ namespace BTCPayServer.Controllers
             {
                 return NotFound();
             }
-
+            
+            var storeBlob = store.GetStoreBlob();
             var prInvoices = payReqId is null ? null : (await _PaymentRequestService.GetPaymentRequest(payReqId, GetUserId())).Invoices;
             var vm = new UpdatePaymentRequestViewModel(paymentRequest)
             {
@@ -123,7 +121,9 @@ namespace BTCPayServer.Controllers
                 AmountAndCurrencyEditable = payReqId is null || !prInvoices.Any()
             };
 
-            vm.Currency ??= store.GetStoreBlob().DefaultCurrency;
+            vm.Currency ??= storeBlob.DefaultCurrency;
+            vm.HasEmailRules = storeBlob.EmailRules?.Any(rule =>
+                rule.Trigger.Contains("PaymentRequest", StringComparison.InvariantCultureIgnoreCase));
 
             return View(nameof(EditPaymentRequest), vm);
         }
@@ -162,9 +162,11 @@ namespace BTCPayServer.Controllers
 
             if (!ModelState.IsValid)
             {
+                var storeBlob = store.GetStoreBlob();
+                viewModel.HasEmailRules = storeBlob.EmailRules?.Any(rule =>
+                    rule.Trigger.Contains("PaymentRequest", StringComparison.InvariantCultureIgnoreCase));
                 return View(nameof(EditPaymentRequest), viewModel);
             }
-
 
             blob.Title = viewModel.Title;
             blob.Email = viewModel.Email;
@@ -413,13 +415,11 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> TogglePaymentRequestArchival(string payReqId)
         {
             var store = GetCurrentStore();
-            var result = await EditPaymentRequest(store.Id, payReqId);
-            if (result is ViewResult viewResult)
+            
+            var result = await _PaymentRequestRepository.ArchivePaymentRequest(payReqId, true);
+            if(result is not null)
             {
-                var model = (UpdatePaymentRequestViewModel)viewResult.Model;
-                model.Archived = !model.Archived;
-                await EditPaymentRequest(payReqId, model);
-                TempData[WellKnownTempData.SuccessMessage] = model.Archived
+                TempData[WellKnownTempData.SuccessMessage] = result.Value
                     ? "The payment request has been archived and will no longer appear in the payment request list by default again."
                     : "The payment request has been unarchived and will appear in the payment request list by default.";
                 return RedirectToAction("GetPaymentRequests", new { storeId = store.Id });

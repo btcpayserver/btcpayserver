@@ -1299,7 +1299,7 @@ namespace BTCPayServer.Tests
             using var tester = CreateServerTester();
             await tester.StartAsync();
             var user = tester.NewAccount();
-            user.GrantAccess();
+            await user.GrantAccessAsync();
             user.RegisterDerivationScheme("BTC");
 
             var rng = new Random();
@@ -1333,8 +1333,6 @@ namespace BTCPayServer.Tests
             var btcmethod = (await client.GetInvoicePaymentMethods(user.StoreId, invoice.Id))[0];
             var paid = btcSent;
             var invoiceAddress = BitcoinAddress.Create(btcmethod.Destination, cashCow.Network);
-
-
             var btc = new PaymentMethodId("BTC", PaymentTypes.BTCLike);
             var networkFee = (await tester.PayTester.InvoiceRepository.GetInvoice(invoice.Id))
                             .GetPaymentMethods()[btc]
@@ -1346,9 +1344,7 @@ namespace BTCPayServer.Tests
                 networkFee = 0.0m;
             }
 
-            cashCow.SendToAddress(invoiceAddress, paid);
-
-
+            await cashCow.SendToAddressAsync(invoiceAddress, paid);
             await TestUtils.EventuallyAsync(async () =>
             {
                 try
@@ -1952,11 +1948,11 @@ namespace BTCPayServer.Tests
             using var tester = CreateServerTester();
             await tester.StartAsync();
             var user = tester.NewAccount();
-            user.GrantAccess();
+            await user.GrantAccessAsync();
             user.RegisterDerivationScheme("BTC");
             await user.SetupWebhook();
-            var invoice = user.BitPay.CreateInvoice(
-                new Invoice()
+            var invoice = await user.BitPay.CreateInvoiceAsync(
+                new Invoice
                 {
                     Price = 5000.0m,
                     TaxIncluded = 1000.0m,
@@ -2003,11 +1999,8 @@ namespace BTCPayServer.Tests
             Assert.Empty(user.BitPay.GetInvoices(invoice.InvoiceTime.UtcDateTime - TimeSpan.FromDays(5),
                 invoice.InvoiceTime.DateTime - TimeSpan.FromDays(1)));
 
-
             var firstPayment = Money.Coins(0.04m);
-
             var txFee = Money.Zero;
-
             var cashCow = tester.ExplorerNode;
 
             var invoiceAddress = BitcoinAddress.Create(invoice.BitcoinAddress, cashCow.Network);
@@ -2035,7 +2028,7 @@ namespace BTCPayServer.Tests
                 secondPayment = localInvoice.BtcDue;
             });
 
-            cashCow.SendToAddress(invoiceAddress, secondPayment);
+            await cashCow.SendToAddressAsync(invoiceAddress, secondPayment);
 
             TestUtils.Eventually(() =>
             {
@@ -2049,7 +2042,7 @@ namespace BTCPayServer.Tests
                 Assert.False((bool)((JValue)localInvoice.ExceptionStatus).Value);
             });
 
-            cashCow.Generate(1); //The user has medium speed settings, so 1 conf is enough to be confirmed
+            await cashCow.GenerateAsync(1); //The user has medium speed settings, so 1 conf is enough to be confirmed
 
             TestUtils.Eventually(() =>
             {
@@ -2057,7 +2050,7 @@ namespace BTCPayServer.Tests
                 Assert.Equal("confirmed", localInvoice.Status);
             });
 
-            cashCow.Generate(5); //Now should be complete
+            await cashCow.GenerateAsync(5); //Now should be complete
 
             TestUtils.Eventually(() =>
             {
@@ -2066,7 +2059,7 @@ namespace BTCPayServer.Tests
                 Assert.NotEqual(0.0m, localInvoice.Rate);
             });
 
-            invoice = user.BitPay.CreateInvoice(new Invoice()
+            invoice = await user.BitPay.CreateInvoiceAsync(new Invoice
             {
                 Price = 5000.0m,
                 Currency = "USD",
@@ -2079,7 +2072,7 @@ namespace BTCPayServer.Tests
             }, Facade.Merchant);
             invoiceAddress = BitcoinAddress.Create(invoice.BitcoinAddress, cashCow.Network);
 
-            var txId = cashCow.SendToAddress(invoiceAddress, invoice.BtcDue + Money.Coins(1));
+            var txId = await cashCow.SendToAddressAsync(invoiceAddress, invoice.BtcDue + Money.Coins(1));
 
             TestUtils.Eventually(() =>
             {
@@ -2096,7 +2089,7 @@ namespace BTCPayServer.Tests
                 Assert.Single(textSearchResult);
             });
 
-            cashCow.Generate(1);
+            await cashCow.GenerateAsync(2);
 
             TestUtils.Eventually(() =>
             {

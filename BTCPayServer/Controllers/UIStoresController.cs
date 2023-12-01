@@ -13,6 +13,7 @@ using BTCPayServer.Client;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
+using BTCPayServer.HostedServices.Webhooks;
 using BTCPayServer.Models;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments;
@@ -22,6 +23,7 @@ using BTCPayServer.Security.Bitpay;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.Mails;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
@@ -68,7 +70,8 @@ namespace BTCPayServer.Controllers
             IOptions<LightningNetworkOptions> lightningNetworkOptions,
             IOptions<ExternalServicesOptions> externalServiceOptions,
             IHtmlHelper html,
-            LightningClientFactoryService lightningClientFactoryService)
+            LightningClientFactoryService lightningClientFactoryService,
+            EmailSenderFactory emailSenderFactory)
         {
             _RateFactory = rateFactory;
             _Repo = repo;
@@ -93,6 +96,7 @@ namespace BTCPayServer.Controllers
             _BTCPayEnv = btcpayEnv;
             _externalServiceOptions = externalServiceOptions;
             _lightningClientFactoryService = lightningClientFactoryService;
+            _emailSenderFactory = emailSenderFactory;
             Html = html;
         }
 
@@ -116,6 +120,7 @@ namespace BTCPayServer.Controllers
         private readonly EventAggregator _EventAggregator;
         private readonly IOptions<ExternalServicesOptions> _externalServiceOptions;
         private readonly LightningClientFactoryService _lightningClientFactoryService;
+        private readonly EmailSenderFactory _emailSenderFactory;
 
         public string? GeneratedPairingCode { get; set; }
         public WebhookSender WebhookNotificationManager { get; }

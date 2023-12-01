@@ -10,6 +10,7 @@ using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
+using BTCPayServer.HostedServices.Webhooks;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Stores;
 using Google.Apis.Auth.OAuth2;

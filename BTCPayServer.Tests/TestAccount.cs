@@ -487,7 +487,7 @@ namespace BTCPayServer.Tests
         }
 
         public List<WebhookInvoiceEvent> WebhookEvents { get; set; } = new List<WebhookInvoiceEvent>();
-        public TEvent AssertHasWebhookEvent<TEvent>(WebhookEventType eventType, Action<TEvent> assert) where TEvent : class
+        public TEvent AssertHasWebhookEvent<TEvent>(string eventType, Action<TEvent> assert) where TEvent : class
         {
             int retry = 0;
 retry:
@@ -520,7 +520,7 @@ retry:
         }
         public async Task SetupWebhook()
         {
-            FakeServer server = new FakeServer();
+            var server = new FakeServer();
             await server.Start();
             var client = await CreateClient(Policies.CanModifyStoreWebhooks);
             var wh = await client.CreateWebhook(StoreId, new CreateStoreWebhookRequest()
@@ -536,7 +536,7 @@ retry:
         {
             var inv = await BitPay.GetInvoiceAsync(invoiceId);
             var net = parent.ExplorerNode.Network;
-            this.parent.ExplorerNode.SendToAddress(BitcoinAddress.Create(inv.BitcoinAddress, net), inv.BtcDue);
+            await parent.ExplorerNode.SendToAddressAsync(BitcoinAddress.Create(inv.BitcoinAddress, net), inv.BtcDue);
             await TestUtils.EventuallyAsync(async () =>
             {
                 var localInvoice = await BitPay.GetInvoiceAsync(invoiceId, Facade.Merchant);

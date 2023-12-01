@@ -135,25 +135,25 @@
                                             <span>Invoices</span>
                                         </a>
                                     </li>
-									<li class="nav-item" permission="@Policies.CanViewInvoices">
+									<li class="nav-item" permission="@Policies.CanViewReports">
 										<a asp-area="" asp-controller="UIReports" asp-action="StoreReports" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.IsActivePage(StoreNavPages.Reporting)" id="SectionNav-Reporting">
 											<vc:icon symbol="invoice" />
 											<span>Reporting</span>
 										</a>
 									</li>
-                                    <li class="nav-item" permission="@Policies.CanModifyStoreSettings">
+                                    <li class="nav-item" permission="@Policies.CanViewPaymentRequests">
                                         <a asp-area="" asp-controller="UIPaymentRequest" asp-action="GetPaymentRequests" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.IsActiveCategory(typeof(PaymentRequestsNavPages))" id="StoreNav-PaymentRequests">
                                             <vc:icon symbol="payment-requests"/>
                                             <span>Requests</span>
                                         </a>
                                     </li>
-                                    <li class="nav-item" permission="@Policies.CanViewStoreSettings">
+                                    <li class="nav-item" permission="@Policies.CanViewPullPayments">
                                         <a asp-area="" asp-controller="UIStorePullPayments" asp-action="PullPayments" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.IsActivePage(StoreNavPages.PullPayments)" id="StoreNav-PullPayments">
                                             <vc:icon symbol="pull-payments"/>
                                             <span>Pull Payments</span>
                                         </a>
                                     </li>
-                                    <li class="nav-item" permission="@Policies.CanModifyStoreSettings">
+                                    <li class="nav-item" permission="@Policies.CanViewPayouts">
                                         <a asp-area="" 
                                            asp-controller="UIStorePullPayments" asp-action="Payouts" 
                                            asp-route-pullPaymentId=""

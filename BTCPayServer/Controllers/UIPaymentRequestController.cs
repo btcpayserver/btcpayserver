@@ -71,8 +71,9 @@ namespace BTCPayServer.Controllers
             FormDataService = formDataService;
         }
 
-        [BitpayAPIConstraint(false)]
+        
         [HttpGet("/stores/{storeId}/payment-requests")]
+        [Authorize(Policy = Policies.CanViewPaymentRequests, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> GetPaymentRequests(string storeId, ListPaymentRequestsViewModel model = null)
         {
             model = this.ParseListQuery(model ?? new ListPaymentRequestsViewModel());
@@ -105,6 +106,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("/stores/{storeId}/payment-requests/edit/{payReqId?}")]
+        [Authorize(Policy = Policies.CanViewPaymentRequests, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> EditPaymentRequest(string storeId, string payReqId)
         {
             var store = GetCurrentStore();
@@ -127,6 +129,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost("/stores/{storeId}/payment-requests/edit/{payReqId?}")]
+        [Authorize(Policy = Policies.CanModifyPaymentRequests, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> EditPaymentRequest(string payReqId, UpdatePaymentRequestViewModel viewModel)
         {
             if (!string.IsNullOrEmpty(viewModel.Currency) &&
@@ -386,6 +389,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("{payReqId}/clone")]
+        [Authorize(Policy = Policies.CanModifyPaymentRequests, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> ClonePaymentRequest(string payReqId)
         {
             var store = GetCurrentStore();
@@ -405,6 +409,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("{payReqId}/archive")]
+        [Authorize(Policy = Policies.CanModifyPaymentRequests, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> TogglePaymentRequestArchival(string payReqId)
         {
             var store = GetCurrentStore();

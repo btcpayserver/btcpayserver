@@ -37,6 +37,7 @@ using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Controllers
 {
+   
     [Route("stores")]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
@@ -126,6 +127,30 @@ namespace BTCPayServer.Controllers
         public bool StoreNotConfigured
         {
             get; set;
+        }
+        
+        [AllowAnonymous]
+        [HttpGet("{storeId}/index")]
+        public async Task<IActionResult> Index(string storeId)
+        {
+            var userId = _UserManager.GetUserId(User);
+            if(userId is null)
+                return Forbid();
+            var store = await _Repo.FindStore(storeId, _UserManager.GetUserId(User));
+            if (store is null)
+            {
+                return Forbid();
+            }
+            if (store.GetPermissionSet(userId).Contains(Policies.CanModifyStoreSettings, storeId))
+            {
+                return RedirectToAction("Dashboard", new { storeId });
+            }
+            if (store.GetPermissionSet(userId).Contains(Policies.CanViewInvoices, storeId))
+            {
+                return RedirectToAction("ListInvoices", "UIInvoice", new { storeId });
+            }
+            HttpContext.SetStoreData(store);
+            return View();
         }
 
         [HttpGet]

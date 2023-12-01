@@ -197,12 +197,14 @@ namespace BTCPayServer.Controllers
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
-
-        public RedirectToActionResult RedirectToStore(string userId, StoreData store)
+        public static RedirectToActionResult RedirectToStore(string userId, StoreData store)
         {
-            return store.HasPermission(userId, Policies.CanModifyStoreSettings)
-                ? RedirectToAction("Dashboard", "UIStores", new { storeId = store.Id })
-                : RedirectToAction("ListInvoices", "UIInvoice", new { storeId = store.Id });
+            var perms = store.GetPermissionSet(userId);
+            if (perms.Contains(Policies.CanModifyStoreSettings, store.Id))
+                return new RedirectToActionResult("Dashboard", "UIStores", new {storeId = store.Id});
+            if (perms.Contains(Policies.CanViewInvoices, store.Id))
+                return new RedirectToActionResult("ListInvoices", "UIInvoice", new { storeId = store.Id });
+            return new RedirectToActionResult("Index", "UIStores", new {storeId = store.Id});
         }
     }
 }

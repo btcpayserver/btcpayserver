@@ -19,6 +19,7 @@ namespace BTCPayServer.Client
         public const string CanModifyStoreWebhooks = "btcpay.store.webhooks.canmodifywebhooks";
         public const string CanModifyStoreSettingsUnscoped = "btcpay.store.canmodifystoresettings:";
         public const string CanViewStoreSettings = "btcpay.store.canviewstoresettings";
+        public const string CanViewReports = "btcpay.store.canviewreports";
         public const string CanViewInvoices = "btcpay.store.canviewinvoices";
         public const string CanCreateInvoice = "btcpay.store.cancreateinvoice";
         public const string CanModifyInvoices = "btcpay.store.canmodifyinvoices";
@@ -34,7 +35,10 @@ namespace BTCPayServer.Client
         public const string CanDeleteUser = "btcpay.user.candeleteuser";
         public const string CanManagePullPayments = "btcpay.store.canmanagepullpayments";
         public const string CanArchivePullPayments = "btcpay.store.canarchivepullpayments";
+        public const string CanManagePayouts = "btcpay.store.canmanagepayouts";
+        public const string CanViewPayouts = "btcpay.store.canviewpayouts";
         public const string CanCreatePullPayments = "btcpay.store.cancreatepullpayments";
+        public const string CanViewPullPayments = "btcpay.store.canviewpullpayments";
         public const string CanCreateNonApprovedPullPayments = "btcpay.store.cancreatenonapprovedpullpayments";
         public const string CanViewCustodianAccounts = "btcpay.store.canviewcustodianaccounts";
         public const string CanManageCustodianAccounts = "btcpay.store.canmanagecustodianaccounts";
@@ -53,6 +57,7 @@ namespace BTCPayServer.Client
                 yield return CanModifyServerSettings;
                 yield return CanModifyStoreSettings;
                 yield return CanViewStoreSettings;
+                yield return CanViewReports;
                 yield return CanViewPaymentRequests;
                 yield return CanModifyPaymentRequests;
                 yield return CanModifyProfile;
@@ -72,6 +77,7 @@ namespace BTCPayServer.Client
                 yield return CanManagePullPayments;
                 yield return CanArchivePullPayments;
                 yield return CanCreatePullPayments;
+                yield return CanViewPullPayments;
                 yield return CanCreateNonApprovedPullPayments;
                 yield return CanViewCustodianAccounts;
                 yield return CanManageCustodianAccounts;
@@ -79,6 +85,8 @@ namespace BTCPayServer.Client
                 yield return CanWithdrawFromCustodianAccounts;
                 yield return CanTradeCustodianAccount;
                 yield return CanManageUsers;
+                yield return CanManagePayouts;
+                yield return CanViewPayouts;
             }
         }
         public static bool IsValidPolicy(string policy)
@@ -252,11 +260,13 @@ namespace BTCPayServer.Client
                 Policies.CanViewStoreSettings,
                 Policies.CanModifyStoreWebhooks,
                 Policies.CanModifyPaymentRequests,
+                Policies.CanManagePayouts,
                 Policies.CanUseLightningNodeInStore);
 
             PolicyHasChild(policyMap,Policies.CanManageUsers, Policies.CanCreateUser);
             PolicyHasChild(policyMap,Policies.CanManagePullPayments, Policies.CanCreatePullPayments, Policies.CanArchivePullPayments);
             PolicyHasChild(policyMap,Policies.CanCreatePullPayments, Policies.CanCreateNonApprovedPullPayments);
+            PolicyHasChild(policyMap, Policies.CanCreateNonApprovedPullPayments, Policies.CanViewPullPayments);
             PolicyHasChild(policyMap,Policies.CanModifyPaymentRequests, Policies.CanViewPaymentRequests);
             PolicyHasChild(policyMap,Policies.CanModifyProfile, Policies.CanViewProfile);
             PolicyHasChild(policyMap,Policies.CanUseLightningNodeInStore, Policies.CanViewLightningInvoiceInStore, Policies.CanCreateLightningInvoiceInStore);
@@ -267,7 +277,8 @@ namespace BTCPayServer.Client
             PolicyHasChild(policyMap, Policies.CanUseInternalLightningNode, Policies.CanCreateLightningInvoiceInternalNode, Policies.CanViewLightningInvoiceInternalNode);
             PolicyHasChild(policyMap, Policies.CanManageCustodianAccounts, Policies.CanViewCustodianAccounts);
             PolicyHasChild(policyMap, Policies.CanModifyInvoices, Policies.CanViewInvoices, Policies.CanCreateInvoice, Policies.CanCreateLightningInvoiceInStore);
-            PolicyHasChild(policyMap, Policies.CanViewStoreSettings, Policies.CanViewInvoices, Policies.CanViewPaymentRequests);
+            PolicyHasChild(policyMap, Policies.CanViewStoreSettings, Policies.CanViewInvoices, Policies.CanViewPaymentRequests, Policies.CanViewReports, Policies.CanViewPullPayments, Policies.CanViewPayouts);
+            PolicyHasChild(policyMap, Policies.CanManagePayouts, Policies.CanViewPayouts);
 
             var missingPolicies = Policies.AllPolicies.ToHashSet();
             //recurse through the tree to see which policies are not included in the tree

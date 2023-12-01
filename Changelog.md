@@ -1,5 +1,56 @@
 # Changelog
 
+## 1.12.0
+
+### New feature
+
+* Webhooks: Support for Payment Requests, Payouts and extendibility by plugins (#5421) @Kukks
+* Support BIP129 Multisig wallet import (#5389) @Kukks
+* POS Keypad: Add plus and change clear functionality (#5396) @dennisreimann
+* Forms: Support adjusting invoice amount by multiplier, enables percentage-based discount codes (#5463) @Kukks
+* Pluginify BTCPayNetworkProvider: Prerequisite for moving altcoins to plugins (#5331) @NicolasDorier
+
+### Bug fixes
+
+* Apps: Filter list lookups by available app types (#5482) @dennisreimann
+* Wallet: Use application/jsonl as MIME type for BIP329 label export (#5489) @dennisreimann
+* Wallet: Fill label from BIP21 (#5428) @dennisreimann
+* Greenfield: LNURLPay store payment method fixes (#5446) @dennisreimann
+* Do not activate Blazor in Wizard screens (#5435) @NicolasDorier
+* Pull Payment: Display the amount of claims (#5427) @NicolasDorier
+* Fix qemu package in ARM Docker files (#5504) @greimela
+
+### Improvements
+
+* Upgrade to .NET 8.0 (#5479) @NicolasDorier
+* Enhance fine grain permissions (#5502) @Kukks
+* Checkout: NFC improvements (#5509) @dennisreimann
+* Checkout: Receipt improvements (#5505) @rockstardev @dennisreimann
+* Payment Request: Improve public view (#5413) @dennisreimann @dstrukt
+* POS Keypad: List recent transactions (#5478) @dennisreimann @dstrukt
+* POS Cart: Add options for search and categories display (#5438) @dennisreimann
+* POS Cart: Horizontal scrollable filters (#5391) @dennisreimann
+* POS and Crowdfund: Item editor improvements (#5418 #5449) @dennisreimann
+* Reporting: UI improvements (#5432) @dennisreimann
+* Wallet: Use Mempool.space fee estimation (#5490) @Kukks @NicolasDorier
+* Wallet: Update Passport instructions for import (#5423) @sethforprivacy
+* Plugins: Send notification when a new plugin version is available (#5450) @Kukks
+* Plugins: Improve crash detection on startup and hint at disabled plugins (#5514) @dennisreimann
+* Greenfield: Remove unused checkout type setting from POS (#5512) @dennisreimann
+* Greenfield: Make checkout type V2 default for new stores (#5495) @dennisreimann
+* Domain mapping: Redirect root app to canonical URL (#5471) @dennisreimann
+* Make wallet object system much more performant (#5441) @Kukks @NicolasDorier
+* Lightning: Make implementations extendible by plugins (#5422) @Kukks
+* Lightning: Upgrade LND to 0.17.2-beta @rockstardev
+* Store Branding: Use store logo as favicon (#5519) @dennisreimann
+* UI: Unify list views (#5399) @dennisreimann
+* UI: Unify public page styles (#5460 #5462 #5466) @dennisreimann
+* UI: Add system option for theme switch (#5473) @dennisreimann
+* UI: Pull payment improvements (#5453) @dennisreimann
+* UI: Switch pos data to metadata in invoice create view (#5412) @Kukks
+* Vault: Simplify logic by introducing a VaultClient (#5434) @NicolasDorier
+* Update SSH.NET to 2023.0.0 (#5404) @WojciechNagorski
+
 ## 1.11.7
 
 ### New feature

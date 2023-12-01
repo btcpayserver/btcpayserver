@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using BTCPayServer.Data;
 
 namespace BTCPayServer.Components.StoreSelector
 {
@@ -14,9 +15,9 @@ namespace BTCPayServer.Components.StoreSelector
     public class StoreSelectorOption
     {
         public bool Selected { get; set; }
-        public bool IsOwner { get; set; }
         public string Text { get; set; }
         public string Value { get; set; }
         public WalletId WalletId { get; set; }
+        public StoreData Store { get; set; }
     }
 }

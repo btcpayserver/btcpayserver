@@ -42,7 +42,6 @@ namespace BTCPayServer.Client.Models
         public bool? Archived { get; set; } = null;
         public string FormId { get; set; } = null;
         public string EmbeddedCSS { get; set; } = null;
-        public CheckoutType? CheckoutType { get; set; } = null;
     }
 
     public enum CrowdfundResetEvery

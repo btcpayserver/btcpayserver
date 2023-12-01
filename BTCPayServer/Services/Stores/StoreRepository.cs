@@ -24,7 +24,7 @@ namespace BTCPayServer.Services.Stores
 
         public JsonSerializerSettings SerializerSettings { get; }
 
-        public ApplicationDbContext CreateDbContext()
+        protected ApplicationDbContext CreateDbContext()
         {
             return _ContextFactory.CreateContext();
         }

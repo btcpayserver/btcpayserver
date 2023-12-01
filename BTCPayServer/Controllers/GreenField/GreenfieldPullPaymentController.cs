@@ -58,7 +58,7 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
         [HttpGet("~/api/v1/stores/{storeId}/pull-payments")]
-        [Authorize(Policy = Policies.CanManagePullPayments, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [Authorize(Policy = Policies.CanViewPullPayments, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> GetPullPayments(string storeId, bool includeArchived = false)
         {
             using var ctx = _dbContextFactory.CreateContext();
@@ -456,7 +456,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
 
         [HttpGet("~/api/v1/stores/{storeId}/payouts")]
-        [Authorize(Policy = Policies.CanManagePullPayments, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [Authorize(Policy = Policies.CanViewPayouts, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> GetStorePayouts(string storeId, bool includeCancelled = false)
         {
             var payouts = await _pullPaymentService.GetPayouts(new PullPaymentHostedService.PayoutQuery()
@@ -471,7 +471,7 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
         [HttpDelete("~/api/v1/stores/{storeId}/payouts/{payoutId}")]
-        [Authorize(Policy = Policies.CanManagePullPayments, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [Authorize(Policy = Policies.CanManagePayouts, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> CancelPayout(string storeId, string payoutId)
         {
             var res = await _pullPaymentService.Cancel(new PullPaymentHostedService.CancelRequest(new[] { payoutId }, new[] { storeId }));
@@ -479,7 +479,7 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
         [HttpPost("~/api/v1/stores/{storeId}/payouts/{payoutId}")]
-        [Authorize(Policy = Policies.CanManagePullPayments, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [Authorize(Policy = Policies.CanManagePayouts, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> ApprovePayout(string storeId, string payoutId, ApprovePayoutRequest approvePayoutRequest, CancellationToken cancellationToken = default)
         {
             using var ctx = _dbContextFactory.CreateContext();
@@ -533,7 +533,7 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
         [HttpPost("~/api/v1/stores/{storeId}/payouts/{payoutId}/mark-paid")]
-        [Authorize(Policy = Policies.CanManagePullPayments, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [Authorize(Policy = Policies.CanManagePayouts, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> MarkPayoutPaid(string storeId, string payoutId, CancellationToken cancellationToken = default)
         {
             return await MarkPayout(storeId, payoutId, new Client.Models.MarkPayoutRequest()
@@ -544,7 +544,7 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
         [HttpPost("~/api/v1/stores/{storeId}/payouts/{payoutId}/mark")]
-        [Authorize(Policy = Policies.CanManagePullPayments, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [Authorize(Policy = Policies.CanManagePayouts, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> MarkPayout(string storeId, string payoutId, Client.Models.MarkPayoutRequest request)
         {
             request ??= new();
@@ -571,7 +571,7 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
         [HttpGet("~/api/v1/stores/{storeId}/payouts/{payoutId}")]
-        [Authorize(Policy = Policies.CanManagePullPayments, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [Authorize(Policy = Policies.CanViewPayouts, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> GetStorePayout(string storeId, string payoutId)
         {
             await using var ctx = _dbContextFactory.CreateContext();

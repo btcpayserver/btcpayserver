@@ -5,6 +5,22 @@ const STATUS_SETTLED = ['complete', 'confirmed'];
 const STATUS_INVALID =  ['expired', 'invalid'];
 const urlParams = new URLSearchParams(window.location.search);
 
+class NDEFReaderWrapper {
+    constructor() {
+        this.onreading = null;
+        this.onreadingerror = null;
+    }
+
+    async scan(opts) {
+        if (opts && opts.signal){
+            opts.signal.addEventListener('abort', () => {
+                window.parent.postMessage('nfc:abort', '*');
+            });
+        }
+        window.parent.postMessage('nfc:startScan', '*');
+    }
+}
+
 function computeStartingLanguage() {
     const lang = urlParams.get('lang')
     if (lang && isLanguageAvailable(lang)) return lang;
@@ -45,7 +61,6 @@ Vue.use(VueI18next);
 const fallbackLanguage = 'en';
 const startingLanguage = computeStartingLanguage();
 const i18n = new VueI18next(i18next);
-const eventBus = new Vue();
 
 const PaymentDetails = {
     template: '#payment-details',
@@ -82,6 +97,14 @@ function initApp() {
                 paymentSound: null,
                 nfcReadSound: null,
                 errorSound: null,
+                nfc: {
+                    supported: 'NDEFReader' in window,
+                    scanning: false,
+                    submitting: false,
+                    errorMessage: null,
+                    permissionGranted: false,
+                    readerAbortController: null
+                }
             }
         },
         computed: {
@@ -192,7 +215,7 @@ function initApp() {
                 }
             }
         },
-        mounted () {
+        async mounted () {
             this.updateData(this.srvModel);
             this.updateTimer();
             if (this.isActive || this.isProcessing) {
@@ -206,8 +229,17 @@ function initApp() {
                 this.prepareSound(this.srvModel.nfcReadSoundUrl).then(sound => this.nfcReadSound = sound);
                 this.prepareSound(this.srvModel.errorSoundUrl).then(sound => this.errorSound = sound);
             }
+            if (this.nfc.supported) {
+                await this.setupNFC();
+            }
             updateLanguageSelect();
+            
             window.parent.postMessage('loaded', '*');
+        },
+        beforeDestroy () {
+            if (this.nfc.readerAbortController) {
+                this.nfc.readerAbortController.abort()
+            }
         },
         methods: {
             changePaymentMethod (id) { // payment method or plugin id
@@ -303,7 +335,6 @@ function initApp() {
     
                 // updating ui
                 this.srvModel = data;
-                eventBus.$emit('data-fetched', this.srvModel);
             },
             replaceNewlines (value) {
                 return value ? value.replace(/\n/ig, '<br>') : '';
@@ -345,6 +376,75 @@ function initApp() {
                 const arrayBuffer = await response.arrayBuffer();
                 const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
                 return { audioContext, audioBuffer, playing: false };
+            },
+            async setupNFC () {
+                try {
+                    this.$set(this.nfc, 'permissionGranted', navigator.permissions && (await navigator.permissions.query({ name: 'nfc' })).state === 'granted');
+                } catch (e) {}
+                if (this.nfc.permissionGranted) {
+                    await this.startNFCScan();
+                }
+            },
+            async startNFCScan () {
+                if (this.nfc.scanning) return;
+                this.$set(this.nfc, 'scanning', true);
+                try {
+                    const inModal = window.self !== window.top;
+                    const ndef = inModal ? new NDEFReaderWrapper() : new NDEFReader();
+                    this.nfc.readerAbortController = new AbortController()
+                    this.nfc.readerAbortController.signal.onabort = () => {
+                        this.$set(this.nfc, 'scanning', false);
+                    };
+
+                    await ndef.scan({ signal: this.nfc.readerAbortController.signal })
+                    ndef.onreadingerror = () => this.reportNfcError('Could not read NFC tag')
+                    ndef.onreading = async ({ message }) => {
+                        const record = message.records[0]
+                        const textDecoder = new TextDecoder('utf-8')
+                        const decoded = textDecoder.decode(record.data)
+                        this.$emit('read-nfc-data', decoded)
+                    }
+
+                    if (inModal) {
+                        // receive messages from iframe
+                        window.addEventListener('message', async event => {
+                            // deny messages from other origins
+                            if (event.origin !== window.location.origin) return
+
+                            const { action, data } = event.data
+                            switch (action) {
+                                case 'nfc:data':
+                                    this.$emit('read-nfc-data', data)
+                                    break;
+                                case 'nfc:error':
+                                    this.handleNFCError('Could not read NFC tag')
+                                    break;
+                            }
+                        });
+                    }
+
+                    // we came here, so the user must have allowed NFC access
+                    this.$set(this.nfc, 'permissionGranted', true);
+                } catch (error) {
+                    this.handleNFCError(`NFC scan failed: ${error}`);
+                }
+            },
+            handleNFCData() { // child component reports it is handling the data
+                this.playSound('nfcRead');
+                this.$set(this.nfc, 'submitting', true);
+                this.$set(this.nfc, 'errorMessage', null);
+            },
+            handleNFCResult() { // child component reports result for handling the data
+                this.$set(this.nfc, 'submitting', false);
+            },
+            handleNFCError(message) { // internal or via child component reporting failure of handling the data
+                this.playSound('error');
+                this.$set(this.nfc, 'submitting', false);
+                this.$set(this.nfc, 'errorMessage', message);
+                const $nfc = document.getElementById('NFC');
+                if ($nfc) {
+                    $nfc.scrollIntoView({ block: 'end', inline: 'center', behavior: 'smooth' });
+                }
             }
         }
     });

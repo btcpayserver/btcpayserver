@@ -85,9 +85,6 @@ const posCommon = {
                 ? percentage
                 : null;
         },
-        unsetPayButtonLoading () {
-            this.payButtonLoading = false
-        },
         formatCrypto (value, withSymbol) {
             const symbol = withSymbol ? ` ${this.currencySymbol || this.currencyCode}` : ''
             const { divisibility } = this.currencyInfo

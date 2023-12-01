@@ -25,7 +25,7 @@ namespace BTCPayServer.Security.Bitpay
         public BitpayAuthenticationHandler(
             TokenRepository tokenRepository,
             StoreRepository storeRepository,
-            IOptionsMonitor<BitpayAuthenticationOptions> options, ILoggerFactory logger, UrlEncoder encoder, ISystemClock clock) : base(options, logger, encoder, clock)
+            IOptionsMonitor<BitpayAuthenticationOptions> options, ILoggerFactory logger, UrlEncoder encoder) : base(options, logger, encoder)
         {
             _TokenRepository = tokenRepository;
             _StoreRepository = storeRepository;

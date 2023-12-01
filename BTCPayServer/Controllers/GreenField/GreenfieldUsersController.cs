@@ -104,14 +104,14 @@ namespace BTCPayServer.Controllers.Greenfield
         public async Task<ActionResult<ApplicationUserData>> GetCurrentUser()
         {
             var user = await _userManager.GetUserAsync(User);
-            return await FromModel(user);
+            return await FromModel(user!);
         }
 
         [Authorize(Policy = Policies.CanDeleteUser, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpDelete("~/api/v1/users/me")]
         public async Task<IActionResult> DeleteCurrentUser()
         {
-            return await DeleteUser(_userManager.GetUserId(User));
+            return await DeleteUser(_userManager.GetUserId(User)!);
         }
 
         [AllowAnonymous]

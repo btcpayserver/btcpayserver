@@ -2099,18 +2099,18 @@ namespace BTCPayServer.Tests
             //validation errors
             await AssertValidationError(new[] { nameof(CreateInvoiceRequest.Amount), $"{nameof(CreateInvoiceRequest.Checkout)}.{nameof(CreateInvoiceRequest.Checkout.PaymentTolerance)}", $"{nameof(CreateInvoiceRequest.Checkout)}.{nameof(CreateInvoiceRequest.Checkout.PaymentMethods)}[0]" }, async () =>
             {
-                await client.CreateInvoice(user.StoreId, new CreateInvoiceRequest() { Amount = -1, Checkout = new CreateInvoiceRequest.CheckoutOptions() { PaymentTolerance = -2, PaymentMethods = new[] { "jasaas_sdsad" } } });
+                await client.CreateInvoice(user.StoreId, new CreateInvoiceRequest { Amount = -1, Checkout = new CreateInvoiceRequest.CheckoutOptions { PaymentTolerance = -2, PaymentMethods = new[] { "jasaas_sdsad" } } });
             });
 
             await AssertHttpError(403, async () =>
             {
                 await viewOnly.CreateInvoice(user.StoreId,
-                    new CreateInvoiceRequest() { Currency = "helloinvalid", Amount = 1 });
+                    new CreateInvoiceRequest { Currency = "helloinvalid", Amount = 1 });
             });
             await user.RegisterDerivationSchemeAsync("BTC");
             string origOrderId = "testOrder";
             var newInvoice = await client.CreateInvoice(user.StoreId,
-                new CreateInvoiceRequest()
+                new CreateInvoiceRequest
                 {
                     Currency = "USD",
                     Amount = 1,
@@ -2197,7 +2197,7 @@ namespace BTCPayServer.Tests
 
             //list NonExisting Status
             var invoicesNonExistingStatus = await viewOnly.GetInvoices(user.StoreId,
-                status: new[] { BTCPayServer.Client.Models.InvoiceStatus.Invalid });
+                status: new[] { InvoiceStatus.Invalid });
             Assert.NotNull(invoicesNonExistingStatus);
             Assert.Empty(invoicesNonExistingStatus);
 
@@ -2215,7 +2215,7 @@ namespace BTCPayServer.Tests
 
             //update
             newInvoice = await client.CreateInvoice(user.StoreId,
-                new CreateInvoiceRequest() { Currency = "USD", Amount = 1 });
+                new CreateInvoiceRequest { Currency = "USD", Amount = 1 });
             Assert.Contains(InvoiceStatus.Settled, newInvoice.AvailableStatusesForManualMarking);
             Assert.Contains(InvoiceStatus.Invalid, newInvoice.AvailableStatusesForManualMarking);
             await client.MarkInvoiceStatus(user.StoreId, newInvoice.Id, new MarkInvoiceStatusRequest()
@@ -2227,7 +2227,7 @@ namespace BTCPayServer.Tests
             Assert.DoesNotContain(InvoiceStatus.Settled, newInvoice.AvailableStatusesForManualMarking);
             Assert.Contains(InvoiceStatus.Invalid, newInvoice.AvailableStatusesForManualMarking);
             newInvoice = await client.CreateInvoice(user.StoreId,
-                new CreateInvoiceRequest() { Currency = "USD", Amount = 1 });
+                new CreateInvoiceRequest { Currency = "USD", Amount = 1 });
             await client.MarkInvoiceStatus(user.StoreId, newInvoice.Id, new MarkInvoiceStatusRequest()
             {
                 Status = InvoiceStatus.Invalid
@@ -2242,13 +2242,13 @@ namespace BTCPayServer.Tests
             await AssertHttpError(403, async () =>
             {
                 await viewOnly.UpdateInvoice(user.StoreId, invoice.Id,
-                    new UpdateInvoiceRequest()
+                    new UpdateInvoiceRequest
                     {
                         Metadata = metadataForUpdate
                     });
             });
             invoice = await client.UpdateInvoice(user.StoreId, invoice.Id,
-                new UpdateInvoiceRequest()
+                new UpdateInvoiceRequest
                 {
                     Metadata = metadataForUpdate
                 });
@@ -2288,13 +2288,12 @@ namespace BTCPayServer.Tests
             await client.UnarchiveInvoice(user.StoreId, invoice.Id);
             Assert.NotNull(await client.GetInvoice(user.StoreId, invoice.Id));
 
-
             foreach (var marked in new[] { InvoiceStatus.Settled, InvoiceStatus.Invalid })
             {
                 var inv = await client.CreateInvoice(user.StoreId,
-                new CreateInvoiceRequest() { Currency = "USD", Amount = 100 });
+                new CreateInvoiceRequest { Currency = "USD", Amount = 100 });
                 await user.PayInvoice(inv.Id);
-                await client.MarkInvoiceStatus(user.StoreId, inv.Id, new MarkInvoiceStatusRequest()
+                await client.MarkInvoiceStatus(user.StoreId, inv.Id, new MarkInvoiceStatusRequest
                 {
                     Status = marked
                 });
@@ -2322,13 +2321,12 @@ namespace BTCPayServer.Tests
                 }
             }
 
-
             newInvoice = await client.CreateInvoice(user.StoreId,
-                new CreateInvoiceRequest()
+                new CreateInvoiceRequest
                 {
                     Currency = "USD",
                     Amount = 1,
-                    Checkout = new CreateInvoiceRequest.CheckoutOptions()
+                    Checkout = new CreateInvoiceRequest.CheckoutOptions
                     {
                         DefaultLanguage = "it-it ",
                         RedirectURL = "http://toto.com/lol"

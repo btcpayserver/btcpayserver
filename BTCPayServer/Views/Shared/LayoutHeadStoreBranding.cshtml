@@ -1,9 +1,10 @@
-@model (string BrandColor, string CssFileId, string CustomCSSLink, string EmbeddedCSS)
-@using BTCPayServer.Abstractions.Extensions
-@using Microsoft.AspNetCore.Mvc.TagHelpers
+@model StoreBrandingViewModel
 @using BTCPayServer.Abstractions.Contracts
 @inject IFileService FileService
 @{
+   var logoUrl = !string.IsNullOrEmpty(Model.LogoFileId)
+       ? await FileService.GetFileUrl(Context.Request.GetAbsoluteRootUri(), Model.LogoFileId)
+       : null;
     var cssUrl = !string.IsNullOrEmpty(Model.CssFileId)
         ? await FileService.GetFileUrl(Context.Request.GetAbsoluteRootUri(), Model.CssFileId)
         : null;
@@ -36,6 +37,7 @@
             color: var(--btcpay-body-link-accent);
         }
     </style>
+    <meta name="theme-color" content="@brand">
 }
 @if (!string.IsNullOrEmpty(cssUrl))
 {
@@ -51,4 +53,9 @@
     <style>
         @Safe.Raw(Model.EmbeddedCSS)
     </style>
+}
+@if (!string.IsNullOrEmpty(logoUrl))
+{
+    <link rel="icon" href="@logoUrl">
+    <link rel="apple-touch-icon" href="@logoUrl">
 }

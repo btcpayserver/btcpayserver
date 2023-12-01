@@ -5,6 +5,7 @@ using BTCPayServer.Data;
 using BTCPayServer.Filters;
 using BTCPayServer.Lightning;
 using BTCPayServer.Logging;
+using BTCPayServer.Models;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Services.Stores;
@@ -42,9 +43,7 @@ namespace BTCPayServer.Controllers
             {
                 CryptoCode = cryptoCode,
                 StoreName = store.StoreName,
-                BrandColor = storeBlob.BrandColor,
-                LogoFileId = storeBlob.LogoFileId,
-                CssFileId = storeBlob.CssFileId
+                StoreBranding = new StoreBrandingViewModel(storeBlob)
             };
             try
             {
@@ -74,7 +73,6 @@ namespace BTCPayServer.Controllers
             return existing;
         }
 
-
         private string GetImage(PaymentMethodId paymentMethodId, BTCPayNetwork network)
         {
             var res = paymentMethodId.PaymentType == PaymentTypes.BTCLike
@@ -83,7 +81,6 @@ namespace BTCPayServer.Controllers
             return "/" + res;
         }
     }
-
 
     public class ShowLightningNodeInfoViewModel
     {
@@ -103,13 +100,11 @@ namespace BTCPayServer.Controllers
                 return _connection;
             }
         }
+        public StoreBrandingViewModel StoreBranding { get; set; }
         public NodeData[] NodeInfo { get; set; }
         public bool Available { get; set; }
         public string CryptoCode { get; set; }
         public string CryptoImage { get; set; }
         public string StoreName { get; set; }
-        public string LogoFileId { get; set; }
-        public string CssFileId { get; set; }
-        public string BrandColor { get; set; }
     }
 }

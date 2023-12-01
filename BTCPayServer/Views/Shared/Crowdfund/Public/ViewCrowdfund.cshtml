@@ -4,6 +4,7 @@
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @{
 	ViewData["Title"] = Model.Title;
+    ViewData["StoreBranding"] = Model.StoreBranding;
 	Layout = null;
 	Csp.UnsafeEval();
 	if (!string.IsNullOrEmpty(Model.DisqusShortname))
@@ -16,18 +17,8 @@
 <html class="h-100" @(Env.IsDeveloping ? " data-devenv" : "")>
 <head>
     <partial name="LayoutHead"/>
-    <partial name="LayoutHeadStoreBranding" model="@(Model.BrandColor, Model.CssFileId, Model.CustomCSSLink, Model.EmbeddedCSS)" />
-    <link href="~/vendor/bootstrap-vue/bootstrap-vue.min.css" asp-append-version="true"  rel="stylesheet" />
-    <link href="~/crowdfund/styles/main.css" asp-append-version="true"  rel="stylesheet" />
-
-    @if (!string.IsNullOrEmpty(Model.CustomCSSLink))
-    {
-        <link href="@Model.CustomCSSLink" rel="stylesheet" asp-append-version="true"/>
-    }
-    @if (!string.IsNullOrEmpty(Model.EmbeddedCSS))
-    {
-        @Safe.Raw($"<style>{Model.EmbeddedCSS}</style>")
-    }
+    <link href="~/vendor/bootstrap-vue/bootstrap-vue.min.css" asp-append-version="true" rel="stylesheet"/>
+    <link href="~/crowdfund/styles/main.css" asp-append-version="true" rel="stylesheet"/>
     <style>
         #app { --wrap-max-width: 1320px; }
         #crowdfund-main-image {
@@ -44,7 +35,7 @@
             object-fit: scale-down;
         }
     </style>
-    <vc:ui-extension-point location="crowdfund-head" model="@Model"></vc:ui-extension-point>
+    <vc:ui-extension-point location="crowdfund-head" model="@Model"/>
 </head>
 <body class="min-vh-100 p-2">
 @if (!Model.Enabled)

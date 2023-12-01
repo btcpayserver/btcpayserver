@@ -87,13 +87,17 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             var store = await _appService.GetStore(app);
             var storeBlob = store.GetStoreBlob();
 
+            var storeBranding = new StoreBrandingViewModel(storeBlob)
+            {
+                EmbeddedCSS = settings.EmbeddedCSS,
+                CustomCSSLink = settings.CustomCSSLink
+            };
+
             return View($"PointOfSale/Public/{viewType}", new ViewPointOfSaleViewModel
             {
                 Title = settings.Title,
                 StoreName = store.StoreName,
-                BrandColor = storeBlob.BrandColor,
-                CssFileId = storeBlob.CssFileId,
-                LogoFileId = storeBlob.LogoFileId,
+                StoreBranding = storeBranding,
                 Step = step.ToString(CultureInfo.InvariantCulture),
                 ViewType = (PosViewType)viewType,
                 ShowCustomAmount = settings.ShowCustomAmount,
@@ -117,12 +121,9 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 CustomButtonText = settings.CustomButtonText,
                 CustomTipText = settings.CustomTipText,
                 CustomTipPercentages = settings.CustomTipPercentages,
-                CustomCSSLink = settings.CustomCSSLink,
-                CustomLogoLink = storeBlob.CustomLogo,
                 AppId = appId,
                 StoreId = store.Id,
                 Description = settings.Description,
-                EmbeddedCSS = settings.EmbeddedCSS,
                 RequiresRefundEmail = settings.RequiresRefundEmail
             });
         }
@@ -458,9 +459,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             var vm = new FormViewModel
             {
                 StoreName = store.StoreName,
-                BrandColor = storeBlob.BrandColor,
-                CssFileId = storeBlob.CssFileId,
-                LogoFileId = storeBlob.LogoFileId,
+                StoreBranding = new StoreBrandingViewModel(storeBlob),
                 FormName = formData.Name,
                 Form = form,
                 AspController = controller,

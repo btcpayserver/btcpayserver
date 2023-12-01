@@ -13,6 +13,7 @@ using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
 using BTCPayServer.Forms.Models;
+using BTCPayServer.Models;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -164,9 +165,7 @@ public class UIFormsController : Controller
             FormName = formData.Name,
             Form = form,
             StoreName = store?.StoreName,
-            BrandColor = storeBlob?.BrandColor,
-            CssFileId = storeBlob?.CssFileId,
-            LogoFileId = storeBlob?.LogoFileId,
+            StoreBranding = new StoreBrandingViewModel(storeBlob)
         });
     }
 

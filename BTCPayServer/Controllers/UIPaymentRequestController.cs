@@ -10,6 +10,7 @@ using BTCPayServer.Data;
 using BTCPayServer.Filters;
 using BTCPayServer.Forms;
 using BTCPayServer.Forms.Models;
+using BTCPayServer.Models;
 using BTCPayServer.Models.PaymentRequestViewModels;
 using BTCPayServer.PaymentRequest;
 using BTCPayServer.Services;
@@ -209,12 +210,14 @@ namespace BTCPayServer.Controllers
             }
 
             var storeBlob = store.GetStoreBlob();
+            vm.HubPath = PaymentRequestHub.GetHubPath(Request);
             vm.StoreName = store.StoreName;
             vm.StoreWebsite = store.StoreWebsite;
-            vm.BrandColor = storeBlob.BrandColor;
-            vm.LogoFileId = storeBlob.LogoFileId;
-            vm.CssFileId = storeBlob.CssFileId;
-            vm.HubPath = PaymentRequestHub.GetHubPath(Request);
+            vm.StoreBranding = new StoreBrandingViewModel(storeBlob)
+            {
+                EmbeddedCSS = vm.EmbeddedCSS,
+                CustomCSSLink = vm.CustomCSSLink
+            };
 
             return View(vm);
         }
@@ -240,7 +243,6 @@ namespace BTCPayServer.Controllers
             var formData = await FormDataService.GetForm(prFormId);
             if (formData is null)
             {
-
                 return RedirectToAction("PayPaymentRequest", new { payReqId });
             }
 
@@ -266,8 +268,14 @@ namespace BTCPayServer.Controllers
             }
             viewModel.FormName = formData.Name;
             viewModel.Form = form;
+            
+            var storeBlob = result.StoreData.GetStoreBlob();
+            viewModel.StoreBranding = new StoreBrandingViewModel(storeBlob)
+            {
+                EmbeddedCSS = prBlob.EmbeddedCSS,
+                CustomCSSLink = prBlob.CustomCSSLink
+            };
             return View("Views/UIForms/View", viewModel);
-
         }
 
         [HttpGet("{payReqId}/pay")]

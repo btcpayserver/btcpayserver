@@ -223,9 +223,7 @@ namespace BTCPayServer.Controllers
                 Currency = i.Currency,
                 Timestamp = i.InvoiceTime,
                 StoreName = store.StoreName,
-                BrandColor = storeBlob.BrandColor,
-                LogoFileId = storeBlob.LogoFileId,
-                CssFileId = storeBlob.CssFileId,
+                StoreBranding = new StoreBrandingViewModel(storeBlob),
                 ReceiptOptions = receipt
             };
 
@@ -858,11 +856,11 @@ namespace BTCPayServer.Controllers
                 DefaultLang = lang ?? invoice.DefaultLanguage ?? storeBlob.DefaultLang ?? "en",
                 ShowPayInWalletButton = storeBlob.ShowPayInWalletButton,
                 ShowStoreHeader = storeBlob.ShowStoreHeader,
-                CustomCSSLink = storeBlob.CustomCSS,
+                StoreBranding = new StoreBrandingViewModel(storeBlob)
+                {
+                    CustomCSSLink = storeBlob.CustomCSS
+                },
                 CustomLogoLink = storeBlob.CustomLogo,
-                LogoFileId = storeBlob.LogoFileId,
-                CssFileId = storeBlob.CssFileId,
-                BrandColor = storeBlob.BrandColor,
                 CheckoutType = invoice.CheckoutType ?? storeBlob.CheckoutType,
                 HtmlTitle = storeBlob.HtmlTitle ?? "BTCPay Invoice",
                 CelebratePayment = storeBlob.CelebratePayment,

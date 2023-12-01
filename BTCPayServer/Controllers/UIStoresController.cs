@@ -139,9 +139,10 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> Index(string storeId)
         {
             var userId = _UserManager.GetUserId(User);
-            if(userId is null)
+            if (string.IsNullOrEmpty(userId))
                 return Forbid();
-            var store = await _Repo.FindStore(storeId, _UserManager.GetUserId(User));
+            
+            var store = await _Repo.FindStore(storeId, userId);
             if (store is null)
             {
                 return Forbid();
@@ -158,12 +159,10 @@ namespace BTCPayServer.Controllers
             return View();
         }
 
-        [HttpGet]
-        [Route("{storeId}/users")]
+        [HttpGet("{storeId}/users")]
         public async Task<IActionResult> StoreUsers()
         {
-            StoreUsersViewModel vm = new StoreUsersViewModel();
-            vm.Role = StoreRoleId.Guest.Role;
+            var vm = new StoreUsersViewModel { Role = StoreRoleId.Guest.Role };
             await FillUsers(vm);
             return View(vm);
         }
@@ -182,8 +181,7 @@ namespace BTCPayServer.Controllers
 
         public StoreData CurrentStore => HttpContext.GetStoreData();
 
-        [HttpPost]
-        [Route("{storeId}/users")]
+        [HttpPost("{storeId}/users")]
         public async Task<IActionResult> StoreUsers(string storeId, StoreUsersViewModel vm)
         {
             await FillUsers(vm);

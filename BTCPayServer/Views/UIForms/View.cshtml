@@ -3,21 +3,21 @@
 @{
     Layout = null;
     ViewData["Title"] = Model.FormName;
+    ViewData["StoreBranding"] = Model.StoreBranding;
 }
 <!DOCTYPE html>
 <html lang="en" @(Env.IsDeveloping ? " data-devenv" : "")>
 <head>
     <partial name="LayoutHead" />
-    <partial name="LayoutHeadStoreBranding" model="@(Model.BrandColor, Model.CssFileId, "", "")" />
     <meta name="robots" content="noindex,nofollow">
     <style>#FormView { --wrap-max-width: 576px; }</style>
 </head>
 <body class="min-vh-100">
     <div id="FormView" class="public-page-wrap">
         <partial name="_StatusMessage" model="@(new ViewDataDictionary(ViewData) { { "Margin", "mb-4" } })" />
-        @if (!string.IsNullOrEmpty(Model.StoreName) || !string.IsNullOrEmpty(Model.LogoFileId))
+        @if (!string.IsNullOrEmpty(Model.StoreName) || !string.IsNullOrEmpty(Model.StoreBranding.LogoFileId))
         {
-            <partial name="_StoreHeader" model="(Model.StoreName, Model.LogoFileId)" />
+            <partial name="_StoreHeader" model="(Model.StoreName, Model.StoreBranding)" />
         }
         else
         {

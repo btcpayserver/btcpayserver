@@ -271,7 +271,7 @@ namespace BTCPayServer.Hosting
                                 if (lightningClient.ToString() != lightning)
                                 {
                                     logs.Configuration.LogWarning(
-                                        $"Setting {net.CryptoCode}.lightning is a deprecated format ({lightning}), it will work now, but please replace it for future versions with '{lightningClient.ToString()}'");
+                                        $"Setting {net.CryptoCode}.lightning is a deprecated format ({lightning}), it will work now, but please replace it for future versions with '{lightningClient}'");
                                 }
                                 options.InternalLightningByCryptoCode.Add(net.CryptoCode, lightningClient);
                             }

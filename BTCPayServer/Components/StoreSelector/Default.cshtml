@@ -31,8 +31,7 @@
 }
 else
 {
-    <a asp-controller="UIStores" asp-action="Dashboard" permission="@Policies.CanModifyStoreSettings" asp-route-storeId="@Model.CurrentStoreId" id="StoreSelectorHome" class="navbar-brand py-2">@{await LogoContent();}</a>
-    <a asp-controller="UIInvoice" asp-action="ListInvoices" not-permission="@Policies.CanModifyStoreSettings" asp-route-storeId="@Model.CurrentStoreId" id="StoreSelectorHome" class="navbar-brand py-2">@{await LogoContent();}</a>
+    <a asp-controller="UIStores" asp-action="Index" asp-route-storeId="@Model.CurrentStoreId" id="StoreSelectorHome" class="navbar-brand py-2">@{await LogoContent();}</a>
 }
 @if (Model.Options.Any() || Model.ArchivedCount > 0)
 {
@@ -54,21 +53,14 @@ else
                 @foreach (var option in Model.Options)
                 {
                     <li>
-                        @if (option.IsOwner)
-                        {
-                            <a asp-controller="UIStores" asp-action="Dashboard" asp-route-storeId="@option.Value" class="dropdown-item@(option.Selected ? " active" : "")" id="StoreSelectorMenuItem-@option.Value">@StoreName(option.Text)</a>
-                        }
-                        else
-                        {
-                            <a asp-controller="UIInvoice" asp-action="ListInvoices" asp-route-storeId="@option.Value" class="dropdown-item@(option.Selected ? " active" : "")" id="StoreSelectorMenuItem-@option.Value">@StoreName(option.Text)</a>
-                        }
+                        <a asp-controller="UIStores" asp-action="Index" asp-route-storeId="@option.Value" class="dropdown-item@(option.Selected ? " active" : "")" id="StoreSelectorMenuItem-@option.Value">@StoreName(option.Text)</a>
                     </li>
                 }
                 @if (Model.Options.Any())
                 {
                     <li><hr class="dropdown-divider"></li>
                 }
-                <li><a asp-controller="UIUserStores" asp-action="CreateStore" class="dropdown-item @ViewData.IsActivePage(StoreNavPages.Create)" id="StoreSelectorCreate">Create Store</a></li>
+                <li ><a asp-controller="UIUserStores" asp-action="CreateStore" class="dropdown-item @ViewData.IsActivePage(StoreNavPages.Create)" id="StoreSelectorCreate">Create Store</a></li>
                 @if (Model.ArchivedCount > 0)
                 {
                     <li><hr class="dropdown-divider"></li>

@@ -5,7 +5,6 @@ namespace BTCPayServer.Configuration
 {
     public class LightningNetworkOptions
     {
-        public Dictionary<string, LightningConnectionString> InternalLightningByCryptoCode { get; set; } =
-            new Dictionary<string, LightningConnectionString>();
+        public Dictionary<string, ILightningClient> InternalLightningByCryptoCode { get; set; } = new();
     }
 }

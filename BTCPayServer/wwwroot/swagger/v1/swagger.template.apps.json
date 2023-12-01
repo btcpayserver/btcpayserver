@@ -881,9 +881,6 @@
                         "type": ["boolean", "null"],
                         "description": "Whether refund email is required when paying the invoice. Defaults to what is set in the store settings"
                     },
-                    "checkoutType": {
-                        "$ref": "#/components/schemas/CheckoutType"
-                    },
                     "formId": {
                         "type": ["string", "null"],
                         "description": "Form ID to request customer data"

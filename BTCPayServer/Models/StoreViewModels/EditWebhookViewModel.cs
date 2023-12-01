@@ -30,7 +30,7 @@ namespace BTCPayServer.Models.StoreViewModels
         }
         public string Id { get; set; }
         public DateTimeOffset Time { get; set; }
-        public WebhookEventType Type { get; private set; }
+        public string Type { get; private set; }
         public bool Pruned { get; set; }
         public string WebhookId { get; set; }
         public bool Success { get; set; }
@@ -57,7 +57,7 @@ namespace BTCPayServer.Models.StoreViewModels
         public bool Active { get; set; }
         public bool AutomaticRedelivery { get; set; }
         public bool Everything { get; set; }
-        public WebhookEventType[] Events { get; set; } = Array.Empty<WebhookEventType>();
+        public string[] Events { get; set; } = Array.Empty<string>();
         [Uri]
         [Required]
         public string PayloadUrl { get; set; }

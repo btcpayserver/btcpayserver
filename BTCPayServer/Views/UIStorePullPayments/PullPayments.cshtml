@@ -128,12 +128,15 @@
                 <tr class="mass-action-row">
                     <td class="date-col">@pp.StartDate.ToBrowserDate()</td>
                     <td>
-                        <a asp-action="EditPullPayment"
-                           asp-controller="UIPullPayment"
-                           asp-route-storeId="@storeId"
-                           asp-route-pullPaymentId="@pp.Id">
+                        <a 
+                            permission="@Policies.CanManagePullPayments"
+                            asp-action="EditPullPayment"
+                            asp-controller="UIPullPayment"
+                            asp-route-storeId="@storeId"
+                            asp-route-pullPaymentId="@pp.Id">
                             @pp.Name
                         </a>
+                        <span not-permission="@Policies.CanManagePullPayments">@pp.Name</span>
                     </td>
                     <td>@pp.AutoApproveClaims</td>
                     <td class="align-middle">
@@ -149,12 +152,14 @@
                     <td class="actions-col">
                         <div class="d-inline-flex align-items-center gap-3">
                             <a asp-action="ViewPullPayment"
+                               permission="@Policies.CanViewPullPayments"
                                asp-controller="UIPullPayment"
                                asp-route-pullPaymentId="@pp.Id"
                                target="_blank">
                                 View
                             </a>
                             <a class="pp-payout"
+                               permission="@Policies.CanViewPayouts"
                                asp-action="Payouts"
                                asp-route-storeId="@storeId"
                                asp-route-pullPaymentId="@pp.Id">

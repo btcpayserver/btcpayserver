@@ -9,7 +9,7 @@ namespace BTCPayServer.Client.Models
 {
     public class WebhookEvent
     {
-        public readonly static JsonSerializerSettings DefaultSerializerSettings;
+        public static readonly JsonSerializerSettings DefaultSerializerSettings;
         static WebhookEvent()
         {
             DefaultSerializerSettings = new JsonSerializerSettings();
@@ -45,8 +45,7 @@ namespace BTCPayServer.Client.Models
             }
         }
         public bool IsRedelivery { get; set; }
-        [JsonConverter(typeof(StringEnumConverter))]
-        public WebhookEventType Type { get; set; }
+        public string Type { get; set; }
         [JsonConverter(typeof(NBitcoin.JsonConverters.DateTimeToUnixTimeConverter))]
         public DateTimeOffset Timestamp { get; set; }
         [JsonExtensionData]

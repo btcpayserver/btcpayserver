@@ -121,6 +121,65 @@ namespace BTCPayServer
             }
         }
 
+        public static bool TryParseBSMSFile(string filecontent, DerivationSchemeParser derivationSchemeParser, ref DerivationSchemeSettings derivationSchemeSettings,
+            out string error)
+        {
+            error = null;
+            try
+            {
+                string[] lines = filecontent.Split(
+                    new[] {"\r\n", "\r", "\n"},
+                    StringSplitOptions.None
+                );
+
+                if (!lines[0].Trim().Equals("BSMS 1.0"))
+                {;
+                    return false;
+                }
+
+                var descriptor = lines[1];
+                var derivationPath = lines[2].Split(',', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault()?? "/0/*";
+                if (derivationPath == "No path restrictions")
+                {
+                    derivationPath = "/0/*";
+                }
+                if(derivationPath != "/0/*")
+                {
+                    error = "BTCPay Server can only derive address to the deposit and change paths";
+                    return false;
+                }
+                
+                
+                descriptor = descriptor.Replace("/**", derivationPath);
+                var testAddress = BitcoinAddress.Create( lines[3], derivationSchemeParser.Network);
+               var result =  derivationSchemeParser.ParseOutputDescriptor(descriptor);
+               
+               var deposit = new NBXplorer.KeyPathTemplates(null).GetKeyPathTemplate(DerivationFeature.Deposit);
+               var line = result.Item1.GetLineFor(deposit).Derive(0);
+               
+               if (testAddress.ScriptPubKey != line.ScriptPubKey)
+                {
+                    error = "BSMS test address did not match our generated address";
+                    return false;
+                }
+
+                derivationSchemeSettings.Source = "BSMS";
+                derivationSchemeSettings.AccountDerivation = result.Item1;
+                derivationSchemeSettings.AccountOriginal = descriptor.Trim();
+                derivationSchemeSettings.AccountKeySettings = result.Item2.Select((path, i) => new AccountKeySettings()
+                {
+                    RootFingerprint = path?.MasterFingerprint,
+                    AccountKeyPath = path?.KeyPath,
+                    AccountKey = result.Item1.GetExtPubKeys().ElementAt(i).GetWif(derivationSchemeParser.Network)
+                }).ToArray();
+                return true;
+            }
+            catch (Exception e)
+            {
+                error = $"BSMS parse error: {e.Message}";
+                return false;
+            }
+        }
         public static bool TryParseFromWalletFile(string fileContents, BTCPayNetwork network, out DerivationSchemeSettings settings, out string error)
         {
             settings = null;
@@ -140,6 +199,17 @@ namespace BTCPayServer
             }
             catch
             {
+                if (TryParseBSMSFile(fileContents, derivationSchemeParser,ref result, out var bsmsError))
+                {
+                    settings = result;
+                    settings.Network = network;
+                    return true;
+                }
+                if (bsmsError is not null)
+                {
+                    error = bsmsError;
+                    return false;
+                }
                 result.Source = "GenericFile";
                 if (TryParseXpub(fileContents, derivationSchemeParser, ref result, ref error) ||
                     TryParseXpub(fileContents, derivationSchemeParser, ref result, ref error, false))

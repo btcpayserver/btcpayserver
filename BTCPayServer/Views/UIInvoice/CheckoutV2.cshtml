@@ -109,7 +109,15 @@
                         </div>
                     </div>
                 }
-                <component v-if="paymentMethodComponent" :is="paymentMethodComponent" :model="srvModel" />
+                <component v-if="paymentMethodComponent" :is="paymentMethodComponent"
+                           :model="srvModel"
+                           :nfc-scanning="nfc.scanning"
+                           :nfc-supported="nfc.supported"
+                           :nfc-error-message="nfc.errorMessage"
+                           v-on:start-nfc-scan="startNFCScan"
+                           v-on:handle-nfc-data="handleNFCData"
+                           v-on:handle-nfc-error="handleNFCError"
+                           v-on:handle-nfc-result="handleNFCResult" />
             </section>
             <section id="result" v-else>
                 <div v-if="isProcessing" id="processing" key="processing">

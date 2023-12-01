@@ -111,6 +111,7 @@ namespace BTCPayServer.Tests
             // Payment Request
             s.Driver.FindElement(By.Id("StoreNav-PaymentRequests")).Click();
             s.Driver.FindElement(By.Id("CreatePaymentRequest")).Click();
+            Thread.Sleep(10000);
             s.Driver.FindElement(By.Id("Title")).SendKeys("Pay123");
             s.Driver.FindElement(By.Id("Amount")).SendKeys("700");
             new SelectElement(s.Driver.FindElement(By.Id("FormId"))).SelectByValue("Email");
@@ -461,6 +462,12 @@ namespace BTCPayServer.Tests
             using var s = CreateSeleniumTester();
             await s.StartAsync();
             s.RegisterNewUser(true);
+            s.CreateNewStore();
+            
+            // Store Emails without server fallback
+            s.GoToStore(StoreNavPages.Emails);
+            s.Driver.FindElement(By.Id("ConfigureEmailRules")).Click();
+            Assert.Contains("You need to configure email settings before this feature works", s.Driver.PageSource);
 
             // Server Emails
             s.Driver.Navigate().GoToUrl(s.Link("/server/emails"));
@@ -470,12 +477,11 @@ namespace BTCPayServer.Tests
                 s.FindAlertMessage();
             }
             CanSetupEmailCore(s);
-            s.CreateNewStore();
 
-            // Store Emails
+            // Store Emails with server fallback
             s.GoToStore(StoreNavPages.Emails);
             s.Driver.FindElement(By.Id("ConfigureEmailRules")).Click();
-            Assert.Contains("You need to configure email settings before this feature works", s.Driver.PageSource);
+            Assert.Contains("Emails will be sent with the email settings of the server", s.Driver.PageSource);
 
             s.GoToStore(StoreNavPages.Emails);
             CanSetupEmailCore(s);
@@ -485,10 +491,11 @@ namespace BTCPayServer.Tests
             Assert.Contains("There are no rules yet.", s.Driver.PageSource);
             Assert.DoesNotContain("id=\"SaveEmailRules\"", s.Driver.PageSource);
             Assert.DoesNotContain("You need to configure email settings before this feature works", s.Driver.PageSource);
+            Assert.DoesNotContain("Emails will be sent with the email settings of the server", s.Driver.PageSource);
 
             s.Driver.FindElement(By.Id("CreateEmailRule")).Click();
             var select = new SelectElement(s.Driver.FindElement(By.Id("Rules_0__Trigger")));
-            select.SelectByText("InvoiceSettled", true);
+            select.SelectByText("An invoice has been settled", true);
             s.Driver.FindElement(By.Id("Rules_0__To")).SendKeys("test@gmail.com");
             s.Driver.FindElement(By.Id("Rules_0__CustomerEmail")).Click();
             s.Driver.FindElement(By.Id("Rules_0__Subject")).SendKeys("Thanks!");
@@ -938,8 +945,9 @@ namespace BTCPayServer.Tests
                     Policies.CanModifyServerSettings
              });
 
+            s.GoToUrl("/logout");
             await alice.MakeAdmin();
-            s.Logout();
+            
             s.GoToLogin();
             s.LogIn(alice.Email, alice.Password);
             s.GoToUrl($"/cheat/permissions/stores/{alice.StoreId}");
@@ -1036,20 +1044,20 @@ namespace BTCPayServer.Tests
             select.SelectByText("Point of", true);
             s.Driver.FindElement(By.Id("SaveButton")).Click();
             s.FindAlertMessage();
-
-            s.Logout();
-            s.GoToLogin();
-            s.LogIn(userId);
             // Make sure after login, we are not redirected to the PoS
+            s.Logout();
+            s.LogIn(userId);
             Assert.DoesNotContain("Tea shop", s.Driver.PageSource);
             var prevUrl = s.Driver.Url;
-
             // We are only if explicitly going to /
             s.GoToUrl("/");
             Assert.Contains("Tea shop", s.Driver.PageSource);
-            s.Driver.Navigate().GoToUrl(new Uri(prevUrl, UriKind.Absolute));
+            // Check redirect to canonical url
+            s.GoToUrl(posBaseUrl);
+            Assert.Equal("/", new Uri(s.Driver.Url, UriKind.Absolute).AbsolutePath);
 
             // Let's check with domain mapping as well.
+            s.Driver.Navigate().GoToUrl(new Uri(prevUrl, UriKind.Absolute));
             s.GoToServer(ServerNavPages.Policies);
             s.Driver.ScrollTo(By.Id("RootAppId"));
             select = new SelectElement(s.Driver.FindElement(By.Id("RootAppId")));
@@ -1062,19 +1070,20 @@ namespace BTCPayServer.Tests
             select.SelectByText("Point of", true);
             s.Driver.FindElement(By.Id("SaveButton")).Click();
             Assert.Contains("Policies updated successfully", s.FindAlertMessage().Text);
-
+            // Make sure after login, we are not redirected to the PoS
             s.Logout();
             s.LogIn(userId);
-            // Make sure after login, we are not redirected to the PoS
             Assert.DoesNotContain("Tea shop", s.Driver.PageSource);
-
             // We are only if explicitly going to /
             s.GoToUrl("/");
             Assert.Contains("Tea shop", s.Driver.PageSource);
+            // Check redirect to canonical url
+            s.GoToUrl(posBaseUrl);
+            Assert.Equal("/", new Uri(s.Driver.Url, UriKind.Absolute).AbsolutePath);
             
             // Archive
-            Assert.True(s.Driver.ElementDoesNotExist(By.Id("Nav-ArchivedApps")));
             s.Driver.SwitchTo().Window(windows[0]);
+            Assert.True(s.Driver.ElementDoesNotExist(By.Id("Nav-ArchivedApps")));
             s.Driver.FindElement(By.Id("btn-archive-toggle")).Click();
             Assert.Contains("The app has been archived and will no longer appear in the apps list by default.", s.FindAlertMessage().Text);
             
@@ -1416,13 +1425,6 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Name("update")).Click();
             s.FindAlertMessage();
             s.Driver.FindElement(By.LinkText("Modify")).Click();
-            foreach (var value in Enum.GetValues(typeof(WebhookEventType)))
-            {
-                // Here we make sure we did not forget an event type in the list
-                // However, maybe some event should not appear here because not at the store level.
-                // Fix as needed.
-                Assert.Contains($"value=\"{value}\"", s.Driver.PageSource);
-            }
 
             // This one should be checked
             Assert.Contains("value=\"InvoiceProcessing\" checked", s.Driver.PageSource);
@@ -2709,7 +2711,7 @@ namespace BTCPayServer.Tests
                         callbacks.Add(request.Callback);
                         break;
                     default:
-                        Assert.False(true, "Should have matched");
+                        Assert.Fail("Should have matched");
                         break;
                 }
             }
@@ -3050,13 +3052,18 @@ retry:
         {
             s.Driver.FindElement(By.Id("QuickFillDropdownToggle")).Click();
             s.Driver.FindElement(By.CssSelector("#quick-fill .dropdown-menu .dropdown-item:first-child")).Click();
+            s.Driver.FindElement(By.Id("Settings_Login")).Clear();
             s.Driver.FindElement(By.Id("Settings_Login")).SendKeys("test@gmail.com");
             s.Driver.FindElement(By.CssSelector("button[value=\"Save\"]")).Submit();
             s.FindAlertMessage();
+            s.Driver.FindElement(By.Id("Settings_Password")).Clear();
             s.Driver.FindElement(By.Id("Settings_Password")).SendKeys("mypassword");
+            
+            s.Driver.FindElement(By.Id("Settings_From")).Clear();
             s.Driver.FindElement(By.Id("Settings_From")).SendKeys("Firstname Lastname <email@example.com>");
             s.Driver.FindElement(By.Id("Save")).SendKeys(Keys.Enter);
             Assert.Contains("Configured", s.Driver.PageSource);
+            s.Driver.FindElement(By.Id("Settings_Login")).Clear();
             s.Driver.FindElement(By.Id("Settings_Login")).SendKeys("test_fix@gmail.com");
             s.Driver.FindElement(By.Id("Save")).SendKeys(Keys.Enter);
             Assert.Contains("Configured", s.Driver.PageSource);

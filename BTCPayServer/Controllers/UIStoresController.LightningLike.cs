@@ -140,17 +140,18 @@ namespace BTCPayServer.Controllers
                     ModelState.AddModelError(nameof(vm.ConnectionString), "Please provide a connection string");
                     return View(vm);
                 }
-                if (!LightningConnectionString.TryParse(vm.ConnectionString, false, out var connectionString, out var error))
+
+                ILightningClient? lightningClient = null;
+                try
                 {
-                    ModelState.AddModelError(nameof(vm.ConnectionString), $"Invalid URL ({error})");
+                    lightningClient = _lightningClientFactoryService.Create(vm.ConnectionString, network);
+                }
+                catch (Exception e)
+                {
+                    ModelState.AddModelError(nameof(vm.ConnectionString), $"Invalid URL ({e.Message})");
                     return View(vm);
                 }
-                if (connectionString.ConnectionType == LightningConnectionType.LndGRPC)
-                {
-                    ModelState.AddModelError(nameof(vm.ConnectionString), $"BTCPay does not support gRPC connections");
-                    return View(vm);
-                }
-                if (!User.IsInRole(Roles.ServerAdmin) && !connectionString.IsSafe())
+                if (!User.IsInRole(Roles.ServerAdmin) && !lightningClient.IsSafe())
                 {
                     ModelState.AddModelError(nameof(vm.ConnectionString), "You are not a server admin, so the connection string should not contain 'cookiefilepath', 'macaroondirectorypath', 'macaroonfilepath', and should not point to a local ip or to a dns name ending with '.internal', '.local', '.lan' or '.'.");
                     return View(vm);
@@ -163,7 +164,7 @@ namespace BTCPayServer.Controllers
 
                 try
                 {
-                    paymentMethod.SetLightningUrl(connectionString);
+                    paymentMethod.SetLightningUrl(lightningClient);
                 }
                 catch (Exception ex)
                 {

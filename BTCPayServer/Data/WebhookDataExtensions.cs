@@ -5,10 +5,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
+using BTCPayServer.HostedServices.Webhooks;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using SshNet.Security.Cryptography;
 
 namespace BTCPayServer.Data
 {
@@ -16,9 +16,8 @@ namespace BTCPayServer.Data
     {
         public bool Everything { get; set; }
 
-        [JsonProperty(ItemConverterType = typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
-        public WebhookEventType[] SpecificEvents { get; set; } = Array.Empty<WebhookEventType>();
-        public bool Match(WebhookEventType evt)
+        public string[] SpecificEvents { get; set; } = Array.Empty<string>();
+        public bool Match(string evt)
         {
             return Everything || SpecificEvents.Contains(evt);
         }
@@ -47,7 +46,7 @@ namespace BTCPayServer.Data
         }
         public T ReadRequestAs<T>()
         {
-            return JsonConvert.DeserializeObject<T>(UTF8Encoding.UTF8.GetString(Request), HostedServices.WebhookSender.DefaultSerializerSettings);
+            return JsonConvert.DeserializeObject<T>(UTF8Encoding.UTF8.GetString(Request), WebhookSender.DefaultSerializerSettings);
         }
 
         public bool IsPruned()
@@ -78,14 +77,14 @@ namespace BTCPayServer.Data
             if (webhook.Blob is null)
                 return null;
             else
-                return JsonConvert.DeserializeObject<WebhookDeliveryBlob>(webhook.Blob, HostedServices.WebhookSender.DefaultSerializerSettings);
+                return JsonConvert.DeserializeObject<WebhookDeliveryBlob>(webhook.Blob, WebhookSender.DefaultSerializerSettings);
         }
         public static void SetBlob(this WebhookDeliveryData webhook, WebhookDeliveryBlob blob)
         {
             if (blob is null)
                 webhook.Blob = null;
             else
-                webhook.Blob = JsonConvert.SerializeObject(blob, HostedServices.WebhookSender.DefaultSerializerSettings);
+                webhook.Blob = JsonConvert.SerializeObject(blob, WebhookSender.DefaultSerializerSettings);
         }
     }
 }

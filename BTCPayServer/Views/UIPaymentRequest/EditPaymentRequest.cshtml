@@ -1,13 +1,12 @@
 @using BTCPayServer.Services.PaymentRequests
 @using System.Globalization
+@using BTCPayServer.Client
 @using BTCPayServer.Forms
-@using BTCPayServer.Services.Stores
 @using BTCPayServer.TagHelpers
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @inject FormDataService FormDataService
 @model BTCPayServer.Models.PaymentRequestViewModels.UpdatePaymentRequestViewModel
 @{
-    
     var checkoutFormOptions = await FormDataService.GetSelect(Model.StoreId, Model.FormId);
 
     ViewData.SetActivePage(PaymentRequestsNavPages.Create, $"{(string.IsNullOrEmpty(Model.Id) ? "Create" : "Edit")} Payment Request", Model.Id);
@@ -28,11 +27,11 @@
         <div class="d-flex gap-3 mt-3 mt-sm-0">
             @if (string.IsNullOrEmpty(Model.Id))
             {
-                <button type="submit" class="btn btn-primary" id="SaveButton">Create</button>
+                <button type="submit" class="btn btn-primary" id="SaveButton"  permission="@Policies.CanModifyPaymentRequests">Create</button>
             }
             else
             {
-                <button type="submit" class="btn btn-primary order-sm-1" id="SaveButton">Save</button>
+                <button type="submit" class="btn btn-primary order-sm-1" id="SaveButton"  permission="@Policies.CanModifyPaymentRequests">Save</button>
                 <a class="btn btn-secondary" asp-action="ViewPaymentRequest" asp-route-payReqId="@Model.Id" id="ViewPaymentRequest" target="_blank">View</a>
             }
         </div>
@@ -85,7 +84,14 @@
                 <label asp-for="Email" class="form-label"></label>
                 <input type="email" asp-for="Email" placeholder="Firstname Lastname <email@example.com>" class="form-control" />
                 <span asp-validation-for="Email" class="text-danger"></span>
-                <div id="PaymentRequestEmailHelpBlock" class="form-text">The recipient's email. This will send notification mails to the recipient, as configured by the <a asp-action="StoreEmails" asp-controller="UIStores" asp-route-storeId="@Model.StoreId">email rules</a>, and include the email in the invoice export data.</div>
+                <div id="PaymentRequestEmailHelpBlock" class="form-text">
+                    This will send notification mails to the recipient, as configured by the
+                    <a asp-action="StoreEmails" asp-controller="UIStores" asp-route-storeId="@Model.StoreId">email rules</a>.
+                    @if (Model.HasEmailRules is not true)
+                    {
+                        <div class="text-warning">No payment request related email rules have been configured for this store.</div>
+                    }
+                </div>
             </div>
             <div class="form-group">
                 <label asp-for="FormId" class="form-label"></label>
@@ -152,18 +158,19 @@
 {
     <div class="d-flex gap-3 mt-3">
         <a class="btn btn-secondary"
+            permission="@Policies.CanViewInvoices"
            asp-action="ListInvoices"
            asp-controller="UIInvoice"
            asp-route-storeId="@Model.StoreId"
            asp-route-searchterm="@($"orderid:{PaymentRequestRepository.GetOrderIdForPaymentRequest(Model.Id)}")">Invoices</a>
-        <a class="btn btn-secondary" asp-route-payReqId="@Model.Id" asp-action="ClonePaymentRequest" id="ClonePaymentRequest">Clone</a>
+        <a class="btn btn-secondary" asp-route-payReqId="@Model.Id" asp-action="ClonePaymentRequest" id="ClonePaymentRequest"  permission="@Policies.CanModifyPaymentRequests">Clone</a>
         @if (!Model.Archived)
         {
-            <a class="btn btn-secondary" data-bs-toggle="tooltip" title="Archive this payment request so that it does not appear in the payment request list by default" asp-controller="UIPaymentRequest" asp-action="TogglePaymentRequestArchival" asp-route-payReqId="@Model.Id" id="ArchivePaymentRequest">Archive</a>
+            <a class="btn btn-secondary" data-bs-toggle="tooltip" title="Archive this payment request so that it does not appear in the payment request list by default" asp-controller="UIPaymentRequest" asp-action="TogglePaymentRequestArchival" asp-route-payReqId="@Model.Id" id="ArchivePaymentRequest" permission="@Policies.CanModifyPaymentRequests">Archive</a>
         }
         else
         {
-            <a class="btn btn-secondary" data-bs-toggle="tooltip" title="Unarchive this payment request" asp-controller="UIPaymentRequest" asp-action="TogglePaymentRequestArchival" asp-route-payReqId="@Model.Id" id="UnarchivePaymentRequest">Unarchive</a>
+            <a class="btn btn-secondary" data-bs-toggle="tooltip" title="Unarchive this payment request" asp-controller="UIPaymentRequest" asp-action="TogglePaymentRequestArchival" asp-route-payReqId="@Model.Id" id="UnarchivePaymentRequest" permission="@Policies.CanModifyPaymentRequests">Unarchive</a>
         }
     </div>
 }

@@ -117,9 +117,25 @@
 {
     <div class="alert alert-danger mb-4 d-flex align-items-center justify-content-between">
         Some plugins were disabled due to fatal errors. They may be incompatible with this version of BTCPay Server.
-        <button class="btn btn-danger" data-bs-toggle="collapse" data-bs-target="#disabled-plugins">View disabled plugins</button>
+    </div>
+    <div class="mb-5">
+        <h3 class="mb-4">Disabled Plugins</h3>
+        <ul class="list-group list-group-flush d-inline-block">
+            @foreach (var d in Model.Disabled)
+            {
+                <li class="list-group-item px-0">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                        <span>@d</span>
+                        <form asp-action="UnInstallPlugin" asp-route-plugin="@d">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">Uninstall</button>
+                        </form>
+                    </div>
+                </li>
+            }
+        </ul>
     </div>
 }
+
 @if (Model.Commands.Any())
 {
     <div class="alert alert-info mb-4 d-flex align-items-center justify-content-between">
@@ -466,37 +482,6 @@
                                         <span class="my-2 me-3">@extComm.Key</span>
                                         <form asp-action="CancelPluginCommands" asp-route-plugin="@extComm.Key">
                                             <button type="submit" class="btn btn-outline-secondary">Cancel pending @extComm.Last().command</button>
-                                        </form>
-                                    </div>
-                                </li>
-                            }
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-}
-@if (Model.Disabled.Any())
-{
-    <div class="mb-4">
-        <h3 class="mb-4">Disabled Plugins</h3>
-        <button class="btn btn-secondary mb-4" type="button" data-bs-toggle="collapse" data-bs-target="#disabled-plugins">
-            Disabled Plugins
-        </button>
-        <div class="row collapse" id="disabled-plugins">
-            <div class="col col-12 col-lg-6 mb-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h4 class="card-title">Disabled plugins</h4>
-                        <ul class="list-group list-group-flush">
-                            @foreach (var d in Model.Disabled)
-                            {
-                                <li class="list-group-item px-0">
-                                    <div class="d-flex flex-wrap align-items-center justify-content-between mx-3">
-                                        <span class="my-2 me-3">@d</span>
-                                        <form asp-action="UnInstallPlugin" asp-route-plugin="@d">
-                                            <button type="submit" class="btn btn-outline-secondary">Uninstall</button>
                                         </form>
                                     </div>
                                 </li>

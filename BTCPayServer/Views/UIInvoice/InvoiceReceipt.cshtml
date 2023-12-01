@@ -31,7 +31,7 @@
         </script>
     }
     <style>
-        #InvoiceReceipt { --wrap-max-width: 720px; }
+        #InvoiceReceipt { --wrap-max-width: 768px; }
         #InvoiceSummary { gap: var(--btcpay-space-l); }
         #PaymentDetails table tbody tr:first-child td { padding-top: 1rem; }
         #PaymentDetails table tbody:not(:last-child) tr:last-child > th,td { padding-bottom: 1rem; }
@@ -64,26 +64,26 @@
                         {
                             <vc:qr-code data="@Context.Request.GetCurrentUrl()"></vc:qr-code>
                         }
-                        <dl class="d-flex flex-column gap-4 mb-0 flex-fill">
-                            <div class="d-flex flex-column">
-                                <div class="d-flex align-items-center justify-content-between gap-3">
-                                    <a href="?print=true" class="btn btn-link p-0 d-print-none fw-semibold order-1" target="_blank">Print</a>
-                                    <dd class="text-muted mb-0 fw-semibold">Amount Paid</dd>
-                                </div>
-                                <dt class="fs-2 mb-0 text-nowrap fw-semibold">@DisplayFormatter.Currency(Model.Amount, Model.Currency, DisplayFormatter.CurrencyFormat.Symbol)</dt>
-                            </div>
-                            <div class="d-flex flex-column">
-                                <dd class="text-muted mb-0 fw-semibold">Date</dd>
-                                <dt class="fs-5 mb-0 text-nowrap fw-semibold">@Model.Timestamp.ToBrowserDate()</dt>
-                            </div>
-                            @if (!string.IsNullOrEmpty(Model.OrderId))
-                            {
+                        <div class="d-flex gap-4 mb-0 flex-fill">
+                            <dl class="d-flex flex-column gap-4 mb-0 flex-fill">
                                 <div class="d-flex flex-column">
-                                    <dd class="text-muted mb-0 fw-semibold">Order ID</dd>
-                                    <dt class="fs-5 mb-0 text-break fw-semibold">@Model.OrderId</dt>
+                                    <dd class="text-muted mb-0 fw-semibold">Amount Paid</dd>
+                                    <dt class="fs-2 mb-0 text-nowrap fw-semibold">@DisplayFormatter.Currency(Model.Amount, Model.Currency, DisplayFormatter.CurrencyFormat.Symbol)</dt>
                                 </div>
-                            }
-                        </dl>
+                                <div class="d-flex flex-column">
+                                    <dd class="text-muted mb-0 fw-semibold">Date</dd>
+                                    <dt class="fs-5 mb-0 text-nowrap fw-semibold">@Model.Timestamp.ToBrowserDate()</dt>
+                                </div>
+                                @if (!string.IsNullOrEmpty(Model.OrderId))
+                                {
+                                    <div class="d-flex flex-column">
+                                        <dd class="text-muted mb-0 fw-semibold">Order ID</dd>
+                                        <dt class="fs-5 mb-0 text-break fw-semibold">@Model.OrderId</dt>
+                                    </div>
+                                }
+                            </dl>
+                            <a href="?print=true" class="flex-grow-0 align-self-start btn btn-secondary d-print-none fs-4" target="_blank">Print</a>
+                        </div>
                     }
                 </div>
                 
@@ -121,7 +121,7 @@
                                         <tr>
                                             <td class="date-col">@payment.ReceivedDate.ToBrowserDate()</td>
                                             <td class="amount-col">@payment.PaidFormatted</td>
-                                            <td class="amount-col">@payment.AmountFormatted @payment.PaymentMethod</td>
+                                            <td class="amount-col">@payment.AmountFormatted</td>
                                         </tr>
                                         @if (!string.IsNullOrEmpty(payment.Destination))
                                         {

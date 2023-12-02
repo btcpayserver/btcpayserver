@@ -4473,7 +4473,7 @@ clientBasic.PreviewUpdateStoreRateConfiguration(user.StoreId, new StoreRateConfi
             await AssertHttpError(404, async () => await withdrawalClient.SimulateCustodianAccountWithdrawal(storeId, "WRONG-ACCOUNT-ID", simulateWithdrawalRequest));
 
             // Test: SimulateWithdrawal, wrong store ID
-            // TODO it is wierd that 403 is considered normal, but it is like this for all calls where the store is wrong... I'd have preferred a 404 error, because the store cannot be found.
+            // TODO it is weird that 403 is considered normal, but it is like this for all calls where the store is wrong... I'd have preferred a 404 error, because the store cannot be found.
             await AssertHttpError(403, async () => await withdrawalClient.SimulateCustodianAccountWithdrawal("WRONG-STORE-ID", accountId, simulateWithdrawalRequest));
 
             // Test: SimulateWithdrawal, correct payment method, wrong amount
@@ -4504,7 +4504,7 @@ clientBasic.PreviewUpdateStoreRateConfiguration(user.StoreId, new StoreRateConfi
             await AssertHttpError(404, async () => await withdrawalClient.CreateCustodianAccountWithdrawal(storeId, "WRONG-ACCOUNT-ID", createWithdrawalRequest));
 
             // Test: CreateWithdrawal, wrong store ID
-            // TODO it is wierd that 403 is considered normal, but it is like this for all calls where the store is wrong... I'd have preferred a 404 error, because the store cannot be found.
+            // TODO it is weird that 403 is considered normal, but it is like this for all calls where the store is wrong... I'd have preferred a 404 error, because the store cannot be found.
             await AssertHttpError(403, async () => await withdrawalClient.CreateCustodianAccountWithdrawal("WRONG-STORE-ID", accountId, createWithdrawalRequest));
 
             // Test: CreateWithdrawal, correct payment method, wrong amount

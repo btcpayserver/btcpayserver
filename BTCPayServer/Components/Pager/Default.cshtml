@@ -83,7 +83,7 @@
 
         if (Model.PaginationQuery != null)
         {
-            // merge both, prefering the `query` properties in case of duplicate keys
+            // merge both, preferring the `query` properties in case of duplicate keys
             query = query.Concat(Model.PaginationQuery)
                 .GroupBy(e => e.Key)
                 .ToDictionary(g => g.Key, g => g.First().Value);

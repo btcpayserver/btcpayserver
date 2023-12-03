@@ -8,7 +8,6 @@
 * Support BIP129 Multisig wallet import (#5389) @Kukks
 * POS Keypad: Add plus and change clear functionality (#5396) @dennisreimann @dstrukt
 * Forms: Support adjusting invoice amount by multiplier, enables percentage-based discount codes (#5463) @Kukks
-* Pluginify BTCPayNetworkProvider: Prerequisite for moving altcoins to plugins (#5331) @NicolasDorier
 
 ### Bug fixes
 
@@ -18,7 +17,6 @@
 * Greenfield: LNURLPay store payment method fixes (#5446) @dennisreimann
 * Do not activate Blazor in Wizard screens (#5435) @NicolasDorier
 * Pull Payment: Display the amount of claims (#5427) @NicolasDorier
-* Fix qemu package in ARM Docker files (#5504) @greimela
 
 ### Improvements
 
@@ -39,7 +37,6 @@
 * Greenfield: Remove unused checkout type setting from POS (#5512) @dennisreimann
 * Greenfield: Make checkout type V2 default for new stores (#5495) @dennisreimann
 * Domain mapping: Redirect root app to canonical URL (#5471) @dennisreimann
-* Make wallet object system much more performant (#5441) @Kukks @NicolasDorier
 * Lightning: Make implementations extendible by plugins (#5422) @Kukks
 * Lightning: Upgrade LND to 0.17.2-beta @rockstardev
 * Store Branding: Use store logo as favicon (#5519) @dennisreimann
@@ -48,8 +45,6 @@
 * UI: Add system option for theme switch (#5473) @dennisreimann
 * UI: Pull payment improvements (#5453) @dennisreimann
 * UI: Switch pos data to metadata in invoice create view (#5412) @Kukks
-* Vault: Simplify logic by introducing a VaultClient (#5434) @NicolasDorier
-* Update SSH.NET to 2023.0.0 (#5404) @WojciechNagorski
 
 ## 1.11.7
 

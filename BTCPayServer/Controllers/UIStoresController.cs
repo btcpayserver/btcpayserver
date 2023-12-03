@@ -13,6 +13,7 @@ using BTCPayServer.Client;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
+using BTCPayServer.HostedServices.Webhooks;
 using BTCPayServer.Models;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments;
@@ -22,6 +23,7 @@ using BTCPayServer.Security.Bitpay;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.Mails;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
@@ -37,6 +39,7 @@ using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Controllers
 {
+   
     [Route("stores")]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
@@ -67,7 +70,8 @@ namespace BTCPayServer.Controllers
             IOptions<LightningNetworkOptions> lightningNetworkOptions,
             IOptions<ExternalServicesOptions> externalServiceOptions,
             IHtmlHelper html,
-            LightningClientFactoryService lightningClientFactoryService)
+            LightningClientFactoryService lightningClientFactoryService,
+            EmailSenderFactory emailSenderFactory)
         {
             _RateFactory = rateFactory;
             _Repo = repo;
@@ -92,6 +96,7 @@ namespace BTCPayServer.Controllers
             _BTCPayEnv = btcpayEnv;
             _externalServiceOptions = externalServiceOptions;
             _lightningClientFactoryService = lightningClientFactoryService;
+            _emailSenderFactory = emailSenderFactory;
             Html = html;
         }
 
@@ -115,6 +120,7 @@ namespace BTCPayServer.Controllers
         private readonly EventAggregator _EventAggregator;
         private readonly IOptions<ExternalServicesOptions> _externalServiceOptions;
         private readonly LightningClientFactoryService _lightningClientFactoryService;
+        private readonly EmailSenderFactory _emailSenderFactory;
 
         public string? GeneratedPairingCode { get; set; }
         public WebhookSender WebhookNotificationManager { get; }
@@ -127,13 +133,36 @@ namespace BTCPayServer.Controllers
         {
             get; set;
         }
+        
+        [AllowAnonymous]
+        [HttpGet("{storeId}/index")]
+        public async Task<IActionResult> Index(string storeId)
+        {
+            var userId = _UserManager.GetUserId(User);
+            if (string.IsNullOrEmpty(userId))
+                return Forbid();
+            
+            var store = await _Repo.FindStore(storeId, userId);
+            if (store is null)
+            {
+                return Forbid();
+            }
+            if (store.GetPermissionSet(userId).Contains(Policies.CanModifyStoreSettings, storeId))
+            {
+                return RedirectToAction("Dashboard", new { storeId });
+            }
+            if (store.GetPermissionSet(userId).Contains(Policies.CanViewInvoices, storeId))
+            {
+                return RedirectToAction("ListInvoices", "UIInvoice", new { storeId });
+            }
+            HttpContext.SetStoreData(store);
+            return View();
+        }
 
-        [HttpGet]
-        [Route("{storeId}/users")]
+        [HttpGet("{storeId}/users")]
         public async Task<IActionResult> StoreUsers()
         {
-            StoreUsersViewModel vm = new StoreUsersViewModel();
-            vm.Role = StoreRoleId.Guest.Role;
+            var vm = new StoreUsersViewModel { Role = StoreRoleId.Guest.Role };
             await FillUsers(vm);
             return View(vm);
         }
@@ -152,8 +181,7 @@ namespace BTCPayServer.Controllers
 
         public StoreData CurrentStore => HttpContext.GetStoreData();
 
-        [HttpPost]
-        [Route("{storeId}/users")]
+        [HttpPost("{storeId}/users")]
         public async Task<IActionResult> StoreUsers(string storeId, StoreUsersViewModel vm)
         {
             await FillUsers(vm);
@@ -638,7 +666,7 @@ namespace BTCPayServer.Controllers
                             WalletId = new WalletId(store.Id, paymentMethodId.CryptoCode),
                             Enabled = !excludeFilters.Match(paymentMethodId) && strategy != null,
 #if ALTCOINS
-                            Collapsed = network is ElementsBTCPayNetwork elementsBTCPayNetwork && elementsBTCPayNetwork.NetworkCryptoCode != elementsBTCPayNetwork.CryptoCode && string.IsNullOrEmpty(value)
+                            Collapsed = network is Plugins.Altcoins.ElementsBTCPayNetwork elementsBTCPayNetwork && elementsBTCPayNetwork.NetworkCryptoCode != elementsBTCPayNetwork.CryptoCode && string.IsNullOrEmpty(value)
 #endif
                         });
                         break;

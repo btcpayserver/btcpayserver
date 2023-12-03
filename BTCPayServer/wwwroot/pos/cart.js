@@ -205,7 +205,7 @@ document.addEventListener("DOMContentLoaded",function () {
 
             window.addEventListener('pagehide', () => {
                 if (this.payButtonLoading) {
-                    this.unsetPayButtonLoading();
+                    this.payButtonLoading = false;
                     localStorage.removeItem(storageKey('cart'));
                 }
             })

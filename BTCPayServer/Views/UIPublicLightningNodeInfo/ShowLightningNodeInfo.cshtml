@@ -3,20 +3,20 @@
 @{
     Layout = null;
     ViewData["Title"] = $"{Model.StoreName} – {Model.CryptoCode} Lightning Node";
+    ViewData["StoreBranding"] = Model.StoreBranding;
 }
 <!DOCTYPE html>
 <html lang="en" @(Env.IsDeveloping ? " data-devenv" : "")>
 <head>
-    <partial name="LayoutHead" />
-    <partial name="LayoutHeadStoreBranding" model="@(Model.BrandColor, Model.CssFileId, "", "")" />
-    <link href="~/main/qrcode.css" rel="stylesheet" asp-append-version="true" />
+    <partial name="LayoutHead"/>
+    <link href="~/main/qrcode.css" rel="stylesheet" asp-append-version="true"/>
     <style>#app { --wrap-max-width: 400px; }</style>
 </head>
 <body class="min-vh-100">
     <div id="app" class="public-page-wrap">
         <main class="flex-grow-1">
             <div class="d-flex flex-column justify-content-center gap-4">
-                <partial name="_StoreHeader" model="(Model.StoreName, Model.LogoFileId)" />
+                <partial name="_StoreHeader" model="(Model.StoreName, Model.StoreBranding)" />
                 <section class="tile">
                     <h2 class="h4 card-subtitle text-center text-secondary mt-1 mb-3">
                         <span>@Model.CryptoCode</span>

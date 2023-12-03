@@ -1,5 +1,7 @@
 @model EditWebhookViewModel
 @using  BTCPayServer.Client.Models;
+@using BTCPayServer.HostedServices.Webhooks
+@inject WebhookSender WebhookSender 
 @{
     Layout = "../Shared/_NavLayout.cshtml";
     ViewData.SetActivePage(StoreNavPages.Webhooks, "Webhook Settings", Context.GetStoreData().Id);
@@ -55,20 +57,11 @@
             </select>
             <div id="event-selector" class="collapse">
                 <div class="pb-3">
-                    @foreach (var evt in new[]
-                  {
-                        ("A new invoice has been created", WebhookEventType.InvoiceCreated),
-                        ("A new payment has been received", WebhookEventType.InvoiceReceivedPayment),
-                        ("A payment has been settled", WebhookEventType.InvoicePaymentSettled),
-                        ("An invoice is processing", WebhookEventType.InvoiceProcessing),
-                        ("An invoice has expired", WebhookEventType.InvoiceExpired),
-                        ("An invoice has been settled", WebhookEventType.InvoiceSettled),
-                        ("An invoice became invalid", WebhookEventType.InvoiceInvalid)
-                    })
+                    @foreach (var evt in WebhookSender.GetSupportedWebhookTypes())
                     {
                         <div class="form-check my-1">
-                            <input name="Events" id="@evt.Item2" value="@evt.Item2" @(Model.Events.Contains(evt.Item2) ? "checked" : "") type="checkbox" class="form-check-input" />
-                            <label for="@evt.Item2" class="form-check-label">@evt.Item1</label>
+                            <input name="Events" id="@evt.Key" value="@evt.Key" @(Model.Events.Contains(evt.Key) ? "checked" : "") type="checkbox" class="form-check-input" />
+                            <label for="@evt.Key" class="form-check-label">@evt.Value</label>
                         </div>
                     }
                 </div>

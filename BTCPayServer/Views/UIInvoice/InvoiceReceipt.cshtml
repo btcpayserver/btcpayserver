@@ -8,6 +8,7 @@
 @{
     Layout = null;
     ViewData["Title"] = $"Receipt from {Model.StoreName}";
+    ViewData["StoreBranding"] = Model.StoreBranding;
     var isProcessing = Model.Status == InvoiceStatus.Processing;
     var isFreeInvoice = (Model.Status == InvoiceStatus.New && Model.Amount == 0);
     var isSettled = Model.Status == InvoiceStatus.Settled;
@@ -15,8 +16,7 @@
 <!DOCTYPE html>
 <html lang="en" @(Env.IsDeveloping ? " data-devenv" : "")>
 <head>
-    <partial name="LayoutHead" />
-    <partial name="LayoutHeadStoreBranding" model="@(Model.BrandColor, Model.CssFileId, "", "")" />
+    <partial name="LayoutHead"/>
     <meta name="robots" content="noindex,nofollow">
     @if (isProcessing)
     {
@@ -43,7 +43,7 @@
     <div id="InvoiceReceipt" class="public-page-wrap">
         <main class="flex-grow-1">
             <div class="d-flex flex-column justify-content-center gap-4">
-                <partial name="_StoreHeader" model="(Model.StoreName, Model.LogoFileId)" />
+                <partial name="_StoreHeader" model="(Model.StoreName, Model.StoreBranding)" />
                 <partial name="_StatusMessage" model="@(new ViewDataDictionary(ViewData) { { "Margin", "mb-4" } })"/>
                 <div id="InvoiceSummary" class="tile d-flex flex-wrap align-items-center justify-content-center">
                     @if (isProcessing)

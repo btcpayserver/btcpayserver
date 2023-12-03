@@ -15,6 +15,7 @@ using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
+using BTCPayServer.Configuration;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
@@ -46,6 +47,7 @@ using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Labels;
 using BTCPayServer.Services.Mails;
+using BTCPayServer.Services.Notifications;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Storage.Models;
 using BTCPayServer.Storage.Services.Providers.FileSystemStorage.Configuration;
@@ -57,6 +59,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using NBitcoin.Payment;
@@ -177,7 +180,7 @@ namespace BTCPayServer.Tests
             // If this test fail, run `UpdateSwagger` once.
             if (description != json["components"]["securitySchemes"]["API_Key"]["description"].Value<string>())
             {
-                Assert.False(true, "Please run manually the test `UpdateSwagger` once");
+                Assert.Fail("Please run manually the test `UpdateSwagger` once");
             }
         }
 
@@ -541,7 +544,7 @@ namespace BTCPayServer.Tests
 
             var pairingCode = (string)token.RouteValues["pairingCode"];
 
-            acc.BitPay.AuthorizeClient(new PairingCode(pairingCode)).GetAwaiter().GetResult();
+            await acc.BitPay.AuthorizeClient(new PairingCode(pairingCode));
             Assert.True(acc.BitPay.TestAccess(Facade.Merchant));
         }
 
@@ -605,7 +608,7 @@ namespace BTCPayServer.Tests
                             completed = true;
                             break;
                         default:
-                            Assert.False(true, $"{evtName} was not expected");
+                            Assert.Fail($"{evtName} was not expected");
                             break;
                     }
                 }
@@ -1296,7 +1299,7 @@ namespace BTCPayServer.Tests
             using var tester = CreateServerTester();
             await tester.StartAsync();
             var user = tester.NewAccount();
-            user.GrantAccess();
+            await user.GrantAccessAsync();
             user.RegisterDerivationScheme("BTC");
 
             var rng = new Random();
@@ -1330,8 +1333,6 @@ namespace BTCPayServer.Tests
             var btcmethod = (await client.GetInvoicePaymentMethods(user.StoreId, invoice.Id))[0];
             var paid = btcSent;
             var invoiceAddress = BitcoinAddress.Create(btcmethod.Destination, cashCow.Network);
-
-
             var btc = new PaymentMethodId("BTC", PaymentTypes.BTCLike);
             var networkFee = (await tester.PayTester.InvoiceRepository.GetInvoice(invoice.Id))
                             .GetPaymentMethods()[btc]
@@ -1343,9 +1344,7 @@ namespace BTCPayServer.Tests
                 networkFee = 0.0m;
             }
 
-            cashCow.SendToAddress(invoiceAddress, paid);
-
-
+            await cashCow.SendToAddressAsync(invoiceAddress, paid);
             await TestUtils.EventuallyAsync(async () =>
             {
                 try
@@ -1365,7 +1364,7 @@ namespace BTCPayServer.Tests
                 }
                 catch (JsonSerializationException)
                 {
-                    Assert.False(true, "The bitpay's amount is not set");
+                    Assert.Fail("The bitpay's amount is not set");
                 }
             });
         }
@@ -1949,11 +1948,11 @@ namespace BTCPayServer.Tests
             using var tester = CreateServerTester();
             await tester.StartAsync();
             var user = tester.NewAccount();
-            user.GrantAccess();
+            await user.GrantAccessAsync();
             user.RegisterDerivationScheme("BTC");
             await user.SetupWebhook();
-            var invoice = user.BitPay.CreateInvoice(
-                new Invoice()
+            var invoice = await user.BitPay.CreateInvoiceAsync(
+                new Invoice
                 {
                     Price = 5000.0m,
                     TaxIncluded = 1000.0m,
@@ -2000,11 +1999,8 @@ namespace BTCPayServer.Tests
             Assert.Empty(user.BitPay.GetInvoices(invoice.InvoiceTime.UtcDateTime - TimeSpan.FromDays(5),
                 invoice.InvoiceTime.DateTime - TimeSpan.FromDays(1)));
 
-
             var firstPayment = Money.Coins(0.04m);
-
             var txFee = Money.Zero;
-
             var cashCow = tester.ExplorerNode;
 
             var invoiceAddress = BitcoinAddress.Create(invoice.BitcoinAddress, cashCow.Network);
@@ -2032,7 +2028,7 @@ namespace BTCPayServer.Tests
                 secondPayment = localInvoice.BtcDue;
             });
 
-            cashCow.SendToAddress(invoiceAddress, secondPayment);
+            await cashCow.SendToAddressAsync(invoiceAddress, secondPayment);
 
             TestUtils.Eventually(() =>
             {
@@ -2046,7 +2042,7 @@ namespace BTCPayServer.Tests
                 Assert.False((bool)((JValue)localInvoice.ExceptionStatus).Value);
             });
 
-            cashCow.Generate(1); //The user has medium speed settings, so 1 conf is enough to be confirmed
+            await cashCow.GenerateAsync(1); //The user has medium speed settings, so 1 conf is enough to be confirmed
 
             TestUtils.Eventually(() =>
             {
@@ -2054,7 +2050,7 @@ namespace BTCPayServer.Tests
                 Assert.Equal("confirmed", localInvoice.Status);
             });
 
-            cashCow.Generate(5); //Now should be complete
+            await cashCow.GenerateAsync(5); //Now should be complete
 
             TestUtils.Eventually(() =>
             {
@@ -2063,7 +2059,7 @@ namespace BTCPayServer.Tests
                 Assert.NotEqual(0.0m, localInvoice.Rate);
             });
 
-            invoice = user.BitPay.CreateInvoice(new Invoice()
+            invoice = await user.BitPay.CreateInvoiceAsync(new Invoice
             {
                 Price = 5000.0m,
                 Currency = "USD",
@@ -2076,7 +2072,7 @@ namespace BTCPayServer.Tests
             }, Facade.Merchant);
             invoiceAddress = BitcoinAddress.Create(invoice.BitcoinAddress, cashCow.Network);
 
-            var txId = cashCow.SendToAddress(invoiceAddress, invoice.BtcDue + Money.Coins(1));
+            var txId = await cashCow.SendToAddressAsync(invoiceAddress, invoice.BtcDue + Money.Coins(1));
 
             TestUtils.Eventually(() =>
             {
@@ -2093,7 +2089,7 @@ namespace BTCPayServer.Tests
                 Assert.Single(textSearchResult);
             });
 
-            cashCow.Generate(1);
+            await cashCow.GenerateAsync(2);
 
             TestUtils.Eventually(() =>
             {
@@ -2258,12 +2254,16 @@ namespace BTCPayServer.Tests
         }
 
 
-        class MockVersionFetcher : IVersionFetcher
+        class MockVersionFetcher : GithubVersionFetcher
         {
             public const string MOCK_NEW_VERSION = "9.9.9.9";
-            public Task<string> Fetch(CancellationToken cancellation)
+            public override Task<string> Fetch(CancellationToken cancellation)
             {
                 return Task.FromResult(MOCK_NEW_VERSION);
+            }
+
+            public MockVersionFetcher(IHttpClientFactory httpClientFactory, BTCPayServerOptions options, ILogger<GithubVersionFetcher> logger, SettingsRepository settingsRepository, BTCPayServerEnvironment environment, NotificationSender notificationSender) : base(httpClientFactory, options, logger, settingsRepository, environment, notificationSender)
+            {
             }
         }
 
@@ -2283,8 +2283,13 @@ namespace BTCPayServer.Tests
             var mockEnv = tester.PayTester.GetService<BTCPayServerEnvironment>();
             var mockSender = tester.PayTester.GetService<Services.Notifications.NotificationSender>();
 
-            var svc = new NewVersionCheckerHostedService(settings, mockEnv, mockSender, new MockVersionFetcher(), BTCPayLogs);
-            await svc.ProcessVersionCheck();
+            var svc = new MockVersionFetcher(tester.PayTester.GetService<IHttpClientFactory>(),
+                tester.PayTester.GetService<BTCPayServerOptions>(),
+                tester.PayTester.GetService<ILogger<GithubVersionFetcher>>(),
+                settings,
+                mockEnv,
+                mockSender);
+            await svc.Do(CancellationToken.None);
 
             // since last version present in database was null, it should've been updated with version mock returned
             var lastVersion = await settings.GetSettingAsync<NewVersionCheckerDataHolder>();

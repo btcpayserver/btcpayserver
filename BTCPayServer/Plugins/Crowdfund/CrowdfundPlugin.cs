@@ -8,6 +8,7 @@ using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Abstractions.Services;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
+using BTCPayServer.Models;
 using BTCPayServer.Plugins.Crowdfund.Controllers;
 using BTCPayServer.Plugins.Crowdfund.Models;
 using BTCPayServer.Plugins.PointOfSale;
@@ -177,19 +178,19 @@ namespace BTCPayServer.Plugins.Crowdfund
 
             var store = appData.StoreData;
             var storeBlob = store.GetStoreBlob();
-
+            var storeBranding = new StoreBrandingViewModel(storeBlob)
+            {
+                CustomCSSLink = settings.CustomCSSLink,
+                EmbeddedCSS = settings.EmbeddedCSS
+            };
             return new ViewCrowdfundViewModel
             {
                 Title = settings.Title,
                 Tagline = settings.Tagline,
                 Description = settings.Description,
-                CustomCSSLink = settings.CustomCSSLink,
                 MainImageUrl = settings.MainImageUrl,
-                EmbeddedCSS = settings.EmbeddedCSS,
                 StoreName = store.StoreName,
-                CssFileId = storeBlob.CssFileId,
-                LogoFileId = storeBlob.LogoFileId,
-                BrandColor = storeBlob.BrandColor,
+                StoreBranding = storeBranding,
                 StoreId = appData.StoreDataId,
                 AppId = appData.Id,
                 StartDate = settings.StartDate?.ToUniversalTime(),

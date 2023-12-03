@@ -8,6 +8,7 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 using BTCPayServer.Events;
 using BTCPayServer.Payments;
+using BTCPayServer.Plugins.Altcoins;
 using BTCPayServer.Services.Altcoins.Zcash.Configuration;
 using BTCPayServer.Services.Altcoins.Zcash.Payments;
 using BTCPayServer.Services.Altcoins.Zcash.RPC;

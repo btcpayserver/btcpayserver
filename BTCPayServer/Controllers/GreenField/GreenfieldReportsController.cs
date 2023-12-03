@@ -32,7 +32,7 @@ public class GreenfieldReportsController : Controller
     public ApplicationDbContextFactory DBContextFactory { get; }
     public ReportService ReportService { get; }
 
-    [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+    [Authorize(Policy = Policies.CanViewReports, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
     [HttpPost("~/api/v1/stores/{storeId}/reports")]
     [NonAction] // Disabling this endpoint as we still need to figure out the request/response model
     public async Task<IActionResult> StoreReports(string storeId, [FromBody] StoreReportRequest? vm = null, CancellationToken cancellationToken = default)

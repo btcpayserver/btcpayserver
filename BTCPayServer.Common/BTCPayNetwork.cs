@@ -4,6 +4,8 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using BTCPayServer.Common;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.Extensions.DependencyInjection;
 using NBitcoin;
 using NBXplorer;
 using NBXplorer.Models;
@@ -62,6 +64,31 @@ namespace BTCPayServer
         public KeyPath CoinType { get; set; }
 
         public Dictionary<uint, DerivationType> ElectrumMapping = new Dictionary<uint, DerivationType>();
+        public BTCPayNetwork SetDefaultElectrumMapping(ChainName chainName)
+        {
+            //https://github.com/spesmilo/electrum/blob/11733d6bc271646a00b69ff07657119598874da4/electrum/constants.py
+            ElectrumMapping = chainName == ChainName.Mainnet
+                    ? new Dictionary<uint, DerivationType>()
+                    {
+                        {0x0488b21eU, DerivationType.Legacy }, // xpub
+                        {0x049d7cb2U, DerivationType.SegwitP2SH }, // ypub
+                        {0x04b24746U, DerivationType.Segwit }, //zpub
+                    }
+                    : new Dictionary<uint, DerivationType>()
+                    {
+                        {0x043587cfU, DerivationType.Legacy}, // tpub
+                        {0x044a5262U, DerivationType.SegwitP2SH}, // upub
+                        {0x045f1cf6U, DerivationType.Segwit} // vpub
+                    };
+            if (!NBitcoinNetwork.Consensus.SupportSegwit)
+            {
+                ElectrumMapping =
+                    ElectrumMapping
+                    .Where(kv => kv.Value == DerivationType.Legacy)
+                    .ToDictionary(k => k.Key, k => k.Value);
+            }
+            return this;
+        }
 
         public virtual bool WalletSupported { get; set; } = true;
         public virtual bool ReadonlyWallet { get; set; } = false;
@@ -107,25 +134,8 @@ namespace BTCPayServer
 
     public abstract class BTCPayNetworkBase
     {
-        private string _blockExplorerLink;
         public bool ShowSyncSummary { get; set; } = true;
         public string CryptoCode { get; set; }
-
-        public string BlockExplorerLink
-        {
-            get => _blockExplorerLink;
-            set
-            {
-                if (string.IsNullOrEmpty(BlockExplorerLinkDefault))
-                {
-                    BlockExplorerLinkDefault = value;
-                }
-
-                _blockExplorerLink = value;
-            }
-        }
-
-        public string BlockExplorerLinkDefault { get; set; }
         public string DisplayName { get; set; }
         public int Divisibility { get; set; } = 8;
         public bool IsBTC
@@ -153,5 +163,8 @@ namespace BTCPayServer
         {
             return NBitcoin.JsonConverters.Serializer.ToString(obj, null);
         }
+        
+        [Obsolete("Use TransactionLinkProviders service instead")]
+        public string BlockExplorerLink { get; set; }
     }
 }

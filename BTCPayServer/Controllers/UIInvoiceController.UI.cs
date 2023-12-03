@@ -5,6 +5,7 @@ using System.Globalization;
 using System.Linq;
 using System.Net.Mime;
 using System.Net.WebSockets;
+using System.Reflection.Metadata;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
@@ -222,9 +223,7 @@ namespace BTCPayServer.Controllers
                 Currency = i.Currency,
                 Timestamp = i.InvoiceTime,
                 StoreName = store.StoreName,
-                BrandColor = storeBlob.BrandColor,
-                LogoFileId = storeBlob.LogoFileId,
-                CssFileId = storeBlob.CssFileId,
+                StoreBranding = new StoreBrandingViewModel(storeBlob),
                 ReceiptOptions = receipt
             };
 
@@ -236,49 +235,13 @@ namespace BTCPayServer.Controllers
             JToken? receiptData = null;
             i.Metadata?.AdditionalData?.TryGetValue("receiptData", out receiptData);
 
-            var payments = i.GetPayments(true)
-                .Select(paymentEntity =>
-                {
-                    var paymentData = paymentEntity.GetCryptoPaymentData();
-                    var paymentMethodId = paymentEntity.GetPaymentMethodId();
-                    if (paymentData is null || paymentMethodId is null)
-                    {
-                        return null;
-                    }
-
-                    string txId = paymentData.GetPaymentId();
-                    string? link = GetTransactionLink(paymentMethodId, txId);
-
-                    return new ViewPaymentRequestViewModel.PaymentRequestInvoicePayment
-                    {
-                        Amount = paymentEntity.PaidAmount.Gross,
-                        Paid = paymentEntity.InvoicePaidAmount.Net,
-                        ReceivedDate = paymentEntity.ReceivedTime.DateTime,
-                        AmountFormatted = _displayFormatter.Currency(paymentEntity.PaidAmount.Gross, paymentEntity.PaidAmount.Currency),
-                        PaidFormatted = _displayFormatter.Currency(paymentEntity.InvoicePaidAmount.Net, i.Currency, DisplayFormatter.CurrencyFormat.Symbol),
-                        RateFormatted = _displayFormatter.Currency(paymentEntity.Rate, i.Currency, DisplayFormatter.CurrencyFormat.Symbol),
-                        PaymentMethod = paymentMethodId.ToPrettyString(),
-                        Link = link,
-                        Id = txId,
-                        Destination = paymentData.GetDestination(),
-                        PaymentProof = paymentData.GetPaymentProof(),
-                        PaymentType = paymentData.GetPaymentType()
-                    };
-                })
-                .Where(payment => payment != null)
-                .ToList();
+            var payments = ViewPaymentRequestViewModel.PaymentRequestInvoicePayment.GetViewModels(i, _displayFormatter, _transactionLinkProviders);
 
             vm.Amount = i.PaidAmount.Net;
             vm.Payments = receipt.ShowPayments is false ? null : payments;
             vm.AdditionalData = PosDataParser.ParsePosData(receiptData);
 
             return View(print ? "InvoiceReceiptPrint" : "InvoiceReceipt", vm);
-        }
-
-        private string? GetTransactionLink(PaymentMethodId paymentMethodId, string txId)
-        {
-            var network = _NetworkProvider.GetNetwork(paymentMethodId.CryptoCode);
-            return network == null ? null : paymentMethodId.PaymentType.GetTransactionLink(network, txId);
         }
 
         [HttpGet("invoices/{invoiceId}/refund")]
@@ -893,11 +856,11 @@ namespace BTCPayServer.Controllers
                 DefaultLang = lang ?? invoice.DefaultLanguage ?? storeBlob.DefaultLang ?? "en",
                 ShowPayInWalletButton = storeBlob.ShowPayInWalletButton,
                 ShowStoreHeader = storeBlob.ShowStoreHeader,
-                CustomCSSLink = storeBlob.CustomCSS,
+                StoreBranding = new StoreBrandingViewModel(storeBlob)
+                {
+                    CustomCSSLink = storeBlob.CustomCSS
+                },
                 CustomLogoLink = storeBlob.CustomLogo,
-                LogoFileId = storeBlob.LogoFileId,
-                CssFileId = storeBlob.CssFileId,
-                BrandColor = storeBlob.BrandColor,
                 CheckoutType = invoice.CheckoutType ?? storeBlob.CheckoutType,
                 HtmlTitle = storeBlob.HtmlTitle ?? "BTCPay Invoice",
                 CelebratePayment = storeBlob.CelebratePayment,
@@ -1266,7 +1229,7 @@ namespace BTCPayServer.Controllers
                 {
                     metadataObj = JObject.Parse(model.Metadata);
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     ModelState.AddModelError(nameof(model.Metadata), "Metadata was not valid JSON");
                 }
@@ -1388,7 +1351,7 @@ namespace BTCPayServer.Controllers
 
         private InvoiceEntity GetCurrentInvoice() => HttpContext.GetInvoiceData();
 
-        private string GetUserId() => _UserManager.GetUserId(User);
+        private string GetUserId() => _UserManager.GetUserId(User)!;
 
         public class PosDataParser
         {

@@ -1,5 +1,6 @@
+@using BTCPayServer.HostedServices.Webhooks
 @model EditWebhookViewModel
-@using  BTCPayServer.Client.Models;
+@inject WebhookSender WebhookSender
 @{
     Layout = "../Shared/_NavLayout.cshtml";
     ViewData.SetActivePage(StoreNavPages.Webhooks, "Send a test event to a webhook endpoint", Context.GetStoreData().Id);
@@ -12,7 +13,7 @@
             <div class="form-group">
                 <label for="Type" class="form-label">Event type</label>
                 <select 
-                    asp-items="Html.GetEnumSelectList<WebhookEventType>()" 
+                    asp-items="@WebhookSender.GetSupportedWebhookTypes().Select(s => new SelectListItem(s.Value,s.Key))" 
                     name="Type" 
                     id="Type"
                     class="form-select w-auto"

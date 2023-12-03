@@ -47,6 +47,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             AppService appService,
             CurrencyNameTable currencies,
             StoreRepository storeRepository,
+            InvoiceRepository invoiceRepository,
             UIInvoiceController invoiceController,
             FormDataService formDataService,
             DisplayFormatter displayFormatter)
@@ -54,12 +55,14 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             _currencies = currencies;
             _appService = appService;
             _storeRepository = storeRepository;
+            _invoiceRepository = invoiceRepository;
             _invoiceController = invoiceController;
             _displayFormatter = displayFormatter;
             FormDataService = formDataService;
         }
 
         private readonly CurrencyNameTable _currencies;
+        private readonly InvoiceRepository _invoiceRepository;
         private readonly StoreRepository _storeRepository;
         private readonly AppService _appService;
         private readonly UIInvoiceController _invoiceController;
@@ -84,13 +87,17 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             var store = await _appService.GetStore(app);
             var storeBlob = store.GetStoreBlob();
 
+            var storeBranding = new StoreBrandingViewModel(storeBlob)
+            {
+                EmbeddedCSS = settings.EmbeddedCSS,
+                CustomCSSLink = settings.CustomCSSLink
+            };
+
             return View($"PointOfSale/Public/{viewType}", new ViewPointOfSaleViewModel
             {
                 Title = settings.Title,
                 StoreName = store.StoreName,
-                BrandColor = storeBlob.BrandColor,
-                CssFileId = storeBlob.CssFileId,
-                LogoFileId = storeBlob.LogoFileId,
+                StoreBranding = storeBranding,
                 Step = step.ToString(CultureInfo.InvariantCulture),
                 ViewType = (PosViewType)viewType,
                 ShowCustomAmount = settings.ShowCustomAmount,
@@ -114,12 +121,9 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 CustomButtonText = settings.CustomButtonText,
                 CustomTipText = settings.CustomTipText,
                 CustomTipPercentages = settings.CustomTipPercentages,
-                CustomCSSLink = settings.CustomCSSLink,
-                CustomLogoLink = storeBlob.CustomLogo,
                 AppId = appId,
                 StoreId = store.Id,
                 Description = settings.Description,
-                EmbeddedCSS = settings.EmbeddedCSS,
                 RequiresRefundEmail = settings.RequiresRefundEmail
             });
         }
@@ -455,9 +459,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             var vm = new FormViewModel
             {
                 StoreName = store.StoreName,
-                BrandColor = storeBlob.BrandColor,
-                CssFileId = storeBlob.CssFileId,
-                LogoFileId = storeBlob.LogoFileId,
+                StoreBranding = new StoreBrandingViewModel(storeBlob),
                 FormName = formData.Name,
                 Form = form,
                 AspController = controller,
@@ -519,6 +521,37 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
 
             viewModel.FormParameters = formParameters;
             return View("Views/UIForms/View", viewModel);
+        }
+        
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+        [HttpGet("/apps/{appId}/pos/recent-transactions")]
+        public async Task<IActionResult> RecentTransactions(string appId)
+        {
+            var app = await _appService.GetApp(appId, PointOfSaleAppType.AppType);
+            if (app == null)
+                return NotFound();
+
+            var from = DateTimeOffset.UtcNow - TimeSpan.FromDays(3);
+            var invoices = await AppService.GetInvoicesForApp(_invoiceRepository, app, from, new[]
+                {
+                    InvoiceState.ToString(InvoiceStatusLegacy.New),
+                    InvoiceState.ToString(InvoiceStatusLegacy.Paid),
+                    InvoiceState.ToString(InvoiceStatusLegacy.Confirmed),
+                    InvoiceState.ToString(InvoiceStatusLegacy.Complete),
+                    InvoiceState.ToString(InvoiceStatusLegacy.Expired),
+                    InvoiceState.ToString(InvoiceStatusLegacy.Invalid)
+                });
+            var recent = invoices
+                .Take(10)
+                .Select(i => new JObject
+                {
+                    ["id"] = i.Id,
+                    ["date"] = i.InvoiceTime,
+                    ["price"] = _displayFormatter.Currency(i.Price, i.Currency, DisplayFormatter.CurrencyFormat.Symbol),
+                    ["status"] = i.GetInvoiceState().Status.ToModernStatus().ToString(),
+                    ["url"] = Url.Action(nameof(UIInvoiceController.Invoice), "UIInvoice", new { invoiceId = i.Id })
+                });
+            return Json(recent);
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]

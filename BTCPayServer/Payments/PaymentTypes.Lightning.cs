@@ -47,11 +47,6 @@ namespace BTCPayServer.Payments
             return JsonConvert.DeserializeObject<LightningSupportedPaymentMethod>(value.ToString());
         }
 
-        public override string GetTransactionLink(BTCPayNetworkBase network, string txId)
-        {
-            return null;
-        }
-
         public override string GetPaymentLink(BTCPayNetworkBase network, InvoiceEntity invoice, IPaymentMethodDetails paymentMethodDetails,
             decimal cryptoInfoDue, string serverUri)
         {

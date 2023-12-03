@@ -6,7 +6,7 @@
 
 * Webhooks: Support for Payment Requests, Payouts and extendibility by plugins (#5421) @Kukks
 * Support BIP129 Multisig wallet import (#5389) @Kukks
-* POS Keypad: Add plus and change clear functionality (#5396) @dennisreimann
+* POS Keypad: Add plus and change clear functionality (#5396) @dennisreimann @dstrukt
 * Forms: Support adjusting invoice amount by multiplier, enables percentage-based discount codes (#5463) @Kukks
 * Pluginify BTCPayNetworkProvider: Prerequisite for moving altcoins to plugins (#5331) @NicolasDorier
 
@@ -31,7 +31,7 @@
 * POS Cart: Add options for search and categories display (#5438) @dennisreimann
 * POS Cart: Horizontal scrollable filters (#5391) @dennisreimann
 * POS and Crowdfund: Item editor improvements (#5418 #5449) @dennisreimann
-* Reporting: UI improvements (#5432) @dennisreimann
+* Reporting: UI improvements (#5432) @dennisreimann @dstrukt
 * Wallet: Use Mempool.space fee estimation (#5490) @Kukks @NicolasDorier
 * Wallet: Update Passport instructions for import (#5423) @sethforprivacy
 * Plugins: Send notification when a new plugin version is available (#5450) @Kukks
@@ -43,8 +43,8 @@
 * Lightning: Make implementations extendible by plugins (#5422) @Kukks
 * Lightning: Upgrade LND to 0.17.2-beta @rockstardev
 * Store Branding: Use store logo as favicon (#5519) @dennisreimann
-* UI: Unify list views (#5399) @dennisreimann
-* UI: Unify public page styles (#5460 #5462 #5466) @dennisreimann
+* UI: Unify list views (#5399) @dennisreimann @dstrukt
+* UI: Unify public page styles (#5460 #5462 #5466) @dennisreimann @dstrukt
 * UI: Add system option for theme switch (#5473) @dennisreimann
 * UI: Pull payment improvements (#5453) @dennisreimann
 * UI: Switch pos data to metadata in invoice create view (#5412) @Kukks

@@ -17,6 +17,7 @@
 * Greenfield: LNURLPay store payment method fixes (#5446) @dennisreimann
 * Do not activate Blazor in Wizard screens (#5435) @NicolasDorier
 * Pull Payment: Display the amount of claims (#5427) @NicolasDorier
+* Dashboard: LND limbo balance had the wrong unit (a 1 BTC limbo balance would show as 0.001 BTC) @NicolasDorier
 
 ### Improvements
 

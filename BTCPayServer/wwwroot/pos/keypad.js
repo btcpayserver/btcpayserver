@@ -131,11 +131,16 @@ document.addEventListener("DOMContentLoaded",function () {
             async loadRecentTransactions() {
                 this.recentTransactionsLoading = true;
                 const { url } = this.$refs.RecentTransactions.dataset;
-                const response = await fetch(url);
-                if (response.ok) {
-                    this.recentTransactions = await response.json();
+                try {
+                    const response = await fetch(url);
+                    if (response.ok) {
+                        this.recentTransactions = await response.json();
+                    }
+                } catch (error) {
+                    console.error(error);
+                } finally {
+                    this.recentTransactionsLoading = false;
                 }
-                this.recentTransactionsLoading = false;
             }
         },
         created() {

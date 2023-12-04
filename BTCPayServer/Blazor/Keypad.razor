@@ -1,0 +1,338 @@
+@using Newtonsoft.Json.Linq
+@using System.Text.RegularExpressions
+@using System.Globalization
+@using Newtonsoft.Json
+@inject IJSRuntime JS
+
+<div class="d-flex flex-column gap-4">
+    <input type="hidden" name="amount" value="@GetTotal()">
+    <input type="hidden" name="posdata" value="@GetData()">
+    <div class="d-flex flex-column align-items-center px-4 mb-auto" @ref="_keypadTop">
+        <div class="fw-semibold text-muted" id="Currency">@CurrencyCode</div>
+        <div class="fw-bold lh-sm" id="Amount" style="font-size:@($"{FontSize}px")" @ref="_keypadAmount">@FormatCurrency(GetTotal(), false)</div>
+        <div class="text-muted text-center mt-2" id="Calculation">@Calculation(Model)</div>
+    </div>
+    @if (IsDiscountEnabled || IsTipEnabled)
+    {
+        <div id="ModeTabs" class="tab-content mb-n2">
+            @if (IsDiscountEnabled)
+            {
+                <div class="tab-pane fade px-2 @(Mode == InputMode.Discount ? "show active" : "")" role="tabpanel" aria-labelledby="ModeTablist-Discount">
+                    <div class="h4 fw-semibold text-muted text-center" id="Discount">
+                        <span class="h3 text-body me-1">@(Model.DiscountPercent ?? 0)%</span> discount
+                    </div>
+                </div>
+            }
+            @if (IsTipEnabled)
+            {
+                var tip = GetTip();
+                <div class="tab-pane fade px-2 @(Mode == InputMode.Tip ? "show active" : "")" role="tabpanel" aria-labelledby="ModeTablist-Tip">
+                    <div class="btcpay-pills d-flex flex-wrap align-items-center justify-content-center gap-2">
+                        @if (CustomTipPercentages != null)
+                        {
+                            <button
+                                id="Tip-Custom"
+                                type="button"
+                                class="btcpay-pill @(Model.TipPercent == null ? "active" : "")"
+                                @onclick="() => Model.TipPercent = null">
+                                @(Model.Tip is > 0 ? FormatCurrency(Model.Tip.Value, true) : "Custom")
+                            </button>
+                            @foreach(var percentage in CustomTipPercentages)
+                            {
+                                <button
+                                    type="button"
+                                    id="Tip-@percentage"
+                                    class="btcpay-pill @(Model.TipPercent == percentage ? "active" : "")"
+                                    @onclick="() => Model.TipPercent = percentage">
+                                    @percentage%
+                                </button>
+                            }
+                        }
+                        else
+                        {
+                            <div class="h5 fw-semibold text-muted text-center">
+                                Amount@(tip > 0 ? $": {FormatCurrency(tip, true)}" : "")
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+        <div id="ModeTablist" class="nav btcpay-pills align-items-center justify-content-center mb-n2 pb-1" role="tablist">
+            @{ var amount = GetAmount(); }
+            @foreach (var mode in GetModes())
+            {
+                <input id="ModeTablist-@mode" name="mode" value="@mode" type="radio" role="tab"
+                       aria-controls="Mode-@mode" aria-selected="@(Mode == mode ? "true" : "false")"
+                       data-bs-toggle="pill" data-bs-target="#Mode-@mode"
+                       checked="@(Mode == mode)"
+                       disabled="@(mode != InputMode.Amount && amount == 0)"
+                       @onclick="() => Mode = mode">
+                <label for="ModeTablist-@mode">@mode</label>
+            }
+        </div>
+    }
+    <div class="keypad">
+        @foreach (var key in Keys)
+        {
+            <button disabled="@(key == '+' && Mode != InputMode.Amount)" @onclick="@(e => KeyPress(key))" @onclick:preventDefault @ondblclick="@(e => DoublePress(key))" type="button" class="btn btn-secondary btn-lg" data-key="@key">@key</button>
+        }
+    </div>
+    <button class="btn btn-lg btn-primary mx-3" type="submit" disabled="@IsSubmitting" id="pay-button" @onclick="@(e => { IsSubmitting = true; })">
+        @if (IsSubmitting)
+        {
+            <div class="spinner-border spinner-border-sm" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        }
+        else
+        {
+            <span>Charge</span>
+        }
+    </button>
+</div>
+
+@code {
+#nullable enable
+	[Parameter, EditorRequired]
+	public string CurrencyCode { get; set; }
+    [Parameter]
+    public NumberFormatInfo? CurrencyInfo { get; set; }
+    [Parameter]
+    public bool IsDiscountEnabled { get; set; }
+    [Parameter]
+    public bool IsTipEnabled { get; set; }
+    [Parameter]
+    public int[]? CustomTipPercentages { get; set; }
+    [Parameter]
+    public EventCallback<MouseEventArgs> OnClickCallback { get; set; }
+
+    private bool IsSubmitting { get; set; }
+
+    const int DefaultFontSize = 64;
+    static char[] Keys = { '1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0', '+' };
+    private int FontSize { get; set; } = DefaultFontSize;
+
+    public enum InputMode
+    {
+        Amount,
+        Discount,
+        Tip
+    }
+
+    private ElementReference _keypadTop;
+    private ElementReference _keypadAmount;
+    private string? _currencySymbol;
+    private int _currencyDivisibility;
+
+    private InputMode Mode { get; set; } = InputMode.Amount;
+
+    public class KeypadModel
+    {
+        public List<decimal> Amounts { get; set; } = new () { 0 };
+        public int? DiscountPercent { get; set; }
+        public int? TipPercent { get; set; }
+        public decimal? Tip { get; set; }
+    }
+    
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        
+        _currencySymbol = CurrencyInfo?.CurrencySymbol ?? CurrencyCode;
+        _currencyDivisibility = CurrencyInfo?.CurrencyDecimalDigits ?? 0;
+    }
+
+    private KeypadModel Model { get; set; } = new ();
+
+    private async Task KeyPress(char key)
+    {
+        if (Mode == InputMode.Amount) {
+            var lastIndex = Model.Amounts.Count - 1;
+            var lastAmount = Model.Amounts[lastIndex];
+            if (key == 'C') {
+                if (lastAmount == 0 && lastIndex == 0) {
+                    // clear completely
+                    Clear();
+                } else if (lastAmount == 0) {
+                    // remove latest value
+                    Model.Amounts.RemoveAt(lastIndex);
+                } else {
+                    // clear latest value
+                    Model.Amounts[lastIndex] = 0;
+                }
+            } else if (key == '+' && lastAmount != 0) {
+                Model.Amounts.Add(0);
+            } else { // Is a digit
+                Model.Amounts[lastIndex] = Math.Min(ApplyKeyToValue(key, lastAmount, _currencyDivisibility), decimal.MaxValue / 10);
+            }
+        } else {
+            if (key == 'C') {
+                if (Mode == InputMode.Tip)
+                {
+                    Model.Tip = null;
+                    Model.TipPercent = null;
+                }
+                else
+                {
+                    Model.DiscountPercent = null;
+                }
+            } else {
+                var divisibility = Mode == InputMode.Tip ? _currencyDivisibility : 0;
+                if (Mode == InputMode.Tip)
+                {
+                    Model.Tip = Math.Min(ApplyKeyToValue(key, Model.Tip ?? 0, divisibility), decimal.MaxValue / 10);
+                    Model.TipPercent = null;
+                }
+                else
+                {
+                    var num = (int)ApplyKeyToValue(key, Model.DiscountPercent ?? 0, divisibility);
+                    Model.DiscountPercent = Math.Min(num, 100);
+                }
+            }
+        }
+        await UpdateFontSize();
+    }
+
+    private decimal ApplyKeyToValue(char key, decimal value, int divisibility)
+    {
+        var str = value is 0 ? "" : FormattedInvariant(value, divisibility);
+        str = (str + key).Replace(".", "");
+        if (divisibility > 0)
+        {
+            str = str.PadLeft(divisibility + 1, '0');
+            str = Regex.Replace(str, $"(\\d*)(\\d{{{divisibility}}})", "$1.$2");
+        }
+
+        return decimal.Parse(str, CultureInfo.InvariantCulture);
+    }
+
+    private void DoublePress(char key)
+    {
+        if (key == 'C') {
+            Clear();
+        }
+    }
+
+    private void Clear()
+    {
+        Model.Amounts.Clear();
+        Model.Amounts.Add(0);
+        Model.DiscountPercent = null;
+        Model.TipPercent = null;
+        Model.Tip = null;
+        Mode = InputMode.Amount;
+    }
+
+    private string GetData()
+    {
+        var data = new JObject
+        {
+            ["subTotal"] = GetAmount(),
+            ["total"] = GetTotal(),
+        };
+
+        var discount = GetDiscount();
+        if (discount > 0)
+        {
+            data["discount"] = discount;
+        }
+        if (Model.DiscountPercent is > 0)
+        {
+            data["discountPercentage"] = Model.DiscountPercent;
+        }
+
+        var tip = GetTip();
+        if (tip > 0)
+        {
+            data["tip"] = tip;
+        }
+        if (Model.TipPercent != null)
+        {
+            data["tipPercentage"] = Model.TipPercent;
+        }
+        return JsonConvert.SerializeObject(data);
+    }
+
+    private List<InputMode> GetModes()
+    {
+        var modes = new List<InputMode> { InputMode.Amount };
+        if (IsDiscountEnabled) modes.Add(InputMode.Discount);
+        if (IsTipEnabled) modes.Add(InputMode.Tip);
+        return modes;
+    }
+
+    private decimal GetAmount()
+    {
+        return Model.Amounts.Count > 0 ? Model.Amounts.Sum() : Model.Amounts.FirstOrDefault();
+    }
+
+    private decimal GetDiscount()
+    {
+        var amount = GetAmount();
+        return amount > 0 && Model.DiscountPercent is > 0
+            ? Math.Round(amount * (Model.DiscountPercent.Value / 100.0m), _currencyDivisibility)
+            : 0;
+    }
+
+    private decimal GetTip()
+    {
+        if (Model.TipPercent is > 0) {
+            var amount = GetAmount() - GetDiscount();
+            return Math.Round(amount * (Model.TipPercent.Value / 100.0m), _currencyDivisibility);
+        }
+        return Model.Tip is > 0 ? Math.Round(Model.Tip.Value, _currencyDivisibility) : 0.0m;
+    }
+
+    private decimal GetTotal()
+    {
+        return GetAmount() - GetDiscount() + GetTip();
+    }
+
+    private string? Calculation(KeypadModel model)
+    {
+        if (model.Amounts.Count < 2 && model.DiscountPercent is not > 0 && !model.Tip.HasValue) return null;
+        var calc = string.Join(" + ", model.Amounts.Select(amt => FormatCurrency(amt, true)));
+        var discount = GetDiscount();
+        if (discount > 0) calc += $" - {FormatCurrency(discount, true)} ({model.DiscountPercent}%)";
+        var tip = GetTip();
+        if (tip > 0) calc += $" + {FormatCurrency(tip, true)}";
+        if (model.TipPercent > 0) calc += $" ({model.TipPercent}%)";
+        return calc;
+    }
+
+    private string FormatCurrency(decimal value, bool withSymbol)
+    {
+        if (CurrencyCode is "BTC" or "SATS") return FormatCrypto(value, withSymbol);
+        try {
+            var formatted = value.ToString("C", CurrencyInfo);
+            return withSymbol ? formatted : formatted.Replace(_currencySymbol, "").Trim();
+        }
+        catch (Exception)
+        {
+            return FormatCrypto(value, withSymbol);
+        }
+    }
+
+    private string FormatCrypto(decimal value, bool withSymbol) {
+        var symbol = withSymbol ? $" {_currencySymbol}" : "";
+        return $"{FormattedInvariant(value, _currencyDivisibility)}{symbol}";
+    }
+
+    private string FormattedInvariant(decimal value, int divisibility) {
+        return string.Format(CultureInfo.InvariantCulture, $"{{0:0.{new string('0', divisibility)}}}", value);
+    }
+
+    private async Task UpdateFontSize()
+    {
+        var top = await JS.InvokeAsync<decimal>("Interop.getWidth", new object[] { _keypadTop });
+        var amt = await JS.InvokeAsync<decimal>("Interop.getWidth", new object[] { _keypadAmount });
+        var gamma = top / amt;
+
+        FontSize = (int)(top < amt
+            ? Math.Floor(FontSize * gamma)
+            : Math.Min(FontSize * gamma, DefaultFontSize));
+
+        StateHasChanged();
+    }
+}

@@ -11,38 +11,41 @@ const posCommon = {
         }
     },
     computed: {
+        divisibility() {
+            return this.currencyInfo.currencyDecimalDigits;
+        },
         amountNumeric () {
             const value = parseFloat(this.amount)
-            return isNaN(value) ? 0.0 : parseFloat(value.toFixed(this.currencyInfo.divisibility))
+            return isNaN(value) ? 0.0 : parseFloat(value.toFixed(this.divisibility))
         },
         discountPercentNumeric () {
             const value = parseFloat(this.discountPercent)
-            return isNaN(value) ? 0.0 : parseFloat(value.toFixed(this.currencyInfo.divisibility))
+            return isNaN(value) ? 0.0 : parseFloat(value.toFixed(this.divisibility))
         },
         discountNumeric () {
             return this.amountNumeric && this.discountPercentNumeric
-                ? parseFloat((this.amountNumeric * (this.discountPercentNumeric / 100)).toFixed(this.currencyInfo.divisibility))
+                ? parseFloat((this.amountNumeric * (this.discountPercentNumeric / 100)).toFixed(this.divisibility))
                 : 0.0;
         },
         amountMinusDiscountNumeric () {
-            return parseFloat((this.amountNumeric - this.discountNumeric).toFixed(this.currencyInfo.divisibility))
+            return parseFloat((this.amountNumeric - this.discountNumeric).toFixed(this.divisibility))
         },
         tipNumeric () {
             if (this.tipPercent) {
-                return parseFloat((this.amountMinusDiscountNumeric * (this.tipPercent / 100)).toFixed(this.currencyInfo.divisibility))
+                return parseFloat((this.amountMinusDiscountNumeric * (this.tipPercent / 100)).toFixed(this.divisibility))
             } else {
                 if (this.tip < 0) {
                     this.tip = 0
                 }
                 const value = parseFloat(this.tip)
-                return isNaN(value) ? 0.0 : parseFloat(value.toFixed(this.currencyInfo.divisibility))
+                return isNaN(value) ? 0.0 : parseFloat(value.toFixed(this.divisibility))
             }
         },
         total () {
             return this.amountNumeric - this.discountNumeric + this.tipNumeric
         },
         totalNumeric () {
-            return parseFloat(parseFloat(this.total).toFixed(this.currencyInfo.divisibility))
+            return parseFloat(parseFloat(this.total).toFixed(this.divisibility))
         },
         posdata () {
             const data = {
@@ -87,16 +90,14 @@ const posCommon = {
         },
         formatCrypto (value, withSymbol) {
             const symbol = withSymbol ? ` ${this.currencySymbol || this.currencyCode}` : ''
-            const { divisibility } = this.currencyInfo
-            return parseFloat(value).toFixed(divisibility) + symbol
+            return parseFloat(value).toFixed(this.divisibility) + symbol
         },
         formatCurrency (value, withSymbol) {
             const currency = this.currencyCode
             if (currency === 'BTC' || currency === 'SATS') return this.formatCrypto(value, withSymbol)
-            const { divisibility } = this.currencyInfo
             const locale = this.getLocale(currency);
             const style = withSymbol ? 'currency' : 'decimal'
-            const opts = { currency, style, maximumFractionDigits: divisibility, minimumFractionDigits: divisibility }
+            const opts = { currency, style, maximumFractionDigits: this.divisibility, minimumFractionDigits: this.divisibility }
             try {
                 return new Intl.NumberFormat(locale, opts).format(value)
             } catch (err) {

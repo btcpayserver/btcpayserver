@@ -150,7 +150,7 @@
                         <tbody id="CartItems">
                         <tr v-for="item in cart" :key="item.id">
                             <td class="align-middle">
-                                <h6 class="fw-semibold mb-1">{{ item.title }}</h6>
+                                <h6 class="fw-semibold mb-1" v-html="item.title"></h6>
                                 <button type="button" v-on:click="removeFromCart(item.id)" class="btn btn-sm btn-link p-0 text-danger fw-semibold">Remove</button>
                             </td>
                             <td class="align-middle">
@@ -197,7 +197,7 @@
                                             type="number"
                                             min="0"
                                             step="@Model.Step" />
-                                        <span>@(Model.CurrencyInfo.CurrencySymbol ?? Model.CurrencyCode)</span>
+                                        <span>@(Model.CurrencySymbol ?? Model.CurrencyCode)</span>
                                     </div>
                                     <button
                                         v-for="percentage in customTipPercentages"

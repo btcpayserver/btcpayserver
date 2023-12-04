@@ -107,15 +107,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 EnableTips = settings.EnableTips,
                 CurrencyCode = settings.Currency,
                 CurrencySymbol = numberFormatInfo.CurrencySymbol,
-                CurrencyInfo = new ViewPointOfSaleViewModel.CurrencyInfoData
-                {
-                    CurrencySymbol = string.IsNullOrEmpty(numberFormatInfo.CurrencySymbol) ? settings.Currency : numberFormatInfo.CurrencySymbol,
-                    Divisibility = numberFormatInfo.CurrencyDecimalDigits,
-                    DecimalSeparator = numberFormatInfo.CurrencyDecimalSeparator,
-                    ThousandSeparator = numberFormatInfo.NumberGroupSeparator,
-                    Prefixed = new[] { 0, 2 }.Contains(numberFormatInfo.CurrencyPositivePattern),
-                    SymbolSpace = new[] { 2, 3 }.Contains(numberFormatInfo.CurrencyPositivePattern)
-                },
+                CurrencyInfo = numberFormatInfo,
                 Items = AppService.Parse(settings.Template, false),
                 ButtonText = settings.ButtonText,
                 CustomButtonText = settings.CustomButtonText,

@@ -102,16 +102,16 @@ document.addEventListener("DOMContentLoaded",function () {
                     } else if (key === '+' && parseFloat(lastAmount || '0')) {
                         this.amounts.push(null);
                     } else { // Is a digit
-                        const { divisibility } = this.currencyInfo;
-                        const value = this.applyKeyToValue(key, lastAmount, divisibility);
+                        const { currencyDecimalDigits } = this.currencyInfo;
+                        const value = this.applyKeyToValue(key, lastAmount, currencyDecimalDigits);
                         Vue.set(this.amounts, lastIndex, value);
                     }
                 } else {
                     if (key === 'C') {
                         this[this.keypadTarget] = null;
                     } else {
-                        const divisibility = this.keypadTarget === 'tip' ? this.currencyInfo.divisibility : 0;
-                        this[this.keypadTarget] = this.applyKeyToValue(key, this[this.keypadTarget], divisibility);
+                        const currencyDecimalDigits = this.keypadTarget === 'tip' ? this.divisibility : 0;
+                        this[this.keypadTarget] = this.applyKeyToValue(key, this[this.keypadTarget], currencyDecimalDigits);
                     }
                 }
             },

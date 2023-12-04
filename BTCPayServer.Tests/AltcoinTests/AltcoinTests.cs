@@ -736,11 +736,9 @@ donation:
                     Assert.Equal(test.ExpectedSymbol,
                         vmview.CurrencyInfo.CurrencySymbol
                             .Replace("￥", "¥")); // Hack so JPY test pass on linux as well);
-                    Assert.Equal(test.ExpectedDecimalSeparator, vmview.CurrencyInfo.DecimalSeparator);
-                    Assert.Equal(test.ExpectedThousandSeparator, vmview.CurrencyInfo.ThousandSeparator);
-                    Assert.Equal(test.ExpectedPrefixed, vmview.CurrencyInfo.Prefixed);
-                    Assert.Equal(test.ExpectedDivisibility, vmview.CurrencyInfo.Divisibility);
-                    Assert.Equal(test.ExpectedSymbolSpace, vmview.CurrencyInfo.SymbolSpace);
+                    Assert.Equal(test.ExpectedDecimalSeparator, vmview.CurrencyInfo.CurrencyDecimalSeparator);
+                    Assert.Equal(test.ExpectedThousandSeparator, vmview.CurrencyInfo.CurrencyGroupSeparator);
+                    Assert.Equal(test.ExpectedDivisibility, vmview.CurrencyInfo.CurrencyDecimalDigits);
                 }
 
                 //test inventory related features

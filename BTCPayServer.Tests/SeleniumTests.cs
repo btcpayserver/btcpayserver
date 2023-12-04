@@ -2358,15 +2358,15 @@ namespace BTCPayServer.Tests
             var windows = s.Driver.WindowHandles;
             Assert.Equal(2, windows.Count);
             s.Driver.SwitchTo().Window(windows[1]);
-            s.Driver.WaitForElement(By.ClassName("keypad"));
 
             // basic checks
-            Assert.Contains("EUR", s.Driver.FindElement(By.Id("Currency")).Text);
-            Assert.Contains("0,00", s.Driver.FindElement(By.Id("Amount")).Text);
-            Assert.Equal("", s.Driver.FindElement(By.Id("Calculation")).Text);
-            Assert.True(s.Driver.FindElement(By.Id("ModeTablist-amounts")).Selected);
-            Assert.False(s.Driver.FindElement(By.Id("ModeTablist-discount")).Enabled);
-            Assert.False(s.Driver.FindElement(By.Id("ModeTablist-tip")).Enabled);
+            s.Driver.WaitUntilAvailable(By.ClassName("keypad"));
+            Assert.Contains("EUR", s.Driver.WaitForElement(By.Id("Currency")).Text);
+            Assert.Contains("0,00", s.Driver.WaitForElement(By.Id("Amount")).Text);
+            Assert.Equal("", s.Driver.WaitForElement(By.Id("Calculation")).Text);
+            Assert.False(s.Driver.FindElement(By.Id("ModeTablist-Discount")).Enabled);
+            Assert.False(s.Driver.FindElement(By.Id("ModeTablist-Tip")).Enabled);
+            Assert.True(s.Driver.FindElement(By.Id("ModeTablist-Amount")).Selected);
 
             // Amount: 1234,56
             s.Driver.FindElement(By.CssSelector(".keypad [data-key='1']")).Click();
@@ -2375,30 +2375,30 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.CssSelector(".keypad [data-key='4']")).Click();
             s.Driver.FindElement(By.CssSelector(".keypad [data-key='0']")).Click();
             s.Driver.FindElement(By.CssSelector(".keypad [data-key='0']")).Click();
-            Assert.Equal("1.234,00", s.Driver.FindElement(By.Id("Amount")).Text);
+            Assert.Equal("1 234,00", s.Driver.FindElement(By.Id("Amount")).Text);
             Assert.Equal("", s.Driver.FindElement(By.Id("Calculation")).Text);
             s.Driver.FindElement(By.CssSelector(".keypad [data-key='+']")).Click();
             s.Driver.FindElement(By.CssSelector(".keypad [data-key='5']")).Click();
             s.Driver.FindElement(By.CssSelector(".keypad [data-key='6']")).Click();
-            Assert.Equal("1.234,56", s.Driver.FindElement(By.Id("Amount")).Text);
-            Assert.True(s.Driver.FindElement(By.Id("ModeTablist-discount")).Enabled);
-            Assert.True(s.Driver.FindElement(By.Id("ModeTablist-tip")).Enabled);
-            Assert.Equal("1.234,00 € + 0,56 €", s.Driver.FindElement(By.Id("Calculation")).Text);
+            Assert.Equal("1 234,56", s.Driver.FindElement(By.Id("Amount")).Text);
+            Assert.True(s.Driver.FindElement(By.Id("ModeTablist-Discount")).Enabled);
+            Assert.True(s.Driver.FindElement(By.Id("ModeTablist-Tip")).Enabled);
+            Assert.Equal("1 234,00 € + 0,56 €", s.Driver.FindElement(By.Id("Calculation")).Text);
 
             // Discount: 10%
-            s.Driver.FindElement(By.CssSelector("label[for='ModeTablist-discount']")).Click();
+            s.Driver.FindElement(By.CssSelector("label[for='ModeTablist-Discount']")).Click();
             s.Driver.FindElement(By.CssSelector(".keypad [data-key='1']")).Click();
             s.Driver.FindElement(By.CssSelector(".keypad [data-key='0']")).Click();
-            Assert.Contains("1.111,10", s.Driver.FindElement(By.Id("Amount")).Text);
+            Assert.Contains("1 111,10", s.Driver.FindElement(By.Id("Amount")).Text);
             Assert.Contains("10% discount", s.Driver.FindElement(By.Id("Discount")).Text);
-            Assert.Contains("1.234,00 € + 0,56 € - 123,46 € (10%)", s.Driver.FindElement(By.Id("Calculation")).Text);
+            Assert.Contains("1 234,00 € + 0,56 € - 123,46 € (10%)", s.Driver.FindElement(By.Id("Calculation")).Text);
 
             // Tip: 10%
-            s.Driver.FindElement(By.CssSelector("label[for='ModeTablist-tip']")).Click();
+            s.Driver.FindElement(By.CssSelector("label[for='ModeTablist-Tip']")).Click();
             s.Driver.WaitForElement(By.Id("Tip-Custom"));
             s.Driver.FindElement(By.Id("Tip-10")).Click();
-            Assert.Contains("1.222,21", s.Driver.FindElement(By.Id("Amount")).Text);
-            Assert.Contains("1.234,00 € + 0,56 € - 123,46 € (10%) + 111,11 € (10%)", s.Driver.FindElement(By.Id("Calculation")).Text);
+            Assert.Contains("1 222,21", s.Driver.FindElement(By.Id("Amount")).Text);
+            Assert.Contains("1 234,00 € + 0,56 € - 123,46 € (10%) + 111,11 € (10%)", s.Driver.FindElement(By.Id("Calculation")).Text);
 
             // Pay
             s.Driver.FindElement(By.Id("pay-button")).Click();

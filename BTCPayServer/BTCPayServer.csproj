@@ -49,9 +49,9 @@
     <PackageReference Include="YamlDotNet" Version="8.0.0" />
     <PackageReference Include="BIP78.Sender" Version="0.2.2" />
     <PackageReference Include="BTCPayServer.Hwi" Version="2.0.2" />
-    <PackageReference Include="BTCPayServer.Lightning.All" Version="1.5.1" />
+    <PackageReference Include="BTCPayServer.Lightning.All" Version="1.5.2" />
     <PackageReference Include="CsvHelper" Version="15.0.5" />
-    <PackageReference Include="Dapper" Version="2.1.21" />
+    <PackageReference Include="Dapper" Version="2.1.24" />
     <PackageReference Include="Fido2" Version="2.0.2" />
     <PackageReference Include="Fido2.AspNet" Version="2.0.2" />
     <PackageReference Include="LNURL" Version="0.0.34" />

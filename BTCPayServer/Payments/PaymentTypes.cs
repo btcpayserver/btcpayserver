@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 #if ALTCOINS
 using BTCPayServer.Services.Altcoins.Monero.Payments;
@@ -15,13 +16,13 @@ namespace BTCPayServer.Payments
     /// </summary>
     public static class PaymentTypes
     {
-        private static PaymentType[] _paymentTypes =
+        public static HashSet<PaymentType> AvailablePaymentTypes = new(new PaymentType[]
         {
             BTCLike, LightningLike, LNURLPay,
 #if ALTCOINS
             MoneroLike, ZcashLike,
 #endif
-        };
+        });
         /// <summary>
         /// On-Chain UTXO based, bitcoin compatible
         /// </summary>
@@ -48,7 +49,7 @@ namespace BTCPayServer.Payments
 
         public static bool TryParse(string paymentType, out PaymentType type)
         {
-            type = _paymentTypes.FirstOrDefault(type1 => type1.IsPaymentType(paymentType));
+            type = AvailablePaymentTypes.FirstOrDefault(type1 => type1.IsPaymentType(paymentType));
             return type != null;
         }
         public static PaymentType Parse(string paymentType)
@@ -59,9 +60,10 @@ namespace BTCPayServer.Payments
         }
     }
 
-    public abstract class PaymentType
+    public abstract class PaymentType : IEquatable<PaymentType>
     {
         public abstract string ToPrettyString();
+
         public override string ToString()
         {
             return GetId();
@@ -82,9 +84,14 @@ namespace BTCPayServer.Payments
         public abstract string SerializePaymentData(BTCPayNetworkBase network, CryptoPaymentData paymentData);
         public abstract IPaymentMethodDetails DeserializePaymentMethodDetails(BTCPayNetworkBase network, string str);
         public abstract string SerializePaymentMethodDetails(BTCPayNetworkBase network, IPaymentMethodDetails details);
-        public abstract ISupportedPaymentMethod DeserializeSupportedPaymentMethod(BTCPayNetworkBase network, JToken value);
-        public abstract string GetPaymentLink(BTCPayNetworkBase network, InvoiceEntity invoice, IPaymentMethodDetails paymentMethodDetails,
+
+        public abstract ISupportedPaymentMethod DeserializeSupportedPaymentMethod(BTCPayNetworkBase network,
+            JToken value);
+
+        public abstract string GetPaymentLink(BTCPayNetworkBase network, InvoiceEntity invoice,
+            IPaymentMethodDetails paymentMethodDetails,
             decimal cryptoInfoDue, string serverUri);
+
         public abstract string InvoiceViewPaymentPartialName { get; }
 
         public abstract object GetGreenfieldData(ISupportedPaymentMethod supportedPaymentMethod, bool canModifyStore);
@@ -97,16 +104,30 @@ namespace BTCPayServer.Payments
         protected bool IsPaymentTypeBase(string paymentType)
         {
             paymentType = paymentType?.ToLowerInvariant();
-            return new[]
-            {
-                GetId().Replace("-", "", StringComparison.InvariantCulture),
-                ToStringNormalized()
-            }.Contains(
+            return new[] {GetId().Replace("-", "", StringComparison.InvariantCulture), ToStringNormalized()}.Contains(
                 paymentType,
                 StringComparer.InvariantCultureIgnoreCase);
         }
 
-        public abstract void PopulateCryptoInfo(InvoiceEntity invoice, PaymentMethod details, Services.Invoices.InvoiceCryptoInfo invoiceCryptoInfo,
+        public abstract void PopulateCryptoInfo(InvoiceEntity invoice, PaymentMethod details,
+            Services.Invoices.InvoiceCryptoInfo invoiceCryptoInfo,
             string serverUrl);
+
+        public bool Equals(PaymentType other)
+        {
+            return ToString() == other?.ToString();
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            return obj.GetType() == GetType() && Equals((PaymentType)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return ToString().GetHashCode();
+        }
     }
 }

@@ -8,6 +8,7 @@
 * Support BIP129 Multisig wallet import (#5389) @Kukks
 * POS Keypad: Add plus and change clear functionality (#5396) @dennisreimann @dstrukt
 * Forms: Support adjusting invoice amount by multiplier, enables percentage-based discount codes (#5463) @Kukks
+* Can pair or reset a Boltcard to a pull payment (#5419) @NicolasDorier
 
 ### Bug fixes
 

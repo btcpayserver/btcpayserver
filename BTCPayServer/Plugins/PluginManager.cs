@@ -20,6 +20,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using NBXplorer;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Plugins
 {
@@ -65,6 +66,31 @@ namespace BTCPayServer.Plugins
         public static IMvcBuilder AddPlugins(this IMvcBuilder mvcBuilder, IServiceCollection serviceCollection,
             IConfiguration config, ILoggerFactory loggerFactory, ServiceProvider bootstrapServiceProvider)
         {
+            void LoadPluginsFromAssemblies(Assembly systemAssembly1, HashSet<string> hashSet, HashSet<string> loadedPluginIdentifiers1,
+                List<IBTCPayServerPlugin> btcPayServerPlugins)
+            {
+                // Load the referenced assembly plugins
+                // All referenced plugins should have at least one plugin with exact same plugin identifier
+                // as the assembly. Except for the system assembly (btcpayserver assembly) which are fake plugins
+                foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+                {
+                    var assemblyName = assembly.GetName().Name;
+                    bool isSystemPlugin = assembly == systemAssembly1;
+                    if (!isSystemPlugin && hashSet.Contains(assemblyName))
+                        continue;
+
+                    foreach (var plugin in GetPluginInstancesFromAssembly(assembly))
+                    {
+                        if (!isSystemPlugin && plugin.Identifier != assemblyName)
+                            continue;
+                        if (!loadedPluginIdentifiers1.Add(plugin.Identifier))
+                            continue;
+                        btcPayServerPlugins.Add(plugin);
+                        plugin.SystemPlugin = isSystemPlugin;
+                    }
+                }
+            }
+
             var logger = loggerFactory.CreateLogger(typeof(PluginManager));
             var pluginsFolder = new DataDirectories().Configure(config).PluginDir;
             var plugins = new List<IBTCPayServerPlugin>();
@@ -76,29 +102,17 @@ namespace BTCPayServer.Plugins
             });
             logger.LogInformation($"Loading plugins from {pluginsFolder}");
             Directory.CreateDirectory(pluginsFolder);
-            ExecuteCommands(pluginsFolder);
+            ExecuteCommands(pluginsFolder, null);
 
             var disabledPlugins = GetDisabledPlugins(pluginsFolder);
             var systemAssembly = typeof(Program).Assembly;
-            // Load the referenced assembly plugins
-            // All referenced plugins should have at least one plugin with exact same plugin identifier
-            // as the assembly. Except for the system assembly (btcpayserver assembly) which are fake plugins
-            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
-            {
-                var assemblyName = assembly.GetName().Name;
-                bool isSystemPlugin = assembly == systemAssembly;
-                if (!isSystemPlugin && disabledPlugins.Contains(assemblyName))
-                    continue;
+            LoadPluginsFromAssemblies(systemAssembly, disabledPlugins, loadedPluginIdentifiers, plugins);
 
-                foreach (var plugin in GetPluginInstancesFromAssembly(assembly))
-                {
-                    if (!isSystemPlugin && plugin.Identifier != assemblyName)
-                        continue;
-                    if (!loadedPluginIdentifiers.Add(plugin.Identifier))
-                        continue;
-                    plugins.Add(plugin);
-                    plugin.SystemPlugin = isSystemPlugin;
-                }
+            if (ExecuteCommands(pluginsFolder,
+                    plugins.ToDictionary(plugin => plugin.Identifier, plugin => plugin.Version)))
+            {
+                plugins.Clear();
+                LoadPluginsFromAssemblies(systemAssembly, disabledPlugins, loadedPluginIdentifiers, plugins);
             }
 
             var pluginsToLoad = new List<(string PluginIdentifier, string PluginFilePath)>();
@@ -246,30 +260,48 @@ namespace BTCPayServer.Plugins
         }
         private static IBTCPayServerPlugin GetPluginInstanceFromAssembly(string pluginIdentifier, Assembly assembly)
         {
-            return GetPluginInstancesFromAssembly(assembly)
-                .Where(plugin => plugin.Identifier == pluginIdentifier)
-                .FirstOrDefault();
+            return GetPluginInstancesFromAssembly(assembly).FirstOrDefault(plugin => plugin.Identifier == pluginIdentifier);
         }
+        
 
-        private static void ExecuteCommands(string pluginsFolder)
+        private static bool ExecuteCommands(string pluginsFolder, Dictionary<string, Version> installed = null)
         {
             var pendingCommands = GetPendingCommands(pluginsFolder);
-            foreach (var command in pendingCommands)
+            if (!pendingCommands.Any())
             {
-                ExecuteCommand(command, pluginsFolder);
+                return false;
+
+            }
+            var remainingCommands = (from command in pendingCommands where !ExecuteCommand(command, pluginsFolder, false, installed) select $"{command.command}:{command.plugin}").ToList();
+
+            if (remainingCommands.Any())
+            {
+                File.WriteAllLines(Path.Combine(pluginsFolder, "commands"), remainingCommands);
+            }
+            else
+            {
+                File.Delete(Path.Combine(pluginsFolder, "commands"));
             }
 
-            File.Delete(Path.Combine(pluginsFolder, "commands"));
+            return remainingCommands.Count != pendingCommands.Length;
         }
-
-        private static void ExecuteCommand((string command, string extension) command, string pluginsFolder,
-            bool ignoreOrder = false)
+        private static bool DependenciesMet(string pluginsFolder ,string plugin, Dictionary<string, Version> installed)
+        {
+            var dirName = Path.Combine(pluginsFolder, plugin);
+            var manifestFileName = dirName + ".json";
+            if (!File.Exists(manifestFileName)) return true;
+            var pluginManifest =  JObject.Parse(File.ReadAllText(manifestFileName)).ToObject<PluginService.AvailablePlugin>();
+            return DependenciesMet(pluginManifest.Dependencies, installed);
+        }
+        private static bool ExecuteCommand((string command, string extension) command, string pluginsFolder,
+            bool ignoreOrder = false, Dictionary<string, Version> installed = null)
         {
             var dirName = Path.Combine(pluginsFolder, command.extension);
             switch (command.command)
             {
                 case "update":
-                    ExecuteCommand(("enable", command.extension), pluginsFolder, true);
+                    if (!DependenciesMet(pluginsFolder, command.extension, installed))
+                        return false;
                     ExecuteCommand(("delete", command.extension), pluginsFolder, true);
                     ExecuteCommand(("install", command.extension), pluginsFolder, true);
                     break;
@@ -293,8 +325,12 @@ namespace BTCPayServer.Plugins
 
                     break;
                 case "install":
-                    ExecuteCommand(("enable", command.extension), pluginsFolder, true);
                     var fileName = dirName + BTCPayPluginSuffix;
+                    var manifestFileName = dirName + ".json";
+                    if (!DependenciesMet(pluginsFolder, command.extension, installed))
+                        return false;
+                    
+                    ExecuteCommand(("enable", command.extension), pluginsFolder, true);
                     if (File.Exists(fileName))
                     {
                         ZipFile.ExtractToDirectory(fileName, dirName, true);
@@ -302,8 +338,11 @@ namespace BTCPayServer.Plugins
                         {
                             File.AppendAllLines(Path.Combine(pluginsFolder, "order"), new[] { command.extension });
                         }
-
                         File.Delete(fileName);
+                        if (File.Exists(manifestFileName))
+                        {
+                            File.Move(manifestFileName, Path.Combine(dirName, Path.GetFileName(manifestFileName)));
+                        }
                     }
 
                     break;
@@ -339,6 +378,8 @@ namespace BTCPayServer.Plugins
 
                     break;
             }
+
+            return true;
         }
 
         public static (string command, string plugin)[] GetPendingCommands(string pluginsFolder)
@@ -364,6 +405,14 @@ namespace BTCPayServer.Plugins
             var cmds = GetPendingCommands(pluginDir).Where(tuple =>
                 !tuple.plugin.Equals(plugin, StringComparison.InvariantCultureIgnoreCase)).ToArray();
 
+            if (File.Exists(Path.Combine(pluginDir, plugin, BTCPayPluginSuffix)))
+            {
+                File.Delete(Path.Combine(pluginDir, plugin, BTCPayPluginSuffix));
+            } 
+            if (File.Exists(Path.Combine(pluginDir, plugin, ".json")))
+            {
+                File.Delete(Path.Combine(pluginDir, plugin, ".json"));
+            }
             File.Delete(Path.Combine(pluginDir, "commands"));
             QueueCommands(pluginDir, cmds);
         }
@@ -383,6 +432,62 @@ namespace BTCPayServer.Plugins
             }
 
             return new HashSet<string>();
+        }
+
+        public static bool DependencyMet(IBTCPayServerPlugin.PluginDependency dependency,
+            Dictionary<string, Version> installed)
+        {
+            var plugin = dependency.Identifier.ToLowerInvariant();
+            var versionReq = dependency.Condition;
+            if (!installed.ContainsKey(plugin) && !versionReq.Equals("!"))
+            {
+                return false;
+            }
+
+            if (installed.ContainsKey(plugin) && versionReq.Equals("!"))
+            {
+                return false;
+            }
+
+            var versionConditions = versionReq.Split("||", StringSplitOptions.RemoveEmptyEntries);
+            return versionConditions.Any(s =>
+            {
+                s = s.Trim();
+                var v = s.Substring(1);
+                if (s[1] == '=')
+                {
+                    v = s.Substring(2);
+                }
+
+                var parsedV = Version.Parse(v);
+                switch (s)
+                {
+                    case { } xx when xx.StartsWith(">="):
+                        return installed[plugin] >= parsedV;
+                    case { } xx when xx.StartsWith("<="):
+                        return installed[plugin] <= parsedV;
+                    case { } xx when xx.StartsWith(">"):
+                        return installed[plugin] > parsedV;
+                    case { } xx when xx.StartsWith("<"):
+                        return installed[plugin] >= parsedV;
+                    case { } xx when xx.StartsWith("^"):
+                        return installed[plugin] >= parsedV && installed[plugin].Major == parsedV.Major;
+                    case { } xx when xx.StartsWith("~"):
+                        return installed[plugin] >= parsedV && installed[plugin].Major == parsedV.Major &&
+                               installed[plugin].Minor == parsedV.Minor;
+                    case { } xx when xx.StartsWith("!="):
+                        return installed[plugin] != parsedV;
+                    case { } xx when xx.StartsWith("=="):
+                    default:
+                        return installed[plugin] == parsedV;
+                }
+            });
+        }
+
+        public static bool DependenciesMet(IBTCPayServerPlugin.PluginDependency[] dependencies,
+            Dictionary<string, Version> installed)
+        {
+            return dependencies.All(dependency => DependencyMet(dependency, installed));
         }
     }
 }

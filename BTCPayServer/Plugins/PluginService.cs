@@ -47,6 +47,15 @@ namespace BTCPayServer.Plugins
 
         public IEnumerable<IBTCPayServerPlugin> LoadedPlugins { get; }
         public BTCPayServerEnvironment Env { get; }
+        
+        public Version? GetVersionOfPendingInstall(string plugin)
+        {
+            var dirName = Path.Combine(_dataDirectories.Value.PluginDir, plugin);
+            var manifestFileName = dirName + ".json";
+            if (!File.Exists(manifestFileName)) return null;
+            var pluginManifest =  JObject.Parse(File.ReadAllText(manifestFileName)).ToObject<PluginService.AvailablePlugin>();
+            return pluginManifest.Version;
+        }
 
         public async Task<AvailablePlugin[]> GetRemotePlugins()
         {
@@ -70,10 +79,13 @@ namespace BTCPayServer.Plugins
         {
             var dest = _dataDirectories.Value.PluginDir;
             var filedest = Path.Join(dest, pluginIdentifier + ".btcpay");
+            var filemanifestdest = Path.Join(dest, pluginIdentifier + ".json");
             Directory.CreateDirectory(Path.GetDirectoryName(filedest));
             var url = $"api/v1/plugins/[{Uri.EscapeDataString(pluginIdentifier)}]/versions/{Uri.EscapeDataString(version)}/download";
+            var manifest = (await _pluginBuilderClient.GetPublishedVersions(null, true)).Select(v => v.ManifestInfo.ToObject<AvailablePlugin>()).FirstOrDefault(p => p.Identifier == pluginIdentifier);
+            await File.WriteAllTextAsync(filemanifestdest, JsonConvert.SerializeObject(manifest, Formatting.Indented));
             using var resp2 = await _pluginBuilderClient.HttpClient.GetAsync(url);
-            using var fs = new FileStream(filedest, FileMode.Create, FileAccess.ReadWrite);
+            await using var fs = new FileStream(filedest, FileMode.Create, FileAccess.ReadWrite);
             await resp2.Content.CopyToAsync(fs);
             await fs.FlushAsync();
         }

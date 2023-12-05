@@ -72,7 +72,8 @@ public class InvoiceWebhookProvider : WebhookProvider<InvoiceEvent>
             case InvoiceEventCode.MarkedCompleted:
                 return new WebhookInvoiceSettledEvent(storeId)
                 {
-                    ManuallyMarked = eventCode == InvoiceEventCode.MarkedCompleted
+                    ManuallyMarked = eventCode == InvoiceEventCode.MarkedCompleted,
+                    OverPaid = invoiceEvent.Invoice.ExceptionStatus == InvoiceExceptionStatus.PaidOver
                 };
             case InvoiceEventCode.Created:
                 return new WebhookInvoiceEvent(WebhookEventType.InvoiceCreated, storeId);

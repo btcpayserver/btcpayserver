@@ -63,6 +63,7 @@ namespace BTCPayServer.Client.Models
         }
 
         public bool ManuallyMarked { get; set; }
+        public bool OverPaid { get; set; }
     }
 
     public class WebhookInvoiceInvalidEvent : WebhookInvoiceEvent

@@ -12,6 +12,7 @@
 
 ### Bug fixes
 
+* Webhooks: Re-add OverPaid property to WebhookInvoiceSettledEvent (#5538 #5496) @dennisreimann
 * Apps: Filter list lookups by available app types (#5482) @dennisreimann
 * Wallet: Use application/jsonl as MIME type for BIP329 label export (#5489) @dennisreimann
 * Wallet: Fill label from BIP21 (#5428) @dennisreimann

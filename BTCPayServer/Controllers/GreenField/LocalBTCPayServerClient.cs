@@ -1275,6 +1275,11 @@ namespace BTCPayServer.Controllers.Greenfield
             return GetFromActionResult<PayoutData>(await GetController<GreenfieldPullPaymentController>().GetPayout(pullPaymentId, payoutId));
         }
 
+        public override async Task<RegisterBoltcardResponse> RegisterBoltcard(string pullPaymentId, RegisterBoltcardRequest request, CancellationToken cancellationToken = default)
+        {
+            return GetFromActionResult<RegisterBoltcardResponse>(await GetController<GreenfieldPullPaymentController>().RegisterBoltcard(pullPaymentId, request));
+        }
+
         public override async Task<PullPaymentLNURL> GetPullPaymentLNURL(string pullPaymentId, CancellationToken cancellationToken = default)
         {
             return GetFromActionResult<PullPaymentLNURL>(await GetController<GreenfieldPullPaymentController>().GetPullPaymentLNURL(pullPaymentId));

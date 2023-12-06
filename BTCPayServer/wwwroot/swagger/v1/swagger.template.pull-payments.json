@@ -1,5 +1,116 @@
 {
     "paths": {
+        "/api/v1/pull-payments/{pullPaymentId}/boltcards": {
+            "parameters": [
+                {
+                    "name": "pullPaymentId",
+                    "in": "path",
+                    "required": true,
+                    "description": "The ID of the pull payment",
+                    "schema": {
+                        "type": "string"
+                    }
+                }
+            ],
+            "post": {
+                "operationId": "PullPayments_LinkBoltcard",
+                "summary": "Link a boltcard to a pull payment",
+                "description": "Linking a boltcard to a pull payment will allow you to pay via NFC with it, the money will be sent from the pull payment. The boltcard keys are generated using [Deterministic Boltcard Key Generation](https://github.com/boltcard/boltcard/blob/main/docs/DETERMINISTIC.md).",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [ "UID" ],
+                                "type": "object",
+                                "properties": {
+                                    "UID": {
+                                        "type": "string",
+                                        "example": "46ab87ff36a3b7",
+                                        "description": "The `UID` of the NTag424",
+                                        "nullable": false
+                                    },
+                                    "onExisting": {
+                                        "type": "string",
+                                        "x-enumNames": [
+                                            "KeepVersion",
+                                            "UpdateVersion"
+                                        ],
+                                        "enum": [
+                                            "KeepVersion",
+                                            "UpdateVersion"
+                                        ],
+                                        "default": "UpdateVersion",
+                                        "description": "What to do if the boltcard is already linked.\n * `KeepVersion` will return the keys (K0-K4) that are already registered.\n * `UpdateVersion` will increment the version of the key, and thus return different keys (K0-K4). (See [Deterministic Boltcard Key Generation](https://github.com/boltcard/boltcard/blob/main/docs/DETERMINISTIC.md))"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The boltcard has been linked to the pull payment.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "LNURLW": {
+                                            "type": "string",
+                                            "description": "The lnurl withdraw of the server",
+                                            "example": "lnurlw://example.com/boltcard"
+                                        },
+                                        "version": {
+                                            "type": "number",
+                                            "description": "The version of the registration (See [Deterministic Boltcard Key Generation](https://github.com/boltcard/boltcard/blob/main/docs/DETERMINISTIC.md))"
+                                        },
+                                        "K0": {
+                                            "type": "string",
+                                            "description": "The public key K0 of the boltcard",
+                                            "example": "02a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b"
+                                        },
+                                        "K1": {
+                                            "type": "string",
+                                            "description": "The public key K1 of the boltcard",
+                                            "example": "02a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b"
+                                        },
+                                        "K2": {
+                                            "type": "string",
+                                            "description": "The public key K2 of the boltcard",
+                                            "example": "02a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b"
+                                        },
+                                        "K3": {
+                                            "type": "string",
+                                            "description": "The public key K3 of the boltcard",
+                                            "example": "02a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b"
+                                        },
+                                        "K4": {
+                                            "type": "string",
+                                            "description": "The public key K4 of the boltcard",
+                                            "example": "02a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b"
+                                        }
+
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "The pull payment has not been found. Wellknown error code is: `pullpayment-not-found`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    }
+                },
+                "tags": [
+                    "Pull payments (Public)"
+                ]
+            }
+        },
         "/api/v1/stores/{storeId}/pull-payments": {
             "parameters": [
                 {

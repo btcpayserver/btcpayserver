@@ -197,10 +197,11 @@ retry:
             driver.FindElement(selector).Click();
         }
 
-        [DebuggerHidden]
         public static bool ElementDoesNotExist(this IWebDriver driver, By selector)
         {
-            Assert.Throws<NoSuchElementException>(() =>
+            Assert.Throws<NoSuchElementException>(
+            [DebuggerStepThrough]
+            () =>
             {
                 driver.FindElement(selector);
             });

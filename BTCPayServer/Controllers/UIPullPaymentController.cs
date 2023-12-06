@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Amazon.S3.Model;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
@@ -10,20 +13,27 @@ using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
+using BTCPayServer.Lightning;
+using BTCPayServer.ModelBinders;
 using BTCPayServer.Models;
 using BTCPayServer.Models.WalletViewModels;
+using BTCPayServer.NTag424;
 using BTCPayServer.Payments;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
+using Dapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin;
+using NBitcoin.DataEncoders;
+using NdefLibrary.Ndef;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Controllers
 {
-    public class UIPullPaymentController : Controller
+    public partial class UIPullPaymentController : Controller
     {
         private readonly ApplicationDbContextFactory _dbContextFactory;
         private readonly CurrencyNameTable _currencyNameTable;
@@ -33,6 +43,8 @@ namespace BTCPayServer.Controllers
         private readonly BTCPayNetworkJsonSerializerSettings _serializerSettings;
         private readonly IEnumerable<IPayoutHandler> _payoutHandlers;
         private readonly StoreRepository _storeRepository;
+        private readonly BTCPayServerEnvironment _env;
+        private readonly SettingsRepository _settingsRepository;
 
         public UIPullPaymentController(ApplicationDbContextFactory dbContextFactory,
             CurrencyNameTable currencyNameTable,
@@ -41,7 +53,9 @@ namespace BTCPayServer.Controllers
             BTCPayNetworkProvider networkProvider,
             BTCPayNetworkJsonSerializerSettings serializerSettings,
             IEnumerable<IPayoutHandler> payoutHandlers,
-            StoreRepository storeRepository)
+            StoreRepository storeRepository,
+            BTCPayServerEnvironment env,
+            SettingsRepository settingsRepository)
         {
             _dbContextFactory = dbContextFactory;
             _currencyNameTable = currencyNameTable;
@@ -50,6 +64,8 @@ namespace BTCPayServer.Controllers
             _serializerSettings = serializerSettings;
             _payoutHandlers = payoutHandlers;
             _storeRepository = storeRepository;
+            _env = env;
+            _settingsRepository = settingsRepository;
             _networkProvider = networkProvider;
         }
 
@@ -114,7 +130,7 @@ namespace BTCPayServer.Controllers
                 var url = Url.Action("GetLNURLForPullPayment", "UILNURL", new { cryptoCode = _networkProvider.DefaultNetwork.CryptoCode, pullPaymentId = vm.Id }, Request.Scheme, Request.Host.ToString());
                 vm.LnurlEndpoint = url != null ? new Uri(url) : null;
             }
-            
+
             return View(nameof(ViewPullPayment), vm);
         }
 
@@ -224,11 +240,11 @@ namespace BTCPayServer.Controllers
                 ModelState.AddModelError(nameof(vm.Destination), "Invalid destination or payment method");
                 return await ViewPullPayment(pullPaymentId);
             }
-            
-            var amtError = ClaimRequest.IsPayoutAmountOk(destination, vm.ClaimedAmount == 0? null: vm.ClaimedAmount, paymentMethodId.CryptoCode, ppBlob.Currency);
+
+            var amtError = ClaimRequest.IsPayoutAmountOk(destination, vm.ClaimedAmount == 0 ? null : vm.ClaimedAmount, paymentMethodId.CryptoCode, ppBlob.Currency);
             if (amtError.error is not null)
             {
-                ModelState.AddModelError(nameof(vm.ClaimedAmount), amtError.error );
+                ModelState.AddModelError(nameof(vm.ClaimedAmount), amtError.error);
             }
             else if (amtError.amount is not null)
             {

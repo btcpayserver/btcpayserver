@@ -111,7 +111,6 @@ public class InvoiceWebhookProvider : WebhookProvider<InvoiceEvent>
                         invoiceEvent.Invoice.Status.ToModernStatus() == InvoiceStatus.Invalid,
                     PaymentMethod = invoiceEvent.Payment.GetPaymentMethodId().ToStringNormalized(),
                     Payment = GreenfieldInvoiceController.ToPaymentModel(invoiceEvent.Invoice, invoiceEvent.Payment),
-                    OverPaid = invoiceEvent.Invoice.ExceptionStatus == InvoiceExceptionStatus.PaidOver,
                     StoreId = invoiceEvent.Invoice.StoreId
                 };
             default:

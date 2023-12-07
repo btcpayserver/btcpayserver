@@ -6,10 +6,10 @@
 @{
     Layout = "_Layout";
     ViewData.SetActivePage(ServerNavPages.Plugins);
-    var installed = Model.Installed.ToDictionary(plugin => plugin.Identifier.ToLowerInvariant(), plugin => plugin.Version);
+    var installed = Model.Installed.ToDictionary(plugin => plugin.Identifier, plugin => plugin.Version);
 
     var availableAndNotInstalledx = Model.Available
-        .Where(plugin => !installed.ContainsKey(plugin.Identifier.ToLowerInvariant()))
+        .Where(plugin => !installed.ContainsKey(plugin.Identifier))
         .GroupBy(plugin => plugin.Identifier)
         .ToList();
 
@@ -278,7 +278,7 @@
     <div class="row mb-4">
         @foreach (var plugin in availableAndNotInstalled)
         {
-            var recommended = BTCPayServerOptions.RecommendedPlugins.Contains(plugin.Identifier.ToLowerInvariant());
+            var recommended = BTCPayServerOptions.RecommendedPlugins.Any(id => string.Equals(id, plugin.Identifier, StringComparison.InvariantCultureIgnoreCase));
             var disabled = Model.Disabled?.Contains(plugin.Identifier) ?? false;
 
             <div class="col col-12 col-md-6 col-lg-12 col-xl-6 col-xxl-4 mb-4">

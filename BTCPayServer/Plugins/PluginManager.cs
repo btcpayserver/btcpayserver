@@ -99,14 +99,13 @@ namespace BTCPayServer.Plugins
             });
             logger.LogInformation($"Loading plugins from {pluginsFolder}");
             Directory.CreateDirectory(pluginsFolder);
-            ExecuteCommands(pluginsFolder, null);
+            ExecuteCommands(pluginsFolder);
 
             var disabledPlugins = GetDisabledPlugins(pluginsFolder);
             var systemAssembly = typeof(Program).Assembly;
             LoadPluginsFromAssemblies(systemAssembly, disabledPlugins, loadedPluginIdentifiers, plugins);
 
-            if (ExecuteCommands(pluginsFolder,
-                    plugins.ToDictionary(plugin => plugin.Identifier, plugin => plugin.Version)))
+            if (ExecuteCommands(pluginsFolder, plugins.ToDictionary(plugin => plugin.Identifier, plugin => plugin.Version)))
             {
                 plugins.Clear();
                 LoadPluginsFromAssemblies(systemAssembly, disabledPlugins, loadedPluginIdentifiers, plugins);
@@ -428,16 +427,15 @@ namespace BTCPayServer.Plugins
         }
 
         public static bool DependencyMet(IBTCPayServerPlugin.PluginDependency dependency,
-            Dictionary<string, Version> installed)
+            Dictionary<string, Version> installed = null)
         {
             var plugin = dependency.Identifier.ToLowerInvariant();
             var versionReq = dependency.Condition;
+            // ensure installed is not null and has lowercased keys for comparison
+            installed = installed == null
+                ? new Dictionary<string, Version>()
+                : installed.ToDictionary(x => x.Key.ToLowerInvariant(), x => x.Value);
             if (!installed.ContainsKey(plugin) && !versionReq.Equals("!"))
-            {
-                return false;
-            }
-
-            if (installed.ContainsKey(plugin) && versionReq.Equals("!"))
             {
                 return false;
             }
@@ -477,8 +475,8 @@ namespace BTCPayServer.Plugins
             });
         }
 
-        public static bool DependenciesMet(IBTCPayServerPlugin.PluginDependency[] dependencies,
-            Dictionary<string, Version> installed)
+        public static bool DependenciesMet(IEnumerable<IBTCPayServerPlugin.PluginDependency> dependencies,
+            Dictionary<string, Version> installed = null)
         {
             return dependencies.All(dependency => DependencyMet(dependency, installed));
         }

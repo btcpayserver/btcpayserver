@@ -233,7 +233,7 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
                         Amount = paymentEntity.PaidAmount.Gross,
                         Paid = paymentEntity.InvoicePaidAmount.Net,
                         ReceivedDate = paymentEntity.ReceivedTime.DateTime,
-                        AmountFormatted = displayFormatter.Currency(paymentEntity.PaidAmount.Gross, paymentEntity.PaidAmount.Currency, DisplayFormatter.CurrencyFormat.None),
+                        AmountFormatted = displayFormatter.Currency(paymentEntity.PaidAmount.Gross, paymentEntity.PaidAmount.Currency),
                         PaidFormatted = displayFormatter.Currency(paymentEntity.InvoicePaidAmount.Net, invoice.Currency, DisplayFormatter.CurrencyFormat.Symbol),
                         RateFormatted = displayFormatter.Currency(paymentEntity.Rate, invoice.Currency, DisplayFormatter.CurrencyFormat.Symbol),
                         PaymentMethod = paymentMethodId.ToPrettyString(),

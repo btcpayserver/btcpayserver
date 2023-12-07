@@ -44,13 +44,8 @@
 }
 
 <style>
-  .version-switch .nav-link {
-	  display: inline;
-  }
-
-	  .version-switch .nav-link.active {
-		  display: none;
-	  }
+    .version-switch .nav-link { display: inline; }
+    .version-switch .nav-link.active { display: none; }
 </style>
 
 <partial name="_StatusMessage" />
@@ -226,7 +221,6 @@
                     {
                         var exclusivePendingAction = true;
                         <div class="card-footer border-0 pb-3 d-flex gap-2">
-                           
                             @if (pendingAction && updateAvailable)
                             {
                                 var isUpdateAction = Model.Commands.Last(tuple => tuple.plugin.Equals(plugin.Identifier, StringComparison.InvariantCultureIgnoreCase)).command == "update";
@@ -258,9 +252,7 @@
                                             <button title="Schedule update for when the dependencies have been met to ensure a smooth transition" data-bs-toggle="tooltip" type="submit" class="btn btn-secondary">Schedule update</button>
                                         </form>
                                     }
-
                                 }
-
                                 @if (DependentOn(plugin.Identifier))
                                 {
                                     <button type="button" class="btn btn-outline-danger" data-bs-toggle="tooltip" title="This plugin cannot be uninstalled as it is depended on by other plugins.">Uninstall <span class="fa fa-exclamation"></span></button>

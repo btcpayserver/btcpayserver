@@ -249,7 +249,7 @@
                                     else
                                     {
                                         <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" asp-route-version="@x.Version" asp-route-update="true" class="me-3">
-                                            <button title="Schedule update for when the dependencies have been met to ensure a smooth transition" data-bs-toggle="tooltip" type="submit" class="btn btn-secondary">Schedule update</button>
+                                            <button title="Schedule upgrade for when the dependencies have been met to ensure a smooth update" data-bs-toggle="tooltip" type="submit" class="btn btn-secondary">Schedule update</button>
                                         </form>
                                     }
                                 }
@@ -394,7 +394,7 @@
                             else
                             {
                                 <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" asp-route-version="@plugin.Version">
-                                    <button title="Schedule install for when the dependencies have been met to ensure a smooth transition" data-bs-toggle="tooltip" type="submit" class="btn btn-primary">Schedule install</button>
+                                    <button title="Schedule install for when the dependencies have been met to ensure a smooth update" data-bs-toggle="tooltip" type="submit" class="btn btn-primary">Schedule install</button>
                                 </form>
                             }
                         }

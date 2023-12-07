@@ -138,6 +138,7 @@
 
 	<ItemGroup>
     <Watch Include="Views\**\*.*"></Watch>
+    <Watch Remove="Views\Shared\LocalhostBrowserSupport.cshtml" />
     <Watch Remove="Views\UIAccount\CheatPermissions.cshtml" />
     <Watch Remove="Views\UIReports\StoreReports.cshtml" />
     <Content Update="Views\UIApps\_ViewImports.cshtml">

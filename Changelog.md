@@ -2,6 +2,14 @@
 
 ## 1.12.0
 
+### Noteworthy
+
+* With this release we upgrade to .NET 8, which also requires a current version of the Docker engine (>= 20.10.10).
+  We will try to migrate outdated versions when upgrading BTCPay Server, but if you see these [symptoms](https://docs.linuxserver.io/FAQ/#symptoms) after updating, please [upgrade Docker engine manually](https://docs.docker.com/engine/install/).
+* We changed a lot of things under the hood, making the Lightning integrations extendible by plugins and also preparing the
+  migration of Altcoins to plugins. If you are using plugins, you will most likely find them disabled after this update, because
+  new versions compatible with BTCPay Server v1.12 are required. Please see the "Manage Plugins" section once updated.
+
 ### New feature
 
 * Webhooks: Support for Payment Requests, Payouts and extendibility by plugins (#5421) @Kukks

@@ -2,22 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Configuration;
-using BTCPayServer.Lightning.CLightning;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.FileSystemGlobbing;
 using Microsoft.Extensions.Options;
-using NBitcoin.DataEncoders;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -27,10 +19,8 @@ namespace BTCPayServer.Plugins
     {
         private readonly IOptions<DataDirectories> _dataDirectories;
         private readonly PoliciesSettings _policiesSettings;
-        private readonly ISettingsRepository _settingsRepository;
         private readonly PluginBuilderClient _pluginBuilderClient;
         public PluginService(
-            ISettingsRepository settingsRepository,
             IEnumerable<IBTCPayServerPlugin> btcPayServerPlugins,
             PluginBuilderClient pluginBuilderClient,
             IOptions<DataDirectories> dataDirectories,
@@ -39,7 +29,6 @@ namespace BTCPayServer.Plugins
         {
             LoadedPlugins = btcPayServerPlugins;
             _pluginBuilderClient = pluginBuilderClient;
-            _settingsRepository = settingsRepository;
             _dataDirectories = dataDirectories;
             _policiesSettings = policiesSettings;
             Env = env;
@@ -53,7 +42,7 @@ namespace BTCPayServer.Plugins
             var dirName = Path.Combine(_dataDirectories.Value.PluginDir, plugin);
             var manifestFileName = dirName + ".json";
             if (!File.Exists(manifestFileName)) return null;
-            var pluginManifest =  JObject.Parse(File.ReadAllText(manifestFileName)).ToObject<PluginService.AvailablePlugin>();
+            var pluginManifest =  JObject.Parse(File.ReadAllText(manifestFileName)).ToObject<AvailablePlugin>();
             return pluginManifest.Version;
         }
 
@@ -75,6 +64,7 @@ namespace BTCPayServer.Plugins
                 return p;
             }).ToArray();
         }
+
         public async Task DownloadRemotePlugin(string pluginIdentifier, string version)
         {
             var dest = _dataDirectories.Value.PluginDir;
@@ -96,6 +86,7 @@ namespace BTCPayServer.Plugins
             UninstallPlugin(plugin);
             PluginManager.QueueCommands(dest, ("install", plugin));
         }
+
         public void UpdatePlugin(string plugin)
         {
             var dest = _dataDirectories.Value.PluginDir;
@@ -134,8 +125,7 @@ namespace BTCPayServer.Plugins
             public string Author { get; set; }
             public string AuthorLink { get; set; }
 
-            public void Execute(IApplicationBuilder applicationBuilder,
-                IServiceProvider applicationBuilderApplicationServices)
+            public void Execute(IApplicationBuilder applicationBuilder, IServiceProvider applicationBuilderApplicationServices)
             {
             }
 

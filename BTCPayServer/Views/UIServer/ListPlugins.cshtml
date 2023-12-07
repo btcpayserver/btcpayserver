@@ -41,8 +41,6 @@
         }
         return false;
     }
-
-    
 }
 
 <style>
@@ -379,12 +377,9 @@
                     </div>
                     <div class="card-footer border-0 pb-3 d-flex gap-2">
                         @{
-                            var exclusivePendingAction = true;
                             var pendingAction = Model.Commands.LastOrDefault(tuple => tuple.plugin.Equals(plugin.Identifier, StringComparison.InvariantCultureIgnoreCase));
-
                             var version = PluginService.GetVersionOfPendingInstall(plugin.Identifier);
-                            exclusivePendingAction = version == plugin.Version;
-                        }
+                            var exclusivePendingAction = version == plugin.Version;
                         }
                         @if (!pendingAction.Equals(default))
                         {

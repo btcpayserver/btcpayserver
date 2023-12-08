@@ -6,6 +6,7 @@ using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -17,6 +18,7 @@ using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.Lightning;
 using BTCPayServer.Models.InvoicingModels;
+using BTCPayServer.NTag424;
 using BTCPayServer.Payments;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
@@ -25,6 +27,8 @@ using BTCPayServer.Views.Manage;
 using BTCPayServer.Views.Server;
 using BTCPayServer.Views.Stores;
 using BTCPayServer.Views.Wallets;
+using Dapper;
+using ExchangeSharp;
 using LNURL;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -2116,6 +2120,7 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.CssSelector("#lnurlwithdraw-button")).Click();
             s.Driver.WaitForElement(By.Id("qr-code-data-input"));
             
+            // Try to use lnurlw via the QR Code
             var lnurl = new Uri(LNURL.LNURL.Parse(s.Driver.FindElement(By.Id("qr-code-data-input")).GetAttribute("value"), out _).ToString().Replace("https", "http"));
             s.Driver.FindElement(By.CssSelector("button[data-bs-dismiss='modal']")).Click();
             var info = Assert.IsType<LNURLWithdrawRequest>(await LNURL.LNURL.FetchInformation(lnurl, s.Server.PayTester.HttpClient));
@@ -2126,7 +2131,7 @@ namespace BTCPayServer.Tests
             Assert.Equal(info.CurrentBalance, new LightMoney(0.0000001m, LightMoneyUnit.BTC));
 
             var bolt2 = (await s.Server.CustomerLightningD.CreateInvoice(
-                new LightMoney(0.0000001m, LightMoneyUnit.BTC),
+                new LightMoney(0.00000005m, LightMoneyUnit.BTC),
                 $"LNurl w payout test {DateTime.UtcNow.Ticks}",
                 TimeSpan.FromHours(1), CancellationToken.None));
             var response = await info.SendRequest(bolt2.BOLT11, s.Server.PayTester.HttpClient, null,null);
@@ -2140,6 +2145,52 @@ namespace BTCPayServer.Tests
             });
             s.Driver.Close();
             s.Driver.SwitchTo().Window(s.Driver.WindowHandles.First());
+
+            // Simulate a boltcard
+            {
+                var db = s.Server.PayTester.GetService<ApplicationDbContextFactory>();
+                var ppid = lnurl.AbsoluteUri.Split("/").Last();
+                var issuerKey = new IssuerKey(SettingsRepositoryExtensions.FixedKey());
+                var uid = RandomNumberGenerator.GetBytes(7);
+                var cardKey = issuerKey.CreateCardKey(uid, 0);
+                var keys = cardKey.DeriveBoltcardKeys(issuerKey);
+                await db.LinkBoltcardToPullPayment(ppid, issuerKey, uid);
+                var piccData = new byte[] { 0xc7 }.Concat(uid).Concat(new byte[] { 1, 0, 0, 0, 0, 0, 0, 0 }).ToArray();
+                var p = keys.EncryptionKey.Encrypt(piccData);
+                var c = keys.AuthenticationKey.GetSunMac(uid, 1);
+                var boltcardUrl = new Uri(s.Server.PayTester.ServerUri.AbsoluteUri + $"boltcard?p={Encoders.Hex.EncodeData(p).ToStringUpperInvariant()}&c={Encoders.Hex.EncodeData(c).ToStringUpperInvariant()}");
+                // p and c should work so long as no bolt11 has been submitted
+                info = (LNURLWithdrawRequest)await LNURL.LNURL.FetchInformation(boltcardUrl, s.Server.PayTester.HttpClient);
+                info = (LNURLWithdrawRequest)await LNURL.LNURL.FetchInformation(boltcardUrl, s.Server.PayTester.HttpClient);
+                var fakeBoltcardUrl = new Uri(Regex.Replace(boltcardUrl.AbsoluteUri, "p=([A-F0-9]{32})", $"p={RandomBytes(16)}"));
+                await Assert.ThrowsAsync<LNUrlException>(() => LNURL.LNURL.FetchInformation(fakeBoltcardUrl, s.Server.PayTester.HttpClient));
+                fakeBoltcardUrl = new Uri(Regex.Replace(boltcardUrl.AbsoluteUri, "c=([A-F0-9]{16})", $"c={RandomBytes(8)}"));
+                await Assert.ThrowsAsync<LNUrlException>(() => LNURL.LNURL.FetchInformation(fakeBoltcardUrl, s.Server.PayTester.HttpClient));
+
+                bolt2 = (await s.Server.CustomerLightningD.CreateInvoice(
+                    new LightMoney(0.00000005m, LightMoneyUnit.BTC),
+                    $"LNurl w payout test2 {DateTime.UtcNow.Ticks}",
+                    TimeSpan.FromHours(1), CancellationToken.None));
+                response = await info.SendRequest(bolt2.BOLT11, s.Server.PayTester.HttpClient, null, null);
+                Assert.Equal("OK", response.Status);
+                // No replay should be possible
+                await Assert.ThrowsAsync<LNUrlException>(() => LNURL.LNURL.FetchInformation(boltcardUrl, s.Server.PayTester.HttpClient));
+                response = await info.SendRequest(bolt2.BOLT11, s.Server.PayTester.HttpClient, null, null);
+                Assert.Equal("ERROR", response.Status);
+                Assert.Contains("Replayed", response.Reason);
+
+                // Check the state of the registration, counter should have increased
+                var reg = await db.GetBoltcardRegistration(issuerKey, uid);
+                Assert.Equal((ppid, 1, 0), (reg.PullPaymentId, reg.Counter, reg.Version));
+                await db.SetBoltcardResetState(issuerKey, uid);
+                // After reset, counter is 0, version unchanged and ppId null
+                reg = await db.GetBoltcardRegistration(issuerKey, uid);
+                Assert.Equal((null, 0, 0), (reg.PullPaymentId, reg.Counter, reg.Version));
+                await db.LinkBoltcardToPullPayment(ppid, issuerKey, uid);
+                // Relink should bump Version
+                reg = await db.GetBoltcardRegistration(issuerKey, uid);
+                Assert.Equal((ppid, 0, 1), (reg.PullPaymentId, reg.Counter, reg.Version));
+            }
 
             s.GoToStore(s.StoreId, StoreNavPages.PullPayments);
             s.Driver.FindElement(By.Id("NewPullPayment")).Click();
@@ -2219,6 +2270,12 @@ namespace BTCPayServer.Tests
                 Assert.Equal(LightningInvoiceStatus.Paid, (await s.Server.CustomerLightningD.GetInvoice(bolt2.Id)).Status);
             });
             s.Driver.Close();
+        }
+
+        private string RandomBytes(int count)
+        {
+            var c = RandomNumberGenerator.GetBytes(count);
+            return Encoders.Hex.EncodeData(c);
         }
 
         [Fact]

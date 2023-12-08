@@ -523,7 +523,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             return View("Views/UIForms/View", viewModel);
         }
         
-        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+        [Authorize(Policy = Policies.CanViewInvoices, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [HttpGet("/apps/{appId}/pos/recent-transactions")]
         public async Task<IActionResult> RecentTransactions(string appId)
         {

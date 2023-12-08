@@ -72,7 +72,8 @@ public class InvoiceWebhookProvider : WebhookProvider<InvoiceEvent>
             case InvoiceEventCode.MarkedCompleted:
                 return new WebhookInvoiceSettledEvent(storeId)
                 {
-                    ManuallyMarked = eventCode == InvoiceEventCode.MarkedCompleted
+                    ManuallyMarked = eventCode == InvoiceEventCode.MarkedCompleted,
+                    OverPaid = invoiceEvent.Invoice.ExceptionStatus == InvoiceExceptionStatus.PaidOver
                 };
             case InvoiceEventCode.Created:
                 return new WebhookInvoiceEvent(WebhookEventType.InvoiceCreated, storeId);
@@ -110,7 +111,6 @@ public class InvoiceWebhookProvider : WebhookProvider<InvoiceEvent>
                         invoiceEvent.Invoice.Status.ToModernStatus() == InvoiceStatus.Invalid,
                     PaymentMethod = invoiceEvent.Payment.GetPaymentMethodId().ToStringNormalized(),
                     Payment = GreenfieldInvoiceController.ToPaymentModel(invoiceEvent.Invoice, invoiceEvent.Payment),
-                    OverPaid = invoiceEvent.Invoice.ExceptionStatus == InvoiceExceptionStatus.PaidOver,
                     StoreId = invoiceEvent.Invoice.StoreId
                 };
             default:

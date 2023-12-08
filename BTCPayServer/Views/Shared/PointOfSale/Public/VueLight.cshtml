@@ -1,3 +1,4 @@
+@using BTCPayServer.Client
 @model BTCPayServer.Plugins.PointOfSale.Models.ViewPointOfSaleViewModel
 
 <form id="app" method="post" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" v-on:submit="handleFormSubmit" class="d-flex flex-column gap-4 my-auto" v-cloak>
@@ -89,7 +90,7 @@
             </div>
         </div>
     </div>
-    <button type="button" class="btn btn-link p-1" data-bs-toggle="modal" data-bs-target="#RecentTransactions" id="RecentTransactionsToggle">
+    <button type="button" class="btn btn-link p-1" data-bs-toggle="modal" data-bs-target="#RecentTransactions" id="RecentTransactionsToggle" permission="@Policies.CanViewInvoices">
         <vc:icon symbol="manage-plugins"/>
     </button>
 </form>

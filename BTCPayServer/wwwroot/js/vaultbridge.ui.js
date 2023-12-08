@@ -60,12 +60,14 @@ var vaultui = (function () {
         * @type {VaultBridgeUI}
         */
         var self = this;
+        /**
+       * @type {string}
+       */
         this.backend_uri = backend_uri;
         /**
         * @type {vault.VaultBridge}
         */
         this.bridge = null;
-
         /**
         * @type {string}
         */
@@ -127,6 +129,18 @@ var vaultui = (function () {
                     console.warn(json.details);
             }
         }
+
+        function showMessage(message) {
+            let type = 'ok';
+            if (message.type === 'Error')
+                type = 'failed';
+            if (message.type === 'Processing')
+                type = '?';
+            show(new VaultFeedback(type, message.message, ""));
+            if (type.debug)
+                console.warn(type.debug);
+        }
+
         async function needRetry(json) {
             if (json.hasOwnProperty("error")) {
                 var handled = false;
@@ -212,7 +226,26 @@ var vaultui = (function () {
             }
             return true;
         };
-
+        this.sendBackendCommand = async function (command) {
+            if (!self.bridge || self.bridge.socket.readyState !== 1) {
+                self.bridge = await vault.connectToBackendSocket(self.backend_uri);
+            }
+            show(VaultFeedbacks.vaultLoading);
+            self.bridge.socket.send(command);
+            while (true) {
+                var json = await self.bridge.waitBackendMessage();
+                if (json.command === 'showMessage') {
+                    showMessage(json);
+                    if (json.type === "Error") {
+                        showRetry();
+                        return false;
+                    }
+                }
+                if (json.command == 'done') {
+                    return true;
+                }
+            }
+        }
         this.askForDisplayAddress = async function (rootedKeyPath) {
             if (!await self.ensureConnectedToBackend())
                 return false;

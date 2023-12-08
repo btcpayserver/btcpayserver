@@ -1984,7 +1984,7 @@ namespace BTCPayServer.Tests
                 Assert.Single(textSearchResult);
             });
 
-            invoice = user.BitPay.GetInvoice(invoice.Id, Facade.Merchant);
+            invoice = await user.BitPay.GetInvoiceAsync(invoice.Id, Facade.Merchant);
             Assert.Equal(1000.0m, invoice.TaxIncluded);
             Assert.Equal(5000.0m, invoice.Price);
             Assert.Equal(Money.Coins(0), invoice.BtcPaid);
@@ -2104,6 +2104,7 @@ namespace BTCPayServer.Tests
                 c =>
                 {
                     Assert.False(c.ManuallyMarked);
+                    Assert.True(c.OverPaid);
                 });
             user.AssertHasWebhookEvent<WebhookInvoiceProcessingEvent>(WebhookEventType.InvoiceProcessing,
                 c =>

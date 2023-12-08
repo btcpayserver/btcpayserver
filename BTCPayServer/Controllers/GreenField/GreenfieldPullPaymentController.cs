@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
@@ -10,6 +11,7 @@ using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
+using BTCPayServer.NTag424;
 using BTCPayServer.Payments;
 using BTCPayServer.Security;
 using BTCPayServer.Services;
@@ -19,6 +21,7 @@ using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
+using NBitcoin.DataEncoders;
 using Newtonsoft.Json.Linq;
 using MarkPayoutRequest = BTCPayServer.HostedServices.MarkPayoutRequest;
 
@@ -37,6 +40,8 @@ namespace BTCPayServer.Controllers.Greenfield
         private readonly IEnumerable<IPayoutHandler> _payoutHandlers;
         private readonly BTCPayNetworkProvider _networkProvider;
         private readonly IAuthorizationService _authorizationService;
+        private readonly SettingsRepository _settingsRepository;
+        private readonly BTCPayServerEnvironment _env;
 
         public GreenfieldPullPaymentController(PullPaymentHostedService pullPaymentService,
             LinkGenerator linkGenerator,
@@ -45,7 +50,9 @@ namespace BTCPayServer.Controllers.Greenfield
             Services.BTCPayNetworkJsonSerializerSettings serializerSettings,
             IEnumerable<IPayoutHandler> payoutHandlers,
             BTCPayNetworkProvider btcPayNetworkProvider,
-            IAuthorizationService authorizationService)
+            IAuthorizationService authorizationService,
+            SettingsRepository settingsRepository,
+            BTCPayServerEnvironment env)
         {
             _pullPaymentService = pullPaymentService;
             _linkGenerator = linkGenerator;
@@ -55,6 +62,8 @@ namespace BTCPayServer.Controllers.Greenfield
             _payoutHandlers = payoutHandlers;
             _networkProvider = btcPayNetworkProvider;
             _authorizationService = authorizationService;
+            _settingsRepository = settingsRepository;
+            _env = env;
         }
 
         [HttpGet("~/api/v1/stores/{storeId}/pull-payments")]
@@ -185,6 +194,46 @@ namespace BTCPayServer.Controllers.Greenfield
                                 Request.Host,
                                 Request.PathBase)
             };
+        }
+
+        [HttpPost]
+        [Route("~/api/v1/pull-payments/{pullPaymentId}/boltcards")]
+        [AllowAnonymous]
+        public async Task<IActionResult> RegisterBoltcard(string pullPaymentId, RegisterBoltcardRequest request)
+        {
+            if (pullPaymentId is null)
+                return PullPaymentNotFound();
+            var pp = await _pullPaymentService.GetPullPayment(pullPaymentId, false);
+            if (pp is null)
+                return PullPaymentNotFound();
+            if (request?.UID is null || request.UID.Length != 7)
+            {
+                ModelState.AddModelError(nameof(request.UID), "The UID is required and should be 7 bytes");
+                return this.CreateValidationError(ModelState);
+            }
+            if (!_pullPaymentService.SupportsLNURL(pp.GetBlob()))
+            {
+                return this.CreateAPIError(400, "lnurl-not-supported", "This pull payment currency should be BTC or SATS and accept lightning");
+            }
+
+            var issuerKey = await _settingsRepository.GetIssuerKey(_env);
+            var version = await _dbContextFactory.LinkBoltcardToPullPayment(pullPaymentId, issuerKey, request.UID, request.OnExisting);
+            var keys = issuerKey.CreateCardKey(request.UID, version).DeriveBoltcardKeys(issuerKey);
+
+            var boltcardUrl = Url.Action(nameof(UIBoltcardController.GetWithdrawRequest), "UIBoltcard");
+            boltcardUrl = Request.GetAbsoluteUri(boltcardUrl);
+            boltcardUrl = Regex.Replace(boltcardUrl, "^https?://", "lnurlw://");
+
+            return Ok(new RegisterBoltcardResponse()
+            {
+                LNURLW = boltcardUrl,
+                Version = version,
+                K0 = Encoders.Hex.EncodeData(keys.AppMasterKey.ToBytes()).ToUpperInvariant(),
+                K1 = Encoders.Hex.EncodeData(keys.EncryptionKey.ToBytes()).ToUpperInvariant(),
+                K2 = Encoders.Hex.EncodeData(keys.AuthenticationKey.ToBytes()).ToUpperInvariant(),
+                K3 = Encoders.Hex.EncodeData(keys.K3.ToBytes()).ToUpperInvariant(),
+                K4 = Encoders.Hex.EncodeData(keys.K4.ToBytes()).ToUpperInvariant(),
+            });
         }
 
         [HttpGet("~/api/v1/pull-payments/{pullPaymentId}")]

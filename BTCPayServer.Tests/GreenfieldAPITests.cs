@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
@@ -1084,7 +1085,39 @@ namespace BTCPayServer.Tests
             Assert.IsType<string>(lnrURLs.LNURLUri);
             Assert.Equal(12.303228134m, test4.Amount);
             Assert.Equal("BTC", test4.Currency);
-            
+
+            // Check we can register Boltcard
+            var uid = new byte[7];
+            RandomNumberGenerator.Fill(uid);
+            var card = await client.RegisterBoltcard(test4.Id, new RegisterBoltcardRequest()
+            {
+                UID = uid
+            });
+            Assert.Equal(0, card.Version);
+            var card1keys = new[] { card.K0, card.K1, card.K2, card.K3, card.K4 };
+            Assert.DoesNotContain(null, card1keys);
+            var card2 = await client.RegisterBoltcard(test4.Id, new RegisterBoltcardRequest()
+            {
+                UID = uid
+            });
+            Assert.Equal(1, card2.Version);
+            Assert.StartsWith("lnurlw://", card2.LNURLW);
+            Assert.EndsWith("/boltcard", card2.LNURLW);
+            var card2keys = new[] { card2.K0, card2.K1, card2.K2, card2.K3, card2.K4 };
+            Assert.DoesNotContain(null, card2keys);
+            for (int i = 0; i < card1keys.Length; i++)
+            {
+                if (i == 1)
+                    Assert.Contains(card1keys[i], card2keys);
+                else
+                    Assert.DoesNotContain(card1keys[i], card2keys);
+            }
+            var card3 = await client.RegisterBoltcard(test4.Id, new RegisterBoltcardRequest()
+            {
+                UID = uid,
+                OnExisting = OnExistingBehavior.KeepVersion
+            });
+            Assert.Equal(card2.Version, card3.Version);
             // Test with SATS denomination values
             var testSats = await client.CreatePullPayment(storeId, new Client.Models.CreatePullPaymentRequest()
             {

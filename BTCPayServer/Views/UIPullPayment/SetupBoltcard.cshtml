@@ -1,39 +1,26 @@
 @using BTCPayServer.Controllers
-@model WalletSendVaultModel
+@model SetupBoltcardViewModel
 @{
-    var walletId = Context.GetRouteValue("walletId").ToString();
-    var cancelUrl = Model.ReturnUrl ?? Url.Action(nameof(UIWalletsController.WalletTransactions), new { walletId });
-    var backUrl = Model.BackUrl != null ? $"{Model.BackUrl}?returnUrl={Model.ReturnUrl}" : null;
     Layout = "_LayoutWizard";
-    ViewData.SetActivePage(WalletsNavPages.Send, "Sign the transaction", walletId);
 }
 
 @section Navbar {
-    @if (backUrl != null)
-    {
-		<a href="@Url.EnsureLocal(backUrl, Context.Request)" id="GoBack">
-            <vc:icon symbol="back" />
-        </a>
-    }
-	<a href="@Url.EnsureLocal(cancelUrl, Context.Request)" id="CancelWizard" class="cancel">
+	<a href="@Url.EnsureLocal(Model.ReturnUrl, Context.Request)" id="CancelWizard" class="cancel">
         <vc:icon symbol="close" />
     </a>
 }
 
 <header class="text-center">
     <h1>@ViewData["Title"]</h1>
-    <p class="lead text-secondary mt-3">Using BTCPay Server Vault</p>
+    <p class="lead text-secondary mt-3">Using BTCPay Server Vault (NFC)</p>
 </header>
 
 <partial name="LocalhostBrowserSupport" />
 
 <div id="body" class="my-4">
-    <form id="broadcastForm" asp-action="WalletSendVault" asp-route-walletId="@walletId" method="post" style="display:none;">
-        <input type="hidden" id="WalletId" asp-for="WalletId" />
+	<form id="broadcastForm" method="post" style="display:none;">
         <input type="hidden" asp-for="WebsocketPath" />
         <input type="hidden" asp-for="ReturnUrl" />
-        <input type="hidden" asp-for="BackUrl" />
-        <partial name="SigningContext" for="SigningContext" />
     </form>
     <div id="vaultPlaceholder"></div>
     <button id="vault-retry" class="btn btn-primary" style="display:none;" type="button">Retry</button>
@@ -47,6 +34,9 @@
     <script src="~/js/vaultbridge.js" type="text/javascript" defer="defer" asp-append-version="true"></script>
     <script src="~/js/vaultbridge.ui.js" type="text/javascript" defer="defer" asp-append-version="true"></script>
     <script>
+		function delay(ms) {
+			return new Promise(resolve => setTimeout(resolve, ms));
+		}
         async function askSign() {
             var websocketPath = $("#WebsocketPath").val();
             var loc = window.location, ws_uri;
@@ -60,13 +50,11 @@
             var html = $("#VaultConnection").html();
             $("#vaultPlaceholder").html(html);
             var vaultUI = new vaultui.VaultBridgeUI(ws_uri);
-            
-            while (!await vaultUI.askForDevice() || !await vaultUI.askSignPSBT({
-                walletId: $("#WalletId").val(),
-                psbt: $("#SigningContext_PSBT").val()
-            })) {
+			var command = @Safe.Json(Model.Command);
+			while (!await vaultUI.sendBackendCommand(command)) {
+				await vaultUI.waitRetryPushed();
             }
-            $("#SigningContext_PSBT").val(vaultUI.psbt);
+			await delay(2000);
             $("#broadcastForm").submit();
         }
         document.addEventListener("DOMContentLoaded", function () {

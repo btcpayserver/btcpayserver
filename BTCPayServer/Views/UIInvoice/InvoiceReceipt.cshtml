@@ -64,7 +64,6 @@
                         {
                             <vc:qr-code data="@Context.Request.GetCurrentUrl()"></vc:qr-code>
                         }
-<<<<<<< HEAD
                         else if (!isSettled)
                         {
                             <div class="lead text-center p-4 fw-semibold" id="invoice-unsettled">
@@ -85,12 +84,10 @@
                                         <a href="?print=true" class="btn btn-link p-0 d-print-none fw-semibold order-1" target="_blank">Print Receipt</a>
                                         <dd class="text-muted mb-0 fw-semibold">Amount Paid</dd>
                                     </div>
-=======
                         <div class="d-flex gap-4 mb-0 flex-fill">
                             <dl class="d-flex flex-column gap-4 mb-0 flex-fill">
                                 <div class="d-flex flex-column">
                                     <dd class="text-muted mb-0 fw-semibold">Amount Paid</dd>
->>>>>>> 433adf4668dbbb73732353d7a1ab825b3adc87ec
                                     <dt class="fs-2 mb-0 text-nowrap fw-semibold">@DisplayFormatter.Currency(Model.Amount, Model.Currency, DisplayFormatter.CurrencyFormat.Symbol)</dt>
                                 </div>
                                 <div class="d-flex flex-column">

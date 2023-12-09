@@ -31,7 +31,7 @@
   "payment_received": "Payment Received",
   "payment_received_body": "Your payment has been received and is now processing.",
   "payment_received_confirmations": "Once your payment has received {{requiredConfirmations}} confirmations on the {{cryptoCode}} blockchain, your invoice will be settled.",
-  "invoice_paid": "Invoice Paid Successfully",
+  "invoice_paid": "Invoice Paid",
   "invoice_expired": "Invoice Expired",
   "invoice_expired_body": "An invoice is only valid for {{minutes}} minutes.\n\nReturn to {{storeName}} if you would like to resubmit a payment.",
   "invoice_paidpartial_body": "An invoice is only valid for {{minutes}} minutes.\n\nThis invoice expired with partial payment. Please contact us, so that we can fulfill your order.",

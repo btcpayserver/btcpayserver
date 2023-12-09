@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using BTCPayServer.JsonConverters;
+using BTCPayServer.Models;
 using BTCPayServer.Services.Apps;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Newtonsoft.Json;
@@ -57,9 +58,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Models
             public bool SymbolSpace { get; set; }
         }
 
-        public string LogoFileId { get; set; }
-        public string CssFileId { get; set; }
-        public string BrandColor { get; set; }
+        public StoreBrandingViewModel StoreBranding { get; set; }
         public string StoreName { get; set; }
         public CurrencyInfoData CurrencyInfo { get; set; }
         public PosViewType ViewType { get; set; }
@@ -106,14 +105,9 @@ namespace BTCPayServer.Plugins.PointOfSale.Models
         public string CustomButtonText { get; set; }
         public string CustomTipText { get; set; }
         public int[] CustomTipPercentages { get; set; }
-
-        [Display(Name = "Custom CSS URL")]
-        public string CustomCSSLink { get; set; }
-        public string CustomLogoLink { get; set; }
         public string Description { get; set; }
         public SelectList AllCategories { get; set; }
         [Display(Name = "Custom CSS Code")]
-        public string EmbeddedCSS { get; set; }
         public RequiresRefundEmail RequiresRefundEmail { get; set; } = RequiresRefundEmail.InheritFromStore;
         public string StoreId { get; set; }
     }

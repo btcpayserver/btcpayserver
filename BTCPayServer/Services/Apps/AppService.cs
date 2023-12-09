@@ -253,6 +253,7 @@ namespace BTCPayServer.Services.Apps
         public async Task<ListAppsViewModel.ListAppViewModel[]> GetAllApps(string? userId, bool allowNoUser = false, string? storeId = null, bool includeArchived = false)
         {
             await using var ctx = _ContextFactory.CreateContext();
+            var types = GetAvailableAppTypes().Select(at => at.Key).ToHashSet();
             var listApps = (await ctx.UserStore
                 .Where(us =>
                     (allowNoUser && string.IsNullOrEmpty(userId) || us.ApplicationUserId == userId) &&
@@ -260,7 +261,7 @@ namespace BTCPayServer.Services.Apps
                 .Include(store => store.StoreRole)
                 .Include(store => store.StoreData)
                 .Join(ctx.Apps, us => us.StoreDataId, app => app.StoreDataId, (us, app) => new { us, app })
-                .Where(b => !b.app.Archived || b.app.Archived == includeArchived)
+                .Where(b => types.Contains(b.app.AppType) && (!b.app.Archived || b.app.Archived == includeArchived))
                 .OrderBy(b => b.app.Created)
                 .ToArrayAsync()).Select(arg => new ListAppsViewModel.ListAppViewModel
             {
@@ -311,9 +312,10 @@ namespace BTCPayServer.Services.Apps
         public async Task<List<AppData>> GetApps(string[] appIds, bool includeStore = false, bool includeArchived = false)
         {
             await using var ctx = _ContextFactory.CreateContext();
+            var types = GetAvailableAppTypes().Select(at => at.Key);
             var query = ctx.Apps
                 .Where(app => appIds.Contains(app.Id))
-                .Where(app => !app.Archived || app.Archived == includeArchived);
+                .Where(app => types.Contains(app.AppType) && (!app.Archived || app.Archived == includeArchived));
             if (includeStore)
             {
                 query = query.Include(data => data.StoreData);
@@ -332,9 +334,10 @@ namespace BTCPayServer.Services.Apps
         public async Task<AppData?> GetApp(string appId, string? appType, bool includeStore = false, bool includeArchived = false)
         {
             await using var ctx = _ContextFactory.CreateContext();
+            var types = GetAvailableAppTypes().Select(at => at.Key);
             var query = ctx.Apps
                 .Where(us => us.Id == appId && (appType == null || us.AppType == appType))
-                .Where(app => !app.Archived || app.Archived == includeArchived);
+                .Where(app => types.Contains(app.AppType) && (!app.Archived || app.Archived == includeArchived));
             if (includeStore)
             {
                 query = query.Include(data => data.StoreData);

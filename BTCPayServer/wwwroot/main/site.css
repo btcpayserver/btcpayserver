@@ -85,10 +85,6 @@ a.unobtrusive-link {
     text-decoration: inherit;
 }
 
-.btn.btn-link:focus {
-    box-shadow: none;
-}
-
 [aria-expanded] > svg.icon-caret-down {
     flex-shrink: 0;
     width: 24px;
@@ -219,7 +215,8 @@ h2 svg.icon.icon-info {
 
 /* Print */
 @media print {
-    section {
+    section,
+    .tile {
         page-break-inside: avoid;
     }
     .table-responsive {
@@ -245,16 +242,20 @@ h2 svg.icon.icon-info {
     a {
         text-decoration: none !important;
     }
+    .buttons,
     .toasted-container {
         display: none !important;
     }
     .truncate-center a,
     .truncate-center button,
     .truncate-center-truncated {
-        display: none;
+        display: none !important;
     }
     .card {
         page-break-inside: avoid;
+    }
+    .actions-col {
+        display: none;
     }
 }
 
@@ -638,28 +639,56 @@ input:checked + label.btcpay-list-select-item {
 }
 
 /* Public pages */
-.public-page-wrap {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-    margin: 0 auto;
-    padding: var(--btcpay-space-l) var(--btcpay-space-m);
-}
-
-/* gradually try to set better but less supported values and units */
-.min-vh-100,
-.public-page-wrap {
-    min-height: -webkit-fill-available !important;
-    min-height: 100dvh !important;
-}
-
-@media (max-width: 400px) {
+@media screen {
     .public-page-wrap {
-        padding-left: 0;
-        padding-right: 0;
+        --wrap-max-width: none;
+        --wrap-padding-vertical: var(--btcpay-space-l);
+        --wrap-padding-horizontal: var(--btcpay-space-m);
+        
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        max-width: var(--wrap-max-width);
+        margin: 0 auto;
+        padding: var(--wrap-padding-vertical) var(--wrap-padding-horizontal);
+    }
+    
+    /* gradually try to set better but less supported values and units */
+    .min-vh-100,
+    .public-page-wrap {
+        min-height: -webkit-fill-available !important;
+        min-height: 100dvh !important;
+    }
+    .tile {
+        --tile-padding: 1.5rem;
+        --tile-border-radius: var(--btcpay-border-radius-l);
+
+        padding: var(--tile-padding);
+        background: var(--btcpay-bg-tile);
+        border-radius: var(--tile-border-radius);
+        box-shadow: var(--btcpay-box-shadow-lg);
+    }
+    .tile .buttons {
+        display: flex;
+        flex-direction: column;
+        gap: var(--btcpay-space-m);
+    }
+    .tile > :last-child {
+        margin-bottom: 0;
     }
 }
 
+@media screen and (max-width: 400px) {
+    .public-page-wrap {
+        --wrap-padding-horizontal: 0;
+    }
+    .tile {
+        --tile-padding: 1rem;
+        --tile-border-radius: none;
+    }
+}
+
+/* Store Header */
 .store-header {
     display: flex;
     flex-direction: column;
@@ -705,6 +734,7 @@ a.store-powered-by svg {
     height: 2rem;
     width: 4rem;
 }
+.store-footer a:hover,
 a.store-powered-by:hover {
     color: var(--btcpay-body-text-hover);
 }
@@ -952,6 +982,11 @@ input.ts-wrapper.form-control:not(.ts-hidden-accessible,.ts-inline) {
     text-overflow: ellipsis;
 }
 
+.truncate-center-end,
+.truncate-center-start {
+    white-space: nowrap;
+}
+
 .truncate-center-id {
     font-family: var(--btcpay-font-monospace);
     font-size: .875em;
@@ -1063,6 +1098,9 @@ input.ts-wrapper.form-control:not(.ts-hidden-accessible,.ts-inline) {
 .amount-col {
     text-align: right;
     white-space: nowrap;
+}
+.actions-col {
+    text-align: right;
 }
 
 /* Mass Actions */

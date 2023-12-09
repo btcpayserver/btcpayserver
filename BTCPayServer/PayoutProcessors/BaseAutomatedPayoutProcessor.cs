@@ -41,7 +41,7 @@ public abstract class BaseAutomatedPayoutProcessor<T> : BaseAsyncService where T
     protected readonly BTCPayNetworkProvider _btcPayNetworkProvider;
     protected readonly PaymentMethodId PaymentMethodId;
     private readonly IPluginHookService _pluginHookService;
-    private readonly EventAggregator _eventAggregator;
+    protected readonly EventAggregator _eventAggregator;
 
     protected BaseAutomatedPayoutProcessor(
         ILoggerFactory logger,
@@ -115,7 +115,13 @@ public abstract class BaseAutomatedPayoutProcessor<T> : BaseAsyncService where T
                 Logs.PayServer.LogInformation(
                     $"{payouts.Count} found to process. Starting (and after will sleep for {blob.Interval})");
                 await Process(paymentMethod, payouts);
+
                 await context.SaveChangesAsync();
+                
+                foreach (var payoutData in payouts.Where(payoutData => payoutData.State != PayoutState.AwaitingPayment))
+                {
+                    _eventAggregator.Publish(new PayoutEvent(null, payoutData));
+                }
             }
 
             // Allow plugins do to something after automatic payout processing

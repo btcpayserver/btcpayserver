@@ -47,7 +47,7 @@ namespace BTCPayServer.Services
         }
 
 
-        public static ApplicationUserData FromModel(ApplicationUser data, string[] roles)
+        public static ApplicationUserData FromModel(ApplicationUser data, string?[] roles)
         {
             return new ApplicationUserData()
             {
@@ -112,6 +112,8 @@ namespace BTCPayServer.Services
             using var scope = _serviceProvider.CreateScope();
             var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
             var user = await userManager.FindByIdAsync(userId);
+            if (user is null)
+                return false;
             IdentityResult res;
             if (enableAdmin)
             {
@@ -147,7 +149,9 @@ namespace BTCPayServer.Services
 
             await Task.WhenAll(files.Select(file => _fileService.RemoveFile(file.Id, userId)));
 
-            user = await userManager.FindByIdAsync(userId);
+            user = (await userManager.FindByIdAsync(userId))!;
+            if (user is null)
+                return;
             var res = await userManager.DeleteAsync(user);
             if (res.Succeeded)
             {

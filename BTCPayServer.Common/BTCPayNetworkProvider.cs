@@ -1,8 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using BTCPayServer.Configuration;
+using BTCPayServer.Logging;
+using Microsoft.AspNetCore.DataProtection.KeyManagement;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBXplorer;
+using StandardConfiguration;
 
 namespace BTCPayServer
 {
@@ -19,92 +26,39 @@ namespace BTCPayServer
             }
         }
 
-        BTCPayNetworkProvider(BTCPayNetworkProvider unfiltered, string[] cryptoCodes)
-        {
-            NetworkType = unfiltered.NetworkType;
-            _NBXplorerNetworkProvider = new NBXplorerNetworkProvider(unfiltered.NetworkType);
-            _Networks = new Dictionary<string, BTCPayNetworkBase>();
-            cryptoCodes = cryptoCodes.Select(c => c.ToUpperInvariant()).ToArray();
-            foreach (var network in unfiltered._Networks)
-            {
-                if (cryptoCodes.Contains(network.Key))
-                {
-                    _Networks.Add(network.Key, network.Value);
-                }
-            }
-        }
-
-
         public ChainName NetworkType { get; private set; }
-        public BTCPayNetworkProvider(ChainName networkType)
+        public BTCPayNetworkProvider(
+            IEnumerable<BTCPayNetworkBase> networks,
+            SelectedChains selectedChains,
+            NBXplorerNetworkProvider nbxplorerNetworkProvider,
+            Logs logs,
+            IConfiguration configuration)
         {
-            _NBXplorerNetworkProvider = new NBXplorerNetworkProvider(networkType);
-            NetworkType = networkType;
-            InitBitcoin();
-#if ALTCOINS
-            InitLiquid();
-            InitLiquidAssets();
-            InitLitecoin();
-            InitBitcore();
-            InitDogecoin();
-            InitBGold();
-            InitMonacoin();
-            InitDash();
-            InitFeathercoin();
-            InitAlthash();
-            InitGroestlcoin();
-            InitViacoin();
-            InitMonero();
-            InitZcash();
-            // InitArgoneum();//their rate source is down 9/15/20.
-            // InitMonetaryUnit(); Not supported from Bittrex from 11/23/2022, dead shitcoin
+#if !ALTCOINS
+            var onlyBTC = networks.Count() == 1 && networks.First().IsBTC;
+            if (!onlyBTC)
+                throw new ConfigException($"This build of BTCPay Server does not support altcoins");
+#endif
 
-            // Assume that electrum mappings are same as BTC if not specified
-            foreach (var network in _Networks.Values.OfType<BTCPayNetwork>())
+            _NBXplorerNetworkProvider = nbxplorerNetworkProvider;
+            NetworkType = nbxplorerNetworkProvider.NetworkType;
+            foreach (var network in networks)
             {
-                if (network.ElectrumMapping.Count == 0)
-                {
-                    network.ElectrumMapping = GetNetwork<BTCPayNetwork>("BTC").ElectrumMapping;
-                    if (!network.NBitcoinNetwork.Consensus.SupportSegwit)
-                    {
-                        network.ElectrumMapping =
-                            network.ElectrumMapping
-                            .Where(kv => kv.Value == DerivationType.Legacy)
-                            .ToDictionary(k => k.Key, k => k.Value);
-                    }
-                }
+                _Networks.Add(network.CryptoCode.ToUpperInvariant(), network);
             }
 
-            // Disabled because of https://twitter.com/Cryptopia_NZ/status/1085084168852291586
-            //InitBPlus();
-            //InitUfo();
-#endif
-        }
+            foreach (var chain in selectedChains.ExplicitlySelected)
+            {
+                if (GetNetwork<BTCPayNetworkBase>(chain) == null)
+                    throw new ConfigException($"Invalid chains \"{chain}\"");
+            }
 
-        /// <summary>
-        /// Keep only the specified crypto
-        /// </summary>
-        /// <param name="cryptoCodes">Crypto to support</param>
-        /// <returns></returns>
-        public BTCPayNetworkProvider Filter(string[] cryptoCodes)
-        {
-            return new BTCPayNetworkProvider(this, cryptoCodes);
+            logs.Configuration.LogInformation(
+                "Supported chains: " + String.Join(',', _Networks.Select(n => n.Key).ToArray()));
         }
 
         public BTCPayNetwork BTC => GetNetwork<BTCPayNetwork>("BTC");
         public BTCPayNetworkBase DefaultNetwork => BTC ?? GetAll().First();
-
-        public void Add(BTCPayNetwork network)
-        {
-            if (network.NBitcoinNetwork == null)
-                return;
-            Add(network as BTCPayNetworkBase);
-        }
-        public void Add(BTCPayNetworkBase network)
-        {
-            _Networks.Add(network.CryptoCode.ToUpperInvariant(), network);
-        }
-
         public IEnumerable<BTCPayNetworkBase> GetAll()
         {
             return _Networks.Values.ToArray();

@@ -23,10 +23,9 @@ namespace BTCPayServer.Models.InvoicingModels
             public string CryptoCode { get; set; }
             public bool Displayed { get; set; }
         }
+        public StoreBrandingViewModel StoreBranding { get; set; }
         public string CustomCSSLink { get; set; }
         public string CustomLogoLink { get; set; }
-        public string CssFileId { get; set; }
-        public string LogoFileId { get; set; }
         public string PaymentSoundUrl { get; set; }
         public string NfcReadSoundUrl { get; set; }
         public string ErrorSoundUrl { get; set; }

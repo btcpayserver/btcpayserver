@@ -98,7 +98,7 @@ retry:
                 }
                 Thread.Sleep(50);
             }
-            Assert.False(true, "Elements was found");
+            Assert.Fail("Elements was found");
         }
 
         public static void UntilJsIsReady(this WebDriverWait wait)
@@ -197,10 +197,11 @@ retry:
             driver.FindElement(selector).Click();
         }
 
-        [DebuggerHidden]
         public static bool ElementDoesNotExist(this IWebDriver driver, By selector)
         {
-            Assert.Throws<NoSuchElementException>(() =>
+            Assert.Throws<NoSuchElementException>(
+            [DebuggerStepThrough]
+            () =>
             {
                 driver.FindElement(selector);
             });

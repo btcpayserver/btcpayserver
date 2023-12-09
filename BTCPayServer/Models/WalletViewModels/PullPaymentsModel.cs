@@ -98,9 +98,13 @@ namespace BTCPayServer.Models.WalletViewModels
 
         [MaxLength(30)]
         public string Name { get; set; }
+
+        [Display(Name = "Memo")]
         public string Description { get; set; }
+
         [Display(Name = "Custom CSS URL")]
         public string CustomCSSLink { get; set; }
+
         [Display(Name = "Custom CSS Code")]
         public string EmbeddedCSS { get; set; }
     }

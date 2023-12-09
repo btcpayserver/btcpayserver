@@ -1,5 +1,6 @@
-@using BTCPayServer.Client.Models
+@using BTCPayServer.HostedServices.Webhooks
 @model BTCPayServer.Controllers.UIStoresController.StoreEmailRuleViewModel
+@inject WebhookSender WebhookSender
 
 @{
     Layout = "../Shared/_NavLayout.cshtml";
@@ -54,7 +55,7 @@
                                     </button>
                                 </div>
                             </div>
-                            <select asp-for="Rules[index].Trigger" asp-items="@Html.GetEnumSelectList<WebhookEventType>()" class="form-select email-rule-trigger" required></select>
+                            <select asp-for="Rules[index].Trigger" asp-items="@WebhookSender.GetSupportedWebhookTypes().Select(s => new SelectListItem(s.Value,s.Key))" class="form-select email-rule-trigger" required></select>
                             <span asp-validation-for="Rules[index].Trigger" class="text-danger"></span>
                             <div class="form-text">Choose what event sends the email.</div>
                         </div>
@@ -78,17 +79,47 @@
                             <label asp-for="Rules[index].Body" class="form-label" data-required></label>
                             <textarea asp-for="Rules[index].Body" class="form-control richtext email-rule-body" rows="4"></textarea>
                             <span asp-validation-for="Rules[index].Body" class="text-danger"></span>
-                            <div class="form-text d-flex gap-2">
-                                <div>Placeholders:</div>
-                                <div>
-                                    <code>{Invoice.Id}</code>,
-                                    <code>{Invoice.StoreId}</code>,
-                                    <code>{Invoice.Price}</code>,
-                                    <code>{Invoice.Currency}</code>,
-                                    <code>{Invoice.Status}</code>,
-                                    <code>{Invoice.AdditionalStatus}</code>,
-                                    <code>{Invoice.OrderId}</code>
-                                </div>
+                            <div class="form-text rounded bg-light p-2">
+                                <table class="table table-sm caption-top m-0">
+                                    <caption class="text-muted p-0">Placeholders</caption>
+                                    <tr>
+                                        <th>Invoice</th>
+                                        <td>
+                                            <code>{Invoice.Id}</code>,
+                                            <code>{Invoice.StoreId}</code>,
+                                            <code>{Invoice.Price}</code>,
+                                            <code>{Invoice.Currency}</code>,
+                                            <code>{Invoice.Status}</code>,
+                                            <code>{Invoice.AdditionalStatus}</code>,
+                                            <code>{Invoice.OrderId}</code>
+                                        	<code>{Invoice.Metadata}*</code>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Request</th>
+                                        <td>
+                                            <code>{PaymentRequest.Id}</code>,
+                                            <code>{PaymentRequest.Price}</code>,
+                                            <code>{PaymentRequest.Currency}</code>,
+                                            <code>{PaymentRequest.Title}</code>,
+                                            <code>{PaymentRequest.Description}</code>,
+                                            <code>{PaymentRequest.Status}</code>
+                                        	<code>{PaymentRequest.FormResponse}*</code>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Payout</th>
+                                        <td>
+                                            <code>{Payout.Id}</code>,
+                                            <code>{Payout.PullPaymentId}</code>,
+                                            <code>{Payout.Destination}</code>,
+                                            <code>{Payout.State}</code>
+                                        	<code>{Payout.Metadata}*</code>
+                                        </td>
+                                    </tr>
+                                    <tr><td colspan="2">* These fields are JSON objects. You can access properties within them using <a href="https://www.newtonsoft.com/json/help/html/SelectToken.htm#SelectTokenJSONPath" rel="noreferrer noopener" target="_blank">this syntax</a>. One example is <code>{Invoice.Metadata.itemCode}</code>
+</td></tr>
+                                </table>
                             </div>
                         </div>
                     </li>

@@ -16,8 +16,8 @@
     }
 }
 
-<div id="PosStatic" class="public-page-wrap container-xl">
-    <partial name="_StoreHeader" model="(string.IsNullOrEmpty(Model.Title) ? Model.StoreName : Model.Title, Model.LogoFileId)" />
+<div id="PosStatic" class="public-page-wrap">
+    <partial name="_StoreHeader" model="(string.IsNullOrEmpty(Model.Title) ? Model.StoreName : Model.Title, Model.StoreBranding)" />
     <main>
         <partial name="_StatusMessage" />
         @if (!string.IsNullOrEmpty(Model.Description))

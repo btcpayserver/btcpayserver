@@ -5,6 +5,7 @@ using BTCPayServer.Data;
 using BTCPayServer.Filters;
 using BTCPayServer.Lightning;
 using BTCPayServer.Logging;
+using BTCPayServer.Models;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Services.Stores;
@@ -37,31 +38,30 @@ namespace BTCPayServer.Controllers
             if (store == null)
                 return NotFound();
 
+            var storeBlob = store.GetStoreBlob();
+            var vm = new ShowLightningNodeInfoViewModel
+            {
+                CryptoCode = cryptoCode,
+                StoreName = store.StoreName,
+                StoreBranding = new StoreBrandingViewModel(storeBlob)
+            };
             try
             {
                 var paymentMethodDetails = GetExistingLightningSupportedPaymentMethod(cryptoCode, store);
                 var network = _BtcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
-                var nodeInfo =
-                    await _LightningLikePaymentHandler.GetNodeInfo(paymentMethodDetails, network, new InvoiceLogs(), throws: true);
+                var nodeInfo = await _LightningLikePaymentHandler.GetNodeInfo(paymentMethodDetails, network,
+                    new InvoiceLogs(), throws: true);
 
-                return View(new ShowLightningNodeInfoViewModel
-                {
-                    Available = true,
-                    NodeInfo = nodeInfo.Select(n => new ShowLightningNodeInfoViewModel.NodeData(n)).ToArray(),
-                    CryptoCode = cryptoCode,
-                    CryptoImage = GetImage(paymentMethodDetails.PaymentId, network),
-                    StoreName = store.StoreName
-                });
+                vm.Available = true;
+                vm.CryptoImage = GetImage(paymentMethodDetails.PaymentId, network);
+                vm.NodeInfo = nodeInfo.Select(n => new ShowLightningNodeInfoViewModel.NodeData(n)).ToArray();
             }
             catch (Exception)
             {
-                return View(new ShowLightningNodeInfoViewModel
-                {
-                    Available = false,
-                    CryptoCode = cryptoCode,
-                    StoreName = store.StoreName
-                });
+                // ignored
             }
+
+            return View(vm);
         }
 
         private LightningSupportedPaymentMethod GetExistingLightningSupportedPaymentMethod(string cryptoCode, StoreData store)
@@ -73,7 +73,6 @@ namespace BTCPayServer.Controllers
             return existing;
         }
 
-
         private string GetImage(PaymentMethodId paymentMethodId, BTCPayNetwork network)
         {
             var res = paymentMethodId.PaymentType == PaymentTypes.BTCLike
@@ -82,7 +81,6 @@ namespace BTCPayServer.Controllers
             return "/" + res;
         }
     }
-
 
     public class ShowLightningNodeInfoViewModel
     {
@@ -102,6 +100,7 @@ namespace BTCPayServer.Controllers
                 return _connection;
             }
         }
+        public StoreBrandingViewModel StoreBranding { get; set; }
         public NodeData[] NodeInfo { get; set; }
         public bool Available { get; set; }
         public string CryptoCode { get; set; }

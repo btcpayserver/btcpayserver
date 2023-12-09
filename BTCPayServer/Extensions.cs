@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -83,19 +84,42 @@ namespace BTCPayServer
             return endpoint != null;
         }
 
-        public static bool IsSafe(this LightningConnectionString connectionString)
+        public static Uri GetServerUri(this ILightningClient client)
         {
-            if (connectionString.CookieFilePath != null ||
-                connectionString.MacaroonDirectoryPath != null ||
-                connectionString.MacaroonFilePath != null)
+            var kv = LightningConnectionStringHelper.ExtractValues(client.ToString(), out var type);
+            
+            return !kv.TryGetValue("server", out var server) ? null : new Uri(server, UriKind.Absolute);
+        }
+
+        public static string GetDisplayName(this ILightningClient client)
+        {
+            LightningConnectionStringHelper.ExtractValues(client.ToString(), out var type);
+           
+            var field = typeof(LightningConnectionType).GetField(type, BindingFlags.Public | BindingFlags.Static);
+            if (field == null) return type;
+            DisplayAttribute attr = field.GetCustomAttribute<DisplayAttribute>();
+            return attr?.Name ?? type;
+
+        }
+
+        public static bool IsSafe(this ILightningClient connectionString)
+        {
+            var kv = LightningConnectionStringHelper.ExtractValues(connectionString.ToString(), out var type);
+            if (kv.TryGetValue("cookiefilepath", out var cookieFilePath)  ||
+                kv.TryGetValue("macaroondirectorypath", out var macaroonDirectoryPath)  ||
+                kv.TryGetValue("macaroonfilepath", out var macaroonFilePath) )
                 return false;
 
-            var uri = connectionString.BaseUri;
+            if (!kv.TryGetValue("server", out var server))
+            {
+                return true;
+            }
+            var uri = new Uri(server, UriKind.Absolute);
             if (uri.Scheme.Equals("unix", StringComparison.OrdinalIgnoreCase))
                 return false;
-            if (!NBitcoin.Utils.TryParseEndpoint(uri.DnsSafeHost, 80, out var endpoint))
+            if (!Utils.TryParseEndpoint(uri.DnsSafeHost, 80, out var endpoint))
                 return false;
-            return !Extensions.IsLocalNetwork(uri.DnsSafeHost);
+            return !IsLocalNetwork(uri.DnsSafeHost);
         }
 
         public static IQueryable<TEntity> Where<TEntity>(this Microsoft.EntityFrameworkCore.DbSet<TEntity> obj, System.Linq.Expressions.Expression<Func<TEntity, bool>> predicate) where TEntity : class
@@ -399,42 +423,6 @@ namespace BTCPayServer
                 }
             };
             return controller.View("PostRedirect", redirectVm);
-        }
-
-        public static BTCPayNetworkProvider ConfigureNetworkProvider(this IConfiguration configuration, Logs logs)
-        {
-            var _networkType = DefaultConfiguration.GetNetworkType(configuration);
-            var supportedChains = configuration.GetOrDefault<string>("chains", "btc")
-                .Split(',', StringSplitOptions.RemoveEmptyEntries)
-                .Select(t => t.ToUpperInvariant()).ToHashSet();
-            foreach (var c in supportedChains.ToList())
-            {
-                if (new[] { "ETH", "USDT20", "FAU" }.Contains(c, StringComparer.OrdinalIgnoreCase))
-                {
-                    logs.Configuration.LogWarning($"'{c}' is not anymore supported, please remove it from 'chains'");
-                    supportedChains.Remove(c);
-                }
-            }
-            var networkProvider = new BTCPayNetworkProvider(_networkType);
-            var filtered = networkProvider.Filter(supportedChains.ToArray());
-#if ALTCOINS
-            supportedChains.AddRange(filtered.GetAllElementsSubChains(networkProvider));
-#endif
-#if !ALTCOINS
-            var onlyBTC = supportedChains.Count == 1 && supportedChains.First() == "BTC";
-            if (!onlyBTC)
-                throw new ConfigException($"This build of BTCPay Server does not support altcoins");
-#endif
-            var result = networkProvider.Filter(supportedChains.ToArray());
-            foreach (var chain in supportedChains)
-            {
-                if (result.GetNetwork<BTCPayNetworkBase>(chain) == null)
-                    throw new ConfigException($"Invalid chains \"{chain}\"");
-            }
-
-            logs.Configuration.LogInformation(
-                "Supported chains: " + String.Join(',', supportedChains.ToArray()));
-            return result;
         }
 
         public static DataDirectories Configure(this DataDirectories dataDirectories, IConfiguration configuration)

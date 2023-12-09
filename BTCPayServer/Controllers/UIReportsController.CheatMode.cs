@@ -16,8 +16,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Internal;
-using System.Text.Json.Nodes;
-using Org.BouncyCastle.Ocsp;
 using System.Threading;
 using System.Collections.Generic;
 using Newtonsoft.Json.Linq;

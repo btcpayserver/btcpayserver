@@ -9,7 +9,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json;
-using Org.BouncyCastle.Crypto.Generators;
 
 namespace BTCPayServer.Services.Notifications
 {

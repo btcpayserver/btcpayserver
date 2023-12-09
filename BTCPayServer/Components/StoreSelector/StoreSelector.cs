@@ -48,7 +48,7 @@ namespace BTCPayServer.Components.StoreSelector
                         Value = store.Id,
                         Selected = store.Id == currentStore?.Id,
                         WalletId = walletId,
-                        IsOwner = role != null && role.Permissions.Contains(Policies.CanModifyStoreSettings)
+                        Store = store,
                     };
                 })
                 .OrderBy(s => s.Text)

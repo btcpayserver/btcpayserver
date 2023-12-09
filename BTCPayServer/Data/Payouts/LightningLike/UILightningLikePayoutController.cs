@@ -7,6 +7,7 @@ using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
+using BTCPayServer.HostedServices;
 using BTCPayServer.Lightning;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
@@ -35,6 +36,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
         private readonly LightningClientFactoryService _lightningClientFactoryService;
         private readonly IOptions<LightningNetworkOptions> _options;
         private readonly IAuthorizationService _authorizationService;
+        private readonly EventAggregator _eventAggregator;
         private readonly StoreRepository _storeRepository;
 
         public UILightningLikePayoutController(ApplicationDbContextFactory applicationDbContextFactory,
@@ -44,7 +46,9 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             BTCPayNetworkProvider btcPayNetworkProvider,
             StoreRepository storeRepository,
             LightningClientFactoryService lightningClientFactoryService,
-            IOptions<LightningNetworkOptions> options, IAuthorizationService authorizationService)
+            IOptions<LightningNetworkOptions> options, 
+            IAuthorizationService authorizationService,
+            EventAggregator eventAggregator)
         {
             _applicationDbContextFactory = applicationDbContextFactory;
             _userManager = userManager;
@@ -55,6 +59,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             _options = options;
             _storeRepository = storeRepository;
             _authorizationService = authorizationService;
+            _eventAggregator = eventAggregator;
         }
 
         private async Task<List<PayoutData>> GetPayouts(ApplicationDbContext dbContext, PaymentMethodId pmi,
@@ -214,6 +219,16 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             }
 
             await ctx.SaveChangesAsync();
+            foreach (var payoutG in payouts)
+            {
+                foreach (PayoutData payout in payoutG)
+                {
+                    if (payout.State != PayoutState.AwaitingPayment)
+                    {
+                        _eventAggregator.Publish(new PayoutEvent(null, payout));
+                    }
+                }
+            }
             return View("LightningPayoutResult", results);
         }
         public static async Task<(BOLT11PaymentRequest, ResultVM)> GetInvoiceFromLNURL(PayoutData payoutData,

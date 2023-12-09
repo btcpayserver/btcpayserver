@@ -44,6 +44,12 @@ public class DisplayFormatter
         }
         var formatted = value.ToString("C", provider);
 
+        // Ensure we are not using the symbol for BTC — we made that design choice consciously.
+        if (format == CurrencyFormat.Symbol && currencyData.Code == "BTC")
+        {
+            format = CurrencyFormat.Code;
+        }
+
         return format switch
         {
             CurrencyFormat.None => formatted.Replace(provider.CurrencySymbol, "").Trim(),

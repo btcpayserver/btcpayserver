@@ -80,7 +80,6 @@
         };
     </script>
     <div id="Dashboard" class="mt-4">
-        <vc:ui-extension-point location="dashboard" model="@Model"/>
         @if (Model.WalletEnabled)
         {
             <vc:store-wallet-balance store="@store"/>
@@ -119,6 +118,7 @@
             <vc:store-recent-transactions vm="@(new StoreRecentTransactionsViewModel { Store = store, CryptoCode = Model.CryptoCode, InitialRendering = true })"/>
         }
         <vc:store-recent-invoices vm="@(new StoreRecentInvoicesViewModel { Store = store, CryptoCode = Model.CryptoCode, InitialRendering = true })"/>
+        <vc:ui-extension-point location="dashboard" model="@Model" />
         @foreach (var app in Model.Apps)
         {
 		  <vc:app-sales app-id="@app.Id" app-type="@app.AppType" />

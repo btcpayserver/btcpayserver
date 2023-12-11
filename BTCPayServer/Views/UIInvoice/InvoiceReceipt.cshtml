@@ -62,28 +62,10 @@
                     {
                         if (Model.ReceiptOptions.ShowQR is true)
                         {
-                            <vc:qr-code data="@Context.Request.GetCurrentUrl()"></vc:qr-code>
-                        }
-                        else if (!isSettled)
-                        {
-                            <div class="lead text-center p-4 fw-semibold" id="invoice-unsettled">
-                                The invoice is not settled.
+                            <div aria-label="QR Code" role="img">
+                                <vc:qr-code data="@Context.Request.GetCurrentUrl()"></vc:qr-code>
                             </div>
                         }
-                        else
-                        {
-                            if (Model.ReceiptOptions.ShowQR is true)
-                            {
-                                <div aria-label="QR Code" role="img">
-                                    <vc:qr-code data="@Context.Request.GetCurrentUrl()"></vc:qr-code>
-                                </div>
-                            }
-                            <dl class="d-flex flex-column gap-4 mb-0 flex-fill">
-                                <div class="d-flex flex-column">
-                                    <div class="d-flex align-items-center justify-content-between">
-                                        <a href="?print=true" class="btn btn-link p-0 d-print-none fw-semibold order-1" target="_blank">Print Receipt</a>
-                                        <dd class="text-muted mb-0 fw-semibold">Amount Paid</dd>
-                                    </div>
                         <div class="d-flex gap-4 mb-0 flex-fill">
                             <dl class="d-flex flex-column gap-4 mb-0 flex-fill">
                                 <div class="d-flex flex-column">

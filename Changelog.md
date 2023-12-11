@@ -57,6 +57,7 @@
 * UI: Add system option for theme switch (#5473) @dennisreimann
 * UI: Pull payment improvements (#5453) @dennisreimann
 * UI: Switch pos data to metadata in invoice create view (#5412) @Kukks
+* UI: Improve invoice's webhooks table (#5545) @NicolasDorier
 
 ## 1.11.7
 

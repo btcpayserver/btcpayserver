@@ -9,6 +9,7 @@
 * We changed a lot of things under the hood, making the Lightning integrations extendible by plugins and also preparing the
   migration of Altcoins to plugins. If you are using plugins, you will most likely find them disabled after this update, because
   new versions compatible with BTCPay Server v1.12 are required. Please see the "Manage Plugins" section once updated.
+* We are ending support for Postgresql 11 as it reached 5 years after its initial release. Read more about [end-of-life (EOL) of postgresql](https://www.postgresql.org/support/versioning/). While Postgresql 11 should still work with BTCPay Server, we will not keep compatibility moving forward.
 
 ### New feature
 

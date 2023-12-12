@@ -1005,7 +1005,7 @@ Assert.Equal("2b0e251e", nunchuk.AccountKeySettings[1].RootFingerprint.ToString(
         public async Task CheckRatesProvider()
         {
             var spy = new SpyRateProvider();
-            RateRules.TryParse("X_X = bittrex(X_X);", out var rateRules);
+            RateRules.TryParse("X_X = bitpay(X_X);", out var rateRules);
 
             var factory = CreateBTCPayRateFactory();
             factory.Providers.Clear();
@@ -1013,7 +1013,7 @@ Assert.Equal("2b0e251e", nunchuk.AccountKeySettings[1].RootFingerprint.ToString(
             factory.Providers.Clear();
             var fetch = new BackgroundFetcherRateProvider(spy);
             fetch.DoNotAutoFetchIfExpired = true;
-            factory.Providers.Add("bittrex", fetch);
+            factory.Providers.Add("bitpay", fetch);
             var fetchedRate = await fetcher.FetchRate(CurrencyPair.Parse("BTC_USD"), rateRules, default);
             spy.AssertHit();
             fetchedRate = await fetcher.FetchRate(CurrencyPair.Parse("BTC_USD"), rateRules, default);
@@ -1614,7 +1614,7 @@ Assert.Equal("2b0e251e", nunchuk.AccountKeySettings[1].RootFingerprint.ToString(
             StringBuilder builder = new StringBuilder();
             builder.AppendLine("// Some cool comments");
             builder.AppendLine("DOGE_X = DOGE_BTC * BTC_X * 1.1");
-            builder.AppendLine("DOGE_BTC = Bittrex(DOGE_BTC)");
+            builder.AppendLine("DOGE_BTC = bitpay(DOGE_BTC)");
             builder.AppendLine("// Some other cool comments");
             builder.AppendLine("BTC_usd = kraken(BTC_USD)");
             builder.AppendLine("BTC_X = Coinbase(BTC_X);");
@@ -1625,7 +1625,7 @@ Assert.Equal("2b0e251e", nunchuk.AccountKeySettings[1].RootFingerprint.ToString(
             Assert.Equal(
                 "// Some cool comments\n" +
                 "DOGE_X = DOGE_BTC * BTC_X * 1.1;\n" +
-                "DOGE_BTC = bittrex(DOGE_BTC);\n" +
+                "DOGE_BTC = bitpay(DOGE_BTC);\n" +
                 "// Some other cool comments\n" +
                 "BTC_USD = kraken(BTC_USD);\n" +
                 "BTC_X = coinbase(BTC_X);\n" +
@@ -1633,10 +1633,10 @@ Assert.Equal("2b0e251e", nunchuk.AccountKeySettings[1].RootFingerprint.ToString(
                 rules.ToString());
             var tests = new[]
             {
-                (Pair: "DOGE_USD", Expected: "bittrex(DOGE_BTC) * kraken(BTC_USD) * 1.1"),
+                (Pair: "DOGE_USD", Expected: "bitpay(DOGE_BTC) * kraken(BTC_USD) * 1.1"),
                 (Pair: "BTC_USD", Expected: "kraken(BTC_USD)"),
                 (Pair: "BTC_CAD", Expected: "coinbase(BTC_CAD)"),
-                (Pair: "DOGE_CAD", Expected: "bittrex(DOGE_BTC) * coinbase(BTC_CAD) * 1.1"),
+                (Pair: "DOGE_CAD", Expected: "bitpay(DOGE_BTC) * coinbase(BTC_CAD) * 1.1"),
                 (Pair: "LTC_CAD", Expected: "coinaverage(LTC_CAD) * 1.02"),
                 (Pair: "SATS_CAD", Expected: "0.00000001 * coinbase(BTC_CAD)"),
                 (Pair: "Sats_USD", Expected: "0.00000001 * kraken(BTC_USD)")
@@ -1646,13 +1646,13 @@ Assert.Equal("2b0e251e", nunchuk.AccountKeySettings[1].RootFingerprint.ToString(
                 Assert.Equal(test.Expected, rules.GetRuleFor(CurrencyPair.Parse(test.Pair)).ToString());
             }
             rules.Spread = 0.2m;
-            Assert.Equal("(bittrex(DOGE_BTC) * kraken(BTC_USD) * 1.1) * (0.8, 1.2)", rules.GetRuleFor(CurrencyPair.Parse("DOGE_USD")).ToString());
+            Assert.Equal("(bitpay(DOGE_BTC) * kraken(BTC_USD) * 1.1) * (0.8, 1.2)", rules.GetRuleFor(CurrencyPair.Parse("DOGE_USD")).ToString());
             ////////////////
 
             // Check errors conditions
             builder = new StringBuilder();
             builder.AppendLine("DOGE_X = LTC_CAD * BTC_X * 1.1");
-            builder.AppendLine("DOGE_BTC = Bittrex(DOGE_BTC)");
+            builder.AppendLine("DOGE_BTC = bitpay(DOGE_BTC)");
             builder.AppendLine("BTC_usd = kraken(BTC_USD)");
             builder.AppendLine("LTC_CHF = LTC_CHF * 1.01");
             builder.AppendLine("BTC_X = Coinbase(BTC_X)");
@@ -1673,7 +1673,7 @@ Assert.Equal("2b0e251e", nunchuk.AccountKeySettings[1].RootFingerprint.ToString(
             // Check if we can resolve exchange rates
             builder = new StringBuilder();
             builder.AppendLine("DOGE_X = DOGE_BTC * BTC_X * 1.1");
-            builder.AppendLine("DOGE_BTC = Bittrex(DOGE_BTC)");
+            builder.AppendLine("DOGE_BTC = bitpay(DOGE_BTC)");
             builder.AppendLine("BTC_usd = kraken(BTC_USD)");
             builder.AppendLine("BTC_X = Coinbase(BTC_X)");
             builder.AppendLine("X_X = CoinAverage(X_X) * 1.02");
@@ -1681,10 +1681,10 @@ Assert.Equal("2b0e251e", nunchuk.AccountKeySettings[1].RootFingerprint.ToString(
 
             var tests2 = new[]
             {
-                (Pair: "DOGE_USD", Expected: "bittrex(DOGE_BTC) * kraken(BTC_USD) * 1.1", ExpectedExchangeRates: "bittrex(DOGE_BTC),kraken(BTC_USD)"),
+                (Pair: "DOGE_USD", Expected: "bitpay(DOGE_BTC) * kraken(BTC_USD) * 1.1", ExpectedExchangeRates: "bitpay(DOGE_BTC),kraken(BTC_USD)"),
                 (Pair: "BTC_USD", Expected: "kraken(BTC_USD)", ExpectedExchangeRates: "kraken(BTC_USD)"),
                 (Pair: "BTC_CAD", Expected: "coinbase(BTC_CAD)", ExpectedExchangeRates: "coinbase(BTC_CAD)"),
-                (Pair: "DOGE_CAD", Expected: "bittrex(DOGE_BTC) * coinbase(BTC_CAD) * 1.1", ExpectedExchangeRates: "bittrex(DOGE_BTC),coinbase(BTC_CAD)"),
+                (Pair: "DOGE_CAD", Expected: "bitpay(DOGE_BTC) * coinbase(BTC_CAD) * 1.1", ExpectedExchangeRates: "bitpay(DOGE_BTC),coinbase(BTC_CAD)"),
                 (Pair: "LTC_CAD", Expected: "coinaverage(LTC_CAD) * 1.02", ExpectedExchangeRates: "coinaverage(LTC_CAD)"),
                 (Pair: "SATS_USD", Expected: "0.00000001 * kraken(BTC_USD)", ExpectedExchangeRates: "kraken(BTC_USD)"),
                 (Pair: "SATS_EUR", Expected: "0.00000001 * coinbase(BTC_EUR)", ExpectedExchangeRates: "coinbase(BTC_EUR)")
@@ -1696,11 +1696,11 @@ Assert.Equal("2b0e251e", nunchuk.AccountKeySettings[1].RootFingerprint.ToString(
                 Assert.Equal(test.ExpectedExchangeRates, string.Join(',', rule.ExchangeRates.OfType<object>().ToArray()));
             }
             var rule2 = rules.GetRuleFor(CurrencyPair.Parse("DOGE_CAD"));
-            rule2.ExchangeRates.SetRate("bittrex", CurrencyPair.Parse("DOGE_BTC"), new BidAsk(5000m));
+            rule2.ExchangeRates.SetRate("bitpay", CurrencyPair.Parse("DOGE_BTC"), new BidAsk(5000m));
             rule2.Reevaluate();
             Assert.True(rule2.HasError);
             Assert.Equal("5000 * ERR_RATE_UNAVAILABLE(coinbase, BTC_CAD) * 1.1", rule2.ToString(true));
-            Assert.Equal("bittrex(DOGE_BTC) * coinbase(BTC_CAD) * 1.1", rule2.ToString(false));
+            Assert.Equal("bitpay(DOGE_BTC) * coinbase(BTC_CAD) * 1.1", rule2.ToString(false));
             rule2.ExchangeRates.SetRate("coinbase", CurrencyPair.Parse("BTC_CAD"), new BidAsk(2000.4m));
             rule2.Reevaluate();
             Assert.False(rule2.HasError);

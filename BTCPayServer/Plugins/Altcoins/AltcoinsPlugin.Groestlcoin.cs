@@ -20,7 +20,7 @@ public partial class AltcoinsPlugin
             DefaultRateRules = new[]
             {
                     "GRS_X = GRS_BTC * BTC_X",
-                    "GRS_BTC = bittrex(GRS_BTC)"
+                    "GRS_BTC = upbit(GRS_BTC)"
                 },
             CryptoImagePath = "imlegacy/groestlcoin.png",
             LightningImagePath = "imlegacy/groestlcoin-lightning.svg",

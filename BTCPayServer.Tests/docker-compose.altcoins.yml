@@ -73,7 +73,7 @@ services:
         - "sshd_datadir:/root/.ssh"
 
   devlnd:
-    image: btcpayserver/bitcoin:25.1
+    image: btcpayserver/bitcoin:26.0
     environment:
       BITCOIN_NETWORK: regtest
       BITCOIN_WALLETDIR: "/data/wallets"
@@ -135,7 +135,7 @@ services:
 
   bitcoind:
     restart: unless-stopped
-    image: btcpayserver/bitcoin:25.1
+    image: btcpayserver/bitcoin:26.0
     environment:
       BITCOIN_NETWORK: regtest
       BITCOIN_WALLETDIR: "/data/wallets"

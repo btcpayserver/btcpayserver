@@ -9,7 +9,7 @@
 @if (invoice.Overpaid)
 {
     var usedPaymentMethods = invoice.CryptoPayments.Count(p => p.Paid != null);
-    <p class="d-flex align-items-center gap-2 mb-3 text-warning">
+    <p class="info-note text-warning">
         <vc:icon symbol="warning"/>
         This invoice got overpaid.
         @if (usedPaymentMethods > 1)

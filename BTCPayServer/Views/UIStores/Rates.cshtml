@@ -97,18 +97,18 @@ BTC_USD = kraken(BTC_USD);</code></pre>
 X_X = kraken(X_X);</code></pre>
                     <p>A given currency pair match the most specific rule. If two rules are matching and are as specific, the first rule will be chosen.</p>
                     <p>
-                        But now, what if you want to support <code>DOGE</code>? The problem with <code>DOGE</code> is that most exchange do not have any pair for it. But <code>bittrex</code> has a <code>DOGE_BTC</code> pair. <br />
+                        But now, what if you want to support <code>DOGE</code>? The problem with <code>DOGE</code> is that most exchange do not have any pair for it. But <code>bitpay</code> has a <code>DOGE_BTC</code> pair. <br />
                         Luckily, the rule engine allow you to reference rules:
                     </p>
-                    <pre><code class="text hljs">DOGE_X = bittrex(DOGE_BTC) * BTC_X;
+                    <pre><code class="text hljs">DOGE_X = bitpay(DOGE_BTC) * BTC_X;
 X_CAD = ndax(X_CAD);
 X_X = kraken(X_X);</code></pre>
                     <p>
-                        With <code>DOGE_USD</code> will be expanded to <code>bittrex(DOGE_BTC) * kraken(BTC_USD)</code>. And <code>DOGE_CAD</code> will be expanded to <code>bittrex(DOGE_BTC) * ndax(BTC_CAD)</code>. <br />
+                        With <code>DOGE_USD</code> will be expanded to <code>bitpay(DOGE_BTC) * kraken(BTC_USD)</code>. And <code>DOGE_CAD</code> will be expanded to <code>bitpay(DOGE_BTC) * ndax(BTC_CAD)</code>. <br />
                         However, we advise you to write it that way to increase coverage so that <code>DOGE_BTC</code> is also supported:
                     </p>
                     <pre><code class="text hljs">DOGE_X = DOGE_BTC * BTC_X;
-DOGE_BTC = bittrex(DOGE_BTC);
+DOGE_BTC = bitpay(DOGE_BTC);
 X_CAD = ndax(X_CAD);
 X_X = kraken(X_X);</code></pre>
                     <p>

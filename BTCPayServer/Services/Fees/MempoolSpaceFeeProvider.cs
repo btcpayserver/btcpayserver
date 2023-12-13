@@ -56,9 +56,22 @@ public class MempoolSpaceFeeProvider(
                     "minimumFee" => 144,
                     _ => -1
                 };
-                feesByBlockTarget.TryAdd(target, new FeeRate(value));
+                feesByBlockTarget.TryAdd(target, new FeeRate(RandomizeByPercentage(value, 10)));
             }
             return feesByBlockTarget;
         })!;
+    }
+    
+    static decimal RandomizeByPercentage(decimal value, int percentage)
+    {
+        decimal range = value * percentage / 100m;
+        var res = value + range * (Random.Shared.NextDouble() < 0.5 ? -1 : 1);
+
+        return res switch
+        {
+            < 1m => 1m,
+            > 850 => 850,
+            _ => res
+        };
     }
 }

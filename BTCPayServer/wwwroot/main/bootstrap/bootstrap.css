@@ -12255,6 +12255,10 @@ ul:not([class]) li {
   color: var(--btcpay-body-text-muted) !important;
 }
 
+.text-warning {
+  color: rgba(var(--btcpay-body-text-warning-rgb), var(--btcpay-text-opacity)) !important;
+}
+
 /* Modals */
 .modal-content {
   box-shadow: 0 20px 20px rgba(0, 0, 0, 0.15);

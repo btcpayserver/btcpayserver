@@ -56,7 +56,10 @@
                                 }
                                 @if (!permissions.Any())
                                 {
-                                    <span class="text-warning">No permissions</span>
+                                    <span class="info-note text-warning">
+                                        <vc:icon symbol="warning"/>
+                                        No permissions
+                                    </span>
                                 }
                                 else
                                 {

@@ -16,6 +16,7 @@
   --btcpay-body-bg-rgb: 22, 27, 34;
   --btcpay-body-text: var(--btcpay-white);
   --btcpay-body-text-muted: var(--btcpay-neutral-600);
+  --btcpay-body-text-warning-rgb: 255, 192, 67;
   --btcpay-body-text-rgb: 255, 255, 255;
   --btcpay-body-link-accent: var(--btcpay-primary-accent);
   --btcpay-body-link-accent-rgb: var(--btcpay-primary-accent-rgb);

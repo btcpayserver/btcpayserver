@@ -54,7 +54,10 @@
                     <span asp-validation-for="Amount" class="text-danger"></span>
                     @if (!Model.AmountAndCurrencyEditable)
                     {
-                        <p class="text-warning mb-0 mt-2">Amount and currency are not editable once payment request has invoices</p>
+                        <p class="info-note text-warning mb-0 mt-2">
+                            <vc:icon symbol="warning"/>
+                            Amount and currency are not editable once payment request has invoices
+                        </p>
                     }
                 </div>
                 <div class="form-group">
@@ -89,7 +92,10 @@
                     <a asp-action="StoreEmails" asp-controller="UIStores" asp-route-storeId="@Model.StoreId">email rules</a>.
                     @if (Model.HasEmailRules is not true)
                     {
-                        <div class="text-warning">No payment request related email rules have been configured for this store.</div>
+                        <div class="info-note mt-1 text-warning" role="alert">
+                            <vc:icon symbol="warning"/>
+                            No payment request related email rules have been configured for this store.
+                        </div>
                     }
                 </div>
             </div>

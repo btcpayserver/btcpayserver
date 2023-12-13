@@ -97,6 +97,18 @@ a.unobtrusive-link {
     transform: rotate(-180deg);
 }
 
+/* Icon and text, used for warnings of additional info text. Adjust spacing and color via utility classes. */
+.info-note {
+    display: inline-flex;
+    align-items: baseline;
+    gap: var(--btcpay-space-s);
+}
+
+.info-note .icon {
+    position: relative;
+    top: var(--btcpay-space-xs);
+}
+
 /* Badges */
 .badge-new,
 .badge-pending {

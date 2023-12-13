@@ -119,8 +119,8 @@
   --btcpay-yellow-400-rgb: 255,207,112;
   --btcpay-yellow-500: #FFC043;
   --btcpay-yellow-500-rgb: 255,192,67;
-  --btcpay-yellow-600: #BC8B2C;
-  --btcpay-yellow-600-rgb: 188,139,44;
+  --btcpay-yellow-600: #B57E12;
+  --btcpay-yellow-600-rgb: 181,126,18;
   --btcpay-yellow-700: #997328;
   --btcpay-yellow-700-rgb: 153,115,40;
   --btcpay-yellow-800: #674D1B;
@@ -193,6 +193,7 @@
   --btcpay-body-text-hover: var(--btcpay-body-text);
   --btcpay-body-text-active: var(--btcpay-primary-text-active);
   --btcpay-body-text-muted: var(--btcpay-neutral-500);
+  --btcpay-body-text-warning-rgb: 181, 126, 18;
   --btcpay-body-text-rgb: 41, 41, 41;
   --btcpay-body-link: var(--btcpay-primary);
   --btcpay-body-link-rgb: var(--btcpay-primary-rgb);

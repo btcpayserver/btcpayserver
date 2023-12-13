@@ -9,6 +9,20 @@
     var linkProviders = TransactionLinkProviders.ToArray();
 }
 
+@section PageHeadContent {
+    <style>
+        #AllowLightningInternalNodeForAll ~ .info-note,
+        #AllowHotWalletRPCImportForAll ~ .info-note,
+        #AllowHotWalletForAll ~ .info-note,
+        #DisableNonAdminCreateUserApi:checked ~ .info-note,
+        #LockSubscription:checked ~ .info-note { display: none; }
+        
+        #AllowLightningInternalNodeForAll:checked ~ .info-note,
+        #AllowHotWalletRPCImportForAll:checked ~ .info-note,
+        #AllowHotWalletForAll:checked ~ .info-note { display: inline-flex; }
+    </style>
+}
+
 <h3 class="mb-4">@ViewData["Title"]</h3>
 
 @if (!ViewContext.ModelState.IsValid)
@@ -28,6 +42,10 @@
                         <vc:icon symbol="info" />
                     </a>
                     <span asp-validation-for="AllowLightningInternalNodeForAll" class="text-danger"></span>
+                    <div class="info-note mt-2 text-warning" role="alert">
+                        <vc:icon symbol="warning"/>
+                        Caution: Enabling this option, may simplify the onboarding for third-parties but carries liabilities and security risks associated with sharing the lightning node with other users.
+                    </div>
                 </div>
                 <div class="form-check my-3">
                     <input asp-for="AllowHotWalletForAll" type="checkbox" class="form-check-input"/>
@@ -36,11 +54,19 @@
                         <vc:icon symbol="info" />
                     </a>
                     <span asp-validation-for="AllowHotWalletForAll" class="text-danger"></span>
+                    <div class="info-note mt-2 text-warning" role="alert">
+                        <vc:icon symbol="warning"/>
+                        Caution: Enabling this option, may simplify the onboarding and spending for third-parties but carries liabilities and security risks associated to storing private keys of third parties on a server.
+                    </div>
                 </div>
                 <div class="form-check my-3">
                     <input asp-for="AllowHotWalletRPCImportForAll" type="checkbox" class="form-check-input"/>
                     <label asp-for="AllowHotWalletRPCImportForAll" class="form-check-label"></label>
                     <span asp-validation-for="AllowHotWalletRPCImportForAll" class="text-danger"></span>
+                    <div class="info-note mt-2 text-warning" role="alert">
+                        <vc:icon symbol="warning"/>
+                        Caution: Enabling this option, may simplify the onboarding and spending for third-parties but carries liabilities and security risks associated to storing private keys of third parties on a server.
+                    </div>
                 </div>
             </div>
 
@@ -70,12 +96,20 @@
                     <input asp-for="LockSubscription" type="checkbox" class="form-check-input"/>
                     <label asp-for="LockSubscription" class="form-check-label"></label>
                     <span asp-validation-for="LockSubscription" class="text-danger"></span>
+                    <div class="info-note mt-2 text-warning" role="alert">
+                        <vc:icon symbol="warning"/>
+                        Caution: Enabling public user registration means anyone can register to your server and may expose your BTCPay Server instance to potential security risks from unknown users.
+                    </div>
                 </div>
 
                 <div class="form-check my-3">
                     <input asp-for="DisableNonAdminCreateUserApi" type="checkbox" class="form-check-input"/>
                     <label asp-for="DisableNonAdminCreateUserApi" class="form-check-label"></label>
                     <span asp-validation-for="DisableNonAdminCreateUserApi" class="text-danger"></span>
+                    <div class="info-note mt-2 text-warning" role="alert">
+                        <vc:icon symbol="warning"/>
+                        Caution: Allowing non-admins to have access to API endpoints may expose your BTCPay Server instance to potential security risks from unknown users.
+                    </div>
                 </div>
             </div>
 

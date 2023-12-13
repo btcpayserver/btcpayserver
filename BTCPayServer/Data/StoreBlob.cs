@@ -167,7 +167,7 @@ namespace BTCPayServer.Data
 
         public RateRules GetDefaultRateRules(BTCPayNetworkProvider networkProvider)
         {
-            StringBuilder builder = new StringBuilder();
+            var builder = new StringBuilder();
             foreach (var network in networkProvider.GetAll())
             {
                 if (network.DefaultRateRules.Length != 0)
@@ -177,7 +177,7 @@ namespace BTCPayServer.Data
                     {
                         builder.AppendLine(line);
                     }
-                    builder.AppendLine($"////////");
+                    builder.AppendLine("////////");
                     builder.AppendLine();
                 }
             }
@@ -185,7 +185,7 @@ namespace BTCPayServer.Data
             var preferredExchange = string.IsNullOrEmpty(PreferredExchange) ? GetRecommendedExchange() : PreferredExchange;
             builder.AppendLine(CultureInfo.InvariantCulture, $"X_X = {preferredExchange}(X_X);");
 
-            BTCPayServer.Rating.RateRules.TryParse(builder.ToString(), out var rules);
+            RateRules.TryParse(builder.ToString(), out var rules);
             rules.Spread = Spread;
             return rules;
         }

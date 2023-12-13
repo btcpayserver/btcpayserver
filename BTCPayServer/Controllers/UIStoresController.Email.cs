@@ -51,11 +51,11 @@ namespace BTCPayServer.Controllers
         {
             vm.Rules ??= new List<StoreEmailRule>();
             int commandIndex = 0;
-            var indSep = command.IndexOf(":", StringComparison.InvariantCultureIgnoreCase);
-            if (indSep > 0)
+            
+            var indSep = command.Split(':', StringSplitOptions.RemoveEmptyEntries);
+            if (indSep.Length > 1)
             {
-                var item = command[(indSep + 1)..];
-                commandIndex = int.Parse(item, CultureInfo.InvariantCulture);
+                commandIndex = int.Parse(indSep[1], CultureInfo.InvariantCulture);
             }
 
             if (command.StartsWith("remove", StringComparison.InvariantCultureIgnoreCase))
@@ -72,10 +72,19 @@ namespace BTCPayServer.Controllers
             for (var i = 0; i < vm.Rules.Count; i++)
             {
                 var rule = vm.Rules[i];
-                if (!rule.CustomerEmail && string.IsNullOrEmpty(rule.To))
-                    ModelState.AddModelError($"{nameof(vm.Rules)}[{i}].{nameof(rule.To)}", "Either recipient or \"Send the email to the buyer\" is required");
+
+                if (!string.IsNullOrEmpty(rule.To) && (rule.To.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                        .Any(s => !MailboxAddressValidator.TryParse(s, out var mb))))
+                {
+                    ModelState.AddModelError($"{nameof(vm.Rules)}[{i}].{nameof(rule.To)}",
+                        "Invalid mailbox address provided. Valid formats are: 'test@example.com' or 'Firstname Lastname <test@example.com>'");
+
+                }
+                else if (!rule.CustomerEmail && string.IsNullOrEmpty(rule.To))
+                    ModelState.AddModelError($"{nameof(vm.Rules)}[{i}].{nameof(rule.To)}",
+                        "Either recipient or \"Send the email to the buyer\" is required");
             }
-            
+
             if (!ModelState.IsValid)
             {
                 return View(vm);
@@ -144,7 +153,7 @@ namespace BTCPayServer.Controllers
             
             public bool CustomerEmail { get; set; }
             
-            [MailboxAddress]
+           
             public string To { get; set; }
             
             [Required]

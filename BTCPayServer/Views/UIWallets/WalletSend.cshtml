@@ -116,7 +116,13 @@
                 <button type="button" class="crypto-balance-link btn btn-link p-0 align-baseline">@Model.CurrentBalance</button> <span>@Model.CryptoCode</span>.
                 @if (Model.ImmatureBalance > 0)
                 {
-                    <span><br><span class="text-warning">⚠</span> @Model.ImmatureBalance @Model.CryptoCode are still immature and require additional confirmations.</span>
+                    <span>
+                        <br>
+                        <span class="info-note text-warning">
+                            <vc:icon symbol="warning"/>
+                            @Model.ImmatureBalance @Model.CryptoCode are still immature and require additional confirmations.
+                        </span>
+                    </span>
                 }
             </div>
         </div>

@@ -12,7 +12,7 @@ public partial class AltcoinsPlugin
     public void InitMonacoin(IServiceCollection services)
     {
         var nbxplorerNetwork = NBXplorerNetworkProvider.GetFromCryptoCode("MONA");
-        var network = new BTCPayNetwork()
+        var network = new BTCPayNetwork
         {
             CryptoCode = nbxplorerNetwork.CryptoCode,
             DisplayName = "Monacoin",
@@ -20,7 +20,8 @@ public partial class AltcoinsPlugin
             DefaultRateRules = new[]
             {
                                 "MONA_X = MONA_BTC * BTC_X",
-                                "MONA_BTC = bittrex(MONA_BTC)"
+                                "MONA_JPY = bitbank(MONA_JPY)",
+                                "MONA_BTC = MONA_JPY * JPY_BTC"
                 },
             CryptoImagePath = "imlegacy/monacoin.png",
             LightningImagePath = "imlegacy/mona-lightning.svg",

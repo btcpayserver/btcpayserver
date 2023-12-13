@@ -176,15 +176,16 @@
                     <a href="https://docs.btcpayserver.org/FAQ/Stores/#consider-the-invoice-confirmed-when-the-payment-transaction" target="_blank" rel="noreferrer noopener" title="More information...">
                         <vc:icon symbol="info"/>
                     </a>
-                    <select asp-for="SpeedPolicy" class="form-select w-auto" onchange="document.getElementById('unconfirmed-warning').hidden = this.value !== '0';">
+                    <select asp-for="SpeedPolicy" class="form-select w-auto" onchange="document.getElementById('unconfirmed-warning').hidden = this.value !== '0'">
                         <option value="0">Is unconfirmed</option>
                         <option value="1">Has at least 1 confirmation</option>
                         <option value="3">Has at least 2 confirmations</option>
                         <option value="2">Has at least 6 confirmations</option>
                     </select>
-                    <div class="alert alert-warning my-2" hidden="@(Model.SpeedPolicy != 0)" id="unconfirmed-warning" role="alert">
+                    <p class="info-note my-3 text-warning" id="unconfirmed-warning" role="alert" hidden="@(Model.SpeedPolicy != 0)">
+                        <vc:icon symbol="warning"/>
                         Choosing to accept an unconfirmed invoice can lead to double-spending and is strongly discouraged.
-                    </div>
+                    </p>
                     <span asp-validation-for="SpeedPolicy" class="text-danger"></span>
                 </div>
                 <div class="form-check my-1">

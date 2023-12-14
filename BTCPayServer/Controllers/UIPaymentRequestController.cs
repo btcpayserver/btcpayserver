@@ -362,7 +362,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("{payReqId}/cancel")]
-        [Authorize(Policy = Policies.CanModifyPaymentRequests, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+        [AllowAnonymous]
         public async Task<IActionResult> CancelUnpaidPendingInvoice(string payReqId, bool redirect = true)
         {
             var result = await _PaymentRequestService.GetPaymentRequest(payReqId, GetUserId());

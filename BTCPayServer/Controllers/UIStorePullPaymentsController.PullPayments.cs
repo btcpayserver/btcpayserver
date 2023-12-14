@@ -138,11 +138,8 @@ namespace BTCPayServer.Controllers
             }
             if (!ModelState.IsValid)
                 return View(model);
-            if (model.AutoApproveClaims)
-            {
-                model.AutoApproveClaims = (await
-                    _authorizationService.AuthorizeAsync(User, storeId, Policies.CanCreatePullPayments)).Succeeded;
-            }
+            model.AutoApproveClaims = model.AutoApproveClaims &&  (await
+                _authorizationService.AuthorizeAsync(User, storeId, Policies.CanCreatePullPayments)).Succeeded;
             await _pullPaymentService.CreatePullPayment(new HostedServices.CreatePullPayment()
             {
                 Name = model.Name,

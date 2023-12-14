@@ -770,7 +770,7 @@
                 "security": [
                     {
                         "API_Key": [
-                            "btcpay.store.canmodifystoresettings"
+                            "btcpay.store.cancreatepullpayments"
                         ],
                         "Basic": []
                     }

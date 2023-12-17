@@ -70,7 +70,7 @@ public class MempoolSpaceFeeProvider(
         return res switch
         {
             < 1m => 1m,
-            > 850 => 850,
+            > 850m => 2000m,
             _ => res
         };
     }

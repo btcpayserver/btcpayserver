@@ -109,9 +109,9 @@
         margin-left: -1px;
         margin-right: -1px;
     }
-    .store-footer {
+    /*.store-footer {
         display: none !important;
-    }
+    }*/
 }
 /* fix sticky hover effect on mobile browsers */
 @media (hover: none) {

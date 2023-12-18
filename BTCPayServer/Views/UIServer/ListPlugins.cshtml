@@ -4,7 +4,6 @@
 @inject BTCPayServerOptions BTCPayServerOptions
 @inject PluginService PluginService
 @{
-    Layout = "_Layout";
     ViewData.SetActivePage(ServerNavPages.Plugins);
     var installed = Model.Installed.ToDictionary(plugin => plugin.Identifier, plugin => plugin.Version);
     var installedWithoutSystemPlugins = Model.Installed.Where(i => !i.SystemPlugin).ToList();

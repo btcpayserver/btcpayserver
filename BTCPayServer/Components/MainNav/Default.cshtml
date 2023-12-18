@@ -185,19 +185,15 @@
                             }
                         </ul>
                         <ul class="navbar-nav">
-                            <li class="nav-item" permission="@Policies.CanModifyServerSettings">
-                                <a asp-area="" asp-controller="UIServer" asp-action="ListPlugins" class="nav-link @ViewData.IsActivePage(ServerNavPages.Plugins)" id="Nav-ManagePlugins">
-                                    @if (PluginService.GetDisabledPlugins().Any())
-                                    {
+                            @if (PluginService.GetDisabledPlugins().Any())
+                            {
+                                <li class="nav-item" permission="@Policies.CanModifyServerSettings">
+                                    <a asp-area="" asp-controller="UIServer" asp-action="ListPlugins" class="nav-link @ViewData.IsActivePage(ServerNavPages.Plugins)" id="Nav-ManagePlugins">
                                         <span class="me-2 btcpay-status btcpay-status--disabled"></span>
-                                    }
-                                    else
-                                    {
-                                        <vc:icon symbol="manage-plugins" />
-                                    }
-                                    <span>Manage Plugins</span>
-                                </a>
-                            </li>
+                                        <span>Manage Plugins</span>
+                                    </a>
+                                </li>
+                            }
                             @if (Model.Store != null && Model.ArchivedAppsCount > 0)
                             {
                                 <li class="nav-item nav-item-sub" permission="@Policies.CanModifyStoreSettings">

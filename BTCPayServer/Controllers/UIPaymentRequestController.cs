@@ -26,8 +26,8 @@ using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Controllers
 {
-    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     [Route("payment-requests")]
+    [Authorize(Policy = Policies.CanViewPaymentRequests, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public class UIPaymentRequestController : Controller
     {
         private readonly UIInvoiceController _InvoiceController;
@@ -69,7 +69,6 @@ namespace BTCPayServer.Controllers
             FormDataService = formDataService;
         }
 
-        
         [HttpGet("/stores/{storeId}/payment-requests")]
         [Authorize(Policy = Policies.CanViewPaymentRequests, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> GetPaymentRequests(string storeId, ListPaymentRequestsViewModel model = null)
@@ -363,6 +362,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("{payReqId}/cancel")]
+        [AllowAnonymous]
         public async Task<IActionResult> CancelUnpaidPendingInvoice(string payReqId, bool redirect = true)
         {
             var result = await _PaymentRequestService.GetPaymentRequest(payReqId, GetUserId());

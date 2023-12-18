@@ -142,7 +142,7 @@ namespace BTCPayServer.Payments.Lightning
                 {
                     throw new PaymentMethodUnavailableException("The lightning node did not reply in a timely manner");
                 }
-                catch (NotSupportedException) when (isLndHub)
+                catch (NotSupportedException)
                 {
                     return new NodeInfo[] {};
                 }

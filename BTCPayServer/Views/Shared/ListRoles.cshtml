@@ -96,7 +96,10 @@
                 <td>
                     @if (!role.Permissions.Any())
                     {
-                        <span class="text-warning">No policies</span>
+                        <span class="info-note text-warning">
+                            <vc:icon symbol="warning"/>
+                            No policies
+                        </span>
                     }
                     else
                     {

@@ -1,15 +1,15 @@
 @using BTCPayServer.Configuration
 @using BTCPayServer.Plugins
-@using BTCPayServer.Abstractions.Contracts
 @model BTCPayServer.Controllers.UIServerController.ListPluginsViewModel
 @inject BTCPayServerOptions BTCPayServerOptions
+@inject PluginService PluginService
 @{
     Layout = "_Layout";
     ViewData.SetActivePage(ServerNavPages.Plugins);
-    var installed = Model.Installed.ToDictionary(plugin => plugin.Identifier.ToLowerInvariant(), plugin => plugin.Version);
+    var installed = Model.Installed.ToDictionary(plugin => plugin.Identifier, plugin => plugin.Version);
 
     var availableAndNotInstalledx = Model.Available
-        .Where(plugin => !installed.ContainsKey(plugin.Identifier.ToLowerInvariant()))
+        .Where(plugin => !installed.ContainsKey(plugin.Identifier))
         .GroupBy(plugin => plugin.Identifier)
         .ToList();
 
@@ -17,7 +17,7 @@
     foreach (var availableAndNotInstalledItem in availableAndNotInstalledx)
     {
         var ordered = availableAndNotInstalledItem.OrderByDescending(plugin => plugin.Version).ToArray();
-        availableAndNotInstalled.Add(ordered.FirstOrDefault(availablePlugin => DependenciesMet(availablePlugin.Dependencies)) ?? ordered.FirstOrDefault());
+        availableAndNotInstalled.Add(ordered.FirstOrDefault(availablePlugin => PluginManager.DependenciesMet(availablePlugin.Dependencies, installed)) ?? ordered.FirstOrDefault());
     }
 
     bool DependentOn(string plugin)
@@ -41,77 +41,32 @@
         }
         return false;
     }
-
-    bool DependencyMet(IBTCPayServerPlugin.PluginDependency dependency)
-    {
-        var plugin = dependency.Identifier.ToLowerInvariant();
-        var versionReq = dependency.Condition;
-        if (!installed.ContainsKey(plugin) && !versionReq.Equals("!"))
-        {
-            return false;
-        }
-        if (installed.ContainsKey(plugin) && versionReq.Equals("!"))
-        {
-            return false;
-        }
-
-        var versionConditions = versionReq.Split("||", StringSplitOptions.RemoveEmptyEntries);
-        return versionConditions.Any(s =>
-        {
-            s = s.Trim();
-            var v = s.Substring(1);
-            if (s[1] == '=')
-            {
-                v = s.Substring(2);
-            }
-            var parsedV = Version.Parse(v);
-            switch (s)
-            {
-                case { } xx when xx.StartsWith(">="):
-                    return installed[plugin] >= parsedV;
-                case { } xx when xx.StartsWith("<="):
-                    return installed[plugin] <= parsedV;
-                case { } xx when xx.StartsWith(">"):
-                    return installed[plugin] > parsedV;
-                case { } xx when xx.StartsWith("<"):
-                    return installed[plugin] >= parsedV;
-                case { } xx when xx.StartsWith("^"):
-                    return installed[plugin] >= parsedV && installed[plugin].Major == parsedV.Major;
-                case { } xx when xx.StartsWith("~"):
-                    return installed[plugin] >= parsedV && installed[plugin].Major == parsedV.Major && installed[plugin].Minor == parsedV.Minor;
-                case { } xx when xx.StartsWith("!="):
-                    return installed[plugin] != parsedV;
-                case { } xx when xx.StartsWith("=="):
-                default:
-                    return installed[plugin] == parsedV;
-            }
-        });
-    }
-
-    bool DependenciesMet(IBTCPayServerPlugin.PluginDependency[] dependencies)
-    {
-        foreach (var dependency in dependencies)
-        {
-            if (!DependencyMet(dependency))
-            {
-                return false;
-            }
-        }
-        return true;
-    }
 }
 
 <style>
-  .version-switch .nav-link {
-	  display: inline;
-  }
-
-	  .version-switch .nav-link.active {
-		  display: none;
-	  }
+    .version-switch .nav-link { display: inline; }
+    .version-switch .nav-link.active { display: none; }
 </style>
 
 <partial name="_StatusMessage" />
+
+<div class="alert alert-warning alert-dismissible mb-4" role="alert">
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+        <vc:icon symbol="close" />
+    </button>
+    <h5 class="alert-heading">Important notice about plugins</h5> 
+    <p class="mb-0">
+        Plugins are developed by third parties. They need to be updated and maintained regularly in addition to BTCPay Server. Use plugins at your own risk.
+        <a href="#warning-details" data-bs-toggle="collapse" class="alert-link">Read more</a>
+    </p>
+    <div class="collapse" id="warning-details">
+        <p class="my-3"><strong>Use at Your Own Risk:</strong> Plugins in this store are developed by independent third parties. These plugins have not undergone review by the BTCPay Server team.</p>
+        <p class="mb-3"><strong>Disclaimer of Responsibility:</strong> BTCPay Server contributors or Foundation are not liable for any harm, loss, or damage resulting from the installation or use of the plugins. Users assume full responsibility for their installation, use, familiarity with licensing and terms of service and maintenance.</p>
+        <p class="mb-3"><strong>No Official Endorsement:</strong> Inclusion in the list of BTCPay Server plugins does not constitute an endorsement or guarantee of quality, safety, or compatibility.</p>
+        <p class="mb-3"><strong>Due Diligence Advised:</strong> We recommend users exercise caution and conduct their own research or consult the community before installing any plugin.</p>
+        <p class="mb-0"><strong>Feedback and Reporting:</strong> Should you experience issues with a plugin, please provide feedback or report concerns directly to the respective plugin developers.</p>
+    </div>
+</div>
 
 @if (Model.Disabled.Any())
 {
@@ -157,7 +112,7 @@
         {
             Model.DownloadedPluginsByIdentifier.TryGetValue(plugin.Identifier, out var downloadInfo);
             var matchedAvailable = Model.Available.Where(availablePlugin => availablePlugin.Identifier == plugin.Identifier && availablePlugin.Version > plugin.Version).OrderByDescending(availablePlugin => availablePlugin.Version).ToArray();
-            var x = matchedAvailable.FirstOrDefault(availablePlugin => DependenciesMet(availablePlugin.Dependencies)) ?? matchedAvailable.FirstOrDefault();
+            var x = matchedAvailable.FirstOrDefault(availablePlugin => PluginManager.DependenciesMet(availablePlugin.Dependencies, installed)) ?? matchedAvailable.FirstOrDefault();
             var updateAvailable = matchedAvailable.Any();
             var tabId = plugin.Identifier.ToLowerInvariant().Replace(".", "_");
             <div class="col col-12 col-md-6 col-lg-12 col-xl-6 col-xxl-4 mb-4">
@@ -205,7 +160,7 @@
                                         {
                                             <li class="list-group-item p-2 d-inline-flex align-items-center gap-2">
                                                 @dependency
-                                                @if (!DependencyMet(dependency))
+                                                @if (!PluginManager.DependencyMet(dependency, installed))
                                                 {
                                                     <span title="Dependency not met." data-bs-toggle="tooltip" class="text-danger">
                                                         <vc:icon symbol="warning" />
@@ -229,7 +184,7 @@
                                             {
                                                 <li class="list-group-item p-2 d-inline-flex align-items-center gap-2">
                                                     @dependency
-                                                    @if (!DependencyMet(dependency))
+                                                    @if (!PluginManager.DependencyMet(dependency, installed))
                                                     {
                                                         <span title="Dependency not met." data-bs-toggle="tooltip" class="text-danger">
                                                             <vc:icon symbol="warning" />
@@ -280,22 +235,41 @@
                     @{
                         var pendingAction = Model.Commands.Any(tuple => tuple.plugin.Equals(plugin.Identifier, StringComparison.InvariantCultureIgnoreCase));
                     }
-                    @if (pendingAction || (updateAvailable && x != null && DependenciesMet(x.Dependencies)) || !DependentOn(plugin.Identifier))
+                    @if (pendingAction || (updateAvailable && x != null && !DependentOn(plugin.Identifier)))
                     {
-                        <div class="card-footer border-0 pb-3 d-flex">
+                        var exclusivePendingAction = true;
+                        <div class="card-footer border-0 pb-3 d-flex gap-2">
+                            @if (pendingAction && updateAvailable)
+                            {
+                                var isUpdateAction = Model.Commands.Last(tuple => tuple.plugin.Equals(plugin.Identifier, StringComparison.InvariantCultureIgnoreCase)).command == "update";
+                                if (isUpdateAction)
+                                {
+                                    var version = PluginService.GetVersionOfPendingInstall(plugin.Identifier);
+                                    exclusivePendingAction = version == x.Version;
+                                }
+                            }
                             @if (pendingAction)
                             {
                                 <form asp-action="CancelPluginCommands" asp-route-plugin="@plugin.Identifier">
                                     <button type="submit" class="btn btn-outline-secondary">Cancel pending action</button>
                                 </form>
                             }
-                            else
+                            @if(!pendingAction || !exclusivePendingAction)
                             {
-                                @if (updateAvailable && x != null && DependenciesMet(x.Dependencies))
+                                @if (updateAvailable && x != null)
                                 {
-                                    <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" asp-route-version="@x.Version" asp-route-update="true" class="me-3">
-                                        <button type="submit" class="btn btn-secondary">Update</button>
-                                    </form>
+                                    if (PluginManager.DependenciesMet(x.Dependencies, installed))
+                                    {
+                                        <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" asp-route-version="@x.Version" asp-route-update="true" class="me-3">
+                                            <button type="submit" class="btn btn-secondary">Update</button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" asp-route-version="@x.Version" asp-route-update="true" class="me-3">
+                                            <button title="Schedule upgrade for when the dependencies have been met to ensure a smooth update" data-bs-toggle="tooltip" type="submit" class="btn btn-secondary">Schedule update</button>
+                                        </form>
+                                    }
                                 }
                                 @if (DependentOn(plugin.Identifier))
                                 {
@@ -322,7 +296,7 @@
     <div class="row mb-4">
         @foreach (var plugin in availableAndNotInstalled)
         {
-            var recommended = BTCPayServerOptions.RecommendedPlugins.Contains(plugin.Identifier.ToLowerInvariant());
+            var recommended = BTCPayServerOptions.RecommendedPlugins.Any(id => string.Equals(id, plugin.Identifier, StringComparison.InvariantCultureIgnoreCase));
             var disabled = Model.Disabled?.Contains(plugin.Identifier) ?? false;
 
             <div class="col col-12 col-md-6 col-lg-12 col-xl-6 col-xxl-4 mb-4">
@@ -360,7 +334,7 @@
                                 {
                                     <li class="list-group-item p-2 d-inline-flex align-items-center gap-2">
                                         @dependency
-                                        @if (!DependencyMet(dependency))
+                                        @if (!PluginManager.DependencyMet(dependency, installed))
                                         {
                                             <span title="Dependency not met." data-bs-toggle="tooltip" class="text-danger">
                                                 <vc:icon symbol="warning" />
@@ -369,6 +343,12 @@
                                     </li>
                                 }
                             </ul>
+                            if(!PluginManager.DependenciesMet(plugin.Dependencies, installed))
+                            {
+                                <div class="text-warning py-2 ">
+                                    Dependencies not met.
+                                </div>
+                            }
                         }
 
                         @if (plugin != null)
@@ -405,31 +385,36 @@
                             </ul>
                         }
                     </div>
-                    <div class="card-footer border-0 pb-3">
+                    <div class="card-footer border-0 pb-3 d-flex gap-2">
                         @{
-                            var pending = Model.Commands.LastOrDefault(tuple => tuple.plugin.Equals(plugin.Identifier, StringComparison.InvariantCultureIgnoreCase));
+                            var pendingAction = Model.Commands.LastOrDefault(tuple => tuple.plugin.Equals(plugin.Identifier, StringComparison.InvariantCultureIgnoreCase));
+                            var version = PluginService.GetVersionOfPendingInstall(plugin.Identifier);
+                            var exclusivePendingAction = version == plugin.Version;
                         }
-                        @if (!pending.Equals(default))
+                        @if (!pendingAction.Equals(default))
                         {
                             <form asp-action="CancelPluginCommands" asp-route-plugin="@plugin.Identifier">
-                                <button type="submit" class="btn btn-outline-secondary">Cancel pending @pending.command</button>
+                                <button type="submit" class="btn btn-outline-secondary">Cancel pending @pendingAction.command</button>
                             </form>
                         }
-                        else if (DependenciesMet(plugin.Dependencies))
+                        @if (pendingAction.Equals(default) || !exclusivePendingAction)
                         {
-							@* Don't show the "Install" button if plugin has been disabled *@
-                            @if (!disabled)
+                            if (PluginManager.DependenciesMet(plugin.Dependencies, installed))
+                            {
+                                @* Don't show the "Install" button if plugin has been disabled *@
+                                @if (!disabled)
+                                {
+                                    <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" asp-route-version="@plugin.Version">
+                                        <button type="submit" class="btn btn-primary">Install</button>
+                                    </form>
+                                }
+                            }
+                            else
                             {
                                 <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" asp-route-version="@plugin.Version">
-                                    <button type="submit" class="btn btn-primary">Install</button>
+                                    <button title="Schedule install for when the dependencies have been met to ensure a smooth update" data-bs-toggle="tooltip" type="submit" class="btn btn-primary">Schedule install</button>
                                 </form>
                             }
-                        }
-                        else
-                        {
-                            <div class="text-danger">
-                                Cannot install until dependencies are met.
-                            </div>
                         }
                     </div>
                 </div>

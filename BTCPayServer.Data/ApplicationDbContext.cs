@@ -93,7 +93,7 @@ namespace BTCPayServer.Data
             ApplicationUser.OnModelCreating(builder, Database);
             AddressInvoiceData.OnModelCreating(builder);
             APIKeyData.OnModelCreating(builder, Database);
-            AppData.OnModelCreating(builder);
+            AppData.OnModelCreating(builder, Database);
             CustodianAccountData.OnModelCreating(builder, Database);
             //StoredFile.OnModelCreating(builder);
             InvoiceEventData.OnModelCreating(builder);

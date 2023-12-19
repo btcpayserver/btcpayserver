@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
+using BTCPayServer.Events;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Hosting;
 using BTCPayServer.Lightning;
@@ -757,24 +758,26 @@ noninventoryitem:
                 vmpos.Template = AppService.SerializeTemplate(MigrationStartupTask.ParsePOSYML(vmpos.Template));
                 Assert.IsType<RedirectToActionResult>(pos.UpdatePointOfSale(app.Id, vmpos).Result);
 
-                //inventoryitem has 1 item available
-                await tester.WaitForEvent<AppInventoryUpdaterHostedService.UpdateAppInventory>(() =>
+                async Task AssertCanBuy(string choiceKey, bool expected)
                 {
-                    Assert.IsType<RedirectToActionResult>(publicApps
-                        .ViewPointOfSale(app.Id, PosViewType.Cart, 1, choiceKey: "inventoryitem").Result);
-                    return Task.CompletedTask;
-                });
+                    var redirect = Assert.IsType<RedirectToActionResult>(await publicApps
+                        .ViewPointOfSale(app.Id, PosViewType.Cart, 1, choiceKey: choiceKey));
+                    if (expected)
+                        Assert.Equal("UIInvoice", redirect.ControllerName);
+                    else
+                        Assert.NotEqual("UIInvoice", redirect.ControllerName);
+                }
+
+                //inventoryitem has 1 item available
+                await AssertCanBuy("inventoryitem", true);
 
                 //we already bought all available stock so this should fail
                 await Task.Delay(100);
-                Assert.IsType<RedirectToActionResult>(publicApps
-                    .ViewPointOfSale(app.Id, PosViewType.Cart, 1, choiceKey: "inventoryitem").Result);
+                await AssertCanBuy("inventoryitem", false);
 
                 //inventoryitem has unlimited items available
-                Assert.IsType<RedirectToActionResult>(publicApps
-                    .ViewPointOfSale(app.Id, PosViewType.Cart, 1, choiceKey: "noninventoryitem").Result);
-                Assert.IsType<RedirectToActionResult>(publicApps
-                    .ViewPointOfSale(app.Id, PosViewType.Cart, 1, choiceKey: "noninventoryitem").Result);
+                await AssertCanBuy("noninventoryitem", true);
+                await AssertCanBuy("noninventoryitem", true);
 
                 //verify invoices where created
                 invoices = user.BitPay.GetInvoices();
@@ -808,34 +811,8 @@ normal:
   price: 1.0";
                 vmpos.Template = AppService.SerializeTemplate(MigrationStartupTask.ParsePOSYML(vmpos.Template));
                 Assert.IsType<RedirectToActionResult>(pos.UpdatePointOfSale(app.Id, vmpos).Result);
-                try
-                {
-                    Assert.IsType<RedirectToActionResult>(publicApps
-                        .ViewPointOfSale(app.Id, PosViewType.Cart, 1, choiceKey: "btconly").Result);
-                }
-                catch (IsTypeException)
-                {
-                    TestLogs.LogInformation("This test sometimes fails, so we try to find the issue here...");
-                    TestLogs.LogInformation("Template: " + vmpos.Template);
-                    var retryOk = publicApps.ViewPointOfSale(app.Id, PosViewType.Cart, 1, choiceKey: "btconly").Result is RedirectToActionResult;
-                    var noChoiceKey = publicApps.ViewPointOfSale(app.Id, PosViewType.Cart, 1).Result is RedirectToActionResult;
-                    TestLogs.LogInformation("RetryOk: " + retryOk);
-                    TestLogs.LogInformation("NoChoiceKey: " + retryOk);
-                    var appService = tester.PayTester.GetService<AppService>();
-                    var found = await appService.GetApp(app.Id, PointOfSaleAppType.AppType);
-                    TestLogs.LogInformation("Found: " + (found != null));
-                    if (found is not null)
-                    {
-                        var settings = found.GetSettings<PointOfSaleSettings>();
-                        TestLogs.LogInformation("settings Found: " + (settings != null));
-                        if (settings is not null)
-                        {
-                            TestLogs.LogInformation("template Found: " + (settings.Template));
-                            TestLogs.LogInformation("parsed template Found: " + (AppService.SerializeTemplate(AppService.Parse(settings.Template, false))));
-                        }
-                    }
-                    throw;
-                }
+                Assert.IsType<RedirectToActionResult>(publicApps
+                    .ViewPointOfSale(app.Id, PosViewType.Cart, 1, choiceKey: "btconly").Result);
                 Assert.IsType<RedirectToActionResult>(publicApps
                     .ViewPointOfSale(app.Id, PosViewType.Cart, 1, choiceKey: "normal").Result);
                 invoices = user.BitPay.GetInvoices();

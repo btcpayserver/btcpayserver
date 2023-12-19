@@ -37,7 +37,7 @@ namespace BTCPayServer.Plugins
         public IEnumerable<IBTCPayServerPlugin> LoadedPlugins { get; }
         public BTCPayServerEnvironment Env { get; }
         
-        public Version? GetVersionOfPendingInstall(string plugin)
+        public Version GetVersionOfPendingInstall(string plugin)
         {
             var dirName = Path.Combine(_dataDirectories.Value.PluginDir, plugin);
             var manifestFileName = dirName + ".json";

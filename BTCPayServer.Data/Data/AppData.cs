@@ -1,5 +1,6 @@
 using System;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Newtonsoft.Json;
 
 namespace BTCPayServer.Data
@@ -16,13 +17,20 @@ namespace BTCPayServer.Data
         public string Settings { get; set; }
         public bool Archived { get; set; }
 
-        internal static void OnModelCreating(ModelBuilder builder)
+        internal static void OnModelCreating(ModelBuilder builder, DatabaseFacade databaseFacade)
         {
             builder.Entity<AppData>()
                        .HasOne(o => o.StoreData)
                        .WithMany(i => i.Apps).OnDelete(DeleteBehavior.Cascade);
             builder.Entity<AppData>()
                     .HasOne(a => a.StoreData);
+
+            if (databaseFacade.IsNpgsql())
+            {
+                builder.Entity<AppData>()
+                    .Property(o => o.Settings)
+                    .HasColumnType("JSONB");
+            }
         }
 
         // utility methods

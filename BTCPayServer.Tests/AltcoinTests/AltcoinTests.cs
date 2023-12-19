@@ -23,6 +23,7 @@ using Newtonsoft.Json.Linq;
 using OpenQA.Selenium;
 using Xunit;
 using Xunit.Abstractions;
+using Xunit.Sdk;
 using WalletSettingsViewModel = BTCPayServer.Models.StoreViewModels.WalletSettingsViewModel;
 
 namespace BTCPayServer.Tests
@@ -808,8 +809,21 @@ normal:
 
                 vmpos.Template = AppService.SerializeTemplate(MigrationStartupTask.ParsePOSYML(vmpos.Template));
                 Assert.IsType<RedirectToActionResult>(pos.UpdatePointOfSale(app.Id, vmpos).Result);
-                Assert.IsType<RedirectToActionResult>(publicApps
-                    .ViewPointOfSale(app.Id, PosViewType.Cart, 1, choiceKey: "btconly").Result);
+                try
+                {
+                    Assert.IsType<RedirectToActionResult>(publicApps
+                        .ViewPointOfSale(app.Id, PosViewType.Cart, 1, choiceKey: "btconly").Result);
+                }
+                catch (IsTypeException)
+                {
+                    TestLogs.LogInformation("This test sometimes fails, so we try to find the issue here...");
+                    TestLogs.LogInformation("Template: " + vmpos.Template);
+                    var retryOk = publicApps.ViewPointOfSale(app.Id, PosViewType.Cart, 1, choiceKey: "btconly").Result is RedirectToActionResult;
+                    var noChoiceKey = publicApps.ViewPointOfSale(app.Id, PosViewType.Cart, 1).Result is RedirectToActionResult;
+                    TestLogs.LogInformation("RetryOk: " + retryOk);
+                    TestLogs.LogInformation("NoChoiceKey: " + retryOk);
+                    throw;
+                }
                 Assert.IsType<RedirectToActionResult>(publicApps
                     .ViewPointOfSale(app.Id, PosViewType.Cart, 1, choiceKey: "normal").Result);
                 invoices = user.BitPay.GetInvoices();

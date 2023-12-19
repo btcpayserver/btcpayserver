@@ -806,7 +806,6 @@ btconly:
     - BTC
 normal:
   price: 1.0";
-
                 vmpos.Template = AppService.SerializeTemplate(MigrationStartupTask.ParsePOSYML(vmpos.Template));
                 Assert.IsType<RedirectToActionResult>(pos.UpdatePointOfSale(app.Id, vmpos).Result);
                 try
@@ -822,6 +821,19 @@ normal:
                     var noChoiceKey = publicApps.ViewPointOfSale(app.Id, PosViewType.Cart, 1).Result is RedirectToActionResult;
                     TestLogs.LogInformation("RetryOk: " + retryOk);
                     TestLogs.LogInformation("NoChoiceKey: " + retryOk);
+                    var appService = tester.PayTester.GetService<AppService>();
+                    var found = await appService.GetApp(app.Id, PointOfSaleAppType.AppType);
+                    TestLogs.LogInformation("Found: " + (found != null));
+                    if (found is not null)
+                    {
+                        var settings = found.GetSettings<PointOfSaleSettings>();
+                        TestLogs.LogInformation("settings Found: " + (settings != null));
+                        if (settings is not null)
+                        {
+                            TestLogs.LogInformation("template Found: " + (settings.Template));
+                            TestLogs.LogInformation("parsed template Found: " + (AppService.SerializeTemplate(AppService.Parse(settings.Template, false))));
+                        }
+                    }
                     throw;
                 }
                 Assert.IsType<RedirectToActionResult>(publicApps

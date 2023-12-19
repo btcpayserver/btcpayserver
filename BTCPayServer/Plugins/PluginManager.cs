@@ -189,7 +189,14 @@ namespace BTCPayServer.Plugins
             {
                 if (plugin.Identifier == "BTCPayServer.Plugins.Prism" && plugin.Version <= new Version("1.1.18"))
                 {
+                    QueueCommands(pluginsFolder, ("disable", plugin.Identifier));
                     logger.LogWarning("Please update your prism plugin, this version is incompatible");
+                    continue;
+                } 
+                if (plugin.Identifier == "BTCPayServer.Plugins.Wabisabi" && plugin.Version <= new Version("1.0.66"))
+                {
+                    
+                    QueueCommands(pluginsFolder, ("disable", plugin.Identifier));
                     continue;
                 }
                 try

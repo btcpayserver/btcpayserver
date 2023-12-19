@@ -512,9 +512,9 @@ namespace BTCPayServer.Controllers
 
             await Task.WhenAll(recommendedFees);
             model.RecommendedSatoshiPerByte =
-                recommendedFees.Select(tuple => tuple.Result).Where(option => option != null).ToList();
+                recommendedFees.Select(tuple => tuple.GetAwaiter().GetResult()).Where(option => option != null).ToList();
 
-            model.FeeSatoshiPerByte = model.RecommendedSatoshiPerByte.LastOrDefault()?.FeeRate;
+            model.FeeSatoshiPerByte = recommendedFees[1].GetAwaiter().GetResult()?.FeeRate;
             model.SupportRBF = network.SupportRBF;
 
             model.CryptoDivisibility = network.Divisibility;

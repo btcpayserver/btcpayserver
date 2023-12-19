@@ -172,7 +172,7 @@ namespace BTCPayServer.Services.Rates
                 sb.Append(String.Join('&', payload.Select(kv => $"{kv.Key}={kv.Value}").OfType<object>().ToArray()));
             }
             var request = new HttpRequestMessage(HttpMethod.Get, sb.ToString());
-            var response = await HttpClient.SendAsync(request, cancellationToken);
+            using var response = await HttpClient.SendAsync(request, cancellationToken);
             string stringResult = await response.Content.ReadAsStringAsync();
             var result = JsonConvert.DeserializeObject<T>(stringResult);
             if (result is JToken json)

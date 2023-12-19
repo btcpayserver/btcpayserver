@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,7 +18,7 @@ public class FreeCurrencyRatesRateProvider : IRateProvider
 
     public async Task<PairRate[]> GetRatesAsync(CancellationToken cancellationToken)
     {
-        var response = await _httpClient.GetAsync(RateSourceInfo.Url, cancellationToken);
+        using var response = await _httpClient.GetAsync(RateSourceInfo.Url, cancellationToken);
         response.EnsureSuccessStatusCode();
         var jobj = await response.Content.ReadAsAsync<JObject>(cancellationToken);
         var results = (JObject) jobj["btc"] ;

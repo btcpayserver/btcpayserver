@@ -19,7 +19,7 @@ namespace BTCPayServer.Services.Rates
 
         public async Task<PairRate[]> GetRatesAsync(CancellationToken cancellationToken)
         {
-            var response = await _httpClient.GetAsync("https://api.bitflyer.jp/v1/ticker", cancellationToken);
+            using var response = await _httpClient.GetAsync("https://api.bitflyer.jp/v1/ticker", cancellationToken);
             var jobj = await response.Content.ReadAsAsync<JObject>(cancellationToken);
             if (jobj.Property("error_message")?.Value?.Value<string>() is string err)
             {

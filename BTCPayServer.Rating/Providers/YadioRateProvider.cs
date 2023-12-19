@@ -23,7 +23,7 @@ namespace BTCPayServer.Services.Rates
 
         public async Task<PairRate[]> GetRatesAsync(CancellationToken cancellationToken)
         {
-            var response = await _httpClient.GetAsync("https://api.yadio.io/exrates/BTC", cancellationToken);
+            using var response = await _httpClient.GetAsync("https://api.yadio.io/exrates/BTC", cancellationToken);
             response.EnsureSuccessStatusCode();
             var jobj = await response.Content.ReadAsAsync<JObject>(cancellationToken);
             var results = jobj["BTC"];

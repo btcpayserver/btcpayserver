@@ -402,15 +402,19 @@ retry:
             };
             var settings = JObject.Parse(row.settings);
             var items = JArray.Parse(settings[templatePath]!.Value<string>()!);
+            bool hasChange = false;
             foreach (var change in changes)
             {
-                var item = items.FirstOrDefault(i => i["id"]?.Value<string>() == change.ItemId && i["inventory"] is not null);
+                var item = items.FirstOrDefault(i => i["id"]?.Value<string>() == change.ItemId && i["inventory"] is not null && i["inventory"]!.Type is JTokenType.Integer);
                 if (item is null)
                     continue;
                 var inventory = item["inventory"]!.Value<int>();
                 inventory += change.Delta;
                 item["inventory"] = inventory;
+                hasChange = true;
             }
+            if (!hasChange)
+                return;
             settings[templatePath] = items.ToString(Formatting.None);
             var updated = await connection.ExecuteAsync("UPDATE \"Apps\" SET \"Settings\"=@v::JSONB WHERE \"Id\"=@appId AND xmin=@xmin", new { appId, xmin = (int)row.xmin, v = settings.ToString(Formatting.None) }) == 1;
             // If we can't update, it means someone else updated the row, so we need to retry

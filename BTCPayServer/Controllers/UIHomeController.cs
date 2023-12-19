@@ -84,8 +84,9 @@ namespace BTCPayServer.Controllers
                 }
 
                 var stores = await _storeRepository.GetStoresByUserId(userId);
-                return stores.Any()
-                    ? RedirectToStore(userId, stores.First())
+                var activeStore = stores.FirstOrDefault(s => !s.Archived);
+                return activeStore != null
+                    ? RedirectToStore(userId, activeStore)
                     : RedirectToAction(nameof(UIUserStoresController.CreateStore), "UIUserStores");
             }
 

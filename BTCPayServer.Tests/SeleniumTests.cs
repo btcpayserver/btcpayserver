@@ -164,7 +164,7 @@ namespace BTCPayServer.Tests
             Assert.Contains("CustomFormInputTest", s.Driver.PageSource);
             s.Driver.FindElement(By.Name("buyerEmail")).SendKeys("aa@aa.com");
             s.Driver.FindElement(By.CssSelector("input[type='submit']")).Click();
-            s.PayInvoice(true);
+            s.PayInvoice(true, 0.001m);
             var result = await s.Server.PayTester.HttpClient.GetAsync(formurl);
             Assert.Equal(HttpStatusCode.NotFound, result.StatusCode);
 

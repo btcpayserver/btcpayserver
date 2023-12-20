@@ -105,8 +105,15 @@ namespace BTCPayServer.Tests
 
         public void MineBlockOnInvoiceCheckout()
         {
-            Driver.FindElement(By.CssSelector("#mine-block button")).Click();
-
+            retry:
+            try
+            {
+                Driver.FindElement(By.CssSelector("#mine-block button")).Click();
+            }
+            catch (StaleElementReferenceException)
+            {
+                goto retry;
+            }
         }
 
         /// <summary>

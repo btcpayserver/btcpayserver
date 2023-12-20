@@ -79,13 +79,13 @@ namespace BTCPayServer.Services.Apps
 
         public async Task<object?> GetInfo(string appId)
         {
-            var appData = await GetApp(appId, null);
+            var appData = await GetApp(appId, null, includeStore: true);
             if (appData is null)
                 return null;
             var appType = GetAppType(appData.AppType);
             if (appType is null)
                 return null;
-            return appType.GetInfo(appData);
+            return await appType.GetInfo(appData);
         }
 
         public async Task<IEnumerable<ItemStats>> GetItemStats(AppData appData)

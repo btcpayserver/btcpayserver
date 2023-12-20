@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -31,7 +32,9 @@ namespace BTCPayServer.Data
         public List<InvoiceSearchData> InvoiceSearchData { get; set; }
         public List<RefundData> Refunds { get; set; }
 
-
+        [Timestamp]
+        // With this, update of InvoiceData will fail if the row was modified by another process
+        public uint XMin { get; set; }
         internal static void OnModelCreating(ModelBuilder builder, DatabaseFacade databaseFacade)
         {
             builder.Entity<InvoiceData>()

@@ -20,7 +20,7 @@
                 @try
                 {
                     var client = LightningClientFactoryService.Create(Model.ConnectionString, NetworkProvider.GetNetwork<BTCPayNetwork>(Model.CryptoCode));
-                    client.GetDisplayName();
+                    <span>@client.GetDisplayName()</span>
                     var uri = client.GetServerUri();
                     if (uri is not null)
                     {

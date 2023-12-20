@@ -30,11 +30,11 @@ namespace BTCPayServer.Payments.Lightning
 #pragma warning restore CS0618 // Type or member is obsolete
         }
 
-        public void SetLightningUrl(ILightningClient connectionString)
+        public void SetLightningUrl(ILightningClient client)
         {
-            ArgumentNullException.ThrowIfNull(connectionString);
+            ArgumentNullException.ThrowIfNull(client);
 #pragma warning disable CS0618 // Type or member is obsolete
-            LightningConnectionString = connectionString.ToString();
+            LightningConnectionString = client.ToString();
 #pragma warning restore CS0618 // Type or member is obsolete
         }
 

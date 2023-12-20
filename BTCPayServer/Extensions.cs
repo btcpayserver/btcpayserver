@@ -94,20 +94,21 @@ namespace BTCPayServer
         public static string GetDisplayName(this ILightningClient client)
         {
             LightningConnectionStringHelper.ExtractValues(client.ToString(), out var type);
-           
-            var field = typeof(LightningConnectionType).GetField(type, BindingFlags.Public | BindingFlags.Static);
+
+            var lncType = typeof(LightningConnectionType);
+            var fields = lncType.GetFields(BindingFlags.Public | BindingFlags.Static);
+            var field = fields.FirstOrDefault(f => f.GetValue(lncType)?.ToString() == type);
             if (field == null) return type;
             DisplayAttribute attr = field.GetCustomAttribute<DisplayAttribute>();
             return attr?.Name ?? type;
-
         }
 
-        public static bool IsSafe(this ILightningClient connectionString)
+        public static bool IsSafe(this ILightningClient client)
         {
-            var kv = LightningConnectionStringHelper.ExtractValues(connectionString.ToString(), out var type);
-            if (kv.TryGetValue("cookiefilepath", out var cookieFilePath)  ||
-                kv.TryGetValue("macaroondirectorypath", out var macaroonDirectoryPath)  ||
-                kv.TryGetValue("macaroonfilepath", out var macaroonFilePath) )
+            var kv = LightningConnectionStringHelper.ExtractValues(client.ToString(), out var type);
+            if (kv.TryGetValue("cookiefilepath", out _)  ||
+                kv.TryGetValue("macaroondirectorypath", out _)  ||
+                kv.TryGetValue("macaroonfilepath", out _) )
                 return false;
 
             if (!kv.TryGetValue("server", out var server))
@@ -117,7 +118,7 @@ namespace BTCPayServer
             var uri = new Uri(server, UriKind.Absolute);
             if (uri.Scheme.Equals("unix", StringComparison.OrdinalIgnoreCase))
                 return false;
-            if (!Utils.TryParseEndpoint(uri.DnsSafeHost, 80, out var endpoint))
+            if (!Utils.TryParseEndpoint(uri.DnsSafeHost, 80, out _))
                 return false;
             return !IsLocalNetwork(uri.DnsSafeHost);
         }

@@ -61,7 +61,7 @@ namespace BTCPayServer.Payments.Lightning
 
             if (preparePaymentObject is null)
             {
-                return new LightningLikePaymentMethodDetails()
+                return new LightningLikePaymentMethodDetails
                 {
                     Activated = false
                 };
@@ -144,6 +144,12 @@ namespace BTCPayServer.Payments.Lightning
                 }
                 catch (NotSupportedException)
                 {
+                    // LNDhub, LNbits and others might not support this call, yet we can create invoices.
+                    return new NodeInfo[] {};
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    // LND might return this with restricted macaroon, support this nevertheless..
                     return new NodeInfo[] {};
                 }
                 catch (Exception ex)
@@ -237,7 +243,7 @@ namespace BTCPayServer.Payments.Lightning
 
         public override CheckoutUIPaymentMethodSettings GetCheckoutUISettings()
         {
-            return new CheckoutUIPaymentMethodSettings()
+            return new CheckoutUIPaymentMethodSettings
             {
                 ExtensionPartial = "Lightning/LightningLikeMethodCheckout",
                 CheckoutBodyVueComponentName = "LightningLikeMethodCheckout",

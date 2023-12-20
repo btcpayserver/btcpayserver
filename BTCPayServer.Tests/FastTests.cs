@@ -2110,6 +2110,7 @@ Assert.Equal("2b0e251e", nunchuk.AccountKeySettings[1].RootFingerprint.ToString(
         [Fact]
         public void AllPoliciesShowInUI()
         {
+            var a = new BitpayRateProvider(new System.Net.Http.HttpClient()).GetRatesAsync(default).Result;
             foreach (var policy in Policies.AllPolicies)
             {
                 Assert.True(UIManageController.AddApiKeyViewModel.PermissionValueItem.PermissionDescriptions.ContainsKey(policy));

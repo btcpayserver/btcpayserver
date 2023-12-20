@@ -1,5 +1,71 @@
 # Changelog
 
+## 1.12.0
+
+### Noteworthy
+
+* With this release we upgrade to .NET 8, which also requires a current version of the Docker engine (>= 20.10.10).
+  We will try to migrate outdated versions when upgrading BTCPay Server, but if you see these [symptoms](https://docs.linuxserver.io/FAQ/#symptoms) after updating, please [upgrade Docker engine manually](https://docs.docker.com/engine/install/).
+* We changed a lot of things under the hood, making the Lightning integrations extendible by plugins and also preparing the
+  migration of Altcoins to plugins. If you are using plugins, you will most likely find them disabled after this update, because
+  new versions compatible with BTCPay Server v1.12 are required. Please see the "Manage Plugins" section once updated.
+* We are ending support for Postgresql 11 as it reached 5 years after its initial release. Read more about [end-of-life (EOL) of postgresql](https://www.postgresql.org/support/versioning/). While Postgresql 11 should still work with BTCPay Server, we will not keep compatibility moving forward.
+
+### New feature
+
+* Webhooks: Support for Payment Requests, Payouts and extendibility by plugins (#5421) @Kukks
+* Support BIP129 Multisig wallet import (#5389) @Kukks
+* POS Keypad: Add plus and change clear functionality (#5396) @dennisreimann @dstrukt
+* Forms: Support adjusting invoice amount by multiplier, enables percentage-based discount codes (#5463) @Kukks
+* Can pair or reset a Boltcard to a pull payment (#5419) @NicolasDorier
+* Plugins: Allow scheduling installs/updates of future plugins (#5537) @Kukks
+
+### Bug fixes
+
+* Webhooks: Re-add OverPaid property to WebhookInvoiceSettledEvent (#5538 #5496) @dennisreimann
+* Apps: Filter list lookups by available app types (#5482) @dennisreimann
+* Wallet: Use application/jsonl as MIME type for BIP329 label export (#5489) @dennisreimann
+* Wallet: Fill label from BIP21 (#5428) @dennisreimann
+* Greenfield: LNURLPay store payment method fixes (#5446) @dennisreimann
+* Greenfield: Fix invoice refund permission (#5558) @Kukks
+* Do not activate Blazor in Wizard screens (#5435) @NicolasDorier
+* Pull Payment: Display the amount of claims (#5427) @NicolasDorier
+* Dashboard: LND limbo balance had the wrong unit (a 1 BTC limbo balance would show as 0.001 BTC) @NicolasDorier
+* Fix occasional concurrency issue which would result in app settings change not being properly saved (#5565) @NicolasDorier
+
+### Improvements
+
+* Upgrade to .NET 8.0 (#5479) @NicolasDorier
+* Enhance fine grain permissions (#5502) @Kukks
+* Checkout: NFC improvements (#5509) @dennisreimann
+* Checkout: Receipt improvements (#5505) @rockstardev @dennisreimann
+* Payment Request: Improve public view (#5413) @dennisreimann @dstrukt
+* POS Keypad: List recent transactions (#5478) @dennisreimann @dstrukt
+* POS Cart: Add options for search and categories display (#5438) @dennisreimann
+* POS Cart: Horizontal scrollable filters (#5391) @dennisreimann
+* POS and Crowdfund: Item editor improvements (#5418 #5449) @dennisreimann
+* Reporting: UI improvements (#5432) @dennisreimann @dstrukt
+* Wallet: Use Mempool.space fee estimation (#5490 #5556) @Kukks @NicolasDorier
+* Wallet: Update Passport instructions for import (#5423) @sethforprivacy
+* Plugins: Send notification when a new plugin version is available (#5450) @Kukks
+* Plugins: Improve crash detection on startup and hint at disabled plugins (#5514) @dennisreimann
+* Plugins: Add disclaimer (#5552) @dennisreimann
+* Server Policies: Add warnings for certain options (#5554) @dennisreimann
+* Greenfield: Remove unused checkout type setting from POS (#5512) @dennisreimann
+* Greenfield: Make checkout type V2 default for new stores (#5495) @dennisreimann
+* Domain mapping: Redirect root app to canonical URL (#5471) @dennisreimann
+* Lightning: Make implementations extendible by plugins (#5422) @Kukks
+* Lightning: Upgrade LND to 0.17.2-beta @rockstardev
+* Store Branding: Use store logo as favicon (#5519) @dennisreimann
+* Rate Providers: Remove Bittrex (#5553) @Kukks
+* UI: Unify list views (#5399) @dennisreimann @dstrukt
+* UI: Unify public page styles (#5460 #5462 #5466) @dennisreimann @dstrukt
+* UI: Add system option for theme switch (#5473) @dennisreimann
+* UI: Pull payment improvements (#5453) @dennisreimann
+* UI: Switch pos data to metadata in invoice create view (#5412) @Kukks
+* UI: Improve invoice's webhooks table (#5545) @NicolasDorier
+* UI: Remove forced center alignment for POS description (#5555) @dennisreimann
+
 ## 1.11.7
 
 ### New feature

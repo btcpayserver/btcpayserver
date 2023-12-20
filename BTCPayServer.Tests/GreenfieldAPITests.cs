@@ -29,6 +29,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Xunit;
 using Xunit.Abstractions;
+using Xunit.Sdk;
 using CreateApplicationUserRequest = BTCPayServer.Client.Models.CreateApplicationUserRequest;
 
 namespace BTCPayServer.Tests
@@ -3816,9 +3817,19 @@ namespace BTCPayServer.Tests
                 {
                     case "before-automated-payout-processing":
                         beforeHookTcs.TrySetResult();
+                        var bd = (BeforePayoutActionData)tuple.args;
+                        foreach (var p in bd.Payouts)
+                        {
+                            TestLogs.LogInformation("Before Processed: " + p.Id);
+                        }
                         break;
                     case "after-automated-payout-processing":
                         afterHookTcs.TrySetResult();
+                        var ad = (AfterPayoutActionData)tuple.args;
+                        foreach (var p in ad.Payouts)
+                        {
+                            TestLogs.LogInformation("After Processed: " + p.Id);
+                        }
                         break;
                 }
             };
@@ -3833,7 +3844,21 @@ namespace BTCPayServer.Tests
             await beforeHookTcs.Task.WaitAsync(TimeSpan.FromSeconds(5));
             await afterHookTcs.Task.WaitAsync(TimeSpan.FromSeconds(5));
             payouts = await adminClient.GetStorePayouts(admin.StoreId);
-            Assert.Single(payouts.Where(data => data.State == PayoutState.InProgress && data.Id == payoutThatShouldBeProcessedStraightAway.Id));
+            try
+            {
+                Assert.Single(payouts.Where(data => data.State == PayoutState.InProgress && data.Id == payoutThatShouldBeProcessedStraightAway.Id));
+            }
+            catch (SingleException)
+            {
+                TestLogs.LogInformation("Debugging flaky test...");
+                TestLogs.LogInformation("payoutThatShouldBeProcessedStraightAway: " + payoutThatShouldBeProcessedStraightAway.Id);
+                foreach (var p in payouts)
+                {
+                    TestLogs.LogInformation("Payout Id: " + p.Id);
+                    TestLogs.LogInformation("Payout State: " + p.State);
+                }
+                throw;
+            }
             
             beforeHookTcs = new TaskCompletionSource();
             afterHookTcs = new TaskCompletionSource();

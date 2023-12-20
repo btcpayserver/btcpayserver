@@ -29,7 +29,7 @@ namespace BTCPayServer.Rating.Providers
 
         public async Task<PairRate[]> GetRatesAsync(CancellationToken cancellationToken)
         {
-            var response = await _httpClient.GetAsync("https://api.btcturk.com/api/v2/ticker", cancellationToken);
+            using var response = await _httpClient.GetAsync("https://api.btcturk.com/api/v2/ticker", cancellationToken);
             var jarray = (JArray)(await response.Content.ReadAsAsync<JObject>(cancellationToken))["data"];
             var tickers = jarray.ToObject<Ticker[]>();
             return tickers

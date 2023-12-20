@@ -8,8 +8,15 @@ using NBitcoin;
 
 namespace BTCPayServer.Services.Fees
 {
-    public class FallbackFeeProvider(IFeeProvider[] Providers) : IFeeProvider
+    public class FallbackFeeProvider : IFeeProvider
     {
+        public FallbackFeeProvider(IFeeProvider[] providers)
+        {
+            Providers = providers;
+        }
+
+        public IFeeProvider[] Providers { get; }
+
         public async Task<FeeRate> GetFeeRateAsync(int blockTarget = 20)
         {
             for (int i = 0; i < Providers.Length; i++)

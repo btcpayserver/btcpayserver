@@ -416,6 +416,12 @@
                                 </form>
                             }
                         }
+                        @if (disabled)
+                        {
+                            <form asp-action="UnInstallPlugin" asp-route-plugin="@plugin.Identifier">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Uninstall</button>
+                            </form>
+                        }
                     </div>
                 </div>
             </div>

@@ -38,11 +38,10 @@ namespace BTCPayServer.HostedServices
 
             public bool Dirty => _dirty;
 
-            bool _isBlobUpdated;
-            public bool IsBlobUpdated => _isBlobUpdated;
-            public void BlobUpdated()
+            public bool IsPriceUpdated { get; private set; }
+            public void PriceUpdated()
             {
-                _isBlobUpdated = true;
+                IsPriceUpdated = true;
             }
         }
 
@@ -104,7 +103,7 @@ namespace BTCPayServer.HostedServices
                             var payment = invoice.GetPayments(true).First();
                             invoice.Price = payment.InvoicePaidAmount.Net;
                             invoice.UpdateTotals();
-                            context.BlobUpdated();
+                            context.PriceUpdated();
                         }
                         else
                         {
@@ -291,9 +290,9 @@ namespace BTCPayServer.HostedServices
                             await _invoiceRepository.UpdateInvoiceStatus(invoice.Id, invoice.GetInvoiceState());
                             updateContext.Events.Insert(0, new InvoiceDataChangedEvent(invoice));
                         }
-                        if (updateContext.IsBlobUpdated)
+                        if (updateContext.IsPriceUpdated)
                         {
-                            await _invoiceRepository.UpdateInvoicePrice(invoice.Id, invoice);
+                            await _invoiceRepository.UpdateInvoicePrice(invoice.Id, invoice.Price);
                         }
 
                         foreach (var evt in updateContext.Events)

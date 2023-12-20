@@ -1149,7 +1149,6 @@ namespace BTCPayServer.Tests
 
             // Contribute
             s.Driver.FindElement(By.Id("crowdfund-body-header-cta")).Click();
-            Thread.Sleep(1000);
             s.Driver.WaitUntilAvailable(By.Name("btcpay"));
 
             var frameElement = s.Driver.FindElement(By.Name("btcpay"));

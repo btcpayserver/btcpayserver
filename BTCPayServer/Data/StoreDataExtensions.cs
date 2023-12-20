@@ -50,6 +50,7 @@ namespace BTCPayServer.Data
 
         public static StoreBlob GetStoreBlob(this StoreData storeData)
         {
+            ArgumentNullException.ThrowIfNull(storeData);
             var result = storeData.StoreBlob == null ? new StoreBlob() : new Serializer(null).ToObject<StoreBlob>(storeData.StoreBlob);
             if (result.PreferredExchange == null)
                 result.PreferredExchange = result.GetRecommendedExchange();

@@ -395,7 +395,7 @@ namespace BTCPayServer.Tests
                     BOLT11PaymentRequest.Parse(newBolt11, Network.RegTest).MinimumAmount.ToDecimal(LightMoneyUnit.BTC));
             }, 40000);
 
-            TestLogs.LogInformation($"Paying invoice {newInvoice.Id} remaining due amount {newInvoice.BtcDue.GetValue((BTCPayNetwork) tester.DefaultNetwork)} via lightning");
+            TestLogs.LogInformation($"Paying invoice {newInvoice.Id} remaining due amount {newInvoice.BtcDue.GetValue((BTCPayNetwork)tester.DefaultNetwork)} via lightning");
             var evt = await tester.WaitForEvent<InvoiceDataChangedEvent>(async () =>
             {
                 await tester.SendLightningPaymentAsync(newInvoice);
@@ -1301,11 +1301,8 @@ namespace BTCPayServer.Tests
             var user = tester.NewAccount();
             await user.GrantAccessAsync();
             user.RegisterDerivationScheme("BTC");
-
+            await tester.ExplorerNode.EnsureGenerateAsync(1);
             var rng = new Random();
-            var seed = rng.Next();
-            rng = new Random(seed);
-            TestLogs.LogInformation("Seed: " + seed);
             foreach (var networkFeeMode in Enum.GetValues(typeof(NetworkFeeMode)).Cast<NetworkFeeMode>())
             {
                 await user.SetNetworkFeeMode(networkFeeMode);
@@ -1318,7 +1315,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        private static async Task AssertTopUpBtcPrice(ServerTester tester, TestAccount user, Money btcSent, decimal expectedPriceWithoutNetworkFee, NetworkFeeMode networkFeeMode)
+        private async Task AssertTopUpBtcPrice(ServerTester tester, TestAccount user, Money btcSent, decimal expectedPriceWithoutNetworkFee, NetworkFeeMode networkFeeMode)
         {
             var cashCow = tester.ExplorerNode;
             // First we try payment with a merchant having only BTC
@@ -1343,7 +1340,6 @@ namespace BTCPayServer.Tests
             {
                 networkFee = 0.0m;
             }
-
             await cashCow.SendToAddressAsync(invoiceAddress, paid);
             await TestUtils.EventuallyAsync(async () =>
             {
@@ -1822,7 +1818,7 @@ namespace BTCPayServer.Tests
             Assert.Empty(appList2.Apps);
             Assert.Equal("test", appList.Apps[0].AppName);
             Assert.Equal(apps.CreatedAppId, appList.Apps[0].Id);
-            
+
             Assert.True(app.Role.ToPermissionSet(app.StoreId).Contains(Policies.CanModifyStoreSettings, app.StoreId));
             Assert.Equal(user.StoreId, appList.Apps[0].StoreId);
             Assert.IsType<NotFoundResult>(apps2.DeleteApp(appList.Apps[0].Id));
@@ -2399,11 +2395,11 @@ namespace BTCPayServer.Tests
 
             var url = lnMethod.GetExternalLightningUrl();
             var kv = LightningConnectionStringHelper.ExtractValues(url, out var connType);
-            Assert.Equal(LightningConnectionType.Charge,connType);
+            Assert.Equal(LightningConnectionType.Charge, connType);
             var client = Assert.IsType<ChargeClient>(tester.PayTester.GetService<LightningClientFactoryService>()
                 .Create(url, tester.NetworkProvider.GetNetwork<BTCPayNetwork>("BTC")));
             var auth = Assert.IsType<ChargeAuthentication.UserPasswordAuthentication>(client.ChargeAuthentication);
-            
+
             Assert.Equal("pass", auth.NetworkCredential.Password);
             Assert.Equal("usr", auth.NetworkCredential.UserName);
 
@@ -2829,7 +2825,7 @@ namespace BTCPayServer.Tests
             var app = await client.CreatePointOfSaleApp(acc.StoreId, new CreatePointOfSaleAppRequest()
             {
                 AppName = "Static",
-                DefaultView =  Client.Models.PosViewType.Static,
+                DefaultView = Client.Models.PosViewType.Static,
                 Template = new PointOfSaleSettings().Template
             });
             var resp = await posController.ViewPointOfSale(app.Id, choiceKey: "green-tea");
@@ -2839,7 +2835,7 @@ namespace BTCPayServer.Tests
             app = await client.CreatePointOfSaleApp(acc.StoreId, new CreatePointOfSaleAppRequest()
             {
                 AppName = "Cart",
-                DefaultView =  Client.Models.PosViewType.Cart,
+                DefaultView = Client.Models.PosViewType.Cart,
                 Template = new PointOfSaleSettings().Template
             });
             resp = await posController.ViewPointOfSale(app.Id, posData: new JObject()

@@ -310,10 +310,11 @@ askdevice:
                                     await websocketHelper.Send("{ \"error\": \"no-device\"}", cancellationToken);
                                     continue;
                                 }
-                                device = new HwiDeviceClient(hwi, deviceEntry.DeviceSelector, deviceEntry.Model, deviceEntry.Fingerprint);
+                                var model = deviceEntry.Model ?? "Unsupported hardware wallet, try to update BTCPay Server Vault";
+                                device = new HwiDeviceClient(hwi, deviceEntry.DeviceSelector, model, deviceEntry.Fingerprint);
                                 fingerprint = device.Fingerprint;
                                 JObject json = new JObject();
-                                json.Add("model", device.Model);
+                                json.Add("model", model);
                                 json.Add("fingerprint", device.Fingerprint?.ToString());
                                 await websocketHelper.Send(json.ToString(), cancellationToken);
                                 break;

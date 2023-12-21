@@ -59,15 +59,12 @@ public class StoreEmailRuleProcessorSender : EventHostedServiceBase
                     var sender = await _emailSenderFactory.GetEmailSender(storeWebhookEvent.StoreId);
                     foreach (UIStoresController.StoreEmailRule actionableRule in actionableRules)
                     {
-                       
-
-                        var request = new SendEmailRequest()
+                        var request = new SendEmailRequest
                         {
                             Subject = actionableRule.Subject, Body = actionableRule.Body, Email = actionableRule.To
                         };
                         request = await webhookDeliveryRequest.Interpolate(request, actionableRule);
                         
-                      
                         var recipients = (request?.Email?.Split(",", StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string>())
                             .Select(o =>
                             {
@@ -77,7 +74,7 @@ public class StoreEmailRuleProcessorSender : EventHostedServiceBase
                             .Where(o => o != null)
                             .ToArray();
                         
-                        if(recipients.Length == 0)
+                        if (recipients.Length == 0)
                             continue;
                         
                         sender.SendEmail(recipients.ToArray(), null, null, request.Subject, request.Body);

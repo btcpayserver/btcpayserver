@@ -63,7 +63,7 @@
         <form method="post" enctype="multipart/form-data">
             @if (!ViewContext.ModelState.IsValid)
             {
-                <div asp-validation-summary="All" class="text-danger"></div>
+                <div asp-validation-summary="All"></div>
             }
             <h3 class="mb-3">Invoice Settings</h3>
             @if (Model.PaymentMethods.Any())

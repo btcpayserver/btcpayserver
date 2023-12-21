@@ -1,6 +1,7 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using System.IO.IsolatedStorage;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -218,7 +219,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
             var issuerKey = await _settingsRepository.GetIssuerKey(_env);
             var version = await _dbContextFactory.LinkBoltcardToPullPayment(pullPaymentId, issuerKey, request.UID, request.OnExisting);
-            var keys = issuerKey.CreateCardKey(request.UID, version).DeriveBoltcardKeys(issuerKey);
+            var keys = issuerKey.CreatePullPaymentCardKey(request.UID, version, pullPaymentId).DeriveBoltcardKeys(issuerKey);
 
             var boltcardUrl = Url.Action(nameof(UIBoltcardController.GetWithdrawRequest), "UIBoltcard");
             boltcardUrl = Request.GetAbsoluteUri(boltcardUrl);

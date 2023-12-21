@@ -61,7 +61,7 @@ public class UIBoltcardController : Controller
         var registration = await ContextFactory.GetBoltcardRegistration(issuerKey, piccData, updateCounter: pr is not null);
         if (registration?.PullPaymentId is null)
             return BadRequest(new LNUrlStatusResponse { Status = "ERROR", Reason = "Replayed or expired query" });
-        var cardKey = issuerKey.CreateCardKey(piccData.Uid, registration.Version);
+        var cardKey = issuerKey.CreatePullPaymentCardKey(piccData.Uid, registration.Version, registration.PullPaymentId);
         if (!cardKey.CheckSunMac(c, piccData))
             return BadRequest(new LNUrlStatusResponse { Status = "ERROR", Reason = "Replayed or expired query" });
         LNURLController.ControllerContext.HttpContext = HttpContext;

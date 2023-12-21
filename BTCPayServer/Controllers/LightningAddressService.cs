@@ -110,12 +110,12 @@ public class LightningAddressService
         await context.AddAsync(data);
     }
 
-    private string NormalizeUsername(string username)
+    public static string NormalizeUsername(string username)
     {
         return username.ToLowerInvariant();
     }
 
-    private string GetKey(string username)
+    private static string GetKey(string username)
     {
         username = NormalizeUsername(username);
         return $"{nameof(LightningAddressService)}_{username}";

@@ -6,6 +6,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Loader;
 using System.Text.RegularExpressions;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Configuration;
@@ -63,7 +64,7 @@ namespace BTCPayServer.Plugins
         public static IMvcBuilder AddPlugins(this IMvcBuilder mvcBuilder, IServiceCollection serviceCollection,
             IConfiguration config, ILoggerFactory loggerFactory, ServiceProvider bootstrapServiceProvider)
         {
-            void LoadPluginsFromAssemblies(Assembly systemAssembly1, HashSet<string> hashSet, HashSet<string> loadedPluginIdentifiers1,
+            void LoadPluginsFromAssemblies(Assembly systemAssembly1, HashSet<string> exclude, HashSet<string> loadedPluginIdentifiers1,
                 List<IBTCPayServerPlugin> btcPayServerPlugins)
             {
                 // Load the referenced assembly plugins
@@ -73,7 +74,7 @@ namespace BTCPayServer.Plugins
                 {
                     var assemblyName = assembly.GetName().Name;
                     bool isSystemPlugin = assembly == systemAssembly1;
-                    if (!isSystemPlugin && hashSet.Contains(assemblyName))
+                    if (!isSystemPlugin && exclude.Contains(assemblyName))
                         continue;
 
                     foreach (var plugin in GetPluginInstancesFromAssembly(assembly))
@@ -103,12 +104,12 @@ namespace BTCPayServer.Plugins
 
             var disabledPlugins = GetDisabledPlugins(pluginsFolder);
             var systemAssembly = typeof(Program).Assembly;
-            LoadPluginsFromAssemblies(systemAssembly, disabledPlugins, loadedPluginIdentifiers, plugins);
+            LoadPluginsFromAssemblies(systemAssembly, disabledPlugins.Keys.ToHashSet(), loadedPluginIdentifiers, plugins);
 
             if (ExecuteCommands(pluginsFolder, plugins.ToDictionary(plugin => plugin.Identifier, plugin => plugin.Version)))
             {
                 plugins.Clear();
-                LoadPluginsFromAssemblies(systemAssembly, disabledPlugins, loadedPluginIdentifiers, plugins);
+                LoadPluginsFromAssemblies(systemAssembly, disabledPlugins.Keys.ToHashSet(), loadedPluginIdentifiers, plugins);
             }
 
             var pluginsToLoad = new List<(string PluginIdentifier, string PluginFilePath)>();
@@ -134,7 +135,7 @@ namespace BTCPayServer.Plugins
                 var pluginFilePath = Path.Combine(directory, pluginIdentifier + ".dll");
                 if (!File.Exists(pluginFilePath))
                     continue;
-                if (disabledPlugins.Contains(pluginIdentifier))
+                if (disabledPlugins.ContainsKey(pluginIdentifier))
                     continue;
                 pluginsToLoad.Add((pluginIdentifier, pluginFilePath));
             }
@@ -287,6 +288,29 @@ namespace BTCPayServer.Plugins
 
             return remainingCommands.Count != pendingCommands.Length;
         }
+        private static Dictionary<string, (Version, IBTCPayServerPlugin.PluginDependency[] Dependencies, bool Disabled)> TryGetInstalledInfo(
+            string pluginsFolder)
+        {
+            var lines = File.Exists(Path.Combine(pluginsFolder, "disabled"))
+                ? File.ReadAllLines(Path.Combine(pluginsFolder, "disabled"))
+                : Array.Empty<string>();
+            
+            var installed = new Dictionary<string, (Version, IBTCPayServerPlugin.PluginDependency[] Dependencies, bool Disabled)>();
+            foreach (string pluginDir in Directory.EnumerateDirectories(pluginsFolder))
+            {
+                var plugin = Path.GetFileName(pluginDir);
+                
+                var dirName = Path.Combine(pluginsFolder, plugin);
+                var manifestFileName = Path.Combine(dirName, plugin + ".json");
+                if (File.Exists(manifestFileName))
+                {
+                    var pluginManifest =  JObject.Parse(File.ReadAllText(manifestFileName)).ToObject<PluginService.AvailablePlugin>();
+                    installed.TryAdd(pluginManifest.Identifier, (pluginManifest.Version, pluginManifest.Dependencies, lines.Contains(plugin)));
+                }
+
+            }
+            return installed;
+        }
 
         private static bool DependenciesMet(string pluginsFolder, string plugin, Dictionary<string, Version> installed)
         {
@@ -425,12 +449,10 @@ namespace BTCPayServer.Plugins
             QueueCommands(pluginDir, ("disable", plugin));
         }
 
-        public static HashSet<string> GetDisabledPlugins(string pluginsFolder)
+        public static Dictionary<string, Version> GetDisabledPlugins(string pluginsFolder)
         {
-            var disabledFilePath = Path.Combine(pluginsFolder, "disabled");
-            return File.Exists(disabledFilePath)
-                ? File.ReadLines(disabledFilePath).ToHashSet()
-                : [];
+            return TryGetInstalledInfo(pluginsFolder).Where(pair => pair.Value.Disabled)
+                .ToDictionary(pair => pair.Key, pair => pair.Value.Item1);
         }
 
         public static bool DependencyMet(IBTCPayServerPlugin.PluginDependency dependency,

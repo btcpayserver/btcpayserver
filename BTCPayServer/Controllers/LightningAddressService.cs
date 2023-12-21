@@ -48,14 +48,9 @@ public class LightningAddressService
     {
         return await _memoryCache.GetOrCreateAsync(GetKey(username), async entry =>
         {
-            var result = await Get(new LightningAddressQuery { Usernames = new[] { username } });
+            var result = await Get(new LightningAddressQuery { Usernames = new[] { NormalizeUsername(username) } });
             return result.FirstOrDefault();
         });
-    }
-
-    private string NormalizeUsername(string username)
-    {
-        return username.ToLowerInvariant();
     }
 
     public async Task<bool> Set(LightningAddressData data)
@@ -115,6 +110,10 @@ public class LightningAddressService
         await context.AddAsync(data);
     }
 
+    private string NormalizeUsername(string username)
+    {
+        return username.ToLowerInvariant();
+    }
 
     private string GetKey(string username)
     {

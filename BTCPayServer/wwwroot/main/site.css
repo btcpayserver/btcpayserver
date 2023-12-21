@@ -27,6 +27,21 @@
     visibility: hidden;
 }
 
+/* Form validation messages should match alert styles */
+.validation-summary-errors {
+    padding: .75rem 1rem;
+    margin-bottom: 1.5rem;
+    color: var(--btcpay-danger-text);
+    background-color: var(--btcpay-danger);
+    border: var(--btcpay-border-width) solid var(--btcpay-danger-border);
+    border-radius: var(--btcpay-border-radius);
+}
+
+.alert > :last-child,
+.validation-summary-errors > :last-child {
+    margin-bottom: 0;
+}
+
 /* General and site-wide Bootstrap modifications */
 p {
     margin-bottom: 1.5rem;

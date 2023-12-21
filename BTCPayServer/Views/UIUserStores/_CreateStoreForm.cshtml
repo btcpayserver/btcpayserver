@@ -1,7 +1,7 @@
 @model BTCPayServer.Models.StoreViewModels.CreateStoreViewModel
 
 <form asp-action="CreateStore">
-    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div asp-validation-summary="ModelOnly"></div>
     <div class="form-group">
         <label asp-for="Name" class="form-label" data-required></label>
         <input asp-for="Name" class="form-control w-300px" required />

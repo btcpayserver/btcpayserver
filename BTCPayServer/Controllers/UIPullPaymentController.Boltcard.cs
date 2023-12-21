@@ -111,7 +111,7 @@ next:
                                     try
                                     {
                                         var version = await _dbContextFactory.LinkBoltcardToPullPayment(pullPaymentId, issuerKey, uid);
-                                        var cardKey = issuerKey.CreateCardKey(uid, version);
+                                        var cardKey = issuerKey.CreatePullPaymentCardKey(uid, version, pullPaymentId);
                                         await ntag.SetupBoltcard(boltcardUrl, BoltcardKeys.Default, cardKey.DeriveBoltcardKeys(issuerKey));
                                     }
                                     catch
@@ -135,7 +135,7 @@ next:
                                 }
                                 else if (cardOrigin is CardOrigin.ThisIssuer thisIssuer)
                                 {
-                                    var cardKey = issuerKey.CreateCardKey(thisIssuer.Registration.UId, thisIssuer.Registration.Version);
+                                    var cardKey = issuerKey.CreatePullPaymentCardKey(thisIssuer.Registration.UId, thisIssuer.Registration.Version, pullPaymentId);
                                     await ntag.ResetCard(issuerKey, cardKey);
                                     await _dbContextFactory.SetBoltcardResetState(issuerKey, thisIssuer.Registration.UId);
                                     await vaultClient.Show(VaultMessageType.Ok, "Card reset succeed", cts.Token);

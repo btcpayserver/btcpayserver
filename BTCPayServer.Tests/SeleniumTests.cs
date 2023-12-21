@@ -2151,7 +2151,7 @@ namespace BTCPayServer.Tests
                 var ppid = lnurl.AbsoluteUri.Split("/").Last();
                 var issuerKey = new IssuerKey(SettingsRepositoryExtensions.FixedKey());
                 var uid = RandomNumberGenerator.GetBytes(7);
-                var cardKey = issuerKey.CreateCardKey(uid, 0);
+                var cardKey = issuerKey.CreatePullPaymentCardKey(uid, 0, ppid);
                 var keys = cardKey.DeriveBoltcardKeys(issuerKey);
                 await db.LinkBoltcardToPullPayment(ppid, issuerKey, uid);
                 var piccData = new byte[] { 0xc7 }.Concat(uid).Concat(new byte[] { 1, 0, 0, 0, 0, 0, 0, 0 }).ToArray();

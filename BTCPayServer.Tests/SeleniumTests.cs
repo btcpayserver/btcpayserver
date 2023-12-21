@@ -2189,6 +2189,10 @@ namespace BTCPayServer.Tests
                 // Relink should bump Version
                 reg = await db.GetBoltcardRegistration(issuerKey, uid);
                 Assert.Equal((ppid, 0, 1), (reg.PullPaymentId, reg.Counter, reg.Version));
+
+                await db.LinkBoltcardToPullPayment(ppid, issuerKey, uid);
+                reg = await db.GetBoltcardRegistration(issuerKey, uid);
+                Assert.Equal((ppid, 0, 2), (reg.PullPaymentId, reg.Counter, reg.Version));
             }
 
             s.GoToStore(s.StoreId, StoreNavPages.PullPayments);

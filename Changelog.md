@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.12.3
+
+### Bug fixes
+
+* Fix: Crashes would happen on some plugins introducing new apps type (#5590) @dennisreimann
+
 ## 1.12.2
 
 ### Bug fixes

@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.12.2
+
+### Bug fixes
+
+*  Plugins: Fix missing uninstall button (#5587) @dennisreimann
+*  Webhooks: Fix invoice interpolation (#5586 #5584) @dennisreimann
+
 ## 1.12.1
 
 Recommended update for users using Boltcard with pull payments or Top-Up invoices.

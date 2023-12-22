@@ -234,56 +234,53 @@
                     </div>
                     @{
                         var pendingAction = Model.Commands.Any(tuple => tuple.plugin.Equals(plugin.Identifier, StringComparison.InvariantCultureIgnoreCase));
-                    }
-                    @if (pendingAction || (updateAvailable && x != null && !DependentOn(plugin.Identifier)))
-                    {
                         var exclusivePendingAction = true;
-                        <div class="card-footer border-0 pb-3 d-flex gap-2">
-                            @if (pendingAction && updateAvailable)
+                    }
+                    <div class="card-footer border-0 pb-3 d-flex gap-2">
+                        @if (pendingAction && updateAvailable)
+                        {
+                            var isUpdateAction = Model.Commands.Last(tuple => tuple.plugin.Equals(plugin.Identifier, StringComparison.InvariantCultureIgnoreCase)).command == "update";
+                            if (isUpdateAction)
                             {
-                                var isUpdateAction = Model.Commands.Last(tuple => tuple.plugin.Equals(plugin.Identifier, StringComparison.InvariantCultureIgnoreCase)).command == "update";
-                                if (isUpdateAction)
-                                {
-                                    var version = PluginService.GetVersionOfPendingInstall(plugin.Identifier);
-                                    exclusivePendingAction = version == x.Version;
-                                }
+                                var version = PluginService.GetVersionOfPendingInstall(plugin.Identifier);
+                                exclusivePendingAction = version == x.Version;
                             }
-                            @if (pendingAction)
+                        }
+                        @if (pendingAction)
+                        {
+                            <form asp-action="CancelPluginCommands" asp-route-plugin="@plugin.Identifier">
+                                <button type="submit" class="btn btn-outline-secondary">Cancel pending action</button>
+                            </form>
+                        }
+                        @if (!pendingAction || !exclusivePendingAction)
+                        {
+                            @if (updateAvailable && x != null)
                             {
-                                <form asp-action="CancelPluginCommands" asp-route-plugin="@plugin.Identifier">
-                                    <button type="submit" class="btn btn-outline-secondary">Cancel pending action</button>
-                                </form>
-                            }
-                            @if(!pendingAction || !exclusivePendingAction)
-                            {
-                                @if (updateAvailable && x != null)
+                                if (PluginManager.DependenciesMet(x.Dependencies, installed))
                                 {
-                                    if (PluginManager.DependenciesMet(x.Dependencies, installed))
-                                    {
-                                        <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" asp-route-version="@x.Version" asp-route-update="true" class="me-3">
-                                            <button type="submit" class="btn btn-secondary">Update</button>
-                                        </form>
-                                    }
-                                    else
-                                    {
-                                        <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" asp-route-version="@x.Version" asp-route-update="true" class="me-3">
-                                            <button title="Schedule upgrade for when the dependencies have been met to ensure a smooth update" data-bs-toggle="tooltip" type="submit" class="btn btn-secondary">Schedule update</button>
-                                        </form>
-                                    }
-                                }
-                                @if (DependentOn(plugin.Identifier))
-                                {
-                                    <button type="button" class="btn btn-outline-danger" data-bs-toggle="tooltip" title="This plugin cannot be uninstalled as it is depended on by other plugins.">Uninstall <span class="fa fa-exclamation"></span></button>
+                                    <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" asp-route-version="@x.Version" asp-route-update="true" class="me-3">
+                                        <button type="submit" class="btn btn-secondary">Update</button>
+                                    </form>
                                 }
                                 else
                                 {
-                                    <form asp-action="UnInstallPlugin" asp-route-plugin="@plugin.Identifier">
-                                        <button type="submit" class="btn btn-outline-danger">Uninstall</button>
+                                    <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" asp-route-version="@x.Version" asp-route-update="true" class="me-3">
+                                        <button title="Schedule upgrade for when the dependencies have been met to ensure a smooth update" data-bs-toggle="tooltip" type="submit" class="btn btn-secondary">Schedule update</button>
                                     </form>
                                 }
                             }
-                        </div>
-                    }
+                            @if (DependentOn(plugin.Identifier))
+                            {
+                                <button type="button" class="btn btn-outline-danger" data-bs-toggle="tooltip" title="This plugin cannot be uninstalled as it is depended on by other plugins.">Uninstall <span class="fa fa-exclamation"></span></button>
+                            }
+                            else
+                            {
+                                <form asp-action="UnInstallPlugin" asp-route-plugin="@plugin.Identifier">
+                                    <button type="submit" class="btn btn-outline-danger">Uninstall</button>
+                                </form>
+                            }
+                        }
+                    </div>
                 </div>
             </div>
         }

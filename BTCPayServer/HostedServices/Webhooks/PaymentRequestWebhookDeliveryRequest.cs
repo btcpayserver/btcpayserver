@@ -37,14 +37,14 @@ public class PaymentRequestWebhookDeliveryRequest : WebhookSender.WebhookDeliver
 
     private string Interpolate(string str, PaymentRequestBaseData blob)
     {
-        var res=  str.Replace("{PaymentRequest.Id}", _evt.Data.Id)
+        var res = str.Replace("{PaymentRequest.Id}", _evt.Data.Id)
             .Replace("{PaymentRequest.Price}", blob.Amount.ToString(CultureInfo.InvariantCulture))
             .Replace("{PaymentRequest.Currency}", blob.Currency)
             .Replace("{PaymentRequest.Title}", blob.Title)
             .Replace("{PaymentRequest.Description}", blob.Description)
             .Replace("{PaymentRequest.Status}", _evt.Data.Status.ToString());
 
-        res= InterpolateJsonField(res, "PaymentRequest.FormResponse", blob.FormResponse);
+        res = InterpolateJsonField(res, "PaymentRequest.FormResponse", blob.FormResponse);
         return res;
     }
 }

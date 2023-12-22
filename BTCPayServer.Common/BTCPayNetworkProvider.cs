@@ -31,18 +31,17 @@ namespace BTCPayServer
             IEnumerable<BTCPayNetworkBase> networks,
             SelectedChains selectedChains,
             NBXplorerNetworkProvider nbxplorerNetworkProvider,
-            Logs logs,
-            IConfiguration configuration)
+            Logs logs)
         {
+            var networksList = networks.ToList();
 #if !ALTCOINS
-            var onlyBTC = networks.Count() == 1 && networks.First().IsBTC;
+            var onlyBTC = networksList.Count == 1 && networksList.First().IsBTC;
             if (!onlyBTC)
-                throw new ConfigException($"This build of BTCPay Server does not support altcoins");
+                throw new ConfigException($"This build of BTCPay Server does not support altcoins. Configured networks: {string.Join(',', networksList.Select(n => n.CryptoCode).ToArray())}");
 #endif
-
             _NBXplorerNetworkProvider = nbxplorerNetworkProvider;
             NetworkType = nbxplorerNetworkProvider.NetworkType;
-            foreach (var network in networks)
+            foreach (var network in networksList)
             {
                 _Networks.Add(network.CryptoCode.ToUpperInvariant(), network);
             }
@@ -53,8 +52,7 @@ namespace BTCPayServer
                     throw new ConfigException($"Invalid chains \"{chain}\"");
             }
 
-            logs.Configuration.LogInformation(
-                "Supported chains: " + String.Join(',', _Networks.Select(n => n.Key).ToArray()));
+            logs.Configuration.LogInformation("Supported chains: {Chains}", string.Join(',', _Networks.Select(n => n.Key).ToArray()));
         }
 
         public BTCPayNetwork BTC => GetNetwork<BTCPayNetwork>("BTC");

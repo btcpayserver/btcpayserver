@@ -298,7 +298,7 @@ namespace BTCPayServer.Plugins
         }
 
         private static bool ExecuteCommand((string command, string extension) command, string pluginsFolder,
-            bool ignoreOrder = false, Dictionary<string, Version> installed = null)
+            bool ignoreOrder, Dictionary<string, Version> installed)
         {
             var dirName = Path.Combine(pluginsFolder, command.extension);
             switch (command.command)
@@ -306,12 +306,12 @@ namespace BTCPayServer.Plugins
                 case "update":
                     if (!DependenciesMet(pluginsFolder, command.extension, installed))
                         return false;
-                    ExecuteCommand(("delete", command.extension), pluginsFolder, true);
-                    ExecuteCommand(("install", command.extension), pluginsFolder, true);
+                    ExecuteCommand(("delete", command.extension), pluginsFolder, true, installed);
+                    ExecuteCommand(("install", command.extension), pluginsFolder, true, installed);
                     break;
 
                 case "delete":
-                    ExecuteCommand(("enable", command.extension), pluginsFolder, true);
+                    ExecuteCommand(("enable", command.extension), pluginsFolder, true, installed);
                     if (File.Exists(dirName))
                     {
                         File.Delete(dirName);
@@ -334,7 +334,7 @@ namespace BTCPayServer.Plugins
                     if (!DependenciesMet(pluginsFolder, command.extension, installed))
                         return false;
 
-                    ExecuteCommand(("enable", command.extension), pluginsFolder, true);
+                    ExecuteCommand(("enable", command.extension), pluginsFolder, true, installed);
                     if (File.Exists(fileName))
                     {
                         ZipFile.ExtractToDirectory(fileName, dirName, true);

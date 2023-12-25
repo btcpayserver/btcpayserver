@@ -23,7 +23,7 @@ public class PayoutWebhookDeliveryRequest(PayoutEvent evt, string? webhookId, We
 
     private string Interpolate(string str)
     {
-        var res=  str.Replace("{Payout.Id}", evt.Payout.Id)
+        var res = str.Replace("{Payout.Id}", evt.Payout.Id)
             .Replace("{Payout.PullPaymentId}", evt.Payout.PullPaymentDataId)
             .Replace("{Payout.Destination}", evt.Payout.Destination)
             .Replace("{Payout.State}", evt.Payout.State.ToString());

@@ -164,7 +164,7 @@ namespace BTCPayServer.Tests
             Assert.Contains("CustomFormInputTest", s.Driver.PageSource);
             s.Driver.FindElement(By.Name("buyerEmail")).SendKeys("aa@aa.com");
             s.Driver.FindElement(By.CssSelector("input[type='submit']")).Click();
-            s.PayInvoice(true);
+            s.PayInvoice(true, 0.001m);
             var result = await s.Server.PayTester.HttpClient.GetAsync(formurl);
             Assert.Equal(HttpStatusCode.NotFound, result.StatusCode);
 
@@ -2151,7 +2151,7 @@ namespace BTCPayServer.Tests
                 var ppid = lnurl.AbsoluteUri.Split("/").Last();
                 var issuerKey = new IssuerKey(SettingsRepositoryExtensions.FixedKey());
                 var uid = RandomNumberGenerator.GetBytes(7);
-                var cardKey = issuerKey.CreateCardKey(uid, 0);
+                var cardKey = issuerKey.CreatePullPaymentCardKey(uid, 0, ppid);
                 var keys = cardKey.DeriveBoltcardKeys(issuerKey);
                 await db.LinkBoltcardToPullPayment(ppid, issuerKey, uid);
                 var piccData = new byte[] { 0xc7 }.Concat(uid).Concat(new byte[] { 1, 0, 0, 0, 0, 0, 0, 0 }).ToArray();
@@ -2189,6 +2189,10 @@ namespace BTCPayServer.Tests
                 // Relink should bump Version
                 reg = await db.GetBoltcardRegistration(issuerKey, uid);
                 Assert.Equal((ppid, 0, 1), (reg.PullPaymentId, reg.Counter, reg.Version));
+
+                await db.LinkBoltcardToPullPayment(ppid, issuerKey, uid);
+                reg = await db.GetBoltcardRegistration(issuerKey, uid);
+                Assert.Equal((ppid, 0, 2), (reg.PullPaymentId, reg.Counter, reg.Version));
             }
 
             s.GoToStore(s.StoreId, StoreNavPages.PullPayments);

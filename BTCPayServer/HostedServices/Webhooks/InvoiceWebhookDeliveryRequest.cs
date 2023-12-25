@@ -1,11 +1,9 @@
-﻿using System;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.Services.Invoices;
-using Newtonsoft.Json.Linq;
 using WebhookDeliveryData = BTCPayServer.Data.WebhookDeliveryData;
 
 namespace BTCPayServer.HostedServices.Webhooks;
@@ -46,7 +44,7 @@ public class InvoiceWebhookDeliveryRequest : WebhookSender.WebhookDeliveryReques
             .Replace("{Invoice.OrderId}", Invoice.Metadata.OrderId);
 
 
-        res = InterpolateJsonField(str, "Invoice.Metadata", Invoice.Metadata.ToJObject());
+        res = InterpolateJsonField(res, "Invoice.Metadata", Invoice.Metadata.ToJObject());
         return res;
     }
     

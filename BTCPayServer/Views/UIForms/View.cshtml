@@ -26,7 +26,7 @@
         <main class="flex-grow-1">
             @if (!ViewContext.ModelState.IsValid)
             {
-                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <div asp-validation-summary="ModelOnly"></div>
             }
             <partial name="_FormTopMessages" model="@Model.Form" />
             <div class="d-flex flex-column justify-content-center gap-4">

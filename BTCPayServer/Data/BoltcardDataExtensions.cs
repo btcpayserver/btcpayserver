@@ -21,7 +21,7 @@ public static class BoltcardDataExtensions
         string onConflict = onExisting switch
         {
             OnExistingBehavior.KeepVersion => "UPDATE SET ppid=excluded.ppid, version=boltcards.version",
-            OnExistingBehavior.UpdateVersion => "UPDATE SET ppid=excluded.ppid, version=excluded.version+1",
+            OnExistingBehavior.UpdateVersion => "UPDATE SET ppid=excluded.ppid, version=boltcards.version+1",
             _ => throw new NotSupportedException()
         };
         return await conn.QueryFirstOrDefaultAsync<int>(

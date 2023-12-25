@@ -373,7 +373,7 @@ namespace BTCPayServer
             if (string.IsNullOrEmpty(username))
                 return NotFound("Unknown username");
             
-            LNURLPayRequest lnurlRequest = null;
+            LNURLPayRequest lnurlRequest;
             
             // Check core and fall back to lookup Lightning Address via plugins
             var lightningAddressSettings = await _lightningAddressService.ResolveByAddress(username);

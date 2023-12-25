@@ -401,11 +401,21 @@ retry:
                 _ => "Template"
             };
             var settings = JObject.Parse(row.settings);
-            var items = JArray.Parse(settings[templatePath]!.Value<string>()!);
+            if (!settings.TryGetValue(templatePath, out var template))
+                return;
+
+            var items = template.Type switch
+            {
+                JTokenType.String => JArray.Parse(template.Value<string>()!),
+                JTokenType.Array => (JArray)template,
+                _ => null
+            };
+            if (items is null)
+                return;
             bool hasChange = false;
             foreach (var change in changes)
             {
-                var item = items.FirstOrDefault(i => i["id"]?.Value<string>() == change.ItemId && i["inventory"] is not null && i["inventory"]!.Type is JTokenType.Integer);
+                var item = items.FirstOrDefault(i => i["id"]?.Value<string>() == change.ItemId && i["inventory"]?.Type is JTokenType.Integer);
                 if (item is null)
                     continue;
                 var inventory = item["inventory"]!.Value<int>();

@@ -45,7 +45,7 @@
         <h1>@ViewData["Title"]</h1>
         <p class="lead text-secondary mt-3">@(displayName ?? "An application") is requesting access to your BTCPay Server account.</p>
     </header>
-    <div asp-validation-summary="All" class="text-danger"></div>
+    <div asp-validation-summary="All"></div>
     
     @if (Model.NeedsStorePermission && store == null)
     {

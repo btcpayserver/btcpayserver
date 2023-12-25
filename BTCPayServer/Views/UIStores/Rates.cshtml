@@ -10,7 +10,7 @@
         <h3 class="mb-3">@ViewData["Title"]</h3>
         @if (!ViewContext.ModelState.IsValid)
         {
-            <div asp-validation-summary="All" class="text-danger"></div>
+            <div asp-validation-summary="All"></div>
         }
         <form method="post">
             <input type="hidden" asp-for="ShowScripting" />

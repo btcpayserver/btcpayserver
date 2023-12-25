@@ -1,5 +1,44 @@
 # Changelog
 
+## 1.12.3
+
+### Bug fixes
+
+* Fix: Crashes would happen on some plugins introducing new apps type (#5590) @dennisreimann
+
+## 1.12.2
+
+### Bug fixes
+
+*  Plugins: Fix missing uninstall button (#5587) @dennisreimann
+*  Webhooks: Fix invoice interpolation (#5586 #5584) @dennisreimann
+
+## 1.12.1
+
+Recommended update for users using Boltcard with pull payments or Top-Up invoices.
+
+Breaking change: Boltcards linked to pull payments in version 1.12.0 are not compatible with version 1.12.1.
+
+# New Features
+
+* A disabled plugin can now be uninstalled in the UI (#5570) @Kukks
+
+### Bug fixes
+
+* Fix: Payments to Top-Up could go undetected due to a race condition (#5568) @NicolasDorier
+* Lightning: Fixed the connection display name in LN settings (#5569) @dennisreimann
+* Prevent redirection to archived store after login (#5566) @dennisreimann
+* Use PullPaymentId to derive the cardkey of a Boltcard (#5575) @NicolasDorier
+* Greenfield: The Link a boltcard to a pull payment route would not generate new keys for the boltcard when onExisting was set to UpdateVersion. @NicolasDorier
+
+### Improvements
+
+* Lightning Address: Use lowercase usernames when resolving (#5579) @dennisreimann
+* UI: Form validation summary now matches alert style (#5576, #5564) @dennisreimann
+* Improved error message in Vault if a hardware device isn't supported @NicolasDorier
+* Lightning: Allow LND to be used with non-admin macaroons (#5567) @dennisreimann
+* Fix in API Documentation: The Link a boltcard to a pull payment had incorrectly documented permissions. @NicolasDorier
+
 ## 1.12.0
 
 ### Noteworthy

@@ -27,7 +27,7 @@
         <div class="col-xl-10 col-xxl-constrain">
             @if (!ViewContext.ModelState.IsValid)
             {
-                <div asp-validation-summary="All" class="text-danger"></div>
+                <div asp-validation-summary="All"></div>
             }
             <div class="form-group">
                 <label asp-for="Settings.Server" class="form-label">SMTP Server</label>

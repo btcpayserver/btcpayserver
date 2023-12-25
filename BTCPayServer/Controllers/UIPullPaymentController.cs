@@ -11,6 +11,7 @@ using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
+using BTCPayServer.Controllers.Greenfield;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Lightning;
@@ -127,11 +128,25 @@ namespace BTCPayServer.Controllers
             
             if (_pullPaymentHostedService.SupportsLNURL(blob))
             {
-                var url = Url.Action("GetLNURLForPullPayment", "UILNURL", new { cryptoCode = _networkProvider.DefaultNetwork.CryptoCode, pullPaymentId = vm.Id }, Request.Scheme, Request.Host.ToString());
+                var url = Url.Action(nameof(UILNURLController.GetLNURLForPullPayment), "UILNURL", new { cryptoCode = _networkProvider.DefaultNetwork.CryptoCode, pullPaymentId = vm.Id }, Request.Scheme, Request.Host.ToString());
                 vm.LnurlEndpoint = url != null ? new Uri(url) : null;
+                vm.SetupDeepLink = $"boltcard://program?url={GetBoltcardDeeplinkUrl(vm, OnExistingBehavior.UpdateVersion)}";
+                vm.ResetDeepLink = $"boltcard://reset?url={GetBoltcardDeeplinkUrl(vm, OnExistingBehavior.KeepVersion)}";
             }
 
             return View(nameof(ViewPullPayment), vm);
+        }
+
+        private string GetBoltcardDeeplinkUrl(ViewPullPaymentModel vm, OnExistingBehavior onExisting)
+        {
+            var registerUrl = Url.Action(nameof(GreenfieldPullPaymentController.RegisterBoltcard), "GreenfieldPullPayment",
+                            new
+                            {
+                                pullPaymentId = vm.Id,
+                                onExisting = onExisting.ToString()
+                            }, Request.Scheme, Request.Host.ToString());
+            registerUrl = Uri.EscapeDataString(registerUrl);
+            return registerUrl;
         }
 
         [HttpGet("stores/{storeId}/pull-payments/edit/{pullPaymentId}")]

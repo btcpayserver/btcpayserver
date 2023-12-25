@@ -202,15 +202,15 @@
             </p>
 			@if (Model.LnurlEndpoint is not null)
 			{
-            <p>
-                <a asp-action="SetupBoltcard" asp-controller="UIPullPayment" asp-route-pullPaymentId="@Model.Id" asp-route-command="configure-boltcard">
-					Setup Boltcard
-                </a>
-                <span>&nbsp;|&nbsp;</span>
-                <a asp-action="SetupBoltcard" asp-controller="UIPullPayment" asp-route-pullPaymentId="@Model.Id" asp-route-command="reset-boltcard">
-                    Reset Boltcard
-                </a>
-            </p>
+				<p>
+					<a id="SetupBoltcard" asp-action="SetupBoltcard" asp-controller="UIPullPayment" asp-route-pullPaymentId="@Model.Id" asp-route-command="configure-boltcard">
+						Setup Boltcard
+					</a>
+					<span>&nbsp;|&nbsp;</span>
+					<a id="ResetBoltcard" asp-action="SetupBoltcard" asp-controller="UIPullPayment" asp-route-pullPaymentId="@Model.Id" asp-route-command="reset-boltcard">
+						Reset Boltcard
+					</a>
+				</p>
 			}
             <a class="store-powered-by" href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">
                 Powered by <partial name="_StoreFooterLogo" />
@@ -226,6 +226,15 @@
     <script src="~/vendor/ur-registry/urlib.min.js" asp-append-version="true"></script>
     <script>
         document.addEventListener("DOMContentLoaded", () => {
+			var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+			if (isMobile) {
+				document.getElementById("SetupBoltcard").setAttribute('target', '_blank');
+				document.getElementById("SetupBoltcard").setAttribute('href', @Safe.Json(@Model.SetupDeepLink));
+				document.getElementById("ResetBoltcard").setAttribute('target', '_blank');
+				document.getElementById("ResetBoltcard").setAttribute('href', @Safe.Json(@Model.ResetDeepLink));
+			}
+
+
             window.qrApp = initQRShow({});
             delegate('click', 'button[page-qr]', event => {
                 qrApp.title = "Pull Payment QR";

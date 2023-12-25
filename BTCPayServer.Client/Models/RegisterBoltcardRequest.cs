@@ -4,6 +4,7 @@ using System.Text;
 using NBitcoin.JsonConverters;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Client.Models
 {
@@ -19,6 +20,8 @@ namespace BTCPayServer.Client.Models
         public byte[] UID { get; set; }
         [JsonConverter(typeof(StringEnumConverter))]
         public OnExistingBehavior? OnExisting { get; set; }
+        [JsonExtensionData]
+        public IDictionary<string, JToken> AdditionalData { get; set; } = new Dictionary<string, JToken>();
     }
     public class RegisterBoltcardResponse
     {

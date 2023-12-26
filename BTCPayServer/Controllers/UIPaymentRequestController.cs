@@ -3,7 +3,9 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
+using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Form;
+using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
@@ -39,6 +41,7 @@ namespace BTCPayServer.Controllers
         private readonly DisplayFormatter _displayFormatter;
         private readonly InvoiceRepository _InvoiceRepository;
         private readonly StoreRepository _storeRepository;
+        private readonly BTCPayNetworkProvider _networkProvider;
 
         private FormComponentProviders FormProviders { get; }
         public FormDataService FormDataService { get; }
@@ -54,7 +57,8 @@ namespace BTCPayServer.Controllers
             StoreRepository storeRepository,
             InvoiceRepository invoiceRepository,
             FormComponentProviders formProviders,
-            FormDataService formDataService)
+            FormDataService formDataService,
+            BTCPayNetworkProvider networkProvider)
         {
             _InvoiceController = invoiceController;
             _UserManager = userManager;
@@ -67,6 +71,7 @@ namespace BTCPayServer.Controllers
             _InvoiceRepository = invoiceRepository;
             FormProviders = formProviders;
             FormDataService = formDataService;
+            _networkProvider = networkProvider;
         }
 
         [HttpGet("/stores/{storeId}/payment-requests")]
@@ -102,17 +107,40 @@ namespace BTCPayServer.Controllers
             return View(model);
         }
 
+        private bool AnyPaymentMethodAvailable(StoreData store)
+        {
+            var storeBlob = store.GetStoreBlob();
+            var excludeFilter = storeBlob.GetExcludedPaymentMethods();
+
+            return store.GetSupportedPaymentMethods(_networkProvider).Where(s => !excludeFilter.Match(s.PaymentId)).Any();
+        }
+
         [HttpGet("/stores/{storeId}/payment-requests/edit/{payReqId?}")]
         [Authorize(Policy = Policies.CanViewPaymentRequests, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> EditPaymentRequest(string storeId, string payReqId)
         {
             var store = GetCurrentStore();
+            if (store == null)
+            {
+                return NotFound();
+            }
             var paymentRequest = GetCurrentPaymentRequest();
             if (paymentRequest == null && !string.IsNullOrEmpty(payReqId))
             {
                 return NotFound();
             }
-            
+            if (!AnyPaymentMethodAvailable(store))
+            {
+                TempData.SetStatusMessageModel(new StatusMessageModel
+                {
+                    Severity = StatusMessageModel.StatusSeverity.Error,
+                    Html = $"To create an invoice, you need to <a href='{Url.Action(nameof(UIStoresController.SetupWallet), "UIStores", new { cryptoCode = _networkProvider.DefaultNetwork.CryptoCode, storeId = store.Id })}' class='alert-link'>set up a wallet</a> first",
+                    AllowDismiss = false
+                });
+                HttpContext.SetStoreData(store);
+                return RedirectToAction(nameof(GetPaymentRequests), new { storeId = store.Id });
+            }
+
             var storeBlob = store.GetStoreBlob();
             var prInvoices = payReqId is null ? null : (await _PaymentRequestService.GetPaymentRequest(payReqId, GetUserId())).Invoices;
             var vm = new UpdatePaymentRequestViewModel(paymentRequest)

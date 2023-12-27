@@ -1161,14 +1161,6 @@ namespace BTCPayServer.Controllers
                 nameof(SelectListItem.Text));
         }
 
-        private bool AnyPaymentMethodAvailable(StoreData store)
-        {
-            var storeBlob = store.GetStoreBlob();
-            var excludeFilter = storeBlob.GetExcludedPaymentMethods();
-
-            return store.GetSupportedPaymentMethods(_NetworkProvider).Where(s => !excludeFilter.Match(s.PaymentId)).Any();
-        }
-
         [HttpGet("/stores/{storeId}/invoices/create")]
         [HttpGet("invoices/create")]
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
@@ -1181,7 +1173,7 @@ namespace BTCPayServer.Controllers
                 if (store == null)
                     return NotFound();
 
-                if (!AnyPaymentMethodAvailable(store))
+                if (store.AnyPaymentMethodAvailable(_NetworkProvider))
                 {
                     TempData.SetStatusMessageModel(new StatusMessageModel
                     {
@@ -1190,7 +1182,6 @@ namespace BTCPayServer.Controllers
                         AllowDismiss = false
                     });
                 }
-
                 HttpContext.SetStoreData(store);
             }
             else
@@ -1239,8 +1230,7 @@ namespace BTCPayServer.Controllers
             {
                 return View(model);
             }
-
-            if (!AnyPaymentMethodAvailable(store))
+            if (!store.AnyPaymentMethodAvailable(_NetworkProvider))
             {
                 TempData.SetStatusMessageModel(new StatusMessageModel
                 {
@@ -1250,7 +1240,6 @@ namespace BTCPayServer.Controllers
                 });
                 return View(model);
             }
-
             try
             {
                 var metadata = metadataObj is null ? new InvoiceMetadata() : InvoiceMetadata.FromJObject(metadataObj);

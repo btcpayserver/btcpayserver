@@ -107,14 +107,6 @@ namespace BTCPayServer.Controllers
             return View(model);
         }
 
-        private bool AnyPaymentMethodAvailable(StoreData store)
-        {
-            var storeBlob = store.GetStoreBlob();
-            var excludeFilter = storeBlob.GetExcludedPaymentMethods();
-
-            return store.GetSupportedPaymentMethods(_networkProvider).Where(s => !excludeFilter.Match(s.PaymentId)).Any();
-        }
-
         [HttpGet("/stores/{storeId}/payment-requests/edit/{payReqId?}")]
         [Authorize(Policy = Policies.CanViewPaymentRequests, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> EditPaymentRequest(string storeId, string payReqId)
@@ -129,7 +121,7 @@ namespace BTCPayServer.Controllers
             {
                 return NotFound();
             }
-            if (!AnyPaymentMethodAvailable(store))
+            if (!store.AnyPaymentMethodAvailable(_networkProvider))
             {
                 TempData.SetStatusMessageModel(new StatusMessageModel
                 {

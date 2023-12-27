@@ -4,8 +4,10 @@ function confirmCopy(el, message) {
     if (hasIcon) {
         el.innerHTML = el.innerHTML.replace('#copy', '#checkmark');
     } else {
+        const { width, height } = el.getBoundingClientRect();
         el.dataset.clipboardInitial = el.innerHTML;
-        el.style.minWidth = el.getBoundingClientRect().width + 'px';
+        el.style.minWidth = width + 'px';
+        el.style.minHeight = height + 'px';
         el.innerHTML = confirmHTML;
     }
     el.dataset.clipboardConfirming = true;
@@ -28,7 +30,7 @@ window.copyToClipboard = async function (e, data) {
     e.preventDefault();
     const item = e.target.closest('[data-clipboard]') || e.target.closest('[data-clipboard-target]') || e.target;
     const confirm = item.dataset.clipboardConfirmElement
-        ? document.getElementById(item.dataset.clipboardConfirmElement) || item
+        ? document.querySelector(item.dataset.clipboardConfirmElement) || item
         : item.querySelector('[data-clipboard-confirm]') || item;
     const message = confirm.getAttribute('data-clipboard-confirm') || 'Copied';
     // Check compatibility and permissions:

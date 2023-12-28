@@ -1161,6 +1161,16 @@ namespace BTCPayServer.Controllers
                 nameof(SelectListItem.Text));
         }
 
+        private void SetStatusMessage(StoreData store)
+        {
+            TempData.SetStatusMessageModel(new StatusMessageModel
+            {
+                Severity = StatusMessageModel.StatusSeverity.Error,
+                Html = $"To create an invoice, you need to <a href='{Url.Action(nameof(UIStoresController.SetupWallet), "UIStores", new { cryptoCode = _NetworkProvider.DefaultNetwork.CryptoCode, storeId = store.Id })}' class='alert-link'>set up a wallet</a> first",
+                AllowDismiss = false
+            });
+        }
+
         [HttpGet("/stores/{storeId}/invoices/create")]
         [HttpGet("invoices/create")]
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
@@ -1172,15 +1182,9 @@ namespace BTCPayServer.Controllers
                 var store = await _StoreRepository.FindStore(model.StoreId, GetUserId());
                 if (store == null)
                     return NotFound();
-
                 if (!store.AnyPaymentMethodAvailable(_NetworkProvider))
                 {
-                    TempData.SetStatusMessageModel(new StatusMessageModel
-                    {
-                        Severity = StatusMessageModel.StatusSeverity.Error,
-                        Html = $"To create an invoice, you need to <a href='{Url.Action(nameof(UIStoresController.SetupWallet), "UIStores", new { cryptoCode = _NetworkProvider.DefaultNetwork.CryptoCode, storeId = store.Id })}' class='alert-link'>set up a wallet</a> first",
-                        AllowDismiss = false
-                    });
+                    SetStatusMessage(store);
                 }
                 HttpContext.SetStoreData(store);
             }
@@ -1232,12 +1236,7 @@ namespace BTCPayServer.Controllers
             }
             if (!store.AnyPaymentMethodAvailable(_NetworkProvider))
             {
-                TempData.SetStatusMessageModel(new StatusMessageModel
-                {
-                    Severity = StatusMessageModel.StatusSeverity.Error,
-                    Html = $"To create an invoice, you need to <a href='{Url.Action(nameof(UIStoresController.SetupWallet), "UIStores", new { cryptoCode = _NetworkProvider.DefaultNetwork.CryptoCode, storeId = store.Id })}' class='alert-link'>set up a wallet</a> first",
-                    AllowDismiss = false
-                });
+                SetStatusMessage(store);
                 return View(model);
             }
             try

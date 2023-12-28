@@ -1199,7 +1199,6 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("StoreNav-PaymentRequests")).Click();
             s.Driver.FindElement(By.Id("CreatePaymentRequest")).Click();
             // Should give us an error message if we try to create an invoice before adding a wallet
-            var rr = s.Driver.PageSource;
             Assert.Contains("To create an invoice, you need to", s.Driver.PageSource);
             s.AddDerivationScheme();
             s.Driver.FindElement(By.Id("StoreNav-PaymentRequests")).Click();

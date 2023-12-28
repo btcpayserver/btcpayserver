@@ -1173,7 +1173,7 @@ namespace BTCPayServer.Controllers
                 if (store == null)
                     return NotFound();
 
-                if (store.AnyPaymentMethodAvailable(_NetworkProvider))
+                if (!store.AnyPaymentMethodAvailable(_NetworkProvider))
                 {
                     TempData.SetStatusMessageModel(new StatusMessageModel
                     {

@@ -565,9 +565,11 @@ namespace BTCPayServer.Tests
             s.RegisterNewUser(true);
             s.CreateNewStore();
             s.GoToInvoices();
-            s.Driver.FindElement(By.Id("CreateNewInvoice")).Click();
+
             // Should give us an error message if we try to create an invoice before adding a wallet
+            s.Driver.FindElement(By.Id("CreateNewInvoice")).Click();
             Assert.Contains("To create an invoice, you need to", s.Driver.PageSource);
+
             s.AddDerivationScheme();
             s.GoToInvoices();
             s.CreateInvoice();
@@ -1195,11 +1197,12 @@ namespace BTCPayServer.Tests
             await s.StartAsync();
             s.RegisterNewUser();
             s.CreateNewStore();
-
             s.Driver.FindElement(By.Id("StoreNav-PaymentRequests")).Click();
+            
+            // Should give us an error message if we try to create a payment request before adding a wallet
             s.Driver.FindElement(By.Id("CreatePaymentRequest")).Click();
-            // Should give us an error message if we try to create an invoice before adding a wallet
-            Assert.Contains("To create an invoice, you need to", s.Driver.PageSource);
+            Assert.Contains("To create a payment request, you need to", s.Driver.PageSource);
+
             s.AddDerivationScheme();
             s.Driver.FindElement(By.Id("StoreNav-PaymentRequests")).Click();
             s.Driver.FindElement(By.Id("CreatePaymentRequest")).Click();

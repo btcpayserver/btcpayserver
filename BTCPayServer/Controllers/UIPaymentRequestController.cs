@@ -1,5 +1,4 @@
 using System;
-using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -108,22 +107,6 @@ namespace BTCPayServer.Controllers
             return View(model);
         }
 
-        private IActionResult ValidateStoreHasWallet(StoreData store)
-        {
-            if (!store.AnyPaymentMethodAvailable(_networkProvider))
-            {
-                TempData.SetStatusMessageModel(new StatusMessageModel
-                {
-                    Severity = StatusMessageModel.StatusSeverity.Error,
-                    Html = $"To create an invoice, you need to <a href='{Url.Action(nameof(UIStoresController.SetupWallet), "UIStores", new { cryptoCode = _networkProvider.DefaultNetwork.CryptoCode, storeId = store.Id })}' class='alert-link'>set up a wallet</a> first",
-                    AllowDismiss = false
-                });
-                HttpContext.SetStoreData(store);
-                return RedirectToAction(nameof(GetPaymentRequests), new { storeId = store.Id });
-            }
-            return Ok();
-        }
-
         [HttpGet("/stores/{storeId}/payment-requests/edit/{payReqId?}")]
         [Authorize(Policy = Policies.CanViewPaymentRequests, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> EditPaymentRequest(string storeId, string payReqId)
@@ -138,10 +121,9 @@ namespace BTCPayServer.Controllers
             {
                 return NotFound();
             }
-            var hasWalletResponse = ValidateStoreHasWallet(store);
-            if (!(hasWalletResponse is OkResult))
+            if (!store.AnyPaymentMethodAvailable(_networkProvider))
             {
-                return hasWalletResponse;
+                return NoPaymentMethodResult(storeId);
             }
 
             var storeBlob = store.GetStoreBlob();
@@ -174,11 +156,11 @@ namespace BTCPayServer.Controllers
             {
                 return NotFound();
             }
-            var hasWalletResponse = ValidateStoreHasWallet(store);
-            if (!(hasWalletResponse is OkResult))
+            if (!store.AnyPaymentMethodAvailable(_networkProvider))
             {
-                return hasWalletResponse;
+                return NoPaymentMethodResult(store.Id);
             }
+            
             if (paymentRequest?.Archived is true && viewModel.Archived)
             {
                 ModelState.AddModelError(string.Empty, "You cannot edit an archived payment request.");
@@ -476,5 +458,16 @@ namespace BTCPayServer.Controllers
         private StoreData GetCurrentStore() => HttpContext.GetStoreData();
 
         private PaymentRequestData GetCurrentPaymentRequest() => HttpContext.GetPaymentRequestData();
+
+        private IActionResult NoPaymentMethodResult(string storeId)
+        {
+            TempData.SetStatusMessageModel(new StatusMessageModel
+            {
+                Severity = StatusMessageModel.StatusSeverity.Error,
+                Html = $"To create a payment request, you need to <a href='{Url.Action(nameof(UIStoresController.SetupWallet), "UIStores", new { cryptoCode = _networkProvider.DefaultNetwork.CryptoCode, storeId })}' class='alert-link'>set up a wallet</a> first",
+                AllowDismiss = false
+            });
+            return RedirectToAction(nameof(GetPaymentRequests), new { storeId });
+        }
     }
 }

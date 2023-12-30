@@ -129,7 +129,7 @@
             <fieldset id="tips" class="mt-2">
                 <legend class="h5 mb-3 fw-semibold">Tips</legend>
                 <div class="form-group d-flex align-items-center pt-2">
-                    <input asp-for="EnableTips" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#CustomTipsSettings" aria-expanded="@Model.EnableTips" aria-controls="CustomTipsSettings" />
+                    <input asp-for="EnableTips" type="checkbox" id="EnableTipsCheckbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#CustomTipsSettings" aria-expanded="@Model.EnableTips" aria-controls="CustomTipsSettings" />
                     <label asp-for="EnableTips" class="form-label mb-0"></label>
                     <span asp-validation-for="EnableTips" class="text-danger"></span>
                 </div>
@@ -149,7 +149,7 @@
             <fieldset id="discounts" class="mt-2">
                 <legend class="h5 mb-3 fw-semibold">Discounts</legend>
                 <div class="form-group d-flex align-items-center">
-                    <input asp-for="ShowDiscount" type="checkbox" class="btcpay-toggle me-3" />
+                    <input asp-for="ShowDiscount" type="checkbox" id="EnableDiscountCheckbox" class="btcpay-toggle me-3" />
                     <div>
                         <label asp-for="ShowDiscount" class="form-label mb-0"></label>
                         <div class="text-muted">Not recommended for customer self-checkout.</div>

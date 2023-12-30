@@ -2320,7 +2320,7 @@ namespace BTCPayServer.Tests
         [Fact]
         [Trait("Selenium", "Selenium")]
         [Trait("Lightning", "Lightning")]
-        public async Task VerifyDefaultTipAndDiscountPosStateAndToggleFeatures()
+        public async Task CanUsePOSKeypad()
         {
             using var s = CreateSeleniumTester();
             s.Server.ActivateLightning();
@@ -2337,15 +2337,14 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.CssSelector("label[for='DefaultView_Light']")).Click();
             s.Driver.FindElement(By.Id("Currency")).SendKeys("EUR");
 
-            Assert.False(s.Driver.FindElement(By.Id("EnableTipsCheckbox")).Selected);
-            s.Driver.FindElement(By.Id("EnableTipsCheckbox")).Click();
-            Assert.True(s.Driver.FindElement(By.Id("EnableTipsCheckbox")).Selected);
+            Assert.False(s.Driver.FindElement(By.Id("EnableTips")).Selected);
+            s.Driver.FindElement(By.Id("EnableTips")).Click();
+            Assert.True(s.Driver.FindElement(By.Id("EnableTips")).Selected);
             Thread.Sleep(250);
-            Assert.False(s.Driver.FindElement(By.Id("EnableDiscountCheckbox")).Selected);
-            s.Driver.FindElement(By.Id("EnableDiscountCheckbox")).Click();
-            Assert.True(s.Driver.FindElement(By.Id("EnableDiscountCheckbox")).Selected);
             s.Driver.FindElement(By.Id("CustomTipPercentages")).Clear();
             s.Driver.FindElement(By.Id("CustomTipPercentages")).SendKeys("10,21");
+            Assert.False(s.Driver.FindElement(By.Id("ShowDiscount")).Selected);
+            s.Driver.FindElement(By.Id("ShowDiscount")).Click();
             s.Driver.FindElement(By.Id("SaveSettings")).Click();
             Assert.Contains("App updated", s.FindAlertMessage().Text);
             s.Driver.FindElement(By.Id("ViewApp")).Click();
@@ -2405,63 +2404,6 @@ namespace BTCPayServer.Tests
         [Fact]
         [Trait("Selenium", "Selenium")]
         [Trait("Lightning", "Lightning")]
-        public async Task CanUsePOSKeypad()
-        {
-            using var s = CreateSeleniumTester();
-            s.Server.ActivateLightning();
-            await s.StartAsync();
-            await s.Server.EnsureChannelsSetup();
-
-            s.RegisterNewUser(true);
-            s.CreateNewStore();
-            s.GoToStore();
-            s.AddLightningNode(LightningConnectionType.CLightning, false);
-            s.Driver.FindElement(By.Id("StoreNav-CreatePointOfSale")).Click();
-            s.Driver.FindElement(By.Id("AppName")).SendKeys(Guid.NewGuid().ToString());
-            s.Driver.FindElement(By.Id("Create")).Click();
-            TestUtils.Eventually(() => Assert.Contains("App successfully created", s.FindAlertMessage().Text));
-            s.Driver.FindElement(By.CssSelector("label[for='DefaultView_Light']")).Click();
-            s.Driver.FindElement(By.Id("Currency")).SendKeys("EUR");
-            s.Driver.FindElement(By.Id("SaveSettings")).Click();
-            Assert.Contains("App updated", s.FindAlertMessage().Text);
-            s.Driver.FindElement(By.Id("ViewApp")).Click();
-            var windows = s.Driver.WindowHandles;
-            Assert.Equal(2, windows.Count);
-            s.Driver.SwitchTo().Window(windows[1]);
-            s.Driver.WaitForElement(By.ClassName("keypad"));
-            
-            // basic checks
-            Assert.Contains("EUR", s.Driver.FindElement(By.Id("Currency")).Text);
-            Assert.Contains("0,00", s.Driver.FindElement(By.Id("Amount")).Text);
-            Assert.Equal("", s.Driver.FindElement(By.Id("Calculation")).Text);
-            
-            // Amount: 1234,56
-            s.Driver.FindElement(By.CssSelector(".keypad [data-key='1']")).Click();
-            s.Driver.FindElement(By.CssSelector(".keypad [data-key='2']")).Click();
-            s.Driver.FindElement(By.CssSelector(".keypad [data-key='3']")).Click();
-            s.Driver.FindElement(By.CssSelector(".keypad [data-key='4']")).Click();
-            s.Driver.FindElement(By.CssSelector(".keypad [data-key='0']")).Click();
-            s.Driver.FindElement(By.CssSelector(".keypad [data-key='0']")).Click();
-            Assert.Equal("1.234,00", s.Driver.FindElement(By.Id("Amount")).Text);
-            Assert.Equal("", s.Driver.FindElement(By.Id("Calculation")).Text);
-            s.Driver.FindElement(By.CssSelector(".keypad [data-key='+']")).Click();
-            s.Driver.FindElement(By.CssSelector(".keypad [data-key='5']")).Click();
-            s.Driver.FindElement(By.CssSelector(".keypad [data-key='6']")).Click();
-            Assert.Equal("1.234,56", s.Driver.FindElement(By.Id("Amount")).Text);
-            Assert.Equal("1.234,00 € + 0,56 €", s.Driver.FindElement(By.Id("Calculation")).Text);
-
-            // Pay
-            s.Driver.FindElement(By.Id("pay-button")).Click();
-            s.Driver.WaitUntilAvailable(By.Id("Checkout-v2"));
-            s.Driver.FindElement(By.Id("DetailsToggle")).Click();
-            s.Driver.WaitForElement(By.Id("PaymentDetails-TotalFiat"));
-            Assert.Contains("1 234,56 €", s.Driver.FindElement(By.Id("PaymentDetails-TotalFiat")).Text);
-
-        }
-
-        [Fact]
-        [Trait("Selenium", "Selenium")]
-        [Trait("Lightning", "Lightning")]
         public async Task CanUsePOSCart()
         {
             using var s = CreateSeleniumTester();
@@ -2479,6 +2421,14 @@ namespace BTCPayServer.Tests
             Assert.Contains("App successfully created", s.FindAlertMessage().Text);
             s.Driver.FindElement(By.CssSelector("label[for='DefaultView_Cart']")).Click();
             s.Driver.FindElement(By.Id("Currency")).SendKeys("EUR");
+            Assert.False(s.Driver.FindElement(By.Id("EnableTips")).Selected);
+            s.Driver.FindElement(By.Id("EnableTips")).Click();
+            Assert.True(s.Driver.FindElement(By.Id("EnableTips")).Selected);
+            Thread.Sleep(250);
+            s.Driver.FindElement(By.Id("CustomTipPercentages")).Clear();
+            s.Driver.FindElement(By.Id("CustomTipPercentages")).SendKeys("10,21");
+            Assert.False(s.Driver.FindElement(By.Id("ShowDiscount")).Selected);
+            s.Driver.FindElement(By.Id("ShowDiscount")).Click();
             s.Driver.FindElement(By.Id("SaveSettings")).Click();
             Assert.Contains("App updated", s.FindAlertMessage().Text);
             s.Driver.FindElement(By.Id("ViewApp")).Click();
@@ -2546,12 +2496,24 @@ namespace BTCPayServer.Tests
             Assert.Equal(7, s.Driver.FindElements(By.CssSelector("#CartItems tr")).Count);
             Assert.Equal("10,00 €", s.Driver.FindElement(By.Id("CartTotal")).Text);
 
+            // Discount: 10%
+            s.Driver.ElementDoesNotExist(By.Id("CartDiscount"));
+            s.Driver.FindElement(By.Id("Discount")).SendKeys("10");
+            Assert.Contains("10% = 1,00 €", s.Driver.FindElement(By.Id("CartDiscount")).Text);
+            Assert.Equal("9,00 €", s.Driver.FindElement(By.Id("CartTotal")).Text);
+
+            // Tip: 10%
+            s.Driver.ElementDoesNotExist(By.Id("CartTip"));
+            s.Driver.FindElement(By.Id("Tip-10")).Click();
+            Assert.Contains("10% = 0,90 €", s.Driver.FindElement(By.Id("CartTip")).Text);
+            Assert.Equal("9,90 €", s.Driver.FindElement(By.Id("CartTotal")).Text);
+
             // Check values on checkout page
             s.Driver.FindElement(By.Id("CartSubmit")).Click();
             s.Driver.WaitUntilAvailable(By.Id("Checkout-v2"));
             s.Driver.FindElement(By.Id("DetailsToggle")).Click();
             s.Driver.WaitForElement(By.Id("PaymentDetails-TotalFiat"));
-            Assert.Contains("10,00 €", s.Driver.FindElement(By.Id("PaymentDetails-TotalFiat")).Text);
+            Assert.Contains("9,90 €", s.Driver.FindElement(By.Id("PaymentDetails-TotalFiat")).Text);
 
             // Pay
             s.PayInvoice();

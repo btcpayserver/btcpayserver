@@ -27,10 +27,10 @@ namespace BTCPayServer.Client.Models
         [JsonConverter(typeof(StringEnumConverter))]
         public PosViewType DefaultView { get; set; }
         public bool ShowCustomAmount { get; set; } = false;
-        public bool ShowDiscount { get; set; } = true;
+        public bool ShowDiscount { get; set; } = false;
         public bool ShowSearch { get; set; } = true;
         public bool ShowCategories { get; set; } = true;
-        public bool EnableTips { get; set; } = true;
+        public bool EnableTips { get; set; } = false;
         public string CustomAmountPayButtonText { get; set; } = null;
         public string FixedAmountPayButtonText { get; set; } = null;
         public string TipText { get; set; } = null;

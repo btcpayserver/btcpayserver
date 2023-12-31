@@ -2326,7 +2326,6 @@ namespace BTCPayServer.Tests
             s.Server.ActivateLightning();
             await s.StartAsync();
             await s.Server.EnsureChannelsSetup();
-
             s.RegisterNewUser(true);
             s.CreateNewStore();
             s.GoToStore();
@@ -2337,8 +2336,15 @@ namespace BTCPayServer.Tests
             TestUtils.Eventually(() => Assert.Contains("App successfully created", s.FindAlertMessage().Text));
             s.Driver.FindElement(By.CssSelector("label[for='DefaultView_Light']")).Click();
             s.Driver.FindElement(By.Id("Currency")).SendKeys("EUR");
+
+            Assert.False(s.Driver.FindElement(By.Id("EnableTips")).Selected);
+            s.Driver.FindElement(By.Id("EnableTips")).Click();
+            Assert.True(s.Driver.FindElement(By.Id("EnableTips")).Selected);
+            Thread.Sleep(250);
             s.Driver.FindElement(By.Id("CustomTipPercentages")).Clear();
             s.Driver.FindElement(By.Id("CustomTipPercentages")).SendKeys("10,21");
+            Assert.False(s.Driver.FindElement(By.Id("ShowDiscount")).Selected);
+            s.Driver.FindElement(By.Id("ShowDiscount")).Click();
             s.Driver.FindElement(By.Id("SaveSettings")).Click();
             Assert.Contains("App updated", s.FindAlertMessage().Text);
             s.Driver.FindElement(By.Id("ViewApp")).Click();
@@ -2346,7 +2352,7 @@ namespace BTCPayServer.Tests
             Assert.Equal(2, windows.Count);
             s.Driver.SwitchTo().Window(windows[1]);
             s.Driver.WaitForElement(By.ClassName("keypad"));
-            
+
             // basic checks
             Assert.Contains("EUR", s.Driver.FindElement(By.Id("Currency")).Text);
             Assert.Contains("0,00", s.Driver.FindElement(By.Id("Amount")).Text);
@@ -2354,7 +2360,7 @@ namespace BTCPayServer.Tests
             Assert.True(s.Driver.FindElement(By.Id("ModeTablist-amounts")).Selected);
             Assert.False(s.Driver.FindElement(By.Id("ModeTablist-discount")).Enabled);
             Assert.False(s.Driver.FindElement(By.Id("ModeTablist-tip")).Enabled);
-            
+
             // Amount: 1234,56
             s.Driver.FindElement(By.CssSelector(".keypad [data-key='1']")).Click();
             s.Driver.FindElement(By.CssSelector(".keypad [data-key='2']")).Click();
@@ -2371,7 +2377,7 @@ namespace BTCPayServer.Tests
             Assert.True(s.Driver.FindElement(By.Id("ModeTablist-discount")).Enabled);
             Assert.True(s.Driver.FindElement(By.Id("ModeTablist-tip")).Enabled);
             Assert.Equal("1.234,00 € + 0,56 €", s.Driver.FindElement(By.Id("Calculation")).Text);
-            
+
             // Discount: 10%
             s.Driver.FindElement(By.CssSelector("label[for='ModeTablist-discount']")).Click();
             s.Driver.FindElement(By.CssSelector(".keypad [data-key='1']")).Click();
@@ -2379,14 +2385,14 @@ namespace BTCPayServer.Tests
             Assert.Contains("1.111,10", s.Driver.FindElement(By.Id("Amount")).Text);
             Assert.Contains("10% discount", s.Driver.FindElement(By.Id("Discount")).Text);
             Assert.Contains("1.234,00 € + 0,56 € - 123,46 € (10%)", s.Driver.FindElement(By.Id("Calculation")).Text);
-            
+
             // Tip: 10%
             s.Driver.FindElement(By.CssSelector("label[for='ModeTablist-tip']")).Click();
             s.Driver.WaitForElement(By.Id("Tip-Custom"));
             s.Driver.FindElement(By.Id("Tip-10")).Click();
             Assert.Contains("1.222,21", s.Driver.FindElement(By.Id("Amount")).Text);
             Assert.Contains("1.234,00 € + 0,56 € - 123,46 € (10%) + 111,11 € (10%)", s.Driver.FindElement(By.Id("Calculation")).Text);
-            
+
             // Pay
             s.Driver.FindElement(By.Id("pay-button")).Click();
             s.Driver.WaitUntilAvailable(By.Id("Checkout-v2"));
@@ -2415,8 +2421,14 @@ namespace BTCPayServer.Tests
             Assert.Contains("App successfully created", s.FindAlertMessage().Text);
             s.Driver.FindElement(By.CssSelector("label[for='DefaultView_Cart']")).Click();
             s.Driver.FindElement(By.Id("Currency")).SendKeys("EUR");
+            Assert.False(s.Driver.FindElement(By.Id("EnableTips")).Selected);
+            s.Driver.FindElement(By.Id("EnableTips")).Click();
+            Assert.True(s.Driver.FindElement(By.Id("EnableTips")).Selected);
+            Thread.Sleep(250);
             s.Driver.FindElement(By.Id("CustomTipPercentages")).Clear();
             s.Driver.FindElement(By.Id("CustomTipPercentages")).SendKeys("10,21");
+            Assert.False(s.Driver.FindElement(By.Id("ShowDiscount")).Selected);
+            s.Driver.FindElement(By.Id("ShowDiscount")).Click();
             s.Driver.FindElement(By.Id("SaveSettings")).Click();
             Assert.Contains("App updated", s.FindAlertMessage().Text);
             s.Driver.FindElement(By.Id("ViewApp")).Click();
@@ -2483,19 +2495,19 @@ namespace BTCPayServer.Tests
             Thread.Sleep(250);
             Assert.Equal(7, s.Driver.FindElements(By.CssSelector("#CartItems tr")).Count);
             Assert.Equal("10,00 €", s.Driver.FindElement(By.Id("CartTotal")).Text);
-            
+
             // Discount: 10%
             s.Driver.ElementDoesNotExist(By.Id("CartDiscount"));
             s.Driver.FindElement(By.Id("Discount")).SendKeys("10");
             Assert.Contains("10% = 1,00 €", s.Driver.FindElement(By.Id("CartDiscount")).Text);
             Assert.Equal("9,00 €", s.Driver.FindElement(By.Id("CartTotal")).Text);
-            
+
             // Tip: 10%
             s.Driver.ElementDoesNotExist(By.Id("CartTip"));
             s.Driver.FindElement(By.Id("Tip-10")).Click();
             Assert.Contains("10% = 0,90 €", s.Driver.FindElement(By.Id("CartTip")).Text);
             Assert.Equal("9,90 €", s.Driver.FindElement(By.Id("CartTotal")).Text);
-            
+
             // Check values on checkout page
             s.Driver.FindElement(By.Id("CartSubmit")).Click();
             s.Driver.WaitUntilAvailable(By.Id("Checkout-v2"));

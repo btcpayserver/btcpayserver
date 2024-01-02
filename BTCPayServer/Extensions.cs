@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Globalization;
@@ -9,6 +10,7 @@ using System.Net.WebSockets;
 using System.Reflection;
 using System.Security.Claims;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.BIP78.Sender;
@@ -16,7 +18,6 @@ using BTCPayServer.Configuration;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Lightning;
-using BTCPayServer.Logging;
 using BTCPayServer.Models;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.NTag424;
@@ -30,10 +31,10 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using NBitcoin;
+using NBitcoin.DataEncoders;
 using NBitcoin.Payment;
-using NBitpayClient;
+using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
 using Newtonsoft.Json;
 using InvoiceCryptoInfo = BTCPayServer.Services.Invoices.InvoiceCryptoInfo;
@@ -42,6 +43,103 @@ namespace BTCPayServer
 {
     public static class Extensions
     {
+
+        private static readonly ConcurrentDictionary<BTCPayNetwork, DerivationSchemeParser> _derivationSchemeParsers =
+            new();
+
+        public static DerivationSchemeParser GetDerivationSchemeParser(this BTCPayNetwork network)
+        {
+            return _derivationSchemeParsers.GetOrAdd(network, n => new DerivationSchemeParser(n));
+        }
+
+        public static bool TryParseFromWalletFile(this IEnumerable<OnChainWalletParser> parsers, string fileContents,
+            BTCPayNetwork network, out DerivationSchemeSettings settings, out string error)
+        {
+            settings = null;
+            error = null;
+            ArgumentNullException.ThrowIfNull(fileContents);
+            ArgumentNullException.ThrowIfNull(network);
+            if (HexEncoder.IsWellFormed(fileContents))
+            {
+                fileContents = Encoding.UTF8.GetString(Encoders.Hex.DecodeData(fileContents));
+            }
+
+            foreach (OnChainWalletParser onChainWalletParser in parsers)
+            {
+                var result = onChainWalletParser.TryParse(network, fileContents);
+                if (result.DerivationSchemeSettings is not null)
+                {
+                    settings = result.DerivationSchemeSettings;
+                    error = null;
+                    return true;
+                }
+
+                if (result.Error is not null)
+                {
+                    error = result.Error;
+                }
+            }
+
+            return false;
+        }
+
+
+        public static bool TryParseXpub(this DerivationSchemeParser derivationSchemeParser, string xpub,
+            ref DerivationSchemeSettings derivationSchemeSettings, out string error)
+        {
+            try
+            {
+                // Extract fingerprint and account key path from export formats that contain them.
+                // Possible formats: [fingerprint/account_key_path]xpub, [fingerprint]xpub, xpub
+                HDFingerprint? rootFingerprint = null;
+                KeyPath accountKeyPath = null;
+                var derivationRegex = new Regex(@"^(?:\[(\w+)(?:\/(.*?))?\])?(\w+)$", RegexOptions.IgnoreCase);
+                var match = derivationRegex.Match(xpub.Trim());
+                if (match.Success)
+                {
+                    if (!string.IsNullOrEmpty(match.Groups[1].Value))
+                        rootFingerprint = HDFingerprint.Parse(match.Groups[1].Value);
+                    if (!string.IsNullOrEmpty(match.Groups[2].Value))
+                        accountKeyPath = KeyPath.Parse(match.Groups[2].Value);
+                    if (!string.IsNullOrEmpty(match.Groups[3].Value))
+                        xpub = match.Groups[3].Value;
+                }
+
+                derivationSchemeSettings.AccountOriginal = xpub.Trim();
+                derivationSchemeSettings.AccountDerivation =
+                    derivationSchemeParser.Parse(derivationSchemeSettings.AccountOriginal, false, false, false);
+                derivationSchemeSettings.AccountKeySettings = derivationSchemeSettings.AccountDerivation.GetExtPubKeys()
+                    .Select(key => new AccountKeySettings {AccountKey = key.GetWif(derivationSchemeParser.Network)})
+                    .ToArray();
+                if (derivationSchemeSettings.AccountDerivation is DirectDerivationStrategy direct && !direct.Segwit)
+                    derivationSchemeSettings.AccountOriginal =
+                        null; // Saving this would be confusing for user, as xpub of electrum is legacy derivation, but for btcpay, it is segwit derivation
+                // apply initial matches if there were no results from parsing
+                if (rootFingerprint != null && derivationSchemeSettings.AccountKeySettings[0].RootFingerprint == null)
+                {
+                    derivationSchemeSettings.AccountKeySettings[0].RootFingerprint = rootFingerprint;
+                }
+
+                if (accountKeyPath != null && derivationSchemeSettings.AccountKeySettings[0].AccountKeyPath == null)
+                {
+                    derivationSchemeSettings.AccountKeySettings[0].AccountKeyPath = accountKeyPath;
+                }
+
+                error = null;
+                return true;
+            }
+            catch (Exception exception)
+            {
+                error = exception.Message;
+                return false;
+            }
+        }
+        
+        public static bool IsOutputDescriptor( string data)
+        {
+            return Regex.Match(data, @"\(.*?\)").Success;
+        }
+        
         public static CardKey CreatePullPaymentCardKey(this IssuerKey issuerKey, byte[] uid, int version, string pullPaymentId)
         {
             var data = Encoding.UTF8.GetBytes(pullPaymentId);

@@ -122,10 +122,11 @@ namespace BTCPayServer.Controllers.Greenfield
 
             try
             {
-                var strategy = DerivationSchemeSettings.Parse(paymentMethod.DerivationScheme, network);
+               
+                var strategy = network.GetDerivationSchemeParser().Parse(paymentMethod.DerivationScheme, false, true);
                 var deposit = new NBXplorer.KeyPathTemplates(null).GetKeyPathTemplate(DerivationFeature.Deposit);
 
-                var line = strategy.AccountDerivation.GetLineFor(deposit);
+                var line = strategy.GetLineFor(deposit);
                 var result = new OnChainPaymentMethodPreviewResultData();
                 for (var i = offset; i < amount; i++)
                 {
@@ -134,8 +135,9 @@ namespace BTCPayServer.Controllers.Greenfield
                         new OnChainPaymentMethodPreviewResultData.OnChainPaymentMethodPreviewResultAddressItem()
                         {
                             KeyPath = deposit.GetKeyPath((uint)i).ToString(),
-                            Address = address.ScriptPubKey.GetDestinationAddress(strategy.Network.NBitcoinNetwork)
-                                .ToString()
+                            Address =
+                                network.NBXplorerNetwork.CreateAddress(strategy,deposit.GetKeyPath((uint)i), address.ScriptPubKey)
+                                    .ToString() 
                         });
                 }
 
@@ -168,10 +170,10 @@ namespace BTCPayServer.Controllers.Greenfield
 
             if (!ModelState.IsValid)
                 return this.CreateValidationError(ModelState);
-            DerivationSchemeSettings strategy;
+            DerivationStrategyBase strategy;
             try
             {
-                strategy = DerivationSchemeSettings.Parse(paymentMethodData.DerivationScheme, network);
+                strategy = network.GetDerivationSchemeParser().Parse(paymentMethodData.DerivationScheme, false, true);
             }
             catch
             {
@@ -181,7 +183,7 @@ namespace BTCPayServer.Controllers.Greenfield
             }
 
             var deposit = new NBXplorer.KeyPathTemplates(null).GetKeyPathTemplate(DerivationFeature.Deposit);
-            var line = strategy.AccountDerivation.GetLineFor(deposit);
+            var line = strategy.GetLineFor(deposit);
             var result = new OnChainPaymentMethodPreviewResultData();
             for (var i = offset; i < amount; i++)
             {
@@ -192,9 +194,9 @@ namespace BTCPayServer.Controllers.Greenfield
                         OnChainPaymentMethodPreviewResultAddressItem()
                     {
                         KeyPath = deposit.GetKeyPath((uint)i).ToString(),
-                        Address = strategy.Network.NBXplorerNetwork.CreateAddress(strategy.AccountDerivation,
-                                line.KeyPathTemplate.GetKeyPath((uint)i),
-                                derivation.ScriptPubKey).ToString()
+                        Address =
+                            network.NBXplorerNetwork.CreateAddress(strategy,deposit.GetKeyPath((uint)i), derivation.ScriptPubKey)
+                                .ToString()
                     });
             }
 
@@ -244,12 +246,13 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 var store = Store;
                 var storeBlob = store.GetStoreBlob();
-                var strategy = DerivationSchemeSettings.Parse(request.DerivationScheme, network);
+                var strategy = network.GetDerivationSchemeParser().Parse(request.DerivationScheme, false, true);
                 if (strategy != null)
-                    await wallet.TrackAsync(strategy.AccountDerivation);
-                strategy.Label = request.Label;
-                var signing = strategy.GetSigningAccountKeySettings();
-                if (request.AccountKeyPath is RootedKeyPath r)
+                    await wallet.TrackAsync(strategy);
+
+                var dss = new DerivationSchemeSettings(strategy, network) {Label = request.Label,};
+                var signing = dss.GetSigningAccountKeySettings();
+                if (request.AccountKeyPath is { } r)
                 {
                     signing.AccountKeyPath = r.KeyPath;
                     signing.RootFingerprint = r.MasterFingerprint;
@@ -260,7 +263,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     signing.RootFingerprint = null;
                 }
 
-                store.SetSupportedPaymentMethod(id, strategy);
+                store.SetSupportedPaymentMethod(id, dss);
                 storeBlob.SetExcluded(id, !request.Enabled);
                 store.SetStoreBlob(storeBlob);
                 await _storeRepository.UpdateStore(store);

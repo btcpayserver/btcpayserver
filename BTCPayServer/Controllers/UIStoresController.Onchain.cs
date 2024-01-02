@@ -90,7 +90,7 @@ namespace BTCPayServer.Controllers
 
             if (vm.WalletFile != null)
             {
-                if (!DerivationSchemeSettings.TryParseFromWalletFile(await ReadAllText(vm.WalletFile), network, out strategy, out var error))
+                if (!_onChainWalletParsers.TryParseFromWalletFile(await ReadAllText(vm.WalletFile), network, out strategy, out var error))
                 {
                     ModelState.AddModelError(nameof(vm.WalletFile), $"Importing wallet failed: {error}");
                     return View(vm.ViewName, vm);
@@ -98,7 +98,7 @@ namespace BTCPayServer.Controllers
             }
             else if (!string.IsNullOrEmpty(vm.WalletFileContent))
             {
-                if (!DerivationSchemeSettings.TryParseFromWalletFile(vm.WalletFileContent, network, out strategy, out var error))
+                if (!_onChainWalletParsers.TryParseFromWalletFile(vm.WalletFileContent, network, out strategy, out var error))
                 {
                     ModelState.AddModelError(nameof(vm.WalletFileContent), $"QR import failed: {error}");
                     return View(vm.ViewName, vm);

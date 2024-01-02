@@ -159,6 +159,16 @@ namespace BTCPayServer.Hosting
             AddSettingsAccessor<PoliciesSettings>(services);
             AddSettingsAccessor<ThemeSettings>(services);
             //
+            
+            services.AddSingleton<OnChainWalletParser, BSMSOnChainWalletParser>();
+            services.AddSingleton<OnChainWalletParser, NBXDerivGenericOnChainWalletParser>();
+            services.AddSingleton<OnChainWalletParser, ElectrumFileOnChainWalletParser>();
+            services.AddSingleton<OnChainWalletParser, OutputDescriptorOnChainWalletParser>(provider => provider.GetService<OutputDescriptorOnChainWalletParser>());
+            services.AddSingleton<OutputDescriptorOnChainWalletParser>();
+            services.AddSingleton<OnChainWalletParser, SpecterOnChainWalletParser>();
+            services.AddSingleton<OnChainWalletParser, OutputDescriptorJsonOnChainWalletParser>();
+            services.AddSingleton<OnChainWalletParser, WasabiOnChainWalletParser>();
+            
             services.AddStartupTask<BlockExplorerLinkStartupTask>();
             services.TryAddSingleton<InvoiceRepository>();
             services.AddSingleton<PaymentService>();

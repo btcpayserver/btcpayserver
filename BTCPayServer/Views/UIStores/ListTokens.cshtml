@@ -18,18 +18,27 @@
 
 <div class="row">
     <div class="col-xxl-constrain col-xl-8">
-        <div class="d-flex align-items-center justify-content-between mb-3">
-            <h3 class="mb-0">@ViewData["Title"]</h3>
+        <h3 class="mb-3">Greenfield API Keys
+            <a href="/docs" target="_blank" rel="noreferrer noopener" title="More information...">
+                <svg role="img" class="icon icon-info">
+                    <use href="/img/icon-sprite.svg?v=sygbBLwB3Ary9gtsQLhSlZSiM1kk3uwN_0kHQUrl0to#info"></use>
+                </svg>
+            </a>
+        </h3>
+        <p>To generate Greenfield API keys, please <a href="/account/apikeys">click here</a>.</p>
+        
+        <h3 class="mt-5 mb-3">@ViewData["Title"]</h3>
+        <div class="d-flex align-items-center justify-content-between">
+            <p>Authorize a public key to access Bitpay compatible Invoice API.
+                <a href="https://support.bitpay.com/hc/en-us/articles/115003001183-How-do-I-pair-my-client-and-create-a-token-" target="_blank" rel="noreferrer noopener" title="More information...">
+                    <vc:icon symbol="info"/>
+                </a>
+            </p>
             <a id="CreateNewToken" asp-action="CreateToken" class="btn btn-primary" role="button" asp-route-storeId="@Context.GetRouteValue("storeId")">
                 Create Token
             </a>
         </div>
 
-        <p>Authorize a public key to access Bitpay compatible Invoice API.
-            <a href="https://support.bitpay.com/hc/en-us/articles/115003001183-How-do-I-pair-my-client-and-create-a-token-" target="_blank" rel="noreferrer noopener" title="More information...">
-                <vc:icon symbol="info"/>
-            </a>
-        </p>
 
         @if (Model.Tokens.Any())
         {
@@ -83,14 +92,6 @@
             </div>
         </form>
 
-        <h3 class="mt-5 mb-3">Greenfield API Keys
-            <a href="/docs" target="_blank" rel="noreferrer noopener" title="More information...">
-                <svg role="img" class="icon icon-info">
-                    <use href="/img/icon-sprite.svg?v=sygbBLwB3Ary9gtsQLhSlZSiM1kk3uwN_0kHQUrl0to#info"></use>
-                </svg>
-            </a>
-        </h3>
-        <p>To generate Greenfield API keys, please <a href="/account/apikeys">click here</a>.</p>
     </div>
 </div>
 

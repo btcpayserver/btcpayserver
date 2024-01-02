@@ -7,6 +7,7 @@
 @using BTCPayServer.Components.AppSales
 @using BTCPayServer.Components.AppTopItems
 @using BTCPayServer.Services.Apps
+@using BTCPayServer.Client
 @model StoreDashboardViewModel
 @{
     ViewData.SetActivePage(StoreNavPages.Dashboard, Model.StoreName, Model.StoreId);
@@ -82,7 +83,7 @@
         @if (Model.LightningEnabled)
         {
             <vc:store-lightning-balance vm="@(new StoreLightningBalanceViewModel { Store = store, CryptoCode = Model.CryptoCode, InitialRendering = true })"/>
-            <vc:store-lightning-services vm="@(new StoreLightningServicesViewModel { Store = store, CryptoCode = Model.CryptoCode })"/>
+            <vc:store-lightning-services vm="@(new StoreLightningServicesViewModel { Store = store, CryptoCode = Model.CryptoCode })" permission="@Policies.CanModifyServerSettings"/>
         }
         @if (Model.WalletEnabled)
         {

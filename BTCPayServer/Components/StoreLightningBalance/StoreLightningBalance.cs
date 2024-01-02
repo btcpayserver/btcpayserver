@@ -60,14 +60,12 @@ public class StoreLightningBalance : ViewComponent
 
         vm.DefaultCurrency = vm.Store.GetStoreBlob().DefaultCurrency;
         vm.CurrencyData = _currencies.GetCurrencyData(vm.DefaultCurrency, true);
-
-
+        
         try
         {
             var lightningClient = await GetLightningClient(vm.Store, vm.CryptoCode);
-            if(lightningClient == null)
+            if (lightningClient == null)
             {
-                
                 vm.InitialRendering = false;
                 return View(vm);
             }
@@ -100,7 +98,7 @@ public class StoreLightningBalance : ViewComponent
         return View(vm);
     }
 
-    private async Task<ILightningClient?> GetLightningClient(StoreData store, string cryptoCode )
+    private async Task<ILightningClient> GetLightningClient(StoreData store, string cryptoCode )
     {
         var network = _networkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
         var id = new PaymentMethodId(cryptoCode, PaymentTypes.LightningLike);

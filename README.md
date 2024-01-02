@@ -137,7 +137,7 @@ To begin developing locally, visit our [local development guide](https://docs.bt
 
 While the documentation advises using docker-compose, you may want to build BTCPay Server yourself.
 
-First, install .NET SDK v8.0 as specified by the [Microsoft website](https://dotnet.microsoft.com/en-us/download/dotnet/8.0).
+First, install .NET SDK v8.0 as specified by the [Microsoft website](https://dotnet.microsoft.com/download/dotnet/8.0).
 
 On Powershell:
 

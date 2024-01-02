@@ -9,6 +9,7 @@ using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Models.ServerViewModels;
 using BTCPayServer.Services;
+using BTCPayServer.Services.Mails;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -188,34 +189,28 @@ namespace BTCPayServer.Controllers
 
                     var tcs = new TaskCompletionSource<Uri>();
 
-                    _eventAggregator.Publish(new UserRegisteredEvent()
+                    _eventAggregator.Publish(new UserRegisteredEvent
                     {
                         RequestUri = Request.GetAbsoluteRootUri(),
                         User = user,
-                        Admin = model.IsAdmin is true,
+                        Admin = model.IsAdmin,
                         CallbackUrlGenerated = tcs
                     });
+                    
                     var callbackUrl = await tcs.Task;
 
-                    if (user.RequiresEmailConfirmation && !user.EmailConfirmed)
+                    if ((user.RequiresEmailConfirmation && !user.EmailConfirmed) || !await _UserManager.HasPasswordAsync(user))
                     {
-
-                        TempData.SetStatusMessageModel(new StatusMessageModel()
+                        var settings = await _SettingsRepository.GetSettingAsync<EmailSettings>() ?? new EmailSettings();
+                        var info = settings.IsComplete()
+                            ? "An email has been sent to set the password.<br/>You may alternatively"
+                            : "An email has not been sent, because the server does not have an email server configured.<br/> You need to";
+                        
+                        TempData.SetStatusMessageModel(new StatusMessageModel
                         {
                             Severity = StatusMessageModel.StatusSeverity.Success,
                             AllowDismiss = false,
-                            Html =
-                                $"Account created without a set password. An email will be sent (if configured) to set the password.<br/> You may alternatively share this link with them: <a class='alert-link' href='{callbackUrl}'>{callbackUrl}</a>"
-                        });
-                    }
-                    else if (!await _UserManager.HasPasswordAsync(user))
-                    {
-                        TempData.SetStatusMessageModel(new StatusMessageModel()
-                        {
-                            Severity = StatusMessageModel.StatusSeverity.Success,
-                            AllowDismiss = false,
-                            Html =
-                                $"Account created without a set password. An email will be sent (if configured) to set the password.<br/> You may alternatively share this link with them: <a class='alert-link' href='{callbackUrl}'>{callbackUrl}</a>"
+                            Html = $"Account created without password. {info} share this link with them: <a class='alert-link' href='{callbackUrl}'>{callbackUrl}</a>"
                         });
                     }
                     return RedirectToAction(nameof(ListUsers));

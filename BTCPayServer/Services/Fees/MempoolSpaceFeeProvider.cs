@@ -17,7 +17,7 @@ public class MempoolSpaceFeeProvider(
     IHttpClientFactory HttpClientFactory,
     bool Testnet) : IFeeProvider
 {
-    private readonly string ExplorerLink = Testnet switch
+    private string ExplorerLink = Testnet switch
     {
         true => "https://mempool.space/testnet/api/v1/fees/recommended",
         false => "https://mempool.space/api/v1/fees/recommended"
@@ -34,32 +34,45 @@ public class MempoolSpaceFeeProvider(
             result[result.Keys.MinBy(key => Math.Abs(key - blockTarget))];
     }
 
-    public Task<Dictionary<int, FeeRate>> GetFeeRatesAsync()
+    public async Task<Dictionary<int, FeeRate>> GetFeeRatesAsync()
     {
-        return MemoryCache.GetOrCreateAsync(CacheKey, async entry =>
+        try
         {
-            entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
-            var client = HttpClientFactory.CreateClient(nameof(MempoolSpaceFeeProvider));
-            using var result = await client.GetAsync(ExplorerLink);
-            result.EnsureSuccessStatusCode();
-            var recommendedFees = await result.Content.ReadAsAsync<Dictionary<string, decimal>>();
-            var feesByBlockTarget = new Dictionary<int, FeeRate>();
-            foreach ((var feeId, decimal value) in recommendedFees)
+            return  (await  MemoryCache.GetOrCreateAsync(CacheKey, async entry =>
             {
-                var target = feeId switch
-                {
-                    "fastestFee" => 1,
-                    "halfHourFee" => 3,
-                    "hourFee" => 6,
-                    "economyFee" when recommendedFees.TryGetValue("minimumFee", out var minFee) && minFee == value => 144,
-                    "economyFee" => 72,
-                    "minimumFee" => 144,
-                    _ => -1
-                };
-                feesByBlockTarget.TryAdd(target, new FeeRate(RandomizeByPercentage(value, 10)));
-            }
-            return feesByBlockTarget;
-        })!;
+                entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
+                return await GetFeeRatesCore();
+            }))!;
+        }
+        catch (Exception e)
+        {
+            MemoryCache.Remove(CacheKey);
+            throw;
+        }
+    }
+
+    protected virtual async Task<Dictionary<int, FeeRate>> GetFeeRatesCore()
+    {
+        var client = HttpClientFactory.CreateClient(nameof(MempoolSpaceFeeProvider));
+        using var result = await client.GetAsync(ExplorerLink, new CancellationTokenSource(TimeSpan.FromSeconds(10)).Token);
+        result.EnsureSuccessStatusCode();
+        var recommendedFees = await result.Content.ReadAsAsync<Dictionary<string, decimal>>();
+        var feesByBlockTarget = new Dictionary<int, FeeRate>();
+        foreach ((var feeId, decimal value) in recommendedFees)
+        {
+            var target = feeId switch
+            {
+                "fastestFee" => 1,
+                "halfHourFee" => 3,
+                "hourFee" => 6,
+                "economyFee" when recommendedFees.TryGetValue("minimumFee", out var minFee) && minFee == value => 144,
+                "economyFee" => 72,
+                "minimumFee" => 144,
+                _ => -1
+            };
+            feesByBlockTarget.TryAdd(target, new FeeRate(RandomizeByPercentage(value, 10)));
+        }
+        return feesByBlockTarget;
     }
     
     static decimal RandomizeByPercentage(decimal value, int percentage)

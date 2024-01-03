@@ -1,45 +1,73 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
-using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.DependencyInjection;
 using NBitcoin;
+using NBXplorer;
 
 namespace BTCPayServer.Services.Fees;
 
-public class FeeProviderFactory : IFeeProviderFactory
+public static class FeeProviderExtensions
 {
-    public FeeProviderFactory(
-    BTCPayServerEnvironment Environment,
-    ExplorerClientProvider ExplorerClients,
-    IHttpClientFactory HttpClientFactory,
-    IMemoryCache MemoryCache)
+    public static IServiceCollection AddFeeProviders(this IServiceCollection services, IServiceProvider bootstrapServiceProvider)
     {
-        _FeeProviders = new ();
+        var networkProvider = bootstrapServiceProvider.GetRequiredService<NBXplorerNetworkProvider>();
 
-        // TODO: Pluginify this
-        foreach ((var network, var client) in ExplorerClients.GetAll())
+        foreach (var network in networkProvider.GetAll())
         {
-            List<IFeeProvider> providers = new List<IFeeProvider>();
-            if (network.IsBTC && Environment.NetworkType != ChainName.Regtest)
+            
+            if (network.CryptoCode == "BTC" && network.NBitcoinNetwork.ChainName != ChainName.Regtest)
             {
-                providers.Add(new MempoolSpaceFeeProvider(
-                    MemoryCache,
+
+                services.AddKeyedSingleton<IFeeProvider>(network.CryptoCode, (provider, o) => new MempoolSpaceFeeProvider(
+                    provider.GetRequiredService<IMemoryCache>(),
                     $"MempoolSpaceFeeProvider-{network.CryptoCode}",
-                    HttpClientFactory,
-                    network is BTCPayNetwork n &&
+                    provider.GetRequiredService<IHttpClientFactory>(),
+                    network is { } n &&
                     n.NBitcoinNetwork.ChainName == ChainName.Testnet));
             }
-            providers.Add(new NBXplorerFeeProvider(client));
-            providers.Add(new StaticFeeProvider(new FeeRate(100L, 1)));
-            var fallback = new FallbackFeeProvider(providers.ToArray());
-            _FeeProviders.Add(network, fallback);
+
+            services.AddKeyedSingleton<IFeeProvider>(network.CryptoCode, (provider, o) => new NBXplorerFeeProvider(
+                provider.GetRequiredService<ExplorerClientProvider>().GetExplorerClient(network.CryptoCode)));
+
+            services.AddKeyedSingleton<IFeeProvider>(network.CryptoCode,
+                (provider, o) => new StaticFeeProvider(new FeeRate(100L, 1)));
         }
+        services.AddSingleton<IFeeProviderFactory, FeeProviderFactory>();
+        return services;
     }
-    private readonly Dictionary<BTCPayNetworkBase, IFeeProvider> _FeeProviders;
+    
+}
+
+public class FeeProviderFactory : IFeeProviderFactory
+{
+    private readonly IEnumerable<IFeeProvider> _feeProviders;
+    private readonly IServiceProvider _serviceProvider;
+
+    public FeeProviderFactory(
+        ExplorerClientProvider explorerClients,
+        IHttpClientFactory httpClientFactory,
+        IMemoryCache memoryCache,
+        IEnumerable<IFeeProvider> feeProviders,
+        IServiceProvider serviceProvider)
+    {
+        _feeProviders = feeProviders;
+        _serviceProvider = serviceProvider;
+    }
+
+    private readonly ConcurrentDictionary<BTCPayNetworkBase, FallbackFeeProvider> _cached = new();
     public IFeeProvider CreateFeeProvider(BTCPayNetworkBase network)
     {
-        return _FeeProviders.TryGetValue(network, out var prov) ? prov : throw new NotSupportedException($"No fee provider for this network ({network.CryptoCode})");
+        return _cached.GetOrAdd(network, n =>
+        {
+            var feeProviders = _serviceProvider.GetKeyedServices<IFeeProvider>(network.CryptoCode).Concat(_feeProviders).ToArray();
+            if (!feeProviders.Any())
+                throw new NotSupportedException($"No fee provider for this network ({network.CryptoCode})");
+
+            return new FallbackFeeProvider(feeProviders.ToArray());
+        });
     }
 }

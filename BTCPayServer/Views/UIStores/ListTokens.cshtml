@@ -25,18 +25,17 @@
         </h3>
         <p>To generate Greenfield API keys, please <a asp-controller="UIManage" asp-action="APIKeys">click here</a>.</p>
         
-        <h3 class="mt-5 mb-3">@ViewData["Title"]</h3>
-        <div class="d-flex align-items-center justify-content-between">
-            <p>Authorize a public key to access Bitpay compatible Invoice API.
-                <a href="https://support.bitpay.com/hc/en-us/articles/115003001183-How-do-I-pair-my-client-and-create-a-token-" target="_blank" rel="noreferrer noopener" title="More information...">
-                    <vc:icon symbol="info"/>
-                </a>
-            </p>
+        <div class="d-flex align-items-center justify-content-between mt-5 mb-3">
+            <h3 class="mb-0">@ViewData["Title"]</h3>
             <a id="CreateNewToken" asp-action="CreateToken" class="btn btn-primary" role="button" asp-route-storeId="@Context.GetRouteValue("storeId")">
                 Create Token
             </a>
         </div>
-
+        <p>Authorize a public key to access Bitpay compatible Invoice API.
+            <a href="https://support.bitpay.com/hc/en-us/articles/115003001183-How-do-I-pair-my-client-and-create-a-token-" target="_blank" rel="noreferrer noopener" title="More information...">
+                <vc:icon symbol="info"/>
+            </a>
+        </p>
 
         @if (Model.Tokens.Any())
         {

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using BTCPayServer.Validation;
 using Newtonsoft.Json;
@@ -21,6 +22,11 @@ namespace BTCPayServer.Services
             get => !LockSubscription;
             set { LockSubscription = !value; }
         }
+
+        [DefaultValue(true)]
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
+        [Display(Name = "Require new users to be approved by an admin after registration")]
+        public bool RequiresUserApproval { get; set; } = true;
 
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
         [Display(Name = "Discourage search engines from indexing this site")]

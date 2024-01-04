@@ -29,9 +29,46 @@ public class MempoolSpaceFeeProvider(
 
         return result.TryGetValue(blockTarget, out var feeRate)
             ? feeRate
-            :
-            //try get the closest one
-            result[result.Keys.MinBy(key => Math.Abs(key - blockTarget))];
+            : InterpolateOrBound(result, blockTarget);
+            
+    }
+    
+    static FeeRate InterpolateOrBound(Dictionary<int, FeeRate> dictionary, int target)
+    {
+        // Get the smallest and largest keys
+        int smallestKey = dictionary.Keys.Min();
+        int largestKey = dictionary.Keys.Max();
+
+        // If the target is outside the range, clamp to the nearest bound
+        if (target <= smallestKey)
+        {
+            return dictionary[smallestKey];
+        }
+        if (target >= largestKey)
+        {
+            return dictionary[largestKey];
+        }
+
+        // Find the keys closest to the target for interpolation
+        int key1 = 0, key2 = 0;
+        decimal value1 = 0, value2 = 0;
+
+        foreach (var key in dictionary.Keys)
+        {
+            if (key < target && (key1 == 0 || key > key1))
+            {
+                key1 = key;
+                value1 = dictionary[key].SatoshiPerByte;
+            }
+            if (key > target && (key2 == 0 || key < key2))
+            {
+                key2 = key;
+                value2 = dictionary[key].SatoshiPerByte;
+            }
+        }
+
+        // Linear interpolation formula
+        return new FeeRate(value1 + ((value2 - value1) / (key2 - key1)) * (target - key1));
     }
 
     public async Task<Dictionary<int, FeeRate>> GetFeeRatesAsync()
@@ -70,13 +107,38 @@ public class MempoolSpaceFeeProvider(
                 "minimumFee" => 144,
                 _ => -1
             };
-            feesByBlockTarget.TryAdd(target, new FeeRate(RandomizeByPercentage(value, 10)));
+            feesByBlockTarget.TryAdd(target, new FeeRate(value));
         }
+        // order feesByBlockTarget and then randomize them by 10%, but never allow the numbers to go below the previous one or higher than the next
+        var ordered = feesByBlockTarget.OrderByDescending(kv => kv.Key).ToList();
+        for (var i = 0; i < ordered.Count; i++)
+        {
+            (int key, FeeRate value) = ordered[i];
+            if (i == 0)
+            {
+                feesByBlockTarget[key] = new FeeRate(RandomizeByPercentage(value.SatoshiPerByte, 10));
+            }
+            else
+            {
+                var previous = ordered[i - 1].Value;
+                var newValue = RandomizeByPercentage(value.SatoshiPerByte, 10);
+                if (newValue < previous.SatoshiPerByte)
+                {
+                    newValue = previous.SatoshiPerByte;
+                }
+                feesByBlockTarget[key] = new FeeRate(newValue);
+            }
+        }
+        
         return feesByBlockTarget;
     }
     
     static decimal RandomizeByPercentage(decimal value, int percentage)
     {
+        if (value is 1)
+        {
+            return 1;
+        }
         decimal range = value * percentage / 100m;
         var res = value + range * (Random.Shared.NextDouble() < 0.5 ? -1 : 1);
 

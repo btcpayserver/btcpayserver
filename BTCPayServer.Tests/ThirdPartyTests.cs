@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.Models.StoreViewModels;
+using BTCPayServer.Models.WalletViewModels;
 using BTCPayServer.Rating;
 using BTCPayServer.Services.Fees;
 using BTCPayServer.Services.Rates;
@@ -92,7 +93,38 @@ namespace BTCPayServer.Tests
                     isTestnet);
                 var rates = await mempoolSpaceFeeProvider.GetFeeRatesAsync();
                 Assert.NotEmpty(rates);
-                await mempoolSpaceFeeProvider.GetFeeRateAsync(20);
+                
+                
+                var recommendedFees =
+                    await Task.WhenAll(new[]
+                        {
+                            TimeSpan.FromMinutes(10.0), TimeSpan.FromMinutes(60.0), TimeSpan.FromHours(6.0),
+                            TimeSpan.FromHours(24.0),
+                        }.Select(async time =>
+                        {
+                            try
+                            {
+                                var result = await mempoolSpaceFeeProvider.GetFeeRateAsync(
+                                    (int)Network.Main.Consensus.GetExpectedBlocksFor(time));
+                                return new WalletSendModel.FeeRateOption()
+                                {
+                                    Target = time,
+                                    FeeRate = result.SatoshiPerByte
+                                };
+                            }
+                            catch (Exception)
+                            {
+                                return null;
+                            }
+                        })
+                        .ToArray());
+                //ENSURE THESE ARE LOGICAL
+                Assert.True(recommendedFees[0].FeeRate >= recommendedFees[1].FeeRate);
+                Assert.True(recommendedFees[1].FeeRate >= recommendedFees[2].FeeRate);
+                Assert.True(recommendedFees[2].FeeRate >= recommendedFees[3].FeeRate);
+                
+                
+                
             }
         }
         [Fact]

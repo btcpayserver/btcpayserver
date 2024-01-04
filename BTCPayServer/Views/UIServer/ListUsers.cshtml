@@ -27,14 +27,8 @@
     </a>
 </div>
 
-<form asp-action="ListUsers" asp-route-sortOrder="@(userEmailSortOrder)" style="max-width:640px">
-    <div class="input-group">
-        <input asp-for="SearchTerm" class="form-control" placeholder="Search by email..." />
-        <button type="submit" class="btn btn-secondary" title="Search by email">
-            <span class="fa fa-search"></span> Search
-        </button>
-    </div>
-    <span asp-validation-for="SearchTerm" class="text-danger"></span>
+<form asp-action="ListUsers" asp-route-sortOrder="@(userEmailSortOrder)" style="max-width:640px" method="get">
+    <input asp-for="SearchTerm" class="form-control" placeholder="Search by email..." />
 </form>
 
 <div class="table-responsive">
@@ -59,12 +53,12 @@
             <th class="text-end">Actions</th>
         </tr>
         </thead>
-        <tbody>
+        <tbody id="UsersList">
         @foreach (var user in Model.Users)
         {
             <tr>
-                <td class="d-flex align-items-center">
-                    <span class="me-2">@user.Email</span>
+                <td class="d-flex align-items-center gap-2">
+                    <span class="user-email">@user.Email</span>
                     @foreach (var role in user.Roles)
                     {
                         <span class="badge bg-info">@Model.Roles[role]</span>
@@ -74,23 +68,23 @@
                 <td class="text-center">
                     @if (user.EmailConfirmed.HasValue)
                     {
-                        <span class="fa @(user.EmailConfirmed.Value ? "fa-check text-success" : "fa-times text-danger")"></span>
+                        <span class="user-email-confirmed fa @(user.EmailConfirmed.Value ? "fa-check text-success" : "fa-times text-danger")"></span>
                     }
                 </td>
                 <td class="text-center">
                     @if (user.Approved.HasValue)
                     {
-                        <span class="fa @(user.Approved.Value ? "fa-check text-success" : "fa-times text-danger")"></span>
+                        <span class="user-approved fa @(user.Approved.Value ? "fa-check text-success" : "fa-times text-danger")"></span>
                     }
                 </td>
                 <td class="text-center">
                     @if (!user.Disabled)
                     {
-                        <span class="text-success fa fa-check" title="User is enabled"></span>
+                        <span class="user-enabled text-success fa fa-check" title="User is enabled"></span>
                     }
                     else
                     {
-                        <span class="text-danger fa fa-times" title="User is disabled"></span>
+                        <span class="user-disabled text-danger fa fa-times" title="User is disabled"></span>
                     }
                 </td>
                 <td class="text-end">
@@ -98,7 +92,7 @@
                         <a asp-action="SendVerificationEmail" asp-route-userId="@user.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="This will send a verification email to <strong>@Html.Encode(user.Email)</strong>.">Resend verification email</a>
                         <span>-</span>
                     }
-                    <a asp-action="User" asp-route-userId="@user.Id">Edit</a> <span> - </span> <a asp-action="DeleteUser" asp-route-userId="@user.Id">Remove</a>
+                    <a asp-action="User" asp-route-userId="@user.Id" class="user-edit">Edit</a> <span> - </span> <a asp-action="DeleteUser" asp-route-userId="@user.Id">Remove</a>
                     - <a asp-action="ToggleUser"
                          asp-route-enable="@user.Disabled"
                          asp-route-userId="@user.Id">

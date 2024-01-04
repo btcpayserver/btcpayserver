@@ -8,6 +8,7 @@ using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Lightning;
 using BTCPayServer.Lightning.CLightning;
+using BTCPayServer.Services;
 using BTCPayServer.Views.Manage;
 using BTCPayServer.Views.Server;
 using BTCPayServer.Views.Stores;
@@ -76,6 +77,11 @@ namespace BTCPayServer.Tests
                     // A bit less than test timeout
                     TimeSpan.FromSeconds(50));
             }
+            
+            // reset test server policies
+            var settings = Server.PayTester.GetService<SettingsRepository>();
+            await settings.UpdateSetting(new PoliciesSettings { LockSubscription = false, RequiresUserApproval = false });
+            
             ServerUri = Server.PayTester.ServerUri;
             Driver.Manage().Window.Maximize();
 

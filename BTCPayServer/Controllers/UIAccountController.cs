@@ -133,11 +133,21 @@ namespace BTCPayServer.Controllers
                 var userId = _userLoginCodeService.Verify(loginCode);
                 if (userId is null)
                 {
-                    ModelState.AddModelError(string.Empty,
-                        "Login code was invalid");
-                    return await Login(returnUrl, null);
+                    TempData[WellKnownTempData.ErrorMessage] = "Login code was invalid";
+                    return await Login(returnUrl);
                 }
+
                 var user = await _userManager.FindByIdAsync(userId);
+                var errorMessage = "Invalid login attempt.";
+                if (!UserService.TryCanLogin(user, out var message))
+                {
+                    TempData.SetStatusMessageModel(new StatusMessageModel
+                    {
+                        Severity = user == null ? StatusMessageModel.StatusSeverity.Error : StatusMessageModel.StatusSeverity.Warning,
+                        Message = message ?? errorMessage
+                    });
+                    return await Login(returnUrl);
+                }
 
                 _logger.LogInformation("User with ID {UserId} logged in with a login code.", user.Id);
                 await _signInManager.SignInAsync(user, false, "LoginCode");
@@ -160,24 +170,20 @@ namespace BTCPayServer.Controllers
             ViewData["ReturnUrl"] = returnUrl;
             if (ModelState.IsValid)
             {
-                // Require the user to have a confirmed email before they can log on.
+                // Require the user to pass basic checks (approval, confirmed email, not disabled) before they can log on
                 var user = await _userManager.FindByEmailAsync(model.Email);
-                if (user != null)
+                var errorMessage = "Invalid login attempt.";
+                if (!UserService.TryCanLogin(user, out var message))
                 {
-                    if (user.RequiresEmailConfirmation && !await _userManager.IsEmailConfirmedAsync(user))
+                    TempData.SetStatusMessageModel(new StatusMessageModel
                     {
-                        ModelState.AddModelError(string.Empty,
-                                      "You must have a confirmed email to log in.");
-                        return View(model);
-                    }
-                }
-                else
-                {
-                    ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+                        Severity = user == null ? StatusMessageModel.StatusSeverity.Error : StatusMessageModel.StatusSeverity.Warning,
+                        Message = message ?? errorMessage
+                    });
                     return View(model);
                 }
 
-                var fido2Devices = await _fido2Service.HasCredentials(user.Id);
+                var fido2Devices = await _fido2Service.HasCredentials(user!.Id);
                 var lnurlAuthCredentials = await _lnurlAuthService.HasCredentials(user.Id);
                 if (!await _userManager.IsLockedOutAsync(user) && (fido2Devices || lnurlAuthCredentials))
                 {
@@ -202,13 +208,10 @@ namespace BTCPayServer.Controllers
                             LoginWithLNURLAuthViewModel = lnurlAuthCredentials ? await BuildLNURLAuthViewModel(model.RememberMe, user) : null,
                         });
                     }
-                    else
-                    {
-                        var incrementAccessFailedResult = await _userManager.AccessFailedAsync(user);
-                        ModelState.AddModelError(string.Empty, "Invalid login attempt.");
-                        return View(model);
-
-                    }
+                    
+                    await _userManager.AccessFailedAsync(user);
+                    ModelState.AddModelError(string.Empty, errorMessage!);
+                    return View(model);
                 }
 
                 var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, lockoutOnFailure: true);
@@ -232,11 +235,9 @@ namespace BTCPayServer.Controllers
                     _logger.LogWarning($"User '{user.Id}' account locked out.");
                     return RedirectToAction(nameof(Lockout), new { user.LockoutEnd });
                 }
-                else
-                {
-                    ModelState.AddModelError(string.Empty, "Invalid login attempt.");
-                    return View(model);
-                }
+                
+                ModelState.AddModelError(string.Empty, errorMessage);
+                return View(model);
             }
 
             // If we got this far, something failed, redisplay form
@@ -297,14 +298,18 @@ namespace BTCPayServer.Controllers
             }
 
             ViewData["ReturnUrl"] = returnUrl;
+            var errorMessage = "Invalid login attempt.";
             var user = await _userManager.FindByIdAsync(viewModel.UserId);
-
-            if (user == null)
+            if (!UserService.TryCanLogin(user, out var message))
             {
-                return NotFound();
+                TempData.SetStatusMessageModel(new StatusMessageModel
+                {
+                    Severity = user == null ? StatusMessageModel.StatusSeverity.Error : StatusMessageModel.StatusSeverity.Warning,
+                    Message = message ?? errorMessage
+                });
+                return RedirectToAction("Login");
             }
 
-            var errorMessage = string.Empty;
             try
             {
                 var k1 = Encoders.Hex.DecodeData(viewModel.LNURLEndpoint.ParseQueryString().Get("k1"));
@@ -316,29 +321,29 @@ namespace BTCPayServer.Controllers
                     _logger.LogInformation("User logged in.");
                     return RedirectToLocal(returnUrl);
                 }
-
-                errorMessage = "Invalid login attempt.";
             }
             catch (Exception e)
             {
                 errorMessage = e.Message;
             }
 
-            ModelState.AddModelError(string.Empty, errorMessage);
-            return View("SecondaryLogin", new SecondaryLoginViewModel()
+            if (!string.IsNullOrEmpty(errorMessage))
+            {
+                ModelState.AddModelError(string.Empty, errorMessage);
+            }
+            return View("SecondaryLogin", new SecondaryLoginViewModel
             {
 
-                LoginWithFido2ViewModel = (await _fido2Service.HasCredentials(user.Id)) ? await BuildFido2ViewModel(viewModel.RememberMe, user) : null,
+                LoginWithFido2ViewModel = await _fido2Service.HasCredentials(user.Id) ? await BuildFido2ViewModel(viewModel.RememberMe, user) : null,
                 LoginWithLNURLAuthViewModel = viewModel,
                 LoginWith2FaViewModel = !user.TwoFactorEnabled
                     ? null
-                    : new LoginWith2faViewModel()
+                    : new LoginWith2faViewModel
                     {
                         RememberMe = viewModel.RememberMe
                     }
             });
         }
-
 
         [HttpPost("/login/fido2")]
         [AllowAnonymous]
@@ -351,14 +356,18 @@ namespace BTCPayServer.Controllers
             }
 
             ViewData["ReturnUrl"] = returnUrl;
+            var errorMessage = "Invalid login attempt.";
             var user = await _userManager.FindByIdAsync(viewModel.UserId);
-
-            if (user == null)
+            if (!UserService.TryCanLogin(user, out var message))
             {
-                return NotFound();
+                TempData.SetStatusMessageModel(new StatusMessageModel
+                {
+                    Severity = user == null ? StatusMessageModel.StatusSeverity.Error : StatusMessageModel.StatusSeverity.Warning,
+                    Message = message ?? errorMessage
+                });
+                return RedirectToAction("Login");
             }
 
-            var errorMessage = string.Empty;
             try
             {
                 if (await _fido2Service.CompleteLogin(viewModel.UserId, JObject.Parse(viewModel.Response).ToObject<AuthenticatorAssertionRawResponse>()))
@@ -367,28 +376,30 @@ namespace BTCPayServer.Controllers
                     _logger.LogInformation("User logged in.");
                     return RedirectToLocal(returnUrl);
                 }
-
-                errorMessage = "Invalid login attempt.";
             }
             catch (Fido2VerificationException e)
             {
                 errorMessage = e.Message;
             }
 
-            ModelState.AddModelError(string.Empty, errorMessage);
+            if (!string.IsNullOrEmpty(errorMessage))
+            {
+                ModelState.AddModelError(string.Empty, errorMessage);
+            }
             viewModel.Response = null;
-            return View("SecondaryLogin", new SecondaryLoginViewModel()
+            return View("SecondaryLogin", new SecondaryLoginViewModel
             {
                 LoginWithFido2ViewModel = viewModel,
-                LoginWithLNURLAuthViewModel = (await _lnurlAuthService.HasCredentials(user.Id)) ? await BuildLNURLAuthViewModel(viewModel.RememberMe, user) : null,
+                LoginWithLNURLAuthViewModel = await _lnurlAuthService.HasCredentials(user.Id) ? await BuildLNURLAuthViewModel(viewModel.RememberMe, user) : null,
                 LoginWith2FaViewModel = !user.TwoFactorEnabled
                     ? null
-                    : new LoginWith2faViewModel()
+                    : new LoginWith2faViewModel
                     {
                         RememberMe = viewModel.RememberMe
                     }
             });
         }
+
         [HttpGet("/login/2fa")]
         [AllowAnonymous]
         public async Task<IActionResult> LoginWith2fa(bool rememberMe, string returnUrl = null)
@@ -436,32 +447,37 @@ namespace BTCPayServer.Controllers
             {
                 throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
             }
+            if (!UserService.TryCanLogin(user, out var message))
+            {
+                TempData.SetStatusMessageModel(new StatusMessageModel
+                {
+                    Severity = StatusMessageModel.StatusSeverity.Warning,
+                    Message = message
+                });
+                return View(model);
+            }
 
             var authenticatorCode = model.TwoFactorCode.Replace(" ", string.Empty, StringComparison.InvariantCulture).Replace("-", string.Empty, StringComparison.InvariantCulture);
-
             var result = await _signInManager.TwoFactorAuthenticatorSignInAsync(authenticatorCode, rememberMe, model.RememberMachine);
-
             if (result.Succeeded)
             {
                 _logger.LogInformation("User with ID {UserId} logged in with 2fa.", user.Id);
                 return RedirectToLocal(returnUrl);
             }
-            else if (result.IsLockedOut)
+            if (result.IsLockedOut)
             {
                 _logger.LogWarning("User with ID {UserId} account locked out.", user.Id);
                 return RedirectToAction(nameof(Lockout), new { user.LockoutEnd });
             }
-            else
+
+            _logger.LogWarning("Invalid authenticator code entered for user with ID {UserId}.", user.Id);
+            ModelState.AddModelError(string.Empty, "Invalid authenticator code.");
+            return View("SecondaryLogin", new SecondaryLoginViewModel
             {
-                _logger.LogWarning("Invalid authenticator code entered for user with ID {UserId}.", user.Id);
-                ModelState.AddModelError(string.Empty, "Invalid authenticator code.");
-                return View("SecondaryLogin", new SecondaryLoginViewModel()
-                {
-                    LoginWith2FaViewModel = model,
-                    LoginWithFido2ViewModel = (await _fido2Service.HasCredentials(user.Id)) ? await BuildFido2ViewModel(rememberMe, user) : null,
-                    LoginWithLNURLAuthViewModel = (await _lnurlAuthService.HasCredentials(user.Id)) ? await BuildLNURLAuthViewModel(rememberMe, user) : null,
-                });
-            }
+                LoginWith2FaViewModel = model,
+                LoginWithFido2ViewModel = await _fido2Service.HasCredentials(user.Id) ? await BuildFido2ViewModel(rememberMe, user) : null,
+                LoginWithLNURLAuthViewModel = await _lnurlAuthService.HasCredentials(user.Id) ? await BuildLNURLAuthViewModel(rememberMe, user) : null,
+            });
         }
 
         [HttpGet("/login/recovery-code")]
@@ -503,13 +519,20 @@ namespace BTCPayServer.Controllers
             var user = await _signInManager.GetTwoFactorAuthenticationUserAsync();
             if (user == null)
             {
-                throw new ApplicationException($"Unable to load two-factor authentication user.");
+                throw new ApplicationException("Unable to load two-factor authentication user.");
+            }
+            if (!UserService.TryCanLogin(user, out var message))
+            {
+                TempData.SetStatusMessageModel(new StatusMessageModel
+                {
+                    Severity = StatusMessageModel.StatusSeverity.Warning,
+                    Message = message
+                });
+                return View(model);
             }
 
             var recoveryCode = model.RecoveryCode.Replace(" ", string.Empty, StringComparison.InvariantCulture);
-
             var result = await _signInManager.TwoFactorRecoveryCodeSignInAsync(recoveryCode);
-
             if (result.Succeeded)
             {
                 _logger.LogInformation("User with ID {UserId} logged in with a recovery code.", user.Id);
@@ -602,17 +625,26 @@ namespace BTCPayServer.Controllers
                     });
                     RegisteredUserId = user.Id;
 
-                    if (!policies.RequiresConfirmedEmail)
+                    if (policies.RequiresConfirmedEmail)
                     {
-                        if (logon)
-                            await _signInManager.SignInAsync(user, isPersistent: false);
+                        TempData[WellKnownTempData.SuccessMessage] = "Account created, please confirm your email.";
+                        return RedirectToAction(nameof(Login));
+                    }
+                    if (policies.RequiresUserApproval)
+                    {
+                        TempData[WellKnownTempData.SuccessMessage] = "Account created, but it requires approval by an admin before you can log in.";
+                        return RedirectToAction(nameof(Login));
+                    }
+                    if (logon)
+                    {
+                        await _signInManager.SignInAsync(user, isPersistent: false);
                         return RedirectToLocal(returnUrl);
                     }
-
-                    TempData[WellKnownTempData.SuccessMessage] = "Account created, please confirm your email";
-                    return View();
                 }
-                AddErrors(result);
+                else
+                {
+                    AddErrors(result);
+                }
             }
 
             // If we got this far, something failed, redisplay form
@@ -687,9 +719,7 @@ namespace BTCPayServer.Controllers
             if (ModelState.IsValid)
             {
                 var user = await _userManager.FindByEmailAsync(model.Email);
-                if (user == null || 
-                    (user.RequiresApproval && !user.Approved) || 
-                    (user.RequiresEmailConfirmation && !await _userManager.IsEmailConfirmedAsync(user)))
+                if (!UserService.TryCanLogin(user, out _))
                 {
                     // Don't reveal that the user does not exist or is not confirmed
                     return RedirectToAction(nameof(ForgotPasswordConfirmation));
@@ -742,13 +772,13 @@ namespace BTCPayServer.Controllers
                 return View(model);
             }
             var user = await _userManager.FindByEmailAsync(model.Email);
-            if (user == null)
+            if (!UserService.TryCanLogin(user, out _))
             {
                 // Don't reveal that the user does not exist
                 return RedirectToAction(nameof(Login));
             }
 
-            var result = await _userManager.ResetPasswordAsync(user, model.Code, model.Password);
+            var result = await _userManager.ResetPasswordAsync(user!, model.Code, model.Password);
             if (result.Succeeded)
             {
                 TempData.SetStatusMessageModel(new StatusMessageModel()

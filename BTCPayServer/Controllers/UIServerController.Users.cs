@@ -98,12 +98,12 @@ namespace BTCPayServer.Controllers
             bool? propertiesChanged = null;
             bool? adminStatusChanged = null;
 
-            if (viewModel.Approved.HasValue && user.Approved != viewModel.Approved)
+            if (user.RequiresApproval && viewModel.Approved.HasValue && user.Approved != viewModel.Approved)
             {
                 user.Approved = viewModel.Approved.Value;
                 propertiesChanged = true;
             }
-            if (viewModel.EmailConfirmed.HasValue && user.EmailConfirmed != viewModel.EmailConfirmed)
+            if (user.RequiresEmailConfirmation && viewModel.EmailConfirmed.HasValue && user.EmailConfirmed != viewModel.EmailConfirmed)
             {
                 user.EmailConfirmed = viewModel.EmailConfirmed.Value;
                 propertiesChanged = true;

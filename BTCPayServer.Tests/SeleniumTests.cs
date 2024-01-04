@@ -406,6 +406,121 @@ namespace BTCPayServer.Tests
         }
 
         [Fact(Timeout = TestTimeout)]
+        public async Task CanRequireApprovalForNewAccounts()
+        {
+            using var s = CreateSeleniumTester();
+            await s.StartAsync();
+            
+            var settings = s.Server.PayTester.GetService<SettingsRepository>();
+            var policies = await settings.GetSettingAsync<PoliciesSettings>() ?? new PoliciesSettings();
+            Assert.True(policies.EnableRegistration);
+            Assert.False(policies.RequiresUserApproval);
+            
+            // Register admin and adapt policies
+            s.RegisterNewUser(true);
+            var admin = s.AsTestAccount();
+            s.GoToHome();
+            s.GoToServer(ServerNavPages.Policies);
+            Assert.True(s.Driver.FindElement(By.Id("EnableRegistration")).Selected);
+            Assert.False(s.Driver.FindElement(By.Id("RequiresUserApproval")).Selected);
+            s.Driver.FindElement(By.Id("RequiresUserApproval")).Click();
+            s.Driver.FindElement(By.Id("SaveButton")).Click();
+            Assert.Contains("Policies updated successfully", s.FindAlertMessage().Text);
+            Assert.True(s.Driver.FindElement(By.Id("RequiresUserApproval")).Selected);
+            s.Logout();
+
+            // Register user and try to log in
+            s.GoToRegister();
+            s.RegisterNewUser();
+            s.Driver.AssertNoError();
+            Assert.Contains("Account created, but it requires approval by an admin before you can log in", s.FindAlertMessage().Text);
+            Assert.Contains("/login", s.Driver.Url);
+            
+            var unapproved = s.AsTestAccount();
+            s.LogIn(unapproved.RegisterDetails.Email, unapproved.RegisterDetails.Password);
+            Assert.Contains("Your user account requires approval by an admin before you can log in", s.FindAlertMessage(StatusMessageModel.StatusSeverity.Warning).Text);
+            Assert.Contains("/login", s.Driver.Url);
+            
+            // Login with admin and reset approval policy
+            s.GoToLogin();
+            s.LogIn(admin.RegisterDetails.Email, admin.RegisterDetails.Password);
+            s.GoToHome();
+            s.GoToServer(ServerNavPages.Policies);
+            Assert.True(s.Driver.FindElement(By.Id("EnableRegistration")).Selected);
+            Assert.True(s.Driver.FindElement(By.Id("RequiresUserApproval")).Selected);
+            s.Driver.FindElement(By.Id("RequiresUserApproval")).Click();
+            s.Driver.FindElement(By.Id("SaveButton")).Click();
+            Assert.Contains("Policies updated successfully", s.FindAlertMessage().Text);
+            Assert.False(s.Driver.FindElement(By.Id("RequiresUserApproval")).Selected);
+            s.Logout();
+            
+            // Still requires approval for user who registered before
+            s.GoToLogin();
+            s.LogIn(unapproved.RegisterDetails.Email, unapproved.RegisterDetails.Password);
+            Assert.Contains("Your user account requires approval by an admin before you can log in", s.FindAlertMessage(StatusMessageModel.StatusSeverity.Warning).Text);
+            Assert.Contains("/login", s.Driver.Url);
+            
+            // New user can register and gets in without approval
+            s.GoToRegister();
+            s.RegisterNewUser();
+            s.Driver.AssertNoError();
+            Assert.DoesNotContain("/login", s.Driver.Url);
+            var autoApproved = s.AsTestAccount();
+            s.CreateNewStore();
+            s.Logout();
+            
+            // Login with admin and check list
+            s.GoToLogin();
+            s.LogIn(admin.RegisterDetails.Email, admin.RegisterDetails.Password);
+            s.GoToHome();
+            s.GoToServer(ServerNavPages.Users);
+            var rows = s.Driver.FindElements(By.CssSelector("#UsersList tr"));
+            Assert.True(rows.Count >= 3);
+            
+            // Check user which didn't require approval
+            s.Driver.FindElement(By.Id("SearchTerm")).Clear();
+            s.Driver.FindElement(By.Id("SearchTerm")).SendKeys(autoApproved.RegisterDetails.Email);
+            s.Driver.FindElement(By.Id("SearchTerm")).SendKeys(Keys.Enter);
+            rows = s.Driver.FindElements(By.CssSelector("#UsersList tr"));
+            Assert.Single(rows);
+            Assert.Contains(autoApproved.RegisterDetails.Email, rows.First().Text);
+            s.Driver.ElementDoesNotExist(By.CssSelector("#UsersList tr:first-child .user-approved"));
+            // Edit view does not contain approve toggle
+            s.Driver.FindElement(By.CssSelector("#UsersList tr:first-child .user-edit")).Click();
+            s.Driver.ElementDoesNotExist(By.Id("Approved"));
+            
+            // Check user which still requires approval
+            s.GoToServer(ServerNavPages.Users);
+            s.Driver.FindElement(By.Id("SearchTerm")).Clear();
+            s.Driver.FindElement(By.Id("SearchTerm")).SendKeys(unapproved.RegisterDetails.Email);
+            s.Driver.FindElement(By.Id("SearchTerm")).SendKeys(Keys.Enter);
+            rows = s.Driver.FindElements(By.CssSelector("#UsersList tr"));
+            Assert.Single(rows);
+            Assert.Contains(unapproved.RegisterDetails.Email, rows.First().Text);
+            s.Driver.FindElement(By.CssSelector("#UsersList tr:first-child .user-approved.text-danger"));
+            // Approve user
+            s.Driver.FindElement(By.CssSelector("#UsersList tr:first-child .user-edit")).Click();
+            s.Driver.FindElement(By.Id("Approved")).Click();
+            s.Driver.FindElement(By.Id("SaveUser")).Click();
+            Assert.Contains("User successfully updated", s.FindAlertMessage().Text);
+            // Check list again
+            s.GoToServer(ServerNavPages.Users);
+            Assert.Contains(unapproved.RegisterDetails.Email, s.Driver.FindElement(By.Id("SearchTerm")).GetAttribute("value"));
+            rows = s.Driver.FindElements(By.CssSelector("#UsersList tr"));
+            Assert.Single(rows);
+            Assert.Contains(unapproved.RegisterDetails.Email, rows.First().Text);
+            s.Driver.FindElement(By.CssSelector("#UsersList tr:first-child .user-approved.text-success"));
+            
+            // Finally, login user that needed approval
+            s.Logout();
+            s.GoToLogin();
+            s.LogIn(unapproved.RegisterDetails.Email, unapproved.RegisterDetails.Password);
+            s.Driver.AssertNoError();
+            Assert.DoesNotContain("/login", s.Driver.Url);
+            s.CreateNewStore();
+        }
+
+        [Fact(Timeout = TestTimeout)]
         public async Task CanUseSSHService()
         {
             using var s = CreateSeleniumTester();

@@ -62,16 +62,48 @@ namespace BTCPayServer.Services
             };
         }
 
-        private bool IsApproved(ApplicationUser user)
+        private static bool IsEmailConfirmed(ApplicationUser user)
+        {
+            return user.EmailConfirmed || !user.RequiresEmailConfirmation;
+        }
+
+        private static bool IsApproved(ApplicationUser user)
         {
             return user.Approved || !user.RequiresApproval;
         }
 
-        private bool IsDisabled(ApplicationUser user)
+        private static bool IsDisabled(ApplicationUser user)
         {
             return user.LockoutEnabled && user.LockoutEnd is not null &&
                    DateTimeOffset.UtcNow < user.LockoutEnd.Value.UtcDateTime;
         }
+        
+        public static bool TryCanLogin(ApplicationUser? user, out string? error)
+        {
+            error = null;
+            if (user == null)
+            {
+                error = "Invalid login attempt.";
+                return false;
+            }
+            if (!IsEmailConfirmed(user))
+            {
+                error = "You must have a confirmed email to log in.";
+                return false;
+            }
+            if (!IsApproved(user))
+            {
+                error = "Your user account requires approval by an admin before you can log in.";
+                return false;
+            }
+            if (IsDisabled(user))
+            {
+                error = "Your user account is currently disabled.";
+                return false;
+            }
+            return true;
+        }
+        
         public async Task<bool?> ToggleUser(string userId, DateTimeOffset? lockedOutDeadline)
         {
             using var scope = _serviceProvider.CreateScope();

@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using BTCPayServer.Services.Apps;
 using BTCPayServer.Validation;
 using Newtonsoft.Json;
 
@@ -14,6 +13,14 @@ namespace BTCPayServer.Services
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
         [Display(Name = "Disable new user registration on the server")]
         public bool LockSubscription { get; set; }
+        
+        [JsonIgnore]
+        [Display(Name = "Enable new user registration on the server")]
+        public bool EnableRegistration
+        {
+            get => !LockSubscription;
+            set { LockSubscription = !value; }
+        }
 
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
         [Display(Name = "Discourage search engines from indexing this site")]
@@ -32,6 +39,14 @@ namespace BTCPayServer.Services
         public bool DisableStoresToUseServerEmailSettings { get; set; }
         [Display(Name = "Disable non-admins access to the user creation API endpoint")]
         public bool DisableNonAdminCreateUserApi { get; set; }
+        
+        [JsonIgnore]
+        [Display(Name = "Non-admins can access the user creation API endpoint")]
+        public bool EnableNonAdminCreateUserApi
+        {
+            get => !DisableNonAdminCreateUserApi;
+            set { DisableNonAdminCreateUserApi = !value; }
+        }
 
         public const string DefaultPluginSource = "https://plugin-builder.btcpayserver.org";
         [UriAttribute]

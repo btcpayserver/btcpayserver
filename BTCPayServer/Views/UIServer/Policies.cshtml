@@ -11,15 +11,8 @@
 
 @section PageHeadContent {
     <style>
-        #AllowLightningInternalNodeForAll ~ .info-note,
-        #AllowHotWalletRPCImportForAll ~ .info-note,
-        #AllowHotWalletForAll ~ .info-note,
-        #DisableNonAdminCreateUserApi:checked ~ .info-note,
-        #LockSubscription:checked ~ .info-note { display: none; }
-        
-        #AllowLightningInternalNodeForAll:checked ~ .info-note,
-        #AllowHotWalletRPCImportForAll:checked ~ .info-note,
-        #AllowHotWalletForAll:checked ~ .info-note { display: inline-flex; }
+        input[type="checkbox"] ~ .info-note { display: none; }
+        input[type="checkbox"]:checked ~ .info-note { display: inline-flex; }
     </style>
 }
 
@@ -34,7 +27,50 @@
     <div class="col-xl-8 col-xxl-constrain">
         <form method="post" class="d-flex flex-column">
             <div class="form-group mb-5">
-                <h4 class="mb-3">Existing User Settings</h4>
+                <h4 class="mb-3">Registration Settings</h4>
+                <div class="form-check my-3">
+                    @{
+                        var emailSettings = (await _SettingsRepository.GetSettingAsync<EmailSettings>()) ?? new EmailSettings();
+                        /* The "|| Model.RequiresConfirmedEmail" check is for the case when a user had checked
+                           the checkbox without first configuring the e-mail settings so that they can uncheck it. */
+                        var isEmailConfigured = emailSettings.IsComplete() || Model.RequiresConfirmedEmail;
+                    }
+                    <input asp-for="RequiresConfirmedEmail" type="checkbox" class="form-check-input" disabled="@(isEmailConfigured ? null : "disabled")"/>
+                    <label asp-for="RequiresConfirmedEmail" class="form-check-label"></label>
+                    <a href="https://docs.btcpayserver.org/FAQ/ServerSettings/#how-to-allow-registration-on-my-btcpay-server" target="_blank" rel="noreferrer noopener">
+                        <vc:icon symbol="info" />
+                    </a>
+                    <span asp-validation-for="RequiresConfirmedEmail" class="text-danger"></span>
+                    @if (!isEmailConfigured)
+                    {
+                        <div class="mb-2">
+                            <span class="text-secondary">Your email server has not been configured. <a asp-controller="UIServer" asp-action="Emails">Please configure it first.</a></span>
+                        </div>
+                    }
+                </div>
+                <div class="form-check my-3">
+                    <input asp-for="EnableRegistration" type="checkbox" class="form-check-input"/>
+                    <label asp-for="EnableRegistration" class="form-check-label"></label>
+                    <span asp-validation-for="EnableRegistration" class="text-danger"></span>
+                    <div class="info-note mt-2 text-warning" role="alert">
+                        <vc:icon symbol="warning"/>
+                        Caution: Enabling public user registration means anyone can register to your server and may expose your BTCPay Server instance to potential security risks from unknown users.
+                    </div>
+                </div>
+
+                <div class="form-check my-3">
+                    <input asp-for="EnableNonAdminCreateUserApi" type="checkbox" class="form-check-input"/>
+                    <label asp-for="EnableNonAdminCreateUserApi" class="form-check-label"></label>
+                    <span asp-validation-for="EnableNonAdminCreateUserApi" class="text-danger"></span>
+                    <div class="info-note mt-2 text-warning" role="alert">
+                        <vc:icon symbol="warning"/>
+                        Caution: Allowing non-admins to have access to API endpoints may expose your BTCPay Server instance to potential security risks from unknown users.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group mb-5">
+                <h4 class="mb-3">User Settings</h4>
                 <div class="form-check my-3">
                     <input asp-for="AllowLightningInternalNodeForAll" type="checkbox" class="form-check-input"/>
                     <label asp-for="AllowLightningInternalNodeForAll" class="form-check-label"></label>
@@ -66,49 +102,6 @@
                     <div class="info-note mt-2 text-warning" role="alert">
                         <vc:icon symbol="warning"/>
                         Caution: Enabling this option, may simplify the onboarding and spending for third-parties but carries liabilities and security risks associated to storing private keys of third parties on a server.
-                    </div>
-                </div>
-            </div>
-
-            <div class="form-group mb-5">
-                <h4 class="mb-3">New User Settings</h4>
-                <div class="form-check my-3">
-                    @{
-                        var emailSettings = (await _SettingsRepository.GetSettingAsync<EmailSettings>()) ?? new EmailSettings();
-                        /* The "|| Model.RequiresConfirmedEmail" check is for the case when a user had checked
-                           the checkbox without first configuring the e-mail settings so that they can uncheck it. */
-                        var isEmailConfigured = emailSettings.IsComplete() || Model.RequiresConfirmedEmail;
-                    }
-                    <input asp-for="RequiresConfirmedEmail" type="checkbox" class="form-check-input" disabled="@(isEmailConfigured ? null : "disabled")"/>
-                    <label asp-for="RequiresConfirmedEmail" class="form-check-label"></label>
-                    <a href="https://docs.btcpayserver.org/FAQ/ServerSettings/#how-to-allow-registration-on-my-btcpay-server" target="_blank" rel="noreferrer noopener">
-                        <vc:icon symbol="info" />
-                    </a>
-                    <span asp-validation-for="RequiresConfirmedEmail" class="text-danger"></span>
-                    @if (!isEmailConfigured)
-                    {
-                        <div class="mb-2">
-                            <span class="text-secondary">Your email server has not been configured. <a asp-controller="UIServer" asp-action="Emails">Please configure it first.</a></span>
-                        </div>
-                    }
-                </div>
-                <div class="form-check my-3">
-                    <input asp-for="LockSubscription" type="checkbox" class="form-check-input"/>
-                    <label asp-for="LockSubscription" class="form-check-label"></label>
-                    <span asp-validation-for="LockSubscription" class="text-danger"></span>
-                    <div class="info-note mt-2 text-warning" role="alert">
-                        <vc:icon symbol="warning"/>
-                        Caution: Enabling public user registration means anyone can register to your server and may expose your BTCPay Server instance to potential security risks from unknown users.
-                    </div>
-                </div>
-
-                <div class="form-check my-3">
-                    <input asp-for="DisableNonAdminCreateUserApi" type="checkbox" class="form-check-input"/>
-                    <label asp-for="DisableNonAdminCreateUserApi" class="form-check-label"></label>
-                    <span asp-validation-for="DisableNonAdminCreateUserApi" class="text-danger"></span>
-                    <div class="info-note mt-2 text-warning" role="alert">
-                        <vc:icon symbol="warning"/>
-                        Caution: Allowing non-admins to have access to API endpoints may expose your BTCPay Server instance to potential security risks from unknown users.
                     </div>
                 </div>
             </div>

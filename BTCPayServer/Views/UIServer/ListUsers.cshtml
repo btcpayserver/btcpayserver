@@ -3,16 +3,12 @@
 @{
     ViewData.SetActivePage(ServerNavPages.Users);
     var nextUserEmailSortOrder = (string)ViewData["NextUserEmailSortOrder"];
-    String userEmailSortOrder = null;
-    switch (nextUserEmailSortOrder)
+    var userEmailSortOrder = nextUserEmailSortOrder switch
     {
-        case "asc":
-            userEmailSortOrder = "desc";
-            break;
-        case "desc":
-            userEmailSortOrder = "asc";
-            break;
-    }
+        "asc" => "desc",
+        "desc" => "asc",
+        _ => null
+    };
 
     var sortIconClass = "fa-sort";
     if (userEmailSortOrder != null)
@@ -20,8 +16,8 @@
         sortIconClass = $"fa-sort-alpha-{userEmailSortOrder}";
     }
 
-    var sortByDesc = "Sort by descending...";
-    var sortByAsc = "Sort by ascending...";
+    const string sortByDesc = "Sort by descending...";
+    const string sortByAsc = "Sort by ascending...";
 }
 
 <div class="d-flex align-items-center justify-content-between mb-3">
@@ -53,7 +49,7 @@
                     title="@(nextUserEmailSortOrder == "desc" ? sortByAsc : sortByDesc)"
                 >
                     Email
-                    <span class="fa @(sortIconClass)" />
+                    <span class="fa @(sortIconClass)"></span>
                 </a>
             </th>
             <th >Created</th>

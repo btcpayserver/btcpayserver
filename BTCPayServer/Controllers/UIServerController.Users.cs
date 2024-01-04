@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
@@ -8,25 +7,21 @@ using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
-using BTCPayServer.Models;
 using BTCPayServer.Models.ServerViewModels;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
-using MimeKit;
 
 namespace BTCPayServer.Controllers
 {
     public partial class UIServerController
     {
-        [Route("server/users")]
+        [HttpGet("server/users")]
         public async Task<IActionResult> ListUsers(
             [FromServices] RoleManager<IdentityRole> roleManager,
-        UsersViewModel model,
-            string sortOrder = null
-        )
+            UsersViewModel model,
+            string sortOrder = null)
         {
             model = this.ParseListQuery(model ?? new UsersViewModel());
 
@@ -74,25 +69,24 @@ namespace BTCPayServer.Controllers
             return View(model);
         }
 
-        [Route("server/users/{userId}")]
+        [HttpGet("server/users/{userId}")]
         public new async Task<IActionResult> User(string userId)
         {
             var user = await _UserManager.FindByIdAsync(userId);
             if (user == null)
                 return NotFound();
             var roles = await _UserManager.GetRolesAsync(user);
-            var userVM = new UsersViewModel.UserViewModel
+            var model = new UsersViewModel.UserViewModel
             {
                 Id = user.Id,
                 Email = user.Email,
                 Verified = user.EmailConfirmed || !user.RequiresEmailConfirmation,
                 IsAdmin = Roles.HasServerAdmin(roles)
             };
-            return View(userVM);
+            return View(model);
         }
 
-        [Route("server/users/{userId}")]
-        [HttpPost]
+        [HttpPost("server/users/{userId}")]
         public new async Task<IActionResult> User(string userId, UsersViewModel.UserViewModel viewModel)
         {
             var user = await _UserManager.FindByIdAsync(userId);
@@ -105,7 +99,7 @@ namespace BTCPayServer.Controllers
             if (!viewModel.IsAdmin && admins.Count == 1 && wasAdmin)
             {
                 TempData[WellKnownTempData.ErrorMessage] = "This is the only Admin, so their role can't be removed until another Admin is added.";
-                return View(viewModel); // return
+                return View(viewModel);
             }
 
             if (viewModel.IsAdmin != wasAdmin)
@@ -121,19 +115,17 @@ namespace BTCPayServer.Controllers
                 }
             }
 
-            return RedirectToAction(nameof(User), new { userId = userId });
+            return RedirectToAction(nameof(User), new { userId });
         }
 
-        [Route("server/users/new")]
-        [HttpGet]
+        [HttpGet("server/users/new")]
         public IActionResult CreateUser()
         {
             ViewData["AllowRequestEmailConfirmation"] = _policiesSettings.RequiresConfirmedEmail;
             return View();
         }
 
-        [Route("server/users/new")]
-        [HttpPost]
+        [HttpPost("server/users/new")]
         public async Task<IActionResult> CreateUser(RegisterFromAdminViewModel model)
         {
             var requiresConfirmedEmail = _policiesSettings.RequiresConfirmedEmail;
@@ -223,7 +215,6 @@ namespace BTCPayServer.Controllers
             {
                 if (await _userService.IsUserTheOnlyOneAdmin(user))
                 {
-                    // return
                     return View("Confirm", new ConfirmModel("Delete admin",
                         $"Unable to proceed: As the user <strong>{Html.Encode(user.Email)}</strong> is the last enabled admin, it cannot be removed."));
                 }

@@ -119,9 +119,9 @@ namespace BTCPayServer.Tests
                         })
                         .ToArray());
                 //ENSURE THESE ARE LOGICAL
-                Assert.True(recommendedFees[0].FeeRate >= recommendedFees[1].FeeRate);
-                Assert.True(recommendedFees[1].FeeRate >= recommendedFees[2].FeeRate);
-                Assert.True(recommendedFees[2].FeeRate >= recommendedFees[3].FeeRate);
+                Assert.True(recommendedFees[0].FeeRate >= recommendedFees[1].FeeRate, $"{recommendedFees[0].Target}:{recommendedFees[0].FeeRate} >= {recommendedFees[1].Target}:{recommendedFees[1].FeeRate}");
+                Assert.True(recommendedFees[1].FeeRate >= recommendedFees[2].FeeRate, $"{recommendedFees[1].Target}:{recommendedFees[1].FeeRate} >= {recommendedFees[2].Target}:{recommendedFees[2].FeeRate}");
+                Assert.True(recommendedFees[2].FeeRate >= recommendedFees[3].FeeRate, $"{recommendedFees[2].Target}:{recommendedFees[2].FeeRate} >= {recommendedFees[3].Target}:{recommendedFees[3].FeeRate}");
                 
                 
                 

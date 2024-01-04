@@ -12,12 +12,12 @@ using NBitcoin;
 namespace BTCPayServer.Services.Fees;
 
 public class MempoolSpaceFeeProvider(
-    IMemoryCache MemoryCache,
-    string CacheKey,
-    IHttpClientFactory HttpClientFactory,
-    bool Testnet) : IFeeProvider
+    IMemoryCache memoryCache,
+    string cacheKey,
+    IHttpClientFactory httpClientFactory,
+    bool testnet) : IFeeProvider
 {
-    private string ExplorerLink = Testnet switch
+    private string ExplorerLink = testnet switch
     {
         true => "https://mempool.space/testnet/api/v1/fees/recommended",
         false => "https://mempool.space/api/v1/fees/recommended"
@@ -35,47 +35,37 @@ public class MempoolSpaceFeeProvider(
     
     static FeeRate InterpolateOrBound(Dictionary<int, FeeRate> dictionary, int target)
     {
-        // Get the smallest and largest keys
-        int smallestKey = dictionary.Keys.Min();
-        int largestKey = dictionary.Keys.Max();
-
-        // If the target is outside the range, clamp to the nearest bound
-        if (target <= smallestKey)
-        {
-            return dictionary[smallestKey];
-        }
-        if (target >= largestKey)
-        {
-            return dictionary[largestKey];
-        }
-
         // Find the keys closest to the target for interpolation
-        int key1 = 0, key2 = 0;
-        decimal value1 = 0, value2 = 0;
+        int? k1 = null;
+        int? k2 = null;
 
-        foreach (var key in dictionary.Keys)
+        foreach (int k in dictionary.Keys.Order())
         {
-            if (key < target && (key1 == 0 || key > key1))
+            k1 = k1 is null ? k : k2;
+            k2 = k;
+            if(target < k)
             {
-                key1 = key;
-                value1 = dictionary[key].SatoshiPerByte;
-            }
-            if (key > target && (key2 == 0 || key < key2))
-            {
-                key2 = key;
-                value2 = dictionary[key].SatoshiPerByte;
+                break;
             }
         }
+
+        if (k1 is null)
+        {
+           throw new InvalidOperationException("No fee rate available");
+        }
+        
+        var v1 = dictionary[k1!.Value].SatoshiPerByte;
+        var v2 = dictionary[k2!.Value].SatoshiPerByte;
 
         // Linear interpolation formula
-        return new FeeRate(value1 + ((value2 - value1) / (key2 - key1)) * (target - key1));
+        return new FeeRate((decimal) (v1 + (v2 - v1) / (k1 - k2) * (target - k1))!);
     }
 
     public async Task<Dictionary<int, FeeRate>> GetFeeRatesAsync()
     {
         try
         {
-            return  (await  MemoryCache.GetOrCreateAsync(CacheKey, async entry =>
+            return  (await  memoryCache.GetOrCreateAsync(cacheKey, async entry =>
             {
                 entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
                 return await GetFeeRatesCore();
@@ -83,14 +73,14 @@ public class MempoolSpaceFeeProvider(
         }
         catch (Exception e)
         {
-            MemoryCache.Remove(CacheKey);
+            memoryCache.Remove(cacheKey);
             throw;
         }
     }
 
     protected virtual async Task<Dictionary<int, FeeRate>> GetFeeRatesCore()
     {
-        var client = HttpClientFactory.CreateClient(nameof(MempoolSpaceFeeProvider));
+        var client = httpClientFactory.CreateClient(nameof(MempoolSpaceFeeProvider));
         using var result = await client.GetAsync(ExplorerLink, new CancellationTokenSource(TimeSpan.FromSeconds(10)).Token);
         result.EnsureSuccessStatusCode();
         var recommendedFees = await result.Content.ReadAsAsync<Dictionary<string, decimal>>();
@@ -120,9 +110,9 @@ public class MempoolSpaceFeeProvider(
             }
             else
             {
-                var previous = ordered[i - 1].Value;
+                var previous = feesByBlockTarget[ordered[i - 1].Key];
                 var newValue = RandomizeByPercentage(value.SatoshiPerByte, 10);
-                if (newValue < previous.SatoshiPerByte)
+                if (newValue > previous.SatoshiPerByte)
                 {
                     newValue = previous.SatoshiPerByte;
                 }
@@ -145,7 +135,7 @@ public class MempoolSpaceFeeProvider(
         return res switch
         {
             < 1m => 1m,
-            > 850m => 2000m,
+            > 2000m => 2000m,
             _ => res
         };
     }

@@ -46,19 +46,25 @@ namespace BTCPayServer.Services
                (userRole, role) => role.Name).ToArray()))).ToListAsync();
         }
 
-
         public static ApplicationUserData FromModel(ApplicationUser data, string?[] roles)
         {
-            return new ApplicationUserData()
+            return new ApplicationUserData
             {
                 Id = data.Id,
                 Email = data.Email,
                 EmailConfirmed = data.EmailConfirmed,
                 RequiresEmailConfirmation = data.RequiresEmailConfirmation,
+                Approved = data.Approved,
+                RequiresApproval = data.RequiresApproval,
                 Created = data.Created,
                 Roles = roles,
                 Disabled = data.LockoutEnabled && data.LockoutEnd is not null && DateTimeOffset.UtcNow < data.LockoutEnd.Value.UtcDateTime
             };
+        }
+
+        private bool IsApproved(ApplicationUser user)
+        {
+            return user.Approved || !user.RequiresApproval;
         }
 
         private bool IsDisabled(ApplicationUser user)
@@ -163,7 +169,6 @@ namespace BTCPayServer.Services
             }
         }
 
-
         public async Task<bool> IsUserTheOnlyOneAdmin(ApplicationUser user)
         {
             using var scope = _serviceProvider.CreateScope();
@@ -175,7 +180,7 @@ namespace BTCPayServer.Services
             }
             var adminUsers = await userManager.GetUsersInRoleAsync(Roles.ServerAdmin);
             var enabledAdminUsers = adminUsers
-                                        .Where(applicationUser => !IsDisabled(applicationUser))
+                                        .Where(applicationUser => !IsDisabled(applicationUser) && IsApproved(applicationUser))
                                         .Select(applicationUser => applicationUser.Id).ToList();
 
             return enabledAdminUsers.Count == 1 && enabledAdminUsers.Contains(user.Id);

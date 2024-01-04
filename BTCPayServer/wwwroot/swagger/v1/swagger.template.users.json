@@ -325,7 +325,15 @@
                     },
                     "requiresEmailConfirmation": {
                         "type": "boolean",
-                        "description": "True if the email requires email confirmation to log in"
+                        "description": "True if the email requires confirmation to log in"
+                    },
+                    "approved": {
+                        "type": "boolean",
+                        "description": "True if an admin has approved the user"
+                    },
+                    "requiresApproval": {
+                        "type": "boolean",
+                        "description": "True if the instance requires approval to log in"
                     },
                     "created": {
                         "nullable": true,

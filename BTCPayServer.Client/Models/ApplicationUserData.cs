@@ -26,6 +26,16 @@ namespace BTCPayServer.Client.Models
         public bool RequiresEmailConfirmation { get; set; }
 
         /// <summary>
+        /// Whether the user was approved by an admin
+        /// </summary>
+        public bool Approved { get; set; }
+
+        /// <summary>
+        /// whether the user needed approval on account creation
+        /// </summary>
+        public bool RequiresApproval { get; set; }
+
+        /// <summary>
         /// the roles of the user
         /// </summary>
         public string[] Roles { get; set; }

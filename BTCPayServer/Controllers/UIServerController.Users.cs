@@ -59,7 +59,8 @@ namespace BTCPayServer.Controllers
                     Name = u.UserName,
                     Email = u.Email,
                     Id = u.Id,
-                    Verified = u.EmailConfirmed || !u.RequiresEmailConfirmation,
+                    EmailConfirmed = u.RequiresEmailConfirmation ? u.EmailConfirmed : null,
+                    Approved = u.RequiresApproval ? u.Approved : null,
                     Created = u.Created,
                     Roles = u.UserRoles.Select(role => role.RoleId),
                     Disabled = u.LockoutEnabled && u.LockoutEnd != null && DateTimeOffset.UtcNow < u.LockoutEnd.Value.UtcDateTime
@@ -80,7 +81,8 @@ namespace BTCPayServer.Controllers
             {
                 Id = user.Id,
                 Email = user.Email,
-                Verified = user.EmailConfirmed || !user.RequiresEmailConfirmation,
+                EmailConfirmed = user.RequiresEmailConfirmation ? user.EmailConfirmed : null,
+                Approved = user.RequiresApproval ? user.Approved : null,
                 IsAdmin = Roles.HasServerAdmin(roles)
             };
             return View(model);
@@ -93,6 +95,20 @@ namespace BTCPayServer.Controllers
             if (user == null)
                 return NotFound();
 
+            bool? propertiesChanged = null;
+            bool? adminStatusChanged = null;
+
+            if (viewModel.Approved.HasValue && user.Approved != viewModel.Approved)
+            {
+                user.Approved = viewModel.Approved.Value;
+                propertiesChanged = true;
+            }
+            if (viewModel.EmailConfirmed.HasValue && user.EmailConfirmed != viewModel.EmailConfirmed)
+            {
+                user.EmailConfirmed = viewModel.EmailConfirmed.Value;
+                propertiesChanged = true;
+            }
+
             var admins = await _UserManager.GetUsersInRoleAsync(Roles.ServerAdmin);
             var roles = await _UserManager.GetRolesAsync(user);
             var wasAdmin = Roles.HasServerAdmin(roles);
@@ -104,8 +120,17 @@ namespace BTCPayServer.Controllers
 
             if (viewModel.IsAdmin != wasAdmin)
             {
-                var success = await _userService.SetAdminUser(user.Id, viewModel.IsAdmin);
-                if (success)
+                adminStatusChanged = await _userService.SetAdminUser(user.Id, viewModel.IsAdmin);
+            }
+
+            if (propertiesChanged is true)
+            {
+                propertiesChanged = await _UserManager.UpdateAsync(user) is { Succeeded: true };
+            }
+
+            if (propertiesChanged.HasValue || adminStatusChanged.HasValue)
+            {
+                if (propertiesChanged is not false && adminStatusChanged is not false)
                 {
                     TempData[WellKnownTempData.SuccessMessage] = "User successfully updated";
                 }
@@ -121,6 +146,7 @@ namespace BTCPayServer.Controllers
         [HttpGet("server/users/new")]
         public IActionResult CreateUser()
         {
+            ViewData["AllowRequestApproval"] = _policiesSettings.RequiresUserApproval;
             ViewData["AllowRequestEmailConfirmation"] = _policiesSettings.RequiresConfirmedEmail;
             return View();
         }
@@ -128,8 +154,8 @@ namespace BTCPayServer.Controllers
         [HttpPost("server/users/new")]
         public async Task<IActionResult> CreateUser(RegisterFromAdminViewModel model)
         {
-            var requiresConfirmedEmail = _policiesSettings.RequiresConfirmedEmail;
-            ViewData["AllowRequestEmailConfirmation"] = requiresConfirmedEmail;
+            ViewData["AllowRequestApproval"] = _policiesSettings.RequiresUserApproval;
+            ViewData["AllowRequestEmailConfirmation"] = _policiesSettings.RequiresConfirmedEmail;
             if (!_Options.CheatMode)
                 model.IsAdmin = false;
             if (ModelState.IsValid)
@@ -140,7 +166,9 @@ namespace BTCPayServer.Controllers
                     UserName = model.Email,
                     Email = model.Email,
                     EmailConfirmed = model.EmailConfirmed,
-                    RequiresEmailConfirmation = requiresConfirmedEmail,
+                    RequiresEmailConfirmation = _policiesSettings.RequiresUserApproval,
+                    RequiresApproval = _policiesSettings.RequiresConfirmedEmail,
+                    Approved = model.Approved,
                     Created = DateTimeOffset.UtcNow
                 };
 
@@ -323,5 +351,8 @@ namespace BTCPayServer.Controllers
 
         [Display(Name = "Email confirmed?")]
         public bool EmailConfirmed { get; set; }
+
+        [Display(Name = "User approved?")]
+        public bool Approved { get; set; }
     }
 }

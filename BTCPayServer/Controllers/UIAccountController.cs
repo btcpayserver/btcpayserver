@@ -126,7 +126,6 @@ namespace BTCPayServer.Controllers
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
         [RateLimitsFilter(ZoneLimits.Login, Scope = RateLimitsScope.RemoteAddress)]
-
         public async Task<IActionResult> LoginWithCode(string loginCode, string returnUrl = null)
         {
             if (!string.IsNullOrEmpty(loginCode))
@@ -569,18 +568,21 @@ namespace BTCPayServer.Controllers
                 return RedirectToAction(nameof(UIHomeController.Index), "UIHome");
             if (ModelState.IsValid)
             {
+                var anyAdmin = (await _userManager.GetUsersInRoleAsync(Roles.ServerAdmin)).Any();
+                var isFirstAdmin = !anyAdmin || (model.IsAdmin && _Options.CheatMode);
                 var user = new ApplicationUser
                 {
                     UserName = model.Email,
                     Email = model.Email,
                     RequiresEmailConfirmation = policies.RequiresConfirmedEmail,
-                    Created = DateTimeOffset.UtcNow
+                    RequiresApproval = policies.RequiresUserApproval,
+                    Created = DateTimeOffset.UtcNow,
+                    Approved = isFirstAdmin // auto-approve first admin
                 };
                 var result = await _userManager.CreateAsync(user, model.Password);
                 if (result.Succeeded)
                 {
-                    var admin = await _userManager.GetUsersInRoleAsync(Roles.ServerAdmin);
-                    if (admin.Count == 0 || (model.IsAdmin && _Options.CheatMode))
+                    if (isFirstAdmin)
                     {
                         await _RoleManager.CreateAsync(new IdentityRole(Roles.ServerAdmin));
                         await _userManager.AddToRoleAsync(user, Roles.ServerAdmin);
@@ -606,11 +608,9 @@ namespace BTCPayServer.Controllers
                             await _signInManager.SignInAsync(user, isPersistent: false);
                         return RedirectToLocal(returnUrl);
                     }
-                    else
-                    {
-                        TempData[WellKnownTempData.SuccessMessage] = "Account created, please confirm your email";
-                        return View();
-                    }
+
+                    TempData[WellKnownTempData.SuccessMessage] = "Account created, please confirm your email";
+                    return View();
                 }
                 AddErrors(result);
             }
@@ -687,7 +687,9 @@ namespace BTCPayServer.Controllers
             if (ModelState.IsValid)
             {
                 var user = await _userManager.FindByEmailAsync(model.Email);
-                if (user == null || (user.RequiresEmailConfirmation && !(await _userManager.IsEmailConfirmedAsync(user))))
+                if (user == null || 
+                    (user.RequiresApproval && !user.Approved) || 
+                    (user.RequiresEmailConfirmation && !await _userManager.IsEmailConfirmedAsync(user)))
                 {
                     // Don't reveal that the user does not exist or is not confirmed
                     return RedirectToAction(nameof(ForgotPasswordConfirmation));

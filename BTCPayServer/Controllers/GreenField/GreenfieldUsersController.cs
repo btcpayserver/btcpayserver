@@ -92,6 +92,26 @@ namespace BTCPayServer.Controllers.Greenfield
                 $"{(request.Locked ? "Locking" : "Unlocking")} user failed");
         }
 
+        [Authorize(Policy = Policies.CanModifyServerSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [HttpPost("~/api/v1/users/{idOrEmail}/approve")]
+        public async Task<IActionResult> ApproveUser(string idOrEmail, ApproveUserRequest request)
+        {
+            var user = await _userManager.FindByIdOrEmail(idOrEmail);
+            if (user is null)
+            {
+                return this.UserNotFound();
+            }
+
+            var success = false;
+            if (user.RequiresApproval)
+            {
+                user.Approved = request.Approved;
+                success = await _userManager.UpdateAsync(user) is { Succeeded: true };
+            }
+            return success ? Ok() : this.CreateAPIError("invalid-state",
+                $"{(request.Approved ? "Approving" : "Unapproving")} user failed");
+        }
+
         [Authorize(Policy = Policies.CanViewUsers, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/users/")]
         public async Task<ActionResult<ApplicationUserData[]>> GetUsers()

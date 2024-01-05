@@ -694,13 +694,9 @@ namespace BTCPayServer.Tests
             // Try loading 1 user by email. Loading myself.
             await AssertHttpError(403, async () => await badClient.GetUserByIdOrEmail(badUser.Email));
 
-
-
-
             // Why is this line needed? I saw it in "CanDeleteUsersViaApi" as well. Is this part of the cleanup?
             tester.Stores.Remove(adminUser.StoreId);
         }
-
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
@@ -3572,6 +3568,62 @@ namespace BTCPayServer.Tests
             await newUserBasicClient.GetCurrentUser();
         }
 
+        [Fact(Timeout = 60 * 2 * 1000)]
+        [Trait("Integration", "Integration")]
+        public async Task ApproveUserTests()
+        {
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+            var admin = tester.NewAccount();
+            await admin.GrantAccessAsync(true);
+            var adminClient = await admin.CreateClient(Policies.Unrestricted);
+            Assert.False((await adminClient.GetUserByIdOrEmail(admin.UserId)).RequiresApproval);
+
+            // require approval
+            var settings = tester.PayTester.GetService<SettingsRepository>();
+            await settings.UpdateSetting(new PoliciesSettings { LockSubscription = false, RequiresUserApproval = true });
+            
+            // new user needs approval
+            var unapprovedUser = tester.NewAccount();
+            await unapprovedUser.GrantAccessAsync();
+            var unapprovedUserClient = await unapprovedUser.CreateClient(Policies.Unrestricted);
+            await AssertAPIError("unauthenticated", async () =>
+            {
+                await unapprovedUserClient.GetCurrentUser();
+            });
+            Assert.True((await adminClient.GetUserByIdOrEmail(unapprovedUser.UserId)).RequiresApproval);
+            Assert.False((await adminClient.GetUserByIdOrEmail(unapprovedUser.UserId)).Approved);
+
+            // approve
+            Assert.True(await adminClient.ApproveUser(unapprovedUser.UserId, true, CancellationToken.None));
+            Assert.True((await adminClient.GetUserByIdOrEmail(unapprovedUser.UserId)).Approved);
+            Assert.True((await unapprovedUserClient.GetCurrentUser()).Approved);
+            
+            // un-approve
+            Assert.True(await adminClient.ApproveUser(unapprovedUser.UserId, false, CancellationToken.None));
+            Assert.False((await adminClient.GetUserByIdOrEmail(unapprovedUser.UserId)).Approved);
+            await AssertAPIError("unauthenticated", async () =>
+            {
+                await unapprovedUserClient.GetCurrentUser();
+            });
+            
+            // reset policies to not require approval
+            await settings.UpdateSetting(new PoliciesSettings { LockSubscription = false, RequiresUserApproval = false });
+            
+            // new user does not need approval
+            var newUser = tester.NewAccount();
+            await newUser.GrantAccessAsync();
+            var newUserClient = await newUser.CreateClient(Policies.Unrestricted);
+            Assert.False((await newUserClient.GetCurrentUser()).RequiresApproval);
+            Assert.False((await newUserClient.GetCurrentUser()).Approved);
+            
+            // try unapproving user which does not have the RequiresApproval flag
+            await AssertAPIError("invalid-state", async () =>
+            {
+                await adminClient.ApproveUser(newUser.UserId, false, CancellationToken.None);
+            });
+        }
+        
         [Fact(Timeout = 60 * 2 * 1000)]
         [Trait("Integration", "Integration")]
         [Trait("Lightning", "Lightning")]

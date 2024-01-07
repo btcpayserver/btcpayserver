@@ -1,3 +1,4 @@
+@using BTCPayServer.Client
 @model BTCPayServer.Components.StoreNumbers.StoreNumbersViewModel
 
 <div class="widget store-numbers" id="StoreNumbers-@Model.Store.Id">
@@ -23,24 +24,21 @@
     {
         <div class="store-number">
             <header>
+                <h6>Paid invoices in the last @Model.TimeframeDays days</h6>
+                @if (Model.PaidInvoices > 0)
+                {
+                    <a asp-controller="UIInvoice" asp-action="ListInvoices" asp-route-storeId="@Model.Store.Id"  permission="@Policies.CanViewInvoices">View All</a>
+                }
+            </header>
+            <div class="h3">@Model.PaidInvoices</div>
+        </div>
+        <div class="store-number">
+            <header>
                 <h6>Payouts Pending</h6>
-                <a asp-controller="UIStorePullPayments" asp-action="Payouts" asp-route-storeId="@Model.Store.Id">Manage</a>
+                <a asp-controller="UIStorePullPayments" asp-action="Payouts" asp-route-storeId="@Model.Store.Id" permission="@Policies.CanManagePullPayments">Manage</a>
             </header>
             <div class="h3">@Model.PayoutsPending</div>
         </div>
-        @if (Model.Transactions is not null)
-        {
-            <div class="store-number">
-                <header>
-                    <h6>TXs in the last @Model.TransactionDays days</h6>
-                    @if (Model.Transactions.Value > 0)
-                    {
-                        <a asp-controller="UIWallets" asp-action="WalletTransactions" asp-route-walletId="@Model.WalletId">View All</a>
-                    }
-                </header>
-                <div class="h3">@Model.Transactions.Value</div>
-            </div>
-        }
         <div class="store-number">
             <header>
                 <h6>Refunds Issued</h6>

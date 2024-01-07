@@ -1,5 +1,8 @@
 @model BTCPayServer.Components.StoreLightningBalance.StoreLightningBalanceViewModel
-
+@if(!Model.InitialRendering && Model.Balance == null)
+{
+   return;
+}
 <div id="StoreLightningBalance-@Model.Store.Id" class="widget store-lightning-balance">
     <div class="d-flex gap-3 align-items-center justify-content-between mb-2">
         <h6>Lightning Balance</h6>
@@ -23,16 +26,18 @@
             @if (Model.Balance.OffchainBalance != null)
             {
                 <div class="balance">
-                    <h3 class="d-inline-block me-1" data-balance="@Model.TotalOffchain">@Model.TotalOffchain</h3>
-                    <span class="text-secondary fw-semibold text-nowrap">
-                        <span class="currency">@Model.CryptoCode</span> in channels
-                    </span>
+                    <div class="d-flex align-items-baseline gap-1">
+                        <h3 class="d-inline-block me-1" data-balance="@Model.TotalOffchain" data-sensitive>@Model.TotalOffchain</h3>
+                        <span class="text-secondary fw-semibold text-nowrap">
+                            <span class="currency">@Model.CryptoCode</span> in channels
+                        </span>
+                    </div>
 
                     <div class="balance-details collapse" id="balanceDetailsOffchain">
                         @if (Model.Balance.OffchainBalance.Opening != null)
                         {
-                            <div class="mt-2">
-                                <span class="fw-semibold" data-balance="@Model.Balance.OffchainBalance.Opening">
+                            <div class="mt-2 d-flex align-items-baseline gap-1">
+                                <span class="fw-semibold" data-balance="@Model.Balance.OffchainBalance.Opening" data-sensitive>
                                     @Model.Balance.OffchainBalance.Opening
                                 </span>
                                 <span class="text-secondary text-nowrap">
@@ -42,8 +47,8 @@
                         }
                         @if (Model.Balance.OffchainBalance.Local != null)
                         {
-                            <div class="mt-2">
-                                <span class="fw-semibold" data-balance="@Model.Balance.OffchainBalance.Local">
+                            <div class="mt-2 d-flex align-items-baseline gap-1">
+                                <span class="fw-semibold" data-balance="@Model.Balance.OffchainBalance.Local" data-sensitive>
                                     @Model.Balance.OffchainBalance.Local
                                 </span>
                                 <span class="text-secondary text-nowrap">
@@ -53,8 +58,8 @@
                         }
                         @if (Model.Balance.OffchainBalance.Remote != null)
                         {
-                            <div class="mt-2">
-                                <span class="fw-semibold" data-balance="@Model.Balance.OffchainBalance.Remote">
+                            <div class="mt-2 d-flex align-items-baseline gap-1">
+                                <span class="fw-semibold" data-balance="@Model.Balance.OffchainBalance.Remote" data-sensitive>
                                     @Model.Balance.OffchainBalance.Remote
                                 </span>
                                 <span class="text-secondary text-nowrap">
@@ -64,8 +69,8 @@
                         }
                         @if (Model.Balance.OffchainBalance.Closing != null)
                         {
-                            <div class="mt-2">
-                                <span class="fw-semibold" data-balance="@Model.Balance.OffchainBalance.Closing">
+                            <div class="mt-2 d-flex align-items-baseline gap-1">
+                                <span class="fw-semibold" data-balance="@Model.Balance.OffchainBalance.Closing" data-sensitive>
                                     @Model.Balance.OffchainBalance.Closing
                                 </span>
                                 <span class="text-secondary text-nowrap">
@@ -79,15 +84,17 @@
             @if (Model.Balance.OnchainBalance != null)
             {
                 <div class="balance">
-                    <h3 class="d-inline-block me-1" data-balance="@Model.TotalOnchain">@Model.TotalOnchain</h3>
-                    <span class="text-secondary fw-semibold text-nowrap">
-                        <span class="currency">@Model.CryptoCode</span> on-chain
-                    </span>
+                    <div class="d-flex align-items-baseline gap-1">
+                        <h3 class="d-inline-block me-1" data-balance="@Model.TotalOnchain" data-sensitive>@Model.TotalOnchain</h3>
+                        <span class="text-secondary fw-semibold text-nowrap">
+                            <span class="currency">@Model.CryptoCode</span> on-chain
+                        </span>
+                    </div>
                     <div class="balance-details collapse" id="balanceDetailsOnchain">
                         @if (Model.Balance.OnchainBalance.Confirmed != null)
                         {
-                            <div class="mt-2">
-                                <span class="fw-semibold" data-balance="@Model.Balance.OnchainBalance.Confirmed">
+                            <div class="mt-2 d-flex align-items-baseline gap-1">
+                                <span class="fw-semibold" data-balance="@Model.Balance.OnchainBalance.Confirmed" data-sensitive>
                                     @Model.Balance.OnchainBalance.Confirmed
                                 </span>
                                 <span class="text-secondary text-nowrap">
@@ -97,8 +104,8 @@
                         }
                         @if (Model.Balance.OnchainBalance.Unconfirmed != null)
                         {
-                            <div class="mt-2">
-                                <span class="fw-semibold" data-balance="@Model.Balance.OnchainBalance.Unconfirmed">
+                            <div class="mt-2 d-flex align-items-baseline gap-1">
+                                <span class="fw-semibold" data-balance="@Model.Balance.OnchainBalance.Unconfirmed" data-sensitive>
                                     @Model.Balance.OnchainBalance.Unconfirmed
                                 </span>
                                 <span class="text-secondary text-nowrap">
@@ -108,8 +115,8 @@
                         }
                         @if (Model.Balance.OnchainBalance.Reserved != null)
                         {
-                            <div class="mt-2">
-                                <span class="fw-semibold" data-balance="@Model.Balance.OnchainBalance.Reserved">
+                            <div class="mt-2 d-flex align-items-baseline gap-1">
+                                <span class="fw-semibold" data-balance="@Model.Balance.OnchainBalance.Reserved" data-sensitive>
                                     @Model.Balance.OnchainBalance.Reserved
                                 </span>
                                 <span class="text-secondary text-nowrap">

@@ -147,7 +147,8 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 throw ErrorShouldBeAdminForInternalNode();
             }
-            return _lightningClientFactory.Create(internalLightningNode, network);
+
+            return internalLightningNode;
         }
     }
 }

@@ -60,9 +60,6 @@ namespace BTCPayServer.Hosting
                 {
                     httpContext.Response.SetHeader("Access-Control-Allow-Origin", "*");
                     httpContext.SetBitpayAuth(bitpayAuth);
-                }
-                if (isBitpayAPI)
-                {
                     await _Next(httpContext);
                     return;
                 }

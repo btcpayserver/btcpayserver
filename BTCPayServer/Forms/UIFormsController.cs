@@ -13,6 +13,7 @@ using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
 using BTCPayServer.Forms.Models;
+using BTCPayServer.Models;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -77,7 +78,6 @@ public class UIFormsController : Controller
 
         if (!_formDataService.IsFormSchemaValid(modifyForm.FormConfig, out var form, out var error))
         {
-
             ModelState.AddModelError(nameof(modifyForm.FormConfig),
                 $"Form config was invalid: {error})");
         }
@@ -85,7 +85,6 @@ public class UIFormsController : Controller
         {
             modifyForm.FormConfig = form.ToString();
         }
-
 
         if (!ModelState.IsValid)
         {
@@ -166,9 +165,7 @@ public class UIFormsController : Controller
             FormName = formData.Name,
             Form = form,
             StoreName = store?.StoreName,
-            BrandColor = storeBlob?.BrandColor,
-            CssFileId = storeBlob?.CssFileId,
-            LogoFileId = storeBlob?.LogoFileId,
+            StoreBranding = new StoreBrandingViewModel(storeBlob)
         });
     }
 
@@ -205,9 +202,25 @@ public class UIFormsController : Controller
         if (store is null)
             return NotFound();
 
+        try
+        {
+
         var request = _formDataService.GenerateInvoiceParametersFromForm(form);
         var inv = await invoiceController.CreateInvoiceCoreRaw(request, store, Request.GetAbsoluteRoot());
-
+        if (inv.Price == 0 && inv.Type == InvoiceType.Standard && inv.ReceiptOptions?.Enabled is not false)
+        {
+            return RedirectToAction("InvoiceReceipt", "UIInvoice", new { invoiceId = inv.Id });
+        }
         return RedirectToAction("Checkout", "UIInvoice", new { invoiceId = inv.Id });
+        }
+        catch (Exception e)
+        {
+            TempData.SetStatusMessageModel(new StatusMessageModel()
+            {
+                Severity = StatusMessageModel.StatusSeverity.Error,
+                Message = "Could not generate invoice: "+ e.Message
+            });
+            return await GetFormView(formData, form);
+        }
     }
 }

@@ -40,7 +40,7 @@ namespace BTCPayServer.Data
         public NetworkFeeMode NetworkFeeMode { get; set; }
 
         [JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
-        [DefaultValue(CheckoutType.V1)]
+        [DefaultValue(CheckoutType.V2)]
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
         public CheckoutType CheckoutType { get; set; }
         public bool RequiresRefundEmail { get; set; }
@@ -65,6 +65,8 @@ namespace BTCPayServer.Data
                     _DefaultCurrency = _DefaultCurrency.Trim().ToUpperInvariant();
             }
         }
+        
+        public string StoreSupportUrl { get; set; }
 
         CurrencyPair[] _DefaultCurrencyPairs;
         [JsonProperty("defaultCurrencyPairs", ItemConverterType = typeof(CurrencyPairJsonConverter))]
@@ -165,7 +167,7 @@ namespace BTCPayServer.Data
 
         public RateRules GetDefaultRateRules(BTCPayNetworkProvider networkProvider)
         {
-            StringBuilder builder = new StringBuilder();
+            var builder = new StringBuilder();
             foreach (var network in networkProvider.GetAll())
             {
                 if (network.DefaultRateRules.Length != 0)
@@ -175,7 +177,7 @@ namespace BTCPayServer.Data
                     {
                         builder.AppendLine(line);
                     }
-                    builder.AppendLine($"////////");
+                    builder.AppendLine("////////");
                     builder.AppendLine();
                 }
             }
@@ -183,7 +185,7 @@ namespace BTCPayServer.Data
             var preferredExchange = string.IsNullOrEmpty(PreferredExchange) ? GetRecommendedExchange() : PreferredExchange;
             builder.AppendLine(CultureInfo.InvariantCulture, $"X_X = {preferredExchange}(X_X);");
 
-            BTCPayServer.Rating.RateRules.TryParse(builder.ToString(), out var rules);
+            RateRules.TryParse(builder.ToString(), out var rules);
             rules.Spread = Spread;
             return rules;
         }
@@ -196,8 +198,11 @@ namespace BTCPayServer.Data
             { "CHF", "kraken" },
             { "GTQ", "bitpay" },
             { "COP", "yadio" },
+            { "ARS", "yadio" },
             { "JPY", "bitbank" },
-            { "TRY", "btcturk" }
+            { "TRY", "btcturk" },
+            { "UGX", "yadio"},
+            { "RSD", "bitpay"}
         };
 
         public string GetRecommendedExchange() =>
@@ -233,6 +238,12 @@ namespace BTCPayServer.Data
         [DefaultValue(true)]
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
         public bool CelebratePayment { get; set; } = true;
+        
+        [DefaultValue(false)]
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
+        public bool PlaySoundOnPayment { get; set; }
+
+        public string SoundFileId { get; set; }
 
         public IPaymentFilter GetExcludedPaymentMethods()
         {

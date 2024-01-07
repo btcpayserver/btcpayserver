@@ -8,11 +8,11 @@
         <div class="d-flex align-items-center justify-content-between mt-n1 mb-4">
             <h3 class="mb-0">@ViewData["Title"]</h3>
             <a asp-action="storage" asp-route-forceChoice="true" asp-route-returnurl="@ViewData["ReturnUrl"]" class="btn btn-secondary d-flex align-items-center">
-                <vc:icon symbol="settings"/>
+                <vc:icon symbol="settings" />
                 <span class="ms-1">Settings</span>
             </a>
         </div>
-        
+
         @if (!Model.StorageConfigured)
         {
             <p>
@@ -42,66 +42,87 @@
                 </form>
             }
 
+            @if (Model.DirectUrlByFiles is { Count: > 0 })
+            {
+                foreach (var fileUrlPair in Model.DirectUrlByFiles)
+                {
+                    var fileId = fileUrlPair.Key;
+                    var file = Model.Files.Single(storedFile => storedFile.Id.Equals(fileId, StringComparison.InvariantCultureIgnoreCase));
+                    var url = Url.Action("GetFile", "UIStorage", new { fileId }, Context.Request.Scheme, Context.Request.Host.ToString());
+                    <div class="border border-light rounded bg-tile mt-3">
+                        <div class="row">
+                            <div class="col-sm-12 col-md-4">
+                                <div class="input-group">
+                                    <div class="form-floating">
+                                        <input id="@fileId-name" class="form-control-plaintext" readonly="readonly" value="@file.FileName">
+                                        <label>File name</label>
+                                    </div>
+                                    <button type="button" class="btn btn-link" data-clipboard="@file.FileName">
+                                        <vc:icon symbol="copy" />
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-sm-12 col-md-4 ">
+                                <div class="input-group  ">
+                                    <div class="form-floating">
+                                        <input id="@fileId" class="form-control-plaintext" readonly="readonly" value="@fileId">
+                                        <label>File Id</label>
+                                    </div>
+                                    <button type="button" class="btn btn-link" data-clipboard="@fileId">
+                                        <vc:icon symbol="copy" />
+                                    </button>
+                                </div>
+                            </div>
+                            <div class=" col-sm-12 col-md-4">
+                                <div class="input-group">
+                                    <div class="form-floating">
+                                        <input id="@fileId-url" class="form-control-plaintext" readonly="readonly" value="@url">
+                                        <label>Permanent Url</label>
+                                    </div>
+                                    <button type="button" class="btn btn-link" data-clipboard="@url">
+                                        <vc:icon symbol="copy" />
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+
             @if (Model.Files.Any())
             {
-                <table class="table table-hover table-responsive-md">
-                    <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Timestamp</th>
-                        <th>User</th>
-                        <th class="text-end">Actions</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    @foreach (var file in Model.Files)
-                    {
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
                         <tr>
-                            <td>@file.FileName</td>
-                            <td>@file.Timestamp.ToBrowserDate()</td>
-                            <td>@file.ApplicationUser.UserName</td>
-                            <td class="text-end">
-                                <a href="@Url.Action("Files", "UIServer", new { fileIds = new string[] { file.Id } })">Get Link</a>
-                                - <a asp-action="DeleteFile" asp-route-fileId="@file.Id">Remove</a>
-                            </td>
+                            <th>Name</th>
+                            <th>Timestamp</th>
+                            <th>User</th>
+                            <th class="text-end">Actions</th>
                         </tr>
-                    }
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                        @foreach (var file in Model.Files)
+                        {
+                            <tr>
+                                <td>
+                                    <a asp-action="Files" asp-route-fileIds="@file.Id">@file.FileName</a>
+                                </td>
+                                <td>@file.Timestamp.ToBrowserDate()</td>
+                                <td>@file.ApplicationUser.UserName</td>
+                                <td class="text-end">
+                                    <a href="@Url.Action("Files", "UIServer", new {fileIds = new [] { file.Id }})" class="text-nowrap">Get Link</a>
+                                    - <a asp-action="DeleteFile" asp-route-fileId="@file.Id">Remove</a>
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
             }
             else
             {
-                <p class="text-secondary mt-3">
-                    There are no files yet.
-                </p>
-            }
-        }
-
-        @if (Model.DirectUrlByFiles != null && Model.DirectUrlByFiles.Count > 0)
-        {
-            foreach (KeyValuePair<string, string> fileUrlPair in Model.DirectUrlByFiles)
-            {
-                var fileId = fileUrlPair.Key;
-                var file = Model.Files.Single(storedFile => storedFile.Id.Equals(fileId, StringComparison.InvariantCultureIgnoreCase));
-
-                <div class="card mb-2">
-                    <div class="card-text">
-                        <ul class="list-group list-group-flush">
-                            <li class="list-group-item">
-                                @file.FileName
-                            </li>
-                            <li class="list-group-item">
-                                <strong>URL:</strong>
-                                <a asp-action="GetFile" asp-controller="UIStorage" asp-route-fileId="@fileId" target="_blank">
-                                    @Url.Action("GetFile", "UIStorage", new
-                                    {
-                                        fileId = fileId
-                                    }, Context.Request.Scheme, Context.Request.Host.ToString())
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
+                <p class="text-secondary mt-3">There are no files yet.</p>
             }
         }
     </div>

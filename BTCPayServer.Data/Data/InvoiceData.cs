@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -30,11 +31,10 @@ namespace BTCPayServer.Data
         public List<PendingInvoiceData> PendingInvoices { get; set; }
         public List<InvoiceSearchData> InvoiceSearchData { get; set; }
         public List<RefundData> Refunds { get; set; }
-        public string CurrentRefundId { get; set; }
-        [ForeignKey("Id,CurrentRefundId")]
-        public RefundData CurrentRefund { get; set; }
 
-
+        [Timestamp]
+        // With this, update of InvoiceData will fail if the row was modified by another process
+        public uint XMin { get; set; }
         internal static void OnModelCreating(ModelBuilder builder, DatabaseFacade databaseFacade)
         {
             builder.Entity<InvoiceData>()
@@ -42,8 +42,6 @@ namespace BTCPayServer.Data
                 .WithMany(a => a.Invoices).OnDelete(DeleteBehavior.Cascade);
             builder.Entity<InvoiceData>().HasIndex(o => o.StoreDataId);
             builder.Entity<InvoiceData>().HasIndex(o => o.OrderId);
-            builder.Entity<InvoiceData>()
-                .HasOne(o => o.CurrentRefund);
             builder.Entity<InvoiceData>().HasIndex(o => o.Created);
 
             if (databaseFacade.IsNpgsql())

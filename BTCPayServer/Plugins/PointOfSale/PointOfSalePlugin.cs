@@ -13,7 +13,7 @@ using BTCPayServer.Plugins.PointOfSale.Controllers;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
-using Ganss.XSS;
+using Ganss.Xss;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -40,7 +40,7 @@ namespace BTCPayServer.Plugins.PointOfSale
         Static,
         [Display(Name = "Product list with cart")]
         Cart,
-        [Display(Name = "Keypad only")]
+        [Display(Name = "Keypad")]
         Light,
         [Display(Name = "Print display")]
         Print
@@ -51,7 +51,6 @@ namespace BTCPayServer.Plugins.PointOfSale
         private readonly LinkGenerator _linkGenerator;
         private readonly IOptions<BTCPayServerOptions> _btcPayServerOptions;
         private readonly DisplayFormatter _displayFormatter;
-        private readonly HtmlSanitizer _htmlSanitizer;
         public const string AppType = "PointOfSale";
 
         public PointOfSaleAppType(
@@ -65,7 +64,6 @@ namespace BTCPayServer.Plugins.PointOfSale
             _linkGenerator = linkGenerator;
             _btcPayServerOptions = btcPayServerOptions;
             _displayFormatter = displayFormatter;
-            _htmlSanitizer = htmlSanitizer;
         }
 
         public override Task<string> ConfigureLink(AppData app)
@@ -82,14 +80,14 @@ namespace BTCPayServer.Plugins.PointOfSale
         public Task<SalesStats> GetSalesStats(AppData app, InvoiceEntity[] paidInvoices, int numberOfDays)
         {
             var posS = app.GetSettings<PointOfSaleSettings>();
-            var items = AppService.Parse(_htmlSanitizer, _displayFormatter, posS.Template, posS.Currency);
+            var items = AppService.Parse(posS.Template);
             return AppService.GetSalesStatswithPOSItems(items, paidInvoices, numberOfDays);
         }
 
         public Task<IEnumerable<ItemStats>> GetItemStats(AppData appData, InvoiceEntity[] paidInvoices)
         {
             var settings = appData.GetSettings<PointOfSaleSettings>();
-            var items = AppService.Parse(_htmlSanitizer, _displayFormatter, settings.Template, settings.Currency);
+            var items = AppService.Parse(settings.Template);
             var itemCount = paidInvoices
                 .Where(entity => entity.Currency.Equals(settings.Currency, StringComparison.OrdinalIgnoreCase) && (
                     // The POS data is present for the cart view, where multiple items can be bought

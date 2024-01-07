@@ -24,7 +24,7 @@ public class AppTopItems : ViewComponent
     public async Task<IViewComponentResult> InvokeAsync(string appId, string appType)
     {
         var type = _appService.GetAppType(appType);
-        if (type is not IHasItemStatsAppType salesAppType || type is not AppBaseType appBaseType)
+        if (type is not (IHasItemStatsAppType and AppBaseType appBaseType))
             return new HtmlContentViewComponentResult(new StringHtmlContent(string.Empty));
 
         var vm = new AppTopItemsViewModel
@@ -40,7 +40,7 @@ public class AppTopItems : ViewComponent
         var app = HttpContext.GetAppData();
         var entries = await _appService.GetItemStats(app);
         vm.SalesCount = entries.Select(e => e.SalesCount).ToList();
-        vm.Entries = entries.ToList();
+        vm.Entries = entries.Take(5).ToList();
         vm.AppType = app.AppType;
         vm.AppUrl = await appBaseType.ConfigureLink(app);
         vm.Name = app.Name;

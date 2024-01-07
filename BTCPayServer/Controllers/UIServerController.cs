@@ -20,6 +20,7 @@ using BTCPayServer.Hosting;
 using BTCPayServer.Logging;
 using BTCPayServer.Models;
 using BTCPayServer.Models.ServerViewModels;
+using BTCPayServer.Payments;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Mails;
@@ -29,6 +30,7 @@ using BTCPayServer.Storage.Services;
 using BTCPayServer.Storage.Services.Providers;
 using BTCPayServer.Validation;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -67,6 +69,7 @@ namespace BTCPayServer.Controllers
         private readonly IEnumerable<IStorageProviderService> _StorageProviderServices;
         private readonly LinkGenerator _linkGenerator;
         private readonly EmailSenderFactory _emailSenderFactory;
+        private readonly TransactionLinkProviders _transactionLinkProviders;
 
         public UIServerController(
             UserManager<ApplicationUser> userManager,
@@ -90,7 +93,8 @@ namespace BTCPayServer.Controllers
             LinkGenerator linkGenerator,
             EmailSenderFactory emailSenderFactory,
             IHostApplicationLifetime applicationLifetime,
-            IHtmlHelper html
+            IHtmlHelper html,
+            TransactionLinkProviders transactionLinkProviders
         )
         {
             _policiesSettings = policiesSettings;
@@ -115,6 +119,7 @@ namespace BTCPayServer.Controllers
             _emailSenderFactory = emailSenderFactory;
             ApplicationLifetime = applicationLifetime;
             Html = html;
+            _transactionLinkProviders = transactionLinkProviders;
         }
 
         [Route("server/maintenance")]
@@ -327,8 +332,10 @@ namespace BTCPayServer.Controllers
                 settings.DomainToAppMapping.RemoveAt(index);
                 return View(settings);
             }
-
-            settings.BlockExplorerLinks = settings.BlockExplorerLinks.Where(tuple => btcPayNetworkProvider.GetNetwork(tuple.CryptoCode).BlockExplorerLinkDefault != tuple.Link).ToList();
+            settings.BlockExplorerLinks = settings.BlockExplorerLinks
+                                            .Where(tuple => _transactionLinkProviders.GetDefaultBlockExplorerLink(PaymentMethodId.Parse(tuple.CryptoCode)) != tuple.Link)
+                                            .Where(tuple => tuple.Link is not null)
+                                            .ToList();
 
             if (!ModelState.IsValid)
             {
@@ -361,7 +368,7 @@ namespace BTCPayServer.Controllers
             }
 
             await _SettingsRepository.UpdateSetting(settings);
-            BlockExplorerLinkStartupTask.SetLinkOnNetworks(settings.BlockExplorerLinks, btcPayNetworkProvider);
+            _ = _transactionLinkProviders.RefreshTransactionLinkTemplates();
             TempData[WellKnownTempData.SuccessMessage] = "Policies updated successfully";
             return RedirectToAction(nameof(Policies));
         }
@@ -664,6 +671,8 @@ namespace BTCPayServer.Controllers
 
         [Route("lnd-config/{configKey}/lnd.config")]
         [AllowAnonymous]
+        [EnableCors(CorsPolicies.All)]
+        [IgnoreAntiforgeryToken]
         public IActionResult GetLNDConfig(ulong configKey)
         {
             var conf = _LnConfigProvider.GetConfig(configKey);
@@ -1047,29 +1056,28 @@ namespace BTCPayServer.Controllers
             {
                 if (model.LogoFile.Length > 1_000_000)
                 {
-                    TempData[WellKnownTempData.ErrorMessage] = "The uploaded logo file should be less than 1MB";
+                    ModelState.AddModelError(nameof(model.LogoFile), "The uploaded logo file should be less than 1MB");
                 }
                 else if (!model.LogoFile.ContentType.StartsWith("image/", StringComparison.InvariantCulture))
                 {
-                    TempData[WellKnownTempData.ErrorMessage] = "The uploaded logo file needs to be an image";
+                    ModelState.AddModelError(nameof(model.LogoFile), "The uploaded logo file needs to be an image");
                 }
                 else
                 {
                     var formFile = await model.LogoFile.Bufferize();
                     if (!FileTypeDetector.IsPicture(formFile.Buffer, formFile.FileName))
                     {
-                        TempData[WellKnownTempData.ErrorMessage] = "The uploaded logo file needs to be an image";
+                        ModelState.AddModelError(nameof(model.LogoFile), "The uploaded logo file needs to be an image");
                     }
                     else
                     {
                         model.LogoFile = formFile;
-                        // delete existing image
+                        // delete existing file
                         if (!string.IsNullOrEmpty(settings.LogoFileId))
                         {
                             await _fileService.RemoveFile(settings.LogoFileId, userId);
                         }
-
-                        // add new image
+                        // add new file
                         try
                         {
                             var storedFile = await _fileService.AddFile(model.LogoFile, userId);

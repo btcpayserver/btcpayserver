@@ -1,6 +1,7 @@
 #if ALTCOINS
 using BTCPayServer.Client.Models;
 using BTCPayServer.Payments;
+using BTCPayServer.Plugins.Altcoins;
 using BTCPayServer.Services.Altcoins.Zcash.Utils;
 using BTCPayServer.Services.Invoices;
 

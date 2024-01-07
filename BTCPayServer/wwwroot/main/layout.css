@@ -9,6 +9,9 @@
     --mobile-header-height: 4rem;
     --desktop-header-height: 8rem;
     --sidebar-width: 280px;
+    --sticky-header-height: 0; /* gets dynamically set via JavaScript */
+
+    scroll-padding-top: calc(var(--sticky-header-height) + var(--btcpay-space-m));
 }
 
 /* Main Menu */
@@ -255,41 +258,37 @@
 }
 
 /* Theme Switch */
-#mainNav .btcpay-theme-switch {
-    width: 100%;
+.btcpay-theme-switch {
+    
+    display: inline-flex;
+    align-items: center;
     justify-content: space-between;
 }
 
-#mainNav .btcpay-theme-switch svg {
-    order: 1;
-    margin: 0 !important;
+.btcpay-theme-switch-label {
+    font-weight: var(--btcpay-font-weight-semibold);
 }
 
-#mainNav .btcpay-theme-switch span {
-    order: 0;
-    margin: 0;
-}
-
-.btcpay-theme-switch {
+.btcpay-theme-switch-themes {
     display: inline-flex;
+    gap: var(--btcpay-space-m);
     align-items: center;
+}
+
+.btcpay-theme-switch-themes button {
+    --icon-size: 1.25rem !important;
     background: none;
-    cursor: pointer;
+    padding: 0;
     border: 0;
+    color: var(--btcpay-body-text-muted);
 }
 
-.btcpay-theme-switch svg {
-    height: 1rem;
-    width: 1rem;
+.btcpay-theme-switch-themes button:hover {
+    color: var(--btcpay-body-link);
 }
 
-.btcpay-theme-switch svg ~ span {
-    margin-left: var(--btcpay-space-xs);
-}
-
-.btcpay-theme-switch path {
-    stroke-width: .5px;
-    fill: currentColor;
+.btcpay-theme-switch-themes button svg {
+    margin: 0 !important;
 }
 
 .btcpay-theme-switch:hover .btcpay-theme-switch-light,
@@ -297,32 +296,10 @@
     fill: currentColor;
 }
 
-.btcpay-theme-switch-dark {
-    stroke: currentColor;
-}
-
-:root[data-btcpay-theme="dark"] .btcpay-theme-switch-dark {
-    display: none;
-}
-
-@media (prefers-color-scheme: dark) {
-    :root:not([data-btcpay-theme="dark"]) .btcpay-theme-switch-dark {
-        display: inline-block;
-    }
-}
-
-.btcpay-theme-switch-light {
-    display: none;
-}
-
-:root[data-btcpay-theme="dark"] .btcpay-theme-switch-light {
-    display: inline-block;
-}
-
-@media (prefers-color-scheme: dark) {
-    :root:not([data-btcpay-theme="light"]) .btcpay-theme-switch-light {
-        display: inline-block;
-    }
+:root:not([data-btcpay-theme]) .btcpay-theme-switch [data-theme="system"],
+:root[data-btcpay-theme="light"] .btcpay-theme-switch [data-theme="light"],
+:root[data-btcpay-theme="dark"] .btcpay-theme-switch [data-theme="dark"] {
+    color: var(--btcpay-body-link);
 }
 
 /* Notifications */
@@ -396,20 +373,13 @@
     background: var(--btcpay-nav-bg-active);
 }
 
-/* Sticky Header: The <div class="sticky-header-setup"></div> needs to be included once
-   before the first sticky-header on the page. The sticky-header has a padding-top so
-   that it does not scroll underneath the fixed header on mobile. The sticky-header-setup
-   negates that padding with a negative margin, so that everything fits in the end. */
-.sticky-header-setup {
-    margin-top: calc(var(--content-padding-top) * -1);
-}
-
 .sticky-header {
     position: -webkit-sticky;
     position: sticky;
     top: 0;
-    z-index: 1020;
+    z-index: 1021;
     background: var(--btcpay-body-bg);
+    margin-top: calc(var(--content-padding-top) * -1);
     /* pull it out of the content padding and adjust its inner padding to make up for that space */
     margin-left: calc(var(--content-padding-horizontal) * -1);
     margin-right: calc(var(--content-padding-horizontal) * -1);
@@ -449,6 +419,22 @@
 
 .btcpay-footer [data-clipboard-hover]::before {
     top: .125rem;
+}
+
+#StatusUpdates {
+    position: fixed;
+    top: var(--content-padding-top);
+    right: var(--content-padding-horizontal);
+}
+#StatusUpdates .blazor-status {
+    width: 16rem;
+    border-color: var(--btcpay-border-color);
+}
+#StatusUpdates .blazor-status__title {
+    color: var(--btcpay-body-text);
+}
+#StatusUpdates .blazor-status__body {
+    padding-left: 2.45rem;
 }
 
 @media (max-width: 991px) {
@@ -502,13 +488,9 @@
         transform: none;
     }
 
-    .offcanvas-backdrop {
+    #mainMenu .offcanvas-backdrop {
         top: var(--mobile-header-height);
         transition-duration: var(--btcpay-transition-duration-fast);
-    }
-
-    .offcanvas-backdrop.show {
-        opacity: 0.8;
     }
 
     #StoreSelector {
@@ -655,7 +637,7 @@
     }
     
     #mainMenuToggle,
-    .offcanvas-backdrop {
+    #mainMenu .offcanvas-backdrop {
         display: none !important;
     }
 
@@ -677,6 +659,11 @@
         max-width: none;
     }
 
+    #mainContent > section .w-100-fixed {
+        /* constrains the content to respect the maximum width and enable responsive tables */
+        width: calc(100vw - var(--sidebar-width) - var(--btcpay-scrollbar-width) - var(--content-padding-horizontal) * 2);
+    }
+
     #SectionNav .nav {
         margin-top: calc(var(--btcpay-space-m) * -1);
     }
@@ -695,6 +682,12 @@
 @media (min-width: 992px) and (max-height: 799px) {
     :root {
         --content-padding-top: 1.25rem;
+    }
+}
+
+@media (min-width: 992px) and (min-height: 800px) {
+    #StatusUpdates {
+        top: 1.25rem;
     }
 }
 

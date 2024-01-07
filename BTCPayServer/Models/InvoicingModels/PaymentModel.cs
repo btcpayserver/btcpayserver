@@ -21,11 +21,14 @@ namespace BTCPayServer.Models.InvoicingModels
             public string PaymentMethodName { get; set; }
             public bool IsLightning { get; set; }
             public string CryptoCode { get; set; }
+            public bool Displayed { get; set; }
         }
+        public StoreBrandingViewModel StoreBranding { get; set; }
         public string CustomCSSLink { get; set; }
         public string CustomLogoLink { get; set; }
-        public string CssFileId { get; set; }
-        public string LogoFileId { get; set; }
+        public string PaymentSoundUrl { get; set; }
+        public string NfcReadSoundUrl { get; set; }
+        public string ErrorSoundUrl { get; set; }
         public string BrandColor { get; set; }
         public string HtmlTitle { get; set; }
         public string DefaultLang { get; set; }
@@ -60,7 +63,7 @@ namespace BTCPayServer.Models.InvoicingModels
         public int TxCount { get; set; }
         public int TxCountForFee { get; set; }
         public string BtcPaid { get; set; }
-        public string StoreEmail { get; set; }
+        public string StoreSupportUrl { get; set; }
 
         public string OrderId { get; set; }
         public decimal NetworkFee { get; set; }
@@ -77,7 +80,6 @@ namespace BTCPayServer.Models.InvoicingModels
         public bool Activated { get; set; }
         public string InvoiceCurrency { get; set; }
         public string ReceiptLink { get; set; }
-        public bool AltcoinsBuild { get; set; }
         public CheckoutType CheckoutType { get; set; }
         public int? RequiredConfirmations { get; set; }
         public long? ReceivedConfirmations { get; set; }

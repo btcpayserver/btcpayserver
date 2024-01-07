@@ -5,7 +5,7 @@
 @{
     Layout = "../Shared/_NavLayout.cshtml";
     ViewData["NavPartialName"] = "../UIStores/_Nav";
-    ViewData.SetActivePage(StoreNavPages.OnchainSettings, $"{Model.CryptoCode} Settings");
+    ViewData.SetActivePage(Model.CryptoCode, $"{Model.CryptoCode} Settings", Model.CryptoCode);
 }
 
 <div class="row">

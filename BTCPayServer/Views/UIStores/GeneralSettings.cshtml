@@ -2,6 +2,7 @@
 @using BTCPayServer.TagHelpers
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @using BTCPayServer.Abstractions.Contracts
+@using BTCPayServer.Client
 @inject IFileService FileService;
 @model GeneralSettingsViewModel
 @{
@@ -14,7 +15,7 @@
     <div class="col-xxl-constrain col-xl-8">
         @if (!ViewContext.ModelState.IsValid)
         {
-            <div asp-validation-summary="All" class="text-danger"></div>
+            <div asp-validation-summary="All"></div>
         }
         <form method="post" enctype="multipart/form-data">
             <h3 class="mb-3">General</h3>
@@ -31,6 +32,14 @@
                 <label asp-for="StoreWebsite" class="form-label"></label>
                 <input asp-for="StoreWebsite" class="form-control" />
                 <span asp-validation-for="StoreWebsite" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="StoreSupportUrl" class="form-label"></label>
+                <input asp-for="StoreSupportUrl" class="form-control" />
+                <span asp-validation-for="StoreSupportUrl" class="text-danger"></span>
+                <div class="form-text">
+                    For support requests, can contain the placeholders <code>{OrderId}</code> and <code>{InvoiceId}</code>. Can be any valid URI, such as a website, email, and nostr.",
+                </div>
             </div>
             
             <h3 class="mt-5 mb-3">Branding</h3>
@@ -137,7 +146,7 @@
                     <vc:icon symbol="info"/>
                 </a>
                 <div class="input-group">
-                    <input inputmode="numeric" asp-for="InvoiceExpiration" class="form-control" style="max-width:10ch;"/>
+                    <input inputmode="numeric" asp-for="InvoiceExpiration" class="form-control" style="max-width:12ch;"/>
                     <span class="input-group-text">minutes</span>
                 </div>
                 <span asp-validation-for="InvoiceExpiration" class="text-danger"></span>
@@ -148,7 +157,7 @@
                     <vc:icon symbol="info"/>
                 </a>
                 <div class="input-group">
-                    <input inputmode="decimal" asp-for="PaymentTolerance" class="form-control" style="max-width:10ch;"/>
+                    <input inputmode="decimal" asp-for="PaymentTolerance" class="form-control" style="max-width:12ch;"/>
                     <span class="input-group-text">percent</span>
                 </div>
                 <span asp-validation-for="PaymentTolerance" class="text-danger"></span>
@@ -156,7 +165,7 @@
             <div class="form-group">
                 <label asp-for="BOLT11Expiration" class="form-label"></label>
                 <div class="input-group">
-                    <input inputmode="numeric" asp-for="BOLT11Expiration" class="form-control" style="max-width:10ch;"/>
+                    <input inputmode="numeric" asp-for="BOLT11Expiration" class="form-control" style="max-width:12ch;"/>
                     <span class="input-group-text">days</span>
                 </div>
                 <span asp-validation-for="BOLT11Expiration" class="text-danger"></span>
@@ -164,13 +173,25 @@
             
             <button type="submit" class="btn btn-primary mt-2" id="Save">Save</button>
         </form>
-        @if (Model.CanDelete)
-        {
-            <h3 class="mt-5 mb-3">Additional Actions</h3>
-            <div id="danger-zone">
-                <a id="DeleteStore" class="btn btn-outline-danger mb-5 mt-2" asp-action="DeleteStore" asp-route-storeId="@Model.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The store <strong>@Html.Encode(Model.StoreName)</strong> will be permanently deleted. This action will also delete all invoices, apps and data associated with the store." data-confirm-input="DELETE">Delete this store</a>
-            </div>
-        }
+        <h3 class="mt-5 mb-3">Additional Actions</h3>
+        <div id="danger-zone" class="d-flex flex-wrap align-items-center gap-3 mb-5 mt-2">
+            <form asp-action="ToggleArchive" asp-route-storeId="@Model.Id" method="post" permission="@Policies.CanModifyStoreSettings">
+                <button type="submit" class="btn btn-outline-secondary" id="btn-archive-toggle">
+                    @if (Model.Archived)
+                    {
+                        <span class="text-nowrap" data-bs-toggle="tooltip" title="Unarchive this store">Unarchive this store</span>
+                    }
+                    else
+                    {
+                        <span class="text-nowrap" data-bs-toggle="tooltip" title="Archive this store so that it does not appear in the stores list by default">Archive this store</span>
+                    }
+                </button>
+            </form>
+            @if (Model.CanDelete)
+            {
+                <a id="DeleteStore" class="btn btn-outline-danger" asp-action="DeleteStore" asp-route-storeId="@Model.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The store <strong>@Html.Encode(Model.StoreName)</strong> will be permanently deleted. This action will also delete all invoices, apps and data associated with the store." data-confirm-input="DELETE">Delete this store</a>
+            }
+        </div>
     </div>
 </div>
 

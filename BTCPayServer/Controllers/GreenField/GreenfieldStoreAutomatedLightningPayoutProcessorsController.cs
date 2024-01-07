@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
+using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
@@ -52,16 +53,23 @@ namespace BTCPayServer.Controllers.Greenfield
 
         private static LightningAutomatedPayoutSettings ToModel(PayoutProcessorData data)
         {
+            var blob = data.HasTypedBlob<LightningAutomatedPayoutBlob>().GetBlob() ?? new LightningAutomatedPayoutBlob();
             return new LightningAutomatedPayoutSettings()
             {
                 PaymentMethod = data.PaymentMethod,
-                IntervalSeconds = data.HasTypedBlob<AutomatedPayoutBlob>().GetBlob()!.Interval
+                IntervalSeconds = blob.Interval,
+                CancelPayoutAfterFailures = blob.CancelPayoutAfterFailures,
+                ProcessNewPayoutsInstantly = blob.ProcessNewPayoutsInstantly
             };
         }
 
-        private static AutomatedPayoutBlob FromModel(LightningAutomatedPayoutSettings data)
+        private static LightningAutomatedPayoutBlob FromModel(LightningAutomatedPayoutSettings data)
         {
-            return new AutomatedPayoutBlob() { Interval = data.IntervalSeconds };
+            return new LightningAutomatedPayoutBlob() { 
+                Interval = data.IntervalSeconds, 
+                CancelPayoutAfterFailures = data.CancelPayoutAfterFailures,
+                ProcessNewPayoutsInstantly = data.ProcessNewPayoutsInstantly
+            };
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -69,6 +77,9 @@ namespace BTCPayServer.Controllers.Greenfield
         public async Task<IActionResult> UpdateStoreLightningAutomatedPayoutProcessor(
             string storeId, string paymentMethod, LightningAutomatedPayoutSettings request)
         {
+            AutomatedPayoutConstants.ValidateInterval(ModelState, request.IntervalSeconds, nameof(request.IntervalSeconds));
+            if (!ModelState.IsValid)
+                return this.CreateValidationError(ModelState);
             paymentMethod = PaymentMethodId.Parse(paymentMethod).ToString();
             var activeProcessor =
                 (await _payoutProcessorService.GetProcessors(
@@ -80,7 +91,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     }))
                 .FirstOrDefault();
             activeProcessor ??= new PayoutProcessorData();
-            activeProcessor.HasTypedBlob<AutomatedPayoutBlob>().SetBlob(FromModel(request));
+            activeProcessor.HasTypedBlob<LightningAutomatedPayoutBlob>().SetBlob(FromModel(request));
             activeProcessor.StoreId = storeId;
             activeProcessor.PaymentMethod = paymentMethod;
             activeProcessor.Processor = LightningAutomatedPayoutSenderFactory.ProcessorName;

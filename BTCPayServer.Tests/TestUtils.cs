@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
+using NBitcoin;
 using OpenQA.Selenium;
 using Xunit;
 using Xunit.Sdk;
@@ -112,7 +113,14 @@ namespace BTCPayServer.Tests
                 }
                 catch (XunitException) when (!cts.Token.IsCancellationRequested)
                 {
-                    await Task.Delay(500, cts.Token);
+                    bool timeout =false;
+                    try
+                    {
+                        await Task.Delay(500, cts.Token);
+                    }
+                    catch { timeout = true; }
+                    if (timeout)
+                        throw;
                 }
             }
         }

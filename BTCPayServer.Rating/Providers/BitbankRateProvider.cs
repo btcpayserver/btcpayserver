@@ -21,7 +21,7 @@ namespace BTCPayServer.Services.Rates
 
         public async Task<PairRate[]> GetRatesAsync(CancellationToken cancellationToken)
         {
-            var response = await _httpClient.GetAsync("https://public.bitbank.cc/tickers", cancellationToken);
+            using var response = await _httpClient.GetAsync("https://public.bitbank.cc/tickers", cancellationToken);
             var jobj = await response.Content.ReadAsAsync<JObject>(cancellationToken);
             var data = jobj.ContainsKey("data") ? jobj["data"] : null;
             if (jobj["success"]?.Value<int>() != 1)

@@ -3,7 +3,7 @@
 <div class="twoFaBox">
     <h2 class="h3 mb-3">Two-Factor Authentication</h2>
     <form method="post" asp-route-returnUrl="@ViewData["ReturnUrl"]" asp-action="LoginWith2fa">
-        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <div asp-validation-summary="ModelOnly"></div>
         <input asp-for="RememberMe" type="hidden"/>
         <div class="form-group">
             <label asp-for="TwoFactorCode" class="form-label"></label>

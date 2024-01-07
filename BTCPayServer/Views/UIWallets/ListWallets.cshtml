@@ -1,4 +1,5 @@
-﻿@model BTCPayServer.Models.WalletViewModels.ListWalletsViewModel
+﻿@using BTCPayServer.Client
+@model BTCPayServer.Models.WalletViewModels.ListWalletsViewModel
 @{
     ViewData.SetActivePage(WalletsNavPages.Index, "Wallets");
 }
@@ -42,16 +43,18 @@
                     @foreach (var wallet in Model.Wallets)
                     {
                         <tr>
-                            @if (wallet.IsOwner)
-                            {
-                                <td><a asp-action="GeneralSettings" asp-controller="UIStores" asp-route-storeId="@wallet.StoreId">@wallet.StoreName</a></td>
-                            }
-                            else
-                            {
-                                <td>@wallet.StoreName</td>
-                            }
+
+                            <td>
+                                <a
+                                    permission="@Policies.CanModifyStoreSettings"
+                                    asp-action="GeneralSettings" asp-controller="UIStores" asp-route-storeId="@wallet.StoreId">
+                                    @wallet.StoreName
+                                </a>
+                                <span not-permission="@Policies.CanModifyStoreSettings">@wallet.StoreName</span>
+                            </td>
+
                             <td>@wallet.CryptoCode</td>
-                            <td>@wallet.Balance</td>
+                            <td><span permission="@Policies.CanModifyStoreSettings">@wallet.Balance</span></td>
                             <td class="text-end">
                                 <a asp-action="WalletTransactions" asp-route-walletId="@wallet.Id">Manage</a>
                             </td>

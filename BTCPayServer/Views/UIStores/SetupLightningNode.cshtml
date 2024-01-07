@@ -156,11 +156,13 @@
                                 </li>
                             </ul>
                             <p>
-                                For the macaroon options you need to provide the <code>admin.macaroon</code>.<br/>
+                                For the macaroon options you need to provide a macaroon with the <code>invoices:write</code> permission (e.g. <code>invoice.macaroon</code>, see
+                                <a href="https://docs.lightning.engineering/lightning-network-tools/lnd/macaroons" target="_blank" rel="noreferrer noopener">details</a>). If you
+                                want to display the node connection details, it also needs the <code>info:read</code> permission.<br/>
                                 The path to the LND data directory may vary, the following examples assume <code>/root/.lnd</code>.
                             </p>
                             <p class="mb-2">The <code>macaroon</code> parameter expects the HEX value, it can be obtained using this command:</p>
-                            <pre class="mb-4">xxd -p -c 256 /root/.lnd/data/chain/bitcoin/mainnet/admin.macaroon | tr -d '\n'</pre>
+                            <pre class="mb-4">xxd -p -c 256 /root/.lnd/data/chain/bitcoin/mainnet/invoice.macaroon | tr -d '\n'</pre>
                             <p class="mb-2">
                                 You can omit <code>certthumbprint</code> if the certificate is trusted by your machine.<br/>
                                 The <code>certthumbprint</code> can be obtained using this command:

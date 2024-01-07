@@ -27,8 +27,10 @@ namespace BTCPayServer.Client.Models
         [JsonConverter(typeof(StringEnumConverter))]
         public PosViewType DefaultView { get; set; }
         public bool ShowCustomAmount { get; set; } = false;
-        public bool ShowDiscount { get; set; } = true;
-        public bool EnableTips { get; set; } = true;
+        public bool ShowDiscount { get; set; } = false;
+        public bool ShowSearch { get; set; } = true;
+        public bool ShowCategories { get; set; } = true;
+        public bool EnableTips { get; set; } = false;
         public string CustomAmountPayButtonText { get; set; } = null;
         public string FixedAmountPayButtonText { get; set; } = null;
         public string TipText { get; set; } = null;
@@ -37,9 +39,9 @@ namespace BTCPayServer.Client.Models
         public string RedirectUrl { get; set; } = null;
         public bool? RedirectAutomatically { get; set; } = null;
         public bool? RequiresRefundEmail { get; set; } = null;
+        public bool? Archived { get; set; } = null;
         public string FormId { get; set; } = null;
         public string EmbeddedCSS { get; set; } = null;
-        public CheckoutType? CheckoutType { get; set; } = null;
     }
 
     public enum CrowdfundResetEvery
@@ -78,6 +80,7 @@ namespace BTCPayServer.Client.Models
         public bool? DisplayPerksValue { get; set; } = null;
         public bool? DisplayPerksRanking { get; set; } = null;
         public bool? SortPerksByPopularity { get; set; } = null;
+        public bool? Archived { get; set; } = null;
         public string[] Sounds { get; set; } = null;
         public string[] AnimationColors { get; set; } = null;
     }

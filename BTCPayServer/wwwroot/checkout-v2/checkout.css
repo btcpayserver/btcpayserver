@@ -1,15 +1,8 @@
-:root {
-    --navbutton-size: .8rem;
-    --section-padding: 1.5rem;
-    --border-radius: var(--btcpay-border-radius-l);
+#Checkout-v2 {
     --wrap-max-width: 400px;
 }
 body {
     overflow-x: hidden;
-}
-.public-page-wrap {
-    flex-direction: column;
-    max-width: var(--wrap-max-width);
 }
 main {
     position: relative;
@@ -36,11 +29,9 @@ nav button#close {
     right: 0;
 }
 nav button .icon {
+    --navbutton-size: .8rem;
     width: var(--navbutton-size);
     height: var(--navbutton-size);
-}
-section {
-    padding: var(--section-padding);
 }
 section h4 {
     margin-bottom: var(--btcpay-space-l);
@@ -141,6 +132,9 @@ section dl > div dd {
     height: 3rem;
     margin: .5rem auto 1.5rem;
 }
+#result #sound {
+    display: none;
+}
 #result #confetti {
     position: absolute;
     left: 50%;
@@ -156,7 +150,7 @@ section dl > div dd {
     color: var(--btcpay-body-text-muted);
 }
 #DefaultLang {
-    width: calc(var(--text-width, 110px) + 3rem);
+    width: calc(var(--text-width, 110px) + 4rem);
     color: var(--btcpay-body-text-muted);
     background-color: var(--btcpay-body-bg);
     box-shadow: none;
@@ -166,12 +160,6 @@ section dl > div dd {
 }
 #DefaultLang:hover {
     color: var(--btcpay-body-text-hover);
-}
-
-@media (max-width: 400px) {
-    main {
-        border-radius: 0;
-    }
 }
 
 /* Modal adjustments */
@@ -186,4 +174,11 @@ section dl > div dd {
 /* Plugins */
 .payment-box .plugins > .payment {
     margin-top: var(--btcpay-space-l);
+}
+
+@media (max-width: 400px) {
+    /* Pull it up if there's no store header */
+    #Checkout-v2 > main.tile:first-child {
+        margin-top: calc(var(--wrap-padding-vertical) * -1);
+    }
 }

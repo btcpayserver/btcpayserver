@@ -1,6 +1,7 @@
-﻿@model PaymentModel
+@model PaymentModel
 @{
     Layout = null;
+    var displayedPaymentMethods = Model.AvailableCryptos.Where(a => a.Displayed).ToList();
 }
 <!DOCTYPE html>
 <html>
@@ -24,13 +25,13 @@
         {
             <h1 class="text-danger">This payment method requires javascript.</h1>
         }
-        @if (Model.AvailableCryptos.Count > 1)
+        @if (displayedPaymentMethods.Count > 1)
         {
             <div>
                 <hr />
                 <h2>Pay with:</h2>
                 <ul style="list-style-type: none;padding-left: 5px;">
-                    @foreach (var crypto in Model.AvailableCryptos)
+                    @foreach (var crypto in displayedPaymentMethods)
                     {
                         <li style="height: 32px; line-height: 32px;">
                             <a asp-action="CheckoutNoScript" asp-route-invoiceId="@Model.InvoiceId" asp-route-paymentMethodId="@crypto.PaymentMethodId">

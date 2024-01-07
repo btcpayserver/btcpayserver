@@ -9,6 +9,7 @@ using BTCPayServer.Logging;
 using BTCPayServer.Models;
 using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Payments;
+using BTCPayServer.Plugins.Altcoins;
 using BTCPayServer.Rating;
 using BTCPayServer.Services.Altcoins.Zcash.RPC.Models;
 using BTCPayServer.Services.Altcoins.Zcash.Services;
@@ -93,7 +94,7 @@ namespace BTCPayServer.Services.Altcoins.Zcash.Payments
             {
                 var cryptoInfo = invoiceResponse.CryptoInfo.First(o => o.GetpaymentMethodId() == paymentMethodId);
                 model.InvoiceBitcoinUrl = ZcashPaymentType.Instance.GetPaymentLink(network, null,
-                    new ZcashLikeOnChainPaymentMethodDetails() {DepositAddress = cryptoInfo.Address}, cryptoInfo.Due,
+                    new ZcashLikeOnChainPaymentMethodDetails() {DepositAddress = cryptoInfo.Address}, cryptoInfo.GetDue().Value,
                     null);
                 model.InvoiceBitcoinUrlQR = model.InvoiceBitcoinUrl;
             }

@@ -1,12 +1,10 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
-using BTCPayServer.Models;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Rating;
 using BTCPayServer.Services.Rates;
@@ -37,12 +35,34 @@ namespace BTCPayServer.Controllers
             _rateFactory = rateFactory;
         }
 
+        [HttpGet()]
+        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanModifyStoreSettingsUnscoped)]
+        public async Task<IActionResult> ListStores(bool archived = false)
+        {
+            var stores = await _repo.GetStoresByUserId(GetUserId());
+            var vm = new ListStoresViewModel
+            {
+                Stores = stores
+                    .Where(s => s.Archived == archived)
+                    .Select(s => new ListStoresViewModel.StoreViewModel
+                    {
+                        StoreId = s.Id,
+                        StoreName = s.StoreName,
+                        Archived = s.Archived
+                    }).ToList(),
+                Archived = archived
+            };
+            return View(vm);
+        }
+
         [HttpGet("create")]
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanModifyStoreSettingsUnscoped)]
-        public IActionResult CreateStore()
+        public async Task<IActionResult> CreateStore(bool skipWizard)
         {
+            var stores = await _repo.GetStoresByUserId(GetUserId());
             var vm = new CreateStoreViewModel
             {
+                IsFirstStore = !(stores.Any() || skipWizard),
                 DefaultCurrency = StoreBlob.StandardDefaultCurrency,
                 Exchanges = GetExchangesSelectList(null)
             };
@@ -56,6 +76,8 @@ namespace BTCPayServer.Controllers
         {
             if (!ModelState.IsValid)
             {
+                var stores = await _repo.GetStoresByUserId(GetUserId());
+                vm.IsFirstStore = !stores.Any();
                 vm.Exchanges = GetExchangesSelectList(vm.PreferredExchange);
                 return View(vm);
             }
@@ -103,12 +125,11 @@ namespace BTCPayServer.Controllers
         {
             var exchanges = _rateFactory.RateProviderFactory
                 .AvailableRateProviders
-                .Where(r => !string.IsNullOrWhiteSpace(r.Name))
                 .OrderBy(s => s.Id, StringComparer.OrdinalIgnoreCase)
                 .ToList();
-            exchanges.Insert(0, new AvailableRateProvider(null, "Recommended", ""));
+            exchanges.Insert(0, new (null, "Recommended", ""));
             var chosen = exchanges.FirstOrDefault(f => f.Id == selected) ?? exchanges.First();
-            return new SelectList(exchanges, nameof(chosen.Id), nameof(chosen.Name), chosen.Id);
+            return new SelectList(exchanges, nameof(chosen.Id), nameof(chosen.DisplayName), chosen.Id);
         }
     }
 }

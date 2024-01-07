@@ -12,6 +12,7 @@ public static class FormDataExtensions
         serviceCollection.AddSingleton<FormDataService>();
         serviceCollection.AddSingleton<FormComponentProviders>();
         serviceCollection.AddSingleton<IFormComponentProvider, HtmlInputFormProvider>();
+        serviceCollection.AddSingleton<IFormComponentProvider, HtmlTextareaFormProvider>();
         serviceCollection.AddSingleton<IFormComponentProvider, HtmlFieldsetFormProvider>();
         serviceCollection.AddSingleton<IFormComponentProvider, HtmlSelectFormProvider>();
         serviceCollection.AddSingleton<IFormComponentProvider, FieldValueMirror>();

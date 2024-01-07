@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Form;
 using BTCPayServer.Forms;
 using Microsoft.AspNetCore.Http;
@@ -10,16 +11,25 @@ using Xunit.Abstractions;
 
 namespace BTCPayServer.Tests;
 
-[Trait("Fast", "Fast")]
+[Collection(nameof(NonParallelizableCollectionDefinition))]
+[Trait("Integration", "Integration")]
 public class FormTests : UnitTestBase
 {
     public FormTests(ITestOutputHelper helper) : base(helper)
     {
     }
 
-    [Fact]
-    public void CanParseForm()
+
+    [Fact(Timeout = TestUtils.TestTimeout)]
+    [Trait("Integration", "Integration")]  
+    public async Task CanParseForm()
     {
+        using var tester = CreateServerTester();
+        await tester.StartAsync();
+        var user = tester.NewAccount();
+        user.GrantAccess();
+        var service = tester.PayTester.GetService<FormDataService>();
+
         var form = new Form()
         {
             Fields = new List<Field>
@@ -40,8 +50,6 @@ public class FormTests : UnitTestBase
                 }
             }
         };
-        var providers = new FormComponentProviders(new List<IFormComponentProvider>());
-        var service = new FormDataService(null, providers);
         Assert.False(service.IsFormSchemaValid(form.ToString(), out _, out _));
         form = new Form
         {
@@ -164,7 +172,7 @@ public class FormTests : UnitTestBase
         Assert.Equal("original", obj["invoice"]["test"].Value<string>());
         Assert.Equal("updated", obj["invoice_item3"].Value<string>());
         Clear(form);
-        form.SetValues(obj);
+        service.SetValues(form, obj);
         obj = service.GetValues(form);
         Assert.Equal("original", obj["invoice"]["test"].Value<string>());
         Assert.Equal("updated", obj["invoice_item3"].Value<string>());
@@ -182,12 +190,73 @@ public class FormTests : UnitTestBase
                 }
             }
         };
-        form.SetValues(obj);
+        
+        service.SetValues(form, obj);
         obj = service.GetValues(form);
         Assert.Null(obj["test"].Value<string>());
-        form.SetValues(new JObject { ["test"] = "hello" });
+        
+        service.SetValues(form, new JObject { ["test"] = "hello" });
         obj = service.GetValues(form);
         Assert.Equal("hello", obj["test"].Value<string>());
+
+        var req = service.GenerateInvoiceParametersFromForm(form);
+        Assert.Null(req.Amount);
+        Assert.Null(req.Currency);
+        
+        form.Fields.Add(new Field
+        {
+            Name = $"{FormDataService.InvoiceParameterPrefix}amount",
+            Type = "number",
+            Value = "1"
+        });
+        req = service.GenerateInvoiceParametersFromForm(form);
+        Assert.Equal(1, req.Amount);
+        
+        form.Fields.Add(new Field
+        {
+            Name = $"{FormDataService.InvoiceParameterPrefix}amount_adjustment",
+            Type = "number",
+            Value = "1"
+        });
+        req = service.GenerateInvoiceParametersFromForm(form);
+        Assert.Equal(2, req.Amount);
+        form.Fields.Add(new Field
+        {
+            Name = $"{FormDataService.InvoiceParameterPrefix}amount_adjustment2",
+            Type = "number",
+            Value = "2"
+        });
+        form.Fields.Add(new Field
+        {
+            Name = $"{FormDataService.InvoiceParameterPrefix}currency",
+            Type = "text",
+            Value = "eur"
+        });
+        req = service.GenerateInvoiceParametersFromForm(form);
+        Assert.Equal("eur", req.Currency);
+        Assert.Equal(4, req.Amount);
+        
+
+        form.Fields.Add(new Field
+        {
+            Name = $"{FormDataService.InvoiceParameterPrefix}amount_multiply_adjustment",
+            Type = "number",
+            Value = "2"
+        });
+        
+        req = service.GenerateInvoiceParametersFromForm(form);
+        Assert.Equal(8, req.Amount);
+        
+        
+        form.Fields.Add(new Field
+        {
+            Name = $"{FormDataService.InvoiceParameterPrefix}amount_multiply_adjustment1",
+            Type = "number",
+            Value = "2"
+        });
+        
+        req = service.GenerateInvoiceParametersFromForm(form);
+        Assert.Equal(16, req.Amount);
     }
 
     private void Clear(Form form)

@@ -1,7 +1,6 @@
 @inject BTCPayServer.Services.PoliciesSettings PoliciesSettings
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<link rel="icon" href="~/favicon.ico" type="image/x-icon">
 @if (PoliciesSettings.DiscourageSearchEngines)
 {
 <meta name="robots" content="noindex">
@@ -16,6 +15,17 @@
 <link href="~/main/site.css" asp-append-version="true"  rel="stylesheet" />
 
 <partial name="LayoutHeadTheme" />
+@if (ViewData.TryGetValue("StoreBranding", out var storeBranding))
+{
+    <partial name="LayoutHeadStoreBranding" model="storeBranding" />
+}
+else
+{
+    <meta name="theme-color" content="#51B13E">
+    <link rel="icon" href="~/favicon.ico">
+    <link rel="apple-touch-icon" href="~/img/icons/icon-512x512.png">
+    <link rel="apple-touch-startup-image" href="~/img/splash.png">
+}
 @* Non-JS *@
 <noscript>
     <style>

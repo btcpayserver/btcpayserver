@@ -254,10 +254,92 @@
                     }
                 ]
             }
+        },
+        "/api/v1/stores/{storeId}/roles": {
+            "get": {
+                "tags": [
+                    "Stores"
+                ],
+                "summary": "Get store's roles",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store to fetch",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "description": "View information about the specified store's roles",
+                "operationId": "Stores_GetStoreRoles",
+                "responses": {
+                    "200": {
+                        "description": "The user roles available for this store",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RoleData"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to get the store's roles"
+                    },
+                    "404": {
+                        "description": "Store not found"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
         }
     },
     "components": {
         "schemas": {
+            "RoleData": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "description": "The role's Id (Same as role if the role is created at server level, if the role is created at the store level the format is `STOREID::ROLE`)",
+                        "type": "string",
+                        "nullable": false,
+                        "example": "Owner"
+                    },
+                    "role": {
+                        "description": "The role's name",
+                        "type": "string",
+                        "nullable": false,
+                        "example": "Owner"
+                    },
+                    "permissions": {
+                        "description": "The permissions attached to this role",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "example": [
+                            "btcpay.store.canmodifystoresettings",
+                            "btcpay.store.cantradecustodianaccount",
+                            "btcpay.store.canwithdrawfromcustodianaccount",
+                            "btcpay.store.candeposittocustodianaccount"
+                        ]
+                    },
+                    "isServerRole": {
+                        "description": "Whether this role is at the scope of the store or scope of the server",
+                        "type": "boolean",
+                        "example": true
+                    }
+                }
+            },
             "StoreDataList": {
                 "type": "array",
                 "items": {
@@ -285,8 +367,11 @@
                 "type": "object",
                 "properties": {
                     "paymentMethod": {
-                        "type": "string",
-                        "description": "The payment method (e.g., \"BTC\" or \"BTC_LightningLike\")",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/PaymentMethodId"
+                            }
+                        ],
                         "nullable": false
                     },
                     "currencyCode": {
@@ -322,6 +407,12 @@
                         "nullable": true,
                         "description": "The absolute url of the store",
                         "format": "url"
+                    },
+                    "supportUrl": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "The support URI of the store, can contain the placeholders `{OrderId}` and `{InvoiceId}`. Can be any valid URI, such as a website, email, and nostr.",
+                        "format": "uri"
                     },
                     "defaultCurrency": {
                         "type": "string",
@@ -366,6 +457,11 @@
                         "default": 0.0,
                         "description": "Consider an invoice fully paid, even if the payment is missing 'x' % of the full amount."
                     },
+                    "archived": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "If true, the store does not appear in the stores list by default."
+                    },
                     "anyoneCanCreateInvoice": {
                         "type": "boolean",
                         "default": false,
@@ -381,8 +477,12 @@
                     },
                     "receipt": {
                         "nullable": true,
-                        "$ref": "#/components/schemas/ReceiptOptions",
-                        "description": "Additional settings to customize the public receipt"
+                        "description": "Additional settings to customize the public receipt",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ReceiptOptions"
+                            }
+                        ]
                     },
                     "lightningAmountInSatoshi": {
                         "type": "boolean",
@@ -442,22 +542,45 @@
                         "default": false,
                         "description": "If true, payjoin will be proposed in the checkout page if possible. ([More information](https://docs.btcpayserver.org/Payjoin/))"
                     },
+                    "autoDetectLanguage": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "If true, the language on the checkout page will adapt to the language defined by the user's browser settings"
+                    },
+                    "showPayInWalletButton": {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "If true, the \"Pay in wallet\" button will be shown on the checkout page (Checkout V2)"
+                    },
+                    "showStoreHeader": {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "If true, the store header will be shown on the checkout page (Checkout V2)"
+                    },
+                    "celebratePayment": {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "If true, payments on the checkout page will be celebrated with confetti (Checkout V2)"
+                    },
+                    "playSoundOnPayment": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "If true, sounds on the checkout page will be enabled (Checkout V2)"
+                    },
                     "lazyPaymentMethods": {
                         "type": "boolean",
                         "default": false,
                         "description": "If true, payment methods are enabled individually upon user interaction in the invoice"
                     },
                     "defaultPaymentMethod": {
-                        "type": "string",
-                        "example": "BTC",
-                        "description": "The default payment method to load when displaying an invoice. It can be in the format of `BTC_LightningNetwork` to specify Lightning to be the default or `BTC_OnChain`/ `BTC` for on-chain to be the default. "
+                        "$ref": "#/components/schemas/PaymentMethodId"
                     },
                     "paymentMethodCriteria": {
                         "type": "array",
                         "nullable": true,
                         "items": {
                             "$ref": "#/components/schemas/PaymentMethodCriteriaData"
-                        },                        
+                        },
                         "description": "The criteria required to activate specific payment methods."
                     }
                 }

@@ -3,6 +3,7 @@
 @using BTCPayServer.Services
 @using BTCPayServer.Services.Invoices
 @inject DisplayFormatter DisplayFormatter
+@inject PaymentMethodHandlerDictionary PaymentMethodHandlerDictionary
 @model BTCPayServer.Components.StoreRecentInvoices.StoreRecentInvoicesViewModel
 
 <div class="widget store-recent-invoices" id="StoreRecentInvoices-@Model.Store.Id">
@@ -51,21 +52,12 @@
                         <a asp-controller="UIInvoice" asp-action="Invoice" asp-route-invoiceId="@invoice.InvoiceId" class="text-break">@invoice.InvoiceId</a>
                     </td>
                     <td>
-                        <span class="badge badge-@invoice.Status.Status.ToModernStatus().ToString().ToLower()">
-                            @invoice.Status.Status.ToModernStatus().ToString()
-                            @if (invoice.Status.ExceptionStatus != InvoiceExceptionStatus.None)
-                            {
-                                @($"({invoice.Status.ExceptionStatus.ToString()})")
-                            }
-                        </span>
-                        @if (invoice.HasRefund)
-                        {
-                            <span class="badge bg-warning">
-                                Refund
-                            </span>
-                        }
+                        <vc:invoice-status state="invoice.Status" payments="invoice.Details.Payments" invoice-id="@invoice.InvoiceId"
+                           is-archived="invoice.Details.Archived" has-refund="invoice.HasRefund" />
                     </td>
-                    <td class="text-end">@DisplayFormatter.Currency(invoice.Amount, invoice.Currency)</td>
+                    <td class="text-end">
+                        <span data-sensitive>@DisplayFormatter.Currency(invoice.Amount, invoice.Currency)</span>
+                    </td>
                 </tr>
             }
             </tbody>

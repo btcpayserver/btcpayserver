@@ -9,24 +9,41 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BTCPayServer.Services.PaymentRequests
 {
+    public record PaymentRequestEvent
+    {
+        public const string Created = nameof(Created);
+        public const string Updated = nameof(Updated);
+        public const string Archived = nameof(Archived);
+        public const string StatusChanged = nameof(StatusChanged);
+        public PaymentRequestData Data { get; set; }
+        public string Type { get; set; }
+        
+        
+    }
+    
     public class PaymentRequestRepository
     {
         private readonly ApplicationDbContextFactory _ContextFactory;
         private readonly InvoiceRepository _InvoiceRepository;
+        private readonly EventAggregator _eventAggregator;
 
-        public PaymentRequestRepository(ApplicationDbContextFactory contextFactory, InvoiceRepository invoiceRepository)
+        public PaymentRequestRepository(ApplicationDbContextFactory contextFactory, 
+            InvoiceRepository invoiceRepository, EventAggregator eventAggregator)
         {
             _ContextFactory = contextFactory;
             _InvoiceRepository = invoiceRepository;
+            _eventAggregator = eventAggregator;
         }
 
         public async Task<PaymentRequestData> CreateOrUpdatePaymentRequest(PaymentRequestData entity)
         {
             await using var context = _ContextFactory.CreateContext();
+            var added = false;
             if (string.IsNullOrEmpty(entity.Id))
             {
                 entity.Id = Guid.NewGuid().ToString();
                 await context.PaymentRequests.AddAsync(entity);
+                added = true;
             }
             else
             {
@@ -34,7 +51,35 @@ namespace BTCPayServer.Services.PaymentRequests
             }
 
             await context.SaveChangesAsync();
+            _eventAggregator.Publish(new PaymentRequestEvent()
+            {
+                Data = entity,
+                Type = added ? PaymentRequestEvent.Created : PaymentRequestEvent.Updated
+            });
             return entity;
+        }
+
+        public async Task<bool?> ArchivePaymentRequest(string id, bool toggle = false)
+        {
+            
+            await using var context = _ContextFactory.CreateContext();
+            var pr = await context.PaymentRequests.FindAsync(id);
+            if(pr == null)
+                return null;
+            if(pr.Archived && !toggle)
+                return pr.Archived;
+            pr.Archived =  !pr.Archived; 
+            await context.SaveChangesAsync();
+            if (pr.Archived)
+            {
+                _eventAggregator.Publish(new PaymentRequestEvent()
+                {
+                    Data = pr,
+                    Type = PaymentRequestEvent.Archived
+                });
+            }
+            
+            return pr.Archived;
         }
 
         public async Task<PaymentRequestData> FindPaymentRequest(string id, string userId, CancellationToken cancellationToken = default)
@@ -44,7 +89,7 @@ namespace BTCPayServer.Services.PaymentRequests
                 return null;
             }
 
-            using var context = _ContextFactory.CreateContext();
+            await using var context = _ContextFactory.CreateContext();
             var result = await context.PaymentRequests.Include(x => x.StoreData)
                 .Where(data =>
                     string.IsNullOrEmpty(userId) ||
@@ -53,27 +98,23 @@ namespace BTCPayServer.Services.PaymentRequests
             return result;
         }
 
-        public async Task<bool> IsPaymentRequestAdmin(string paymentRequestId, string userId)
-        {
-            if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(paymentRequestId))
-            {
-                return false;
-            }
-            using var context = _ContextFactory.CreateContext();
-            return await context.PaymentRequests.Include(x => x.StoreData)
-                .AnyAsync(data =>
-                    data.Id == paymentRequestId &&
-                    (data.StoreData != null && data.StoreData.UserStores.Any(u => u.ApplicationUserId == userId)));
-        }
-
         public async Task UpdatePaymentRequestStatus(string paymentRequestId, Client.Models.PaymentRequestData.PaymentRequestStatus status, CancellationToken cancellationToken = default)
         {
-            using var context = _ContextFactory.CreateContext();
-            var invoiceData = await context.FindAsync<PaymentRequestData>(paymentRequestId);
-            if (invoiceData == null)
+            await using var context = _ContextFactory.CreateContext();
+            var paymentRequestData = await context.FindAsync<PaymentRequestData>(paymentRequestId);
+            if (paymentRequestData == null)
                 return;
-            invoiceData.Status = status;
+            if( paymentRequestData.Status ==  status)
+                return;
+            paymentRequestData.Status = status;
+            
             await context.SaveChangesAsync(cancellationToken);
+            
+            _eventAggregator.Publish(new PaymentRequestEvent()
+            {
+                Data = paymentRequestData,
+                Type = PaymentRequestEvent.StatusChanged
+            });
         }
 
         public async Task<PaymentRequestData[]> FindPaymentRequests(PaymentRequestQuery query, CancellationToken cancellationToken = default)

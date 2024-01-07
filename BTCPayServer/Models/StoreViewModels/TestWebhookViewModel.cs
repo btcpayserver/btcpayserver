@@ -4,6 +4,6 @@ namespace BTCPayServer.Models.StoreViewModels
 {
     public class TestWebhookViewModel
     {
-        public WebhookEventType Type { get; set; }
+        public string Type { get; set; }
     }
 }

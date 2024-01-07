@@ -13,6 +13,9 @@ var hubListener = function () {
     connection.on("InvoiceCreated", function (invoiceId) {
         eventAggregator.$emit("invoice-created", invoiceId);
     });
+    connection.on("InvoiceConfirmed", function (invoiceId) {
+        eventAggregator.$emit("invoice-confirmed", invoiceId);
+    });
     connection.on("InvoiceError", function (error) {
         eventAggregator.$emit("invoice-error", error);
     });

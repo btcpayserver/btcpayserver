@@ -1,5 +1,6 @@
 #nullable enable
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
@@ -11,7 +12,7 @@ namespace BTCPayServer.Payments
     /// </summary>
     public class PaymentMethodId
     {
-        public PaymentMethodId? FindNearest(PaymentMethodId[] others)
+        public PaymentMethodId? FindNearest(IEnumerable<PaymentMethodId> others)
         {
             ArgumentNullException.ThrowIfNull(others);
             return others.FirstOrDefault(f => f == this) ??

@@ -1,14 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace BTCPayServer.Data
 {
-    public class WalletObjectData
+    public class WalletObjectData : IEqualityComparer<WalletObjectData>
     {
         public class Types
         {
@@ -88,9 +86,30 @@ namespace BTCPayServer.Data
             if (databaseFacade.IsNpgsql())
             {
                 builder.Entity<WalletObjectData>()
-                                .Property(o => o.Data)
-                                .HasColumnType("JSONB");
+                    .Property(o => o.Data)
+                    .HasColumnType("JSONB");
+                
             }
+        }
+
+        public bool Equals(WalletObjectData x, WalletObjectData y)
+        {
+            if (ReferenceEquals(x, y)) return true;
+            if (ReferenceEquals(x, null)) return false;
+            if (ReferenceEquals(y, null)) return false;
+            if (x.GetType() != y.GetType()) return false;
+            return string.Equals(x.WalletId, y.WalletId, StringComparison.InvariantCultureIgnoreCase) &&
+                   string.Equals(x.Type, y.Type, StringComparison.InvariantCultureIgnoreCase) &&
+                   string.Equals(x.Id, y.Id, StringComparison.InvariantCultureIgnoreCase);
+        }
+
+        public int GetHashCode(WalletObjectData obj)
+        {
+            HashCode hashCode = new HashCode();
+            hashCode.Add(obj.WalletId, StringComparer.InvariantCultureIgnoreCase);
+            hashCode.Add(obj.Type, StringComparer.InvariantCultureIgnoreCase);
+            hashCode.Add(obj.Id, StringComparer.InvariantCultureIgnoreCase);
+            return hashCode.ToHashCode();
         }
     }
 }

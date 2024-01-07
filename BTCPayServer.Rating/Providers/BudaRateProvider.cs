@@ -18,7 +18,7 @@ public class BudaRateProvider : IRateProvider
 
     public async Task<PairRate[]> GetRatesAsync(CancellationToken cancellationToken)
     {
-        var response = await _httpClient.GetAsync("https://www.buda.com/api/v2/markets/btc-clp/ticker", cancellationToken);
+        using var response = await _httpClient.GetAsync("https://www.buda.com/api/v2/markets/btc-clp/ticker", cancellationToken);
         var jobj = await response.Content.ReadAsAsync<JObject>(cancellationToken);
         var minAsk = jobj["ticker"]["min_ask"][0].Value<decimal>();
         var maxBid = jobj["ticker"]["max_bid"][0].Value<decimal>();

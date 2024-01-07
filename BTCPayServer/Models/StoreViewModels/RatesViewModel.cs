@@ -17,11 +17,11 @@ namespace BTCPayServer.Models.StoreViewModels
             public bool Error { get; set; }
         }
 
-        public void SetExchangeRates(IEnumerable<AvailableRateProvider> supportedList, string preferredExchange)
+        public void SetExchangeRates(IEnumerable<RateSourceInfo> supportedList, string preferredExchange)
         {
-            supportedList = supportedList.Select(a => new AvailableRateProvider(a.Id, a.DisplayName, a.Url, a.Source)).ToArray();
+            supportedList = supportedList.ToArray();
             var chosen = supportedList.FirstOrDefault(f => f.Id == preferredExchange) ?? supportedList.FirstOrDefault();
-            Exchanges = new SelectList(supportedList, nameof(chosen.Id), nameof(chosen.Name), chosen);
+            Exchanges = new SelectList(supportedList, nameof(chosen.Id), nameof(chosen.DisplayName), chosen);
             PreferredExchange = chosen?.Id;
             RateSource = chosen?.Url;
         }
@@ -39,7 +39,7 @@ namespace BTCPayServer.Models.StoreViewModels
         public string ScriptTest { get; set; }
         public string DefaultCurrencyPairs { get; set; }
         public string StoreId { get; set; }
-        public IEnumerable<AvailableRateProvider> AvailableExchanges { get; set; }
+        public IEnumerable<RateSourceInfo> AvailableExchanges { get; set; }
 
         [Display(Name = "Add Exchange Rate Spread")]
         [Range(0.0, 100.0)]

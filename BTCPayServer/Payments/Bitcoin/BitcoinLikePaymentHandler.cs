@@ -211,7 +211,7 @@ namespace BTCPayServer.Payments.Bitcoin
                     new Key().GetScriptPubKey(supportedPaymentMethod.AccountDerivation.ScriptPubKeyType());
                 var dust = txOut.GetDustThreshold();
                 var amount = paymentMethod.Calculate().Due;
-                if (amount < dust)
+                if (amount < dust.ToDecimal(MoneyUnit.BTC))
                     throw new PaymentMethodUnavailableException("Amount below the dust threshold. For amounts of this size, it is recommended to enable an off-chain (Lightning) payment method");
             }
             if (preparePaymentObject is null)

@@ -318,6 +318,8 @@ namespace BTCPayServer.Controllers
             await _broadcaster.Schedule(DateTimeOffset.UtcNow + TimeSpan.FromMinutes(2.0), cloned.ExtractTransaction(), btcPayNetwork);
             using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             cts.CancelAfter(TimeSpan.FromSeconds(30));
+            var minRelayFee = _dashboard.Get(btcPayNetwork.CryptoCode).Status.BitcoinStatus?.MinRelayTxFee;
+            _payjoinClient.MinimumFeeRate = minRelayFee;
             return await _payjoinClient.RequestPayjoin(bip21, new PayjoinWallet(derivationSchemeSettings), psbt, cts.Token);
         }
 

@@ -5,7 +5,7 @@
 @if (!Model.Constant)
 {
     <fieldset>
-        <legend class="h3 mt-4 mb-3">@Model.Label</legend>
+        <legend class="h3 mt-4 mb-3">@Safe.Raw(Model.Label)</legend>
         @foreach (var field in Model.Fields)
         {
 			if (FormComponentProviders.TypeToComponentProvider.TryGetValue(field.Type, out var partial) && !string.IsNullOrEmpty(partial.View))

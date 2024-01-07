@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -97,7 +98,7 @@ retry:
                 }
                 Thread.Sleep(50);
             }
-            Assert.False(true, "Elements was found");
+            Assert.Fail("Elements was found");
         }
 
         public static void UntilJsIsReady(this WebDriverWait wait)
@@ -120,6 +121,13 @@ retry:
         public static void InvokeJSFunction(this IWebDriver driver, string element, string funcName)
         {
             driver.ExecuteJavaScript($"document.getElementById('{element}').{funcName}()");
+        }
+
+        public static void WaitWalletTransactionsLoaded(this IWebDriver driver)
+        {
+            var wait = new WebDriverWait(driver, SeleniumTester.ImplicitWait);
+            wait.UntilJsIsReady();
+            wait.Until(d => d.WaitForElement(By.CssSelector("#WalletTransactions[data-loaded='true']")));
         }
 
         public static IWebElement WaitForElement(this IWebDriver driver, By selector)
@@ -191,7 +199,9 @@ retry:
 
         public static bool ElementDoesNotExist(this IWebDriver driver, By selector)
         {
-            Assert.Throws<NoSuchElementException>(() =>
+            Assert.Throws<NoSuchElementException>(
+            [DebuggerStepThrough]
+            () =>
             {
                 driver.FindElement(selector);
             });

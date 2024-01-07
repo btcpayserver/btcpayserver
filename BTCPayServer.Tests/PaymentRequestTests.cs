@@ -31,7 +31,6 @@ namespace BTCPayServer.Tests
             user.RegisterDerivationScheme("BTC");
 
             var user2 = tester.NewAccount();
-
             await user2.GrantAccessAsync();
 
             var paymentRequestController = user.GetController<UIPaymentRequestController>();
@@ -162,7 +161,7 @@ namespace BTCPayServer.Tests
             using var tester = CreateServerTester();
             await tester.StartAsync();
             var user = tester.NewAccount();
-            user.GrantAccess();
+            await user.GrantAccessAsync();
             user.RegisterDerivationScheme("BTC");
 
             var paymentRequestController = user.GetController<UIPaymentRequestController>();
@@ -170,7 +169,7 @@ namespace BTCPayServer.Tests
             Assert.IsType<NotFoundResult>(await
                 paymentRequestController.CancelUnpaidPendingInvoice(Guid.NewGuid().ToString(), false));
 
-            var request = new UpdatePaymentRequestViewModel()
+            var request = new UpdatePaymentRequestViewModel
             {
                 Title = "original juice",
                 Currency = "BTC",

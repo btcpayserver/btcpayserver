@@ -140,7 +140,13 @@
             </div>
         </div>
     </div>
-
+    @if (Model.AdditionalOptions is not null)
+    {
+        @foreach (var dictKeys in Model.AdditionalOptions)
+        {
+            <input type="hidden" asp-for="AdditionalOptions[dictKeys.Key]" />
+        }
+    }
     <button type="submit" class="btn btn-primary" id="Continue">@(isImport ? "Continue" : "Create")</button>
 </form>
 

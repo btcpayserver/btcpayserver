@@ -4,6 +4,7 @@
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @{
 	ViewData["Title"] = Model.Title;
+    ViewData["StoreBranding"] = Model.StoreBranding;
 	Layout = null;
 	Csp.UnsafeEval();
 	if (!string.IsNullOrEmpty(Model.DisqusShortname))
@@ -16,19 +17,10 @@
 <html class="h-100" @(Env.IsDeveloping ? " data-devenv" : "")>
 <head>
     <partial name="LayoutHead"/>
-    <partial name="LayoutHeadStoreBranding" model="@(Model.BrandColor, Model.CssFileId, Model.CustomCSSLink, Model.EmbeddedCSS)" />
-    <link href="~/vendor/bootstrap-vue/bootstrap-vue.css" asp-append-version="true"  rel="stylesheet" />
-    <link href="~/crowdfund/styles/main.css" asp-append-version="true"  rel="stylesheet" />
-
-    @if (!string.IsNullOrEmpty(Model.CustomCSSLink))
-    {
-        <link href="@Model.CustomCSSLink" rel="stylesheet" asp-append-version="true"/>
-    }
-    @if (!string.IsNullOrEmpty(Model.EmbeddedCSS))
-    {
-        @Safe.Raw($"<style>{Model.EmbeddedCSS}</style>")
-    }
+    <link href="~/vendor/bootstrap-vue/bootstrap-vue.min.css" asp-append-version="true" rel="stylesheet"/>
+    <link href="~/crowdfund/styles/main.css" asp-append-version="true" rel="stylesheet"/>
     <style>
+        #app { --wrap-max-width: 1320px; }
         #crowdfund-main-image {
             border-radius: var(--btcpay-border-radius);
             object-fit: cover;
@@ -38,8 +30,12 @@
         #crowdfund-body-description {
             font-size: 16px;
         }
+        .perk.card .card-img-top{
+            max-height: 210px;
+            object-fit: scale-down;
+        }
     </style>
-    <vc:ui-extension-point location="crowdfund-head" model="@Model"></vc:ui-extension-point>
+    <vc:ui-extension-point location="crowdfund-head" model="@Model"/>
 </head>
 <body class="min-vh-100 p-2">
 @if (!Model.Enabled)
@@ -53,7 +49,7 @@
     <canvas id="fireworks" class="d-none"></canvas>
 }
 
-<div class="public-page-wrap flex-column container" id="app" @(Model.SimpleDisplay ? "" : "v-cloak")>
+<div class="public-page-wrap" id="app" @(Model.SimpleDisplay ? "" : "v-cloak")>
     @if (!string.IsNullOrEmpty(Model.MainImageUrl))
     {
         <img v-if="srvModel.mainImageUrl" :src="srvModel.mainImageUrl" :alt="srvModel.title" id="crowdfund-main-image" asp-append-version="true"/>
@@ -81,16 +77,14 @@
                 }
                 @if (Model.EnforceTargetAmount)
                 {
-                    <span v-if="srvModel.enforceTargetAmount" class="h5 ms-2">
+                    <span v-if="srvModel.enforceTargetAmount" class="h5 ms-2" v-b-tooltip title="No contributions allowed after the goal has been reached">
                         Hardcap Goal
-                        <span v-b-tooltip title="No contributions allowed after the goal has been reached"><vc:icon symbol="info" /></span>
                     </span>
                 }
                 else
                 {
-                    <span v-if="!srvModel.enforceTargetAmount" class="h5 ms-2">
+                    <span v-if="!srvModel.enforceTargetAmount" class="h5 ms-2" v-b-tooltip title="Contributions allowed even after goal is reached">
                         Softcap Goal
-                        <span v-b-tooltip title="Contributions allowed even after goal is reached"><vc:icon symbol="info" /></span>
                     </span>
                 }
             </span>
@@ -213,11 +207,11 @@
     </div>
 
     <div class="text-center mb-4" id="crowdfund-body-header">
-        <button v-if="active" id="crowdfund-body-header-cta" class="btn btn-lg btn-primary py-2 px-5 only-for-js" v-on:click="contributeModalOpen = true">Contribute</button>
+        <button v-if="active" id="crowdfund-body-header-cta" class="btn btn-lg btn-primary py-2 px-5 only-for-js" v-on:click="contribute">Contribute</button>
     </div>
 
     <div class="row mt-4 justify-content-between gap-5">
-        <div class="col-lg-7 col-sm-12" id="crowdfund-body-description-container">
+        <div :class="{ 'col-lg-7 col-sm-12': hasPerks, 'col-12': !hasPerks }" id="crowdfund-body-description-container">
             <template v-if="srvModel.disqusEnabled && srvModel.disqusShortname">
                 <b-tabs>
                     <b-tab title="Details" active>
@@ -234,7 +228,7 @@
                 </div>
             </template>
         </div>
-        <div class="col-lg-4 col-sm-12" id="crowdfund-body-contribution-container">
+        <div class="col-lg-4 col-sm-12" id="crowdfund-body-contribution-container" v-if="hasPerks">
             <contribute :target-currency="srvModel.targetCurrency"
                         :loading="loading"
                         :display-perks-ranking="srvModel.displayPerksRanking"
@@ -258,7 +252,6 @@
             </div>
         </div>
     </noscript>
-    <div class="text-center text-muted mt-4" v-text="`Updated ${lastUpdated}`">Updated @Model.Info.LastUpdated</div>
     <b-modal title="Contribute" v-model="contributeModalOpen" size="lg" ok-only="true" ok-variant="secondary" ok-title="Close" ref="modalContribute">
         <contribute v-if="contributeModalOpen"
                     :target-currency="srvModel.targetCurrency"
@@ -268,8 +261,8 @@
                     :in-modal="true">
         </contribute>
     </b-modal>
-
     <footer class="store-footer">
+        <p class="text-muted" v-text="`Updated ${lastUpdated}`">Updated @Model.Info.LastUpdated</p>
         <a class="store-powered-by" href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">
             Powered by <partial name="_StoreFooterLogo" />
         </a>
@@ -279,7 +272,7 @@
 <template id="perks-template">
     <div class="perks-container">
         <perk v-if="!perks || perks.length === 0"
-              :perk="{title: 'Donate Custom Amount', price: { type: 0, value: null }}"
+              :perk="{title: 'Donate Custom Amount', priceType: 'Topup', price: { type: 'Topup' } }"
               :target-currency="targetCurrency"
               :active="active"
               :loading="loading"
@@ -318,15 +311,17 @@
                 <div class="card-title d-flex justify-content-between" :class="{ 'mb-0': !perk.description }">
                     <span class="h5" :class="{ 'mb-0': !perk.description }">{{perk.title ? perk.title : perk.id}}</span>
                     <span class="text-muted">
-                        <template v-if="perk.price && perk.price.value">
-                            {{formatAmount(perk.price.value.noExponents(), srvModel.currencyData.divisibility)}}
-                            {{targetCurrency}}
-                            <template v-if="perk.price.type == 1">or more</template>
-                        </template>
-                        <template v-else-if="perk.price.type === 2 && !perk.price.value">
+                       
+                        <template v-if="perk.priceType === 'Fixed' && amount ==0">
                             Free
                         </template>
-                        <template v-else-if="perk.price.type === 0 || (!perk.price.value && perk.price.type === 1)">
+                        <template v-else-if="amount">
+                            {{formatAmount(perk.price.noExponents(), srvModel.currencyData.divisibility)}}
+                            {{targetCurrency}}
+                            <template v-if="perk.price.type === 'Minimum'">or more</template>
+                        </template>
+
+                        <template v-else-if="perk.priceType === 'Topup' || (!amount && perk.priceType === 'Minimum')">
                             Any amount
                         </template>
                     </span>
@@ -334,19 +329,18 @@
                 <p class="card-text overflow-hidden" v-if="perk.description" v-html="perk.description"></p>
 
                 <div class="input-group" style="max-width:500px;" v-if="expanded" :id="'perk-form'+ perk.id">
-                    <template v-if="perk.price.type !== 0 && !(perk.price.type === 2 && !perk.price.value)"> 
+                    <template v-if="perk.priceType !== 'Topup' && !(perk.priceType === 'Fixed' && amount == 0)">
                         <input
-                            
                             :disabled="!active"
-                            :readonly="perk.price.type !== 1"
+                            :readonly="perk.priceType === 'Fixed'"
                             class="form-control hide-number-spin"
                             type="number"
                             v-model="amount"
-                            :min="perk.price.value"
+                            :min="perk.price"
                             step="any"
                             placeholder="Contribution Amount"
                             required>
-                        <span class="input-group-text" >{{targetCurrency}}</span>
+                        <span class="input-group-text">{{targetCurrency}}</span>
                     </template>
                     <button
                         class="btn btn-primary d-flex align-items-center "
@@ -392,11 +386,10 @@
     <script src="~/vendor/moment/moment.min.js" asp-append-version="true"></script>
     <script src="~/vendor/vue-qrcode/vue-qrcode.min.js" asp-append-version="true"></script>
     <script src="~/vendor/vue-toasted/vue-toasted.min.js" asp-append-version="true"></script>
-    <script src="~/vendor/bootstrap-vue/bootstrap-vue.js" asp-append-version="true"></script>
+    <script src="~/vendor/bootstrap-vue/bootstrap-vue.min.js" asp-append-version="true"></script>
     <script src="~/vendor/signalr/signalr.js" asp-append-version="true"></script>
     <script src="~/vendor/animejs/anime.min.js" asp-append-version="true"></script>
     <script src="~/crowdfund/app.js" asp-append-version="true"></script>
-    <script src="~/crowdfund/helpers/math.js" asp-append-version="true"></script>
     <script src="~/crowdfund/services/audioplayer.js" asp-append-version="true"></script>
     <script src="~/crowdfund/services/fireworks.js" asp-append-version="true"></script>
     <script src="~/crowdfund/services/listener.js" asp-append-version="true"></script>

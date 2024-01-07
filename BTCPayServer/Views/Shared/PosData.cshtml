@@ -3,63 +3,113 @@
 @functions {
     private bool IsValidURL(string source)
     {
-        return Uri.TryCreate(source, UriKind.Absolute, out var uriResult) && 
-            (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
+        return Uri.TryCreate(source, UriKind.Absolute, out var uriResult) &&
+               (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
     }
 }
-@if (Model.Items.Count > 0)
+
+@if (Model.Items.Any())
 {
-<table class="table my-0" v-pre>
-    @foreach (var (key, value) in Model.Items)
-    {
-        <tr>
-            @if (value is string str)
+    var hasCart = Model.Items.ContainsKey("Cart");
+    <table class="table my-0" v-pre>
+        @if (hasCart || (Model.Items.ContainsKey("Subtotal") && Model.Items.ContainsKey("Total")))
+        {
+            @if (hasCart)
             {
-                if (!string.IsNullOrEmpty(key))
+                <tbody>
+                @foreach (var (key, value) in (Dictionary<string, object>)Model.Items["Cart"])
                 {
-                    <th class="w-150px">@key</th>
+                    <tr>
+                        <th>@key</th>
+                        <td class="text-end">@value</td>
+                    </tr>
                 }
-                <td>
-                    @if (IsValidURL(str))
-                    {
-                        <a href="@str" target="_blank" rel="noreferrer noopener">@str</a>
-                    }
-                    else
-                    {
-                        @value?.ToString()
-                    }
-                </td>
+                </tbody>
             }
-            else if (value is Dictionary<string, object>subItems)
+            <tfoot style="border-top-width:@(hasCart ? "3px" : "0")">
+                @if (Model.Items.ContainsKey("Subtotal"))
+                {
+                    <tr>
+                        <th>Subtotal</th>
+                        <td class="text-end">@Model.Items["Subtotal"]</td>
+                    </tr>
+                }
+                @if (Model.Items.ContainsKey("Discount"))
+                {
+                    <tr>
+                        <th>Discount</th>
+                        <td class="text-end">@Model.Items["Discount"]</td>
+                    </tr>
+                }
+                @if (Model.Items.ContainsKey("Tip"))
+                {
+                    <tr>
+                        <th>Tip</th>
+                        <td class="text-end">@Model.Items["Tip"]</td>
+                    </tr>
+                }
+                @if (Model.Items.ContainsKey("Total"))
+                {
+                    <tr style="border-top-width:3px">
+                        <th>Total</th>
+                        <td class="text-end">@Model.Items["Total"]</td>
+                    </tr>
+                }
+            </tfoot>
+        }
+        else
+        {
+            foreach (var (key, value) in Model.Items)
             {
-                @* This is the array case *@
-                if (subItems.Count == 1 && subItems.First().Value is string str2)
-                {
-                    <th class="w-150px">@key</th>
-                    <td>
-                        @if (IsValidURL(str2))
+                <tr>
+                    @if (value is string str)
+                    {
+                        if (!string.IsNullOrEmpty(key))
                         {
-                            <a href="@str2" target="_blank" rel="noreferrer noopener">@str2</a>
+                            <th>@key</th>
                         }
-                        else
-                        {
-                            @subItems.First().Value?.ToString()
-                        }
-					</td>
-				}
-				else if (subItems.Count > 0)
-				{
-					<td colspan="2" >
-						@{
-							Write(Html.Raw($"<h{Model.Level + 3} class=\"mt-4 mb-3\">"));
-							Write(key);
-							Write(Html.Raw($"</h{Model.Level + 3}>"));
-						}
-                        <partial name="PosData" model="(subItems, Model.Level + 1)"/>
-                    </td>
-                }
+                        <td style="white-space:pre-wrap">@* Explicitely remove whitespace at front here *@@if (IsValidURL(str)){<a href="@str" target="_blank" rel="noreferrer noopener">@str</a>}else {@str.Trim()}</td>
+                    }
+                    else if (value is Dictionary<string, object> { Count: > 0 } subItems)
+                    {
+                        <td colspan="2">
+                            @{
+                                @if (!string.IsNullOrEmpty(key))
+                                {
+                                    Write(Html.Raw($"<h{Model.Level + 3} class=\"mb-3 fw-semibold\">"));
+                                    Write(key);
+                                    Write(Html.Raw($"</h{Model.Level + 3}>"));
+                                }
+                            }
+                            <partial name="PosData" model="@((subItems, Model.Level + 1))" />
+                        </td>
+                    }
+                    else if (value is IEnumerable<object> valueArray)
+                    {
+                        <td colspan="2">
+                            @{
+                                @if (!string.IsNullOrEmpty(key))
+                                {
+                                    Write(Html.Raw($"<h{Model.Level + 3} class=\"mb-3 fw-semibold\">"));
+                                    Write(key);
+                                    Write(Html.Raw($"</h{Model.Level + 3}>"));
+                                }
+                            }
+                            @foreach (var item in valueArray)
+                            {
+                                @if (item is Dictionary<string, object> { Count: > 0 } subItems2)
+                                {
+                                    <partial name="PosData" model="@((subItems2, Model.Level + 1))" />
+                                }
+                                else
+                                {
+                                    <partial name="PosData" model="@((new Dictionary<string, object> { { "", item } }, Model.Level + 1))" />
+                                }
+                            }
+                        </td>
+                    }
+                </tr>
             }
-        </tr>
-    }
-</table>
+        }
+    </table>
 }

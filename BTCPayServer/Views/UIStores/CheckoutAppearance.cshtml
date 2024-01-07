@@ -1,12 +1,14 @@
 @using BTCPayServer.Payments
 @using Microsoft.AspNetCore.Mvc.TagHelpers
-@using BTCPayServer.Services.Stores
+@using BTCPayServer.Abstractions.TagHelpers
+@using BTCPayServer.Abstractions.Contracts
+@inject IFileService FileService
 @model CheckoutAppearanceViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
     ViewData.SetActivePage(StoreNavPages.CheckoutAppearance, "Checkout experience", Context.GetStoreData().Id);
 
-    var store = ViewContext.HttpContext.GetStoreData();
+    var canUpload = await FileService.IsAvailable();
 }
 @section PageFootContent {
     <partial name="_ValidationScriptsPartial" />
@@ -22,6 +24,8 @@
 			$("#UseClassicCheckout").prop('checked', false);
 			$("#CheckoutV2Settings").addClass('show');
 			$("#ClassicCheckoutSettings").removeClass('show');
+			$("#CheckNFC").removeClass('d-none');
+			$("#PlaySoundOnPayment").prop('checked', true);
 			$("#ShowPayInWalletButton").prop('checked', false);
 			$("#ShowStoreHeader").prop('checked', false);
 		});
@@ -29,18 +33,37 @@
 			$("#UseClassicCheckout").prop('checked', false);
 			$("#CheckoutV2Settings").addClass('show');
 			$("#ClassicCheckoutSettings").removeClass('show');
+			$("#CheckNFC").addClass('d-none');
+			$("#PlaySoundOnPayment").prop('checked', false);
 			$("#ShowPayInWalletButton").prop('checked', true);
 			$("#ShowStoreHeader").prop('checked', true);
 		});
+        
+		delegate('click', '#CheckNFC button', async e => {
+			if ('NDEFReader' in window) {
+                const ndef = new NDEFReader();
+                try {
+                    await ndef.scan();
+                    e.target.classList = 'btn btn-outline-success';
+                    e.target.innerText = 'NFC access granted';
+                } catch (error) {
+                    e.target.classList = 'btn btn-outline-warning';
+                    e.target.innerText = 'Please allow NFC access in your browser settings';
+                }
+            } else {
+                e.target.classList = 'btn btn-outline-danger';
+                e.target.innerText = 'NFC is not supported by this browser';
+            }
+        });
     </script>
 }
 
 <div class="row">
     <div class="col-xxl-constrain col-xl-8">
-        <form method="post">
+        <form method="post" enctype="multipart/form-data">
             @if (!ViewContext.ModelState.IsValid)
             {
-                <div asp-validation-summary="All" class="text-danger"></div>
+                <div asp-validation-summary="All"></div>
             }
             <h3 class="mb-3">Invoice Settings</h3>
             @if (Model.PaymentMethods.Any())
@@ -94,18 +117,19 @@
 					</div>
 				</div>
 			</h3>
-            
             <div class="d-flex align-items-center mb-4">
 				<input asp-for="UseClassicCheckout" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target=".checkout-settings" aria-expanded="@(Model.UseClassicCheckout)" aria-controls="CheckoutV2Settings" />
 				<label asp-for="UseClassicCheckout" class="form-label mb-0"></label>
                 <span asp-validation-for="UseClassicCheckout" class="text-danger"></span>
             </div>
-
+            <div id="CheckNFC" class="form-group d-none">
+                <button type="button" class="btn btn-outline-secondary">Check if NFC is supported and enabled on this device</button>
+            </div>
 			<div class="checkout-settings collapse @(Model.UseClassicCheckout ? "" : "show")" id="CheckoutV2Settings">
                 <div class="form-group">
                     <label asp-for="DisplayExpirationTimer" class="form-label"></label>
                     <div class="input-group">
-                        <input inputmode="numeric" asp-for="DisplayExpirationTimer" class="form-control" style="max-width:10ch;" />
+                        <input inputmode="numeric" asp-for="DisplayExpirationTimer" class="form-control" style="max-width:12ch;" />
                         <span class="input-group-text">minutes</span>
                     </div>
                     <span asp-validation-for="DisplayExpirationTimer" class="text-danger"></span>
@@ -113,6 +137,41 @@
                 <div class="form-check">
                     <input asp-for="CelebratePayment" type="checkbox" class="form-check-input" />
                     <label asp-for="CelebratePayment" class="form-check-label"></label>
+                </div>
+                <div class="form-check">
+                    <input asp-for="PlaySoundOnPayment" type="checkbox" class="form-check-input" data-bs-toggle="collapse" data-bs-target="#PlaySoundOnPaymentOptions" aria-expanded="@Model.PlaySoundOnPayment" aria-controls="PlaySoundOnPaymentOptions" />
+                    <label asp-for="PlaySoundOnPayment" class="form-check-label"></label>
+                    <div class="collapse @(Model.PlaySoundOnPayment ? "show" : "")" id="PlaySoundOnPaymentOptions">
+                        <div class="form-group mb-0 py-3">
+                            <div class="d-flex align-items-center justify-content-between gap-2">
+                                <label asp-for="SoundFile" class="form-label"></label>
+                                @if (!string.IsNullOrEmpty(Model.SoundFileId))
+                                {
+                                    <button type="submit" class="btn btn-link p-0 text-danger" name="RemoveSoundFile" value="true">
+                                        <span class="fa fa-times"></span> Remove
+                                    </button>
+                                }
+                            </div>
+                            @if (canUpload)
+                            {
+                                <div class="d-flex align-items-center gap-3">
+                                    <input asp-for="SoundFile" type="file" class="form-control flex-grow">
+                                    @{
+                                        var soundUrl = string.IsNullOrEmpty(Model.SoundFileId)
+                                            ? string.Concat(Context.Request.GetAbsoluteRootUri().ToString(), "checkout-v2/payment.mp3")
+                                            : await FileService.GetFileUrl(Context.Request.GetAbsoluteRootUri(), Model.SoundFileId);
+                                    }
+                                    <audio controls src="@soundUrl" style="height:2.1rem;max-width:10.5rem;"></audio>
+                                </div>
+                                <span asp-validation-for="SoundFile" class="text-danger"></span>
+                            }
+                            else
+                            {
+                                <input asp-for="SoundFile" type="file" class="form-control" disabled>
+                                <div class="form-text">In order to upload a custom sound, a <a asp-controller="UIServer" asp-action="Files">file storage</a> must be configured.</div>
+                            }
+                        </div>
+                    </div>
                 </div>
 				<div class="form-check">
 					<input asp-for="ShowStoreHeader" type="checkbox" class="form-check-input" />

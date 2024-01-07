@@ -206,7 +206,15 @@
             lineItemsExpanded: false,
             changingCurrencies: false,
             loading: true,
-            isModal: initialSrvModel.isModal
+            isModal: initialSrvModel.isModal,
+            nfc: {
+                supported: 'NDEFReader' in window,
+                scanning: false,
+                submitting: false,
+                errorMessage: null,
+                permissionGranted: false,
+                readerAbortController: null
+            }
         },
         computed: {
             expiringSoon: function(){
@@ -233,7 +241,7 @@
                     : null;
             }
         },
-        mounted: function(){
+        mounted: async function(){
             this.startProgressTimer();
             this.listenIn();
             this.onDataCallback(this.srvModel);
@@ -244,6 +252,14 @@
             jQuery("invoice").fadeOut(0).fadeIn(300);
             window.closePaymentMethodDialog = this.closePaymentMethodDialog.bind(this);
             this.loading = false;
+            if (this.nfc.supported) {
+                this.setupNFC();
+            }
+        },
+        beforeDestroy () {
+            if (this.nfc.readerAbortController) {
+                this.nfc.readerAbortController.abort()
+            }
         },
         methods: {
             onlyExpandLineItems: function() {
@@ -403,6 +419,71 @@
                 } else {
                     this.emailAddressInputInvalid = true;
                 }
+            },
+            async setupNFC () {
+                try {
+                    this.$set(this.nfc, 'permissionGranted', navigator.permissions && (await navigator.permissions.query({ name: 'nfc' })).state === 'granted');
+                } catch (e) {}
+                if (this.nfc.permissionGranted) {
+                    await this.startNFCScan();
+                }
+            },
+            async startNFCScan () {
+                if (this.nfc.scanning) return;
+                this.$set(this.nfc, 'scanning', true);
+                try {
+                    const inModal = window.self !== window.top;
+                    const ndef = inModal ? new NDEFReaderWrapper() : new NDEFReader();
+                    this.nfc.readerAbortController = new AbortController()
+                    this.nfc.readerAbortController.signal.onabort = () => {
+                        this.$set(this.nfc, 'scanning', false);
+                    };
+            
+                    await ndef.scan({ signal: this.nfc.readerAbortController.signal })
+                    ndef.onreadingerror = () => this.reportNfcError('Could not read NFC tag')
+                    ndef.onreading = async ({ message }) => {
+                        const record = message.records[0]
+                        const textDecoder = new TextDecoder('utf-8')
+                        const decoded = textDecoder.decode(record.data)
+                        this.$emit('read-nfc-data', decoded)
+                    }
+            
+                    if (inModal) {
+                        // receive messages from iframe
+                        window.addEventListener('message', async event => {
+                            // deny messages from other origins
+                            if (event.origin !== window.location.origin) return
+            
+                            const { action, data } = event.data
+                            switch (action) {
+                                case 'nfc:data':
+                                    this.$emit('read-nfc-data', data)
+                                    break;
+                                case 'nfc:error':
+                                    this.handleNFCError('Could not read NFC tag')
+                                    break;
+                            }
+                        });
+                    }
+            
+                    // we came here, so the user must have allowed NFC access
+                    this.$set(this.nfc, 'permissionGranted', true);
+                } catch (error) {
+                    this.handleNFCError(`NFC scan failed: ${error}`);
+                }
+            },
+            handleNFCData() { // child component reports it is handling the data
+                this.$set(this.nfc, 'errorMessage', null);
+                this.$set(this.nfc, 'successMessage', null);
+                this.$set(this.nfc, 'submitting', true);
+            },
+            handleNFCResult(message) { // child component reports result for handling the data
+                this.$set(this.nfc, 'submitting', false);
+                this.$set(this.nfc, 'successMessage', message);
+            },
+            handleNFCError(message) { // internal or via child component reporting failure of handling the data
+                this.$set(this.nfc, 'submitting', false);
+                this.$set(this.nfc, 'errorMessage', message);
             }
         }
     });

@@ -57,17 +57,8 @@ namespace BTCPayServer.Payments
             return DerivationSchemeSettings.Parse(((JValue)value).Value<string>(), net);
         }
 
-        public override string GetTransactionLink(BTCPayNetworkBase network, string txId)
-        {
-            ArgumentNullException.ThrowIfNull(txId);
-            if (network?.BlockExplorerLink == null)
-                return null;
-            txId = txId.Split('-').First();
-            return string.Format(CultureInfo.InvariantCulture, network.BlockExplorerLink, txId);
-        }
-
         public override string GetPaymentLink(BTCPayNetworkBase network, InvoiceEntity invoice, IPaymentMethodDetails paymentMethodDetails,
-            Money cryptoInfoDue, string serverUri)
+            decimal cryptoInfoDue, string serverUri)
         {
             if (!paymentMethodDetails.Activated)
             {
@@ -105,7 +96,7 @@ namespace BTCPayServer.Payments
         {
             cryptoInfo.PaymentUrls = new InvoiceCryptoInfo.InvoicePaymentUrls()
             {
-                BIP21 = GetPaymentLink(details.Network, invoice, details.GetPaymentMethodDetails(), cryptoInfo.Due, serverUrl),
+                BIP21 = GetPaymentLink(details.Network, invoice, details.GetPaymentMethodDetails(), cryptoInfo.GetDue().Value, serverUrl),
             };
         }
     }

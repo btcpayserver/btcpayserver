@@ -4,6 +4,7 @@ namespace BTCPayServer.Views.Stores
 {
     public enum StoreNavPages
     {
+        Index,
         Create,
         Dashboard,
         General,
@@ -19,11 +20,13 @@ namespace BTCPayServer.Views.Stores
         Plugins,
         Webhooks,
         PullPayments,
+        Reporting,
         Payouts,
         PayoutProcessors,
         [Obsolete("Use StoreNavPages.Plugins instead")]
         Integrations,
         Emails,
-        Forms
+        Forms,
+        Roles
     }
 }

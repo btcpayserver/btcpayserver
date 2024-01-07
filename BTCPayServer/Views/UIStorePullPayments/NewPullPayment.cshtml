@@ -1,4 +1,5 @@
 @using BTCPayServer.Abstractions.Extensions
+@using BTCPayServer.Client
 @using BTCPayServer.Views.Stores
 @model BTCPayServer.Models.WalletViewModels.NewPullPaymentModel
 @{
@@ -15,7 +16,6 @@
 }
 
 <form method="post" asp-route-walletId="@Context.GetRouteValue("walletId")" asp-action="NewPullPayment">
-    <div class="sticky-header-setup"></div>
     <div class="sticky-header d-flex align-items-center justify-content-between">
         <h2 class="mb-0">@ViewData["Title"]</h2>
         <input type="submit" value="Create" class="btn btn-primary" id="Create"/>
@@ -42,7 +42,7 @@
                     <span asp-validation-for="Currency" class="text-danger"></span>
                 </div>
 
-                <div class="form-group col-12">
+                <div class="form-group col-12" permission="@Policies.CanCreatePullPayments">
                     <div class="form-check ">
                         <input asp-for="AutoApproveClaims" type="checkbox" class="form-check-input"/>
                         <label asp-for="AutoApproveClaims" class="form-check-label"></label>
@@ -111,7 +111,7 @@
                                 <div class="form-group">
                                     <label asp-for="BOLT11Expiration" class="form-label"></label>
                                     <div class="input-group">
-                                        <input inputmode="numeric" asp-for="BOLT11Expiration" class="form-control" style="max-width:10ch;"/>
+                                        <input inputmode="numeric" asp-for="BOLT11Expiration" class="form-control" style="max-width:12ch;"/>
                                         <span class="input-group-text">days</span>
                                     </div>
                                     <span asp-validation-for="BOLT11Expiration" class="text-danger"></span>

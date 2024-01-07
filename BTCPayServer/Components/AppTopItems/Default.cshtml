@@ -27,8 +27,8 @@
 			const response = await fetch(url);
 			if (response.ok) {
 				document.getElementById(`AppTopItems-${appId}`).outerHTML = await response.text();
-				const data = document.querySelector(`#AppSales-${appId} template`);
-				if (data) window.appSales.dataLoaded(JSON.parse(data.innerHTML));
+				const data = document.querySelector(`#AppTopItems-${appId} template`);
+				if (data) window.appTopItems.dataLoaded(JSON.parse(data.innerHTML));
 			}
 		})();
 	    </script>
@@ -48,7 +48,7 @@
                         <span class="app-item-point ct-point"></span>
                         @entry.Title
                     </span>
-                    <span class="app-item-value">
+                    <span class="app-item-value" data-sensitive>
                         <span class="text-muted">@entry.SalesCount @($"{label}{(entry.SalesCount == 1 ? "" : "s")}"),</span>
                         @entry.TotalFormatted
                     </span>

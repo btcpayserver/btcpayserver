@@ -1,6 +1,9 @@
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
+using BTCPayServer.Abstractions.Contracts;
+using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
@@ -8,6 +11,7 @@ using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -21,17 +25,20 @@ namespace BTCPayServer.Controllers
         public UIAppsController(
             UserManager<ApplicationUser> userManager,
             StoreRepository storeRepository,
+            IFileService fileService,
             AppService appService,
             IHtmlHelper html)
         {
             _userManager = userManager;
             _storeRepository = storeRepository;
+            _fileService = fileService;
             _appService = appService;
             Html = html;
         }
 
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly StoreRepository _storeRepository;
+        private readonly IFileService _fileService;
         private readonly AppService _appService;
 
         public string CreatedAppId { get; set; }
@@ -69,28 +76,26 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> ListApps(
             string storeId,
             string sortOrder = null,
-            string sortOrderColumn = null
+            string sortOrderColumn = null,
+            bool archived = false
         )
         {
             var store = GetCurrentStore();
-            var apps = await _appService.GetAllApps(GetUserId(), false, store.Id);
+            var apps = (await _appService.GetAllApps(GetUserId(), false, store.Id, archived))
+                .Where(app => app.Archived == archived);
 
             if (sortOrder != null && sortOrderColumn != null)
             {
                 apps = apps.OrderByDescending(app =>
                 {
-                    switch (sortOrderColumn)
+                    return sortOrderColumn switch
                     {
-                        case nameof(app.AppName):
-                            return app.AppName;
-                        case nameof(app.StoreName):
-                            return app.StoreName;
-                        case nameof(app.AppType):
-                            return app.AppType;
-                        default:
-                            return app.Id;
-                    }
-                }).ToArray();
+                        nameof(app.AppName) => app.AppName,
+                        nameof(app.StoreName) => app.StoreName,
+                        nameof(app.AppType) => app.AppType,
+                        _ => app.Id
+                    };
+                });
 
                 switch (sortOrder)
                 {
@@ -98,7 +103,7 @@ namespace BTCPayServer.Controllers
                         ViewData[$"{sortOrderColumn}SortOrder"] = "asc";
                         break;
                     case "asc":
-                        apps = apps.Reverse().ToArray();
+                        apps = apps.Reverse();
                         ViewData[$"{sortOrderColumn}SortOrder"] = "desc";
                         break;
                 }
@@ -106,7 +111,7 @@ namespace BTCPayServer.Controllers
 
             return View(new ListAppsViewModel
             {
-                Apps = apps
+                Apps = apps.ToArray()
             });
         }
 
@@ -154,7 +159,6 @@ namespace BTCPayServer.Controllers
             TempData[WellKnownTempData.SuccessMessage] = "App successfully created";
             CreatedAppId = appData.Id;
 
-
             var url = await type.ConfigureLink(appData);
             return Redirect(url);
         }
@@ -183,14 +187,85 @@ namespace BTCPayServer.Controllers
 
             return RedirectToAction(nameof(UIStoresController.Dashboard), "UIStores", new { storeId = app.StoreDataId });
         }
+        
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+        [HttpPost("{appId}/archive")]
+        public async Task<IActionResult> ToggleArchive(string appId)
+        {
+            var app = GetCurrentApp();
+            if (app == null)
+                return NotFound();
+            
+            var type = _appService.GetAppType(app.AppType);
+            if (type is null)
+            {
+                return UnprocessableEntity();
+            }
+
+            var archived = !app.Archived;
+            if (await _appService.SetArchived(app, archived))
+            {
+                TempData[WellKnownTempData.SuccessMessage] = archived
+                    ? "The app has been archived and will no longer appear in the apps list by default."
+                    : "The app has been unarchived and will appear in the apps list by default again.";
+            }
+            else
+            {
+                TempData[WellKnownTempData.ErrorMessage] = $"Failed to {(archived ? "archive" : "unarchive")} the app.";
+            }
+            
+            var url = await type.ConfigureLink(app);
+            return Redirect(url);
+        }
+
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+        [HttpPost("{appId}/upload-file")]
+        [IgnoreAntiforgeryToken]
+        public async Task<IActionResult> FileUpload(IFormFile file)
+        {
+            var app = GetCurrentApp();
+            var userId = GetUserId();
+            if (app is null || userId is null)
+                return NotFound();
+
+            if (!file.FileName.IsValidFileName())
+            {
+                return Json(new { error = "Invalid file name" });
+            }
+            if (!file.ContentType.StartsWith("image/", StringComparison.InvariantCulture))
+            {
+                return Json(new { error = "The file needs to be an image" });
+            }
+            if (file.Length > 500_000)
+            {
+                return Json(new { error = "The file size should be less than 0.5MB" });
+            }
+            var formFile = await file.Bufferize();
+            if (!FileTypeDetector.IsPicture(formFile.Buffer, formFile.FileName))
+            {
+                return Json(new { error = "The file needs to be an image" });
+            }
+            try
+            {
+                var storedFile = await _fileService.AddFile(file, userId);
+                var fileId = storedFile.Id;
+                var fileUrl = await _fileService.GetFileUrl(Request.GetAbsoluteRootUri(), fileId);
+                return Json(new { fileId, fileUrl });
+            }
+            catch (Exception e)
+            {
+                return Json(new { error = $"Could not save file: {e.Message}" });
+            }
+        }
 
         async Task<string> GetStoreDefaultCurrentIfEmpty(string storeId, string currency)
         {
             if (string.IsNullOrWhiteSpace(currency))
             {
-                currency = (await _storeRepository.FindStore(storeId)).GetStoreBlob().DefaultCurrency;
+                var store = await _storeRepository.FindStore(storeId);
+                currency = store?.GetStoreBlob().DefaultCurrency;
             }
-            return currency.Trim().ToUpperInvariant();
+            return currency?.Trim().ToUpperInvariant();
         }
 
         private string GetUserId() => _userManager.GetUserId(User);

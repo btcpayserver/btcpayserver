@@ -6,22 +6,23 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
-using BTCPayServer.Models;
 using BTCPayServer.Plugins.Crowdfund.Models;
 using BTCPayServer.Plugins.PointOfSale.Models;
 using BTCPayServer.Services.Apps;
+using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
-using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using NBitpayClient;
 using NicolasDorier.RateLimits;
+using CrowdfundResetEvery = BTCPayServer.Services.Apps.CrowdfundResetEvery;
 
 namespace BTCPayServer.Plugins.Crowdfund.Controllers
 {
@@ -127,13 +128,13 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
             ViewPointOfSaleViewModel.Item choice = null;
             if (!string.IsNullOrEmpty(request.ChoiceKey))
             {
-                var choices = _appService.GetPOSItems(settings.PerksTemplate, settings.TargetCurrency);
+                var choices = AppService.Parse(settings.PerksTemplate, false);
                 choice = choices?.FirstOrDefault(c => c.Id == request.ChoiceKey);
                 if (choice == null)
                     return NotFound("Incorrect option provided");
                 title = choice.Title;
 
-                if (choice.Price.Type == ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Topup)
+                if (choice.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Topup)
                 {
                     price = null;
                 }
@@ -174,33 +175,43 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
 
             try
             {
-                var invoice = await _invoiceController.CreateInvoiceCore(new BitpayCreateInvoiceRequest()
+                var appPath = await _appService.ViewLink(app);
+                var appUrl = HttpContext.Request.GetAbsoluteUri(appPath);
+                var invoice = await _invoiceController.CreateInvoiceCoreRaw(new CreateInvoiceRequest()
                 {
-                    OrderId = AppService.GetAppOrderId(app),
+                    Amount = price,
                     Currency = settings.TargetCurrency,
-                    ItemCode = request.ChoiceKey ?? string.Empty,
-                    ItemDesc = title,
-                    BuyerEmail = request.Email,
-                    Price = price,
-                    NotificationURL = settings.NotificationUrl,
-                    FullNotifications = true,
-                    ExtendedNotifications = true,
-                    SupportedTransactionCurrencies = paymentMethods,
-                    RedirectURL = request.RedirectUrl ?? Request.GetDisplayUrl(),
-                }, store, HttpContext.Request.GetAbsoluteRoot(),
-                    new List<string>() { AppService.GetAppInternalTag(appId) },
-                    cancellationToken, (entity) =>
+                    Metadata = new InvoiceMetadata()
                     {
-                        entity.Metadata.OrderUrl = Request.GetDisplayUrl();
+                        OrderId = AppService.GetRandomOrderId(),
+                        ItemCode = request.ChoiceKey ?? string.Empty,
+                        ItemDesc = title,
+                        BuyerEmail = request.Email
+                    }.ToJObject(),
+                    Checkout = new InvoiceDataBase.CheckoutOptions()
+                    {
+                        RedirectURL = request.RedirectUrl ?? appUrl,
+                        PaymentMethods = paymentMethods?.Where(p => p.Value.Enabled)
+                                                    .Select(p => p.Key).ToArray()
+                    },
+                    AdditionalSearchTerms = new[] { AppService.GetAppSearchTerm(app) }
+                }, store, HttpContext.Request.GetAbsoluteRoot(),
+                    new List<string> { AppService.GetAppInternalTag(appId) },
+                    cancellationToken, entity =>
+                    {
+                        entity.NotificationURLTemplate = settings.NotificationUrl;
+                        entity.FullNotifications = true;
+                        entity.ExtendedNotifications = true;
+                        entity.Metadata.OrderUrl = appUrl;
                     });
 
                 if (request.RedirectToCheckout)
                 {
                     return RedirectToAction(nameof(UIInvoiceController.Checkout), "UIInvoice",
-                        new { invoiceId = invoice.Data.Id });
+                        new { invoiceId = invoice.Id });
                 }
 
-                return Ok(invoice.Data.Id);
+                return Ok(invoice.Id);
             }
             catch (BitpayHttpException e)
             {
@@ -225,6 +236,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                 StoreName = app.StoreData?.StoreName,
                 StoreDefaultCurrency = await GetStoreDefaultCurrentIfEmpty(app.StoreDataId, settings.TargetCurrency),
                 AppName = app.Name,
+                Archived = app.Archived,
                 Enabled = settings.Enabled,
                 EnforceTargetAmount = settings.EnforceTargetAmount,
                 StartDate = settings.StartDate,
@@ -247,7 +259,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                 IsRecurring = resetEvery != nameof(CrowdfundResetEvery.Never),
                 UseAllStoreInvoices = app.TagAllInvoices,
                 AppId = appId,
-                SearchTerm = app.TagAllInvoices ? $"storeid:{app.StoreDataId}" : $"orderid:{AppService.GetAppOrderId(app)}",
+                SearchTerm = app.TagAllInvoices ? $"storeid:{app.StoreDataId}" : $"appid:{app.Id}",
                 DisplayPerksRanking = settings.DisplayPerksRanking,
                 DisplayPerksValue = settings.DisplayPerksValue,
                 SortPerksByPopularity = settings.SortPerksByPopularity,
@@ -265,13 +277,14 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
             if (app == null)
                 return NotFound();
 
+            vm.AppId = app.Id;
             vm.TargetCurrency = await GetStoreDefaultCurrentIfEmpty(app.StoreDataId, vm.TargetCurrency);
             if (_currencies.GetCurrencyData(vm.TargetCurrency, false) == null)
                 ModelState.AddModelError(nameof(vm.TargetCurrency), "Invalid currency");
 
             try
             {
-                vm.PerksTemplate = _appService.SerializeTemplate(_appService.Parse(vm.PerksTemplate, vm.TargetCurrency));
+                vm.PerksTemplate = AppService.SerializeTemplate(AppService.Parse(vm.PerksTemplate));
             }
             catch
             {
@@ -333,6 +346,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
             }
 
             app.Name = vm.AppName;
+            app.Archived = vm.Archived;
             var newSettings = new CrowdfundSettings
             {
                 Title = vm.Title,

@@ -1,4 +1,4 @@
- <Project Sdk="Microsoft.NET.Sdk.Web">
+﻿ <Project Sdk="Microsoft.NET.Sdk.Web">
   <Import Project="../Build/Version.csproj" Condition="Exists('../Build/Version.csproj')" />
   <Import Project="../Build/Common.csproj" />
 
@@ -38,6 +38,7 @@
 
   <ItemGroup Condition="'$(Altcoins)' != 'true'">
     <Content Remove="Services\Altcoins\**\*" />
+    <Compile Remove="Plugins\Altcoins\**\*" />
     <Content Remove="Views\UIMoneroLikeStore\**\*" />
     <Content Remove="Views\UIZcashLikeStore\**\*" />
     <Content Remove="Views\Shared\Monero\**\*" />
@@ -45,28 +46,29 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="BTCPayServer.NTag424" Version="1.0.19" />
+    <PackageReference Include="YamlDotNet" Version="8.0.0" />
     <PackageReference Include="BIP78.Sender" Version="0.2.2" />
     <PackageReference Include="BTCPayServer.Hwi" Version="2.0.2" />
-    <PackageReference Include="BTCPayServer.Lightning.All" Version="1.4.23" />
+    <PackageReference Include="BTCPayServer.Lightning.All" Version="1.5.3" />
     <PackageReference Include="CsvHelper" Version="15.0.5" />
-    <PackageReference Include="Dapper" Version="2.0.123" />
+    <PackageReference Include="Dapper" Version="2.1.24" />
     <PackageReference Include="Fido2" Version="2.0.2" />
     <PackageReference Include="Fido2.AspNet" Version="2.0.2" />
-    <PackageReference Include="HtmlSanitizer" Version="5.0.372" />
-    <PackageReference Include="LNURL" Version="0.0.29" />
+    <PackageReference Include="LNURL" Version="0.0.34" />
     <PackageReference Include="MailKit" Version="3.3.0" />
     <PackageReference Include="BTCPayServer.NETCore.Plugins.Mvc" Version="1.4.4" />
     <PackageReference Include="QRCoder" Version="1.4.3" />
-    <PackageReference Include="System.IO.Pipelines" Version="6.0.3" />
+    <PackageReference Include="System.IO.Pipelines" Version="8.0.0" />
     <PackageReference Include="NBitpayClient" Version="1.0.0.39" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="NicolasDorier.CommandLine" Version="2.0.0" />
     <PackageReference Include="NicolasDorier.CommandLine.Configuration" Version="2.0.0" />
     <PackageReference Include="NicolasDorier.RateLimits" Version="1.2.3" />
-    <PackageReference Include="Serilog" Version="2.9.0" />
-    <PackageReference Include="Serilog.AspNetCore" Version="3.2.0" />
-    <PackageReference Include="Serilog.Sinks.File" Version="4.1.0" />
-    <PackageReference Include="SSH.NET" Version="2020.0.2" />
+    <PackageReference Include="Serilog" Version="3.1.1" />
+    <PackageReference Include="Serilog.AspNetCore" Version="8.0.0" />
+    <PackageReference Include="Serilog.Sinks.File" Version="5.0.1-dev-00968" />
+    <PackageReference Include="SSH.NET" Version="2023.0.0" />
   </ItemGroup>
 
 	<ItemGroup>
@@ -75,12 +77,12 @@
     <PackageReference Include="TwentyTwenty.Storage.Azure" Version="2.12.1" />
     <PackageReference Include="TwentyTwenty.Storage.Google" Version="2.12.1" />
     <PackageReference Include="TwentyTwenty.Storage.Local" Version="2.12.1" />
-		<PackageReference Include="YamlDotNet" Version="8.0.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="6.0.9" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="6.0.9" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="8.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="8.0.0" />
   </ItemGroup>
 
 	<ItemGroup>
+	  <None Include="Views\UIReports\StoreReports.cshtml" />
 	  <None Include="wwwroot\vendor\font-awesome\fonts\fontawesome-webfont.svg" />
 	  <None Include="wwwroot\vendor\font-awesome\fonts\fontawesome-webfont.woff2" />
 	  <None Include="wwwroot\vendor\font-awesome\less\animated.less" />
@@ -111,9 +113,6 @@
 	  <None Include="wwwroot\vendor\font-awesome\scss\_screen-reader.scss" />
 	  <None Include="wwwroot\vendor\font-awesome\scss\_stacked.scss" />
 	  <None Include="wwwroot\vendor\font-awesome\scss\_variables.scss" />
-	  <None Include="wwwroot\vendor\jquery-easing\jquery.easing.compatibility.js" />
-	  <None Include="wwwroot\vendor\jquery-easing\jquery.easing.js" />
-	  <None Include="wwwroot\vendor\jquery-easing\jquery.easing.min.js" />
 	  <None Include="wwwroot\vendor\jquery\jquery.js" />
 	  <None Include="wwwroot\vendor\jquery\jquery.min.js" />
 	</ItemGroup>
@@ -122,6 +121,7 @@
 	  <Folder Include="wwwroot\vendor\bootstrap" />
 	  <Folder Include="wwwroot\vendor\clipboard.js\" />
 	  <Folder Include="wwwroot\vendor\highlightjs\" />
+	  <Folder Include="wwwroot\vendor\pivottable\" />
 	  <Folder Include="wwwroot\vendor\summernote" />
 	  <Folder Include="wwwroot\vendor\tom-select" />
 	  <Folder Include="wwwroot\vendor\ur-registry" />
@@ -138,7 +138,9 @@
 
 	<ItemGroup>
     <Watch Include="Views\**\*.*"></Watch>
+    <Watch Remove="Views\Shared\LocalhostBrowserSupport.cshtml" />
     <Watch Remove="Views\UIAccount\CheatPermissions.cshtml" />
+    <Watch Remove="Views\UIReports\StoreReports.cshtml" />
     <Content Update="Views\UIApps\_ViewImports.cshtml">
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <Pack>$(IncludeRazorContentInPack)</Pack>

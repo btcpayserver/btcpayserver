@@ -5,6 +5,7 @@ using System.Linq;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Payments;
+using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Validation;
@@ -18,6 +19,9 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
     {
         public List<ViewPaymentRequestViewModel> Items { get; set; }
         public override int CurrentPageCount => Items.Count;
+        
+        public SearchString Search { get; set; }
+        public string SearchText { get; set; }
     }
 
     public class UpdatePaymentRequestViewModel
@@ -69,7 +73,11 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
 
         [Display(Name = "Expiration Date")]
         public DateTime? ExpiryDate { get; set; }
-        [Required] public string Title { get; set; }
+        
+        [Required]
+        public string Title { get; set; }
+        
+        [Display(Name = "Memo")]
         public string Description { get; set; }
 
         [Display(Name = "Store")]
@@ -84,11 +92,13 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
 
         [Display(Name = "Custom CSS Code")]
         public string EmbeddedCSS { get; set; }
-        [Display(Name = "Allow payee to create invoices in their own denomination")]
+        
+        [Display(Name = "Allow payee to create invoices with custom amounts")]
         public bool AllowCustomPaymentAmounts { get; set; }
 
         public Dictionary<string, object> FormResponse { get; set; }
         public bool AmountAndCurrencyEditable { get; set; } = true;
+        public bool? HasEmailRules { get; set; }
     }
 
     public class ViewPaymentRequestViewModel
@@ -108,13 +118,14 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
             EmbeddedCSS = blob.EmbeddedCSS;
             CustomCSSLink = blob.CustomCSSLink;
             AllowCustomPaymentAmounts = blob.AllowCustomPaymentAmounts;
-            if (!string.IsNullOrEmpty(EmbeddedCSS))
-                EmbeddedCSS = $"<style>{EmbeddedCSS}</style>";
             switch (data.Status)
             {
                 case Client.Models.PaymentRequestData.PaymentRequestStatus.Pending:
                     Status = "Pending";
                     IsPending = true;
+                    break;
+                case Client.Models.PaymentRequestData.PaymentRequestStatus.Processing:
+                    Status = "Processing";
                     break;
                 case Client.Models.PaymentRequestData.PaymentRequestStatus.Completed:
                     Status = "Settled";
@@ -126,7 +137,7 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
                     throw new ArgumentOutOfRangeException();
             }
         }
-
+        public StoreBrandingViewModel StoreBranding { get; set; }
         public bool AllowCustomPaymentAmounts { get; set; }
         public string Email { get; set; }
         public string Status { get; set; }
@@ -141,10 +152,8 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
         public DateTime? ExpiryDate { get; set; }
         public string Title { get; set; }
         public string Description { get; set; }
-        public string LogoFileId { get; set; }
-        public string CssFileId { get; set; }
-        public string BrandColor { get; set; }
         public string StoreName { get; set; }
+        public string StoreWebsite { get; set; }
         public string EmbeddedCSS { get; set; }
         public string CustomCSSLink { get; set; }
 
@@ -200,8 +209,47 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
 
         public class PaymentRequestInvoicePayment
         {
+            public static List<ViewPaymentRequestViewModel.PaymentRequestInvoicePayment>
+                GetViewModels(
+                InvoiceEntity invoice,
+                DisplayFormatter displayFormatter,
+                TransactionLinkProviders txLinkProvider)
+            {
+                return invoice
+                .GetPayments(true)
+                .Select(paymentEntity =>
+                {
+                    var paymentData = paymentEntity.GetCryptoPaymentData();
+                    var paymentMethodId = paymentEntity.GetPaymentMethodId();
+                    if (paymentData is null || paymentMethodId is null)
+                    {
+                        return null;
+                    }
+                    string txId = paymentData.GetPaymentId();
+                    string link = txLinkProvider.GetTransactionLink(paymentMethodId, txId);
+
+                    return new ViewPaymentRequestViewModel.PaymentRequestInvoicePayment
+                    {
+                        Amount = paymentEntity.PaidAmount.Gross,
+                        Paid = paymentEntity.InvoicePaidAmount.Net,
+                        ReceivedDate = paymentEntity.ReceivedTime.DateTime,
+                        AmountFormatted = displayFormatter.Currency(paymentEntity.PaidAmount.Gross, paymentEntity.PaidAmount.Currency),
+                        PaidFormatted = displayFormatter.Currency(paymentEntity.InvoicePaidAmount.Net, invoice.Currency, DisplayFormatter.CurrencyFormat.Symbol),
+                        RateFormatted = displayFormatter.Currency(paymentEntity.Rate, invoice.Currency, DisplayFormatter.CurrencyFormat.Symbol),
+                        PaymentMethod = paymentMethodId.ToPrettyString(),
+                        Link = link,
+                        Id = txId,
+                        Destination = paymentData.GetDestination(),
+                        PaymentProof = paymentData.GetPaymentProof(),
+                        PaymentType = paymentData.GetPaymentType()
+                    };
+                })
+                .Where(payment => payment != null)
+                .ToList();
+            }
             public string PaymentMethod { get; set; }
             public decimal Amount { get; set; }
+            public string AmountFormatted { get; set; }
             public string RateFormatted { get; set; }
             public decimal Paid { get; set; }
             public string PaidFormatted { get; set; }

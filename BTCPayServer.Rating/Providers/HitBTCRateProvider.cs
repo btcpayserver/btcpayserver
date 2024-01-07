@@ -21,7 +21,7 @@ namespace BTCPayServer.Rating
 
         public async Task<PairRate[]> GetRatesAsync(CancellationToken cancellationToken)
         {
-            var response = await _httpClient.GetAsync("https://api.hitbtc.com/api/2/public/ticker", cancellationToken);
+            using var response = await _httpClient.GetAsync("https://api.hitbtc.com/api/2/public/ticker", cancellationToken);
             var jarray = await response.Content.ReadAsAsync<JArray>(cancellationToken);
             return jarray
                 .Children<JObject>()

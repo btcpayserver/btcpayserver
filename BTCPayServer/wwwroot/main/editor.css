@@ -1,0 +1,76 @@
+.editor .nav-pills .nav-link {
+    background: none;
+    padding: 0;
+    font-weight: var(--btcpay-font-weight-semibold);
+    font-size: 1.125rem;
+}
+
+.editor .nav-pills .nav-link.active {
+    color: var(--btcpay-primary);
+}
+
+.editor .list-group-item:not(.active) {
+    background: none;
+}
+
+.editor .list-group-item {
+    --image-size: 3rem;
+    border: none;
+    margin: 0;
+    padding: var(--btcpay-space-m) var(--btcpay-space-m) var(--btcpay-space-m) var(--btcpay-space-s) !important;
+}
+
+.editor .list-group-item + .list-group-item.active {
+    margin: 0;
+    border: 0;
+}
+
+.editor .list-group-item .img img {
+    width: var(--image-size);
+    height: var(--image-size);
+}
+
+.editor .list-group-item .img img {
+    max-width: var(--image-size);
+    max-height: var(--image-size);
+    object-fit: scale-down;
+    border-radius: var(--btcpay-border-radius);
+}
+
+.editor fieldset .list-group-item {
+    padding: var(--btcpay-space-m) 0 var(--btcpay-space-m);
+}
+
+.editor .control {
+    color: var(--btcpay-body-text-muted);
+    border: none;
+    padding: 0 var(--btcpay-space-xs);
+}
+
+.editor .control.drag[disabled] {
+    visibility: hidden;
+}
+
+.editor .control.drag:hover {
+    color: var(--btcpay-primary);
+}
+
+.editor .control.remove:hover {
+    color: var(--btcpay-danger);
+}
+
+.editor .control.remove .icon {
+    --btn-icon-size: 1.75rem;
+}
+
+.editor .field .form-group:last-child {
+    margin-bottom: 0;
+}
+
+.editor .nested-fields {
+    margin: 0 -3.1rem 0 -.5rem;
+}
+
+.editor .nested-fields .list-group-item {
+    padding-right: 1rem;
+}

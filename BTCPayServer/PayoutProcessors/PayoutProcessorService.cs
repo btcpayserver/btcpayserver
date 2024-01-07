@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -43,6 +44,15 @@ public class PayoutProcessorService : EventHostedServiceBase
 
     public class PayoutProcessorQuery
     {
+        public PayoutProcessorQuery()
+        {
+            
+        }
+        public PayoutProcessorQuery(string storeId, string paymentMethod)
+        {
+            Stores = new[] { storeId };
+            PaymentMethods = new[] { paymentMethod };
+        }
         public string[] Stores { get; set; }
         public string[] Processors { get; set; }
         public string[] PaymentMethods { get; set; }
@@ -126,7 +136,16 @@ public class PayoutProcessorService : EventHostedServiceBase
         if (matchedProcessor is not null)
         {
             await StopProcessor(data.Id, cancellationToken);
-            var processor = await matchedProcessor.ConstructProcessor(data);
+            IHostedService processor = null;
+            try
+            {
+                processor = await matchedProcessor.ConstructProcessor(data);
+            }
+            catch(Exception ex)
+            {
+                Logs.PayServer.LogWarning(ex, $"Payout processor ({data.PaymentMethod}) failed to start. Skipping...");
+                return;
+            }
             await processor.StartAsync(cancellationToken);
             Services.TryAdd(data.Id, processor);
         }
@@ -164,6 +183,14 @@ public class PayoutProcessorService : EventHostedServiceBase
             }
 
             processorUpdated.Processed?.SetResult();
+        }
+    }
+
+    internal async Task Restart(PayoutProcessorQuery payoutProcessorQuery)
+    {
+        foreach (var data in await GetProcessors(payoutProcessorQuery))
+        {
+            await StartOrUpdateProcessor(data, default);
         }
     }
 }

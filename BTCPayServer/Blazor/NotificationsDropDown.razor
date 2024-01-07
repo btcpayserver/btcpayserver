@@ -1,0 +1,156 @@
+@using BTCPayServer.Abstractions.Contracts;
+@using BTCPayServer.Configuration;
+@using BTCPayServer.Data;
+@using BTCPayServer.Services.Notifications;
+@using Microsoft.AspNetCore.Identity;
+@using Microsoft.AspNetCore.Routing;
+@implements IDisposable
+@inject AuthenticationStateProvider _AuthenticationStateProvider
+@inject NotificationManager _NotificationManager
+@inject UserManager<ApplicationUser> _UserManager
+@inject IJSRuntime _JSRuntime
+@inject LinkGenerator _LinkGenerator
+@inject BTCPayServerOptions _BTCPayServerOptions
+@inject EventAggregator _EventAggregator
+
+<div id="Notifications">
+	@if (UnseenCount == "0")
+	{
+		<a href="@NotificationsUrl" id="NotificationsHandle" class="mainMenuButton" title="Notifications">
+			<Icon Symbol="notifications" />
+		</a>
+	}
+	else
+	{
+		<button id="NotificationsHandle" class="mainMenuButton" title="Notifications" type="button" data-bs-toggle="dropdown">
+			<Icon Symbol="notifications" />
+			<span class="badge rounded-pill bg-danger p-1 ms-1" id="NotificationsBadge">@UnseenCount</span>
+		</button>
+	}
+	@if (UnseenCount != "0" && Last5 is not null)
+	{
+		<div class="dropdown-menu text-center" id="NotificationsDropdown" aria-labelledby="NotificationsHandle">
+			<div class="d-flex gap-3 align-items-center justify-content-between py-3 px-4 border-bottom border-light">
+				<h5 class="m-0">Notifications</h5>
+				<a class="btn btn-link p-0" @onclick="MarkAllAsSeen" id="NotificationsMarkAllAsSeen">Mark all as seen</a>
+			</div>
+			<div id="NotificationsList" v-pre>
+				@foreach (var n in Last5)
+				{
+					<a href="@NotificationUrl(n.Id)" class="notification d-flex align-items-center dropdown-item border-bottom border-light py-3 px-4">
+						<div class="me-3">
+							<Icon Symbol="@NotificationIcon(n.Identifier)" />
+						</div>
+						<div class="notification-item__content">
+							<div class="text-start text-wrap">
+								@n.Body
+							</div>
+							<div class="text-start d-flex">
+								<small class="text-muted" data-timeago-unixms="@n.Created.ToUnixTimeMilliseconds()">@n.Created.ToTimeAgo()</small>
+							</div>
+						</div>
+					</a>
+				}
+			</div>
+
+			<div class="p-3">
+				<a href="@NotificationsUrl">View all</a>
+			</div>
+		</div>
+	}
+</div>
+
+@code {
+	string NotificationsUrl => _LinkGenerator.GetPathByAction("Index", "UINotifications", pathBase: _BTCPayServerOptions.RootPath);
+	string NotificationUrl(string notificationId) => _LinkGenerator.GetPathByAction("NotificationPassThrough", "UINotifications", values: new { id = notificationId }, pathBase: _BTCPayServerOptions.RootPath);
+	string UnseenCount;
+	List<NotificationViewModel> Last5;
+	IDisposable _EventAggregatorListener;
+	protected override void OnInitialized()
+	{
+		if (_JSRuntime.IsPreRendering())
+			return;
+		_EventAggregatorListener = _EventAggregator.Subscribe<UserNotificationsUpdatedEvent>((s, evt) =>
+		{
+			_ = InvokeAsync(async () =>
+			{
+				if (await GetUserId() is string userId)
+				{
+					var res = await _NotificationManager.GetSummaryNotifications(userId, cachedOnly: false);
+					UpdateState(res);
+					StateHasChanged();
+				}
+			});
+		});
+	}
+
+	public void Dispose() => _EventAggregatorListener?.Dispose();
+
+    static string SeenCount(int? count)
+	{
+		if (count is not int c)
+			return "0";
+		if (c >= NotificationManager.MaxUnseen)
+			return $"{NotificationManager.MaxUnseen - 1}+";
+		return c.ToString();
+	}
+
+	void UpdateState((List<NotificationViewModel> Items, int? Count) res)
+	{
+		UnseenCount = SeenCount(res.Count);
+		Last5 = res.Items;
+	}
+
+	protected override async Task OnParametersSetAsync()
+	{
+		if (await GetUserId() is string userId)
+		{
+			// For prerendering and first rendering, always use the cached value
+			var res = await _NotificationManager.GetSummaryNotifications(userId, cachedOnly: true);
+			// If we forget to update the state here, the UI will flicker.
+			// Because the first rendering will think there is 0 events, until the DB call ends and the second rendering happens.
+			// By updating the state here, the first rendering will show the cached value until the second rendering happens
+			UpdateState(res);
+			// We don't want to block the pre-rendering, so we will render again when the costly request is over
+			if (!_JSRuntime.IsPreRendering())
+			{
+				res = await _NotificationManager.GetSummaryNotifications(userId, cachedOnly: false);
+				UpdateState(res);
+			}
+		}
+	}
+
+	async Task<string> GetUserId()
+	{
+		var state = await _AuthenticationStateProvider.GetAuthenticationStateAsync();
+		if (!state.User.Identity.IsAuthenticated)
+			return null;
+		return _UserManager.GetUserId(state.User);
+	}
+
+    private async Task MarkAllAsSeen()
+	{
+		if (await GetUserId() is string userId)
+		{
+			await _NotificationManager.ToggleSeen(new NotificationsQuery() { Seen = false, UserId = userId }, true);
+			UnseenCount = "0";
+		}
+	}
+
+	private static string NotificationIcon(string type)
+	{
+		return type switch
+		{
+			"invoice_expired" => "notifications-invoice-failure",
+			"invoice_expiredpaidpartial" => "notifications-invoice-failure",
+			"invoice_failedtoconfirm" => "notifications-invoice-failure",
+			"invoice_confirmed" => "notifications-invoice-settled",
+			"invoice_paidafterexpiration" => "notifications-invoice-settled",
+			"external-payout-transaction" => "notifications-payout",
+			"payout_awaitingapproval" => "notifications-payout",
+			"payout_awaitingpayment" => "notifications-payout-approved",
+			"newversion" => "notifications-new-version",
+			_ => "note"
+		};
+	}
+}

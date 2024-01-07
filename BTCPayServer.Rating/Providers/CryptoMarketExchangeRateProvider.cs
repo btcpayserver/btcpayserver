@@ -28,7 +28,7 @@ namespace BTCPayServer.Services.Rates
 
         public async Task<PairRate[]> GetRatesAsync(CancellationToken cancellationToken)
         {
-            var response = await _httpClient.GetAsync("https://api.exchange.cryptomkt.com/api/3/public/ticker/", cancellationToken);
+            using var response = await _httpClient.GetAsync("https://api.exchange.cryptomkt.com/api/3/public/ticker/", cancellationToken);
             var jobj = await response.Content.ReadAsAsync<JObject>(cancellationToken);
 
             return ((jobj as JObject) ?? new JObject())

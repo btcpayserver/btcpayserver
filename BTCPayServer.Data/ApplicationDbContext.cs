@@ -64,6 +64,7 @@ namespace BTCPayServer.Data
         public DbSet<U2FDevice> U2FDevices { get; set; }
         public DbSet<Fido2Credential> Fido2Credentials { get; set; }
         public DbSet<UserStore> UserStore { get; set; }
+        public DbSet<StoreRole> StoreRoles { get; set; }
         [Obsolete]
         public DbSet<WalletData> Wallets { get; set; }
         public DbSet<WalletObjectData> WalletObjects { get; set; }
@@ -92,7 +93,7 @@ namespace BTCPayServer.Data
             ApplicationUser.OnModelCreating(builder, Database);
             AddressInvoiceData.OnModelCreating(builder);
             APIKeyData.OnModelCreating(builder, Database);
-            AppData.OnModelCreating(builder);
+            AppData.OnModelCreating(builder, Database);
             CustodianAccountData.OnModelCreating(builder, Database);
             //StoredFile.OnModelCreating(builder);
             InvoiceEventData.OnModelCreating(builder);
@@ -129,6 +130,7 @@ namespace BTCPayServer.Data
             PayoutProcessorData.OnModelCreating(builder, Database);
             WebhookData.OnModelCreating(builder, Database);
             FormData.OnModelCreating(builder, Database);
+            StoreRole.OnModelCreating(builder, Database);
 
 
             if (Database.IsSqlite() && !_designTime)

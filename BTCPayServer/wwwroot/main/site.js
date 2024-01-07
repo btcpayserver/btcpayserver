@@ -1,3 +1,5 @@
+const baseUrl = Object.values(document.scripts).find(s => s.src.includes('/main/site.js')).src.split('/main/site.js').shift();
+
 const flatpickrInstances = [];
 
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DateTimeFormat/DateTimeFormat
@@ -33,7 +35,7 @@ async function initLabelManager (elementId) {
             : '--label-bg:var(--btcpay-neutral-300);--label-fg:var(--btcpay-neutral-800)'
 
     if (element) {
-        const { fetchUrl, updateUrl, walletId, walletObjectType, walletObjectId, labels,selectElement } = element.dataset;
+        const { fetchUrl, updateUrl, walletId, walletObjectType, walletObjectId, labels, selectElement } = element.dataset;
         const commonCallId = `walletLabels-${walletId}`;
         if (!window[commonCallId]) {
             window[commonCallId] = fetch(fetchUrl, {
@@ -44,7 +46,6 @@ async function initLabelManager (elementId) {
                 },
             }).then(res => res.json());
         }
-        const selectElementI = document.getElementById(selectElement);
         const items = element.value.split(',').filter(x => !!x);
         const options = await window[commonCallId].then(labels => {
             const newItems = items.filter(item => !labels.find(label => label.label === item));
@@ -92,7 +93,8 @@ async function initLabelManager (elementId) {
                 }));
             },
             async onChange (values) {
-                if(selectElementI){
+                const selectElementI = selectElement ? document.getElementById(selectElement) : null;
+                if (selectElementI){
                     while (selectElementI.options.length > 0) {
                         selectElementI.remove(0);
                     }
@@ -153,9 +155,15 @@ const initLabelManagers = () => {
 
 document.addEventListener("DOMContentLoaded", () => {
     // sticky header
-    const stickyHeader = document.querySelector('.sticky-header-setup + .sticky-header');
+    const stickyHeader = document.querySelector('#mainContent > section .sticky-header');
     if (stickyHeader) {
-        document.documentElement.style.scrollPaddingTop = `calc(${stickyHeader.offsetHeight}px + var(--btcpay-space-m))`;
+        const setStickyHeaderHeight = () => {
+            document.documentElement.style.setProperty('--sticky-header-height', `${stickyHeader.offsetHeight}px`)
+        }
+        window.addEventListener('resize', e => {
+            debounce('resize', setStickyHeaderHeight, 50)
+        });
+        setStickyHeaderHeight();
     }
     
     // initialize timezone offset value if field is present in page
@@ -268,17 +276,48 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
     
+    // Invoice Status
+    delegate('click', '[data-invoice-state-badge] [data-invoice-id][data-new-state]', async e => {
+        const $button = e.target
+        const $badge = $button.closest('[data-invoice-state-badge]')
+        const { invoiceId, newState } = $button.dataset
+
+        $badge.classList.add('pe-none'); // disable further interaction
+        const response = await fetch(`${baseUrl}/invoices/${invoiceId}/changestate/${newState}`, { method: 'POST' })
+        if (response.ok) {
+            const { statusString } = await response.json()
+            $badge.outerHTML = `<div class="badge badge-${newState}" data-invoice-state-badge="${invoiceId}">${statusString}</div>`
+        } else {
+            $badge.classList.remove('pe-none');
+            alert("Invoice state update failed");
+        }
+    })
+    
     // Time Format
     delegate('click', '.switch-time-format', switchTimeFormat);
 
     // Theme Switch
-    delegate('click', '.btcpay-theme-switch', e => {
+    delegate('click', '.btcpay-theme-switch [data-theme]', e => {
         e.preventDefault()
-        const current = document.documentElement.getAttribute(THEME_ATTR) || COLOR_MODES[0]
-        const mode = current === COLOR_MODES[0] ? COLOR_MODES[1] : COLOR_MODES[0]
-        setColorMode(mode)
-        e.target.closest('.btcpay-theme-switch').blur()
+        const $btn = e.target.closest('.btcpay-theme-switch [data-theme]')
+        setColorMode($btn.dataset.theme)
+        $btn.blur()
     })
+
+    // Sensitive Info
+    const SENSITIVE_INFO_STORE_KEY = 'btcpay-hide-sensitive-info';
+    const SENSITIVE_INFO_DATA_ATTR = 'data-hide-sensitive-info';
+    delegate('change', '#HideSensitiveInfo', e => {
+        e.preventDefault()
+        const isActive = window.localStorage.getItem(SENSITIVE_INFO_STORE_KEY) === 'true';
+        if (isActive) {
+            window.localStorage.removeItem(SENSITIVE_INFO_STORE_KEY);
+            document.documentElement.removeAttribute(SENSITIVE_INFO_DATA_ATTR);
+        } else {
+            window.localStorage.setItem(SENSITIVE_INFO_STORE_KEY, 'true');
+            document.documentElement.setAttribute(SENSITIVE_INFO_DATA_ATTR, 'true');
+        }
+    });
     
     // Currency Selection: Remove the current input value once the element is focused, so that the user gets to
     // see the available options. If no selection or change is made, reset it to the previous value on blur.
@@ -321,6 +360,158 @@ document.addEventListener("DOMContentLoaded", () => {
             window.localStorage.setItem(COLLAPSED_KEY, JSON.stringify(collapsed))
         })
     }
+    
+    // Mass Action Tables
+    const updateSelectedCount = ($table) => {
+        const selectedCount = document.querySelectorAll('.mass-action-select:checked').length;
+        const $selectedCount = $table.querySelector('.mass-action-selected-count');
+        if ($selectedCount) $selectedCount.innerText = selectedCount;
+        if (selectedCount === 0) {
+            $table.removeAttribute('data-selected');
+        } else {
+            $table.setAttribute('data-selected', selectedCount.toString());
+        }
+    }
+
+    delegate('click', '.mass-action .mass-action-select-all', e => {
+        const $table = e.target.closest('.mass-action');
+        const { checked } = e.target;
+        $table.querySelectorAll('.mass-action-select,.mass-action-select-all').forEach($checkbox => {
+            $checkbox.checked = checked;
+        });
+        updateSelectedCount($table);
+    });
+
+    delegate('change', '.mass-action .mass-action-select', e => {
+        const $table = e.target.closest('.mass-action');
+        const selectedCount = $table.querySelectorAll('.mass-action-select:checked').length;
+        if (selectedCount === 0) {
+            $table.querySelectorAll('.mass-action-select-all').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+        }
+        updateSelectedCount($table);
+    });
+
+    delegate('click', '.mass-action .mass-action-row', e => {
+        const $target = e.target
+        if ($target.matches('td,time,span[data-sensitive]')) {
+            const $row = $target.closest('.mass-action-row');
+            $row.querySelector('.mass-action-select').click();
+        }
+    });
 });
 
+// Initialize Blazor
+if (window.Blazor) {
+    let isUnloading = false;
+    window.addEventListener("beforeunload", () => { isUnloading = true; });
+    let brokenConnection = {
+        isConnected: false,
+        titleContent: 'Connection broken',
+        innerHTML: 'Please <a href="">refresh the page</a>.'
+    };
+    let interruptedConnection = {
+        isConnected: false,
+        titleContent: 'Connection interrupted',
+        innerHTML: 'Attempt to reestablish the connection in a few seconds...'
+    };
+    let successfulConnection = {
+        isConnected: true,
+        titleContent: 'Connection established',
+        innerHTML: '' // use empty link on purpose
+    };
+    class BlazorReconnectionHandler {
+        reconnecting = false;
+        async onConnectionDown(options, _error) {
+            if (this.reconnecting)
+                return;
+            this.setBlazorStatus(interruptedConnection);
+            this.reconnecting = true;
+            console.debug('Blazor hub connection lost');
+            await this.reconnect();
+        }
 
+        async reconnect() {
+            let delays = [500, 1000, 2000, 4000, 8000, 16000, 20000, 40000];
+            let i = 0;
+            const lastDelay = delays.length - 1;
+            while (i < delays.length) {
+                await this.delay(delays[i]);
+                try {
+                    if (await Blazor.reconnect())
+                        return;
+                    console.warn('Error while reconnecting to Blazor hub (Broken circuit)');
+                    break;
+                }
+                catch (err) {
+                    this.setBlazorStatus(interruptedConnection);
+                    console.warn(`Error while reconnecting to Blazor hub (${err})`);
+                }
+                i++;
+            }
+            this.setBlazorStatus(brokenConnection);
+        }
+        onConnectionUp() {
+            this.reconnecting = false;
+            console.debug('Blazor hub connected');
+            this.setBlazorStatus(successfulConnection);
+        }
+
+        setBlazorStatus(content) {
+            document.querySelectorAll('.blazor-status').forEach($status => {
+                const $state = $status.querySelector('.blazor-status__state');
+                const $title = $status.querySelector('.blazor-status__title');
+                const $body = $status.querySelector('.blazor-status__body');
+                $state.classList.remove('btcpay-status--enabled');
+                $state.classList.remove('btcpay-status--disabled');
+                $state.classList.add(content.isConnected ? 'btcpay-status--enabled' : 'btcpay-status--disabled');
+                $title.textContent = content.titleContent;
+                $body.innerHTML = content.innerHTML;
+                $body.classList.toggle('d-none', content.isConnected);
+                if (!isUnloading) {
+                    const toast = new bootstrap.Toast($status, { autohide: false });
+                    if (content.isConnected) {
+                        if (toast.isShown())
+                            toast.hide();
+                    }
+                    else {
+                        if (!toast.isShown())
+                            toast.show();
+                    }
+                }
+            });
+        }
+        delay(durationMilliseconds) {
+            return new Promise(resolve => setTimeout(resolve, durationMilliseconds));
+        }
+    }
+
+    const handler = new BlazorReconnectionHandler();
+    handler.setBlazorStatus(successfulConnection);
+    Blazor.start({
+        reconnectionHandler: handler
+    });
+}
+
+String.prototype.noExponents= function(){
+    const data = String(this).split(/[eE]/);
+    if(data.length== 1) return data[0];
+
+    var  z= '', sign= this<0? '-':'',
+        str= data[0].replace('.', ''),
+        mag= Number(data[1])+ 1;
+
+    if(mag<0){
+        z= sign + '0.';
+        while(mag++) z += '0';
+        return z + str.replace(/^\-/,'');
+    }
+    mag -= str.length;
+    while(mag--) z += '0';
+    return str + z;
+}
+
+Number.prototype.noExponents= function(){
+    return  String(this).noExponents();
+};

@@ -141,7 +141,7 @@ namespace BTCPayServer.Security
             {
                 if (store is not null)
                 {
-                    if (store.HasPermission(policy))
+                    if (store.HasPermission(userId,policy))
                     {
                         success = true;
                     }

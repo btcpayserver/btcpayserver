@@ -58,7 +58,7 @@ namespace BTCPayServer.Plugins.NFC
             if (!methods.TryGetValue(new PaymentMethodId("BTC", PaymentTypes.LNURLPay), out var lnurlPaymentMethod) &&
                 !methods.TryGetValue(new PaymentMethodId("BTC", PaymentTypes.LightningLike), out lnPaymentMethod))
             {
-                return BadRequest("Destination for lnurlw was not specified");
+                return BadRequest("Destination for LNURL-Withdraw was not specified");
             }
 
             Uri uri;
@@ -81,10 +81,8 @@ namespace BTCPayServer.Plugins.NFC
                 return BadRequest("LNURL was not LNURL-Withdraw");
             }
 
-            var httpClient = _httpClientFactory.CreateClient(uri.IsOnion()
-                ? LightningLikePayoutHandler.LightningLikePayoutHandlerOnionNamedClient
-                : LightningLikePayoutHandler.LightningLikePayoutHandlerClearnetNamedClient);
             LNURLWithdrawRequest info;
+            var httpClient = CreateHttpClient(uri);
             try
             {
                 info = await LNURL.LNURL.FetchInformation(uri, tag, httpClient) as LNURLWithdrawRequest;
@@ -99,10 +97,6 @@ namespace BTCPayServer.Plugins.NFC
             {
                 return BadRequest("Could not fetch info from LNURL-Withdraw");
             }
-
-            httpClient = _httpClientFactory.CreateClient(info.Callback.IsOnion()
-                ? LightningLikePayoutHandler.LightningLikePayoutHandlerOnionNamedClient
-                : LightningLikePayoutHandler.LightningLikePayoutHandlerClearnetNamedClient);
 
             string bolt11 = null;
             if (lnPaymentMethod is not null)
@@ -125,7 +119,7 @@ namespace BTCPayServer.Plugins.NFC
                 }
                 else
                 {
-                    due = new LightMoney(lnPaymentMethod.Calculate().Due);
+                    due = LightMoney.Coins(lnPaymentMethod.Calculate().Due);
                 }
 
                 if (info.MinWithdrawable > due || due > info.MaxWithdrawable)
@@ -141,10 +135,10 @@ namespace BTCPayServer.Plugins.NFC
 
             if (lnurlPaymentMethod is not null)
             {
-                Money due;
+                decimal due;
                 if (invoice.Type == InvoiceType.TopUp && request.Amount is not null)
                 {
-                    due = new Money(request.Amount.Value, MoneyUnit.Satoshi);
+                    due = new Money(request.Amount.Value, MoneyUnit.Satoshi).ToDecimal(MoneyUnit.BTC);
                 }
                 else if (invoice.Type == InvoiceType.TopUp)
                 {
@@ -155,23 +149,31 @@ namespace BTCPayServer.Plugins.NFC
                     due = lnurlPaymentMethod.Calculate().Due;
                 }
 
-                var amount = LightMoney.Satoshis(due.Satoshi);
-                var actionPath = Url.Action(nameof(UILNURLController.GetLNURLForInvoice), "UILNURL",
-                    new { invoiceId = request.InvoiceId, cryptoCode = "BTC", amount = amount.MilliSatoshi });
-                var url = Request.GetAbsoluteUri(actionPath);
-                var resp = await httpClient.GetAsync(url);
-                var response = await resp.Content.ReadAsStringAsync();
+                try
+                {
+                    httpClient = CreateHttpClient(info.Callback);
+                    var amount = LightMoney.Coins(due);
+                    var actionPath = Url.Action(nameof(UILNURLController.GetLNURLForInvoice), "UILNURL",
+                        new { invoiceId = request.InvoiceId, cryptoCode = "BTC", amount = amount.MilliSatoshi });
+                    var url = Request.GetAbsoluteUri(actionPath);
+                    var resp = await httpClient.GetAsync(url);
+                    var response = await resp.Content.ReadAsStringAsync();
 
-                if (resp.IsSuccessStatusCode)
-                {
-                    var res = JObject.Parse(response).ToObject<LNURLPayRequest.LNURLPayRequestCallbackResponse>();
-                    bolt11 = res.Pr;
+                    if (resp.IsSuccessStatusCode)
+                    {
+                        var res = JObject.Parse(response).ToObject<LNURLPayRequest.LNURLPayRequestCallbackResponse>();
+                        bolt11 = res.Pr;
+                    }
+                    else
+                    {
+                        var res = JObject.Parse(response).ToObject<LNUrlStatusResponse>();
+                        return BadRequest($"Could not fetch BOLT11 invoice to pay to: {res.Reason}");                
+
+                    }
                 }
-                else
+                catch (Exception ex)
                 {
-                    var res = JObject.Parse(response).ToObject<LNUrlStatusResponse>();
-                    return BadRequest(
-                        $"Could not fetch BOLT11 invoice to pay to: {res.Reason}");
+                    return BadRequest($"Could not fetch BOLT11 invoice to pay to: {ex.Message}");    
                 }
             }
 
@@ -180,13 +182,27 @@ namespace BTCPayServer.Plugins.NFC
                 return BadRequest("Could not fetch BOLT11 invoice to pay to.");
             }
 
-            var result = await info.SendRequest(bolt11, httpClient);
-            if (!string.IsNullOrEmpty(result.Status) && result.Status.Equals("ok", StringComparison.InvariantCultureIgnoreCase))
+            try
             {
-                return Ok(result.Reason);
-            }
+                var result = await info.SendRequest(bolt11, httpClient, null, null);
+                if (!string.IsNullOrEmpty(result.Status) && result.Status.Equals("ok", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    return Ok(result.Reason);
+                }
 
-            return BadRequest(result.Reason ?? "Unknown error");
+                return BadRequest(result.Reason ?? "Unknown error");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);    
+            }
+        }
+
+        private HttpClient CreateHttpClient(Uri uri)
+        {
+            return _httpClientFactory.CreateClient(uri.IsOnion()
+                ? LightningLikePayoutHandler.LightningLikePayoutHandlerOnionNamedClient
+                : LightningLikePayoutHandler.LightningLikePayoutHandlerClearnetNamedClient);
         }
     }
 }

@@ -232,17 +232,13 @@ namespace BTCPayServer.Tests
                 ndax.ExchangeRates.Add(new PairRate(CurrencyPair.Parse("BTC_CAD"), new BidAsk(6000m)));
                 rateProvider.Providers.Add("ndax", ndax);
 
-                var bittrex = new MockRateProvider();
-                bittrex.ExchangeRates.Add(new PairRate(CurrencyPair.Parse("DOGE_BTC"), new BidAsk(0.004m)));
-                rateProvider.Providers.Add("bittrex", bittrex);
-
-
                 var bitfinex = new MockRateProvider();
                 bitfinex.ExchangeRates.Add(new PairRate(CurrencyPair.Parse("UST_BTC"), new BidAsk(0.000136m)));
                 rateProvider.Providers.Add("bitfinex", bitfinex);
 
                 var bitpay = new MockRateProvider();
                 bitpay.ExchangeRates.Add(new PairRate(CurrencyPair.Parse("ETB_BTC"), new BidAsk(0.1m)));
+                bitpay.ExchangeRates.Add(new PairRate(CurrencyPair.Parse("DOGE_BTC"), new BidAsk(0.004m)));
                 rateProvider.Providers.Add("bitpay", bitpay);
                 var kraken = new MockRateProvider();
                 kraken.ExchangeRates.Add(new PairRate(CurrencyPair.Parse("ETH_BTC"), new BidAsk(0.1m)));

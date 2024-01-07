@@ -1,5 +1,4 @@
 using System;
-using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -99,14 +98,25 @@ namespace BTCPayServer.Tests
             Driver.FindElement(By.Id("FakePayment")).Click();
             if (mine)
             {
+                TestUtils.Eventually(() =>
+                {
+                    Driver.WaitForElement(By.Id("CheatSuccessMessage"));
+                });
                 MineBlockOnInvoiceCheckout();
             }
         }
 
         public void MineBlockOnInvoiceCheckout()
         {
-            Driver.FindElement(By.CssSelector("#mine-block button")).Click();
-
+            retry:
+            try
+            {
+                Driver.FindElement(By.CssSelector("#mine-block button")).Click();
+            }
+            catch (StaleElementReferenceException)
+            {
+                goto retry;
+            }
         }
 
         /// <summary>
@@ -180,7 +190,7 @@ namespace BTCPayServer.Tests
             {
                 Driver.FindElement(By.Id("StoreSelectorToggle")).Click();
             }
-            Driver.WaitForElement(By.Id("StoreSelectorCreate")).Click();
+            GoToUrl("/stores/create");
             var name = "Store" + RandomUtils.GetUInt64();
             TestLogs.LogInformation($"Created store {name}");
             Driver.WaitForElement(By.Id("Name")).SendKeys(name);
@@ -295,17 +305,12 @@ namespace BTCPayServer.Tests
 
         public void AddLightningNode()
         {
-            AddLightningNode(null, null, true);
+            AddLightningNode(null, true);
         }
 
-        public void AddLightningNode(LightningConnectionType? connectionType = null, bool test = true)
+        public void AddLightningNode(string connectionType = null, bool test = true)
         {
-            AddLightningNode(null, connectionType, test);
-        }
-
-        public void AddLightningNode(string cryptoCode = null, LightningConnectionType? connectionType = null, bool test = true)
-        {
-            cryptoCode ??= "BTC";
+            var cryptoCode = "BTC";
             if (!Driver.PageSource.Contains("Connect to a Lightning node"))
             {
                 GoToLightningSettings();
@@ -313,8 +318,6 @@ namespace BTCPayServer.Tests
 
             var connectionString = connectionType switch
             {
-                LightningConnectionType.Charge =>
-                    $"type=charge;server={Server.MerchantCharge.Client.Uri.AbsoluteUri};allowinsecure=true",
                 LightningConnectionType.CLightning =>
                     $"type=clightning;server={((CLightningClient)Server.MerchantLightningD).Address.AbsoluteUri}",
                 LightningConnectionType.LndREST =>
@@ -395,6 +398,10 @@ namespace BTCPayServer.Tests
         public void GoToHome()
         {
             Driver.Navigate().GoToUrl(ServerUri);
+            if (Driver.PageSource.Contains("id=\"SkipWizard\""))
+            {
+                Driver.FindElement(By.Id("SkipWizard")).Click();
+            }
         }
 
         public void Logout()
@@ -563,7 +570,7 @@ namespace BTCPayServer.Tests
             walletId ??= WalletId;
             GoToWallet(walletId, WalletsNavPages.Receive);
             Driver.FindElement(By.Id("generateButton")).Click();
-            var addressStr = Driver.FindElement(By.Id("Address")).GetAttribute("value");
+            var addressStr = Driver.FindElement(By.Id("Address")).GetAttribute("data-text");
             var address = BitcoinAddress.Create(addressStr, ((BTCPayNetwork)Server.NetworkProvider.GetNetwork(walletId.CryptoCode)).NBitcoinNetwork);
             for (var i = 0; i < coins; i++)
             {

@@ -1,4 +1,5 @@
-using Ganss.XSS;
+using System.Web;
+using Ganss.Xss;
 using Microsoft.AspNetCore.Html;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
@@ -20,6 +21,11 @@ namespace BTCPayServer.Abstractions.Services
         public IHtmlContent Raw(string value)
         {
             return _htmlHelper.Raw(_htmlSanitizer.Sanitize(value));
+        }
+        
+        public IHtmlContent RawEncode(string value)
+        {
+            return _htmlHelper.Raw(HttpUtility.HtmlEncode(_htmlSanitizer.Sanitize(value)));
         }
 
         public IHtmlContent Json(object model)

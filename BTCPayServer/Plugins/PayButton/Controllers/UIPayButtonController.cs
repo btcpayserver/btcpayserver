@@ -60,6 +60,11 @@ namespace BTCPayServer.Plugins.PayButton.Controllers
             }
 
             var apps = await _appService.GetAllApps(_userManager.GetUserId(User), false, store.Id);
+            // unset app store data, because we don't need it and inclusion leads to circular references when serializing to JSON
+            foreach (var app in apps)
+            {
+                app.App.StoreData = null;
+            }
             var appUrl = HttpContext.Request.GetAbsoluteRoot().WithTrailingSlash();
             var model = new PayButtonViewModel
             {

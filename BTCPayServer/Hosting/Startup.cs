@@ -25,6 +25,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Rewrite;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -32,8 +33,10 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Microsoft.Net.Http.Headers;
+using NBXplorer;
 using NicolasDorier.RateLimits;
 
 namespace BTCPayServer.Hosting
@@ -57,8 +60,28 @@ namespace BTCPayServer.Hosting
         public ILoggerFactory LoggerFactory { get; }
         public Logs Logs { get; }
 
+        public static ServiceProvider CreateBootstrap(IConfiguration conf)
+        {
+            return CreateBootstrap(conf, new Logs(), new FuncLoggerFactory(n => NullLogger.Instance));
+        }
+        public static ServiceProvider CreateBootstrap(IConfiguration conf, Logs logs, ILoggerFactory loggerFactory)
+        {
+            ServiceCollection bootstrapServices = new ServiceCollection();
+            var networkType = DefaultConfiguration.GetNetworkType(conf);
+            bootstrapServices.AddSingleton(logs);
+            bootstrapServices.AddSingleton(loggerFactory);
+            bootstrapServices.AddSingleton<IConfiguration>(conf);
+            bootstrapServices.AddSingleton<SelectedChains>();
+            bootstrapServices.AddSingleton<NBXplorerNetworkProvider>(new NBXplorerNetworkProvider(networkType));
+            return bootstrapServices.BuildServiceProvider();
+        }
+
         public void ConfigureServices(IServiceCollection services)
         {
+            var bootstrapServiceProvider = CreateBootstrap(Configuration, Logs, LoggerFactory);
+            services.AddSingleton(bootstrapServiceProvider.GetRequiredService<SelectedChains>());
+            services.AddSingleton(bootstrapServiceProvider.GetRequiredService<NBXplorerNetworkProvider>());
+
             services.AddMemoryCache();
             services.AddDataProtection()
                 .SetApplicationName("BTCPay Server")
@@ -143,8 +166,10 @@ namespace BTCPayServer.Hosting
             })
             .AddNewtonsoftJson()
             .AddRazorRuntimeCompilation()
-            .AddPlugins(services, Configuration, LoggerFactory)
+            .AddPlugins(services, Configuration, LoggerFactory, bootstrapServiceProvider)
             .AddControllersAsServices();
+
+            services.AddServerSideBlazor();
 
             LowercaseTransformer.Register(services);
             ValidateControllerNameTransformer.Register(services);
@@ -248,6 +273,13 @@ namespace BTCPayServer.Hosting
                 rateLimits.SetZone($"zone={ZoneLimits.ForgotPassword} rate=5r/d burst=5 nodelay");
             }
 
+            // HACK: blazor server js hard code some path, making it works only on root path. This fix it.
+            // Workaround this bug https://github.com/dotnet/aspnetcore/issues/43191
+            var rewriteOptions = new RewriteOptions();
+            rewriteOptions.AddRewrite("_blazor/(negotiate|initializers|disconnect)$", "/_blazor/$1", skipRemainingRules: true);
+            rewriteOptions.AddRewrite("_blazor$", "/_blazor", skipRemainingRules: true);
+            app.UseRewriter(rewriteOptions);
+
             app.UseHeadersOverride();
             var forwardingOptions = new ForwardedHeadersOptions()
             {
@@ -266,13 +298,7 @@ namespace BTCPayServer.Hosting
 
             app.UseStaticFiles(new StaticFileOptions
             {
-                OnPrepareResponse = ctx =>
-                {
-                    // Cache static assets for one year, set asp-append-version="true" on references to update on change.
-                    // https://andrewlock.net/adding-cache-control-headers-to-static-files-in-asp-net-core/
-                    const int durationInSeconds = 60 * 60 * 24 * 365;
-                    ctx.Context.Response.Headers[HeaderNames.CacheControl] = "public,max-age=" + durationInSeconds;
-                }
+                OnPrepareResponse = LongCache
             });
 
             // The framework during publish automatically publish the js files into
@@ -300,15 +326,25 @@ namespace BTCPayServer.Hosting
                 HttpOnly = Microsoft.AspNetCore.CookiePolicy.HttpOnlyPolicy.Always,
                 Secure = Microsoft.AspNetCore.Http.CookieSecurePolicy.SameAsRequest
             });
+
             app.UseEndpoints(endpoints =>
             {
                 AppHub.Register(endpoints);
                 PaymentRequestHub.Register(endpoints);
+                endpoints.MapBlazorHub().RequireAuthorization();
                 endpoints.MapRazorPages();
                 endpoints.MapControllers();
                 endpoints.MapControllerRoute("default", "{controller:validate=UIHome}/{action:lowercase=Index}/{id?}");
             });
             app.UsePlugins();
+        }
+
+        private static void LongCache(Microsoft.AspNetCore.StaticFiles.StaticFileResponseContext ctx)
+        {
+            // Cache static assets for one year, set asp-append-version="true" on references to update on change.
+            // https://andrewlock.net/adding-cache-control-headers-to-static-files-in-asp-net-core/
+            const int durationInSeconds = 60 * 60 * 24 * 365;
+            ctx.Context.Response.Headers[HeaderNames.CacheControl] = "public,max-age=" + durationInSeconds;
         }
 
         private static Action<Microsoft.AspNetCore.StaticFiles.StaticFileResponseContext> NewMethod()

@@ -12,17 +12,15 @@
 }
 <div class="form-group">
     <label class="form-label" for="@Model.Name"@(Model.Required ? " data-required" : "")>
-        @Model.Label
+        @Safe.Raw(Model.Label)
     </label>
-
     <select id="@selectField.Name" asp-items="selectField.Options" class="form-select @(errors is null ? "" : "is-invalid")"
             name="@selectField.Name" data-val="true" aria-describedby="HelpText-@selectField.Name" required="@selectField.Required"
             data-val-required="@selectField.Label is required.">
     </select>
-
     <span class="text-danger" data-valmsg-for="@selectField.Name" data-valmsg-replace="true">@(isInvalid && errors.Any() ? errors.First().ErrorMessage : string.Empty)</span>
     @if (!string.IsNullOrEmpty(selectField.HelpText))
     {
-        <div id="@($"HelpText-{selectField.Name}")" class="form-text">@selectField.HelpText</div>
+        <div id="@($"HelpText-{selectField.Name}")" class="form-text">@Safe.Raw(selectField.HelpText)</div>
     }
 </div>

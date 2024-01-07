@@ -1,8 +1,8 @@
-@using Microsoft.AspNetCore.Mvc.TagHelpers
-@using BTCPayServer.Abstractions.Extensions
 @using BTCPayServer.Abstractions.Contracts
+@using BTCPayServer.Client
+@using BTCPayServer.Components.MainLogo
 @using BTCPayServer.Services
-@inject SignInManager<ApplicationUser> SignInManager
+@using BTCPayServer.Views.Stores
 @inject BTCPayServerEnvironment Env
 @inject IFileService FileService
 @model BTCPayServer.Components.StoreSelector.StoreSelectorViewModel
@@ -29,18 +29,13 @@
 {
     <a asp-controller="UIHome" asp-action="Index" id="StoreSelectorHome" class="navbar-brand py-2">@{await LogoContent();}</a>
 }
-else if (Model.CurrentStoreIsOwner)
-{
-    <a asp-controller="UIStores" asp-action="Dashboard" asp-route-storeId="@Model.CurrentStoreId" id="StoreSelectorHome" class="navbar-brand py-2">@{await LogoContent();}</a>
-}
 else
 {
-    <a asp-controller="UIInvoice" asp-action="ListInvoices" asp-route-storeId="@Model.CurrentStoreId" id="StoreSelectorHome" class="navbar-brand py-2">@{await LogoContent();}</a>
+    <a asp-controller="UIStores" asp-action="Index" asp-route-storeId="@Model.CurrentStoreId" id="StoreSelectorHome" class="navbar-brand py-2">@{await LogoContent();}</a>
 }
-
-<div id="StoreSelector">
-    @if (Model.Options.Any())
-    {
+@if (Model.Options.Any() || Model.ArchivedCount > 0)
+{
+    <div id="StoreSelector">
         <div id="StoreSelectorDropdown" class="dropdown only-for-js">
             <button id="StoreSelectorToggle" class="btn btn-secondary dropdown-toggle rounded-pill px-3 @(Model.CurrentStoreId == null ? "empty-state" : "")" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                 @if (!string.IsNullOrEmpty(Model.CurrentStoreLogoFileId))
@@ -58,23 +53,20 @@ else
                 @foreach (var option in Model.Options)
                 {
                     <li>
-                        @if (option.IsOwner)
-                        {
-                            <a asp-controller="UIStores" asp-action="Dashboard" asp-route-storeId="@option.Value" class="dropdown-item@(option.Selected ? " active" : "")" id="StoreSelectorMenuItem-@option.Value">@StoreName(option.Text)</a>
-                        }
-                        else
-                        {
-                            <a asp-controller="UIInvoice" asp-action="ListInvoices" asp-route-storeId="@option.Value" class="dropdown-item@(option.Selected ? " active" : "")" id="StoreSelectorMenuItem-@option.Value">@StoreName(option.Text)</a>
-                        }
+                        <a asp-controller="UIStores" asp-action="Index" asp-route-storeId="@option.Value" class="dropdown-item@(option.Selected ? " active" : "")" id="StoreSelectorMenuItem-@option.Value">@StoreName(option.Text)</a>
                     </li>
                 }
-                <li><hr class="dropdown-divider"></li>
-                <li><a asp-controller="UIUserStores" asp-action="CreateStore" class="dropdown-item" id="StoreSelectorCreate">Create Store</a></li>
+                @if (Model.Options.Any())
+                {
+                    <li><hr class="dropdown-divider"></li>
+                }
+                <li ><a asp-controller="UIUserStores" asp-action="CreateStore" class="dropdown-item @ViewData.IsActivePage(StoreNavPages.Create)" id="StoreSelectorCreate">Create Store</a></li>
+                @if (Model.ArchivedCount > 0)
+                {
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a asp-controller="UIUserStores" asp-action="ListStores" asp-route-archived="true" class="dropdown-item @ViewData.IsActivePage(StoreNavPages.Index)" id="StoreSelectorArchived">@Model.ArchivedCount Archived Store@(Model.ArchivedCount == 1 ? "" : "s")</a></li>
+                }
             </ul>
         </div>
-    }
-    else if (SignInManager.IsSignedIn(User))
-    {
-        <a asp-controller="UIUserStores" asp-action="CreateStore" class="btn btn-primary w-100 rounded-pill text-nowrap" id="StoreSelectorCreate">Create Store</a>
-    }
-</div>
+    </div>
+}

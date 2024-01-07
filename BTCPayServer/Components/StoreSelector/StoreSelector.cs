@@ -1,5 +1,6 @@
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Identity;
@@ -29,7 +30,9 @@ namespace BTCPayServer.Components.StoreSelector
             var userId = _userManager.GetUserId(UserClaimsPrincipal);
             var stores = await _storeRepo.GetStoresByUserId(userId);
             var currentStore = ViewContext.HttpContext.GetStoreData();
+            var archivedCount = stores.Count(s => s.Archived);
             var options = stores
+                .Where(store => !store.Archived)
                 .Select(store =>
                 {
                     var cryptoCode = store
@@ -43,8 +46,8 @@ namespace BTCPayServer.Components.StoreSelector
                         Text = store.StoreName,
                         Value = store.Id,
                         Selected = store.Id == currentStore?.Id,
-                        IsOwner = store.Role == StoreRoles.Owner,
-                        WalletId = walletId
+                        WalletId = walletId,
+                        Store = store
                     };
                 })
                 .OrderBy(s => s.Text)
@@ -57,8 +60,8 @@ namespace BTCPayServer.Components.StoreSelector
                 Options = options,
                 CurrentStoreId = currentStore?.Id,
                 CurrentDisplayName = currentStore?.StoreName,
-                CurrentStoreIsOwner = currentStore?.Role == StoreRoles.Owner,
-                CurrentStoreLogoFileId = blob?.LogoFileId
+                CurrentStoreLogoFileId = blob?.LogoFileId,
+                ArchivedCount = archivedCount
             };
 
             return View(vm);

@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace BTCPayServer.Data
 {
-    public class WebhookDeliveryData : IHasBlobUntyped
+    public class WebhookDeliveryData
     {
         [Key]
         [MaxLength(25)]
@@ -17,10 +17,8 @@ namespace BTCPayServer.Data
 
         [Required]
         public DateTimeOffset Timestamp { get; set; }
-        [Obsolete("Use Blob2 instead")]
-        public byte[] Blob { get; set; }
-        public string Blob2 { get; set; }
-
+        public string Blob { get; set; }
+        public bool Pruned { get; set; }
 
         internal static void OnModelCreating(ModelBuilder builder, DatabaseFacade databaseFacade)
         {
@@ -28,11 +26,11 @@ namespace BTCPayServer.Data
                 .HasOne(o => o.Webhook)
                 .WithMany(a => a.Deliveries).OnDelete(DeleteBehavior.Cascade);
             builder.Entity<WebhookDeliveryData>().HasIndex(o => o.WebhookId);
-
+            builder.Entity<WebhookDeliveryData>().HasIndex(o => o.Timestamp);
             if (databaseFacade.IsNpgsql())
             {
                 builder.Entity<WebhookDeliveryData>()
-                    .Property(o => o.Blob2)
+                    .Property(o => o.Blob)
                     .HasColumnType("JSONB");
             }
         }

@@ -8,6 +8,7 @@ namespace BTCPayServer.Data;
 public class AutomatedPayoutBlob
 {
     public TimeSpan Interval { get; set; } = TimeSpan.FromHours(1);
+    public bool ProcessNewPayoutsInstantly { get; set; }
 }
 public class PayoutProcessorData : IHasBlobUntyped
 {

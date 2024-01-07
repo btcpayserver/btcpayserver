@@ -1,0 +1,17 @@
+@using BTCPayServer.Client
+@using BTCPayServer.Abstractions.Extensions
+@using BTCPayServer.Views.Stores
+@model BTCPayServer.Components.MainNav.MainNavViewModel
+@{
+    var store = Context.GetStoreData();
+}
+
+@if (store != null)
+{
+    <li class="nav-item" permission="@Policies.CanModifyStoreSettings">
+        <a asp-area="" asp-controller="UIShopify" asp-action="EditShopify" asp-route-storeId="@store.Id" class="nav-link @ViewData.IsActivePage("shopify", nameof(StoreNavPages))" id="StoreNav-Shopify">
+            <vc:icon symbol="logo-shopify" />
+            <span>Shopify</span>
+        </a>
+    </li>
+}

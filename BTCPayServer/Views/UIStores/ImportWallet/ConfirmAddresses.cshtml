@@ -17,8 +17,10 @@
 
 @if (!ViewContext.ModelState.IsValid)
 {
-    <div asp-validation-summary="All" class="text-danger"></div>
+    <div asp-validation-summary="All"></div>
 }
+
+<partial name="LocalhostBrowserSupport" />
 
 <template id="modal-template">
     <div class="modal-dialog" role="document">

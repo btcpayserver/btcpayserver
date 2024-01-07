@@ -9,6 +9,7 @@ using BTCPayServer.Logging;
 using BTCPayServer.Models;
 using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Payments;
+using BTCPayServer.Plugins.Altcoins;
 using BTCPayServer.Rating;
 using BTCPayServer.Services.Altcoins.Monero.RPC.Models;
 using BTCPayServer.Services.Altcoins.Monero.Services;
@@ -93,7 +94,7 @@ namespace BTCPayServer.Services.Altcoins.Monero.Payments
             {
                 var cryptoInfo = invoiceResponse.CryptoInfo.First(o => o.GetpaymentMethodId() == paymentMethodId);
                 model.InvoiceBitcoinUrl = MoneroPaymentType.Instance.GetPaymentLink(network, null,
-                    new MoneroLikeOnChainPaymentMethodDetails() {DepositAddress = cryptoInfo.Address}, cryptoInfo.Due,
+                    new MoneroLikeOnChainPaymentMethodDetails() {DepositAddress = cryptoInfo.Address}, cryptoInfo.GetDue().Value,
                     null);
                 model.InvoiceBitcoinUrlQR = model.InvoiceBitcoinUrl;
             }

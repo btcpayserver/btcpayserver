@@ -15,6 +15,8 @@ namespace BTCPayServer.Services.Altcoins.Monero.Configuration
         public Uri DaemonRpcUri { get; set; }
         public Uri InternalWalletRpcUri { get; set; }
         public string WalletDirectory { get; set; }
+        public string Username { get; set; }
+        public string Password { get; set; }
     }
 }
 #endif

@@ -1,18 +1,33 @@
+@using BTCPayServer.Payments;
 @using BTCPayServer.Services
 @using BTCPayServer.Services.Mails;
 @model BTCPayServer.Services.PoliciesSettings
 @inject SettingsRepository _SettingsRepository
-@inject BTCPayNetworkProvider BTCPayNetworkProvider
+@inject TransactionLinkProviders TransactionLinkProviders
 @{
     ViewData.SetActivePage(ServerNavPages.Policies);
-    var networks = BTCPayNetworkProvider.GetAll().ToArray();
+    var linkProviders = TransactionLinkProviders.ToArray();
+}
+
+@section PageHeadContent {
+    <style>
+        #AllowLightningInternalNodeForAll ~ .info-note,
+        #AllowHotWalletRPCImportForAll ~ .info-note,
+        #AllowHotWalletForAll ~ .info-note,
+        #DisableNonAdminCreateUserApi:checked ~ .info-note,
+        #LockSubscription:checked ~ .info-note { display: none; }
+        
+        #AllowLightningInternalNodeForAll:checked ~ .info-note,
+        #AllowHotWalletRPCImportForAll:checked ~ .info-note,
+        #AllowHotWalletForAll:checked ~ .info-note { display: inline-flex; }
+    </style>
 }
 
 <h3 class="mb-4">@ViewData["Title"]</h3>
 
 @if (!ViewContext.ModelState.IsValid)
 {
-    <div asp-validation-summary="All" class="text-danger"></div>
+    <div asp-validation-summary="All"></div>
 }
 
 <div class="row">
@@ -27,6 +42,10 @@
                         <vc:icon symbol="info" />
                     </a>
                     <span asp-validation-for="AllowLightningInternalNodeForAll" class="text-danger"></span>
+                    <div class="info-note mt-2 text-warning" role="alert">
+                        <vc:icon symbol="warning"/>
+                        Caution: Enabling this option, may simplify the onboarding for third-parties but carries liabilities and security risks associated with sharing the lightning node with other users.
+                    </div>
                 </div>
                 <div class="form-check my-3">
                     <input asp-for="AllowHotWalletForAll" type="checkbox" class="form-check-input"/>
@@ -35,11 +54,19 @@
                         <vc:icon symbol="info" />
                     </a>
                     <span asp-validation-for="AllowHotWalletForAll" class="text-danger"></span>
+                    <div class="info-note mt-2 text-warning" role="alert">
+                        <vc:icon symbol="warning"/>
+                        Caution: Enabling this option, may simplify the onboarding and spending for third-parties but carries liabilities and security risks associated to storing private keys of third parties on a server.
+                    </div>
                 </div>
                 <div class="form-check my-3">
                     <input asp-for="AllowHotWalletRPCImportForAll" type="checkbox" class="form-check-input"/>
                     <label asp-for="AllowHotWalletRPCImportForAll" class="form-check-label"></label>
                     <span asp-validation-for="AllowHotWalletRPCImportForAll" class="text-danger"></span>
+                    <div class="info-note mt-2 text-warning" role="alert">
+                        <vc:icon symbol="warning"/>
+                        Caution: Enabling this option, may simplify the onboarding and spending for third-parties but carries liabilities and security risks associated to storing private keys of third parties on a server.
+                    </div>
                 </div>
             </div>
 
@@ -69,12 +96,20 @@
                     <input asp-for="LockSubscription" type="checkbox" class="form-check-input"/>
                     <label asp-for="LockSubscription" class="form-check-label"></label>
                     <span asp-validation-for="LockSubscription" class="text-danger"></span>
+                    <div class="info-note mt-2 text-warning" role="alert">
+                        <vc:icon symbol="warning"/>
+                        Caution: Enabling public user registration means anyone can register to your server and may expose your BTCPay Server instance to potential security risks from unknown users.
+                    </div>
                 </div>
 
                 <div class="form-check my-3">
                     <input asp-for="DisableNonAdminCreateUserApi" type="checkbox" class="form-check-input"/>
                     <label asp-for="DisableNonAdminCreateUserApi" class="form-check-label"></label>
                     <span asp-validation-for="DisableNonAdminCreateUserApi" class="text-danger"></span>
+                    <div class="info-note mt-2 text-warning" role="alert">
+                        <vc:icon symbol="warning"/>
+                        Caution: Allowing non-admins to have access to API endpoints may expose your BTCPay Server instance to potential security risks from unknown users.
+                    </div>
                 </div>
             </div>
 
@@ -154,7 +189,6 @@
                 <h5 class="d-flex align-items-center justify-content-between mt-5 gap-3">
                     Domain to app mapping
                     <button id="AddDomainButton" type="submit" name="command" value="add-domain" class="d-inline-block btn text-primary btn-link p-0">
-                        <span class="fa fa-plus"></span>
                         Add domain mapping
                     </button>
                 </h5>
@@ -187,24 +221,28 @@
 
             <h4>Block Explorers</h4>
 
-            @for (var i = 0; i < networks.Count(); i++)
+            @for (var lpi = 0; lpi < linkProviders.Length; lpi++)
             {
-                var network = networks.ElementAt(i);
-                var existingOverride = Model.BlockExplorerLinks?.SingleOrDefault(tuple => tuple.CryptoCode.Equals(network.CryptoCode, StringComparison.InvariantCultureIgnoreCase));
-                var linkValue = existingOverride?.Link ?? network.BlockExplorerLinkDefault;
-                if (Model.BlockExplorerLinks.Count < i + 1)
+                var pmi = linkProviders[lpi].Key;
+                var defaultLink = linkProviders[lpi].Value.BlockExplorerLinkDefault;
+                var existingOverride = Model.BlockExplorerLinks?.SingleOrDefault(tuple => PaymentMethodId.Parse(tuple.CryptoCode) == pmi);
+                if (existingOverride is null)
                 {
-                    Model.BlockExplorerLinks.Add(new PoliciesSettings.BlockExplorerOverrideItem() {CryptoCode = network.CryptoCode, Link = network.BlockExplorerLinkDefault});
+                    existingOverride = new PoliciesSettings.BlockExplorerOverrideItem { CryptoCode = pmi.ToStringNormalized(), Link = null };
+                    Model.BlockExplorerLinks ??= new ();
+                    Model.BlockExplorerLinks.Add(existingOverride);
                 }
-                <div class="form-group">
-                    <label asp-for="BlockExplorerLinks[i].Link" class="form-label">@network.DisplayName (@network.CryptoCode)</label>
-                    <input type="hidden" asp-for="BlockExplorerLinks[i].CryptoCode" value="@network.CryptoCode"/>
-                    <div class="input-group">
-                        <input type="text" class="form-control" asp-for="BlockExplorerLinks[i].Link" value="@linkValue" rel="noreferrer noopener" data-default-link="@network.BlockExplorerLinkDefault"/>
-                        <button type="button" class="btn btn-secondary only-for-js" title="Revert to default">
-                            <span class="fa fa-refresh"></span>
+                var i = Model.BlockExplorerLinks.IndexOf(existingOverride);
+                var linkValue = existingOverride.Link ?? defaultLink;
+                <div class="form-group" data-default="@defaultLink">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                        <label asp-for="BlockExplorerLinks[i].Link" class="form-label">@pmi.ToPrettyString()</label>
+                        <button type="button" class="btn btn-link p-0 only-for-js revert-default" title="Revert to default">
+                            Set to default
                         </button>
                     </div>
+                    <input type="hidden" asp-for="BlockExplorerLinks[i].CryptoCode" value="@pmi.ToStringNormalized()" />
+                    <input type="text" class="form-control block-explorer-link" asp-for="BlockExplorerLinks[i].Link" value="@linkValue" rel="noreferrer noopener" />
                 </div>
             }
         </form>
@@ -213,11 +251,10 @@
 
 @section PageFootContent {
     <script>
-        for (let element of document.getElementsByClassName("revert-default")) {
-            element.addEventListener("click", function (){
-              element.parentElement.previousElementSibling.value = element.parentElement.previousElementSibling.getAttribute("data-default-link")
-            });
-        }
+        delegate('click', '.revert-default', e => {
+            const $row = e.target.closest('[data-default]');
+            $row.querySelector('input.block-explorer-link').value = $row.dataset.default;
+        })
         for (let element of document.getElementsByClassName("collapse-on-js")){
             if (element.classList.contains("show")){
                 element.classList.remove("show");

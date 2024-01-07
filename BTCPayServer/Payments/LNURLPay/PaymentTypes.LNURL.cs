@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Payments.Lightning;
@@ -12,7 +13,7 @@ namespace BTCPayServer.Payments
 {
     public class LNURLPayPaymentType : LightningPaymentType
     {
-        public new static LNURLPayPaymentType Instance { get; } = new LNURLPayPaymentType();
+        public new static LNURLPayPaymentType Instance { get; } = new();
         public override string ToPrettyString() => "LNURL-Pay";
         public override string GetId() => "LNURLPAY";
         public override string ToStringNormalized() => "LNURLPAY";
@@ -28,16 +29,27 @@ namespace BTCPayServer.Payments
         }
 
         public override string GetPaymentLink(BTCPayNetworkBase network, InvoiceEntity invoice, IPaymentMethodDetails paymentMethodDetails,
-            Money cryptoInfoDue, string serverUri)
+            decimal cryptoInfoDue, string serverUri)
         {
             if (!paymentMethodDetails.Activated)
             {
                 return null;
             }
-            var lnurlPaymentMethodDetails = (LNURLPayPaymentMethodDetails)paymentMethodDetails;
-            var uri = new Uri(
-                $"{serverUri.WithTrailingSlash()}{network.CryptoCode}/UILNURL/pay/i/{invoice.Id}");
-            return LNURL.LNURL.EncodeUri(uri, "payRequest", lnurlPaymentMethodDetails.Bech32Mode).ToString();
+
+            try
+            {
+                var lnurlPaymentMethodDetails = (LNURLPayPaymentMethodDetails)paymentMethodDetails;
+                var uri = new Uri(
+                    $"{serverUri.WithTrailingSlash()}{network.CryptoCode}/UILNURL/pay/i/{invoice.Id}");
+                return LNURL.LNURL.EncodeUri(uri, "payRequest", lnurlPaymentMethodDetails.Bech32Mode).ToString();
+            }
+            catch (Exception e)
+            {
+                // TODO: we need to switch payment types from static singletons to DI
+                // _logger.LogError(e, "Error generating LNURL payment link");
+                Console.WriteLine($"Error generating LNURL payment link: {e.Message}");
+                return null;
+            }
         }
 
         public override string InvoiceViewPaymentPartialName { get; } = "Lightning/ViewLightningLikePaymentData";
@@ -47,7 +59,6 @@ namespace BTCPayServer.Payments
                 return new LNURLPayPaymentMethodBaseData()
                 {
                     UseBech32Scheme = lightningSupportedPaymentMethod.UseBech32Scheme,
-                    EnableForStandardInvoices = lightningSupportedPaymentMethod.EnableForStandardInvoices,
                     LUD12Enabled = lightningSupportedPaymentMethod.LUD12Enabled
                 };
             return null;
@@ -64,7 +75,7 @@ namespace BTCPayServer.Payments
             {
                 AdditionalData = new Dictionary<string, JToken>()
                 {
-                    {"LNURLP", JToken.FromObject(GetPaymentLink(details.Network, invoice, details.GetPaymentMethodDetails(), invoiceCryptoInfo.Due,
+                    {"LNURLP", JToken.FromObject(GetPaymentLink(details.Network, invoice, details.GetPaymentMethodDetails(), invoiceCryptoInfo.GetDue().Value,
                         serverUrl))}
                 }
             };

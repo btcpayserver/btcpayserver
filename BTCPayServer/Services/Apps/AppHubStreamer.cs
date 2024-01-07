@@ -40,7 +40,7 @@ namespace BTCPayServer.Services.Apps
                         await _HubContext.Clients.Group(appId).SendCoreAsync(AppHub.PaymentReceived, new object[]
                             {
                         data.GetValue(),
-                        invoiceEvent.Payment.GetCryptoCode(),
+                        invoiceEvent.Payment.Currency,
                         invoiceEvent.Payment.GetPaymentMethodId()?.PaymentType?.ToString()
                             }, cancellationToken);
                     }

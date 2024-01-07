@@ -31,79 +31,23 @@ jobs:
       - run:
           command: |
             curl -X POST -H "Authorization: token $GH_PAT" -H "Accept: application/vnd.github.everest-preview+json" -H "Content-Type: application/json" https://api.github.com/repos/btcpayserver/btcpayserver-doc/dispatches --data '{"event_type": "build_docs"}'
-
   # publish jobs require $DOCKERHUB_REPO, $DOCKERHUB_USER, $DOCKERHUB_PASS defined
-  amd64:
-    machine:
-      image: ubuntu-2004:202111-02
+  docker:
+    docker:
+      - image: cimg/base:stable
     steps:
+      - setup_remote_docker
       - checkout
       - run:
           command: |
             LATEST_TAG=${CIRCLE_TAG:1} #trim v from tag
             GIT_COMMIT=$(git rev-parse HEAD)
             #
-            sudo docker build --build-arg GIT_COMMIT=${GIT_COMMIT} --pull -t $DOCKERHUB_REPO:$LATEST_TAG-amd64 -f amd64.Dockerfile .
-            sudo docker build --build-arg GIT_COMMIT=${GIT_COMMIT} --pull --build-arg CONFIGURATION_NAME=Altcoins-Release -t $DOCKERHUB_REPO:$LATEST_TAG-altcoins-amd64 -f amd64.Dockerfile .
-            sudo docker login --username=$DOCKERHUB_USER --password=$DOCKERHUB_PASS
-            sudo docker push $DOCKERHUB_REPO:$LATEST_TAG-amd64
-            sudo docker push $DOCKERHUB_REPO:$LATEST_TAG-altcoins-amd64
-
-  arm32v7:
-    machine:
-      image: ubuntu-2004:202111-02
-    steps:
-      - checkout
-      - run:
-          command: |
-            sudo docker run --rm --privileged multiarch/qemu-user-static:register --reset
-            LATEST_TAG=${CIRCLE_TAG:1} #trim v from tag
-            GIT_COMMIT=$(git rev-parse HEAD)
-            #
-            sudo docker build --build-arg GIT_COMMIT=${GIT_COMMIT} --pull -t $DOCKERHUB_REPO:$LATEST_TAG-arm32v7 -f arm32v7.Dockerfile .
-            sudo docker build --build-arg GIT_COMMIT=${GIT_COMMIT} --pull --build-arg CONFIGURATION_NAME=Altcoins-Release -t $DOCKERHUB_REPO:$LATEST_TAG-altcoins-arm32v7 -f arm32v7.Dockerfile .
-            sudo docker login --username=$DOCKERHUB_USER --password=$DOCKERHUB_PASS
-            sudo docker push $DOCKERHUB_REPO:$LATEST_TAG-arm32v7
-            sudo docker push $DOCKERHUB_REPO:$LATEST_TAG-altcoins-arm32v7
-
-  arm64v8:
-    machine:
-      image: ubuntu-2004:202111-02
-    steps:
-      - checkout
-      - run:
-          command: |
-            sudo docker run --rm --privileged multiarch/qemu-user-static:register --reset
-            LATEST_TAG=${CIRCLE_TAG:1} #trim v from tag
-            GIT_COMMIT=$(git rev-parse HEAD)
-            #
-            sudo docker build --build-arg GIT_COMMIT=${GIT_COMMIT} --pull -t $DOCKERHUB_REPO:$LATEST_TAG-arm64v8 -f arm64v8.Dockerfile .
-            sudo docker build --build-arg GIT_COMMIT=${GIT_COMMIT} --build-arg CONFIGURATION_NAME=Altcoins-Release --pull -t $DOCKERHUB_REPO:$LATEST_TAG-altcoins-arm64v8 -f arm64v8.Dockerfile .
-            sudo docker login --username=$DOCKERHUB_USER --password=$DOCKERHUB_PASS
-            sudo docker push $DOCKERHUB_REPO:$LATEST_TAG-arm64v8
-            sudo docker push $DOCKERHUB_REPO:$LATEST_TAG-altcoins-arm64v8
-
-  multiarch:
-    machine:
-      image: ubuntu-2004:202201-02
-    steps:
-      - run:
-          command: |
-            sudo docker login --username=$DOCKERHUB_USER --password=$DOCKERHUB_PASS
-            #
-            LATEST_TAG=${CIRCLE_TAG:1} #trim v from tag
-            sudo docker manifest create --amend $DOCKERHUB_REPO:$LATEST_TAG $DOCKERHUB_REPO:$LATEST_TAG-amd64 $DOCKERHUB_REPO:$LATEST_TAG-arm32v7 $DOCKERHUB_REPO:$LATEST_TAG-arm64v8
-            sudo docker manifest annotate $DOCKERHUB_REPO:$LATEST_TAG $DOCKERHUB_REPO:$LATEST_TAG-amd64 --os linux --arch amd64
-            sudo docker manifest annotate $DOCKERHUB_REPO:$LATEST_TAG $DOCKERHUB_REPO:$LATEST_TAG-arm32v7 --os linux --arch arm --variant v7
-            sudo docker manifest annotate $DOCKERHUB_REPO:$LATEST_TAG $DOCKERHUB_REPO:$LATEST_TAG-arm64v8 --os linux --arch arm64 --variant v8
-            sudo docker manifest push $DOCKERHUB_REPO:$LATEST_TAG -p
-
-            sudo docker manifest create --amend $DOCKERHUB_REPO:$LATEST_TAG-altcoins $DOCKERHUB_REPO:$LATEST_TAG-altcoins-amd64 $DOCKERHUB_REPO:$LATEST_TAG-altcoins-arm32v7 $DOCKERHUB_REPO:$LATEST_TAG-altcoins-arm64v8
-            sudo docker manifest annotate $DOCKERHUB_REPO:$LATEST_TAG-altcoins $DOCKERHUB_REPO:$LATEST_TAG-altcoins-amd64 --os linux --arch amd64
-            sudo docker manifest annotate $DOCKERHUB_REPO:$LATEST_TAG-altcoins $DOCKERHUB_REPO:$LATEST_TAG-altcoins-arm32v7 --os linux --arch arm --variant v7
-            sudo docker manifest annotate $DOCKERHUB_REPO:$LATEST_TAG-altcoins $DOCKERHUB_REPO:$LATEST_TAG-altcoins-arm64v8 --os linux --arch arm64 --variant v8
-            sudo docker manifest push $DOCKERHUB_REPO:$LATEST_TAG-altcoins -p
-
+            docker login --username=$DOCKERHUB_USER --password=$DOCKERHUB_PASS
+            docker buildx create --use
+            DOCKER_BUILDX_OPTS="--platform linux/amd64,linux/arm64,linux/arm/v7 --build-arg GIT_COMMIT=${GIT_COMMIT} --push"
+            docker buildx build $DOCKER_BUILDX_OPTS -t $DOCKERHUB_REPO:$LATEST_TAG .
+            docker buildx build $DOCKER_BUILDX_OPTS -t $DOCKERHUB_REPO:$LATEST_TAG-altcoins --build-arg CONFIGURATION_NAME=Altcoins-Release .
 workflows:
   version: 2
   build_and_test:
@@ -120,7 +64,7 @@ workflows:
             # only act on version tags
             tags:
               only: /(v[1-9]+(\.[0-9]+)*(-[a-z0-9-]+)?)|(v[a-z0-9-]+)/
-      - amd64:
+      - docker:
           filters:
             # ignore any commit on any branch by default
             branches:
@@ -128,27 +72,5 @@ workflows:
             # only act on version tags v1.0.0.88 or v1.0.2-1
             # OR feature tags like vlndseedbackup
             # OR features on specific versions like v1.0.0.88-lndseedbackup-1
-            tags:
-              only: /(v[1-9]+(\.[0-9]+)*(-[a-z0-9-]+)?)|(v[a-z0-9-]+)/
-      - arm32v7:
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /(v[1-9]+(\.[0-9]+)*(-[a-z0-9-]+)?)|(v[a-z0-9-]+)/
-      - arm64v8:
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /(v[1-9]+(\.[0-9]+)*(-[a-z0-9-]+)?)|(v[a-z0-9-]+)/
-      - multiarch:
-          requires:
-            - amd64
-            - arm32v7
-            - arm64v8
-          filters:
-            branches:
-              ignore: /.*/
             tags:
               only: /(v[1-9]+(\.[0-9]+)*(-[a-z0-9-]+)?)|(v[a-z0-9-]+)/

@@ -5,41 +5,35 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Services;
+using Microsoft.Extensions.Configuration;
 
 namespace BTCPayServer.Hosting
 {
     public class BlockExplorerLinkStartupTask : IStartupTask
     {
-        private readonly SettingsRepository _settingsRepository;
         private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
+        private readonly TransactionLinkProviders _transactionLinksProviders;
+        private readonly IConfiguration _configuration;
 
-        public BlockExplorerLinkStartupTask(SettingsRepository settingsRepository,
-            BTCPayNetworkProvider btcPayNetworkProvider)
+        public BlockExplorerLinkStartupTask(
+            BTCPayNetworkProvider btcPayNetworkProvider,
+            TransactionLinkProviders transactionLinksProviders,
+            IConfiguration configuration)
         {
-            _settingsRepository = settingsRepository;
             _btcPayNetworkProvider = btcPayNetworkProvider;
+            _transactionLinksProviders = transactionLinksProviders;
+            _configuration = configuration;
         }
 
         public async Task ExecuteAsync(CancellationToken cancellationToken = default)
         {
-            var settings = await _settingsRepository.GetSettingAsync<PoliciesSettings>();
-            if (settings?.BlockExplorerLinks?.Any() is true)
+            var blockExplorerLink = _configuration["blockexplorerlink"];
+            if (!string.IsNullOrEmpty(blockExplorerLink))
             {
-                SetLinkOnNetworks(settings.BlockExplorerLinks, _btcPayNetworkProvider);
+                foreach (var prov in _transactionLinksProviders.Values)
+                    prov.OverrideBlockExplorerLink = blockExplorerLink;
             }
-        }
-
-        public static void SetLinkOnNetworks(List<PoliciesSettings.BlockExplorerOverrideItem> links,
-            BTCPayNetworkProvider networkProvider)
-        {
-            var networks = networkProvider.GetAll();
-            foreach (var network in networks)
-            {
-                var overrideLink = links.SingleOrDefault(item =>
-                    item.CryptoCode.Equals(network.CryptoCode, StringComparison.InvariantCultureIgnoreCase));
-                network.BlockExplorerLink = overrideLink?.Link ?? network.BlockExplorerLinkDefault;
-
-            }
+            await _transactionLinksProviders.RefreshTransactionLinkTemplates();
         }
     }
 }

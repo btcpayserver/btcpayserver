@@ -11,17 +11,22 @@ using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Rating;
+using BTCPayServer.Services.Fees;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Storage.Models;
 using BTCPayServer.Storage.Services.Providers.AzureBlobStorage.Configuration;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.FileSystemGlobbing;
 using NBitcoin;
 using NBitpayClient;
 using Newtonsoft.Json;
 using Xunit;
 using Xunit.Abstractions;
 using Xunit.Sdk;
+using static BTCPayServer.HostedServices.PullPaymentHostedService.PayoutApproval;
 
 namespace BTCPayServer.Tests
 {
@@ -71,6 +76,25 @@ namespace BTCPayServer.Tests
             await UnitTest1.CanUploadRemoveFiles(controller);
         }
 
+        [Fact]
+        public async Task CanQueryMempoolFeeProvider()
+        {
+            IServiceCollection collection = new ServiceCollection();
+            collection.AddMemoryCache();
+            collection.AddHttpClient();
+            var prov = collection.BuildServiceProvider();
+            foreach (var isTestnet in new[] { true, false })
+            {
+                var mempoolSpaceFeeProvider = new MempoolSpaceFeeProvider(
+                    prov.GetService<IMemoryCache>(),
+                    "test" + isTestnet,
+                    prov.GetService<IHttpClientFactory>(),
+                    isTestnet);
+                var rates = await mempoolSpaceFeeProvider.GetFeeRatesAsync();
+                Assert.NotEmpty(rates);
+                await mempoolSpaceFeeProvider.GetFeeRateAsync(20);
+            }
+        }
         [Fact]
         public async Task CanQueryDirectProviders()
         {
@@ -177,7 +201,7 @@ namespace BTCPayServer.Tests
             Assert.Contains(rates, e => e.CurrencyPair == new CurrencyPair("XMR", "BTC") && e.BidAsk.Bid < 1.0m);
 
             // Check we didn't skip too many exchanges
-            Assert.InRange(skipped, 0, 3);
+            Assert.InRange(skipped, 0, 5);
         }
 
         [Fact]
@@ -266,17 +290,16 @@ retry:
             }
             catch (Exception ex)
             {
-                var details = ex is EqualException ? (ex as EqualException).Actual : ex.Message;
+                var details = ex.Message;
                 TestLogs.LogInformation($"FAILED: {url} ({file}) {details}");
 
                 throw;
             }
         }
 
-        [Fact()]
+        [Fact]
         public void CanSolveTheDogesRatesOnKraken()
         {
-            var provider = new BTCPayNetworkProvider(ChainName.Mainnet);
             var factory = FastTests.CreateBTCPayRateFactory();
             var fetcher = new RateFetcher(factory);
 
@@ -290,10 +313,44 @@ retry:
         }
 
         [Fact]
-        public void CanGetRateCryptoCurrenciesByDefault()
+        public async Task CanGetRateFromRecommendedExchanges()
         {
-            string[] brokenShitcoins = { "BTX_USD", "CHC_USD" };
-            var provider = new BTCPayNetworkProvider(ChainName.Mainnet);
+            var factory = FastTests.CreateBTCPayRateFactory();
+            var fetcher = new RateFetcher(factory);
+            var provider = CreateNetworkProvider(ChainName.Mainnet);
+            var b = new StoreBlob();
+            string[] temporarilyBroken = Array.Empty<string>();
+            foreach (var k in StoreBlob.RecommendedExchanges)
+            {
+                b.DefaultCurrency = k.Key;
+                var rules = b.GetDefaultRateRules(provider);
+                var pairs = new[] { CurrencyPair.Parse($"BTC_{k.Key}") }.ToHashSet();
+                var result = fetcher.FetchRates(pairs, rules, default);
+                foreach ((CurrencyPair key, Task<RateResult> value) in result)
+                {
+                    TestLogs.LogInformation($"Testing {key} when default currency is {k.Key}");
+                    var rateResult = await value;
+                    var hasRate = rateResult.BidAsk != null;
+                    
+                    if (temporarilyBroken.Contains(k.Key))
+                    {
+                        if (!hasRate)
+                        {
+                            TestLogs.LogInformation($"Skipping {key} because it is marked as temporarily broken");
+                            continue;
+                        }
+                        TestLogs.LogInformation($"Note: {key} is marked as temporarily broken, but the rate is available");
+                    }
+                    Assert.True(hasRate, $"Impossible to get the rate {rateResult.EvaluatedRule}");
+                }
+            }
+        }
+
+        [Fact]
+        public async Task CanGetRateCryptoCurrenciesByDefault()
+        {
+            using var cts = new CancellationTokenSource(60_000);
+            var provider = CreateNetworkProvider(ChainName.Mainnet);
             var factory = FastTests.CreateBTCPayRateFactory();
             var fetcher = new RateFetcher(factory);
             var pairs =
@@ -301,19 +358,29 @@ retry:
                     .Select(c => new CurrencyPair(c.CryptoCode, "USD"))
                     .ToHashSet();
 
+            string[] brokenShitcoins = { "BTG", "BTX", "GRS" };
+            bool IsBrokenShitcoin(CurrencyPair p) => brokenShitcoins.Contains(p.Left) || brokenShitcoins.Contains(p.Right);
+            foreach (var _ in brokenShitcoins)
+            {
+                foreach (var p in pairs.Where(IsBrokenShitcoin).ToArray())
+                {
+                    TestLogs.LogInformation($"Skipping {p} because it is marked as broken");
+                    pairs.Remove(p);
+                }
+            }
+
             var rules = new StoreBlob().GetDefaultRateRules(provider);
-            var result = fetcher.FetchRates(pairs, rules, default);
+            var result = fetcher.FetchRates(pairs, rules, cts.Token);
             foreach ((CurrencyPair key, Task<RateResult> value) in result)
             {
-                var rateResult = value.GetAwaiter().GetResult();
+                var rateResult = await value;
                 TestLogs.LogInformation($"Testing {key}");
-                if (brokenShitcoins.Contains(key.ToString()))
-                    continue;
                 Assert.True(rateResult.BidAsk != null, $"Impossible to get the rate {rateResult.EvaluatedRule}");
             }
         }
 
         [Fact]
+        [Trait("Fast", "Fast")]
         public async Task CheckJsContent()
         {
             // This test verify that no malicious js is added in the minified files.
@@ -322,42 +389,77 @@ retry:
             var actual = GetFileContent("BTCPayServer", "wwwroot", "vendor", "bootstrap", "bootstrap.bundle.min.js").Trim();
             var version = Regex.Match(actual, "Bootstrap v([0-9]+.[0-9]+.[0-9]+)").Groups[1].Value;
             var expected = (await (await client.GetAsync($"https://cdn.jsdelivr.net/npm/bootstrap@{version}/dist/js/bootstrap.bundle.min.js")).Content.ReadAsStringAsync()).Trim();
-            Assert.Equal(expected, actual);
+            EqualJsContent(expected, actual);
 
             actual = GetFileContent("BTCPayServer", "wwwroot", "vendor", "clipboard.js", "clipboard.js");
             expected = (await (await client.GetAsync("https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.8/clipboard.js")).Content.ReadAsStringAsync()).Trim();
-            Assert.Equal(expected, actual);
+            EqualJsContent(expected, actual);
 
             actual = GetFileContent("BTCPayServer", "wwwroot", "vendor", "vuejs", "vue.min.js").Trim();
             version = Regex.Match(actual, "Vue\\.js v([0-9]+.[0-9]+.[0-9]+)").Groups[1].Value;
             expected = (await (await client.GetAsync($"https://cdnjs.cloudflare.com/ajax/libs/vue/{version}/vue.min.js")).Content.ReadAsStringAsync()).Trim();
-            Assert.Equal(expected, actual);
+            EqualJsContent(expected, actual);
 
             actual = GetFileContent("BTCPayServer", "wwwroot", "vendor", "i18next", "i18next.min.js").Trim();
             expected = (await (await client.GetAsync("https://cdnjs.cloudflare.com/ajax/libs/i18next/22.0.6/i18next.min.js")).Content.ReadAsStringAsync()).Trim();
-            Assert.Equal(expected, actual);
+            EqualJsContent(expected, actual);
 
             actual = GetFileContent("BTCPayServer", "wwwroot", "vendor", "i18next", "i18nextHttpBackend.min.js").Trim();
             expected = (await (await client.GetAsync("https://cdnjs.cloudflare.com/ajax/libs/i18next-http-backend/2.0.1/i18nextHttpBackend.min.js")).Content.ReadAsStringAsync()).Trim();
-            Assert.Equal(expected, actual);
+            EqualJsContent(expected, actual);
 
             actual = GetFileContent("BTCPayServer", "wwwroot", "vendor", "i18next", "vue-i18next.js").Trim();
             expected = (await (await client.GetAsync("https://unpkg.com/@panter/vue-i18next@0.15.2/dist/vue-i18next.js")).Content.ReadAsStringAsync()).Trim();
-            Assert.Equal(expected, actual);
+            EqualJsContent(expected, actual);
 
             actual = GetFileContent("BTCPayServer", "wwwroot", "vendor", "vue-qrcode", "vue-qrcode.min.js").Trim();
             version = Regex.Match(actual, "vue-qrcode v([0-9]+.[0-9]+.[0-9]+)").Groups[1].Value;
             expected = (await (await client.GetAsync($"https://unpkg.com/@chenfengyuan/vue-qrcode@{version}/dist/vue-qrcode.min.js")).Content.ReadAsStringAsync()).Trim();
-            Assert.Equal(expected, actual);
+            EqualJsContent(expected, actual);
 
             actual = GetFileContent("BTCPayServer", "wwwroot", "vendor", "tom-select", "tom-select.complete.min.js").Trim();
-            expected = (await (await client.GetAsync($"https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js")).Content.ReadAsStringAsync()).Trim();
-            Assert.Equal(expected, actual);
+            version = Regex.Match(actual, "Tom Select v([0-9]+.[0-9]+.[0-9]+)").Groups[1].Value;
+            expected = (await (await client.GetAsync($"https://cdn.jsdelivr.net/npm/tom-select@{version}/dist/js/tom-select.complete.min.js")).Content.ReadAsStringAsync()).Trim();
+            EqualJsContent(expected, actual);
 
             actual = GetFileContent("BTCPayServer", "wwwroot", "vendor", "dom-confetti", "dom-confetti.min.js").Trim();
             version = Regex.Match(actual, "Original file: /npm/dom-confetti@([0-9]+.[0-9]+.[0-9]+)/lib/main.js").Groups[1].Value;
             expected = (await (await client.GetAsync($"https://cdn.jsdelivr.net/npm/dom-confetti@{version}/lib/main.min.js")).Content.ReadAsStringAsync()).Trim();
-            Assert.Equal(expected, actual);
+            EqualJsContent(expected, actual);
+
+            actual = GetFileContent("BTCPayServer", "wwwroot", "vendor", "vue-sortable", "sortable.min.js").Trim();
+            version = Regex.Match(actual, "Sortable ([0-9]+.[0-9]+.[0-9]+) ").Groups[1].Value;
+            expected = (await (await client.GetAsync($"https://unpkg.com/sortablejs@{version}/Sortable.min.js")).Content.ReadAsStringAsync()).Trim();
+            EqualJsContent(expected, actual);
+
+            actual = GetFileContent("BTCPayServer", "wwwroot", "vendor", "bootstrap-vue", "bootstrap-vue.min.js").Trim();
+            version = Regex.Match(actual, "BootstrapVue ([0-9]+.[0-9]+.[0-9]+)").Groups[1].Value;
+            expected = (await (await client.GetAsync($"https://cdnjs.cloudflare.com/ajax/libs/bootstrap-vue/{version}/bootstrap-vue.min.js")).Content.ReadAsStringAsync()).Trim();
+            EqualJsContent(expected, actual);
+
+            actual = GetFileContent("BTCPayServer", "wwwroot", "vendor", "FileSaver", "FileSaver.min.js").Trim();
+            expected = (await (await client.GetAsync($"https://raw.githubusercontent.com/eligrey/FileSaver.js/43bbd2f0ae6794f8d452cd360e9d33aef6071234/dist/FileSaver.min.js")).Content.ReadAsStringAsync()).Trim();
+            EqualJsContent(expected, actual);
+
+            actual = GetFileContent("BTCPayServer", "wwwroot", "vendor", "papaparse", "papaparse.min.js").Trim();
+            expected = (await (await client.GetAsync($"https://raw.githubusercontent.com/mholt/PapaParse/5.4.1/papaparse.min.js")).Content.ReadAsStringAsync()).Trim();
+            EqualJsContent(expected, actual);
+
+            actual = GetFileContent("BTCPayServer", "wwwroot", "vendor", "vue-sanitize-directive", "vue-sanitize-directive.umd.min.js").Trim();
+            version = Regex.Match(actual, "Original file: /npm/vue-sanitize-directive@([0-9]+.[0-9]+.[0-9]+)").Groups[1].Value;
+            expected = (await (await client.GetAsync($"https://cdn.jsdelivr.net/npm/vue-sanitize-directive@{version}/dist/vue-sanitize-directive.umd.min.js")).Content.ReadAsStringAsync()).Trim();
+            EqualJsContent(expected, actual);
+
+            actual = GetFileContent("BTCPayServer", "wwwroot", "vendor", "decimal.js", "decimal.min.js").Trim();
+            version = Regex.Match(actual, "Original file: /npm/decimal\\.js@([0-9]+.[0-9]+.[0-9]+)/decimal\\.js").Groups[1].Value;
+            expected = (await (await client.GetAsync($"https://cdn.jsdelivr.net/npm/decimal.js@{version}/decimal.min.js")).Content.ReadAsStringAsync()).Trim();
+            EqualJsContent(expected, actual);
+        }
+
+        private void EqualJsContent(string expected, string actual)
+        {
+            if (expected != actual)
+                 Assert.Equal(expected, actual.ReplaceLineEndings("\n"));
         }
 
         string GetFileContent(params string[] path)

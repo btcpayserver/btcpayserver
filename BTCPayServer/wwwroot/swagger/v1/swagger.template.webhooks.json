@@ -68,7 +68,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/WebhookDataCreate"
+                                    "$ref": "#/components/schemas/WebhookDataCreateResult"
                                 }
                             }
                         }
@@ -397,6 +397,9 @@
                     },
                     "404": {
                         "description": "The delivery does not exists."
+                    },
+                    "409": {
+                        "description": "`webhookdelivery-pruned`: This webhook delivery has been pruned, so it can't be redelivered."
                     }
                 },
                 "security": [
@@ -459,6 +462,9 @@
                     },
                     "404": {
                         "description": "The delivery does not exists."
+                    },
+                    "409": {
+                        "description": "`webhookdelivery-pruned`: This webhook delivery has been pruned, so it can't be redelivered."
                     }
                 },
                 "security": [
@@ -521,9 +527,6 @@
             "WebhookData": {
                 "allOf": [
                     {
-                        "$ref": "#/components/schemas/WebhookDataBase"
-                    },
-                    {
                         "type": "object",
                         "properties": {
                             "id": {
@@ -532,10 +535,30 @@
                                 "nullable": false
                             }
                         }
+                    },
+                    {
+                        "$ref": "#/components/schemas/WebhookDataBase"
                     }
                 ]
             },
             "WebhookDataCreate": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/WebhookDataBase"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "secret": {
+                                "type": "string",
+                                "description": "Must be used by the callback receiver to ensure the delivery comes from BTCPay Server. BTCPay Server includes the `BTCPay-Sig` HTTP header, whose format is `sha256=HMAC256(UTF8(webhook's secret), body)`. The pattern to authenticate the webhook is similar to [how to secure webhooks in Github](https://docs.github.com/webhooks/securing/). If left out, null, or empty, the secret will be auto-generated.",
+                                "nullable": true
+                            }
+                        }
+                    }
+                ]
+            },
+            "WebhookDataCreateResult": {
                 "allOf": [
                     {
                         "$ref": "#/components/schemas/WebhookData"
@@ -545,8 +568,8 @@
                         "properties": {
                             "secret": {
                                 "type": "string",
-                                "description": "Must be used by the callback receiver to ensure the delivery comes from BTCPay Server. BTCPay Server includes the `BTCPay-Sig` HTTP header, whose format is `sha256=HMAC256(UTF8(webhook's secret), body)`. The pattern to authenticate the webhook is similar to [how to secure webhooks in Github](https://docs.github.com/webhooks/securing/).",
-                                "nullable": false
+                                "description": "Must be used by the callback receiver to ensure the delivery comes from BTCPay Server. BTCPay Server includes the `BTCPay-Sig` HTTP header, whose format is `sha256=HMAC256(UTF8(webhook's secret), body)`. The pattern to authenticate the webhook is similar to [how to secure webhooks in Github](https://docs.github.com/webhooks/securing/). Value of the auto-generated or custom secret.",
+                                "nullable": true
                             }
                         }
                     }
@@ -573,11 +596,6 @@
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
-                    "id": {
-                        "type": "string",
-                        "description": "The id of the webhook",
-                        "nullable": false
-                    },
                     "enabled": {
                         "type": "boolean",
                         "description": "Whether this webhook is enabled or not",
@@ -762,13 +780,21 @@
                                 "nullable": false
                             },
                             "paymentMethod": {
-                                "type": "string",
+                                "allOf": [
+                                    {
+                                        "$ref": "#/components/schemas/PaymentMethodId"
+                                    }
+                                ],
                                 "description": "What payment method was used for this payment",
                                 "nullable": false
                             },
                             "payment": {
                                 "description": "Details about the payment",
-                                "$ref": "#/components/schemas/Payment"
+                                "allOf": [
+                                    {
+                                        "$ref": "#/components/schemas/Payment"
+                                    }
+                                ]
                             }
                         }
                     }

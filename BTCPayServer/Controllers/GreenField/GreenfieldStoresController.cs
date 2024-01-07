@@ -33,6 +33,7 @@ namespace BTCPayServer.Controllers.Greenfield
             _storeRepository = storeRepository;
             _userManager = userManager;
         }
+        
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores")]
         public Task<ActionResult<IEnumerable<Client.Models.StoreData>>> GetStores()
@@ -112,14 +113,16 @@ namespace BTCPayServer.Controllers.Greenfield
             return Ok(FromModel(store));
         }
 
-        internal static Client.Models.StoreData FromModel(Data.StoreData data)
+        internal static Client.Models.StoreData FromModel(StoreData data)
         {
             var storeBlob = data.GetStoreBlob();
-            return new Client.Models.StoreData()
+            return new Client.Models.StoreData
             {
                 Id = data.Id,
                 Name = data.StoreName,
                 Website = data.StoreWebsite,
+                Archived = data.Archived,
+                SupportUrl = storeBlob.StoreSupportUrl,
                 SpeedPolicy = data.SpeedPolicy,
                 DefaultPaymentMethod = data.GetDefaultPaymentId()?.ToStringNormalized(),
                 //blob
@@ -128,6 +131,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 //we do not include EmailSettings in this model and instead opt to set it in stores/storeid/email endpoints
                 //we do not include PaymentMethodCriteria because moving the CurrencyValueJsonConverter to the Client csproj is hard and requires a refactor (#1571 & #1572)
                 NetworkFeeMode = storeBlob.NetworkFeeMode,
+                DefaultCurrency = storeBlob.DefaultCurrency,
                 RequiresRefundEmail = storeBlob.RequiresRefundEmail,
                 CheckoutType = storeBlob.CheckoutType,
                 Receipt = InvoiceDataBase.ReceiptOptions.Merge(storeBlob.ReceiptOptions, null),
@@ -149,13 +153,18 @@ namespace BTCPayServer.Controllers.Greenfield
                 LightningDescriptionTemplate = storeBlob.LightningDescriptionTemplate,
                 PaymentTolerance = storeBlob.PaymentTolerance,
                 PayJoinEnabled = storeBlob.PayJoinEnabled,
-                PaymentMethodCriteria = storeBlob.PaymentMethodCriteria?.Where(criteria => criteria.Value is not null)?.Select(criteria => new PaymentMethodCriteriaData()
+                AutoDetectLanguage = storeBlob.AutoDetectLanguage,
+                ShowPayInWalletButton = storeBlob.ShowPayInWalletButton,
+                ShowStoreHeader = storeBlob.ShowStoreHeader,
+                CelebratePayment = storeBlob.CelebratePayment,
+                PlaySoundOnPayment = storeBlob.PlaySoundOnPayment,
+                PaymentMethodCriteria = storeBlob.PaymentMethodCriteria?.Where(criteria => criteria.Value is not null).Select(criteria => new PaymentMethodCriteriaData
                 {
                     Above = criteria.Above,
                     Amount = criteria.Value.Value,
                     CurrencyCode = criteria.Value.Currency,
                     PaymentMethod = criteria.PaymentMethod.ToStringNormalized()
-                })?.ToList() ?? new List<PaymentMethodCriteriaData>()
+                }).ToList() ?? new List<PaymentMethodCriteriaData>()
             };
         }
 
@@ -163,8 +172,8 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             var blob = model.GetStoreBlob();
             model.StoreName = restModel.Name;
-            model.StoreName = restModel.Name;
             model.StoreWebsite = restModel.Website;
+            model.Archived = restModel.Archived;
             model.SpeedPolicy = restModel.SpeedPolicy;
             model.SetDefaultPaymentId(defaultPaymentMethod);
             //we do not include the default payment method in this model and instead opt to set it in the stores/storeid/payment-methods endpoints
@@ -176,7 +185,6 @@ namespace BTCPayServer.Controllers.Greenfield
             blob.NetworkFeeMode = restModel.NetworkFeeMode;
             blob.DefaultCurrency = restModel.DefaultCurrency;
             blob.RequiresRefundEmail = restModel.RequiresRefundEmail;
-            blob.CheckoutType = restModel.CheckoutType;
             blob.ReceiptOptions = InvoiceDataBase.ReceiptOptions.Merge(restModel.Receipt, null);
             blob.LightningAmountInSatoshi = restModel.LightningAmountInSatoshi;
             blob.LightningPrivateRouteHints = restModel.LightningPrivateRouteHints;
@@ -186,6 +194,7 @@ namespace BTCPayServer.Controllers.Greenfield
             blob.ShowRecommendedFee = restModel.ShowRecommendedFee;
             blob.RecommendedFeeBlockTarget = restModel.RecommendedFeeBlockTarget;
             blob.DefaultLang = restModel.DefaultLang;
+            blob.StoreSupportUrl = restModel.SupportUrl;
             blob.MonitoringExpiration = restModel.MonitoringExpiration;
             blob.InvoiceExpiration = restModel.InvoiceExpiration;
             blob.DisplayExpirationTimer = restModel.DisplayExpirationTimer;
@@ -196,11 +205,23 @@ namespace BTCPayServer.Controllers.Greenfield
             blob.LightningDescriptionTemplate = restModel.LightningDescriptionTemplate;
             blob.PaymentTolerance = restModel.PaymentTolerance;
             blob.PayJoinEnabled = restModel.PayJoinEnabled;
+            if (restModel.CheckoutType.HasValue)
+                blob.CheckoutType = restModel.CheckoutType.Value;
+            if (restModel.AutoDetectLanguage.HasValue)
+                blob.AutoDetectLanguage = restModel.AutoDetectLanguage.Value;
+            if (restModel.ShowPayInWalletButton.HasValue)
+                blob.ShowPayInWalletButton = restModel.ShowPayInWalletButton.Value;
+            if (restModel.ShowStoreHeader.HasValue)
+                blob.ShowStoreHeader = restModel.ShowStoreHeader.Value;
+            if (restModel.CelebratePayment.HasValue)
+                blob.CelebratePayment = restModel.CelebratePayment.Value;
+            if (restModel.PlaySoundOnPayment.HasValue)
+                blob.PlaySoundOnPayment = restModel.PlaySoundOnPayment.Value;
             blob.PaymentMethodCriteria = restModel.PaymentMethodCriteria?.Select(criteria =>
-                new PaymentMethodCriteria()
+                new PaymentMethodCriteria
                 {
                     Above = criteria.Above,
-                    Value = new CurrencyValue()
+                    Value = new CurrencyValue
                     {
                         Currency = criteria.CurrencyCode,
                         Value = criteria.Amount
@@ -238,7 +259,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 ModelState.AddModelError(nameof(request.DisplayExpirationTimer), "DisplayExpirationTimer can only be between 1 and 34560 mins");
             if (request.MonitoringExpiration < TimeSpan.FromMinutes(10) && request.MonitoringExpiration > TimeSpan.FromMinutes(60 * 24 * 24))
                 ModelState.AddModelError(nameof(request.MonitoringExpiration), "MonitoringExpiration can only be between 10 and 34560 mins");
-            if (request.PaymentTolerance < 0 && request.PaymentTolerance > 100)
+            if (request.PaymentTolerance < 0 || request.PaymentTolerance > 100)
                 ModelState.AddModelError(nameof(request.PaymentTolerance), "PaymentTolerance can only be between 0 and 100 percent");
 
             if (request.PaymentMethodCriteria?.Any() is true)

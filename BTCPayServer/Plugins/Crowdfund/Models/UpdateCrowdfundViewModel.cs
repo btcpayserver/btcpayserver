@@ -116,5 +116,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Models
 
         // NOTE: Improve validation if needed
         public bool ModelWithMinimumData => Description != null && Title != null && TargetCurrency != null;
+
+        public bool Archived { get; set; }
     }
 }

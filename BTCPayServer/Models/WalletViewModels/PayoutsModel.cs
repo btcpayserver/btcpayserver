@@ -26,7 +26,8 @@ namespace BTCPayServer.Models.WalletViewModels
             public bool Selected { get; set; }
             public DateTimeOffset Date { get; set; }
             public string PullPaymentId { get; set; }
-            public string PullPaymentName { get; set; }
+            public string Source { get; set; }
+            public string SourceLink { get; set; }
             public string Destination { get; set; }
             public string Amount { get; set; }
             public string ProofLink { get; set; }

@@ -1,5 +1,117 @@
 {
     "paths": {
+        "/api/v1/pull-payments/{pullPaymentId}/boltcards": {
+            "parameters": [
+                {
+                    "name": "pullPaymentId",
+                    "in": "path",
+                    "required": true,
+                    "description": "The ID of the pull payment",
+                    "schema": {
+                        "type": "string"
+                    }
+                }
+            ],
+            "post": {
+                "operationId": "PullPayments_LinkBoltcard",
+                "summary": "Link a boltcard to a pull payment",
+                "description": "Linking a boltcard to a pull payment will allow you to pay via NFC with it, the money will be sent from the pull payment. The boltcard keys are generated using [Deterministic Boltcard Key Generation](https://github.com/boltcard/boltcard/blob/main/docs/DETERMINISTIC.md).",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [ "UID" ],
+                                "type": "object",
+                                "properties": {
+                                    "UID": {
+                                        "type": "string",
+                                        "example": "46ab87ff36a3b7",
+                                        "description": "The `UID` of the NTag424",
+                                        "nullable": false
+                                    },
+                                    "onExisting": {
+                                        "type": "string",
+                                        "x-enumNames": [
+                                            "KeepVersion",
+                                            "UpdateVersion"
+                                        ],
+                                        "enum": [
+                                            "KeepVersion",
+                                            "UpdateVersion"
+                                        ],
+                                        "default": "UpdateVersion",
+                                        "description": "What to do if the boltcard is already linked.\n * `KeepVersion` will return the keys (K0-K4) that are already registered.\n * `UpdateVersion` will increment the version of the key, and thus return different keys (K0-K4). (See [Deterministic Boltcard Key Generation](https://github.com/boltcard/boltcard/blob/main/docs/DETERMINISTIC.md))"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The boltcard has been linked to the pull payment.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "LNURLW": {
+                                            "type": "string",
+                                            "description": "The lnurl withdraw of the server",
+                                            "example": "lnurlw://example.com/boltcard"
+                                        },
+                                        "version": {
+                                            "type": "number",
+                                            "description": "The version of the registration (See [Deterministic Boltcard Key Generation](https://github.com/boltcard/boltcard/blob/main/docs/DETERMINISTIC.md))"
+                                        },
+                                        "K0": {
+                                            "type": "string",
+                                            "description": "The public key K0 of the boltcard",
+                                            "example": "02a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b"
+                                        },
+                                        "K1": {
+                                            "type": "string",
+                                            "description": "The public key K1 of the boltcard",
+                                            "example": "02a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b"
+                                        },
+                                        "K2": {
+                                            "type": "string",
+                                            "description": "The public key K2 of the boltcard",
+                                            "example": "02a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b"
+                                        },
+                                        "K3": {
+                                            "type": "string",
+                                            "description": "The public key K3 of the boltcard",
+                                            "example": "02a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b"
+                                        },
+                                        "K4": {
+                                            "type": "string",
+                                            "description": "The public key K4 of the boltcard",
+                                            "example": "02a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b"
+                                        }
+
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "The pull payment has not been found. Wellknown error code is: `pullpayment-not-found`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    }
+                },
+                "tags": [
+                    "Pull payments (Public)"
+                ],
+                "security": []
+            }
+        },
         "/api/v1/stores/{storeId}/pull-payments": {
             "parameters": [
                 {
@@ -243,7 +355,7 @@
                 "security": [
                     {
                         "API_Key": [
-                            "btcpay.store.canmanagepullpayments"
+                            "btcpay.store.canarchivepullpayments"
                         ],
                         "Basic": []
                     }
@@ -455,7 +567,7 @@
                 }
             ],
             "post": {
-                "summary": "Create Payout ",
+                "summary": "Create Payout",
                 "description": "Create a new payout",
                 "operationId": "Payouts_CreatePayoutThroughStore",
                 "requestBody": {
@@ -883,9 +995,7 @@
                         "description": "The amount of the payout in the currency of the pull payment (eg. USD)."
                     },
                     "paymentMethod": {
-                        "type": "string",
-                        "example": "BTC",
-                        "description": "The payment method of the payout"
+                        "$ref": "#/components/schemas/PaymentMethodId"
                     }
                 }
             },
@@ -904,6 +1014,10 @@
                             "approved": {
                                 "type": "boolean",
                                 "description": "Whether to approve this payout automatically upon creation"
+                            },
+                            "metadata": {
+                                "type": "object",
+                                "description": "Additional metadata to store with the payout"
                             }
                         }
                     }
@@ -991,9 +1105,7 @@
                         "description": "The amount of the payout in the currency of the pull payment (eg. USD)."
                     },
                     "paymentMethod": {
-                        "type": "string",
-                        "example": "BTC",
-                        "description": "The payment method of the payout (e.g., \"BTC\" or \"BTC_LightningLike\""
+                        "$ref": "#/components/schemas/PaymentMethodId"
                     },
                     "cryptoCode": {
                         "type": "string",
@@ -1012,6 +1124,32 @@
                     },
                     "paymentProof": {
                         "$ref": "#/components/schemas/PayoutPaymentProof"
+                    },
+                    "metadata": {
+                        "type": "object",
+                        "additionalProperties": true,
+                        "description": "Additional information around the payout that can be supplied. The mentioned properties are all optional and you can introduce any json format you wish.",
+                        "example": {
+                            "source": "Payout created through the API"
+                        },
+                        "anyOf": [
+                            {
+                                "title": "General information",
+                                "properties": {
+                                    "source": {
+                                        "type": "string",
+                                        "nullable": true,
+                                        "description": "The source of the payout creation. Shown on the payout list page."
+                                    },
+                                    "sourceLink": {
+                                        "type": "string",
+                                        "format": "url",
+                                        "nullable": true,
+                                        "description": "A link to the source of the payout creation. Shown on the payout list page."
+                                    }
+                                }
+                            }
+                        ]
                     }
                 }
             },

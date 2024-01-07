@@ -20,6 +20,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json.Linq;
 using MarkPayoutRequest = BTCPayServer.HostedServices.MarkPayoutRequest;
 using PayoutData = BTCPayServer.Data.PayoutData;
 using PullPaymentData = BTCPayServer.Data.PullPaymentData;
@@ -27,7 +28,7 @@ using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Controllers
 {
-    [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    [Authorize(Policy = Policies.CanViewPullPayments, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     [AutoValidateAntiforgeryToken]
     public class UIStorePullPaymentsController : Controller
     {
@@ -38,6 +39,7 @@ namespace BTCPayServer.Controllers
         private readonly PullPaymentHostedService _pullPaymentService;
         private readonly ApplicationDbContextFactory _dbContextFactory;
         private readonly BTCPayNetworkJsonSerializerSettings _jsonSerializerSettings;
+        private readonly IAuthorizationService _authorizationService;
 
         public StoreData CurrentStore
         {
@@ -53,7 +55,8 @@ namespace BTCPayServer.Controllers
             DisplayFormatter displayFormatter,
             PullPaymentHostedService pullPaymentHostedService,
             ApplicationDbContextFactory dbContextFactory,
-            BTCPayNetworkJsonSerializerSettings jsonSerializerSettings)
+            BTCPayNetworkJsonSerializerSettings jsonSerializerSettings,
+            IAuthorizationService authorizationService)
         {
             _btcPayNetworkProvider = btcPayNetworkProvider;
             _payoutHandlers = payoutHandlers;
@@ -62,10 +65,11 @@ namespace BTCPayServer.Controllers
             _pullPaymentService = pullPaymentHostedService;
             _dbContextFactory = dbContextFactory;
             _jsonSerializerSettings = jsonSerializerSettings;
+            _authorizationService = authorizationService;
         }
 
         [HttpGet("stores/{storeId}/pull-payments/new")]
-        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+        [Authorize(Policy = Policies.CanCreateNonApprovedPullPayments, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> NewPullPayment(string storeId)
         {
             if (CurrentStore is null)
@@ -94,7 +98,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost("stores/{storeId}/pull-payments/new")]
-        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+        [Authorize(Policy = Policies.CanCreateNonApprovedPullPayments, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> NewPullPayment(string storeId, NewPullPaymentModel model)
         {
             if (CurrentStore is null)
@@ -134,6 +138,8 @@ namespace BTCPayServer.Controllers
             }
             if (!ModelState.IsValid)
                 return View(model);
+            model.AutoApproveClaims = model.AutoApproveClaims &&  (await
+                _authorizationService.AuthorizeAsync(User, storeId, Policies.CanCreatePullPayments)).Succeeded;
             await _pullPaymentService.CreatePullPayment(new HostedServices.CreatePullPayment()
             {
                 Name = model.Name,
@@ -247,7 +253,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("stores/{storeId}/pull-payments/{pullPaymentId}/archive")]
-        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+        [Authorize(Policy = Policies.CanArchivePullPayments, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public IActionResult ArchivePullPayment(string storeId,
             string pullPaymentId)
         {
@@ -256,11 +262,11 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost("stores/{storeId}/pull-payments/{pullPaymentId}/archive")]
-        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+        [Authorize(Policy = Policies.CanArchivePullPayments, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> ArchivePullPaymentPost(string storeId,
             string pullPaymentId)
         {
-            await _pullPaymentService.Cancel(new HostedServices.PullPaymentHostedService.CancelRequest(pullPaymentId));
+            await _pullPaymentService.Cancel(new PullPaymentHostedService.CancelRequest(pullPaymentId));
             TempData.SetStatusMessageModel(new StatusMessageModel()
             {
                 Message = "Pull payment archived",
@@ -269,7 +275,7 @@ namespace BTCPayServer.Controllers
             return RedirectToAction(nameof(PullPayments), new { storeId });
         }
 
-        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+        [Authorize(Policy = Policies.CanManagePayouts, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [HttpPost("stores/{storeId}/pull-payments/payouts")]
         [HttpPost("stores/{storeId}/pull-payments/{pullPaymentId}/payouts")]
         [HttpPost("stores/{storeId}/payouts")]
@@ -463,6 +469,7 @@ namespace BTCPayServer.Controllers
 
         [HttpGet("stores/{storeId}/pull-payments/{pullPaymentId}/payouts")]
         [HttpGet("stores/{storeId}/payouts")]
+        [Authorize(Policy = Policies.CanViewPayouts, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> Payouts(
             string storeId, string pullPaymentId, string paymentMethodId, PayoutState payoutState,
             int skip = 0, int count = 50)
@@ -529,10 +536,33 @@ namespace BTCPayServer.Controllers
             {
                 var ppBlob = item.PullPayment?.GetBlob();
                 var payoutBlob = item.Payout.GetBlob(_jsonSerializerSettings);
+                item.Payout.PullPaymentData = item.PullPayment;
+                string payoutSource = item.Payout.GetPayoutSource(_jsonSerializerSettings);
+                if (payoutBlob.Metadata?.TryGetValue("source", StringComparison.InvariantCultureIgnoreCase,
+                        out var source) is true)
+                {
+                    payoutSource = source.Value<string>();
+                }
+                else
+                {
+                    payoutSource = ppBlob?.Name ?? item.PullPayment?.Id;
+                }
+
+                string payoutSourceLink = null;
+                if (payoutBlob.Metadata?.TryGetValue("sourceLink", StringComparison.InvariantCultureIgnoreCase,
+                        out var sourceLink) is true)
+                {
+                    payoutSourceLink = sourceLink.Value<string>();
+                }
+                else if(item.PullPayment?.Id is not null)
+                {
+                    payoutSourceLink = Url.Action("ViewPullPayment", "UIPullPayment", new { pullPaymentId = item.PullPayment?.Id });
+                }
                 var m = new PayoutsModel.PayoutModel
                 {
                     PullPaymentId = item.PullPayment?.Id,
-                    PullPaymentName = ppBlob?.Name ?? item.PullPayment?.Id,
+                    Source = payoutSource,
+                    SourceLink = payoutSourceLink,
                     Date = item.Payout.Date,
                     PayoutId = item.Payout.Id,
                     Amount = _displayFormatter.Currency(payoutBlob.Amount, ppBlob?.Currency ?? PaymentMethodId.Parse(item.Payout.PaymentMethodId).CryptoCode),

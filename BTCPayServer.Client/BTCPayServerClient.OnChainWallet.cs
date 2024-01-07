@@ -55,7 +55,7 @@ namespace BTCPayServer.Client
         }
 
         public virtual async Task<IEnumerable<OnChainWalletTransactionData>> ShowOnChainWalletTransactions(
-            string storeId, string cryptoCode, TransactionStatus[] statusFilter = null, string labelFilter = null,
+            string storeId, string cryptoCode, TransactionStatus[] statusFilter = null, string labelFilter = null, int skip = 0,
             CancellationToken token = default)
         {
             var query = new Dictionary<string, object>();
@@ -66,6 +66,10 @@ namespace BTCPayServer.Client
             if (labelFilter != null)
             {
                 query.Add(nameof(labelFilter), labelFilter);
+            }
+            if (skip != 0)
+            {
+                query.Add(nameof(skip), skip);
             }
             var response =
                 await _httpClient.SendAsync(

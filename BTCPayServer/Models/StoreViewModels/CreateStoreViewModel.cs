@@ -5,6 +5,8 @@ namespace BTCPayServer.Models.StoreViewModels
 {
     public class CreateStoreViewModel
     {
+        public bool IsFirstStore { get; set; }
+        
         [Required]
         [MaxLength(50)]
         [MinLength(1)]

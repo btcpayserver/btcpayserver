@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
@@ -58,7 +59,7 @@ public class UILightningAutomatedPayoutProcessorsController : Controller
                 }))
             .FirstOrDefault();
 
-        return View(new LightningTransferViewModel(activeProcessor is null ? new AutomatedPayoutBlob() : OnChainAutomatedPayoutProcessor.GetBlob(activeProcessor)));
+        return View(new LightningTransferViewModel(activeProcessor is null ? new LightningAutomatedPayoutBlob() : LightningAutomatedPayoutProcessor.GetBlob(activeProcessor)));
     }
 
     [HttpPost("~/stores/{storeId}/payout-processors/lightning-automated/{cryptocode}")]
@@ -66,6 +67,8 @@ public class UILightningAutomatedPayoutProcessorsController : Controller
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> Configure(string storeId, string cryptoCode, LightningTransferViewModel automatedTransferBlob)
     {
+        if (!ModelState.IsValid)
+            return View(automatedTransferBlob);
         if (!_lightningAutomatedPayoutSenderFactory.GetSupportedPaymentMethods().Any(id =>
                 id.CryptoCode.Equals(cryptoCode, StringComparison.InvariantCultureIgnoreCase)))
         {
@@ -89,7 +92,7 @@ public class UILightningAutomatedPayoutProcessorsController : Controller
                 }))
             .FirstOrDefault();
         activeProcessor ??= new PayoutProcessorData();
-        activeProcessor.HasTypedBlob<AutomatedPayoutBlob>().SetBlob(automatedTransferBlob.ToBlob());
+        activeProcessor.HasTypedBlob<LightningAutomatedPayoutBlob>().SetBlob(automatedTransferBlob.ToBlob());
         activeProcessor.StoreId = storeId;
         activeProcessor.PaymentMethod = new PaymentMethodId(cryptoCode, LightningPaymentType.Instance).ToString();
         activeProcessor.Processor = _lightningAutomatedPayoutSenderFactory.Processor;
@@ -116,16 +119,26 @@ public class UILightningAutomatedPayoutProcessorsController : Controller
 
         }
 
-        public LightningTransferViewModel(AutomatedPayoutBlob blob)
+        public LightningTransferViewModel(LightningAutomatedPayoutBlob blob)
         {
             IntervalMinutes = blob.Interval.TotalMinutes;
+            CancelPayoutAfterFailures = blob.CancelPayoutAfterFailures;
+            ProcessNewPayoutsInstantly = blob.ProcessNewPayoutsInstantly;
         }
 
+        public bool ProcessNewPayoutsInstantly { get; set; }
+
+        public int? CancelPayoutAfterFailures { get; set; }
+
+        [Range(AutomatedPayoutConstants.MinIntervalMinutes, AutomatedPayoutConstants.MaxIntervalMinutes)]
         public double IntervalMinutes { get; set; }
 
-        public AutomatedPayoutBlob ToBlob()
+        public LightningAutomatedPayoutBlob ToBlob()
         {
-            return new AutomatedPayoutBlob { Interval = TimeSpan.FromMinutes(IntervalMinutes) };
+            return new LightningAutomatedPayoutBlob {
+                ProcessNewPayoutsInstantly = ProcessNewPayoutsInstantly,
+                Interval = TimeSpan.FromMinutes(IntervalMinutes), 
+                CancelPayoutAfterFailures = CancelPayoutAfterFailures};
         }
     }
 }

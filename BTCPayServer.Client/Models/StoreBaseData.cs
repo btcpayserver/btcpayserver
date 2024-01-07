@@ -16,6 +16,8 @@ namespace BTCPayServer.Client.Models
 
         public string Website { get; set; }
 
+        public string SupportUrl { get; set; }
+
         [JsonConverter(typeof(TimeSpanJsonConverter.Seconds))]
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public TimeSpan InvoiceExpiration { get; set; } = TimeSpan.FromMinutes(15);
@@ -35,13 +37,19 @@ namespace BTCPayServer.Client.Models
         public bool AnyoneCanCreateInvoice { get; set; }
         public string DefaultCurrency { get; set; }
         public bool RequiresRefundEmail { get; set; }
+
         [JsonConverter(typeof(StringEnumConverter))]
-        public CheckoutType CheckoutType { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public CheckoutType? CheckoutType { get; set; }
+
         public bool LightningAmountInSatoshi { get; set; }
         public bool LightningPrivateRouteHints { get; set; }
         public bool OnChainWithLnInvoiceFallback { get; set; }
         public bool LazyPaymentMethods { get; set; }
         public bool RedirectAutomatically { get; set; }
+
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public bool Archived { get; set; }
 
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public bool ShowRecommendedFee { get; set; } = true;
@@ -67,6 +75,17 @@ namespace BTCPayServer.Client.Models
         public List<PaymentMethodCriteriaData> PaymentMethodCriteria { get; set; }
 
         public bool PayJoinEnabled { get; set; }
+
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public bool? AutoDetectLanguage { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public bool? ShowPayInWalletButton { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public bool? ShowStoreHeader { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public bool? CelebratePayment { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public bool? PlaySoundOnPayment { get; set; }
 
         public InvoiceData.ReceiptOptions Receipt { get; set; }
 

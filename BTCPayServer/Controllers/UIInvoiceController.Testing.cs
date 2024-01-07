@@ -29,14 +29,17 @@ namespace BTCPayServer.Controllers
 
         [HttpPost("i/{invoiceId}/test-payment")]
         [CheatModeRoute]
-        public async Task<IActionResult> TestPayment(string invoiceId, FakePaymentRequest request, [FromServices] Cheater cheater)
+        public async Task<IActionResult> TestPayment(string invoiceId, FakePaymentRequest request, 
+            [FromServices] Cheater cheater, 
+            [FromServices] LightningClientFactoryService lightningClientFactoryService)
         {
             var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
             var store = await _StoreRepository.FindStore(invoice.StoreId);
             var isSats = request.CryptoCode.ToUpper(CultureInfo.InvariantCulture) == "SATS";
             var cryptoCode = isSats ? "BTC" : request.CryptoCode;
             var amount = new Money(request.Amount, isSats ? MoneyUnit.Satoshi : MoneyUnit.BTC);
-            var network = _NetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode).NBitcoinNetwork;
+            var btcpayNetwork = _NetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
+            var network = btcpayNetwork.NBitcoinNetwork;
             var paymentMethodId = new[] { store.GetDefaultPaymentId() }
                 .Concat(store.GetEnabledPaymentIds(_NetworkProvider))
                 .FirstOrDefault(p => p?.ToString() == request.PaymentMethodId);
@@ -55,14 +58,16 @@ namespace BTCPayServer.Controllers
                         return Ok(new
                         {
                             Txid = txid,
-                            AmountRemaining = (paymentMethod.Calculate().Due - amount).ToUnit(MoneyUnit.BTC),
+                            AmountRemaining = paymentMethod.Calculate().Due - amount.ToDecimal(MoneyUnit.BTC),
                             SuccessMessage = $"Created transaction {txid}"
                         });
 
                     case LightningPaymentType:
                         // requires the channels to be set up using the BTCPayServer.Tests/docker-lightning-channel-setup.sh script
-                        LightningConnectionString.TryParse(Environment.GetEnvironmentVariable("BTCPAY_BTCEXTERNALLNDREST"), false, out var lnConnection);
-                        var lnClient = LightningClientFactory.CreateClient(lnConnection, network);
+                        var lnClient = lightningClientFactoryService.Create(
+                            Environment.GetEnvironmentVariable("BTCPAY_BTCEXTERNALLNDREST"),
+                            btcpayNetwork);
+
                         var lnAmount = new LightMoney(amount.Satoshi, LightMoneyUnit.Satoshi);
                         var response = await lnClient.Pay(destination, new PayInvoiceParams { Amount = lnAmount });
 
@@ -70,11 +75,11 @@ namespace BTCPayServer.Controllers
                         {
                             var bolt11 = BOLT11PaymentRequest.Parse(destination, network);
                             var paymentHash = bolt11.PaymentHash?.ToString();
-                            var paid = new Money(response.Details.TotalAmount.ToUnit(LightMoneyUnit.Satoshi), MoneyUnit.Satoshi);
+                            var paid = response.Details.TotalAmount.ToDecimal(LightMoneyUnit.BTC);
                             return Ok(new
                             {
                                 Txid = paymentHash,
-                                AmountRemaining = (paymentMethod.Calculate().TotalDue - paid).ToUnit(MoneyUnit.BTC),
+                                AmountRemaining = paymentMethod.Calculate().TotalDue - paid,
                                 SuccessMessage = $"Sent payment {paymentHash}"
                             });
                         }

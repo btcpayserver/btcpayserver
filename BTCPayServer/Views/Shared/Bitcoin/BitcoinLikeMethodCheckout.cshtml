@@ -15,7 +15,7 @@
                     </div>
                 </div>
                 <div class="payment__details__instruction__open-wallet" v-if="srvModel.invoiceBitcoinUrl && srvModel.showPayInWalletButton">
-                    <a class="payment__details__instruction__open-wallet__btn action-button" target="_top" v-bind:href="srvModel.invoiceBitcoinUrl">
+                    <a class="payment__details__instruction__open-wallet__btn action-button" target="_blank" v-bind:href="srvModel.invoiceBitcoinUrl">
                         <span>{{$t("Open in wallet")}}</span>
                     </a>
                 </div>
@@ -79,7 +79,7 @@
 <script type="text/javascript">
     Vue.component('BitcoinLikeMethodCheckout',
         {
-            props: ["srvModel"],
+            props: ['srvModel', 'nfcSupported', 'nfcScanning', 'nfcErrorMessage'],
             template: "#bitcoin-method-checkout-template",
             components: {
                 qrcode: VueQrcode
@@ -107,7 +107,7 @@
     });
 
     Vue.component('BitcoinLikeMethodCheckoutHeader', {
-        props: ["srvModel"],
+        props: ['srvModel', 'nfcSupported', 'nfcScanning', 'nfcErrorMessage'],
         template: "#bitcoin-method-checkout-header-template",
         data: function() {
             return {

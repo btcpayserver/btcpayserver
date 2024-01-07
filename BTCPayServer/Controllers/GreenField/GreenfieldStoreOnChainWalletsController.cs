@@ -14,6 +14,7 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Models.WalletViewModels;
+using BTCPayServer.Payments;
 using BTCPayServer.Payments.PayJoin;
 using BTCPayServer.Payments.PayJoin.Sender;
 using BTCPayServer.Services;
@@ -54,6 +55,7 @@ namespace BTCPayServer.Controllers.Greenfield
         private readonly WalletReceiveService _walletReceiveService;
         private readonly IFeeProviderFactory _feeProviderFactory;
         private readonly UTXOLocker _utxoLocker;
+        private readonly TransactionLinkProviders _transactionLinkProviders;
 
         public GreenfieldStoreOnChainWalletsController(
             IAuthorizationService authorizationService,
@@ -69,7 +71,8 @@ namespace BTCPayServer.Controllers.Greenfield
             EventAggregator eventAggregator,
             WalletReceiveService walletReceiveService,
             IFeeProviderFactory feeProviderFactory,
-            UTXOLocker utxoLocker
+            UTXOLocker utxoLocker,
+            TransactionLinkProviders transactionLinkProviders
         )
         {
             _authorizationService = authorizationService;
@@ -86,6 +89,7 @@ namespace BTCPayServer.Controllers.Greenfield
             _walletReceiveService = walletReceiveService;
             _feeProviderFactory = feeProviderFactory;
             _utxoLocker = utxoLocker;
+            _transactionLinkProviders = transactionLinkProviders;
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -182,7 +186,8 @@ namespace BTCPayServer.Controllers.Greenfield
             [FromQuery] TransactionStatus[]? statusFilter = null,
             [FromQuery] string? labelFilter = null,
             [FromQuery] int skip = 0,
-            [FromQuery] int limit = int.MaxValue
+            [FromQuery] int limit = int.MaxValue,
+            CancellationToken cancellationToken = default
         )
         {
             if (IsInvalidWalletRequest(cryptoCode, out var network,
@@ -197,7 +202,7 @@ namespace BTCPayServer.Controllers.Greenfield
             if (statusFilter?.Any() is true || !string.IsNullOrWhiteSpace(labelFilter))
                 preFiltering = false;
             var txs = await wallet.FetchTransactionHistory(derivationScheme.AccountDerivation, preFiltering ? skip : 0,
-                preFiltering ? limit : int.MaxValue);
+                preFiltering ? limit : int.MaxValue, cancellationToken: cancellationToken);
             if (!preFiltering)
             {
                 var filteredList = new List<TransactionHistoryLine>(txs.Count);
@@ -311,6 +316,7 @@ namespace BTCPayServer.Controllers.Greenfield
             var utxos = await wallet.GetUnspentCoins(derivationScheme.AccountDerivation);
             var walletTransactionsInfoAsync = await _walletRepository.GetWalletTransactionsInfo(walletId,
                 utxos.SelectMany(GetWalletObjectsQuery.Get).Distinct().ToArray());
+            var pmi = new PaymentMethodId(cryptoCode, PaymentTypes.BTCLike);
             return Ok(utxos.Select(coin =>
                 {
                     walletTransactionsInfoAsync.TryGetValue(coin.OutPoint.Hash.ToString(), out var info1);
@@ -326,8 +332,7 @@ namespace BTCPayServer.Controllers.Greenfield
 #pragma warning disable CS0612 // Type or member is obsolete
                         Labels = info?.LegacyLabels ?? new Dictionary<string, LabelData>(),
 #pragma warning restore CS0612 // Type or member is obsolete
-                        Link = string.Format(CultureInfo.InvariantCulture, network.BlockExplorerLink,
-                            coin.OutPoint.Hash.ToString()),
+                        Link = _transactionLinkProviders.GetTransactionLink(pmi, coin.OutPoint.ToString()),
                         Timestamp = coin.Timestamp,
                         KeyPath = coin.KeyPath,
                         Confirmations = coin.Confirmations,
@@ -585,6 +590,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 {
                     await _delayedTransactionBroadcaster.Schedule(DateTimeOffset.UtcNow + TimeSpan.FromMinutes(2.0),
                         transaction, network);
+                    _payjoinClient.MinimumFeeRate = minRelayFee;
                     var payjoinPSBT = await _payjoinClient.RequestPayjoin(
                         new BitcoinUrlBuilder(signingContext.PayJoinBIP21, network.NBitcoinNetwork),
                         new PayjoinWallet(derivationScheme),

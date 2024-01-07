@@ -1,47 +1,25 @@
-Vue.directive('collapsible', {
-    bind: function (el, binding) {
-        el.classList.add('collapse');
-        el.classList[binding.value ? 'add' : 'remove']('show');
-        el.transitionDuration = 350;
-    },
-    update: function (el, binding) {
-        if (binding.oldValue !== binding.value){
-            if (binding.value) {
-                setTimeout(function () {
-                    el.classList.remove('collapse');
-                    const height = window.getComputedStyle(el).height;
-                    el.classList.add('collapsing');
-                    el.offsetHeight;
-                    el.style.height = height;
-                    setTimeout(function () {
-                        el.classList.remove('collapsing');
-                        el.classList.add('collapse');
-                        el.style.height = null;
-                        el.classList.add('show');
-                    }, el.transitionDuration)
-                }, 0);
-            } else {
-                el.style.height = window.getComputedStyle(el).height;
-                el.classList.remove('collapse');
-                el.classList.remove('show');
-                el.offsetHeight;
-                el.style.height = null;
-                el.classList.add('collapsing');
-                setTimeout(function () {
-                    el.classList.add('collapse');
-                    el.classList.remove('collapsing');
-                }, el.transitionDuration)
-            }
-        }
-    }
-});
-
 // These are the legacy states, see InvoiceEntity
 const STATUS_PAYABLE = ['new'];
 const STATUS_PAID = ['paid'];
 const STATUS_SETTLED = ['complete', 'confirmed'];
 const STATUS_INVALID =  ['expired', 'invalid'];
 const urlParams = new URLSearchParams(window.location.search);
+
+class NDEFReaderWrapper {
+    constructor() {
+        this.onreading = null;
+        this.onreadingerror = null;
+    }
+
+    async scan(opts) {
+        if (opts && opts.signal){
+            opts.signal.addEventListener('abort', () => {
+                window.parent.postMessage('nfc:abort', '*');
+            });
+        }
+        window.parent.postMessage('nfc:startScan', '*');
+    }
+}
 
 function computeStartingLanguage() {
     const lang = urlParams.get('lang')
@@ -83,7 +61,6 @@ Vue.use(VueI18next);
 const fallbackLanguage = 'en';
 const startingLanguage = computeStartingLanguage();
 const i18n = new VueI18next(i18next);
-const eventBus = new Vue();
 
 const PaymentDetails = {
     template: '#payment-details',
@@ -116,7 +93,18 @@ function initApp() {
                 paymentMethodId: null,
                 endData: null,
                 isModal: srvModel.isModal,
-                pollTimeoutID: null
+                pollTimeoutID: null,
+                paymentSound: null,
+                nfcReadSound: null,
+                errorSound: null,
+                nfc: {
+                    supported: 'NDEFReader' in window,
+                    scanning: false,
+                    submitting: false,
+                    errorMessage: null,
+                    permissionGranted: false,
+                    readerAbortController: null
+                }
             }
         },
         computed: {
@@ -132,6 +120,9 @@ function initApp() {
             isActive () {
                 return STATUS_PAYABLE.includes(this.srvModel.status);
             },
+            isPaidPartial () {
+                return this.btcPaid > 0 && this.btcDue > 0;
+            },
             showInfo () {
                 return this.showTimer || this.showPaymentDueInfo;
             },
@@ -139,7 +130,7 @@ function initApp() {
                 return this.isActive && this.remainingSeconds < this.srvModel.displayExpirationTimer;
             },
             showPaymentDueInfo () {
-                return this.btcPaid > 0 && this.btcDue > 0;
+                return this.isPaidPartial;
             },
             showRecommendedFee () {
                 return this.isActive && this.srvModel.showRecommendedFee && this.srvModel.feeRate;
@@ -224,7 +215,7 @@ function initApp() {
                 }
             }
         },
-        mounted () {
+        async mounted () {
             this.updateData(this.srvModel);
             this.updateTimer();
             if (this.isActive || this.isProcessing) {
@@ -233,8 +224,22 @@ function initApp() {
             if (this.isProcessing) {
                 this.listenForConfirmations();
             }
+            if (this.srvModel.paymentSoundUrl) {
+                this.prepareSound(this.srvModel.paymentSoundUrl).then(sound => this.paymentSound = sound);
+                this.prepareSound(this.srvModel.nfcReadSoundUrl).then(sound => this.nfcReadSound = sound);
+                this.prepareSound(this.srvModel.errorSoundUrl).then(sound => this.errorSound = sound);
+            }
+            if (this.nfc.supported) {
+                await this.setupNFC();
+            }
             updateLanguageSelect();
+            
             window.parent.postMessage('loaded', '*');
+        },
+        beforeDestroy () {
+            if (this.nfc.readerAbortController) {
+                this.nfc.readerAbortController.abort()
+            }
         },
         methods: {
             changePaymentMethod (id) { // payment method or plugin id
@@ -262,6 +267,7 @@ function initApp() {
                 }
             },
             listenIn () {
+                const self = this;
                 let socket = null;
                 const updateFn = this.fetchData;
                 const supportsWebSockets = 'WebSocket' in window && window.WebSocket.CLOSING === 2;
@@ -275,6 +281,9 @@ function initApp() {
                         };
                         socket.onerror = function (e) {
                             console.error('Error while connecting to websocket for invoice notifications (callback):', e);
+                        };
+                        socket.onclose = function () {
+                            self.pollUpdates(2000, socket);
                         };
                     }
                     catch (e) {
@@ -320,19 +329,33 @@ function initApp() {
                     const { status } = data;
                     window.parent.postMessage({ invoiceId, status }, '*');
                 }
-                
                 const newEnd = new Date();
                 newEnd.setSeconds(newEnd.getSeconds() + data.expirationSeconds);
                 this.endDate = newEnd;
     
                 // updating ui
                 this.srvModel = data;
-                eventBus.$emit('data-fetched', this.srvModel);
             },
             replaceNewlines (value) {
                 return value ? value.replace(/\n/ig, '<br>') : '';
             },
+            playSound (soundName) {
+                // sound
+                const sound = this[soundName + 'Sound'];
+                if (sound && !sound.playing) {
+                    const { audioContext, audioBuffer } = sound;
+                    const source = audioContext.createBufferSource();
+                    source.onended = () => { sound.playing = false; };
+                    source.buffer = audioBuffer;
+                    source.connect(audioContext.destination);
+                    source.start();
+                    sound.playing = true;
+                }
+            },
             async celebratePayment (duration) {
+                // sound
+                this.playSound('payment')
+                // confetti
                 const $confettiEl = document.getElementById('confetti')
                 if (window.confetti && $confettiEl && !$confettiEl.dataset.running) {
                     $confettiEl.dataset.running = true;
@@ -344,6 +367,83 @@ function initApp() {
                         colors: ["#a864fd", "#29cdff", "#78ff44", "#ff718d", "#fdff6a"]
                     });
                     delete $confettiEl.dataset.running;
+                }
+            },
+            async prepareSound (url) {
+                const audioContext = new AudioContext();
+                const response = await fetch(url)
+                if (!response.ok) return console.error(`Could not load payment sound, HTTP error ${response.status}`);
+                const arrayBuffer = await response.arrayBuffer();
+                const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+                return { audioContext, audioBuffer, playing: false };
+            },
+            async setupNFC () {
+                try {
+                    this.$set(this.nfc, 'permissionGranted', navigator.permissions && (await navigator.permissions.query({ name: 'nfc' })).state === 'granted');
+                } catch (e) {}
+                if (this.nfc.permissionGranted) {
+                    await this.startNFCScan();
+                }
+            },
+            async startNFCScan () {
+                if (this.nfc.scanning) return;
+                this.$set(this.nfc, 'scanning', true);
+                try {
+                    const inModal = window.self !== window.top;
+                    const ndef = inModal ? new NDEFReaderWrapper() : new NDEFReader();
+                    this.nfc.readerAbortController = new AbortController()
+                    this.nfc.readerAbortController.signal.onabort = () => {
+                        this.$set(this.nfc, 'scanning', false);
+                    };
+
+                    await ndef.scan({ signal: this.nfc.readerAbortController.signal })
+                    ndef.onreadingerror = () => this.reportNfcError('Could not read NFC tag')
+                    ndef.onreading = async ({ message }) => {
+                        const record = message.records[0]
+                        const textDecoder = new TextDecoder('utf-8')
+                        const decoded = textDecoder.decode(record.data)
+                        this.$emit('read-nfc-data', decoded)
+                    }
+
+                    if (inModal) {
+                        // receive messages from iframe
+                        window.addEventListener('message', async event => {
+                            // deny messages from other origins
+                            if (event.origin !== window.location.origin) return
+
+                            const { action, data } = event.data
+                            switch (action) {
+                                case 'nfc:data':
+                                    this.$emit('read-nfc-data', data)
+                                    break;
+                                case 'nfc:error':
+                                    this.handleNFCError('Could not read NFC tag')
+                                    break;
+                            }
+                        });
+                    }
+
+                    // we came here, so the user must have allowed NFC access
+                    this.$set(this.nfc, 'permissionGranted', true);
+                } catch (error) {
+                    this.handleNFCError(`NFC scan failed: ${error}`);
+                }
+            },
+            handleNFCData() { // child component reports it is handling the data
+                this.playSound('nfcRead');
+                this.$set(this.nfc, 'submitting', true);
+                this.$set(this.nfc, 'errorMessage', null);
+            },
+            handleNFCResult() { // child component reports result for handling the data
+                this.$set(this.nfc, 'submitting', false);
+            },
+            handleNFCError(message) { // internal or via child component reporting failure of handling the data
+                this.playSound('error');
+                this.$set(this.nfc, 'submitting', false);
+                this.$set(this.nfc, 'errorMessage', message);
+                const $nfc = document.getElementById('NFC');
+                if ($nfc) {
+                    $nfc.scrollIntoView({ block: 'end', inline: 'center', behavior: 'smooth' });
                 }
             }
         }

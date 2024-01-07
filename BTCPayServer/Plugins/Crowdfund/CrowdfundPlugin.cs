@@ -8,6 +8,7 @@ using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Abstractions.Services;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
+using BTCPayServer.Models;
 using BTCPayServer.Plugins.Crowdfund.Controllers;
 using BTCPayServer.Plugins.Crowdfund.Models;
 using BTCPayServer.Plugins.PointOfSale;
@@ -15,7 +16,7 @@ using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
-using Ganss.XSS;
+using Ganss.Xss;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -74,14 +75,14 @@ namespace BTCPayServer.Plugins.Crowdfund
         public Task<SalesStats> GetSalesStats(AppData app, InvoiceEntity[] paidInvoices, int numberOfDays)
         {
             var cfS = app.GetSettings<CrowdfundSettings>();
-            var items = AppService.Parse(_htmlSanitizer, _displayFormatter, cfS.PerksTemplate, cfS.TargetCurrency);
+            var items = AppService.Parse( cfS.PerksTemplate);
             return AppService.GetSalesStatswithPOSItems(items, paidInvoices, numberOfDays);
         }
 
         public Task<IEnumerable<ItemStats>> GetItemStats(AppData appData, InvoiceEntity[] paidInvoices)
         {
             var settings = appData.GetSettings<CrowdfundSettings>();
-            var perks = AppService.Parse(_htmlSanitizer, _displayFormatter, settings.PerksTemplate, settings.TargetCurrency);
+            var perks = AppService.Parse( settings.PerksTemplate);
             var perkCount = paidInvoices
                 .Where(entity => entity.Currency.Equals(settings.TargetCurrency, StringComparison.OrdinalIgnoreCase) &&
                                  // we need the item code to know which perk it is and group by that
@@ -89,15 +90,7 @@ namespace BTCPayServer.Plugins.Crowdfund
                 .GroupBy(entity => entity.Metadata.ItemCode)
                 .Select(entities =>
                 {
-                    var total = entities
-                        .Sum(entity => entity.GetPayments(true)
-                            .Sum(pay =>
-                            {
-                                var paymentMethodId = pay.GetPaymentMethodId();
-                                var value = pay.GetCryptoPaymentData().GetValue() - pay.NetworkFee;
-                                var rate = entity.GetPaymentMethod(paymentMethodId).Rate;
-                                return rate * value;
-                            }));
+                    var total = entities.Sum(entity => entity.PaidAmount.Net);
                     var itemCode = entities.Key;
                     var perk = perks.FirstOrDefault(p => p.Id == itemCode);
                     return new ItemStats
@@ -167,16 +160,10 @@ namespace BTCPayServer.Plugins.Crowdfund
                                      !string.IsNullOrEmpty(entity.Metadata.ItemCode))
                     .GroupBy(entity => entity.Metadata.ItemCode)
                     .ToDictionary(entities => entities.Key, entities =>
-                        entities.Sum(entity => entity.GetPayments(true).Sum(pay =>
-                        {
-                            var paymentMethodId = pay.GetPaymentMethodId();
-                            var value = pay.GetCryptoPaymentData().GetValue() - pay.NetworkFee;
-                            var rate = entity.GetPaymentMethod(paymentMethodId).Rate;
-                            return rate * value;
-                        })));
+                        entities.Sum(entity => entity.PaidAmount.Net));
             }
 
-            var perks = AppService.GetPOSItems(_htmlSanitizer, _displayFormatter, settings.PerksTemplate, settings.TargetCurrency);
+            var perks = AppService.Parse( settings.PerksTemplate, false);
             if (settings.SortPerksByPopularity)
             {
                 var ordered = perkCount.OrderByDescending(pair => pair.Value);
@@ -191,19 +178,19 @@ namespace BTCPayServer.Plugins.Crowdfund
 
             var store = appData.StoreData;
             var storeBlob = store.GetStoreBlob();
-
+            var storeBranding = new StoreBrandingViewModel(storeBlob)
+            {
+                CustomCSSLink = settings.CustomCSSLink,
+                EmbeddedCSS = settings.EmbeddedCSS
+            };
             return new ViewCrowdfundViewModel
             {
                 Title = settings.Title,
                 Tagline = settings.Tagline,
                 Description = settings.Description,
-                CustomCSSLink = settings.CustomCSSLink,
                 MainImageUrl = settings.MainImageUrl,
-                EmbeddedCSS = settings.EmbeddedCSS,
                 StoreName = store.StoreName,
-                CssFileId = storeBlob.CssFileId,
-                LogoFileId = storeBlob.LogoFileId,
-                BrandColor = storeBlob.BrandColor,
+                StoreBranding = storeBranding,
                 StoreId = appData.StoreDataId,
                 AppId = appData.Id,
                 StartDate = settings.StartDate?.ToUniversalTime(),

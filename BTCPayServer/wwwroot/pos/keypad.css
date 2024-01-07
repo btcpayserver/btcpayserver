@@ -1,0 +1,121 @@
+#PosKeypad {
+    --wrap-max-width: 500px;
+    overflow: hidden;
+    position: relative;
+}
+
+#RecentTransactionsToggle {
+    position: absolute;
+    top: var(--btcpay-space-l);
+    left: var(--btcpay-space-m);
+    z-index: 1;
+}
+
+#RecentTransactionsToggle .icon {
+    --btn-icon-size: 2.25em;
+}
+#RecentTransactionsRefresh[disabled] .icon {
+    animation: 1.25s linear infinite spinner-border;
+}
+#RecentTransactions .list-group {
+    margin: calc(var(--btcpay-modal-padding) * -1);
+    width: calc(100% + var(--btcpay-modal-padding) * 2);
+}
+
+#RecentTransactions .list-group-item {
+    background-color: transparent;
+}
+
+#RecentTransactions .list-group .badge-container {
+    flex: 0 0 5.125rem;
+    text-align: right;
+}
+
+@media (max-width: 359px) {
+    #RecentTransactions .list-group .badge-container {
+        flex-grow: 1;
+    }
+}
+
+/* modes */
+#ModeTabs {
+    min-height: 2.75rem;
+}
+
+/* keypad */
+.keypad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+}
+.keypad .btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    position: relative;
+    border-radius: 0;
+    border-color: transparent !important;
+    font-weight: var(--btcpay-font-weight-semibold);
+    font-size: 24px;
+    min-height: 3.5rem;
+    height: 8vh;
+    max-height: 6rem;
+    color: var(--btcpay-body-text);
+}
+.keypad .btn[data-key="+"] {
+    font-size: 2.25em;
+}
+.btcpay-pills label,
+.btn-secondary.rounded-pill {
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+/* make borders collapse by shifting rows and columns by 1px */
+/* second column */
+.keypad .btn:nth-child(3n-1) {
+    margin-left: -1px;
+}
+/* third column */
+.keypad .btn:nth-child(3n) {
+    margin-left: -1px;
+}
+/* from second row downwards */
+.keypad .btn:nth-child(n+4) {
+    margin-top: -1px;
+}
+/* ensure highlighted button is topmost */
+.keypad .btn:hover,
+.keypad .btn:focus,
+.keypad .btn:active {
+    z-index: 1;
+}
+
+#Calculation {
+    min-height: 1.5rem;
+}
+
+@media (max-height: 700px) {
+    .store-header {
+        display: none !important;
+    }
+}
+@media (max-width: 575px) {
+    #PosKeypad {
+        --wrap-padding-horizontal: 0;
+        overflow: hidden;
+    }
+    .keypad {
+        margin-left: -1px;
+        margin-right: -1px;
+    }
+    .store-footer {
+        display: none !important;
+    }
+}
+/* fix sticky hover effect on mobile browsers */
+@media (hover: none) {
+    .actions .btn-secondary:hover {
+        border-color: var(--btcpay-secondary-border-active) !important;
+    }
+}

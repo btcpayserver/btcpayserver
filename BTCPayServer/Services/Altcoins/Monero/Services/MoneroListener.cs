@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Events;
 using BTCPayServer.Payments;
+using BTCPayServer.Plugins.Altcoins;
 using BTCPayServer.Services.Altcoins.Monero.Configuration;
 using BTCPayServer.Services.Altcoins.Monero.Payments;
 using BTCPayServer.Services.Altcoins.Monero.RPC;
@@ -119,16 +120,16 @@ namespace BTCPayServer.Services.Altcoins.Monero.Services
         private async Task ReceivedPayment(InvoiceEntity invoice, PaymentEntity payment)
         {
             _logger.LogInformation(
-                $"Invoice {invoice.Id} received payment {payment.GetCryptoPaymentData().GetValue()} {payment.GetCryptoCode()} {payment.GetCryptoPaymentData().GetPaymentId()}");
+                $"Invoice {invoice.Id} received payment {payment.GetCryptoPaymentData().GetValue()} {payment.Currency} {payment.GetCryptoPaymentData().GetPaymentId()}");
             var paymentData = (MoneroLikePaymentData)payment.GetCryptoPaymentData();
             var paymentMethod = invoice.GetPaymentMethod(payment.Network, MoneroPaymentType.Instance);
             if (paymentMethod != null &&
                 paymentMethod.GetPaymentMethodDetails() is MoneroLikeOnChainPaymentMethodDetails monero &&
                 monero.Activated && 
                 monero.GetPaymentDestination() == paymentData.GetDestination() &&
-                paymentMethod.Calculate().Due > Money.Zero)
+                paymentMethod.Calculate().Due > 0.0m)
             {
-                var walletClient = _moneroRpcProvider.WalletRpcClients[payment.GetCryptoCode()];
+                var walletClient = _moneroRpcProvider.WalletRpcClients[payment.Currency];
 
                 var address = await walletClient.SendCommandAsync<CreateAddressRequest, CreateAddressResponse>(
                     "create_address",

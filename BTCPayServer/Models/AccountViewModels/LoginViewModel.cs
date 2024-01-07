@@ -14,7 +14,7 @@ namespace BTCPayServer.Models.AccountViewModels
         public string Password { get; set; }
         public string LoginCode { get; set; }
 
-        [Display(Name = "Remember me?")]
+        [Display(Name = "Remember me")]
         public bool RememberMe { get; set; }
     }
 }

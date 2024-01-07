@@ -1,7 +1,4 @@
-@using BTCPayServer.Client.Models
-@using Microsoft.AspNetCore.Mvc.TagHelpers
 @using BTCPayServer.Client
-@using BTCPayServer.Abstractions.TagHelpers
 @model InvoiceDetailsModel
 @{
     ViewData["Title"] = $"Invoice {Model.Id}";
@@ -10,38 +7,33 @@
 @section PageHeadContent {
     <meta name="robots" content="noindex,nofollow">
     <style>
-        #posData td > table:last-child { margin-bottom: 0 !important; }
-        #posData table > tbody > tr:first-child > td > h4 { margin-top: 0 !important; }
-        .invoice-information { display: flex; flex-wrap: wrap; gap: var(--btcpay-space-xl) var(--btcpay-space-xxl); }
+        #posData td > table:last-child {
+            margin-bottom: 0 !important;
+        }
+
+        #posData table > tbody > tr:first-child > td > h4 {
+            margin-top: 0 !important;
+        }
+
+        .invoice-information {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--btcpay-space-xl) var(--btcpay-space-xxl);
+        }
+
+        .invoice-information > div {
+            max-width: 540px;
+        }
+
+        .invoice-information > div table th {
+            width: 200px;
+            font-weight: var(--btcpay-font-weight-semibold);
+        }
     </style>
 }
 
 @section PageFootContent {
     <script>
-        const alertClasses = { "Settled (marked)": 'success', "Invalid (marked)": 'danger' }
-        
-        function changeInvoiceState(invoiceId, newState) {
-            console.log(invoiceId, newState)
-            const toggleButton = $("#markStatusDropdownMenuButton");
-            toggleButton.attr("disabled", "disabled");
-
-            $.post(`${invoiceId}/changestate/${newState}`)
-                .done(({ statusString }) => {
-                    const alertClass = alertClasses[statusString];
-                    toggleButton.replaceWith(`<span class="fs-6 fw-normal badge bg-${alertClass}">${statusString} <span class="fa fa-check"></span></span>`);
-                })
-                .fail(function () {
-                    toggleButton.removeAttr("disabled");
-                    alert("Invoice state update failed");
-                });
-        }
-        
-        delegate('click', '[data-change-invoice-status-button]', e => {
-            const button = e.target.closest('[data-change-invoice-status-button]')
-            const { id, status } = button.dataset
-            changeInvoiceState(id, status)
-        })
-        
         const handleRefundResponse = async response => {
             const modalBody = document.querySelector('#RefundModal .modal-body')
             if (response.ok && response.redirected) {
@@ -52,14 +44,14 @@
                 modalBody.innerHTML = '<div class="alert alert-danger" role="alert">Failed to load refund options.</div>'
             }
         }
-        
+
         delegate('click', '#IssueRefund', async e => {
             e.preventDefault()
             const { href: url } = e.target
             const response = await fetch(url)
             await handleRefundResponse(response)
         })
-        
+
         delegate('submit', '#RefundForm', async e => {
             e.preventDefault()
             const form = e.target
@@ -68,6 +60,91 @@
             const response = await fetch(url, { method, body })
             await handleRefundResponse(response)
         })
+
+        function checkCustomAmount() {
+            const $refundForm = document.getElementById('RefundForm');
+            const currency = $refundForm.querySelector('#CustomCurrency').value;
+            const cryptoCode = $refundForm.querySelector('#CryptoCode').value;
+            const invoiceCurrency = $refundForm.querySelector('#InvoiceCurrency').value;
+            const amount = parseFloat($refundForm.querySelector('#CustomAmount').value);
+            const fiatAmount = parseFloat($refundForm.querySelector('#FiatAmount').value);
+            const cryptoAmountNow = parseFloat($refundForm.querySelector('#CryptoAmountNow').value);
+            const cryptoAmountThen = parseFloat($refundForm.querySelector('#CryptoAmountThen').value);
+
+            let isOverpaying = false;
+            if (currency === cryptoCode) {
+                isOverpaying = amount > Math.max(cryptoAmountNow, cryptoAmountThen);
+            } else if (currency === invoiceCurrency) {
+                isOverpaying = amount > fiatAmount;
+            }
+            document.getElementById('CustomAmountWarning').hidden = !isOverpaying;
+        }
+        delegate('change', '#CustomAmount', checkCustomAmount);
+        delegate('change', '#CustomCurrency', checkCustomAmount);
+
+        function updateSubtractPercentageResult() {
+            const $refundForm = document.getElementById('RefundForm');
+            const $result = document.getElementById('SubtractPercentageResult');
+            const $selectedRefundOption = $refundForm.querySelector('[name="SelectedRefundOption"]:checked');
+            if (!$selectedRefundOption) {
+                $result.hidden = true;
+                return;
+            }
+
+            const refundOption = $selectedRefundOption.value;
+            const cryptoCode = $refundForm.querySelector('#CryptoCode').value;
+            const customCurrency = $refundForm.querySelector('#CustomCurrency').value;
+            const invoiceCurrency = $refundForm.querySelector('#InvoiceCurrency').value;
+            const customAmount = parseFloat($refundForm.querySelector('#CustomAmount').value);
+            const fiatAmount = parseFloat($refundForm.querySelector('#FiatAmount').value);
+            const overpaidAmount = parseFloat($refundForm.querySelector('#OverpaidAmount').value);
+            const cryptoAmountNow = parseFloat($refundForm.querySelector('#CryptoAmountNow').value);
+            const cryptoAmountThen = parseFloat($refundForm.querySelector('#CryptoAmountThen').value);
+            const cryptoDivisibility = parseInt($refundForm.querySelector('#CryptoDivisibility').value);
+            const invoiceDivisibility = parseInt($refundForm.querySelector('#InvoiceDivisibility').value);
+            const percentage = parseFloat($refundForm.querySelector('#SubtractPercentage').value);
+            const isInvalid = isNaN(percentage);
+
+            let amount = null;
+            let currency = cryptoCode;
+            let divisibility = cryptoDivisibility;
+            switch (refundOption) {
+                case 'RateThen':
+                    amount = cryptoAmountThen;
+                    break;
+                case 'CurrentRate':
+                    amount = cryptoAmountNow;
+                    break;
+                case 'OverpaidAmount':
+                    amount = overpaidAmount;
+                    break;
+                case 'Fiat':
+                    amount = fiatAmount;
+                    currency = invoiceCurrency;
+                    divisibility = invoiceDivisibility;
+                    break;
+                case 'Custom':
+                    amount = customAmount;
+                    currency = customCurrency;
+                    divisibility = customCurrency === invoiceCurrency ? invoiceDivisibility : cryptoDivisibility;
+                    break;
+            }
+
+            if (amount == null || isInvalid) {
+                $result.hidden = true;
+                return;
+            }
+
+            console.log({ refundOption, isInvalid, amount, currency })
+            const reduceByAmount = (amount * (percentage / 100));
+            const refundAmount = (amount - reduceByAmount).toFixed(divisibility);
+            $result.innerText = `= ${refundAmount} ${currency} refund`;
+            $result.hidden = false;
+        }
+        delegate('change', '[name="SelectedRefundOption"]', updateSubtractPercentageResult);
+        delegate('change', '#SubtractPercentage', updateSubtractPercentageResult);
+        delegate('change', '#CustomCurrency', updateSubtractPercentageResult);
+        delegate('change', '#CustomAmount', updateSubtractPercentageResult);
     </script>
 }
 
@@ -79,7 +156,7 @@
                 <div class="modal-header">
                     <h4 class="modal-title" id="RefundTitle">Issue Refund</h4>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
-                        <vc:icon symbol="close"/>
+                        <vc:icon symbol="close" />
                     </button>
                 </div>
                 <div class="modal-body">
@@ -92,7 +169,6 @@
     </div>
 }
 
-<div class="sticky-header-setup"></div>
 <div class="sticky-header d-flex flex-wrap gap-3 align-items-center justify-content-between">
     <h2 class="mb-0 text-break">@ViewData["Title"]</h2>
     <div class="d-flex flex-wrap gap-3 d-print-none">
@@ -127,7 +203,7 @@
     </div>
 </div>
 
-<partial name="_StatusMessage"/>
+<partial name="_StatusMessage" />
 
 <div class="invoice-details">
     <div class="invoice-information mb-5">
@@ -135,19 +211,19 @@
             <h3 class="mb-3">General Information</h3>
             <table class="table mb-0">
                 <tr>
-                    <th class="fw-semibold">Store</th>
+                    <th>Store</th>
                     <td>
                         <a href="@Model.StoreLink" rel="noreferrer noopener">@Model.StoreName</a>
                     </td>
                 </tr>
                 <tr>
-                    <th class="fw-semibold">Invoice Id</th>
+                    <th>Invoice Id</th>
                     <td>@Model.Id</td>
                 </tr>
                 @if (!string.IsNullOrEmpty(Model.TypedMetadata.OrderId))
                 {
                     <tr>
-                        <th class="fw-semibold">Order Id</th>
+                        <th>Order Id</th>
                         <td>
                             @if (!string.IsNullOrEmpty(Model.TypedMetadata.OrderUrl))
                             {
@@ -172,67 +248,43 @@
                 @if (Model.TypedMetadata.PaymentRequestId is not null)
                 {
                     <tr>
-                        <th class="fw-semibold">Payment Request Id</th>
+                        <th>Payment Request Id</th>
                         <td>
                             <a href="@Model.PaymentRequestLink" rel="noreferrer noopener">@Model.TypedMetadata.PaymentRequestId</a>
                         </td>
                     </tr>
                 }
                 <tr>
-                    <th class="fw-semibold">State</th>
+                    <th>State</th>
                     <td>
-                        @if (Model.CanMarkStatus)
-                        {
-                            <div class="dropdown changeInvoiceStateToggle">
-                                <button class="btn btn-secondary btn-sm dropdown-toggle py-1 px-2" type="button" id="markStatusDropdownMenuButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                    @Model.State
-                                </button>
-                                <div class="dropdown-menu" aria-labelledby="markStatusDropdownMenuButton">
-                                    @if (Model.CanMarkInvalid)
-                                    {
-                                        <button type="button" class="dropdown-item lh-base changeInvoiceState" data-id="@Model.Id" data-status="invalid" data-change-invoice-status-button>
-                                            Mark as invalid
-                                        </button>
-                                    }
-                                    @if (Model.CanMarkSettled)
-                                    {
-                                        <button type="button" class="dropdown-item lh-base changeInvoiceState" href="#" data-id="@Model.Id" data-status="settled" data-change-invoice-status-button>
-                                            Mark as settled
-                                        </button>
-                                    }
-                                </div>
-                            </div>
-                        }
-                        else
-                        {
-                            @Model.State
-                        }
+                        <vc:invoice-status invoice-id="@Model.Id" state="Model.State" payments="Model.Payments"
+                           is-archived="Model.Archived" has-refund="Model.HasRefund" />
                     </td>
                 </tr>
                 <tr>
-                    <th class="fw-semibold">Created Date</th>
+                    <th>Created Date</th>
                     <td>@Model.CreatedDate.ToBrowserDate()</td>
                 </tr>
                 <tr>
-                    <th class="fw-semibold">Expiration Date</th>
+                    <th>Expiration Date</th>
                     <td>@Model.ExpirationDate.ToBrowserDate()</td>
                 </tr>
                 <tr>
-                    <th class="fw-semibold">Monitoring Date</th>
+                    <th>Monitoring Date</th>
                     <td>@Model.MonitoringDate.ToBrowserDate()</td>
                 </tr>
                 <tr>
-                    <th class="fw-semibold">Transaction Speed</th>
+                    <th>Transaction Speed</th>
                     <td>@Model.TransactionSpeed</td>
                 </tr>
                 <tr>
-                    <th class="fw-semibold">Total Fiat Due</th>
-                    <td>@Model.Fiat</td>
+                    <th>Total Amount Due</th>
+                    <td><span data-sensitive>@Model.Fiat</span></td>
                 </tr>
                 @if (!string.IsNullOrEmpty(Model.RefundEmail))
                 {
                     <tr>
-                        <th class="fw-semibold">Refund Email</th>
+                        <th>Refund Email</th>
                         <td>
                             <a href="mailto:@Model.RefundEmail">@Model.RefundEmail</a>
                         </td>
@@ -241,14 +293,14 @@
                 @if (!string.IsNullOrEmpty(Model.NotificationUrl))
                 {
                     <tr>
-                        <th class="fw-semibold">Notification Url</th>
+                        <th>Notification Url</th>
                         <td>@Model.NotificationUrl</td>
                     </tr>
                 }
                 @if (!string.IsNullOrEmpty(Model.RedirectUrl))
                 {
                     <tr>
-                        <th class="fw-semibold">Redirect Url</th>
+                        <th>Redirect Url</th>
                         <td>
                             <a href="@Model.RedirectUrl" rel="noreferrer noopener">@Model.RedirectUrl</a>
                         </td>
@@ -257,70 +309,71 @@
             </table>
         </div>
         <div class="d-flex flex-column gap-5">
-			@if (!string.IsNullOrEmpty(Model.TypedMetadata.ItemCode) ||
-				 !string.IsNullOrEmpty(Model.TypedMetadata.ItemDesc) ||
-				 Model.TypedMetadata.TaxIncluded is not null)
-			{
-                <div>
-					<h3 class="mb-3">
-						<span>Product Information</span>
-						<a href="https://docs.btcpayserver.org/Development/InvoiceMetadata/" target="_blank" rel="noreferrer noopener">
-							<vc:icon symbol="info" />
-						</a>
-					</h3>
-					<table class="table mb-0">
-						@if (!string.IsNullOrEmpty(Model.TypedMetadata.ItemCode))
-						{
-							<tr>
-								<th class="fw-semibold">Item code</th>
-								<td>@Model.TypedMetadata.ItemCode</td>
-							</tr>
-						}
-						@if (!string.IsNullOrEmpty(Model.TypedMetadata.ItemDesc))
-						{
-							<tr>
-								<th class="fw-semibold">Item Description</th>
-								<td>@Model.TypedMetadata.ItemDesc</td>
-							</tr>
-						}
-						@if (Model.TaxIncluded is not null)
-						{
-							<tr>
-								<th class="fw-semibold">Tax Included</th>
-								<td>@Model.TaxIncluded</td>
-							</tr>
-						}
-					</table>
-		       </div>
-			}
-            @if (Model.TypedMetadata.BuyerName is not null ||
-                 Model.TypedMetadata.BuyerEmail is not null ||
-                 Model.TypedMetadata.BuyerPhone is not null ||
-                 Model.TypedMetadata.BuyerAddress1 is not null ||
-                 Model.TypedMetadata.BuyerAddress2 is not null ||
-                 Model.TypedMetadata.BuyerCity is not null ||
-                 Model.TypedMetadata.BuyerState is not null ||
-                 Model.TypedMetadata.BuyerCountry is not null ||
-                 Model.TypedMetadata.BuyerZip is not null)
+            @if (!string.IsNullOrEmpty(Model.TypedMetadata.ItemCode) ||
+                    !string.IsNullOrEmpty(Model.TypedMetadata.ItemDesc) ||
+                    Model.TypedMetadata.TaxIncluded is not null)
             {
                 <div>
-                    <h3 class="mb-3"><span>Buyer Information</span>
-						<a href="https://docs.btcpayserver.org/Development/InvoiceMetadata/" target="_blank" rel="noreferrer noopener">
-							<vc:icon symbol="info" />
-						</a>
-					</h3>
+                    <h3 class="mb-3">
+                        <span>Product Information</span>
+                        <a href="https://docs.btcpayserver.org/Development/InvoiceMetadata/" target="_blank" rel="noreferrer noopener">
+                            <vc:icon symbol="info" />
+                        </a>
+                    </h3>
+                    <table class="table mb-0">
+                        @if (!string.IsNullOrEmpty(Model.TypedMetadata.ItemCode))
+                        {
+                            <tr>
+                                <th>Item code</th>
+                                <td>@Model.TypedMetadata.ItemCode</td>
+                            </tr>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.TypedMetadata.ItemDesc))
+                        {
+                            <tr>
+                                <th>Item Description</th>
+                                <td>@Model.TypedMetadata.ItemDesc</td>
+                            </tr>
+                        }
+                        @if (Model.TaxIncluded is not null)
+                        {
+                            <tr>
+                                <th>Tax Included</th>
+                                <td>@Model.TaxIncluded</td>
+                            </tr>
+                        }
+                    </table>
+                </div>
+            }
+            @if (Model.TypedMetadata.BuyerName is not null ||
+                    Model.TypedMetadata.BuyerEmail is not null ||
+                    Model.TypedMetadata.BuyerPhone is not null ||
+                    Model.TypedMetadata.BuyerAddress1 is not null ||
+                    Model.TypedMetadata.BuyerAddress2 is not null ||
+                    Model.TypedMetadata.BuyerCity is not null ||
+                    Model.TypedMetadata.BuyerState is not null ||
+                    Model.TypedMetadata.BuyerCountry is not null ||
+                    Model.TypedMetadata.BuyerZip is not null)
+            {
+                <div>
+                    <h3 class="mb-3">
+                        <span>Buyer Information</span>
+                        <a href="https://docs.btcpayserver.org/Development/InvoiceMetadata/" target="_blank" rel="noreferrer noopener">
+                            <vc:icon symbol="info" />
+                        </a>
+                    </h3>
                     <table class="table mb-0">
                         @if (Model.TypedMetadata.BuyerName is not null)
                         {
                             <tr>
-                                <th class="fw-semibold">Name</th>
+                                <th>Name</th>
                                 <td>@Model.TypedMetadata.BuyerName</td>
                             </tr>
                         }
                         @if (Model.TypedMetadata.BuyerEmail is not null)
                         {
                             <tr>
-                                <th class="fw-semibold">Email</th>
+                                <th>Email</th>
                                 <td>
                                     <a href="mailto:@Model.TypedMetadata.BuyerEmail">@Model.TypedMetadata.BuyerEmail</a>
                                 </td>
@@ -329,187 +382,205 @@
                         @if (Model.TypedMetadata.BuyerPhone is not null)
                         {
                             <tr>
-                                <th class="fw-semibold">Phone</th>
+                                <th>Phone</th>
                                 <td>@Model.TypedMetadata.BuyerPhone</td>
                             </tr>
                         }
                         @if (Model.TypedMetadata.BuyerAddress1 is not null)
                         {
                             <tr>
-                                <th class="fw-semibold">Address 1</th>
+                                <th>Address 1</th>
                                 <td>@Model.TypedMetadata.BuyerAddress1</td>
                             </tr>
                         }
                         @if (Model.TypedMetadata.BuyerAddress2 is not null)
                         {
                             <tr>
-                                <th class="fw-semibold">Address 2</th>
+                                <th>Address 2</th>
                                 <td>@Model.TypedMetadata.BuyerAddress2</td>
                             </tr>
                         }
                         @if (Model.TypedMetadata.BuyerCity is not null)
                         {
                             <tr>
-                                <th class="fw-semibold">City</th>
+                                <th>City</th>
                                 <td>@Model.TypedMetadata.BuyerCity</td>
                             </tr>
                         }
                         @if (Model.TypedMetadata.BuyerState is not null)
                         {
                             <tr>
-                                <th class="fw-semibold">State</th>
+                                <th>State</th>
                                 <td>@Model.TypedMetadata.BuyerState</td>
                             </tr>
                         }
                         @if (Model.TypedMetadata.BuyerCountry is not null)
                         {
                             <tr>
-                                <th class="fw-semibold">Country</th>
+                                <th>Country</th>
                                 <td>@Model.TypedMetadata.BuyerCountry</td>
                             </tr>
                         }
                         @if (Model.TypedMetadata.BuyerZip is not null)
                         {
                             <tr>
-                                <th class="fw-semibold">Zip</th>
+                                <th>Zip</th>
                                 <td>@Model.TypedMetadata.BuyerZip</td>
                             </tr>
                         }
                     </table>
                 </div>
             }
-            @if (Model.AdditionalData.Any())
+            @if (Model.ReceiptData != null && Model.ReceiptData.Any())
             {
                 <div>
-					<h3 class="mb-3">
-						<span>Additional Information</span>
-						<a href="https://docs.btcpayserver.org/Development/InvoiceMetadata/" target="_blank" rel="noreferrer noopener">
-							<vc:icon symbol="info" />
-						</a>
-					</h3>
+                    <h3 class="mb-3">
+                        <span>Receipt Information</span>
+                        <a href="https://docs.btcpayserver.org/Development/InvoiceMetadata/" target="_blank" rel="noreferrer noopener">
+                            <vc:icon symbol="info" />
+                        </a>
+                    </h3>
+                    <partial name="PosData" model="(Model.ReceiptData, 1)" />
+                </div>
+            }
+            @if (Model.AdditionalData != null && Model.AdditionalData.Any())
+            {
+                <div>
+                    <h3 class="mb-3">
+                        <span>Additional Information</span>
+                        <a href="https://docs.btcpayserver.org/Development/InvoiceMetadata/" target="_blank" rel="noreferrer noopener">
+                            <vc:icon symbol="info" />
+                        </a>
+                    </h3>
                     <partial name="PosData" model="(Model.AdditionalData, 1)" />
                 </div>
             }
         </div>
     </div>
-
+    <div class="row">
+    <div class="col-xxl-constrain">
     <h3 class="mb-3">Invoice Summary</h3>
-    <partial name="ListInvoicesPaymentsPartial" model="(Model, true)"/>
+    <partial name="ListInvoicesPaymentsPartial" model="(Model, true)" />
 
     @if (Model.Deliveries.Any())
     {
         <section class="mt-4 d-print-none">
             <h3 class="mb-3">Webhooks</h3>
             <div class="table-responsive-xl">
-                <table class="table table-hover table-responsive-md mb-5">
+                <table class="table table-hover mb-5">
                     <thead>
-                    <tr>
-                        <th>Status</th>
-                        <th>ID</th>
-                        <th>Type</th>
-                        <th>Url</th>
-                        <th>Date</th>
-                        <th class="text-end">Action</th>
-                    </tr>
+                        <tr>
+                            <th>Status</th>
+                            <th>ID</th>
+                            <th>Type</th>
+                            <th>Url</th>
+                            <th>Date</th>
+                            <th class="text-end">Action</th>
+                        </tr>
                     </thead>
                     <tbody>
-                    @foreach (var delivery in Model.Deliveries)
-                    {
-                        <tr>
-                            <form asp-action="RedeliverWebhook"
-                                  asp-route-storeId="@Model.StoreId"
-                                  asp-route-invoiceId="@Model.Id"
-                                  asp-route-deliveryId="@delivery.Id"
-                                  method="post">
+                        @foreach (var delivery in Model.Deliveries)
+                        {
+                            <tr>
+                                <form asp-action="RedeliverWebhook"
+                                      asp-route-storeId="@Model.StoreId"
+                                      asp-route-invoiceId="@Model.Id"
+                                      asp-route-deliveryId="@delivery.Id"
+                                      method="post">
                                 <td>
                                     <span>
-                                        @if (delivery.Success)
-                                        {
+                                            @if (delivery.Success)
+                                            {
                                             <span class="fa fa-check text-success" title="Success"></span>
-                                        }
-                                        else
-                                        {
+                                            }
+                                            else
+                                            {
                                             <span class="fa fa-times text-danger" title="@delivery.ErrorMessage"></span>
-                                        }
+                                            }
                                     </span>
                                 </td>
                                 <td>
+                                    @if (!delivery.Pruned)
+                                    {
                                     <span>
                                         <a asp-action="WebhookDelivery"
-                                           asp-route-invoiceId="@Model.Id"
-                                           asp-route-deliveryId="@delivery.Id"
-                                           class="delivery-content"
-                                           target="_blank">
-                                            @delivery.Id
+                                            asp-route-invoiceId="@Model.Id"
+                                            asp-route-deliveryId="@delivery.Id"
+                                            class="delivery-content"
+                                            target="_blank">
+                                                @delivery.Id
                                         </a>
                                     </span>
+                                    }
                                 </td>
                                 <td>
                                     <span>@delivery.Type</span>
                                 </td>
                                 <td>
-                                    <span class="text-nowrap" data-bs-toggle="tooltip" title="@delivery.PayloadUrl" style="cursor: pointer;">
+                                    <span class="text-break" data-bs-toggle="tooltip" title="@delivery.PayloadUrl" style="cursor: pointer;">
                                         <span style="max-width: 250px;">@delivery.PayloadUrl</span>
                                     </span>
                                 </td>
                                 <td>
                                     <span>
-                                        @delivery.Time.ToBrowserDate()
+                                            @delivery.Time.ToBrowserDate()
                                     </span>
                                 </td>
                                 <td class="text-end">
+                                    @if (!delivery.Pruned) {
                                     <button id="#redeliver-@delivery.Id"
                                             type="submit"
                                             class="btn btn-link p-0 redeliver">
                                         Redeliver
                                     </button>
+                                    }
                                 </td>
-                            </form>
-                        </tr>
-                    }
+                                </form>
+                            </tr>
+                        }
                     </tbody>
                 </table>
             </div>
         </section>
-        
+
     }
     @if ((Model.Refunds?.Count ?? 0) > 0)
     {
         <section class="mt-4">
             <h3 class="mb-3">Refunds</h3>
             <div class="table-responsive-xl">
-                <table class="table table-hover table-responsive-md mb-5">
+                <table class="table table-hover mb-5">
                     <thead>
-                    <tr>
-                        <th>Pull Payment</th>
-                        <th>Amount</th>
-                        <th>Date</th>
-                    </tr>
+                        <tr>
+                            <th>Pull Payment</th>
+                            <th>Amount</th>
+                            <th>Date</th>
+                        </tr>
                     </thead>
                     <tbody>
-                    @foreach (var refund in Model.Refunds)
-                    {
-                        var blob = refund.PullPaymentData.GetBlob();
-                        <tr>
+                        @foreach (var refund in Model.Refunds)
+                        {
+                            var blob = refund.PullPaymentData.GetBlob();
+                            <tr>
 
-                            <td>
-                                <span>
-                                    <a asp-action="ViewPullPayment" asp-controller="UIPullPayment"
-                                       asp-route-pullPaymentId="@refund.PullPaymentDataId"
-                                       class="delivery-content"
-                                       target="_blank">
-                                        @refund.PullPaymentData.Id
-                                    </a>
-                                </span>
-                            </td>
-                            <td>
-                                <span>@blob.Limit @blob.Currency</span>
-                            </td>
-                            <td>
-                                <span> @refund.PullPaymentData.StartDate.ToBrowserDate() </span>
-                            </td>
-                        </tr>
-                    }
+                                <td>
+                                    <span>
+                                        <a asp-action="ViewPullPayment" asp-controller="UIPullPayment"
+                                           asp-route-pullPaymentId="@refund.PullPaymentDataId"
+                                           class="delivery-content"
+                                           target="_blank">
+                                            @refund.PullPaymentData.Id
+                                        </a>
+                                    </span>
+                                </td>
+                                <td>
+                                    <span>@blob.Limit @blob.Currency</span>
+                                </td>
+                                <td>
+                                    <span> @refund.PullPaymentData.StartDate.ToBrowserDate() </span>
+                                </td>
+                            </tr>
+                        }
                     </tbody>
                 </table>
             </div>
@@ -535,4 +606,6 @@
             </tbody>
         </table>
     </section>
+    </div>
+    </div>
 </div>

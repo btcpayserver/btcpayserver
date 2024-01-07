@@ -14,7 +14,7 @@ declare -A xpubs
 
 printf "\n👛 Create descriptor wallets\n\n"
 for ((n=1;n<=3;n++)); do
-  # Create descriptor wallets, surpress error output in case wallet already exists
+  # Create descriptor wallets, suppress error output in case wallet already exists
   ./docker-bitcoin-cli.sh -named createwallet wallet_name="${prefix}_part_${n}" descriptors=true > /dev/null 2>&1
 
   # Collect xpubs
@@ -38,7 +38,7 @@ multisig_int_desc="{\"desc\": $internal_desc_sum, \"active\": true, \"internal\"
 
 multisig_desc="[$multisig_ext_desc, $multisig_int_desc]"
 
-# Create multisig wallet, surpress error output in case wallet already exists
+# Create multisig wallet, suppress error output in case wallet already exists
 
 printf "\n🔐 Create multisig wallet\n"
 printf "\nExternal descriptor: $external_desc\n"

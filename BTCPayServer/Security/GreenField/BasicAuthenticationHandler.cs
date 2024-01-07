@@ -26,9 +26,8 @@ namespace BTCPayServer.Security.Greenfield
             IOptionsMonitor<GreenfieldAuthenticationOptions> options,
             ILoggerFactory logger,
             UrlEncoder encoder,
-            ISystemClock clock,
             SignInManager<ApplicationUser> signInManager,
-            UserManager<ApplicationUser> userManager) : base(options, logger, encoder, clock)
+            UserManager<ApplicationUser> userManager) : base(options, logger, encoder)
         {
             _identityOptions = identityOptions;
             _signInManager = signInManager;

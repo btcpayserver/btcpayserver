@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Plugins.Crowdfund;
@@ -13,18 +15,13 @@ using BTCPayServer.Plugins.PointOfSale.Models;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
-using ExchangeSharp;
-using Ganss.XSS;
+using Dapper;
+using Ganss.Xss;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin;
 using NBitcoin.DataEncoders;
-using NBitpayClient;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using YamlDotNet.Core;
-using YamlDotNet.RepresentationModel;
-using YamlDotNet.Serialization;
-using PosViewType = BTCPayServer.Plugins.PointOfSale.PosViewType;
 using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Services.Apps
@@ -32,6 +29,17 @@ namespace BTCPayServer.Services.Apps
     public class AppService
     {
         private readonly Dictionary<string, AppBaseType> _appTypes;
+        static AppService()
+        {
+            _defaultSerializer = new JsonSerializerSettings()
+            {
+                ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(),
+                Formatting = Formatting.None
+            };
+        }
+
+        private static JsonSerializerSettings _defaultSerializer;
+
         readonly ApplicationDbContextFactory _ContextFactory;
         private readonly InvoiceRepository _InvoiceRepository;
         readonly CurrencyNameTable _Currencies;
@@ -39,6 +47,7 @@ namespace BTCPayServer.Services.Apps
         private readonly StoreRepository _storeRepository;
         private readonly HtmlSanitizer _HtmlSanitizer;
         public CurrencyNameTable Currencies => _Currencies;
+
         public AppService(
             IEnumerable<AppBaseType> apps,
             ApplicationDbContextFactory contextFactory,
@@ -70,13 +79,13 @@ namespace BTCPayServer.Services.Apps
 
         public async Task<object?> GetInfo(string appId)
         {
-            var appData = await GetApp(appId, null);
+            var appData = await GetApp(appId, null, includeStore: true);
             if (appData is null)
                 return null;
             var appType = GetAppType(appData.AppType);
             if (appType is null)
                 return null;
-            return appType.GetInfo(appData);
+            return await appType.GetInfo(appData);
         }
 
         public async Task<IEnumerable<ItemStats>> GetItemStats(AppData appData)
@@ -153,12 +162,10 @@ namespace BTCPayServer.Services.Apps
         {
             return (res, e) =>
             {
-                if (e.Metadata.PosData != null)
+                // flatten single items from POS data
+                var data = e.Metadata.PosData?.ToObject<PosAppData>();
+                if (data is { Cart.Length: > 0 })
                 {
-                    // flatten single items from POS data
-                    var data = e.Metadata.PosData.ToObject<PosAppData>();
-                    if (data is not { Cart.Length: > 0 })
-                        return res;
                     foreach (var lineItem in data.Cart)
                     {
                         var item = items.FirstOrDefault(p => p.Id == lineItem.Id);
@@ -170,7 +177,7 @@ namespace BTCPayServer.Services.Apps
                             res.Add(new InvoiceStatsItem
                             {
                                 ItemCode = item.Id,
-                                FiatPrice = lineItem.Price.Value,
+                                FiatPrice = lineItem.Price,
                                 Date = e.InvoiceTime.Date
                             });
                         }
@@ -178,17 +185,10 @@ namespace BTCPayServer.Services.Apps
                 }
                 else
                 {
-                    var fiatPrice = e.GetPayments(true).Sum(pay =>
-                    {
-                        var paymentMethodId = pay.GetPaymentMethodId();
-                        var value = pay.GetCryptoPaymentData().GetValue() - pay.NetworkFee;
-                        var rate = e.GetPaymentMethod(paymentMethodId).Rate;
-                        return rate * value;
-                    });
                     res.Add(new InvoiceStatsItem
                     {
-                        ItemCode = e.Metadata.ItemCode,
-                        FiatPrice = fiatPrice,
+                        ItemCode = e.Metadata.ItemCode ?? typeof(PosViewType).DisplayName(PosViewType.Light.ToString()),
+                        FiatPrice = e.PaidAmount.Net,
                         Date = e.InvoiceTime.Date
                     });
                 }
@@ -196,8 +196,8 @@ namespace BTCPayServer.Services.Apps
             };
         }
 
-        public static string GetAppOrderId(AppData app) => GetAppOrderId(app.AppType, app.Id);
-        public static string GetAppOrderId(string appType, string appId) =>
+        public static string GetAppSearchTerm(AppData app) => GetAppSearchTerm(app.AppType, app.Id);
+        public static string GetAppSearchTerm(string appType, string appId) =>
             appType switch
             {
                 CrowdfundAppType.AppType => $"crowdfund-app_{appId}",
@@ -210,13 +210,18 @@ namespace BTCPayServer.Services.Apps
         {
             return invoice.GetInternalTags("APP#");
         }
+        
+        public static string GetRandomOrderId(int length = 16)
+        {
+            return Encoders.Base58.EncodeData(RandomUtils.GetBytes(length));
+        }
 
         public static async Task<InvoiceEntity[]> GetInvoicesForApp(InvoiceRepository invoiceRepository, AppData appData, DateTimeOffset? startDate = null, string[]? status = null)
         {
             var invoices = await invoiceRepository.GetInvoices(new InvoiceQuery
             {
                 StoreId = new[] { appData.StoreDataId },
-                OrderId = appData.TagAllInvoices ? null : new[] { GetAppOrderId(appData) },
+                TextSearch = appData.TagAllInvoices ? null : GetAppSearchTerm(appData),
                 Status = status ?? new[]{
                     InvoiceState.ToString(InvoiceStatusLegacy.New),
                     InvoiceState.ToString(InvoiceStatusLegacy.Paid),
@@ -231,15 +236,6 @@ namespace BTCPayServer.Services.Apps
             return invoices;
         }
 
-        public async Task<StoreData[]> GetOwnedStores(string userId)
-        {
-            await using var ctx = _ContextFactory.CreateContext();
-            return await ctx.UserStore
-                .Where(us => us.ApplicationUserId == userId && us.Role == StoreRoles.Owner)
-                .Select(u => u.StoreData)
-                .ToArrayAsync();
-        }
-
         public async Task<bool> DeleteApp(AppData appData)
         {
             await using var ctx = _ContextFactory.CreateContext();
@@ -248,28 +244,39 @@ namespace BTCPayServer.Services.Apps
             return await ctx.SaveChangesAsync() == 1;
         }
 
-        public async Task<ListAppsViewModel.ListAppViewModel[]> GetAllApps(string? userId, bool allowNoUser = false, string? storeId = null)
+        public async Task<bool> SetArchived(AppData appData, bool archived)
         {
             await using var ctx = _ContextFactory.CreateContext();
-            var listApps = await ctx.UserStore
+            appData.Archived = archived;
+            ctx.Entry(appData).State = EntityState.Modified;
+            return await ctx.SaveChangesAsync() == 1;
+        }
+
+        public async Task<ListAppsViewModel.ListAppViewModel[]> GetAllApps(string? userId, bool allowNoUser = false, string? storeId = null, bool includeArchived = false)
+        {
+            await using var ctx = _ContextFactory.CreateContext();
+            var types = GetAvailableAppTypes().Select(at => at.Key).ToHashSet();
+            var listApps = (await ctx.UserStore
                 .Where(us =>
                     (allowNoUser && string.IsNullOrEmpty(userId) || us.ApplicationUserId == userId) &&
                     (storeId == null || us.StoreDataId == storeId))
-                .Join(ctx.Apps, us => us.StoreDataId, app => app.StoreDataId,
-                    (us, app) =>
-                        new ListAppsViewModel.ListAppViewModel
-                        {
-                            IsOwner = us.Role == StoreRoles.Owner,
-                            StoreId = us.StoreDataId,
-                            StoreName = us.StoreData.StoreName,
-                            AppName = app.Name,
-                            AppType = app.AppType,
-                            Id = app.Id,
-                            Created = app.Created,
-                            App = app
-                        })
-                .OrderBy(b => b.Created)
-                .ToArrayAsync();
+                .Include(store => store.StoreRole)
+                .Include(store => store.StoreData)
+                .Join(ctx.Apps, us => us.StoreDataId, app => app.StoreDataId, (us, app) => new { us, app })
+                .Where(b => types.Contains(b.app.AppType) && (!b.app.Archived || b.app.Archived == includeArchived))
+                .OrderBy(b => b.app.Created)
+                .ToArrayAsync()).Select(arg => new ListAppsViewModel.ListAppViewModel
+            {
+                Role = StoreRepository.ToStoreRole(arg.us.StoreRole),
+                StoreId = arg.us.StoreDataId,
+                StoreName = arg.us.StoreData.StoreName,
+                AppName = arg.app.Name,
+                AppType = arg.app.AppType,
+                Id = arg.app.Id,
+                Created = arg.app.Created,
+                Archived = arg.app.Archived,
+                App = arg.app
+            }).ToArray();
 
             // allowNoUser can lead to apps being included twice, unify them with distinct
             if (allowNoUser)
@@ -304,11 +311,13 @@ namespace BTCPayServer.Services.Apps
             return style;
         }
 
-        public async Task<List<AppData>> GetApps(string[] appIds, bool includeStore = false)
+        public async Task<List<AppData>> GetApps(string[] appIds, bool includeStore = false, bool includeArchived = false)
         {
             await using var ctx = _ContextFactory.CreateContext();
+            var types = GetAvailableAppTypes().Select(at => at.Key);
             var query = ctx.Apps
-                .Where(app => appIds.Contains(app.Id));
+                .Where(app => appIds.Contains(app.Id))
+                .Where(app => types.Contains(app.AppType) && (!app.Archived || app.Archived == includeArchived));
             if (includeStore)
             {
                 query = query.Include(data => data.StoreData);
@@ -324,13 +333,13 @@ namespace BTCPayServer.Services.Apps
             return await query.ToListAsync();
         }
 
-        public async Task<AppData?> GetApp(string appId, string? appType, bool includeStore = false)
+        public async Task<AppData?> GetApp(string appId, string? appType, bool includeStore = false, bool includeArchived = false)
         {
             await using var ctx = _ContextFactory.CreateContext();
+            var types = GetAvailableAppTypes().Select(at => at.Key);
             var query = ctx.Apps
-                .Where(us => us.Id == appId &&
-                             (appType == null || us.AppType == appType));
-
+                .Where(us => us.Id == appId && (appType == null || us.AppType == appType))
+                .Where(app => types.Contains(app.AppType) && (!app.Archived || app.Archived == includeArchived));
             if (includeStore)
             {
                 query = query.Include(data => data.StoreData);
@@ -343,168 +352,18 @@ namespace BTCPayServer.Services.Apps
             return _storeRepository.FindStore(app.StoreDataId);
         }
 
-        public string SerializeTemplate(ViewPointOfSaleViewModel.Item[] items)
+        public static string SerializeTemplate(ViewPointOfSaleViewModel.Item[] items)
         {
-            var mappingNode = new YamlMappingNode();
-            foreach (var item in items)
-            {
-                var itemNode = new YamlMappingNode();
-                itemNode.Add("title", new YamlScalarNode(item.Title));
-                if (item.Price.Type != ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Topup && item.Price.Value is not null)
-                    itemNode.Add("price", new YamlScalarNode(item.Price.Value.ToStringInvariant()));
-                if (!string.IsNullOrEmpty(item.Description))
-                {
-                    itemNode.Add("description", new YamlScalarNode(item.Description)
-                    {
-                        Style = ScalarStyle.DoubleQuoted
-                    });
-                }
-                if (!string.IsNullOrEmpty(item.Image))
-                {
-                    itemNode.Add("image", new YamlScalarNode(item.Image));
-                }
-                itemNode.Add("price_type", new YamlScalarNode(item.Price.Type.ToStringLowerInvariant()));
-                itemNode.Add("disabled", new YamlScalarNode(item.Disabled.ToStringLowerInvariant()));
-                if (item.Inventory.HasValue)
-                {
-                    itemNode.Add("inventory", new YamlScalarNode(item.Inventory.ToString()));
-                }
-
-                if (!string.IsNullOrEmpty(item.BuyButtonText))
-                {
-                    itemNode.Add("buyButtonText", new YamlScalarNode(item.BuyButtonText));
-                }
-
-                if (item.PaymentMethods?.Any() is true)
-                {
-                    itemNode.Add("payment_methods", new YamlSequenceNode(item.PaymentMethods.Select(s => new YamlScalarNode(s))));
-                }
-                mappingNode.Add(item.Id, itemNode);
-            }
-
-            var serializer = new SerializerBuilder().Build();
-            return serializer.Serialize(mappingNode);
+               return JsonConvert.SerializeObject(items, Formatting.Indented, _defaultSerializer);
         }
-
-        public ViewPointOfSaleViewModel.Item[] Parse(string template, string currency)
-        {
-            return Parse(_HtmlSanitizer, _displayFormatter, template, currency);
-        }
-
-
-        public ViewPointOfSaleViewModel.Item[] GetPOSItems(string template, string currency)
-        {
-            return GetPOSItems(_HtmlSanitizer, _displayFormatter, template, currency);
-        }
-        public static ViewPointOfSaleViewModel.Item[] Parse(HtmlSanitizer htmlSanitizer, DisplayFormatter displayFormatter, string template, string currency)
+        public static ViewPointOfSaleViewModel.Item[] Parse(string template, bool includeDisabled = true)
         {
             if (string.IsNullOrWhiteSpace(template))
                 return Array.Empty<ViewPointOfSaleViewModel.Item>();
-            using var input = new StringReader(template);
-            YamlStream stream = new();
-            stream.Load(input);
-            var root = (YamlMappingNode)stream.Documents[0].RootNode;
-            return root
-                .Children
-                .Select(kv => new PosHolder(htmlSanitizer) { Key = htmlSanitizer.Sanitize((kv.Key as YamlScalarNode)?.Value), Value = kv.Value as YamlMappingNode })
-                .Where(kv => kv.Value != null)
-                .Select(c =>
-                {
-                    ViewPointOfSaleViewModel.Item.ItemPrice price = new();
-                    var pValue = c.GetDetail("price")?.FirstOrDefault();
 
-                    switch (c.GetDetailString("custom") ?? c.GetDetailString("price_type")?.ToLowerInvariant())
-                    {
-                        case "topup":
-                        case null when pValue is null:
-                            price.Type = ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Topup;
-                            break;
-                        case "true":
-                        case "minimum":
-                            price.Type = ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Minimum;
-                            if (pValue != null && !string.IsNullOrEmpty(pValue.Value?.Value))
-                            {
-                                price.Value = decimal.Parse(pValue.Value.Value, CultureInfo.InvariantCulture);
-                                price.Formatted = displayFormatter.Currency(price.Value.Value, currency, DisplayFormatter.CurrencyFormat.Symbol);
-                            }
-                            break;
-                        case "fixed":
-                        case "false":
-                        case null:
-                            price.Type = ViewPointOfSaleViewModel.Item.ItemPrice.ItemPriceType.Fixed;
-                            if (pValue?.Value.Value is not null)
-                            {
-                                price.Value = decimal.Parse(pValue.Value.Value, CultureInfo.InvariantCulture);
-                                price.Formatted = displayFormatter.Currency(price.Value.Value, currency, DisplayFormatter.CurrencyFormat.Symbol);
-                            }
-                            break;
-                    }
-
-                    return new ViewPointOfSaleViewModel.Item
-                    {
-                        Description = c.GetDetailString("description"),
-                        Id = c.Key,
-                        Image = c.GetDetailString("image"),
-                        Title = c.GetDetailString("title") ?? c.Key,
-                        Price = price,
-                        BuyButtonText = c.GetDetailString("buyButtonText"),
-                        Inventory =
-                            string.IsNullOrEmpty(c.GetDetailString("inventory"))
-                                ? null
-                                : int.Parse(c.GetDetailString("inventory"), CultureInfo.InvariantCulture),
-                        PaymentMethods = c.GetDetailStringList("payment_methods"),
-                        Disabled = c.GetDetailString("disabled") == "true"
-                    };
-                })
-                .ToArray();
-        }
-
-        public static ViewPointOfSaleViewModel.Item[] GetPOSItems(HtmlSanitizer htmlSanitizer, DisplayFormatter displayFormatter, string template, string currency)
-        {
-            return Parse(htmlSanitizer, displayFormatter, template, currency).Where(c => !c.Disabled).ToArray();
+            return  JsonConvert.DeserializeObject<ViewPointOfSaleViewModel.Item[]>(template, _defaultSerializer)!.Where(item => includeDisabled || !item.Disabled).ToArray();
         }
 #nullable restore
-        private class PosHolder
-        {
-            private readonly HtmlSanitizer _htmlSanitizer;
-
-            public PosHolder(
-                HtmlSanitizer htmlSanitizer)
-            {
-                _htmlSanitizer = htmlSanitizer;
-            }
-
-            public string Key { get; set; }
-            public YamlMappingNode Value { get; set; }
-
-            public IEnumerable<PosScalar> GetDetail(string field)
-            {
-                var res = Value.Children
-                                 .Where(kv => kv.Value != null)
-                                 .Select(kv => new PosScalar { Key = (kv.Key as YamlScalarNode)?.Value, Value = kv.Value as YamlScalarNode })
-                                 .Where(cc => cc.Key == field);
-                return res;
-            }
-
-            public string GetDetailString(string field)
-            {
-                var raw = GetDetail(field).FirstOrDefault()?.Value?.Value;
-                return raw is null ? null : _htmlSanitizer.Sanitize(raw);
-            }
-            public string[] GetDetailStringList(string field)
-            {
-                if (!Value.Children.ContainsKey(field) || !(Value.Children[field] is YamlSequenceNode sequenceNode))
-                {
-                    return null;
-                }
-                return sequenceNode.Children.Select(node => (node as YamlScalarNode)?.Value).Where(s => s != null).Select(s => _htmlSanitizer.Sanitize(s)).ToArray();
-            }
-        }
-        private class PosScalar
-        {
-            public string Key { get; set; }
-            public YamlScalarNode Value { get; set; }
-        }
 #nullable enable
         public async Task<AppData?> GetAppDataIfOwner(string userId, string appId, string? type = null)
         {
@@ -512,7 +371,8 @@ namespace BTCPayServer.Services.Apps
                 return null;
             await using var ctx = _ContextFactory.CreateContext();
             var app = await ctx.UserStore
-                            .Where(us => us.ApplicationUserId == userId && us.Role == StoreRoles.Owner)
+                            .Include(store => store.StoreRole)
+                            .Where(us => us.ApplicationUserId == userId && us.StoreRole.Permissions.Contains(Policies.CanModifyStoreSettings))
                             .SelectMany(us => us.StoreData.Apps.Where(a => a.Id == appId))
                .FirstOrDefaultAsync();
             if (app == null)
@@ -520,6 +380,56 @@ namespace BTCPayServer.Services.Apps
             if (type != null && type != app.AppType)
                 return null;
             return app;
+        }
+
+        record AppSettingsWithXmin(string apptype, string settings, uint xmin);
+        public record InventoryChange(string ItemId, int Delta);
+        public async Task UpdateInventory(string appId, InventoryChange[] changes)
+        {
+            await using var ctx = _ContextFactory.CreateContext();
+            // We use xmin to make sure we don't override changes made by another process
+retry:
+            var connection = ctx.Database.GetDbConnection();
+            var row = connection.QueryFirstOrDefault<AppSettingsWithXmin>(
+                "SELECT \"AppType\" AS apptype, \"Settings\" AS settings, xmin FROM \"Apps\" WHERE \"Id\"=@appId", new { appId }
+                );
+            if (row?.settings is null)
+                return;
+            var templatePath = row.apptype switch
+            {
+                CrowdfundAppType.AppType => "PerksTemplate",
+                _ => "Template"
+            };
+            var settings = JObject.Parse(row.settings);
+            if (!settings.TryGetValue(templatePath, out var template))
+                return;
+
+            var items = template.Type switch
+            {
+                JTokenType.String => JArray.Parse(template.Value<string>()!),
+                JTokenType.Array => (JArray)template,
+                _ => null
+            };
+            if (items is null)
+                return;
+            bool hasChange = false;
+            foreach (var change in changes)
+            {
+                var item = items.FirstOrDefault(i => i["id"]?.Value<string>() == change.ItemId && i["inventory"]?.Type is JTokenType.Integer);
+                if (item is null)
+                    continue;
+                var inventory = item["inventory"]!.Value<int>();
+                inventory += change.Delta;
+                item["inventory"] = inventory;
+                hasChange = true;
+            }
+            if (!hasChange)
+                return;
+            settings[templatePath] = items.ToString(Formatting.None);
+            var updated = await connection.ExecuteAsync("UPDATE \"Apps\" SET \"Settings\"=@v::JSONB WHERE \"Id\"=@appId AND xmin=@xmin", new { appId, xmin = (int)row.xmin, v = settings.ToString(Formatting.None) }) == 1;
+            // If we can't update, it means someone else updated the row, so we need to retry
+            if (!updated)
+                goto retry;
         }
 
         public async Task UpdateOrCreateApp(AppData app)
@@ -555,30 +465,41 @@ namespace BTCPayServer.Services.Apps
             }
         }
 #nullable enable
-        public static bool TryParsePosCartItems(JObject? posData, [MaybeNullWhen(false)] out Dictionary<string, int> cartItems)
+        
+        public static bool TryParsePosCartItems(JObject? posData, [MaybeNullWhen(false)] out List<PosCartItem> cartItems)
         {
             cartItems = null;
             if (posData is null)
                 return false;
-            if (!posData.TryGetValue("cart", out var cartObject))
+            if (!posData.TryGetValue("cart", out var cartObject) || cartObject is null)
                 return false;
-            if (cartObject is null)
-                return false;
-
-            cartItems = new();
-            foreach (var o in cartObject.OfType<JObject>())
+            try
             {
-                var id = o.GetValue("id", StringComparison.InvariantCulture)?.ToString();
-                if (id != null)
+                cartItems = new List<PosCartItem>();
+                foreach (var o in cartObject.OfType<JObject>())
                 {
+                    var id = o.GetValue("id", StringComparison.InvariantCulture)?.ToString();
+                    if (id == null)
+                        continue;
                     var countStr = o.GetValue("count", StringComparison.InvariantCulture)?.ToString() ?? string.Empty;
+                    var price = o.GetValue("price") switch
+                    {
+                        JValue v => v.Value<decimal>(),
+                        // Don't crash on legacy format
+                        JObject v2 => v2["value"]?.Value<decimal>() ?? 0m,
+                        _ => 0m
+                    };
                     if (int.TryParse(countStr, out var count))
                     {
-                        cartItems.TryAdd(id, count);
+                        cartItems.Add(new PosCartItem { Id = id, Count = count, Price = price });
                     }
                 }
+                return true;
             }
-            return true;
+            catch (FormatException)
+            {
+                return false;
+            }
         }
 
         public async Task SetDefaultSettings(AppData appData, string defaultCurrency)
@@ -600,6 +521,13 @@ namespace BTCPayServer.Services.Apps
             return await appType?.ViewLink(app)!;
         }
 #nullable restore
+    }
+
+    public class PosCartItem
+    {
+        public string Id { get; set; }
+        public int Count { get; set; }
+        public decimal Price { get; set; }
     }
 
     public class ItemStats

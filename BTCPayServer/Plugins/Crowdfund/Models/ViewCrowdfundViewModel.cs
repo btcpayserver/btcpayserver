@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using BTCPayServer.Models.AppViewModels;
-using BTCPayServer.Payments;
+using BTCPayServer.Models;
 using BTCPayServer.Plugins.PointOfSale.Models;
 using BTCPayServer.Services.Rates;
 
@@ -17,12 +15,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Models
         public string Title { get; set; }
         public string Description { get; set; }
         public string MainImageUrl { get; set; }
-        public string CssFileId { get; set; }
-        public string LogoFileId { get; set; }
         public string StoreName { get; set; }
-        public string BrandColor { get; set; }
-        public string EmbeddedCSS { get; set; }
-        public string CustomCSSLink { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
 
@@ -32,6 +25,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Models
 
         public CrowdfundInfo Info { get; set; }
         public string Tagline { get; set; }
+        public StoreBrandingViewModel StoreBranding { get; set; }
         public ViewPointOfSaleViewModel.Item[] Perks { get; set; }
         public bool SimpleDisplay { get; set; }
         public bool DisqusEnabled { get; set; }
@@ -60,8 +54,6 @@ namespace BTCPayServer.Plugins.Crowdfund.Models
             public DateTime? LastResetDate { get; set; }
             public DateTime? NextResetDate { get; set; }
         }
-
-
 
         public bool Started => !StartDate.HasValue || DateTime.UtcNow > StartDate;
 

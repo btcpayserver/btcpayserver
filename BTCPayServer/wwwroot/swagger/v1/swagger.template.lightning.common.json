@@ -250,16 +250,22 @@
                 "type": "object",
                 "properties": {
                     "onchain": {
-                        "type": "object",
                         "description": "On-chain balance of the Lightning node",
                         "nullable": true,
-                        "$ref": "#/components/schemas/OnchainBalanceData"
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/OnchainBalanceData"
+                            }
+                        ]
                     },
                     "offchain": {
-                        "type": "object",
                         "description": "Off-chain balance of the Lightning node",
                         "nullable": true,
-                        "$ref": "#/components/schemas/OffchainBalanceData"
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/OffchainBalanceData"
+                            }
+                        ]
                     }
                 }
             },

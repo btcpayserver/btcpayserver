@@ -1,4 +1,5 @@
 using System;
+using System.Data.Common;
 using BTCPayServer.Abstractions.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
@@ -21,7 +22,6 @@ namespace BTCPayServer.Abstractions.Contracts
         }
 
         public abstract T CreateContext();
-
         class CustomNpgsqlMigrationsSqlGenerator : NpgsqlMigrationsSqlGenerator
         {
 #pragma warning disable EF1001 // Internal EF Core API usage.
@@ -84,6 +84,7 @@ namespace BTCPayServer.Abstractions.Contracts
                         .UseNpgsql(_options.Value.ConnectionString, o =>
                         {
                             o.EnableRetryOnFailure(10);
+                            o.SetPostgresVersion(12, 0);
                             if (!string.IsNullOrEmpty(_schemaPrefix))
                             {
                                 o.MigrationsHistoryTable(_schemaPrefix);

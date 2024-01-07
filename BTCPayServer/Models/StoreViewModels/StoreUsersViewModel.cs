@@ -11,10 +11,6 @@ namespace BTCPayServer.Models.StoreViewModels
             public string Role { get; set; }
             public string Id { get; set; }
         }
-        public StoreUsersViewModel()
-        {
-            Role = StoreRoles.Guest;
-        }
         [Required]
         [EmailAddress]
         public string Email { get; set; }

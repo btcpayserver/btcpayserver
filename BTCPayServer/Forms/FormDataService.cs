@@ -43,9 +43,9 @@ public class FormDataService
             Field.Create("Address Line 1", "buyerAddress1", null, true, null),
             Field.Create("Address Line 2", "buyerAddress2", null, false, null),
             Field.Create("City", "buyerCity", null, true, null),
-            Field.Create("Postcode", "buyerZip", null, false, null),
+            Field.Create("Postcode", "buyerZip", null, true, null),
             Field.Create("State", "buyerState", null, false, null),
-            new SelectField()
+            new SelectField
             {
                 Name = "buyerCountry",
                 Label = "Country",
@@ -151,11 +151,38 @@ public class FormDataService
 
     public CreateInvoiceRequest GenerateInvoiceParametersFromForm(Form form)
     {
-        var amt = GetValue(form, $"{InvoiceParameterPrefix}amount");
+        var amtRaw = GetValue(form, $"{InvoiceParameterPrefix}amount");
+        var amt = string.IsNullOrEmpty(amtRaw) ? (decimal?) null : decimal.Parse(amtRaw, CultureInfo.InvariantCulture);
+        foreach (var f in form.GetAllFields())
+        {
+            if (f.FullName.StartsWith($"{InvoiceParameterPrefix}amount_adjustment") && decimal.TryParse(GetValue(form, f.Field), out var adjustment))
+            {
+                if (amt is null)
+                {
+                    amt = adjustment;
+                }
+                else
+                {
+                    amt += adjustment;
+                }
+            } 
+            if (f.FullName.StartsWith($"{InvoiceParameterPrefix}amount_multiply_adjustment") && decimal.TryParse(GetValue(form, f.Field), out var adjustmentM))
+            {
+                if (amt is not null)
+                {
+                    amt *= adjustmentM;
+                }
+            }
+        }
+        
+        if(amt is not null)
+        {
+            amt = Math.Max(0, amt.Value);
+        }
         return new CreateInvoiceRequest
         {
             Currency = GetValue(form, $"{InvoiceParameterPrefix}currency"),
-            Amount = string.IsNullOrEmpty(amt) ? null : decimal.Parse(amt, CultureInfo.InvariantCulture),
+            Amount = amt,
             Metadata = GetValues(form),
         };
     }
@@ -196,5 +223,37 @@ public class FormDataService
             node[f.Field.Name] = GetValue(form, f.FullName);
         }
         return r;
+    }
+    
+    public void SetValues(Form form, JObject values)
+    {
+        
+        var fields = form.GetAllFields().ToDictionary(k => k.FullName, k => k.Field);
+        SetValues(fields, new List<string>(), values);
+    }
+
+    private void SetValues(Dictionary<string, Field> fields, List<string> path, JObject values)
+    {
+        foreach (var prop in values.Properties())
+        {
+            List<string> propPath = new List<string>(path.Count + 1);
+            propPath.AddRange(path);
+            propPath.Add(prop.Name);
+            if (prop.Value.Type == JTokenType.Object)
+            {
+                SetValues(fields, propPath, (JObject)prop.Value);
+            }
+            else if (prop.Value.Type == JTokenType.String)
+            {
+                var fullName = string.Join('_', propPath.Where(s => !string.IsNullOrEmpty(s)));
+                if (fields.TryGetValue(fullName, out var f) && !f.Constant)
+                {
+                    if (_formProviders.TypeToComponentProvider.TryGetValue(f.Type, out var formComponentProvider))
+                    {
+                        formComponentProvider.SetValue(f, prop.Value);
+                    }
+                }
+            }
+        }
     }
 }

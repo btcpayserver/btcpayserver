@@ -65,7 +65,7 @@
 		</form>
 	}
 	<script type="text/javascript">
-		document.forms.item(0).submit();
+        HTMLFormElement.prototype.submit.call(document.forms.item(0));
 	</script>
 	<partial name="LayoutFoot" />
 </body>

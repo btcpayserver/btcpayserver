@@ -48,7 +48,7 @@
     var scriptMatch = thisScript.match(scriptSrcRegex)
     if (scriptMatch) {
         // We can't just take the domain as btcpay can run under a sub path with RootPath
-        origin = thisScript.substr(0, thisScript.length - scriptMatch[0].length);
+        origin = thisScript.slice(0, thisScript.length - scriptMatch[0].length);
     }
     // urlPrefix should be site root without trailing slash
     function setApiUrlPrefix(urlPrefix) {
@@ -88,10 +88,36 @@
     function onModalReceiveMessage(customOnModalReceiveMessage) {
         onModalReceiveMessageMethod = customOnModalReceiveMessage;
     }
+    var readerAbortController = null;
 
+    function startNfcScan() {
+        const ndef = new NDEFReader();
+        readerAbortController = new AbortController()
+        readerAbortController.signal.onabort = () => {
+            this.scanning = false;
+        };
+        ndef.scan({ signal:readerAbortController.signal }).then(() => {
+            ndef.onreading = event => {
+                const message = event.message;
+                const record = message.records[0];
+                const textDecoder = new TextDecoder('utf-8');
+                const data = textDecoder.decode(record.data);
+
+                // Send NFC data back to the iframe
+                if (iframe) {
+                    iframe.contentWindow.postMessage({ action: 'nfc:data', data }, '*');
+                }
+            };
+            ndef.onreadingerror = () => {
+                // Send error message back to the iframe
+                if (iframe) {
+                    iframe.contentWindow.postMessage({ action: 'nfc:error' }, '*');
+                }
+            };
+        }).catch(console.error);
+    }
+    
     function receiveMessage(event) {
-        var uri;
-
         if (!origin.startsWith(event.origin) || !showingInvoice) {
             return;
         }
@@ -99,8 +125,14 @@
             hideFrame();
         } else if (event.data === 'loaded') {
             showFrame();
+        } else if (event.data === 'nfc:startScan') {
+            startNfcScan();
+        } else if (event.data === 'nfc:abort') {
+            if (readerAbortController) {
+                readerAbortController.abort()
+            }
         } else if (event.data && event.data.open) {
-            uri = event.data.open;
+            const uri = event.data.open;
             if (uri.indexOf('bitcoin:') === 0) {
                 window.location = uri;
             }
@@ -149,5 +181,4 @@
         setApiUrlPrefix: setApiUrlPrefix,
         onModalReceiveMessage: onModalReceiveMessage
     };
-
 })();

@@ -14,7 +14,7 @@
 <div class="row">
     <div class="col-xl-8 col-xxl-constrain">
         <form asp-action="CreateApp" asp-route-appType="@Model.AppType">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div asp-validation-summary="ModelOnly"></div>
             @if (string.IsNullOrEmpty(Model.AppType))
             {
                 <div class="form-group">

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
@@ -79,6 +80,8 @@ public class UIOnChainAutomatedPayoutProcessorsController : Controller
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> Configure(string storeId, string cryptoCode, OnChainTransferViewModel automatedTransferBlob)
     {
+        if (!ModelState.IsValid)
+            return View(automatedTransferBlob);
         if (!_onChainAutomatedPayoutSenderFactory.GetSupportedPaymentMethods().Any(id =>
                 id.CryptoCode.Equals(cryptoCode, StringComparison.InvariantCultureIgnoreCase)))
         {
@@ -131,20 +134,29 @@ public class UIOnChainAutomatedPayoutProcessorsController : Controller
 
         public OnChainTransferViewModel(OnChainAutomatedPayoutBlob blob)
         {
+            ProcessNewPayoutsInstantly = blob.ProcessNewPayoutsInstantly;
             IntervalMinutes = blob.Interval.TotalMinutes;
             FeeTargetBlock = blob.FeeTargetBlock;
+            Threshold = blob.Threshold;
         }
 
-        public int FeeTargetBlock { get; set; }
+        public bool ProcessNewPayoutsInstantly { get; set; }
 
+        [Range(1, 1000)]
+        public int FeeTargetBlock { get; set; }
+        public decimal Threshold { get; set; }
+
+        [Range(AutomatedPayoutConstants.MinIntervalMinutes, AutomatedPayoutConstants.MaxIntervalMinutes)]
         public double IntervalMinutes { get; set; }
 
         public OnChainAutomatedPayoutBlob ToBlob()
         {
             return new OnChainAutomatedPayoutBlob
             {
+                ProcessNewPayoutsInstantly = ProcessNewPayoutsInstantly,
                 FeeTargetBlock = FeeTargetBlock,
-                Interval = TimeSpan.FromMinutes(IntervalMinutes)
+                Interval = TimeSpan.FromMinutes(IntervalMinutes),
+                Threshold = Threshold
             };
         }
     }

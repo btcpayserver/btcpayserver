@@ -30,7 +30,7 @@ namespace BTCPayServer.HostedServices
         readonly TimeSpan Period = TimeSpan.FromMinutes(60);
         async Task UpdateRecord()
         {
-            using (var timeout = CancellationTokenSource.CreateLinkedTokenSource(Cancellation))
+            using (var timeout = CancellationTokenSource.CreateLinkedTokenSource(CancellationToken))
             {
                 var settings = await SettingsRepository.GetSettingAsync<DynamicDnsSettings>() ?? new DynamicDnsSettings();
                 foreach (var service in settings.Services)
@@ -59,9 +59,9 @@ namespace BTCPayServer.HostedServices
                     }
                 }
             }
-            using var delayCancel = CancellationTokenSource.CreateLinkedTokenSource(Cancellation);
+            using var delayCancel = CancellationTokenSource.CreateLinkedTokenSource(CancellationToken);
             var delay = Task.Delay(Period, delayCancel.Token);
-            var changed = SettingsRepository.WaitSettingsChanged<DynamicDnsSettings>(Cancellation);
+            var changed = SettingsRepository.WaitSettingsChanged<DynamicDnsSettings>(CancellationToken);
             await Task.WhenAny(delay, changed);
             delayCancel.Cancel();
         }

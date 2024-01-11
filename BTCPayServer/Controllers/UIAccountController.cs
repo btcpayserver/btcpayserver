@@ -618,14 +618,17 @@ namespace BTCPayServer.Controllers
                     });
                     RegisteredUserId = user.Id;
 
+                    TempData[WellKnownTempData.SuccessMessage] = "Account created.";
                     if (policies.RequiresConfirmedEmail)
                     {
-                        TempData[WellKnownTempData.SuccessMessage] = "Account created, please confirm your email.";
-                        return RedirectToAction(nameof(Login));
+                        TempData[WellKnownTempData.SuccessMessage] += " Please confirm your email.";
                     }
                     if (policies.RequiresUserApproval)
                     {
-                        TempData[WellKnownTempData.SuccessMessage] = "Account created, but it requires approval by an admin before you can log in.";
+                        TempData[WellKnownTempData.SuccessMessage] += " The new account requires approval by an admin before you can log in.";
+                    }
+                    if (policies.RequiresConfirmedEmail || policies.RequiresUserApproval)
+                    {
                         return RedirectToAction(nameof(Login));
                     }
                     if (logon)

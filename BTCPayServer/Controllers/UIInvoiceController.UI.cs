@@ -1,11 +1,8 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
-using System.Net.Mime;
 using System.Net.WebSockets;
-using System.Reflection.Metadata;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
@@ -32,10 +29,8 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin;
-using NBitpayClient;
 using NBXplorer;
 using Newtonsoft.Json.Linq;
-using BitpayCreateInvoiceRequest = BTCPayServer.Models.BitpayCreateInvoiceRequest;
 using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Controllers
@@ -1149,63 +1144,34 @@ namespace BTCPayServer.Controllers
             };
         }
 
-        private SelectList GetPaymentMethodsSelectList()
-        {
-            var store = GetCurrentStore();
-            var excludeFilter = store.GetStoreBlob().GetExcludedPaymentMethods();
-
-            return new SelectList(store.GetSupportedPaymentMethods(_NetworkProvider)
-                        .Where(s => !excludeFilter.Match(s.PaymentId))
-                        .Select(method => new SelectListItem(method.PaymentId.ToPrettyString(), method.PaymentId.ToString())),
-                nameof(SelectListItem.Value),
-                nameof(SelectListItem.Text));
-        }
-
-        private bool AnyPaymentMethodAvailable(StoreData store)
-        {
-            var storeBlob = store.GetStoreBlob();
-            var excludeFilter = storeBlob.GetExcludedPaymentMethods();
-
-            return store.GetSupportedPaymentMethods(_NetworkProvider).Where(s => !excludeFilter.Match(s.PaymentId)).Any();
-        }
-
         [HttpGet("/stores/{storeId}/invoices/create")]
         [HttpGet("invoices/create")]
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [BitpayAPIConstraint(false)]
         public async Task<IActionResult> CreateInvoice(InvoicesModel? model = null)
         {
-            if (model?.StoreId != null)
-            {
-                var store = await _StoreRepository.FindStore(model.StoreId, GetUserId());
-                if (store == null)
-                    return NotFound();
-
-                if (!AnyPaymentMethodAvailable(store))
-                {
-                    TempData.SetStatusMessageModel(new StatusMessageModel
-                    {
-                        Severity = StatusMessageModel.StatusSeverity.Error,
-                        Html = $"To create an invoice, you need to <a href='{Url.Action(nameof(UIStoresController.SetupWallet), "UIStores", new { cryptoCode = _NetworkProvider.DefaultNetwork.CryptoCode, storeId = store.Id })}' class='alert-link'>set up a wallet</a> first",
-                        AllowDismiss = false
-                    });
-                }
-
-                HttpContext.SetStoreData(store);
-            }
-            else
+            if (string.IsNullOrEmpty(model?.StoreId))
             {
                 TempData[WellKnownTempData.ErrorMessage] = "You need to select a store before creating an invoice.";
                 return RedirectToAction(nameof(UIHomeController.Index), "UIHome");
             }
 
-            var storeBlob = HttpContext.GetStoreData()?.GetStoreBlob();
+            var store = await _StoreRepository.FindStore(model.StoreId, GetUserId());
+            if (store == null)
+                return NotFound();
+            
+            if (!store.AnyPaymentMethodAvailable(_NetworkProvider))
+            {
+                return NoPaymentMethodResult(store.Id);
+            }
+            
+            var storeBlob = store.GetStoreBlob();
             var vm = new CreateInvoiceModel
             {
                 StoreId = model.StoreId,
-                Currency = storeBlob?.DefaultCurrency,
-                CheckoutType = storeBlob?.CheckoutType ?? CheckoutType.V2,
-                AvailablePaymentMethods = GetPaymentMethodsSelectList()
+                Currency = storeBlob.DefaultCurrency,
+                CheckoutType = storeBlob.CheckoutType,
+                AvailablePaymentMethods = GetPaymentMethodsSelectList(store)
             };
 
             return View(vm);
@@ -1218,9 +1184,14 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> CreateInvoice(CreateInvoiceModel model, CancellationToken cancellationToken)
         {
             var store = HttpContext.GetStoreData();
+            if (!store.AnyPaymentMethodAvailable(_NetworkProvider))
+            {
+                return NoPaymentMethodResult(store.Id);
+            }
+            
             var storeBlob = store.GetStoreBlob();
             model.CheckoutType = storeBlob.CheckoutType;
-            model.AvailablePaymentMethods = GetPaymentMethodsSelectList();
+            model.AvailablePaymentMethods = GetPaymentMethodsSelectList(store);
 
             JObject? metadataObj = null;
             if (!string.IsNullOrEmpty(model.Metadata))
@@ -1239,18 +1210,6 @@ namespace BTCPayServer.Controllers
             {
                 return View(model);
             }
-
-            if (!AnyPaymentMethodAvailable(store))
-            {
-                TempData.SetStatusMessageModel(new StatusMessageModel
-                {
-                    Severity = StatusMessageModel.StatusSeverity.Error,
-                    Html = $"To create an invoice, you need to <a href='{Url.Action(nameof(UIStoresController.SetupWallet), "UIStores", new { cryptoCode = _NetworkProvider.DefaultNetwork.CryptoCode, storeId = store.Id })}' class='alert-link'>set up a wallet</a> first",
-                    AllowDismiss = false
-                });
-                return View(model);
-            }
-
             try
             {
                 var metadata = metadataObj is null ? new InvoiceMetadata() : InvoiceMetadata.FromJObject(metadataObj);
@@ -1395,6 +1354,27 @@ namespace BTCPayServer.Controllers
                         break;
                 }
             }
+        }
+
+        private SelectList GetPaymentMethodsSelectList(StoreData store)
+        {
+            var excludeFilter = store.GetStoreBlob().GetExcludedPaymentMethods();
+            return new SelectList(store.GetSupportedPaymentMethods(_NetworkProvider)
+                    .Where(s => !excludeFilter.Match(s.PaymentId))
+                    .Select(method => new SelectListItem(method.PaymentId.ToPrettyString(), method.PaymentId.ToString())),
+                nameof(SelectListItem.Value),
+                nameof(SelectListItem.Text));
+        }
+
+        private IActionResult NoPaymentMethodResult(string storeId)
+        {
+            TempData.SetStatusMessageModel(new StatusMessageModel
+            {
+                Severity = StatusMessageModel.StatusSeverity.Error,
+                Html = $"To create an invoice, you need to <a href='{Url.Action(nameof(UIStoresController.SetupWallet), "UIStores", new { cryptoCode = _NetworkProvider.DefaultNetwork.CryptoCode, storeId })}' class='alert-link'>set up a wallet</a> first",
+                AllowDismiss = false
+            });
+            return RedirectToAction(nameof(ListInvoices), new { storeId });
         }
     }
 }

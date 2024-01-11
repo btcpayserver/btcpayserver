@@ -60,6 +60,14 @@ namespace BTCPayServer.Data
             return result;
         }
 
+        public static bool AnyPaymentMethodAvailable(this StoreData storeData, BTCPayNetworkProvider networkProvider)
+        {
+            var storeBlob = GetStoreBlob(storeData);
+            var excludeFilter = storeBlob.GetExcludedPaymentMethods();
+
+            return GetSupportedPaymentMethods(storeData, networkProvider).Where(s => !excludeFilter.Match(s.PaymentId)).Any();
+        }
+
         public static bool SetStoreBlob(this StoreData storeData, StoreBlob storeBlob)
         {
             var original = new Serializer(null).ToString(storeData.GetStoreBlob());

@@ -433,7 +433,7 @@ namespace BTCPayServer.Tests
             s.GoToRegister();
             s.RegisterNewUser();
             s.Driver.AssertNoError();
-            Assert.Contains("Account created, but it requires approval by an admin before you can log in", s.FindAlertMessage().Text);
+            Assert.Contains("Account created. The new account requires approval by an admin before you can log in", s.FindAlertMessage().Text);
             Assert.Contains("/login", s.Driver.Url);
             
             var unapproved = s.AsTestAccount();

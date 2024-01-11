@@ -136,13 +136,12 @@ namespace BTCPayServer.Controllers
                 }
 
                 var user = await _userManager.FindByIdAsync(userId);
-                var errorMessage = "Invalid login attempt.";
                 if (!UserService.TryCanLogin(user, out var message))
                 {
                     TempData.SetStatusMessageModel(new StatusMessageModel
                     {
                         Severity = user == null ? StatusMessageModel.StatusSeverity.Error : StatusMessageModel.StatusSeverity.Warning,
-                        Message = message ?? errorMessage
+                        Message = message
                     });
                     return await Login(returnUrl);
                 }
@@ -170,13 +169,13 @@ namespace BTCPayServer.Controllers
             {
                 // Require the user to pass basic checks (approval, confirmed email, not disabled) before they can log on
                 var user = await _userManager.FindByEmailAsync(model.Email);
-                var errorMessage = "Invalid login attempt.";
+                const string errorMessage = "Invalid login attempt.";
                 if (!UserService.TryCanLogin(user, out var message))
                 {
                     TempData.SetStatusMessageModel(new StatusMessageModel
                     {
                         Severity = user == null ? StatusMessageModel.StatusSeverity.Error : StatusMessageModel.StatusSeverity.Warning,
-                        Message = message ?? errorMessage
+                        Message = message
                     });
                     return View(model);
                 }
@@ -301,7 +300,7 @@ namespace BTCPayServer.Controllers
                 TempData.SetStatusMessageModel(new StatusMessageModel
                 {
                     Severity = user == null ? StatusMessageModel.StatusSeverity.Error : StatusMessageModel.StatusSeverity.Warning,
-                    Message = message ?? errorMessage
+                    Message = message
                 });
                 return RedirectToAction("Login");
             }
@@ -358,7 +357,7 @@ namespace BTCPayServer.Controllers
                 TempData.SetStatusMessageModel(new StatusMessageModel
                 {
                     Severity = user == null ? StatusMessageModel.StatusSeverity.Error : StatusMessageModel.StatusSeverity.Warning,
-                    Message = message ?? errorMessage
+                    Message = message
                 });
                 return RedirectToAction("Login");
             }

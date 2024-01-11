@@ -1,6 +1,7 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
@@ -78,7 +79,7 @@ namespace BTCPayServer.Services
                    DateTimeOffset.UtcNow < user.LockoutEnd.Value.UtcDateTime;
         }
         
-        public static bool TryCanLogin([NotNullWhenAttribute(true)] ApplicationUser? user, [MaybeNullWhen(true)] out string error)
+        public static bool TryCanLogin([NotNullWhen(true)] ApplicationUser? user, [MaybeNullWhen(true)] out string error)
         {
             error = null;
             if (user == null)

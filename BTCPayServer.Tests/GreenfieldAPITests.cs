@@ -3586,10 +3586,15 @@ namespace BTCPayServer.Tests
             // new user needs approval
             var unapprovedUser = tester.NewAccount();
             await unapprovedUser.GrantAccessAsync();
-            var unapprovedUserClient = await unapprovedUser.CreateClient(Policies.Unrestricted);
+            var unapprovedUserBasicAuthClient = await unapprovedUser.CreateClient();
             await AssertAPIError("unauthenticated", async () =>
             {
-                await unapprovedUserClient.GetCurrentUser();
+                await unapprovedUserBasicAuthClient.GetCurrentUser();
+            });
+            var unapprovedUserApiKeyClient = await unapprovedUser.CreateClient(Policies.Unrestricted);
+            await AssertAPIError("unauthenticated", async () =>
+            {
+                await unapprovedUserApiKeyClient.GetCurrentUser();
             });
             Assert.True((await adminClient.GetUserByIdOrEmail(unapprovedUser.UserId)).RequiresApproval);
             Assert.False((await adminClient.GetUserByIdOrEmail(unapprovedUser.UserId)).Approved);
@@ -3597,14 +3602,19 @@ namespace BTCPayServer.Tests
             // approve
             Assert.True(await adminClient.ApproveUser(unapprovedUser.UserId, true, CancellationToken.None));
             Assert.True((await adminClient.GetUserByIdOrEmail(unapprovedUser.UserId)).Approved);
-            Assert.True((await unapprovedUserClient.GetCurrentUser()).Approved);
+            Assert.True((await unapprovedUserApiKeyClient.GetCurrentUser()).Approved);
+            Assert.True((await unapprovedUserBasicAuthClient.GetCurrentUser()).Approved);
             
             // un-approve
             Assert.True(await adminClient.ApproveUser(unapprovedUser.UserId, false, CancellationToken.None));
             Assert.False((await adminClient.GetUserByIdOrEmail(unapprovedUser.UserId)).Approved);
             await AssertAPIError("unauthenticated", async () =>
             {
-                await unapprovedUserClient.GetCurrentUser();
+                await unapprovedUserApiKeyClient.GetCurrentUser();
+            });
+            await AssertAPIError("unauthenticated", async () =>
+            {
+                await unapprovedUserBasicAuthClient.GetCurrentUser();
             });
             
             // reset policies to not require approval
@@ -3613,9 +3623,12 @@ namespace BTCPayServer.Tests
             // new user does not need approval
             var newUser = tester.NewAccount();
             await newUser.GrantAccessAsync();
-            var newUserClient = await newUser.CreateClient(Policies.Unrestricted);
-            Assert.False((await newUserClient.GetCurrentUser()).RequiresApproval);
-            Assert.False((await newUserClient.GetCurrentUser()).Approved);
+            var newUserBasicAuthClient = await newUser.CreateClient();
+            var newUserApiKeyClient = await newUser.CreateClient(Policies.Unrestricted);
+            Assert.False((await newUserApiKeyClient.GetCurrentUser()).RequiresApproval);
+            Assert.False((await newUserApiKeyClient.GetCurrentUser()).Approved);
+            Assert.False((await newUserBasicAuthClient.GetCurrentUser()).RequiresApproval);
+            Assert.False((await newUserBasicAuthClient.GetCurrentUser()).Approved);
             
             // try unapproving user which does not have the RequiresApproval flag
             await AssertAPIError("invalid-state", async () =>

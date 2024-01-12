@@ -101,7 +101,7 @@ namespace BTCPayServer.Controllers
 
             if (user.RequiresApproval && viewModel.Approved.HasValue && user.Approved != viewModel.Approved)
             {
-                approvalStatusChanged = await _userService.SetUserApproval(user.Id, viewModel.Approved.Value);
+                approvalStatusChanged = await _userService.SetUserApproval(user.Id, viewModel.Approved.Value, Request.GetAbsoluteRootUri());
             }
             if (user.RequiresEmailConfirmation && viewModel.EmailConfirmed.HasValue && user.EmailConfirmed != viewModel.EmailConfirmed)
             {

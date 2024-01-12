@@ -33,6 +33,7 @@ namespace BTCPayServer.HostedServices
         protected override void SubscribeToEvents()
         {
             Subscribe<UserRegisteredEvent>();
+            Subscribe<UserApprovedEvent>();
             Subscribe<UserPasswordResetRequestedEvent>();
         }
 
@@ -72,8 +73,19 @@ namespace BTCPayServer.HostedServices
                     {
                         userRegisteredEvent.CallbackUrlGenerated?.SetResult(null);
                     }
-
                     break;
+
+                case UserApprovedEvent userApprovedEvent:
+                    if (userApprovedEvent.Approved)
+                    {
+                        address = userApprovedEvent.User.GetMailboxAddress();
+                        callbackUrl = _generator.LoginLink(userApprovedEvent.RequestUri.Scheme,
+                            new HostString(userApprovedEvent.RequestUri.Host, userApprovedEvent.RequestUri.Port),
+                            userApprovedEvent.RequestUri.PathAndQuery);
+                        (await _emailSenderFactory.GetEmailSender()).SendApprovalConfirmation(address, callbackUrl);
+                    }
+                    break;
+
                 case UserPasswordResetRequestedEvent userPasswordResetRequestedEvent2:
                     userPasswordResetRequestedEvent = userPasswordResetRequestedEvent2;
 passwordSetter:

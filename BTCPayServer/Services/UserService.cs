@@ -4,8 +4,10 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
+using BTCPayServer.Events;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Storage.Services;
 using Microsoft.AspNetCore.Identity;
@@ -21,6 +23,7 @@ namespace BTCPayServer.Services
         private readonly StoredFileRepository _storedFileRepository;
         private readonly FileService _fileService;
         private readonly StoreRepository _storeRepository;
+        private readonly EventAggregator _eventAggregator;
         private readonly ApplicationDbContextFactory _applicationDbContextFactory;
         private readonly ILogger<UserService> _logger;
 
@@ -28,6 +31,7 @@ namespace BTCPayServer.Services
             IServiceProvider serviceProvider,
             StoredFileRepository storedFileRepository,
             FileService fileService,
+            EventAggregator eventAggregator,
             StoreRepository storeRepository,
             ApplicationDbContextFactory applicationDbContextFactory,
             ILogger<UserService> logger)
@@ -35,6 +39,7 @@ namespace BTCPayServer.Services
             _serviceProvider = serviceProvider;
             _storedFileRepository = storedFileRepository;
             _fileService = fileService;
+            _eventAggregator = eventAggregator;
             _storeRepository = storeRepository;
             _applicationDbContextFactory = applicationDbContextFactory;
             _logger = logger;
@@ -105,7 +110,7 @@ namespace BTCPayServer.Services
             return true;
         }
         
-        public async Task<bool> SetUserApproval(string userId, bool approved)
+        public async Task<bool> SetUserApproval(string userId, bool approved, Uri requestUri)
         {
             using var scope = _serviceProvider.CreateScope();
             var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
@@ -120,6 +125,7 @@ namespace BTCPayServer.Services
             if (succeeded)
             {
                 _logger.LogInformation("User {UserId} is now {Status}", user.Id, approved ? "approved" : "unapproved");
+                _eventAggregator.Publish(new UserApprovedEvent { User = user, Approved = approved, RequestUri = requestUri });
             }
             else
             {

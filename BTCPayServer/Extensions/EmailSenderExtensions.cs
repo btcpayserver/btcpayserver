@@ -23,6 +23,12 @@ namespace BTCPayServer.Services
                 $"Please confirm your account by clicking this link: <a href='{HtmlEncoder.Default.Encode(link)}'>link</a>");
         }
 
+        public static void SendApprovalConfirmation(this IEmailSender emailSender, MailboxAddress address, string link)
+        {
+            emailSender.SendEmail(address, "Your account has been approved",
+                $"Your account has been approved and you can now <a href='{HtmlEncoder.Default.Encode(link)}'>login here</a>");
+        }
+
         public static void SendSetPasswordConfirmation(this IEmailSender emailSender, MailboxAddress address, string link, bool newPassword)
         {
             var subject = $"{(newPassword ? "Set" : "Update")}  Password";

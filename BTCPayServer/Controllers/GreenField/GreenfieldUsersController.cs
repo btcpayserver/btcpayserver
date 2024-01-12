@@ -105,8 +105,7 @@ namespace BTCPayServer.Controllers.Greenfield
             var success = false;
             if (user.RequiresApproval)
             {
-                user.Approved = request.Approved;
-                success = await _userManager.UpdateAsync(user) is { Succeeded: true };
+                success = await _userService.SetUserApproval(user.Id, request.Approved);
             }
             return success ? Ok() : this.CreateAPIError("invalid-state",
                 $"{(request.Approved ? "Approving" : "Unapproving")} user failed");

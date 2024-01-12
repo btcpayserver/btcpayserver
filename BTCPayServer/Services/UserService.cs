@@ -105,6 +105,30 @@ namespace BTCPayServer.Services
             return true;
         }
         
+        public async Task<bool> SetUserApproval(string userId, bool approved)
+        {
+            using var scope = _serviceProvider.CreateScope();
+            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+            var user = await userManager.FindByIdAsync(userId);
+            if (user is null || !user.RequiresApproval || user.Approved == approved)
+            {
+                return false;
+            }
+            
+            user.Approved = approved;
+            var succeeded = await userManager.UpdateAsync(user) is { Succeeded: true };
+            if (succeeded)
+            {
+                _logger.LogInformation("User {UserId} is now {Status}", user.Id, approved ? "approved" : "unapproved");
+            }
+            else
+            {
+                _logger.LogError("Failed to {Action} user {UserId}", approved ? "approve" : "unapprove", user.Id);
+            }
+
+            return succeeded;
+        }
+        
         public async Task<bool?> ToggleUser(string userId, DateTimeOffset? lockedOutDeadline)
         {
             using var scope = _serviceProvider.CreateScope();

@@ -97,11 +97,11 @@ namespace BTCPayServer.Controllers
 
             bool? propertiesChanged = null;
             bool? adminStatusChanged = null;
+            bool? approvalStatusChanged = null;
 
             if (user.RequiresApproval && viewModel.Approved.HasValue && user.Approved != viewModel.Approved)
             {
-                user.Approved = viewModel.Approved.Value;
-                propertiesChanged = true;
+                approvalStatusChanged = await _userService.SetUserApproval(user.Id, viewModel.Approved.Value);
             }
             if (user.RequiresEmailConfirmation && viewModel.EmailConfirmed.HasValue && user.EmailConfirmed != viewModel.EmailConfirmed)
             {
@@ -128,9 +128,9 @@ namespace BTCPayServer.Controllers
                 propertiesChanged = await _UserManager.UpdateAsync(user) is { Succeeded: true };
             }
 
-            if (propertiesChanged.HasValue || adminStatusChanged.HasValue)
+            if (propertiesChanged.HasValue || adminStatusChanged.HasValue || approvalStatusChanged.HasValue)
             {
-                if (propertiesChanged is not false && adminStatusChanged is not false)
+                if (propertiesChanged is not false && adminStatusChanged is not false && approvalStatusChanged is not false)
                 {
                     TempData[WellKnownTempData.SuccessMessage] = "User successfully updated";
                 }

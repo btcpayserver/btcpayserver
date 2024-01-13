@@ -207,7 +207,13 @@
     </div>
 
     <div class="text-center mb-4" id="crowdfund-body-header">
-        <button v-if="active" id="crowdfund-body-header-cta" class="btn btn-lg btn-primary py-2 px-5 only-for-js" v-on:click="contribute">Contribute</button>
+        @if (Model.HasFormForExtraValues)
+            {
+                <button class="btn btn-lg btn-primary py-2 px-5" onclick="window.location.href='@Url.Action("CrowdfundForm", "UICrowdfund", new {Model.AppId})'">Contribute</button>
+            }
+        else {
+            <button v-if="active" id="crowdfund-body-header-cta" class="btn btn-lg btn-primary py-2 px-5 only-for-js" v-on:click="contribute">Contribute</button>
+        }
     </div>
 
     <div class="row mt-4 justify-content-between gap-5">

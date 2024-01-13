@@ -11,7 +11,6 @@ using BTCPayServer.Data;
 using BTCPayServer.Models;
 using BTCPayServer.Plugins.Crowdfund.Controllers;
 using BTCPayServer.Plugins.Crowdfund.Models;
-using BTCPayServer.Plugins.PointOfSale;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
@@ -210,6 +209,7 @@ namespace BTCPayServer.Plugins.Crowdfund
                 PerkCount = perkCount,
                 PerkValue = perkValue,
                 NeverReset = settings.ResetEvery == CrowdfundResetEvery.Never,
+                HasFormForExtraValues = (settings.FormId is not null),
                 Sounds = settings.Sounds,
                 AnimationColors = settings.AnimationColors,
                 CurrencyData = _currencyNameTable.GetCurrencyData(settings.TargetCurrency, true),

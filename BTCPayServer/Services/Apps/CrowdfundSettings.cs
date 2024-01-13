@@ -45,6 +45,9 @@ namespace BTCPayServer.Services.Apps
         public bool DisplayPerksRanking { get; set; }
         public bool DisplayPerksValue { get; set; }
         public bool SortPerksByPopularity { get; set; }
+        public string FormId { get; set; } = null;
+
+
         public string[] AnimationColors { get; set; } =
         {
             "#FF6138", "#FFBE53", "#2980B9", "#282741"

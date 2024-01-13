@@ -62,7 +62,9 @@
                     {
                         if (Model.ReceiptOptions.ShowQR is true)
                         {
-                            <vc:qr-code data="@Context.Request.GetCurrentUrl()"></vc:qr-code>
+                            <div aria-label="QR Code" role="img">
+                                <vc:qr-code data="@Context.Request.GetCurrentUrl()"></vc:qr-code>
+                            </div>
                         }
                         <div class="d-flex gap-4 mb-0 flex-fill">
                             <dl class="d-flex flex-column gap-4 mb-0 flex-fill">

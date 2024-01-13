@@ -7,11 +7,12 @@
     @await Component.InvokeAsync("UiExtensionPoint", new {location = "checkout-v2-bitcoin-pre-content", model = Model})
     <div class="payment-box">
         <div v-if="model.invoiceBitcoinUrlQR" class="qr-container" :data-qr-value="model.invoiceBitcoinUrlQR" :data-clipboard="model.btcAddress">
-            <div>
+            <div role="img" aria-label="Bitcoin QR Code">
                 <qrcode :value="model.invoiceBitcoinUrlQR" tag="div" :options="qrOptions" />
             </div>
-            <img class="qr-icon" :src="model.cryptoImage" :alt="model.paymentMethodName"/>
+            <img class="qr-icon" :src="model.cryptoImage" :alt="model.paymentMethodName" />
         </div>
+
         <div v-if="model.btcAddress" class="input-group mt-3">
             <div class="form-floating" id="Address_@Model.PaymentMethodId">
                 <vc:truncate-center text="model.btcAddress" is-vue="true" padding="15" elastic="true" classes="form-control-plaintext" />

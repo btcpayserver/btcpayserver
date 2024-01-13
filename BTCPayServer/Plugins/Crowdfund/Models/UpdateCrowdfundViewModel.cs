@@ -117,6 +117,10 @@ namespace BTCPayServer.Plugins.Crowdfund.Models
         // NOTE: Improve validation if needed
         public bool ModelWithMinimumData => Description != null && Title != null && TargetCurrency != null;
 
+
+        [Display(Name = "Request contributor data on checkout")]
+        public string FormId { get; set; }
+
         public bool Archived { get; set; }
     }
 }

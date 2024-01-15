@@ -427,6 +427,7 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("SaveButton")).Click();
             Assert.Contains("Policies updated successfully", s.FindAlertMessage().Text);
             Assert.True(s.Driver.FindElement(By.Id("RequiresUserApproval")).Selected);
+            s.Driver.ElementDoesNotExist(By.Id("NotificationsBadge"));
             s.Logout();
 
             // Register user and try to log in
@@ -441,10 +442,18 @@ namespace BTCPayServer.Tests
             Assert.Contains("Your user account requires approval by an admin before you can log in", s.FindAlertMessage(StatusMessageModel.StatusSeverity.Warning).Text);
             Assert.Contains("/login", s.Driver.Url);
             
-            // Login with admin and reset approval policy
+            // Login with admin
             s.GoToLogin();
             s.LogIn(admin.RegisterDetails.Email, admin.RegisterDetails.Password);
             s.GoToHome();
+            
+            // Check notification
+            TestUtils.Eventually(() => Assert.Equal("1", s.Driver.FindElement(By.Id("NotificationsBadge")).Text));
+            s.Driver.FindElement(By.Id("NotificationsHandle")).Click();
+            Assert.Matches($"New user {unapproved.RegisterDetails.Email} requires approval", s.Driver.FindElement(By.CssSelector("#NotificationsList .notification")).Text);
+            s.Driver.FindElement(By.Id("NotificationsMarkAllAsSeen")).Click();
+            
+            // Reset approval policy
             s.GoToServer(ServerNavPages.Policies);
             Assert.True(s.Driver.FindElement(By.Id("EnableRegistration")).Selected);
             Assert.True(s.Driver.FindElement(By.Id("RequiresUserApproval")).Selected);
@@ -473,6 +482,11 @@ namespace BTCPayServer.Tests
             s.GoToLogin();
             s.LogIn(admin.RegisterDetails.Email, admin.RegisterDetails.Password);
             s.GoToHome();
+            
+            // No notification this time
+            s.Driver.ElementDoesNotExist(By.Id("NotificationsBadge"));
+            
+            // Check users list
             s.GoToServer(ServerNavPages.Users);
             var rows = s.Driver.FindElements(By.CssSelector("#UsersList tr"));
             Assert.True(rows.Count >= 3);

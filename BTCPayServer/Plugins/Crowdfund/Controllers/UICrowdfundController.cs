@@ -105,7 +105,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
         [EnableCors(CorsPolicies.All)]
         [DomainMappingConstraint(CrowdfundAppType.AppType)]
         [RateLimitsFilter(ZoneLimits.PublicInvoices, Scope = RateLimitsScope.RemoteAddress)]
-        public async Task<IActionResult> ContributeToCrowdfund(string appId, ContributeToCrowdfund request, CancellationToken cancellationToken = default, string formResponse = null)
+        public async Task<IActionResult> ContributeToCrowdfund(string appId, ContributeToCrowdfund request, string formResponse = null, CancellationToken cancellationToken = default)
         {
             var app = await _appService.GetApp(appId, CrowdfundAppType.AppType, true);
 
@@ -551,6 +551,8 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                 return null;
             }
             var info = (ViewCrowdfundViewModel)await _app.GetInfo(app);
+            info.FormUrl = info.HasFormForExtraValues ? Url.Action("CrowdfundForm", "UICrowdfund", new { info.AppId }) : "";
+            
             info.HubPath = AppHub.GetHubPath(Request);
             info.SimpleDisplay = Request.Query.ContainsKey("simple");
             return info;

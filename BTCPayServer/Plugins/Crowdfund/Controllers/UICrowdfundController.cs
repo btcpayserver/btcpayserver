@@ -584,6 +584,8 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                 return null;
             }
             var info = (ViewCrowdfundViewModel)await _app.GetInfo(app);
+            info.FormUrl = info.HasFormForExtraValues ? Url.Action("CrowdfundForm", "UICrowdfund", new { info.AppId }) : "";
+            
             info.HubPath = AppHub.GetHubPath(Request);
             info.SimpleDisplay = Request.Query.ContainsKey("simple");
             return info;

@@ -427,6 +427,13 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("SaveButton")).Click();
             Assert.Contains("Policies updated successfully", s.FindAlertMessage().Text);
             Assert.True(s.Driver.FindElement(By.Id("RequiresUserApproval")).Selected);
+            
+            // Check user create view has approval checkbox
+            s.GoToServer(ServerNavPages.Users);
+            s.Driver.FindElement(By.Id("CreateUser")).Click();
+            Assert.False(s.Driver.FindElement(By.Id("Approved")).Selected);
+            
+            // Ensure there is no unread notification yet
             s.Driver.ElementDoesNotExist(By.Id("NotificationsBadge"));
             s.Logout();
 
@@ -461,6 +468,12 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("SaveButton")).Click();
             Assert.Contains("Policies updated successfully", s.FindAlertMessage().Text);
             Assert.False(s.Driver.FindElement(By.Id("RequiresUserApproval")).Selected);
+            
+            // Check user create view does not have approval checkbox
+            s.GoToServer(ServerNavPages.Users);
+            s.Driver.FindElement(By.Id("CreateUser")).Click();
+            s.Driver.ElementDoesNotExist(By.Id("Approved"));
+            
             s.Logout();
             
             // Still requires approval for user who registered before

@@ -166,8 +166,8 @@ namespace BTCPayServer.Controllers
                     UserName = model.Email,
                     Email = model.Email,
                     EmailConfirmed = model.EmailConfirmed,
-                    RequiresEmailConfirmation = _policiesSettings.RequiresUserApproval,
-                    RequiresApproval = _policiesSettings.RequiresConfirmedEmail,
+                    RequiresEmailConfirmation = _policiesSettings.RequiresConfirmedEmail,
+                    RequiresApproval = _policiesSettings.RequiresUserApproval,
                     Approved = model.Approved,
                     Created = DateTimeOffset.UtcNow
                 };

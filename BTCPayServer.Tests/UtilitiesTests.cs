@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon.Auth.AccessControlPolicy;
@@ -13,6 +15,10 @@ using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers;
 using ExchangeSharp;
+using Microsoft.AspNetCore.Razor.Language;
+using Microsoft.AspNetCore.Razor.Language.Intermediate;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using NBitcoin;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -22,18 +28,18 @@ using OpenQA.Selenium.DevTools.V100.Network;
 using OpenQA.Selenium.Support.UI;
 using Xunit;
 using Xunit.Abstractions;
-using static BTCPayServer.Tests.TransifexClient;
+using Microsoft.Extensions.FileSystemGlobbing;
 
 namespace BTCPayServer.Tests
 {
     /// <summary>
     /// This class hold easy to run utilities for dev time
     /// </summary>
-    public class UtilitiesTests
+    public class UtilitiesTests : UnitTestBase
     {
         public ITestOutputHelper Logs { get; }
 
-        public UtilitiesTests(ITestOutputHelper logs)
+        public UtilitiesTests(ITestOutputHelper logs) : base(logs)
         {
             Logs = logs;
         }
@@ -261,6 +267,120 @@ retry:
                 goto retry;
             }
             Thread.Sleep(200);
+        }
+
+        /// <summary>
+        /// This utilities crawl through the cs files in search for
+        /// Display attributes, then update Translations.Default to list them
+        /// </summary>
+        [Trait("Utilities", "Utilities")]
+        [Fact]
+        public async Task UpdateDefaultTranslations()
+        {
+            var soldir = TestUtils.TryGetSolutionDirectoryInfo();
+            List<string> defaultTranslatedKeys = new List<string>();
+
+            // Go through all cs files, and find [Display] and [DisplayName] attributes
+            foreach (var file in soldir.EnumerateFiles("*.cs", SearchOption.AllDirectories))
+            {
+                var txt = File.ReadAllText(file.FullName);
+                var tree = CSharpSyntaxTree.ParseText(txt, new CSharpParseOptions(LanguageVersion.Default));
+                var walker = new DisplayNameWalker();
+                walker.Visit(tree.GetRoot());
+                foreach (var k in walker.Keys)
+                {
+                    defaultTranslatedKeys.Add(k);
+                }
+            }
+
+            // Go through all cshtml file, search for text-translate or ViewLocalizer usage
+            using (var tester = CreateServerTester())
+            {
+                await tester.StartAsync();
+                var engine = tester.PayTester.GetService<RazorProjectEngine>();
+                foreach (var file in soldir.EnumerateFiles("*.cshtml", SearchOption.AllDirectories))
+                {
+                    var filePath = file.FullName;
+                    var txt = File.ReadAllText(file.FullName);
+                    if (txt.Contains("ViewLocalizer"))
+                    {
+                        var matches = Regex.Matches(txt, "ViewLocalizer\\[\"(.*?)\"\\]");
+                        foreach (Match match in matches)
+                        {
+                            defaultTranslatedKeys.Add(match.Groups[1].Value);
+                        }
+                    }
+                    else if (txt.Contains("text-translate"))
+                    {
+                        filePath = filePath.Replace(Path.Combine(soldir.FullName, "BTCPayServer"), "/");
+                        var item = engine.FileSystem.GetItem(filePath);
+                        
+                        var node = (DocumentIntermediateNode)engine.Process(item).Items[typeof(DocumentIntermediateNode)];
+                        foreach (var n in node.FindDescendantNodes<TagHelperIntermediateNode>())
+                        {
+                            foreach (var tagHelper in n.TagHelpers)
+                            {
+                                if (tagHelper.Name.EndsWith("TranslateTagHelper"))
+                                {
+                                    var htmlContent = n.FindDescendantNodes<HtmlContentIntermediateNode>().First();
+                                    var inner = txt.Substring(htmlContent.Source.Value.AbsoluteIndex, htmlContent.Source.Value.Length);
+                                    defaultTranslatedKeys.Add(inner);
+                                }
+                            }
+                        }
+                        
+                    }
+                }
+
+            }
+            defaultTranslatedKeys = defaultTranslatedKeys.Distinct().OrderBy(o => o).ToList();
+            var path = Path.Combine(soldir.FullName, "BTCPayServer/Services/Translations.Default.cs");
+            var defaultTranslation = File.ReadAllText(path);
+            var startIdx = defaultTranslation.IndexOf("\"\"\"");
+            var endIdx = defaultTranslation.LastIndexOf("\"\"\"");
+            var content = defaultTranslation.Substring(0, startIdx + 3);
+            content += "\n" + String.Join('\n', defaultTranslatedKeys) + "\n";
+            content += defaultTranslation.Substring(endIdx);
+            File.WriteAllText(path, content);
+        }
+        class DisplayNameWalker : CSharpSyntaxWalker
+        {
+            public List<string> Keys = new List<string>();
+            public bool InAttribute = false;
+            public override void VisitAttribute(AttributeSyntax node)
+            {
+                InAttribute = true;
+                base.VisitAttribute(node);
+                InAttribute = false;
+            }
+            public override void VisitIdentifierName(IdentifierNameSyntax node)
+            {
+                if (InAttribute)
+                {
+                    InAttribute = node.Identifier.Text switch
+                    {
+                        "Display" => true,
+                        "DisplayAttribute" => true,
+                        "DisplayName" => true,
+                        "DisplayNameAttribute" => true,
+                        _ => false
+                    };
+                }
+            }
+            public override void VisitAttributeArgument(AttributeArgumentSyntax node)
+            {
+                if (InAttribute)
+                {
+                    var name = node.Expression switch
+                    {
+                        LiteralExpressionSyntax les => les.Token.ValueText,
+                        IdentifierNameSyntax ins => ins.Identifier.Text,
+                        _ => throw new InvalidOperationException("Unknown node")
+                    };
+                    Keys.Add(name);
+                    InAttribute = false;
+                }
+            }
         }
 
         /// <summary>

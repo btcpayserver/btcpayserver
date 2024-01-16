@@ -32,6 +32,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
@@ -168,6 +169,7 @@ namespace BTCPayServer.Hosting
             .AddNewtonsoftJson()
             .AddRazorRuntimeCompilation()
             .AddPlugins(services, Configuration, LoggerFactory, bootstrapServiceProvider)
+            .AddDataAnnotationsLocalization()
             .AddControllersAsServices();
 
             services.AddServerSideBlazor();

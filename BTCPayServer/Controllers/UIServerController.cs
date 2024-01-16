@@ -68,6 +68,7 @@ namespace BTCPayServer.Controllers
         private readonly UriResolver _uriResolver;
         private readonly EmailSenderFactory _emailSenderFactory;
         private readonly TransactionLinkProviders _transactionLinkProviders;
+        private readonly LocalizerService _localizer;
 
         public UIServerController(
             UserManager<ApplicationUser> userManager,
@@ -93,7 +94,8 @@ namespace BTCPayServer.Controllers
             EmailSenderFactory emailSenderFactory,
             IHostApplicationLifetime applicationLifetime,
             IHtmlHelper html,
-            TransactionLinkProviders transactionLinkProviders
+            TransactionLinkProviders transactionLinkProviders,
+            LocalizerService localizer
         )
         {
             _policiesSettings = policiesSettings;
@@ -120,6 +122,7 @@ namespace BTCPayServer.Controllers
             ApplicationLifetime = applicationLifetime;
             Html = html;
             _transactionLinkProviders = transactionLinkProviders;
+            _localizer = localizer;
         }
 
         [HttpGet("server/stores")]

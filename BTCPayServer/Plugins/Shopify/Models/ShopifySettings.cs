@@ -9,7 +9,7 @@ namespace BTCPayServer.Plugins.Shopify.Models
         [Display(Name = "Shop Name")]
         public string ShopName { get; set; }
 
-        [Display(Name = "Api Key")]
+        [Display(Name = "API Key")]
         public string ApiKey { get; set; }
 
         [Display(Name = "Admin API access token")]

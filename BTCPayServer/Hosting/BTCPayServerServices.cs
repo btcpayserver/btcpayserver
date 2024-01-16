@@ -75,6 +75,10 @@ using Serilog;
 using BTCPayServer.Services.Reporting;
 using BTCPayServer.Services.WalletFileParsing;
 
+using Microsoft.Extensions.Localization;
+using Microsoft.AspNetCore.Mvc.Localization;
+
+
 #if ALTCOINS
 using BTCPayServer.Services.Altcoins.Monero;
 using BTCPayServer.Services.Altcoins.Zcash;
@@ -90,6 +94,11 @@ namespace BTCPayServer.Hosting
         }
         public static IServiceCollection AddBTCPayServer(this IServiceCollection services, IConfiguration configuration, Logs logs)
         {
+            services.TryAddSingleton<IStringLocalizerFactory, LocalizerFactory>();
+            services.TryAddSingleton<IHtmlLocalizerFactory, LocalizerFactory>();
+            services.TryAddSingleton<LocalizerService>();
+            services.TryAddSingleton<ViewLocalizer>();
+
             services.AddSingleton<MvcNewtonsoftJsonOptions>(o => o.GetRequiredService<IOptions<MvcNewtonsoftJsonOptions>>().Value);
             services.AddSingleton<JsonSerializerSettings>(o => o.GetRequiredService<IOptions<MvcNewtonsoftJsonOptions>>().Value.SerializerSettings);
             services.AddDbContext<ApplicationDbContext>((provider, o) =>
@@ -165,6 +174,7 @@ namespace BTCPayServer.Hosting
             AddOnchainWalletParsers(services);
 
             services.AddStartupTask<BlockExplorerLinkStartupTask>();
+            services.AddStartupTask<LoadTranslationsStartupTask>();
             services.TryAddSingleton<InvoiceRepository>();
             services.AddSingleton<PaymentService>();
             services.AddSingleton<BTCPayServerEnvironment>();

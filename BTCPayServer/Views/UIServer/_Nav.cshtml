@@ -1,4 +1,4 @@
-﻿@using BTCPayServer.Configuration
+@using BTCPayServer.Configuration
 @inject BTCPayServerOptions _btcPayServerOptions
 
 <div class="sticky-header mb-l">
@@ -17,6 +17,7 @@
             }
             <a asp-controller="UIServer" id="SectionNav-@ServerNavPages.Logs" class="nav-link @ViewData.IsActivePage(ServerNavPages.Logs)" asp-action="LogsView">Logs</a>
             <a asp-controller="UIServer" id="SectionNav-@ServerNavPages.Files" class="nav-link @ViewData.IsActivePage(ServerNavPages.Files)" asp-action="Files">Files</a>
+			<a asp-controller="UIServer" id="SectionNav-@ServerNavPages.Translations" class="nav-link @ViewData.IsActivePage(ServerNavPages.Translations)" asp-action="ServerTranslations">Translations</a>
             <vc:ui-extension-point location="server-nav" model="@Model"/>
         </div>
     </nav>

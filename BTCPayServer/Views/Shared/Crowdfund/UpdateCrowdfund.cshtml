@@ -177,11 +177,6 @@
     <div class="row">
         <div class="col-xl-8 col-xxl-constrain">
             <h3 class="mt-5 mb-4">Contributions</h3>
-            <div class="form-group">
-                <label asp-for="FormId" class="form-label"></label>
-                <select asp-for="FormId" class="form-select w-auto" asp-items="@checkoutFormOptions"></select>
-                <span asp-validation-for="FormId" class="text-danger"></span>
-            </div>
             <div class="form-check mb-3">
                 <input asp-for="SortPerksByPopularity" type="checkbox" class="form-check-input" />
                 <label asp-for="SortPerksByPopularity" class="form-check-label"></label>
@@ -208,6 +203,13 @@
                 <input asp-for="UseAllStoreInvoices" type="checkbox" class="form-check-input" />
                 <label asp-for="UseAllStoreInvoices" class="form-check-label"></label>
                 <span asp-validation-for="UseAllStoreInvoices" class="text-danger"></span>
+            </div>
+            
+            <h3 class="mt-5 mb-4">Checkout</h3>
+            <div class="form-group">
+                <label asp-for="FormId" class="form-label"></label>
+                <select asp-for="FormId" class="form-select w-auto" asp-items="@checkoutFormOptions"></select>
+                <span asp-validation-for="FormId" class="text-danger"></span>
             </div>
 
             <h3 class="mt-5 mb-2">Additional Options</h3>

@@ -221,7 +221,7 @@ document.addEventListener("DOMContentLoaded",function (ev) {
             contribute() {
                 if (!this.active || this.loading) return;
 
-                if (this.srvModel.hasFormForExtraValues) {
+                if (this.srvModel.formUrl) {
                     window.location.href = this.srvModel.formUrl;
                     return;
                 }

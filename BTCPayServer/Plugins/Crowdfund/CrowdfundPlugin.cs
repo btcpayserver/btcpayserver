@@ -182,6 +182,10 @@ namespace BTCPayServer.Plugins.Crowdfund
                 CustomCSSLink = settings.CustomCSSLink,
                 EmbeddedCSS = settings.EmbeddedCSS
             };
+            var formUrl = settings.FormId != null
+                ? _linkGenerator.GetPathByAction(nameof(UICrowdfundController.CrowdfundForm), "UICrowdfund",
+                    new { appId = appData.Id }, _options.Value.RootPath)
+                : null;
             return new ViewCrowdfundViewModel
             {
                 Title = settings.Title,
@@ -209,7 +213,7 @@ namespace BTCPayServer.Plugins.Crowdfund
                 PerkCount = perkCount,
                 PerkValue = perkValue,
                 NeverReset = settings.ResetEvery == CrowdfundResetEvery.Never,
-                HasFormForExtraValues = (settings.FormId is not null),
+                FormUrl = formUrl,
                 Sounds = settings.Sounds,
                 AnimationColors = settings.AnimationColors,
                 CurrencyData = _currencyNameTable.GetCurrencyData(settings.TargetCurrency, true),

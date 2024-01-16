@@ -516,10 +516,13 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 }
             }
 
+            var store = await _appService.GetStore(app);
+            var storeBlob = store.GetStoreBlob();
+
             viewModel.FormName = formData.Name;
             viewModel.Form = form;
-
             viewModel.FormParameters = formParameters;
+            viewModel.StoreBranding = new StoreBrandingViewModel(storeBlob);
             return View("Views/UIForms/View", viewModel);
         }
         

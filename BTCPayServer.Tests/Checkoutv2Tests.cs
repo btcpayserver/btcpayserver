@@ -60,13 +60,13 @@ namespace BTCPayServer.Tests
             Assert.Contains("Bitcoin", s.Driver.FindElement(By.CssSelector(".payment-method.active")).Text);
             Assert.Contains("LNURL", s.Driver.FindElement(By.CssSelector(".payment-method:nth-child(2)")).Text);
             var qrValue = s.Driver.FindElement(By.CssSelector(".qr-container")).GetAttribute("data-qr-value");
-            var address = s.Driver.FindElement(By.CssSelector(".qr-container")).GetAttribute("data-clipboard");
+            var clipboard = s.Driver.FindElement(By.CssSelector(".qr-container")).GetAttribute("data-clipboard");
             var payUrl = s.Driver.FindElement(By.Id("PayInWallet")).GetAttribute("href");
-            var copyAddress = s.Driver.FindElement(By.CssSelector("#Address_BTC .truncate-center-start")).Text;
-            Assert.Equal($"bitcoin:{address}", payUrl);
+            var address = s.Driver.FindElement(By.CssSelector("#Address_BTC .truncate-center-start")).Text;
             Assert.StartsWith("bcrt", s.Driver.FindElement(By.CssSelector("#Address_BTC .truncate-center-start")).Text);
             Assert.DoesNotContain("lightning=", payUrl);
-            Assert.Equal(address, copyAddress);
+            Assert.Equal($"bitcoin:{address}", payUrl);
+            Assert.Equal($"bitcoin:{address}", clipboard);
             Assert.Equal($"bitcoin:{address.ToUpperInvariant()}", qrValue);
             s.Driver.ElementDoesNotExist(By.Id("Lightning_BTC"));
 
@@ -97,11 +97,11 @@ namespace BTCPayServer.Tests
             Assert.Contains("Lightning", s.Driver.WaitForElement(By.CssSelector(".payment-method.active")).Text);
             Assert.Contains("Bitcoin", s.Driver.WaitForElement(By.CssSelector(".payment-method")).Text);
             qrValue = s.Driver.FindElement(By.CssSelector(".qr-container")).GetAttribute("data-qr-value");
-            address = s.Driver.FindElement(By.CssSelector(".qr-container")).GetAttribute("data-clipboard");
+            clipboard = s.Driver.FindElement(By.CssSelector(".qr-container")).GetAttribute("data-clipboard");
             payUrl = s.Driver.FindElement(By.Id("PayInWallet")).GetAttribute("href");
-            copyAddress = s.Driver.FindElement(By.CssSelector("#Lightning_BTC_LightningLike .truncate-center-start")).Text;
+            address = s.Driver.FindElement(By.CssSelector("#Lightning_BTC_LightningLike .truncate-center-start")).Text;
             Assert.Equal($"lightning:{address}", payUrl);
-            Assert.Equal(address, copyAddress);
+            Assert.Equal($"lightning:{address}", clipboard);
             Assert.Equal($"lightning:{address.ToUpperInvariant()}", qrValue);
             s.Driver.ElementDoesNotExist(By.Id("Address_BTC"));
 
@@ -153,7 +153,7 @@ namespace BTCPayServer.Tests
             s.Driver.WaitUntilAvailable(By.Id("Checkout-v2"));
             
             await Task.Delay(200);
-            address = s.Driver.FindElement(By.CssSelector(".qr-container")).GetAttribute("data-clipboard");
+            address = s.Driver.FindElement(By.CssSelector("#Address_BTC .truncate-center-start")).Text;
             var amountFraction = "0.00001";
             await s.Server.ExplorerNode.SendToAddressAsync(BitcoinAddress.Create(address, Network.RegTest),
                 Money.Parse(amountFraction));
@@ -202,15 +202,14 @@ namespace BTCPayServer.Tests
 
             // Pay partial amount
             await Task.Delay(200);
-            address = s.Driver.FindElement(By.CssSelector(".qr-container")).GetAttribute("data-clipboard");
-            amountFraction = "0.00001";
-            await s.Server.ExplorerNode.SendToAddressAsync(BitcoinAddress.Create(address, Network.RegTest),
-                Money.Parse(amountFraction));
-            await s.Server.ExplorerNode.GenerateAsync(1);
-
+            s.Driver.FindElement(By.Id("test-payment-amount")).Clear();
+            s.Driver.FindElement(By.Id("test-payment-amount")).SendKeys("0.00001");
+            
             // Fake Pay
             TestUtils.Eventually(() =>
             {
+                s.Driver.FindElement(By.Id("FakePayment")).Click();
+                s.Driver.FindElement(By.Id("mine-block")).Click();
                 paymentInfo = s.Driver.WaitForElement(By.Id("PaymentInfo"));
                 Assert.Contains("The invoice hasn't been paid in full", paymentInfo.Text);
                 Assert.Contains("Please send", paymentInfo.Text);
@@ -265,18 +264,19 @@ namespace BTCPayServer.Tests
             Assert.Empty(s.Driver.FindElements(By.CssSelector(".payment-method")));
             Assert.Contains("BTC", s.Driver.FindElement(By.Id("AmountDue")).Text);
             qrValue = s.Driver.FindElement(By.CssSelector(".qr-container")).GetAttribute("data-qr-value");
-            address = s.Driver.FindElement(By.CssSelector(".qr-container")).GetAttribute("data-clipboard");
+            clipboard = s.Driver.FindElement(By.CssSelector(".qr-container")).GetAttribute("data-clipboard");
             payUrl = s.Driver.FindElement(By.Id("PayInWallet")).GetAttribute("href");
             var copyAddressOnchain = s.Driver.FindElement(By.CssSelector("#Address_BTC .truncate-center-start")).Text;
             var copyAddressLightning = s.Driver.FindElement(By.CssSelector("#Lightning_BTC .truncate-center-start")).Text;
-            Assert.StartsWith($"bitcoin:{address}?amount=", payUrl);
+            Assert.StartsWith($"bitcoin:{copyAddressOnchain}?amount=", payUrl);
             Assert.Contains("?amount=", payUrl);
             Assert.Contains("&lightning=", payUrl);
             Assert.StartsWith("bcrt", copyAddressOnchain);
-            Assert.Equal(address, copyAddressOnchain);
             Assert.StartsWith("lnbcrt", copyAddressLightning);
-            Assert.StartsWith($"bitcoin:{address.ToUpperInvariant()}?amount=", qrValue);
+            Assert.StartsWith($"bitcoin:{copyAddressOnchain.ToUpperInvariant()}?amount=", qrValue);
             Assert.Contains("&lightning=LNBCRT", qrValue);
+            Assert.Contains("&lightning=lnbcrt", clipboard);
+            Assert.Equal(clipboard, payUrl);
 
             // Check details
             s.Driver.ToggleCollapse("PaymentDetails");
@@ -333,17 +333,18 @@ namespace BTCPayServer.Tests
             s.Driver.WaitUntilAvailable(By.Id("Checkout-v2"));
             Assert.Empty(s.Driver.FindElements(By.CssSelector(".payment-method")));
             qrValue = s.Driver.FindElement(By.CssSelector(".qr-container")).GetAttribute("data-qr-value");
-            address = s.Driver.FindElement(By.CssSelector(".qr-container")).GetAttribute("data-clipboard");
+            clipboard = s.Driver.FindElement(By.CssSelector(".qr-container")).GetAttribute("data-clipboard");
             payUrl = s.Driver.FindElement(By.Id("PayInWallet")).GetAttribute("href");
             copyAddressOnchain = s.Driver.FindElement(By.CssSelector("#Address_BTC .truncate-center-start")).Text;
             copyAddressLightning = s.Driver.FindElement(By.CssSelector("#Lightning_BTC .truncate-center-start")).Text;
-            Assert.StartsWith($"bitcoin:{address}", payUrl);
+            Assert.StartsWith($"bitcoin:{copyAddressOnchain}", payUrl);
             Assert.Contains("?lightning=lnurl", payUrl);
             Assert.DoesNotContain("amount=", payUrl);
             Assert.StartsWith("bcrt", copyAddressOnchain);
-            Assert.Equal(address, copyAddressOnchain);
             Assert.StartsWith("lnurl", copyAddressLightning);
-            Assert.StartsWith($"bitcoin:{address.ToUpperInvariant()}?lightning=LNURL", qrValue);
+            Assert.StartsWith($"bitcoin:{copyAddressOnchain.ToUpperInvariant()}?lightning=LNURL", qrValue);
+            Assert.Contains($"bitcoin:{copyAddressOnchain}?lightning=lnurl", clipboard);
+            Assert.Equal(clipboard, payUrl);
 
             // Check details
             s.Driver.ToggleCollapse("PaymentDetails");

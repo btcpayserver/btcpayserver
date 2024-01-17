@@ -191,7 +191,7 @@ namespace BTCPayServer.Controllers
         [HttpGet("{storeId}/onchain/{cryptoCode}/generate/{method?}")]
         public async Task<IActionResult> GenerateWallet(WalletSetupViewModel vm)
         {
-            var checkResult = IsAvailable(vm.CryptoCode, out _, out var network);
+            var checkResult = IsAvailable(vm.CryptoCode, out var store, out var network);
             if (checkResult != null)
             {
                 return checkResult;
@@ -231,7 +231,7 @@ namespace BTCPayServer.Controllers
         [HttpPost("{storeId}/onchain/{cryptoCode}/generate/{method}")]
         public async Task<IActionResult> GenerateWallet(string storeId, string cryptoCode, WalletSetupMethod method, WalletSetupRequest request)
         {
-            var checkResult = IsAvailable(cryptoCode, out _, out var network);
+            var checkResult = IsAvailable(cryptoCode, out var store, out var network);
             if (checkResult != null)
             {
                 return checkResult;

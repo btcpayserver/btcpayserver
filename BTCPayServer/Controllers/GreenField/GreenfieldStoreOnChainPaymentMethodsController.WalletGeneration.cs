@@ -23,7 +23,7 @@ namespace BTCPayServer.Controllers.Greenfield
             GenerateWalletRequest request)
         {
 
-            AssertCryptoCodeWallet(cryptoCode, out var network, out _);
+            AssertCryptoCodeWallet(cryptoCode, out var network, out var wallet);
 
             if (!_walletProvider.IsAvailable(network))
             {

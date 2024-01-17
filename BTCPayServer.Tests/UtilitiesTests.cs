@@ -409,7 +409,7 @@ retry:
                 content.Headers.TryAddWithoutValidation("Content-Type", "application/vnd.api+json;profile=\"bulk\"");
                 message.Content = content;
                 using var response = await Client.SendAsync(message);
-                await response.Content.ReadAsStringAsync();
+                var str = await response.Content.ReadAsStringAsync();
             }).ToArray());
         }
 

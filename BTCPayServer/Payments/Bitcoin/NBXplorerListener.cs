@@ -411,6 +411,7 @@ namespace BTCPayServer.Payments.Bitcoin
 
         private async Task<InvoiceEntity> ReceivedPayment(BTCPayWallet wallet, InvoiceEntity invoice, PaymentEntity payment, DerivationStrategyBase strategy)
         {
+            var paymentData = (BitcoinLikePaymentData)payment.GetCryptoPaymentData();
             invoice = (await UpdatePaymentStates(wallet, invoice.Id));
             if (invoice == null)
                 return null;

@@ -29,7 +29,7 @@ namespace BTCPayServer.Tests
             using var s = CreateSeleniumTester(newDb: true);
             await s.StartAsync();
 
-            s.RegisterNewUser(true);
+            var u1 = s.RegisterNewUser(true);
             var hot = s.CreateNewStore();
             var seed = s.GenerateWallet(isHotWallet: true);
             var cold = s.CreateNewStore();

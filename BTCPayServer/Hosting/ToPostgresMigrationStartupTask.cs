@@ -172,6 +172,7 @@ namespace BTCPayServer.Hosting
             if (await otherContext.Settings.FirstOrDefaultAsync() == null)
                 return;
             {
+                var postgres = new NpgsqlConnectionStringBuilder(p);
                 using var postgresContext = new ApplicationDbContext(new DbContextOptionsBuilder<ApplicationDbContext>().UseNpgsql(p, o =>
                 {
                     o.CommandTimeout(60 * 60 * 10);

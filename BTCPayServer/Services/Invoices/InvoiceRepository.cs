@@ -320,6 +320,8 @@ namespace BTCPayServer.Services.Invoices
                 if (paymentMethod == null)
                     return false;
 
+                var existingPaymentMethod = paymentMethod.GetPaymentMethodDetails();
+                paymentMethod.SetPaymentMethodDetails(paymentMethodDetails);
 #pragma warning disable CS0618
                 if (network.IsBTC)
                 {
@@ -356,6 +358,7 @@ namespace BTCPayServer.Services.Invoices
                 var invoice = await context.Invoices.FindAsync(invoiceId);
                 if (invoice == null)
                     return;
+                var network = paymentMethod.Network;
                 var invoiceEntity = invoice.GetBlob(_btcPayNetworkProvider);
                 var newDetails = paymentMethod.GetPaymentMethodDetails();
                 var existing = invoiceEntity.GetPaymentMethod(paymentMethod.GetId());

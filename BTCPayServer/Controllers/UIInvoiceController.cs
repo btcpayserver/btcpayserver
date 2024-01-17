@@ -227,6 +227,7 @@ namespace BTCPayServer.Controllers
             entity.Status = InvoiceStatusLegacy.New;
             entity.UpdateTotals();
             HashSet<CurrencyPair> currencyPairsToFetch = new HashSet<CurrencyPair>();
+            var rules = storeBlob.GetRateRules(_NetworkProvider);
             var excludeFilter = storeBlob.GetExcludedPaymentMethods(); // Here we can compose filters from other origin with PaymentFilter.Any()
             if (invoicePaymentMethodFilter != null)
             {

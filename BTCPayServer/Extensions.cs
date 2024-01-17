@@ -154,7 +154,7 @@ namespace BTCPayServer
 
         public static Uri GetServerUri(this ILightningClient client)
         {
-            var kv = LightningConnectionStringHelper.ExtractValues(client.ToString(), out _);
+            var kv = LightningConnectionStringHelper.ExtractValues(client.ToString(), out var type);
             
             return !kv.TryGetValue("server", out var server) ? null : new Uri(server, UriKind.Absolute);
         }
@@ -173,7 +173,7 @@ namespace BTCPayServer
 
         public static bool IsSafe(this ILightningClient client)
         {
-            var kv = LightningConnectionStringHelper.ExtractValues(client.ToString(), out _);
+            var kv = LightningConnectionStringHelper.ExtractValues(client.ToString(), out var type);
             if (kv.TryGetValue("cookiefilepath", out _)  ||
                 kv.TryGetValue("macaroondirectorypath", out _)  ||
                 kv.TryGetValue("macaroonfilepath", out _) )

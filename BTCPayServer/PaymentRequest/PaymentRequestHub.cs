@@ -80,7 +80,7 @@ namespace BTCPayServer.PaymentRequest
                 await _PaymentRequestController.CancelUnpaidPendingInvoice(prId, false);
             switch (result)
             {
-                case OkObjectResult:
+                case OkObjectResult okObjectResult:
                     await Clients.Group(prId).SendCoreAsync(InvoiceCancelled, System.Array.Empty<object>());
                     break;
 

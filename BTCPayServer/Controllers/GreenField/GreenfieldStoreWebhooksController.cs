@@ -78,7 +78,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
         private void ValidateWebhookRequest(StoreWebhookBaseData create)
         {
-            if (!Uri.TryCreate(create?.Url, UriKind.Absolute, out _))
+            if (!Uri.TryCreate(create?.Url, UriKind.Absolute, out var uri))
                 ModelState.AddModelError(nameof(Url), "Invalid Url");
         }
 

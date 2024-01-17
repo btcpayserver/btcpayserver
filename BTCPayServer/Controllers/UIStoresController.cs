@@ -71,7 +71,8 @@ namespace BTCPayServer.Controllers
             IOptions<ExternalServicesOptions> externalServiceOptions,
             IHtmlHelper html,
             LightningClientFactoryService lightningClientFactoryService,
-            EmailSenderFactory emailSenderFactory)
+            EmailSenderFactory emailSenderFactory,
+            WalletFileParsers onChainWalletParsers)
         {
             _RateFactory = rateFactory;
             _Repo = repo;
@@ -97,6 +98,7 @@ namespace BTCPayServer.Controllers
             _externalServiceOptions = externalServiceOptions;
             _lightningClientFactoryService = lightningClientFactoryService;
             _emailSenderFactory = emailSenderFactory;
+            _onChainWalletParsers = onChainWalletParsers;
             Html = html;
         }
 
@@ -121,6 +123,7 @@ namespace BTCPayServer.Controllers
         private readonly IOptions<ExternalServicesOptions> _externalServiceOptions;
         private readonly LightningClientFactoryService _lightningClientFactoryService;
         private readonly EmailSenderFactory _emailSenderFactory;
+        private readonly WalletFileParsers _onChainWalletParsers;
 
         public string? GeneratedPairingCode { get; set; }
         public WebhookSender WebhookNotificationManager { get; }
@@ -916,7 +919,7 @@ namespace BTCPayServer.Controllers
                 return derivationSchemeSettings;
             }
 
-            var strategy = parser.Parse(derivationScheme);
+            var strategy = parser.Parse(derivationScheme, false, true);
             return new DerivationSchemeSettings(strategy, network);
         }
 

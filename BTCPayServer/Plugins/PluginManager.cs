@@ -108,6 +108,7 @@ namespace BTCPayServer.Plugins
             if (ExecuteCommands(pluginsFolder, plugins.ToDictionary(plugin => plugin.Identifier, plugin => plugin.Version)))
             {
                 plugins.Clear();
+                loadedPluginIdentifiers.Clear();
                 LoadPluginsFromAssemblies(systemAssembly, disabledPlugins, loadedPluginIdentifiers, plugins);
             }
 

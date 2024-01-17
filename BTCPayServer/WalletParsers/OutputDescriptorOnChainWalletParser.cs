@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 using System;
 using System.Linq;
 using BTCPayServer;
@@ -10,7 +10,8 @@ public class OutputDescriptorOnChainWalletParser : OnChainWalletParser
     {
         try
         {
-            if (!Extensions.IsOutputDescriptor(data))
+            var maybeOutputDesc = !data.Trim().StartsWith("{", StringComparison.OrdinalIgnoreCase);
+            if (!maybeOutputDesc)
                 return (null, null);
 
             var derivationSchemeParser = network.GetDerivationSchemeParser();

@@ -54,9 +54,6 @@ namespace BTCPayServer
 
             ArgumentNullException.ThrowIfNull(str);
             str = str.Trim();
-            var explicitSuffix  = str.StartsWith("tr(") ? "-[taproot]" : "";
-            
-            str = str.Replace("tr(", "wpkh(");
             //nbitcoin output descriptor does not support taproot, so let's check if it is a taproot descriptor and fake until it is supported
            
             var outputDescriptor = OutputDescriptor.Parse(str, Network);
@@ -87,8 +84,10 @@ namespace BTCPayServer
                         return (Parse(ds.Item1 + suffix, true, false, false), ds.Item2);
                     };
                     throw new FormatException("sh descriptors are only supported with multsig(legacy or p2wsh) and segwit(p2wpkh)");
+                case OutputDescriptor.Tr tr:
+                    return ExtractFromPkProvider(tr.InnerPubkey, "-[taproot]");
                 case OutputDescriptor.WPKH wpkh:
-                    return ExtractFromPkProvider(wpkh.PkProvider, explicitSuffix);
+                    return ExtractFromPkProvider(wpkh.PkProvider);
                 case OutputDescriptor.WSH { Inner: OutputDescriptor.Multi multi }:
                     return ExtractFromMulti(multi);
                 case OutputDescriptor.WSH:

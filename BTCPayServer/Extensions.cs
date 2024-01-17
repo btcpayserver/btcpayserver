@@ -34,6 +34,7 @@ using Microsoft.Extensions.DependencyInjection;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using NBitcoin.Payment;
+using NBitcoin.Scripting;
 using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
 using Newtonsoft.Json;
@@ -133,11 +134,6 @@ namespace BTCPayServer
                 error = exception.Message;
                 return false;
             }
-        }
-        
-        public static bool IsOutputDescriptor( string data)
-        {
-            return Regex.Match(data, @"\(.*?\)").Success;
         }
         
         public static CardKey CreatePullPaymentCardKey(this IssuerKey issuerKey, byte[] uid, int version, string pullPaymentId)

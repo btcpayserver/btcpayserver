@@ -11,20 +11,26 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
             <vc:icon symbol="close" />
         </button>
-        Warning: No wallet has been linked to your BTCPay Store.<br/>
+        Warning: No wallet has been linked to your BTCPay Server Store.<br/>
         See <a href="https://docs.btcpayserver.org/WalletSetup/" target="_blank" class="alert-link" rel="noreferrer noopener">this link</a> for more information on how to connect your store and wallet.
     </div>
 }
 
 <div class="row">
     <div class="col-xxl-constrain col-xl-8">
-        <div class="d-flex align-items-center justify-content-between mb-3">
+        <h3 class="mb-3">Greenfield API Keys
+            <a href="/docs" target="_blank" rel="noreferrer noopener" title="More information...">
+                <vc:icon symbol="info"/>
+            </a>
+        </h3>
+        <p>To generate Greenfield API keys, please <a asp-controller="UIManage" asp-action="APIKeys">click here</a>.</p>
+        
+        <div class="d-flex align-items-center justify-content-between mt-5 mb-3">
             <h3 class="mb-0">@ViewData["Title"]</h3>
             <a id="CreateNewToken" asp-action="CreateToken" class="btn btn-primary" role="button" asp-route-storeId="@Context.GetRouteValue("storeId")">
                 Create Token
             </a>
         </div>
-
         <p>Authorize a public key to access Bitpay compatible Invoice API.
             <a href="https://support.bitpay.com/hc/en-us/articles/115003001183-How-do-I-pair-my-client-and-create-a-token-" target="_blank" rel="noreferrer noopener" title="More information...">
                 <vc:icon symbol="info"/>

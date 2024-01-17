@@ -15,7 +15,7 @@
 <link href="~/main/site.css" asp-append-version="true"  rel="stylesheet" />
 
 <partial name="LayoutHeadTheme" />
-@if (ViewData.TryGetValue("StoreBranding", out var storeBranding))
+@if (ViewData.TryGetValue("StoreBranding", out var storeBranding) && storeBranding != null)
 {
     <partial name="LayoutHeadStoreBranding" model="storeBranding" />
 }

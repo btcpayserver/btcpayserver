@@ -391,10 +391,6 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             }
 
-            var store = GetCurrentStore();
-            var storeBlob = BTCPayServer.Data.StoreDataExtensions.GetStoreBlob(store);
-            var defaultCurrency = storeBlob.DefaultCurrency;
-
             try
             {
                 var assetBalancesData =
@@ -583,7 +579,7 @@ namespace BTCPayServer.Controllers
 
             try
             {
-                if (custodian is ICanWithdraw withdrawableCustodian)
+                if (custodian is ICanWithdraw)
                 {
                     var config = custodianAccount.GetBlob();
 

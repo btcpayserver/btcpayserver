@@ -251,7 +251,7 @@ namespace BTCPayServer.Payments.Lightning
         {
             lock (_InstanceListeners)
             {
-                foreach ((var key, var instance) in _InstanceListeners.ToArray())
+                foreach ((_, var instance) in _InstanceListeners.ToArray())
                 {
                     instance.RemoveExpiredInvoices();
                     if (!instance.Empty)

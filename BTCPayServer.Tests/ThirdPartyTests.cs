@@ -278,7 +278,6 @@ retry:
             }
             catch (Exception ex) when (ex is MatchesException)
             {
-                var details = ex.Message;
                 TestLogs.LogInformation($"FAILED: {url} ({file}) – anchor not found: {uri.Fragment}");
 
                 throw;

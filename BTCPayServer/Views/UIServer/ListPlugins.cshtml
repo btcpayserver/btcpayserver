@@ -7,13 +7,13 @@
     Layout = "_Layout";
     ViewData.SetActivePage(ServerNavPages.Plugins);
     var installed = Model.Installed.ToDictionary(plugin => plugin.Identifier, plugin => plugin.Version);
-
+    var installedWithoutSystemPlugins = Model.Installed.Where(i => !i.SystemPlugin).ToList();
+    var availableAndNotInstalled = new List<PluginService.AvailablePlugin>();
     var availableAndNotInstalledx = Model.Available
         .Where(plugin => !installed.ContainsKey(plugin.Identifier))
         .GroupBy(plugin => plugin.Identifier)
         .ToList();
-
-    var availableAndNotInstalled = new List<PluginService.AvailablePlugin>();
+    
     foreach (var availableAndNotInstalledItem in availableAndNotInstalledx)
     {
         var ordered = availableAndNotInstalledItem.OrderByDescending(plugin => plugin.Version).ToArray();
@@ -76,12 +76,18 @@
     <div class="mb-5">
         <h3 class="mb-4">Disabled Plugins</h3>
         <ul class="list-group list-group-flush d-inline-block">
-            @foreach (var d in Model.Disabled)
+            @foreach (var (plugin, version) in Model.Disabled)
             {
                 <li class="list-group-item px-0">
                     <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
-                        <span>@d</span>
-                        <form asp-action="UnInstallPlugin" asp-route-plugin="@d">
+                        <span>
+                            @plugin
+                            @if (version != null)
+                            {
+                                <span>({version})</span>
+                            }
+                        </span>
+                        <form asp-action="UnInstallPlugin" asp-route-plugin="@plugin">
                             <button type="submit" class="btn btn-sm btn-outline-danger">Uninstall</button>
                         </form>
                     </div>

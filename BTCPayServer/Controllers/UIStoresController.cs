@@ -504,7 +504,7 @@ namespace BTCPayServer.Controllers
                 var methodCriterion = model.PaymentMethodCriteria[index];
                 if (!string.IsNullOrWhiteSpace(methodCriterion.Value))
                 {
-                    if (!CurrencyValue.TryParse(methodCriterion.Value, out var value))
+                    if (!CurrencyValue.TryParse(methodCriterion.Value, out _))
                     {
                         model.AddModelError(viewModel => viewModel.PaymentMethodCriteria[index].Value,
                             $"{methodCriterion.PaymentMethod}: Invalid format. Make sure to enter a valid amount and currency code. Examples: '5 USD', '0.001 BTC'", this);
@@ -674,7 +674,7 @@ namespace BTCPayServer.Controllers
                         });
                         break;
 
-                    case LNURLPayPaymentType lnurlPayPaymentType:
+                    case LNURLPayPaymentType:
                         break;
 
                     case LightningPaymentType _:
@@ -1000,7 +1000,7 @@ namespace BTCPayServer.Controllers
             var store = model.StoreId switch
             {
                 null => CurrentStore,
-                string id => await _Repo.FindStore(storeId, userId)
+                _ => await _Repo.FindStore(storeId, userId)
             };
             if (store == null)
                 return Challenge(AuthenticationSchemes.Cookie);

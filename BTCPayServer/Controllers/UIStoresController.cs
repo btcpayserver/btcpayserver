@@ -71,7 +71,8 @@ namespace BTCPayServer.Controllers
             IOptions<ExternalServicesOptions> externalServiceOptions,
             IHtmlHelper html,
             LightningClientFactoryService lightningClientFactoryService,
-            EmailSenderFactory emailSenderFactory)
+            EmailSenderFactory emailSenderFactory,
+            WalletFileParsers onChainWalletParsers)
         {
             _RateFactory = rateFactory;
             _Repo = repo;
@@ -97,6 +98,7 @@ namespace BTCPayServer.Controllers
             _externalServiceOptions = externalServiceOptions;
             _lightningClientFactoryService = lightningClientFactoryService;
             _emailSenderFactory = emailSenderFactory;
+            _onChainWalletParsers = onChainWalletParsers;
             Html = html;
         }
 
@@ -121,6 +123,7 @@ namespace BTCPayServer.Controllers
         private readonly IOptions<ExternalServicesOptions> _externalServiceOptions;
         private readonly LightningClientFactoryService _lightningClientFactoryService;
         private readonly EmailSenderFactory _emailSenderFactory;
+        private readonly WalletFileParsers _onChainWalletParsers;
 
         public string? GeneratedPairingCode { get; set; }
         public WebhookSender WebhookNotificationManager { get; }
@@ -501,7 +504,7 @@ namespace BTCPayServer.Controllers
                 var methodCriterion = model.PaymentMethodCriteria[index];
                 if (!string.IsNullOrWhiteSpace(methodCriterion.Value))
                 {
-                    if (!CurrencyValue.TryParse(methodCriterion.Value, out var value))
+                    if (!CurrencyValue.TryParse(methodCriterion.Value, out _))
                     {
                         model.AddModelError(viewModel => viewModel.PaymentMethodCriteria[index].Value,
                             $"{methodCriterion.PaymentMethod}: Invalid format. Make sure to enter a valid amount and currency code. Examples: '5 USD', '0.001 BTC'", this);
@@ -671,7 +674,7 @@ namespace BTCPayServer.Controllers
                         });
                         break;
 
-                    case LNURLPayPaymentType lnurlPayPaymentType:
+                    case LNURLPayPaymentType:
                         break;
 
                     case LightningPaymentType _:
@@ -916,7 +919,7 @@ namespace BTCPayServer.Controllers
                 return derivationSchemeSettings;
             }
 
-            var strategy = parser.Parse(derivationScheme);
+            var strategy = parser.Parse(derivationScheme, false, true);
             return new DerivationSchemeSettings(strategy, network);
         }
 
@@ -997,7 +1000,7 @@ namespace BTCPayServer.Controllers
             var store = model.StoreId switch
             {
                 null => CurrentStore,
-                string id => await _Repo.FindStore(storeId, userId)
+                _ => await _Repo.FindStore(storeId, userId)
             };
             if (store == null)
                 return Challenge(AuthenticationSchemes.Cookie);

@@ -30,7 +30,7 @@ public class AppSales : ViewComponent
     public async Task<IViewComponentResult> InvokeAsync(string appId, string appType)
     {
         var type = _appService.GetAppType(appType);
-        if (type is not IHasSaleStatsAppType salesAppType || type is not AppBaseType appBaseType)
+        if (type is not IHasSaleStatsAppType || type is not AppBaseType appBaseType)
             return new HtmlContentViewComponentResult(new StringHtmlContent(string.Empty));
         var vm = new AppSalesViewModel
         {

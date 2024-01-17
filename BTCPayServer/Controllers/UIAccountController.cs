@@ -205,7 +205,7 @@ namespace BTCPayServer.Controllers
                     }
                     else
                     {
-                        var incrementAccessFailedResult = await _userManager.AccessFailedAsync(user);
+                        await _userManager.AccessFailedAsync(user);
                         ModelState.AddModelError(string.Empty, "Invalid login attempt.");
                         return View(model);
 

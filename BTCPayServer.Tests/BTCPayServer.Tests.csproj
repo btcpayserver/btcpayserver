@@ -25,8 +25,8 @@
     <PackageReference Include="Selenium.Support" Version="4.1.1" />
     <PackageReference Include="Selenium.WebDriver" Version="4.1.1" />
 	<PackageReference Include="Selenium.WebDriver.ChromeDriver" Version="119.0.6045.10500" />
-	<PackageReference Include="xunit" Version="2.6.3" />
-	<PackageReference Include="xunit.runner.visualstudio" Version="2.5.5">
+	<PackageReference Include="xunit" Version="2.6.6" />
+	<PackageReference Include="xunit.runner.visualstudio" Version="2.5.6">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>

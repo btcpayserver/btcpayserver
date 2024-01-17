@@ -72,7 +72,7 @@ namespace BTCPayServer.Controllers
             IHtmlHelper html,
             LightningClientFactoryService lightningClientFactoryService,
             EmailSenderFactory emailSenderFactory,
-            IEnumerable<OnChainWalletParser> onChainWalletParsers)
+            WalletFileParsers onChainWalletParsers)
         {
             _RateFactory = rateFactory;
             _Repo = repo;
@@ -123,7 +123,7 @@ namespace BTCPayServer.Controllers
         private readonly IOptions<ExternalServicesOptions> _externalServiceOptions;
         private readonly LightningClientFactoryService _lightningClientFactoryService;
         private readonly EmailSenderFactory _emailSenderFactory;
-        private readonly IEnumerable<OnChainWalletParser> _onChainWalletParsers;
+        private readonly WalletFileParsers _onChainWalletParsers;
 
         public string? GeneratedPairingCode { get; set; }
         public WebhookSender WebhookNotificationManager { get; }

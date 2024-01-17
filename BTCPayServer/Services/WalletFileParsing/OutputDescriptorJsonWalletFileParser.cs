@@ -2,12 +2,12 @@
 using System;
 using BTCPayServer;
 using Newtonsoft.Json.Linq;
-
-public class OutputDescriptorJsonOnChainWalletParser : OnChainWalletParser
+namespace BTCPayServer.Services.WalletFileParsing;
+public class OutputDescriptorJsonWalletFileParser : IWalletFileParser
 {
-    private readonly OutputDescriptorOnChainWalletParser _outputDescriptorOnChainWalletParser;
+    private readonly OutputDescriptorWalletFileParser _outputDescriptorOnChainWalletParser;
 
-    public OutputDescriptorJsonOnChainWalletParser(OutputDescriptorOnChainWalletParser outputDescriptorOnChainWalletParser)
+    public OutputDescriptorJsonWalletFileParser(OutputDescriptorWalletFileParser outputDescriptorOnChainWalletParser)
     {
         _outputDescriptorOnChainWalletParser = outputDescriptorOnChainWalletParser;
     }

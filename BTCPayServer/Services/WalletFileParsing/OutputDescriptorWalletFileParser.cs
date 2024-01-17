@@ -2,8 +2,8 @@
 using System;
 using System.Linq;
 using BTCPayServer;
-
-public class OutputDescriptorOnChainWalletParser : OnChainWalletParser
+namespace BTCPayServer.Services.WalletFileParsing;
+public class OutputDescriptorWalletFileParser : IWalletFileParser
 {
     public (BTCPayServer.DerivationSchemeSettings? DerivationSchemeSettings, string? Error) TryParse(BTCPayNetwork network,
         string data)

@@ -3,8 +3,8 @@ using System;
 using BTCPayServer;
 using NBitcoin;
 using Newtonsoft.Json.Linq;
-
-public class ElectrumFileOnChainWalletParser : OnChainWalletParser
+namespace BTCPayServer.Services.WalletFileParsing;
+public class ElectrumWalletFileParser : IWalletFileParser
 {
     public (BTCPayServer.DerivationSchemeSettings? DerivationSchemeSettings, string? Error) TryParse(BTCPayNetwork network,
         string data)

@@ -1,8 +1,8 @@
 #nullable enable
 using System;
 using BTCPayServer;
-
-public class NBXDerivGenericOnChainWalletParser : OnChainWalletParser
+namespace BTCPayServer.Services.WalletFileParsing;
+public class NBXDerivGenericWalletFileParser : IWalletFileParser
 {
     public (BTCPayServer.DerivationSchemeSettings? DerivationSchemeSettings, string? Error) TryParse(BTCPayNetwork network,
         string data)

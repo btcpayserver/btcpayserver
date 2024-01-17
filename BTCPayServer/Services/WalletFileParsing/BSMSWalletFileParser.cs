@@ -7,8 +7,8 @@ using NBXplorer.DerivationStrategy;
 using AccountKeySettings = BTCPayServer.AccountKeySettings;
 using BTCPayNetwork = BTCPayServer.BTCPayNetwork;
 
-
-public class BSMSOnChainWalletParser : OnChainWalletParser
+namespace BTCPayServer.Services.WalletFileParsing;
+public class BSMSWalletFileParser : IWalletFileParser
 {
     public (BTCPayServer.DerivationSchemeSettings? DerivationSchemeSettings, string? Error) TryParse(
         BTCPayNetwork network,

@@ -884,11 +884,11 @@ namespace BTCPayServer.Tests
         }
 
 
-        public static IEnumerable<OnChainWalletParser> GetParsers()
+        public static WalletFileParsers GetParsers()
         {
             var service = new ServiceCollection();
             BTCPayServerServices.AddOnchainWalletParsers(service);
-            return service.BuildServiceProvider().GetRequiredService<IEnumerable<OnChainWalletParser>>();
+            return service.BuildServiceProvider().GetRequiredService<WalletFileParsers>();
         }
 
         [Fact]
@@ -902,7 +902,7 @@ namespace BTCPayServer.Tests
             var parsers = GetParsers();
             // xpub
             var tpub = "tpubD6NzVbkrYhZ4YHNiuTdTmHRmbcPRLfqgyneZFCL1mkzkUBjXriQShxTh9HL34FK2mhieasJVk9EzJrUfkFqRNQBjiXgx3n5BhPkxKBoFmaS";
-            Assert.True(parsers.TryParseFromWalletFile(tpub, testnet, out var settings, out var error));
+            Assert.True(parsers.TryParseWalletFile(tpub, testnet, out var settings, out var error));
             Assert.Null(error);
             Assert.True(settings.AccountDerivation is DirectDerivationStrategy { Segwit: false });
             Assert.Equal($"{tpub}-[legacy]", ((DirectDerivationStrategy)settings.AccountDerivation).ToString());
@@ -913,7 +913,7 @@ namespace BTCPayServer.Tests
             var fingerprint = "e5746fd9";
             var account = "84'/1'/0'";
             var str = $"[{fingerprint}/{account}]{vpub}";
-            Assert.True(parsers.TryParseFromWalletFile(str, testnet, out settings, out error));
+            Assert.True(parsers.TryParseWalletFile(str, testnet, out settings, out error));
             Assert.Null(error);
             Assert.True(settings.AccountDerivation is DirectDerivationStrategy { Segwit: true });
             Assert.Equal(vpub, settings.AccountOriginal);
@@ -922,7 +922,7 @@ namespace BTCPayServer.Tests
             Assert.Equal(account, settings.AccountKeySettings[0].AccountKeyPath.ToString());
 
             // ColdCard
-            Assert.True(parsers.TryParseFromWalletFile(
+            Assert.True(parsers.TryParseWalletFile(
                 "{\"keystore\": {\"ckcc_xpub\": \"xpub661MyMwAqRbcGVBsTGeNZN6QGVHmMHLdSA4FteGsRrEriu4pnVZMZWnruFFFXkMnyoBjyHndD3Qwcfz4MPzBUxjSevweNFQx7SAYZATtcDw\", \"xpub\": \"ypub6WWc2gWwHbdnAAyJDnR4SPL1phRh7REqrPBfZeizaQ1EmTshieRXJC3Z5YoU4wkcdKHEjQGkh6AYEzCQC1Kz3DNaWSwdc1pc8416hAjzqyD\", \"label\": \"Coldcard Import 0x60d1af8b\", \"ckcc_xfp\": 1624354699, \"type\": \"hardware\", \"hw_type\": \"coldcard\", \"derivation\": \"m/49'/0'/0'\"}, \"wallet_type\": \"standard\", \"use_encryption\": false, \"seed_version\": 17}",
                 mainnet, out settings, out error));
             Assert.Null(error);
@@ -938,28 +938,28 @@ namespace BTCPayServer.Tests
                 settings.AccountDerivation.GetDerivation().ScriptPubKey);
 
             // Should be legacy
-            Assert.True(parsers.TryParseFromWalletFile(
+            Assert.True(parsers.TryParseWalletFile(
                 "{\"keystore\": {\"ckcc_xpub\": \"tpubD6NzVbkrYhZ4YHNiuTdTmHRmbcPRLfqgyneZFCL1mkzkUBjXriQShxTh9HL34FK2mhieasJVk9EzJrUfkFqRNQBjiXgx3n5BhPkxKBoFmaS\", \"xpub\": \"tpubDDWYqT3P24znfsaGX7kZcQhNc5LAjnQiKQvUCHF2jS6dsgJBRtymopEU5uGpMaR5YChjuiExZG1X2aTbqXkp82KqH5qnqwWHp6EWis9ZvKr\", \"label\": \"Coldcard Import 0x60d1af8b\", \"ckcc_xfp\": 1624354699, \"type\": \"hardware\", \"hw_type\": \"coldcard\", \"derivation\": \"m/44'/1'/0'\"}, \"wallet_type\": \"standard\", \"use_encryption\": false, \"seed_version\": 17}",
                 testnet, out settings, out error));
             Assert.True(settings.AccountDerivation is DirectDerivationStrategy { Segwit: false });
             Assert.Null(error);
 
             // Should be segwit p2sh
-            Assert.True(parsers.TryParseFromWalletFile(
+            Assert.True(parsers.TryParseWalletFile(
                 "{\"keystore\": {\"ckcc_xpub\": \"tpubD6NzVbkrYhZ4YHNiuTdTmHRmbcPRLfqgyneZFCL1mkzkUBjXriQShxTh9HL34FK2mhieasJVk9EzJrUfkFqRNQBjiXgx3n5BhPkxKBoFmaS\", \"xpub\": \"upub5DSddA9NoRUyJrQ4p86nsCiTSY7kLHrSxx3joEJXjHd4HPARhdXUATuk585FdWPVC2GdjsMePHb6BMDmf7c6KG4K4RPX6LVqBLtDcWpQJmh\", \"label\": \"Coldcard Import 0x60d1af8b\", \"ckcc_xfp\": 1624354699, \"type\": \"hardware\", \"hw_type\": \"coldcard\", \"derivation\": \"m/49'/1'/0'\"}, \"wallet_type\": \"standard\", \"use_encryption\": false, \"seed_version\": 17}",
                 testnet, out settings, out error));
             Assert.True(settings.AccountDerivation is P2SHDerivationStrategy { Inner: DirectDerivationStrategy { Segwit: true } });
             Assert.Null(error);
 
             // Should be segwit
-            Assert.True(parsers.TryParseFromWalletFile(
+            Assert.True(parsers.TryParseWalletFile(
                 "{\"keystore\": {\"ckcc_xpub\": \"tpubD6NzVbkrYhZ4YHNiuTdTmHRmbcPRLfqgyneZFCL1mkzkUBjXriQShxTh9HL34FK2mhieasJVk9EzJrUfkFqRNQBjiXgx3n5BhPkxKBoFmaS\", \"xpub\": \"vpub5YjYxTemJ39tFRnuAhwduyxG2tKGjoEpmvqVQRPqdYrqa6YGoeSzBtHXaJUYB19zDbXs3JjbEcVWERjQBPf9bEfUUMZNMv1QnMyHV8JPqyf\", \"label\": \"Coldcard Import 0x60d1af8b\", \"ckcc_xfp\": 1624354699, \"type\": \"hardware\", \"hw_type\": \"coldcard\", \"derivation\": \"m/84'/1'/0'\"}, \"wallet_type\": \"standard\", \"use_encryption\": false, \"seed_version\": 17}",
                 testnet, out settings, out error));
             Assert.True(settings.AccountDerivation is DirectDerivationStrategy { Segwit: true });
             Assert.Null(error);
 
             // Specter
-            Assert.True(parsers.TryParseFromWalletFile(
+            Assert.True(parsers.TryParseWalletFile(
                 "{\"label\": \"Specter\", \"blockheight\": 123456, \"descriptor\": \"wpkh([8bafd160/49h/0h/0h]xpub661MyMwAqRbcGVBsTGeNZN6QGVHmMHLdSA4FteGsRrEriu4pnVZMZWnruFFFXkMnyoBjyHndD3Qwcfz4MPzBUxjSevweNFQx7SAYZATtcDw/0/*)#9x4vkw48\"}",
                 mainnet, out var specter, out error));
             Assert.Equal(root.GetPublicKey().GetHDFingerPrint(), specter.AccountKeySettings[0].RootFingerprint);
@@ -976,7 +976,7 @@ wsh(sortedmulti(1,[5c9e228d/48'/0'/0'/2']xpub6EgGHjcvovyN3nK921zAGPfuB41cJXkYRdt
 bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
 ";
 
-            Assert.True(parsers.TryParseFromWalletFile(bsms,
+            Assert.True(parsers.TryParseWalletFile(bsms,
                 mainnet, out var nunchuk, out error));
 
             Assert.Equal(2, nunchuk.AccountKeySettings.Length);
@@ -1003,7 +1003,7 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
 
 
             // Failure case
-            Assert.False(parsers.TryParseFromWalletFile(
+            Assert.False(parsers.TryParseWalletFile(
                 "{\"keystore\": {\"ckcc_xpub\": \"tpubFailure\", \"xpub\": \"tpubFailure\", \"label\": \"Failure\"}, \"wallet_type\": \"standard\"}",
                 testnet, out settings, out error));
             Assert.Null(settings);
@@ -1013,7 +1013,7 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
             //passport 
             var passportText =
                 "{\"Source\": \"Passport\", \"Descriptor\": \"tr([5c9e228d/86'/0'/0']xpub6EgGHjcvovyN3nK921zAGPfuB41cJXkYRdt3tLGmiMyvbgHpss4X1eRZwShbEBb1znz2e2bCkCED87QZpin3sSYKbmCzQ9Sc7LaV98ngdeX/0/*)\", \"FirmwareVersion\": \"v1.0.0\"}";
-            Assert.True(parsers.TryParseFromWalletFile(passportText, mainnet, out var passport, out error));
+            Assert.True(parsers.TryParseWalletFile(passportText, mainnet, out var passport, out error));
             Assert.Equal("Passport", passport.Source);
             Assert.True(passport.AccountDerivation is TaprootDerivationStrategy);
             Assert.Equal("5c9e228d", passport.AccountKeySettings[0].RootFingerprint.ToString());

@@ -73,6 +73,8 @@ using Newtonsoft.Json;
 using NicolasDorier.RateLimits;
 using Serilog;
 using BTCPayServer.Services.Reporting;
+using BTCPayServer.Services.WalletFileParsing;
+
 #if ALTCOINS
 using BTCPayServer.Services.Altcoins.Monero;
 using BTCPayServer.Services.Altcoins.Zcash;
@@ -518,14 +520,15 @@ namespace BTCPayServer.Hosting
 
         public static void AddOnchainWalletParsers(IServiceCollection services)
         {
-            services.AddSingleton<OnChainWalletParser, BSMSOnChainWalletParser>();
-            services.AddSingleton<OnChainWalletParser, NBXDerivGenericOnChainWalletParser>();
-            services.AddSingleton<OnChainWalletParser, ElectrumFileOnChainWalletParser>();
-            services.AddSingleton<OnChainWalletParser, OutputDescriptorOnChainWalletParser>(provider => provider.GetService<OutputDescriptorOnChainWalletParser>());
-            services.AddSingleton<OutputDescriptorOnChainWalletParser>();
-            services.AddSingleton<OnChainWalletParser, SpecterOnChainWalletParser>();
-            services.AddSingleton<OnChainWalletParser, OutputDescriptorJsonOnChainWalletParser>();
-            services.AddSingleton<OnChainWalletParser, WasabiOnChainWalletParser>();
+            services.AddSingleton<WalletFileParsers>();
+            services.AddSingleton<IWalletFileParser, BSMSWalletFileParser>();
+            services.AddSingleton<IWalletFileParser, NBXDerivGenericWalletFileParser>();
+            services.AddSingleton<IWalletFileParser, ElectrumWalletFileParser>();
+            services.AddSingleton<IWalletFileParser, OutputDescriptorWalletFileParser>(provider => provider.GetService<OutputDescriptorWalletFileParser>());
+            services.AddSingleton<OutputDescriptorWalletFileParser>();
+            services.AddSingleton<IWalletFileParser, SpecterWalletFileParser>();
+            services.AddSingleton<IWalletFileParser, OutputDescriptorJsonWalletFileParser>();
+            services.AddSingleton<IWalletFileParser, WasabiWalletFileParser>();
         }
 
         internal static void RegisterRateSources(IServiceCollection services)

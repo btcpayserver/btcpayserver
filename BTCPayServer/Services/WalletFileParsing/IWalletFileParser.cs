@@ -1,7 +1,7 @@
 ﻿#nullable enable
 using BTCPayServer;
-
-public interface OnChainWalletParser
+namespace BTCPayServer.Services.WalletFileParsing;
+public interface IWalletFileParser
 {
     (BTCPayServer.DerivationSchemeSettings? DerivationSchemeSettings, string? Error) TryParse(BTCPayNetwork network, string data);
 }

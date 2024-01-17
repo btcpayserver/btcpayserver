@@ -53,38 +53,6 @@ namespace BTCPayServer
             return _derivationSchemeParsers.GetOrAdd(network, n => new DerivationSchemeParser(n));
         }
 
-        public static bool TryParseFromWalletFile(this IEnumerable<OnChainWalletParser> parsers, string fileContents,
-            BTCPayNetwork network, out DerivationSchemeSettings settings, out string error)
-        {
-            settings = null;
-            error = null;
-            ArgumentNullException.ThrowIfNull(fileContents);
-            ArgumentNullException.ThrowIfNull(network);
-            if (HexEncoder.IsWellFormed(fileContents))
-            {
-                fileContents = Encoding.UTF8.GetString(Encoders.Hex.DecodeData(fileContents));
-            }
-
-            foreach (OnChainWalletParser onChainWalletParser in parsers)
-            {
-                var result = onChainWalletParser.TryParse(network, fileContents);
-                if (result.DerivationSchemeSettings is not null)
-                {
-                    settings = result.DerivationSchemeSettings;
-                    error = null;
-                    return true;
-                }
-
-                if (result.Error is not null)
-                {
-                    error = result.Error;
-                }
-            }
-
-            return false;
-        }
-
-
         public static bool TryParseXpub(this DerivationSchemeParser derivationSchemeParser, string xpub,
             ref DerivationSchemeSettings derivationSchemeSettings, out string error)
         {

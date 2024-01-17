@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 using System;
 using BTCPayServer;
 
@@ -13,7 +13,7 @@ public class NBXDerivGenericOnChainWalletParser : OnChainWalletParser
             result.Source = "Generic";
             return (result, null);
         }
-        catch (Exception e)
+        catch (Exception)
         {
             return (null, null);
         }

@@ -886,14 +886,9 @@ namespace BTCPayServer.Tests
 
         public static IEnumerable<OnChainWalletParser> GetParsers()
         {
-            var odowp = new OutputDescriptorOnChainWalletParser();
-            yield return odowp;
-            yield return new BSMSOnChainWalletParser();
-            yield return new NBXDerivGenericOnChainWalletParser();
-            yield return new ElectrumFileOnChainWalletParser();
-            yield return new SpecterOnChainWalletParser(odowp);
-            yield return new OutputDescriptorJsonOnChainWalletParser(odowp);
-            yield return new WasabiOnChainWalletParser();
+            var service = new ServiceCollection();
+            BTCPayServerServices.AddOnchainWalletParsers(service);
+            return service.BuildServiceProvider().GetRequiredService<IEnumerable<OnChainWalletParser>>();
         }
 
         [Fact]

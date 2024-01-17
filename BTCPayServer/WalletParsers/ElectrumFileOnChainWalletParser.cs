@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 using System;
 using BTCPayServer;
 using NBitcoin;
@@ -15,12 +15,11 @@ public class ElectrumFileOnChainWalletParser : OnChainWalletParser
             var jobj = JObject.Parse(data);
             var result = new BTCPayServer.DerivationSchemeSettings() {Network = network};
 
-            if (jobj.ContainsKey("keystore"))
+            if (jobj["keystore"] is JObject keyStore)
             {
                 result.Source = "ElectrumFile";
-                jobj = (JObject)jobj["keystore"];
+                jobj = keyStore;
 
-                string error = null;
                 if (!jobj.TryGetValue("xpub", StringComparison.InvariantCultureIgnoreCase, out var xpubToken))
                 {
                     return (null, "no xpub");
@@ -30,11 +29,11 @@ public class ElectrumFileOnChainWalletParser : OnChainWalletParser
                 result.AccountOriginal = xpubToken.Value<string>();
                 result.GetSigningAccountKeySettings();
                 
-                if (jobj.ContainsKey("label"))
+                if (jobj["label"]?.Value<string>() is string label)
                 {
                     try
                     {
-                        result.Label = jobj["label"].Value<string>();
+                        result.Label = label;
                     }
                     catch
                     {
@@ -42,12 +41,12 @@ public class ElectrumFileOnChainWalletParser : OnChainWalletParser
                     }
                 }
 
-                if (jobj.ContainsKey("ckcc_xfp"))
+                if (jobj["ckcc_xfp"]?.Value<uint>() is uint xfp)
                 {
                     try
                     {
                         result.AccountKeySettings[0].RootFingerprint =
-                            new HDFingerprint(jobj["ckcc_xfp"].Value<uint>());
+                            new HDFingerprint(xfp);
                     }
                     catch
                     {
@@ -55,12 +54,11 @@ public class ElectrumFileOnChainWalletParser : OnChainWalletParser
                     }
                 }
 
-                if (jobj.ContainsKey("derivation"))
+                if (jobj["derivation"]?.Value<string>() is string derivation)
                 {
                     try
                     {
-                        result.AccountKeySettings[0].AccountKeyPath =
-                            new KeyPath(jobj["derivation"].Value<string>());
+                        result.AccountKeySettings[0].AccountKeyPath = new KeyPath(derivation);
                     }
                     catch
                     {
@@ -81,7 +79,7 @@ public class ElectrumFileOnChainWalletParser : OnChainWalletParser
             }
 
         }
-        catch (FormatException e)
+        catch (FormatException)
         {
             return (null, "invalid xpub");
         }

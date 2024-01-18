@@ -73,7 +73,7 @@ namespace BTCPayServer.Tests
         public async Task<BTCPayServerClient> CreateClient(params string[] permissions)
         {
             var manageController = parent.PayTester.GetController<UIManageController>(UserId, StoreId, IsAdmin);
-            var x = Assert.IsType<RedirectToActionResult>(await manageController.AddApiKey(
+            Assert.IsType<RedirectToActionResult>(await manageController.AddApiKey(
                 new UIManageController.AddApiKeyViewModel()
                 {
                     PermissionValues = permissions.Select(s =>
@@ -339,7 +339,6 @@ namespace BTCPayServer.Tests
 
         public async Task<BitcoinAddress> GetNewAddress(BTCPayNetwork network)
         {
-            var cashCow = parent.ExplorerNode;
             var btcPayWallet = parent.PayTester.GetService<BTCPayWalletProvider>().GetWallet(network);
             var address = (await btcPayWallet.ReserveAddressAsync(this.DerivationScheme)).Address;
             return address;
@@ -347,7 +346,7 @@ namespace BTCPayServer.Tests
 
         public async Task<PSBT> Sign(PSBT psbt)
         {
-            var btcPayWallet = parent.PayTester.GetService<BTCPayWalletProvider>()
+            parent.PayTester.GetService<BTCPayWalletProvider>()
                 .GetWallet(psbt.Network.NetworkSet.CryptoCode);
             var explorerClient = parent.PayTester.GetService<ExplorerClientProvider>()
                 .GetExplorerClient(psbt.Network.NetworkSet.CryptoCode);
@@ -444,7 +443,7 @@ namespace BTCPayServer.Tests
             var parsedBip21 = new BitcoinUrlBuilder(
                 invoice.CryptoInfo.First(c => c.CryptoCode == network.NetworkSet.CryptoCode).PaymentUrls.BIP21,
                 network);
-            if (!parsedBip21.TryGetPayjoinEndpoint(out var endpoint))
+            if (!parsedBip21.TryGetPayjoinEndpoint(out _))
                 return null;
             return parsedBip21;
         }

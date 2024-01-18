@@ -240,7 +240,7 @@ namespace BTCPayServer.Controllers.Greenfield
             }
 
             if (!string.IsNullOrEmpty(request.DefaultPaymentMethod) &&
-                !PaymentMethodId.TryParse(request.DefaultPaymentMethod, out var defaultPaymentMethodId))
+                !PaymentMethodId.TryParse(request.DefaultPaymentMethod, out _))
             {
                 ModelState.AddModelError(nameof(request.Name), "DefaultPaymentMethod is invalid");
             }

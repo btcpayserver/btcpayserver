@@ -649,11 +649,6 @@ namespace BTCPayServer.Tests
         public void CanAcceptInvoiceWithTolerance()
         {
             var networkProvider = CreateNetworkProvider(ChainName.Regtest);
-            var paymentMethodHandlerDictionary = new PaymentMethodHandlerDictionary(new IPaymentMethodHandler[]
-            {
-                new BitcoinLikePaymentHandler(null, networkProvider, null, null, null, null),
-                new LightningLikePaymentHandler(null, null, networkProvider, null, null, null),
-            });
             var entity = new InvoiceEntity();
             entity.Networks = networkProvider;
 #pragma warning disable CS0618
@@ -1620,7 +1615,7 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
         {
             var b = JsonConvert.DeserializeObject<PullPaymentBlob>("{}");
             Assert.Equal(TimeSpan.FromDays(30.0), b.BOLT11Expiration);
-            var aaa = JsonConvert.SerializeObject(b);
+            JsonConvert.SerializeObject(b);
         }
 
         [Fact]
@@ -2129,7 +2124,7 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
         [Fact]
         public void AllPoliciesShowInUI()
         {
-            var a = new BitpayRateProvider(new System.Net.Http.HttpClient()).GetRatesAsync(default).Result;
+            new BitpayRateProvider(new System.Net.Http.HttpClient()).GetRatesAsync(default).GetAwaiter().GetResult();
             foreach (var policy in Policies.AllPolicies)
             {
                 Assert.True(UIManageController.AddApiKeyViewModel.PermissionValueItem.PermissionDescriptions.ContainsKey(policy));

@@ -87,7 +87,6 @@ namespace BTCPayServer.Services.Rates
             var normalizedPairsList = symbols.Where(s => !notFoundSymbols.ContainsKey(s)).Select(s => helper.NormalizeMarketSymbol(s)).ToList();
             var csvPairsList = string.Join(",", normalizedPairsList);
             JToken apiTickers = await MakeJsonRequestAsync<JToken>("/0/public/Ticker", null, new Dictionary<string, object> { { "pair", csvPairsList } }, cancellationToken: cancellationToken);
-            var tickers = new List<KeyValuePair<string, ExchangeTicker>>();
             foreach (string symbol in symbols)
             {
                 var ticker = ConvertToExchangeTicker(symbol, apiTickers[symbol]);

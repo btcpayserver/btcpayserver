@@ -91,7 +91,13 @@ namespace BTCPayServer.Tests
                     "test" + isTestnet,
                     prov.GetService<IHttpClientFactory>(),
                     isTestnet);
+                mempoolSpaceFeeProvider.CachedOnly = true;
+                await Assert.ThrowsAsync<InvalidOperationException>(() => mempoolSpaceFeeProvider.GetFeeRateAsync());
+                mempoolSpaceFeeProvider.CachedOnly = false;
                 var rates = await mempoolSpaceFeeProvider.GetFeeRatesAsync();
+                mempoolSpaceFeeProvider.CachedOnly = true;
+                await mempoolSpaceFeeProvider.GetFeeRateAsync();
+                mempoolSpaceFeeProvider.CachedOnly = false;
                 Assert.NotEmpty(rates);
                 
                 
@@ -121,10 +127,7 @@ namespace BTCPayServer.Tests
                 //ENSURE THESE ARE LOGICAL
                 Assert.True(recommendedFees[0].FeeRate >= recommendedFees[1].FeeRate, $"{recommendedFees[0].Target}:{recommendedFees[0].FeeRate} >= {recommendedFees[1].Target}:{recommendedFees[1].FeeRate}");
                 Assert.True(recommendedFees[1].FeeRate >= recommendedFees[2].FeeRate, $"{recommendedFees[1].Target}:{recommendedFees[1].FeeRate} >= {recommendedFees[2].Target}:{recommendedFees[2].FeeRate}");
-                Assert.True(recommendedFees[2].FeeRate >= recommendedFees[3].FeeRate, $"{recommendedFees[2].Target}:{recommendedFees[2].FeeRate} >= {recommendedFees[3].Target}:{recommendedFees[3].FeeRate}");
-                
-                
-                
+                Assert.True(recommendedFees[2].FeeRate >= recommendedFees[3].FeeRate, $"{recommendedFees[2].Target}:{recommendedFees[2].FeeRate} >= {recommendedFees[3].Target}:{recommendedFees[3].FeeRate}");                
             }
         }
         [Fact]

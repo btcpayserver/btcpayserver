@@ -88,8 +88,7 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<IJsonConverterRegistration, JsonConverterRegistration>((s) => new JsonConverterRegistration(create));
             return services;
         }
-        public static IServiceCollection AddBTCPayServer(this IServiceCollection services, IConfiguration configuration,
-            Logs logs, ServiceProvider bootstrapServiceProvider)
+        public static IServiceCollection AddBTCPayServer(this IServiceCollection services, IConfiguration configuration, Logs logs)
         {
             services.AddSingleton<MvcNewtonsoftJsonOptions>(o => o.GetRequiredService<IOptions<MvcNewtonsoftJsonOptions>>().Value);
             services.AddSingleton<JsonSerializerSettings>(o => o.GetRequiredService<IOptions<MvcNewtonsoftJsonOptions>>().Value.SerializerSettings);
@@ -369,7 +368,8 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<WalletReceiveService>();
             services.AddSingleton<IHostedService>(provider => provider.GetService<WalletReceiveService>());
             services.TryAddSingleton<CurrencyNameTable>(CurrencyNameTable.Instance);
-            services.AddFeeProviders(bootstrapServiceProvider);
+            services.TryAddSingleton<IFeeProviderFactory, FeeProviderFactory>();
+
             services.Configure<MvcOptions>((o) =>
             {
                 o.ModelMetadataDetailsProviders.Add(new SuppressChildValidationMetadataProvider(typeof(WalletId)));

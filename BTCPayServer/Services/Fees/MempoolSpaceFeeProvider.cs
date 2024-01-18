@@ -3,11 +3,16 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using AngleSharp.Dom;
+using ExchangeSharp;
 using Microsoft.Extensions.Caching.Memory;
 using NBitcoin;
+using Org.BouncyCastle.Asn1.X509;
+using YamlDotNet.Core.Tokens;
 
 namespace BTCPayServer.Services.Fees;
 
@@ -27,41 +32,28 @@ public class MempoolSpaceFeeProvider(
     {
         var result = await GetFeeRatesAsync();
 
-        return result.TryGetValue(blockTarget, out var feeRate)
-            ? feeRate
-            : InterpolateOrBound(result, blockTarget);
+        return InterpolateOrBound(result, blockTarget);
             
     }
     
-    static FeeRate InterpolateOrBound(Dictionary<int, FeeRate> dictionary, int target)
+    internal static FeeRate InterpolateOrBound(BlockFeeRate[] ordered, int target)
     {
-        // Find the keys closest to the target for interpolation
-        int? k1 = null;
-        int? k2 = null;
-
-        foreach (int k in dictionary.Keys.Order())
+        (BlockFeeRate lb, BlockFeeRate hb) = (ordered[0], ordered[^1]);
+        target = Math.Clamp(target, lb.Blocks, hb.Blocks);
+        for (int i = 0; i < ordered.Length; i++)
         {
-            k1 = k1 is null ? k : k2;
-            k2 = k;
-            if(target < k)
-            {
-                break;
-            }
+            if (ordered[i].Blocks > lb.Blocks && ordered[i].Blocks <= target)
+                lb = ordered[i];
+            if (ordered[i].Blocks < hb.Blocks && ordered[i].Blocks >= target)
+                hb = ordered[i];
         }
-
-        if (k1 is null)
-        {
-           throw new InvalidOperationException("No fee rate available");
-        }
-        
-        var v1 = dictionary[k1!.Value].SatoshiPerByte;
-        var v2 = dictionary[k2!.Value].SatoshiPerByte;
-
-        // Linear interpolation formula
-        return new FeeRate((decimal) (v1 + (v2 - v1) / (k1 - k2) * (target - k1))!);
+        if (hb.Blocks == lb.Blocks)
+            return hb.FeeRate;
+        var a = (decimal)(target - lb.Blocks) / (decimal)(hb.Blocks - lb.Blocks);
+        return new FeeRate((1 - a) * lb.FeeRate.SatoshiPerByte + a * hb.FeeRate.SatoshiPerByte);
     }
 
-    public async Task<Dictionary<int, FeeRate>> GetFeeRatesAsync()
+    internal async Task<BlockFeeRate[]> GetFeeRatesAsync()
     {
         try
         {
@@ -71,20 +63,21 @@ public class MempoolSpaceFeeProvider(
                 return await GetFeeRatesCore();
             }))!;
         }
-        catch (Exception e)
+        catch (Exception)
         {
             memoryCache.Remove(cacheKey);
             throw;
         }
     }
-
-    protected virtual async Task<Dictionary<int, FeeRate>> GetFeeRatesCore()
+    internal record BlockFeeRate(int Blocks, FeeRate FeeRate);
+    async Task<BlockFeeRate[]> GetFeeRatesCore()
     {
         var client = httpClientFactory.CreateClient(nameof(MempoolSpaceFeeProvider));
-        using var result = await client.GetAsync(ExplorerLink, new CancellationTokenSource(TimeSpan.FromSeconds(10)).Token);
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        using var result = await client.GetAsync(ExplorerLink, cts.Token);
         result.EnsureSuccessStatusCode();
         var recommendedFees = await result.Content.ReadAsAsync<Dictionary<string, decimal>>();
-        var feesByBlockTarget = new Dictionary<int, FeeRate>();
+        var r = new List<BlockFeeRate>();
         foreach ((var feeId, decimal value) in recommendedFees)
         {
             var target = feeId switch
@@ -97,41 +90,25 @@ public class MempoolSpaceFeeProvider(
                 "minimumFee" => 144,
                 _ => -1
             };
-            feesByBlockTarget.TryAdd(target, new FeeRate(value));
+            r.Add(new(target, new FeeRate(value)));
         }
-        // order feesByBlockTarget and then randomize them by 10%, but never allow the numbers to go below the previous one or higher than the next
-        var ordered = feesByBlockTarget.OrderByDescending(kv => kv.Key).ToList();
-        for (var i = 0; i < ordered.Count; i++)
+        var ordered = r.OrderBy(k => k.Blocks).ToArray();
+        for (var i = 0; i < ordered.Length; i++)
         {
-            (int key, FeeRate value) = ordered[i];
-            if (i == 0)
-            {
-                feesByBlockTarget[key] = new FeeRate(RandomizeByPercentage(value.SatoshiPerByte, 10));
-            }
-            else
-            {
-                var previous = feesByBlockTarget[ordered[i - 1].Key];
-                var newValue = RandomizeByPercentage(value.SatoshiPerByte, 10);
-                if (newValue > previous.SatoshiPerByte)
-                {
-                    newValue = previous.SatoshiPerByte;
-                }
-                feesByBlockTarget[key] = new FeeRate(newValue);
-            }
+            // Randomize a bit
+            ordered[i] = ordered[i] with { FeeRate = new FeeRate(RandomizeByPercentage(ordered[i].FeeRate.SatoshiPerByte, 10m)) };
+            if (i > 0) // Make sure feerate always increase
+                ordered[i] = ordered[i] with { FeeRate = FeeRate.Max(ordered[i - 1].FeeRate, ordered[i].FeeRate) };
         }
-        
-        return feesByBlockTarget;
+        return ordered;
     }
     
-    static decimal RandomizeByPercentage(decimal value, int percentage)
+    internal static decimal RandomizeByPercentage(decimal value, decimal percentage)
     {
         if (value is 1)
-        {
             return 1;
-        }
-        decimal range = value * percentage / 100m;
-        var res = value + range * (Random.Shared.NextDouble() < 0.5 ? -1 : 1);
-
+        decimal range = (value * percentage) / 100m;
+        var res = value + (range * 2.0m) * ((decimal)(Random.Shared.NextDouble() - 0.5));
         return res switch
         {
             < 1m => 1m,

@@ -110,7 +110,7 @@ namespace BTCPayServer.Hosting
                 opts.ValidationInterval = TimeSpan.FromMinutes(5.0);
             });
 
-            services.AddBTCPayServer(Configuration, Logs, bootstrapServiceProvider);
+            services.AddBTCPayServer(Configuration, Logs);
             services.AddProviderStorage();
             services.AddSession();
             services.AddSignalR();

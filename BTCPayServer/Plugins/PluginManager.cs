@@ -50,7 +50,7 @@ namespace BTCPayServer.Plugins
                     pluginName = assemblyName;
                     return true;
                 }
-                // For TypeLoadException, check if it might come from areferenced assembly
+                // For TypeLoadException, check if it might come from a referenced assembly
                 if (!string.IsNullOrEmpty(fromAssembly) && assembly.GetReferencedAssemblies().Select(a => a.Name).Contains(fromAssembly))
                 {
                     pluginName = assemblyName;

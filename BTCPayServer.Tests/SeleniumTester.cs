@@ -638,7 +638,11 @@ retry:
         public void GoToServer(ServerNavPages navPages = ServerNavPages.Index)
         {
             Driver.FindElement(By.Id("Nav-ServerSettings")).Click();
-            if (navPages != ServerNavPages.Index)
+            if (navPages == ServerNavPages.Plugins)
+            {
+                Driver.FindElement(By.Id("Nav-ManagePlugins")).Click();
+            }
+            else if (navPages != ServerNavPages.Index)
             {
                 Driver.FindElement(By.Id($"SectionNav-{navPages}")).Click();
             }

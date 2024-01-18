@@ -11,6 +11,7 @@ using BTCPayServer.Abstractions.Custodians;
 using BTCPayServer.Configuration;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Hosting;
+using BTCPayServer.Plugins;
 using BTCPayServer.Rating;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Custodian.Client.MockCustodian;
@@ -50,7 +51,7 @@ namespace BTCPayServer.Tests
         {
             this.LoggerProvider = loggerProvider;
             this.TestLogs = testLogs;
-            this._Directory = scope ?? throw new ArgumentNullException(nameof(scope));
+            this._Directory = Path.Combine(Directory.GetCurrentDirectory(), scope ?? throw new ArgumentNullException(nameof(scope)));
         }
 
         public Uri NBXplorerUri
@@ -162,6 +163,9 @@ namespace BTCPayServer.Tests
 
             if (!string.IsNullOrEmpty(ExplorerPostgres))
                 config.AppendLine($"explorer.postgres=" + ExplorerPostgres);
+            
+            config.AppendLine("plugindir=" + Path.Combine(_Directory, "Plugins"));
+            
             var confPath = Path.Combine(chainDirectory, "settings.config");
             await File.WriteAllTextAsync(confPath, config.ToString());
 
@@ -198,7 +202,17 @@ namespace BTCPayServer.Tests
                     .UseKestrel()
                     .UseStartup<Startup>()
                     .Build();
-            await _Host.StartWithTasksAsync();
+
+            try
+            {
+                await _Host.StartWithTasksAsync(conf);
+            }
+            catch (Exception e) when (PluginManager.IsExceptionByPlugin(e, out var pluginName))
+            {
+                TestLogs.LogInformation($"Disabled plugin {pluginName} as it crashed on startup");
+                _Host.Dispose();
+                throw;
+            }
 
             var urls = _Host.ServerFeatures.Get<IServerAddressesFeature>().Addresses;
             foreach (var url in urls)
@@ -244,7 +258,6 @@ namespace BTCPayServer.Tests
                 kraken.ExchangeRates.Add(new PairRate(CurrencyPair.Parse("ETH_BTC"), new BidAsk(0.1m)));
                 rateProvider.Providers.Add("kraken", kraken);
             }
-
 
             TestLogs.LogInformation("Waiting site is operational...");
             await WaitSiteIsOperational();

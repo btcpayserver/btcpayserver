@@ -73,7 +73,7 @@ namespace BTCPayServer
                     builder.UseContentRoot(Directory.GetCurrentDirectory());
                 }
                 host = builder.Build();
-                await host.StartWithTasksAsync();
+                await host.StartWithTasksAsync(conf);
                 var urls = host.ServerFeatures.Get<IServerAddressesFeature>().Addresses;
                 foreach (var url in urls)
                 {
@@ -89,9 +89,7 @@ namespace BTCPayServer
             }
             catch (Exception e) when (PluginManager.IsExceptionByPlugin(e, out var pluginName))
             {
-                logs.Configuration.LogError(e, $"Disabling plugin {pluginName} as it crashed on startup");
-                var pluginDir = new DataDirectories().Configure(conf).PluginDir;
-                PluginManager.DisablePlugin(pluginDir, pluginName);
+                logs.Configuration.LogError(e, "Disabled plugin {PluginName} as it crashed on startup", pluginName);
             }
             finally
             {

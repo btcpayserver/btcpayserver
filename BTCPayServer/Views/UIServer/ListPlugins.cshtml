@@ -75,7 +75,7 @@
     </div>
     <div class="mb-5">
         <h3 class="mb-4">Disabled Plugins</h3>
-        <ul class="list-group list-group-flush d-inline-block">
+        <ul class="list-group list-group-flush d-inline-block" id="DisabledPlugins">
             @foreach (var (plugin, version) in Model.Disabled)
             {
                 <li class="list-group-item px-0">
@@ -88,7 +88,7 @@
                             }
                         </span>
                         <form asp-action="UnInstallPlugin" asp-route-plugin="@plugin">
-                            <button type="submit" class="btn btn-sm btn-outline-danger">Uninstall</button>
+                            <button type="submit" class="btn btn-sm btn-outline-danger uninstall-plugin">Uninstall</button>
                         </form>
                     </div>
                 </li>
@@ -104,24 +104,24 @@
         @if (Model.CanShowRestart)
         {
             <form method="post" asp-action="Maintenance" class="mt-2">
-                <button type="submit" name="command" value="soft-restart" class="btn btn-info" asp-action="Maintenance">Restart now</button>
+                <button type="submit" name="command" value="soft-restart" class="btn btn-info" asp-action="Maintenance" id="Restart">Restart now</button>
             </form>
         }
     </div>
 }
 
-@if (Model.Installed.Any())
+@if (installedWithoutSystemPlugins.Any())
 {
     <h3 class="mb-4">Installed Plugins</h3>
     <div class="row mb-4">
-        @foreach (var plugin in Model.Installed.Where(i => !i.SystemPlugin))
+        @foreach (var plugin in installedWithoutSystemPlugins)
         {
             Model.DownloadedPluginsByIdentifier.TryGetValue(plugin.Identifier, out var downloadInfo);
             var matchedAvailable = Model.Available.Where(availablePlugin => availablePlugin.Identifier == plugin.Identifier && availablePlugin.Version > plugin.Version).OrderByDescending(availablePlugin => availablePlugin.Version).ToArray();
             var x = matchedAvailable.FirstOrDefault(availablePlugin => PluginManager.DependenciesMet(availablePlugin.Dependencies, installed)) ?? matchedAvailable.FirstOrDefault();
             var updateAvailable = matchedAvailable.Any();
             var tabId = plugin.Identifier.ToLowerInvariant().Replace(".", "_");
-            <div class="col col-12 col-md-6 col-lg-12 col-xl-6 col-xxl-4 mb-4">
+            <div class="col col-12 col-md-6 col-lg-12 col-xl-6 col-xxl-4 mb-4" id="InstalledPlugins">
                 <div class="card h-100" id="@plugin.Identifier">
                     <div class="card-body">
                         <div class="d-flex flex-wrap align-items-baseline justify-content-between gap-2 mb-3">
@@ -303,7 +303,7 @@
             var recommended = BTCPayServerOptions.RecommendedPlugins.Any(id => string.Equals(id, plugin.Identifier, StringComparison.InvariantCultureIgnoreCase));
             Model.Disabled.TryGetValue(plugin.Identifier, out var disabled);
 
-            <div class="col col-12 col-md-6 col-lg-12 col-xl-6 col-xxl-4 mb-4">
+            <div class="col col-12 col-md-6 col-lg-12 col-xl-6 col-xxl-4 mb-4" id="AvailablePlugins">
                 <div class="card h-100" id="@plugin.Identifier">
                     <div class="card-body">
                         <div class="d-flex flex-wrap align-items-baseline justify-content-between gap-2 mb-3">
@@ -445,7 +445,7 @@
 
 <div class="mb-4">
     <h3 class="mb-4">Upload Plugin</h3>
-    <button class="btn btn-secondary mb-4" type="button" data-bs-toggle="collapse" data-bs-target="#manual-upload">
+    <button class="btn btn-secondary mb-4" type="button" data-bs-toggle="collapse" data-bs-target="#manual-upload" id="toggle-manual-upload">
         Upload Plugin
     </button>
     <div class="row collapse" id="manual-upload">
@@ -459,7 +459,7 @@
                     </div>
                     <form method="post" enctype="multipart/form-data" asp-action="UploadPlugin">
                         <input type="file" class="form-control mb-3" required name="files" accept=".btcpay" id="files">
-                        <button class="btn btn-primary" type="submit">Upload</button>
+                        <button class="btn btn-primary" type="submit" id="UploadPlugin">Upload</button>
                     </form>
                 </div>
             </div>

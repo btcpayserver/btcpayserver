@@ -1147,6 +1147,14 @@ namespace BTCPayServer.Tests
             bitpay = new Bitpay(k, tester.PayTester.ServerUri);
             Assert.True(bitpay.TestAccess(Facade.Merchant));
             Assert.True(bitpay.TestAccess(Facade.PointOfSale));
+            HttpClient client = new HttpClient();
+            var token = (await bitpay.GetAccessTokenAsync(Facade.Merchant)).Value;
+            var getRates = tester.PayTester.ServerUri.AbsoluteUri + $"rates/?cryptoCode=BTC&token={token}";
+            var req = new HttpRequestMessage(HttpMethod.Get, getRates);
+            req.Headers.Add("x-signature", NBitpayClient.Extensions.BitIdExtensions.GetBitIDSignature(k, getRates, null));
+            req.Headers.Add("x-identity", k.PubKey.ToHex());
+            var resp = await client.SendAsync(req);
+            resp.EnsureSuccessStatusCode();
 
             // Can generate API Key
             var repo = tester.PayTester.GetService<TokenRepository>();
@@ -1167,7 +1175,6 @@ namespace BTCPayServer.Tests
             apiKey = apiKey2;
 
             // Can create an invoice with this new API Key
-            HttpClient client = new HttpClient();
             HttpRequestMessage message = new HttpRequestMessage(HttpMethod.Post,
                 tester.PayTester.ServerUri.AbsoluteUri + "invoices");
             message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic",

@@ -46,7 +46,7 @@ namespace BTCPayServer
     {
         public static DerivationSchemeParser GetDerivationSchemeParser(this BTCPayNetwork network)
         {
-            return new DerivationSchemeParser(n);
+            return new DerivationSchemeParser(network);
         }
 
         public static bool TryParseXpub(this DerivationSchemeParser derivationSchemeParser, string xpub,

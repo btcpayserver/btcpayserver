@@ -524,7 +524,7 @@ namespace BTCPayServer.Tests
             rows = s.Driver.FindElements(By.CssSelector("#UsersList tr"));
             Assert.Single(rows);
             Assert.Contains(unapproved.RegisterDetails.Email, rows.First().Text);
-            s.Driver.FindElement(By.CssSelector("#UsersList tr:first-child .user-approved.text-danger"));
+            Assert.Contains("Pending Approval", s.Driver.FindElement(By.CssSelector("#UsersList tr:first-child .user-status")).Text);
             // Approve user
             s.Driver.FindElement(By.CssSelector("#UsersList tr:first-child .user-edit")).Click();
             s.Driver.FindElement(By.Id("Approved")).Click();
@@ -536,7 +536,7 @@ namespace BTCPayServer.Tests
             rows = s.Driver.FindElements(By.CssSelector("#UsersList tr"));
             Assert.Single(rows);
             Assert.Contains(unapproved.RegisterDetails.Email, rows.First().Text);
-            s.Driver.FindElement(By.CssSelector("#UsersList tr:first-child .user-approved.text-success"));
+            Assert.Contains("Active", s.Driver.FindElement(By.CssSelector("#UsersList tr:first-child .user-status")).Text);
             
             // Finally, login user that needed approval
             s.Logout();

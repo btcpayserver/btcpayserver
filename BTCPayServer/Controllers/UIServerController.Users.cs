@@ -300,6 +300,29 @@ namespace BTCPayServer.Controllers
             return RedirectToAction(nameof(ListUsers));
         }
 
+        [HttpGet("server/users/{userId}/approve")]
+        public async Task<IActionResult> ApproveUser(string userId, bool approved)
+        {
+            var user = userId == null ? null : await _UserManager.FindByIdAsync(userId);
+            if (user == null)
+                return NotFound();
+
+            return View("Confirm", new ConfirmModel($"{(approved ? "Approve" : "Unapprove")} user", $"The user <strong>{Html.Encode(user.Email)}</strong> will be {(approved ? "approved" : "unapproved")}. Are you sure?", (approved ? "Approve" : "Unapprove")));
+        }
+
+        [HttpPost("server/users/{userId}/approve")]
+        public async Task<IActionResult> ApproveUserPost(string userId, bool approved)
+        {
+            var user = userId == null ? null : await _UserManager.FindByIdAsync(userId);
+            if (user == null)
+                return NotFound();
+
+            await _userService.SetUserApproval(userId, approved, Request.GetAbsoluteRootUri());
+
+            TempData[WellKnownTempData.SuccessMessage] = $"User {(approved ? "approved" : "unapproved")}";
+            return RedirectToAction(nameof(ListUsers));
+        }
+
         [HttpGet("server/users/{userId}/verification-email")]
         public async Task<IActionResult> SendVerificationEmail(string userId)
         {

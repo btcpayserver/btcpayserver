@@ -285,8 +285,12 @@ namespace BTCPayServer.Payments.Lightning
                         }
 
 
-                        if (oldDetails is LNURLPayPaymentMethodDetails lnurlPayPaymentMethodDetails && !string.IsNullOrEmpty(lnurlPayPaymentMethodDetails.BOLT11))
+                        if (oldDetails is LNURLPayPaymentMethodDetails lnurlPayPaymentMethodDetails)
                         {
+                            // LNUrlPay doesn't create a BOLT11 until it's actually scanned.
+                            // So if no BOLT11 already created, which is likely the case, do nothing
+                            if (string.IsNullOrEmpty(lnurlPayPaymentMethodDetails.BOLT11))
+                                continue;
                             try
                             {
                                 var client = _lightningLikePaymentHandler.CreateLightningClient(lnurlPayPaymentMethodDetails.LightningSupportedPaymentMethod,
@@ -375,7 +379,6 @@ namespace BTCPayServer.Payments.Lightning
                             InvoiceEventData.EventSeverity.Error);
                     }
                 }
-
                 await _InvoiceRepository.AddInvoiceLogs(invoice.Id, logs);
                 _CheckInvoices.Writer.TryWrite(invoice.Id);
             }

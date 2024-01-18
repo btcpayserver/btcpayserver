@@ -39,7 +39,7 @@ namespace BTCPayServer.Tests
             if (!Directory.Exists(_Directory))
                 Directory.CreateDirectory(_Directory);
 
-            NetworkProvider = networkProvider;
+            _NetworkProvider = networkProvider;
             ExplorerNode = new RPCClient(RPCCredentialString.Parse(GetEnvironment("TESTS_BTCRPCCONNECTION", "server=http://127.0.0.1:43782;ceiwHEbqWI83:DwubwWsoo3")), NetworkProvider.GetNetwork<BTCPayNetwork>("BTC").NBitcoinNetwork);
             ExplorerNode.ScanRPCCapabilities();
 
@@ -214,8 +214,14 @@ namespace BTCPayServer.Tests
         {
             return new TestAccount(this);
         }
-
-        public BTCPayNetworkProvider NetworkProvider { get; private set; }
+        BTCPayNetworkProvider _NetworkProvider;
+        public BTCPayNetworkProvider NetworkProvider
+        {
+            get
+            {
+                return PayTester?.Networks ?? _NetworkProvider;
+            }
+        }
         public RPCClient ExplorerNode
         {
             get; set;

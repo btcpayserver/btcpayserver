@@ -90,7 +90,7 @@ namespace BTCPayServer.Controllers
 
             if (vm.WalletFile != null)
             {
-                if (!DerivationSchemeSettings.TryParseFromWalletFile(await ReadAllText(vm.WalletFile), network, out strategy, out var error))
+                if (!_onChainWalletParsers.TryParseWalletFile(await ReadAllText(vm.WalletFile), network, out strategy, out var error))
                 {
                     ModelState.AddModelError(nameof(vm.WalletFile), $"Importing wallet failed: {error}");
                     return View(vm.ViewName, vm);
@@ -98,7 +98,7 @@ namespace BTCPayServer.Controllers
             }
             else if (!string.IsNullOrEmpty(vm.WalletFileContent))
             {
-                if (!DerivationSchemeSettings.TryParseFromWalletFile(vm.WalletFileContent, network, out strategy, out var error))
+                if (!_onChainWalletParsers.TryParseWalletFile(vm.WalletFileContent, network, out strategy, out var error))
                 {
                     ModelState.AddModelError(nameof(vm.WalletFileContent), $"QR import failed: {error}");
                     return View(vm.ViewName, vm);
@@ -191,7 +191,7 @@ namespace BTCPayServer.Controllers
         [HttpGet("{storeId}/onchain/{cryptoCode}/generate/{method?}")]
         public async Task<IActionResult> GenerateWallet(WalletSetupViewModel vm)
         {
-            var checkResult = IsAvailable(vm.CryptoCode, out var store, out var network);
+            var checkResult = IsAvailable(vm.CryptoCode, out _, out var network);
             if (checkResult != null)
             {
                 return checkResult;
@@ -231,7 +231,7 @@ namespace BTCPayServer.Controllers
         [HttpPost("{storeId}/onchain/{cryptoCode}/generate/{method}")]
         public async Task<IActionResult> GenerateWallet(string storeId, string cryptoCode, WalletSetupMethod method, WalletSetupRequest request)
         {
-            var checkResult = IsAvailable(cryptoCode, out var store, out var network);
+            var checkResult = IsAvailable(cryptoCode, out _, out var network);
             if (checkResult != null)
             {
                 return checkResult;

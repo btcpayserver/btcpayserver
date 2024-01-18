@@ -139,7 +139,7 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<UserLoginCodeService>();
             services.AddSingleton<LnurlAuthService>();
             services.AddSingleton<LightningAddressService>();
-            var mvcBuilder = services.AddMvc(o =>
+            services.AddMvc(o =>
              {
                  o.Filters.Add(new XFrameOptionsAttribute(XFrameOptionsAttribute.XFrameOptions.Deny));
                  o.Filters.Add(new XContentTypeOptionsAttribute("nosniff"));

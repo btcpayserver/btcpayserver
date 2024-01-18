@@ -707,9 +707,11 @@ namespace BTCPayServer.Tests
             s.RegisterNewUser(true);
             s.CreateNewStore();
             s.GoToInvoices();
-            s.Driver.FindElement(By.Id("CreateNewInvoice")).Click();
+
             // Should give us an error message if we try to create an invoice before adding a wallet
+            s.Driver.FindElement(By.Id("CreateNewInvoice")).Click();
             Assert.Contains("To create an invoice, you need to", s.Driver.PageSource);
+
             s.AddDerivationScheme();
             s.GoToInvoices();
             s.CreateInvoice();
@@ -1337,8 +1339,13 @@ namespace BTCPayServer.Tests
             await s.StartAsync();
             s.RegisterNewUser();
             s.CreateNewStore();
-            s.AddDerivationScheme();
+            s.Driver.FindElement(By.Id("StoreNav-PaymentRequests")).Click();
+            
+            // Should give us an error message if we try to create a payment request before adding a wallet
+            s.Driver.FindElement(By.Id("CreatePaymentRequest")).Click();
+            Assert.Contains("To create a payment request, you need to", s.Driver.PageSource);
 
+            s.AddDerivationScheme();
             s.Driver.FindElement(By.Id("StoreNav-PaymentRequests")).Click();
             s.Driver.FindElement(By.Id("CreatePaymentRequest")).Click();
             s.Driver.FindElement(By.Id("Title")).SendKeys("Pay123");
@@ -1768,7 +1775,6 @@ namespace BTCPayServer.Tests
             var mnemonic = s.GenerateWallet(cryptoCode, "", true, true);
 
             //lets import and save private keys
-            var root = mnemonic.DeriveExtKey();
             invoiceId = s.CreateInvoice(storeId);
             invoice = await s.Server.PayTester.InvoiceRepository.GetInvoice(invoiceId);
             address = invoice.EntityToDTO().Addresses["BTC"];
@@ -2733,7 +2739,7 @@ namespace BTCPayServer.Tests
             // BOLT11 is also displayed for standard invoice (not LNURL, even if it is available)
             s.Driver.FindElement(By.Id("copy-tab")).Click();
             var bolt11 = s.Driver.FindElement(By.CssSelector("input.checkoutTextbox")).GetAttribute("value");
-            var bolt11Parsed = Lightning.BOLT11PaymentRequest.Parse(bolt11, s.Server.ExplorerNode.Network);
+            Lightning.BOLT11PaymentRequest.Parse(bolt11, s.Server.ExplorerNode.Network);
             var invoiceId = s.Driver.Url.Split('/').Last();
             using (var resp = await s.Server.PayTester.HttpClient.GetAsync("BTC/lnurl/pay/i/" + invoiceId))
             {
@@ -2944,7 +2950,6 @@ namespace BTCPayServer.Tests
             }
             invoices = await repo.GetInvoices(new InvoiceQuery() { StoreId = new[] { s.StoreId } });
             Assert.Equal(2, invoices.Length);
-            var emailSuffix = $"@{s.Server.PayTester.HostName}:{s.Server.PayTester.Port}";
             foreach (var i in invoices)
             {
                 var lightningPaymentMethod = i.GetPaymentMethod(new PaymentMethodId("BTC", PaymentTypes.LNURLPay));

@@ -74,11 +74,10 @@ namespace BTCPayServer.Controllers
                 var rule = vm.Rules[i];
 
                 if (!string.IsNullOrEmpty(rule.To) && (rule.To.Split(',', StringSplitOptions.RemoveEmptyEntries)
-                        .Any(s => !MailboxAddressValidator.TryParse(s, out var mb))))
+                        .Any(s => !MailboxAddressValidator.TryParse(s, out _))))
                 {
                     ModelState.AddModelError($"{nameof(vm.Rules)}[{i}].{nameof(rule.To)}",
                         "Invalid mailbox address provided. Valid formats are: 'test@example.com' or 'Firstname Lastname <test@example.com>'");
-
                 }
                 else if (!rule.CustomerEmail && string.IsNullOrEmpty(rule.To))
                     ModelState.AddModelError($"{nameof(vm.Rules)}[{i}].{nameof(rule.To)}",
@@ -114,8 +113,17 @@ namespace BTCPayServer.Controllers
                     var emailSender = await _emailSenderFactory.GetEmailSender(store.Id);
                     if (await IsSetupComplete(emailSender))
                     {
-                        emailSender.SendEmail(MailboxAddress.Parse(rule.To), $"({store.StoreName} test) {rule.Subject}", rule.Body);
-                        message += $"Test email sent to {rule.To} — please verify you received it.";
+                        var recipients = rule.To.Split(",", StringSplitOptions.RemoveEmptyEntries)
+                            .Select(o =>
+                            {
+                                MailboxAddressValidator.TryParse(o, out var mb);
+                                return mb;
+                            })
+                            .Where(o => o != null)
+                            .ToArray();
+                        
+                        emailSender.SendEmail(recipients.ToArray(), null, null, $"({store.StoreName} test) {rule.Subject}", rule.Body);
+                        message += "Test email sent — please verify you received it.";
                     }
                     else
                     {

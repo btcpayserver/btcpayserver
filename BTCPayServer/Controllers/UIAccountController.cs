@@ -205,7 +205,7 @@ namespace BTCPayServer.Controllers
                             LoginWithLNURLAuthViewModel = lnurlAuthCredentials ? await BuildLNURLAuthViewModel(model.RememberMe, user) : null,
                         });
                     }
-                    
+
                     await _userManager.AccessFailedAsync(user);
                     ModelState.AddModelError(string.Empty, errorMessage!);
                     return View(model);

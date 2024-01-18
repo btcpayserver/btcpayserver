@@ -168,36 +168,30 @@ namespace BTCPayServer.Controllers
                     return View(vm);
                 }
                 var builder = new UriBuilder();
-                using (var client = new HttpClient(new HttpClientHandler()
+                try
                 {
-                    ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
-                }))
-                {
-                    try
-                    {
-                        builder.Scheme = this.Request.Scheme;
-                        builder.Host = vm.DNSDomain;
-                        var addresses1 = GetAddressAsync(this.Request.Host.Host);
-                        var addresses2 = GetAddressAsync(vm.DNSDomain);
-                        await Task.WhenAll(addresses1, addresses2);
+                    builder.Scheme = this.Request.Scheme;
+                    builder.Host = vm.DNSDomain;
+                    var addresses1 = GetAddressAsync(this.Request.Host.Host);
+                    var addresses2 = GetAddressAsync(vm.DNSDomain);
+                    await Task.WhenAll(addresses1, addresses2);
 
-                        var addressesSet = addresses1.GetAwaiter().GetResult().Select(c => c.ToString()).ToHashSet();
-                        var hasCommonAddress = addresses2.GetAwaiter().GetResult().Select(c => c.ToString()).Any(s => addressesSet.Contains(s));
-                        if (!hasCommonAddress)
-                        {
-                            ModelState.AddModelError(nameof(vm.DNSDomain), $"Invalid host ({vm.DNSDomain} is not pointing to this BTCPay instance)");
-                            return View(vm);
-                        }
-                    }
-                    catch (Exception ex)
+                    var addressesSet = addresses1.GetAwaiter().GetResult().Select(c => c.ToString()).ToHashSet();
+                    var hasCommonAddress = addresses2.GetAwaiter().GetResult().Select(c => c.ToString()).Any(s => addressesSet.Contains(s));
+                    if (!hasCommonAddress)
                     {
-                        var messages = new List<object>();
-                        messages.Add(ex.Message);
-                        if (ex.InnerException != null)
-                            messages.Add(ex.InnerException.Message);
-                        ModelState.AddModelError(nameof(vm.DNSDomain), $"Invalid domain ({string.Join(", ", messages.ToArray())})");
+                        ModelState.AddModelError(nameof(vm.DNSDomain), $"Invalid host ({vm.DNSDomain} is not pointing to this BTCPay instance)");
                         return View(vm);
                     }
+                }
+                catch (Exception ex)
+                {
+                    var messages = new List<object>();
+                    messages.Add(ex.Message);
+                    if (ex.InnerException != null)
+                        messages.Add(ex.InnerException.Message);
+                    ModelState.AddModelError(nameof(vm.DNSDomain), $"Invalid domain ({string.Join(", ", messages.ToArray())})");
+                    return View(vm);
                 }
 
                 var error = await RunSSH(vm, $"changedomain.sh {vm.DNSDomain}");
@@ -685,7 +679,7 @@ namespace BTCPayServer.Controllers
         [HttpPost]
         public async Task<IActionResult> ServicePost(string serviceName, string cryptoCode)
         {
-            if (!_dashBoard.IsFullySynched(cryptoCode, out var unusud))
+            if (!_dashBoard.IsFullySynched(cryptoCode, out _))
             {
                 TempData[WellKnownTempData.ErrorMessage] = $"{cryptoCode} is not fully synched";
                 return RedirectToAction(nameof(Services));

@@ -44,13 +44,9 @@ namespace BTCPayServer
 {
     public static class Extensions
     {
-
-        private static readonly ConcurrentDictionary<BTCPayNetwork, DerivationSchemeParser> _derivationSchemeParsers =
-            new();
-
         public static DerivationSchemeParser GetDerivationSchemeParser(this BTCPayNetwork network)
         {
-            return _derivationSchemeParsers.GetOrAdd(network, n => new DerivationSchemeParser(n));
+            return new DerivationSchemeParser(n);
         }
 
         public static bool TryParseXpub(this DerivationSchemeParser derivationSchemeParser, string xpub,

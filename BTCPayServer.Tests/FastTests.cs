@@ -28,6 +28,7 @@ using BTCPayServer.Plugins.Bitcoin;
 using BTCPayServer.Rating;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
+using BTCPayServer.Services.Fees;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Labels;
 using BTCPayServer.Services.Rates;
@@ -157,6 +158,38 @@ namespace BTCPayServer.Tests
             data = JsonConvert.DeserializeObject<TradeRequestData>("{\"fromAsset\":\"Test\", \"qty\": \"6.1e-7\"}");
             Assert.Equal(6.1e-7m, data.Qty.Value);
             Assert.Equal("Test", data.FromAsset);
+        }
+
+        [Fact]
+        public void CanInterpolateOrBound()
+        {
+            var testData = new ((int Blocks, decimal Fee)[] Data, int Target, decimal Expected) []
+            {
+                ([(0, 0m), (10, 100m)], 5, 50m),
+                ([(50, 0m), (100, 100m)], 5, 0.0m),
+                ([(50, 0m), (100, 100m)], 101, 100.0m),
+                ([(50, 100m), (50, 100m)], 101, 100.0m),
+                ([(50, 0m), (100, 100m)], 75, 50m),
+                ([(0, 0m), (50, 50m), (100, 100m)], 75, 75m),
+                ([(0, 0m), (500, 50m), (1000, 100m)], 750, 75m),
+                ([(0, 0m), (500, 50m), (1000, 100m)], 100, 10m),
+                ([(0, 0m), (100, 100m)], 80, 80m),
+                ([(0, 0m), (100, 100m)], 25, 25m),
+            };
+            foreach (var t in testData)
+            {
+                var actual = MempoolSpaceFeeProvider.InterpolateOrBound(t.Data.Select(t => new MempoolSpaceFeeProvider.BlockFeeRate(t.Blocks, new FeeRate(t.Fee))).ToArray(), t.Target);
+                Assert.Equal(new FeeRate(t.Expected), actual);
+            }
+        }
+        [Fact]
+        public void CanRandomizeByPercentage()
+        {
+            var generated = Enumerable.Range(0, 1000).Select(_ => MempoolSpaceFeeProvider.RandomizeByPercentage(100.0m, 10.0m)).ToArray();
+            Assert.Empty(generated.Where(g => g < 90m));
+            Assert.Empty(generated.Where(g => g > 110m));
+            Assert.NotEmpty(generated.Where(g => g < 91m));
+            Assert.NotEmpty(generated.Where(g => g > 109m));
         }
 
         private void CanParseDecimalsCore(string str, decimal expected)

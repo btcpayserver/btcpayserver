@@ -52,14 +52,23 @@ public class MempoolSpaceFeeProvider(
         var a = (decimal)(target - lb.Blocks) / (decimal)(hb.Blocks - lb.Blocks);
         return new FeeRate((1 - a) * lb.FeeRate.SatoshiPerByte + a * hb.FeeRate.SatoshiPerByte);
     }
+    readonly TimeSpan Expiration = TimeSpan.FromMinutes(25);
+    public async Task RefreshCache()
+    {
+        var rate = await GetFeeRatesCore();
+        memoryCache.Set(cacheKey, rate, Expiration);
+    }
 
+    public bool CachedOnly { get; set; }
     internal async Task<BlockFeeRate[]> GetFeeRatesAsync()
     {
+        if (CachedOnly)
+            return memoryCache.Get(cacheKey) as BlockFeeRate[] ?? throw new InvalidOperationException("Fee rates unavailable");
         try
         {
             return  (await  memoryCache.GetOrCreateAsync(cacheKey, async entry =>
             {
-                entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
+                entry.AbsoluteExpirationRelativeToNow = Expiration;
                 return await GetFeeRatesCore();
             }))!;
         }
@@ -73,8 +82,7 @@ public class MempoolSpaceFeeProvider(
     async Task<BlockFeeRate[]> GetFeeRatesCore()
     {
         var client = httpClientFactory.CreateClient(nameof(MempoolSpaceFeeProvider));
-        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
-        using var result = await client.GetAsync(ExplorerLink, cts.Token);
+        using var result = await client.GetAsync(ExplorerLink);
         result.EnsureSuccessStatusCode();
         var recommendedFees = await result.Content.ReadAsAsync<Dictionary<string, decimal>>();
         var r = new List<BlockFeeRate>();
@@ -97,8 +105,8 @@ public class MempoolSpaceFeeProvider(
         {
             // Randomize a bit
             ordered[i] = ordered[i] with { FeeRate = new FeeRate(RandomizeByPercentage(ordered[i].FeeRate.SatoshiPerByte, 10m)) };
-            if (i > 0) // Make sure feerate always increase
-                ordered[i] = ordered[i] with { FeeRate = FeeRate.Max(ordered[i - 1].FeeRate, ordered[i].FeeRate) };
+            if (i > 0) // Make sure feerate always decrease
+                ordered[i] = ordered[i] with { FeeRate = FeeRate.Min(ordered[i - 1].FeeRate, ordered[i].FeeRate) };
         }
         return ordered;
     }

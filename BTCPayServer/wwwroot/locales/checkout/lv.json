@@ -39,5 +39,7 @@
   "submitting_nfc": "Iesniegšana NFC ...",
   "payment_received": "Saņemta maksājuma informācija",
   "payment_received_body": "Jūsu maksājums ir saņemts un tagad tiek apstrādāts",
-  "payment_received_confirmations": "Kad jūsu maksājums ir saņēmis {{requiredConfirmations}} apstiprinājumus {{cryptoCode}} blokķēdē, jūsu rēķins tiks apmaksāts."
+  "payment_received_confirmations": "Kad jūsu maksājums ir saņēmis {{requiredConfirmations}} apstiprinājumus {{cryptoCode}} blokķēdē, jūsu rēķins tiks apmaksāts.",
+  "invoice_paidpartial_body": "Rēķins ir derīgs tikai {{minutes}} minūtes. Šis rēķins ir beidzies ar daļēju maksājumu. Lūdzu, sazinieties ar mums, lai mēs varētu izpildīt jūsu pasūtījumu.",
+  "contact_us": "Sazinieties ar mums"
 }

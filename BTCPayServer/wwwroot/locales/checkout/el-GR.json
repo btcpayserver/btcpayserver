@@ -39,5 +39,7 @@
   "submitting_nfc": "Υποβολή NFC...",
   "payment_received": "Η πληρωμή ελήφθη",
   "payment_received_body": "Η πληρωμή σας έχει ληφθεί και επεξεργάζεται τώρα",
-  "payment_received_confirmations": "Μόλις η πληρωμή σας λάβει {{requiredConfirmations}} επιβεβαιώσεις στο blockchain {{cryptoCode}}, η τιμολόγησή σας θα εξοφληθεί."
+  "payment_received_confirmations": "Μόλις η πληρωμή σας λάβει {{requiredConfirmations}} επιβεβαιώσεις στο blockchain {{cryptoCode}}, η τιμολόγησή σας θα εξοφληθεί.",
+  "invoice_paidpartial_body": "Το τιμολόγιο είναι έγκυρο μόνο για {{minutes}} λεπτά. Αυτό το τιμολόγιο έληξε με μερική πληρωμή. Παρακαλούμε επικοινωνήστε μαζί μας, ώστε να μπορέσουμε να εκπληρώσουμε την παραγγελία σας.",
+  "contact_us": "Επικοινωνήστε μαζί μας"
 }

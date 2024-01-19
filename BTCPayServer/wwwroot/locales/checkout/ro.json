@@ -39,5 +39,7 @@
   "submitting_nfc": "Trimitere NFC...",
   "payment_received": "Plată primită",
   "payment_received_body": "Plata dvs. a fost primită și este acum în curs de procesare",
-  "payment_received_confirmations": "Odată ce plata dumneavoastră primește {{requiredConfirmations}} confirmări pe blockchain-ul {{cryptoCode}}, factura dumneavoastră va fi achitată."
+  "payment_received_confirmations": "Odată ce plata dumneavoastră primește {{requiredConfirmations}} confirmări pe blockchain-ul {{cryptoCode}}, factura dumneavoastră va fi achitată.",
+  "invoice_paidpartial_body": "O factură este valabilă doar pentru {{minutes}} minute. Această factură a expirat cu plată parțială. Vă rugăm să ne contactați pentru a putea finaliza comanda dumneavoastră.",
+  "contact_us": "Contactați-ne"
 }

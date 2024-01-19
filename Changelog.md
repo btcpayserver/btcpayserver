@@ -12,9 +12,11 @@
 * Fix: POS order with invalid form input was unable to reach the payment page (#5655 #5658) @dennisreimann
 * Fix: Checkout v1 was not applying the custom style (#5628 #5615 #5616) @dennisreimann
 * Fix: Test email with multiple recipients was crashing (#5649 #5648) @dennisreimann
+* Fix: Test webhook for payment requests (#5680) @Kukks
 
 ### Improvements
 
+* Checkout v2: Update checkout v2 translations from Transifex and ChatGPT (#5679) @NicolasDorier
 * Checkout v2: Clicking the QR code now copies the full payment URI (#5625 #5627) @dennisreimann
 * Improved checkout page load time by fetching the recommended fee in the background periodically (#5672) @NicolasDorier
 * Clear any previous pending actions of a plugin when you click uninstall (#5577) @Kukks

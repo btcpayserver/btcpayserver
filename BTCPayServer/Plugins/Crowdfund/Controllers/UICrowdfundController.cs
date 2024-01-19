@@ -269,7 +269,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
         [HttpGet("/apps/{appId}/crowdfund/form")]
         [IgnoreAntiforgeryToken]
         [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.Unset)]
-        public async Task<IActionResult> CrowdfundForm(string appId)
+        public async Task<IActionResult> CrowdfundForm(string appId, decimal? amount=0, string choiceKey="")
         {
             var app = await _appService.GetApp(appId, CrowdfundAppType.AppType);
             if (app == null)
@@ -297,7 +297,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                 Form = form,
                 AspController = controller,
                 AspAction = nameof(CrowdfundFormSubmit),
-                RouteParameters = new Dictionary<string, string> { { "appId", appId } },
+                RouteParameters = new Dictionary<string, string> { { "appId", appId }, { "amount", amount.ToString() }, { "choiceKey", choiceKey } },
                 FormParameters = formParameters,
                 FormParameterPrefix = prefix
             };
@@ -308,7 +308,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
         [HttpPost("/apps/{appId}/crowdfund/form/submit")]
         [IgnoreAntiforgeryToken]
         [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.Unset)]
-        public async Task<IActionResult> CrowdfundFormSubmit(string appId, FormViewModel viewModel)
+        public async Task<IActionResult> CrowdfundFormSubmit(string appId, decimal amount, string choiceKey, FormViewModel viewModel)
         {
             var app = await _appService.GetApp(appId, CrowdfundAppType.AppType);
             if (app == null)
@@ -335,6 +335,8 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                 var req = new ContributeToCrowdfund()
                 {
                     RedirectToCheckout = true,
+                    Amount = amount == 0 ? null : amount,
+                    ChoiceKey = choiceKey,
                     ViewCrowdfundViewModel = appInfo
                 };
 

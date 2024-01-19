@@ -9,7 +9,7 @@
 * Fix: Partial Payment displayed 'Could not update BTC (LNURL-Pay)' in invoice logs (#5670) @NicolasDorier
 * Fix: BTCPay Server failed to start the first time when installing a new plugin (#5595) @NicolasDorier
 * Importing a Taproot account from Passport failed with no error message (#5518 #5638) @Kukks
-* Fix: Unable to reach the payment page when a custom form was enabled (#5655 #5658) @dennisreimann
+* Fix: POS order with invalid form input was unable to reach the payment page (#5655 #5658) @dennisreimann
 * Fix: Checkout v1 was not applying the custom style (#5628 #5615 #5616) @dennisreimann
 * Fix: Test email with multiple recipients was crashing (#5649 #5648) @dennisreimann
 

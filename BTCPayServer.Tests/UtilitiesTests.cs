@@ -200,7 +200,7 @@ namespace BTCPayServer.Tests
 
                     if (!askedPrompt)
                     {
-                        driver.FindElement(By.XPath("//a[contains(text(), \"New chat\")]")).Click();
+                        driver.FindElements(By.XPath("//button[contains(@class,'text-token-text-primary')]")).Where(e => e.Displayed).First().Click();
                         Thread.Sleep(200);
                         var input = driver.FindElement(By.XPath("//textarea[@data-id]"));
                         input.SendKeys($"I am translating a checkout crypto payment page, and I want you to translate it from English (en-US) to {languageCurrent} ({jsonLangCode}).");
@@ -232,7 +232,9 @@ retry:
             Thread.Sleep(200);
             try
             {
-                driver.FindElement(By.XPath("//*[contains(text(), \"Regenerate response\")]"));
+                var el = driver.FindElement(By.XPath("//button[contains(@data-testid, 'send-button')]"));
+                if (!el.Displayed)
+                    goto retry;
             }
             catch
             {

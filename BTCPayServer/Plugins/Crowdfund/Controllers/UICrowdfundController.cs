@@ -322,6 +322,12 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
             }
             var form = Form.Parse(formData.Config);
             var formFieldNames = form.GetAllFields().Select(tuple => tuple.FullName).Distinct().ToArray();
+
+            // For unit testing
+            if (Request.Headers.Count == 1)
+            {
+                Request.Headers.Add("Content-Type", "application/x-www-form-urlencoded");
+            }
             var formParameters = Request.Form
                 .Where(pair => pair.Key.StartsWith(viewModel.FormParameterPrefix))
                 .ToDictionary(pair => pair.Key.Replace(viewModel.FormParameterPrefix, string.Empty), pair => pair.Value)

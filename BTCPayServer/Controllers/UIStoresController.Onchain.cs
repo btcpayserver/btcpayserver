@@ -90,9 +90,17 @@ namespace BTCPayServer.Controllers
 
             if (vm.WalletFile != null)
             {
-                if (!_onChainWalletParsers.TryParseWalletFile(await ReadAllText(vm.WalletFile), network, out strategy, out var error))
+                string fileContent = null;
+                try
                 {
-                    ModelState.AddModelError(nameof(vm.WalletFile), $"Importing wallet failed: {error}");
+                    fileContent = await ReadAllText(vm.WalletFile);
+                }
+                catch
+                {
+                }
+                if (fileContent is null || !_onChainWalletParsers.TryParseWalletFile(fileContent, network, out strategy, out _))
+                {
+                    ModelState.AddModelError(nameof(vm.WalletFile), $"Importing wallet failed");
                     return View(vm.ViewName, vm);
                 }
             }

@@ -39,5 +39,7 @@
   "submitting_nfc": "NFC göndərilməkdədir...",
   "payment_received": "Ödəniş qəbul edildi",
   "payment_received_body": "Sizin ödənişiniz qəbul edildi və hazırda işlənir",
-  "payment_received_confirmations": "Sizin ödənişiniz {{cryptoCode}} blockchain-də {{requiredConfirmations}} təsdiqlənmə ilə qəbul ediləcəkdir."
+  "payment_received_confirmations": "Sizin ödənişiniz {{cryptoCode}} blockchain-də {{requiredConfirmations}} təsdiqlənmə ilə qəbul ediləcəkdir.",
+  "invoice_paidpartial_body": "Faktura yalnız {{minutes}} dəqiqə müddətinə etibarlıdır. Bu faktura qismən ödəmə ilə vaxtı keçmişdir. Sifarişinizi yerinə yetirmək üçün bizimlə əlaqə saxlayın.",
+  "contact_us": "Bizimlə əlaqə saxlayın"
 }

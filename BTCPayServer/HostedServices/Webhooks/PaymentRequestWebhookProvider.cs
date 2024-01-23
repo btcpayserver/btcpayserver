@@ -28,9 +28,9 @@ public class PaymentRequestWebhookProvider: WebhookProvider<PaymentRequestEvent>
     public override WebhookEvent CreateTestEvent(string type, object[] args)
     {
         var storeId = args[0].ToString();
-        return new WebhookPayoutEvent(type, storeId)
+        return new WebhookPaymentRequestEvent(type, storeId)
         {
-            PayoutId = "__test__" + Guid.NewGuid() + "__test__"
+            PaymentRequestId = "__test__" + Guid.NewGuid() + "__test__"
         };
     }
 

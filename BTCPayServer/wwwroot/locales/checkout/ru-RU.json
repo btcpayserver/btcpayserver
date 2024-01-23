@@ -39,5 +39,7 @@
   "submitting_nfc": "Отправка NFC...",
   "payment_received": "Платеж получен",
   "payment_received_body": "Ваш платеж получен и находится в обработке",
-  "payment_received_confirmations": "Как только ваш платеж получит {{requiredConfirmations}} подтверждений на блокчейне {{cryptoCode}}, ваш счет будет оплачен."
+  "payment_received_confirmations": "Как только ваш платеж получит {{requiredConfirmations}} подтверждений на блокчейне {{cryptoCode}}, ваш счет будет оплачен.",
+  "invoice_paidpartial_body": "Счет действителен только в течение {{minutes}} минут. Этот счет истек с частичной оплатой. Пожалуйста, свяжитесь с нами, чтобы мы могли выполнить ваш заказ.",
+  "contact_us": "Свяжитесь с нами"
 }

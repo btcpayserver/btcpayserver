@@ -39,5 +39,7 @@
   "submitting_nfc": "提交 NFC ...",
   "payment_received": "支付已收到",
   "payment_received_body": "您的付款已收到并正在处理中。",
-  "payment_received_confirmations": "一旦您的{{cryptoCode}}区块链支付获得{{requiredConfirmations}}个确认，您的发票将结清。"
+  "payment_received_confirmations": "一旦您的{{cryptoCode}}区块链支付获得{{requiredConfirmations}}个确认，您的发票将结清。",
+  "invoice_paidpartial_body": "发票只在{{minutes}}分钟内有效。该发票已因部分付款而过期。请联系我们，以便我们能够完成您的订单。",
+  "contact_us": "联系我们"
 }

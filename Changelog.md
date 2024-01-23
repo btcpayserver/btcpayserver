@@ -1,5 +1,34 @@
 # Changelog
 
+## 1.12.4
+
+### Bug fixes
+
+* Fix: When the mempool fee was above 850 sat/vbyte, it was being rounded to 2000 sat/vbyte (#5643) @Kukks
+* Fix: Bitpay's API rate route was not backward compatible for some queries (#5671) @NicolasDorier
+* Fix: Partial Payment displayed 'Could not update BTC (LNURL-Pay)' in invoice logs (#5670) @NicolasDorier
+* Fix: BTCPay Server failed to start the first time when installing a new plugin (#5595) @NicolasDorier
+* Importing a Taproot account from Passport failed with no error message (#5518 #5638) @Kukks
+* Fix: POS order with invalid form input was unable to reach the payment page (#5655 #5658) @dennisreimann
+* Fix: Checkout v1 was not applying the custom style (#5628 #5615 #5616) @dennisreimann
+* Fix: Test email with multiple recipients was crashing (#5649 #5648) @dennisreimann
+* Fix: Test webhook for payment requests (#5680) @Kukks
+
+### Improvements
+
+* Checkout v2: Update checkout v2 translations from Transifex and ChatGPT (#5679) @NicolasDorier
+* Checkout v2: Clicking the QR code now copies the full payment URI (#5625 #5627) @dennisreimann
+* Improved checkout page load time by fetching the recommended fee in the background periodically (#5672) @NicolasDorier
+* Clear any previous pending actions of a plugin when you click uninstall (#5577) @Kukks
+* Display the plugin version that was disabled (#5577) @Kukks
+* Show an update button on disabled plugins instead of an install button (#5577) @Kukks
+* If a plugin is scheduled to be installed/updated, it will display which version was scheduled for the update. If a newer version is available than the scheduled one, an option to switch will be shown (#5577) @Kukks
+* Improved fee rate approximation by linear interpolation between known block targets (#5643) @Kukks
+* Prevented creation of payment requests when a wallet is not set up (#5620) @TChukwuleta
+* Hide LN Balance when using an internal node and not a server admin (#5639) @Kukks
+* Added a link to the Greenfield API Key management page from the store's settings Access token page (#5635) @hiluan
+* Removed the 'What's New' button and information (#5608 #5618) @hiluan
+
 ## 1.12.3
 
 ### Bug fixes

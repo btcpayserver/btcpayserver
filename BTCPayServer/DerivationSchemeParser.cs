@@ -96,7 +96,7 @@ namespace BTCPayServer
                     throw new ArgumentOutOfRangeException(nameof(outputDescriptor));
             }
         }
-        public DerivationStrategyBase Parse(string str, bool ignorePrefix = false, bool ignoreBasePrefix = false, bool enforceNetworkPrefix = true)
+        public DerivationStrategyBase Parse(string str, bool ignorePrefix = false, bool ignoreBasePrefix = false, bool enforceNetworkPrefix = true, bool electrum = true)
         {
             ArgumentNullException.ThrowIfNull(str);
             str = str.Trim();
@@ -143,7 +143,7 @@ namespace BTCPayServer
                         throw new FormatException(
                             $"Invalid xpub. Is this really for {BtcPayNetwork.CryptoCode} {Network.ChainName}?");
 
-                    if (!ignorePrefix && !hasLabel && BtcPayNetwork.ElectrumMapping.TryGetValue(prefix, out var type))
+                    if (!ignorePrefix && !hasLabel && electrum && BtcPayNetwork.ElectrumMapping.TryGetValue(prefix, out var type))
                     {
                         switch (type)
                         {

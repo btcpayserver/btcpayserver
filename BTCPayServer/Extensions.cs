@@ -50,7 +50,7 @@ namespace BTCPayServer
         }
 
         public static bool TryParseXpub(this DerivationSchemeParser derivationSchemeParser, string xpub,
-            ref DerivationSchemeSettings derivationSchemeSettings, out string error)
+            ref DerivationSchemeSettings derivationSchemeSettings, out string error, bool electrum = true)
         {
             try
             {
@@ -72,7 +72,7 @@ namespace BTCPayServer
 
                 derivationSchemeSettings.AccountOriginal = xpub.Trim();
                 derivationSchemeSettings.AccountDerivation =
-                    derivationSchemeParser.Parse(derivationSchemeSettings.AccountOriginal, false, false, false);
+                    derivationSchemeParser.Parse(derivationSchemeSettings.AccountOriginal, false, false, false, electrum);
                 derivationSchemeSettings.AccountKeySettings = derivationSchemeSettings.AccountDerivation.GetExtPubKeys()
                     .Select(key => new AccountKeySettings {AccountKey = key.GetWif(derivationSchemeParser.Network)})
                     .ToArray();

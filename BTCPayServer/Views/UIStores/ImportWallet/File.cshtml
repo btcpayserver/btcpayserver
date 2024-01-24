@@ -1,7 +1,13 @@
+@using BTCPayServer.Services
 @model WalletSetupViewModel
+@inject WalletFileParsers FileParsers
 @{
     Layout = "_LayoutWalletSetup";
     ViewData.SetActivePage(StoreNavPages.OnchainSettings, "Import your wallet file", Context.GetStoreData().Id);
+    
+    var fileSources = new SelectList(FileParsers.GetSourceHandles()
+            .Select(sourceHandle => new SelectListItem(sourceHandle, sourceHandle, Model.WalletFileSource == sourceHandle)), 
+        nameof(SelectListItem.Value), nameof(SelectListItem.Text));
 }
 
 @section Navbar {
@@ -17,11 +23,15 @@
 
 <form method="post" enctype="multipart/form-data" class="my-5">
     <div class="form-group">
-        <label asp-for="WalletFile" class="form-label"></label>
+        <label asp-for="WalletFile" class="form-label" data-required></label>
         <input asp-for="WalletFile" type="file" class="form-control" required>
         <span asp-validation-for="WalletFile" class="text-danger"></span>
     </div>
-
+    <div class="form-group">
+        <label asp-for="WalletFileSource" class="form-label" data-required></label>
+        <select asp-for="WalletFileSource" asp-items="@fileSources" class="form-select" required></select>
+        <span asp-validation-for="WalletFileSource" class="text-danger"></span>
+    </div>
     <button type="submit" class="btn btn-primary">Continue</button>
 </form>
 

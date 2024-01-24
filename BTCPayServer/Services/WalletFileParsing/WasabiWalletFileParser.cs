@@ -7,6 +7,8 @@ using Newtonsoft.Json;
 namespace BTCPayServer.Services.WalletFileParsing;
 public class WasabiWalletFileParser : IWalletFileParser
 {
+    public string[] SourceHandles => ["WasabiFile"];
+
     class WasabiFormat
     {
         public string? ExtPubKey { get; set; }
@@ -15,13 +17,14 @@ public class WasabiWalletFileParser : IWalletFileParser
         public string? ColdCardFirmwareVersion { get; set; }
         public string? CoboVaultFirmwareVersion { get; set; }
     }
+
     public bool TryParse(BTCPayNetwork network, string data, [MaybeNullWhen(false)] out DerivationSchemeSettings derivationSchemeSettings, [MaybeNullWhen(true)] out string error)
     {
         error = null;
         derivationSchemeSettings = null;
         var jobj = JsonConvert.DeserializeObject<WasabiFormat>(data);
         var derivationSchemeParser = network.GetDerivationSchemeParser();
-        var result = new DerivationSchemeSettings { Network = network, Source = "WasabiFile" };
+        var result = new DerivationSchemeSettings { Network = network, Source = SourceHandles.First() };
 
         if (jobj is null || !derivationSchemeParser.TryParseXpub(jobj.ExtPubKey, ref result, out error))
         {

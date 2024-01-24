@@ -101,7 +101,7 @@ namespace BTCPayServer.Controllers
                 }
 
                 string error = null;
-                if (fileContent is null || !_onChainWalletParsers.TryParseWalletFile(fileContent, network, out strategy, out error))
+                if (fileContent is null || !_onChainWalletParsers.TryParseWalletFile(fileContent, vm.WalletFileSource, network, out strategy, out error))
                 {
                     var details = !string.IsNullOrEmpty(error) ? error : "Make sure you import a compatible wallet format";
                     ModelState.AddModelError(nameof(vm.WalletFile), $"Wallet file import failed: {details}");

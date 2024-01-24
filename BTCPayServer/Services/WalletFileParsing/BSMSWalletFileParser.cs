@@ -11,6 +11,8 @@ using BTCPayNetwork = BTCPayServer.BTCPayNetwork;
 namespace BTCPayServer.Services.WalletFileParsing;
 public class BSMSWalletFileParser : IWalletFileParser
 {
+    public string[] SourceHandles => ["BSMS"];
+
     public bool TryParse(BTCPayNetwork network, string data, [MaybeNullWhen(false)] out DerivationSchemeSettings derivationSchemeSettings, [MaybeNullWhen(true)] out string error)
     {
         error = null;
@@ -51,7 +53,7 @@ public class BSMSWalletFileParser : IWalletFileParser
         derivationSchemeSettings = new DerivationSchemeSettings
         {
             Network = network,
-            Source = "BSMS",
+            Source = SourceHandles.First(),
             AccountDerivation = result.Item1,
             AccountOriginal = descriptor.Trim(),
             AccountKeySettings = result.Item2.Select((path, i) => new AccountKeySettings

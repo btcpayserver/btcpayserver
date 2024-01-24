@@ -1,10 +1,12 @@
 #nullable enable
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using Newtonsoft.Json;
 namespace BTCPayServer.Services.WalletFileParsing;
 public class OutputDescriptorJsonWalletFileParser(OutputDescriptorWalletFileParser outputDescriptorOnChainWalletParser)
     : IWalletFileParser
 {
+    public string[] SourceHandles => ["OutputDescriptorJsonWalletFile"];
     class OutputDescriptorJsonWalletFileFormat
     {
         [JsonProperty("Descriptor")]
@@ -25,8 +27,9 @@ public class OutputDescriptorJsonWalletFileParser(OutputDescriptorWalletFilePars
 
         if (!outputDescriptorOnChainWalletParser.TryParse(network, jobj.Descriptor, out derivationSchemeSettings, out error))
             return false;
-        if (!string.IsNullOrEmpty(jobj.Source))
-            derivationSchemeSettings.Source = jobj.Source;
+
+        derivationSchemeSettings.Source = string.IsNullOrEmpty(jobj.Source) ? SourceHandles.First() : jobj.Source;
+
         return true;
     }
 }

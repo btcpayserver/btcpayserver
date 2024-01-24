@@ -1,10 +1,13 @@
 #nullable enable
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using NBitcoin;
 using Newtonsoft.Json;
 namespace BTCPayServer.Services.WalletFileParsing;
 public class ElectrumWalletFileParser : IWalletFileParser
 {
+    public string[] SourceHandles => ["ElectrumFile", "ColdCard", "CoboVault"];
+
     class ElectrumFormat
     {
         internal class KeyStoreFormat
@@ -19,6 +22,7 @@ public class ElectrumWalletFileParser : IWalletFileParser
         }
         public KeyStoreFormat? keystore { get; set; }
     }
+
     public bool TryParse(BTCPayNetwork network, string data, [MaybeNullWhen(false)] out DerivationSchemeSettings derivationSchemeSettings, [MaybeNullWhen(true)] out string error)
     {
         error = null;
@@ -31,7 +35,7 @@ public class ElectrumWalletFileParser : IWalletFileParser
         }
 
         var derivationSchemeParser = network.GetDerivationSchemeParser();
-        var result = new DerivationSchemeSettings { Network = network, Source = "ElectrumFile" };
+        var result = new DerivationSchemeSettings { Network = network, Source = SourceHandles.First() };
 
         if (!derivationSchemeParser.TryParseXpub(jobj.keystore.xpub, ref result, out error, true))
             return false;

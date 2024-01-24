@@ -5,6 +5,7 @@ using System.Linq;
 namespace BTCPayServer.Services.WalletFileParsing;
 public class OutputDescriptorWalletFileParser : IWalletFileParser
 {
+    public string[] SourceHandles => ["OutputDescriptor"];
     public bool TryParse(BTCPayNetwork network, string data, [MaybeNullWhen(false)] out DerivationSchemeSettings derivationSchemeSettings, [MaybeNullWhen(true)] out string error)
     {
         error = null;
@@ -20,7 +21,7 @@ public class OutputDescriptorWalletFileParser : IWalletFileParser
         derivationSchemeSettings = new DerivationSchemeSettings
         {
             Network = network,
-            Source = "OutputDescriptor",
+            Source = SourceHandles.First(),
             AccountOriginal = data.Trim(),
             AccountDerivation = descriptor.Item1,
             AccountKeySettings = descriptor.Item2.Select((path, i) => new AccountKeySettings

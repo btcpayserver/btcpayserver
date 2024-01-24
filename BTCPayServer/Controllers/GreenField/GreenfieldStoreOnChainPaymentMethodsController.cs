@@ -123,7 +123,7 @@ namespace BTCPayServer.Controllers.Greenfield
             try
             {
                
-                var strategy = network.GetDerivationSchemeParser().Parse(paymentMethod.DerivationScheme, false, true);
+                var strategy = network.GetDerivationSchemeParser().Parse(paymentMethod.DerivationScheme);
                 var deposit = new NBXplorer.KeyPathTemplates(null).GetKeyPathTemplate(DerivationFeature.Deposit);
 
                 var line = strategy.GetLineFor(deposit);
@@ -173,7 +173,7 @@ namespace BTCPayServer.Controllers.Greenfield
             DerivationStrategyBase strategy;
             try
             {
-                strategy = network.GetDerivationSchemeParser().Parse(paymentMethodData.DerivationScheme, false, true);
+                strategy = network.GetDerivationSchemeParser().Parse(paymentMethodData.DerivationScheme);
             }
             catch
             {
@@ -246,7 +246,7 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 var store = Store;
                 var storeBlob = store.GetStoreBlob();
-                var strategy = network.GetDerivationSchemeParser().Parse(request.DerivationScheme, false, true);
+                var strategy = network.GetDerivationSchemeParser().Parse(request.DerivationScheme);
                 if (strategy != null)
                     await wallet.TrackAsync(strategy);
 

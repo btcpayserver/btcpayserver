@@ -11,6 +11,7 @@ public class ElectrumWalletFileParser : IWalletFileParser
         {
             public string? xpub { get; set; }
             public string? label { get; set; }
+            public string? root_fingerprint { get; set; }
             public uint? ckcc_xfp { get; set; }
             public string? derivation { get; set; }
             public string? ColdCardFirmwareVersion { get; set; }
@@ -29,28 +30,25 @@ public class ElectrumWalletFileParser : IWalletFileParser
         var derivationSchemeParser = network.GetDerivationSchemeParser();
         result.Source = "ElectrumFile";
 
-        if (jobj.keystore.xpub is null || jobj.keystore.ckcc_xfp is null || jobj.keystore.derivation is null)
+        if (jobj.keystore.xpub is null)
             return false;
 
-        var strategy = derivationSchemeParser.Parse(jobj.keystore.xpub, false, false, true);
-        result.AccountDerivation = strategy;
-        result.AccountOriginal = jobj.keystore.xpub;
-        result.GetSigningAccountKeySettings();
-
+        if (!derivationSchemeParser.TryParseXpub(jobj.keystore.xpub, ref result, true))
+            return false;
+        
         if (jobj.keystore.label is not null)
             result.Label = jobj.keystore.label;
 
-        result.AccountKeySettings[0].RootFingerprint = new HDFingerprint(jobj.keystore.ckcc_xfp.Value);
-        result.AccountKeySettings[0].AccountKeyPath = new KeyPath(jobj.keystore.derivation);
-
+        if (jobj.keystore.ckcc_xfp is not null)
+            result.AccountKeySettings[0].RootFingerprint = new HDFingerprint(jobj.keystore.ckcc_xfp.Value);
+        if (jobj.keystore.root_fingerprint is not null)
+            result.AccountKeySettings[0].RootFingerprint = HDFingerprint.Parse(jobj.keystore.root_fingerprint);
+        if (jobj.keystore.derivation is not null)
+            result.AccountKeySettings[0].AccountKeyPath = new KeyPath(jobj.keystore.derivation);
         if (jobj.keystore.ColdCardFirmwareVersion is not null)
-        {
             result.Source = "ColdCard";
-        }
         else if (jobj.keystore.CoboVaultFirmwareVersion is not null)
-        {
             result.Source = "CoboVault";
-        }
         derivationSchemeSettings = result;
         return true;
     }

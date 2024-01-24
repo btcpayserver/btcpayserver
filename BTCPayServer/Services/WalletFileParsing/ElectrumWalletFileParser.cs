@@ -1,7 +1,10 @@
 #nullable enable
+using System;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using NBitcoin;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 namespace BTCPayServer.Services.WalletFileParsing;
 public class ElectrumWalletFileParser : IWalletFileParser
 {
@@ -22,7 +25,7 @@ public class ElectrumWalletFileParser : IWalletFileParser
     public bool TryParse(BTCPayNetwork network, string data, [MaybeNullWhen(false)] out DerivationSchemeSettings derivationSchemeSettings)
     {
         derivationSchemeSettings = null;
-        var jobj = JsonConvert.DeserializeObject<ElectrumFormat>(data);
+        var jobj = DeserializeObject<ElectrumFormat>(data);
         if (jobj?.keystore is null)
             return false;
 
@@ -51,5 +54,15 @@ public class ElectrumWalletFileParser : IWalletFileParser
             result.Source = "CoboVault";
         derivationSchemeSettings = result;
         return true;
+    }
+
+    private T? DeserializeObject<T>(string data)
+    {
+        // We can't call JsonConvert.DeserializeObject directly
+        // because some export of Electrum file can have more than one
+        // JSON object separated by commas in the file
+        JsonTextReader reader = new JsonTextReader(new StringReader(data));
+        var o = JObject.ReadFrom(reader);
+        return JsonConvert.DeserializeObject<T>(o.ToString());
     }
 }

@@ -1113,6 +1113,28 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
             Assert.Equal("fbb5b37d", electrum.GetSigningAccountKeySettings().RootFingerprint.ToString());
             Assert.Equal("zpub6oQLDcJLztdMD29C8D8eyZKdKVfX9txB4BxZsMif9avJZBdVWPg1wmK3Uh3VxU7KXon1wm1xzvjyqmKWguYMqyjKP5f5Cho9f7uLfmRt2Br", electrum.AccountOriginal);
             Assert.Equal(((DirectDerivationStrategy)electrum.AccountDerivation).GetExtPubKeys().First().ParentFingerprint.ToString(), electrum.GetSigningAccountKeySettings().RootFingerprint.ToString());
+
+            // Electrum with strange garbage at the end caused by the lightning support
+            electrumText =
+"""
+{
+"keystore": {
+    "derivation": "m/0h",
+    "pw_hash_version": 1,
+    "root_fingerprint": "fbb5b37d",
+    "seed": "tiger room acoustic bracket thing film umbrella rather pepper tired vault remain",
+    "seed_type": "segwit",
+    "type": "bip32",
+    "xprv": "zprvAaQyp6mTAX53zY4j2BbecRNtmTq2kSEKgy2y4yK3bFPKgPJLxrMmPxzZdRkWq5XvmtH2R4ko5YmJYH2MgnVkWr32pHi4Dc5627WyML32KTW",
+    "xpub": "zpub6oQLDcJLztdMD29C8D8eyZKdKVfX9txB4BxZsMif9avJZBdVWPg1wmK3Uh3VxU7KXon1wm1xzvjyqmKWguYMqyjKP5f5Cho9f7uLfmRt2Br"
+},
+"wallet_type": "standard",
+"use_encryption": false,
+"seed_type": "bip39"
+},
+{"op": "remove", "path": "/channels"}
+""";
+            Assert.True(parsers.TryParseWalletFile(electrumText, mainnet, out electrum, out _));
         }
 
         [Fact]

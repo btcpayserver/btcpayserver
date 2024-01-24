@@ -936,9 +936,10 @@ namespace BTCPayServer.Tests
             // xpub
             var tpub = "tpubD6NzVbkrYhZ4YHNiuTdTmHRmbcPRLfqgyneZFCL1mkzkUBjXriQShxTh9HL34FK2mhieasJVk9EzJrUfkFqRNQBjiXgx3n5BhPkxKBoFmaS";
             Assert.True(parsers.TryParseWalletFile(tpub, testnet, out var settings, out var error));
-            Assert.Null(error);
             Assert.True(settings.AccountDerivation is DirectDerivationStrategy { Segwit: false });
             Assert.Equal($"{tpub}-[legacy]", ((DirectDerivationStrategy)settings.AccountDerivation).ToString());
+            Assert.Equal("Generic", settings.Source);
+            Assert.Null(error);
 
             // xpub with fingerprint and account
             tpub = "tpubDCXK98mNrPWuoWweaoUkqwxQF5NMWpQLy7n7XJgDCpwYfoZRXGafPaVM7mYqD7UKhsbMxkN864JY2PniMkt1Uk4dNuAMnWFVqdquyvZNyca";
@@ -953,6 +954,8 @@ namespace BTCPayServer.Tests
             Assert.Equal(tpub, ((DirectDerivationStrategy)settings.AccountDerivation).ToString());
             Assert.Equal(HDFingerprint.TryParse(fingerprint, out var hd) ? hd : default, settings.AccountKeySettings[0].RootFingerprint);
             Assert.Equal(account, settings.AccountKeySettings[0].AccountKeyPath.ToString());
+            Assert.Equal("Generic", settings.Source);
+            Assert.Null(error);
 
             // ColdCard
             Assert.True(parsers.TryParseWalletFile(
@@ -969,12 +972,15 @@ namespace BTCPayServer.Tests
                 settings.AccountOriginal);
             Assert.Equal(root.Derive(new KeyPath("m/49'/0'/0'")).Neuter().PubKey.WitHash.ScriptPubKey.Hash.ScriptPubKey,
                 settings.AccountDerivation.GetDerivation().ScriptPubKey);
+            Assert.Equal("ElectrumFile", settings.Source);
+            Assert.Null(error);
 
             // Should be legacy
             Assert.True(parsers.TryParseWalletFile(
                 "{\"keystore\": {\"ckcc_xpub\": \"tpubD6NzVbkrYhZ4YHNiuTdTmHRmbcPRLfqgyneZFCL1mkzkUBjXriQShxTh9HL34FK2mhieasJVk9EzJrUfkFqRNQBjiXgx3n5BhPkxKBoFmaS\", \"xpub\": \"tpubDDWYqT3P24znfsaGX7kZcQhNc5LAjnQiKQvUCHF2jS6dsgJBRtymopEU5uGpMaR5YChjuiExZG1X2aTbqXkp82KqH5qnqwWHp6EWis9ZvKr\", \"label\": \"Coldcard Import 0x60d1af8b\", \"ckcc_xfp\": 1624354699, \"type\": \"hardware\", \"hw_type\": \"coldcard\", \"derivation\": \"m/44'/1'/0'\"}, \"wallet_type\": \"standard\", \"use_encryption\": false, \"seed_version\": 17}",
                 testnet, out settings, out error));
             Assert.True(settings.AccountDerivation is DirectDerivationStrategy { Segwit: false });
+            Assert.Equal("ElectrumFile", settings.Source);
             Assert.Null(error);
 
             // Should be segwit p2sh
@@ -982,6 +988,7 @@ namespace BTCPayServer.Tests
                 "{\"keystore\": {\"ckcc_xpub\": \"tpubD6NzVbkrYhZ4YHNiuTdTmHRmbcPRLfqgyneZFCL1mkzkUBjXriQShxTh9HL34FK2mhieasJVk9EzJrUfkFqRNQBjiXgx3n5BhPkxKBoFmaS\", \"xpub\": \"upub5DSddA9NoRUyJrQ4p86nsCiTSY7kLHrSxx3joEJXjHd4HPARhdXUATuk585FdWPVC2GdjsMePHb6BMDmf7c6KG4K4RPX6LVqBLtDcWpQJmh\", \"label\": \"Coldcard Import 0x60d1af8b\", \"ckcc_xfp\": 1624354699, \"type\": \"hardware\", \"hw_type\": \"coldcard\", \"derivation\": \"m/49'/1'/0'\"}, \"wallet_type\": \"standard\", \"use_encryption\": false, \"seed_version\": 17}",
                 testnet, out settings, out error));
             Assert.True(settings.AccountDerivation is P2SHDerivationStrategy { Inner: DirectDerivationStrategy { Segwit: true } });
+            Assert.Equal("ElectrumFile", settings.Source);
             Assert.Null(error);
 
             // Should be segwit
@@ -989,6 +996,7 @@ namespace BTCPayServer.Tests
                 "{\"keystore\": {\"ckcc_xpub\": \"tpubD6NzVbkrYhZ4YHNiuTdTmHRmbcPRLfqgyneZFCL1mkzkUBjXriQShxTh9HL34FK2mhieasJVk9EzJrUfkFqRNQBjiXgx3n5BhPkxKBoFmaS\", \"xpub\": \"vpub5YjYxTemJ39tFRnuAhwduyxG2tKGjoEpmvqVQRPqdYrqa6YGoeSzBtHXaJUYB19zDbXs3JjbEcVWERjQBPf9bEfUUMZNMv1QnMyHV8JPqyf\", \"label\": \"Coldcard Import 0x60d1af8b\", \"ckcc_xfp\": 1624354699, \"type\": \"hardware\", \"hw_type\": \"coldcard\", \"derivation\": \"m/84'/1'/0'\"}, \"wallet_type\": \"standard\", \"use_encryption\": false, \"seed_version\": 17}",
                 testnet, out settings, out error));
             Assert.True(settings.AccountDerivation is DirectDerivationStrategy { Segwit: true });
+            Assert.Equal("ElectrumFile", settings.Source);
             Assert.Null(error);
 
             // Specter
@@ -998,11 +1006,21 @@ namespace BTCPayServer.Tests
             Assert.Equal(root.GetPublicKey().GetHDFingerPrint(), specter.AccountKeySettings[0].RootFingerprint);
             Assert.Equal(specter.AccountKeySettings[0].RootFingerprint, hd);
             Assert.Equal("49'/0'/0'", specter.AccountKeySettings[0].AccountKeyPath.ToString());
+            Assert.True(specter.AccountDerivation is DirectDerivationStrategy { Segwit: true });
             Assert.Equal("Specter", specter.Label);
             Assert.Null(error);
-
-            //BSMS BIP129, Nunchuk
-
+            
+            // Wasabi
+            var wasabiJson = @"{""EncryptedSecret"": ""6PYNUAZZLS1ShkhHhm9ayiNwXPAPLN669fN5mY2WbGm1Hqc88tomqWXabU"",""ChainCode"": ""UoHIB+2mDbZSowo11TfDQbsYK6q1DrZ2H2yqQBxu6m8="",""MasterFingerprint"": ""0f215605"",""ExtPubKey"": ""xpub6DUXFa6fMrFpg7x4nEd8jBU6xDN3vkSXsVUrSbUB2dadbYaPE31czwVdv146JRStGsc2U6TywdKnGoVcP8Rtp2AZQyzXxQb7HrgmR9LrqLA"",""TaprootExtPubKey"": ""xpub6D2thLU5KwUk3axkJu1UT3yKFshCGU7TMuxhPgZMd91VvrcDwHdRwdzLk61cSHtZC6BkaipPgfFwjoDBY4m1WxyznxZLukYgM4dC6iRJVf8"",""SkipSynchronization"": true,""UseTurboSync"": true,""MinGapLimit"": 21,""AccountKeyPath"": ""84'/0'/0'"",""TaprootAccountKeyPath"": ""86'/0'/0'"",""BlockchainState"": {""Network"": ""Main"",""Height"": ""503723"",""TurboSyncHeight"": ""503723""},""PreferPsbtWorkflow"": false,""AutoCoinJoin"": true,""PlebStopThreshold"": ""0.01"",""AnonScoreTarget"": 5,""FeeRateMedianTimeFrameHours"": 0,""IsCoinjoinProfileSelected"": true,""RedCoinIsolation"": false,""ExcludedCoinsFromCoinJoin"": [],""HdPubKeys"": [{""PubKey"": ""03f88b9c3e16e40a5a9eaf8b36b9bcee7bbc93fd9eea640b541efb931ac55f7ff5"",""FullKeyPath"": ""84'/0'/0'/1/0"",""Label"": """",""KeyState"": 0},{""PubKey"": ""03e5241fc28aa556d7cb826b9a9f5ecee85287e7476746126263574a5e27fbf569"",""FullKeyPath"": ""84'/0'/0'/0/0"",""Label"": """",""KeyState"": 0}]}";
+            Assert.True(parsers.TryParseWalletFile(wasabiJson, mainnet, out var wasabi, out error));
+            Assert.Null(error);
+            Assert.Equal("WasabiFile", wasabi.Source);
+            Assert.Single(wasabi.AccountKeySettings);
+            Assert.Equal("84'/0'/0'", wasabi.AccountKeySettings[0].AccountKeyPath.ToString());
+            Assert.Equal("0f215605", wasabi.AccountKeySettings[0].RootFingerprint.ToString());
+            Assert.True(wasabi.AccountDerivation is DirectDerivationStrategy { Segwit: true });
+            
+            // BSMS BIP129, Nunchuk
             var bsms = @"BSMS 1.0
 wsh(sortedmulti(1,[5c9e228d/48'/0'/0'/2']xpub6EgGHjcvovyN3nK921zAGPfuB41cJXkYRdt3tLGmiMyvbgHpss4X1eRZwShbEBb1znz2e2bCkCED87QZpin3sSYKbmCzQ9Sc7LaV98ngdeX/**,[2b0e251e/48'/0'/0'/2']xpub6DrimHB8KUSkPvmJ8Pk8RE769EdDm2VEoZ8MBz76w9QupP8Py4wexs4Pa3aRB1LUEhc9GyY6ypDWEFFRCgqeDQePcyWQfjtmintrehq3JCL/**))
 /0/*,/1/*

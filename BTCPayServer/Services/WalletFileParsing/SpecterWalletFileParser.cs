@@ -27,9 +27,11 @@ public class SpecterWalletFileParser : IWalletFileParser
             return false;
         if (!_outputDescriptorOnChainWalletParser.TryParse(network, jobj.descriptor, out derivationSchemeSettings))
             return false;
+
         derivationSchemeSettings.Source = "Specter";
         if (jobj.label is not null)
-        derivationSchemeSettings.Label = jobj.label;
+            derivationSchemeSettings.Label = jobj.label;
+
         return true;
     }
 }

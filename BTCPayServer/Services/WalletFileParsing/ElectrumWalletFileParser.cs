@@ -1,10 +1,7 @@
 #nullable enable
-using System;
 using System.Diagnostics.CodeAnalysis;
-using BTCPayServer;
 using NBitcoin;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 namespace BTCPayServer.Services.WalletFileParsing;
 public class ElectrumWalletFileParser : IWalletFileParser
 {
@@ -28,7 +25,7 @@ public class ElectrumWalletFileParser : IWalletFileParser
         if (jobj?.keystore is null)
             return false;
 
-        var result = new BTCPayServer.DerivationSchemeSettings() { Network = network };
+        var result = new DerivationSchemeSettings { Network = network };
         var derivationSchemeParser = network.GetDerivationSchemeParser();
         result.Source = "ElectrumFile";
 
@@ -45,7 +42,6 @@ public class ElectrumWalletFileParser : IWalletFileParser
 
         result.AccountKeySettings[0].RootFingerprint = new HDFingerprint(jobj.keystore.ckcc_xfp.Value);
         result.AccountKeySettings[0].AccountKeyPath = new KeyPath(jobj.keystore.derivation);
-
 
         if (jobj.keystore.ColdCardFirmwareVersion is not null)
         {

@@ -1,8 +1,11 @@
 #nullable enable
+using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.IO;
 using NBitcoin;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 namespace BTCPayServer.Services.WalletFileParsing;
 public class ElectrumWalletFileParser : IWalletFileParser
 {
@@ -27,7 +30,7 @@ public class ElectrumWalletFileParser : IWalletFileParser
     {
         error = null;
         derivationSchemeSettings = null;
-        var jobj = JsonConvert.DeserializeObject<ElectrumFormat>(data);
+        var jobj = DeserializeObject<ElectrumFormat>(data);
         if (string.IsNullOrEmpty(jobj?.keystore?.xpub))
         {
             error = "Missing xpub";
@@ -57,5 +60,15 @@ public class ElectrumWalletFileParser : IWalletFileParser
 
         derivationSchemeSettings = result;
         return true;
+    }
+
+    private T? DeserializeObject<T>(string data)
+    {
+        // We can't call JsonConvert.DeserializeObject directly
+        // because some export of Electrum file can have more than one
+        // JSON object separated by commas in the file
+        JsonTextReader reader = new JsonTextReader(new StringReader(data));
+        var o = JObject.ReadFrom(reader);
+        return JsonConvert.DeserializeObject<T>(o.ToString());
     }
 }

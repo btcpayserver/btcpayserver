@@ -14,6 +14,7 @@
 * Fix: Test email with multiple recipients was crashing (#5649 #5648) @dennisreimann
 * Fix: Test webhook for payment requests (#5680) @Kukks
 * Fix: Sometimes importing a wallet file from Electrum would fail @NicolasDorier
+* Fix: Creating a Store as a Guest generates a 403 error (#5688 #5689) @dennisreimann
 
 ### Improvements
 

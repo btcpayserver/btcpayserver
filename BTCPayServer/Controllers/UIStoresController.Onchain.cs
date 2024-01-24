@@ -100,7 +100,7 @@ namespace BTCPayServer.Controllers
                 }
                 if (fileContent is null || !_onChainWalletParsers.TryParseWalletFile(fileContent, network, out strategy, out _))
                 {
-                    ModelState.AddModelError(nameof(vm.WalletFile), $"Importing wallet failed");
+                    ModelState.AddModelError(nameof(vm.WalletFile), $"Import failed, make sure you import a compatible wallet format");
                     return View(vm.ViewName, vm);
                 }
             }

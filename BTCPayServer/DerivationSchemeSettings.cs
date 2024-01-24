@@ -13,17 +13,17 @@ namespace BTCPayServer
     {
         public static DerivationSchemeSettings Parse(string derivationStrategy, BTCPayNetwork network)
         {
-            string error = null;
             ArgumentNullException.ThrowIfNull(network);
             ArgumentNullException.ThrowIfNull(derivationStrategy);
             var result = new DerivationSchemeSettings { Network = network };
             var parser = network.GetDerivationSchemeParser();
-            if (parser.TryParseXpub(derivationStrategy, ref result, out error))
+            if (parser.TryParseXpub(derivationStrategy, ref result) ||
+                parser.TryParseXpub(derivationStrategy, ref result, electrum: true))
             {
                 return result;
             }
 
-            throw new FormatException($"Invalid Derivation Scheme: {error}");
+            throw new FormatException($"Invalid Derivation Scheme");
         }
 
         public static bool TryParseFromJson(string config, BTCPayNetwork network, out DerivationSchemeSettings strategy)

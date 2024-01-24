@@ -30,7 +30,7 @@ public class WasabiWalletFileParser : IWalletFileParser
             Network = network
         };
 
-        if (jobj is null || !derivationSchemeParser.TryParseXpub(jobj.ExtPubKey, ref result, out var error, false))
+        if (jobj is null || !derivationSchemeParser.TryParseXpub(jobj.ExtPubKey, ref result))
             return false;
 
         if (jobj.MasterFingerprint is not null)

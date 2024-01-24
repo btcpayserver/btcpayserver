@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -48,8 +49,9 @@ namespace BTCPayServer
         }
 
         public static bool TryParseXpub(this DerivationSchemeParser derivationSchemeParser, string xpub,
-            ref DerivationSchemeSettings derivationSchemeSettings, bool electrum = false)
+            ref DerivationSchemeSettings derivationSchemeSettings, [MaybeNullWhen(true)] out string error, bool electrum = false)
         {
+            error = null;
             if (!electrum)
             {
                 var isOD = Regex.Match(xpub, @"\(.*?\)").Success;
@@ -70,6 +72,7 @@ namespace BTCPayServer
                 {
                     if (isOD)
                     {
+                        error = "Passed output descriptor instead of xpub";
                         return false;
                     } // otherwise continue and try to parse input as xpub
                 }
@@ -111,8 +114,9 @@ namespace BTCPayServer
                 }
                 return true;
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                error = e.Message;
                 return false;
             }
         }

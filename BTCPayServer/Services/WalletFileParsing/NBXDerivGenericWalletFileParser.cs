@@ -3,12 +3,12 @@ using System.Diagnostics.CodeAnalysis;
 namespace BTCPayServer.Services.WalletFileParsing;
 public class NBXDerivGenericWalletFileParser : IWalletFileParser
 {
-    public bool TryParse(BTCPayNetwork network, string data, [MaybeNullWhen(false)] out DerivationSchemeSettings derivationSchemeSettings)
+    public bool TryParse(BTCPayNetwork network, string data, [MaybeNullWhen(false)] out DerivationSchemeSettings derivationSchemeSettings, [MaybeNullWhen(true)] out string error)
     {
         var result = new DerivationSchemeSettings { Network = network };
         var parser = network.GetDerivationSchemeParser();
-        if (parser.TryParseXpub(data, ref result, electrum: true) ||
-            parser.TryParseXpub(data, ref result))
+        if (parser.TryParseXpub(data, ref result, out error, electrum: true) ||
+            parser.TryParseXpub(data, ref result, out error, electrum: false))
         {
             derivationSchemeSettings = result;
             derivationSchemeSettings.Source = "GenericFile";

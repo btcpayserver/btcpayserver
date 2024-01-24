@@ -525,11 +525,11 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<IWalletFileParser, BSMSWalletFileParser>();
             services.AddSingleton<IWalletFileParser, NBXDerivGenericWalletFileParser>();
             services.AddSingleton<IWalletFileParser, ElectrumWalletFileParser>();
-            services.AddSingleton<IWalletFileParser, OutputDescriptorWalletFileParser>(provider => provider.GetService<OutputDescriptorWalletFileParser>());
-            services.AddSingleton<OutputDescriptorWalletFileParser>();
             services.AddSingleton<IWalletFileParser, SpecterWalletFileParser>();
-            services.AddSingleton<IWalletFileParser, OutputDescriptorJsonWalletFileParser>();
             services.AddSingleton<IWalletFileParser, WasabiWalletFileParser>();
+            services.AddSingleton<IWalletFileParser, OutputDescriptorWalletFileParser>(provider => provider.GetService<OutputDescriptorWalletFileParser>());
+            services.AddSingleton<IWalletFileParser, OutputDescriptorJsonWalletFileParser>();
+            services.AddSingleton<OutputDescriptorWalletFileParser>();
         }
 
         internal static void RegisterRateSources(IServiceCollection services)

@@ -31,14 +31,15 @@ public class WalletFileParsers
         {
             try
             {
-                if (onChainWalletParser.TryParse(network, fileContents, out settings))
+                if (onChainWalletParser.TryParse(network, fileContents, out settings, out error))
                     return true;
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                error = e.Message;
             }
         }
-        error = "Unsupported file format";
+        error ??= "Unsupported file format";
         return false;
     }
 }

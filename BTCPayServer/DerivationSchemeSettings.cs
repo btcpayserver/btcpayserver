@@ -2,10 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using BTCPayServer.Payments;
+using BTCPayServer.Services.WalletFileParsing;
 using NBitcoin;
 using NBXplorer.Client;
 using NBXplorer.DerivationStrategy;
 using Newtonsoft.Json;
+using NLog;
 
 namespace BTCPayServer
 {
@@ -17,13 +19,14 @@ namespace BTCPayServer
             ArgumentNullException.ThrowIfNull(derivationStrategy);
             var result = new DerivationSchemeSettings { Network = network };
             var parser = network.GetDerivationSchemeParser();
-            if (parser.TryParseXpub(derivationStrategy, ref result) ||
-                parser.TryParseXpub(derivationStrategy, ref result, electrum: true))
+            string error;
+            if (parser.TryParseXpub(derivationStrategy, ref result, out error, electrum: false) ||
+                parser.TryParseXpub(derivationStrategy, ref result, out error, electrum: true))
             {
                 return result;
             }
 
-            throw new FormatException($"Invalid Derivation Scheme");
+            throw new FormatException($"Invalid Derivation Scheme: {error}");
         }
 
         public static bool TryParseFromJson(string config, BTCPayNetwork network, out DerivationSchemeSettings strategy)
@@ -36,7 +39,11 @@ namespace BTCPayServer
                 strategy = network.NBXplorerNetwork.Serializer.ToObject<DerivationSchemeSettings>(config);
                 strategy.Network = network;
             }
-            catch { }
+            catch
+            {
+                // ignored
+            }
+
             return strategy != null;
         }
 

@@ -1,12 +1,9 @@
 #nullable enable
-using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using BTCPayServer;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 namespace BTCPayServer.Services.WalletFileParsing;
 public class WasabiWalletFileParser : IWalletFileParser
 {
@@ -17,21 +14,20 @@ public class WasabiWalletFileParser : IWalletFileParser
         public string? AccountKeyPath { get; set; }
         public string? ColdCardFirmwareVersion { get; set; }
         public string? CoboVaultFirmwareVersion { get; set; }
-        public string? DerivationPath { get; set; }
-        public string? Source { get; set; }
     }
-    public bool TryParse(BTCPayNetwork network, string data, [MaybeNullWhen(false)] out DerivationSchemeSettings derivationSchemeSettings)
+    public bool TryParse(BTCPayNetwork network, string data, [MaybeNullWhen(false)] out DerivationSchemeSettings derivationSchemeSettings, [MaybeNullWhen(true)] out string error)
     {
+        error = null;
         derivationSchemeSettings = null;
         var jobj = JsonConvert.DeserializeObject<WasabiFormat>(data);
         var derivationSchemeParser = network.GetDerivationSchemeParser();
-        var result = new DerivationSchemeSettings()
-        {
-            Network = network
-        };
+        var result = new DerivationSchemeSettings { Network = network, Source = "WasabiFile" };
 
-        if (jobj is null || !derivationSchemeParser.TryParseXpub(jobj.ExtPubKey, ref result))
+        if (jobj is null || !derivationSchemeParser.TryParseXpub(jobj.ExtPubKey, ref result, out error))
+        {
+            error ??= "Could not parse xpub";
             return false;
+        }
 
         if (jobj.MasterFingerprint is not null)
         {
@@ -61,8 +57,6 @@ public class WasabiWalletFileParser : IWalletFileParser
         {
             result.Source = "CoboVault";
         }
-        else
-            result.Source = jobj.Source ?? "WasabiFile";
 
         derivationSchemeSettings = result;
         return true;

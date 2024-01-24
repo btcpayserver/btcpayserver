@@ -1,36 +1,36 @@
 #nullable enable
-using System;
 using System.Diagnostics.CodeAnalysis;
-using BTCPayServer;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 namespace BTCPayServer.Services.WalletFileParsing;
-public class SpecterWalletFileParser : IWalletFileParser
+public class SpecterWalletFileParser(OutputDescriptorWalletFileParser outputDescriptorOnChainWalletParser)
+    : IWalletFileParser
 {
-    private readonly OutputDescriptorWalletFileParser _outputDescriptorOnChainWalletParser;
-
     class SpecterFormat
     {
-        public string? descriptor { get; set; }
-        public int? blockheight { get; set; }
-        public string? label { get; set; }
+        [JsonProperty("descriptor")]
+        public string? Descriptor { get; set; }
+        [JsonProperty("label")]
+        public string? Label { get; set; }
+        [JsonProperty("blockheight")]
+        public int? Blockheight { get; set; }
     }
-    public SpecterWalletFileParser(OutputDescriptorWalletFileParser outputDescriptorOnChainWalletParser)
-    {
-        _outputDescriptorOnChainWalletParser = outputDescriptorOnChainWalletParser;
-    }
-    public bool TryParse(BTCPayNetwork network, string data, [MaybeNullWhen(false)] out DerivationSchemeSettings derivationSchemeSettings)
+
+    public bool TryParse(BTCPayNetwork network, string data, [MaybeNullWhen(false)] out DerivationSchemeSettings derivationSchemeSettings, [MaybeNullWhen(true)] out string error)
     {
         derivationSchemeSettings = null;
         var jobj = JsonConvert.DeserializeObject<SpecterFormat>(data);
-        if (jobj?.descriptor is null || jobj.blockheight is null)
+        if (string.IsNullOrEmpty(jobj?.Descriptor) || jobj.Blockheight is null)
+        {
+            error = "Not a Specter file";
             return false;
-        if (!_outputDescriptorOnChainWalletParser.TryParse(network, jobj.descriptor, out derivationSchemeSettings))
+        }
+        
+        if (!outputDescriptorOnChainWalletParser.TryParse(network, jobj.Descriptor, out derivationSchemeSettings, out error))
             return false;
 
-        derivationSchemeSettings.Source = "Specter";
-        if (jobj.label is not null)
-            derivationSchemeSettings.Label = jobj.label;
+        derivationSchemeSettings.Source = "SpecterFile";
+        if (!string.IsNullOrEmpty(jobj.Label))
+            derivationSchemeSettings.Label = jobj.Label;
 
         return true;
     }

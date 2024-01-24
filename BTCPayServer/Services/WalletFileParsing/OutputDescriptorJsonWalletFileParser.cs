@@ -1,33 +1,31 @@
 #nullable enable
-using System;
 using System.Diagnostics.CodeAnalysis;
-using BTCPayServer;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 namespace BTCPayServer.Services.WalletFileParsing;
-public class OutputDescriptorJsonWalletFileParser : IWalletFileParser
+public class OutputDescriptorJsonWalletFileParser(OutputDescriptorWalletFileParser outputDescriptorOnChainWalletParser)
+    : IWalletFileParser
 {
-    private readonly OutputDescriptorWalletFileParser _outputDescriptorOnChainWalletParser;
-
     class OutputDescriptorJsonWalletFileFormat
     {
+        [JsonProperty("Descriptor")]
         public string? Descriptor { get; set; }
+        [JsonProperty("Source")]
         public string? Source { get; set; }
     }
-    public OutputDescriptorJsonWalletFileParser(OutputDescriptorWalletFileParser outputDescriptorOnChainWalletParser)
-    {
-        _outputDescriptorOnChainWalletParser = outputDescriptorOnChainWalletParser;
-    }
-    public bool TryParse(BTCPayNetwork network, string data, [MaybeNullWhen(false)] out DerivationSchemeSettings derivationSchemeSettings)
+
+    public bool TryParse(BTCPayNetwork network, string data, [MaybeNullWhen(false)] out DerivationSchemeSettings derivationSchemeSettings, [MaybeNullWhen(true)] out string error)
     {
         derivationSchemeSettings = null;
         var jobj = JsonConvert.DeserializeObject<OutputDescriptorJsonWalletFileFormat>(data);
-        if (jobj?.Descriptor is null)
+        if (string.IsNullOrEmpty(jobj?.Descriptor))
+        {
+            error = "Missing descriptor";
             return false;
+        }
 
-        if (!_outputDescriptorOnChainWalletParser.TryParse(network, jobj.Descriptor, out derivationSchemeSettings))
+        if (!outputDescriptorOnChainWalletParser.TryParse(network, jobj.Descriptor, out derivationSchemeSettings, out error))
             return false;
-        if (jobj.Source is not null)
+        if (!string.IsNullOrEmpty(jobj.Source))
             derivationSchemeSettings.Source = jobj.Source;
         return true;
     }

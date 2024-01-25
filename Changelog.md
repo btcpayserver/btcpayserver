@@ -16,6 +16,7 @@
 * Fix: Sometimes importing a wallet file from Electrum would fail @NicolasDorier
 * Fix: Creating a Store as a Guest generates a 403 error (#5688 #5689) @dennisreimann
 * Fix: In Wallet Send, label were not applied to transactions (#5700) @NicolasDorier
+* Fix: "View recent invoices" in Keypad PoS should be accessible for authenticated Guest users (#5702 #5698) @dennisreimann
 
 ### Improvements
 

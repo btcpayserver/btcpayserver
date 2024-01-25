@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Globalization;
 using System.Linq;
 using BTCPayServer.JsonConverters;
 using BTCPayServer.Models;
@@ -48,19 +49,9 @@ namespace BTCPayServer.Plugins.PointOfSale.Models
             [JsonExtensionData] public Dictionary<string, JToken> AdditionalData { get; set; }
         }
 
-        public class CurrencyInfoData
-        {
-            public bool Prefixed { get; set; }
-            public string CurrencySymbol { get; set; }
-            public string ThousandSeparator { get; set; }
-            public string DecimalSeparator { get; set; }
-            public int Divisibility { get; set; }
-            public bool SymbolSpace { get; set; }
-        }
-
         public StoreBrandingViewModel StoreBranding { get; set; }
         public string StoreName { get; set; }
-        public CurrencyInfoData CurrencyInfo { get; set; }
+        public NumberFormatInfo CurrencyInfo { get; set; }
         public PosViewType ViewType { get; set; }
         public bool ShowCustomAmount { get; set; }
         public bool ShowDiscount { get; set; }

@@ -360,10 +360,13 @@ namespace BTCPayServer.Tests
             expirySeconds.SendKeys("5");
             s.Driver.FindElement(By.Id("Expire")).Click();
 
-            paymentInfo = s.Driver.WaitForElement(By.Id("PaymentInfo"));
-            Assert.Contains("This invoice will expire in", paymentInfo.Text);
-            Assert.Contains("00:0", paymentInfo.Text);
-            Assert.DoesNotContain("Please send", paymentInfo.Text);
+            TestUtils.Eventually(() =>
+            {
+                paymentInfo = s.Driver.WaitForElement(By.Id("PaymentInfo"));
+                Assert.Contains("This invoice will expire in", paymentInfo.Text);
+                Assert.Contains("00:0", paymentInfo.Text);
+                Assert.DoesNotContain("Please send", paymentInfo.Text);
+            });
 
             // Configure countdown timer
             s.GoToHome();

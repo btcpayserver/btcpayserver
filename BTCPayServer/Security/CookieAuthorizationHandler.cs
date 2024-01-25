@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Contracts;
@@ -74,10 +73,10 @@ namespace BTCPayServer.Security
                 // resolve from app
                 if (routeData.Values.TryGetValue("appId", out var vAppId) && vAppId is string appId)
                 {
-                    app = await _appService.GetAppDataIfOwner(userId, appId);
+                    app = await _appService.GetAppData(userId, appId);
                     if (storeId == null)
                     {
-                        storeId = app?.StoreDataId ?? String.Empty;
+                        storeId = app?.StoreDataId ?? string.Empty;
                     }
                     else if (app?.StoreDataId != storeId)
                     {
@@ -90,7 +89,7 @@ namespace BTCPayServer.Security
                     paymentRequest = await _paymentRequestRepository.FindPaymentRequest(payReqId, userId);
                     if (storeId == null)
                     {
-                        storeId = paymentRequest?.StoreDataId ?? String.Empty;
+                        storeId = paymentRequest?.StoreDataId ?? string.Empty;
                     }
                     else if (paymentRequest?.StoreDataId != storeId)
                     {
@@ -103,7 +102,7 @@ namespace BTCPayServer.Security
                     invoice = await _invoiceRepository.GetInvoice(invoiceId);
                     if (storeId == null)
                     {
-                        storeId = invoice?.StoreId ?? String.Empty;
+                        storeId = invoice?.StoreId ?? string.Empty;
                     }
                     else if (invoice?.StoreId != storeId)
                     {

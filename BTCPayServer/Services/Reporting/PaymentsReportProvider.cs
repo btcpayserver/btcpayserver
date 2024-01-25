@@ -44,7 +44,10 @@ public class PaymentsReportProvider : ReportProvider
                 new ("LightningAddress", "string"),
                 new ("Currency", "string"),
                 new ("CurrencyAmount", "amount"),
-                new ("Rate", "amount")
+                new ("Rate", "amount"),
+                new ("Subtotal", "amount"),
+                new ("Discount", "amount"),
+                new ("Tip", "amount")
             },
             Charts = 
             {
@@ -163,7 +166,7 @@ public class PaymentsReportProvider : ReportProvider
             values.Add(paymentType.CryptoCode);
 
             var cryptoAmount = paymentData.GetValue();
-
+            var currency = invoiceBlob.Currency ?? "USD";
             var divisibility = 8;
             if (_btcPayNetworkProvider.TryGetNetwork<BTCPayNetwork>(paymentType.CryptoCode, out var network))
             {
@@ -177,17 +180,24 @@ public class PaymentsReportProvider : ReportProvider
                 .GetPaymentMethodDetails() as LNURLPayPaymentMethodDetails)?
                 .ConsumedLightningAddress;
             values.Add(consumerdLightningAddress);
-            values.Add(invoiceBlob.Currency);
+            values.Add(currency);
             if (invoiceBlob.Rates.TryGetValue(paymentType.CryptoCode, out var rate))
             {
-                values.Add(DisplayFormatter.ToFormattedAmount(rate * cryptoAmount, invoiceBlob.Currency ?? "USD")); // Currency amount
-                values.Add(DisplayFormatter.ToFormattedAmount(rate, invoiceBlob.Currency ?? "USD"));
+                values.Add(DisplayFormatter.ToFormattedAmount(rate * cryptoAmount, currency)); // Currency amount
+                values.Add(DisplayFormatter.ToFormattedAmount(rate, currency));
             }
             else
             {
                 values.Add(null);
                 values.Add(null);
             }
+
+            var subtotal = invoiceBlob.Metadata.PosData?.Value<decimal?>("subTotal");
+            values.Add(subtotal.HasValue ? DisplayFormatter.ToFormattedAmount(subtotal.Value, currency) : null);
+            var discount = invoiceBlob.Metadata.PosData?.Value<decimal?>("discountAmount");
+            values.Add(discount.HasValue ? DisplayFormatter.ToFormattedAmount(discount.Value, currency) : null);
+            var tip = invoiceBlob.Metadata.PosData?.Value<decimal?>("tip");
+            values.Add(tip.HasValue ? DisplayFormatter.ToFormattedAmount(tip.Value, currency) : null);
 
             queryContext.Data.Add(values);
         }

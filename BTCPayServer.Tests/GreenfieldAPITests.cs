@@ -13,6 +13,7 @@ using BTCPayServer.Controllers;
 using BTCPayServer.Events;
 using BTCPayServer.Lightning;
 using BTCPayServer.Models.InvoicingModels;
+using BTCPayServer.NTag424;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.PayoutProcessors;
@@ -24,6 +25,7 @@ using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin;
+using NBitcoin.DataEncoders;
 using NBitpayClient;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -1115,6 +1117,35 @@ namespace BTCPayServer.Tests
                 OnExisting = OnExistingBehavior.KeepVersion
             });
             Assert.Equal(card2.Version, card3.Version);
+            var p = new byte[] { 0xc7 }.Concat(uid).Concat(new byte[8]).ToArray();
+            var card4 = await client.RegisterBoltcard(test4.Id, new RegisterBoltcardRequest()
+            {
+                OnExisting = OnExistingBehavior.KeepVersion,
+                LNURLW = card2.LNURLW + $"?p={Encoders.Hex.EncodeData(AESKey.Parse(card2.K1).Encrypt(p))}"
+            });
+            Assert.Equal(card2.Version, card4.Version);
+            Assert.Equal(card2.K4, card4.K4);
+            // Can't define both properties
+            await AssertValidationError(["LNURLW"], () => client.RegisterBoltcard(test4.Id, new RegisterBoltcardRequest()
+            {
+                OnExisting = OnExistingBehavior.KeepVersion,
+                UID = uid,
+                LNURLW = card2.LNURLW + $"?p={Encoders.Hex.EncodeData(AESKey.Parse(card2.K1).Encrypt(p))}"
+            }));
+            // p is malformed
+            await AssertValidationError(["LNURLW"], () => client.RegisterBoltcard(test4.Id, new RegisterBoltcardRequest()
+            {
+                OnExisting = OnExistingBehavior.KeepVersion,
+                UID = uid,
+                LNURLW = card2.LNURLW + $"?p=lol"
+            }));
+            // p is invalid
+            p[0] = 0;
+            await AssertValidationError(["LNURLW"], () => client.RegisterBoltcard(test4.Id, new RegisterBoltcardRequest()
+            {
+                OnExisting = OnExistingBehavior.KeepVersion,
+                LNURLW = card2.LNURLW + $"?p={Encoders.Hex.EncodeData(AESKey.Parse(card2.K1).Encrypt(p))}"
+            }));
             // Test with SATS denomination values
             var testSats = await client.CreatePullPayment(storeId, new Client.Models.CreatePullPaymentRequest()
             {

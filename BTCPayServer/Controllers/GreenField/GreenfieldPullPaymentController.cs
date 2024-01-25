@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Diagnostics.CodeAnalysis;
 using System.IO.IsolatedStorage;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -215,7 +216,29 @@ namespace BTCPayServer.Controllers.Greenfield
             var pp = await _pullPaymentService.GetPullPayment(pullPaymentId, false);
             if (pp is null)
                 return PullPaymentNotFound();
-            _logs.PayServer.LogInformation(JsonConvert.SerializeObject(request, Formatting.Indented));
+            var issuerKey = await _settingsRepository.GetIssuerKey(_env);
+            // LNURLW is used by deeplinks
+            if (request?.LNURLW is not null)
+            {
+                if (request.UID is not null)
+                {
+                    ModelState.AddModelError(nameof(request.LNURLW), "You should pass either LNURLW or UID but not both");
+                    return this.CreateValidationError(ModelState);
+                }
+                var p = ExtractP(request.LNURLW);
+                if (p is null)
+                {
+                    ModelState.AddModelError(nameof(request.LNURLW), "The LNURLW should contains a 'p=' parameter");
+                    return this.CreateValidationError(ModelState);
+                }
+                if (issuerKey.TryDecrypt(p) is not BoltcardPICCData picc)
+                {
+                    ModelState.AddModelError(nameof(request.LNURLW), "The LNURLW 'p=' parameter cannot be decrypted");
+                    return this.CreateValidationError(ModelState);
+                }
+                request.UID = picc.Uid;
+            }
+
             if (request?.UID is null || request.UID.Length != 7)
             {
                 ModelState.AddModelError(nameof(request.UID), "The UID is required and should be 7 bytes");
@@ -234,7 +257,6 @@ namespace BTCPayServer.Controllers.Greenfield
                 _ => request.OnExisting
             };
 
-            var issuerKey = await _settingsRepository.GetIssuerKey(_env);
             var version = await _dbContextFactory.LinkBoltcardToPullPayment(pullPaymentId, issuerKey, request.UID, request.OnExisting);
             var keys = issuerKey.CreatePullPaymentCardKey(request.UID, version, pullPaymentId).DeriveBoltcardKeys(issuerKey);
 
@@ -252,6 +274,20 @@ namespace BTCPayServer.Controllers.Greenfield
                 K3 = Encoders.Hex.EncodeData(keys.K3.ToBytes()).ToUpperInvariant(),
                 K4 = Encoders.Hex.EncodeData(keys.K4.ToBytes()).ToUpperInvariant(),
             });
+        }
+
+        private string? ExtractP(string? url)
+        {
+            if (url is null || !Uri.TryCreate(url, UriKind.Absolute, out var uri))
+                return null;
+            int num = uri.AbsoluteUri.IndexOf('?');
+            if (num == -1)
+                return null;
+            string input = uri.AbsoluteUri.Substring(num);
+            Match match = Regex.Match(input, "p=([a-f0-9A-F]{32})");
+            if (!match.Success)
+                return null;
+            return match.Groups[1].Value;
         }
 
         [HttpGet("~/api/v1/pull-payments/{pullPaymentId}")]

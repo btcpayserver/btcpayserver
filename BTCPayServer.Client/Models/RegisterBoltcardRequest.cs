@@ -15,6 +15,8 @@ namespace BTCPayServer.Client.Models
     }
     public class RegisterBoltcardRequest
     {
+        [JsonProperty("LNURLW")]
+        public string LNURLW { get; set; }
         [JsonConverter(typeof(HexJsonConverter))]
         [JsonProperty("UID")]
         public byte[] UID { get; set; }

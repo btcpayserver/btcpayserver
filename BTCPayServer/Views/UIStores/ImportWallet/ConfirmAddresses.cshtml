@@ -19,8 +19,10 @@
 {
     <div asp-validation-summary="All"></div>
 }
-
-<partial name="LocalhostBrowserSupport" />
+@if (this.Model.Method is WalletSetupMethod.Hardware)
+{
+	<partial name="LocalhostBrowserSupport" />
+}
 
 <template id="modal-template">
     <div class="modal-dialog" role="document">

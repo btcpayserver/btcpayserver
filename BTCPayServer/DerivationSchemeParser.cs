@@ -34,7 +34,7 @@ namespace BTCPayServer
                         {
                             throw new FormatException("Custom change paths are not supported.");
                         }
-                        return (Parse($"{hd.Extkey}{suffix}", true, false, false), null);
+                        return (Parse($"{hd.Extkey}{suffix}"), null);
                     case PubKeyProvider.Origin origin:
                         var innerResult = ExtractFromPkProvider(origin.Inner, suffix);
                         return (innerResult.Item1, new[] { origin.KeyOriginInfo });
@@ -48,14 +48,14 @@ namespace BTCPayServer
                 var xpubs = multi.PkProviders.Select(provider => ExtractFromPkProvider(provider));
                 return (
                     Parse(
-                        $"{multi.Threshold}-of-{(string.Join('-', xpubs.Select(tuple => tuple.Item1.ToString())))}{(multi.IsSorted ? "" : "-[keeporder]")}", true ,false, false),
+                        $"{multi.Threshold}-of-{(string.Join('-', xpubs.Select(tuple => tuple.Item1.ToString())))}{(multi.IsSorted ? "" : "-[keeporder]")}"),
                     xpubs.SelectMany(tuple => tuple.Item2).ToArray());
             }
 
             ArgumentNullException.ThrowIfNull(str);
             str = str.Trim();
             //nbitcoin output descriptor does not support taproot, so let's check if it is a taproot descriptor and fake until it is supported
-           
+
             var outputDescriptor = OutputDescriptor.Parse(str, Network);
             switch (outputDescriptor)
             {
@@ -81,7 +81,7 @@ namespace BTCPayServer
                         sh.Inner is OutputDescriptor.WSH)
                     {
                         var ds = ParseOutputDescriptor(sh.Inner.ToString());
-                        return (Parse(ds.Item1 + suffix, true, false, false), ds.Item2);
+                        return (Parse(ds.Item1 + suffix), ds.Item2);
                     };
                     throw new FormatException("sh descriptors are only supported with multsig(legacy or p2wsh) and segwit(p2wpkh)");
                 case OutputDescriptor.Tr tr:
@@ -96,17 +96,23 @@ namespace BTCPayServer
                     throw new ArgumentOutOfRangeException(nameof(outputDescriptor));
             }
         }
-        public DerivationStrategyBase Parse(string str, bool ignorePrefix = false, bool ignoreBasePrefix = false, bool enforceNetworkPrefix = true)
+        public DerivationStrategyBase Parse(string str)
         {
             ArgumentNullException.ThrowIfNull(str);
             str = str.Trim();
-
             HashSet<string> hintedLabels = new HashSet<string>();
-
             if (!Network.Consensus.SupportSegwit)
             {
                 hintedLabels.Add("legacy");
                 str = str.Replace("-[p2sh]", string.Empty, StringComparison.OrdinalIgnoreCase);
+            }
+
+            try
+            {
+                return BtcPayNetwork.NBXplorerNetwork.DerivationStrategyFactory.Parse(str);
+            }
+            catch
+            {
             }
 
             var parts = str.Split('-');
@@ -125,29 +131,23 @@ namespace BTCPayServer
                     hintedLabels.Add(parts[i].Substring(1, parts[i].Length - 2).ToLowerInvariant());
                     continue;
                 }
-
                 try
                 {
                     var data = Network.GetBase58CheckEncoder().DecodeData(parts[i]);
                     if (data.Length < 4)
                         continue;
                     var prefix = Utils.ToUInt32(data, false);
-
                     var standardPrefix = Utils.ToBytes(0x0488b21eU, false);
                     for (int ii = 0; ii < 4; ii++)
                         data[ii] = standardPrefix[ii];
 
                     var derivationScheme = GetBitcoinExtPubKeyByNetwork(Network, data).ToString();
 
-                    if (enforceNetworkPrefix && !BtcPayNetwork.ElectrumMapping.ContainsKey(prefix))
-                        throw new FormatException(
-                            $"Invalid xpub. Is this really for {BtcPayNetwork.CryptoCode} {Network.ChainName}?");
-
-                    if (!ignorePrefix && !hasLabel && BtcPayNetwork.ElectrumMapping.TryGetValue(prefix, out var type))
+                    if (BtcPayNetwork.ElectrumMapping.TryGetValue(prefix, out var type))
                     {
                         switch (type)
                         {
-                            case DerivationType.Legacy when !ignoreBasePrefix:
+                            case DerivationType.Legacy:
                                 hintedLabels.Add("legacy");
                                 break;
                             case DerivationType.SegwitP2SH:
@@ -155,12 +155,7 @@ namespace BTCPayServer
                                 break;
                         }
                     }
-
                     parts[i] = derivationScheme;
-                }
-                catch (FormatException e) when (e.Message.StartsWith("Invalid xpub"))
-                {
-                    throw;
                 }
                 catch { continue; }
             }
@@ -170,8 +165,33 @@ namespace BTCPayServer
             {
                 str = $"{str}-[{label}]";
             }
-
             return BtcPayNetwork.NBXplorerNetwork.DerivationStrategyFactory.Parse(str);
+        }
+
+        internal DerivationStrategyBase ParseElectrum(string str)
+        {
+            ArgumentNullException.ThrowIfNull(str);
+            str = str.Trim();
+            var data = Network.GetBase58CheckEncoder().DecodeData(str);
+            if (data.Length < 4)
+                throw new FormatException();
+            var prefix = Utils.ToUInt32(data, false);
+
+            var standardPrefix = Utils.ToBytes(0x0488b21eU, false);
+            for (int ii = 0; ii < 4; ii++)
+                data[ii] = standardPrefix[ii];
+            var extPubKey = GetBitcoinExtPubKeyByNetwork(Network, data);
+            if (!BtcPayNetwork.ElectrumMapping.TryGetValue(prefix, out var type))
+            {
+                throw new FormatException();
+            }
+            if (type == DerivationType.Segwit)
+                return new DirectDerivationStrategy(extPubKey, true);
+            if (type == DerivationType.Legacy)
+                return new DirectDerivationStrategy(extPubKey, false);
+            if (type == DerivationType.SegwitP2SH)
+                return BtcPayNetwork.NBXplorerNetwork.DerivationStrategyFactory.Parse(extPubKey.ToString() + "-[p2sh]");
+            throw new FormatException();
         }
 
         public static BitcoinExtPubKey GetBitcoinExtPubKeyByNetwork(Network network, byte[] data)

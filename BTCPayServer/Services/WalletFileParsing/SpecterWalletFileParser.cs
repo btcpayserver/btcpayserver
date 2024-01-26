@@ -1,41 +1,37 @@
 #nullable enable
 using System;
+using System.Diagnostics.CodeAnalysis;
 using BTCPayServer;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 namespace BTCPayServer.Services.WalletFileParsing;
 public class SpecterWalletFileParser : IWalletFileParser
 {
     private readonly OutputDescriptorWalletFileParser _outputDescriptorOnChainWalletParser;
 
+    class SpecterFormat
+    {
+        public string? descriptor { get; set; }
+        public int? blockheight { get; set; }
+        public string? label { get; set; }
+    }
     public SpecterWalletFileParser(OutputDescriptorWalletFileParser outputDescriptorOnChainWalletParser)
     {
         _outputDescriptorOnChainWalletParser = outputDescriptorOnChainWalletParser;
     }
-    public (DerivationSchemeSettings? DerivationSchemeSettings, string? Error) TryParse(BTCPayNetwork network,
-        string data)
+    public bool TryParse(BTCPayNetwork network, string data, [MaybeNullWhen(false)] out DerivationSchemeSettings derivationSchemeSettings)
     {
-        try
-        {
-            var jobj = JObject.Parse(data);
-            if (!jobj.TryGetValue("descriptor", StringComparison.InvariantCultureIgnoreCase, out var descriptorObj)
-                || !jobj.ContainsKey("blockheight")
-                || descriptorObj?.Value<string>() is not string desc)
-                return (null, null);
+        derivationSchemeSettings = null;
+        var jobj = JsonConvert.DeserializeObject<SpecterFormat>(data);
+        if (jobj?.descriptor is null || jobj.blockheight is null)
+            return false;
+        if (!_outputDescriptorOnChainWalletParser.TryParse(network, jobj.descriptor, out derivationSchemeSettings))
+            return false;
 
-                
-            var result =  _outputDescriptorOnChainWalletParser.TryParse(network, desc);
-            if (result.DerivationSchemeSettings is not null)
-                result.DerivationSchemeSettings.Source = "Specter";
+        derivationSchemeSettings.Source = "Specter";
+        if (jobj.label is not null)
+            derivationSchemeSettings.Label = jobj.label;
 
-            if (result.DerivationSchemeSettings is not null && jobj.TryGetValue("label",
-                    StringComparison.InvariantCultureIgnoreCase, out var label) && label?.Value<string>() is string labelValue)
-                result.DerivationSchemeSettings.Label = labelValue;
-            return result;
-                
-        }
-        catch (Exception)
-        {
-            return (null, null);
-        }
+        return true;
     }
 }

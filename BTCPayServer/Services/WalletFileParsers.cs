@@ -19,7 +19,7 @@ public class WalletFileParsers
     public bool TryParseWalletFile(string fileContents, BTCPayNetwork network, [MaybeNullWhen(false)] out DerivationSchemeSettings settings, [MaybeNullWhen(true)] out string error)
     {
         settings = null;
-        error = string.Empty;
+        error = null;
         ArgumentNullException.ThrowIfNull(fileContents);
         ArgumentNullException.ThrowIfNull(network);
         if (HexEncoder.IsWellFormed(fileContents))
@@ -29,19 +29,16 @@ public class WalletFileParsers
 
         foreach (IWalletFileParser onChainWalletParser in Parsers)
         {
-            var result = onChainWalletParser.TryParse(network, fileContents);
-            if (result.DerivationSchemeSettings is not null)
+            try
             {
-                settings = result.DerivationSchemeSettings;
-                error = null;
-                return true;
+                if (onChainWalletParser.TryParse(network, fileContents, out settings))
+                    return true;
             }
-
-            if (result.Error is not null)
+            catch (Exception)
             {
-                error = result.Error;
             }
         }
+        error = "Unsupported file format";
         return false;
     }
 }

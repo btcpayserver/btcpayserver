@@ -32,9 +32,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using NBitcoin;
-using NBitcoin.DataEncoders;
 using NBitcoin.Payment;
-using NBitcoin.Scripting;
 using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
 using Newtonsoft.Json;
@@ -50,8 +48,32 @@ namespace BTCPayServer
         }
 
         public static bool TryParseXpub(this DerivationSchemeParser derivationSchemeParser, string xpub,
-            ref DerivationSchemeSettings derivationSchemeSettings, out string error)
+            ref DerivationSchemeSettings derivationSchemeSettings, bool electrum = false)
         {
+            if (!electrum)
+            {
+                var isOD = Regex.Match(xpub, @"\(.*?\)").Success;
+                try
+                {
+                    var result = derivationSchemeParser.ParseOutputDescriptor(xpub);
+                    derivationSchemeSettings.AccountOriginal = xpub.Trim();
+                    derivationSchemeSettings.AccountDerivation = result.Item1;
+                    derivationSchemeSettings.AccountKeySettings = result.Item2.Select((path, i) => new AccountKeySettings()
+                    {
+                        RootFingerprint = path?.MasterFingerprint,
+                        AccountKeyPath = path?.KeyPath,
+                        AccountKey = result.Item1.GetExtPubKeys().ElementAt(i).GetWif(derivationSchemeParser.Network)
+                    }).ToArray();
+                    return true;
+                }
+                catch (Exception)
+                {
+                    if (isOD)
+                    {
+                        return false;
+                    } // otherwise continue and try to parse input as xpub
+                }
+            }
             try
             {
                 // Extract fingerprint and account key path from export formats that contain them.
@@ -69,37 +91,32 @@ namespace BTCPayServer
                     if (!string.IsNullOrEmpty(match.Groups[3].Value))
                         xpub = match.Groups[3].Value;
                 }
-
                 derivationSchemeSettings.AccountOriginal = xpub.Trim();
-                derivationSchemeSettings.AccountDerivation =
-                    derivationSchemeParser.Parse(derivationSchemeSettings.AccountOriginal, false, false, false);
+                derivationSchemeSettings.AccountDerivation = electrum ? derivationSchemeParser.ParseElectrum(derivationSchemeSettings.AccountOriginal) : derivationSchemeParser.Parse(derivationSchemeSettings.AccountOriginal);
                 derivationSchemeSettings.AccountKeySettings = derivationSchemeSettings.AccountDerivation.GetExtPubKeys()
-                    .Select(key => new AccountKeySettings {AccountKey = key.GetWif(derivationSchemeParser.Network)})
-                    .ToArray();
+                    .Select(key => new AccountKeySettings
+                    {
+                        AccountKey = key.GetWif(derivationSchemeParser.Network)
+                    }).ToArray();
                 if (derivationSchemeSettings.AccountDerivation is DirectDerivationStrategy direct && !direct.Segwit)
-                    derivationSchemeSettings.AccountOriginal =
-                        null; // Saving this would be confusing for user, as xpub of electrum is legacy derivation, but for btcpay, it is segwit derivation
+                    derivationSchemeSettings.AccountOriginal = null; // Saving this would be confusing for user, as xpub of electrum is legacy derivation, but for btcpay, it is segwit derivation
                 // apply initial matches if there were no results from parsing
                 if (rootFingerprint != null && derivationSchemeSettings.AccountKeySettings[0].RootFingerprint == null)
                 {
                     derivationSchemeSettings.AccountKeySettings[0].RootFingerprint = rootFingerprint;
                 }
-
                 if (accountKeyPath != null && derivationSchemeSettings.AccountKeySettings[0].AccountKeyPath == null)
                 {
                     derivationSchemeSettings.AccountKeySettings[0].AccountKeyPath = accountKeyPath;
                 }
-
-                error = null;
                 return true;
             }
-            catch (Exception exception)
+            catch (Exception)
             {
-                error = exception.Message;
                 return false;
             }
         }
-        
+
         public static CardKey CreatePullPaymentCardKey(this IssuerKey issuerKey, byte[] uid, int version, string pullPaymentId)
         {
             var data = Encoding.UTF8.GetBytes(pullPaymentId);

@@ -1,21 +1,20 @@
 #nullable enable
-using System;
-using BTCPayServer;
+using System.Diagnostics.CodeAnalysis;
 namespace BTCPayServer.Services.WalletFileParsing;
 public class NBXDerivGenericWalletFileParser : IWalletFileParser
 {
-    public (BTCPayServer.DerivationSchemeSettings? DerivationSchemeSettings, string? Error) TryParse(BTCPayNetwork network,
-        string data)
+    public bool TryParse(BTCPayNetwork network, string data, [MaybeNullWhen(false)] out DerivationSchemeSettings derivationSchemeSettings)
     {
-        try
+        var result = new DerivationSchemeSettings { Network = network };
+        var parser = network.GetDerivationSchemeParser();
+        if (parser.TryParseXpub(data, ref result, electrum: true) ||
+            parser.TryParseXpub(data, ref result))
         {
-            var result =  BTCPayServer.DerivationSchemeSettings.Parse(data, network);
-            result.Source = "Generic";
-            return (result, null);
+            derivationSchemeSettings = result;
+            derivationSchemeSettings.Source = "GenericFile";
+            return true;
         }
-        catch (Exception)
-        {
-            return (null, null);
-        }
+        derivationSchemeSettings = null;
+        return false;
     }
 }

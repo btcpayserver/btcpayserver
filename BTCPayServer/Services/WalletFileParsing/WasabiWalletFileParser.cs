@@ -1,105 +1,70 @@
 #nullable enable
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using BTCPayServer;
 using NBitcoin;
 using NBitcoin.DataEncoders;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 namespace BTCPayServer.Services.WalletFileParsing;
 public class WasabiWalletFileParser : IWalletFileParser
 {
-
-    public (DerivationSchemeSettings? DerivationSchemeSettings, string? Error) TryParse(BTCPayNetwork network,
-        string data)
+    class WasabiFormat
     {
-        try
+        public string? ExtPubKey { get; set; }
+        public string? MasterFingerprint { get; set; }
+        public string? AccountKeyPath { get; set; }
+        public string? ColdCardFirmwareVersion { get; set; }
+        public string? CoboVaultFirmwareVersion { get; set; }
+        public string? DerivationPath { get; set; }
+        public string? Source { get; set; }
+    }
+    public bool TryParse(BTCPayNetwork network, string data, [MaybeNullWhen(false)] out DerivationSchemeSettings derivationSchemeSettings)
+    {
+        derivationSchemeSettings = null;
+        var jobj = JsonConvert.DeserializeObject<WasabiFormat>(data);
+        var derivationSchemeParser = network.GetDerivationSchemeParser();
+        var result = new DerivationSchemeSettings()
         {
-            var jobj = JObject.Parse(data);
-            if (jobj["ExtPubKey"]?.Value<string>() is not string extPubKey)
-                return (null, null);
+            Network = network
+        };
 
-            var derivationSchemeParser = network.GetDerivationSchemeParser();
-            var result = new DerivationSchemeSettings()
-            {
-                Network = network
-            };
+        if (jobj is null || !derivationSchemeParser.TryParseXpub(jobj.ExtPubKey, ref result))
+            return false;
 
-            if (!derivationSchemeParser.TryParseXpub(extPubKey, ref result, out var error))
+        if (jobj.MasterFingerprint is not null)
+        {
+            // https://github.com/zkSNACKs/WalletWasabi/pull/1663#issuecomment-508073066
+            if (uint.TryParse(jobj.MasterFingerprint, out var fingerprint))
             {
-                return (null, error);
-            }
-
-            if (jobj["MasterFingerprint"]?.ToString()?.Trim() is string mfpString)
-            {
-                try
-                {
-                    // https://github.com/zkSNACKs/WalletWasabi/pull/1663#issuecomment-508073066
-                    if (uint.TryParse(mfpString, out var fingerprint))
-                    {
-                        result.AccountKeySettings[0].RootFingerprint = new HDFingerprint(fingerprint);
-                    }
-                    else
-                    {
-                        var bytes = Encoders.Hex.DecodeData(mfpString);
-                        var shouldReverseMfp = jobj["ColdCardFirmwareVersion"]?.Value<string>() == "2.1.0";
-                        if (shouldReverseMfp) // Bug in previous version of coldcard
-                            bytes = bytes.Reverse().ToArray();
-                        result.AccountKeySettings[0].RootFingerprint = new HDFingerprint(bytes);
-                    }
-                }
-
-                catch
-                {
-                    return (null, "MasterFingerprint was not valid");
-                }
-            }
-
-            if (jobj["AccountKeyPath"]?.Value<string>() is string accountKeyPath)
-            {
-                try
-                {
-                    result.AccountKeySettings[0].AccountKeyPath = new KeyPath(accountKeyPath);
-                }
-                catch
-                {
-                    return (null, "AccountKeyPath was not valid");
-                }
-            }
-
-            if (jobj["DerivationPath"]?.Value<string>()?.ToLowerInvariant() is string derivationPath)
-            {
-                try
-                {
-                    result.AccountKeySettings[0].AccountKeyPath = new KeyPath(derivationPath);
-                }
-                catch
-                {
-                    return (null, "Derivation path was not valid");
-                }
-            }
-
-            if (jobj.ContainsKey("ColdCardFirmwareVersion"))
-            {
-                result.Source = "ColdCard";
-            }
-            else if (jobj.ContainsKey("CoboVaultFirmwareVersion"))
-            {
-                result.Source = "CoboVault";
-            }
-            else if (jobj.TryGetValue("Source", StringComparison.InvariantCultureIgnoreCase, out var source))
-            {
-                result.Source = source.Value<string>();
+                result.AccountKeySettings[0].RootFingerprint = new HDFingerprint(fingerprint);
             }
             else
-                result.Source = "WasabiFile";
-
-
-            return (result, null);
+            {
+                var bytes = Encoders.Hex.DecodeData(jobj.MasterFingerprint);
+                var shouldReverseMfp = jobj.ColdCardFirmwareVersion == "2.1.0";
+                if (shouldReverseMfp) // Bug in previous version of coldcard
+                    bytes = bytes.Reverse().ToArray();
+                result.AccountKeySettings[0].RootFingerprint = new HDFingerprint(bytes);
+            }
         }
-        catch (Exception)
+
+        if (jobj.AccountKeyPath is not null)
+            result.AccountKeySettings[0].AccountKeyPath = new KeyPath(jobj.AccountKeyPath);
+
+        if (jobj.ColdCardFirmwareVersion is not null)
         {
-            return (null, null);
+            result.Source = "ColdCard";
         }
+        else if (jobj.CoboVaultFirmwareVersion is not null)
+        {
+            result.Source = "CoboVault";
+        }
+        else
+            result.Source = jobj.Source ?? "WasabiFile";
 
+        derivationSchemeSettings = result;
+        return true;
     }
 }

@@ -919,7 +919,7 @@ namespace BTCPayServer.Controllers
                 return derivationSchemeSettings;
             }
 
-            var strategy = parser.Parse(derivationScheme, false, true);
+            var strategy = parser.Parse(derivationScheme);
             return new DerivationSchemeSettings(strategy, network);
         }
 

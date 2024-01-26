@@ -610,8 +610,16 @@ namespace BTCPayServer.Tests
             s.RegisterNewUser(true);
             s.CreateNewStore();
             
+            // Ensure empty server settings
+            s.Driver.Navigate().GoToUrl(s.Link("/server/emails"));
+            s.Driver.FindElement(By.Id("Settings_Login")).Clear();
+            s.Driver.FindElement(By.Id("Settings_Password")).Clear();
+            s.Driver.FindElement(By.Id("Settings_From")).Clear();
+            s.Driver.FindElement(By.Id("Save")).Submit();
+            
             // Store Emails without server fallback
             s.GoToStore(StoreNavPages.Emails);
+            s.Driver.ElementDoesNotExist(By.Id("UseCustomSMTP"));
             s.Driver.FindElement(By.Id("ConfigureEmailRules")).Click();
             Assert.Contains("You need to configure email settings before this feature works", s.Driver.PageSource);
 
@@ -623,13 +631,16 @@ namespace BTCPayServer.Tests
                 s.FindAlertMessage();
             }
             CanSetupEmailCore(s);
-
+            
             // Store Emails with server fallback
             s.GoToStore(StoreNavPages.Emails);
+            Assert.False(s.Driver.FindElement(By.Id("UseCustomSMTP")).Selected);
             s.Driver.FindElement(By.Id("ConfigureEmailRules")).Click();
-            Assert.Contains("Emails will be sent with the email settings of the server", s.Driver.PageSource);
+            Assert.DoesNotContain("You need to configure email settings before this feature works", s.Driver.PageSource);
 
             s.GoToStore(StoreNavPages.Emails);
+            s.Driver.FindElement(By.Id("UseCustomSMTP")).Click();
+            Thread.Sleep(250);
             CanSetupEmailCore(s);
 
             // Store Email Rules
@@ -637,7 +648,6 @@ namespace BTCPayServer.Tests
             Assert.Contains("There are no rules yet.", s.Driver.PageSource);
             Assert.DoesNotContain("id=\"SaveEmailRules\"", s.Driver.PageSource);
             Assert.DoesNotContain("You need to configure email settings before this feature works", s.Driver.PageSource);
-            Assert.DoesNotContain("Emails will be sent with the email settings of the server", s.Driver.PageSource);
 
             s.Driver.FindElement(By.Id("CreateEmailRule")).Click();
             var select = new SelectElement(s.Driver.FindElement(By.Id("Rules_0__Trigger")));
@@ -648,6 +658,9 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.ClassName("note-editable")).SendKeys("Your invoice is settled");
             s.Driver.FindElement(By.Id("SaveEmailRules")).Click();
             Assert.Contains("Store email rules saved", s.FindAlertMessage().Text);
+            
+            s.GoToStore(StoreNavPages.Emails);
+            Assert.True(s.Driver.FindElement(By.Id("UseCustomSMTP")).Selected);
         }
 
         [Fact(Timeout = TestTimeout)]
@@ -2474,10 +2487,27 @@ namespace BTCPayServer.Tests
             s.Server.ActivateLightning();
             await s.StartAsync();
             await s.Server.EnsureChannelsSetup();
+            
+            // Create users
+            var user = s.RegisterNewUser();
+            var userAccount = s.AsTestAccount();
+            s.GoToHome();
+            s.Logout();
+            s.GoToRegister();
             s.RegisterNewUser(true);
+            
+            // Setup store and associate user
             s.CreateNewStore();
             s.GoToStore();
             s.AddLightningNode(LightningConnectionType.CLightning, false);
+            s.GoToStore(StoreNavPages.Users);
+            s.Driver.FindElement(By.Id("Email")).Clear();
+            s.Driver.FindElement(By.Id("Email")).SendKeys(user);
+            new SelectElement(s.Driver.FindElement(By.Id("Role"))).SelectByValue("Guest");
+            s.Driver.FindElement(By.Id("AddUser")).Click();
+            Assert.Contains("User added successfully", s.FindAlertMessage().Text);
+            
+            // Setup POS
             s.Driver.FindElement(By.Id("StoreNav-CreatePointOfSale")).Click();
             s.Driver.FindElement(By.Id("AppName")).SendKeys(Guid.NewGuid().ToString());
             s.Driver.FindElement(By.Id("Create")).Click();
@@ -2502,6 +2532,8 @@ namespace BTCPayServer.Tests
             s.Driver.WaitForElement(By.ClassName("keypad"));
 
             // basic checks
+            var keypadUrl = s.Driver.Url;
+            s.Driver.FindElement(By.Id("RecentTransactionsToggle"));
             Assert.Contains("EUR", s.Driver.FindElement(By.Id("Currency")).Text);
             Assert.Contains("0,00", s.Driver.FindElement(By.Id("Amount")).Text);
             Assert.Equal("", s.Driver.FindElement(By.Id("Calculation")).Text);
@@ -2547,6 +2579,19 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("DetailsToggle")).Click();
             s.Driver.WaitForElement(By.Id("PaymentDetails-TotalFiat"));
             Assert.Contains("1 222,21 €", s.Driver.FindElement(By.Id("PaymentDetails-TotalFiat")).Text);
+            
+            // Guest user can access recent transactions
+            s.GoToHome();
+            s.Logout();
+            s.LogIn(user, userAccount.RegisterDetails.Password);
+            s.GoToUrl(keypadUrl);
+            s.Driver.FindElement(By.Id("RecentTransactionsToggle"));
+            s.GoToHome();
+            s.Logout();
+            
+            // Unauthenticated user can't access recent transactions
+            s.GoToUrl(keypadUrl);
+            s.Driver.ElementDoesNotExist(By.Id("RecentTransactionsToggle"));
         }
 
         [Fact]
@@ -3269,15 +3314,13 @@ retry:
 
         private static void CanSetupEmailCore(SeleniumTester s)
         {
+            s.Driver.ScrollTo(By.Id("QuickFillDropdownToggle"));
             s.Driver.FindElement(By.Id("QuickFillDropdownToggle")).Click();
             s.Driver.FindElement(By.CssSelector("#quick-fill .dropdown-menu .dropdown-item:first-child")).Click();
             s.Driver.FindElement(By.Id("Settings_Login")).Clear();
             s.Driver.FindElement(By.Id("Settings_Login")).SendKeys("test@gmail.com");
-            s.Driver.FindElement(By.CssSelector("button[value=\"Save\"]")).Submit();
-            s.FindAlertMessage();
             s.Driver.FindElement(By.Id("Settings_Password")).Clear();
             s.Driver.FindElement(By.Id("Settings_Password")).SendKeys("mypassword");
-            
             s.Driver.FindElement(By.Id("Settings_From")).Clear();
             s.Driver.FindElement(By.Id("Settings_From")).SendKeys("Firstname Lastname <email@example.com>");
             s.Driver.FindElement(By.Id("Save")).SendKeys(Keys.Enter);

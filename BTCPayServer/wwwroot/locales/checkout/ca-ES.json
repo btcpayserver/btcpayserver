@@ -39,5 +39,7 @@
   "submitting_nfc": "Enviant NFC...",
   "payment_received": "Pagament rebut",
   "payment_received_body": "El seu pagament ha estat rebut i ara s'està processant",
-  "payment_received_confirmations": "Un cop el vostre pagament hagi rebut {{requiredConfirmations}} confirmacions a la cadena de blocs {{cryptoCode}}, la vostra factura es liquidarà."
+  "payment_received_confirmations": "Un cop el vostre pagament hagi rebut {{requiredConfirmations}} confirmacions a la cadena de blocs {{cryptoCode}}, la vostra factura es liquidarà.",
+  "invoice_paidpartial_body": "Una factura només és vàlida durant {{minutes}} minuts. Aquesta factura ha vencut amb un pagament parcial. Si us plau, poseu-vos en contacte amb nosaltres perquè puguem completar la vostra comanda.",
+  "contact_us": "Contacta'ns"
 }

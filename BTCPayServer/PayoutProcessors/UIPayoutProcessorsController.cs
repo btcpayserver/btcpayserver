@@ -42,9 +42,6 @@ public class UIPayoutProcessorsController : Controller
                 new PayoutProcessorService.PayoutProcessorQuery() { Stores = new[] { storeId } }))
             .GroupBy(data => data.Processor);
 
-        var paymentMethods = HttpContext.GetStoreData().GetEnabledPaymentMethods(_btcPayNetworkProvider)
-            .Select(method => method.PaymentId).ToList();
-
         return View(_payoutProcessorFactories.Select(factory =>
         {
             var conf = activeProcessors.FirstOrDefault(datas => datas.Key == factory.Processor)

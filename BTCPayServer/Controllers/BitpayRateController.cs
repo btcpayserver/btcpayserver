@@ -48,7 +48,7 @@ namespace BTCPayServer.Controllers
         [Route("rates/{baseCurrency}")]
         [HttpGet]
         [BitpayAPIConstraint]
-        public async Task<IActionResult> GetBaseCurrencyRates(string baseCurrency, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetBaseCurrencyRates(string baseCurrency, string cryptoCode = null, CancellationToken cancellationToken = default)
         {
             var supportedMethods = CurrentStore.GetSupportedPaymentMethods(_networkProvider);
 
@@ -57,16 +57,16 @@ namespace BTCPayServer.Controllers
 
             var currencypairs = BuildCurrencyPairs(currencyCodes, baseCurrency);
 
-            var result = await GetRates2(currencypairs, null, cancellationToken);
+            var result = await GetRates2(currencypairs, null, cryptoCode, cancellationToken);
             var rates = (result as JsonResult)?.Value as Rate[];
             return rates == null ? result : Json(new DataWrapper<Rate[]>(rates));
         }
 
         [HttpGet("rates/{baseCurrency}/{currency}")]
         [BitpayAPIConstraint]
-        public async Task<IActionResult> GetCurrencyPairRate(string baseCurrency, string currency, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetCurrencyPairRate(string baseCurrency, string currency, string cryptoCode = null, CancellationToken cancellationToken = default)
         {
-            var result = await GetRates2($"{baseCurrency}_{currency}", null, cancellationToken);
+            var result = await GetRates2($"{baseCurrency}_{currency}", null, cryptoCode, cancellationToken);
             return (result as JsonResult)?.Value is not Rate[] rates
                 ? result
                 : Json(new DataWrapper<Rate>(rates.First()));
@@ -74,9 +74,9 @@ namespace BTCPayServer.Controllers
 
         [HttpGet("rates")]
         [BitpayAPIConstraint]
-        public async Task<IActionResult> GetRates(string currencyPairs, string storeId = null, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> GetRates(string currencyPairs, string storeId = null, string cryptoCode = null, CancellationToken cancellationToken = default)
         {
-            var result = await GetRates2(currencyPairs, storeId, cancellationToken);
+            var result = await GetRates2(currencyPairs, storeId, cryptoCode, cancellationToken);
             return (result as JsonResult)?.Value is not Rate[] rates
                 ? result
                 : Json(new DataWrapper<Rate[]>(rates));
@@ -84,7 +84,7 @@ namespace BTCPayServer.Controllers
 
         [AllowAnonymous]
         [HttpGet("api/rates")]
-        public async Task<IActionResult> GetRates2(string currencyPairs, string storeId, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetRates2(string currencyPairs, string storeId, string cryptoCode = null, CancellationToken cancellationToken = default)
         {
             var store = CurrentStore ?? await _storeRepo.FindStore(storeId);
             if (store == null)
@@ -95,7 +95,12 @@ namespace BTCPayServer.Controllers
             }
             if (currencyPairs == null)
             {
-                currencyPairs = store.GetStoreBlob().GetDefaultCurrencyPairString();
+                var blob = store.GetStoreBlob();
+                currencyPairs = blob.GetDefaultCurrencyPairString();
+                if (string.IsNullOrEmpty(currencyPairs) && !string.IsNullOrWhiteSpace(cryptoCode))
+                {
+                    currencyPairs = $"{blob.DefaultCurrency}_{cryptoCode}".ToUpperInvariant();
+                }
                 if (string.IsNullOrEmpty(currencyPairs))
                 {
                     var result = Json(new BitpayErrorsModel() { Error = "You need to setup the default currency pairs in 'Store Settings / Rates' or specify 'currencyPairs' query parameter (eg. BTC_USD,LTC_CAD)." });

@@ -39,5 +39,7 @@
   "submitting_nfc": "Enviando NFC...",
   "payment_received": "Pago recibido",
   "payment_received_body": "Su pago ha sido recibido y se está procesando en este momento",
-  "payment_received_confirmations": "Una vez que tu pago haya recibido {{requiredConfirmations}} confirmaciones en la cadena de bloques {{cryptoCode}}, se liquidará tu factura."
+  "payment_received_confirmations": "Una vez que tu pago haya recibido {{requiredConfirmations}} confirmaciones en la cadena de bloques {{cryptoCode}}, se liquidará tu factura.",
+  "invoice_paidpartial_body": "Una factura es válida solo por {{minutes}} minutos. Esta factura expiró con un pago parcial. Por favor, contáctenos para que podamos completar su pedido.",
+  "contact_us": "Contáctenos"
 }

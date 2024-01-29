@@ -39,5 +39,7 @@
   "payment_received_body": "Votre paiement a été reçu et est en cours de traitement",
   "scanning_nfc": "Numérisation NFC en cours...",
   "submitting_nfc": "Soumission NFC en cours...",
-  "payment_received_confirmations": "Une fois que votre paiement aura reçu {{requiredConfirmations}} confirmations sur la blockchain {{cryptoCode}}, votre facture sera réglée."
+  "payment_received_confirmations": "Une fois que votre paiement aura reçu {{requiredConfirmations}} confirmations sur la blockchain {{cryptoCode}}, votre facture sera réglée.",
+  "invoice_paidpartial_body": "Une facture n'est valide que pendant {{minutes}} minutes. Cette facture a expiré avec un paiement partiel. Veuillez nous contacter afin que nous puissions traiter votre commande.",
+  "contact_us": "Contactez-nous"
 }

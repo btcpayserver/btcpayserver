@@ -39,5 +39,7 @@
   "submitting_nfc": "Ukubhaliswa kwe-NFC ...",
   "payment_received": "Isitshalo esilandelayo",
   "payment_received_body": "Isitshalo sakho sibhalwe futhi kuyatholakala manje",
-  "payment_received_confirmations": "Ekubeni iliphi eliphezulu kwama-confirmations {{requiredConfirmations}} ku-blockchain ye-{{cryptoCode}}, isitifiketi sakho siza kuphela."
+  "payment_received_confirmations": "Ekubeni iliphi eliphezulu kwama-confirmations {{requiredConfirmations}} ku-blockchain ye-{{cryptoCode}}, isitifiketi sakho siza kuphela.",
+  "invoice_paidpartial_body": "Isicelo salibhizinisi lihlawulelwe kuphela emizuzwini ye{{minutes}}. Le ibhizinisi ilahlekile uma kunezimali ezithizelewe. Ngiyacelani ukuthi ucabangele siqinisekiselelele ngezinto zakho.",
+  "contact_us": "Thandaza nathi"
 }

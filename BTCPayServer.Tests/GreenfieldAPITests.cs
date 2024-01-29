@@ -58,8 +58,8 @@ namespace BTCPayServer.Tests
             var factory = tester.PayTester.GetService<IBTCPayServerClientFactory>();
             Assert.NotNull(factory);
             var client = await factory.Create(user.UserId, user.StoreId);
-            var u = await client.GetCurrentUser();
-            var s = await client.GetStores();
+            await client.GetCurrentUser();
+            await client.GetStores();
             var store = await client.GetStore(user.StoreId);
             Assert.NotNull(store);
             var addr = await client.GetLightningDepositAddress(user.StoreId, "BTC");
@@ -1138,7 +1138,7 @@ namespace BTCPayServer.Tests
             var approved = await acc.CreateClient(Policies.CanCreatePullPayments);
             await AssertPermissionError(Policies.CanCreatePullPayments, async () =>
             {
-                var pullPayment = await nonApproved.CreatePullPayment(acc.StoreId, new CreatePullPaymentRequest()
+                await nonApproved.CreatePullPayment(acc.StoreId, new CreatePullPaymentRequest()
                 {
                     Amount = 100,
                     Currency = "USD",
@@ -1149,7 +1149,7 @@ namespace BTCPayServer.Tests
             });
             await AssertPermissionError(Policies.CanCreatePullPayments, async () =>
             {
-                var pullPayment = await nonApproved.CreatePayout(acc.StoreId, new CreatePayoutThroughStoreRequest()
+                await nonApproved.CreatePayout(acc.StoreId, new CreatePayoutThroughStoreRequest()
                 {
                     Amount = 100,
                     PaymentMethod = "BTC",
@@ -1158,7 +1158,7 @@ namespace BTCPayServer.Tests
                 });
             });
 
-            var pullPayment = await approved.CreatePullPayment(acc.StoreId, new CreatePullPaymentRequest()
+            await approved.CreatePullPayment(acc.StoreId, new CreatePullPaymentRequest()
             {
                 Amount = 100,
                 Currency = "USD",
@@ -1167,7 +1167,7 @@ namespace BTCPayServer.Tests
                 AutoApproveClaims = true
             });
 
-            var p = await approved.CreatePayout(acc.StoreId, new CreatePayoutThroughStoreRequest()
+            await approved.CreatePayout(acc.StoreId, new CreatePayoutThroughStoreRequest()
             {
                 Amount = 100,
                 PaymentMethod = "BTC",
@@ -2537,7 +2537,6 @@ namespace BTCPayServer.Tests
                 Expiry = TimeSpan.FromSeconds(400),
                 PrivateRouteHints = false
             });
-            var chargeInvoice = invoiceData;
             Assert.NotNull(await client.GetLightningInvoice("BTC", invoiceData.Id));
 
             // check list for internal node
@@ -3679,7 +3678,7 @@ namespace BTCPayServer.Tests
                 SavePrivateKeys = true
             });
 
-            var preApprovedPayoutWithoutPullPayment = await adminClient.CreatePayout(admin.StoreId, new CreatePayoutThroughStoreRequest()
+            await adminClient.CreatePayout(admin.StoreId, new CreatePayoutThroughStoreRequest()
             {
                 Amount = 0.0001m,
                 Approved = true,
@@ -3911,7 +3910,7 @@ namespace BTCPayServer.Tests
             
             beforeHookTcs = new TaskCompletionSource();
             afterHookTcs = new TaskCompletionSource();
-            var payoutThatShouldNotBeProcessedStraightAway3 = await adminClient.CreatePayout(admin.StoreId, new CreatePayoutThroughStoreRequest()
+            await adminClient.CreatePayout(admin.StoreId, new CreatePayoutThroughStoreRequest()
             {
                 Amount = 0.3m,
                 Approved = true,
@@ -4331,7 +4330,7 @@ clientBasic.PreviewUpdateStoreRateConfiguration(user.StoreId, new StoreRateConfi
             await admin.GrantAccessAsync(true);
 
             var unauthClient = new BTCPayServerClient(tester.PayTester.ServerUri);
-            var authClientNoPermissions = await admin.CreateClient(Policies.CanViewInvoices);
+            await admin.CreateClient(Policies.CanViewInvoices);
             var adminClient = await admin.CreateClient(Policies.Unrestricted);
             var managerClient = await admin.CreateClient(Policies.CanManageCustodianAccounts);
             var withdrawalClient = await admin.CreateClient(Policies.CanWithdrawFromCustodianAccounts);

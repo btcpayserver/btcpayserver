@@ -39,5 +39,7 @@
   "submitting_nfc": "Изпращане на NFC...",
   "payment_received": "Получено плащане.",
   "payment_received_body": "Вашето плащане е получено и в момента се обработва",
-  "payment_received_confirmations": "След като плащането ви получи {{requiredConfirmations}} потвърждения във веригата на блокове на {{cryptoCode}}, вашата фактура ще бъде платена."
+  "payment_received_confirmations": "След като плащането ви получи {{requiredConfirmations}} потвърждения във веригата на блокове на {{cryptoCode}}, вашата фактура ще бъде платена.",
+  "invoice_paidpartial_body": "Фактурата е валидна само за {{minutes}} минути. Тази фактура изтече с частично плащане. Моля, свържете се с нас, за да можем да изпълним вашата поръчка.",
+  "contact_us": "Свържете се с нас"
 }

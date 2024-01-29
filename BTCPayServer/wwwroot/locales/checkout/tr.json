@@ -39,5 +39,7 @@
   "submitting_nfc": "NFC gönderiliyor...",
   "payment_received": "Ödeme Alındı",
   "payment_received_body": "Ödemeniz alındı ve işleniyor",
-  "payment_received_confirmations": "{{cryptoCode}} blockchain'indeki {{requiredConfirmations}} onay almış ödemeniz tamamlanacaktır."
+  "payment_received_confirmations": "{{cryptoCode}} blockchain'indeki {{requiredConfirmations}} onay almış ödemeniz tamamlanacaktır.",
+  "invoice_paidpartial_body": "Bir fatura yalnızca {{minutes}} dakika boyunca geçerlidir. Bu fatura kısmi ödeme ile süresi doldu. Siparişinizi tamamlamamız için lütfen bize ulaşın.",
+  "contact_us": "Bize ulaşın"
 }

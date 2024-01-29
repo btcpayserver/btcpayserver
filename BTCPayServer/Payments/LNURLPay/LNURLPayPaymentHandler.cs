@@ -57,8 +57,7 @@ namespace BTCPayServer.Payments.Lightning
             {
                 throw new PaymentMethodUnavailableException("LNURL requires a lightning node to be configured for the store.");
             }
-
-            var client = lnSupported.CreateLightningClient(network, Options.Value, _lightningClientFactoryService);
+            
             var nodeInfo = (await _lightningLikePaymentHandler.GetNodeInfo(lnSupported, _networkProvider.GetNetwork<BTCPayNetwork>(supportedPaymentMethod.CryptoCode), logs, paymentMethod.PreferOnion)).FirstOrDefault();
 
             return new LNURLPayPaymentMethodDetails()

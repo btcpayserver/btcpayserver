@@ -39,5 +39,7 @@
   "submitting_nfc": "एनएफसी जमा कर रहा है ...",
   "payment_received": "भुगतान प्राप्त हुआ",
   "payment_received_body": "आपका भुगतान प्राप्त हो गया है और अब प्रोसेस हो रहा है।",
-  "payment_received_confirmations": "जब आपके भुगतान को {{cryptoCode}} ब्लॉकचेन पर {{requiredConfirmations}} पुष्टिकरण मिल जाएंगे, तब आपका चालान समाप्त हो जाएगा।"
+  "payment_received_confirmations": "जब आपके भुगतान को {{cryptoCode}} ब्लॉकचेन पर {{requiredConfirmations}} पुष्टिकरण मिल जाएंगे, तब आपका चालान समाप्त हो जाएगा।",
+  "invoice_paidpartial_body": "यह चालान केवल {{minutes}} मिनटों के लिए मान्य है। यह चालान आंशिक भुगतान के साथ समाप्त हो गया है। कृपया हमसे संपर्क करें, ताकि हम आपका ऑर्डर पूरा कर सकें।",
+  "contact_us": "हमसे संपर्क करें"
 }

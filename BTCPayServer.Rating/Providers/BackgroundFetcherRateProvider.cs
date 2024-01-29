@@ -110,7 +110,7 @@ namespace BTCPayServer.Services.Rates
 
         public void LoadState(BackgroundFetcherState state)
         {
-            if (state.LastRequested is DateTimeOffset lastRequested)
+            if (state.LastRequested is DateTimeOffset)
                 this.LastRequested = state.LastRequested;
             if (state.LastUpdated is DateTimeOffset updated && state.Rates is List<BackgroundFetcherRate> rates)
             {

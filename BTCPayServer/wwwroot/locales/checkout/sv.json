@@ -39,5 +39,7 @@
   "submitting_nfc": "Skickar NFC …",
   "payment_received": "Betalningen mottagen",
   "payment_received_body": "Din betalning har mottagits och bearbetas nu",
-  "payment_received_confirmations": "När din betalning har mottagit {{requiredConfirmations}} bekräftelser på {{cryptoCode}} blockkedjan kommer din faktura att betalas."
+  "payment_received_confirmations": "När din betalning har mottagit {{requiredConfirmations}} bekräftelser på {{cryptoCode}} blockkedjan kommer din faktura att betalas.",
+  "invoice_paidpartial_body": "En faktura är endast giltig i {{minuter}} minuter. Denna faktura har löpt ut med delbetalning. Vänligen kontakta oss så att vi kan fullfölja din beställning.",
+  "contact_us": "Kontakta oss"
 }

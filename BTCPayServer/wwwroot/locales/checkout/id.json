@@ -39,5 +39,7 @@
   "submitting_nfc": "Mengirim NFC...",
   "payment_received": "Pembayaran Diterima",
   "payment_received_body": "Pembayaran Anda telah diterima dan sedang diproses",
-  "payment_received_confirmations": "Setelah pembayaran Anda menerima {{requiredConfirmations}} konfirmasi pada blockchain {{cryptoCode}}, faktur Anda akan diselesaikan."
+  "payment_received_confirmations": "Setelah pembayaran Anda menerima {{requiredConfirmations}} konfirmasi pada blockchain {{cryptoCode}}, faktur Anda akan diselesaikan.",
+  "invoice_paidpartial_body": "Faktur ini hanya berlaku selama {{minutes}} menit. Faktur ini telah kedaluwarsa dengan pembayaran sebagian. Silakan hubungi kami agar kami dapat menyelesaikan pesanan Anda.",
+  "contact_us": "Hubungi kami"
 }

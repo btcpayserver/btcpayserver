@@ -267,7 +267,6 @@ namespace BTCPayServer.Tests
             }
             catch (Exception ex) when (ex is MatchesException)
             {
-                var details = ex.Message;
                 TestLogs.LogInformation($"FAILED: {url} ({file}) – anchor not found: {uri.Fragment}");
 
                 throw;
@@ -347,7 +346,7 @@ namespace BTCPayServer.Tests
 
             try
             {
-                var throwsBitpay404Error = user.BitPay.GetInvoice(invoice.Id + "123");
+                user.BitPay.GetInvoice(invoice.Id + "123");
             }
             catch (BitPayException ex)
             {
@@ -885,7 +884,7 @@ namespace BTCPayServer.Tests
             Assert.Equal("LTC", GetCurrencyPairRateResult.Data.Code);
 
             // Should be OK because the request is signed, so we can know the store
-            var rates = acc.BitPay.GetRates();
+            acc.BitPay.GetRates();
             HttpClient client = new HttpClient();
             // Unauthentified requests should also be ok
             var response =
@@ -1072,7 +1071,7 @@ namespace BTCPayServer.Tests
             var invoice = await user.BitPay.CreateInvoiceAsync(new Invoice(0.01m, "BTC"));
             await tester.WaitForEvent<InvoiceEvent>(async () =>
             {
-                var tx = await tester.ExplorerNode.SendToAddressAsync(
+                await tester.ExplorerNode.SendToAddressAsync(
                     BitcoinAddress.Create(invoice.BitcoinAddress, Network.RegTest),
                     Money.Coins(0.01m));
             });
@@ -1148,6 +1147,14 @@ namespace BTCPayServer.Tests
             bitpay = new Bitpay(k, tester.PayTester.ServerUri);
             Assert.True(bitpay.TestAccess(Facade.Merchant));
             Assert.True(bitpay.TestAccess(Facade.PointOfSale));
+            HttpClient client = new HttpClient();
+            var token = (await bitpay.GetAccessTokenAsync(Facade.Merchant)).Value;
+            var getRates = tester.PayTester.ServerUri.AbsoluteUri + $"rates/?cryptoCode=BTC&token={token}";
+            var req = new HttpRequestMessage(HttpMethod.Get, getRates);
+            req.Headers.Add("x-signature", NBitpayClient.Extensions.BitIdExtensions.GetBitIDSignature(k, getRates, null));
+            req.Headers.Add("x-identity", k.PubKey.ToHex());
+            var resp = await client.SendAsync(req);
+            resp.EnsureSuccessStatusCode();
 
             // Can generate API Key
             var repo = tester.PayTester.GetService<TokenRepository>();
@@ -1168,7 +1175,6 @@ namespace BTCPayServer.Tests
             apiKey = apiKey2;
 
             // Can create an invoice with this new API Key
-            HttpClient client = new HttpClient();
             HttpRequestMessage message = new HttpRequestMessage(HttpMethod.Post,
                 tester.PayTester.ServerUri.AbsoluteUri + "invoices");
             message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic",
@@ -1457,7 +1463,7 @@ namespace BTCPayServer.Tests
 
             // via UI
             var controller = user.GetController<UIInvoiceController>();
-            var model = await controller.CreateInvoice();
+            await controller.CreateInvoice();
             (await controller.CreateInvoice(new CreateInvoiceModel(), default)).AssertType<RedirectToActionResult>();
             invoice = await client.GetInvoice(user.StoreId, controller.CreatedInvoiceId);
             Assert.Equal("EUR", invoice.Currency);
@@ -2139,8 +2145,7 @@ namespace BTCPayServer.Tests
             user.RegisterDerivationScheme("BTC");
 
             var serverController = user.GetController<UIServerController>();
-            var vm = Assert.IsType<LogsViewModel>(
-                Assert.IsType<ViewResult>(await serverController.LogsView()).Model);
+            Assert.IsType<LogsViewModel>(Assert.IsType<ViewResult>(await serverController.LogsView()).Model);
         }
 
         [Fact(Timeout = LongRunningTestTimeout)]
@@ -2394,7 +2399,7 @@ namespace BTCPayServer.Tests
             Assert.NotNull(lnMethod.GetExternalLightningUrl());
 
             var url = lnMethod.GetExternalLightningUrl();
-            var kv = LightningConnectionStringHelper.ExtractValues(url, out var connType);
+            LightningConnectionStringHelper.ExtractValues(url, out var connType);
             Assert.Equal(LightningConnectionType.Charge, connType);
             var client = Assert.IsType<ChargeClient>(tester.PayTester.GetService<LightningClientFactoryService>()
                 .Create(url, tester.NetworkProvider.GetNetwork<BTCPayNetwork>("BTC")));
@@ -2771,7 +2776,7 @@ namespace BTCPayServer.Tests
             Assert.Equal(fileContent, data);
 
             //create a temporary link to file
-            var tmpLinkGenerate = Assert.IsType<RedirectToActionResult>(await controller.CreateTemporaryFileUrl(fileId,
+            Assert.IsType<RedirectToActionResult>(await controller.CreateTemporaryFileUrl(fileId,
                 new UIServerController.CreateTemporaryFileUrlViewModel
                 {
                     IsDownload = true,

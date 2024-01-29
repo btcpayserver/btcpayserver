@@ -73,6 +73,8 @@ using Newtonsoft.Json;
 using NicolasDorier.RateLimits;
 using Serilog;
 using BTCPayServer.Services.Reporting;
+using BTCPayServer.Services.WalletFileParsing;
+
 #if ALTCOINS
 using BTCPayServer.Services.Altcoins.Monero;
 using BTCPayServer.Services.Altcoins.Zcash;
@@ -129,7 +131,7 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<IHostedService>(provider => provider.GetRequiredService<TorServices>());
             services.AddSingleton<ISwaggerProvider, DefaultSwaggerProvider>();
             services.TryAddSingleton<SocketFactory>();
-            
+
             services.AddSingleton<Func<HttpClient, ILightningConnectionStringHandler>>(client =>
                 new ChargeLightningConnectionStringHandler(client));
             services.AddSingleton<Func<HttpClient, ILightningConnectionStringHandler>>(_ =>
@@ -145,8 +147,8 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<LightningClientFactoryService>();
             services.AddHttpClient(LightningClientFactoryService.OnionNamedClient)
                 .ConfigurePrimaryHttpMessageHandler<Socks5HttpClientHandler>();
-            
-            
+
+
             services.TryAddSingleton<InvoicePaymentNotification>();
             services.TryAddSingleton<BTCPayServerOptions>(o =>
                 o.GetRequiredService<IOptions<BTCPayServerOptions>>().Value);
@@ -159,6 +161,9 @@ namespace BTCPayServer.Hosting
             AddSettingsAccessor<PoliciesSettings>(services);
             AddSettingsAccessor<ThemeSettings>(services);
             //
+
+            AddOnchainWalletParsers(services);
+
             services.AddStartupTask<BlockExplorerLinkStartupTask>();
             services.TryAddSingleton<InvoiceRepository>();
             services.AddSingleton<PaymentService>();
@@ -246,7 +251,7 @@ namespace BTCPayServer.Hosting
                             {
                                 error = e.Message;
                             }
-                           
+
                             if (error is not null)
                             {
                                 logs.Configuration.LogWarning($"Invalid setting {net.CryptoCode}.lightning, " +
@@ -363,7 +368,8 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<WalletReceiveService>();
             services.AddSingleton<IHostedService>(provider => provider.GetService<WalletReceiveService>());
             services.TryAddSingleton<CurrencyNameTable>(CurrencyNameTable.Instance);
-            services.TryAddSingleton<IFeeProviderFactory,FeeProviderFactory>();
+            services.AddScheduledTask<FeeProviderFactory>(TimeSpan.FromMinutes(3.0));
+            services.AddSingleton<IFeeProviderFactory, FeeProviderFactory>(f => f.GetRequiredService<FeeProviderFactory>());
 
             services.Configure<MvcOptions>((o) =>
             {
@@ -412,7 +418,7 @@ namespace BTCPayServer.Hosting
 
             services.AddSingleton<NotificationManager>();
             services.AddScoped<NotificationSender>();
-            
+
             services.AddSingleton<IHostedService, NBXplorerWaiters>();
             services.AddSingleton<IHostedService, InvoiceEventSaverService>();
             services.AddSingleton<IHostedService, BitpayIPNSender>();
@@ -511,6 +517,19 @@ namespace BTCPayServer.Hosting
             }
 
             return services;
+        }
+
+        public static void AddOnchainWalletParsers(IServiceCollection services)
+        {
+            services.AddSingleton<WalletFileParsers>();
+            services.AddSingleton<IWalletFileParser, BSMSWalletFileParser>();
+            services.AddSingleton<IWalletFileParser, NBXDerivGenericWalletFileParser>();
+            services.AddSingleton<IWalletFileParser, ElectrumWalletFileParser>();
+            services.AddSingleton<IWalletFileParser, OutputDescriptorWalletFileParser>(provider => provider.GetService<OutputDescriptorWalletFileParser>());
+            services.AddSingleton<OutputDescriptorWalletFileParser>();
+            services.AddSingleton<IWalletFileParser, SpecterWalletFileParser>();
+            services.AddSingleton<IWalletFileParser, OutputDescriptorJsonWalletFileParser>();
+            services.AddSingleton<IWalletFileParser, WasabiWalletFileParser>();
         }
 
         internal static void RegisterRateSources(IServiceCollection services)

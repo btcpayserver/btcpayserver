@@ -39,5 +39,7 @@
   "submitting_nfc": "Indienen van NFC ...",
   "payment_received": "Betaling ontvangen",
   "payment_received_body": "Uw betaling is ontvangen en wordt nu verwerkt",
-  "payment_received_confirmations": "Zodra uw betaling {{requiredConfirmations}} bevestigingen heeft ontvangen op de {{cryptoCode}} blockchain, zal uw factuur worden voldaan."
+  "payment_received_confirmations": "Zodra uw betaling {{requiredConfirmations}} bevestigingen heeft ontvangen op de {{cryptoCode}} blockchain, zal uw factuur worden voldaan.",
+  "invoice_paidpartial_body": "Een factuur is slechts geldig voor {{minutes}} minuten. Deze factuur is verlopen met gedeeltelijke betaling. Neem contact met ons op, zodat we uw bestelling kunnen vervullen.",
+  "contact_us": "Neem contact met ons op"
 }

@@ -6,25 +6,27 @@ namespace BTCPayServer.Models.ServerViewModels
 {
     public class EmailsViewModel
     {
+        public EmailSettings Settings { get; set; }
+        public EmailSettings FallbackSettings { get; set; }
+        public bool PasswordSet { get; set; }
+        
+        [MailboxAddress]
+        [Display(Name = "Test Email")]
+        public string TestEmail { get; set; }
+
         public EmailsViewModel()
         {
-
         }
-        public EmailsViewModel(EmailSettings settings)
+
+        public EmailsViewModel(EmailSettings settings, EmailSettings fallbackSettings = null)
         {
             Settings = settings;
+            FallbackSettings = fallbackSettings;
             PasswordSet = !string.IsNullOrEmpty(settings?.Password);
         }
-        public EmailSettings Settings
-        {
-            get; set;
-        }
-        public bool PasswordSet { get; set; }
-        [MailboxAddressAttribute]
-        [Display(Name = "Test Email")]
-        public string TestEmail
-        {
-            get; set;
-        }
+        
+        public bool IsSetup() => Settings?.IsComplete() is true;
+        public bool IsFallbackSetup() => FallbackSettings?.IsComplete() is true;
+        public bool UsesFallback() => IsFallbackSetup() && Settings == FallbackSettings;
     }
 }

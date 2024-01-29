@@ -39,5 +39,7 @@
   "submitting_nfc": "Indsend NFC ...",
   "payment_received": "Betaling modtaget",
   "payment_received_body": "Din betaling er modtaget og behandles nu",
-  "payment_received_confirmations": "Når din betaling har modtaget {{requiredConfirmations}} bekræftelser på {{cryptoCode}} blockchain, vil din faktura blive afregnet."
+  "payment_received_confirmations": "Når din betaling har modtaget {{requiredConfirmations}} bekræftelser på {{cryptoCode}} blockchain, vil din faktura blive afregnet.",
+  "invoice_paidpartial_body": "En faktura er kun gyldig i {{minutes}} minutter. Denne faktura er udløbet med delvis betaling. Kontakt os venligst, så vi kan opfylde din ordre.",
+  "contact_us": "Kontakt os"
 }

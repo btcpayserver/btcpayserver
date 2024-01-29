@@ -21,7 +21,6 @@ namespace BTCPayServer.Plugins.Bitcoin
             var nbxplorerNetworkProvider = services.BootstrapServices.GetRequiredService<NBXplorerNetworkProvider>();
             var nbxplorerNetwork = nbxplorerNetworkProvider.GetFromCryptoCode("BTC");
             var chainName = nbxplorerNetwork.NBitcoinNetwork.ChainName;
-            var selectedChains = services.BootstrapServices.GetRequiredService<SelectedChains>();
             if (!services.BootstrapServices.GetRequiredService<SelectedChains>().Contains("BTC"))
                 return;
             var blockExplorerLink = chainName == ChainName.Mainnet ? "https://mempool.space/tx/{0}" :

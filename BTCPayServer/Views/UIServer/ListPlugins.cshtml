@@ -7,13 +7,13 @@
     Layout = "_Layout";
     ViewData.SetActivePage(ServerNavPages.Plugins);
     var installed = Model.Installed.ToDictionary(plugin => plugin.Identifier, plugin => plugin.Version);
-
+    var installedWithoutSystemPlugins = Model.Installed.Where(i => !i.SystemPlugin).ToList();
+    var availableAndNotInstalled = new List<PluginService.AvailablePlugin>();
     var availableAndNotInstalledx = Model.Available
         .Where(plugin => !installed.ContainsKey(plugin.Identifier))
         .GroupBy(plugin => plugin.Identifier)
         .ToList();
-
-    var availableAndNotInstalled = new List<PluginService.AvailablePlugin>();
+    
     foreach (var availableAndNotInstalledItem in availableAndNotInstalledx)
     {
         var ordered = availableAndNotInstalledItem.OrderByDescending(plugin => plugin.Version).ToArray();
@@ -76,12 +76,18 @@
     <div class="mb-5">
         <h3 class="mb-4">Disabled Plugins</h3>
         <ul class="list-group list-group-flush d-inline-block">
-            @foreach (var d in Model.Disabled)
+            @foreach (var (plugin, version) in Model.Disabled)
             {
                 <li class="list-group-item px-0">
                     <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
-                        <span>@d</span>
-                        <form asp-action="UnInstallPlugin" asp-route-plugin="@d">
+                        <span>
+                            @plugin
+                            @if (version != null)
+                            {
+                                <span>({version})</span>
+                            }
+                        </span>
+                        <form asp-action="UnInstallPlugin" asp-route-plugin="@plugin">
                             <button type="submit" class="btn btn-sm btn-outline-danger">Uninstall</button>
                         </form>
                     </div>
@@ -233,26 +239,27 @@
                         </div>
                     </div>
                     @{
-                        var pendingAction = Model.Commands.Any(tuple => tuple.plugin.Equals(plugin.Identifier, StringComparison.InvariantCultureIgnoreCase));
+                        var pendingAction = Model.Commands.LastOrDefault(tuple => tuple.plugin.Equals(plugin.Identifier, StringComparison.InvariantCultureIgnoreCase)).command;
                         var exclusivePendingAction = true;
+                        
+                        var versionOfPendingInstall = PluginService.GetVersionOfPendingInstall(plugin.Identifier);
                     }
                     <div class="card-footer border-0 pb-3 d-flex gap-2">
-                        @if (pendingAction && updateAvailable)
+                        @if (pendingAction is not null && updateAvailable)
                         {
                             var isUpdateAction = Model.Commands.Last(tuple => tuple.plugin.Equals(plugin.Identifier, StringComparison.InvariantCultureIgnoreCase)).command == "update";
                             if (isUpdateAction)
                             {
-                                var version = PluginService.GetVersionOfPendingInstall(plugin.Identifier);
-                                exclusivePendingAction = version == x.Version;
+                                exclusivePendingAction = versionOfPendingInstall == x.Version;
                             }
                         }
-                        @if (pendingAction)
+                        @if (pendingAction is not null)
                         {
                             <form asp-action="CancelPluginCommands" asp-route-plugin="@plugin.Identifier">
-                                <button type="submit" class="btn btn-outline-secondary">Cancel pending action</button>
+                                <button type="submit" class="btn btn-outline-secondary">Cancel pending @pendingAction @(versionOfPendingInstall is null? "": $"of {versionOfPendingInstall}")</button>
                             </form>
                         }
-                        @if (!pendingAction || !exclusivePendingAction)
+                        @if (pendingAction is null  || !exclusivePendingAction)
                         {
                             @if (updateAvailable && x != null)
                             {
@@ -294,7 +301,7 @@
         @foreach (var plugin in availableAndNotInstalled)
         {
             var recommended = BTCPayServerOptions.RecommendedPlugins.Any(id => string.Equals(id, plugin.Identifier, StringComparison.InvariantCultureIgnoreCase));
-            var disabled = Model.Disabled?.Contains(plugin.Identifier) ?? false;
+            Model.Disabled.TryGetValue(plugin.Identifier, out var disabled);
 
             <div class="col col-12 col-md-6 col-lg-12 col-xl-6 col-xxl-4 mb-4">
                 <div class="card h-100" id="@plugin.Identifier">
@@ -313,7 +320,11 @@
                         </div>
                         <h5 class="text-muted d-flex align-items-center mt-1 gap-2">
                             @plugin.Version
-                            @if (disabled)
+                            @if (disabled is { } && disabled != plugin.Version)
+                            {
+                                <div class="badge bg-light">Disabled (@disabled)</div>
+                            }
+                            else if (disabled is { } && disabled == plugin.Version)
                             {
                                 <div class="badge bg-light">Disabled</div>
                             }
@@ -384,25 +395,31 @@
                     </div>
                     <div class="card-footer border-0 pb-3 d-flex gap-2">
                         @{
-                            var pendingAction = Model.Commands.LastOrDefault(tuple => tuple.plugin.Equals(plugin.Identifier, StringComparison.InvariantCultureIgnoreCase));
-                            var version = PluginService.GetVersionOfPendingInstall(plugin.Identifier);
-                            var exclusivePendingAction = version == plugin.Version;
+                            var res = Model.Commands.LastOrDefault(tuple => tuple.plugin.Equals(plugin.Identifier, StringComparison.InvariantCultureIgnoreCase));
+                            var pendingAction = res != default ? res.command : null;
+                            var versionOfPendingInstall = PluginService.GetVersionOfPendingInstall(plugin.Identifier);
+                            var exclusivePendingAction = pendingAction is not null && (pendingAction == "delete" || versionOfPendingInstall == plugin.Version);
                         }
-                        @if (!pendingAction.Equals(default))
+                        @if (pendingAction is not null)
                         {
                             <form asp-action="CancelPluginCommands" asp-route-plugin="@plugin.Identifier">
-                                <button type="submit" class="btn btn-outline-secondary">Cancel pending @pendingAction.command</button>
+                                <button type="submit" class="btn btn-outline-secondary">Cancel pending @pendingAction @(versionOfPendingInstall is null? "": $"of {versionOfPendingInstall}")</button>
                             </form>
                         }
-                        @if (pendingAction.Equals(default) || !exclusivePendingAction)
+                        @if (pendingAction is null|| !exclusivePendingAction)
                         {
                             if (PluginManager.DependenciesMet(plugin.Dependencies, installed))
                             {
-                                @* Don't show the "Install" button if plugin has been disabled *@
-                                @if (!disabled)
+                                @if (disabled is null)
                                 {
                                     <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" asp-route-version="@plugin.Version">
                                         <button type="submit" class="btn btn-primary">Install</button>
+                                    </form>
+                                }
+                                else if (disabled != plugin.Version)
+                                {
+                                    <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" asp-route-version="@plugin.Version" asp-route-update="true">
+                                        <button type="submit" class="btn btn-primary">Update</button>
                                     </form>
                                 }
                             }
@@ -413,7 +430,7 @@
                                 </form>
                             }
                         }
-                        @if (disabled)
+                        @if (disabled is not null && pendingAction is null)
                         {
                             <form asp-action="UnInstallPlugin" asp-route-plugin="@plugin.Identifier">
                                 <button type="submit" class="btn btn-sm btn-outline-danger">Uninstall</button>

@@ -39,5 +39,7 @@
   "submitting_nfc": "Invio NFC in corso...",
   "payment_received": "Pagamento ricevuto",
   "payment_received_body": "Il tuo pagamento è stato ricevuto ed è in fase di elaborazione",
-  "payment_received_confirmations": "Una volta che il tuo pagamento avrà ricevuto {{requiredConfirmations}} conferme sulla blockchain {{cryptoCode}}, la tua fattura verrà saldata."
+  "payment_received_confirmations": "Una volta che il tuo pagamento avrà ricevuto {{requiredConfirmations}} conferme sulla blockchain {{cryptoCode}}, la tua fattura verrà saldata.",
+  "invoice_paidpartial_body": "Un'Fattura è valida solo per {{minutes}} minuti. Questa fattura è scaduta con un pagamento parziale. Si prega di contattarci in modo da poter completare il suo ordine.",
+  "contact_us": "Contattaci"
 }

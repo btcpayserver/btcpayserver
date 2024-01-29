@@ -39,5 +39,7 @@
   "submitting_nfc": "שליחת NFC...",
   "payment_received": "התשלום התקבל",
   "payment_received_body": "התשלום שלך התקבל ומעובד כעת",
-  "payment_received_confirmations": "כאשר התשלום שלך יקבל {{requiredConfirmations}} אישורים בצד שרת ה- blockchain של {{cryptoCode}}, החשבונית שלך תישוב."
+  "payment_received_confirmations": "כאשר התשלום שלך יקבל {{requiredConfirmations}} אישורים בצד שרת ה- blockchain של {{cryptoCode}}, החשבונית שלך תישוב.",
+  "invoice_paidpartial_body": "חשבונית זו בתוקף ל{{minutes}} דקות בלבד. החשבונית פגה תוקפה עם תשלום חלקי. אנא צור קשר עמנו כדי שנוכל לבצע את הזמנתך.",
+  "contact_us": "צור קשר"
 }

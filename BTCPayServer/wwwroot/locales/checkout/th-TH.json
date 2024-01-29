@@ -39,5 +39,7 @@
   "submitting_nfc": "ส่ง NFC ...",
   "payment_received": "ได้รับการชำระเงินแล้ว",
   "payment_received_body": "การชำระเงินของคุณได้รับและกำลังดำเนินการต่อไป",
-  "payment_received_confirmations": "เมื่อการชำระเงินของคุณได้รับการยืนยัน {{requiredConfirmations}} ครั้งบนบล็อกเชน {{cryptoCode}} ใบแจ้งหนี้ของคุณจะถูกชำระแล้ว"
+  "payment_received_confirmations": "เมื่อการชำระเงินของคุณได้รับการยืนยัน {{requiredConfirmations}} ครั้งบนบล็อกเชน {{cryptoCode}} ใบแจ้งหนี้ของคุณจะถูกชำระแล้ว",
+  "invoice_paidpartial_body": "ใบแจ้งหนี้มีความใช้ได้เฉพาะ {{minutes}} นาที เนื่องจากการชำ",
+  "contact_us": "ติดต่อเรา"
 }

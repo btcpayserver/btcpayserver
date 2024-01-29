@@ -39,5 +39,7 @@
   "submitting_nfc": "NFCを送信しています…",
   "payment_received": "支払いが受領されました",
   "payment_received_body": "お支払いを受け付けました。現在処理中です",
-  "payment_received_confirmations": "{{cryptoCode}}ブロックチェーン上で{{requiredConfirmations}}回の承認が完了すると、支払いが完了し、請求書が決済されます。"
+  "payment_received_confirmations": "{{cryptoCode}}ブロックチェーン上で{{requiredConfirmations}}回の承認が完了すると、支払いが完了し、請求書が決済されます。",
+  "invoice_paidpartial_body": "請求書は{{minutes}}分間のみ有効です。この請求書は一部支払いで期限切れになりました。ご注文を完了できるように、お問い合わせください。",
+  "contact_us": "お問い合わせください"
 }

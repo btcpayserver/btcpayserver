@@ -108,6 +108,7 @@ namespace BTCPayServer.Plugins
         public void UninstallPlugin(string plugin)
         {
             var dest = _dataDirectories.Value.PluginDir;
+            PluginManager.CancelCommands(dest, plugin);
             PluginManager.QueueCommands(dest, ("delete", plugin));
         }
 
@@ -155,9 +156,9 @@ namespace BTCPayServer.Plugins
             PluginManager.CancelCommands(_dataDirectories.Value.PluginDir, plugin);
         }
 
-        public string[] GetDisabledPlugins()
+        public Dictionary<string, Version> GetDisabledPlugins()
         {
-            return PluginManager.GetDisabledPlugins(_dataDirectories.Value.PluginDir).ToArray();
+            return PluginManager.GetDisabledPlugins(_dataDirectories.Value.PluginDir);
         }
     }
 }

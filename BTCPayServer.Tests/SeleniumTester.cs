@@ -77,11 +77,7 @@ namespace BTCPayServer.Tests
                     // A bit less than test timeout
                     TimeSpan.FromSeconds(50));
             }
-            
-            // reset test server policies
-            var settings = Server.PayTester.GetService<SettingsRepository>();
-            await settings.UpdateSetting(new PoliciesSettings { LockSubscription = false, RequiresUserApproval = false });
-            
+
             ServerUri = Server.PayTester.ServerUri;
             Driver.Manage().Window.Maximize();
 

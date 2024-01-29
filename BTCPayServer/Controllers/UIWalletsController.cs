@@ -571,6 +571,7 @@ namespace BTCPayServer.Controllers
                 return NotFound();
 
             vm.SupportRBF = network.SupportRBF;
+            vm.AllowFeeBump = network.SupportRBF ? WalletSendModel.ThreeStateBool.Yes : WalletSendModel.ThreeStateBool.No;
             vm.NBXSeedAvailable = await GetSeed(walletId, network) != null;
             if (!string.IsNullOrEmpty(bip21))
             {

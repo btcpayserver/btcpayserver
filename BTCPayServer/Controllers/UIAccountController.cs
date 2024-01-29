@@ -106,8 +106,9 @@ namespace BTCPayServer.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> Login(string returnUrl = null, string email = null)
         {
-            if (User.Identity is { IsAuthenticated: true } && string.IsNullOrEmpty(returnUrl))
+            if (User.Identity.IsAuthenticated && string.IsNullOrEmpty(returnUrl))
                 return RedirectToLocal();
+
             // Clear the existing external cookie to ensure a clean login process
             await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
 
@@ -456,11 +457,6 @@ namespace BTCPayServer.Controllers
             {
                 _logger.LogInformation("User with ID {UserId} logged in with 2fa", user.Id);
                 return RedirectToLocal(returnUrl);
-            }
-            if (result.IsLockedOut)
-            {
-                _logger.LogWarning("User with ID {UserId} account locked out", user.Id);
-                return RedirectToAction(nameof(Lockout), new { user.LockoutEnd });
             }
 
             _logger.LogWarning("Invalid authenticator code entered for user with ID {UserId}", user.Id);

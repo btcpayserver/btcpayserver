@@ -93,16 +93,10 @@ const posCommon = {
         formatCurrency (value, withSymbol) {
             const currency = this.currencyCode
             if (currency === 'BTC' || currency === 'SATS') return this.formatCrypto(value, withSymbol)
-
-            // Check if the currency is COP or ARS (exclude decimal places)
-            const excludeDecimalPlaces = ['COP', 'ARS'].includes(currency);
-
             const { divisibility } = this.currencyInfo;
-            const maximumFractionDigits = excludeDecimalPlaces ? 0 : divisibility;
-            const minimumFractionDigits = excludeDecimalPlaces ? 0 : divisibility;
             const locale = this.getLocale(currency);
             const style = withSymbol ? 'currency' : 'decimal'
-            const opts = { currency, style, maximumFractionDigits, minimumFractionDigits }
+            const opts = { currency, style, maximumFractionDigits: divisibility, minimumFractionDigits: divisibility }
             try {
                 return new Intl.NumberFormat(locale, opts).format(value)
             } catch (err) {

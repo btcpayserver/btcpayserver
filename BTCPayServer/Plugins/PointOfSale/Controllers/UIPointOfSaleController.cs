@@ -92,6 +92,8 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 EmbeddedCSS = settings.EmbeddedCSS,
                 CustomCSSLink = settings.CustomCSSLink
             };
+            // Check if the currency is COP or ARS (exclude decimal places)
+            bool excludeDivisibility = new[] { "ARS", "COP" }.Contains(settings.Currency);
 
             return View($"PointOfSale/Public/{viewType}", new ViewPointOfSaleViewModel
             {
@@ -110,7 +112,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 CurrencyInfo = new ViewPointOfSaleViewModel.CurrencyInfoData
                 {
                     CurrencySymbol = string.IsNullOrEmpty(numberFormatInfo.CurrencySymbol) ? settings.Currency : numberFormatInfo.CurrencySymbol,
-                    Divisibility = numberFormatInfo.CurrencyDecimalDigits,
+                    Divisibility = excludeDivisibility ? 0 : numberFormatInfo.CurrencyDecimalDigits,
                     DecimalSeparator = numberFormatInfo.CurrencyDecimalSeparator,
                     ThousandSeparator = numberFormatInfo.NumberGroupSeparator,
                     Prefixed = new[] { 0, 2 }.Contains(numberFormatInfo.CurrencyPositivePattern),

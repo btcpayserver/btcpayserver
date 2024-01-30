@@ -513,8 +513,6 @@ namespace BTCPayServer.Controllers
                 recommendedFees.Select(tuple => tuple.GetAwaiter().GetResult()).Where(option => option != null).ToList();
 
             model.FeeSatoshiPerByte = recommendedFees[1].GetAwaiter().GetResult()?.FeeRate;
-            model.SupportRBF = network.SupportRBF;
-
             model.CryptoDivisibility = network.Divisibility;
             using (CancellationTokenSource cts = new CancellationTokenSource())
             {
@@ -570,8 +568,6 @@ namespace BTCPayServer.Controllers
             if (network == null || network.ReadonlyWallet)
                 return NotFound();
 
-            vm.SupportRBF = network.SupportRBF;
-            vm.AllowFeeBump = network.SupportRBF ? WalletSendModel.ThreeStateBool.Yes : WalletSendModel.ThreeStateBool.No;
             vm.NBXSeedAvailable = await GetSeed(walletId, network) != null;
             if (!string.IsNullOrEmpty(bip21))
             {

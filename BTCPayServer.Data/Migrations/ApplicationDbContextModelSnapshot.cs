@@ -112,6 +112,9 @@ namespace BTCPayServer.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("INTEGER");
 
+                    b.Property<bool>("Approved")
+                        .HasColumnType("INTEGER");
+
                     b.Property<byte[]>("Blob")
                         .HasColumnType("BLOB");
 
@@ -156,6 +159,9 @@ namespace BTCPayServer.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("PhoneNumberConfirmed")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("RequiresApproval")
                         .HasColumnType("INTEGER");
 
                     b.Property<bool>("RequiresEmailConfirmation")

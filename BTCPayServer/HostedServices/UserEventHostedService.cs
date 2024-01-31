@@ -6,6 +6,8 @@ using BTCPayServer.Events;
 using BTCPayServer.Logging;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Mails;
+using BTCPayServer.Services.Notifications;
+using BTCPayServer.Services.Notifications.Blobs;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -19,20 +21,27 @@ namespace BTCPayServer.HostedServices
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly EmailSenderFactory _emailSenderFactory;
+        private readonly NotificationSender _notificationSender;
         private readonly LinkGenerator _generator;
 
-
-        public UserEventHostedService(EventAggregator eventAggregator, UserManager<ApplicationUser> userManager,
-            EmailSenderFactory emailSenderFactory, LinkGenerator generator, Logs logs) : base(eventAggregator, logs)
+        public UserEventHostedService(
+            EventAggregator eventAggregator,
+            UserManager<ApplicationUser> userManager,
+            EmailSenderFactory emailSenderFactory,
+            NotificationSender notificationSender,
+            LinkGenerator generator,
+            Logs logs) : base(eventAggregator, logs)
         {
             _userManager = userManager;
             _emailSenderFactory = emailSenderFactory;
+            _notificationSender = notificationSender;
             _generator = generator;
         }
 
         protected override void SubscribeToEvents()
         {
             Subscribe<UserRegisteredEvent>();
+            Subscribe<UserApprovedEvent>();
             Subscribe<UserPasswordResetRequestedEvent>();
         }
 
@@ -40,30 +49,39 @@ namespace BTCPayServer.HostedServices
         {
             string code;
             string callbackUrl;
+            Uri uri;
+            HostString host;
+            ApplicationUser user;
             MailboxAddress address;
+            IEmailSender emailSender;
             UserPasswordResetRequestedEvent userPasswordResetRequestedEvent;
             switch (evt)
             {
                 case UserRegisteredEvent userRegisteredEvent:
+                    user = userRegisteredEvent.User;
                     Logs.PayServer.LogInformation(
-                        $"A new user just registered {userRegisteredEvent.User.Email} {(userRegisteredEvent.Admin ? "(admin)" : "")}");
-                    if (!userRegisteredEvent.User.EmailConfirmed && userRegisteredEvent.User.RequiresEmailConfirmation)
+                        $"A new user just registered {user.Email} {(userRegisteredEvent.Admin ? "(admin)" : "")}");
+                    if (user.RequiresApproval && !user.Approved)
                     {
-                        code = await _userManager.GenerateEmailConfirmationTokenAsync(userRegisteredEvent.User);
-                        callbackUrl = _generator.EmailConfirmationLink(userRegisteredEvent.User.Id, code,
-                            userRegisteredEvent.RequestUri.Scheme,
-                            new HostString(userRegisteredEvent.RequestUri.Host, userRegisteredEvent.RequestUri.Port),
-                            userRegisteredEvent.RequestUri.PathAndQuery);
+                        await _notificationSender.SendNotification(new AdminScope(), new NewUserRequiresApprovalNotification(user));
+                    }
+                    if (!user.EmailConfirmed && user.RequiresEmailConfirmation)
+                    {
+                        uri = userRegisteredEvent.RequestUri;
+                        host = new HostString(uri.Host, uri.Port);
+                        code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                        callbackUrl = _generator.EmailConfirmationLink(user.Id, code, uri.Scheme, host, uri.PathAndQuery);
                         userRegisteredEvent.CallbackUrlGenerated?.SetResult(new Uri(callbackUrl));
-                        address = userRegisteredEvent.User.GetMailboxAddress();
-                        (await _emailSenderFactory.GetEmailSender()).SendEmailConfirmation(address, callbackUrl);
+                        address = user.GetMailboxAddress();
+                        emailSender = await _emailSenderFactory.GetEmailSender();
+                        emailSender.SendEmailConfirmation(address, callbackUrl);
                     }
                     else if (!await _userManager.HasPasswordAsync(userRegisteredEvent.User))
                     {
-                        userPasswordResetRequestedEvent = new UserPasswordResetRequestedEvent()
+                        userPasswordResetRequestedEvent = new UserPasswordResetRequestedEvent
                         {
                             CallbackUrlGenerated = userRegisteredEvent.CallbackUrlGenerated,
-                            User = userRegisteredEvent.User,
+                            User = user,
                             RequestUri = userRegisteredEvent.RequestUri
                         };
                         goto passwordSetter;
@@ -72,22 +90,33 @@ namespace BTCPayServer.HostedServices
                     {
                         userRegisteredEvent.CallbackUrlGenerated?.SetResult(null);
                     }
-
                     break;
+
+                case UserApprovedEvent userApprovedEvent:
+                    if (userApprovedEvent.Approved)
+                    {
+                        uri = userApprovedEvent.RequestUri;
+                        host = new HostString(uri.Host, uri.Port);
+                        address = userApprovedEvent.User.GetMailboxAddress();
+                        callbackUrl = _generator.LoginLink(uri.Scheme, host, uri.PathAndQuery);
+                        emailSender = await _emailSenderFactory.GetEmailSender();
+                        emailSender.SendApprovalConfirmation(address, callbackUrl);
+                    }
+                    break;
+
                 case UserPasswordResetRequestedEvent userPasswordResetRequestedEvent2:
                     userPasswordResetRequestedEvent = userPasswordResetRequestedEvent2;
 passwordSetter:
-                    code = await _userManager.GeneratePasswordResetTokenAsync(userPasswordResetRequestedEvent.User);
-                    var newPassword = await _userManager.HasPasswordAsync(userPasswordResetRequestedEvent.User);
-                    callbackUrl = _generator.ResetPasswordCallbackLink(userPasswordResetRequestedEvent.User.Id, code,
-                        userPasswordResetRequestedEvent.RequestUri.Scheme,
-                        new HostString(userPasswordResetRequestedEvent.RequestUri.Host,
-                            userPasswordResetRequestedEvent.RequestUri.Port),
-                        userPasswordResetRequestedEvent.RequestUri.PathAndQuery);
+                    uri = userPasswordResetRequestedEvent.RequestUri;
+                    host = new HostString(uri.Host, uri.Port);
+                    user = userPasswordResetRequestedEvent.User;
+                    code = await _userManager.GeneratePasswordResetTokenAsync(user);
+                    var newPassword = await _userManager.HasPasswordAsync(user);
+                    callbackUrl = _generator.ResetPasswordCallbackLink(user.Id, code, uri.Scheme, host, uri.PathAndQuery);
                     userPasswordResetRequestedEvent.CallbackUrlGenerated?.SetResult(new Uri(callbackUrl));
-                    address = userPasswordResetRequestedEvent.User.GetMailboxAddress();
-                    (await _emailSenderFactory.GetEmailSender())
-                        .SendSetPasswordConfirmation(address, callbackUrl, newPassword);
+                    address = user.GetMailboxAddress();
+                    emailSender = await _emailSenderFactory.GetEmailSender();
+                    emailSender.SendSetPasswordConfirmation(address, callbackUrl, newPassword);
                     break;
             }
         }

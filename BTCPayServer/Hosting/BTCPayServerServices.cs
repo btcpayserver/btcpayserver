@@ -436,8 +436,8 @@ namespace BTCPayServer.Hosting
             services.AddScoped<IAuthorizationHandler, BitpayAuthorizationHandler>();
 
             services.AddSingleton<INotificationHandler, NewVersionNotification.Handler>();
+            services.AddSingleton<INotificationHandler, NewUserRequiresApprovalNotification.Handler>();
             services.AddSingleton<INotificationHandler, PluginUpdateNotification.Handler>();
-
             services.AddSingleton<INotificationHandler, InvoiceEventNotification.Handler>();
             services.AddSingleton<INotificationHandler, PayoutNotification.Handler>();
             services.AddSingleton<INotificationHandler, ExternalPayoutTransactionNotification.Handler>();

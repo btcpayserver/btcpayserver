@@ -11,7 +11,8 @@ namespace BTCPayServer.Models.ServerViewModels
             public string Id { get; set; }
             public string Name { get; set; }
             public string Email { get; set; }
-            public bool Verified { get; set; }
+            public bool? EmailConfirmed { get; set; }
+            public bool? Approved { get; set; }
             public bool Disabled { get; set; }
             public bool IsAdmin { get; set; }
             public DateTimeOffset? Created { get; set; }

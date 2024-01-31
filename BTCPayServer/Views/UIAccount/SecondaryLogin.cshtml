@@ -13,9 +13,9 @@
     <partial name="_ValidationScriptsPartial" />
 }
 
-@if (Model.LoginWith2FaViewModel != null && Model.LoginWithFido2ViewModel != null&& Model.LoginWithLNURLAuthViewModel != null)
+@if (Model.LoginWith2FaViewModel != null && Model.LoginWithFido2ViewModel != null && Model.LoginWithLNURLAuthViewModel != null)
 {
-    <div asp-validation-summary="ModelOnly"></div>
+    <div asp-validation-summary="ModelOnly" class="@(ViewContext.ModelState.ErrorCount.Equals(1) ? "no-marker" : "")"></div>
 }
 else if (Model.LoginWith2FaViewModel == null && Model.LoginWithFido2ViewModel == null && Model.LoginWithLNURLAuthViewModel == null)
 {

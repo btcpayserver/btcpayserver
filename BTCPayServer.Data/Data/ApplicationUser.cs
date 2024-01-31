@@ -11,6 +11,8 @@ namespace BTCPayServer.Data
     public class ApplicationUser : IdentityUser, IHasBlob<UserBlob>
     {
         public bool RequiresEmailConfirmation { get; set; }
+        public bool RequiresApproval { get; set; }
+        public bool Approved { get; set; }
         public List<StoredFile> StoredFiles { get; set; }
         [Obsolete("U2F support has been replace with FIDO2")]
         public List<U2FDevice> U2FDevices { get; set; }

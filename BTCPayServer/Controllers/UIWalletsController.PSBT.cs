@@ -42,7 +42,7 @@ namespace BTCPayServer.Controllers
                 psbtDestination.Amount = Money.Coins(transactionOutput.Amount.Value);
                 psbtDestination.SubstractFees = transactionOutput.SubtractFeesFromOutput;
             }
-            psbtRequest.RBF = true;
+            psbtRequest.RBF = network.SupportRBF ? true : null;
             psbtRequest.AlwaysIncludeNonWitnessUTXO = sendModel.AlwaysIncludeNonWitnessUTXO;
 
             psbtRequest.FeePreference = new FeePreference();

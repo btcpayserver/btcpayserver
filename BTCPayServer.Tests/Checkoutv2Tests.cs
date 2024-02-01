@@ -39,7 +39,6 @@ namespace BTCPayServer.Tests
             var supportUrl = "https://support.satoshisteaks.com/{InvoiceId}/";
             s.GoToStore();
             s.Driver.FindElement(By.Id("StoreWebsite")).SendKeys(storeUrl);
-            s.Driver.FindElement(By.Id("StoreSupportUrl")).SendKeys(supportUrl);
             s.Driver.FindElement(By.Id("Save")).Click();
             Assert.Contains("Store successfully updated", s.FindAlertMessage().Text);
 
@@ -47,6 +46,7 @@ namespace BTCPayServer.Tests
             s.Driver.WaitForAndClick(By.Id("Presets"));
             s.Driver.WaitForAndClick(By.Id("Presets_InStore"));
             Assert.True(s.Driver.SetCheckbox(By.Id("ShowPayInWalletButton"), true));
+            s.Driver.FindElement(By.Id("SupportUrl")).SendKeys(supportUrl);
             s.Driver.FindElement(By.Id("Save")).SendKeys(Keys.Enter);
             Assert.Contains("Store successfully updated", s.FindAlertMessage().Text);
 

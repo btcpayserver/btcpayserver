@@ -432,11 +432,6 @@ namespace BTCPayServer.Tests
             Assert.Contains("Policies updated successfully", s.FindAlertMessage().Text);
             Assert.True(s.Driver.FindElement(By.Id("RequiresUserApproval")).Selected);
             
-            // Check user create view has approval checkbox
-            s.GoToServer(ServerNavPages.Users);
-            s.Driver.FindElement(By.Id("CreateUser")).Click();
-            Assert.False(s.Driver.FindElement(By.Id("Approved")).Selected);
-            
             // Ensure there is no unread notification yet
             s.Driver.ElementDoesNotExist(By.Id("NotificationsBadge"));
             s.Logout();

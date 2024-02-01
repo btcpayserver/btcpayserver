@@ -185,7 +185,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 RequiresEmailConfirmation = policies.RequiresConfirmedEmail,
                 RequiresApproval = policies.RequiresUserApproval,
                 Created = DateTimeOffset.UtcNow,
-                Approved = !anyAdmin && isAdmin // auto-approve first admin
+                Approved = isAdmin // auto-approve first admin and users created by an admin
             };
             var passwordValidation = await this._passwordValidator.ValidateAsync(_userManager, user, request.Password);
             if (!passwordValidation.Succeeded)

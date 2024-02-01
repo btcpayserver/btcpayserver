@@ -147,7 +147,6 @@ namespace BTCPayServer.Controllers
         [HttpGet("server/users/new")]
         public IActionResult CreateUser()
         {
-            ViewData["AllowRequestApproval"] = _policiesSettings.RequiresUserApproval;
             ViewData["AllowRequestEmailConfirmation"] = _policiesSettings.RequiresConfirmedEmail;
             return View();
         }
@@ -155,7 +154,6 @@ namespace BTCPayServer.Controllers
         [HttpPost("server/users/new")]
         public async Task<IActionResult> CreateUser(RegisterFromAdminViewModel model)
         {
-            ViewData["AllowRequestApproval"] = _policiesSettings.RequiresUserApproval;
             ViewData["AllowRequestEmailConfirmation"] = _policiesSettings.RequiresConfirmedEmail;
             if (!_Options.CheatMode)
                 model.IsAdmin = false;
@@ -168,7 +166,7 @@ namespace BTCPayServer.Controllers
                     EmailConfirmed = model.EmailConfirmed,
                     RequiresEmailConfirmation = _policiesSettings.RequiresConfirmedEmail,
                     RequiresApproval = _policiesSettings.RequiresUserApproval,
-                    Approved = model.Approved,
+                    Approved = true, // auto-approve users created by an admin
                     Created = DateTimeOffset.UtcNow
                 };
 
@@ -365,8 +363,5 @@ namespace BTCPayServer.Controllers
 
         [Display(Name = "Email confirmed?")]
         public bool EmailConfirmed { get; set; }
-
-        [Display(Name = "User approved?")]
-        public bool Approved { get; set; }
     }
 }

@@ -32,8 +32,6 @@
     </form>
 }
 
-<partial name="_StatusMessage" />
-
 <form method="post" asp-action="AuthorizeAPIKey">
     <input type="hidden" asp-for="RedirectUrl" value="@Model.RedirectUrl"/>
     <input type="hidden" asp-for="Permissions" value="@Model.Permissions"/>

@@ -48,6 +48,9 @@ namespace BTCPayServer.Services.Rates
             { "XXMR", "XMR" },
             { "XETH", "ETH" },
             { "USDC", "USDC" }, // On A=A purpose
+            { "XZEC", "ZEC" },
+            { "XLTC", "LTC" },
+            { "XXRP", "XRP" },
         };
 
         string Normalize(string ticker)

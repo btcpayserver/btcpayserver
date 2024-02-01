@@ -34,7 +34,7 @@ public class DisplayFormatter
     public string Currency(decimal value, string currency, CurrencyFormat format = CurrencyFormat.Code)
     {
         var provider = _currencyNameTable.GetNumberFormatInfo(currency, true);
-        var currencyData = _currencyNameTable.GetCurrencyData(currency, true);
+         var currencyData = _currencyNameTable.GetCurrencyData(currency, true);
         var divisibility = currencyData.Divisibility;
         value = value.RoundToSignificant(ref divisibility);
         if (divisibility != provider.CurrencyDecimalDigits)

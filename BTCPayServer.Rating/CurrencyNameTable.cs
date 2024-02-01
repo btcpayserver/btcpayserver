@@ -77,7 +77,19 @@ namespace BTCPayServer.Services.Rates
                             continue;
                         try
                         {
-                            _CurrencyProviders.TryAdd(new RegionInfo(culture.LCID).ISOCurrencySymbol, culture);
+                            if (new RegionInfo(culture.LCID).ISOCurrencySymbol.Equals("ARS") || new RegionInfo(culture.LCID).ISOCurrencySymbol.Equals("COP"))
+                            {
+                                var modifiedCulture = new CultureInfo(culture.Name);
+                                NumberFormatInfo modifiedNumberFormat = (NumberFormatInfo)modifiedCulture.NumberFormat.Clone();
+                                modifiedNumberFormat.CurrencyDecimalDigits = 0;
+                                modifiedCulture.NumberFormat = modifiedNumberFormat;
+
+                                _CurrencyProviders.TryAdd(new RegionInfo(culture.LCID).ISOCurrencySymbol, modifiedCulture);
+                            }
+                            else
+                            {
+                                _CurrencyProviders.TryAdd(new RegionInfo(culture.LCID).ISOCurrencySymbol, culture);
+                            }
                         }
                         catch { }
                     }

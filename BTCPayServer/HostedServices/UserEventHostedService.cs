@@ -58,11 +58,21 @@ public class UserEventHostedService(
                 var requiresEmailConfirmation = user.RequiresEmailConfirmation && !user.EmailConfirmed;
 
                 // log registration info and send notification
-                Logs.PayServer.LogInformation("New {Type} {Email} {Info}", type, user.Email, info);
+                var newUserInfo = $"New {type} {user.Email} {info}";
+                Logs.PayServer.LogInformation(newUserInfo);
+
+                emailSender = await emailSenderFactory.GetEmailSender();
 
                 if (requiresApproval)
                 {
                     await notificationSender.SendNotification(new AdminScope(), new NewUserRequiresApprovalNotification(user));
+
+                    var admins = await userManager.GetUsersInRoleAsync(Roles.ServerAdmin);
+                    var approvalLink = generator.UserDetailsLink(user.Id, uri.Scheme, host, uri.PathAndQuery);
+                    foreach (var admin in admins)
+                    {
+                        emailSender.SendNewUserInfo(admin.GetMailboxAddress(), newUserInfo, approvalLink);
+                    }
                 }
 
                 // set callback result and send email to user
@@ -72,7 +82,6 @@ public class UserEventHostedService(
                     callbackUrl = generator.InvitationLink(user.Id, code, uri.Scheme, host, uri.PathAndQuery);
                     ev.CallbackUrlGenerated?.SetResult(new Uri(callbackUrl));
 
-                    emailSender = await emailSenderFactory.GetEmailSender();
                     emailSender.SendInvitation(user.GetMailboxAddress(), callbackUrl);
                 }
                 else if (requiresEmailConfirmation)
@@ -81,7 +90,6 @@ public class UserEventHostedService(
                     callbackUrl = generator.EmailConfirmationLink(user.Id, code, uri.Scheme, host, uri.PathAndQuery);
                     ev.CallbackUrlGenerated?.SetResult(new Uri(callbackUrl));
 
-                    emailSender = await emailSenderFactory.GetEmailSender();
                     emailSender.SendEmailConfirmation(user.GetMailboxAddress(), callbackUrl);
                 }
                 else

@@ -40,5 +40,11 @@ namespace BTCPayServer.Services
             emailSender.SendEmail(address, "BTCPay Server: Invitation",
                 $"Please complete your account setup by clicking this link: <a href='{HtmlEncoder.Default.Encode(link)}'>link</a>");
         }
+
+        public static void SendNewUserInfo(this IEmailSender emailSender, MailboxAddress address, string newUserInfo, string link)
+        {
+            emailSender.SendEmail(address, $"BTCPay Server: {newUserInfo}",
+                $"{newUserInfo}. You can verify and approve the account here: <a href='{HtmlEncoder.Default.Encode(link)}'>User details</a>");
+        }
     }
 }

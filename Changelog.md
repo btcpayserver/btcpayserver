@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.12.5
+
+### Bug fixes
+
+* Fix: Emergency fix for stores using Kraken rate source @NicolasDorier
+
 ## 1.12.4
 
 ### Bug fixes

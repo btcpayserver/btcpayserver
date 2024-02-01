@@ -161,7 +161,6 @@ namespace BTCPayServer.Controllers
                 model.IsAdmin = false;
             if (ModelState.IsValid)
             {
-                IdentityResult result;
                 var user = new ApplicationUser
                 {
                     UserName = model.Email,
@@ -173,14 +172,9 @@ namespace BTCPayServer.Controllers
                     Created = DateTimeOffset.UtcNow
                 };
 
-                if (!string.IsNullOrEmpty(model.Password))
-                {
-                    result = await _UserManager.CreateAsync(user, model.Password);
-                }
-                else
-                {
-                    result = await _UserManager.CreateAsync(user);
-                }
+                var result = string.IsNullOrEmpty(model.Password)
+                    ? await _UserManager.CreateAsync(user)
+                    : await _UserManager.CreateAsync(user, model.Password);
 
                 if (result.Succeeded)
                 {
@@ -188,11 +182,13 @@ namespace BTCPayServer.Controllers
                         model.IsAdmin = false;
 
                     var tcs = new TaskCompletionSource<Uri>();
+                    var currentUser = await _UserManager.GetUserAsync(HttpContext.User);
 
-                    _eventAggregator.Publish(new UserRegisteredEvent
+                    _eventAggregator.Publish(new UserInvitedEvent
                     {
                         RequestUri = Request.GetAbsoluteRootUri(),
                         User = user,
+                        InvitedByUser = currentUser,
                         Admin = model.IsAdmin,
                         CallbackUrlGenerated = tcs
                     });

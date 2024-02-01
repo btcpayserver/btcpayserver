@@ -349,17 +349,18 @@ namespace BTCPayServer.Tests
             s.GoToHome();
 
             //Change Password & Log Out
+            var newPassword = "abc???";
             s.GoToProfile(ManageNavPages.ChangePassword);
             s.Driver.FindElement(By.Id("OldPassword")).SendKeys("123456");
-            s.Driver.FindElement(By.Id("NewPassword")).SendKeys("abc???");
-            s.Driver.FindElement(By.Id("ConfirmPassword")).SendKeys("abc???");
+            s.Driver.FindElement(By.Id("NewPassword")).SendKeys(newPassword);
+            s.Driver.FindElement(By.Id("ConfirmPassword")).SendKeys(newPassword);
             s.Driver.FindElement(By.Id("UpdatePassword")).Click();
             s.Logout();
             s.Driver.AssertNoError();
 
             //Log In With New Password
             s.Driver.FindElement(By.Id("Email")).SendKeys(email);
-            s.Driver.FindElement(By.Id("Password")).SendKeys("abc???");
+            s.Driver.FindElement(By.Id("Password")).SendKeys(newPassword);
             s.Driver.FindElement(By.Id("LoginButton")).Click();
 
             s.GoToHome();
@@ -383,11 +384,14 @@ namespace BTCPayServer.Tests
             s.Driver.Navigate().GoToUrl(url);
             Assert.Equal("hidden", s.Driver.FindElement(By.Id("Email")).GetAttribute("type"));
             Assert.Equal(usr, s.Driver.FindElement(By.Id("Email")).GetAttribute("value"));
+            Assert.Equal("Set your password", s.Driver.FindElement(By.CssSelector("h4")).Text);
+            Assert.Contains("Invitation accepted. Please set your password.", s.FindAlertMessage(StatusMessageModel.StatusSeverity.Info).Text);
 
             s.Driver.FindElement(By.Id("Password")).SendKeys("123456");
             s.Driver.FindElement(By.Id("ConfirmPassword")).SendKeys("123456");
             s.Driver.FindElement(By.Id("SetPassword")).Click();
-            s.FindAlertMessage();
+            Assert.Contains("Password successfully set.", s.FindAlertMessage().Text);
+            
             s.Driver.FindElement(By.Id("Email")).SendKeys(usr);
             s.Driver.FindElement(By.Id("Password")).SendKeys("123456");
             s.Driver.FindElement(By.Id("LoginButton")).Click();

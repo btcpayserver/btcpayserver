@@ -672,13 +672,12 @@ namespace BTCPayServer.Controllers
             var result = await _userManager.ConfirmEmailAsync(user, code);
             if (!await _userManager.HasPasswordAsync(user))
             {
-
                 TempData.SetStatusMessageModel(new StatusMessageModel
                 {
                     Severity = StatusMessageModel.StatusSeverity.Info,
-                    Message = "Your email has been confirmed but you still need to set your password."
+                    Message = "Your email has been confirmed. Please set your password."
                 });
-                return RedirectToAction("SetPassword", new { email = user.Email, code = await _userManager.GeneratePasswordResetTokenAsync(user) });
+                return await RedirectToSetPassword(user);
             }
 
             if (result.Succeeded)
@@ -688,7 +687,7 @@ namespace BTCPayServer.Controllers
                     Severity = StatusMessageModel.StatusSeverity.Success,
                     Message = "Your email has been confirmed."
                 });
-                return RedirectToAction("Login", new { email = user.Email });
+                return RedirectToAction(nameof(Login), new { email = user.Email });
             }
 
             return View("Error");
@@ -743,14 +742,20 @@ namespace BTCPayServer.Controllers
                 throw new ApplicationException("A code must be supplied for password reset.");
             }
 
+            var user = string.IsNullOrEmpty(userId) ? null : await _userManager.FindByIdAsync(userId);
+            var hasPassword = user != null && await _userManager.HasPasswordAsync(user);
             if (!string.IsNullOrEmpty(userId))
             {
-                var user = await _userManager.FindByIdAsync(userId);
                 email = user?.Email;
             }
 
-            var model = new SetPasswordViewModel { Code = code, Email = email, EmailSetInternally = !string.IsNullOrEmpty(email) };
-            return View(model);
+            return View(new SetPasswordViewModel
+            {
+                Code = code,
+                Email = email,
+                EmailSetInternally = !string.IsNullOrEmpty(email),
+                HasPassword = hasPassword
+            });
         }
 
         [HttpPost("/login/set-password")]
@@ -762,6 +767,7 @@ namespace BTCPayServer.Controllers
             {
                 return View(model);
             }
+            
             var user = await _userManager.FindByEmailAsync(model.Email);
             if (!UserService.TryCanLogin(user, out _))
             {
@@ -781,7 +787,56 @@ namespace BTCPayServer.Controllers
             }
 
             AddErrors(result);
+            model.HasPassword = await _userManager.HasPasswordAsync(user);
             return View(model);
+        }
+
+        [AllowAnonymous]
+        [HttpGet("/invite/{userId}/{code}")]
+        public async Task<IActionResult> AcceptInvite(string userId, string code)
+        {
+            if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(code))
+            {
+                return NotFound();
+            }
+
+            var user = await _userManager.FindByInvitationTokenAsync(userId, Uri.UnescapeDataString(code));
+            if (user == null)
+            {
+                return NotFound();
+            }
+            
+            var requiresEmailConfirmation = user.RequiresEmailConfirmation && !user.EmailConfirmed;
+            var requiresSetPassword = !await _userManager.HasPasswordAsync(user);
+            
+            if (requiresEmailConfirmation)
+            {
+                return RedirectToAction(nameof(ConfirmEmail), new { userId, code });
+            }
+            if (requiresSetPassword)
+            {
+                TempData.SetStatusMessageModel(new StatusMessageModel
+                {
+                    Severity = StatusMessageModel.StatusSeverity.Info,
+                    Message = "Invitation accepted. Please set your password."
+                });
+                return await RedirectToSetPassword(user);
+            }
+
+            // Inform user that a password has been set on account creation
+            TempData.SetStatusMessageModel(new StatusMessageModel
+            {
+                Severity = StatusMessageModel.StatusSeverity.Info,
+                Message = "Your password has been set by the user who invited you."
+            });
+
+            return RedirectToAction(nameof(Login), new { email = user.Email });
+        }
+
+        private async Task<IActionResult> RedirectToSetPassword(ApplicationUser user)
+        {
+            var code = await _userManager.GeneratePasswordResetTokenAsync(user);
+            return RedirectToAction(nameof(SetPassword), new { userId = user.Id, email = user.Email, code });
         }
 
         #region Helpers

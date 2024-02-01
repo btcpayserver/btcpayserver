@@ -88,7 +88,8 @@ namespace BTCPayServer.Hosting
                 .PersistKeysToFileSystem(new DirectoryInfo(new DataDirectories().Configure(Configuration).DataDir));
             services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
-                .AddDefaultTokenProviders();
+                .AddDefaultTokenProviders()
+                .AddInvitationTokenProvider();
             services.Configure<AuthenticationOptions>(opts =>
             {
                 opts.DefaultAuthenticateScheme = null;

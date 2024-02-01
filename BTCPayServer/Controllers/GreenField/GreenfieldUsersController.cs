@@ -214,7 +214,8 @@ namespace BTCPayServer.Controllers.Greenfield
                 return this.CreateValidationError(ModelState);
             }
 
-            if (request.IsAdministrator is true)
+            var isNewAdmin = request.IsAdministrator is true;
+            if (isNewAdmin)
             {
                 if (!anyAdmin)
                 {
@@ -233,7 +234,13 @@ namespace BTCPayServer.Controllers.Greenfield
                     await _settingsRepository.FirstAdminRegistered(policies, _options.UpdateUrl != null, _options.DisableRegistration, Logs);
                 }
             }
-            _eventAggregator.Publish(new UserRegisteredEvent() { RequestUri = Request.GetAbsoluteRootUri(), User = user, Admin = request.IsAdministrator is true });
+
+            var currentUser = await _userManager.GetUserAsync(User);
+            var userEvent = currentUser is null
+                ? new UserRegisteredEvent { RequestUri = Request.GetAbsoluteRootUri(), User = user, Admin = isNewAdmin }
+                : new UserInvitedEvent { RequestUri = Request.GetAbsoluteRootUri(), User = user, Admin = isNewAdmin, InvitedByUser = currentUser };
+            _eventAggregator.Publish(userEvent);
+
             var model = await FromModel(user);
             return CreatedAtAction(string.Empty, model);
         }

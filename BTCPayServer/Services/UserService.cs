@@ -4,11 +4,9 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
-using BTCPayServer;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
-using BTCPayServer.Services.Stores;
 using BTCPayServer.Storage.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -22,7 +20,6 @@ namespace BTCPayServer.Services
         private readonly IServiceProvider _serviceProvider;
         private readonly StoredFileRepository _storedFileRepository;
         private readonly FileService _fileService;
-        private readonly StoreRepository _storeRepository;
         private readonly EventAggregator _eventAggregator;
         private readonly ApplicationDbContextFactory _applicationDbContextFactory;
         private readonly ILogger<UserService> _logger;
@@ -32,7 +29,6 @@ namespace BTCPayServer.Services
             StoredFileRepository storedFileRepository,
             FileService fileService,
             EventAggregator eventAggregator,
-            StoreRepository storeRepository,
             ApplicationDbContextFactory applicationDbContextFactory,
             ILogger<UserService> logger)
         {
@@ -40,7 +36,6 @@ namespace BTCPayServer.Services
             _storedFileRepository = storedFileRepository;
             _fileService = fileService;
             _eventAggregator = eventAggregator;
-            _storeRepository = storeRepository;
             _applicationDbContextFactory = applicationDbContextFactory;
             _logger = logger;
         }

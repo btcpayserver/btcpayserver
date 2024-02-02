@@ -192,21 +192,17 @@ namespace BTCPayServer.Controllers
                     });
                     
                     var callbackUrl = await tcs.Task;
-
-                    if ((user.RequiresEmailConfirmation && !user.EmailConfirmed) || !await _UserManager.HasPasswordAsync(user))
+                    var settings = await _SettingsRepository.GetSettingAsync<EmailSettings>() ?? new EmailSettings();
+                    var info = settings.IsComplete()
+                        ? "An invitation email has been sent.<br/>You may alternatively"
+                        : "An invitation email has not been sent, because the server does not have an email server configured.<br/> You need to";
+                    
+                    TempData.SetStatusMessageModel(new StatusMessageModel
                     {
-                        var settings = await _SettingsRepository.GetSettingAsync<EmailSettings>() ?? new EmailSettings();
-                        var info = settings.IsComplete()
-                            ? "An email has been sent to set the password.<br/>You may alternatively"
-                            : "An email has not been sent, because the server does not have an email server configured.<br/> You need to";
-                        
-                        TempData.SetStatusMessageModel(new StatusMessageModel
-                        {
-                            Severity = StatusMessageModel.StatusSeverity.Success,
-                            AllowDismiss = false,
-                            Html = $"Account created without password. {info} share this link with them: <a class='alert-link' href='{callbackUrl}'>{callbackUrl}</a>"
-                        });
-                    }
+                        Severity = StatusMessageModel.StatusSeverity.Success,
+                        AllowDismiss = false,
+                        Html = $"Account successfully created. {info} share this link with them: <a class='alert-link' href='{callbackUrl}'>{callbackUrl}</a>"
+                    });
                     return RedirectToAction(nameof(ListUsers));
                 }
 

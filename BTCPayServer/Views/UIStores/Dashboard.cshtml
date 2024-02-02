@@ -24,7 +24,9 @@
 {
     /* include chart library inline so that it instantly renders */
     <link rel="stylesheet" href="~/vendor/chartist/chartist.css" asp-append-version="true">
+    <link rel="stylesheet" href="~/vendor/chartist/chartist-plugin-tooltip.css" asp-append-version="true">
     <script src="~/vendor/chartist/chartist.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/chartist/chartist-plugin-tooltip.js" asp-append-version="true"></script>
     <script>
         const DashboardUtils = {
             toDefaultCurrency(amount, rate) {

@@ -120,7 +120,7 @@ public abstract class BaseAutomatedPayoutProcessor<T> : BaseAsyncService where T
                 
                 foreach (var payoutData in payouts.Where(payoutData => payoutData.State != PayoutState.AwaitingPayment))
                 {
-                    _eventAggregator.Publish(new PayoutEvent(null, payoutData));
+                    _eventAggregator.Publish(new PayoutEvent(PayoutEvent.PayoutEventType.Updated, payoutData));
                 }
             }
 

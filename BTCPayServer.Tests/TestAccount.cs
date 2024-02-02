@@ -472,7 +472,7 @@ namespace BTCPayServer.Tests
                     var callback = Encoding.UTF8.GetString(bytes);
                     lock (_webhookEvents)
                     {
-                        _webhookEvents.Add(JsonConvert.DeserializeObject<StoreWebhookEvent>(callback));
+                        _webhookEvents.Add(JsonConvert.DeserializeObject<DummyStoreWebhookEvent>(callback));
                     }
                     req.Response.StatusCode = 200;
                     _server.Done();
@@ -485,8 +485,13 @@ namespace BTCPayServer.Tests
             }
         }
 
+        public class DummyStoreWebhookEvent : StoreWebhookEvent
+        {
+            
+        }
+
         public List<StoreWebhookEvent> WebhookEvents { get; set; } = new List<StoreWebhookEvent>();
-        public TEvent AssertHasWebhookEvent<TEvent>(string eventType, Action<TEvent> assert) where TEvent : class
+        public async Task<TEvent> AssertHasWebhookEvent<TEvent>(string eventType, Action<TEvent> assert) where TEvent : class
         {
             int retry = 0;
 retry:
@@ -510,7 +515,7 @@ retry:
             }
             if (retry < 3)
             {
-                Thread.Sleep(1000);
+                await Task.Delay(1000);
                 retry++;
                 goto retry;
             }

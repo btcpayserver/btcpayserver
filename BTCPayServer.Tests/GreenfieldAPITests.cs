@@ -2331,7 +2331,7 @@ namespace BTCPayServer.Tests
                 if (marked == InvoiceStatus.Settled)
                 {
                     Assert.Equal(InvoiceStatus.Settled, result.Status);
-                    user.AssertHasWebhookEvent<WebhookInvoiceSettledEvent>(WebhookEventType.InvoiceSettled,
+                    await user.AssertHasWebhookEvent<WebhookInvoiceSettledEvent>(WebhookEventType.InvoiceSettled,
                         o =>
                         {
                             Assert.Equal(inv.Id, o.InvoiceId);
@@ -2341,7 +2341,7 @@ namespace BTCPayServer.Tests
                 if (marked == InvoiceStatus.Invalid)
                 {
                     Assert.Equal(InvoiceStatus.Invalid, result.Status);
-                    var evt = user.AssertHasWebhookEvent<WebhookInvoiceInvalidEvent>(WebhookEventType.InvoiceInvalid,
+                    var evt = await user.AssertHasWebhookEvent<WebhookInvoiceInvalidEvent>(WebhookEventType.InvoiceInvalid,
                         o =>
                         {
                             Assert.Equal(inv.Id, o.InvoiceId);

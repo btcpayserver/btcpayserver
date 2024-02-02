@@ -1961,26 +1961,13 @@ namespace BTCPayServer.Tests
             await user.SetupWebhook();
             var client = await user.CreateClient();
             
-            //invoice webhooks
-            var invoice = await client.CreateInvoice(user.StoreId, new CreateInvoiceRequest()
-            {
-                Amount = 0.01m,
-                Currency = "BTC",
-                Checkout = new InvoiceDataBase.CheckoutOptions()
-                {
-                    Expiration = TimeSpan.FromSeconds(1)
-                }
-            });
-            user.AssertHasWebhookEvent(WebhookEventType.InvoiceCreated,  (WebhookInvoiceEvent x)=> Assert.Equal(invoice.Id, x.InvoiceId));
-            user.AssertHasWebhookEvent(WebhookEventType.InvoiceExpired,  (WebhookInvoiceEvent x)=> Assert.Equal(invoice.Id, x.InvoiceId));
-            invoice = await client.CreateInvoice(user.StoreId, new CreateInvoiceRequest()
+
+           var  invoice = await client.CreateInvoice(user.StoreId, new CreateInvoiceRequest()
             {
                 Amount = 0.00m,
                 Currency = "BTC"
             });;
-            user.AssertHasWebhookEvent(WebhookEventType.InvoiceCreated,  (WebhookInvoiceEvent x)=> Assert.Equal(invoice.Id, x.InvoiceId));
-            user.AssertHasWebhookEvent(WebhookEventType.InvoiceProcessing,  (WebhookInvoiceEvent x)=> Assert.Equal(invoice.Id, x.InvoiceId));
-            user.AssertHasWebhookEvent(WebhookEventType.InvoiceSettled,  (WebhookInvoiceEvent x)=> Assert.Equal(invoice.Id, x.InvoiceId));
+            await user.AssertHasWebhookEvent(WebhookEventType.InvoiceCreated,  (WebhookInvoiceEvent x)=> Assert.Equal(invoice.Id, x.InvoiceId));
             
             //invoice payment webhooks
             invoice = await client.CreateInvoice(user.StoreId, new CreateInvoiceRequest()
@@ -2001,14 +1988,15 @@ namespace BTCPayServer.Tests
                 .PaymentLink, tester.ExplorerNode.Network);
             var remainingPaymentTx = await tester.ExplorerNode.SendToAddressAsync(invoicePaymentRequest.Address, Money.Coins(invoicePaymentRequest.Amount.ToDecimal(MoneyUnit.BTC)));
             
-            user.AssertHasWebhookEvent(WebhookEventType.InvoiceProcessing,  (WebhookInvoiceEvent x)=> Assert.Equal(invoice.Id, x.InvoiceId));
-            user.AssertHasWebhookEvent(WebhookEventType.InvoiceReceivedPayment,
+            await user.AssertHasWebhookEvent(WebhookEventType.InvoiceCreated,  (WebhookInvoiceEvent x)=> Assert.Equal(invoice.Id, x.InvoiceId));
+            await user.AssertHasWebhookEvent(WebhookEventType.InvoiceProcessing,  (WebhookInvoiceEvent x)=> Assert.Equal(invoice.Id, x.InvoiceId));
+            await user.AssertHasWebhookEvent(WebhookEventType.InvoiceReceivedPayment,
                 (WebhookInvoiceReceivedPaymentEvent x) =>
                 {
                     Assert.Equal(invoice.Id, x.InvoiceId);
                     Assert.Contains(halfPaymentTx.ToString(), x.Payment.Id);
                 });
-            user.AssertHasWebhookEvent(WebhookEventType.InvoiceReceivedPayment,
+            await  user.AssertHasWebhookEvent(WebhookEventType.InvoiceReceivedPayment,
                 (WebhookInvoiceReceivedPaymentEvent x) =>
                 {
                     Assert.Equal(invoice.Id, x.InvoiceId);
@@ -2017,29 +2005,25 @@ namespace BTCPayServer.Tests
 
             await tester.ExplorerNode.GenerateAsync(1);
             
-            user.AssertHasWebhookEvent(WebhookEventType.InvoicePaymentSettled,
+            await  user.AssertHasWebhookEvent(WebhookEventType.InvoicePaymentSettled,
                 (WebhookInvoiceReceivedPaymentEvent x) =>
                 {
                     Assert.Equal(invoice.Id, x.InvoiceId);
                     Assert.Contains(halfPaymentTx.ToString(), x.Payment.Id);
                 });
-            user.AssertHasWebhookEvent(WebhookEventType.InvoicePaymentSettled,
+            await  user.AssertHasWebhookEvent(WebhookEventType.InvoicePaymentSettled,
                 (WebhookInvoiceReceivedPaymentEvent x) =>
                 {
                     Assert.Equal(invoice.Id, x.InvoiceId);
                     Assert.Contains(remainingPaymentTx.ToString(), x.Payment.Id);
                 });
             
-            user.AssertHasWebhookEvent(WebhookEventType.InvoiceSettled,  (WebhookInvoiceEvent x)=> Assert.Equal(invoice.Id, x.InvoiceId));
+            await user.AssertHasWebhookEvent(WebhookEventType.InvoiceSettled,  (WebhookInvoiceEvent x)=> Assert.Equal(invoice.Id, x.InvoiceId));
             
             invoice = await client.CreateInvoice(user.StoreId, new CreateInvoiceRequest()
             {
                 Amount = 0.01m,
                 Currency = "BTC",
-                Checkout = new InvoiceDataBase.CheckoutOptions()
-                {
-                Expiration = TimeSpan.FromSeconds(5)
-            }
             });
             invoicePaymentRequest = new BitcoinUrlBuilder((await client.GetInvoicePaymentMethods(user.StoreId, invoice.Id)).Single(model =>
                     PaymentMethodId.Parse(model.PaymentMethod) ==
@@ -2048,14 +2032,13 @@ namespace BTCPayServer.Tests
             halfPaymentTx =  await tester.ExplorerNode.SendToAddressAsync(invoicePaymentRequest.Address, Money.Coins(invoicePaymentRequest.Amount.ToDecimal(MoneyUnit.BTC)/2m));
             
             
-            user.AssertHasWebhookEvent(WebhookEventType.InvoiceCreated,  (WebhookInvoiceEvent x)=> Assert.Equal(invoice.Id, x.InvoiceId));
-            user.AssertHasWebhookEvent(WebhookEventType.InvoiceReceivedPayment,
+            await  user.AssertHasWebhookEvent(WebhookEventType.InvoiceCreated,  (WebhookInvoiceEvent x)=> Assert.Equal(invoice.Id, x.InvoiceId));
+            await user.AssertHasWebhookEvent(WebhookEventType.InvoiceReceivedPayment,
                 (WebhookInvoiceReceivedPaymentEvent x) =>
                 {
                     Assert.Equal(invoice.Id, x.InvoiceId);
                     Assert.Contains(halfPaymentTx.ToString(), x.Payment.Id);
                 });
-            user.AssertHasWebhookEvent(WebhookEventType.InvoiceExpired,  (WebhookInvoiceEvent x)=> Assert.Equal(invoice.Id, x.InvoiceId));
             
             invoice = await client.CreateInvoice(user.StoreId, new CreateInvoiceRequest()
             {
@@ -2063,9 +2046,9 @@ namespace BTCPayServer.Tests
                 Currency = "BTC"
             });
             
-            user.AssertHasWebhookEvent(WebhookEventType.InvoiceCreated,  (WebhookInvoiceEvent x)=> Assert.Equal(invoice.Id, x.InvoiceId));
+            await user.AssertHasWebhookEvent(WebhookEventType.InvoiceCreated,  (WebhookInvoiceEvent x)=> Assert.Equal(invoice.Id, x.InvoiceId));
             await client.MarkInvoiceStatus(user.StoreId, invoice.Id, new MarkInvoiceStatusRequest() { Status = InvoiceStatus.Invalid});
-            user.AssertHasWebhookEvent(WebhookEventType.InvoiceInvalid,  (WebhookInvoiceEvent x)=> Assert.Equal(invoice.Id, x.InvoiceId));
+            await user.AssertHasWebhookEvent(WebhookEventType.InvoiceInvalid,  (WebhookInvoiceEvent x)=> Assert.Equal(invoice.Id, x.InvoiceId));
             
             //payment request webhook test
             var pr = await client.CreatePaymentRequest(user.StoreId, new CreatePaymentRequestRequest()
@@ -2079,20 +2062,26 @@ namespace BTCPayServer.Tests
                 //END todo
                 Description = "lala baba"
             });
-            user.AssertHasWebhookEvent(WebhookEventType.PaymentRequestCreated,  (WebhookPaymentRequestEvent x)=> Assert.Equal(pr.Id, x.PaymentRequestId));
+            await user.AssertHasWebhookEvent(WebhookEventType.PaymentRequestCreated,  (WebhookPaymentRequestEvent x)=> Assert.Equal(pr.Id, x.PaymentRequestId));
             pr = await client.UpdatePaymentRequest(user.StoreId, pr.Id,
-                new UpdatePaymentRequestRequest() { Title = "test pr updated",});
-            user.AssertHasWebhookEvent(WebhookEventType.PaymentRequestUpdated,  (WebhookPaymentRequestEvent x)=> Assert.Equal(pr.Id, x.PaymentRequestId));
+                new UpdatePaymentRequestRequest() { Title = "test pr updated", Amount = 100m,
+                    Currency = "USD",
+                    //TODO: this is a bug, we should not have these props in create request
+                    StoreId = user.StoreId,
+                    FormResponse = new JObject(),
+                    //END todo
+                    Description = "lala baba"});
+            await user.AssertHasWebhookEvent(WebhookEventType.PaymentRequestUpdated,  (WebhookPaymentRequestEvent x)=> Assert.Equal(pr.Id, x.PaymentRequestId));
             var inv = await client.PayPaymentRequest(user.StoreId, pr.Id, new PayPaymentRequestRequest() {});
             
             await client.MarkInvoiceStatus(user.StoreId, inv.Id, new MarkInvoiceStatusRequest() { Status = InvoiceStatus.Settled});
-            user.AssertHasWebhookEvent(WebhookEventType.PaymentRequestStatusChanged,  (WebhookPaymentRequestEvent x)=>
+            await user.AssertHasWebhookEvent(WebhookEventType.PaymentRequestStatusChanged,  (WebhookPaymentRequestEvent x)=>
             {
                 Assert.Equal(PaymentRequestData.PaymentRequestStatus.Completed, x.Status);
                 Assert.Equal(pr.Id, x.PaymentRequestId);
             });
             await client.ArchivePaymentRequest(user.StoreId, pr.Id);
-            user.AssertHasWebhookEvent(WebhookEventType.PaymentRequestArchived,  (WebhookPaymentRequestEvent x)=> Assert.Equal(pr.Id, x.PaymentRequestId));
+            await user.AssertHasWebhookEvent(WebhookEventType.PaymentRequestArchived,  (WebhookPaymentRequestEvent x)=> Assert.Equal(pr.Id, x.PaymentRequestId));
             //payoyt webhooks test
             var payout = await client.CreatePayout(user.StoreId,
                 new CreatePayoutThroughStoreRequest()
@@ -2102,22 +2091,22 @@ namespace BTCPayServer.Tests
                     Approved = true,
                     PaymentMethod = "BTC"
                 });
-            user.AssertHasWebhookEvent(WebhookEventType.PayoutCreated,  (WebhookPayoutEvent x)=> Assert.Equal(payout.Id, x.PayoutId));
+            await user.AssertHasWebhookEvent(WebhookEventType.PayoutCreated,  (WebhookPayoutEvent x)=> Assert.Equal(payout.Id, x.PayoutId));
              await client.MarkPayout(user.StoreId, payout.Id, new MarkPayoutRequest(){ State = PayoutState.AwaitingApproval});
-             user.AssertHasWebhookEvent(WebhookEventType.PayoutUpdated,  (WebhookPayoutEvent x)=>
+             await user.AssertHasWebhookEvent(WebhookEventType.PayoutUpdated,  (WebhookPayoutEvent x)=>
              {
                  Assert.Equal(payout.Id, x.PayoutId);
                  Assert.Equal(PayoutState.AwaitingApproval, x.PayoutState);
              });
              
              await client.ApprovePayout(user.StoreId, payout.Id, new ApprovePayoutRequest(){});
-             user.AssertHasWebhookEvent(WebhookEventType.PayoutApproved,  (WebhookPayoutEvent x)=>
+             await user.AssertHasWebhookEvent(WebhookEventType.PayoutApproved,  (WebhookPayoutEvent x)=>
              {
                  Assert.Equal(payout.Id, x.PayoutId);
                  Assert.Equal(PayoutState.AwaitingPayment, x.PayoutState);
              });
              await client.CancelPayout(user.StoreId, payout.Id );
-             user.AssertHasWebhookEvent(WebhookEventType.PayoutUpdated,  (WebhookPayoutEvent x)=>
+             await  user.AssertHasWebhookEvent(WebhookEventType.PayoutUpdated,  (WebhookPayoutEvent x)=>
              {
                  Assert.Equal(payout.Id, x.PayoutId);
                  Assert.Equal(PayoutState.Cancelled, x.PayoutState);

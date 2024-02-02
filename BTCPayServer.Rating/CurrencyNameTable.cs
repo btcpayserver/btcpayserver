@@ -77,7 +77,15 @@ namespace BTCPayServer.Services.Rates
                             continue;
                         try
                         {
-                            _CurrencyProviders.TryAdd(new RegionInfo(culture.LCID).ISOCurrencySymbol, culture);
+                            var symbol = new RegionInfo(culture.LCID).ISOCurrencySymbol;
+                            var c = symbol switch
+                            {
+                                // ARS and COP are officially 2 digits, but due to depreciation,
+                                // nobody really use those anymore. (See https://github.com/btcpayserver/btcpayserver/issues/5708)
+                                "ARS" or "COP" => ModifyCurrencyDecimalDigit(culture, 0),
+                                _ => culture
+                            };
+                            _CurrencyProviders.TryAdd(symbol, c);
                         }
                         catch { }
                     }
@@ -89,6 +97,15 @@ namespace BTCPayServer.Services.Rates
                 }
                 return _CurrencyProviders.TryGet(currency.ToUpperInvariant());
             }
+        }
+
+        private CultureInfo ModifyCurrencyDecimalDigit(CultureInfo culture, int decimals)
+        {
+            var modifiedCulture = new CultureInfo(culture.Name);
+            NumberFormatInfo modifiedNumberFormat = (NumberFormatInfo)modifiedCulture.NumberFormat.Clone();
+            modifiedNumberFormat.CurrencyDecimalDigits = decimals;
+            modifiedCulture.NumberFormat = modifiedNumberFormat;
+            return modifiedCulture;
         }
 
         private void AddCurrency(Dictionary<string, IFormatProvider> currencyProviders, string code, int divisibility, string symbol)

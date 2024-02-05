@@ -167,7 +167,7 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Name("buyerEmail")).SendKeys("aa@aa.com");
             s.Driver.FindElement(By.CssSelector("input[type='submit']")).Click();
 
-            s.PayInvoice(true);
+            s.PayInvoice(true, 10);
             var invoiceId2 = s.Driver.Url[(s.Driver.Url.LastIndexOf("/", StringComparison.Ordinal) + 1)..];
             s.Driver.Close();
             s.Driver.SwitchTo().Window(s.Driver.WindowHandles.First());
@@ -208,7 +208,7 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Name("buyerEmail")).SendKeys("aa@aa.com");
             s.Driver.FindElement(By.CssSelector("input[type='submit']")).Click();
 
-            s.PayInvoice(true);
+            s.PayInvoice(true, 20);
             var invoiceId3 = s.Driver.Url[(s.Driver.Url.LastIndexOf("/", StringComparison.Ordinal) + 1)..];
             s.Driver.Close();
             s.Driver.SwitchTo().Window(s.Driver.WindowHandles.First());

@@ -190,7 +190,7 @@ namespace BTCPayServer.Tests
 
             new SelectElement(s.Driver.FindElement(By.Id("FormId"))).SelectByValue("Email");
 
-            s.Driver.FindElement(By.CssSelector("button[value=\"Add Item\"]")).Click();
+            s.Driver.FindElement(By.Id("btAddItem")).Click();
             s.Driver.FindElement(By.Id("EditorTitle")).SendKeys("Perk 1");
             s.Driver.FindElement(By.Id("EditorId")).SendKeys("Perk-1");
             s.Driver.FindElement(By.Id("EditorAmount")).SendKeys("20");

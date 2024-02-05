@@ -15,6 +15,7 @@
         input[type="checkbox"] ~ div > .subsettings { display: none; }
         input[type="checkbox"]:checked ~ div > .info-note { display: flex; max-width: 44em; }
         input[type="checkbox"]:checked ~ div > .subsettings { display: block; }
+        .subsettings > :last-child { margin-bottom: 0 !important; }
     </style>
 }
 
@@ -30,7 +31,7 @@
         <form method="post" class="d-flex flex-column">
             <div class="form-group mb-5">
                 <h4 class="mb-3">Registration Settings</h4>
-                <div class="d-flex my-3 gap-3">
+                <div class="d-flex gap-3">
                     <input asp-for="EnableRegistration" type="checkbox" class="btcpay-toggle" />
                     <div>
                         <label asp-for="EnableRegistration" class="form-label mb-0"></label>
@@ -56,9 +57,7 @@
                                     <span asp-validation-for="RequiresConfirmedEmail" class="text-danger"></span>
                                     @if (!isEmailConfigured)
                                     {
-                                        <div class="mb-2">
-                                            <span class="text-secondary">Your email server has not been configured. <a asp-controller="UIServer" asp-action="Emails">Please configure it first.</a></span>
-                                        </div>
+                                        <div class="text-secondary">Your email server has not been configured. <a asp-controller="UIServer" asp-action="Emails">Please configure it first.</a></div>
                                     }
                                 </div>
                             </div>
@@ -148,8 +147,8 @@
                 <input asp-for="PluginSource" placeholder="@PoliciesSettings.DefaultPluginSource" class="form-control"/>
                 <span asp-validation-for="PluginSource" class="text-danger"></span>
             </div>
-            <div class="form-check">
-                <input asp-for="PluginPreReleases" type="checkbox" class="form-check-input"/>
+            <div class="d-flex mt-n2">
+                <input asp-for="PluginPreReleases" type="checkbox" class="btcpay-toggle me-3"/>
                 <label asp-for="PluginPreReleases" class="form-label mb-0"></label>
             </div>
 

@@ -97,7 +97,7 @@ namespace BTCPayServer.Tests
 
             s.Driver.FindElement(By.Id("ViewApp")).Click();
             s.Driver.SwitchTo().Window(s.Driver.WindowHandles.Last());
-            
+
             s.Driver.FindElement(By.CssSelector("button[type='submit']")).Click();
 
             Assert.Contains("Enter your email", s.Driver.PageSource);
@@ -108,7 +108,7 @@ namespace BTCPayServer.Tests
             var invoiceId = s.Driver.Url[(s.Driver.Url.LastIndexOf("/", StringComparison.Ordinal) + 1)..];
             s.Driver.Close();
             s.Driver.SwitchTo().Window(s.Driver.WindowHandles.First());
-            
+
             s.GoToInvoice(invoiceId);
             Assert.Contains("aa@aa.com", s.Driver.PageSource);
 
@@ -123,10 +123,10 @@ namespace BTCPayServer.Tests
 
             s.Driver.FindElement(By.XPath("//a[starts-with(@id, 'Edit-')]")).Click();
             var editUrl = s.Driver.Url;
-            
+
             s.Driver.FindElement(By.Id("ViewPaymentRequest")).Click();
             s.Driver.SwitchTo().Window(s.Driver.WindowHandles.Last());
-            
+
             s.Driver.FindElement(By.CssSelector("[data-test='form-button']")).Click();
             Assert.Contains("Enter your email", s.Driver.PageSource);
 
@@ -135,11 +135,87 @@ namespace BTCPayServer.Tests
             invoiceId = s.Driver.Url.Split('/').Last();
             s.Driver.Close();
             s.Driver.SwitchTo().Window(s.Driver.WindowHandles.First());
-            
+
             s.Driver.Navigate().GoToUrl(editUrl);
             Assert.Contains("aa@aa.com", s.Driver.PageSource);
             var invoice = await s.Server.PayTester.GetService<InvoiceRepository>().GetInvoice(invoiceId);
             Assert.Equal("aa@aa.com", invoice.Metadata.BuyerEmail);
+
+
+            // Crowdfund
+            s.Driver.FindElement(By.Id("StoreNav-CreateCrowdfund")).Click();
+            s.Driver.FindElement(By.Id("AppName")).SendKeys("CF" + Guid.NewGuid().ToString());
+            s.Driver.FindElement(By.Id("Create")).Click();
+            Assert.Contains("App successfully created", s.FindAlertMessage().Text);
+
+            s.Driver.FindElement(By.Id("Title")).SendKeys("MyStarter");
+            s.Driver.FindElement(By.CssSelector("div.note-editable.card-block")).SendKeys("1BTC = 1BTC");
+            s.Driver.FindElement(By.Id("TargetCurrency")).Clear();
+            s.Driver.FindElement(By.Id("TargetCurrency")).SendKeys("EUR");
+            s.Driver.FindElement(By.Id("TargetAmount")).SendKeys("700");
+
+            new SelectElement(s.Driver.FindElement(By.Id("FormId"))).SelectByValue("Email");
+            s.Driver.FindElement(By.Id("SaveSettings")).Click();
+            Assert.Contains("App updated", s.FindAlertMessage().Text);
+
+            s.Driver.FindElement(By.Id("ViewApp")).Click();
+            s.Driver.SwitchTo().Window(s.Driver.WindowHandles.Last());
+
+            s.Driver.FindElement(By.Id("crowdfund-body-header-cta")).Click();
+
+            Assert.Contains("Enter your email", s.Driver.PageSource);
+            s.Driver.FindElement(By.Name("buyerEmail")).SendKeys("aa@aa.com");
+            s.Driver.FindElement(By.CssSelector("input[type='submit']")).Click();
+
+            s.PayInvoice(true);
+            var invoiceId2 = s.Driver.Url[(s.Driver.Url.LastIndexOf("/", StringComparison.Ordinal) + 1)..];
+            s.Driver.Close();
+            s.Driver.SwitchTo().Window(s.Driver.WindowHandles.First());
+
+            s.GoToInvoice(invoiceId);
+            Assert.Contains("aa@aa.com", s.Driver.PageSource);
+
+
+            // Crowdfund with perk
+            s.Driver.FindElement(By.Id("StoreNav-CreateCrowdfund")).Click();
+            s.Driver.FindElement(By.Id("AppName")).SendKeys("CF" + Guid.NewGuid().ToString());
+            s.Driver.FindElement(By.Id("Create")).Click();
+            Assert.Contains("App successfully created", s.FindAlertMessage().Text);
+
+            s.Driver.FindElement(By.Id("Title")).SendKeys("MyStarter2");
+            s.Driver.FindElement(By.CssSelector("div.note-editable.card-block")).SendKeys("1BTC = 1BTC");
+            s.Driver.FindElement(By.Id("TargetCurrency")).Clear();
+            s.Driver.FindElement(By.Id("TargetCurrency")).SendKeys("EUR");
+            s.Driver.FindElement(By.Id("TargetAmount")).SendKeys("700");
+
+            new SelectElement(s.Driver.FindElement(By.Id("FormId"))).SelectByValue("Email");
+
+            s.Driver.FindElement(By.CssSelector("button[value=\"Add Item\"]")).Click();
+            s.Driver.FindElement(By.Id("EditorTitle")).SendKeys("Perk 1");
+            s.Driver.FindElement(By.Id("EditorId")).SendKeys("Perk-1");
+            s.Driver.FindElement(By.Id("EditorAmount")).SendKeys("20");
+            s.Driver.FindElement(By.Id("ApplyItemChanges")).Click();
+
+            s.Driver.FindElement(By.Id("SaveSettings")).Click();
+            Assert.Contains("App updated", s.FindAlertMessage().Text);
+
+            s.Driver.FindElement(By.Id("ViewApp")).Click();
+            s.Driver.SwitchTo().Window(s.Driver.WindowHandles.Last());
+            s.Driver.FindElement(By.Id("perk-1")).Click();
+            s.Driver.FindElement(By.CssSelector("button[value=\"Continue\"]")).Submit();
+
+            Assert.Contains("Enter your email", s.Driver.PageSource);
+            s.Driver.FindElement(By.Name("buyerEmail")).SendKeys("aa@aa.com");
+            s.Driver.FindElement(By.CssSelector("input[type='submit']")).Click();
+
+            s.PayInvoice(true);
+            var invoiceId3 = s.Driver.Url[(s.Driver.Url.LastIndexOf("/", StringComparison.Ordinal) + 1)..];
+            s.Driver.Close();
+            s.Driver.SwitchTo().Window(s.Driver.WindowHandles.First());
+
+            s.GoToInvoice(invoiceId);
+            Assert.Contains("aa@aa.com", s.Driver.PageSource);
+
 
             //Custom Forms
             s.GoToStore(StoreNavPages.Forms);
@@ -147,13 +223,13 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("CreateForm")).Click();
             s.Driver.FindElement(By.Name("Name")).SendKeys("Custom Form 1");
             s.Driver.FindElement(By.Id("ApplyEmailTemplate")).Click();
-            
+
             s.Driver.FindElement(By.Id("CodeTabButton")).Click();
             s.Driver.WaitForElement(By.Id("CodeTabPane"));
-            
+
             var config = s.Driver.FindElement(By.Name("FormConfig")).GetAttribute("value");
             Assert.Contains("buyerEmail", config);
-            
+
             s.Driver.FindElement(By.Name("FormConfig")).Clear();
             s.Driver.FindElement(By.Name("FormConfig"))
                 .SendKeys(config.Replace("Enter your email", "CustomFormInputTest"));
@@ -179,10 +255,10 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("CreateForm")).Click();
             s.Driver.FindElement(By.Name("Name")).SendKeys("Custom Form 2");
             s.Driver.FindElement(By.Id("ApplyEmailTemplate")).Click();
-            
+
             s.Driver.FindElement(By.Id("CodeTabButton")).Click();
             s.Driver.WaitForElement(By.Id("CodeTabPane"));
-            
+
             s.Driver.SetCheckbox(By.Name("Public"), true);
 
             s.Driver.FindElement(By.Name("FormConfig")).Clear();

@@ -3,18 +3,47 @@
     ViewData.SetActivePage(ServerNavPages.Maintenance, "Maintenance");
 }
 
-<h3 class="mb-4">@ViewData["Title"]</h3>
+<h3 class="mb-2">@ViewData["Title"]</h3>
 
 <form method="post">
     <div class="row mb-5">
         <div class="col-xl-8 col-xxl-constrain">
-            <h4 class="mb-2">Domain name</h4>
-            <p>You can change the domain name of your server by following <a href="https://docs.btcpayserver.org/FAQ/Deployment/#how-to-change-your-btcpay-server-domain-name" target="_blank" rel="noreferrer noopener">this guide</a>.</p>
-
-            <div class="d-flex">
-                <input asp-for="DNSDomain" class="form-control flex-fill" disabled="@(Model.CanUseSSH ? null : "disabled")" />
+            <div class="form-group mb-5">
+                @if (ViewBag.UpdateUrlPresent)
+                {
+                    <div class="d-flex my-3">
+                        <input asp-for="CheckForNewVersions" type="checkbox" class="btcpay-toggle me-3"/>
+                        <div>
+                            <label asp-for="CheckForNewVersions" class="form-label mb-0"></label>
+                            <span asp-validation-for="CheckForNewVersions" class="text-danger"></span>
+                        </div>
+                    </div>
+                }
+                <div class="d-flex my-3">
+                    <input asp-for="DiscourageSearchEngines" type="checkbox" class="btcpay-toggle me-3"/>
+                    <div>
+                        <label asp-for="DiscourageSearchEngines" class="form-label mb-0"></label>
+                        <a href="https://docs.btcpayserver.org/FAQ/ServerSettings/#how-to-hide-my-btcpay-server-from-search-engines" target="_blank" rel="noreferrer noopener">
+                            <vc:icon symbol="info" />
+                        </a>
+                        <span asp-validation-for="DiscourageSearchEngines" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="d-flex my-3">
+                    <input asp-for="EnableExperimentalFeatures" type="checkbox" class="btcpay-toggle me-3"/>
+                    <label asp-for="EnableExperimentalFeatures" class="form-label mb-0"></label>
+                </div>
+                <button name="command" type="submit" class="btn btn-secondary mt-3" value="save">
+                    Save
+                </button>
+            </div>
+            
+            <div class="form-group">
+                <label asp-for="DNSDomain" class="form-label h4"></label>
+                <input asp-for="DNSDomain" class="form-control" disabled="@(Model.CanUseSSH ? null : "disabled")" />
+                <div class="form-text">You can change the domain name of your server by following <a href="https://docs.btcpayserver.org/FAQ/Deployment/#how-to-change-your-btcpay-server-domain-name" target="_blank" rel="noreferrer noopener">this guide</a>.</div>
                 <span asp-validation-for="DNSDomain" class="text-danger"></span>
-                <button name="command" type="submit" class="btn btn-secondary ms-3" value="changedomain" title="Change domain" disabled="@(Model.CanUseSSH ? null : "disabled")">
+                <button name="command" type="submit" class="btn btn-secondary mt-3" value="changedomain" title="Change domain" disabled="@(Model.CanUseSSH ? null : "disabled")">
                     Confirm
                 </button>
             </div>

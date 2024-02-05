@@ -142,34 +142,6 @@
                 </div>
             </div>
 
-            <div class="form-group mb-5">
-                <h4 class="mb-3">Maintenance Settings</h4>
-                @if (ViewBag.UpdateUrlPresent)
-                {
-                    <div class="d-flex my-3">
-                        <input asp-for="CheckForNewVersions" type="checkbox" class="btcpay-toggle me-3"/>
-                        <div>
-                            <label asp-for="CheckForNewVersions" class="form-label mb-0"></label>
-                            <span asp-validation-for="CheckForNewVersions" class="text-danger"></span>
-                        </div>
-                    </div>
-                }
-                <div class="d-flex my-3">
-                    <input asp-for="DiscourageSearchEngines" type="checkbox" class="btcpay-toggle me-3"/>
-                    <div>
-                        <label asp-for="DiscourageSearchEngines" class="form-label mb-0"></label>
-                        <a href="https://docs.btcpayserver.org/FAQ/ServerSettings/#how-to-hide-my-btcpay-server-from-search-engines" target="_blank" rel="noreferrer noopener">
-                            <vc:icon symbol="info" />
-                        </a>
-                        <span asp-validation-for="DiscourageSearchEngines" class="text-danger"></span>
-                    </div>
-                </div>
-                <div class="d-flex my-3">
-                    <input asp-for="Experimental" type="checkbox" class="btcpay-toggle me-3"/>
-                    <label asp-for="Experimental" class="form-label mb-0"></label>
-                </div>
-            </div>
-
             <h4 class="mb-3">Plugins</h4>
             <div class="form-group">
                 <label asp-for="PluginSource" class="form-label"></label>

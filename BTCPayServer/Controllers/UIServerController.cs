@@ -122,23 +122,32 @@ namespace BTCPayServer.Controllers
             _transactionLinkProviders = transactionLinkProviders;
         }
 
-        [Route("server/maintenance")]
+        [HttpGet("server/maintenance")]
         public IActionResult Maintenance()
         {
-            MaintenanceViewModel vm = new MaintenanceViewModel();
-            vm.CanUseSSH = _sshState.CanUseSSH;
+            ViewBag.UpdateUrlPresent = _Options.UpdateUrl != null;
+
+            var vm = new MaintenanceViewModel
+            {
+                CanUseSSH = _sshState.CanUseSSH,
+                DNSDomain = Request.Host.Host,
+                DiscourageSearchEngines = _policiesSettings.DiscourageSearchEngines,
+                CheckForNewVersions = _policiesSettings.CheckForNewVersions,
+                EnableExperimentalFeatures = _policiesSettings.Experimental
+            };
+
             if (!vm.CanUseSSH)
                 TempData[WellKnownTempData.ErrorMessage] = "Maintenance feature requires access to SSH properly configured in BTCPay Server configuration.";
-            vm.DNSDomain = this.Request.Host.Host;
             if (IPAddress.TryParse(vm.DNSDomain, out var unused))
                 vm.DNSDomain = null;
+
             return View(vm);
         }
 
-        [Route("server/maintenance")]
-        [HttpPost]
+        [HttpPost("server/maintenance")]
         public async Task<IActionResult> Maintenance(MaintenanceViewModel vm, string command)
         {
+            ViewBag.UpdateUrlPresent = _Options.UpdateUrl != null;
             vm.CanUseSSH = _sshState.CanUseSSH;
             if (command != "soft-restart" && !vm.CanUseSSH)
             {
@@ -201,6 +210,19 @@ namespace BTCPayServer.Controllers
                 builder.Path = null;
                 builder.Query = null;
                 TempData[WellKnownTempData.SuccessMessage] = $"Domain name changing... the server will restart, please use \"{builder.Uri.AbsoluteUri}\" (this page won't reload automatically)";
+            }
+            else if (command == "save")
+            {
+                if (vm.DiscourageSearchEngines != _policiesSettings.DiscourageSearchEngines ||
+                    vm.CheckForNewVersions != _policiesSettings.CheckForNewVersions ||
+                    vm.EnableExperimentalFeatures != _policiesSettings.Experimental)
+                {
+                    _policiesSettings.DiscourageSearchEngines = vm.DiscourageSearchEngines;
+                    _policiesSettings.CheckForNewVersions = vm.CheckForNewVersions;
+                    _policiesSettings.Experimental = vm.EnableExperimentalFeatures;
+                    await _SettingsRepository.UpdateSetting(_policiesSettings);
+                    TempData[WellKnownTempData.SuccessMessage] = "Settings successfully updated.";
+                }
             }
             else if (command == "update")
             {
@@ -303,14 +325,12 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> Policies()
         {
             ViewBag.AppsList = await GetAppSelectList();
-            ViewBag.UpdateUrlPresent = _Options.UpdateUrl != null;
             return View(_policiesSettings);
         }
 
         [HttpPost("server/policies")]
         public async Task<IActionResult> Policies([FromServices] BTCPayNetworkProvider btcPayNetworkProvider, PoliciesSettings settings, string command = "")
         {
-            ViewBag.UpdateUrlPresent = _Options.UpdateUrl != null;
             ViewBag.AppsList = await GetAppSelectList();
 
             if (command == "add-domain")

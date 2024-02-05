@@ -1134,13 +1134,17 @@ namespace BTCPayServer.Controllers
         [Route("server/emails")]
         public async Task<IActionResult> Emails()
         {
-            var data = (await _SettingsRepository.GetSettingAsync<EmailSettings>()) ?? new EmailSettings();
-            return View(new EmailsViewModel(data));
+            var email = await _SettingsRepository.GetSettingAsync<EmailSettings>() ?? new EmailSettings();
+            var vm = new ServerEmailsViewModel(email)
+            {
+                EnableStoresToUseServerEmailSettings = !_policiesSettings.DisableStoresToUseServerEmailSettings
+            };
+            return View(vm);
         }
 
         [Route("server/emails")]
         [HttpPost]
-        public async Task<IActionResult> Emails(EmailsViewModel model, string command)
+        public async Task<IActionResult> Emails(ServerEmailsViewModel model, string command)
         {
             if (command == "Test")
             {
@@ -1170,6 +1174,13 @@ namespace BTCPayServer.Controllers
                 }
                 return View(model);
             }
+
+            if (_policiesSettings.DisableStoresToUseServerEmailSettings == model.EnableStoresToUseServerEmailSettings)
+            {
+                _policiesSettings.DisableStoresToUseServerEmailSettings = !model.EnableStoresToUseServerEmailSettings;
+                await _SettingsRepository.UpdateSetting(_policiesSettings);
+            }
+
             if (command == "ResetPassword")
             {
                 var settings = await _SettingsRepository.GetSettingAsync<EmailSettings>() ?? new EmailSettings();
@@ -1178,22 +1189,22 @@ namespace BTCPayServer.Controllers
                 TempData[WellKnownTempData.SuccessMessage] = "Email server password reset";
                 return RedirectToAction(nameof(Emails));
             }
-            else // if (command == "Save")
+            
+            // save
+            if (model.Settings.From is not null && !MailboxAddressValidator.IsMailboxAddress(model.Settings.From))
             {
-                if (model.Settings.From is not null && !MailboxAddressValidator.IsMailboxAddress(model.Settings.From))
-                {
-                    ModelState.AddModelError("Settings.From", "Invalid email");
-                    return View(model);
-                }
-                var oldSettings = await _SettingsRepository.GetSettingAsync<EmailSettings>() ?? new EmailSettings();
-                if (new EmailsViewModel(oldSettings).PasswordSet)
-                {
-                    model.Settings.Password = oldSettings.Password;
-                }
-                await _SettingsRepository.UpdateSetting(model.Settings);
-                TempData[WellKnownTempData.SuccessMessage] = "Email settings saved";
-                return RedirectToAction(nameof(Emails));
+                ModelState.AddModelError("Settings.From", "Invalid email");
+                return View(model);
             }
+            var oldSettings = await _SettingsRepository.GetSettingAsync<EmailSettings>() ?? new EmailSettings();
+            if (new EmailsViewModel(oldSettings).PasswordSet)
+            {
+                model.Settings.Password = oldSettings.Password;
+            }
+            
+            await _SettingsRepository.UpdateSetting(model.Settings);
+            TempData[WellKnownTempData.SuccessMessage] = "Email settings saved";
+            return RedirectToAction(nameof(Emails));
         }
 
         [Route("server/logs/{file?}")]

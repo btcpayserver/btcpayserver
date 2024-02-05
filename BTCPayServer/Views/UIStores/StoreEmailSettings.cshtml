@@ -1,4 +1,4 @@
-@model BTCPayServer.Models.ServerViewModels.EmailsViewModel
+@model BTCPayServer.Models.EmailsViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
     ViewData.SetActivePage(StoreNavPages.Emails, "Emails", Context.GetStoreData().Id);
@@ -21,24 +21,27 @@
 </div>
 
 <h3 class="mb-4">Email Server</h3>
-@if (Model.IsFallbackSetup())
-{
-    <label class="d-flex align-items-center mb-4">
-        <input type="checkbox" id="UseCustomSMTP" checked="@hasCustomSettings" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#SmtpSettings" aria-expanded="@hasCustomSettings" aria-controls="SmtpSettings" />
-        <div>
-            <span>Use custom SMTP settings for this store</span>
-            <div class="form-text">Otherwise, the server's SMTP settings will be used to send emails.</div>
-        </div>
-    </label>
 
-    <div class="checkout-settings collapse @(hasCustomSettings ? "show" : "")" id="SmtpSettings">
+<form method="post" autocomplete="off">
+    @if (Model.IsFallbackSetup())
+    {
+        <label class="d-flex align-items-center mb-4">
+            <input type="checkbox" id="UseCustomSMTP" checked="@hasCustomSettings" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#SmtpSettings" aria-expanded="@hasCustomSettings" aria-controls="SmtpSettings" />
+            <div>
+                <span>Use custom SMTP settings for this store</span>
+                <div class="form-text">Otherwise, the server's SMTP settings will be used to send emails.</div>
+            </div>
+        </label>
+
+        <div class="checkout-settings collapse @(hasCustomSettings ? "show" : "")" id="SmtpSettings">
+            <partial name="EmailsBody" model="Model" />
+        </div>
+    }
+    else
+    {
         <partial name="EmailsBody" model="Model" />
-    </div>
-}
-else
-{
-    <partial name="EmailsBody" model="Model" />
-}
+    }
+</form>
 
 @section PageFootContent {
     <partial name="_ValidationScriptsPartial" />

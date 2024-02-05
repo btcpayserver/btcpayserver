@@ -7,11 +7,9 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
-using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
-using BTCPayServer.Models.ServerViewModels;
+using BTCPayServer.Models;
 using BTCPayServer.Services.Mails;
-using BTCPayServer.Validation;
 using Microsoft.AspNetCore.Mvc;
 using MimeKit;
 

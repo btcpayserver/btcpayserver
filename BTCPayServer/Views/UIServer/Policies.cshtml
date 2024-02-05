@@ -129,20 +129,6 @@
             </div>
 
             <div class="form-group mb-5">
-                <h4 class="mb-3">Email Settings</h4>
-                <div class="d-flex my-3">
-                    <input asp-for="EnableStoresToUseServerEmailSettings" type="checkbox" class="btcpay-toggle me-3"/>
-                    <div>
-                        <label asp-for="EnableStoresToUseServerEmailSettings" class="form-label mb-0"></label>
-                        <a href="https://docs.btcpayserver.org/Notifications/#server-emails" target="_blank" rel="noreferrer noopener">
-                            <vc:icon symbol="info" />
-                        </a>
-                        <span asp-validation-for="EnableStoresToUseServerEmailSettings" class="text-danger"></span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="form-group mb-5">
                 <h4 class="mb-3">Notification Settings</h4>
                 <div class="d-flex my-3">
                     <input asp-for="DisableInstantNotifications" type="checkbox" class="btcpay-toggle me-3"/>

@@ -137,6 +137,82 @@ namespace BTCPayServer.Tests
             var invoice = await s.Server.PayTester.GetService<InvoiceRepository>().GetInvoice(invoiceId);
             Assert.Equal("aa@aa.com", invoice.Metadata.BuyerEmail);
 
+
+            // Crowdfund
+            s.Driver.FindElement(By.Id("StoreNav-CreateCrowdfund")).Click();
+            s.Driver.FindElement(By.Id("AppName")).SendKeys("CF" + Guid.NewGuid().ToString());
+            s.Driver.FindElement(By.Id("Create")).Click();
+            Assert.Contains("App successfully created", s.FindAlertMessage().Text);
+
+            s.Driver.FindElement(By.Id("Title")).SendKeys("MyStarter");
+            s.Driver.FindElement(By.CssSelector("div.note-editable.card-block")).SendKeys("1BTC = 1BTC");
+            s.Driver.FindElement(By.Id("TargetCurrency")).Clear();
+            s.Driver.FindElement(By.Id("TargetCurrency")).SendKeys("EUR");
+            s.Driver.FindElement(By.Id("TargetAmount")).SendKeys("700");
+
+            new SelectElement(s.Driver.FindElement(By.Id("FormId"))).SelectByValue("Email");
+            s.Driver.FindElement(By.Id("SaveSettings")).Click();
+            Assert.Contains("App updated", s.FindAlertMessage().Text);
+
+            s.Driver.FindElement(By.Id("ViewApp")).Click();
+            s.Driver.SwitchTo().Window(s.Driver.WindowHandles.Last());
+
+            s.Driver.FindElement(By.Id("crowdfund-body-header-cta")).Click();
+
+            Assert.Contains("Enter your email", s.Driver.PageSource);
+            s.Driver.FindElement(By.Name("buyerEmail")).SendKeys("aa@aa.com");
+            s.Driver.FindElement(By.CssSelector("input[type='submit']")).Click();
+
+            s.PayInvoice(true);
+            var invoiceId2 = s.Driver.Url[(s.Driver.Url.LastIndexOf("/", StringComparison.Ordinal) + 1)..];
+            s.Driver.Close();
+            s.Driver.SwitchTo().Window(s.Driver.WindowHandles.First());
+
+            s.GoToInvoice(invoiceId);
+            Assert.Contains("aa@aa.com", s.Driver.PageSource);
+
+
+            // Crowdfund with perk
+            s.Driver.FindElement(By.Id("StoreNav-CreateCrowdfund")).Click();
+            s.Driver.FindElement(By.Id("AppName")).SendKeys("CF" + Guid.NewGuid().ToString());
+            s.Driver.FindElement(By.Id("Create")).Click();
+            Assert.Contains("App successfully created", s.FindAlertMessage().Text);
+
+            s.Driver.FindElement(By.Id("Title")).SendKeys("MyStarter2");
+            s.Driver.FindElement(By.CssSelector("div.note-editable.card-block")).SendKeys("1BTC = 1BTC");
+            s.Driver.FindElement(By.Id("TargetCurrency")).Clear();
+            s.Driver.FindElement(By.Id("TargetCurrency")).SendKeys("EUR");
+            s.Driver.FindElement(By.Id("TargetAmount")).SendKeys("700");
+
+            new SelectElement(s.Driver.FindElement(By.Id("FormId"))).SelectByValue("Email");
+
+            s.Driver.FindElement(By.CssSelector("button[value=\"Add Item\"]")).Click();
+            s.Driver.FindElement(By.Id("EditorTitle")).SendKeys("Perk 1");
+            s.Driver.FindElement(By.Id("EditorId")).SendKeys("Perk-1");
+            s.Driver.FindElement(By.Id("EditorAmount")).SendKeys("20");
+            s.Driver.FindElement(By.Id("ApplyItemChanges")).Click();
+
+            s.Driver.FindElement(By.Id("SaveSettings")).Click();
+            Assert.Contains("App updated", s.FindAlertMessage().Text);
+
+            s.Driver.FindElement(By.Id("ViewApp")).Click();
+            s.Driver.SwitchTo().Window(s.Driver.WindowHandles.Last());
+            s.Driver.FindElement(By.Id("perk-1")).Click();
+            s.Driver.FindElement(By.CssSelector("button[value=\"Continue\"]")).Submit();
+
+            Assert.Contains("Enter your email", s.Driver.PageSource);
+            s.Driver.FindElement(By.Name("buyerEmail")).SendKeys("aa@aa.com");
+            s.Driver.FindElement(By.CssSelector("input[type='submit']")).Click();
+
+            s.PayInvoice(true);
+            var invoiceId3 = s.Driver.Url[(s.Driver.Url.LastIndexOf("/", StringComparison.Ordinal) + 1)..];
+            s.Driver.Close();
+            s.Driver.SwitchTo().Window(s.Driver.WindowHandles.First());
+
+            s.GoToInvoice(invoiceId);
+            Assert.Contains("aa@aa.com", s.Driver.PageSource);
+
+
             //Custom Forms
             s.GoToStore(StoreNavPages.Forms);
             Assert.Contains("There are no forms yet.", s.Driver.PageSource);

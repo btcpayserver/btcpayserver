@@ -14,7 +14,6 @@
         role = null;
 
     var storeId = Context.GetRouteValue("storeId") as string;
-    var controller = ViewContext.RouteData.Values["controller"].ToString().TrimEnd("Controller", StringComparison.InvariantCultureIgnoreCase);
     if (storeId is null)
         ViewData.SetActivePage(ServerNavPages.Roles, role is null ? "Create role" : "Update role");
 

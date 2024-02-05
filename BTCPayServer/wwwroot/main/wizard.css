@@ -7,21 +7,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: space-between;
-}
-
-@media (max-width: 575px) {
-    #wizard-navbar {
-        margin-top: -35px;
-    }
-}
-@media (min-width: 576px) {
-    #wizard-navbar {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        padding: 24px;
-    }
+    margin-top: -2rem;
 }
 
 #wizard-navbar a,

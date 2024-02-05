@@ -39,5 +39,7 @@
   "submitting_nfc": "NFC-ի ներկայացումը ...",
   "payment_received": "Վճարումը ստացված է",
   "payment_received_body": "Ձեր վճարումը ստացվել է և ներկայացում է մշակվում",
-  "payment_received_confirmations": "Ձեր վճարումը հաստատվելուց {{requiredConfirmations}} հաստատումներից հետո {{cryptoCode}} բլոկցային, ձեր հաշիվը կտեղափոխվի:"
+  "payment_received_confirmations": "Ձեր վճարումը հաստատվելուց {{requiredConfirmations}} հաստատումներից հետո {{cryptoCode}} բլոկցային, ձեր հաշիվը կտեղափոխվի:",
+  "invoice_paidpartial_body": "Հաշիվը վավերական է միայն {{minutes}} րոպեների համար: Այս հաշիվը լրացել է մասնակի վճարումով: Խնդրում ենք կապվել մեզ հետ, որպեսզի մենք կարողանանք կատարել ձեր պատվերը։",
+  "contact_us": "Կապվեք մեզ հետ"
 }

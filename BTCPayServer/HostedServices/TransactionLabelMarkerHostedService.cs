@@ -51,17 +51,31 @@ namespace BTCPayServer.HostedServices
 
                         // find all wallet objects that fit this transaction
                         // that means see if there are any utxo objects that match in/outs and scripts/addresses that match outs
-                        var matchedObjects = transactionEvent.NewTransactionEvent.TransactionData.Transaction.Inputs
-                            .Select<TxIn, ObjectTypeId>(txIn => new ObjectTypeId(WalletObjectData.Types.Utxo, txIn.PrevOut.ToString()))
-                            .Concat(transactionEvent.NewTransactionEvent.Outputs.SelectMany<NBXplorer.Models.MatchedOutput, ObjectTypeId>(txOut =>
 
-                                new[]{
-                            new ObjectTypeId(WalletObjectData.Types.Address, GetAddress(derivation, txOut, network).ToString()),
-                            new ObjectTypeId(WalletObjectData.Types.Utxo, new OutPoint(transactionEvent.NewTransactionEvent.TransactionData.TransactionHash, (uint)txOut.Index).ToString())
+                        var matchedObjects = new List<ObjectTypeId>();
+                        // Check if inputs match some UTXOs
+                        foreach (var txIn in transactionEvent.NewTransactionEvent.TransactionData.Transaction.Inputs)
+                        {
+                            matchedObjects.Add(new ObjectTypeId(WalletObjectData.Types.Utxo, txIn.PrevOut.ToString()));
+                        }
 
-                                })).Distinct().ToArray();
+                        // Check if outputs match some UTXOs
+                        var walletOutputsByIndex = transactionEvent.NewTransactionEvent.Outputs.ToDictionary(o => (uint)o.Index);
+                        foreach (var txOut in transactionEvent.NewTransactionEvent.TransactionData.Transaction.Outputs.AsIndexedOutputs())
+                        {
+                            BitcoinAddress? address = null;
+                            // Technically, walletTxOut.Address can be calculated.
+                            // However in liquid for example, this returns the blinded address
+                            // rather than the unblinded one.
+                            if (walletOutputsByIndex.TryGetValue(txOut.N, out var walletTxOut))
+                                address = walletTxOut.Address;
+                            address ??= txOut.TxOut.ScriptPubKey.GetDestinationAddress(network.NBitcoinNetwork);
+                            if (address is not null)
+                                matchedObjects.Add(new ObjectTypeId(WalletObjectData.Types.Address, address.ToString()));
+                            matchedObjects.Add(new ObjectTypeId(WalletObjectData.Types.Utxo, new OutPoint(transactionEvent.NewTransactionEvent.TransactionData.TransactionHash, txOut.N).ToString()));
+                        }
 
-                        var objs = await _walletRepository.GetWalletObjects(new GetWalletObjectsQuery() { TypesIds = matchedObjects });
+                        var objs = await _walletRepository.GetWalletObjects(new GetWalletObjectsQuery() { TypesIds = matchedObjects.Distinct().ToArray() });
                         var links  = new List<WalletObjectLinkData>(); 
                         foreach (var walletObjectDatas in objs.GroupBy(data => data.Key.WalletId))
                         {
@@ -111,12 +125,6 @@ namespace BTCPayServer.HostedServices
                         break;
                     }
             }
-        }
-
-        private BitcoinAddress GetAddress(DerivationStrategyBase derivationStrategy, NBXplorer.Models.MatchedOutput txOut, BTCPayNetwork network)
-        {
-            // Old version of NBX doesn't give address in the event, so we need to guess
-            return (txOut.Address ?? network.NBXplorerNetwork.CreateAddress(derivationStrategy, txOut.KeyPath, txOut.ScriptPubKey));
         }
     }
 }

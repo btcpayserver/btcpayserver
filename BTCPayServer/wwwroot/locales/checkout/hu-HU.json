@@ -39,5 +39,7 @@
   "submitting_nfc": "NFC küldése...",
   "payment_received": "Fizetés fogadva",
   "payment_received_body": "A fizetésed megérkezett és feldolgozás alatt áll",
-  "payment_received_confirmations": "Amint a fizetésed {{requiredConfirmations}} megerősítést kapott a(z) {{cryptoCode}} blokkláncban, az áfád rendezve lesz."
+  "payment_received_confirmations": "Amint a fizetésed {{requiredConfirmations}} megerősítést kapott a(z) {{cryptoCode}} blokkláncban, az áfád rendezve lesz.",
+  "invoice_paidpartial_body": "Egy számla csak {{minutes}} percig érvényes. Ez a számla lejárt részleges fizetéssel. Kérjük, lépjen kapcsolatba velünk, hogy teljesíthessük rendelését.",
+  "contact_us": "Lépjen kapcsolatba velünk"
 }

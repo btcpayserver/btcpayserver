@@ -475,9 +475,6 @@ namespace BTCPayServer.Hosting
                         continue;
                     var obj = new JObject();
                     obj.Add("color", label.Value);
-                    var labelObjId = new WalletObjectId(WalletId.Parse(wallet.Id),
-                        WalletObjectData.Types.Label,
-                        labelId);
                     ctx.WalletObjects.Add(new WalletObjectData()
                     {
                         WalletId = wallet.Id,

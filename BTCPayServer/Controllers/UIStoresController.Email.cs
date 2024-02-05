@@ -27,22 +27,20 @@ namespace BTCPayServer.Controllers
                 return NotFound();
 
             var blob = store.GetStoreBlob();
-            var storeSetupComplete = blob.EmailSettings?.IsComplete() is true;
-            if (!storeSetupComplete && !TempData.HasStatusMessage())
+            if (blob.EmailSettings?.IsComplete() is not true && !TempData.HasStatusMessage())
             {
                 var emailSender = await _emailSenderFactory.GetEmailSender(store.Id) as StoreEmailSender;
-                var hasServerFallback = await IsSetupComplete(emailSender?.FallbackSender);
-                var message = hasServerFallback
-                    ? "Emails will be sent with the email settings of the server"
-                    : "You need to configure email settings before this feature works";
-                TempData.SetStatusMessageModel(new StatusMessageModel
+                if (!await IsSetupComplete(emailSender?.FallbackSender))
                 {
-                    Severity = hasServerFallback ? StatusMessageModel.StatusSeverity.Info : StatusMessageModel.StatusSeverity.Warning,
-                    Html = $"{message}. <a class='alert-link' href='{Url.Action("StoreEmailSettings", new { storeId })}'>Configure store email settings</a>."
-                });
+                    TempData.SetStatusMessageModel(new StatusMessageModel
+                    {
+                        Severity = StatusMessageModel.StatusSeverity.Warning,
+                        Html = $"You need to configure email settings before this feature works. <a class='alert-link' href='{Url.Action("StoreEmailSettings", new { storeId })}'>Configure store email settings</a>."
+                    });
+                }
             }
 
-            var vm = new StoreEmailRuleViewModel { Rules = blob.EmailRules ?? new List<StoreEmailRule>() };
+            var vm = new StoreEmailRuleViewModel { Rules = blob.EmailRules ?? [] };
             return View(vm);
         }
 
@@ -172,13 +170,20 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("{storeId}/email-settings")]
-        public IActionResult StoreEmailSettings()
+        public async Task<IActionResult> StoreEmailSettings(string storeId)
         {
             var store = HttpContext.GetStoreData();
             if (store == null)
                 return NotFound();
-            var data = store.GetStoreBlob().EmailSettings ?? new EmailSettings();
-            return View(new EmailsViewModel(data));
+
+            var blob = store.GetStoreBlob();
+            var data = blob.EmailSettings ?? new EmailSettings();
+            var fallbackSettings = await _emailSenderFactory.GetEmailSender(store.Id) is StoreEmailSender { FallbackSender: not null } storeSender
+                ? await storeSender.FallbackSender.GetEmailSettings()
+                : null;
+            var vm = new EmailsViewModel(data, fallbackSettings);
+            
+            return View(vm);
         }
 
         [HttpPost("{storeId}/email-settings")]
@@ -187,7 +192,13 @@ namespace BTCPayServer.Controllers
             var store = HttpContext.GetStoreData();
             if (store == null)
                 return NotFound();
-
+            
+            var emailSender = await _emailSenderFactory.GetEmailSender(store.Id) as StoreEmailSender;
+            var fallbackSettings = await _emailSenderFactory.GetEmailSender(store.Id) is StoreEmailSender { FallbackSender: not null } storeSender
+                ? await storeSender.FallbackSender.GetEmailSettings()
+                : null;
+            model.FallbackSettings = fallbackSettings;
+            
             if (command == "Test")
             {
                 try
@@ -230,7 +241,7 @@ namespace BTCPayServer.Controllers
                     return View(model);
                 }
                 var storeBlob = store.GetStoreBlob();
-                if (new EmailsViewModel(storeBlob.EmailSettings).PasswordSet && storeBlob.EmailSettings != null)
+                if (storeBlob.EmailSettings != null && new EmailsViewModel(storeBlob.EmailSettings, fallbackSettings).PasswordSet)
                 {
                     model.Settings.Password = storeBlob.EmailSettings.Password;
                 }

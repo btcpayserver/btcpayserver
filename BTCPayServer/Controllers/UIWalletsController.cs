@@ -146,7 +146,6 @@ namespace BTCPayServer.Controllers
                 return NotFound();
 
             var txObjId = new WalletObjectId(walletId, WalletObjectData.Types.Tx, transactionId);
-            var wallet = _walletProvider.GetWallet(paymentMethod.Network);
             if (addlabel != null)
             {
                 await WalletRepository.AddWalletObjectLabels(txObjId, addlabel);
@@ -414,7 +413,6 @@ namespace BTCPayServer.Controllers
             await ExplorerClientProvider.GetExplorerClient(walletId.CryptoCode).WaitServerStartedAsync();
             await Task.Delay(1000);
             await using var conn = await factory.OpenConnection();
-            var wallet_id = paymentMethod.GetNBXWalletId();
 
             var txIds = sending.Select(s => s.Result.ToString()).ToArray();
             await conn.ExecuteAsync(

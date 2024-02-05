@@ -64,8 +64,17 @@ namespace BTCPayServer.Services.Rates
             {
                 if (_CurrencyProviders.Count == 0)
                 {
-                    foreach (var culture in CultureInfo.GetCultures(CultureTypes.AllCultures).Where(c => !c.IsNeutralCulture))
+                    foreach (var culture in CultureInfo.GetCultures(CultureTypes.AllCultures))
                     {
+                        // This avoid storms of exception throwing slowing up
+                        // startup and debugging sessions
+                        if (culture switch
+                        {
+                            { LCID: 0x007F or 0x0000 or 0x0c00 or 0x1000 } => true,
+                            { IsNeutralCulture : true } => true,
+                            _ => false
+                        })
+                            continue;
                         try
                         {
                             _CurrencyProviders.TryAdd(new RegionInfo(culture.LCID).ISOCurrencySymbol, culture);

@@ -39,5 +39,7 @@
   "submitting_nfc": "NFC жіберу ...",
   "payment_received": "Төлем қабылданды",
   "payment_received_body": "Сіздің төлеміңіз қабылданды және осы жағдайда өңдеуі жүргізілуде",
-  "payment_received_confirmations": "Өтінішіңіз {{cryptoCode}} блокшотында {{requiredConfirmations}} растау алынғаннан кейін, сіздің счетіңіз төленеді."
+  "payment_received_confirmations": "Өтінішіңіз {{cryptoCode}} блокшотында {{requiredConfirmations}} растау алынғаннан кейін, сіздің счетіңіз төленеді.",
+  "invoice_paidpartial_body": "Қаузе тек {{minutes}} минуттан қабылданады. Осы қаузе қиын болды, жарты ақша төлеумен аяқталды. Сізбен байланыс алыңыз, сонда біз сіздің тапсырысыңызды орындауға болады.",
+  "contact_us": "Бізге хабарласыңыз"
 }

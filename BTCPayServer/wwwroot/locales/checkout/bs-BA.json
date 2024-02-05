@@ -39,5 +39,7 @@
   "submitting_nfc": "Slanje NFC-a...",
   "payment_received": "Plaćanje primljeno",
   "payment_received_body": "Vaša uplata je primljena i sada se obrađuje",
-  "payment_received_confirmations": "Nakon što Vaša uplata dobije {{requiredConfirmations}} potvrde na {{cryptoCode}} blockchain-u, Vaš račun će biti namiren."
+  "payment_received_confirmations": "Nakon što Vaša uplata dobije {{requiredConfirmations}} potvrde na {{cryptoCode}} blockchain-u, Vaš račun će biti namiren.",
+  "invoice_paidpartial_body": "Račun je važeći samo {{minutes}} minuta. Ovaj račun je istekao s djelomičnom uplatom. Molimo vas da nas kontaktirate kako bismo ispunili vašu narudžbu.",
+  "contact_us": "Kontaktirajte nas"
 }

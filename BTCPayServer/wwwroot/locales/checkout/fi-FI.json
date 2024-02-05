@@ -39,5 +39,7 @@
   "submitting_nfc": "Lähetetään NFC...",
   "payment_received": "Maksu vastaanotettu",
   "payment_received_body": "Maksusi on vastaanotettu ja sitä käsitellään parhaillaan",
-  "payment_received_confirmations": "Kun maksusi on vastaanotettu {{requiredConfirmations}} vahvistuksella {{cryptoCode}} lohkoketjussa, laskusi suoritetaan."
+  "payment_received_confirmations": "Kun maksusi on vastaanotettu {{requiredConfirmations}} vahvistuksella {{cryptoCode}} lohkoketjussa, laskusi suoritetaan.",
+  "invoice_paidpartial_body": "Lasku on voimassa vain {{minutes}} minuuttia. Tämä lasku vanhentui osittaisen maksun vuoksi. Ole yhteydessä meihin, jotta voimme täyttää tilauksesi.",
+  "contact_us": "Ota yhteyttä meille"
 }

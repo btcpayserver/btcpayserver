@@ -39,5 +39,7 @@
   "submitting_nfc": "NFC를 제출 중...",
   "payment_received": "결제가 완료되었습니다",
   "payment_received_body": "결제가 완료되어 처리 중입니다",
-  "payment_received_confirmations": "{{requiredConfirmations}} 개의 확인이 {{cryptoCode}} 블록체인 상에서 수신되면, 고객님의 청구서가 처리됩니다."
+  "payment_received_confirmations": "{{requiredConfirmations}} 개의 확인이 {{cryptoCode}} 블록체인 상에서 수신되면, 고객님의 청구서가 처리됩니다.",
+  "invoice_paidpartial_body": "청구서는 {{minutes}}분 동안만 유효합니다. 이 청구서는 부분 결제 상태로 만료되었습니다. 주문을 완료할 수 있도록 저희에게 연락해 주세요.",
+  "contact_us": "저희에게 연락하세요"
 }

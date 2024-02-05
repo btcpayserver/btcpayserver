@@ -39,5 +39,7 @@
   "submitting_nfc": "ኤንክስፕ ይግቡ ...",
   "payment_received": "ክፍያ ተመልክቷል",
   "payment_received_body": "የትእዛዝህ ክፍያ ተመልክቷል፣ እናንተ በአሁኑ ጊዜ ተጠቀሙ",
-  "payment_received_confirmations": "ከ {{cryptoCode}} ምርመራ በመታየት {{requiredConfirmations}} መረጃ ላይ የሚገኙት የማንኛውም ክፍያ የተከተሉ የሚከተለውን ክፍት ቀጠሮዎች ከሚከተሉት እቅድ ጋር ተጠቀሙ።"
+  "payment_received_confirmations": "ከ {{cryptoCode}} ምርመራ በመታየት {{requiredConfirmations}} መረጃ ላይ የሚገኙት የማንኛውም ክፍያ የተከተሉ የሚከተለውን ክፍት ቀጠሮዎች ከሚከተሉት እቅድ ጋር ተጠቀሙ።",
+  "invoice_paidpartial_body": "የመዘጋጀት ቅርጸት ከ {{minutes}} ደቂቃ ቀጥል። የመዘጋጀት ቅርጸት በማንቂያ አሁን ተማረ። እባክዎን እኛን ይደውሉ ፡፡ እንደገና የሚከተለውን ነገር እንዳይሰጥ አስፈላጊ ይድረሳል።",
+  "contact_us": "እኛን ይደውሉ"
 }

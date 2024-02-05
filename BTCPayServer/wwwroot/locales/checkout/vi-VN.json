@@ -39,5 +39,7 @@
   "submitting_nfc": "Gửi NFC ...",
   "payment_received": "Đã nhận thanh toán",
   "payment_received_body": "Thanh toán của bạn đã được nhận và đang được xử lý.",
-  "payment_received_confirmations": "Sau khi thanh toán của bạn nhận được {{requiredConfirmations}} xác nhận trên blockchain {{cryptoCode}}, hoá đơn của bạn sẽ được giải quyết."
+  "payment_received_confirmations": "Sau khi thanh toán của bạn nhận được {{requiredConfirmations}} xác nhận trên blockchain {{cryptoCode}}, hoá đơn của bạn sẽ được giải quyết.",
+  "invoice_paidpartial_body": "Hóa đơn chỉ còn hiệu lực trong {{phút}} phút. Hóa đơn này đã hết hạn với thanh toán một phần. Vui lòng liên hệ với chúng tôi để chúng tôi có thể thực hiện đơn hàng của bạn.",
+  "contact_us": "Liên hệ với chúng tôi"
 }

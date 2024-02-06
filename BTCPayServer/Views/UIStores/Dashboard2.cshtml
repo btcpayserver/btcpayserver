@@ -1,0 +1,8 @@
+﻿@using BTCPayServer.Blazor
+@using BTCPayServer.Abstractions.Contracts
+@inject IScopeProvider ScopeProvider
+
+@(await Html.RenderComponentAsync<Dashboard>(RenderMode.ServerPrerendered, new
+{
+    StoreId = ScopeProvider.GetCurrentStoreId()
+}))

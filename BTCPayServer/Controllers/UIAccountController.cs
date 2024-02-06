@@ -811,7 +811,7 @@ namespace BTCPayServer.Controllers
             
             if (requiresEmailConfirmation)
             {
-                return RedirectToAction(nameof(ConfirmEmail), new { userId, code });
+                return await RedirectToConfirmEmail(user);
             }
             if (requiresSetPassword)
             {
@@ -831,6 +831,12 @@ namespace BTCPayServer.Controllers
             });
 
             return RedirectToAction(nameof(Login), new { email = user.Email });
+        }
+        
+        private async Task<IActionResult> RedirectToConfirmEmail(ApplicationUser user)
+        {
+            var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            return RedirectToAction(nameof(ConfirmEmail), new { userId = user.Id, code });
         }
 
         private async Task<IActionResult> RedirectToSetPassword(ApplicationUser user)

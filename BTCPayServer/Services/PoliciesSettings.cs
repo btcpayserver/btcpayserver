@@ -23,10 +23,9 @@ namespace BTCPayServer.Services
             set { LockSubscription = !value; }
         }
 
-        [DefaultValue(true)]
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
         [Display(Name = "Require new users to be approved by an admin after registration")]
-        public bool RequiresUserApproval { get; set; } = true;
+        public bool RequiresUserApproval { get; set; }
 
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
         [Display(Name = "Discourage search engines from indexing this site")]

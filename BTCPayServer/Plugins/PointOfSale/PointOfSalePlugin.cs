@@ -56,8 +56,7 @@ namespace BTCPayServer.Plugins.PointOfSale
         public PointOfSaleAppType(
             LinkGenerator linkGenerator,
             IOptions<BTCPayServerOptions> btcPayServerOptions,
-            DisplayFormatter displayFormatter,
-            HtmlSanitizer htmlSanitizer)
+            DisplayFormatter displayFormatter)
         {
             Type = AppType;
             Description = "Point of Sale";

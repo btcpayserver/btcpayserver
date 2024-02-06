@@ -45,7 +45,6 @@ namespace BTCPayServer.Plugins.Crowdfund
         private readonly IOptions<BTCPayServerOptions> _options;
         private readonly DisplayFormatter _displayFormatter;
         private readonly CurrencyNameTable _currencyNameTable;
-        private readonly HtmlSanitizer _htmlSanitizer;
         private readonly InvoiceRepository _invoiceRepository;
         public const string AppType = "Crowdfund";
 
@@ -54,15 +53,13 @@ namespace BTCPayServer.Plugins.Crowdfund
             IOptions<BTCPayServerOptions> options,
             InvoiceRepository invoiceRepository,
             DisplayFormatter displayFormatter,
-            CurrencyNameTable currencyNameTable,
-            HtmlSanitizer htmlSanitizer)
+            CurrencyNameTable currencyNameTable)
         {
             Description = Type = AppType;
             _linkGenerator = linkGenerator;
             _options = options;
             _displayFormatter = displayFormatter;
             _currencyNameTable = currencyNameTable;
-            _htmlSanitizer = htmlSanitizer;
             _invoiceRepository = invoiceRepository;
         }
 

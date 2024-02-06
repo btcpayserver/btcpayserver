@@ -28,7 +28,6 @@ using OpenQA.Selenium.DevTools.V100.Network;
 using OpenQA.Selenium.Support.UI;
 using Xunit;
 using Xunit.Abstractions;
-using Microsoft.Extensions.FileSystemGlobbing;
 
 namespace BTCPayServer.Tests
 {

@@ -38,8 +38,6 @@ namespace BTCPayServer.Services
         public bool AllowHotWalletRPCImportForAll { get; set; }
         [Display(Name = "Check releases on GitHub and notify when new BTCPay Server version is available")]
         public bool CheckForNewVersions { get; set; }
-        [Display(Name = "Disable notifications from automatically showing (no websockets)")]
-        public bool DisableInstantNotifications { get; set; }
         [Display(Name = "Disable stores from using the server's email settings as backup")]
         public bool DisableStoresToUseServerEmailSettings { get; set; }
         

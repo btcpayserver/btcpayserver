@@ -127,20 +127,6 @@
                 </div>
             </div>
 
-            <div class="form-group mb-5">
-                <h4 class="mb-3">Notification Settings</h4>
-                <div class="d-flex my-3">
-                    <input asp-for="DisableInstantNotifications" type="checkbox" class="btcpay-toggle me-3"/>
-                    <div>
-                        <label asp-for="DisableInstantNotifications" class="form-label mb-0"></label>
-                        <a href="https://docs.btcpayserver.org/Notifications/#notifications" target="_blank" rel="noreferrer noopener">
-                            <vc:icon symbol="info" />
-                        </a>
-                        <span asp-validation-for="DisableInstantNotifications" class="text-danger"></span>
-                    </div>
-                </div>
-            </div>
-
             <h4 class="mb-3">Plugins</h4>
             <div class="form-group">
                 <label asp-for="PluginSource" class="form-label"></label>

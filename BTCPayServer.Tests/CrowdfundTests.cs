@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Security.AccessControl;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Form;
 using BTCPayServer.Client;
@@ -13,16 +11,12 @@ using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Plugins.Crowdfund;
 using BTCPayServer.Plugins.Crowdfund.Controllers;
 using BTCPayServer.Plugins.Crowdfund.Models;
-using BTCPayServer.Plugins.PointOfSale.Models;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Primitives;
 using NBitcoin;
 using NBitpayClient;
-using OpenQA.Selenium.DevTools.V100.Runtime;
 using Xunit;
 using Xunit.Abstractions;
 using static BTCPayServer.Tests.UnitTest1;
@@ -283,7 +277,7 @@ namespace BTCPayServer.Tests
                 PosData = "posData",
                 ItemDesc = "Some description",
                 TransactionSpeed = "high",
-                FullNotifications = true,
+                FullNotifications = true
             }, Facade.Merchant);
             invoiceEntity = tester.PayTester.InvoiceRepository.GetInvoice(invoice.Id).GetAwaiter().GetResult();
             Assert.DoesNotContain(AppService.GetAppInternalTag(app.Id), invoiceEntity.InternalTags);
@@ -314,7 +308,6 @@ namespace BTCPayServer.Tests
             });
         }
 
-
         [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task CrowdfundWithFormNoPerk()
@@ -328,15 +321,8 @@ namespace BTCPayServer.Tests
 
             var frmService = tester.PayTester.GetService<FormDataService>();
             var appService = tester.PayTester.GetService<AppService>();
-
             var crowdfund = user.GetController<UICrowdfundController>();
             var apps = user.GetController<UIAppsController>();
-
-            var vm = new CreateAppViewModel()
-            {
-                SelectedAppType = CrowdfundAppType.AppType,
-                AppName = "test",
-            };
             var appData = new AppData { StoreDataId = user.StoreId, Name = "test", AppType = CrowdfundAppType.AppType };
             await appService.UpdateOrCreateApp(appData);
             var appList = Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps.ListApps(user.StoreId).Result).Model);
@@ -344,16 +330,16 @@ namespace BTCPayServer.Tests
             apps.HttpContext.SetAppData(appData);
             crowdfund.HttpContext.SetAppData(appData);
 
-            var form = new Form()
+            var form = new Form
             {
-                Fields = new List<Field>
-                {
+                Fields =
+                [
                     Field.Create("Enter your email", "item1", "test@toto.com", true, null, "email"),
                     Field.Create("Name", "item2", 2.ToString(), true, null),
                     Field.Create("Item3", "invoice_item3", 3.ToString(), true, null)
-                }
+                ]
             };
-            var frmData = new FormData()
+            var frmData = new FormData
             {
                 StoreId = user.StoreId,
                 Name = "frmTest",
@@ -368,19 +354,13 @@ namespace BTCPayServer.Tests
             crowdfundViewModel.FormId = lstForms[0].Id;
             crowdfundViewModel.TargetCurrency = "BTC";
             crowdfundViewModel.Enabled = true;
-
             Assert.IsType<RedirectToActionResult>(crowdfund.UpdateCrowdfund(app.Id, crowdfundViewModel, "save").Result);
 
             var vm2 = await crowdfund.CrowdfundForm(app.Id, (decimal?)0.01).AssertViewModelAsync<FormViewModel>();
-
             var res = await crowdfund.CrowdfundFormSubmit(app.Id, (decimal)0.01, "", vm2);
-
             Assert.IsNotType<NotFoundObjectResult>(res);
             Assert.IsNotType<BadRequest>(res);
-
-
         }
-
 
         [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Integration", "Integration")]
@@ -395,15 +375,8 @@ namespace BTCPayServer.Tests
 
             var frmService = tester.PayTester.GetService<FormDataService>();
             var appService = tester.PayTester.GetService<AppService>();
-
             var crowdfund = user.GetController<UICrowdfundController>();
             var apps = user.GetController<UIAppsController>();
-
-            var vm = new CreateAppViewModel()
-            {
-                SelectedAppType = CrowdfundAppType.AppType,
-                AppName = "test",
-            };
             var appData = new AppData { StoreDataId = user.StoreId, Name = "test", AppType = CrowdfundAppType.AppType };
             await appService.UpdateOrCreateApp(appData);
             var appList = Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps.ListApps(user.StoreId).Result).Model);
@@ -411,16 +384,16 @@ namespace BTCPayServer.Tests
             apps.HttpContext.SetAppData(appData);
             crowdfund.HttpContext.SetAppData(appData);
 
-            var form = new Form()
+            var form = new Form
             {
-                Fields = new List<Field>
-                {
+                Fields =
+                [
                     Field.Create("Enter your email", "item1", "test@toto.com", true, null, "email"),
                     Field.Create("Name", "item2", 2.ToString(), true, null),
                     Field.Create("Item3", "invoice_item3", 3.ToString(), true, null)
-                }
+                ]
             };
-            var frmData = new FormData()
+            var frmData = new FormData
             {
                 StoreId = user.StoreId,
                 Name = "frmTest",
@@ -436,13 +409,10 @@ namespace BTCPayServer.Tests
             crowdfundViewModel.TargetCurrency = "BTC";
             crowdfundViewModel.Enabled = true;
             crowdfundViewModel.PerksTemplate = "[{\"id\": \"xxx\",\"title\": \"Perk 1\",\"priceType\": \"Fixed\",\"price\": \"0.001\",\"image\": \"\",\"description\": \"\",\"categories\": [],\"disabled\": false}]";
-
             Assert.IsType<RedirectToActionResult>(crowdfund.UpdateCrowdfund(app.Id, crowdfundViewModel, "save").Result);
 
             var vm2 = await crowdfund.CrowdfundForm(app.Id, (decimal?)0.01, "xxx").AssertViewModelAsync<FormViewModel>();
-
             var res = await crowdfund.CrowdfundFormSubmit(app.Id, (decimal)0.01, "xxx", vm2);
-
             Assert.IsNotType<NotFoundObjectResult>(res);
             Assert.IsNotType<BadRequest>(res);
         }

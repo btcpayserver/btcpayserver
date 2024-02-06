@@ -445,8 +445,6 @@ namespace BTCPayServer.Tests
 
             Assert.IsNotType<NotFoundObjectResult>(res);
             Assert.IsNotType<BadRequest>(res);
-
-
         }
     }
 }

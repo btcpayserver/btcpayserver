@@ -328,25 +328,20 @@
                         </span>
                     </div>
                     <p class="card-text overflow-hidden" v-if="perk.description" v-html="perk.description"></p>
-
-                    <div class="input-group" style="max-width:500px;" v-if="expanded" :id="'perk-form'+ perk.id">
+                    <div class="input-group mt-3" style="max-width:500px;" v-if="expanded" :id="'perk-form'+ perk.id">
                         <template v-if="perk.priceType !== 'Topup' && !(perk.priceType === 'Fixed' && amount == 0)">
-                        <input
-                            :disabled="!active"
-                                   :readonly="perk.priceType === 'Fixed'"
-                                   class="form-control hide-number-spin"
-                                   type="number"
+                            <input type="number" class="form-control hide-number-spin"
                                    v-model="amount"
+                                   :disabled="!active"
+                                   :readonly="perk.priceType === 'Fixed'"
                                    :min="perk.price"
                                    step="any"
                                    placeholder="Contribution Amount"
                                    required>
                             <span class="input-group-text">{{targetCurrency}}</span>
                         </template>
-                    <button
-                        class="btn btn-primary d-flex align-items-center "
-                                v-bind:class="{ 'btn-disabled': loading}"
-                                :disabled="!active || loading"
+                        <button class="btn btn-primary d-flex align-items-center"
+                                :class="{'btn-disabled': loading}"
                                 type="submit">
                             <div v-if="loading" class="spinner-grow spinner-grow-sm me-2" role="status">
                                 <span class="visually-hidden">Loading...</span>
@@ -368,8 +363,7 @@
     <template id="contribute-template">
         <div>
             <h3 v-if="!inModal" class="mb-3">Contribute</h3>
-        <perks
-            :perks="perks"
+            <perks :perks="perks"
                    :loading="loading"
                    :in-modal="inModal"
                    :display-perks-ranking="displayPerksRanking"

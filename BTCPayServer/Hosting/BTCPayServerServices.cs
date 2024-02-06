@@ -317,9 +317,7 @@ namespace BTCPayServer.Hosting
             services.TryAddTransient<DisplayFormatter>();
             services.TryAddSingleton<Ganss.Xss.HtmlSanitizer>(o =>
             {
-
                 var htmlSanitizer = new Ganss.Xss.HtmlSanitizer();
-
 
                 htmlSanitizer.RemovingAtRule += (sender, args) =>
                 {
@@ -353,6 +351,7 @@ namespace BTCPayServer.Hosting
                 htmlSanitizer.AllowedTags.Remove("img");
                 htmlSanitizer.AllowedAttributes.Add("webkitallowfullscreen");
                 htmlSanitizer.AllowedAttributes.Add("allowfullscreen");
+                htmlSanitizer.AllowedSchemes.Add("mailto");
                 return htmlSanitizer;
             });
 

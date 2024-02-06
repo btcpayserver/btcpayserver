@@ -7,6 +7,7 @@ using System.Security.Claims;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Custodians;
 using BTCPayServer.Configuration;
 using BTCPayServer.HostedServices;
@@ -41,8 +42,7 @@ namespace BTCPayServer.Tests
 
     public class BTCPayServerTester : IDisposable
     {
-        private readonly string _Directory;
-
+        internal readonly string _Directory;
         public ILoggerProvider LoggerProvider { get; }
 
         ILog TestLogs;
@@ -90,6 +90,13 @@ namespace BTCPayServer.Tests
         public TestDatabases TestDatabase
         {
             get; set;
+        }
+
+        public async Task RestartStartupTask<T>()
+        {
+            var startupTask = GetService<IServiceProvider>().GetServices<IStartupTask>()
+                .Single(task => task is T);
+            await startupTask.ExecuteAsync();
         }
 
         public bool MockRates { get; set; } = true;

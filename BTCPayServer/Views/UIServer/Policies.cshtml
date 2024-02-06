@@ -140,6 +140,14 @@
 
             <div class="form-group mb-5">
                 <h4 class="mb-3">Maintenance Settings</h4>
+				<div class="form-check my-3">
+					<label asp-for="LangDictionary" class="form-label"></label>
+					<select asp-for="LangDictionary"
+							asp-items="@(new SelectList(ViewBag.LangDictionaries, nameof(SelectListItem.Value), nameof(SelectListItem.Text), Model.DomainToAppMapping[index].AppId))"
+							class="form-select">
+					</select>
+					<span asp-validation-for="LangDictionary" class="text-danger"></span>
+				</div>
                 @if (ViewBag.UpdateUrlPresent)
                 {
                     <div class="form-check my-3">

@@ -1,0 +1,195 @@
+﻿@using BTCPayServer.Services.Invoices
+@using BTCPayServer.Abstractions.Contracts
+@using BTCPayServer.Services
+@inherits BaseWidgetComponent<InvoiceWidget.InvoiceWidgetConfig>
+@inject InvoiceRepository InvoiceRepository
+@inject DisplayFormatter DisplayFormatter 
+
+
+
+@if (Loading)
+{
+    <header class="mb-3">
+        <h3>Invoices</h3>
+
+    </header>
+
+    <div class="spinner-border" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+}
+else if (EditMode)
+{
+    <header class="mb-3">
+        <h3>Invoices</h3>
+
+    </header>
+
+    <div>
+        <div class="form-group">
+            <label class="form-label">Days</label>
+            <input type="number" @bind="EditConfig.LastDays" min="1" max="100" step="1" class="form-control" />
+        </div>
+        <div class="form-group">
+            <label class="form-label">Limit</label>
+            <input type="number" @bind="EditConfig.LimitToShow" min="1" max="100" step="1" class="form-control" />
+        </div>
+
+        <div class="form-group">
+            <div class="d-flex justify-content-center gap-2">
+                <button class="btn btn-primary btn-sm px-2" @onclick="SaveEdit">Save</button>
+                <button class="btn btn-outline-secondary btn-sm   px-2" @onclick="CancelEdit">Cancel</button>
+                <button class="btn btn-outline-danger btn-sm   px-2" @onclick="Remove">Remove</button>
+            </div>
+        </div>
+
+    </div>
+}
+else if (_invoices is null)
+{  
+    <header class="mb-3">
+        <h3>Invoices</h3>
+
+    </header>
+    <p class="text-secondary my-3">
+        This widget is not yet configured.
+    </p>
+    @if (!Readonly)
+    {
+        <button class="btn btn-link" @onclick="EnterEdit">Edit widget</button>
+    }
+}
+else if (Size <= 6)
+{
+    
+    <div class="balance d-flex align-items-baseline gap-1">
+        <h3 class="d-inline-block me-1">@_invoices.Length</h3>
+        <span class="text-secondary fw-semibold currency">invoices</span>
+    </div>
+    <p class="text-secondary my-3">in last @TypedConfig.LastDays days</p>
+    @if (!Readonly)
+    {
+        <button class="btn btn-link" @onclick="EnterEdit">Edit widget</button>
+    }
+}
+else if (_invoices.Length == 0)
+{
+    <header class="mb-3">
+        <h3>Invoices</h3>
+
+    </header>
+    <p class="text-secondary my-3">
+        There are no recent invoices.
+    </p>
+    @if (!Readonly)
+    {
+        <button class="btn btn-link" @onclick="EnterEdit">Edit widget</button>
+    }
+}
+else
+{
+    <header class="mb-3">
+        <h3>Invoices</h3>
+
+    </header>
+    <div class="table-responsive">
+        <table class="table table-hover mt-3 mb-0">
+            <thead>
+            <tr>
+                <th class="w-125px">Date</th>
+                <th class="text-nowrap">Invoice Id</th>
+                <th>Status</th>
+                <th class="text-end">Amount</th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var invoice in _invoices)
+            {
+                <tr>
+                    <td>@invoice.InvoiceTime.ToTimeAgo()</td>
+                    <td>
+                        <a asp-controller="UIInvoice" asp-action="Invoice" asp-route-invoiceId="@invoice.Id" class="text-break">@invoice.Id</a>
+                    </td>
+                    <td>
+                        @invoice.Status.ToModernStatus()
+                    </td>
+                    <td class="text-end">
+                        <span data-sensitive>@DisplayFormatter.Currency(invoice.Price, invoice.Currency)</span>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+    @if (!Readonly)
+    {
+        <button class="btn btn-link" @onclick="EnterEdit">Edit widget</button>
+    }
+}
+
+@code{
+
+    private InvoiceEntity[] _invoices;
+    
+
+    protected override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _ = Fetch();
+        }
+
+        return base.OnAfterRenderAsync(firstRender);
+    }
+
+    public class InvoiceWidgetConfig
+    {
+        public int LimitToShow { get; set; } = 10;
+        public int LastDays { get; set; } = 30;
+    }
+
+    private async Task Fetch()
+    {
+        Loading = true;
+        try
+        {
+            if (TypedConfig is null)
+            {
+                return;
+            }
+            
+            _invoices = await InvoiceRepository.GetInvoices(new InvoiceQuery()
+            {
+                IncludeArchived = false,
+                StartDate = DateTimeOffset.UtcNow.AddDays(-TypedConfig.LastDays),
+                Take = TypedConfig.LimitToShow,
+                StoreId = new[] {StoreId}
+            });
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
+        finally
+        {
+            Loading = false;
+        }
+    }
+
+    protected override Task TypedConfigChanged()
+    {
+        _ = Fetch();
+        return base.TypedConfigChanged();
+    }
+
+    public static readonly AvailableWidget AvailableWidget = new AvailableWidget()
+    {
+        Name = "Invoices",
+        Type = nameof(InvoiceWidget),
+        ComponentType = typeof(InvoiceWidget),
+        MaxSize = 13,
+        MinSize = 2
+    };
+
+}

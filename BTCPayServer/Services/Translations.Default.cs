@@ -17,14 +17,12 @@ Add additional fee (network fee) to invoice …
 Add Exchange Rate Spread
 Add hop hints for private channels to the Lightning invoice
 Admin API access token
+Admin must approve new users
 Allow anyone to create invoice
-Allow fee increase (RBF)
 Allow form for public use
-Allow non-admins to create hot wallets for their stores
-Allow non-admins to import hot wallets for their stores
-Allow non-admins to use the internal lightning node in their stores
 Allow payee to create invoices with custom amounts
 Allow payee to pass a comment
+Allow Stores use the Server's SMTP email settings as their default
 Always include non-witness UTXO if available
 Amazon S3
 Amount
@@ -38,6 +36,7 @@ Auto-detect language on checkout
 Automatically approve claims
 Available Payment Methods
 Azure Blob Storage
+Backend's language
 Batch size
 BIP39 Seed (12/24 word mnemonic phrase) or HD private key (xprv...)
 Brand Color
@@ -46,7 +45,6 @@ Callback Notification URL
 Can use hot wallet
 Can use RPC import
 Celebrate payment with confetti
-Change domain
 Check releases on GitHub and notify when new BTCPay Server version is available
 Colors to rotate between with animation when a payment is made. One color per line.
 Confirm new password
@@ -54,17 +52,14 @@ Confirm password
 Connection string
 Consider the invoice paid even if the paid amount is … % less than expected
 Consider the invoice settled when the payment transaction …
+Contact URL
 Contribution Perks Template
 Count all invoices created on the store as part of the goal
 Currency
 Current password
-Custodian
 Custom CSS
-Custom CSS Code
-Custom CSS URL
 Custom HTML title to display on Checkout page
 Custom sound file for successful payment
-Custom Theme CSS URL
 Custom Theme Extension Type
 Custom Theme File
 Default currency
@@ -76,14 +71,13 @@ Derivation scheme format
 Description
 Description template of the lightning invoice
 Destination Address
-Disable new user registration on the server
-Disable non-admins access to the user creation API endpoint
-Disable notifications from automatically showing (no websockets)
+Disable public user registration
 Disable stores from using the server's email settings as backup
 Discourage search engines from indexing this site
 Display app on website root
 Display contribution ranking
 Display contribution value
+Display item selection for keypad
 Display Lightning payment amounts in Satoshis
 Display the category list
 Display the search bar
@@ -92,9 +86,11 @@ Disqus Shortname
 Do not allow additional contributions after target has been reached
 Does not extend a BTCPay Server theme, fully custom
 Domain
+Domain name
 Don't create UTXO change
 Email
 Email address
+Email confirmation required
 Email confirmed?
 Enable background animations on new payments
 Enable Disqus Comments
@@ -102,6 +98,7 @@ Enable experimental features
 Enable LNURL
 Enable Payjoin/P2EP
 Enable public receipt page for settled invoices
+Enable public user registration
 Enable sounds on checkout page
 Enable sounds on new payments
 Enable tips
@@ -111,12 +108,12 @@ Expiration Date
 Extends the BTCPay Server Dark theme
 Extends the BTCPay Server Light theme
 Featured Image URL
-Fee rate (satoshi per byte)
+Fee rate (sat/vB)
 Form configuration (JSON)
 Gap limit
 Google Cloud Storage
 GRPC SSL Cipher suite (GRPC_SSL_CIPHER_SUITES)
-Inherit from store settings
+Image
 Invoice currency
 Invoice expires if the full amount has not been paid after …
 Invoice metadata
@@ -125,8 +122,6 @@ Is signing key
 Item Description
 Keypad
 Lightning node (LNURL Auth)
-Link to a custom CSS stylesheet
-Link to a custom logo
 LNURL Classic Mode
 Local File System
 Logo
@@ -137,12 +132,14 @@ Memo
 Metadata
 Min sats
 Minimum acceptable expiration time for BOLT11 for refunds
-Name
 New password
+Non-admins can access the User Creation API Endpoint
+Non-admins can create Hot Wallets for their Store
+Non-admins can import Hot Wallets for their Store
+Non-admins can use the Internal Lightning Node for their Store
+Non-admins cannot access the User Creation API Endpoint
 Notification Email
 Notification URL
-Off
-On
 Only enable the payment method after user explicitly chooses it
 Optional seed passphrase
 Order Id
@@ -152,7 +149,7 @@ Password
 Password (leave blank to generate invite-link)
 PayJoin BIP21
 Payment invalid if transactions fails to confirm … after invoice expiration
-Payment Methods
+Payout Methods
 Plugin server
 Point of Sale Style
 Policies
@@ -160,6 +157,7 @@ Preferred Price Source
 Print display
 Product list
 Product list with cart
+Profile Picture
 PSBT content
 PSBT to combine with…
 Public Key
@@ -170,17 +168,18 @@ Redirect invoice to redirect url automatically after paid
 Redirect URL
 Remember me
 Remember this machine
+Request contributor data on checkout
 Request customer data on checkout
-Require a confirmation email for registering
-Require Refund Email
-Requires a refund email
 Reset goal every
 REST Uri
 Role
 Root fingerprint
 Scope
+Search engines can index this site
 Security device (FIDO2)
-Select the payment method used for refund
+Select the Default Currency during Store Creation
+Select the payout method used for refund
+Server Name
 Shop Name
 Show "Pay in wallet" button
 Show a timer … minutes before invoice expiration
@@ -213,14 +212,13 @@ Upload PSBT from file…
 Url of the Dynamic DNS service you are using
 Use custom theme
 Use SSL
-Use the classic checkout
 User can input custom amount
 User can input discount in %
 UTXOs to spend from
 Verification Code
 Wallet file
 Wallet file content
-Welcome to your BTCPay Server
+Welcome to {0}
 Your dynamic DNS hostname
 """;
             Default = Translations.CreateFromText(knownTranslations);

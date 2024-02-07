@@ -310,7 +310,7 @@
                     <a asp-controller="UIServer" id="SectionNav-@ServerNavPages.Branding" class="nav-link @ViewData.ActivePageClass(ServerNavPages.Branding)" asp-action="Branding">Branding</a>
                 </li>
 				<li class="nav-item nav-item-sub" permission="@Policies.CanModifyServerSettings">
-					<a asp-controller="UIServer" id="SectionNav-@ServerNavPages.Translations" class="nav-link @ViewData.ActivePageClass(ServerNavPages.Translations)" asp-action="ServerTranslations">Translations</a>
+					<a asp-controller="UIServer" id="SectionNav-@ServerNavPages.Translations" class="nav-link @ViewData.ActivePageClass(ServerNavPages.Translations)" asp-action="ListDictionaries">Translations</a>
 				</li>
                 @if (BtcPayServerOptions.DockerDeployment)
                 {

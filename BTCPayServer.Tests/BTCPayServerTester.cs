@@ -96,7 +96,7 @@ namespace BTCPayServer.Tests
 
         public async Task RestartStartupTask<T>()
         {
-            var startupTask = GetService<IServiceProvider>().GetServices<IStartupTask>()
+            var startupTask = GetService<IServiceProvider>().GetServices<Abstractions.Contracts.IStartupTask>()
                 .Single(task => task is T);
             await startupTask.ExecuteAsync();
         }

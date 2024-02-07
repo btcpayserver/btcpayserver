@@ -303,7 +303,7 @@ retry:
                     var txt = File.ReadAllText(file.FullName);
                     if (txt.Contains("ViewLocalizer"))
                     {
-                        var matches = Regex.Matches(txt, "ViewLocalizer\\[\"(.*?)\"\\]");
+                        var matches = Regex.Matches(txt, "ViewLocalizer\\[\"(.*?)\"[\\],]");
                         foreach (Match match in matches)
                         {
                             defaultTranslatedKeys.Add(match.Groups[1].Value);

@@ -469,7 +469,7 @@ namespace BTCPayServer.Controllers
         private async Task<List<SelectListItem>> GetLangDictionariesSelectList()
         {
             var dictionaries = await this._localizer.GetDictionaries();
-            return dictionaries.Select(d => new SelectListItem(d.LangName, d.LangName)).OrderBy(d => d.Value).ToList();
+            return dictionaries.Select(d => new SelectListItem(d.DictionaryName, d.DictionaryName)).OrderBy(d => d.Value).ToList();
         }
 
         private static bool TryParseAsExternalService(TorService torService, [MaybeNullWhen(false)] out ExternalService externalService)

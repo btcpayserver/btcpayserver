@@ -21,6 +21,19 @@ namespace BTCPayServer.Services
             public record Added(string Key, string Value) : Diff(Key);
             public record Modified(string Key, string NewValue, string OldValue) : Diff(Key);
         }
+        public static bool TryCreateFromText(string text, [MaybeNullWhen(false)] out Translations translations)
+        {
+            translations = null;
+            try
+            {
+                translations = CreateFromText(text);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
         public static Translations CreateFromText(string text)
         {
             text = (text ?? "").Replace("\r\n", "\n");

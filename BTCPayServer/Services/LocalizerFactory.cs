@@ -98,7 +98,7 @@ namespace BTCPayServer.Services
             public LocalizedString GetString(string name, params object[] arguments)
             {
                 //var args = String.Join(", ", arguments.Select((a, i) => $"arg[{i}]:{a}").ToArray());
-                //Logs.PayServer.LogInformation($"[HTML] GetString(name,args):");
+                Logs.PayServer.LogInformation($"[HTML] GetString(name,args):");
                 return this[name, arguments];
             }
         }

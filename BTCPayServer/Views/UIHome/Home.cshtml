@@ -9,7 +9,7 @@
 
 <partial name="_StatusMessage" />
 
-<h2 text-translate="true">Welcome to @(string.IsNullOrWhiteSpace(settings.ServerName) ? "your BTCPay\u00a0Server" : settings.ServerName)</h2>
+<h2 text-translate="true">@ViewLocalizer["Welcome to {0}", string.IsNullOrWhiteSpace(settings.ServerName) ? "BTCPay Server" : settings.ServerName]</h2>
 
 @if (!Model.HasStore)
 {

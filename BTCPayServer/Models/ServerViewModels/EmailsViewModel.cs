@@ -5,7 +5,7 @@ namespace BTCPayServer.Models.ServerViewModels;
 
 public class ServerEmailsViewModel : EmailsViewModel
 {
-    [Display(Name = "Allow stores to use the server's SMTP email settings as a default")]
+    [Display(Name = "Allow Stores use the Server's SMTP email settings as their default")]
     public bool EnableStoresToUseServerEmailSettings { get; set; }
 
     public ServerEmailsViewModel()

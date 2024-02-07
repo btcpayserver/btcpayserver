@@ -20,18 +20,26 @@
                     </div>
                 }
                 <div class="d-flex my-3">
-                    <input asp-for="DiscourageSearchEngines" type="checkbox" class="btcpay-toggle me-3"/>
+                    <input asp-for="AllowSearchEngines" type="checkbox" class="btcpay-toggle me-3"/>
                     <div>
-                        <label asp-for="DiscourageSearchEngines" class="form-label mb-0"></label>
+                        <label asp-for="AllowSearchEngines" class="form-label mb-0"></label>
                         <a href="https://docs.btcpayserver.org/FAQ/ServerSettings/#how-to-hide-my-btcpay-server-from-search-engines" target="_blank" rel="noreferrer noopener">
                             <vc:icon symbol="info" />
                         </a>
-                        <span asp-validation-for="DiscourageSearchEngines" class="text-danger"></span>
+                        <span asp-validation-for="AllowSearchEngines" class="text-danger"></span>
                     </div>
                 </div>
-                <div class="d-flex my-3">
-                    <input asp-for="EnableExperimentalFeatures" type="checkbox" class="btcpay-toggle me-3"/>
-                    <label asp-for="EnableExperimentalFeatures" class="form-label mb-0"></label>
+                <div class="d-flex align-items-center my-3">
+                    <input asp-for="EnableExperimentalFeatures" type="checkbox" class="btcpay-toggle me-3" />
+                    <div>
+                        <label asp-for="EnableExperimentalFeatures" class="form-label mb-0"></label>
+                        <div class="text-muted">
+                            Will allow you to use the custodian account feature.
+                            <a href="https://blog.btcpayserver.org/btcpay-server-1-9-0/#-exchange-integration-via-plugins-" target="_blank" rel="noreferrer noopener">
+                                <vc:icon symbol="info" />
+                            </a>
+                        </div>
+                    </div>
                 </div>
                 <button name="command" type="submit" class="btn btn-secondary mt-3" value="save">
                     Save

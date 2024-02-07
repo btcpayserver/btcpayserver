@@ -131,7 +131,7 @@ namespace BTCPayServer.Controllers
             {
                 CanUseSSH = _sshState.CanUseSSH,
                 DNSDomain = Request.Host.Host,
-                DiscourageSearchEngines = _policiesSettings.DiscourageSearchEngines,
+                AllowSearchEngines = _policiesSettings.AllowSearchEngines,
                 CheckForNewVersions = _policiesSettings.CheckForNewVersions,
                 EnableExperimentalFeatures = _policiesSettings.Experimental
             };
@@ -213,11 +213,11 @@ namespace BTCPayServer.Controllers
             }
             else if (command == "save")
             {
-                if (vm.DiscourageSearchEngines != _policiesSettings.DiscourageSearchEngines ||
+                if (vm.AllowSearchEngines != _policiesSettings.AllowSearchEngines ||
                     vm.CheckForNewVersions != _policiesSettings.CheckForNewVersions ||
                     vm.EnableExperimentalFeatures != _policiesSettings.Experimental)
                 {
-                    _policiesSettings.DiscourageSearchEngines = vm.DiscourageSearchEngines;
+                    _policiesSettings.AllowSearchEngines = vm.AllowSearchEngines;
                     _policiesSettings.CheckForNewVersions = vm.CheckForNewVersions;
                     _policiesSettings.Experimental = vm.EnableExperimentalFeatures;
                     await _SettingsRepository.UpdateSetting(_policiesSettings);

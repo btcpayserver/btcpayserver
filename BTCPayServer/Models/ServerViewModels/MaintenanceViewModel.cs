@@ -8,8 +8,8 @@ public class MaintenanceViewModel
     public string DNSDomain { get; set; }
     public bool CanUseSSH { get; internal set; }
 
-    [Display(Name = "Discourage search engines from indexing this site")]
-    public bool DiscourageSearchEngines { get; set; }
+    [Display(Name = "Search engines can index this site")]
+    public bool AllowSearchEngines { get; set; }
 
     [Display(Name = "Check releases on GitHub and notify when new BTCPay Server version is available")]
     public bool CheckForNewVersions { get; set; }

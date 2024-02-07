@@ -614,15 +614,17 @@ namespace BTCPayServer.Controllers
                     RegisteredUserId = user.Id;
 
                     TempData[WellKnownTempData.SuccessMessage] = "Account created.";
-                    if (policies.RequiresConfirmedEmail)
+                    var requiresConfirmedEmail = policies.RequiresConfirmedEmail && !user.EmailConfirmed;
+                    var requiresUserApproval = policies.RequiresUserApproval && !user.Approved;
+                    if (requiresConfirmedEmail)
                     {
                         TempData[WellKnownTempData.SuccessMessage] += " Please confirm your email.";
                     }
-                    if (policies.RequiresUserApproval)
+                    if (requiresUserApproval)
                     {
                         TempData[WellKnownTempData.SuccessMessage] += " The new account requires approval by an admin before you can log in.";
                     }
-                    if (policies.RequiresConfirmedEmail || policies.RequiresUserApproval)
+                    if (requiresConfirmedEmail || requiresUserApproval)
                     {
                         return RedirectToAction(nameof(Login));
                     }

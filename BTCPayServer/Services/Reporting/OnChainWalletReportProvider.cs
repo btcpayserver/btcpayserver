@@ -3,6 +3,7 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Form;
 using BTCPayServer.Services.Stores;
 using Dapper;
 using NBitcoin;
@@ -67,7 +68,14 @@ public class OnChainWalletReportProvider : ReportProvider
         var store = await StoreRepository.FindStore(queryContext.StoreId);
         if (store is null)
             return;
-        var interval = DateTimeOffset.UtcNow - queryContext.From;
+        var dates = GetFromTo(queryContext.Query);
+        TimeSpan interval = TimeSpan.FromDays(30);
+        if (dates.From is not null)
+        {
+            interval = DateTimeOffset.UtcNow - dates.From.Value;
+        }
+
+        
         foreach (var settings in store.GetDerivationSchemeSettings(NetworkProvider))
         {
             var walletId = new WalletId(store.Id, settings.Network.CryptoCode);
@@ -90,7 +98,7 @@ public class OnChainWalletReportProvider : ReportProvider
             foreach (var r in rows)
             {
                 var date = (DateTimeOffset)r.seen_at;
-                if (date > queryContext.To)
+                if (dates.To is not null && date > dates.To.Value)
                     continue;
                 var values = queryContext.AddData();
                 var balanceChange = Money.Satoshis((long)r.balance_change).ToDecimal(MoneyUnit.BTC);

@@ -81,52 +81,60 @@ srv.updateFieldViews = function () {
 };
 
 document.addEventListener("DOMContentLoaded", () => {
-    delegate("input", ".flatdtpicker", function () {
-        // We don't use vue to bind dates, because VueJS break the flatpickr as soon as binding occurs.
-        let to = document.getElementById("toDate").value
-        let from = document.getElementById("fromDate").value
-
-        if (!to || !from)
-            return;
-
-        from = moment(from).unix();
-        to = moment(to).endOf('day').unix();
-
-        srv.request.timePeriod.from = from;
-        srv.request.timePeriod.to = to;
-        fetchStoreReports();
-    });
+    // delegate("input", ".flatdtpicker", function () {
+    //     // We don't use vue to bind dates, because VueJS break the flatpickr as soon as binding occurs.
+    //     // let to = document.getElementById("toDate").value
+    //     // let from = document.getElementById("fromDate").value
+    //     //
+    //     // if (!to || !from)
+    //     //     return;
+    //     //
+    //     // from = moment(from).unix();
+    //     // to = moment(to).endOf('day').unix();
+    //     //
+    //     // srv.request.timePeriod.from = from;
+    //     // srv.request.timePeriod.to = to;
+    //     fetchStoreReports();
+    // });
 
     delegate("click", "#exportCSV", downloadCSV);
-    
-    const $viewNameToggle = document.getElementById("ViewNameToggle")
-    delegate("click", ".available-view", function (e) {
+    delegate("submit", "#reportQuery", (e)=>{
         e.preventDefault();
-        const { view } = e.target.dataset;
-        $viewNameToggle.innerText = view;
-        document.querySelectorAll(".available-view").forEach($el => $el.classList.remove("custom-active"));
-        e.target.classList.add("custom-active");
-        srv.request.viewName = view;
-        fetchStoreReports();
+        fetchStoreReports();        
     });
+        delegate("click", "#btnfakeData", (e)=>{
+        e.preventDefault();
+        fetchStoreReports(true);        
+    });
+    
+    // const $viewNameToggle = document.getElementById("ViewNameToggle")
+    // delegate("click", ".available-view", function (e) {
+    //     e.preventDefault();
+    //     const { view } = e.target.dataset;
+    //     $viewNameToggle.innerText = view;
+    //     document.querySelectorAll(".available-view").forEach($el => $el.classList.remove("custom-active"));
+    //     e.target.classList.add("custom-active");
+    //     srv.request.viewName = view;
+    //     fetchStoreReports();
+    // });
 
-    let to = new Date();
-    let from = new Date(to.getTime() - 1000 * 60 * 60 * 24 * 30);
-    var urlParams = new URLSearchParams(new URL(window.location).search);
-    if (urlParams.has("from")) {
-        from = new Date(parseInt(urlParams.get("from")) * 1000);
-    }
-    if (urlParams.has("to")) {
-        to = new Date(parseInt(urlParams.get("to")) * 1000);
-    }
-    srv.request = srv.request || {};
-    srv.request.timePeriod = srv.request.timePeriod || {};
-    srv.request.timePeriod.to = moment(to).unix();
-    srv.request.viewName = srv.request.viewName || "Payments";
-    srv.request.timePeriod.from = moment(from).unix();
-    srv.request.timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    // let to = new Date();
+    // let from = new Date(to.getTime() - 1000 * 60 * 60 * 24 * 30);
+    // var urlParams = new URLSearchParams(new URL(window.location).search);
+    // if (urlParams.has("from")) {
+    //     from = new Date(parseInt(urlParams.get("from")) * 1000);
+    // }
+    // if (urlParams.has("to")) {
+    //     to = new Date(parseInt(urlParams.get("to")) * 1000);
+    // }
+    // srv.request = srv.request || {};
+    // srv.request.timePeriod = srv.request.timePeriod || {};
+    // srv.request.timePeriod.to = moment(to).unix();
+    // srv.request.viewName = srv.request.viewName || "Payments";
+    // srv.request.timePeriod.from = moment(from).unix();
+    // srv.request.timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     srv.result = { fields: [], values: [] };
-    updateUIDateRange();
+    //updateUIDateRange();
     app = new Vue({
         el: '#app',
         data() { return { srv } },
@@ -160,10 +168,6 @@ function displayValue(val) {
     return val && typeof val === "object" && typeof val.d === "number" ? new Decimal(val.v).toFixed(val.d) : val;
 }
 
-function updateUIDateRange() {
-    document.getElementById("toDate")._flatpickr.setDate(moment.unix(srv.request.timePeriod.to).toDate());
-    document.getElementById("fromDate")._flatpickr.setDate(moment.unix(srv.request.timePeriod.from).toDate());
-}
 
 // This function modify all the fields of a given type
 function modifyFields(fields, data, type, action) {
@@ -191,14 +195,20 @@ function downloadCSV() {
     saveAs(blob, "export.csv");
 }
 
-async function fetchStoreReports() {
-    const result = await fetch(window.location, {
+async function fetchStoreReports(fakedata = false) {
+
+    const formElement = document.getElementById("reportQuery");
+    
+    const data = new URLSearchParams(new FormData(formElement));
+    if(fakedata){
+        data.set("fakedata", "true");
+    }
+    const result = await fetch(formElement.getAttribute("action"), {
         method: 'POST',
         headers: {
             'Accept': 'application/json',
-            'Content-Type': 'application/json'
         },
-        body: JSON.stringify(srv.request)
+        body: data
     });
 
     srv.result = await result.json();
@@ -206,12 +216,8 @@ async function fetchStoreReports() {
 
     // Dates from API are UTC, convert them to local time
     modifyFields(srv.result.fields, srv.result.data, 'datetime', a => a? moment(a).format(): a);
-    var urlParams = new URLSearchParams(new URL(window.location).search);
-    urlParams.set("viewName", srv.request.viewName);
-    urlParams.set("from", srv.request.timePeriod.from);
-    urlParams.set("to", srv.request.timePeriod.to);
-    history.replaceState(null, null, "?" + urlParams.toString());
-    updateUIDateRange();
+
+    // updateUIDateRange();
 
     srv.charts = [];
     for (let i = 0; i < srv.result.charts.length; i++) {

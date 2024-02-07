@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Form;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
@@ -24,7 +25,7 @@ public class PayoutsReportProvider : ReportProvider
         _pullPaymentHostedService = pullPaymentHostedService;
         _btcPayNetworkJsonSerializerSettings = btcPayNetworkJsonSerializerSettings;
     }
-    
+
     public override string Name => "Payouts";
     public override async Task Query(QueryContext queryContext, CancellationToken cancellation)
     {
@@ -32,8 +33,8 @@ public class PayoutsReportProvider : ReportProvider
         foreach (var payout in (await _pullPaymentHostedService.GetPayouts(new PullPaymentHostedService.PayoutQuery()
                  {
                      Stores = new[] {queryContext.StoreId},
-                     From = queryContext.From,
-                     To = queryContext.To,
+                     // From = queryContext.From,
+                     // To = queryContext.To,
                      IncludeArchived = true,
                      IncludePullPaymentData = true,
 

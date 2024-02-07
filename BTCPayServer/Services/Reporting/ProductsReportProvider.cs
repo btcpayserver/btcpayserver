@@ -29,14 +29,15 @@ public class ProductsReportProvider : ReportProvider
         var appsById = (await Apps.GetApps(queryContext.StoreId)).ToDictionary(o => o.Id);
         var tagAllinvoicesApps = appsById.Values.Where(a => a.TagAllInvoices).ToList();
         queryContext.ViewDefinition = CreateDefinition();
+        var dates = GetFromTo(queryContext.Query);
         foreach (var i in (await InvoiceRepository.GetInvoices(new InvoiceQuery
         {
             IncludeArchived = true,
             IncludeAddresses = false,
             IncludeEvents = false,
             IncludeRefunds = false,
-            StartDate = queryContext.From,
-            EndDate = queryContext.To,
+            StartDate = dates.From,
+            EndDate = dates.To,
             StoreId = new[] { queryContext.StoreId }
         }, cancellation)).OrderBy(c => c.InvoiceTime))
         {

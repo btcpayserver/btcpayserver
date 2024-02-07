@@ -17,6 +17,7 @@ using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
 using BTCPayServer.Controllers;
+using BTCPayServer.Controllers.GreenField;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Fido2;
@@ -2914,8 +2915,8 @@ namespace BTCPayServer.Tests
 
         private async Task<StoreReportResponse> GetReport(TestAccount acc, StoreReportRequest req)
         {
-            var controller = acc.GetController<UIReportsController>();
-            return (await controller.StoreReportsJson(acc.StoreId, req)).AssertType<JsonResult>()
+            var controller = acc.GetController<GreenfieldReportsController>();
+            return (await controller.StoreReports(acc.StoreId, req)).AssertType<JsonResult>()
                 .Value
                 .AssertType<StoreReportResponse>();
         }

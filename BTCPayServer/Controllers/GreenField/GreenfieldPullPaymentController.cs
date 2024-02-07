@@ -264,6 +264,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
             var version = await _dbContextFactory.LinkBoltcardToPullPayment(pullPaymentId, issuerKey, request.UID, request.OnExisting);
             this._logs.PayServer.LogInformation($"Version: " + version);
+            this._logs.PayServer.LogInformation($"ID: " + Encoders.Hex.EncodeData(issuerKey.GetId(request.UID)));
 
             var keys = issuerKey.CreatePullPaymentCardKey(request.UID, version, pullPaymentId).DeriveBoltcardKeys(issuerKey);
 
